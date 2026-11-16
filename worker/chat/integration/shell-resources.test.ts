@@ -103,12 +103,12 @@ it('serves real shell lists and keeps workspace views private to each member', a
   expect(saved.status).toBe(200)
   expect(await saved.json()).toEqual({
     view,
-    routine: null,
+    automation: null,
     baseBranch: 'main',
   })
   expect(await (await fixture.request(path)).json()).toEqual({
     view,
-    routine: null,
+    automation: null,
     baseBranch: 'main',
   })
   expect(
@@ -125,7 +125,7 @@ it('serves real shell lists and keeps workspace views private to each member', a
       fileList: 'all',
       tool: 'terminal',
     },
-    routine: null,
+    automation: null,
     baseBranch: 'main',
   })
   const outsider = await fixture.request(path, {

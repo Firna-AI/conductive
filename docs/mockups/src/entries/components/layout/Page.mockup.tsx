@@ -40,7 +40,7 @@ export const page = defineComponent({
     },
   } as const,
   slots: ['actions', 'tabs', 'children'],
-  props: { title: 'Routines', subtitle: 'Acme' },
+  props: { title: 'Automations', subtitle: 'Acme' },
   render: (props, context) => (
     <Page
       actions={props.actions}
@@ -71,7 +71,7 @@ export const page = defineComponent({
       slots: {
         actions: (
           <actionButton.Component icon="plus" tone="primary">
-            New routine
+            New automation
           </actionButton.Component>
         ),
         tabs: <span />,

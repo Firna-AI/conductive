@@ -6,6 +6,8 @@ import { actionButton } from '../../entries/components/common/actions.mockup'
 import { notice } from '../../entries/components/common/Notice.mockup'
 import { Section } from '../settings/Section'
 import { orgColumns, orgTableSize } from './LargestOrgs'
+import { longRunColumns } from './LongRuns'
+import { longRunsWords } from './longRunsCopy'
 import tiles from './OperatorTiles.module.css'
 import list from './WorkspaceStates.module.css'
 
@@ -57,6 +59,18 @@ export function OperatorLoading(props: { viewport: Viewport }) {
             </li>
           ))}
         </ul>
+      </Section>
+      <Section title={longRunsWords.title}>
+        <Table
+          accessibilityLabel={longRunsWords.title}
+          cell={() => null}
+          columns={longRunColumns[props.viewport]}
+          loading
+          loadingRowCount={10}
+          rowKey={(_, index) => String(index)}
+          rows={[]}
+          size={orgTableSize[props.viewport]}
+        />
       </Section>
       {chartTitles.map((title) => (
         <Section key={title} title={title}>

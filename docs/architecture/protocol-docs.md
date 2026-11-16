@@ -41,6 +41,8 @@ This page lists each protocol doc and what it covers.
     - [Fast mode](../protocol/fast-mode.md): the Fast switch of the model
       menu, the models that show it, who may turn it on, and the speed of a
       turn that cannot run fast.
+    - [Dropped answers](../protocol/dropped-answers.md): the continue
+      message of a Claude turn after its model answer drops.
   - [File mentions](../protocol/file-mentions.md): the list of `@` in the
     composer, the chips of files and folders, the sent chips of attached
     files, and the removal of each chip of the composer.
@@ -114,6 +116,8 @@ This page lists each protocol doc and what it covers.
   reports.
 - [Operator section](../protocol/operator-section.md): the pages of the
   operator in the web app, their counts, and their searches.
+  - [Operator section: the Overview](../protocol/operator-overview.md): the
+    live counts of the Overview, and the long runs of cloud computers.
 - [Command palette](../protocol/command-palette.md): the key and the search
   that finds the workspaces, the actions, and the settings.
 - [Command palette: empty and unavailable states](../protocol/command-palette-states.md):
@@ -166,7 +170,7 @@ This page lists each protocol doc and what it covers.
 - [Website docs](../protocol/website-docs.md): the public guides of the
   marketing site, their addresses and navigation, and the rules for their
   words.
-- [Routines](../protocol/routines.md): routines and their schedules, with the
-  linked pages [Routine runs](../protocol/routine-runs.md),
+- [Automations](../protocol/automations.md): automations and their schedules, with the
+  linked pages [Automation runs](../protocol/automation-runs.md),
   [Pull request runs](../protocol/pull-request-runs.md), and
   [Base branches](../protocol/base-branches.md).

@@ -55,7 +55,7 @@
   padding: 10px 8px 24px;
 }
 
-/* New workspace, Routines, and Search above the sections. */
+/* New workspace, Automations, and Search above the sections. */
 .links {
   display: flex;
   flex-direction: column;

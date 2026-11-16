@@ -129,6 +129,10 @@ The session reply has app access, and `GET /api/waitlist` answers with `accessSt
 The operator samples in `fixtures/operator-samples.ts` have the names and the counts of the operator mockups, with an ID for each org and user, and the people of the other fixtures. Ten of them wait, with the names of the waitlist mockups. Each time counts back from the time of the samples. Hexwave is suspended, Pinecrest is deleted, and Dana Kim is suspended. `SAMPLE_IDS` names them, Sam Okafor and Kenji Watanabe, who wait with and without a verified email, and Zed K, the newest person who waits, as `SAMPLE_IDS.newestWaiting`.
 `fixtures/operator-access-samples.ts` gives the way in of each user who came after the waitlist, the age of each GitHub account, the referral code of each user with app access, and the invite codes of the mockups. `fixtures/operator-access.ts` turns them into the app access of a user, the waitlist, and the codes, with the records that an operator changes: the approvals, the open sign-ups in `openSignups`, the codes, the pause, and the switch in `waitlistSwitch`. `sampleAccessRecords` in `fixtures/operator-access-records.ts` builds those records at a time, with the waitlist on. An open sign-up names its operator on the page of a user. The approval email of Ana Pereira went, and the one of Joe Quinn never went. The suspension of Dana Kim disabled her referral code.
 `fixtures/operator.ts` builds the replies from the samples and their records: the page of an org or a user, its row in a list, and the Overview with the 30 UTC days up to the day of the read and the count of the people who wait. The dev fake changes the records with Suspend, Lift, Approve, New code, Disable, the pause, and the switch. Its waitlist reads the same codes, pause, and switch, and a code that works there counts its use and gives a referral code.
+The Overview also includes long runs with workspace, org, and owner identities and raw Unix millisecond times.
+These samples include deleted and suspended orgs, a suspended owner, and a start without a cloud computer ID.
+`operatorOverview` accepts a fixed sample time separately from the read time, so a dev refresh keeps each start.
+`sampleComputerId` gives the computer ID that the dev Orgs search also finds.
 `macCommands` chooses the Mac commands of the fake workspace, and `onMac` makes the window the Mac app on the Mac of the fake user.
 Without `onMac`, the window is a browser: it has no pairing, and the Mac settings refuse it as the Worker does.
 Each fake record has a `requestKey` from `fakeRequestKey`, which differs from its `requestId` and is safe in an address.
@@ -217,7 +221,7 @@ Replies, timers, and `waitFor` go on.
 - `message-field.ts` focuses, types into, pastes into, presses keys in, clears, and reads the message field of a composer.
 - `file-picker.ts` picks files with the first Attach files button of a composer.
 - `file-drop.ts` drags and drops files, folders, and text, as Chrome gives them.
-- `fake-core-routes.ts` records account, org, settings, section, member, and routine replies: the list, and the read, update, and delete of each routine, and a create. Each routine, and the routine that a create answers, also has each page of its runs and a Run now that starts a run on a new workspace.
+- `fake-core-routes.ts` records account, org, settings, section, member, and automation replies: the list, and the read, update, and delete of each automation, and a create. Each automation, and the automation that a create answers, also has each page of its runs and a Run now that starts a run on a new workspace.
 - `fake-workspace-routes.ts` records workspace, session, message, and view replies.
 - `fake-tool-routes.ts` records file, terminal, preview, desktop, and GitHub replies, also the member action routes of GitHub.
   Its upload replies give each file the `path` that `attachmentPath` in `src/shared/attachment-paths.ts` builds, as the Worker does.
@@ -236,11 +240,11 @@ Replies, timers, and `waitFor` go on.
 - `fixtures/operator-samples.ts` and `fixtures/operator.ts` give the sample orgs and users of the operator section, and build its replies.
 - `fixtures/operator-access-samples.ts` and `fixtures/operator-access.ts` give the waitlist, the codes, and the app access of the samples, and `disabledCode`, the reply of a disable. `fixtures/operator-access-records.ts` gives `sampleAccessRecords`, the records that an operator changes.
 - `fixtures/repositories.ts` supplies GitHub repository choices before org creation and the org's repository records.
-- `fixtures/routines.ts` maps the routines of the mockups, newest first, with the last run of each, to the shared contracts. Its `runs` are the runs that the page of each routine lists in the mockups, or else its last run. Its `created` is the reply of a create: the routine that the flow "Create a routine" saves.
-- `fixtures/routine-runs.ts` maps the run lists of the mockups to the runs of the API: each cause of a failed run and each reason of a skipped run as the Worker stores them, with the login of an account outside the org. `runsPage` gives one page of runs as the Worker pages them.
+- `fixtures/automations.ts` maps the automations of the mockups, newest first, with the last run of each, to the shared contracts. Its `runs` are the runs that the page of each automation lists in the mockups, or else its last run. Its `created` is the reply of a create: the automation that the flow "Create an automation" saves.
+- `fixtures/automation-runs.ts` maps the run lists of the mockups to the runs of the API: each cause of a failed run and each reason of a skipped run as the Worker stores them, with the login of an account outside the org. `runsPage` gives one page of runs as the Worker pages them.
   Each run includes its agent and owner for the shared run contract. A member who left the org stays the owner of their runs, as the Worker keeps their user record.
   A run whose first start or first turn failed keeps its workspace, and a run that a check failed has none.
-- `fixtures/routine-triggers.ts` turns a trigger of a save into the trigger of a reply: a preset with its cron, and each login with a fake GitHub ID.
+- `fixtures/automation-triggers.ts` turns a trigger of a save into the trigger of a reply: a preset with its cron, and each login with a fake GitHub ID.
 - `fixtures/workspaces.ts` maps workspace and session samples, and `senderSnapshot` copies the identity of a person as a session starter.
 - `fixtures/tools.ts` maps file, GitHub, and tool samples. `FAKE_GITHUB_HEAD_SHA` is the head commit of each fake pull request.
 - `fixtures/devices.ts` maps the Mac command samples of the mockups: requests in each state, the pairing, and the Mac settings.

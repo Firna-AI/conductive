@@ -9,7 +9,7 @@ renders plain React parts. An edit to a shared part therefore gives one
 Changes row for each screen and variant that looks different, and no row
 names the part. Commit `cc3ea647` changed `WorkspaceMark`, which 196 screen
 modules import. This change registers every part of the catalogue with
-Mokly's `defineComponent`: 344 parts. An edit to a registered part then gives one row for the
+Mokly's `defineComponent`: 347 parts. An edit to a registered part then gives one row for the
 part, and the screens that use it go under its Affected screens. The
 change adds no HTML entry, changes no screen picture, and changes no app
 code.
@@ -19,7 +19,9 @@ shared React parts with `defineComponent`, in batches, the widest first.
 On 2026-11-16 the branch merged `main`, which removed the Conductor
 comparison page with its 7 `parity` parts and added 9 parts: `TextLink`,
 3 `pricing` parts, 2 chat parts, and 3 settings parts. The counts below
-follow that merge.
+follow that merge. A second merge on the same day brought the rename of
+routines to automations (#397), and two new parts: `NewSectionDialog`
+and `LongRuns`. Milestone 2 split out one more chat part, `NewTabAnchor`.
 
 On 2026-11-13 the user asked that this plan include every part, not
 only a first batch. The milestones register the parts folder by folder,
@@ -75,8 +77,8 @@ counts and test under `.context/mokly-html/` of this workspace.
   "Mokly markers require a sidecar render context".
 - Repeated siblings need distinct `moklyInstance` names, in lowercase
   kebab-case. Duplicates in one scope fail the build.
-- After the merge of `main` on 2026-11-16, the app reaches 61 of the 297
-  TSX files of `docs/mockups/src/components/` and `docs/mockups/src/screens/`.
+- After the second merge of `main` on 2026-11-16, the app reaches 61 of
+  the 299 TSX files of `docs/mockups/src/components/` and `docs/mockups/src/screens/`.
 - Some parts nest other parts. Mokly attributes a child's edit to the
   child when the child renders through its wrapper, and to the parent
   when the child is plain.
@@ -118,11 +120,11 @@ These are design calls of the agent, made on 2026-11-13:
 
 - **The parts.** A part is an exported React component with a PascalCase
   name that draws UI. The plan registers each such export:
-  - All 325 exports of the 236 files in `docs/mockups/src/components/`,
+  - All 328 exports of the 238 files in `docs/mockups/src/components/`,
     except six that draw nothing of their own: the link primitives
     `ScreenLink` and `StillLinks`, and the context providers
     `TouchScreen`, `TintedTheme`, `MacApp`, and `ChatWorkspaces`. That
-    leaves 319 parts.
+    leaves 322 parts.
   - The 26 helper parts that live in `docs/mockups/src/screens/`, except
     `PictureCapture`, which only frames the marketing captures. That
     leaves 25 parts.
@@ -137,7 +139,7 @@ These are design calls of the agent, made on 2026-11-13:
   reviewable, and no two milestones conflict.
 - **More than one mockup milestone.** All mockup work comes first, in
   Milestones 1 to 6, and the documentation milestone comes directly
-  after. Reason: the whole change is mockup work, and one milestone of 344
+  after. Reason: the whole change is mockup work, and one milestone of 347
   parts is too large to delegate and check.
 - **The place of a registration.** One entry module for each source file,
   at `docs/mockups/src/entries/components/<folder>/<file>.mockup.tsx`. It
@@ -315,9 +317,14 @@ Tags: mockup
 
 Depends on: 2
 
-Register the parts of the chat, the files, and the tools: 72 parts.
+Register the parts of the chat, the files, and the tools, and
+`NewSectionDialog`: 74 parts.
 
-- [ ] Register the 49 parts of `components/chat/`. Keep
+- [ ] Register `NewSectionDialog` of `components/workspaces/`, which `main`
+      added after Milestone 2. Move the plain uses of registered parts in
+      `NewSectionDialog.tsx` to wrappers.
+- [ ] Register the 50 parts of `components/chat/`, with `NewTabAnchor`,
+      which Milestone 2 split out of `WebLinkText`. Keep
       `docs/mockups/src/screens/WorkspaceScreen.tsx` under 300 lines; it
       has 298, so split it before it grows.
 - [ ] Register the 13 parts of `components/files/` and the 9 of
@@ -364,19 +371,20 @@ and Get started: 74 parts.
 - [ ] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
-## Milestone 5: Mockups, operator and routines
+## Milestone 5: Mockups, operator and automations
 
 Tags: mockup
 
 Depends on: 4
 
-Register the parts of the operator section and the routines: 54 parts.
+Register the parts of the operator section and the automations: 55 parts.
 
-- [ ] Register the 34 parts of `components/operator/`.
-- [ ] Register the 14 parts of `components/routines/`.
-- [ ] Register the 6 helper parts of `screens/routineActions.tsx`,
-      `screens/routineFrame.tsx`, `screens/routineNotShown.tsx`,
-      `screens/routineParts.tsx`, and `screens/routineTabs.tsx`.
+- [ ] Register the 35 parts of `components/operator/`, with `LongRuns`, which
+      `main` added. Move its plain uses of registered parts to wrappers.
+- [ ] Register the 14 parts of `components/automations/`.
+- [ ] Register the 6 helper parts of `screens/automationActions.tsx`,
+      `screens/automationFrame.tsx`, `screens/automationNotShown.tsx`,
+      `screens/automationParts.tsx`, and `screens/automationTabs.tsx`.
 - [ ] Move each mockup-only consumer of these parts to the wrapper.
       Keep the plain part in each file that the app reaches. Check this
       with `.context/mokly-html/closure2.mjs`.

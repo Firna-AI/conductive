@@ -20,6 +20,11 @@
     - `worker/operator/org-native.test.ts`: `suppresses a due native disk restart after org suspension while an active org still resumes`.
     - `worker/operator/ownership-stop-race.test.ts`: `leaves eligible pending starts intact and reports a skipped access stop as incomplete`.
   - A focused rerun of those two files at the same path and with the same source passed all seven tests in 13.99 seconds. No timeout or assertion changed. The full run spawned 1,115 workers and took 1,192.11 seconds. Resource contention remains a suspected source. The path alone does not explain these two failures.
+  - On 16 November 2026, merging main commit `196da1706` into `calummoore/porto-rpuj` passed every static check. The full suite passed 3,539 tests and failed three tests, with no skips, across 1,126 files in 987.02 seconds. Each failure was `Error: Test timed out in 15000ms.`:
+    - `worker/app-api/boot.test.ts`: `keeps account data and Get started isolated from other users and deleted orgs`.
+    - `worker/lifecycle/saved-script-execution.test.ts`: `runs retention startup in Bash with its org environment without marking ready or restarting the runner`.
+    - `worker/lifecycle/start-runner-readiness.test.ts`: `completes a resume only after runner readiness without rerunning its startup script`.
+  - All three files exactly matched main commit `196da1706`. A focused rerun of the three files at the same path, with the same source and timeouts, passed all 13 tests with no skips in 15.19 seconds. Both runs set `TMPDIR` to a directory on the repository filesystem. Resource contention during the full run is a suspected source. The blocked await and the cause remain unknown.
 - **Task:** Find the source of these timeouts. Compare focused and full runs at the same path, then compare paths with the same test set. Make the tests deterministic with readiness signals, event order, or isolated state. Keep each assertion. Add no retry, sleep, skip, or longer timeout.
 - **Impact if no action:** A complete check can fail while a focused run passes. This can hide a real regression or delay another branch.
 - **Needs:** Node 24 and a Conductive workspace that can run the full suite.

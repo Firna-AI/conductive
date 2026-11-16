@@ -116,7 +116,8 @@ workspace and its first session take the title.
 Each other session takes the first line of its first message with own words
 as its title. The rule is `sessionTitleFrom` in
 `src/shared/session-title.ts`, which the Worker uses too. That rule first
-puts the original name of each attached file in place of its mention.
+leaves out each mention of an attached image. It puts the original name of
+each other attached file in place of its mention.
 
 ## Key code
 

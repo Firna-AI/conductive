@@ -1,18 +1,18 @@
 import { defineComponent } from '@mokly/mokly'
 import { RunLinks } from '../../../components/workspace/RunLinks'
-import { routines } from '../../../fixtures/routines'
+import { automations } from '../../../fixtures/automations'
 import { pullRequest } from '../../../fixtures/pullRequests'
 import { paths } from '../../../paths'
 
-/** The routine of a run workspace and its pull request, as `RunSource`. */
+/** The automation of a run workspace and its pull request, as `RunSource`. */
 export const runSourceSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['routine', 'routineTo'],
+  required: ['automation', 'automationTo'],
   properties: {
-    routine: { type: 'string' },
-    /** The page of the routine in the mockups. */
-    routineTo: { type: 'string', minLength: 1 },
+    automation: { type: 'string' },
+    /** The page of the automation in the mockups. */
+    automationTo: { type: 'string', minLength: 1 },
     pullRequest: {
       type: 'object',
       additionalProperties: false,
@@ -30,8 +30,8 @@ export const runLinks = defineComponent({
   slug: 'run-links',
   title: 'Run links',
   description:
-    'The line under the header of a run workspace, which links to its routine and to the pull request that started the run. A long routine name gives up its room first, and the number of the pull request always shows. Its own page shows a run of Review pull requests for #482.',
-  relatedDocs: ['docs/mockups/catalogue-chat-and-routines.md'],
+    'The line under the header of a run workspace, which links to its automation and to the pull request that started the run. A long automation name gives up its room first, and the number of the pull request always shows. Its own page shows a run of Review pull requests for #482.',
+  relatedDocs: ['docs/mockups/catalogue-chat-and-automations.md'],
   propSchema: {
     type: 'object',
     additionalProperties: false,
@@ -40,8 +40,8 @@ export const runLinks = defineComponent({
   } as const,
   props: {
     run: {
-      routine: routines['review-prs'].name,
-      routineTo: paths.routine,
+      automation: automations['review-prs'].name,
+      automationTo: paths.automation,
       pullRequest: { number: pullRequest.number, url: pullRequest.url },
     },
   },
@@ -53,8 +53,8 @@ export const runLinks = defineComponent({
       description: 'A run that Run now started, without a pull request.',
       props: {
         run: {
-          routine: routines['morning-summary'].name,
-          routineTo: paths.routineRunNow,
+          automation: automations['morning-summary'].name,
+          automationTo: paths.automationRunNow,
         },
       },
     },

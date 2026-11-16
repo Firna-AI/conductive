@@ -42,9 +42,10 @@ function UserNotice(props: { user: UserPage }) {
 
 /**
  * The page of a user for the operator: their state, their name and other
- * details with the age of the GitHub account, how and when they got app
- * access, their referral code, the workspaces that they own, and their
- * orgs with their roles. Each org opens the page of that org. A user
+ * details with the age of the GitHub account, the time of their last new
+ * workspace or sent message, how and when they got app access, their
+ * referral code, the workspaces that they own, and their orgs with their
+ * roles. Each org opens the page of that org. A user
  * without a name on GitHub has no Name row, and a person who waits has no
  * app access, code, or org yet. The Email row gives the primary verified
  * email on GitHub, or says that the account has none.
@@ -66,6 +67,7 @@ export function UserDetails(props: {
             { term: 'GitHub ID', value: String(user.githubId), mono: true },
             { term: 'On GitHub', value: user.githubAge },
             { term: 'Joined', value: user.joined },
+            { term: 'Last active', value: user.lastActive ?? 'Unknown' },
             {
               term: 'Workspaces',
               value: `${user.owned} owned, ${user.running} running`,

@@ -96,7 +96,7 @@ export const homeList = defineComponent({
   slug: 'home-list',
   title: 'Home list',
   description:
-    'The workspace list as a page: on a phone, and in a narrow window. The header, New workspace, Routines, Search, and the sections of the org. A suspended org shows its notice first, and no New workspace and no section menus. Search shows the key of the palette only in a desktop window. A list that did not load shows its failure in place of the sections. Its own page shows the list of Acme on a phone.',
+    'The workspace list as a page: on a phone, and in a narrow window. The header, New workspace, Automations, Search, and the sections of the org. A suspended org shows its notice first, and no New workspace and no section menus. Search shows the key of the palette only in a desktop window. A list that did not load shows its failure in place of the sections. Its own page shows the list of Acme on a phone.',
   relatedDocs: ['docs/mockups/orgs-and-logins.md'],
   propSchema: {
     type: 'object',

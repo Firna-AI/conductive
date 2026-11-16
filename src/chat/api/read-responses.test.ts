@@ -19,7 +19,7 @@ it('reads a temporary file or diff tab without a display mode', () => {
   ]) {
     expect(readViewReply({ view: { ...view, temporaryTab } })).toEqual({
       view: { ...view, temporaryTab },
-      routine: null,
+      automation: null,
     })
   }
 })

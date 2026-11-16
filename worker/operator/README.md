@@ -13,7 +13,7 @@ points.
 
 ## Overview
 
-The [overview guide](overview.md) gives the route, access check, counts, and response.
+The [overview guide](overview.md) gives the route, access check, counts, long runs, and response.
 
 ## Orgs and users
 
@@ -60,7 +60,9 @@ Status is `deleted`, `suspended`, or `active`, in that priority.
 Match is `org-id`, `cloud-computer-id`, or `preview-address` for a resource match.
 Match is null for a name match or no search.
 
-User entries give `githubId`, `login`, `name`, `joinedAt`, `orgs`, `workspaces`, and `status`.
+User entries give `githubId`, `login`, `name`, `joinedAt`, `lastActiveAt`, `orgs`, `workspaces`, and `status`.
+`lastActiveAt` is `users.last_active_at`, or null when the user has no recorded action.
+[`data/user-activity.ts`](../data/user-activity.ts) writes it, as [the Worker README](../README.md#last-active-time) says.
 User status is `active` or `suspended`.
 Both user entries and user pages also include `OperatorUserAccess` from
 [`operator-waitlist.ts`](../../src/shared/operator-waitlist.ts).
@@ -89,7 +91,7 @@ The purge time is null when no time is stored.
 The state buckets match the overview.
 Running separates workspaces from unfinished builds and refreshes.
 
-The user page gives their identity, name, join time, and owned workspace counts.
+The user page gives their identity, name, join time, last active time, and owned workspace counts.
 Its `email` gives the primary verified email, or null without one.
 Its `workspaces` gives `total` and `running`.
 Its `orgs` gives each org's identity, initials, and the user's role.
@@ -289,7 +291,8 @@ The [operator test guide](tests.md) gives the commands and native provider setup
 
 ### Related Docs
 
-- [Operator section](../../docs/protocol/operator-section.md): access, overview numbers, and directory pages.
+- [Operator section](../../docs/protocol/operator-section.md): access and directory pages.
+- [Operator Overview](../../docs/protocol/operator-overview.md): overview numbers and long runs.
 - [Waitlist](../../docs/protocol/waitlist.md) and [codes](../../docs/protocol/waitlist-codes.md): app access and email rules.
 - [Sign-ups](../../docs/protocol/sign-ups.md): the pause of sign-ups and the waitlist switch.
 - [Operator actions](../../docs/protocol/operator-actions.md): the

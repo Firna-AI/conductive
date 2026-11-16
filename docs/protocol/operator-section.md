@@ -4,6 +4,8 @@ This doc holds the requirements and the decisions in force for the
 operator section. In this part of the web app, an operator sees the whole
 app and acts on one org or one user (decision 142). The operator also runs
 the waitlist there (decision 160).
+[Operator section: the Overview](operator-overview.md) states the
+Overview tab, with its counts and its long runs.
 [Operator actions](operator-actions.md) states who is an operator, and
 what a suspension and a lift do. [Waitlist](waitlist.md) states the
 waitlist and the codes. [Sign-ups](sign-ups.md) states the pause, the
@@ -61,42 +63,8 @@ names a dated record, as
 
 ## The Overview
 
-- The Overview reads live counts across every org each time it opens, and
-  again on Refresh (decision 144). It keeps no history of the counts, and
-  it shows no costs.
-- It shows these counts:
-  - The users, the orgs, and the workspaces, each with the new ones of the
-    last 7 days.
-  - The people who wait, in a line under the users. The line opens the
-    Waitlist tab (decision 160). As that tab does, the count leaves out
-    suspended people.
-  - The cloud computers that run now, for the Running workspaces and for
-    each unfinished build or refresh of an org image.
-  - The workspaces by state: Running, Stopped, Failed, and Archived. They
-    add up to the workspace total.
-  - The new workspaces and the new users of each UTC day of the last 30
-    days, each with its total for the 30 days.
-  - The five orgs with the most workspaces, archived workspaces included.
-- The count of users keeps every account, by join day, also each person
-  who waits. Reason: decision 144 chose the counts, and the two numbers
-  still show who can use the app.
-- Running holds the
-  [workspace states](workspace-life.md#workspace-states)
-  starting, ready, working, needs input, and finished with unread output.
-  Failed holds the error state.
-- The 7 days are the 7 times 24 hours before the read.
-- The 30 days are UTC days, so that the counts need no time zone of the
-  operator. The last of them is the current UTC day.
-- The counts read only the records that exist now. So the count of a past
-  day can go down, for example after the purge of a deleted org or a
-  failed first start.
-- The counts include a deleted org and its workspaces while their records
-  exist. Only the five largest orgs leave out a deleted org.
-- Among the five largest orgs, a tie goes in the order of the org names.
-- The Overview lists no suspensions (decision 148). The Orgs and Users
-  tabs find a suspended org or user.
-- A failed read shows no number. Try again reads the counts again. Reason:
-  a count that did not load is not zero.
+- [Operator section: the Overview](operator-overview.md) states the live
+  counts of the Overview, and its long runs of cloud computers.
 
 ## Orgs and Users
 
@@ -111,6 +79,17 @@ names a dated record, as
 - The Users tab searches every user by GitHub login, name on GitHub, or
   numeric GitHub ID (decision 147).
 - The Users tab marks each person who waits as Waiting (decision 160).
+- The Users tab gives the last active time of each user, in a Last active
+  column on a desktop. The page of a user gives it too, as a date and a
+  time of day. The last active time is the time of the last real action
+  of the person: a new workspace, or a chat message that the person sends
+  or sends again from the app (the user's decision of 14 November 2026).
+  Reason: the operator sees which accounts still do work.
+- Sign-in, reads, and the other actions of the app do not count. An
+  action that an agent tool or an automation takes for the person does not
+  count either, because the person did not act.
+- The column gives the time of day for a time of today, and else the day,
+  as Joined does. A user with no recorded action shows Unknown.
 - With no search, the Orgs and Users tabs list the newest first, 20 at a
   time, with Show more (decision 147). A search lists its matches in the
   same way.
@@ -121,9 +100,10 @@ names a dated record, as
   members, each with their name on GitHub and their role
   (decisions 147 and 149).
 - The page of a user gives the GitHub login, the name on GitHub, the GitHub
-  ID, and the join day. It gives the number of workspaces that the user
-  owns, and how many of them run now. It lists the orgs of the user, each
-  with the role of the user (decisions 147 and 149).
+  ID, the join day, and the last active time. It gives the number of
+  workspaces that the user owns, and how many of them run now. It lists
+  the orgs of the user, each with the role of the user (decisions 147 and
+  149).
 - An account with no name on GitHub shows its login and no name
   (decision 149).
 - The page of a user also gives the primary verified email of the GitHub

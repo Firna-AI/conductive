@@ -103,6 +103,26 @@ These facts belong to this implementation, not to the protocol docs.
   same turn. Outside a wait, the adapter ignores the result. An ignored
   result does not take the message list of an earlier SDK frame. It does
   not end the active turn, and it frees no sent message.
+- After a drop, the Claude adapter sends the agent one continue message in
+  place of a failure, as
+  [Dropped answers](../docs/protocol/dropped-answers.md)
+  says. A drop is a model answer stream that ends early. The adapter finds
+  it from either signal: the drop text of the `claude` program in a failed
+  result, or a failed result after a main answer that started and never
+  stopped.
+- The adapter maps the continue message to the member messages of the
+  request that dropped. So its result frees the same held input, and the
+  runner ends the turn only when the agent finishes. A drop in a wake-up
+  reply during a background wait also gets a continue message. Its result
+  then counts as a wake-up reply, like the reply that dropped, unless the
+  reply also takes in a member message. Then its result answers that
+  message.
+- Each agent process gets at most one continue message. A second drop
+  fails the turn. A Stop before or during the continue message ends the
+  turn as stopped. An automatic release update gives an existing
+  workspace this behavior.
+- Codex gets no continue message. It reconnects a dropped answer stream by
+  itself, with the default of its `stream_max_retries` setting.
 - The runner saves the events of all sessions in one state file, in order,
   before it sends them. The state file holds the stream ID, its event
   counter, the unconfirmed events, the tree and changes revisions, and

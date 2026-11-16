@@ -18,7 +18,7 @@ export const sidebar = defineComponent({
   slug: 'sidebar',
   title: 'Sidebar',
   description:
-    'The desktop sidebar beside the org rail: the org name with its Settings cog, New workspace, Routines, Search, and the sections of the org. A suspended org keeps Routines and Search, with read-only sections. A list that did not load shows its failure in place of the sections. An open menu of a row may pass the edge of the sidebar. Its own page shows the sidebar of Acme.',
+    'The desktop sidebar beside the org rail: the org name with its Settings cog, New workspace, Automations, Search, and the sections of the org. A suspended org keeps Automations and Search, with read-only sections. A list that did not load shows its failure in place of the sections. An open menu of a row may pass the edge of the sidebar. Its own page shows the sidebar of Acme.',
   relatedDocs: ['docs/mockups/orgs-and-logins.md'],
   propSchema: {
     type: 'object',
@@ -28,7 +28,7 @@ export const sidebar = defineComponent({
       org: orgSchema,
       ...sectionListProperties,
       /** The page that the main area shows, when the sidebar links to it. */
-      current: { enum: ['settings', 'new-workspace', 'routines'] },
+      current: { enum: ['settings', 'new-workspace', 'automations'] },
       /** A build of the org's cloud computer failed. */
       settingsAlert: { type: 'boolean' },
       /** The New workspace page of the org, such as that of a new org. */

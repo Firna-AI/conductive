@@ -138,7 +138,7 @@ The Worker reads a fresh ChatGPT login before forwarding a request.
 It renews before expiry through [Codex authentication](../codex-auth/README.md).
 Each turn can claim one renewal after a 401, across metadata and model requests.
 Its workspace object saves the used and pending flags before renewal,
-in the same queue as token checks. Completion clears only the pending flag.
+in the chat queue, where each check with a claim runs. Completion clears only the pending flag.
 Concurrent requests, Codex resends, and object eviction keep the same bound.
 The required `CodexTaskOwner` registers credential work through the request's `execution.waitUntil`.
 The renewal service owns its shared renewal through commit and local cleanup.
@@ -181,10 +181,16 @@ Checks start every 15 seconds while the upload, fetch, or answer runs.
 A passing check renews the lease to 30 seconds after that check started.
 A separate timer cancels the upload, fetch, and answer when the lease ends.
 A slow check cannot extend that deadline.
-A refusal before the answer starts returns its stable error code.
+A periodic check that throws runs again after 1, 2, then 4 seconds, until the lease ends.
+The first check gets no retry. An error with `overloaded` set gets none either, so the request ends.
+A refusal ends the request at once. Before the answer starts, it returns its stable error code.
+Each check, also each Codex credential check, gets a new Durable Object stub from `runtime.workspace`, because [a stub can stay broken](https://developers.cloudflare.com/durable-objects/best-practices/error-handling/) after an error.
 A client disconnect also cancels the upstream.
 It adds no model filter, rate limit, or answer size limit.
+A Worker warning records each check that throws, each retry, and each request that the checks end.
+Each warning holds only the workspace ID and its error kind or end code.
 It writes no request body, answer body, or header value to logs.
+The [stream rules](../../docs/protocol/model-gateway-requests.md#streams) state these requirements.
 
 ## Development
 
@@ -214,7 +220,7 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
 - [codex-body.ts](codex-body.ts): `CodexBodyScanner` checks the streamed JSON grammar and top-level `background` fields.
 - [json-tokens.ts](json-tokens.ts): `JsonTokens` reads JSON tokens and unescapes keys without keeping token text.
 - [json-stack.ts](json-stack.ts): `JsonStack` stores compact container states without a separate depth limit.
-- [request-lifetime.ts](request-lifetime.ts): `GatewayRequestLifetime` owns the lease, periodic checks, cancellation, and cleanup across every forwarding phase.
+- [request-lifetime.ts](request-lifetime.ts): `GatewayRequestLifetime` owns the lease, periodic checks and their retries, cancellation, warnings, and cleanup across every forwarding phase.
 - [stream.ts](stream.ts): answer forwarding under the request lease.
 - [redact.ts](redact.ts): bounded carry bytes for credential removal from error bodies.
 - [errors.ts](errors.ts): stable gateway refusals in each provider's API shape.
@@ -223,7 +229,9 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
   Its caller holds the chat queue, as runner dispatch does.
   It fails the turn and gives no token when the login is missing or changed since the first token.
   It does the same for a login of another kind than the dispatch read.
-  `check` enters that queue and returns the current starter login or a stable refusal reason.
+  `check` returns the current starter login or a stable refusal reason.
+  Without a claim, it first reads the turn, the session, and the login outside that queue, and returns when that read accepts the token.
+  Every other check enters the queue. Only the queued check refuses a token, fails a turn, or saves a claim.
   It refuses a token whose prefix does not match the login kind.
 - [token.ts](token.ts): `turnTokenRoute` reads the workspace and turn route.
   `deriveTurnToken` puts the prefix of the login kind before each token, and `turnTokenMatchesKind` checks that prefix.

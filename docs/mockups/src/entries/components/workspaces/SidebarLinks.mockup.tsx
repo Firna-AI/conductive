@@ -1,7 +1,7 @@
 import { defineComponent } from '@mokly/mokly'
 import {
   NewWorkspaceLink,
-  RoutinesLink,
+  AutomationsLink,
   SearchLink,
   SettingsLink,
 } from '../../../components/workspaces/SidebarLinks'
@@ -94,17 +94,17 @@ export const newWorkspaceLink = defineComponent({
   ],
 })
 
-/** The row below New workspace that opens the routines, registered with Mokly. */
-export const routinesLink = defineComponent({
-  slug: 'routines-link',
-  title: 'Routines link',
+/** The row below New workspace that opens the automations, registered with Mokly. */
+export const automationsLink = defineComponent({
+  slug: 'automations-link',
+  title: 'Automations link',
   description:
-    'The row below New workspace that opens the routines of the org. A suspended org keeps it. Its own page shows the row of the sidebar.',
+    'The row below New workspace that opens the automations of the org. A suspended org keeps it. Its own page shows the row of the sidebar.',
   relatedDocs: ['docs/mockups/orgs-and-logins.md'],
   propSchema: pageLinkSchema,
   props: { variant: 'sidebar' },
   render: (props) => (
-    <RoutinesLink
+    <AutomationsLink
       current={props.current}
       to={props.to}
       variant={props.variant}
@@ -114,7 +114,7 @@ export const routinesLink = defineComponent({
     {
       slug: 'current',
       title: 'Current page',
-      description: 'The row while the main area shows the routines.',
+      description: 'The row while the main area shows the automations.',
       props: { current: true },
     },
     {

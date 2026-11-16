@@ -7,6 +7,7 @@ import {
   TargetState,
 } from '../components/operator/directory'
 import { OperatorPage } from '../components/operator/OperatorPage'
+import { userPagePath } from '../components/operator/targetPages'
 import { NameLink, TargetMark } from '../components/operator/targets'
 import { operatorTotals } from '../fixtures/operator'
 import {
@@ -33,6 +34,7 @@ const columns: Readonly<Record<Viewport, TableColumn[]>> = {
   desktop: [
     { key: 'user', label: 'User', flex: 1 },
     { key: 'joined', label: 'Joined', width: 100 },
+    { key: 'active', label: 'Last active', width: 100 },
     { key: 'orgs', label: 'Orgs', align: 'right', width: 56 },
     { key: 'workspaces', label: 'Workspaces', align: 'right', width: 92 },
   ],
@@ -53,12 +55,6 @@ function detailOf(row: UserRow) {
   return row.name
 }
 
-/** The users whose own page the catalogue draws. Others open Dana Kim. */
-const userPagePaths: Readonly<Record<string, string>> = {
-  'rho-9': paths.operatorUserInviteCode,
-  'tide-sam': paths.operatorUserReferralCode,
-}
-
 /** The page of each state, or the page drawn for the user. */
 function pageOf(row: UserRow): string {
   switch (row.status) {
@@ -67,7 +63,7 @@ function pageOf(row: UserRow): string {
     case 'waiting':
       return paths.operatorUserWaiting
     case 'active':
-      return userPagePaths[row.login] ?? paths.operatorUser
+      return userPagePath(row.login)
   }
 }
 
@@ -92,6 +88,8 @@ function cell(row: UserRow, key: string) {
       )
     case 'joined':
       return <TableCell muted>{row.joined}</TableCell>
+    case 'active':
+      return <TableCell muted>{row.lastActive ?? 'Unknown'}</TableCell>
     case 'orgs':
       return <TableCell numeric>{row.orgs}</TableCell>
     default:

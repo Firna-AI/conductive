@@ -21,7 +21,7 @@ export const workspaceHeader = defineComponent({
   slug: 'workspace-header',
   title: 'Workspace header',
   description:
-    'The name, number, repository, owner, and state of the open workspace. The label of the number follows the name and copies the link of the workspace. For an admin of the org, the owner opens the menu that reassigns the workspace. On desktop the header ends with the toggle that hides the right column. On a phone, Back leads the header, and the label of the number leads the line under the name. A run workspace also links to its routine and its pull request. Its own page shows Checkout address autocomplete for an admin.',
+    'The name, number, repository, owner, and state of the open workspace. The label of the number follows the name and copies the link of the workspace. For an admin of the org, the owner opens the menu that reassigns the workspace. On desktop the header ends with the toggle that hides the right column. On a phone, Back leads the header, and the label of the number leads the line under the name. A run workspace also links to its automation and its pull request. Its own page shows Checkout address autocomplete for an admin.',
   relatedDocs: ['docs/mockups/design-workspace.md'],
   propSchema: {
     type: 'object',
@@ -44,7 +44,7 @@ export const workspaceHeader = defineComponent({
       copy: { enum: ['copied', 'failed'] },
       /** The user hid the right column of the desktop. */
       rightHidden: { type: 'boolean' },
-      /** The routine of a run workspace and the pull request of its run. */
+      /** The automation of a run workspace and the pull request of its run. */
       run: runSourceSchema,
     },
   } as const,
@@ -93,12 +93,12 @@ export const workspaceHeader = defineComponent({
       slug: 'run',
       title: 'Run workspace',
       description:
-        'The workspace of a pull request run, with the line of its routine and its pull request.',
+        'The workspace of a pull request run, with the line of its automation and its pull request.',
       props: {
         workspace: run.workspace,
         name: run.workspace.name,
         status: 'working',
-        run: { ...run.origin, routineTo: paths.routine },
+        run: { ...run.origin, automationTo: paths.automation },
       },
     },
   ],

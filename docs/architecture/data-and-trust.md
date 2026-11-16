@@ -18,7 +18,7 @@ and the separate preview domain.
 | Users, orgs, members, sections, workspaces, settings, suspensions, and lifts | D1                                       |
 | App access, the codes and their uses, and approval email states              | D1                                       |
 | The pause and the waitlist switch                                            | D1                                       |
-| Routines and their runs | D1 |
+| Automations and their runs | D1 |
 | The org and the provider account of each sandbox and each saved snapshot     | D1                                       |
 | Env var values and agent logins                                              | The Worker's storage, encrypted          |
 | The host of each own endpoint login | D1 |
@@ -74,8 +74,8 @@ and the separate preview domain.
 - The members of one org can reach the turn token in a sandbox, as
   [Access and security](../protocol/isolation.md#agent-logins-in-a-sandbox)
   says.
-- A routine run acts as its owner while no person watches. It uses the
+- An automation run acts as its owner while no person watches. It uses the
   owner's agent login and GitHub token, and the org's env vars. Its
   sandbox follows the same gateway boundary above. Other GitHub accounts
   can write text that its agent reads, as
-  [Risks that stay open](../protocol/routines.md#risks-that-stay-open) says.
+  [Risks that stay open](../protocol/automations.md#risks-that-stay-open) says.

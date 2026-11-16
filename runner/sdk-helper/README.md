@@ -27,9 +27,9 @@ Agent events reach the runner's output filter before event storage or transmissi
 That filter keeps tokens and partial text across helper starts.
 Malformed or incomplete lines close the transport without reporting their contents.
 
-The [login guide](../agent-logins.md), [Codex guide](../codex-logins.md),
+The [behavior guide](../behavior.md), [login guide](../agent-logins.md), [Codex guide](../codex-logins.md),
 [agent tools guide](../agent-tools.md), and [background work guide](../background-work.md)
-give the adapter behavior and its limits.
+give the adapter behavior and its limits. The behavior guide gives the continue message after a dropped answer.
 
 ## Development
 

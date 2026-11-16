@@ -7,15 +7,14 @@ import {
   TargetState,
 } from '../components/operator/directory'
 import { OperatorPage } from '../components/operator/OperatorPage'
+import { orgPagePaths } from '../components/operator/targetPages'
 import { NameLink, TargetMark } from '../components/operator/targets'
 import { operatorTotals } from '../fixtures/operator'
 import {
   newestOrgs,
   orgSearches,
   type OrgRow,
-  type TargetStatus,
 } from '../fixtures/operatorDirectory'
-import { paths } from '../paths'
 import { instanceKey } from '../instanceKey'
 
 export const operatorOrgsSchema = {
@@ -45,13 +44,6 @@ const columns: Readonly<Record<Viewport, TableColumn[]>> = {
     { key: 'org', label: 'Org', flex: 1 },
     { key: 'workspaces', label: 'Workspaces', align: 'right', width: 92 },
   ],
-}
-
-/** The page of an org in each state. */
-const orgPaths: Readonly<Record<TargetStatus, string>> = {
-  active: paths.operatorOrg,
-  suspended: paths.operatorOrgSuspended,
-  deleted: paths.operatorOrgDeleted,
 }
 
 /**
@@ -84,7 +76,7 @@ function cellOf(viewport: Viewport) {
           <NameCell
             detail={lineOf(row, viewport)}
             mark={<TargetMark size={22} target={{ kind: 'org', ...row }} />}
-            name={<NameLink to={orgPaths[row.status]}>{row.name}</NameLink>}
+            name={<NameLink to={orgPagePaths[row.status]}>{row.name}</NameLink>}
           />
         )
       case 'created':

@@ -91,6 +91,8 @@ export const workspaceSchema = {
     number: { type: 'integer', minimum: 1 },
     link: { type: 'string' },
     branch: { type: 'string' },
+    /** The branch before the workspace has a name, when it differs. */
+    placeholderBranch: { type: 'string' },
     repository: { enum: repositoryKeys },
     section: { enum: sectionKeys },
     choice: agentChoiceSchema,

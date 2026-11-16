@@ -90,8 +90,8 @@ it('keeps an in-progress Claude answer and its user association across a backgro
   const events: ProviderEvent[] = []
   const mapper = new ClaudeEvents(
     new Map([
-      ['current-sdk-uuid', 'message-current'],
-      ['old-sdk-uuid', 'message-old'],
+      ['current-sdk-uuid', ['message-current']],
+      ['old-sdk-uuid', ['message-old']],
     ]),
     (event) => events.push(event),
     (uuid) => uuid === 'current-sdk-uuid',

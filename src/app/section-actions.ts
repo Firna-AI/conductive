@@ -24,17 +24,25 @@ import { same } from './resource'
 const readSectionResponse = (body: unknown) =>
   nested(record(body), 'section', readSection)
 
-export function createSection(org: OrgModel, name: string): Promise<Section> {
+/**
+ * Creates a section directly below `afterSectionId`, or at the end of the
+ * list without it. The new section shows when the server answers.
+ */
+export function createSection(
+  org: OrgModel,
+  name: string,
+  afterSectionId?: string,
+): Promise<Section> {
   return org.resources.list.write(
     same,
     () =>
       org.services.api.send(
         'POST',
         sectionsPath(org.orgId),
-        { name },
+        afterSectionId === undefined ? { name } : { name, afterSectionId },
         readSectionResponse,
       ),
-    sectionAdded,
+    (section) => sectionAdded(section, afterSectionId),
   )
 }
 
