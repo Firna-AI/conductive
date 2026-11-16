@@ -151,11 +151,13 @@ export function WorkspaceScreen(props: {
     <WorkspaceHeader
       back={suspended ? paths.suspendedOrg : undefined}
       canReassign={admin && !readOnly}
+      canRestart={!readOnly}
       copy={state.copyLink === 'none' ? undefined : state.copyLink}
       name={workspace.name}
       ownerOpen={state.overlay === 'reassign'}
       run={open.run}
       rightHidden={rightHidden}
+      stateOpen={state.overlay === 'restart'}
       status={status}
       viewport={viewport}
       workspace={workspace}

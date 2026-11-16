@@ -47,6 +47,7 @@ When a program shows a link with a label, its hint names the website that it ope
 
 The shell keeps running when its connection drops.
 Reconnect to return to the same shell and running commands.
+**Restart** in the workspace header also drops the connection until the agents are back.
 A stop of the cloud computer ends those commands.
 After a resume, start any needed server again.
 

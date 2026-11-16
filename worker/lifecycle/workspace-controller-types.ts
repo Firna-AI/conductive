@@ -7,6 +7,7 @@ import type {
 } from './workspace-runtime'
 import type { ImageCoordinatorState } from './image-timers'
 import type {
+  DurableLifecycleState,
   LifecyclePublisher,
   LifecycleReconciliation,
 } from './durable-types'
@@ -29,6 +30,10 @@ export interface WorkspaceController extends WorkspaceLifecycleEndpoint {
     computers: readonly ComputerIdentity[],
   ): Promise<ComputerIdentity[]>
   lifecycleActivity(checkOnly?: true): Promise<LifecycleActivityResult>
+  /** One serial change of the lifecycle state, such as a Restart. */
+  changeLifecycle(
+    change: (state: DurableLifecycleState) => DurableLifecycleState,
+  ): Promise<void>
   extendLifecycleInput(
     operation: () => Promise<LifecycleReconciliation>,
   ): Promise<LifecycleReconciliation | void>
