@@ -1,10 +1,11 @@
 import { expect, it } from 'vitest'
-import type { Attachment } from './messages'
+import type { Attachment } from './generated/Attachment'
 import { mentionParts } from './mention-text'
 import {
   attachmentForMention,
   hasOwnWords,
   textWithAttachmentNames,
+  titleSourceText,
 } from './attachment-mentions'
 
 const attachment = {
@@ -44,4 +45,21 @@ it('needs words outside the mentions of its own attached files', () => {
   expect(hasOwnWords(`Compare @${attachment.path}`, files)).toBe(true)
   expect(hasOwnWords('@src/login.ts', files)).toBe(true)
   expect(hasOwnWords('', files)).toBe(false)
+})
+
+it('leaves attached images out of title text and names other attached files', () => {
+  const log = {
+    ...attachment,
+    id: 'log',
+    name: 'crash report.log',
+    path: '.context/attachments/log/crash-report.log',
+    kind: 'file',
+    mediaType: 'text/plain',
+  } satisfies Attachment & { path: string }
+  expect(
+    titleSourceText(
+      `Fix @${attachment.path}  with @${log.path} and @src/login.ts\n@${attachment.path}\tnow`,
+      [attachment, log],
+    ),
+  ).toBe('Fix with crash report.log and @src/login.ts\nnow')
 })

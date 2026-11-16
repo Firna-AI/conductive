@@ -3,6 +3,7 @@ import type { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { toolFixtures } from '../../test-support/fixtures/tools'
 import { terminalPaths } from '../../shared/terminal'
+import { bridgeOutputMessage } from '../../shared/terminal-bridge'
 import {
   devPortReports,
   devStates,
@@ -43,6 +44,11 @@ function Choice(props: {
     </span>
   )
 }
+
+/** A line with an OSC 8 link, whose label hides its address. */
+const labelledLinkOutput =
+  '\r\n     Report  \x1b]8;;https://reports.storefront.dev/run/1\x1b\\' +
+  'Open the HTML report\x1b]8;;\x1b\\\r\n'
 
 /**
  * The controls of the development page: the tool, its state, the layout, and
@@ -142,6 +148,49 @@ export function DevControls(props: {
         Turn on mouse reports
       </button>
       <button
+        // A link with a label, as a test reporter prints it with OSC 8.
+        onClick={() => props.onTerminalOutput(labelledLinkOutput)}
+        onMouseDown={keepTerminalFocus}
+        type="button"
+      >
+        Print a link with a label
+      </button>
+      <button
+        onClick={() =>
+          props.onTerminalOutput(
+            Array.from(
+              { length: 300 },
+              (_, line) => `line ${line + 1}\r\n`,
+            ).join(''),
+          )
+        }
+        onMouseDown={keepTerminalFocus}
+        type="button"
+      >
+        Print 300 lines
+      </button>
+      <button
+        onClick={() => props.onTerminalOutput(devBridge('hello', 52, 18))}
+        onMouseDown={keepTerminalFocus}
+        type="button"
+      >
+        Bridge hello
+      </button>
+      <button
+        onClick={() => props.onTerminalOutput(devBridge('size', 120, 40))}
+        onMouseDown={keepTerminalFocus}
+        type="button"
+      >
+        Larger shared size
+      </button>
+      <button
+        onClick={() => props.onTerminalOutput(devBridge('size', 30, 8))}
+        onMouseDown={keepTerminalFocus}
+        type="button"
+      >
+        Smaller shared size
+      </button>
+      <button
         onClick={() =>
           change(
             'workspace',
@@ -155,5 +204,17 @@ export function DevControls(props: {
         Switch workspace
       </button>
     </div>
+  )
+}
+
+/** The nonce of the fake terminal bridge of the development page. */
+const devNonce = '00112233445566778899aabbccddeeff'
+
+/** A message of the fake terminal bridge, as the real bridge writes it. */
+function devBridge(kind: 'hello' | 'size', columns: number, rows: number) {
+  const size = { columns, rows }
+  return bridgeOutputMessage(
+    devNonce,
+    kind === 'hello' ? { kind, version: 1, size } : { kind, size },
   )
 }

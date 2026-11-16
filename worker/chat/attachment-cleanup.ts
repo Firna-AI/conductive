@@ -1,3 +1,5 @@
+import { cleanupAttachmentDownloads } from './attachment-download-data'
+import { cleanupTransferredAttachments } from './attachment-transfer-cleanup'
 import type { AppEnv } from '../env'
 import { warnWorker } from '../warnings'
 import {
@@ -10,7 +12,7 @@ import { attachmentBucket, type AttachmentRecord } from './attachment-record'
 import type { ChatStore } from './store'
 import { attachmentWorkspaceSurvives } from './attachment-claim-data'
 
-async function removeAttachmentBytes(
+export async function removeAttachmentBytes(
   env: AppEnv,
   record: AttachmentRecord,
 ): Promise<void> {
@@ -108,6 +110,8 @@ export async function cleanupDraftAttachments(
   env: AppEnv,
   now: number,
 ): Promise<void> {
+  await cleanupAttachmentDownloads(env.DB, now)
+  await cleanupTransferredAttachments(env, now)
   let after = ''
   while (true) {
     const records = await attachmentBatch(env.DB, { now, after })

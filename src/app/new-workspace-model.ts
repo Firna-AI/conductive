@@ -1,5 +1,5 @@
+import type { AgentChoice } from '../shared/generated/AgentChoice'
 import type { FieldFiles } from '../chat/components/chip-field/attached-files'
-import type { AgentChoice } from '../shared/agents'
 import type { BuildsResponse, Repository } from '../shared/org-settings'
 import {
   workspacesPath,
@@ -133,6 +133,7 @@ export class NewWorkspaceModel {
       orgId: org.orgId,
       newId: () => org.services.newId(),
       lifetime: () => org.creations.lifetime,
+      delay: org.services.delay,
     })
     this.create = new Store<CreateState>({ state: 'idle' })
     // A draft that got its text before the repositories and the builds

@@ -60,6 +60,65 @@
   Machine contention during native fixture work is suspected. The blocked await and the cause are not established.
   The selected suite also found a malformed Extend result in the branch's settings relay test data. That test data was corrected separately.
 - On 13 November 2026, the branch `calummoore/oslo-tq4m`, which then changed no Worker file, ran the complete gate on a machine with 4 CPUs and 8 GB of memory, beside a dev server and a headless Chrome. 113 Worker test files failed, most with `Test timed out in 15000ms`. The 440 files of the web app and the 88 files of the runner passed. A rerun of the 113 files with `--maxWorkers=2`, beside two review agents, failed each of the first 71 files again. Then a test worker hung for over an hour next to a defunct `workerd` process, with a load average near 0, and the run was stopped. `worker/app-api/feature-shell-sections.test.ts` passed alone two times, and a reviewer saw it time out alone while the rerun ran. `worker/lifecycle/continue-native.test.ts` failed for another reason: its test helper rewrote each `/home/user` of a command, also the fixture folders of a checkout under `/home/user`. The same branch fixed that helper.
+- On 13 November 2026, the branch `calummoore/milan-ofz5` ran test files on 4 CPUs that other sessions shared, with a load near 5.
+  `worker/lifecycle/workspace-runtime.test.ts:47` timed out at its own 20-second limit, at about 21 s.
+  It did so in 2 of 2 runs on the branch, and in 1 of 1 run on its merge base `c194159bf`.
+  The branch changes no line of that test. Machine load is the suspected source.
+- On 16 November 2026, the main merge into `calummoore/lima-gc9c` ran the complete gate without another test run beside it.
+  The suite passed 3,310 tests and reported two lifecycle timeouts:
+  - `worker/lifecycle/ownership-maintenance.test.ts`, "retries a revoked-token stop after active ownership and preserves maintenance before a fresh resume": `Error: Test timed out in 15000ms.`
+  - `worker/lifecycle/disk-retention-time-limit.test.ts`, "ends an unready retention restart at its original deadline through phase changes, reconstruction, and stop retries, then permits user resume": `Error: Test timed out in 15000ms.`
+  Both files match `main` at `eedd836791eaf1793563a4fc4ad207398cdc60a1`.
+  Both files then passed unchanged together: six tests, no failures or skips.
+  The same rerun included the marketing site file, which failed setup with the separate known cross-device rename error.
+  Machine contention during native fixture work is suspected. The blocked await and the cause are not established.
+- On 16 November 2026, the merge of `origin/main` at `a20746b99` into
+  `calummoore/quito-oqn7` passed every static check and 54 targeted endpoint
+  tests. The local complete gate was interrupted after repeated timeouts
+  in six unchanged Worker test files. The interrupted run also reported
+  the 12 tests of `worker/marketing/built-site.test.ts` as skipped.
+  A rerun of the six failed files with `VITEST_MAX_WORKERS=2` finished:
+  15 tests passed and 12 failed. These cases failed:
+  - `worker/devices/lifecycle.test.ts > relays all four approval choices only from the paired desktop session`.
+  - `worker/features/continue-routes.test.ts > resumes Continue through real routes and socket wake, fences sends and Archive, expires recovered credentials, and routes new-branch GitHub events`.
+  - `worker/lifecycle/archive-lifecycle.test.ts > restores without starting, orders same-time transitions, and resumes with a fresh token`.
+  - `worker/lifecycle/published-image-creation.test.ts > creates from captured image repositories while current settings and selection change`.
+  - `worker/lifecycle/workspace-publication-retry.test.ts > keeps the original idle alarm after a stored creation result retries its D1 publication`.
+  - `worker/lifecycle/workspace-publication-retry.test.ts > stops at the original idle deadline while the completed creation still needs publication`.
+  - `worker/lifecycle/workspace-publication-retry.test.ts > retains an older creation publication retry after a resume completes`.
+  - `worker/lifecycle/workspace-publication-retry.test.ts > recovers publication during runner wait without moving the resume deadline`.
+  - `worker/lifecycle/workspace-publication-retry.test.ts > stops a suspended owner while the completed creation still needs publication`.
+  - `worker/lifecycle/workspace-publication-retry.test.ts > recovers a stored creation publication from a legacy lifecycle alarm`.
+  - `worker/lifecycle/workspace-publication-retry.test.ts > releases start and publication alarms after archive removes their records`.
+  - `worker/chat/integration/failed-first-start-retry.test.ts > retries the same failed workspace with a fresh token and dispatches every stored message once in order`.
+  The failures were `Error: Test timed out in 15000ms`, except the
+  legacy lifecycle alarm case. Its reset failed with `Timed out waiting
+  to evict Durable Object: it still has active references`, and its
+  cleanup failed with `TypeError: fetch failed` and `UND_ERR_SOCKET`.
+  A clean detached checkout of `a20746b99` then ran the Continue routes
+  file alone with `VITEST_MAX_WORKERS=1`. Its only case also failed with
+  `Error: Test timed out in 15000ms` in an 18.91-second run. This proves
+  that the Continue failure occurs without the merge. All six failed
+  test files match that main commit. The other failures were not checked
+  on a clean main checkout. Native runtime or storage delays are a
+  suspected source; neither the blocked await nor the cause is known.
+- On 16 November 2026, the main merge into `calummoore/delft-i3g7`
+  passed every static gate step and 275 selected tests.
+  The complete Vitest run was stopped after 39 failed cases across
+  16 completed Worker test files. The run is partial.
+  The files cover Continue, startup retries, device approval, publication,
+  archive, workspace lifecycle, image sources, model endpoints, and previews.
+  All 16 files match main at `699027931e00f214ef4ba734cdfd0907093590a7`.
+  `worker/features/continue-routes.test.ts` then failed alone on the
+  merged tree with `Error: Test timed out in 15000ms.`
+  Its only case, "resumes Continue through real routes and socket wake,
+  fences sends and Archive, expires recovered credentials, and routes
+  new-branch GitHub events", also failed alone in a clean detached checkout
+  of that main commit with the same error.
+  The merged-tree rerun took 26.15 seconds. The main run took 22.65 seconds.
+  This proves that the Continue timeout occurs without the merge.
+  The other failures were not reproduced on main in this attempt.
+  The blocked await and cause remain unknown.
 - **Problem:** These tests depend on wall-clock time limits, so a busy machine can fail them with no defect in the code.
 - **Impact if no action:** A slow CI runner or a busy developer machine can fail the gate now and then, and a person must rerun it.
 - **Root question:** How do these tests stay correct on a slow or busy machine?

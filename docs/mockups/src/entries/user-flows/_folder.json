@@ -13,12 +13,14 @@
     "archive-from-list",
     "create-org",
     "mac-command",
-    "create-routine",
+    "create-automation",
     "link-a-workspace",
     "merge-and-continue",
     "open-a-session-link",
+    "open-a-terminal-link",
     "mention-a-file",
     "open-a-file-from-an-answer",
-    "drop-a-file"
+    "drop-a-file",
+    "open-a-local-server"
   ]
 }

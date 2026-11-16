@@ -1,91 +1,97 @@
+import {
+  lineTargets,
+  type TargetReader,
+} from '../../markdown/markdown-destination'
+import { bareAddressAt } from '../../markdown/web-links'
 import { mentionAt, type Mention } from '../../shared/mention-text'
-import { bareLinkAt, markdownTargetAt } from './workspace-links'
+
+/** A Markdown link: its label, and the text around its address as typed. */
+export interface MarkdownLink {
+  /** The text between the brackets. */
+  label: string
+  /** The text before the address, such as `[docs](` or `[docs]( <`. */
+  before: string
+  /** The text after the address, such as `)`, `>)`, or ` "Docs")`. */
+  after: string
+  /** A `!` stands before it, so it is the Markdown of an image. */
+  image: boolean
+}
+
+/** A web address of chat text, bare or in a Markdown link. */
+export interface LinkToken {
+  kind: 'link'
+  href: string
+  source: string
+  markdown: MarkdownLink | null
+}
 
 /** A token of chat text, before the list of the org names its links. */
 export type Token =
   | { kind: 'text'; text: string }
   | { kind: 'code'; text: string }
   | { kind: 'mark' }
-  | {
-      kind: 'link'
-      href: string
-      source: string
-      markdown: boolean
-      /** The label of a Markdown link, between its brackets. */
-      label?: string
-    }
+  | LinkToken
   | { kind: 'mention'; mention: Mention }
 
 /** What a reading of chat text looks for, besides code. */
-export interface Reading {
+interface Reading {
   /** `**` marks bold, as in an answer. */
   marks: boolean
-  /** Links count. A Markdown link of no workspace reads again without them. */
+  /** Links count. A text that shows as typed reads again without them. */
   links: boolean
+  paths?: boolean
   /**
    * Whether a mention counts, as in a message of a member. The `@` of each
    * other mention reads as plain text.
    */
   mentions: (mention: Mention) => boolean
-  /**
-   * A Markdown link or image whose target is not a web address counts, as
-   * in an answer, where the target can be a path of the file tree.
-   */
-  paths?: boolean
-}
-
-/** The target of a Markdown link that is not a web address, such as a path. */
-const pathTarget = /\(<([^<>\n]+)>\)|\(([^\s()<>]+)\)/y
-
-/** The target of a Markdown link at `at`, as a web address or as a path. */
-function targetAt(
-  text: string,
-  at: number,
-  paths: boolean,
-): { href: string; length: number } | null {
-  const web = markdownTargetAt(text, at)
-  if (web || !paths) return web
-  pathTarget.lastIndex = at
-  const match = pathTarget.exec(text)
-  return match
-    ? { href: match[1] ?? match[2] ?? '', length: match[0].length }
-    : null
 }
 
 /**
  * The Markdown link whose `[` stands at `at`, or null. Its label ends at the
- * first `]` outside code, on the same line, and its target follows at once.
- * So a label can hold code or bold.
+ * first `]` outside code, and its target follows at once, with an optional
+ * link title, as the file preview reads it. So a label can hold code or
+ * bold. The whole link stands on one line, as in the message field, so no
+ * chip takes in a line break.
  */
 function markdownLinkAt(
   text: string,
   at: number,
-  paths: boolean,
-): Token | null {
+  targetAt: TargetReader,
+): LinkToken | null {
   let code = false
   for (let index = at + 1; index < text.length; index += 1) {
     const char = text[index]
     if (char === '\n') return null
     if (char === '`') code = !code
     else if (char === ']' && !code) {
-      const target = targetAt(text, index + 1, paths)
+      if (text[index + 1] !== '(') return null
+      const target = targetAt(index + 2)
       if (!target) return null
-      const source = text.slice(at, index + 1 + target.length)
-      const label = text.slice(at + 1, index)
-      return { kind: 'link', href: target.href, source, markdown: true, label }
+      return {
+        kind: 'link',
+        href: target.destination,
+        source: text.slice(at, target.next),
+        markdown: {
+          label: text.slice(at + 1, index),
+          before: text.slice(at, target.start),
+          after: text.slice(target.end, target.next),
+          image: text[at - 1] === '!',
+        },
+      }
     }
   }
   return null
 }
 
-/**
- * The Markdown image whose `!` stands at `at`, with a target that is not a
- * web address, or null. Such an image counts only where paths count.
- */
-function imageLinkAt(text: string, at: number): Token | null {
-  if (text[at + 1] !== '[') return null
-  const link = markdownLinkAt(text, at + 1, true)
-  if (link?.kind !== 'link' || /^https?:/u.test(link.href)) return null
+/** A file image includes its leading exclamation mark in the link source. */
+function imageLinkAt(
+  text: string,
+  at: number,
+  targetAt: TargetReader,
+): LinkToken | null {
+  const link = markdownLinkAt(text, at + 1, targetAt)
+  if (!link || /^https?:/u.test(link.href)) return null
   return { ...link, source: `!${link.source}` }
 }
 
@@ -93,27 +99,14 @@ function imageLinkAt(text: string, at: number): Token | null {
  * The bare web address at `at`, or null. Where `**` marks bold, the address
  * ends before the next mark, so bold around the address stays bold.
  */
-function bareLinkTokenAt(
+function bareAddressTokenAt(
   text: string,
   at: number,
   marks: boolean,
-): Token | null {
+): LinkToken | null {
   const mark = marks ? text.indexOf('**', at) : -1
-  const href = bareLinkAt(mark === -1 ? text : text.slice(0, mark), at)
-  return href ? { kind: 'link', href, source: href, markdown: false } : null
-}
-
-/**
- * The mention at `at`, or null. Where `**` marks bold, the mention ends
- * before the next mark, so bold around a mention stays bold.
- */
-function mentionTokenAt(
-  text: string,
-  at: number,
-  marks: boolean,
-): Mention | null {
-  const mark = marks ? text.indexOf('**', at) : -1
-  return mentionAt(mark === -1 ? text : text.slice(0, mark), at)
+  const href = bareAddressAt(mark === -1 ? text : text.slice(0, mark), at)
+  return href ? { kind: 'link', href, source: href, markdown: null } : null
 }
 
 /**
@@ -124,6 +117,7 @@ function mentionTokenAt(
  */
 export function tokens(text: string, reading: Reading): Token[] {
   const found: Token[] = []
+  const targetAt = lineTargets(text)
   let plain = ''
   const add = (token: Token, length: number) => {
     if (plain !== '') found.push({ kind: 'text', text: plain })
@@ -144,22 +138,22 @@ export function tokens(text: string, reading: Reading): Token[] {
       index += add({ kind: 'mark' }, 2)
       continue
     }
-    const mention = mentionTokenAt(text, index, reading.marks)
+    const mark = reading.marks ? text.indexOf('**', index) : -1
+    const mention = mentionAt(mark === -1 ? text : text.slice(0, mark), index)
     if (mention && reading.mentions(mention)) {
       index += add({ kind: 'mention', mention }, mention.source.length)
       continue
     }
-    const paths = reading.paths === true
     const link = !reading.links
       ? null
-      : text[index] === '['
-        ? markdownLinkAt(text, index, paths)
-        : paths && text[index] === '!'
-          ? imageLinkAt(text, index)
+      : reading.paths && text[index] === '!' && text[index + 1] === '['
+        ? imageLinkAt(text, index, targetAt)
+        : text[index] === '['
+          ? markdownLinkAt(text, index, targetAt)
           : text.startsWith('http', index)
-            ? bareLinkTokenAt(text, index, reading.marks)
+            ? bareAddressTokenAt(text, index, reading.marks)
             : null
-    if (link?.kind === 'link') {
+    if (link) {
       index += add(link, link.source.length)
       continue
     }

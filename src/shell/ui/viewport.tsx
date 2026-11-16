@@ -9,7 +9,7 @@ import { TouchScreen } from '../../../docs/mockups/src/components/common/touch'
 /**
  * The two layouts of the mockups: the desktop app, which narrows with the
  * window and hides its sidebar below 900 px, and the phone, with touch
- * targets of at least 44 px.
+ * targets of at least 40 px.
  */
 export type Viewport = 'desktop' | 'phone'
 

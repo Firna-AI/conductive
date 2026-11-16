@@ -1,14 +1,13 @@
 import { expect, it } from 'vitest'
-
-import type { UserMessage } from '../../src/shared/messages'
+import type { UserMessage } from '../../src/shared/generated/UserMessage'
 import {
   workspacesPath,
   type CreateWorkspaceResponse,
 } from '../../src/shared/workspaces'
 import { setupBackendTests } from './backend-test-hooks'
-import { SOFTWARE } from './backend-test-support'
 import { handleLifecycleRequest, type LifecycleBrowserOptions } from './browser'
 import { FIRST_MESSAGE } from './durable-test-support'
+import { TEST_TIME } from '../test-support/harness'
 
 const fixtureForTest = setupBackendTests()
 
@@ -21,7 +20,6 @@ it('answers with the stored queued first message before starting a sandbox and p
   }
   const messages = new Map<string, UserMessage>()
   const options: LifecycleBrowserOptions = {
-    software: SOFTWARE,
     waitUntil: (work) => {
       void work.catch(() => {})
     },
@@ -62,6 +60,8 @@ it('answers with the stored queued first message before starting a sandbox and p
     )
   const response = await fixture.run(create)
   expect(response?.status).toBe(201)
+  // The records step runs at once, so the answer waits for no alarm delay.
+  expect(runtime.dependencies.now()).toBe(TEST_TIME)
   const admitted: CreateWorkspaceResponse = await response!.json()
   expect(admitted).toMatchObject({
     workspace: { state: 'starting' },

@@ -103,7 +103,7 @@ it('serves real shell lists and keeps workspace views private to each member', a
   expect(saved.status).toBe(200)
   expect(await saved.json()).toEqual({
     view,
-    routine: null,
+    automation: null,
     baseBranch: 'main',
   })
   // A GET also gives the folder of the repository, for the file chips of
@@ -111,7 +111,7 @@ it('serves real shell lists and keeps workspace views private to each member', a
   const folder = '/home/user/conductive/repositories/chat-repository'
   expect(await (await fixture.request(path)).json()).toEqual({
     view,
-    routine: null,
+    automation: null,
     baseBranch: 'main',
     repositoryFolder: folder,
   })
@@ -129,7 +129,7 @@ it('serves real shell lists and keeps workspace views private to each member', a
       fileList: 'all',
       tool: 'terminal',
     },
-    routine: null,
+    automation: null,
     baseBranch: 'main',
     repositoryFolder: folder,
   })

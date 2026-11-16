@@ -1,3 +1,5 @@
+import type { FileEntry } from '../../shared/generated/FileEntry'
+import type { Attachment } from '../../shared/generated/Attachment'
 import { entryName } from '../../../docs/mockups/src/components/chat/entryPaths'
 import { FileChip } from '../../../docs/mockups/src/components/chat/FileChip'
 import { SentFileChip } from '../../../docs/mockups/src/components/chat/SentFileChip'
@@ -6,13 +8,11 @@ import {
   WorkspaceChip,
   type ChipOpener,
 } from '../../../docs/mockups/src/components/chat/WorkspaceChip'
-import inline from '../../../docs/mockups/src/components/common/InlineText.module.css'
 import { routes } from '../../app/router'
-import type { FileEntry } from '../../shared/files'
 import { lineLabel } from '../../shared/line-target'
-import type { Attachment } from '../../shared/messages'
 import { sessionLink } from '../../shared/session-link'
 import { isPlainClick } from '../../shell/ui/AppLink'
+import { useTextLinks } from '../../shell/ui/text-links'
 import { MentionIcon } from '../mentions/MentionIcon'
 import {
   findMentioned,
@@ -31,6 +31,7 @@ import { fileOpener, fileTitle } from './file-opener'
 import { FileTextLink } from './FileTextLink'
 import { chipOf, useChatLinks } from './LinksContext'
 import { sessionChipOf, useLinkedSession } from './session-links'
+import { CodeText, WebLinkText } from './WebLinkText'
 import { sessionTarget, type LinkTarget } from './workspace-links'
 
 /**
@@ -145,9 +146,8 @@ function AttachmentLink(props: { part: AttachmentPart; opens: boolean }) {
 function Part(props: { part: ChatPart; opens: boolean }) {
   const { part } = props
   if (part.kind === 'text') return part.text
-  if (part.kind === 'code') {
-    return <code className={inline.code}>{part.text}</code>
-  }
+  if (part.kind === 'code') return <CodeText part={part} />
+  if (part.kind === 'link') return <WebLinkText part={part} />
   if (part.kind === 'file') return <FileLink part={part} />
   if (part.kind === 'file-link') return <FileTextLink part={part} />
   if (part.kind === 'attachment') {
@@ -156,7 +156,7 @@ function Part(props: { part: ChatPart; opens: boolean }) {
   return <LinkChip target={part.target} />
 }
 
-/** A run of bold text and chips, or one part without bold. */
+/** A run of bold text, chips, and links, or one part without bold. */
 type Run =
   { kind: 'strong'; parts: ChatPart[] } | { kind: 'part'; part: ChatPart }
 
@@ -208,15 +208,17 @@ export interface TextReading {
 
 /**
  * The parts of a text, as `chatParts` reads it with the workspaces of the
- * chat. With `mentions`, it follows the tree of the chat for the chips of
- * the files.
+ * chat, and with the web links of the screen that shows it. With
+ * `mentions`, it follows the tree of the chat for the chips of the files.
  */
 export function useChatParts(text: string, reading: TextReading): ChatPart[] {
   const { links } = useChatLinks()
   const lookup = useEntryLookup(namesFiles(text, reading))
   const root = useRepositoryFolder()
+  const { linkOf } = useTextLinks()
   return chatParts(text, links, {
     strong: reading.strong ?? false,
+    web: linkOf,
     mentions: lookup,
     code: reading.paths ? { root } : undefined,
     attachments: reading.attachments,
@@ -224,10 +226,10 @@ export function useChatParts(text: string, reading: TextReading): ChatPart[] {
 }
 
 /**
- * Draws the parts of a text: text, code, and chips. One `<strong>` holds
- * each run of bold text and chips. `opens` says whether the chip of an
- * attached file opens its copy: only after its message went out to the
- * agent.
+ * Draws the parts of a text: text, code, chips, and links. One `<strong>`
+ * holds each run of bold text, chips, and links. `opens` says whether the
+ * chip of an attached file opens its copy: only after its message went out
+ * to the agent.
  */
 export function ChatText(props: {
   parts: readonly ChatPart[]

@@ -17,7 +17,7 @@ import { codeTabKey, moreTabs, withCodeMoved } from './workspaceTabRow'
 import { withTemporaryTab } from './workspaceTemporaryTab'
 
 /**
- * A workspace that the create flow or a routine run made has one session,
+ * A workspace that the create flow or an automation run made has one session,
  * and no edits of its own.
  */
 export function isNew(state: WorkspaceState): boolean {
@@ -105,10 +105,11 @@ function pictureTab(state: WorkspaceState): WorkspaceTab | undefined {
 export function tabsFor(
   state: WorkspaceState,
   workspace: Workspace,
+  running = false,
 ): WorkspaceTab[] {
   if (isNew(state)) {
     const title = workspaceName(state, workspace)
-    return [{ key: 'session', kind: 'session', title, selected: true }]
+    return [{ key: 'session', kind: 'session', title, selected: true, running }]
   }
   const [first, second] = workspaceSessions
   const linked =
@@ -192,8 +193,20 @@ export function tabsFor(
       selected: true,
     })
   }
+  const background = state.conversation === 'session-links'
+  const active =
+    (background ? tabs[0] : undefined) ??
+    tabs.find(
+      (tab) =>
+        tab.kind === 'session' && tab.selected && tab.key !== newSession.key,
+    ) ??
+    tabs[0]
+  const states = tabs.map((tab) => ({
+    ...tab,
+    running: tab === active && (running || background),
+  }))
   return withTemporaryTab(
     state,
-    state.tabRow === 'moved' ? withCodeMoved(tabs) : tabs,
+    state.tabRow === 'moved' ? withCodeMoved(states) : states,
   )
 }

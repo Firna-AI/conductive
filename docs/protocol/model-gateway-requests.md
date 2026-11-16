@@ -14,6 +14,9 @@ names a dated record, as
 decision number names a decision of the change that adds the gateway, as
 [Model gateway](model-gateway.md) says. An egress decision number names a
 decision of the change that adds the egress container, as that doc says.
+A stream drop decision number, such as stream drop decision 1, names a
+decision of the change for model answers that drop before they are
+complete.
 
 ## Requests and answers
 
@@ -162,6 +165,39 @@ decision of the change that adds the egress container, as that doc says.
   after the turn.
 - An answer that runs to its end was rejected, because a copied token
   could then spend the login for minutes after the turn.
+- While a request runs, the gateway checks its turn again at intervals.
+  The request stops when no check passes for 30 seconds. Reason: the
+  gateway can then no longer tell whether the turn still runs.
+- When a check during a request fails with an error, the request does not
+  stop at once. The gateway tries that check again, with growing waits,
+  until those 30 seconds end (stream drop decision 1).
+- Reason: the workspace object can reset, such as after a deploy. A check
+  during the reset fails. A stop at the first failure would cut an answer
+  that is still valid.
+- A longer time without a check that passes was rejected, because it
+  breaks gateway decision 6.
+- A check that refuses the turn stops the request at once. A check gets
+  no new try when Cloudflare reports the workspace object as overloaded.
+  Reason: Cloudflare advises no retry of an overloaded object.
+- When the first check of a request fails with an error, it gets no new
+  try either. The gateway answers HTTP 503 with
+  `model_gateway_unavailable`. Reason: no part of the answer exists yet.
+  Claude then sends the request again by itself.
+- A check first reads the turn without waiting for other work of the
+  workspace, such as a start or a stop of its sandbox (stream drop
+  decision 1). When that read accepts the token, the check does not wait.
+  Reason: such work can take more than 30 seconds.
+- A refusal always comes from a check that waited for that work. So no
+  check refuses a turn that is only half saved. A check that saves the
+  renewal claim of a ChatGPT sign-in also waits.
+- A copy of the turn in D1 for the checks was rejected, because the read
+  in the workspace needs no second copy of the turn.
+- The gateway writes a warning to the log of the Worker for each check
+  that fails with an error, and for each new try. It also writes one for
+  each request that its checks stop (stream drop decision 1).
+- A warning holds only the workspace ID and the kind of the error.
+  Reason: without the warnings, nobody can see whether answers still end
+  early.
 - When the agent program closes its connection, the gateway cancels the
   request to the upstream.
 - A new version of the egress container takes each new ChatGPT request at
@@ -199,4 +235,13 @@ decision of the change that adds the egress container, as that doc says.
   key of its own. That run then spends the login of the starter while the
   turn runs.
 - Risk: a deploy of the Worker or an update of the Cloudflare runtime can
-  end a long answer. The agent program then sends the request again.
+  reset the workspace object. A check during the reset fails. The gateway
+  tries it again, as [Streams](#streams) says. The answer ends when no
+  check passes for 30 seconds.
+- Risk: after an update of its runtime, Cloudflare gives a running
+  request up to 20 minutes to finish. A request that still runs then
+  ends. Anthropic or the network can also end an answer.
+- Claude keeps the part of an answer that ends early. It does not send the
+  request again.
+  [Dropped answers](dropped-answers.md) states
+  what each agent then does.

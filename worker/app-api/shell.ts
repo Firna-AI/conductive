@@ -9,7 +9,7 @@ import { workspaceRepositoryFolder } from '../lifecycle/repository-location-data
 import { readWorkspace, workspaceView } from '../lifecycle/workspace-data'
 import { listMembers } from '../members/membership'
 import type { RequestContext } from '../security/gate'
-import { workspaceRoutine } from '../routines/workspace-routine-data'
+import { workspaceAutomation } from '../automations/workspace-automation-data'
 import {
   saveWorkspaceReadMark,
   shellRepositories,
@@ -74,7 +74,7 @@ export async function shellRoute(
   if (path === viewPath && request.method === 'GET')
     return Response.json({
       view: await savedWorkspaceView(env.DB, workspaceId, userId),
-      routine: await workspaceRoutine(env.DB, orgId, workspaceId),
+      automation: await workspaceAutomation(env.DB, orgId, workspaceId),
       baseBranch: workspace.baseBranch,
       repositoryFolder: await workspaceRepositoryFolder(env.DB, workspace),
     })
@@ -90,7 +90,7 @@ export async function shellRoute(
     })
     return Response.json({
       view,
-      routine: await workspaceRoutine(env.DB, orgId, workspaceId),
+      automation: await workspaceAutomation(env.DB, orgId, workspaceId),
       baseBranch: workspace.baseBranch,
     })
   }

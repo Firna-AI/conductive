@@ -58,10 +58,10 @@ The shape of the two values, with placeholders in place of real values:
   for session transcript reads in the app and tools. It is also required
   when an operation checks a fast choice: saving a default, creating a
   workspace or session, sending or retrying a message, changing a session
-  choice, creating or updating a routine, and starting a fast routine run.
+  choice, creating or updating an automation, and starting a fast automation run.
   This includes tool writes and a tool send that keeps a session's fast
   choice. A missing or invalid value gives `503 models_unavailable`.
-  A routine run records `models_unavailable` as its failure cause.
+  An automation run records `models_unavailable` as its failure cause.
   A standard-speed choice needs no model list for its choice check.
   Account reads and login-status replies also try the list to show which
   app models an own endpoint lacks. A missing or invalid list omits that

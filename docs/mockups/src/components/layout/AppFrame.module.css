@@ -57,9 +57,9 @@
   }
 }
 
-/* A phone raises every local touch target to 44px. */
+/* A phone raises every local touch target to 40px. */
 .mobile {
-  --ui-touch-min: 44px;
+  --ui-touch-min: 40px;
 
   display: flex;
   position: relative;

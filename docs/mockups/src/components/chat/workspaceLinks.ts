@@ -1,3 +1,10 @@
+import { parseRoute } from '../../../../../src/app/router'
+import {
+  webAddressParts,
+  type WebAddressPart,
+  type WebLinkContext,
+} from '../../../../../src/markdown/web-links'
+import { appDomain } from '../../brand'
 import type { Attachment } from '../../fixtures/attachments'
 import {
   codeTarget,
@@ -14,17 +21,13 @@ import {
 
 /**
  * A part of a text: plain text, code in backticks, a link, a mention of a
- * file or a folder, or a mention of an attached file of the message.
+ * file or a folder, or a mention of an attached file of the message. Code
+ * whose text, without the spaces at its ends, is one web address gives
+ * that address as `href`.
  */
 export type TextPart =
-  | { kind: 'text'; text: string }
-  | { kind: 'code'; text: string }
-  | {
-      kind: 'link'
-      href: string
-      /** The link as the text has it, such as a Markdown link. */
-      source: string
-    }
+  | WebAddressPart
+  | { kind: 'code'; text: string; href?: string }
   | MentionPart
   | AttachedPart
   | FileLinkPart
@@ -38,27 +41,6 @@ export type FileLinkPart = {
   label: string
   source: string
 } & PathTarget
-
-/**
- * A Markdown link to a web address, or a bare web address. A bare address
- * does not end with punctuation, so a full stop after it stays text.
- */
-const linkPattern =
-  /\[[^\]\n]*\]\((https?:\/\/[^\s)]+)\)|https?:\/\/[^\s<>]*[^\s<>.,;:!?'")\]]/g
-
-function linkParts(text: string): TextPart[] {
-  const parts: TextPart[] = []
-  let end = 0
-  for (const match of text.matchAll(linkPattern)) {
-    if (match.index > end) {
-      parts.push({ kind: 'text', text: text.slice(end, match.index) })
-    }
-    parts.push({ kind: 'link', href: match[1] ?? match[0], source: match[0] })
-    end = match.index + match[0].length
-  }
-  if (end < text.length) parts.push({ kind: 'text', text: text.slice(end) })
-  return parts
-}
 
 /** A Markdown link or image whose target is not a web address. */
 const pathLinkPattern = /!?\[([^\]\n]*)\]\((?:<([^<>\n]+)>|([^\s()<>]+))\)/g
@@ -90,10 +72,19 @@ function plainParts(
   mentions: boolean,
   files: readonly Attachment[],
 ): TextPart[] {
-  if (!mentions) return linkParts(text)
+  if (!mentions) return webAddressParts(text)
   return mentionParts(text, files).flatMap((part): TextPart[] =>
-    part.kind === 'text' ? linkParts(part.text) : [part],
+    part.kind === 'text' ? webAddressParts(part.text) : [part],
   )
+}
+
+/** Code, with the web address that it holds alone, if any. */
+function webCodePart(text: string): TextPart {
+  const parts = webAddressParts(text.trim(), false)
+  const [only] = parts
+  return parts.length === 1 && only?.kind === 'link'
+    ? { kind: 'code', text, href: only.href }
+    : { kind: 'code', text }
 }
 
 /**
@@ -104,13 +95,14 @@ function codePart(text: string, answer: boolean): TextPart {
   const target = answer ? codeTarget(text) : undefined
   return target
     ? { kind: 'mention', ...target, source: text, code: true }
-    : { kind: 'code', text }
+    : webCodePart(text)
 }
 
 /**
  * Splits a text into plain text, code, links, and mentions. In a sent
  * message or an answer, `code` is true: each part in backticks is code,
- * and a link or a mention in it stays code. A message box keeps plain
+ * and a mention in it stays code. A web address alone in code is a link.
+ * A message box keeps plain
  * text, so it reads no code. The text of a member reads mentions when
  * `mentions` asks. An `answer` reads mentions too, and code whose whole
  * text is a path of the tree is a file chip (answer chip decision 1). A
@@ -136,6 +128,13 @@ export function textParts(
     )
 }
 
+/** The mockups supply the app origin and the router's page check. */
+export const linkContext: WebLinkContext = {
+  appOrigin: `https://${appDomain}`,
+  isAppPage: (url) =>
+    parseRoute(url.pathname, url.search).screen !== 'not-found',
+}
+
 /** What a link names: a workspace, and one of its sessions, if any. */
 export type LinkTarget = { row: ChatRow; session?: ChatSession }
 
@@ -146,7 +145,7 @@ export type LinkTarget = { row: ChatRow; session?: ChatSession }
  * a page of a workspace, which can be one of its tabs. The URL parser
  * resolves odd parts such as `..` first. Only a workspace in the list of
  * the org of the reader matches. So a link to another org, or to a
- * workspace that the reader cannot see, finds none and stays plain text.
+ * workspace that the reader cannot see, finds none and is no chip.
  * Only a session that the chat read for that workspace, open or closed,
  * matches. A link to any other session names only its workspace.
  */
@@ -171,4 +170,15 @@ export function linkTarget(
     ? row.sessions?.find((item) => item.id === sessionId)
     : undefined
   return { row, session }
+}
+
+/**
+ * The page that a press on a link to a workspace opens, when the mockups
+ * draw it: the session of a session link, or the page of the workspace. A
+ * link to a closed session opens the page of its workspace, so a press
+ * reopens no tab for the other members.
+ */
+export function linkPage(target: LinkTarget): string | undefined {
+  const { row, session } = target
+  return session && !session.closed ? session.to : row.to
 }

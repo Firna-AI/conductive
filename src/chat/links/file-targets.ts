@@ -1,5 +1,5 @@
 import { pictureType } from '../../files/page/file-view'
-import type { FileEntry } from '../../shared/files'
+import type { FileEntry } from '../../shared/generated/FileEntry'
 import { splitLineTarget, type LineRange } from '../../shared/line-target'
 import type { Mention } from '../../shared/mention-text'
 

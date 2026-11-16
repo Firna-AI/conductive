@@ -32,7 +32,7 @@ export interface WorkspaceViewResponse {
    * read of the view gives it.
    */
   repositoryFolder?: string | null
-  routine?: {
+  automation?: {
     id: string
     name: string
     pullRequest?: { number: number; url: string } | null

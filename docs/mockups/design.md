@@ -12,7 +12,7 @@ and a darker accent.
 
 The desktop layout has four columns. The org rail holds the mark, the orgs
 as squares with their initials, Create org, and the account at the bottom.
-The sidebar shows the org name with its Settings link, New workspace, Routines, Search, and
+The sidebar shows the org name with its Settings link, New workspace, Automations, Search, and
 the sections that the user made. Each workspace is one line: a dot-matrix
 mark in the colour of its GitHub state, the name, and the time, and it
 moves to another section by drag and drop. Archive covers the time on
@@ -32,7 +32,7 @@ title in italics, until the next press replaces it.
 The right column has the pull request bar on top, the All files, Changes,
 and Checks lists below it, and the Terminal and Preview tabs at the bottom.
 It shows no file content. A phone shows an org switcher at the top of the list,
-then New workspace, Routines, and Search. It shows the
+then New workspace, Automations, and Search. It shows the
 workspace with its number under its name, a compact pull request row, the
 sessions as tabs above the chat, and four tabs at the bottom.
 
@@ -51,7 +51,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
   `ActionButton` keeps the border of the secondary tone without its fill, so
   the tint of a bar shows through, as on Stop of the 15 minutes bar and on
   Archive of the pull request bar.
-- On a phone every touch target is at least 44 px high. `MobileFrame` gives
+- On a phone every touch target is at least 40 px high, as the user chose
+  on 13 November 2026 for a thinner tab row. `MobileFrame` gives
   the Firna controls the touch sizes through `useControlSizes` in
   `src/components/common/touch.tsx`, and local controls read the
   `--ui-touch-min` variable, which is 0 on desktop.
@@ -236,42 +237,42 @@ sessions as tabs above the chat, and four tabs at the bottom.
   because nothing brings the changes back. The error of a failed Reset all
   stands under the lines and Reset all, across the width of the tab.
 - [The marks](design-marks.md) give the list mark, the mark
-  of the header, and the marks of routine runs. They also give the mark of
+  of the header, and the marks of automation runs. They also give the mark of
   an agent.
 - [Workspace, session, and file chips](design-chat.md#workspace-session-and-file-chips)
-  gives the workspace links, the session links, file mentions, the list of
-  `@`, and chip removal.
-- The parts of routines live in `src/components/routines/`. The routine
+  gives the chips, the list of `@`, and chip removal.
+  [Links in text](design-links.md) gives the other links and `TextLink`.
+- The parts of automations live in `src/components/automations/`. The automation
   page puts its form beside the Runs column on desktop. A phone shows a
-  saved routine in two tabs, Routine and Runs. The Runs list holds the
+  saved automation in two tabs, Automation and Runs. The Runs list holds the
   newest 50 runs, and Show older runs ends it when older runs exist. A
   phone opens the Add trigger menu and the author filter of a pull request
-  trigger in a sheet. A suspended org keeps its Routines link, and shows
-  its routines read-only under its notice. `RunLinks` in
+  trigger in a sheet. A suspended org keeps its Automations link, and shows
+  its automations read-only under its notice. `RunLinks` in
   `src/components/workspace/` draws the line under the header of a run
-  workspace, which links to its routine and to its pull request. The pull
+  workspace, which links to its automation and to its pull request. The pull
   request bar names the base branch of a workspace: the default branch, or
   for a pull request run the head branch of its pull request. A long base
   branch ends in an ellipsis at half of the line. The
   bubble of a message keeps its line breaks, as in the app, so the first
   message of a run shows the facts of its trigger on their own lines.
   - `runCopy.ts` gives the words of a failed run from its stored cause, and
-    from the agent and the owner of the run itself, not of its routine. So
-    a later change of the agent, or a move of the routine to another owner,
+    from the agent and the owner of the run itself, not of its automation. So
+    a later change of the agent, or a move of the automation to another owner,
     changes no past row. A failed start and a failed first turn keep their
-    workspace, and their rows open it, as `app/routines/runs/failed` shows.
-  - When the routine page cannot show its routine, the page keeps Routine
-    as its name and shows no tabs, no Runs list, and no actions. A routine
-    that the org no longer has shows the empty state "This routine is not
-    available" with Open Routines. A read that failed shows `LoadFailure`.
-    `app/routines/routine/unavailable` and `not-loaded` show them.
+    workspace, and their rows open it, as `app/automations/runs/failed` shows.
+  - When the automation page cannot show its automation, the page keeps Automation
+    as its name and shows no tabs, no Runs list, and no actions. An automation
+    that the org no longer has shows the empty state "This automation is not
+    available" with Open Automations. A read that failed shows `LoadFailure`.
+    `app/automations/automation/unavailable` and `not-loaded` show them.
 - `SuspendedOrgNotice` in `src/components/orgs/` draws the notice of a
   suspended org, with the mark of a refused start. It names the org and
   the abuse address, and it offers no action. It is a box at the top of
-  the list, of each settings tab, and of each view of a routine page, and
+  the list, of each settings tab, and of each view of an automation page, and
   above the bar of an archived workspace. A phone shows it above either
-  tab of a routine page, as the `runs` variant of
-  `app/orgs/suspended/routines/routine` shows. `SuspendedOrgPanel` shows the same words in the main area of
+  tab of an automation page, as the `runs` variant of
+  `app/orgs/suspended/automations/automation` shows. `SuspendedOrgPanel` shows the same words in the main area of
   a wide desktop list. `SuspendedOrgAbove` puts the box above the page of
   a deleted org, at the width of a settings page. A suspended org shows no
   action that it refuses.
@@ -325,8 +326,10 @@ sessions as tabs above the chat, and four tabs at the bottom.
   not have, and the files that the cloud computer could not read.
 - The app frame is a size container (`app-frame`), so the layout follows the
   width of the frame, not of the window. In the app the two are the same. A
-  screen is as high as `--ui-screen-height`, which is the window, or the
-  frame of a picture on the marketing site.
+  screen is as high as `--ui-screen-height`, which is the visible part of
+  the window (`100dvh`, so that a phone page does not scroll behind the
+  app while the browser bars show), or the frame of a picture on the
+  marketing site.
 - [The operator section](design-operator.md) gives its tabs, its tables,
   the Waitlist tab, the codes, and the approval email. It also gives
   Suspend, Lift, and Approve, the daily chart, the notice of a pause, and
@@ -334,4 +337,5 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - On a phone the org settings put their four tabs in three columns, so every
   tab shows. The session tabs all shrink, and the current one keeps the start
   of its title beside its close button. When the session tabs still do not
-  fit, their row scrolls sideways.
+  fit, their row scrolls sideways. A phone tab stays 40 px high to touch,
+  but its fill is 32 px high, with 4 px of the row above and below it.

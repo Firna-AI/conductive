@@ -1,0 +1,50 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.rules {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px 48px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Each rule sits under a neutral hairline, as a smaller feature does. */
+.rule {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 18px;
+  border-top: 1px solid var(--ui-border);
+}
+
+.title {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: 15px;
+  font-weight: var(--ui-weight-heading);
+  letter-spacing: -0.005em;
+  line-height: 1.4;
+}
+
+.text {
+  max-width: 560px;
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: 14px;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.mobile {
+  gap: 24px;
+}
+
+.mobile .rules {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 22px;
+}

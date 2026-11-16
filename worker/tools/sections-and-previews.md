@@ -7,10 +7,9 @@ list, open, and close routes.
 states their requirements.
 [Agent tool access](../../docs/protocol/agent-tool-access.md) states the
 reach, the turn rule, and the rights of the sender.
+[Rust tool contracts](../../crates/cnd-runner-interface/src/tools/mod.rs) own the reply types and the preview contract.
 [agent-sections.ts](../../src/shared/agent-sections.ts) and
-[agent-previews.ts](../../src/shared/agent-previews.ts) hold the reply
-types and the path builders. A preview itself uses the normal
-[preview contract](../../src/shared/previews.ts).
+[agent-previews.ts](../../src/shared/agent-previews.ts) hold the path builders.
 
 The CLI and the MCP server offer these routes, as
 [Workspace tool calls](../../tools/calls.md#sections-and-previews) says.
@@ -43,7 +42,7 @@ The CLI and the MCP server offer these routes, as
   gives HTTP 400 `invalid_input`. The new section comes last. The reply
   gives its ID, its name, and its default mark, as the section list does.
 - A delete runs the whole app delete. Each workspace of the section, also
-  an archived one, and each routine of the section move to the default
+  an archived one, and each automation of the section move to the default
   section in one transaction. The workspace metadata is published before
   the reply.
 - A delete of the default section changes nothing and returns
@@ -87,11 +86,13 @@ The CLI and the MCP server offer these routes, as
 ## Tests
 
 The tests use the production Worker, real D1, native workspace objects,
-and a stored calling turn. The provider transport uses the existing fake.
+and a stored calling turn. They call the HTTP routes directly.
+The provider transport uses the existing fake.
+The [Rust tools crate](../../crates/cnd-tools/README.md) tests CLI and MCP request construction.
 
 - `sections.test.ts`: member rights, trimmed names, order, blank names,
   stale callers, the default section, foreign and unknown IDs, active and
-  archived workspace moves, routines, metadata publication, and a sender
+  archived workspace moves, automations, metadata publication, and a sender
   who left.
 - `previews.test.ts`, with `previews.test-support.ts`: agent and member
   opens, signed-in launch links, list facts, close publication, repeated

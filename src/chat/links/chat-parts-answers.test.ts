@@ -1,7 +1,8 @@
 import { describe, expect, test } from 'vitest'
-import type { FileEntry } from '../../shared/files'
+import type { FileEntry } from '../../shared/generated/FileEntry'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { chatParts, type ChatPart, type EntryLookup } from './chat-parts'
+import { webLinkOf } from './links-test-kit'
 
 const links = { orgId: FAKE_IDS.org, workspaces: [] }
 
@@ -37,7 +38,9 @@ function shapes(parts: readonly ChatPart[]) {
           ? { text: part.text, ...(part.strong ? { strong: true } : {}) }
           : part.kind === 'code'
             ? { code: part.text }
-            : { [part.kind]: part.source },
+            : part.kind === 'link'
+              ? { web: part.words.map((word) => word.text).join('') }
+              : { [part.kind]: part.source },
   )
 }
 
@@ -46,6 +49,7 @@ function answer(text: string) {
   return shapes(
     chatParts(text, links, {
       strong: true,
+      web: webLinkOf,
       mentions: find,
       code: { root },
     }),
@@ -103,9 +107,8 @@ describe('file chips in an answer', () => {
       { code: 'npm test' },
       { text: ', ' },
       { code: 'src/gone.ts' },
-      { text: ', @src/gone.ts, [' },
-      { code: 'src/app.ts' },
-      { text: '](https://a.test)' },
+      { text: ', @src/gone.ts, ' },
+      { web: 'src/app.ts' },
     ])
   })
 
@@ -114,6 +117,7 @@ describe('file chips in an answer', () => {
       shapes(
         chatParts('`src/app.ts` @src/app.ts', links, {
           strong: true,
+          web: webLinkOf,
           code: { root },
         }),
       ),
@@ -125,6 +129,7 @@ describe('file chips in an answer', () => {
       shapes(
         chatParts('`src/app.ts` and @src/app.ts', links, {
           strong: false,
+          web: webLinkOf,
           mentions: find,
         }),
       ),
@@ -159,8 +164,10 @@ describe('file chips in an answer', () => {
     ).toEqual([
       { link: 'shots/after.png', label: 'after.png' },
       {
-        text: ' ![x](https://a.test/x.png) [gone](src/gone.ts) [s](src/gone%20file.ts)',
+        text: ' ![x](',
       },
+      { web: 'https://a.test/x.png' },
+      { text: ') [gone](src/gone.ts) [s](src/gone%20file.ts)' },
     ])
   })
 

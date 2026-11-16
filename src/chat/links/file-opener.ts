@@ -1,5 +1,5 @@
 import type { MouseEvent } from 'react'
-import type { FileEntry } from '../../shared/files'
+import type { FileEntry } from '../../shared/generated/FileEntry'
 import { lineLabel, type LineRange } from '../../shared/line-target'
 import { isPlainClick } from '../../shell/ui/AppLink'
 import type { ChatMentions } from '../mentions/MentionsContext'

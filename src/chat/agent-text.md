@@ -44,7 +44,7 @@ state the requirements.
   Its copy uses the `copy` services of the chat and shows a toast with the
   result. Outside a provider, a code block has no button. The size of the
   button comes from the control sizes, so the block keeps room for the
-  44 px button on a phone.
+  40 px button on a phone.
 - `MessageLine` draws the code blocks of its summary as spans, with no
   button, because a summary is a button. A code block under an open line
   draws through `AgentBlocks`, so it has the button.
@@ -67,9 +67,92 @@ state the requirements.
 - A line that starts with a table, or with a list that holds one, keeps
   its closed text in a visually hidden span. So the open line keeps a name
   for a screen reader. An empty heading before the table counts as no
-  text, because it draws nothing. That hidden copy shows no chips, so the
-  keyboard cannot reach a link in it. It reads its text with no links and
-  no files, through a `MentionsProvider` without files.
+  text, because it draws nothing. That hidden copy shows no chips, and
+  `PlainLinks` of `src/shell/ui/text-links.tsx` draws each link in it as
+  its words. A `MentionsProvider` without files removes file chips. So
+  the keyboard cannot reach a link in it.
+
+## Web addresses
+
+- `src/markdown/web-links.ts` reads web addresses for chat text, the
+  message field, and the mockups. It imports no React or app module.
+  `bareAddressAt` reads a bare address with its balanced parentheses and
+  without trailing punctuation or marks. `webAddressParts` splits plain
+  text into addresses and text, with an optional Markdown label.
+- `webLink` checks an address and gives its kind: an app page, a local
+  server with its port, or another web page. The caller supplies the app
+  origin and a page check built on `parseRoute`. `appAddress` joins the
+  raw path segments with one slash, then adds the query and hash.
+- `labelHidesAddress` tests a Markdown label as it shows, without code
+  marks, bold marks, invisible characters, or spaces at its ends. A label
+  that then shows nothing, holds `://`, or starts with `www.` hides where
+  its link leads.
+- `src/markdown/markdown-destination.ts` supplies `readInlineTarget`. It
+  reads the target of an inline link after its `(`: the spaces and line
+  breaks around the address, the address, an optional link title, and the
+  `)`. Chat text, the message field, the mockups, and the file preview
+  share it, with its address boundaries, its escape decoding, and its
+  length limits. It returns the decoded address, its source offsets, and
+  the index after the `)`.
+- Chat text, the message field, and the mockups read each target through
+  `lineTargets` of the same module. It keeps each Markdown link on one
+  line, as its label is. A line break inside its parentheses makes it no
+  Markdown link, so no chip of a sent message or of the field takes in a
+  line break. An answer joins the lines of a paragraph before it reads
+  them, so it reads a link that spans lines as the file preview does.
+- `lineTargets` reads each target of a text once. Keep it so. The readers
+  try a link at each `[`, and many `[` can reach the same `(`. One read
+  for each `[` would take seconds for a crafted answer.
+- `chatParts` uses `bareAddressAt` and `lineTargets`, through the
+  tokenizer of `links/chat-tokens.ts`. The message field uses
+  `webAddressParts` and reads no code, so its addresses stay text.
+
+## Web links
+
+[Chat links](../../docs/protocol/chat-links.md) states the links of chat
+text. These parts read and draw them:
+
+- `chatParts` gives a `LinkPart` of `links/link-parts.ts` for each address
+  that is no chip and that its `web` reader accepts. The part holds the
+  `WebLink` and its words. A bare address shows as the text has it. In an
+  answer, a Markdown link shows as its label, with the code and bold of the
+  label. Its `**` marks bold only inside the label, and its link title
+  does not show. A label that hides the address, by `labelHidesAddress`,
+  shows the address as the text has it.
+- In a sent message, a Markdown link shows as typed. Its brackets, its
+  label, and its link title read again as text and code, with no link, and
+  its address reads as a bare address: a chip, a link, or text. The
+  Markdown of an image, `![alt](address)`, shows as typed in the same way,
+  also in an answer, unless its target names a file of the workspace.
+  A file target shows its label as a link that opens the file. Each other
+  Markdown link whose address is no link shows as typed, with its code
+  and bold.
+- Inline code whose text, without the spaces at its ends, is one address
+  that the reader accepts holds that link, as `CodePart.link`. A
+  workspace link alone in code is such a link, not a chip. Code in a label
+  that shows as typed holds no link.
+- `useChatParts` gives `chatParts` the `linkOf` of `useTextLinks`, from
+  `src/shell/ui/text-links.tsx`. The workspace screen gives that module
+  the app origin, the page check, and the port previews of the workspace,
+  as
+  [The chat of the workspace](../shell/workspace/screen-parts.md#the-chat-of-the-workspace)
+  says. Without them, as on the development page, each link opens a new
+  tab. Where no server runs, such as in a read-only workspace, a local
+  address stays text, so a Markdown link to it shows as typed.
+- `WebLinkText` and `CodeText` in `links/WebLinkText.tsx` draw the parts
+  with the mockups' `TextLink` and the `opener` of `useTextLinks`. A link
+  of the app is an `AppLink` of `src/shell/ui/AppLink.tsx`: a plain click
+  opens its page in the same window, and replaces the address when that
+  page already shows. A local address is an anchor of the app: a plain
+  click opens the port preview in the same window. A click with a
+  modifier key on either stays with the browser. Every other link opens a
+  new tab with `noopener noreferrer`. In the plain mode of `PlainLinks`, a
+  link draws its words alone.
+- A link in a message line is an anchor, so `useFold` leaves a press on it
+  to the link, and the line stays open or closed.
+- A copy of chat text gives the words of each link, as the browser copies
+  a link. `mention-copy.ts` keeps the browser's own copy while each chip
+  shows its copy text.
 
 ## Workspace chips
 
@@ -78,14 +161,15 @@ state the requirements.
   tokenizer, `tokens` in `links/chat-tokens.ts`, reads both, in one pass
   from left to right, and `chatParts` in `links/chat-parts.ts` turns its
   tokens into parts. A backtick starts code first, so a link in code
-  stays code. A Markdown link whose brackets stand outside code is one
+  is no chip. A Markdown link whose brackets stand outside code is one
   unit, also when its label holds code or bold, so it shows as its chip
-  alone. Then bare links count. In an answer, `**` marks bold around text
-  and chips, and a bare link ends before a mark. Bold ends at code, as
-  before. A Markdown link of no workspace shows its source with its code
-  and bold, as before. `links/workspace-links.ts` reads each link with the
-  URL parser and `parseRoute`. A link is a chip only when it has the
-  origin of the links of the list, and the router reads a page of a
+  alone. Then bare links count. In an answer, `**` marks bold around text,
+  chips, and links, and a bare link ends before a mark. Bold ends at code,
+  as before. A Markdown link of no workspace is a link or shows as typed,
+  as [Web links](#web-links) says. `links/workspace-links.ts` reads each link with the
+  URL parser and `parseRoute`. It builds the chip address with
+  `appAddress` of `src/markdown/web-links.ts`. A link is a chip only when
+  it has the origin of the links of the list, and the router reads a page of a
   workspace of the org in that list. The chip shows the current name, in
   bold while the workspace has unread output, as the list does. Its
   list mark shows the state and the GitHub state, from `chipOf` in
@@ -99,8 +183,9 @@ state the requirements.
   chat. Its mark follows the workspace list, as a workspace chip does.
   While that read runs, after it fails, and for a session that the
   workspace does not hold, the link keeps the chip of its workspace. Every
-  other link stays as the text has it. The message
-  field reads its text with `textParts`, which reads no code. A message line of
+  other address is a link or text, as [Web links](#web-links) says. The
+  message field reads its text with `webAddressParts`, which reads no code.
+  A message line of
   a work fold shows chips too. A click on a chip there stays with the
   chip, so the line does not toggle, and a click with a modifier key opens
   a new tab as on any link.

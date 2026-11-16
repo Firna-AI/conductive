@@ -190,3 +190,30 @@ it('reads the overview waiting count and rejects a missing or nonnumeric count',
       new ParseError('waiting is not a number.'),
     )
 })
+
+it('reads the long runs of the overview, with a null computer ID and activity', () => {
+  const overview = operatorFixtures().overview
+  const run = {
+    workspaceId: 'ws-1',
+    workspaceNumber: 12,
+    orgId: 'org-1',
+    orgName: 'Acme',
+    orgStatus: 'deleted',
+    ownerGithubId: 42,
+    ownerLogin: 'mira-s',
+    ownerStatus: 'suspended',
+    cloudComputerId: null,
+    state: 'working',
+    runningSince: 1_800_000_000_000,
+    lastActivityAt: null,
+  }
+  expect(
+    readOperatorOverview({ ...overview, longRuns: [run] }).longRuns,
+  ).toEqual([run])
+  expect(() =>
+    readOperatorOverview({
+      ...overview,
+      longRuns: [{ ...run, ownerStatus: 'waiting' }],
+    }),
+  ).toThrow(ParseError)
+})

@@ -5,7 +5,7 @@ import {
   type EntryLookup,
   type FileTarget,
 } from '../../../../../src/chat/links/file-targets'
-import type { FileEntry } from '../../../../../src/shared/files'
+import type { FileEntry } from '../../../../../src/shared/generated/FileEntry'
 import {
   lineLabel as appLineLabel,
   type LineRange,

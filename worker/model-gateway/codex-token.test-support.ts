@@ -1,5 +1,5 @@
+import type { RunnerLogin } from '../../src/shared/generated/RunnerLogin'
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
-import type { RunnerLogin } from '../../src/shared/runner'
 import type { HttpFetch } from '../env'
 import type { CodexTokens } from '../codex-auth/tokens'
 import { fakeCodexTasks } from '../codex-auth/tasks.test-support'
@@ -57,6 +57,7 @@ export async function tokenGateway(kind: 'token' | 'api-key' = 'token') {
   }
   const renewals: string[] = []
   const failures: string[] = []
+  const workspaceCalls: string[] = []
   let reply: HttpFetch = async (request) => {
     if (new URL(request.url).pathname === accountPath)
       return Response.json(accounts())
@@ -104,24 +105,27 @@ export async function tokenGateway(kind: 'token' | 'api-key' = 'token') {
           }
           return credentials
         },
-        workspace: () => ({
-          checkTurnToken: async (_token, claim) => {
-            if (refusal) return refusal
-            const codexRecoveryClaimed = claim === true && !recoveryUsed
-            if (codexRecoveryClaimed) recoveryUsed = true
-            if (codexRecoveryClaimed) recoveryPending = true
-            if (claim === 'complete') recoveryPending = false
-            return active
-              ? {
-                  ok: true,
-                  login,
-                  loginOwnerId: 'owner',
-                  codexRecoveryClaimed,
-                  codexRecoveryPending: recoveryPending,
-                }
-              : { ok: false, reason: 'turn_not_active' }
-          },
-        }),
+        workspace: (id) => {
+          workspaceCalls.push(id)
+          return {
+            checkTurnToken: async (_token, claim) => {
+              if (refusal) return refusal
+              const codexRecoveryClaimed = claim === true && !recoveryUsed
+              if (codexRecoveryClaimed) recoveryUsed = true
+              if (codexRecoveryClaimed) recoveryPending = true
+              if (claim === 'complete') recoveryPending = false
+              return active
+                ? {
+                    ok: true,
+                    login,
+                    loginOwnerId: 'owner',
+                    codexRecoveryClaimed,
+                    codexRecoveryPending: recoveryPending,
+                  }
+                : { ok: false, reason: 'turn_not_active' }
+            },
+          }
+        },
       },
     )
   return {
@@ -131,6 +135,7 @@ export async function tokenGateway(kind: 'token' | 'api-key' = 'token') {
     bodies,
     renewals,
     failures,
+    workspaceCalls,
     clock,
     request,
     forbidWorkspace: () => {

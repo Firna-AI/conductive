@@ -4,7 +4,8 @@ const COLUMNS = `id, org_id AS orgId, uploader_user_id AS uploaderUserId,
  target_kind AS targetKind, target_id AS targetId, name, kind, media_type AS mediaType,
  size_bytes AS sizeBytes, object_key AS objectKey, multipart_id AS multipartId, state,
  created_at AS createdAt, expires_at AS expiresAt, claimed_workspace_id AS claimedWorkspaceId,
- claimed_message_id AS claimedMessageId, revision`
+ claimed_message_id AS claimedMessageId, transferred_sandbox_id AS transferredSandboxId,
+ bytes_deleted_at AS bytesDeletedAt, revision`
 
 export function readAttachment(db: D1Database, id: string) {
   return db
@@ -103,6 +104,20 @@ export async function saveAttachmentMultipart(
     WHERE id = ? AND state = 'uploading' AND multipart_id IS NULL`,
     )
     .bind(multipartId, id)
+    .run()
+  return result.meta.changes === 1
+}
+
+export async function beginAttachmentCompletion(
+  db: D1Database,
+  record: AttachmentRecord,
+) {
+  const result = await db
+    .prepare(
+      `UPDATE chat_attachments SET revision = revision + 1
+    WHERE id = ? AND state = 'uploading' AND revision = 0 AND multipart_id = ?`,
+    )
+    .bind(record.id, record.multipartId)
     .run()
   return result.meta.changes === 1
 }

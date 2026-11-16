@@ -53,7 +53,7 @@ export function LiftedTab(props: {
       style={{ top: props.top }}
     >
       {tab.kind === 'session' ? (
-        <LiftedSessionTab title={tab.title} />
+        <LiftedSessionTab running={tab.running} title={tab.title} />
       ) : (
         tab.draw({ kind: 'lifted' })
       )}

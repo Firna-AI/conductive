@@ -14,8 +14,8 @@ import { DeletedOrg, OrgHome } from './list/OrgHome'
 import { HomeList, ListHeader } from './list/HomeList'
 import { Sidebar, type ListCurrent } from './list/Sidebar'
 import { NewWorkspaceScreen } from './new-workspace/NewWorkspaceScreen'
-import { RoutineScreen } from './routines/RoutineScreen'
-import { RoutinesScreen } from './routines/RoutinesScreen'
+import { AutomationScreen } from './automations/AutomationScreen'
+import { AutomationsScreen } from './automations/AutomationsScreen'
 import { OrgSettingsScreen } from './settings/OrgSettingsScreen'
 import { useShortcutOffer } from './shortcuts/shortcut-context'
 import { ActionButton } from './ui/actions'
@@ -100,24 +100,24 @@ function screenOf(route: OrgRoute, org: OrgSummary, user: User): ReactNode {
       )
     case 'settings':
       return <OrgSettingsScreen org={org} tab={route.tab} user={user} />
-    case 'routines':
-      return <RoutinesScreen org={org} />
-    case 'new-routine':
+    case 'automations':
+      return <AutomationsScreen org={org} />
+    case 'new-automation':
       return (
-        <RoutineScreen
-          key={`${org.id}:new-routine`}
+        <AutomationScreen
+          key={`${org.id}:new-automation`}
           org={org}
-          routineId={null}
-          tab="routine"
+          automationId={null}
+          tab="automation"
           user={user}
         />
       )
-    case 'routine':
+    case 'automation':
       return (
-        <RoutineScreen
-          key={`${org.id}:${route.routineId}`}
+        <AutomationScreen
+          key={`${org.id}:${route.automationId}`}
           org={org}
-          routineId={route.routineId}
+          automationId={route.automationId}
           tab={route.tab}
           user={user}
         />
@@ -135,10 +135,10 @@ function listCurrent(route: OrgRoute): ListCurrent {
       return { screen: 'workspace', workspaceId: route.workspaceId }
     case 'settings':
       return { screen: 'settings' }
-    case 'routines':
-    case 'new-routine':
-    case 'routine':
-      return { screen: 'routines' }
+    case 'automations':
+    case 'new-automation':
+    case 'automation':
+      return { screen: 'automations' }
   }
 }
 

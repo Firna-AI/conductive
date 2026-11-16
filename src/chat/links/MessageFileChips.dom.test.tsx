@@ -1,9 +1,9 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test } from 'vitest'
-import type { AgentChoice } from '../../shared/agents'
-import type { FileEntry } from '../../shared/files'
-import type { UserMessage } from '../../shared/messages'
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
+import type { FileEntry } from '../../shared/generated/FileEntry'
+import type { UserMessage } from '../../shared/generated/UserMessage'
 import { accessibleName } from '../../test-support/dom-queries'
 import { FAKE_IDS, FAKE_TIME, fakeUser } from '../../test-support/fixtures/core'
 import { senderSnapshot } from '../../test-support/fixtures/workspaces'

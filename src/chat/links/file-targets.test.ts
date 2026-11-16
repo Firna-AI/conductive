@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { FileEntry } from '../../shared/files'
+import type { FileEntry } from '../../shared/generated/FileEntry'
 import { mentionAt } from '../../shared/mention-text'
 import { codeTarget, mentionTarget, type EntryLookup } from './file-targets'
 

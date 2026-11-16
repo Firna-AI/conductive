@@ -18,11 +18,6 @@ Run the browser gate first, and pass its `RequestContext`. The handler
 returns `null` for every other route. `env` is a `LifecycleEnvironment`
 from [`runtime.ts`](runtime.ts). The caller gives these options:
 
-- `software`: the runner archive for each new build and refresh, as the
-  [image README](../../image/README.md#the-runner-archive) says.
-  `runnerSoftware` in [`configuration.ts`](../configuration.ts) reads it
-  from two Worker variables, as
-  [Deployment inputs](../../docs/deployment.md#the-runner-archive) says.
 - `acceptFirstMessage`: the hook of the chat backend. After the admission
   and for each repeat, it stores the queued first message of that admission
   and returns it. So it must be idempotent for the message and session IDs.
@@ -34,8 +29,8 @@ from [`runtime.ts`](runtime.ts). The caller gives these options:
   gives it its work, so the work continues when the browser closes.
 
 `chatLifecycleRoute` makes the runtime with `workspaceRuntime` and
-`imageRuntime`. It gives `software` as a getter, so only a build or a
-refresh reads the archive variables. It gives `acceptFirstMessage` to
+`imageRuntime`. A build or refresh reads the newest release through
+`latestSoftwareRelease`, as [release files](../../image/README.md#conductive-release-files) describes. It gives `acceptFirstMessage` to
 `acceptLifecycleFirstMessage` of the workspace object.
 
 For a read or a resume, the `projectWorkspace` of `chatLifecycleRoute`
@@ -54,6 +49,16 @@ and the stop cleanup of a failed resume.
   loaded. A change to the chosen repositories takes effect after the next
   successful build. A repeat of the same first message ID from the same
   sender returns the same admitted workspace, including after a failed start.
+- `createWorkspace` makes its access checks and its first read together,
+  and the first failed check in its list names the error.
+  `prepareCreationRequest` checks no access, so each caller checks first.
+  The route-wide membership check comes after the create, because the
+  create makes the same check.
+- The 201 reply of a create has a `Server-Timing` header with the
+  `create`, `message`, and `project` steps, in milliseconds.
+  `ServerTiming` in [server-timing.ts](../server-timing.ts) writes it.
+  [Step timing](../../docs/protocol/step-timing.md)
+  gives its requirements.
 - A failed admitted create keeps its workspace, chat, first message, and
   queued messages. Each current member can read the saved cause and history.
   Failure revokes the token and detaches the failed sandbox after saving cleanup ownership.
