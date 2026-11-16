@@ -62,8 +62,9 @@ decision number names a dated record, as
 - The routine page shows the name, the Active switch, the repository, the
   section of the run workspaces, and "By" with the owner. Then it shows the
   triggers, the prompt with the model picker, and the Runs list.
-- A line under the prompt names the member whose agent login and GitHub
-  access the runs use.
+- A line under the prompt names the agent login and the GitHub access that
+  the runs use. The login is the default login of the owner, such as the
+  org login.
 - Save stays off while nothing changed, while the prompt is empty, and
   while the form refuses a cron.
 - A desktop shows the Runs list in a column at the right. A phone shows a
@@ -79,8 +80,9 @@ decision number names a dated record, as
 - Every member who can create a workspace can create a routine. The member
   who creates it is its owner.
 - Only the owner changes a routine, turns it on, and uses Run now.
-- Reason: each run acts as the owner, with the owner's logins. So only the
-  owner decides what runs on those logins.
+- Reason: each run acts as the owner, with the owner's GitHub access and
+  the owner's default login. So only the owner decides what runs in the
+  owner's name.
 - The owner can delete the routine. An admin can turn it off and delete it.
 - Every member who is not the owner reads the routine without fields. A
   line says that only the owner can change it.
@@ -92,8 +94,12 @@ decision number names a dated record, as
   already sees the run workspaces. Routines that every member edits, where
   each save makes the saver the owner, were rejected too.
 - An installation token of the GitHub App for the pushes of each run was
-  rejected. Org routines on an agent login of the org were rejected too.
-  Each breaks the rule that pushes show as their sender (decision 50).
+  rejected. Org routines, which act as the org and not as a member, were
+  rejected too. Each breaks the rule that pushes show as their sender
+  (decision 50).
+- A run can still take the org login for its turns. The org login changes
+  only the agent login of the run. The run still acts as its owner, as
+  [A run acts as its owner](routine-runs.md#a-run-acts-as-its-owner) says.
 - Run now does not show on a routine whose triggers are all pull request
   triggers (decision 510 C). Reason: such a run needs a pull request.
 - A routine with a schedule, or with no trigger, keeps Run now. A Run now
@@ -144,8 +150,9 @@ decision number names a dated record, as
   runs.
 - Its page tells the new owner that it moved from the member who left. It
   stays off until the new owner turns it on.
-- Reason: its runs would now use the logins of the new owner. So the new
-  owner decides when it runs.
+- Reason: its runs would now act as the new owner, with the GitHub access
+  and the default login of the new owner. So the new owner decides when it
+  runs.
 - The new owner can change it, turn it on, use Run now, and delete it.
 - The move keeps the routine and its runs in one place, and it follows the
   rule that moves the workspaces. A Duplicate, a transfer that a member
@@ -183,11 +190,14 @@ decision number names a dated record, as
   reach the agent of a pull request run. The rule of
   [Who may start a run](pull-request-runs.md#who-may-start-a-run) checks
   only the author of the pull request and the sender of the event.
-- Risk: such text can steer the agent. The run uses the owner's agent
+- Risk: such text can steer the agent. The run uses the owner's default
   login and GitHub token, and the env vars of the org. The agent can copy
   the GitHub token and the env vars, or push them to a branch.
-- The sandbox of the run holds only a turn token, which spends the
-  owner's login through the gateway while the turn runs.
+- The sandbox of the run holds only a turn token, which spends that login
+  through the gateway while the turn runs.
+- Risk: a run on the org login spends it while no person watches. The
+  account of the org key or of the org endpoint pays, as
+  [Risks](org-logins.md#risks) says.
 - The owner's GitHub token reaches each repository where the owner
   installed the GitHub App and has access, as
   [GitHub tokens](github-tokens.md) says
@@ -201,8 +211,7 @@ decision number names a dated record, as
   every chat, workspace, session, and message of the org.
 - While a turn of the run runs, such text can also start sessions and
   turns in each workspace of the org that is not archived. Their messages
-  come from the owner. Their turns run on the logins of the starters of
-  their sessions.
+  come from the owner. Their turns run on the logins of their sessions.
 - While that turn runs, such text can also rename, move, and archive
   workspaces, close and stop sessions, change the sections, and open and
   close previews in the whole org. These writes use the rights of the

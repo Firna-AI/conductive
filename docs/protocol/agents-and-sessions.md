@@ -7,7 +7,8 @@ their links, and the names of workspaces and sessions. It belongs to
 [Chat and events](chat-and-events.md). The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says.
+says. An org login decision number names a decision of the change that
+adds the org logins, as [Tokens and secrets](tokens-and-secrets.md) says.
 
 ## Agents
 
@@ -23,9 +24,14 @@ says.
   SDK when that SDK can interrupt a turn and stream partial text. Otherwise
   Codex runs through the Codex App Server.
 - Every member of the org can send messages in each of its workspaces.
-- Each session runs on the agent login of its starter, the member who
-  started the session (decision 105). The starter of a session never
-  changes, so a session never moves to the login of another member.
+- Each session runs on one agent login, the login of the session: the
+  personal login of its starter, or the org login of its org (decision
+  105, org login decision 1 B). The starter is the member who started the
+  session.
+- A session takes the default login of its starter when it accepts its
+  first message, as [The default login](org-logins.md#the-default-login)
+  says. The starter of a session never changes. Its login never changes
+  after its first message, so a session never moves to another login.
 - A member starts a session in one of these ways:
   - with "+"
   - with a model of the other agent, in a session that has a message
@@ -37,20 +43,24 @@ says.
 - A routine run starts the first session of its workspace in the name of
   the routine owner, as
   [A run acts as its owner](routine-runs.md#a-run-acts-as-its-owner) says.
-- The session record names its starter in `startedBy`. A session without a
-  known starter has no login that can be used.
-- While the starter shares the login, the messages of the other members
-  run on it too. So the other members spend the login of the starter
-  (decision 116).
+- The session record names its starter in `startedBy`, and its login in
+  `login`: a member or the org. A stored session with messages but no
+  login runs on the personal login of its starter. A session without a
+  login and without a known starter has no login that can be used.
+- While the starter shares a personal login, the messages of the other
+  members run on it too. So the other members spend the login of the
+  starter (decision 116). The messages of each member of the org run on
+  the org login of a session.
 - Reason: each change of login rewrites the prompt cache of the
   conversation. A login for each sender was rejected for that reason.
 - The login of the workspace owner for all sessions was rejected. Reason:
-  each member who starts a session spends their own login.
+  each member who starts a session spends their default login, not a login
+  of the workspace owner.
 - [Access and security](isolation.md#agent-logins-in-a-sandbox)
   states how a turn uses a login, its share setting, and its risk.
 - A session keeps its memory across a stop and a resume of the sandbox.
-- A Codex session keeps its conversation when its starter changes between
-  an OpenAI API key and a ChatGPT sign-in.
+- A Codex session keeps its conversation when the kind of its login
+  changes, such as from an OpenAI API key to a ChatGPT sign-in.
 - When Codex refuses to resume because the saved model provider differs
   from the current provider or is no longer configured, the session
   continues in a fork.

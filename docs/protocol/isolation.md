@@ -12,7 +12,9 @@ decision number names a dated record, as
 decision number names a decision of the change that adds the
 [model gateway](model-gateway.md), as that doc says. An own endpoint
 decision number names a decision of the change that adds the own endpoint
-logins, as [Tokens and secrets](tokens-and-secrets.md) says.
+logins, as [Tokens and secrets](tokens-and-secrets.md) says. An org login
+decision number names a decision of the change that adds the org logins,
+as that doc also says.
 
 ## Orgs and workspaces
 
@@ -21,6 +23,8 @@ logins, as [Tokens and secrets](tokens-and-secrets.md) says.
   this section do.
 - A request reaches an org, its workspaces, and their sandboxes only for a
   member of that org.
+- An org login serves only the members of its org, in the workspaces of
+  that org, as [Org logins](org-logins.md) says.
 - The workspace token of a sandbox reaches the workspaces of its own org
   through the agent tools, as
   [What the workspace tools reach](#what-the-workspace-tools-reach) says.
@@ -130,7 +134,7 @@ logins, as [Tokens and secrets](tokens-and-secrets.md) says.
   sessions and turns. It can do so in each workspace of the org that is
   not archived.
 - Each such turn goes in the name of the sender of the running turn. It
-  runs on the login of the starter of its session.
+  runs on the login of its session.
 - Risk: such a message also starts the cloud computer of a workspace that
   does not run, as an open does. Each start counts toward the starts that
   all orgs share.
@@ -148,28 +152,31 @@ logins, as [Tokens and secrets](tokens-and-secrets.md) says.
 
 ## Agent logins in a sandbox
 
-- Each session runs on the agent login of its starter, the member who
-  started the session (decision 105). Each turn of the session uses that
-  login, whoever sends its messages.
+- Each session runs on its login: the personal login of its starter, or
+  the org login of its org, as [Agents](agents-and-sessions.md#agents)
+  says. Each turn of the session uses that login, whoever sends its
+  messages.
 - The GitHub token of a turn and its Mac requests still follow its sender,
   as [GitHub tokens](tokens-and-secrets.md#github-tokens) and
   [Mac commands](agent-tools.md#mac-commands) say.
-- A routine run uses its owner's agent login and GitHub token while no
-  person watches. Its sandbox follows the same rules below.
+- A routine run uses the default login and the GitHub token of its owner
+  while no person watches. Its sandbox follows the same rules below.
   [Risks that stay open](routines.md#risks-that-stay-open) states the
   risks of routines.
-- With each turn, the agent runner gets a turn token for the login of the
-  starter, over its connection to the Durable Object. Reason: the sandbox
+- With each turn, the agent runner gets a turn token for the login of its
+  session, over its connection to the Durable Object. Reason: the sandbox
   gets its secrets only at a start, and the sessions of one sandbox can
-  have different starters.
+  run on different logins.
 - No agent login reaches a sandbox, whatever the version pin of its
-  workspace (decision 120). The [model gateway](model-gateway.md) adds the
-  login of the starter to each model request of the turn.
+  workspace (decision 120). This holds for the org login too. The
+  [model gateway](model-gateway.md) adds the login of the session to each
+  model request of the turn.
 - The runner of a sandbox comes from its org image. A workspace accepts
   only a runner of a supported protocol version, as
   [Runner versions](version-pins.md#runner-versions) says.
-- An own endpoint login never reaches a sandbox. The gateway keeps its
-  address and its key in the Worker (gateway decision 10).
+- An own endpoint login never reaches a sandbox, also when it is the org
+  login. The gateway keeps its address and its key in the Worker (gateway
+  decision 10).
 - Before a turn or a later message reaches a runner, the app checks
   that the runner can use its login kind (decision 174).
 - A ChatGPT turn needs a runner that declares support for that sign-in.
@@ -178,12 +185,17 @@ logins, as [Tokens and secrets](tokens-and-secrets.md) says.
   and no credential. The turn fails once with a recovery cause.
 - The cause offers a new workspace after an admin rebuilds the org
   image, or an OpenAI API key. A reconnect does not send the failed turn again.
-- The workspace gives the credential of a turn to the runner only while
-  the starter is a member of the org.
-  [Messages](messages-and-attachments.md#messages) says what a message of another
-  member does when the login of the starter cannot be used.
-- Each agent login has a share setting (decision 116). It says whether the
-  messages of other members can run on that login.
+- On a personal login, the workspace gives the credential of a turn to the
+  runner only while the starter is a member of the org.
+- A session on the org login serves each member of the org, also after its
+  starter leaves the org. Reason: the org login belongs to the org, not to
+  the starter.
+- [Messages](messages-and-attachments.md#messages) says what a message
+  does when the login of its session cannot be used.
+- The org login has no share setting. Each message of a member of the org
+  in a session on the org login runs on it.
+- Each personal login has a share setting (decision 116). It says whether
+  the messages of other members can run on that login.
 - The kind of a login sets the default of its share setting. A new Claude
   subscription login does not let other members use it. A new ChatGPT
   sign-in does not let them use it either (decisions 171 and 175). A new
@@ -199,18 +211,21 @@ logins, as [Tokens and secrets](tokens-and-secrets.md) says.
   rotation keeps the choice of its owner.
 - The account page shows the share setting of each connected login. Its
   owner can change the setting there at any time.
-- When the starter does not share the login, a message of another member
-  starts a new session on that member's own login. A Try again of another
-  member does the same. [Messages](messages-and-attachments.md#messages) states the
-  rules of such a new session.
-- The workspace checks the share setting when it accepts each message, and
-  again before it gives the credential of the turn to the runner. So a
-  waiting message of another member never runs on a login that its owner
-  stopped sharing.
+- When the starter does not share a personal login, a message of another
+  member starts a new session on the default login of that member. A Try
+  again of another member does the same.
+  [Messages](messages-and-attachments.md#messages) states the rules of
+  such a new session.
+- The workspace checks the login of the session and the share setting of
+  a personal login when it accepts each message. It checks them again
+  before it gives the credential of the turn to the runner. So a waiting
+  message of another member never runs on a login that its owner stopped
+  sharing.
 - A message of a sender who left the org never reaches the agent, also
-  while the login of the starter works.
-- The session record shows whether the login of its starter can be used,
-  and whether the starter shares it. It holds no part of the login.
+  while the login of the session works.
+- The session record shows whether the login of the session can be used,
+  and whether the starter shares a personal login. It holds no part of the
+  login.
 - A record that names the host of an own endpoint was rejected, because
   the members of an org trust each other with their logins (own endpoint
   decision 5).
@@ -219,10 +234,13 @@ logins, as [Tokens and secrets](tokens-and-secrets.md) says.
 - Risk: hooks and MCP commands from those rules run in the sandbox of
   the org. Its members trust that ChatGPT workspace admin with their code
   and the credentials that the sandbox can reach.
-- Risk: while the starter shares the login, the other members of a session
-  spend it. Anthropic's rules for hosted products ask each end user to sign
-  in with their own credentials. So a shared Claude subscription stays a
-  risk (decisions 105 and 116).
+- Risk: while the starter shares a personal login, the other members of a
+  session spend it. Anthropic's rules for hosted products ask each end user
+  to sign in with their own credentials. So a shared Claude subscription
+  stays a risk (decisions 105 and 116).
+- Risk: each member of the org spends the org login in each session on it.
+  The account of its key or of its endpoint pays, as
+  [Risks](org-logins.md#risks) says (org login decision 1 B).
 - Risk: while a turn runs, each process in the sandbox can get the
   sender's GitHub App user token. Each member with a terminal there can
   get it too, for example with `git credential fill`. A copied token keeps

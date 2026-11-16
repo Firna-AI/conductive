@@ -90,7 +90,7 @@ the [model gateway](model-gateway.md), as that doc says.
   while the turn runs (decision 175).
 - The email, account ID, and ChatGPT workspace name of the signed-in account also reach
   the sandbox. A process or member with a terminal can read them.
-- Such a process or member can spend the login of the starter through the
+- Such a process or member can spend the login of the session through the
   gateway while the turn runs. A copy of the token works in the same way
   outside the sandbox. A request that still runs at the end of the turn
   stops within 30 seconds, as
@@ -105,7 +105,7 @@ the [model gateway](model-gateway.md), as that doc says.
   that file (gateway decision 11).
 - Risk: a process that keeps running in the sandbox can also get the turn
   token of each later turn while that turn runs. This holds also for the
-  turns of other starters. Examples of such a process are a server that a
+  turns on other logins. Examples of such a process are a server that a
   tool started, and a program that the startup script started. It can
   read each token from the runner, or from the file of Claude, while that
   turn runs.

@@ -9,21 +9,24 @@
 - **Source:** Review. **Category:** Product bug.
 - **Terms:**
   - **Choice:** the agent, the model, and the effort that say how a session runs. The session record keeps it in `choice`.
-  - **Starter:** the member who started a session. The session runs on the agent login of the starter.
-  - **Share switch:** the switch "Let other members use this login" under a connected login in Account.
+  - **Starter:** the member who started a session. The starter never changes.
+  - **Org login:** an API key or an own endpoint login that an admin connects for one agent of an org, on the Agents tab of the org settings. `docs/protocol/org-logins.md` states its rules.
+  - **Share switch:** the switch "Let other members use this login" under a connected personal login in Account.
 - **Background:**
-  - Each session runs on the agent login of its starter. The user chose this on 7 November 2026.
-  - While the share switch is on, the messages of other members run on the starter's login. When it is off, a message of another member starts a new session on that member's own login. The user chose this on 7 November 2026, and `docs/protocol/messages-and-attachments.md` states it.
+  - Each session runs on its login: the personal login of its starter, or the org login of its org. The user chose the login of the starter on 7 November 2026, and added the org login on 16 November 2026. `docs/protocol/agents-and-sessions.md` states the rule.
+  - A new session takes the default login of its starter. The member's own login comes first, and the org login serves a member without one. While an admin turns on the switch "Use for every member" under the org login, the org login comes first. The user chose this order on 16 November 2026.
+  - The org login has no share switch. Every member of the org sends on a session on the org login, and the org pays. So this item concerns only sessions on a personal login.
+  - While the share switch is on, the messages of other members run on the starter's personal login. When it is off, a message of another member starts a new session on the default login of that member. The user chose this on 7 November 2026, and `docs/protocol/messages-and-attachments.md` states it.
   - The model route `PUT .../sessions/<id>/model` lets any member who can reach the workspace change the model and the effort of a session. The route is in `worker/chat/http-routes.ts:149`. `changeModel` in `worker/chat/model-changes.ts:18` saves the new choice for a model of the same agent. It checks neither the starter nor the share switch.
   - The composer never turns the model picker off for another member. A change to a model of the same agent calls the route at once, in `src/chat/state/model-actions.ts:69`.
   - Each send carries the choice of the session, in `src/chat/state/message-actions.ts:62`. So the next message of the starter runs with the choice that another member set.
-- **Problem:** A member who may not use the starter's login can still choose the model and the effort of the starter's own messages.
-- **Impact if no action:** The starter's login can pay for a costlier model or effort, such as the highest effort of the largest model, that another member chose. The starter sees the choice in the picker only when they look before they send.
-- **Root question:** Who may change the model and the effort of a session that runs on another member's login?
+- **Problem:** A member who may not use the starter's personal login can still choose the model and the effort of the starter's own messages.
+- **Impact if no action:** The starter's personal login can pay for a costlier model or effort, such as the highest effort of the largest model, that another member chose. The starter sees the choice in the picker only when they look before they send.
+- **Root question:** Who may change the model and the effort of a session that runs on another member's personal login?
 - **Options:**
   - **A.** Change nothing. The picker of the starter shows the current choice before each send. Effort: Small.
-  - **B.** When the share switch of the starter is off, a change of the model by another member opens a new session on that member's own login, with the draft, as a send of that member already does. It adds a new restriction. Effort: Medium.
-  - **C.** Only the starter changes the model and the effort of a session. Another member's change always opens a new session on that member's own login. It adds a new restriction, also for shared logins. Effort: Medium.
+  - **B.** When the share switch of the starter is off, a change of the model by another member opens a new session on the default login of that member, with the draft, as a send of that member already does. It adds a new restriction. Effort: Medium.
+  - **C.** Only the starter changes the model and the effort of a session on a personal login. Another member's change always opens a new session on the default login of that member. It adds a new restriction, also for shared logins. Effort: Medium.
   - **D.** Keep the route, and show in the composer of the starter who changed the choice last, such as "Priya chose Opus 5.5 Max". Effort: Medium.
 - **Left out:** A check in the model gateway. The gateway forwards each request body unchanged, and a check of the model there would need a new parse of each request body.
 - **Wider fix:** C. One rule for every field of the choice also covers a later field, such as a speed setting.

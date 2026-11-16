@@ -109,7 +109,7 @@ credential route, the image source credential route, the
 [workspace tools](tools/README.md), GitHub webhooks, the model gateway, and the runner socket.
 These handlers use their own machine credentials and skip the browser gate.
 The [model gateway](model-gateway/README.md) accepts only a turn token.
-It adds the starter's login to allowed Anthropic, OpenAI, or own endpoint requests.
+It adds the login of the session to allowed Anthropic, OpenAI, or own endpoint requests.
 Its request upload and model answer both stream.
 The chat backend checks the login kinds of the runner before delivery.
 Each `turn` command carries a turn token and never a real login.
@@ -273,7 +273,7 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [operator/route.ts](operator/route.ts) serves the operator routes after the request gate.
 - [routines/route.ts](routines/route.ts) serves routine records after the request gate.
 - [routines/run-route.ts](routines/run-route.ts) serves Run now and paginated run history.
-- [routines/run-starter.ts](routines/run-starter.ts) starts queued runs with the owner's logins.
+- [routines/run-starter.ts](routines/run-starter.ts) starts queued runs in the name of the routine owner.
 - [routines/pull-request-dispatch.ts](routines/pull-request-dispatch.ts) applies author filters, trust, and loop guards before it stores pull request runs.
 - [routines/schedule-scan.ts](routines/schedule-scan.ts) claims up to 50 due routines and retries up to 50 old queued runs each minute.
 - [operator/approval-email.ts](operator/approval-email.ts) sends approval messages and retries pending deliveries from the scheduled entry.

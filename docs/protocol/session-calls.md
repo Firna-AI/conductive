@@ -148,12 +148,14 @@ at `app/workspace-links/sent-by`.
 - The model chooses the agent of the session, as in a create call.
 - Without a model or an effort, the call uses the saved default of the
   sender. Without a saved default, it uses the default choice of the app.
-- Reason: the new session runs on the agent login of the sender, and "+"
-  also uses the own choice of the member.
+- Reason: the sender is the starter of the new session, and "+" also uses
+  the own choice of the member.
 - Fast mode is off unless the call turns it on, also with the saved
   default. Reason: an agent then spends a login at the higher price of fast
   mode only when its call asks for it.
-- The sender is the starter of the new session (decision 105).
+- The sender is the starter of the new session (decision 105). So the new
+  session takes the default login of the sender, as
+  [The default login](org-logins.md#the-default-login) says.
 - The title follows the name rule of a create call, as
   [Names from the workspace tools](tool-names.md) says. A title that is
   blank after the rule counts as no title.
@@ -178,7 +180,7 @@ at `app/workspace-links/sent-by`.
 - A tool message follows the rules of
   [Messages](messages-and-attachments.md#messages), as a message of its
   sender does. So it joins a running turn. It opens a new session when the
-  sender cannot use the login of the starter.
+  sender cannot use the login of the session.
 - A closed session gets HTTP 409 with the error code `session_closed`.
 - The reply gives the message, its turn, and the session that took it,
   with the link of that session.
@@ -231,8 +233,8 @@ at `app/workspace-links/sent-by`.
 - A limit on the length of a chain of tool messages was rejected. A limit
   on the tool messages of a workspace in an hour was rejected too. Each
   adds a stored count and a refusal.
-- Risk: two agents that answer each other spend the agent logins of their
-  starters until a member stops one. They also spend the starts that all
+- Risk: two agents that answer each other spend the logins of their
+  sessions until a member stops one. They also spend the starts that all
   orgs share.
 
 ## Tool descriptions

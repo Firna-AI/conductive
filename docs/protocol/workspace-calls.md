@@ -42,8 +42,8 @@ number names a dated record, as
 - A create call can also turn on [fast mode](fast-mode.md) for a model
   that has it. Otherwise the first message runs at standard speed. The
   saved default of the owner gives the call no fast mode. Reason: that
-  default belongs to the owner, but the first message runs on the login of
-  the sender of the calling turn.
+  default belongs to the owner, but the first message runs on the default
+  login of the sender of the calling turn.
 - The new workspace gets the org and the workspace owner of the calling
   workspace.
 - Without a choice in the call, the new workspace gets the default section

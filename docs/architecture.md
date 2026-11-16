@@ -50,8 +50,22 @@ each feature.
   have: changed files that are not committed, also untracked files, and
   commits that no remote branch holds.
 - **Sender:** the person who sent the message of a turn. The GitHub token
-  and the Mac requests of the turn belong to its sender. The agent login
-  belongs to the starter of the session, the member who started it.
+  and the Mac requests of the turn belong to its sender. The turn runs on
+  the login of its session, which can belong to another member or to the
+  org.
+- **Starter:** the member who started a session. The starter of a session
+  never changes.
+- **Agent login:** the key, the token, the sign-in, or the own endpoint
+  that the turns of an agent run on. It is a personal login or an org
+  login.
+- **Personal login:** an agent login that a member connects on the account
+  page. It serves all of the orgs of that member.
+- **Org login:** an API key or an own endpoint that an admin connects for
+  one agent of an org. It serves the members of that org.
+- **Login of a session:** the agent login that each turn of a session runs
+  on: the personal login of its starter, or the org login.
+- **Default login:** the agent login that a new session of a member takes,
+  as [The default login](protocol/org-logins.md#the-default-login) says.
 - **Boat key:** the one key of the app's own Boat account, where every
   sandbox and every org image of every org runs. It is a Worker secret.
 - **Provider account:** an account with a sandbox provider. The Worker
@@ -92,7 +106,8 @@ each feature.
 - **Routine:** a saved prompt of an org that runs an agent without a
   person. A schedule, a GitHub pull request event, or Run now starts each
   run. Each run creates a new workspace, the run workspace.
-- **Routine owner:** the member whose logins the runs of a routine use. It
+- **Routine owner:** the member in whose name the runs of a routine act.
+  The runs use the GitHub access and the default login of that member. It
   is the member who created the routine, until that member leaves the org.
 - **Base branch:** the branch that the work of a workspace targets. Changes
   compares with it, and "Create PR" opens into it.

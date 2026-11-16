@@ -118,10 +118,11 @@ turn (decision 62). The Mac app on that Mac asks that person first, as
 ### Who gets a request
 
 - A request goes only to the Mac of the sender of the turn that asks.
-- The agent login belongs to the starter of the session (decision 105). A
-  request still goes to the Mac of the sender of the turn. A request to the
-  Mac of the workspace owner was rejected, because one member could then ask
-  for commands on the Mac of another member.
+- The turn runs on the login of its session, which can belong to the
+  starter or to the org (decision 105). A request still goes to the Mac of
+  the sender of the turn. A request to the Mac of the workspace owner was
+  rejected, because one member could then ask for commands on the Mac of
+  another member.
 - The first turn of a workspace that a create call made has the sender of
   the calling turn. So does each new turn that a message of the
   [session calls](session-calls.md#the-sender) starts. The requests of

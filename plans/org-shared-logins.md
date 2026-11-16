@@ -439,6 +439,29 @@ agent's call, made on 16 November 2026.
   `starter` for the name of the org, because the app imports the type.
   Milestone 6 renames it to `owner`.
 
+The documentation milestone added these calls on 16 November 2026. Each
+is the agent's call.
+
+- A new protocol page, `docs/protocol/org-logins.md`, holds the org login
+  and the default login rule. Reason: the docs that would hold it are
+  already long. The other docs link to it.
+- A message of the starter in a session whose personal login can no
+  longer be used starts a linked session on the org login, when the org
+  login serves the starter. Today the app refuses such a message. Reason:
+  decision 4 refuses no message for a missing login, and no session moves
+  to another login.
+- A stored session with messages but no login runs on the starter's
+  personal login. An empty stored session takes its login at its first
+  message.
+- `loginShared` is always true for a session on the org login.
+- The gateway does not check the starter's membership for a session on the
+  org login.
+- When the saved address of an org endpoint is no longer accepted, the
+  cause of the turn names the org and the agent, and points to the Agents
+  tab of the org settings. Reason: it mirrors the cause of a personal
+  login, which points to the account page, and only an admin can fix an
+  org login.
+
 ## Components
 
 - D1: a table `org_agent_logins` keyed by `org_id` and `agent`, with
@@ -516,24 +539,24 @@ first round's complete copy is in `.context/org-shared-logins/round-1-backup/`.
 
 Depends on: 1
 
-- [ ] `docs/protocol/tokens-and-secrets.md`: the org login, its admins, its
+- [x] `docs/protocol/tokens-and-secrets.md`: the org login, its admins, its
       encryption, and that it serves the members of its org.
-- [ ] `docs/protocol/orgs-and-members.md`: the Agents tab, who changes it,
+- [x] `docs/protocol/orgs-and-members.md`: the Agents tab, who changes it,
       and that decision 21 now has an exception. Change lines 197-199 and
       238-239, which say that each session runs on its starter's login.
-- [ ] `docs/protocol/agents-and-sessions.md`: each session runs on its
+- [x] `docs/protocol/agents-and-sessions.md`: each session runs on its
       login, a personal login or the org login. The starter never changes.
-- [ ] `docs/protocol/isolation.md`: the org login never reaches a sandbox,
+- [x] `docs/protocol/isolation.md`: the org login never reaches a sandbox,
       and the access rule.
-- [ ] `docs/protocol/own-endpoint-logins.md`: drop the rejection of an
+- [x] `docs/protocol/own-endpoint-logins.md`: drop the rejection of an
       org endpoint. State decision 3 for the org endpoint.
-- [ ] `docs/protocol/messages-and-attachments.md`: the default login of
+- [x] `docs/protocol/messages-and-attachments.md`: the default login of
       decision 6.
-- [ ] `docs/protocol/routines.md` and `docs/protocol/routine-runs.md`:
+- [x] `docs/protocol/routines.md` and `docs/protocol/routine-runs.md`:
       decision 5.
-- [ ] `docs/protocol/session-calls.md`: the agent tools use the default
+- [x] `docs/protocol/session-calls.md`: the agent tools use the default
       login of the sender.
-- [ ] `docs/protocol/model-gateway.md` and
+- [x] `docs/protocol/model-gateway.md` and
       `docs/protocol/model-gateway-requests.md`: the login of the session.
 - [ ] Read `src/marketing/terms.ts`, `src/marketing/terms-org.ts`, and
       `src/marketing/privacy.ts` with its parts in full. Update each
@@ -548,11 +571,13 @@ Depends on: 1
 - [ ] Capture the marketing pictures again with `npm run marketing:pictures`.
       The `org` picture shows the tab row of the org settings, which gains
       Agents in Milestone 1.
-- [ ] Update the background of `plans/follow-ups/org-control-of-own-endpoints.md`
+- [x] Update the background of `plans/follow-ups/org-control-of-own-endpoints.md`
       and `plans/follow-ups/member-changes-session-choice.md`.
-- [ ] Update `worker/README.md`, `worker/chat/access.md`,
+- [x] Update `worker/README.md`, `worker/chat/access.md`,
       `src/app/README.md`, and `src/chat/README.md`, when they describe the
-      login of a session.
+      login of a session. `worker/README.md` changed. The other READMEs
+      name code mechanics, so they change with the code in Milestones 4
+      and 6.
 - [ ] Check each relative link of each changed Markdown file.
 
 ## Milestone 3: Org logins in the data and the org API
@@ -588,6 +613,13 @@ Depends on: 3
       of the session.
 - [ ] Move `worker/app-api/get-started-data.ts` to decision 4.
 - [ ] Move `worker/routines/run-starter.ts` to decision 5.
+- [ ] Update the READMEs that name the login functions of the Worker:
+      `worker/chat/access.md`, `worker/chat/README.md`, `key-code.md`,
+      `tests.md`, `integration/README.md`, `integration/session-logins.md`,
+      `integration/logins-and-attachments.md`,
+      `worker/model-gateway/README.md`, `worker/routines/README.md`,
+      `worker/members/README.md`, and
+      `worker/operator/suspension-access.md`.
 - [ ] Tests: a first message on the org login, a message of another member
       in that session, an org login replaced during a turn, removed before
       a waiting message, decision 6 order, the switch of decision 7 on and
@@ -637,6 +669,9 @@ Depends on: 1, 4
       its users in `src/chat/`, because it can name the org.
 - [ ] Make the model pickers follow the list of the org endpoint, by
       decision 3, also in `src/shell/routines/RoutineEditor.tsx:72`.
+- [ ] Update the READMEs that name the login code of the app:
+      `src/app/README.md`, `src/chat/README.md`, `src/chat/sessions.md`,
+      `src/chat/dev/README.md`, and `src/shared/README.md`.
 - [ ] Check the changed screens in a browser against the mockups.
 
 ## Milestone 7: Verification, commit, review, and pull request

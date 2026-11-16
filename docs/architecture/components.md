@@ -210,20 +210,22 @@ the rules.
 - **GitHub App:** one app gives the sign-in, the repository access, and the
   webhooks of every org.
 - **Anthropic and OpenAI:** the model use of each turn on a subscription
-  token or an API key bills to the own Claude or OpenAI account of the
-  starter of its session. The model requests of a turn reach them through
-  the model gateway of the Worker. A settings file in the repository can
-  send the requests of Claude to another address instead. The gateway
-  keeps no copy of a request or an answer.
+  token or an API key bills to the Claude or OpenAI account of the login
+  of its session. That is the account of its starter, or the account of
+  the org for an org login. The model requests of a turn reach them
+  through the model gateway of the Worker. A settings file in the
+  repository can send the requests of Claude to another address instead.
+  The gateway keeps no copy of a request or an answer.
 - **Own endpoints:** an own endpoint is a gateway or a proxy that a user
-  chose, such as a proxy that pools subscriptions. A user can connect one
-  as the agent login of Claude or of Codex. For each turn on such a login,
-  the model gateway forwards the model requests of the turn to the
-  endpoint, with the key that the user saved. So the endpoint gets the
-  messages, the files, and the command results of those turns. No sandbox
-  gets the address or the key.
-  [Own endpoint logins](../protocol/own-endpoint-logins.md)
-  and [Own endpoints](../protocol/model-gateway-requests.md#own-endpoints)
+  chose, such as a proxy that pools subscriptions. A member can connect
+  one as a personal login of Claude or of Codex. An admin can connect one
+  as the org login of an agent. For each turn on such a login, the model
+  gateway forwards the model requests of the turn to the endpoint, with
+  the saved key. So the endpoint gets the messages, the files, and the
+  command results of those turns. No sandbox gets the address or the key.
+  [Own endpoint logins](../protocol/own-endpoint-logins.md),
+  [Org logins](../protocol/org-logins.md), and
+  [Own endpoints](../protocol/model-gateway-requests.md#own-endpoints)
   state the rules.
 - **Workers AI:** the Cloudflare model service writes a title for a
   workspace that has no name, from its first message. Its use bills to the

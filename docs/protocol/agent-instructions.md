@@ -124,9 +124,9 @@ says.
   member ID of the member who sent the message (decision 283). For a
   member without a display name, it gives only the GitHub login and the
   member ID.
-- Reason: several members can write in one session while the starter
-  shares the login (decision 116). So the agent needs to know who sent
-  each message.
+- Reason: several members can write in one session, on the org login or
+  while the starter shares the login (decision 116). So the agent needs to
+  know who sent each message.
 - A message that joins a running turn gives its own sender, who can
   differ from the sender of the turn.
 - Reason for the member ID: the owner filter of the

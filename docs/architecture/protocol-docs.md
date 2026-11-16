@@ -65,6 +65,9 @@ This page lists each protocol doc and what it covers.
     - [Own endpoint logins](../protocol/own-endpoint-logins.md): the
       endpoint and the key of each agent, the model list of the endpoint,
       and the addresses that the app accepts.
+    - [Org logins](../protocol/org-logins.md): the login that an admin
+      connects for each agent of an org, the Agents tab of the org
+      settings, and the default login of a new session.
   - [Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md)
   - [Step timing](../protocol/step-timing.md): the `Server-Timing` header of
     the preview replies and of the create reply, and what it may hold.
