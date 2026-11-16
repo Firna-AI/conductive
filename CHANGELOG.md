@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.20.0](https://github.com/Firna-AI/conductive/compare/v0.19.0...v0.20.0) (2026-11-16)
+
+
+### ⚠ BREAKING CHANGES
+
+* **automations:** the routes /orgs/<id>/routines and the API paths under .../routines are now .../automations. Old links stop working. A browser tab with the old app must reload after the deploy.
+
+### Bug Fixes
+
+* keep model answers alive when the stream drops ([#400](https://github.com/Firna-AI/conductive/issues/400)) ([7543119](https://github.com/Firna-AI/conductive/commit/75431197322d409ceff7b2916749e1f81c555ab4))
+
+
+### Code Refactoring
+
+* **automations:** rename routines to automations ([#397](https://github.com/Firna-AI/conductive/issues/397)) ([acac23f](https://github.com/Firna-AI/conductive/commit/acac23f1ee45003cca21731c2d3d9f885b16ee4e))
+
 ## [0.19.0](https://github.com/Firna-AI/conductive/compare/v0.18.0...v0.19.0) (2026-11-16)
 
 
