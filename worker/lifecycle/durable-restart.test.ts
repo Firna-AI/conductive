@@ -49,7 +49,12 @@ describe('the restart of the software', () => {
     expect(restartingLifecycle(ready, 'ws_1', 10)).toMatchObject({
       state: 'starting',
       softwareRestartAt: 10,
+      lastActivityAt: 10,
     })
+    // A press counts as activity, and never moves a newer activity back.
+    expect(
+      restartingLifecycle({ ...ready, lastActivityAt: 50 }, 'ws_1', 10),
+    ).toMatchObject({ lastActivityAt: 50 })
     for (const state of ['starting', 'stopped', 'error', 'archived'] as const)
       expect(
         refusalCode(() => restartingLifecycle({ ...ready, state }, 'ws_1', 1)),

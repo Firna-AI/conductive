@@ -1,18 +1,12 @@
-import { restartCopy } from '../../docs/mockups/src/components/workspace/restartCopy'
-import type { WorkspaceState } from '../../src/shared/generated/WorkspaceState'
+import {
+  restartableStates,
+  restartCopy,
+} from '../../docs/mockups/src/components/workspace/restartCopy'
 import { HttpError } from '../http'
 import type { DurableLifecycleState } from './durable-types'
 
 /** The runner must be ready again within this time after Restart. */
 export const SOFTWARE_RESTART_LIMIT_MS = 3 * 60 * 1_000
-
-/** The states whose software runs, so that Restart can restart it. */
-const RESTARTABLE: ReadonlySet<WorkspaceState> = new Set([
-  'ready',
-  'working',
-  'input',
-  'unread',
-])
 
 export function workspaceNotRunning(): HttpError {
   return new HttpError(
@@ -37,7 +31,7 @@ export function restartingLifecycle(
       'workspace_not_found',
       'The workspace is not available.',
     )
-  if (!RESTARTABLE.has(state.state) || state.startStop !== undefined)
+  if (!restartableStates.has(state.state) || state.startStop !== undefined)
     throw workspaceNotRunning()
   return {
     ...state,
