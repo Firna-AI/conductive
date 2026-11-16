@@ -155,7 +155,12 @@ The credential alias `/usr/local/bin/conductive-git-credential` links to the
 same program and selects `git-credential`.
 It runs
 `systemctl daemon-reload` and enables the runner, relay, terminal, and
-check timer. It starts no service and changes no package.
+check timer. It changes no package, and it starts no stopped service.
+Last, it restarts the relay when the relay runs, without waiting.
+Boat starts the relay at boot, before the runner pre-start step applies a
+release, so the relay otherwise keeps the release that was active at boot.
+The socket holds port 7682 during the restart. A failed restart prints a
+warning, and the installer still succeeds.
 
 The release units are:
 
