@@ -1,12 +1,9 @@
 import type { Viewport } from '@mokly/mokly'
 import { ArrowRight } from 'lucide-react'
+import { screenFrame } from '../../entries/components/marketing/ScreenFrame.mockup'
+import type { FramedPicture } from '../../screens/marketingPictures'
 import { ScreenLink } from '../common/ScreenLink'
 import { classes } from '../common/classes'
-import {
-  ScreenFrame,
-  type FrameDevice,
-  type ScreenPicture,
-} from './ScreenFrame'
 import { SiteActions } from './SiteActions'
 import styles from './Hero.module.css'
 
@@ -23,12 +20,12 @@ export function Hero(props: {
   title: string
   text: string
   signIn: string
-  picture: ScreenPicture
-  device: FrameDevice
+  picture: FramedPicture
   viewport: Viewport
   notice?: HeroNotice
 }) {
   const mobile = props.viewport === 'mobile'
+  const { picture } = props
   return (
     <section className={classes(styles.hero, mobile && styles.mobile)}>
       <div className={styles.copy}>
@@ -43,7 +40,12 @@ export function Hero(props: {
         <SiteActions stack={mobile} to={props.signIn} />
       </div>
       <div className={styles.picture}>
-        <ScreenFrame device={props.device} picture={props.picture} />
+        <screenFrame.Component
+          device={picture.device}
+          moklyInstance={picture.key}
+          picture={picture.picture}
+          screen={picture.screen}
+        />
       </div>
     </section>
   )

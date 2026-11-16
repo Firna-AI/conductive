@@ -75,6 +75,25 @@ counts and test under `.context/mokly-html/` of this workspace.
 - Some parts nest other parts. Mokly attributes a child's edit to the
   child when the child renders through its wrapper, and to the parent
   when the child is plain.
+- The proof of Milestone 1, on 2026-11-16: with `WorkspaceMark`
+  registered, a trial edit to its render gave 1 Changes row in place of
+  405, and a trial edit to its CSS also gave 1 row in place of 405. The
+  388 screens and variants went under its Affected screens.
+  `.context/registered-mockup-parts/proof.md` holds the method and the
+  counts.
+- A custom property or a `@keyframes` rule in a part's own CSS Module
+  still gives each screen that links the stylesheet a row. Mokly cannot
+  trace those rules to elements.
+- A CSS rule of a state that no own page of the part shows still gives the
+  screens rows. The `.warning` tone of the mark gave 15 rows before and
+  15 after.
+- The first registration of a part lists each screen that draws it in
+  Changes, with the reasons `structure` and `material`, also when its
+  picture is the same. So this pull request lists almost every screen.
+  The proof found that these screens differ only by Mokly's markers, the
+  frame-probe data, and React `useId` values.
+- Until a parent is registered, an instance name must be unique in the
+  whole view, because a plain parent makes no instance scope.
 
 ## Design
 
@@ -117,10 +136,49 @@ These are design calls of the agent, made on 2026-11-13:
   adapter passes `noop`. `viewport` comes from the render context, not
   from a prop. React content becomes a declared slot.
 - **Instance names.** A part in a list takes its `moklyInstance` from the
-  stable id of its fixture, in kebab-case.
+  stable id of its fixture, in kebab-case, with the list in front, such as
+  `sidebar-apple-pay`. A marketing picture takes its picture key, such as
+  `hero`.
+- **Paths.** Each definition sets a kebab-case `slug`, such as
+  `workspace-mark`, so that the path is
+  `components/workspaces/workspace-mark`. The `components` folder comes
+  last in the order of the catalogue.
+- **The marketing frames move to Milestone 1** (2026-11-16). Several
+  marketing pictures draw the same sidebar in one view, so the registered
+  marks repeated their instance names and the strict build failed.
+  Registering `ScreenFrame` and `ScreenCapture` gives each picture its own
+  scope, with the screen as a slot. Their own pages show the frame without
+  a screen, so that the frame does not claim the CSS of the screen.
 - **The variants.** Each part gets one variant for each state that the
-  screens show, and at most five on one page. More states go to nested
-  child pages, as the `mockups` skill says.
+  screens show. Until decision 521 is answered, each part has at most five
+  entries: its own page and four variants. A component variant cannot have
+  child pages. Pick the states that cover the most CSS rules.
+- **The check for each milestone.** Each mockup milestone compares its
+  built screen documents with a build of the merge base, without the
+  Mokly markers, the frame-probe data, and `useId` values. A screen that
+  differs in any other way is a real change.
+
+## Open decisions
+
+### 521. The own pages of a part with more than five states
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation, from the proof of Milestone 1.
+- **Problem:** Mokly gives a CSS rule to a part only when the rule
+  matches on the part's own pages. The `mockups` skill allows at most
+  five mockups on a page, and a component variant cannot have child
+  pages. The mark has seven tones, so two of its tones have no page.
+- **Options:**
+  - **A.** Keep at most five entries. Edits to the other states give
+    screen rows. Effort: Small.
+  - **B.** Give each part one variant for each styled state, also above
+    five. Effort: Small.
+  - **C.** Split each part with many states into smaller parts. Effort:
+    Large.
+  - **D.** Change Mokly so that a part owns the CSS rules of its modules.
+    Effort: Large.
+- **Recommendation:** B. Each part then keeps the gain for every CSS rule.
+- **Status:** Waits for the user. It blocks only the variants above five.
 
 ## Milestone 1: Mockups, the proof and the common parts
 
@@ -129,18 +187,21 @@ Tags: mockup
 Depends on: none
 
 Prove the gain with one part, then register the parts that almost every
-screen uses: 35 parts.
+screen uses: 37 parts, with the two marketing frames.
 
-- [ ] Prove the gain with one part before the rest.
-  - [ ] Register `WorkspaceMark` and render its wrapper from the
+- [x] Prove the gain with one part before the rest.
+  - [x] Register `WorkspaceMark` and render its wrapper from the
         mockup-only parts that use it: `WorkspaceRow` and `PaletteRows`.
         `WorkspaceChip` keeps the plain part, because the app reaches it.
-  - [ ] Make a trial edit to its render and to its CSS, and build. Do not
+  - [x] Make a trial edit to its render and to its CSS, and build. Do not
         commit the trial edit.
-  - [ ] Count the Changes rows before and after the registration. Save
+  - [x] Count the Changes rows before and after the registration. Save
         the counts under `.context/registered-mockup-parts/`.
-  - [ ] Stop and report to the user if the rows do not drop.
-- [ ] Add the `components` folder of the catalogue, with its
+  - [x] Stop and report to the user if the rows do not drop.
+- [x] Register `ScreenFrame` and `ScreenCapture`, and render them from
+      `Hero`, `FeatureSection`, and `PictureCapture`, named by the picture
+      key.
+- [x] Add the `components` folder of the catalogue, with its
       `_folder.json`, to the order in `docs/mockups/src/entries/_folder.json`.
 - [ ] Register the 23 parts of `components/common/`.
 - [ ] Register the 8 parts of `components/layout/` and the 3 parts of
@@ -150,6 +211,9 @@ screen uses: 35 parts.
       with `.context/mokly-html/closure2.mjs`.
 - [ ] Run `npm run mockups:check`, `npm run lint`, `npm run format:check`,
       and `npm run exports:check`.
+- [ ] Compare the built screen documents with a build of the merge base
+      without markers, as the design says. Save the result under
+      `.context/registered-mockup-parts/`.
 - [ ] Smoke-test the new component pages and five screens that use them,
       at both sizes, in light and dark.
 - [ ] Update the design and the TODOs of this plan for each problem that
@@ -176,6 +240,9 @@ the palette, and New workspace: 72 parts.
       with `.context/mokly-html/closure2.mjs`.
 - [ ] Run `npm run mockups:check`, `npm run lint`, `npm run format:check`,
       and `npm run exports:check`.
+- [ ] Compare the built screen documents with a build of the merge base
+      without markers, as the design says. Save the result under
+      `.context/registered-mockup-parts/`.
 - [ ] Smoke-test the new component pages and five screens that use them,
       at both sizes, in light and dark.
 - [ ] Update the design and the TODOs of this plan for each problem that
@@ -198,6 +265,9 @@ Register the parts of the chat, the files, and the tools: 70 parts.
       with `.context/mokly-html/closure2.mjs`.
 - [ ] Run `npm run mockups:check`, `npm run lint`, `npm run format:check`,
       and `npm run exports:check`.
+- [ ] Compare the built screen documents with a build of the merge base
+      without markers, as the design says. Save the result under
+      `.context/registered-mockup-parts/`.
 - [ ] Smoke-test the new component pages and five screens that use them,
       at both sizes, in light and dark.
 - [ ] Update the design and the TODOs of this plan for each problem that
@@ -223,6 +293,9 @@ and Get started: 71 parts.
       with `.context/mokly-html/closure2.mjs`.
 - [ ] Run `npm run mockups:check`, `npm run lint`, `npm run format:check`,
       and `npm run exports:check`.
+- [ ] Compare the built screen documents with a build of the merge base
+      without markers, as the design says. Save the result under
+      `.context/registered-mockup-parts/`.
 - [ ] Smoke-test the new component pages and five screens that use them,
       at both sizes, in light and dark.
 - [ ] Update the design and the TODOs of this plan for each problem that
@@ -246,6 +319,9 @@ Register the parts of the operator section and the routines: 54 parts.
       with `.context/mokly-html/closure2.mjs`.
 - [ ] Run `npm run mockups:check`, `npm run lint`, `npm run format:check`,
       and `npm run exports:check`.
+- [ ] Compare the built screen documents with a build of the merge base
+      without markers, as the design says. Save the result under
+      `.context/registered-mockup-parts/`.
 - [ ] Smoke-test the new component pages and five screens that use them,
       at both sizes, in light and dark.
 - [ ] Update the design and the TODOs of this plan for each problem that
@@ -258,9 +334,9 @@ Tags: mockup
 Depends on: 5
 
 Register the parts of the marketing site, the comparison page, and the
-Mac app: 40 parts.
+Mac app: 38 parts.
 
-- [ ] Register the 25 parts of `components/marketing/` and the 7 of
+- [ ] Register the other 23 parts of `components/marketing/` and the 7 of
       `components/parity/`.
 - [ ] Register the 8 parts of `components/mac/`.
 - [ ] Check with `.context/registered-mockup-parts/inventory.mjs` that
@@ -270,6 +346,9 @@ Mac app: 40 parts.
       with `.context/mokly-html/closure2.mjs`.
 - [ ] Run `npm run mockups:check`, `npm run lint`, `npm run format:check`,
       and `npm run exports:check`.
+- [ ] Compare the built screen documents with a build of the merge base
+      without markers, as the design says. Save the result under
+      `.context/registered-mockup-parts/`.
 - [ ] Smoke-test the new component pages and five screens that use them,
       at both sizes, in light and dark.
 - [ ] Run `npm run marketing:pictures`, and check that no picture
@@ -286,7 +365,8 @@ the product does not change.
 
 - [ ] Update "How a screen is built" and "Folder layout" in
       `docs/mockups/README.md`: the registered parts, their place, the
-      wrapper rule for files that the app reaches, and Affected screens.
+      wrapper rule for files that the app reaches, Affected screens, and
+      the CSS rules that still give screen rows.
 - [ ] Add the `components` paths to `docs/mockups/catalogue.md`.
 - [ ] Check each relative link of the changed Markdown files.
 

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Archive, ArchiveRestore } from 'lucide-react'
+import { workspaceMark } from '../../entries/components/workspaces/WorkspaceMark.mockup'
 import { paths } from '../../paths'
 import { ScreenLink } from '../common/ScreenLink'
 import { IconButton } from '../common/actions'
@@ -8,7 +9,6 @@ import { classes } from '../common/classes'
 import { RowPointMenu, type RowControls } from './RowMenu'
 import type { WorkspaceRow } from './sections'
 import { activityPresentation, listMarkLabel } from './status'
-import { WorkspaceMark } from './WorkspaceMark'
 import rowMenu from './RowMenu.module.css'
 import styles from './WorkspaceRow.module.css'
 
@@ -16,6 +16,17 @@ import styles from './WorkspaceRow.module.css'
 export type RowDrag = 'lifted' | 'placeholder'
 
 type Variant = 'sidebar' | 'page'
+
+/**
+ * The Mokly instance name of the mark of a row: the list and the key of
+ * the workspace, such as `sidebar-apple-pay`, which stay the same when the
+ * rows move. The copy that a drag lifts has its own name, because the faint
+ * row stays in the list.
+ */
+function markInstance(row: WorkspaceRow, variant: Variant, drag?: RowDrag) {
+  const name = `${variant}-${row.workspace.key}`
+  return drag === 'lifted' ? `${name}-lifted` : name
+}
 
 /**
  * The row of a workspace that the user renames from its menu. The field
@@ -37,7 +48,11 @@ function RenameRow(props: {
         row.selected && styles.selected,
       )}
     >
-      <WorkspaceMark github={row.github} status={row.status} />
+      <workspaceMark.Component
+        github={row.github}
+        moklyInstance={markInstance(row, props.variant)}
+        status={row.status}
+      />
       <span
         aria-label="Workspace name"
         className={classes(rowMenu.field, page && rowMenu.fieldPage)}
@@ -112,7 +127,11 @@ export function WorkspaceRowView(props: {
   )
   const content = (
     <>
-      <WorkspaceMark github={row.github} status={row.status} />
+      <workspaceMark.Component
+        github={row.github}
+        moklyInstance={markInstance(row, props.variant, props.drag)}
+        status={row.status}
+      />
       <span className={styles.name}>{row.workspace.name}</span>
       <span className={styles.time}>{row.workspace.updated}</span>
       <span className={a11y.hidden}>

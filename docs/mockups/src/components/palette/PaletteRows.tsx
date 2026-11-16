@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { workspaceMark } from '../../entries/components/workspaces/WorkspaceMark.mockup'
 import { repositories } from '../../fixtures/repositories'
 import {
   shownShortcut,
@@ -12,7 +13,6 @@ import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
 import { OrgTile } from '../orgs/OrgTile'
 import { activityPresentation, listMarkLabel } from '../workspaces/status'
-import { WorkspaceMark } from '../workspaces/WorkspaceMark'
 import type { CommandLead } from './paletteCommands'
 import type { PaletteContent, PaletteRow } from './paletteContent'
 import { EmptyTab, NoResults } from './PaletteEmpty'
@@ -90,7 +90,12 @@ function Row(props: {
         to={to}
       >
         <span className={styles.lead}>
-          <WorkspaceMark github={github} status={status} />
+          {/* Each workspace shows once in a tab, so its key names its mark. */}
+          <workspaceMark.Component
+            github={github}
+            moklyInstance={`palette-${workspace.key}`}
+            status={status}
+          />
         </span>
         {row.number ? (
           <span className={styles.number}>{row.number}</span>
