@@ -6,6 +6,7 @@ import {
 import { orgSettingsPaths } from '../../src/shared/org-settings'
 import { runnerSoftware } from '../configuration'
 import type { AppDependencies, AppEnv } from '../env'
+import { recordUserActivity } from '../data/user-activity'
 import { handleLifecycleRequest } from '../lifecycle/browser'
 import { imageRuntime, workspaceRuntime } from '../lifecycle/runtime'
 import { readWorkspace } from '../lifecycle/workspace-data'
@@ -74,7 +75,7 @@ export async function chatLifecycleRoute(
       ),
     })
   }
-  return handleLifecycleRequest(
+  const response = await handleLifecycleRequest(
     request,
     context,
     {
@@ -120,4 +121,12 @@ export async function chatLifecycleRoute(
       waitUntil: (promise) => execution?.waitUntil(promise),
     },
   )
+  if (create && response?.status === 201)
+    await recordUserActivity(
+      env.DB,
+      context.user.id,
+      dependencies.now(),
+      execution,
+    )
+  return response
 }

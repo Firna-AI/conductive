@@ -83,6 +83,11 @@ export interface OperatorUserSummary extends OperatorUserAccess {
   login: string
   name: string | null
   joinedAt: number
+  /**
+   * The time of the last new workspace or chat message of the person, or
+   * null when the app has no record of one.
+   */
+  lastActiveAt: number | null
   orgs: number
   workspaces: number
   status: 'active' | 'suspended'
@@ -138,6 +143,11 @@ export interface OperatorUserDetail extends OperatorUserAccess {
   login: string
   name: string | null
   joinedAt: number
+  /**
+   * The time of the last new workspace or chat message of the person, or
+   * null when the app has no record of one.
+   */
+  lastActiveAt: number | null
   workspaces: { total: number; running: number }
   orgs: readonly OperatorUserOrg[]
   suspension: OperatorSuspension | null

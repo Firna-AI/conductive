@@ -56,12 +56,18 @@ it('reads only owned workspace counts, all org roles, the name, and the suspensi
     `UPDATE workspaces SET owner_user_id = (SELECT id FROM users WHERE github_id = 8)`,
   ).run()
   await seedWorkspace(harness, { id: 'another-owner', orgId: 'zeta' })
+  await harness.env.DB.prepare(
+    'UPDATE users SET last_active_at = ? WHERE github_id = 8',
+  )
+    .bind(TEST_TIME - 60_000)
+    .run()
   const active = await userPage(harness, cookie, 8)
   expect(active).toEqual({
     githubId: 8,
     login: 'dana-k',
     name: 'Dana Kim',
     joinedAt: TEST_TIME - 1,
+    lastActiveAt: TEST_TIME - 60_000,
     appAccess: { state: 'waiting', waitingSince: TEST_TIME - 1 },
     approvalEmail: { state: 'none', updatedAt: null },
     hasVerifiedEmail: false,

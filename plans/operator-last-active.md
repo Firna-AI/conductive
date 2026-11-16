@@ -114,54 +114,55 @@ Depends on: none
 
 The Users tab and the page of a user show the last active time.
 
-- [ ] Add the Last active column to
+- [x] Add the Last active column to
       `docs/mockups/src/screens/OperatorUsersScreen.tsx`, with a time of
       today, another day, and Unknown in the sample rows.
-- [ ] Add the Last active row to the Details of
+- [x] Add the Last active row to the Details of
       `docs/mockups/src/screens/OperatorUserScreen.tsx`.
-- [ ] Update the `app/operator/users` and `app/operator/user` lines of
+- [x] Update the `app/operator/users` and `app/operator/user` lines of
       `docs/mockups/catalogue-operator.md`.
-- [ ] Run `npm run mockups:check`. Smoke-test the two changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
-      the mockups show.
+- [x] Run `npm run mockups:check`. Smoke-test the two changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
+      the mockups show. The mockups showed no problem.
+      Screenshots: `.context/operator-last-active/mock-*.png`.
 
 ## Milestone 2: Documentation and protocol
 
 Depends on: 1
 
-- [ ] Add the rules of the last active time to the "Orgs and Users"
+- [x] Add the rules of the last active time to the "Orgs and Users"
       section of `docs/protocol/operator-section.md`: what counts, what
       does not count, the column, the row of the user page, and Unknown.
-- [ ] Read both legal pages in full. Add the Privacy bullet in
+- [x] Read both legal pages in full. Add the Privacy bullet in
       `src/marketing/privacy-uses.ts` and the new effective date in
       `src/marketing/privacy.ts`. Update each other sentence that
       restates the fact.
-- [ ] Read each public guide in `src/marketing/docs/` in full. Update
+- [x] Read each public guide in `src/marketing/docs/` in full. Update
       each sentence that restates the fact.
-- [ ] Check that the "Product analytics" row in
+- [x] Check that the "Product analytics" row in
       `src/marketing/from-conductor/` stays true.
 
 ## Milestone 3: Backend
 
 Depends on: 2
 
-- [ ] Add the migration `migrations/<YYYYMMDDHHMM>_user_last_active.sql`.
+- [x] Add the migration `migrations/<YYYYMMDDHHMM>_user_last_active.sql`.
       It adds `users.last_active_at` and fills it from the newest owned
       workspace. Describe it in `migrations/README.md`.
-- [ ] Add the throttled write of the last active time beside the other
+- [x] Add the throttled write of the last active time beside the other
       user records in `worker/data/`.
-- [ ] Record a message send and a retry in `worker/chat/router.ts`, and a
+- [x] Record a message send and a retry in `worker/chat/router.ts`, and a
       new workspace in `worker/app-api/lifecycle.ts`.
-- [ ] Add `lastActiveAt: number | null` to `OperatorUserSummary` and
+- [x] Add `lastActiveAt: number | null` to `OperatorUserSummary` and
       `OperatorUserDetail` in `src/shared/operator.ts`. Read it in
       `worker/operator/user-directory.ts` and
       `worker/operator/user-detail.ts`, and parse it in
       `src/app/api/read-operator.ts` and `read-operator-pages.ts`.
-- [ ] Update the dev state, the dev seed, and the test fixtures.
-- [ ] Add Worker tests: a send, a retry, and a create record the time.
+- [x] Update the dev state, the dev seed, and the test fixtures.
+- [x] Add Worker tests: a send, a retry, and a create record the time.
       An agent tool send and a failed send do not. A second action within
       the minute does not write. The operator readers return the time.
-- [ ] Update `worker/operator/README.md` and `worker/README.md`.
+- [x] Update `worker/operator/README.md` and `worker/README.md`.
 
 ## Milestone 4: Users tab and page of a user
 
@@ -169,13 +170,14 @@ Tags: ui
 
 Depends on: 3
 
-- [ ] Add the Last active column to `src/shell/operator/UsersTab.tsx`.
-- [ ] Add the Last active row to `src/shell/operator/UserDetails.tsx`.
-- [ ] Add a format helper in `src/shell/operator/format.ts` for the
+- [x] Add the Last active column to `src/shell/operator/UsersTab.tsx`.
+- [x] Add the Last active row to `src/shell/operator/UserDetails.tsx`.
+- [x] Add a format helper in `src/shell/operator/format.ts` for the
       column: the time of day for today, else the short day.
-- [ ] Update `UsersTab.test.tsx` and `UserPage.test.tsx`.
-- [ ] Update `src/shell/operator/README.md`.
-- [ ] Check the two pages in a browser with `npm run dev`.
+- [x] Update `UsersTab.test.tsx` and `UserPage.test.tsx`.
+- [x] Update `src/shell/operator/README.md`.
+- [x] Check the two pages in a browser with `npm run dev`.
+      Screenshots: `.context/operator-last-active/app-*.png`.
 
 ## Milestone 5: Verification, commit, review, and pull request
 

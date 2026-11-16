@@ -32,6 +32,7 @@ const columns: Readonly<Record<Viewport, TableColumn[]>> = {
   desktop: [
     { key: 'user', label: 'User', flex: 1 },
     { key: 'joined', label: 'Joined', width: 100 },
+    { key: 'active', label: 'Last active', width: 100 },
     { key: 'orgs', label: 'Orgs', align: 'right', width: 56 },
     { key: 'workspaces', label: 'Workspaces', align: 'right', width: 92 },
   ],
@@ -89,6 +90,8 @@ function cell(row: UserRow, key: string) {
       )
     case 'joined':
       return <TableCell muted>{row.joined}</TableCell>
+    case 'active':
+      return <TableCell muted>{row.lastActive ?? 'Unknown'}</TableCell>
     case 'orgs':
       return <TableCell numeric>{row.orgs}</TableCell>
     default:

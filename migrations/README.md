@@ -237,6 +237,12 @@ It keeps every other preference and every saved view.
 An unset view now uses the dialog, so only accounts made after this migration get the dialog without a choice.
 [The preference](../docs/protocol/create-a-workspace.md#the-preference) gives the requirement.
 
+`202611161200_user_last_active.sql` adds the nullable `users.last_active_at` column.
+It holds the time of the last new workspace or chat message of the person, as [the Worker README](../worker/README.md#last-active-time) says.
+The migration fills each existing user from the creation time of the newest workspace that the user owns.
+Chat messages live in Durable Object storage, so the migration cannot read them.
+A user with no owned workspace keeps `NULL`.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.

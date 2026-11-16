@@ -38,6 +38,8 @@ export type UserPage = {
    */
   verifiedEmail: boolean
   joined: string
+  /** The time of the last new workspace or sent message, if any. */
+  lastActive?: string
   owned: number
   running: number
   orgs: readonly UserOrg[]
@@ -55,6 +57,7 @@ const dana = {
   githubAge: '6 years',
   verifiedEmail: true,
   joined: '21 Oct 2026',
+  lastActive: '6 Nov 2026 at 09:04',
   owned: 14,
   orgs: [
     { name: 'Hexwave', initials: 'HW', role: 'Member' },
@@ -124,6 +127,7 @@ export const userPages = {
     githubAge: '12 years',
     verifiedEmail: true,
     joined: '2 Sep 2026',
+    lastActive: '8 Nov 2026 at 15:02',
     owned: 41,
     running: 2,
     orgs: [

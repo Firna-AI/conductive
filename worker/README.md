@@ -134,6 +134,25 @@ The `* * * * *` Cron Trigger runs routine schedules and recovers old queued runs
 The scheduled entry dispatches each trigger by its cron expression.
 The [member composition](members/composition.ts) supplies the durable lifecycle hooks.
 
+## Last active time
+
+`users.last_active_at` holds the time of the last real action of each
+person, which the operator sees on the Users tab.
+[Orgs and Users](../docs/protocol/operator-section.md#orgs-and-users) gives
+the requirement.
+
+- `routeChat` in [chat/router.ts](chat/router.ts) records a chat message
+  that the person sends or sends again, after the workspace object answers
+  with a 2xx status.
+- `chatLifecycleRoute` in [app-api/lifecycle.ts](app-api/lifecycle.ts)
+  records a new workspace, after the create answers with 201.
+- Agent tools and routines do not pass these routes, so their actions do
+  not count.
+- `recordUserActivity` in [data/user-activity.ts](data/user-activity.ts)
+  writes only when the stored time is older than 1 minute. It runs in
+  `waitUntil` when the entry has an execution context. A failed write logs
+  the `user_activity_failed` warning and never fails the request.
+
 ## Workspace object connections
 
 One `Workspace` class serves each workspace object and each Mac broker object.
@@ -257,7 +276,7 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [waitlist/grant.ts](waitlist/grant.ts) supplies the shared app access grant statements for D1 batches.
 - [app-api/README.md](app-api/README.md) names the entry points of the account, shell, and workspace routes.
 - [configuration.ts](configuration.ts): `runnerSoftware` reads the runner archive variables for builds and refreshes.
-- [chat/router.ts](chat/router.ts) forwards the browser chat routes and the runner socket to the Durable Object of their workspace.
+- [chat/router.ts](chat/router.ts) forwards the browser chat routes and the runner socket to the Durable Object of their workspace. It records the [last active time](#last-active-time) of a sent message.
 - [workspace.ts](workspace.ts) composes each workspace Durable Object. [workspace-lifecycle.ts](workspace-lifecycle.ts) exposes its lifecycle RPC methods and owns its [input activity](lifecycle/README.md#input-activity). Its constructor restores the native sockets, and it receives their message, close, and error events.
 - [native-sockets.ts](native-sockets.ts): `WorkspaceSockets`, the trusted socket roles, the attachment check, the restore, and the dispatch of native socket events.
 - [model-gateway/README.md](model-gateway/README.md): the machine model routes, credential replacement, header rules, stream cancellation, and turn-token checks.

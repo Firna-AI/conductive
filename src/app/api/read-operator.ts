@@ -129,6 +129,7 @@ function readUserSummary(value: unknown): OperatorUserSummary {
     login: text(user, 'login'),
     name: maybeText(user, 'name'),
     joinedAt: count(user, 'joinedAt'),
+    lastActiveAt: maybeCount(user, 'lastActiveAt'),
     orgs: count(user, 'orgs'),
     workspaces: count(user, 'workspaces'),
     status: choice(user, 'status', ['active', 'suspended']),

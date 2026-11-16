@@ -36,6 +36,7 @@ export async function readOperatorUsers(
       .prepare(
         `SELECT u.id AS userId, u.github_id AS githubId, u.github_login AS login,
            u.display_name AS name, u.created_at AS joinedAt,
+           u.last_active_at AS lastActiveAt,
            (SELECT COUNT(*) FROM org_members m WHERE m.user_id = u.id) AS orgs,
            (SELECT COUNT(*) FROM workspaces w WHERE w.owner_user_id = u.id) AS workspaces,
            CASE WHEN u.suspended_at IS NULL THEN 'active' ELSE 'suspended' END AS status

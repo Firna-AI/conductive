@@ -13,6 +13,7 @@ interface UserHeader extends SuspensionRow {
   login: string
   name: string | null
   joinedAt: number
+  lastActiveAt: number | null
   owned: number
   running: number
 }
@@ -26,6 +27,7 @@ export async function readOperatorUser(
       .prepare(
         `SELECT u.id AS userId, u.github_id AS githubId, u.github_login AS login,
            u.display_name AS name, u.created_at AS joinedAt,
+           u.last_active_at AS lastActiveAt,
            (SELECT COUNT(*) FROM workspaces w WHERE w.owner_user_id = u.id) AS owned,
            (SELECT COUNT(*) FROM workspaces w WHERE w.owner_user_id = u.id
              AND ${runningWorkspacePredicate}) AS running,
@@ -56,6 +58,7 @@ export async function readOperatorUser(
     login: user.login,
     name: user.name,
     joinedAt: user.joinedAt,
+    lastActiveAt: user.lastActiveAt,
     workspaces: { total: user.owned, running: user.running },
     orgs: orgs.results.map((row) => {
       if (!('role' in row)) throw new Error('Invalid operator user org row')
