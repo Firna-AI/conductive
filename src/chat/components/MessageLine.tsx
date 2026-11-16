@@ -4,9 +4,10 @@ import styles from '../../../docs/mockups/src/components/chat/ToolGroup.module.c
 import a11y from '../../../docs/mockups/src/components/common/a11y.module.css'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import markdown from '../../../docs/mockups/src/components/files/MarkdownView.module.css'
+import { AnswerText } from '../links/LinkedText'
 import { PlainLinks } from '../../shell/ui/text-links'
-import { LinkedText } from '../links/LinkedText'
 import { LinksProvider, type ChatLinks } from '../links/LinksContext'
+import { MentionsProvider } from '../mentions/MentionsContext'
 import { AgentBlocks } from './AgentText'
 import {
   textBlocks,
@@ -18,7 +19,10 @@ import {
 import local from './chat.module.css'
 import { useFold } from './useFold'
 
-/** No link is a chip here, as outside a chat. */
+/**
+ * No link is a chip here, as outside a chat, so the text holds no link. The
+ * hidden copy also gives no file chips, through a chat without files.
+ */
 const plainLinks: ChatLinks = { links: { orgId: '', workspaces: null } }
 
 /** The cells of a table as text, row by row, with a dot between two cells. */
@@ -27,7 +31,7 @@ function TableText(props: { table: TextTable }) {
   return [head, ...rows].flat().map((cell, index) => (
     <Fragment key={index}>
       {index > 0 ? ' · ' : null}
-      <LinkedText strong text={cell} />
+      <AnswerText text={cell} />
     </Fragment>
   ))
 }
@@ -42,7 +46,7 @@ function LineItem(props: { item: TextItem; open: boolean }) {
   if (props.item.length === 1 && first.kind === 'p') {
     return (
       <>
-        <LinkedText strong text={first.text} />{' '}
+        <AnswerText text={first.text} />{' '}
       </>
     )
   }
@@ -97,7 +101,7 @@ function LineBlock(props: { block: TextBlock; open: boolean }) {
     case 'p':
       return (
         <span className={classes(styles.paragraph, local.lineBlock)}>
-          <LinkedText strong text={block.text} />{' '}
+          <AnswerText text={block.text} />{' '}
         </span>
       )
     case 'heading':
@@ -110,7 +114,7 @@ function LineBlock(props: { block: TextBlock; open: boolean }) {
             local.lineHeading,
           )}
         >
-          <LinkedText strong text={block.text} />{' '}
+          <AnswerText text={block.text} />{' '}
         </span>
       )
     case 'ul':
@@ -194,7 +198,9 @@ export function MessageLine(props: { text: string }) {
             <span className={a11y.hidden}>
               <LinksProvider value={plainLinks}>
                 <PlainLinks>
-                  <LineBlocks blocks={body} open={false} />
+                  <MentionsProvider value={null}>
+                    <LineBlocks blocks={body} open={false} />
+                  </MentionsProvider>
                 </PlainLinks>
               </LinksProvider>
             </span>

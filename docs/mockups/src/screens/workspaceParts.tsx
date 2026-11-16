@@ -43,6 +43,7 @@ import type { WorkspaceState } from './workspaceState'
 export function openFile(state: WorkspaceState): FileTabView | undefined {
   switch (state.tab) {
     case 'code':
+    case 'code-lines':
     case 'markdown':
       return state.tab
     case 'diff':
@@ -71,6 +72,7 @@ function backFrom(open: FileTabView): BackLink {
     case 'unnamed':
       return { label: 'All files', to: paths.maskedPathsAllFiles }
     case 'code':
+    case 'code-lines':
     case 'markdown':
     case 'image':
     case 'image-not-drawn':
