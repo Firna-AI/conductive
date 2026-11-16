@@ -77,7 +77,8 @@ link, and the bars of the cloud computer.
   - The bar opens the fold and the message line that hold the current
     match, as a click does. `findCopy.ts` holds the words of the bar, of
     the Find item of the tab menu, and of the Find button of the header
-    of a file page, which sits beside Copy and is off where Copy is off.
+    of a file page, which sits beside Copy and is on where the page
+    offers Find.
 - `TerminalTabs` in `src/components/tools/` draws the terminals of a
   workspace as a row of tabs above the shown terminal, with + at its end,
   from decisions 1 to 3 of the terminal tabs change, as `app/tools` shows. Its tabs are

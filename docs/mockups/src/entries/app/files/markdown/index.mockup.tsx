@@ -32,6 +32,7 @@ export const filesMarkdown = defineScreen({
         'The find bar over README.md, under the header and above the preview. “checkout” has 3 matches: in a cell of the table of environment variables, in the heading Checkout, and in the paragraph under it. The current match, 1 of 3, is in the cell. On a phone, Find in the header of the page opened the bar, and the on-screen keyboard covers the bottom of the preview.',
       rationale:
         'Find searches only the text that the tab shows, never the stored text, as the design of find decision 1 B says. So the preview finds its rendered text, without the marks of Markdown, and the Source view finds the source. A match stays inside one block, such as one cell, one heading, or one paragraph.',
+      relatedDocs: ['docs/protocol/find-in-tab.md'],
       props: { find: 'found' },
     },
   ],

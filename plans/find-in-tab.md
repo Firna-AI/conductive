@@ -55,7 +55,7 @@ This plan names its decisions after the change, as find decision 1, as
   - The chat draws its whole history, with no windowing. The code view draws every line of a file of up to 5 MiB.
   - Conductor has ⌘F for "Search chat" and "Find in file", and ⌘G and ⇧⌘G for the next and previous match.
 - **Problem:** In the Mac app, a person cannot find a word in a long chat or file. In a browser, matches from outside the tab mix with the matches in the tab.
-- **Impact if no action:** People scroll long chats by hand. The comparison rows for chat search and file search stay at "under consideration".
+- **Impact if no action:** People scroll long chats by hand.
 - **Root question:** How does a person find text in the chat or the file that is open in the centre column?
 - **Options:**
   - **A.** Keep the browser's own find, and fix the chat so that browser find works well in it. Add Find to the Edit menu of the Mac app, with a native find bar on `findInPage`. Matches still come from the whole page. The Mac app needs a new bridge and new fixed keys, which change two rules in force. Effort: Large.
@@ -280,8 +280,9 @@ only the requirements, in Milestone 2.
     and Download. On a phone, the file page shows no tab row, so this
     button is its control. It stands just before Copy, and its tooltip
     says "Find in" and the file name, with the key, such as
-    "Find in useAddressAutocomplete.ts (⌘F)". It is off where Copy is
-    off: for a picture, a binary file, and a page whose text did not load.
+    "Find in useAddressAutocomplete.ts (⌘F)". It is on where the page
+    offers Find, and off elsewhere, such as for a picture, a binary file,
+    and a page whose text did not load.
 - The Keyboard shortcuts tab lists the fixed keys of the find field in
   the Chat group, after Send and New line: "Next match in the find
   field", Enter, "Previous match in the find field", Shift+Enter, and
@@ -364,9 +365,14 @@ mockups of Milestone 1, under the same decision test.
   the tab row and the page header.
 - Find in the menu of a tab that does not show shows that tab, then opens
   the bar on it. Reason: the bar searches only the shown tab.
-- The Find button of the page header stands just before Copy, and it is
-  off where Copy is off. Reason: both act on the text of the page, and
-  the header already keeps Copy off where the page has no text.
+- The Find button of the page header stands just before Copy. Reason:
+  both act on the text of the page.
+- The Find button is on where the page offers Find, and off elsewhere.
+  Reason: the button and the key then always agree. This is the agent's
+  call of 16 November 2026. It replaces the call of 13 November 2026 that
+  the button is off where Copy is off. Copy disagrees with the shown text
+  on two diff pages: the diff of a deleted file shows lines but has no
+  Copy, and a diff with no changed lines shows no lines but has Copy.
 - Each match is a tint of amber, and the current match is solid amber.
   Reason: amber is the usual colour of find, it differs from the accent of
   the focus, and a tint lets the fill of a diff line show through.
@@ -419,16 +425,16 @@ Depends on: 1
 
 The protocol states the requirements of find and of its keys and controls.
 
-- [ ] Create `docs/protocol/find-in-tab.md` with the requirements: the
+- [x] Create `docs/protocol/find-in-tab.md` with the requirements: the
       shown tab only, the tab kinds, the bar, matching, folds, the reader's
       place, live changes, accessibility, the phone, and find decision 1.
       List it in `docs/architecture/protocol-docs.md`.
-- [ ] Update `docs/protocol/keyboard-shortcuts.md` "Commands": remove
+- [x] Update `docs/protocol/keyboard-shortcuts.md` "Commands": remove
       "search in the chat" from the features that the app lacks.
-- [ ] Update `docs/protocol/keyboard-shortcuts-keys.md`: add Find, Find
+- [x] Update `docs/protocol/keyboard-shortcuts-keys.md`: add Find, Find
       next, and Find previous to the table, with their Where words, and the
       reason for no default key of Find previous.
-- [ ] Update `docs/protocol/keyboard-shortcuts-fixed-keys.md`: Enter,
+- [x] Update `docs/protocol/keyboard-shortcuts-fixed-keys.md`: Enter,
       Shift+Enter, and Escape in the find field.
 - [ ] Update `docs/protocol/agents-and-sessions.md` "The tab row": the
       Find item of each tab menu, and the read-only file tab menu, as find
@@ -436,11 +442,11 @@ The protocol states the requirements of find and of its keys and controls.
 - [ ] Add `docs/protocol/find-in-tab.md` to the `relatedDocs` of the find
       mockups: `app/chat/find`, the `find` variants of `app/files`, and
       `app/tabs/menu`.
-- [ ] Update `docs/protocol/workspace-tools.md` "Files and changes": the
+- [x] Update `docs/protocol/workspace-tools.md` "Files and changes": the
       Find button of the file page header.
-- [ ] Read `src/marketing/terms.ts` and `src/marketing/privacy.ts` in full,
+- [x] Read `src/marketing/terms.ts` and `src/marketing/privacy.ts` in full,
       and update each sentence that restates a changed fact.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
 
 ## Milestone 3: Find engine
 
@@ -538,7 +544,7 @@ The bar works in each tab of a file with text.
       Mark their line numbers and the signs of the diff with
       `data-find-skip`.
 - [ ] Add the Find button to the file page header, just before Copy, and
-      off where Copy is off. Add Find to the file and diff tab menu, as
+      on where the page offers Find. Add Find to the file and diff tab menu, as
       find decision 3 chooses.
 - [ ] Offer no Find for an image, a binary file, a file over the size
       limit, or a file that did not load.
@@ -548,7 +554,7 @@ The bar works in each tab of a file with text.
 - [ ] Update `src/files/README.md` and
       `src/shell/workspace/screen-parts.md`.
 
-## Milestone 7: Public guides and the comparison page
+## Milestone 7: Public guides
 
 Depends on: 5, 6
 
@@ -559,12 +565,10 @@ The public docs say what the shipped feature does.
       [Website docs](../docs/protocol/website-docs.md). Read each other
       guide in full, and update each sentence that restates a changed
       fact.
-- [ ] Update the comparison rows, under the rules of
-      [Conductor comparison](../docs/protocol/conductor-comparison.md#statuses):
-      `chat-navigation` in `src/marketing/from-conductor/areas/agents-and-chat.ts`,
-      the file tabs row in `src/marketing/from-conductor/areas/files.ts`,
-      and the note in `navigation-and-appearance.ts`. `search-across-files`
-      and `transcript-sql-search` stay.
+- [ ] Update `src/marketing/docs/files-and-changes.md` near line 113, for
+      the Find button of the header, and `sessions-and-chat.md` near lines
+      211 to 239, for the folds that find opens and for the tab menu, as
+      find decision 3 chooses.
 
 ## Milestone 8: Verification, commit, review, and pull request
 

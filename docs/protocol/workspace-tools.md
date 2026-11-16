@@ -38,6 +38,13 @@ The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   an address with a user name or a password, and an address of the app
   that names no page.
 - The header of a file tab can copy and download the file.
+- The header of a file tab or a diff tab also has a Find button, just
+  before Copy. It opens the find bar over the text of the page, as
+  [Find in the shown tab](find-in-tab.md) says.
+- The tooltip of the Find button says "Find in", the name of the file, and
+  the key of Find. An example is "Find in useAddressAutocomplete.ts (⌘F)".
+- The Find button is on where the page offers Find, and off elsewhere.
+  Reason: the button and the key of Find then always agree.
 - Reading a file has a size limit of 5 MiB, or 5,242,880 bytes.
   Reason: Boat's file read stops at 5 MiB, so a file read that falls back
   to it cannot read more.
@@ -53,8 +60,8 @@ The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   to open it", with Download, as for each other binary file.
 - An image over the read limit shows "Open this file in the terminal", as
   each other file over the limit does.
-- The header keeps Copy and Download. Copy is off for a picture, as for
-  each other binary file.
+- The header keeps Copy, Find, and Download. Copy and Find are off for a
+  picture, as for each other binary file.
 - An SVG file stays text with line numbers. Reason: its source is what a
   member edits.
 - Reason: a press on a screenshot then shows its picture in the file tab,

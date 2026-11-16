@@ -32,6 +32,7 @@ export const filesDiff = defineScreen({
         'The find bar over the diff of AddressForm.tsx, under the header and above the diff. “line1” has 7 matches on unchanged, added, and removed lines. The current match, 3 of 7, is on an added line. The fill of each line shows through the tint of its matches. The line numbers and the + and − signs are never matched. On a phone, Find in the header of the page opened the bar, and the on-screen keyboard covers the bottom of the diff.',
       rationale:
         'The user chose B of find decision 1 on 13 November 2026. The signs and the numbers of a diff are marks, not text that a person reads, so find skips them, as it skips the line numbers of a code file. A match can cross the coloured tokens of one line.',
+      relatedDocs: ['docs/protocol/find-in-tab.md'],
       props: { find: 'found' },
     },
   ],

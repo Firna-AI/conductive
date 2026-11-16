@@ -40,8 +40,9 @@ function isDiff(view: FileTabView): boolean {
 
 /**
  * Find in the text of the page, which opens the find bar. Its tooltip gives
- * the key of Find. It is off where Copy is off, because the page then has
- * no text to find.
+ * the key of Find. It is on where the page offers Find, so it agrees with
+ * the key. The pages that these mockups draw offer no Find where they have
+ * no text.
  */
 function FindButton(props: { name: string; off: boolean }) {
   const label = findInFile(props.name)

@@ -30,6 +30,10 @@ decision number names a decision of the change that adds
   - **Workspace label:** where the header of a workspace shows the label
     of its number, which is the Copy link button.
   - **Session tab:** where the shown tab of a workspace is a session.
+  - **Tab with text:** where the shown tab of a workspace offers Find,
+    outside the find field, as
+    [Which tabs offer Find](find-in-tab.md#which-tabs-offer-find) says.
+  - **Find bar:** where the find bar of the shown tab is open.
   - **Mac app:** only the Mac app has the command.
 - A dash means that the command has no default key.
 - Switch to org 1 to 9 and Open workspace 1 to 9 stand for nine commands
@@ -85,6 +89,9 @@ decision number names a decision of the change that adds
 | Chat | Stop the agent | ⌃⌘⌫ | Alt+Shift+S | Workspace |
 | Chat | Copy concise transcript | ⌥⌘C | Alt+Shift+C | Session tab |
 | Chat | Copy full transcript | – | – | Session tab |
+| Chat | Find | ⌘F | Ctrl+F | Tab with text |
+| Chat | Find next | ⌘G | Ctrl+G | Find bar |
+| Chat | Find previous | ⌥⌘G | Alt+Shift+G | Find bar |
 
 - Fast mode has ⇧⌘E, the key of the Fast row of Conductor, and its twin
   Ctrl+Shift+E (fast mode decision 258). Reason: members who move from
@@ -166,6 +173,8 @@ On a Mac:
   Firefox switches the text direction of the focused text field on it.
   ⌃⌘X was the other choice. Chrome on a Mac uses it for its tab groups, and
   it has no twin on Windows and Linux.
+- Find previous is ⌥⌘G. ⇧⌘G, the key of Conductor, was rejected, because
+  it is the key of Open PR on GitHub. No two commands share a default key.
 
 On Windows and Linux:
 
@@ -186,6 +195,8 @@ On Windows and Linux:
 - Fix checks is Alt+Shift+X, the twin of ⌥⌘X. Ctrl+Shift+X was rejected,
   because Firefox switches the text direction of the focused text field on
   it.
+- Find previous is Alt+Shift+G, the twin of ⌥⌘G. Ctrl+Shift+G, the twin of
+  ⇧⌘G, is the key of Open PR on GitHub.
 - Previous workspace and Next workspace also get Alt+Shift+PageUp and
   Alt+Shift+PageDown. Reason: the Orca screen reader on Linux takes
   Alt+Shift with the arrows in every mode. A person who uses Orca then has

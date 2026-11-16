@@ -21,6 +21,9 @@ No person can give a fixed key to a command. The fixed keys are:
   [Keys inside the palette](command-palette.md#keys-inside-the-palette)
   says
 - Enter, which saves a rename, and Escape, which cancels it
+- in the find field, Enter and Shift+Enter, which go to the next and the
+  previous match, and Escape, which closes the bar, as
+  [Keys](find-in-tab.md#keys) says
 - Shift+F10 and the Menu key on a focused tab, which open the tab menu, as
   [The tab row](agents-and-sessions.md#the-tab-row) says
 - on a focused workspace row, Alt with Up or Down and no other modifier,

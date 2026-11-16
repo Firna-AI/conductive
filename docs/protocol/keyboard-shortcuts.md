@@ -61,10 +61,12 @@ app.
   between the tabs, the workspaces, and the orgs that it shows. Reason:
   decision 144 set this rule for the palette.
 - So the keys of Conductor for features that the app lacks stay out, such
-  as a theme, a zen mode, Pull latest, Start review, and search in the
-  chat.
+  as a theme, a zen mode, Pull latest, and Start review.
 - Copy link, each action of the pull request bar, Copy concise transcript,
   and Copy full transcript are commands too (decision 199).
+- Find, Find next, and Find previous are commands too. They open the find
+  bar of the shown tab and go to its matches, as
+  [Find in the shown tab](find-in-tab.md) says.
 - The default keys copy the keys of Conductor, except where
   [The keys](keyboard-shortcuts-keys.md) gives another key and its reason.
 - A command without a key in Conductor starts with no key. The person can
