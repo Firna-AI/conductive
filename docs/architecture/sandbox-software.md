@@ -33,9 +33,9 @@ published stable API.
 
 The agent tools are an MCP server and a CLI. They manage the workspaces,
 the sessions, the sections, and the port previews of the org, and they ask
-for Mac commands. [Agent tools](../protocol/agent-tools.md) states their
-calls. The git credential helper gets a fresh GitHub token for each git
-operation.
+for Mac commands and run commands with the secrets of the org.
+[Agent tools](../protocol/agent-tools.md) states their calls. The git
+credential helper gets a fresh GitHub token for each git operation.
 
 The program also installs the other parts of the software:
 

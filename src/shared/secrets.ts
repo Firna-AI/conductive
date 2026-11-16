@@ -1,5 +1,5 @@
-import { orgPath, type Timestamp } from './api'
-import type { MessageSender } from './messages'
+import { orgPath } from './api'
+import type { MessageSender } from './generated/MessageSender'
 import { workspacePath } from './workspaces'
 
 export function secretsPath(orgId: string): string {
@@ -25,8 +25,8 @@ export interface OrgSecret {
   createdByUserId: string
   createdBy: MessageSender | null
   allAgents: boolean
-  createdAt: Timestamp
-  updatedAt: Timestamp
+  createdAt: number
+  updatedAt: number
 }
 
 export interface SecretsResponse {
@@ -63,7 +63,7 @@ export interface SessionSecretApproval {
   sessionId: string
   approvedByUserId: string
   approvedBy: MessageSender | null
-  approvedAt: Timestamp
+  approvedAt: number
 }
 
 export interface WorkspaceCapabilitiesResponse {

@@ -165,14 +165,6 @@ Each build installs the newest release of Conductive's own cloud computer softwa
 **Continue** keeps that same computer and the software installed by the org's install script for the workspace's next task.
 A new build does not replace the existing computer.
 
-<<<<<<< HEAD
-Ask an admin to run **Build computer**.
-After it succeeds, create a new workspace to use the updated software.
-This also gives the new workspace the server list in **Preview**.
-The same steps give it the current workspace tools for managing workspaces, sessions, sections, and private previews across the org.
-The tools also read chats and messages there, and run commands with secrets.
-Resuming an existing workspace does not update its installed tools.
-=======
 Conductive's own software updates itself in existing cloud computers.
 Fixes need no new workspace or manual install.
 The software checks for a newer release when it starts, including at each cloud computer start, and every hour while it runs.
@@ -190,12 +182,11 @@ An older cloud computer without the update program gets it at its next start.
 An automatic software update gives an existing workspace the server list in **Preview**.
 The workspace tools update with Conductive's own software.
 They manage workspaces, sessions, sections, and private previews across the org.
-The tools also read chats and messages there.
+The tools also read chats and messages there, and run commands with secrets.
 
 Installing updated agent software in an older computer does not change its protection for saved agent logins.
 Ask an admin to run **Build computer**.
 After it succeeds, create a new workspace for the new protection.
->>>>>>> origin/main
 
 - [Understand agent login protection](/docs/security#protect-agent-and-github-logins)
 

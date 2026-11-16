@@ -64,6 +64,22 @@
   `worker/lifecycle/workspace-runtime.test.ts:47` timed out at its own 20-second limit, at about 21 s.
   It did so in 2 of 2 runs on the branch, and in 1 of 1 run on its merge base `c194159bf`.
   The branch changes no line of that test. Machine load is the suspected source.
+- On 16 November 2026, the conflict repair after merge `24b23ea74` on
+  `calummoore/quito-0ojg` ran eight selected workspace files.
+  The run passed 24 tests and failed two with
+  `Error: Test timed out in 15000ms.`
+  The failing cases were:
+  - `worker/features/continue-routes.test.ts:33`,
+    "resumes Continue through real routes and socket wake, fences sends and Archive, expires recovered credentials, and routes new-branch GitHub events".
+  - `worker/lifecycle/archive-lifecycle.test.ts:79`,
+    "restores without starting, orders same-time transitions, and resumes with a fresh token".
+  A separate checkout of `origin/main` at `eedd83679` ran those two files.
+  Continue timed out there too, while all seven archive tests passed.
+  A second run of the archive file on the repaired branch passed six tests
+  and timed out in the same restore/resume case.
+  This repair changes no test or timeout.
+  The blocked await and cause remain unknown.
+  The runs overlapped other checks, but machine load is not an established cause.
 - **Problem:** These tests depend on wall-clock time limits, so a busy machine can fail them with no defect in the code.
 - **Impact if no action:** A slow CI runner or a busy developer machine can fail the gate now and then, and a person must rerun it.
 - **Root question:** How do these tests stay correct on a slow or busy machine?

@@ -1,10 +1,3 @@
-<<<<<<< HEAD
-import type { AgentChoice } from './agents'
-import { orgPath, type Timestamp } from './api'
-import type { GitHubSummary } from './github'
-import type { MessageSender, SendMessageRequest, UserMessage } from './messages'
-import type { WorkspaceCapabilities } from './secrets'
-=======
 import type { Workspace } from './generated/Workspace'
 
 import type { UserMessage } from './generated/UserMessage'
@@ -12,7 +5,7 @@ import type { WorkspaceStart } from './generated/WorkspaceStart'
 import { orgPath } from './api'
 
 import type { SendMessageRequest } from './messages'
->>>>>>> origin/main
+import type { WorkspaceCapabilities } from './secrets'
 
 export const WORKSPACE_RESTORE_MS = 14 * 24 * 60 * 60 * 1_000
 
