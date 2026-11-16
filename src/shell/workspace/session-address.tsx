@@ -6,11 +6,11 @@ import type { WorkspaceContext } from './features'
 
 /**
  * Shows the session of a session address in its workspace, after the load
- * of the chat. Then the address becomes the address of the workspace, in
- * place of the session address, because the address does not follow the
- * shown tab. A closed or unknown session and a failed load keep the shown
- * tab. A move to another address before the lookup ends stops it, and so
- * does a choice of a shown session, as `showAddress` says.
+ * of the chat. A closed session reopens first. Then the address becomes the
+ * address of the workspace, in place of the session address, because the
+ * address does not follow the shown tab. An unknown session and a failed
+ * load keep the shown tab. A move to another address before the lookup ends
+ * stops it, and so does a choice of a shown session, as `showAddress` says.
  */
 export function OpenSessionAddress(props: {
   chat: ChatController

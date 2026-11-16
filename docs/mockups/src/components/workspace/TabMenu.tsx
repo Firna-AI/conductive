@@ -6,6 +6,7 @@ import {
   Copy,
   CopyPlus,
   Pencil,
+  X,
 } from 'lucide-react'
 import { Menu, type MenuEntry } from '../common/Menu'
 import { Sheet } from '../common/Sheet'
@@ -57,11 +58,13 @@ const keepOpen: TabMenuItem = {
  * The groups of the menu of a tab, before a read-only workspace leaves
  * items out: a session tab has Rename session, Find, Copy link and its two
  * transcript copies, and the moves. The temporary tab has Keep open, Find,
- * and the moves. A kept file or diff tab has Find and the moves.
+ * and the moves. A kept file or diff tab has Find and the moves. Every tab
+ * ends with Close tabs to the right.
  */
 function groupsOf(
   tab: WorkspaceTab,
   moves: readonly TabMenuItem[],
+  closeRight: readonly TabMenuItem[],
 ): readonly (readonly TabMenuItem[])[] {
   const find: TabMenuItem = { ...findItem, changes: false }
   if (tab.kind === 'session') {
@@ -74,9 +77,12 @@ function groupsOf(
         { label: transcriptItems.full, icon: CopyPlus, changes: false },
       ],
       moves,
+      closeRight,
     ]
   }
-  return tab.temporary ? [[keepOpen], [find], moves] : [[find], moves]
+  return tab.temporary
+    ? [[keepOpen], [find], moves, closeRight]
+    : [[find], moves, closeRight]
 }
 
 /**
@@ -86,12 +92,13 @@ function groupsOf(
  * shows the tab and opens the find bar on it (find decision 1 B). The copy
  * items follow: Copy link, which copies the link of the session, the
  * concise copy, with each fold of the chat closed, and the full copy, with
- * every fold open. A temporary tab leads with Keep open. A file or diff
- * tab has Find as its own group. Every tab moves one place left or right.
- * A move that the place of the tab rules
- * out keeps its place, off. A read-only workspace leaves out each item
- * that changes the workspace, so a session tab keeps Find and its copy
- * items, and a file or diff tab keeps only Find.
+ * every fold open. The temporary tab leads with Keep open. A file or diff
+ * tab has Find as its own group. Every tab moves one place left or right,
+ * and closes every tab after it, as Close tabs to the right of a browser
+ * does. A move or a close that the place of the tab rules out keeps its
+ * place, off. A read-only workspace leaves out each item that changes the
+ * workspace, so a session tab keeps Find and its copy items, and a file or
+ * diff tab keeps only Find.
  */
 export function tabMenuOf(
   tabs: readonly WorkspaceTab[],
@@ -115,8 +122,16 @@ export function tabMenuOf(
       changes: true,
     },
   ]
+  const closeRight: TabMenuItem[] = [
+    {
+      label: 'Close tabs to the right',
+      icon: X,
+      disabled: index === tabs.length - 1,
+      changes: true,
+    },
+  ]
   return joined(
-    groupsOf(tab, moves).map((group) =>
+    groupsOf(tab, moves, closeRight).map((group) =>
       group.filter((item) => !readOnly || !item.changes),
     ),
   )

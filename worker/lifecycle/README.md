@@ -86,6 +86,26 @@ provider retries, logs, snapshot leases, and refresh timers.
 The [software image area](../software-image/README.md) builds the shared
 image that a build of an org without an org image starts from.
 
+Org builds and refreshes install the newest sandbox release through `conductive`.
+A first build from a software image runs this step too.
+The step runs apt only when the source image lacks the current apt part or
+a package, or when its ttyd service is not masked, as
+[The software step](image-builds.md#the-software-step) says.
+An image that holds `conductive` updates through that program.
+Refreshes then snapshot without running the org install script.
+The Worker validates release metadata from `CONDUCTIVE_RELEASE_SERVER`,
+which defaults to `https://runner.conductive.build`.
+A failed build lookup fails the build. A failed startup lookup prints a warning.
+
+A normal workspace startup bootstraps a missing program in a detached root job.
+Downloads never hold the lock used by runner restarts.
+Activation shares `/run/conductive/bootstrap-activate.lock` with the restart.
+The first activation confirms its installation before it releases that lock.
+The release program includes the workspace CLI and MCP server.
+Its system installer links `/usr/local/bin/conductive` to the active program.
+Disk retention starts do not bootstrap or restart the runner.
+[Installation](../../image/install.md) gives the command sequence and release layout.
+
 ## Settings
 
 [Lifecycle settings](settings.md) gives the environment inputs and captured secret values.
@@ -103,6 +123,16 @@ The [lifecycle test guide](tests.md) describes the native fixture, clocks, alarm
 
 D1 holds the workspace, token, build, and log records. The storage of each
 object holds the lifecycle state, the turn records, and the events.
+`WorkspaceStateProjection` passes the lifecycle start to `persistLifecycleState`
+in [`workspace-data.ts`](workspace-data.ts).
+The save copies `start.startedAt` into `workspaces.running_since` for starting,
+ready, working, unread, and input. A missing start writes null.
+Stopped, error, and archived states clear the time.
+Archive, Restore, and deleted-org stops also clear it in their direct D1 writes.
+A deleted-org disk restart saves its restart time.
+The [operator Overview](../operator/overview.md) reads this current run time without a provider call.
+The migration leaves existing times null until their next lifecycle save.
+The save runs within 5 minutes during a turn, and within 30 minutes otherwise.
 The computer ledger keeps allocation keys, orgs, owners or starters, and provider IDs with their [provider accounts](provider-accounts.md#the-computer-ledger).
 It keeps deleted computer IDs until their org is purged.
 Assigned identity writes also retain older IDs, including imports and repairs.
@@ -119,6 +149,9 @@ At the end of Restore, the delete goes through the ledger-aware cleanup of [`cle
 A confirmed missing archived disk uses that batch too.
 
 ### Key Code
+
+- [software-release.ts](software-release.ts): reads and validates the newest release JSON.
+- [software-bootstrap.ts](software-bootstrap.ts): verifies downloads and serializes first activation with runner restarts.
 
 [Key code](key-code.md) lists the entry points of the lifecycle code, and
 the guides that give the entry points of each part.

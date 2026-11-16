@@ -5,6 +5,10 @@ This guide belongs to [Web app: data and composition](README.md).
 limits of the chat over the fake. This guide gives the query options of
 the dev wiring in `dev/`, and what its fake routes do.
 
+Without `?conversation=`, a working workspace has a running recorded chat.
+Other recorded workspaces have a finished chat. An explicit conversation
+option overrides this default, including queued chats that show no spinner.
+
 - The dev wiring in `dev/` keeps an in-memory state, so that an edit in the
   browser shows on the next read. Query options choose a preview state, for
   example `?role=member`, `?workspace=starting`, `?firstRun=org`,
@@ -17,18 +21,41 @@ the dev wiring in `dev/`, and what its fake routes do.
   `?banner=checks-failed`, gives `checkout-autocomplete` that pull request
   bar, and its list mark shows the GitHub state of that bar. The other rows
   keep the GitHub states of the mockups. `dev/attachment-routes.ts`
-  keeps the uploaded files of both composers. With `?upload=wait` each
-  upload keeps running, and with `?upload=fail` the first upload of the
-  page fails once, so Try again works. `?sent=<percent>` makes the dev
-  fixture `dev/progress-fixture.ts` report that share of each file as
-  sent, so `?upload=wait&sent=64` shows the measured state. Create org of the dev fake
+  serves the start call, the parts, and the complete call of the uploads
+  of both composers, with the checks of the Worker, through the store of
+  `dev/attachment-parts.ts`. With `?upload=wait` no part gets an answer,
+  so each upload keeps running. With `?upload=fail` the first part of the
+  page fails at its first send and at each of its retries, so its chip
+  fails once, and Try again sends that part again. The retries wait 1, 2,
+  and 4 seconds, so the chip fails after about 7 seconds. `?sent=<percent>` makes
+  the dev fixture `dev/progress-fixture.ts` report that share of each part
+  as sent, so `?upload=wait&sent=64` shows the measured state of a file of
+  one part. Create org of the dev fake
   requires at least one repository and starts a simulated build. Its
   repository catalogue keeps the saved choices, and its custom initials
   stay through rename, delete, and restore. Settings changes during the
   first good build start one added build. The fake compares settings
   revisions with builds as the Worker does.
+- Own endpoint saves return `endpointV1Added` and `modelListReadFailed`, as
+  the Worker does. Refresh returns HTTP 200 with `modelListReadFailed`.
+  False means the read produced a list. These response flags never enter
+  the saved account. Ordinary fake hosts list every model.
+  `https://v1-only.example.test` lists only under `/v1`. A Codex save of
+  that host without a final `/v1` returns `endpointV1Added: true`.
+  `https://no-models.example.test` lists no models. Its saves and Refresh
+  return `modelListReadFailed: true` for both agents. A failed Refresh
+  keeps the previous list and time. The fake keeps no secret or full address.
+  `?login=endpoint&modelList=v1-only` seeds both logins with the first host.
+  Remove and Connect Codex with that host without `/v1` to get the save flag.
+  `?login=endpoint&modelList=read-failed` seeds both with the second host.
+  Refresh then returns the failed-read flag. The Claude login keeps a list
+  from a day before that does not name the last Claude model, so its row
+  shows Refresh, and a Refresh shows the warning above the line of that
+  list. A reload alone returns neither flag.
 - The upload routes also keep the exact bytes of each upload, in a private
-  store of the page. A send that names uploaded files gets a reply with its
+  store of the page. They keep the bytes of each part until the complete
+  call puts the file together, so a large file takes its size in the
+  memory of the page. A send that names uploaded files gets a reply with its
   own message ID, text, model choice, and files. An archived workspace,
   and each message without uploaded files, keep the recorded reply. In a
   workspace that runs, such as `checkout-autocomplete` by default, the
@@ -100,7 +127,7 @@ the dev wiring in `dev/`, and what its fake routes do.
   of the switch, or a new code of the operator section cannot reach the
   waitlist screen.
 - Acme has the
-  routines of the mockups, each with the runs that its page in the mockups
+  automations of the mockups, each with the runs that its page in the mockups
   lists. `?runs=failed` or `?runs=skipped` gives Review pull requests the
   failed or the skipped runs of the mockups. A skipped run names the
   account outside Acme by its login. The fake has no workspaces for these
@@ -109,22 +136,22 @@ the dev wiring in `dev/`, and what its fake routes do.
   makes `checkout-autocomplete` the workspace of one run, so its header
   shows the line of that run, with the pull request of a pull request run.
   The other orgs have no
-  routines, so their Routines page shows its empty state. A save of a
-  routine checks the prompt, each custom cron, and the time zone, as the
+  automations, so their Automations page shows its empty state. A save of an
+  automation checks the prompt, each custom cron, and the time zone, as the
   Worker does. A removal of a repository on the Repositories tab turns off
-  each routine in it, with the reason that the routine page shows, as the
+  each automation in it, with the reason that the automation page shows, as the
   Worker does. Its author filter knows the members of the org and a few
   bots, such as `dependabot[bot]`. Any other login gets the refusal of a
   login that names no GitHub account, with its trigger and its list.
 - Run now makes the workspace of the run as Create workspace does, in the
-  section of the routine, and the run takes the state of that workspace.
-  Without the agent login of the routine's model, as with `?login=none`,
+  section of the automation, and the run takes the state of that workspace.
+  Without the agent login of the automation's model, as with `?login=none`,
   the run fails with no workspace. A prompt that contains `fail` stands for
   a cloud computer that did not start: the run fails and keeps its
   workspace, in the error state with Try again, as the Worker does. The
   recorded server has no chat for
   a workspace that the fake made, so its chat does not load, and the line
-  of its routine does not show.
+  of its automation does not show.
   The dev backend records each run's agent and owner when Run now starts it.
 
 The development fake keeps each org's workspace number counter.

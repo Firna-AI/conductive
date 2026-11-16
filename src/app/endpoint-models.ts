@@ -1,5 +1,7 @@
+import type { AgentModel } from '../shared/generated/AgentModel'
+import type { Agent } from '../shared/generated/Agent'
+import type { AgentChoice } from '../shared/generated/AgentChoice'
 import type { EndpointModelList } from '../shared/account'
-import type { Agent, AgentChoice, AgentModel } from '../shared/agents'
 
 /**
  * An agent login of the signed-in person, with the last model list of an
@@ -54,7 +56,7 @@ function isChoice(model: AgentModel, choice: AgentChoice | undefined): boolean {
  * except one that the last model list of the owner's own endpoint login of
  * its agent does not name. A picker keeps `current`, the model that it
  * shows, also when the list does not name it, so that it never hides the
- * state of its session or its routine.
+ * state of its session or its automation.
  */
 export function offeredModels(
   models: readonly AgentModel[],

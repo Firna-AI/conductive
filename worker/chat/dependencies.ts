@@ -16,6 +16,7 @@ import { readRunnerProtocolVersion } from './runner-version-data'
 import type { ChatDependencies } from './types'
 import { resolveMessageAttachments } from './attachment-claims'
 import { prepareMessageAttachments } from './attachment-copy'
+import { finishAttachmentCopies } from './attachment-transfer-cleanup'
 import { attachmentWorkspace } from './attachment-claim-data'
 import { resolveAttachmentPaths } from './attachment-paths'
 import { filterRunnerOutput } from './runner-output'
@@ -34,8 +35,8 @@ export function chatDependencies(
 ): ChatDependencies {
   return {
     normalizeChoice: (choice) => modelChoice(env, choice),
-    refreshEndpointModels: (userId, agent) =>
-      refreshEndpointModels(
+    refreshEndpointModels: async (userId, agent) => {
+      await refreshEndpointModels(
         env,
         userId,
         agent,
@@ -44,7 +45,8 @@ export function chatDependencies(
           now: overrides.now ?? Date.now,
         },
         { background: true },
-      ),
+      )
+    },
     readBranches: (id) => readRunnerBranches(env.DB, id),
     readCommitAuthor: async (userId) => {
       const user = await readUser(env.DB, userId)
@@ -90,6 +92,8 @@ export function chatDependencies(
         attachments,
         sandboxId,
       ),
+    completeAttachments: (id, attachments, sandboxId) =>
+      finishAttachmentCopies(env, id, attachments, sandboxId),
     attachmentSandboxId: async (id, userId) =>
       (await attachmentWorkspace(env.DB, id, userId))?.sandboxId ?? null,
     resolveAttachmentPaths: (id, userId, attachments) =>

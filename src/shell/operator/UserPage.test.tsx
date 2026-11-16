@@ -43,7 +43,7 @@ function sections(view: HTMLElement): string[] {
 }
 
 describe('the page of a user for the operator', () => {
-  test('shows the name, the GitHub ID, the age on GitHub, the join day, the workspaces, the app access, and the referral code, and lists the orgs with roles, which open their pages', async () => {
+  test('shows the name, the email, the GitHub ID, the age on GitHub, the join day, the workspaces, the app access, and the referral code, and lists the orgs with roles, which open their pages', async () => {
     const page = await openUser(SAMPLE_IDS.activeUser)
     const shown = { header: page.header(), body: sections(page.view) }
     const nameless = await openUser(77120345)
@@ -57,13 +57,13 @@ describe('the page of a user for the operator', () => {
     }).toEqual({
       header: 'Users @mira-s Mira Santos Suspend user',
       body: [
-        'Details Name Mira Santos GitHub ID 52230011 On GitHub 6 years Joined 10 Dec 2026 Workspaces 23 owned, 1 running',
+        'Details Name Mira Santos Email mira-s@example.com GitHub ID 52230011 On GitHub 6 years Joined 10 Dec 2026 Last active 15 Jan 2027 at 02:00 Workspaces 23 owned, 1 running',
         'App access How Joined before the waitlist Since 10 Dec 2026',
         'Referral code Active Code M4QTX-7HKWD Uses 1 of 5 used Used by SO @tide-sam Sam Ortiz 14 Jan Disable code',
         'Orgs TP Tidepool Member LW Lumen Works Member BH Blue Harbor Admin',
       ],
       nameless:
-        'Details GitHub ID 77120345 On GitHub 2 months Joined 4 Jan 2027 Workspaces 6 owned, 2 running',
+        'Details Email vex-ops@example.com GitHub ID 77120345 On GitHub 2 months Joined 4 Jan 2027 Last active 15 Jan 2027 at 06:30 Workspaces 6 owned, 2 running',
       opened: 'Blue Harbor',
     })
   })

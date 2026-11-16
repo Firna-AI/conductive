@@ -13,6 +13,7 @@ import { shellArgument } from './privileged'
 import {
   credentialScript,
   launcherScript,
+  sessionServerScript,
   terminalPromptCommand,
 } from './scripts'
 import {
@@ -100,14 +101,24 @@ it('attaches each terminal connection to the workspace shell at the repository p
   await writeFile(
     fixture.terminal,
     `#!/bin/sh
-printf '%s\\0' "$@"
+printf '%s\\0' "$1" "$2" "$3" "$4" "$5" "$6" "$7"
+shift 7
+exec "$@"
 `,
   )
   expect((await runScript(credentialScript(fixture.options))).code).toBe(0)
   const result = await runScript(launcherScript(fixture.options))
   expect(result.code).toBe(0)
-  expect(result.stdout.split('\0').slice(7, -1)).toEqual([
-    fixture.multiplexer,
+  expect(result.stdout.split('\0').slice(0, -1)).toEqual([
+    '--interface',
+    '0.0.0.0',
+    '--port',
+    '7681',
+    '--writable',
+    '--credential',
+    `conductive:${'11'.repeat(32)}`,
+    fixture.repository,
+    'workspace environment',
     '-N',
     '-S',
     fixture.sessionSocket,
@@ -119,6 +130,43 @@ printf '%s\\0' "$@"
     fixture.repository,
     '/bin/bash',
     '-l',
+  ])
+})
+
+it('starts the workspace shell server with the repository environment and private socket', async () => {
+  const fixture = await scriptFixture()
+  const result = await runScript(sessionServerScript(fixture.options))
+  expect(result.code).toBe(0)
+  expect(result.stderr).toBe('')
+  expect(result.stdout).toContain(fixture.options.restoreMarker)
+  expect(result.stdout.split('\0').slice(0, -1)).toEqual([
+    fixture.repository,
+    'workspace environment',
+    '-S',
+    fixture.sessionSocket,
+    '-f',
+    '/dev/null',
+    'start-server',
+    ';',
+    'set-option',
+    '-s',
+    'exit-empty',
+    'off',
+    ';',
+    'set-option',
+    '-g',
+    'mouse',
+    'on',
+    ';',
+    'set-option',
+    '-g',
+    'history-limit',
+    '2000',
+    ';',
+    'set-environment',
+    '-g',
+    'PROMPT_COMMAND',
+    terminalPromptCommand(fixture.options.restoreMarker),
   ])
 })
 

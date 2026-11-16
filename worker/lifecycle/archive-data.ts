@@ -37,7 +37,7 @@ export async function restoreArchiveRecord(
 ) {
   const result = await db
     .prepare(
-      `UPDATE workspaces SET archived_at = NULL, state = 'stopped',
+      `UPDATE workspaces SET archived_at = NULL, state = 'stopped', running_since = NULL,
     updated_at = MAX(?, updated_at + 1), last_error_code = NULL, last_error_message = NULL,
     next_disk_keepalive_at = COALESCE(stopped_at + ?, ?)
     WHERE id = ? AND org_id = ? AND archived_at = ? AND sandbox_id = ? AND provider_account = ? AND archived_at + ? > ?

@@ -1,22 +1,28 @@
 /**
  * The run lists with failed runs, newest first: a failed run for each
- * cause, and the failed runs that turned a routine off (decision 513 B).
+ * cause, and the failed runs that turned an automation off (decision 513 B).
  */
 
-import { routines } from './routines'
-import { pr, runsOf, turnError, type Run, type RunTrigger } from './routineRuns'
+import { automations } from './automations'
+import {
+  pr,
+  runsOf,
+  turnError,
+  type Run,
+  type RunTrigger,
+} from './automationRuns'
 
 /**
- * A failed run for each cause of the routine that reviews pull requests.
+ * A failed run for each cause of the automation that reviews pull requests.
  * The checks of the agent login and of the GitHub access fail a run before
  * it has a workspace. A failed first start and a failed first turn keep
  * their workspace. A run that did not fail comes between them, so no three
- * runs in a row failed, and the routine stays on. The oldest failed run
- * used Codex, before Cal moved the routine to Claude, so its row still
+ * runs in a row failed, and the automation stays on. The oldest failed run
+ * used Codex, before Cal moved the automation to Claude, so its row still
  * names Codex. The run of #485 finished its first turn, and its workspace
  * could not resume later, so it shows the state of that workspace.
  */
-export const failedRuns: readonly Run[] = runsOf(routines['review-prs'], [
+export const failedRuns: readonly Run[] = runsOf(automations['review-prs'], [
   {
     key: 'opened-488',
     trigger: pr('opened', 488),
@@ -71,33 +77,36 @@ export const failedRuns: readonly Run[] = runsOf(routines['review-prs'], [
 const hourly: RunTrigger = { kind: 'schedule', schedule: 'hourly' }
 
 /**
- * An hourly routine whose last three runs failed, because the Claude login
+ * An hourly automation whose last three runs failed, because the Claude login
  * of its owner is not connected, so it turned off. A check failed each of
  * them, so they have no workspace.
  */
-export const turnedOffRuns: readonly Run[] = runsOf(routines['error-triage'], [
-  {
-    key: 'hourly-6',
-    trigger: hourly,
-    state: 'failed',
-    cause: 'agent-login',
-    when: '5m',
-  },
-  {
-    key: 'hourly-5',
-    trigger: hourly,
-    state: 'failed',
-    cause: 'agent-login',
-    when: '1h',
-  },
-  {
-    key: 'hourly-4',
-    trigger: hourly,
-    state: 'failed',
-    cause: 'agent-login',
-    when: '2h',
-  },
-  { key: 'hourly-3', trigger: hourly, state: 'ready', when: '3h' },
-  { key: 'hourly-2', trigger: hourly, state: 'archived', when: '4h' },
-  { key: 'hourly-1', trigger: hourly, state: 'archived', when: '5h' },
-])
+export const turnedOffRuns: readonly Run[] = runsOf(
+  automations['error-triage'],
+  [
+    {
+      key: 'hourly-6',
+      trigger: hourly,
+      state: 'failed',
+      cause: 'agent-login',
+      when: '5m',
+    },
+    {
+      key: 'hourly-5',
+      trigger: hourly,
+      state: 'failed',
+      cause: 'agent-login',
+      when: '1h',
+    },
+    {
+      key: 'hourly-4',
+      trigger: hourly,
+      state: 'failed',
+      cause: 'agent-login',
+      when: '2h',
+    },
+    { key: 'hourly-3', trigger: hourly, state: 'ready', when: '3h' },
+    { key: 'hourly-2', trigger: hourly, state: 'archived', when: '4h' },
+    { key: 'hourly-1', trigger: hourly, state: 'archived', when: '5h' },
+  ],
+)

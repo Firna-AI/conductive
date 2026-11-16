@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import { Ban, CircleCheck, Laptop, MonitorOff } from 'lucide-react'
+import { LiteralText } from '../../../../../src/chat/device/LiteralText'
 import {
   safariDuration,
   safariOutput,
@@ -47,12 +48,16 @@ const notes: Readonly<Partial<Record<MacCommandState, string>>> = {
 /** The exact command, after a muted shell prompt. Long commands wrap. */
 export function CommandLine(props: { command: string }) {
   return (
-    <code className={styles.command}>
-      <span aria-hidden className={styles.prompt}>
-        ${' '}
-      </span>
-      {props.command}
-    </code>
+    <LiteralText
+      className={styles.command}
+      lead={
+        <span aria-hidden className={styles.prompt}>
+          ${' '}
+        </span>
+      }
+      syntax="shell"
+      text={props.command}
+    />
   )
 }
 

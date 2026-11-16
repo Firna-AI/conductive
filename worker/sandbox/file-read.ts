@@ -1,7 +1,7 @@
 import { HttpError } from '../http'
 import { BodyBudgetExceeded } from '../http/bounded-body'
 import { ProviderError } from './errors'
-import type { SandboxFileRead } from './provider'
+import type { SandboxFileInfo, SandboxFileRead } from './provider'
 import type { BoatTransport } from './transport'
 
 function invalid(): never {
@@ -21,6 +21,31 @@ function samePath(reply: unknown, requested: string): boolean {
 
 function isSize(value: unknown): value is number {
   return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0
+}
+
+export async function readSandboxFileInfo(
+  transport: BoatTransport,
+  sandboxId: string,
+  path: string,
+): Promise<SandboxFileInfo> {
+  const info = await transport.request({
+    operation: 'fileInfo',
+    sandboxId,
+    path,
+  })
+  if (
+    info.type !== 'file.info' ||
+    (info.success !== undefined && info.success !== true) ||
+    !samePath(info.path, path) ||
+    typeof info.name !== 'string' ||
+    typeof info.isDir !== 'boolean' ||
+    typeof info.isSymlink !== 'boolean' ||
+    !isSize(info.size) ||
+    typeof info.mode !== 'string' ||
+    typeof info.modifiedAt !== 'string'
+  )
+    return invalid()
+  return { path, sizeBytes: info.size, isDirectory: info.isDir }
 }
 
 /** Read file content and use validated metadata to diagnose read failures. */
@@ -64,25 +89,14 @@ export async function readSandboxFile(
     ))
       throw error
     try {
-      const info = await transport.request({
-        operation: 'fileInfo',
-        sandboxId,
-        path,
-      })
-      if (
-        info.type !== 'file.info' ||
-        (info.success !== undefined && info.success !== true) ||
-        !samePath(info.path, path) ||
-        typeof info.name !== 'string' ||
-        info.isDir !== false ||
-        typeof info.isSymlink !== 'boolean' ||
-        !isSize(info.size) ||
-        typeof info.mode !== 'string' ||
-        typeof info.modifiedAt !== 'string'
-      )
-        return invalid()
-      if (info.size > maxBytes)
-        return { kind: 'too_large', sizeBytes: info.size, limitBytes: maxBytes }
+      const info = await readSandboxFileInfo(transport, sandboxId, path)
+      if (info.isDirectory) return invalid()
+      if (info.sizeBytes > maxBytes)
+        return {
+          kind: 'too_large',
+          sizeBytes: info.sizeBytes,
+          limitBytes: maxBytes,
+        }
     } catch (metadataError) {
       if (
         error instanceof BodyBudgetExceeded ||

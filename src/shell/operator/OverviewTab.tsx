@@ -15,6 +15,7 @@ import { useApp } from '../context'
 import { ActionButton } from '../ui/actions'
 import { useViewport } from '../ui/viewport'
 import { formatClock } from './format'
+import { LongRuns } from './LongRuns'
 import { OperatorPage } from './OperatorPage'
 import { OverviewLoading } from './OverviewLoading'
 import { LargestOrgs, OverviewTiles } from './OverviewParts'
@@ -33,6 +34,7 @@ function OverviewNumbers(props: {
         counts={overview.workspaceStates}
         page="overview"
       />
+      <LongRuns readAt={overview.readAt} runs={overview.longRuns} />
       <DailyChart
         days={overview.newWorkspacesByDay}
         narrow={narrow}

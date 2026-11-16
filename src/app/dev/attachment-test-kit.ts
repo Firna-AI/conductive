@@ -1,8 +1,8 @@
 import { Buffer } from 'node:buffer'
 import { expect, vi } from 'vitest'
+import type { FileResponse } from '../../shared/generated/FileResponse'
+import type { Attachment } from '../../shared/generated/Attachment'
 import type { FilesResult } from '../../files/api/files-errors'
-import type { FileResponse } from '../../shared/files'
-import type { Attachment } from '../../shared/messages'
 import { FAKE_ORIGIN, FAKE_TIME } from '../../test-support/fixtures/core'
 
 export function setupDevWindow(): void {
@@ -23,11 +23,18 @@ export function resetDevWindow(): void {
   vi.unstubAllGlobals()
 }
 
+/** The hooks of an upload that nothing stops. Its waits end at once. */
 export function uploadHooks() {
   return {
+    resume: null,
     signal: new AbortController().signal,
     live: () => true,
     progress: () => {},
+    keep: () => {},
+    delay: (_ms: number, run: () => unknown) => {
+      run()
+      return () => {}
+    },
   }
 }
 

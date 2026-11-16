@@ -4,6 +4,12 @@ import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 import { routes } from '../../app/router'
 import { HeldRequests } from '../../app/test-kit'
+import {
+  chromeCaretOnFocus,
+  messageText,
+  pasteMessage,
+  typeMessage,
+} from '../../test-support/message-field'
 import { sessionsPath } from '../../shared/sessions'
 import { FakeApiServer } from '../../test-support/fake-api'
 import {
@@ -69,6 +75,26 @@ describe('a click on a workspace in the sidebar', () => {
     await settle()
 
     expect(document.activeElement).toBe(messageField(view))
+  })
+
+  test('puts the caret at the end of a kept draft, not at its start', async () => {
+    holdAnimationFrames()
+    const app = await startedApp(new FakeApiServer())
+    const { view, go } = mountTab(app)
+    await settle()
+    typeMessage(messageField(view), 'Check the form')
+    go(away)
+    await settle()
+
+    // A click outside the field moves the caret of the page there.
+    act(() => document.getSelection()?.collapse(document.body, 0))
+    const stop = chromeCaretOnFocus()
+    click(sidebarRow(view))
+    await settle()
+    stop()
+    pasteMessage(messageField(view), '.')
+
+    expect(messageText(messageField(view))).toBe('Check the form.')
   })
 
   test('leaves the focus where the person moved it before the chat showed', async () => {

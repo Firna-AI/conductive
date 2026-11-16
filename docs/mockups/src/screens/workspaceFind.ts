@@ -1,5 +1,5 @@
 import type { FindState } from '../components/find/findMarks'
-import { replacesLists } from '../components/workspace/sandboxNoticeState'
+import { replacesShownFile } from '../components/workspace/sandboxNoticeState'
 import { foundViews, unmatchedQuery, type FindTab } from '../fixtures/findViews'
 import { panelState } from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
@@ -19,7 +19,9 @@ function findTabOf(state: WorkspaceState): FindTab | undefined {
     case 'markdown':
     case 'diff': {
       const panel = panelState(state)
-      if (panel && replacesLists(panel)) return undefined
+      if (panel && (panel.problem === 'starting' || replacesShownFile(panel))) {
+        return undefined
+      }
       return state.paths === 'masked' ? undefined : state.tab
     }
     default:
