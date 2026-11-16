@@ -57,10 +57,10 @@ report is in `.context/model-stream-drops/options-check-report.md`.
 ### 1. A turn token check ends a streaming answer
 
 Changed: the options check found a second cause, the chat queue, and
-added options D, E, and F. The answer A stays in force until the user
-answers again.
+added options D, E, and F. The user then chose F.
 
-- **Answer:** A, on 16 November 2026. Asked again for F.
+- **Answer:** A, on 16 November 2026. Changed to F on 16 November 2026,
+  after the options check.
 - **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium.
 - **Source:** Implementation.
 - **Category:** Product bug.
@@ -103,8 +103,7 @@ answers again.
 - **Recommendation:** F. Only F removes the wait in the queue, which A
   does not touch. E is the smallest safe step, and I apply its warning
   under the answer A in any case.
-- **Action:** Ask the user, because F changes the recorded answer A and
-  adds Medium effort with a risk of false refusals.
+- **Reason for the answer:** F removes both causes that we own.
 
 ### 2. A dropped answer needs a manual restart
 
@@ -141,7 +140,7 @@ answers again.
 Changed: the options check added options C, D, and E, and moved the
 location. The recommendation changed from A to C.
 
-- **Answer:** Open.
+- **Answer:** C, on 16 November 2026.
 - **Severity:** Low. **Effort:** Small.
 - **Source:** Design.
 - **Category:** UX wording.
@@ -181,9 +180,8 @@ location. The recommendation changed from A to C.
 - **Recommendation:** C, first A. C makes sure that the next answer says
   that the agent continued, at a Small cost. D gives the product's own
   words at the cut, and a later change can add it.
-- **Action:** Ask the user, because the options have real trade-offs:
-  agent words cost little, and product words need a new field and a
-  mockup.
+- **Reason for the answer:** C explains the cut at a small cost. D stays
+  open for a later change.
 
 ## Design
 
@@ -203,6 +201,12 @@ decision.
 - Each check gets a new Durable Object handle from the gateway runtime.
   Codex checks in `codex-request-auth.ts` do the same. Reason: Cloudflare
   says that a handle can stay broken after an error.
+- A check with no Codex claim first reads the turn, the session, and the
+  login outside the chat queue. When that read accepts the token, the
+  check returns at once. In every other case, the check runs as today in
+  the queue, and that result counts. Reason: decision 1, answer F. A read
+  outside the queue can then never refuse a valid answer, and only the
+  queue writes a turn failure or a claim.
 - The gateway writes the warning of option E of decision 1 with
   `warnWorker`. Reason: without it, nobody can see whether cuts continue.
   The open item `plans/follow-ups/request-records-in-logs.md` already
@@ -221,7 +225,9 @@ decision.
   dropped.
 - The continue message says: "The connection to the model dropped before
   your last response finished. Continue from where you stopped. Do not
-  repeat work that is already done." Decision 3 can add one sentence.
+  repeat work that is already done. Start your reply with one short
+  sentence that says that the connection to the model dropped and that
+  you continue." The last sentence comes from decision 3, answer C.
 - A Stop before or during the continue message keeps today's behavior: the
   turn ends as stopped.
 - Codex turns get no continue message. Reason: Codex reconnects a dropped
@@ -232,11 +238,12 @@ decision.
 
 Depends on: none
 
-Update the docs so that they state the new rules. When the user chooses B
-or D for decision 3, add a mockup milestone before this one.
+Update the docs so that they state the new rules. Decision 3, answer C,
+adds no chat line, so the change has no mockup work.
 
 - [ ] Update `docs/protocol/model-gateway-requests.md#streams`: the retry
-      of a check that throws, and the warning. Fix both sentences of the
+      of a check that throws, the check outside the chat queue, and the
+      warning. Fix both sentences of the
       deploy risk.
 - [ ] Update `docs/protocol/messages-and-attachments.md` with the rule of
       the continue message of a Claude turn.
@@ -263,8 +270,7 @@ Depends on: 1
 
 Depends on: 2
 
-Only when the user chooses F for decision 1. Otherwise delete this
-milestone.
+Decision 1, answer F.
 
 - [ ] Let the periodic check read the turn outside the chat queue, with
       no half-written turn visible to it.
