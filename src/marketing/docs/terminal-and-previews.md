@@ -50,6 +50,11 @@ Reconnect to return to the same shell and running commands.
 A stop of the cloud computer ends those commands.
 After a resume, start any needed server again.
 
+The commands that you typed stay in the shell's command history after a stop.
+After a resume, press the Up arrow or Ctrl-R to find them.
+A command that still runs at the stop, such as a server, is not kept.
+A workspace with older cloud computer software gets this with an automatic software update at a later start.
+
 ## Copy output
 
 1. Drag over the output to select it.

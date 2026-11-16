@@ -286,6 +286,20 @@ The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 - A stop of the sandbox ends the shell and its commands, as
   [Stop and resume](workspace-life.md#stop-and-resume) says. The first connection after the
   resume opens a new shell.
+- The commands that the user typed in the shell stay in its command
+  history after a stop. The new shell after the resume finds them, such as
+  with the Up arrow or Ctrl-R (terminal history decision 1). Terminal
+  history decisions are the decisions of the change that added this rule.
+- Each command goes into the history file when it ends, before the next
+  prompt. A command that still runs at the stop, such as a dev server, does
+  not go in. An empty or unset `HISTFILE` keeps the history out of the
+  file.
+- Reason: the sandbox provider saves the disk while the sandbox runs, not
+  after the shutdown at a stop. Bash writes its history file only when the
+  shell exits, which is during that shutdown, so the history was lost. A
+  shell that also reads the new commands of the other shells at each
+  prompt was rejected, because it changes the order of the Up arrow while
+  the user works.
 - On a phone, a row of keys adds the keys that a phone keyboard lacks.
 
 ## Port previews

@@ -204,3 +204,45 @@ it('waits for the restore marker before moving a running shell once and keeps OL
   )
   expect(result.stderr).not.toContain('PROMPT_COMMAND')
 })
+
+it('appends each command to the history file before the next prompt and keeps the exit status', async () => {
+  const fixture = await scriptFixture()
+  const historyFile = `${fixture.root}/history`
+  const result = await runInteractiveBash(
+    [
+      'echo one',
+      'false',
+      'printf "status %s\\n" "$?"',
+      'cat -- "$HISTFILE"',
+      'kill -KILL "$$"',
+    ],
+    {
+      folder: fixture.repository,
+      home: fixture.root,
+      promptCommand: terminalPromptCommand(fixture.options.restoreMarker),
+      historyFile,
+    },
+  )
+  expect(result.stdout).toBe(
+    'one\nstatus 1\necho one\nfalse\nprintf "status %s\\n" "$?"\n',
+  )
+  expect(await readFile(historyFile, 'utf8')).toBe(
+    'echo one\nfalse\nprintf "status %s\\n" "$?"\ncat -- "$HISTFILE"\n',
+  )
+})
+
+it('appends no history without a history file and stays silent when the append fails', async () => {
+  const fixture = await scriptFixture()
+  for (const historyFile of ['', `${fixture.root}/missing/history`]) {
+    const result = await runInteractiveBash(['echo one', 'exit'], {
+      folder: fixture.repository,
+      home: fixture.root,
+      promptCommand: terminalPromptCommand(fixture.options.restoreMarker),
+      historyFile,
+    })
+    expect(result.code).toBe(0)
+    expect(result.stdout).toBe('one\n')
+    expect(result.stderr).not.toContain('history')
+  }
+  await expect(readdir(fixture.root)).resolves.not.toContain('.bash_history')
+})

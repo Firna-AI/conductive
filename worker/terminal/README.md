@@ -128,6 +128,22 @@ The hook has these limits:
 - As each prompt command does, the hook resets `PIPESTATUS` before Bash
   shows the prompt. Bash keeps `$?`.
 
+The hook also runs `history -a` at each prompt, so Bash appends each new
+command to `$HISTFILE` when the command ends. Boat's file watcher saves the
+disk about once a minute while the sandbox runs, and the stop keeps the
+last save. Bash writes its history file at exit, which for a workspace
+shell is the shutdown at a stop, after that last save. Without the append,
+the commands of the shell were lost at each stop. The append has these
+limits:
+
+- A command that still runs at the stop, such as a dev server, does not
+  go in.
+- An empty or unset `HISTFILE` turns the append off, as it turns off the
+  write at exit. A failed append, such as to a folder that does not exist,
+  prints no error.
+- The append keeps the history settings of `~/.bashrc`, such as
+  `HISTCONTROL` and `histappend`.
+
 So every connection of a workspace attaches to the same session, with its
 running commands and its screen. Concurrent connections share it too. A
 dropped socket ends only its own bridge and its tmux client. The tmux server runs in the
@@ -208,8 +224,8 @@ installed in the image. Its trusted options select paths, account names,
 and executables, such as ttyd and tmux. The password program captures
 entropy before conversion and commits a complete password through a
 temporary file. The launcher checks the password before it executes ttyd.
-`terminalPromptCommand(restoreMarker)` builds the folder hook for the path
-of the restore marker.
+`terminalPromptCommand(restoreMarker)` builds the prompt hook, with the
+folder check for the path of the restore marker and the history append.
 
 Tests execute the three programs with fake ttyd and tmux in isolated
 runtime folders. The launcher tests check the attach program with a fake
@@ -218,7 +234,11 @@ tmux client. One test runs the folder hook in a real interactive Bash.
 It moves the folder of the shell as a restore does, and it writes the
 marker later. It checks that the shell stays in the old view until the
 marker exists, moves once, keeps `OLDPWD`, and stays at a later move of
-the folder. It also checks that the hook exports no variable. The package
+the folder. It also checks that the hook exports no variable. Two more
+tests run the hook with a history file. They check that each command is in
+the file before the shell exits, also when the shell is killed, and that
+the hook keeps `$?`. They also check that an empty `HISTFILE` writes
+nothing and that a failed append prints no error. The package
 test runs `terminalPackagesCommand()` with fake `sudo`, `apt-get`, and
 `systemctl` commands. The unit tests read the release units and system installer.
 The bridge release test packages and extracts the system archive. It checks
@@ -318,7 +338,7 @@ Terminal status reads remain available.
 - [The shared connection reader](../security/connection-access.ts) reads each session, membership, and sandbox identity in one batch.
 - [service.ts](service.ts) exports `terminalPackagesCommand`, which installs the apt packages without replacing release files. It also exports the setup command `terminalStartCommand`, the password read `startWorkspaceTerminal`, the marker writer `markTerminalRestoreEnded`.
 - [The shared terminal contract](../../src/shared/terminal.ts) owns `TERMINAL_PORT`.
-- [scripts.ts](scripts.ts) builds the password program, the launcher, and the shell server with `credentialScript`, `launcherScript`, and `sessionServerScript`. It also holds the marker path `TERMINAL_RESTORE_MARKER`, and it builds the folder hook with `terminalPromptCommand`.
+- [scripts.ts](scripts.ts) builds the password program, the launcher, and the shell server with `credentialScript`, `launcherScript`, and `sessionServerScript`. It also holds the marker path `TERMINAL_RESTORE_MARKER`, and it builds the prompt hook with `terminalPromptCommand`.
 - [bridge/main.ts](bridge/main.ts) is the terminal bridge, and [bridge-files.ts](bridge-files.ts) lists its files for the system release packager.
 - [The shared bridge messages](../../src/shared/terminal-bridge.ts) give the private messages between the bridge and the screen, and the limits.
 - [credentials.ts](credentials.ts) encrypts the locally generated workspace password.
