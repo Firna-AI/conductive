@@ -39,14 +39,14 @@ function githubEnvelope(
 export function githubSubscribe(stream: WorkspaceStream): SubscribeToWorkspace {
   return (_afterEventNumber, listener) => {
     let newest: WorkspaceEventEnvelope | null = null
-    return stream.follow({
-      event: (envelope, replayed) => {
+    return stream.subscribe(
+      (envelope, replayed) => {
         const github = githubEnvelope(envelope)
         if (!github) return
         if (replayed) newest = github
         else listener({ type: 'event', envelope: github })
       },
-      replayEnded: (through) => {
+      (through) => {
         const events = newest ? [newest] : []
         newest = null
         listener({
@@ -54,6 +54,6 @@ export function githubSubscribe(stream: WorkspaceStream): SubscribeToWorkspace {
           history: { events, throughEventNumber: through },
         })
       },
-    })
+    )
   }
 }

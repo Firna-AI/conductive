@@ -47,21 +47,16 @@ export function reconnectWait(failures: number): number {
 }
 
 /**
- * A subscriber of the ordered stream that tells the events of a stored
- * history from live events.
+ * A subscriber of the ordered stream. `replayed` marks an event of a page
+ * of the stored history, not a new event.
  */
-export interface StreamFollower {
-  /**
-   * Each event of the workspace, once, in order. `replayed` marks an event
-   * of a page of the stored history, not a new event.
-   */
-  event: (envelope: StreamEnvelope, replayed: boolean) => void
-  /**
-   * The final page of a replay applied, so the state is complete through
-   * `through`. The live events that waited for it follow.
-   */
-  replayEnded?: (through: number) => void
-}
+type StreamListener = (envelope: StreamEnvelope, replayed: boolean) => void
+
+/**
+ * Called after the final page of each replay, so the state is complete
+ * through `through`. The live events that waited for it follow.
+ */
+type ReplayEnded = (through: number) => void
 
 /**
  * The ordered events of one open workspace. Every subscriber gets each
@@ -87,7 +82,10 @@ export class WorkspaceStream {
    * again after a reconnect. A start after a stop counts nothing.
    */
   readonly reconnects = new Store(0)
-  private readonly followers = new Set<StreamFollower>()
+  private readonly listeners = new Set<{
+    listener: StreamListener
+    replayEnded?: ReplayEnded
+  }>()
   private closeSource: (() => void) | null = null
   private cancelRetry: (() => void) | null = null
   private failures = 0
@@ -133,14 +131,14 @@ export class WorkspaceStream {
     this.closeSource = null
   }
 
-  subscribe(listener: (envelope: StreamEnvelope) => void): () => void {
-    return this.follow({ event: listener })
-  }
-
-  /** Like `subscribe`, and it also tells the replays from the live events. */
-  follow(follower: StreamFollower): () => void {
-    this.followers.add(follower)
-    return () => this.followers.delete(follower)
+  /**
+   * Gives each event of the workspace once, in order, from the replays and
+   * live. `replayEnded` tells a part where each replay ends.
+   */
+  subscribe(listener: StreamListener, replayEnded?: ReplayEnded): () => void {
+    const entry = { listener, replayEnded }
+    this.listeners.add(entry)
+    return () => this.listeners.delete(entry)
   }
 
   private connect(): void {
@@ -219,9 +217,7 @@ export class WorkspaceStream {
     this.replay = null
     this.progress = Math.max(this.progress, through)
     if (this.progress > this.last.get()) this.last.set(this.progress)
-    for (const follower of [...this.followers]) {
-      follower.replayEnded?.(this.progress)
-    }
+    for (const entry of [...this.listeners]) entry.replayEnded?.(this.progress)
     if (this.reopened) {
       this.reopened = false
       this.reconnects.set(this.reconnects.get() + 1)
@@ -250,8 +246,6 @@ export class WorkspaceStream {
   /** The number counts in any case. Only this workspace's events reach the screens. */
   private deliver(envelope: StreamEnvelope, replayed: boolean): void {
     if (envelope.workspaceId !== this.target.workspaceId) return
-    for (const follower of [...this.followers]) {
-      follower.event(envelope, replayed)
-    }
+    for (const entry of [...this.listeners]) entry.listener(envelope, replayed)
   }
 }

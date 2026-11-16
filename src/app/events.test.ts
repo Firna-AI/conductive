@@ -125,14 +125,14 @@ describe('WorkspaceStream', () => {
     expect(source.opened.map((item) => item.afterEventNumber)).toEqual([0])
   })
 
-  test('tells a follower the replayed events from the live ones, and when each replay ends', async () => {
+  test('tells a subscriber the replayed events from the live ones, and when each replay ends', async () => {
     const { source, delay, stream } = start()
     const seen: string[] = []
-    stream.follow({
-      event: (item, replayed) =>
+    stream.subscribe(
+      (item, replayed) =>
         seen.push(`${replayed ? 'replay' : 'live'} ${item.eventNumber}`),
-      replayEnded: (through) => seen.push(`end ${through}`),
-    })
+      (through) => seen.push(`end ${through}`),
+    )
     source.send(page([envelope(1)], 3, 2))
     source.send({ type: 'event', envelope: envelope(4) })
     source.send(page([envelope(3)], 3))
