@@ -7,6 +7,9 @@ This page lists each protocol doc and what it covers.
 
 - [Workspaces and sandboxes](../protocol/workspaces-and-sandboxes.md): the org
   image, the life of a workspace, and the disk flushes of a sandbox.
+  - [Sandbox software](../protocol/sandbox-software.md): the releases of the
+    app's own software, the updates of each sandbox, the install in a
+    build, and the software image.
   - [Create a workspace](../protocol/create-a-workspace.md): New workspace as a
     page or as a dialog, the create, the branch, and a failed first start.
   - [Repository folders](../protocol/repository-folders.md): the folder and the
@@ -66,6 +69,8 @@ This page lists each protocol doc and what it covers.
       endpoint and the key of each agent, the model list of the endpoint,
       and the addresses that the app accepts.
   - [Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md)
+  - [Step timing](../protocol/step-timing.md): the `Server-Timing` header of
+    the preview replies and of the create reply, and what it may hold.
 - [Model gateway](../protocol/model-gateway.md): the turn token, and the
   Worker routes that add the agent login to each model request.
   - [Model gateway: requests and answers](../protocol/model-gateway-requests.md):
