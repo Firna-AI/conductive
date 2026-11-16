@@ -197,12 +197,21 @@ keeps them after the merge.
 - Restart restarts the agent runner and the preview relay in the running
   sandbox (Cal's decision 1 A of 16 November 2026). It does not stop or
   resume the sandbox, so it uses no start of the provider.
-- The terminals, their shells, and the commands in them keep running.
+- The shells of the terminals and the commands in them keep running.
+- An open terminal tab disconnects while the workspace shows Starting,
+  and it offers Reconnect. Reconnect works again when the runner is ready.
+  Previews and the activity of the workspace also pause in that time. Cal
+  chose this on 16 November 2026, as option A of review item 2 of the
+  Restart change.
+- Terminal access during a restart was rejected for now, because it needs
+  a stored restart flag and a migration. A tab that reconnects by itself
+  was rejected for the same choice.
   Each process that an agent started under the runner ends. Each running
   turn ends, as after any restart of the runner.
 - A stop and resume, a one-step restart of the whole sandbox, and a
   restart of a dev server of the project were rejected. Reason: Restart
-  fixes a stuck runner or relay in seconds and keeps the terminals.
+  fixes a stuck runner or relay in seconds and keeps the shells of the
+  terminals.
 - Before the restart, the sandbox downloads the newest release of the
   [sandbox software](sandbox-software.md#updates), with a limit of 60
   seconds (Cal's decision 2 B of 16 November 2026). The restart of the

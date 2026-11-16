@@ -81,6 +81,20 @@ Contract owners:
 - **Reason:** a member who presses Restart usually wants the newest fix.
   The rule for the other starts stays.
 
+### 3. Terminals during Restart
+
+- **Decided:** 16 November 2026, by Cal: option A of review item 2.
+- **Root question:** How do open terminals behave while only the runner
+  restarts?
+- **Options:**
+  - **A.** Keep the code. The spec and the guides say that an open
+    terminal tab disconnects during Restart and offers Reconnect. Chosen.
+  - **B.** The terminal tab reconnects by itself when the state runs again.
+  - **C.** Store the restart in the workspace row, with a migration, so
+    that terminals keep their access during a restart.
+  - **D.** Show Starting only in the published workspace.
+- **Reason:** the shells keep running, and A needs no migration.
+
 ## Design
 
 Each item below is my call, made on 16 November 2026, unless it names a
@@ -233,9 +247,9 @@ Depends on: every other milestone
       once, and report.
   - Round 1 found three items. Item 1, a failed restart with no idle
     stop, is fixed with A. Item 3, no route test, is fixed with B. Item 2,
-    terminals disconnect during Restart, waits for the user. Follow-ups:
-    `plans/follow-ups/restart-keeps-terminal-access.md`,
-    `plans/follow-ups/sandbox-may-run-idle-stop.md`, and
+    terminals disconnect during Restart, got Cal's answer A: the docs now say
+    so. Follow-ups:
+    `plans/follow-ups/sandbox-may-run-idle-stop.md` and
     `plans/follow-ups/workspace-action-route-access-test.md`.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".

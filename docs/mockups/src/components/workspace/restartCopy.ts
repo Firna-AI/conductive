@@ -15,7 +15,8 @@ export const restartableStates: ReadonlySet<ActivityStatus> = new Set([
 /**
  * The words of Restart in the header state menu. Restart restarts the agent
  * runner and the preview relay of the cloud computer, after it downloads
- * the newest software. The terminals keep running.
+ * the newest software. The shells of the terminals keep running, but an
+ * open terminal tab disconnects until the agents are back.
  */
 export const restartCopy = {
   menuLabel: 'Cloud computer',
@@ -23,7 +24,7 @@ export const restartCopy = {
   note: 'Restarts the agents and the port previews, and installs updates.',
   confirmTitle: 'Stop the agent and restart?',
   confirmBody:
-    'An agent is working. Restart stops its turn. The terminals keep running.',
+    'An agent is working. Restart stops its turn. Commands in the terminals keep running.',
   confirmAction: 'Restart',
   updateCheckFailed: "Couldn't check for updates.",
   updateCheckFailedBody: 'The restart uses the installed software.',

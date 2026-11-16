@@ -210,7 +210,8 @@ If that download fails, a message says so, and the restart uses the installed so
 The header shows **Starting** until the agents are back.
 
 Restart stops each running agent turn, so it asks first while an agent works.
-Terminals and the commands in them keep running.
+The shells and commands in your terminals keep running.
+An open terminal tab disconnects until the agents are back. Then select **Reconnect**.
 Files, sessions, and chat history stay.
 If the restart fails, the workspace shows an error with **Try again**.
 
