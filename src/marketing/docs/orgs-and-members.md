@@ -52,6 +52,7 @@ You can also use its keyboard shortcut, or **Switch to** in the command palette.
 Conductive opens the last workspace that you opened in that org, with the same session or tab.
 If that workspace is stopped, opening it starts its computer.
 Without a last workspace, the org's workspace list opens.
+While the workspace list is hidden, the current org opens its list instead, as [Hide the workspace list](#hide-the-workspace-list) says.
 
 On a phone, the org switcher opens the org's workspace list.
 
@@ -60,6 +61,22 @@ They stay after a reload and a restart, but not on other devices.
 
 When Conductive opens without a chosen org, it opens the last workspace that you opened.
 If its org is deleted, or you have no last workspace, it opens the first org in your list that is not deleted.
+
+## Hide the workspace list
+
+On a computer, select **Hide the sidebar** beside **Settings** at the top of the workspace list.
+In the Mac app, the button sits beside the window buttons.
+You can also choose **Hide the sidebar** in the command palette.
+Or press **⌘B** on a Mac or **Ctrl+B** on another computer.
+
+While the list is hidden, select the current org in the org list.
+The workspace list opens beside it, over the page.
+Select a workspace to open it.
+Select **Show the sidebar** in that list to show the list again.
+
+A narrow window also hides the list.
+Select the current org to open the list in the same way.
+On the org's own list page, the list shows in the page, so the org opens no second list.
 
 ## Create an org
 

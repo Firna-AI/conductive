@@ -170,8 +170,11 @@ otherwise.
 - New workspace, when it opens its dialog, and Search, which opens the
   palette, also close the popover. A row menu, a rename, and a drag inside
   the popover keep it open.
-- The tile of an open popover keeps the fill of an open tile menu, and its
-  link says `aria-expanded`.
+- The tile of the current org says `aria-expanded` while it can open the
+  popover, and `aria-controls` while the popover is open. The name of the
+  tile hides while the popover is open, so it does not cover the list.
+- A popover that the keys opened, with Enter on the focused tile, moves
+  the focus to the current row of the list, else to its first control.
 - The browser toggle sits in the top of the sidebar, beside Settings. In
   the popover it reads "Show the sidebar". The Mac app keeps its toggle
   beside the window buttons and shows none beside Settings. Reason: one
@@ -216,21 +219,25 @@ phone has no rail, so its variants do not change.
 
 Depends on: 1
 
-- [ ] Add the popover to "Opening an org" in `docs/protocol/org-rail-order.md`.
-- [ ] Add the browser toggle to the protocol docs, and update
+- [x] Add the popover to `docs/protocol/org-rail-order.md`, in a new
+      section "The hidden sidebar" after "Opening an org". No protocol doc
+      covered the panels, so the toggle lives there too.
+- [x] Add the section "Hide the workspace list" to the public guide
+      `src/marketing/docs/orgs-and-members.md`.
+- [x] Add the browser toggle to the protocol docs, and update
       `docs/protocol/desktop-app.md` where the toggle is no longer the
       Mac app's only one.
-- [ ] Update `command-palette-actions.md`, `keyboard-shortcuts-keys.md`,
+- [x] Update `command-palette-actions.md`, `keyboard-shortcuts-keys.md`,
       and `keyboard-shortcuts-tab.md` for decision 5: the command and its
       palette row in every host, and Ctrl+B and [ on Windows and Linux.
-- [ ] Update the code comments that still say the tile opens the list
+- [x] Update the code comments that still say the tile opens the list
       page: `src/shell/layout/frames.tsx:114` and
       `src/shell/OrgRoutes.tsx:147`.
-- [ ] Read each public guide in `src/marketing/docs/` and both legal pages
-      in full. Update each sentence that restates a changed fact.
-- [ ] Update the note of the row `layout-and-zen-mode` in
-      `src/marketing/from-conductor/areas/navigation-and-appearance.ts`, so
-      that it says the sidebar hides too.
+- [x] Read each public guide in `src/marketing/docs/` and both legal pages
+      in full. Update each sentence that restates a changed fact. Only
+      "Switch between orgs" in the Orgs and members guide needed a change.
+- [x] The comparison page with Conductor left `main` before this
+      milestone, so its row needs no change.
 
 ## Milestone 3: The hidden sidebar in both hosts
 
@@ -238,12 +245,12 @@ Tags: ui
 
 Depends on: 2
 
-- [ ] Move the hidden state of the sidebar from `MacChrome` to the panel
+- [x] Move the hidden state of the sidebar from `MacChrome` to the panel
       layout, and keep the Mac app toggle on it.
-- [ ] Hide the sidebar of the browser frame when the person hides it.
-- [ ] Add the toggle beside Settings in the browser.
-- [ ] Apply decision 5 to the command, the palette row, and the keys.
-- [ ] Add tests: the toggle hides and shows the sidebar, in each host.
+- [x] Hide the sidebar of the browser frame when the person hides it.
+- [x] Add the toggle beside Settings in the browser.
+- [x] Apply decision 5 to the command, the palette row, and the keys.
+- [x] Add tests: the toggle hides and shows the sidebar, in each host.
 
 ## Milestone 4: The popover
 
@@ -251,20 +258,29 @@ Tags: ui
 
 Depends on: 3
 
-- [ ] Pass the sidebar of the frame to the rail.
-- [ ] Open the popover on a click on the tile of the current org, under
+- [x] Pass the sidebar of the frame to the rail.
+- [x] Open the popover on a click on the tile of the current org, under
       the rule of decision 2.
-- [ ] Close it on a second click, Escape, a click outside, and a page that
+- [x] Close it on a second click, Escape, a click outside, and a page that
       opens from it. Give the focus back to the tile.
-- [ ] Keep row menus, rename, and drag in the popover working.
-- [ ] Add tests for each case of this milestone and of decision 1.
-- [ ] Check the popover in a browser on the desktop of the cloud computer.
+- [x] Keep row menus, rename, and drag in the popover working.
+- [x] Add tests for each case of this milestone and of decision 1, in
+      `src/shell/layout/ListPopover.test.tsx`. Update the tests of the
+      palette rows, the Keyboard shortcuts tab, and the browser entry of
+      the Mac app for decisions 4 and 5.
+- [x] Check the popover in a browser on the desktop of the cloud computer,
+      on the development page: the toggle, the popover, a row, a row menu
+      over the popover, Escape, and Ctrl+B.
 
 ## Milestone 5: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests and `npm run check`.
+- [x] Run the targeted tests and `npm run check`. The static checks pass.
+      Five Worker test files fail in this sandbox only: four time out under
+      the load of the full run and pass alone, and the site build test
+      needs its temporary folder on the disk of the repository. The log
+      is in `.context/sidebar-list-popover/gate.md`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,

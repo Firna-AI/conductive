@@ -22,7 +22,7 @@ const defaults: Readonly<Record<PlainId, Defaults>> = {
   'account-page': { mac: ['Meta+,'], other: ['Ctrl+,'] },
   'create-org': { mac: [], other: [] },
   'send-feedback': { mac: ['Alt+Meta+F'], other: ['Alt+Shift+F'] },
-  'toggle-sidebar': { mac: ['Meta+B', '['], other: [] },
+  'toggle-sidebar': { mac: ['Meta+B', '['], other: ['Ctrl+B', '['] },
   'toggle-right-column': {
     mac: ['Alt+Meta+B', ']'],
     other: ['Alt+Shift+B', ']'],

@@ -54,7 +54,7 @@
 .popover {
   display: flex;
   position: absolute;
-  z-index: 30;
+  z-index: 15;
   top: 6px;
   bottom: 6px;
   left: calc(var(--ui-rail-width) + 4px);
