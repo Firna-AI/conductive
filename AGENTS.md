@@ -173,12 +173,6 @@ Apple silicon Mac jobs on Blacksmith.
   restate a fact in other words.
   [Website docs](docs/protocol/website-docs.md) gives the rules for the
   words of a guide.
-- The comparison page at `conductive.build/from-conductor` gives each
-  listed Conductor feature a status. Its rows live in
-  `src/marketing/from-conductor/`. When a change ships, starts, or drops a
-  listed feature, update the status of its row in the same change. The
-  claim rules are in
-  [Conductor comparison](docs/protocol/conductor-comparison.md#statuses).
 
 - Rust owns the runner messages and their dependent types in
   `crates/cnd-runner-interface/`. `ts-rs` writes their TypeScript into
