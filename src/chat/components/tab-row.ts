@@ -59,12 +59,17 @@ export type TabDraw =
  * for the keys of Previous tab and Next tab. `keep` keeps the temporary tab
  * in its place, as a double-click on the tab does, for Keep open of its tab
  * menu. It is null for each kept tab, whose menu has no Keep open.
+ * `copyPath` copies the real path of the file of the tab, during the press
+ * of Copy path in its tab menu, because the chat knows only the title. It
+ * is null for a tab whose label hides a secret value, or is not known yet,
+ * whose menu has no Copy path.
  */
 interface RenderedTab {
   title: string
   draw: (draw: TabDraw) => ReactNode
   show: () => void
   keep: (() => void) | null
+  copyPath: (() => void) | null
 }
 
 /** Renders a file or diff tab of the host, as `RenderedTab` says. */

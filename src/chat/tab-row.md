@@ -76,9 +76,10 @@ the requirements.
   kept file or diff tab has Copy path, a line, Move left and Move right, a
   line, then Close tabs to the right. The host tells the row which tab is
   temporary: only that tab gets a `keep` from `renderTab`. The host also
-  gives the Copy path item of each file or diff tab through `renderTab`,
-  because the chat knows only the title of the tab. A tab whose label can
-  hide a secret value gets no Copy path. A move or a close that the place
+  gives each file or diff tab a `copyPath` through `renderTab`, which Copy
+  path calls during its press, because the chat knows only the title of the
+  tab. A tab whose label can hide a secret value gets none, so its menu has
+  no Copy path. `components/tab-menu-items.ts` gives the groups. A move or a close that the place
   of the tab rules out is off: it keeps its place at half opacity, and the
   arrow keys skip it. Escape or a press outside closes the menu.
 - Each item that changes the workspace carries a mark: Rename session,

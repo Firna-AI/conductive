@@ -221,3 +221,55 @@ it('keeps the label that the server gave each entry inside a moved folder until 
     rows: ['keys-[redacted]'],
   })
 })
+
+it('marks each row whose label hides a secret value: a masked file, a folder that the tree lacks and names from a masked label, and an entry of a moved folder until its update', () => {
+  const entry = (
+    path: string,
+    kind: FileEntry['kind'],
+    displayPath?: string,
+  ): FileEntry => ({
+    path,
+    ...(displayPath === undefined ? {} : { displayPath }),
+    name: (displayPath ?? path).slice(
+      (displayPath ?? path).lastIndexOf('/') + 1,
+    ),
+    kind,
+    change: null,
+  })
+  const base = treeFromSnapshot({
+    revision: 1,
+    entries: [
+      entry('keys-acme-7f3k/a.json', 'file', 'keys-[redacted]/a.json'),
+      entry('plain/b.json', 'file'),
+      entry('docs', 'directory'),
+      entry('docs/c.md', 'file'),
+    ],
+  })
+  // The server names the new folder, and its entry keeps its old label.
+  const { tree: moved } = applyTreeDelta(base, {
+    revision: 2,
+    changes: [
+      {
+        operation: 'move',
+        previousPath: 'docs',
+        entry: entry('guide', 'directory'),
+      },
+    ],
+  })
+  const open = new Map(
+    ['guide', 'keys-acme-7f3k', 'plain'].map((path) => [path, true]),
+  )
+  expect(
+    treeRows(moved, open, null).map((row) => [
+      `${'  '.repeat(row.depth)}${row.entry.name}`,
+      row.hidesSecret,
+    ]),
+  ).toEqual([
+    ['guide', false],
+    ['  c.md', true],
+    ['keys-[redacted]', true],
+    ['  a.json', true],
+    ['plain', false],
+    ['  b.json', false],
+  ])
+})

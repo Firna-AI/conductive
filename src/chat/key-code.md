@@ -26,9 +26,10 @@ is relative to `src/chat/`, the folder of this guide.
   move, and the status. `components/TabDragParts.tsx`: the drop line and
   the lifted tab.
 - `components/useTabMenu.ts` and `components/TabMenu.tsx`: the tab menu,
-  its items with the mark of each item that changes the workspace, the
-  items of a read-only row, the long press that opens that row's menu, and
-  its drawing at a point or in a sheet.
+  the long press that opens the menu of a read-only row, and its drawing
+  at a point or in a sheet. `components/tab-menu-items.ts`: the groups of
+  its items, with Copy path of the host, the mark of each item that
+  changes the workspace, and the items of a read-only row.
   `components/useTabMoves.ts`: the moves of the row and Keep open, the
   focus after a move or a keep from the menu, and the words of the status.
 - `components/TranscriptCopy.tsx`: `useTranscriptCopy`, the copy of a

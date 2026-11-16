@@ -217,6 +217,13 @@ recommended F.
   opens no menu, so the browser shows its own.
 - A long press binds only to a touch pointer. A mouse can still select the
   text of a row.
+- On desktop, a long press of a finger opens the row menu at the point of
+  the press, as the tab menu does there. Only a phone draws the sheet.
+  Working agent's call, 16 November 2026, from the tab menu.
+- A row with a menu shows no link menu of the system at a long press. On a
+  screen whose main pointer is a finger, its text does not select either,
+  so the long press opens only the row menu. Working agent's call, 16
+  November 2026.
 - The menu reuses `PointMenu`, `Sheet`, and `MenuList` of `src/shell/ui/`,
   `opensMenu` of `src/shell/ui/menu-keys.ts`, and `useLongPress` of
   `src/app/long-press.ts`. The Files screens get the items as a prop from
@@ -262,6 +269,10 @@ recommended F.
 - The tab menu in `src/chat/` knows only the title of a file tab. So the
   shell gives the Copy path item through `RenderTab`, as it gives `keep`
   in `src/shell/workspace/files/chat-files.tsx`.
+- In a suspended org, the Worker refuses the file routes. A tab there takes
+  its label from the stored file events of the workspace. A tab whose
+  label these events do not give shows "File", so it opens no tab menu.
+  Working agent's note, 16 November 2026.
 
 ### Labels
 
@@ -280,6 +291,9 @@ recommended F.
   while, so it can open no menu until the tree reads again. This errs on
   the safe side. Working agent's call.
 - The menu shows only labels. It reads the real path only at the press.
+- The Files lists run the check themselves. They ask the shell for no item
+  of a row whose label hides a secret value, so no item of the shell gets
+  the real path of such a row. Working agent's call, 16 November 2026.
 
 ### Add to chat
 
@@ -402,7 +416,7 @@ decisions of this plan.
 - [x] Read each other public guide in `src/marketing/docs/` in full.
       Update each sentence that restates a changed fact.
 
-## Milestone 3: The row menu with Copy path
+## Milestone 3: The row menu with Copy path (completed)
 
 Tags: ui
 
@@ -410,38 +424,57 @@ Depends on: 2
 
 Build the row menu on both lists, with Copy path only.
 
-- [ ] Add the shared check that a label hides no secret value. Use it in
-      `mentionable` of `src/chat/mentions/mention-rows.ts`.
-- [ ] Add a row menu prop to `FilesPanel`, `FileTree`, and `ChangeList`.
-      The prop gives the items of a row from its real path and kind.
-- [ ] Open the menu with a right click, the menu keys, and a long press of
+- [x] Add the shared check that a label hides no secret value. Use it in
+      `mentionable` of `src/chat/mentions/mention-rows.ts`. It is
+      `hidesSecret` of `src/files/model/file-labels.ts`, with
+      `tabHidesSecret` for a tab. `TreeRow.hidesSecret` of
+      `src/files/model/tree-rows.ts` applies it to the entry that names a
+      folder that the tree lacks.
+- [x] Add a row menu prop to `FilesPanel`, `FileTree`, and `ChangeList`.
+      The prop gives the items of a row from its real path and kind. It is
+      `rowMenu`, of type `RowMenuItems` in `src/files/panel/row-menu.ts`.
+      It gets the real path, the kind, and the change of the row, and gives
+      groups of items, so Add to chat can come as the first group.
+- [x] Open the menu with a right click, the menu keys, and a long press of
       a finger. Reuse `PointMenu`, `Sheet`, `MenuList`, `opensMenu`, and
-      `useLongPress`.
-- [ ] Mark the row of the open menu. Give the focus back to the row when
+      `useLongPress`. `useRowMenu` of `src/files/panel/useRowMenu.tsx`
+      does it for both lists.
+- [x] Mark the row of the open menu. Give the focus back to the row when
       the menu closes.
-- [ ] In the shell, give Copy path through `services.copy`, with the
-      toast of its result.
-- [ ] Leave Copy path out on a row whose label hides a secret.
-- [ ] Tests: the items on file, folder, and Changes rows; each way to open;
+- [x] In the shell, give Copy path through `services.copy`, with the
+      toast of its result. `useCopyPath` and `useRowMenuItems` of
+      `src/shell/workspace/files/copy-path.ts` do it.
+- [x] Leave Copy path out on a row whose label hides a secret. The lists
+      ask the prop for no item of such a row, as the section "Labels" says.
+- [x] Tests: the items on file, folder, and Changes rows; each way to open;
       the copied text; the toast; a hidden-secret row that opens no menu;
       the saved lists of a stopped cloud computer. A read-only workspace
       shows no rows, so it needs no test here. Working agent's call, 16
-      November 2026, from the mockups.
+      November 2026, from the mockups. The tests are
+      `src/files/panel/RowMenu.mounted.test.tsx`,
+      `src/shell/workspace/files/RowCopyPath.test.tsx`, and a case in
+      `src/files/model/tree-rows.test.ts`.
 
-## Milestone 4: Copy path in the tab menu
+## Milestone 4: Copy path in the tab menu (completed)
 
 Tags: ui
 
 Depends on: 3
 
-- [ ] Add Copy path to the tab menu of a file or diff tab in
+- [x] Add Copy path to the tab menu of a file or diff tab in
       `src/chat/components/useTabMenu.ts`, in its own group after Keep
-      open. The shell gives the item through `RenderTab`.
-- [ ] Keep it in a read-only workspace, so a read-only file tab opens a
+      open. The shell gives the item through `RenderTab`. The shell gives
+      a `copyPath` with each tab, and the chat builds the item. The groups
+      moved to `src/chat/components/tab-menu-items.ts`, because
+      `useTabMenu.ts` would pass the length limit. Working agent's call, 16
+      November 2026.
+- [x] Keep it in a read-only workspace, so a read-only file tab opens a
       menu with only Copy path. Leave it out on a tab whose label hides a
       secret.
-- [ ] Tests: the items of each file tab menu, the copied text, and the
-      read-only tab.
+- [x] Tests: the items of each file tab menu, the copied text, and the
+      read-only tab. The tests are
+      `src/shell/workspace/files/TabCopyPath.test.tsx`, and the updated
+      menus of `src/shell/workspace/files/TemporaryTabMenu.test.tsx`.
 
 ## Milestone 5: Add to chat
 

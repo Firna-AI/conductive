@@ -120,6 +120,15 @@ Each folder of a path is a part of the address. Another address under
   same way: the shell gives only that tab a `keep` for the chat. A move of
   the temporary tab to another place in the row clears the mark too, in
   the chat's save of the new order.
+- The row menu of each row of All files and Changes holds Copy path, as
+  [File row menu](../../../docs/protocol/file-row-menu.md) says. The shell
+  gives it to the Files panel as its `rowMenu`, and gives each file and
+  diff tab a `copyPath` for Copy path of its tab menu. Both copy the real
+  path with the clipboard of the org, so the Mac app copies too, and a
+  toast says the result. A copy sends no request and starts no sandbox,
+  so it also works from the lists that a stopped sandbox keeps. A tab
+  whose label hides a secret value, or is not known yet, gets no
+  `copyPath`.
 - A click on a list saves the list. On desktop the list belongs to the
   right column, so the address keeps the tab of the centre. On a phone a
   list is a page with its own address. An address that names a list saves

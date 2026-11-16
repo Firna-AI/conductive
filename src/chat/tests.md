@@ -95,8 +95,9 @@ frame loop running. `components/TabMenu.dom.test.tsx` opens the tab menu
 with Shift and F10 and with a right click, moves a file tab with Move
 left, and opens the rename field in a tab that does not show. The menu of
 the temporary tab leads with Keep open and a line. Keep open calls the
-`keep` of the host, and the focus and the status follow. A read-only row
-opens no menu on that tab. `state/tab-order.test.ts` moves tabs through
+`keep` of the host, and the focus and the status follow. The label of the
+file tab of the kit hides its secret value, so the tab has no Copy path,
+and a read-only row opens no menu on it. `state/tab-order.test.ts` moves tabs through
 the controller and checks the saved order. A move that changes the place
 of the temporary tab drops its mark in the same save. A move of another
 tab, and a move to its own place, keep the mark.

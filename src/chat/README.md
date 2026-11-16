@@ -18,8 +18,8 @@ tab menu of a session copies its link, and its transcript as Markdown,
 also in a read-only workspace, as
 [Session transcripts](../../docs/protocol/session-transcripts.md) and
 [Session links](../../docs/protocol/agents-and-sessions.md#session-links)
-say. The tab menu of a file or diff tab copies its path, with the Copy
-path item that the host gives with the tab, as
+say. The tab menu of a file or diff tab copies its path, with the
+`copyPath` that the host gives with the tab, as
 [The tab row](../../docs/protocol/agents-and-sessions.md#the-tab-row)
 says.
 

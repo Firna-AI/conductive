@@ -119,14 +119,21 @@ The screens:
   gives the clock of the ages. Pass a stable function. The default is
   `Date.now`. The `listKeys` prop gives the key of the command that opens
   each list, as a tooltip and a name for `aria-keyshortcuts` of its tab.
-- The row menu prop of `FilesPanel` gives the items of the menu of a row
-  of All files or Changes, from the real path and the kind of the row. The
-  shell gives Add to chat and Copy path, so the Files code imports nothing
-  from the chat. The lists open the menu as
-  [File row menu](../../docs/protocol/file-row-menu.md) says, through
-  `PointMenu`, `Sheet`, `MenuList`, and `opensMenu` of the app shell and
-  `useLongPress` of the web app. A row whose label hides a secret value
-  opens no menu, as [Labels of paths](labels.md) says.
+- The `rowMenu` prop of `FilesPanel` gives the items of the row menu of
+  each row of All files and Changes, in groups that a line parts, from the
+  real path, the kind, and the change of the row. The shell gives Copy
+  path, so the Files code holds no item and imports nothing from the chat.
+  Without the prop, no row has a menu. `useRowMenu` of the lists opens the
+  menu as [File row menu](../../docs/protocol/file-row-menu.md) says,
+  through `PointMenu`, `Sheet`, `MenuList`, and `opensMenu` of the app
+  shell and `useLongPress` of the web app: a right click at the pointer,
+  Shift and F10 or the Menu key below the focused row, and a long press of
+  a finger in a sheet on a phone, else at the press. The row of the open
+  menu keeps the fill of a hover, and the focus goes back to it as the
+  menu closes. A row whose label hides a secret value gets no item, so it
+  opens no menu, as [Labels of paths](labels.md) says. The menu shows
+  only labels: the name of the row titles it, and an item reads the real
+  path only at its press.
 - `FilePage` shows one file tab. Markdown starts rendered, and its view
   switch navigates to the same tab with the other mode. The page knows an
   image file by the name of its real path, as
@@ -307,7 +314,8 @@ screen tests keep their static markup checks in Node.
 - `navigation.ts`: `FilesTarget`, `FilesNavigation`, and the tab types of
   the workspace view.
 - `model/file-labels.ts`: `pathLabel`, `pageLabel`, and `tabLabel`, the
-  label that a screen shows for a real path.
+  label that a screen shows for a real path, and `hidesSecret` and
+  `tabHidesSecret`, the shared check of a label that hides a secret value.
 - `panel/FilesPanel.tsx`, `page/FilePage.tsx`, `page/DiffPage.tsx`, and
   `tabs/FileTabItem.tsx`: the screens.
 - `page/file-view.ts`: `fileView`, what a file page shows of one read:
@@ -319,6 +327,9 @@ screen tests keep their static markup checks in Node.
   the label of its path. `page/decode-picture.ts` gives `decodePicture`,
   which loads a picture apart from the page to learn its size, or finds
   that the browser cannot draw it.
+- `panel/useRowMenu.tsx`: `useRowMenu`, the row menu of a list, and its
+  drawing at a point or in a sheet. `panel/row-menu.ts` gives the types of
+  the `rowMenu` prop and the groups of its entries.
 - `panel/UnavailableLists.tsx`: the notices of the failed repairs under
   the lists, with the mockups' `LostUpdateRow` and their ages, and the
   notice of a saved tree that the cloud computer could not read.
