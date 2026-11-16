@@ -13,6 +13,7 @@
         "worker/chatgpt-egress/index.ts",
         "image/*.mjs",
         "image/live-main.ts",
+        "worker/terminal/bridge/main.ts",
         "worker/chat/integration/run-browser-harness.mjs",
         "worker/chat/integration/browser-server.test-support.ts",
         "worker/chat/integration/*-entry.test-support.ts",

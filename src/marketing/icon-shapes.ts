@@ -76,6 +76,11 @@ const actionIcons = {
   ],
 } as const satisfies IconShapes
 
+/** The icon of each fact that a plan of the pricing page includes. */
+const pricingIcons = {
+  'circle-check': [circle(12, 12, 10), path('m9 12 2 2 4-4')],
+} as const satisfies IconShapes
+
 /**
  * The icons of the docs: the docs menu, the chevron of each disclosure, and
  * the previous and next guides.
@@ -94,6 +99,7 @@ const docsIcons = {
 export const lucideIcons = {
   ...featureIcons,
   ...actionIcons,
+  ...pricingIcons,
   ...docsIcons,
 }
 

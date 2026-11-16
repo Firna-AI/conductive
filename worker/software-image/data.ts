@@ -6,7 +6,7 @@ const columns = `id, provider_account AS providerAccount, version, software_json
   snapshot_name AS snapshotName, snapshot_recorded AS snapshotRecorded, state, phase, revision,
   sandbox_id AS sandboxId, process_id AS processId, stdout_offset AS stdoutOffset,
   stderr_offset AS stderrOffset, output, error, token_digest AS tokenDigest,
-  started_at AS startedAt, completed_at AS completedAt`
+  started_at AS startedAt, completed_at AS completedAt, packages_version AS packagesVersion`
 
 export function readSoftwareImage(
   db: D1Database,
@@ -96,6 +96,7 @@ type Progress = Partial<
     | 'error'
     | 'completedAt'
     | 'snapshotRecorded'
+    | 'packagesVersion'
   >
 >
 
@@ -110,7 +111,7 @@ export async function saveSoftwareImage(
     .prepare(
       `UPDATE software_images SET phase = ?, state = ?, sandbox_id = ?,
     process_id = ?, stdout_offset = ?, stderr_offset = ?, output = ?, error = ?,
-    completed_at = ?, snapshot_recorded = ?, revision = revision + 1
+    completed_at = ?, snapshot_recorded = ?, packages_version = ?, revision = revision + 1
     WHERE id = ? AND state = ? AND phase = ? AND revision = ?`,
     )
     .bind(
@@ -124,6 +125,7 @@ export async function saveSoftwareImage(
       next.error,
       next.completedAt,
       next.snapshotRecorded,
+      next.packagesVersion,
       before.id,
       before.state,
       before.phase,

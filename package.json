@@ -1,7 +1,7 @@
 {
   "name": "remote-code",
   "private": true,
-  "version": "0.17.0",
+  "version": "0.18.0",
   "type": "module",
   "scripts": {
     "dev": "npm run site:build && vite",
@@ -55,6 +55,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.2.1",
+    "@xterm/headless": "^6.0.0",
     "astro": "^7.4.7",
     "eslint": "^10.14.0",
     "eslint-plugin-astro": "^3.2.1",
