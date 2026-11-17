@@ -54,14 +54,15 @@ first. Each path is relative to `src/files/`, the folder of this guide.
 - `markdown/preview-blocks.ts`: `previewDocument`, the preview adapter of
   the shared parser of `../markdown/parser.ts`, which the chat uses too.
   It turns the tokens of a file into a `MarkdownDocument`, with the parts
-  of `../markdown/token-read.ts` that it shares with the chat: the depth
-  limit of lists and quotes, and the lines that the parser drops.
-  `markdown/preview-tasks.ts` gives `taskItem`, the task box at the start
-  of a list item.
+  that it shares with the chat: the depth limit of lists and quotes,
+  `maxDepth` of the parser, and the source lines of a deeper list or quote
+  from `../markdown/token-read.ts`. `markdown/preview-tasks.ts` gives
+  `taskItem`, the task box at the start of a list item.
 - `markdown/preview-inline.ts`: `previewInline`, the inline content of one
   block, with the link rule of the preview, the alt text of each image,
-  the depth limit of marks and links, and the line breaks of
-  `../markdown/kept-breaks.ts`, which the chat shares.
+  and the line breaks of `../markdown/kept-breaks.ts`, which the chat
+  shares. The parser limits marks, links, and images to 12 levels, with
+  `../markdown/inline-depth.ts`.
 - `markdown/preview-tables.ts`: `previewTable`, which reads one table of a
   file with `readTableTokens` of `../markdown/table-tokens.ts`, and
   `TableBudget`, the empty cells that the tables of one file may add.

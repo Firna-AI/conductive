@@ -63,7 +63,7 @@ The user chose each one. The full items, with every option, are in
 ## Design calls
 
 Each is my call, with its reason. Calls 1 to 9 date from 16 November
-2026, and calls 10 to 13 from 17 November 2026.
+2026, and calls 10 to 14 from 17 November 2026.
 
 1. One module, `src/markdown/parser.ts`, makes the parser:
    `markdown-it` 15.0.3 or later, the `commonmark` preset, with `table`
@@ -83,14 +83,15 @@ Each is my call, with its reason. Calls 1 to 9 date from 16 November
    block kinds for a quote and a rule. Reason: the renderers, the mockups,
    and `MarkdownTable` change little.
 5. The chat keeps its own rules on top of the parser:
-   - A short table row spans its last cell. The adapter counts the cells
-     of the source row with `readTableRow`, because the parser fills
-     missing cells.
+   - A short table row spans its last cell. The table rule of the parser
+     gives each row only the cells of its source line, up to the width of
+     the header, so the chat adds no empty cell. The file preview fills a
+     short row with empty cells, within its table budget.
    - While the agent writes, an underline on the last line shows as text.
    - A heading with no text draws nothing.
-   - Lists and quotes deeper than 16 levels show as paragraph text.
-   - Each line that the parser drops, past its nesting limit, shows as
-     text. No text of a message is lost.
+   - Lists and quotes deeper than 16 levels show as paragraph text. The
+     parser reads one more level, inside which list and quote marks stay
+     text, so it drops no line. No text of a message is lost.
    Reason: these are requirements in `chat-markdown.md` and
    `chat-tables.md`.
 6. The chat parses on the main thread, as today. Measured in Node on
@@ -131,6 +132,21 @@ Each is my call, with its reason. Calls 1 to 9 date from 16 November
 13. In the work fold, a closed message line shows a quote as its text and a
     rule as a middle dot, `·`. An open line shows them as blocks. Reason:
     a closed line stays one line, as for a table.
+14. The rule of design call 3 reads a link label as text of its block, in
+    both views. The chat reads the alt text of an image in the same way. The
+    file preview shows alt text as plain text, with a space for each line
+    break. The chat applies the rule once to each block, to the parts that
+    it draws. So a line break in a label counts where the link shows it: in
+    its words, between the brackets of a link that opens nothing, and not at
+    all for a chip or for a link that shows its address. In the file
+    preview, a link that holds no node stays an empty link, as CommonMark
+    draws it and as the preview drew it before. Examples are
+    `[](https://example.com)`, and a label of only line breaks at the edge
+    of its block. The link shows nothing, so the rule counts nothing for it:
+    it does not end a run of line breaks. Reason: a label is no block, so it
+    cannot drop the breaks inside its block, and an empty link cannot let a
+    block show two empty lines. Findings 23 and 44 of review round 1 found
+    both defects.
 
 Contract owners:
 
@@ -168,7 +184,8 @@ Replaced ways:
 - The shared readers `src/markdown/list-items.ts`, `headings.ts`,
   `lines.ts`, and the readers `readTableSeparator` and `tableStarts` of
   `table-rows.ts` → the parser. `table-rows.ts` keeps its types, which
-  the mockups import, and `readTableRow`. Deleted in Milestone 5.
+  the mockups import. Deleted in Milestone 5. `readTableRow` lost its last
+  caller with the table rule of review round 1, and that round deletes it.
 - The quote and rule styles of `src/files/markdown/MarkdownView.module.css`
   → the shared style module of design call 4 and item 8 D. Moved in
   Milestone 5.

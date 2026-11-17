@@ -224,9 +224,9 @@ is relative to `src/chat/`, the folder of this guide.
   shared Markdown parser. It gives the paragraphs, headings, lists, code
   blocks, quotes, rules, and tables of an agent message, with `TextTable`
   of `markdown/agent-tables.ts`. `markdown/agent-inline.ts` gives the
-  inline tree of each block, with the line breaks of
-  `markdown/agent-breaks.ts`. `markdown/answer-parts.ts`: `answerParts`,
-  the chips and the links of an inline tree, with the mentions of
+  inline tree of each block, with every line break. `markdown/answer-parts.ts`:
+  `answerParts`, the chips and the links of an inline tree, with the line
+  breaks of `markdown/agent-breaks.ts` and the mentions of
   `markdown/answer-text.ts`. `markdown/AnswerText.tsx`: `AnswerText`,
   which draws them, and `markdown/FileTextLink.tsx`, a link to a file.
   `components/AgentText.tsx`: `AgentText`, which draws the blocks, with the

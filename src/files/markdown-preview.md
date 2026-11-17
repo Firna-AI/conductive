@@ -35,8 +35,8 @@ the preview:
   box, and the chat shows one as text.
 - Lists and quotes nest at most 16 levels deep, as in the chat. A deeper
   list or quote shows as one paragraph of its source lines, with their
-  marks. The parser drops the lines past its own nesting limit, and they
-  show as such a paragraph too, so no text of the file is lost.
+  marks. The parser reads one more level, inside which list and quote
+  marks stay text, so it drops no line, and no text of the file is lost.
 - A link opens only an absolute `http`, `https`, or `mailto` address. Any
   other link shows its label as text. The parser makes no link of a
   script or a data address, so such a link shows as typed. A link in the
@@ -46,6 +46,9 @@ the preview:
   draws its line breaks by the rule of `src/markdown/kept-breaks.ts`,
   which the chat shares, as
   [Line breaks](../../docs/protocol/chat-markdown.md#line-breaks) says.
+  The rule reads the label of a link as text of its block. A link that
+  holds nothing, such as `[](https://example.com)`, stays an empty link,
+  as CommonMark draws it, and the rule counts nothing for it.
 - A soft line break stays a line of the text, so the browser shows it as
   a space.
 - Each row that the parser reads stays in its table, also a line without
@@ -55,8 +58,10 @@ the preview:
 
 The parser pairs the marks of emphasis, strong emphasis, and
 strikethrough by the rules of CommonMark. Emphasis, strong emphasis,
-strikethrough, and links nest at most 12 levels deep. A deeper mark or
-link shows its Markdown as typed around its content.
+strikethrough, links, and images nest at most 12 levels deep, as
+`src/markdown/inline-depth.ts` sets for the preview and the chat. A deeper
+mark or link shows its Markdown as typed around its content, and a deeper
+image shows its Markdown as typed.
 
 A run of more than 256 characters without a space renders as adjacent
 text nodes that end between whole graphemes. The text and its lines stay

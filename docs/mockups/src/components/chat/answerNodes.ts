@@ -52,21 +52,23 @@ function unit(part: AnswerPart, source: string): AnswerItem {
 }
 
 /**
- * Text with its Markdown links and images at web addresses, each one unit,
- * and its line breaks. A bare address stays text, because it reads after
- * the marks pair, as the parser reads it in a text token.
+ * Text with its Markdown links, its images at web addresses, and its bare
+ * addresses, each one unit, and its line breaks. A bare address is a unit
+ * before the marks pair, as the chat parser keeps it whole (design call 8),
+ * so a mark in its path or its query, such as the `__` of `__tests__`,
+ * stays in the address.
  */
 function webLinkItems(text: string): AnswerItem[] {
   const items: AnswerItem[] = []
   let rest = ''
   for (const part of webAddressParts(text)) {
-    if (part.kind === 'text' || part.label === undefined) {
-      rest += part.kind === 'text' ? part.text : part.source
+    if (part.kind === 'text') {
+      rest += part.text
       continue
     }
-    const image = rest.endsWith('!')
-    items.push(...breakItems<AnswerPart>(image ? rest.slice(0, -1) : rest))
     const { href, source, label } = part
+    const image = label !== undefined && rest.endsWith('!')
+    items.push(...breakItems<AnswerPart>(image ? rest.slice(0, -1) : rest))
     items.push(
       image
         ? unit(
@@ -113,15 +115,11 @@ function codeItem(text: string): AnswerItem {
   return unit(part, `\`${text}\``)
 }
 
-/** Text between the marks, with its mentions and its bare addresses. */
+/** Text between the marks, with its mentions. */
 function textNodes(text: string): AnswerNode[] {
-  return mentionParts(text, [], true)
-    .flatMap((part): AnswerPart[] =>
-      part.kind === 'text' ? webAddressParts(part.text) : [part],
-    )
-    .map((part): AnswerNode =>
-      part.kind === 'text' ? part : { kind: 'unit', unit: part },
-    )
+  return mentionParts(text, [], true).map((part): AnswerNode =>
+    part.kind === 'text' ? part : { kind: 'unit', unit: part },
+  )
 }
 
 /** The nodes, with the text between the marks read at each depth. */
@@ -136,11 +134,12 @@ function withText(nodes: readonly AnswerNode[]): AnswerNode[] {
 
 /**
  * The text of an answer, in the order in which the parser reads it: code
- * first, then Markdown links and images, then line breaks, then the marks
- * around them, and last, in the text between the marks, the mentions and
- * the bare addresses. So `**` around code or a chip makes it bold, and an
- * unpaired `**` shows as typed (design call 7). A path keeps its `_`, and
- * a mention inside marks ends before the closing mark (design call 11).
+ * first, then Markdown links, images, and bare addresses, then line
+ * breaks, then the marks around them, and last, in the text between the
+ * marks, the mentions. So `**` around code, a chip, or a link makes it
+ * bold, and an unpaired `**` shows as typed (design call 7). A path keeps
+ * its `_`, and a mention inside marks ends before the closing mark (design
+ * call 11).
  */
 export function answerNodes(text: string): AnswerNode[] {
   const items = text

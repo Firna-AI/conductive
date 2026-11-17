@@ -85,10 +85,10 @@ describe('the links of an answer', () => {
     ])
   })
 
-  test('a label tests as it shows, without its marks, so a label in emphasis cannot hide the address', () => {
+  test('a label tests as it shows, without its marks and with no character for a line break, so a label in emphasis or on two lines cannot hide the address', () => {
     expect(
       answer(
-        '[*https://evil.example*](https://good.example/a) [~~www.evil.example~~](https://good.example/b) [*Good*](https://good.example/c)',
+        '[*https://evil.example*](https://good.example/a) [~~www.evil.example~~](https://good.example/b) [*Good*](https://good.example/c) [https:<br>//good.example/login](https://evil.example/phish)',
       ),
     ).toEqual([
       web('https://good.example/a', text('https://good.example/a')),
@@ -96,6 +96,8 @@ describe('the links of an answer', () => {
       web('https://good.example/b', text('https://good.example/b')),
       text(' '),
       web('https://good.example/c', emphasis(text('Good'))),
+      text(' '),
+      web('https://evil.example/phish', text('https://evil.example/phish')),
     ])
   })
 

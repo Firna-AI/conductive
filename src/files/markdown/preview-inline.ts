@@ -16,16 +16,22 @@ const markOf: ReadonlyMap<string, MdMark['kind']> = new Map<
   ['s_open', 'strike'],
 ])
 
-function isMark(node: MdInline): node is MdMark {
-  return (
-    node.kind === 'strong' || node.kind === 'emphasis' || node.kind === 'strike'
-  )
-}
-
-/** How the line-break rule reads the inline content of the preview. */
+/**
+ * How the line-break rule reads the inline content of the preview. Each
+ * node that holds children, a mark or a link, is a container, so a label
+ * is text of its block. A mark that keeps no node leaves the block. A link
+ * that holds no node stays an empty link, as CommonMark draws it, and the
+ * rule counts nothing for it (design call 14 of the Markdown parser plan).
+ */
 const previewNodes: BreakNodes<MdInline> = {
-  marked: (node) => (isMark(node) ? node.children : null),
-  remarked: (node, children) => (isMark(node) ? { ...node, children } : node),
+  inner: (node) => ('children' in node ? node.children : null),
+  rebuilt: (node, children) => {
+    if (!('children' in node)) return node
+    if (node.kind === 'link' || children.length > 0) {
+      return { ...node, children }
+    }
+    return null
+  },
   leaf: (node) => {
     if (node.kind === 'break') return 'break'
     return node.kind === 'text' && node.text.trim() === '' ? 'blank' : 'shows'
@@ -34,7 +40,7 @@ const previewNodes: BreakNodes<MdInline> = {
 
 /**
  * Inline content with the line breaks that its block draws, as "Line
- * breaks" of `chat-markdown.md` says.
+ * breaks" of `chat-markdown.md` says, also in the labels of its links.
  */
 export function previewBreaks(nodes: readonly MdInline[]): MdInline[] {
   return keptBreaks(nodes, previewNodes)
@@ -98,8 +104,9 @@ interface Open {
 }
 
 /**
- * The open node of a link. A link that is safe to follow keeps its label.
- * Any other link, also one in the label of a link, shows its label alone.
+ * The open node of a link. A link that is safe to follow keeps its label,
+ * with its line breaks, which the rule of its block draws. Any other link,
+ * also one in the label of a link, shows its label alone.
  */
 function link(token: Token, inLabel: boolean): Open {
   const address = token.attrGet('href')
@@ -108,8 +115,7 @@ function link(token: Token, inLabel: boolean): Open {
   const close =
     href === null
       ? (into: MdInline[]) => addNodes(into, nodes)
-      : (into: MdInline[]) =>
-          into.push({ kind: 'link', href, children: previewBreaks(nodes) })
+      : (into: MdInline[]) => into.push({ kind: 'link', href, children: nodes })
   return { nodes, label: true, close }
 }
 

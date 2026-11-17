@@ -1,6 +1,6 @@
 import type { Token } from 'markdown-it'
 import { linkTail } from '../../markdown/parser'
-import { keptBreaks } from './agent-breaks'
+import { showsInline } from './agent-breaks'
 
 /** A mark of agent text: bold text, emphasis, or strikethrough. */
 export type InlineMark = 'strong' | 'emphasis' | 'strike'
@@ -73,7 +73,7 @@ function openLink(token: Token): Open {
     close: (label) => ({
       kind: 'link',
       href: typeof href === 'string' ? href : '',
-      label: keptBreaks(label),
+      label,
       typed,
     }),
   }
@@ -85,7 +85,7 @@ function imageOf(token: Token): InlineImage {
   return {
     kind: 'image',
     href: typeof href === 'string' ? href : '',
-    alt: keptBreaks(nodesOf(token.children ?? [])),
+    alt: nodesOf(token.children ?? []),
   }
 }
 
@@ -144,9 +144,12 @@ function nodesOf(tokens: readonly Token[]): InlineNode[] {
 
 /**
  * The inline text of one block from the tokens of its inline token, with
- * the line breaks that the block draws, as `keptBreaks` says. Empty when
- * the block draws nothing.
+ * each line break that the parser read, also in a link label and in the
+ * alt text of an image. `answerParts` draws the breaks by the rule of the
+ * whole block. Empty when the block shows nothing, such as a block of only
+ * line breaks, so the adapter leaves it out.
  */
 export function inlineText(tokens: readonly Token[] | null): InlineText {
-  return keptBreaks(nodesOf(tokens ?? []))
+  const nodes = nodesOf(tokens ?? [])
+  return showsInline(nodes) ? nodes : []
 }

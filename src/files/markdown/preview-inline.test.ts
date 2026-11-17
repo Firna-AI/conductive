@@ -118,6 +118,41 @@ it('pairs emphasis and strong emphasis markers by the CommonMark rules', () => {
   expect(actual).toEqual(cases)
 })
 
+it('reads a link label as text of its block, so only the edges of the block and a long run drop its line breaks, and an empty link ends no run', () => {
+  const link = (label: string) => `<a href="https://example.com/">${label}</a>`
+  const cases = [
+    // The inputs of finding 44 of review round 1.
+    ['a [b<br>](https://example.com)c', `a ${link('b<br>')}c`],
+    ['a [<br>b](https://example.com)c', `a ${link('<br>b')}c`],
+    // A hard line break of CommonMark at the edge of a label.
+    ['a [b\\\n](https://example.com)c', `a ${link('b<br>')}c`],
+    ['a [b  \n](https://example.com)c', `a ${link('b<br>')}c`],
+    ['a [\\\nb](https://example.com)c', `a ${link('<br>b')}c`],
+    [
+      'a [**b<br>**](https://example.com)c',
+      `a ${link('<strong>b<br></strong>')}c`,
+    ],
+    // The edges of the block and a run of breaks reach into the label.
+    ['[<br>b](https://example.com) c', `${link('b')} c`],
+    ['c [b<br>](https://example.com)', `c ${link('b')}`],
+    [
+      'a [b<br><br><br>](https://example.com)<br><br>c',
+      `a ${link('b<br><br>')}c`,
+    ],
+    // A link that holds nothing stays an empty link, and it ends no run.
+    ['a<br>[](https://example.com)<br><br>c', `a<br>${link('')}<br>c`],
+    // The preview tests no label for an address: a label on two lines shows
+    // as typed, and the link opens its real address, which its title gives.
+    [
+      '[https:<br>//good.example/login](https://evil.example/phish)',
+      '<a href="https://evil.example/phish">https:<br>//good.example/login</a>',
+    ],
+  ] as const
+  // One comparison of the whole table names each case that differs.
+  const actual = cases.map(([text]) => [text, markup(inline(text))])
+  expect(actual).toEqual(cases)
+})
+
 /** The levels of strong text that wrap the content, without recursion. */
 function strongLevels(nodes: readonly MdInline[]) {
   let levels = 0

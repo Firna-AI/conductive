@@ -13,6 +13,7 @@ import {
   type LinkTarget,
   type WorkspaceLinks,
 } from '../links/workspace-links'
+import { answerBreaks } from './agent-breaks'
 import type {
   InlineImage,
   InlineLink,
@@ -65,12 +66,16 @@ export interface AnswerReading {
   files?: { find: EntryLookup; root: string | null }
 }
 
-/** The text that nodes show, as the chat tests a label (chat-links.md). */
+/**
+ * The text that nodes show, as the chat tests a label (chat-links.md). A
+ * line break is no character, so a label that shows an address on two
+ * lines holds that address, as it does on one line.
+ */
 function shownText(nodes: readonly InlineNode[]): string {
   return nodes
     .map((node) => {
       if (node.kind === 'text' || node.kind === 'code') return node.text
-      if (node.kind === 'break') return ' '
+      if (node.kind === 'break') return ''
       if (node.kind === 'mark') return shownText(node.nodes)
       return shownText(node.kind === 'link' ? node.label : node.alt)
     })
@@ -197,7 +202,7 @@ function nodeParts(
         {
           kind: 'mark',
           mark: node.mark,
-          parts: answerParts(node.nodes, reading),
+          parts: inlineParts(node.nodes, reading),
         },
       ]
     case 'link':
@@ -208,12 +213,12 @@ function nodeParts(
 }
 
 /**
- * The parts of the inline text of one block of an agent message, with its
- * chips and its links. A mention can start at the start of the block,
- * after a line break, and right after a mark, and it ends before the
- * closing mark, as "The text of a mention" of `file-mentions.md` says.
+ * The parts of inline nodes, with their chips and their links. A mention
+ * can start at the start of the nodes, after a line break, and right after
+ * a mark, and it ends before the closing mark, as "The text of a mention"
+ * of `file-mentions.md` says.
  */
-export function answerParts(
+function inlineParts(
   nodes: readonly InlineNode[],
   reading: AnswerReading,
 ): AnswerPart[] {
@@ -224,6 +229,19 @@ export function answerParts(
     start = node.kind === 'break' || node.kind === 'mark'
   }
   return parts
+}
+
+/**
+ * The parts that the chat draws for the inline text of one block of an
+ * agent message: its chips and its links, as `inlineParts` reads them,
+ * with the line breaks that the whole block draws, as `answerBreaks` says.
+ * So a break in the label of a link counts where the link shows it.
+ */
+export function answerParts(
+  nodes: readonly InlineNode[],
+  reading: AnswerReading,
+): AnswerPart[] {
+  return answerBreaks(inlineParts(nodes, reading))
 }
 
 /**

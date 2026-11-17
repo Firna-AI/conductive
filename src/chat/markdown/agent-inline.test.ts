@@ -90,16 +90,12 @@ it('reads each form of a line-break tag and each hard line break as a line break
   })
 })
 
-it('draws no line break at the start or the end of a block, no block of only line breaks, and at most one empty line for a run of breaks', () => {
+it('leaves out a block of only line breaks, and keeps the line breaks of each other block for the chat to draw by the rule of the whole block', () => {
   expect({
-    ends: blocksOf('<br><br>Start and end<br> <br>'),
     only: blocksOf('Before', '', '<br> <br><br>', '', '## <br>', '', 'After'),
-    run: blocksOf('One<br><br><br> <br>two<br>**<br><br>three**'),
     cell: blocksOf('| A | B |', '| --- | --- |', '| <br>x<br> | <br> |'),
   }).toEqual({
-    ends: [p('Start and end')],
     only: [p('Before'), p('After')],
-    run: [p('One<br><br>two<br><b><br>three</b>')],
-    cell: [table(['A', 'B'], [['x', '']])],
+    cell: [table(['A', 'B'], [['<br>x<br>', '']])],
   })
 })

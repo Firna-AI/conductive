@@ -26,21 +26,22 @@ React.
   paragraph, a heading, and a table cell hold `InlineText`, the inline
   tree of `markdown/agent-inline.ts`.
 - The inline tree holds text, inline code, line breaks, marks, links, and
-  images. A mark is bold text, emphasis, or strikethrough, around its own
-  nodes. A soft line break is a space of the text. A link keeps the text
-  that the agent wrote around its label, from `linkTail` of the parser, so
-  a link that opens nothing shows as typed.
-- `keptBreaks` in `markdown/agent-breaks.ts` gives the line breaks that a
-  block draws, as [Line breaks](../../docs/protocol/chat-markdown.md#line-breaks)
-  says. A block that then draws nothing, such as a heading with no text or
-  a paragraph of only line breaks, is not a block. An empty quote is not a
+  images. It keeps each line break that the parser read, also in a link
+  label and in the alt text of an image. A mark is bold text, emphasis, or
+  strikethrough, around its own nodes. A soft line break is a space of the
+  text. A link keeps the text that the agent wrote around its label, from
+  `linkTail` of the parser, so a link that opens nothing shows as typed.
+- A block whose inline text shows nothing, such as a heading with no text
+  or a paragraph of only line breaks, is not a block. `showsInline` in
+  `markdown/agent-breaks.ts` gives this test. An empty quote is not a
   block either.
-- Lists and quotes nest at most 16 deep. `agentBlocks` shows a deeper list
-  or quote as one paragraph of its source lines, with their list marks and
+- Lists and quotes nest at most 16 deep, as `maxDepth` of
+  `src/markdown/parser.ts` says. `agentBlocks` shows a deeper list or
+  quote as one paragraph of its source lines, with their list marks and
   their own quote marks. `markdown/agent-source.ts` removes the marks of
-  the quotes around the lines. The parser drops lines past its own nesting
-  limit, and `agentBlocks` shows them as paragraph text too, so no text is
-  lost.
+  the quotes around the lines. The parser reads one more level, inside
+  which list and quote marks stay text, so it drops no line, and no text
+  is lost.
 - An underline counts only when a line break follows it. `agentBlocks`
   turns a heading whose underline is the last line of the message back
   into the text of a paragraph, with the underline.
@@ -49,6 +50,14 @@ React.
 - `answerParts` in `markdown/answer-parts.ts` reads the inline tree of one
   block with the context of the chat: the workspaces, the web links of the
   screen, and the file tree. [Text links](text-links.md) gives its rules.
+- Last, `answerParts` gives the line breaks that the block draws, as
+  [Line breaks](../../docs/protocol/chat-markdown.md#line-breaks) says,
+  with `answerBreaks` of `markdown/agent-breaks.ts`. This one pass reads
+  the parts that the chat draws, in the order in which they show, also
+  inside marks and links. So a line break in a link label counts where the
+  link shows it: in the words of a web link or a link to a file, between
+  the brackets of a link that opens nothing, and not at all when the link
+  shows as a chip or as its address.
 
 ## Drawing
 
@@ -96,9 +105,11 @@ messages and the file preview share their list rules, the list rules of
 CommonMark. Both views read their lists through the shared parser of
 `src/markdown/parser.ts`:
 
-- `src/markdown/token-read.ts` holds the depth limit of 16 that both views
-  apply to lists and quotes. Deeper content, and each line that the parser
-  drops, shows as paragraph text.
+- `maxDepth` of `src/markdown/parser.ts` is the depth limit of 16 that
+  both views apply to lists and quotes. Deeper content shows as paragraph
+  text. `src/markdown/block-depth.ts` keeps the parser one level past that
+  limit, so the parser drops no line. `src/markdown/token-read.ts` gives
+  both views the source lines of a deeper list or quote.
 - The file preview reads task boxes, with `preview-tasks.ts` of
   `src/files/markdown/`. The chat reads none, so it shows them as text.
 
@@ -145,17 +156,15 @@ mockups:
 
 - The chat reads its tables through the shared parser.
   `markdown/agent-tables.ts` turns the tokens of a table into a
-  `TextTable`. The parser fills a short row with empty cells, so the
-  adapter counts the cells of the source line of each row with
-  `readTableRow`, and keeps only those cells, up to the width of the
-  header. It removes the quote marks of the line first.
+  `TextTable`. The table rule of the parser, `src/markdown/table-rule.ts`,
+  gives each row only the cells that its source line has, up to the width
+  of the header. So the chat adds no empty cell to a short row.
 - `rowsInTable` in `markdown/agent-tables.ts` says which body rows stay in
   the table. Today each row that the parser reads stays in it, also a line
   without a pipe. The rows after its count show as paragraph text.
 - `src/markdown/table-tokens.ts` reads the tokens of a table for both
-  views. `src/markdown/table-rows.ts` holds `readTableRow`, which reads the
-  cells of a source row, with escaped pipes and the optional outer pipes.
-  `CellAlign` and `TableCells` are the shared types.
+  views. `src/markdown/table-rows.ts` holds `CellAlign` and `TableCells`,
+  the shared types.
 - The file preview fills short rows with empty cells, as
   [the Markdown preview](../files/markdown-preview.md#safety-limits) says.
 - `table-rows.ts` imports no React. The mockup fixtures import its types,
