@@ -7,7 +7,7 @@
 - **Reason:** the structural fix changes the close codes of the Worker for every bridged socket, and it needs a measurement on a production deploy first.
 
 - **Terms:**
-  - **Automatic try:** after a terminal connection drops with no close of the server, the Terminal tool reads the terminal state again and connects once by itself. Cal chose this on 17 November 2026.
+  - **Automatic try:** after the connection of a terminal drops with no close of the server, that terminal connects again once by itself, as `retries` in `src/terminal/terminalRetry.ts` decides. Cal chose this on 17 November 2026.
   - **Close frame:** the message that ends a WebSocket with a code. A connection that drops with no close frame reaches the page as code 1006.
 - **Background:**
   - `closeEnd` in `src/app/terminal-transport.ts` counts code 1006, 1001, 1012, a close event with no code, and an error event as a lost connection. It counts every other code as an end of the shell, with no automatic try.
