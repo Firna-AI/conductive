@@ -19,7 +19,7 @@
 - **Impact if no action:** In that rare case, the user loses the output of the old screen, such as an error message, against decision 245.
 - **Root question:** How does the ended screen keep its output until a new connection shows its own?
 - **Options:**
-  - **A.** Keep one xterm.js screen for each terminal ID. Only the transport changes on a try. At the first output of the new transport, call `reset()` on the screen, then write that output. Effort: Medium.
+  - **A.** Keep one xterm.js screen for each mount of `TerminalScreen`, or for each terminal of the terminal tabs branch once it merges. Only the transport changes on a try. At the first output of the new transport, call `reset()` on the screen, then write that output. Effort: Medium.
   - **B.** Render the new connection in a hidden second screen, and swap the screens at its first output. Two screens measure sizes and take focus, which adds risk. Effort: Large.
   - **C.** Change the requirement: a failed try after a successful read can show an empty screen. Effort: Small.
 - **Left out:** A copy of the old text into a plain text block, because it loses the colours and the layout of the screen.
