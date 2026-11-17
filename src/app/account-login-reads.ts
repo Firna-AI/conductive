@@ -1,23 +1,21 @@
 import type { Agent } from '../shared/generated/Agent'
-import type { DefaultAgentLogin } from '../shared/generated/DefaultAgentLogin'
 import { ACCOUNT_PATHS, type AccountResponse } from '../shared/account'
 import type { AgentLogins, LoginRead } from './agent-logins'
 import { AGENTS, readAccount } from './api/read-core'
 import type { AppModel } from './app-model'
 import { inOrgs, orgLoginsInUse } from './default-logins'
 import { modelListWait } from './endpoint-models'
-import type { OrgLoginDefaults } from './org-agent-logins'
 import type { Store } from './store'
 
 /**
  * The one owner of the reads of the logins and of the default logins of the
  * account: list opens, page returns, the timer, the reads after a change of
- * a login, an org that joins the orgs of the person, and each read of the
- * org logins of an org. Each read shows only what `AgentLogins.mark` and
- * `AgentLogins.markOrg` let it show. A read across a new app start or a
- * sign-out shows nothing.
+ * a login, and an org that joins the orgs of the person. Each read is a read
+ * of the whole account, because only its reply holds the logins and the
+ * default logins of every org. It shows only what `AgentLogins.mark` lets
+ * it show. A read across a new app start or a sign-out shows nothing.
  */
-export class AccountLoginReads implements OrgLoginDefaults {
+export class AccountLoginReads {
   private running: Promise<void> | null = null
   private cancelTimer: (() => void) | null = null
   /** The orgs of the person that are not deleted, while the app is ready. */
@@ -66,28 +64,6 @@ export class AccountLoginReads implements OrgLoginDefaults {
       readAccount,
     )
     if (this.app.boot.get() === boot) show(account, agent)
-  }
-
-  /**
-   * Counts a change of an org login of `agent`, as `OrgLoginDefaults` says.
-   * An account that names no default login, from an older reply, counts
-   * none, so no read needs to follow a write.
-   */
-  orgLoginChanged(agent: Agent): boolean {
-    if (!this.logins.namesDefaults()) return false
-    this.logins.change(agent)
-    return true
-  }
-
-  /** Marks a read of the org logins of `orgId`, as `OrgLoginDefaults` says. */
-  markOrgRead(
-    orgId: string,
-  ): (defaults: readonly DefaultAgentLogin[] | undefined) => void {
-    const boot = this.app.boot.get()
-    const show = this.logins.markOrg(orgId)
-    return (defaults) => {
-      if (defaults && this.app.boot.get() === boot) show(defaults)
-    }
   }
 
   /** Starts a new read of the account, also while an older one runs. */

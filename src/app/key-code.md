@@ -93,11 +93,9 @@ Each path is relative to `src/app/`, the folder of this page.
   `OrgModel.startBuild` sends Build computer and Try again for each screen
   that offers them.
 - `org-agent-logins.ts`: `OrgAgentLogins`, the org logins of one org with
-  the save, the switch, Remove, and Refresh of an admin. Each read gives
-  the default logins of the person in that org to the account through
-  `OrgLoginDefaults`. Each save, switch change, remove, and Refresh ends
-  in `completed`, which reads the org logins again, as
-  [Login data](login-data.md#rules) says.
+  the save, the switch, Remove, and Refresh of an admin. Each save, switch
+  change, remove, and Refresh calls `changed`, which reads the default
+  logins of the account again, as [Login data](login-data.md#rules) says.
   `api/read-org-logins.ts` reads them. `../shell/settings/AgentsTab.tsx`,
   `OrgLoginList.tsx`, and `EveryMemberSetting.tsx` draw the Agents tab.
 - `first-build.ts`: `firstBuildOf` and `useFirstBuild`, the state of the
@@ -149,12 +147,14 @@ Each path is relative to `src/app/`, the folder of this page.
   ChatGPT sign-in of Codex. `../shell/account/codex-sign-in.ts`:
   `CodexSignIn`, the steps, the polls, and the timer of that sign-in.
   `api/read-core.ts`: `loginUsable`, whether turns can run on a login.
-  After a save, a remove, or a connected sign-in, `readDefaults` reads the
-  logins of the agent again for the default logins of the account.
+  After a save, a remove, a share change, or a connected sign-in,
+  `readDefaults` reads the logins of the agent again for the default
+  logins of the account, and `orgLoginChanged` does so after a change of
+  an org login.
   `account-login-reads.ts`: `AccountLoginReads`, the one owner of the
-  reads of the logins. It also reads the account once when an org joins
-  the orgs of the person, and gives each read of the org logins its
-  place in the account.
+  reads of the logins. Each of its reads is a read of the whole account.
+  It also reads the account once when an org joins the orgs of the
+  person.
   `login-owner.ts`: `loginOwnerName`, the name of the owner of a login,
   the org or a member, for the label of the composer and the line under
   the prompt of an automation.

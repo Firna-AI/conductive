@@ -592,10 +592,12 @@ Milestone 6 added these calls on 17 November 2026. Each is the agent's call.
   next read names the new default, and the order stays with the server.
 - After a save, a remove, or a connected sign-in of an own login, the
   account reads the logins of that agent again for the new default logins.
-  Agent's call of 17 November 2026, after review findings 1 and 2: after a
-  save, a switch change, a remove, or a Refresh of an org login, the app
-  reads the org logins again, and merges only that org's default logins
-  into the account. The account reads its logins once when an org joins
+  Agent's call of 17 November 2026, after review findings 1, 2, and 5:
+  only a complete account reply writes the own logins and the default
+  logins. After a save, a switch change, a remove, or a Refresh of an org
+  login, and after a share change, the app counts a change and reads the
+  account once. The browser does not merge the `defaultLogins` of an org
+  logins reply. The account reads its logins once when an org joins
   the active org set: an accepted invitation, a restore, or a create. The
   account timer also runs while an org login serves new sessions or an org
   endpoint list is kept, and the Agents tab reads its org logins once a

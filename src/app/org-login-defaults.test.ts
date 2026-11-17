@@ -6,6 +6,7 @@ import {
 } from '../shared/account'
 import type { OrgAgentLoginStatus } from '../shared/org-agent-logins'
 import {
+  orgAgentLoginPath,
   orgSettingsPaths,
   refreshOrgAgentLoginModelsPath,
 } from '../shared/org-settings'
@@ -28,12 +29,12 @@ import {
   flushMicrotasks,
   HeldRequests,
   ManualDelay,
+  ManualFocus,
   requestLines,
   testServices,
 } from './test-kit'
 
 const userId = coreFixtures('admin').account.user.id
-const futex = { id: 'futex', name: 'Futex' }
 
 /** A model list of an org endpoint, read at `checkedAt`. */
 function listAt(checkedAt: number, ...missing: string[]): EndpointModelList {
@@ -70,17 +71,35 @@ function serveOrgRead(
   })
 }
 
-/** The app over `server`, after its first load, with held requests and a manual timer. */
+/**
+ * The app over `server`, after its first load, with held requests, a manual
+ * timer, and a manual page focus.
+ */
 async function started(server: FakeApiServer, account: AccountResponse) {
   server.json('GET', ACCOUNT_PATHS.account, account)
   const held = new HeldRequests(server)
   const timer = new ManualDelay()
+  const focus = new ManualFocus()
   const app = new AppModel(
-    testServices(server, { fetch: held.fetch, delay: timer.delay }),
+    testServices(server, {
+      fetch: held.fetch,
+      delay: timer.delay,
+      onFocus: focus.onFocus,
+    }),
   )
   await app.start()
-  return { app, held, timer }
+  return { app, held, timer, focus }
 }
+
+/**
+ * The account of Cal after he connected a Claude login of his own in
+ * another tab: his new Claude sessions in Acme take that login.
+ */
+const withOwnLogin = accountWithDefaults(
+  'admin',
+  { claude: 'own', codex: null },
+  { ownLogins: true },
+)
 
 /** The account of the app, as the screens read it. */
 function account(app: AppModel): AccountResponse {
@@ -100,8 +119,8 @@ function claudeModels(app: AppModel): string[] {
     .map((model) => model.model)
 }
 
-describe('the default logins that the org logins of an org give the account', () => {
-  test('a Refresh of an org endpoint shows its new model list in the model pickers on the org login, with no read of the account', async () => {
+describe('the default logins of the account and the org logins of an org', () => {
+  test('a Refresh of an org endpoint shows its new model list in the model pickers on the org login, with one read of the account', async () => {
     const server = new FakeApiServer()
     const before = listAt(FAKE_TIME - 60_000, 'Fable 5.1')
     const { app } = await started(
@@ -117,6 +136,15 @@ describe('the default logins that the org logins of an org give the account', ()
       modelListReadFailed: false,
     })
     serveOrgRead(server, listAt(FAKE_TIME), { claude: 'org', codex: null })
+    server.json(
+      'GET',
+      ACCOUNT_PATHS.account,
+      accountWithDefaults(
+        'admin',
+        { claude: 'org', codex: null },
+        { orgModelList: listAt(FAKE_TIME) },
+      ),
+    )
     const from = server.requests.length
     await app.org(acme.id).agentLogins.refreshModels('claude')
     expect({
@@ -128,65 +156,63 @@ describe('the default logins that the org logins of an org give the account', ()
     }).toEqual({
       shown: ['Opus 5.5', 'Sonnet 5.5'],
       refreshed: ['Opus 5.5', 'Sonnet 5.5', 'Fable 5.1'],
-      accountReads: 0,
+      accountReads: 1,
     })
   })
 
-  test('a read of the org logins of Acme shows the default logins of Acme in their place, and keeps those of another org', async () => {
+  test('a return to the Agents tab shows a Claude login that the person connected in another tab, also when the reply of the org logins comes before the reply of the account', async () => {
     const server = new FakeApiServer()
-    const list = listAt(FAKE_TIME)
-    const { app } = await started(server, {
-      ...accountWithDefaults(
-        'admin',
-        { claude: 'own', codex: 'own' },
-        { ownLogins: true },
-      ),
-      defaultLogins: [
-        ...defaultsIn(acme, { claude: 'own', codex: 'own' }, userId),
-        ...defaultsIn(futex, { claude: 'org', codex: null }, userId),
-      ],
-    })
-    serveOrgRead(server, list, { claude: 'org', codex: 'own' })
-    await app.org(acme.id).reload('agentLogins')
-    expect(account(app).defaultLogins).toEqual([
-      ...defaultsIn(acme, { claude: 'org', codex: 'own' }, userId, list),
-      ...defaultsIn(futex, { claude: 'org', codex: null }, userId),
-    ])
+    const { app, held, focus } = await started(
+      server,
+      accountWithDefaults('admin', { claude: 'org', codex: null }),
+    )
+    serveOrgRead(server, listAt(FAKE_TIME))
+    const stop = app.org(acme.id).watch('agentLogins')
+    await flushMicrotasks()
+    server.json('GET', ACCOUNT_PATHS.account, withOwnLogin)
+    serveOrgRead(server, listAt(FAKE_TIME), { claude: 'own', codex: null })
+    held.holdAnswer('GET', ACCOUNT_PATHS.account)
+    // The return reads the account first, then the org logins of the tab.
+    focus.focus()
+    await flushMicrotasks()
+    held.release('GET', ACCOUNT_PATHS.account)
+    await app.account.refreshLogins()
+    stop()
+    expect({
+      connected: app.account.login('claude').connected,
+      login: newSessionLogin(account(app), acme.id, 'claude'),
+    }).toEqual({ connected: true, login: 'own' })
   })
 
-  test('a late answer of an older read of the org logins does not take back the default logins of a newer read of the account', async () => {
+  test('a save of the org login of Acme keeps the Claude login of the person that a read of the account brings meanwhile', async () => {
     const server = new FakeApiServer()
     const { app, held } = await started(
       server,
-      accountWithDefaults(
-        'admin',
-        { claude: 'own', codex: 'own' },
-        { ownLogins: true },
-      ),
+      accountWithDefaults('admin', { claude: 'org', codex: null }),
     )
-    const path = orgSettingsPaths.agentLogins(acme.id)
-    serveOrgRead(server, listAt(FAKE_TIME), { claude: 'own', codex: 'own' })
-    held.holdAnswer('GET', path)
-    const older = app.org(acme.id).reload('agentLogins')
+    server.json('GET', ACCOUNT_PATHS.account, withOwnLogin)
+    held.holdAnswer('GET', ACCOUNT_PATHS.account)
+    const read = app.account.refreshLogins()
     await flushMicrotasks()
-    // An admin turned the switch of Acme on, and a page return reads it.
-    server.json(
-      'GET',
-      ACCOUNT_PATHS.account,
-      accountWithDefaults(
-        'admin',
-        { claude: 'org', codex: 'own' },
-        { ownLogins: true },
-      ),
-    )
-    await app.account.refreshLogins()
-    const newer = newSessionLogin(account(app), acme.id, 'claude')
-    held.release('GET', path)
-    await older
+    server.json('PUT', orgAgentLoginPath(acme.id, 'claude'), {
+      agent: 'claude',
+      connected: true,
+      kind: 'api-key',
+      useForEveryMember: false,
+      updatedAt: FAKE_TIME,
+    })
+    serveOrgRead(server, listAt(FAKE_TIME), { claude: 'own', codex: null })
+    await app.org(acme.id).agentLogins.save({
+      agent: 'claude',
+      kind: 'api-key',
+      secret: 'sk-ant-acme',
+    })
+    held.release('GET', ACCOUNT_PATHS.account)
+    await read
     expect({
-      newer,
-      after: newSessionLogin(account(app), acme.id, 'claude'),
-    }).toEqual({ newer: 'org', after: 'org' })
+      connected: app.account.login('claude').connected,
+      login: newSessionLogin(account(app), acme.id, 'claude'),
+    }).toEqual({ connected: true, login: 'own' })
   })
 
   test.each([

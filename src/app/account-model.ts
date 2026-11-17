@@ -24,7 +24,6 @@ import { readSavedShortcuts } from './api/read-shortcuts'
 import { readWaitlistState } from './api/read-waitlist'
 import type { AppModel } from './app-model'
 import { EndpointReads, type LoginReads } from './endpoint-reads'
-import type { OrgLoginDefaults } from './org-agent-logins'
 import { Refresher } from './refresh'
 import { Resource } from './resource'
 import type { AppServices } from './services'
@@ -56,11 +55,6 @@ export class AccountModel {
    * the code with its uses, and whether sign-ups are paused.
    */
   readonly waitlist = new Store<Loadable<WaitlistStateResponse>>(loading)
-  /**
-   * How the org logins of each org keep the default logins of the account
-   * current, through the one owner of the reads of the logins.
-   */
-  readonly orgLoginDefaults: OrgLoginDefaults
   /** The logins of `account`, in the order of their changes. */
   private readonly logins = new AgentLogins(this.account)
   private readonly loginReads: AccountLoginReads
@@ -75,7 +69,6 @@ export class AccountModel {
     this.services = services
     this.app = app
     this.loginReads = new AccountLoginReads(app, this.account, this.logins)
-    this.orgLoginDefaults = this.loginReads
     const endpointReads = new EndpointReads()
     this.endpointReads = endpointReads.store
     this.loginWrites = new AccountLoginWrites(
@@ -199,6 +192,14 @@ export class AccountModel {
   /** Removes a login, with the note and the warning of its reads. */
   removeLogin(agent: Agent): Promise<void> {
     return this.loginWrites.remove(agent)
+  }
+
+  /**
+   * An admin changed an org login of `agent`, so the default logins of the
+   * account are read again, as `AccountLoginWrites.orgLoginChanged` says.
+   */
+  orgLoginChanged(agent: Agent): Promise<void> {
+    return this.loginWrites.orgLoginChanged(agent)
   }
 
   async setDefaultChoice(choice: AgentChoice): Promise<void> {

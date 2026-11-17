@@ -117,12 +117,11 @@ agent login forms, and model lists in the web app.
   `OrgLoginLines.tsx` of the mockups. With only an org login, the agent
   step of Get started says Ready, with the words of `getStartedCopy.ts`
   that name the org login.
-- After each change of a login of an agent, the screens show the default
-  logins that the server names after the change. A change of an own login
-  reads the account again. A change of an org login reads the org logins
-  of its org again. An org that joins the orgs of the person, such as
-  after an accepted invitation, reads the account once.
-  [Login data](login-data.md#rules) gives the rules.
+- After each change of a login of an agent, an own login or an org login,
+  the screens show the default logins that the server names after the
+  change, because the account reads them again. An org that joins the
+  orgs of the person, such as after an accepted invitation, reads the
+  account once too. [Login data](login-data.md#rules) gives the rules.
 
 ## The Agents tab of the org settings
 
@@ -141,9 +140,7 @@ agent login forms, and model lists in the web app.
   saves and of Refresh of an org endpoint in this page, which
   `OrgAgentLogins` keeps as the account keeps its own. Its line of the
   models names the model pickers on the login. The answer of a save
-  holds the model list. So a save reads the logins again only for the
-  default logins of the person, while the account names them. Refresh
-  always reads them again.
+  holds the model list, so only Refresh reads the logins again.
 - The switch "Use for every member" saves at once. While it saves, it
   shows the new value and takes no other change. A failed save shows its
   cause under the hint until the next change, and the switch shows the

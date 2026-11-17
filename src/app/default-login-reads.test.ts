@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest'
 import { ACCOUNT_PATHS, agentLoginPath } from '../shared/account'
-import { orgAgentLoginPath, orgSettingsPaths } from '../shared/org-settings'
+import { orgAgentLoginPath } from '../shared/org-settings'
 import { FakeApiServer } from '../test-support/fake-api'
 import { FAKE_TIME } from '../test-support/fixtures/core'
 import { AppModel } from './app-model'
@@ -10,7 +10,12 @@ import {
   acme,
   type DefaultsOf,
 } from './default-logins.test-support'
-import { HeldRequests, ManualFocus, testServices } from './test-kit'
+import {
+  flushMicrotasks,
+  HeldRequests,
+  ManualFocus,
+  testServices,
+} from './test-kit'
 
 /** The account of Cal, whose server names `defaults` in Acme. */
 function serveDefaults(
@@ -76,24 +81,14 @@ describe('the default logins of the account', () => {
     serveDefaults(server, { claude: 'own', codex: 'own' }, true)
     const { app } = await started(server)
     const before = claudeDefault(app)
-    const saved = {
+    server.json('PATCH', orgAgentLoginPath(acme.id, 'claude'), {
       agent: 'claude',
       connected: true,
       kind: 'api-key',
       useForEveryMember: true,
       updatedAt: FAKE_TIME,
-    } as const
-    server.json('PATCH', orgAgentLoginPath(acme.id, 'claude'), saved)
-    // The read of the org logins after the change names the new default
-    // logins of the person in Acme.
-    server.json('GET', orgSettingsPaths.agentLogins(acme.id), {
-      agentLogins: [saved, { agent: 'codex', connected: false }],
-      defaultLogins: accountWithDefaults(
-        'admin',
-        { claude: 'org', codex: 'own' },
-        { ownLogins: true },
-      ).defaultLogins,
     })
+    serveDefaults(server, { claude: 'org', codex: 'own' }, true)
     await app.org(acme.id).agentLogins.setUseForEveryMember('claude', true)
     await vi.waitFor(() => expect(claudeDefault(app)).toBe('org'))
     expect(before).toBe('own')
@@ -110,6 +105,26 @@ describe('the default logins of the account', () => {
     focus.focus()
     await vi.waitFor(() => expect(claudeDefault(app)).toBe('org'))
     expect(before).toBe('own')
+  })
+
+  test('a share change of an own login while a read of the account runs still shows the default logins of the server after the change', async () => {
+    const server = new FakeApiServer()
+    serveDefaults(server, { claude: 'own', codex: 'own' }, true)
+    const { app, held } = await started(server)
+    // An admin turned on "Use for every member" of Acme in another tab.
+    serveDefaults(server, { claude: 'org', codex: 'own' }, true)
+    held.holdAnswer('GET', ACCOUNT_PATHS.account)
+    const read = app.account.refreshLogins()
+    await flushMicrotasks()
+    server.json('PATCH', agentLoginPath('claude'), {
+      ...claudeKey,
+      kind: 'token',
+      noReuse: false,
+    })
+    await app.account.setNoReuse('claude', false)
+    held.release('GET', ACCOUNT_PATHS.account)
+    await read
+    expect(claudeDefault(app)).toBe('org')
   })
 
   test('a read that started before a remove of an own login does not show its older default logins', async () => {

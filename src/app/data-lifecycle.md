@@ -203,9 +203,9 @@ of the data that the screens read and write.
   answered never takes it back, as `Resource` says. A change of the switch
   shows at once, and a failed save takes it back. The note and the warning
   of the saves and of Refresh of an org endpoint stay only in the memory of
-  the page, so a reload removes them. Each read also gives the default
-  logins of the person in that org to the account, as
-  [Login data](login-data.md#rules) says.
+  the page, so a reload removes them. The account does not take the
+  default logins that a read names, as [Login data](login-data.md#rules)
+  says.
 - The Cloud computer tab follows the builds while it shows. The builds,
   not the settings, say which saved changes the org image lacks, in
   `BuildsResponse.changes`. They read again while a build runs and at

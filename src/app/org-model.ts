@@ -26,7 +26,7 @@ import { listWithArchives } from './archive-overlay'
 import { Creations } from './creations'
 import { workspaceUpdated, type ListData } from './list-changes'
 import { NewWorkspaceModel } from './new-workspace-model'
-import { OrgAgentLogins, type OrgLoginDefaults } from './org-agent-logins'
+import { OrgAgentLogins, type OrgLoginChanged } from './org-agent-logins'
 import {
   automationsWait,
   buildsWait,
@@ -100,15 +100,15 @@ export class OrgModel {
   private readonly drafts = new Map<string, NewWorkspaceModel>()
 
   /**
-   * `loginDefaults` keeps the default logins of the account current after
-   * each read and each change of the org logins, as `OrgLoginDefaults` says.
-   * Without it, such as in a test of one org, they change no account.
+   * `loginsChanged` runs after each change of an org login that an admin
+   * makes here, as `OrgLoginChanged` says. Without it, such as in a test
+   * of one org, the change reads no account.
    */
   constructor(
     services: AppServices,
     orgId: string,
     suspension: OrgSuspension = neverSuspended,
-    loginDefaults?: OrgLoginDefaults,
+    loginsChanged?: OrgLoginChanged,
   ) {
     this.suspension = suspension
     const api = noteOrgRefusals(services.api, () => suspension.note())
@@ -153,7 +153,7 @@ export class OrgModel {
     this.builds = builds.store
     this.members = members.store
     this.automations = automations.store
-    this.agentLogins = new OrgAgentLogins(api, orgId, loginDefaults)
+    this.agentLogins = new OrgAgentLogins(api, orgId, loginsChanged)
     this.parts = {
       list: new Refresher(list, listWait, this.services),
       repositories: new Refresher(repositories, onEntry, this.services),
