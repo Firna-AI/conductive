@@ -1,5 +1,6 @@
 import type { RunnerFileCommand } from '../../src/shared/generated/RunnerFileCommand'
 import { warnWorker } from '../warnings'
+import type { RunnerMessageStage } from '../warning-types'
 import { errorSummary, WarningId } from '../warning-values'
 import type { WorkspaceEventEnvelope } from './workspace-events'
 import { HttpError } from '../http'
@@ -77,14 +78,16 @@ export class RunnerChannel {
       const active = this.connections.current
       if (!active || !active.peer.matches(peer)) return
       if (!(await active.peer.authorize())) return
+      const progress: { stage: RunnerMessageStage } = { stage: 'parse' }
       try {
         const input: unknown =
           typeof value === 'string' ? JSON.parse(value) : value
-        await this.handle(active, input)
+        await this.handle(active, input, progress)
       } catch (error) {
         warnWorker({
           kind: 'runner_message_failed',
           workspaceId: WarningId.checked(active.workspace.id),
+          stage: progress.stage,
           error: errorSummary(error),
         })
         active.peer.close()
@@ -93,8 +96,13 @@ export class RunnerChannel {
     })
   }
 
-  private async handle(active: ActiveRunner, value: unknown): Promise<void> {
+  private async handle(
+    active: ActiveRunner,
+    value: unknown,
+    progress: { stage: RunnerMessageStage },
+  ): Promise<void> {
     const message = parseRunnerTransport(value)
+    progress.stage = message.type === 'hello' ? 'hello' : 'event'
     if (message.type === 'hello') {
       const welcome = await prepareRunnerHello(
         active,
@@ -105,6 +113,7 @@ export class RunnerChannel {
       )
       if (!welcome) return
       active.streamId = message.streamId
+      active.processStartId = message.processStartId
       active.protocolVersion = welcome.protocolVersion
       active.loginKinds = message.loginKinds
       active.ready = welcome.ready
@@ -145,6 +154,7 @@ export class RunnerChannel {
       message.type === 'file.read.result' ||
       message.type === 'file.diff.result'
     ) {
+      progress.stage = 'file_result'
       if (active.id)
         await this.dependencies.receiveFileResult(message.value, active.id)
       return
@@ -177,6 +187,7 @@ export class RunnerChannel {
       },
       this.publish,
     )
+    progress.stage = 'after_commit'
     if (message.eventNumber > cursor) {
       await active.peer.send({
         type: 'resend',

@@ -51,7 +51,7 @@ test('development moves take the tree of a top-level row, a move of a nested row
   const list = () => api.get(workspacesPath(org), readWorkspaces)
   /** The rows of General, each with its depth. */
   const general = async () =>
-    groupWorkspaces(sections, await list())
+    groupWorkspaces(sections, await list(), clock.now)
       .sections.find((group) => group.section.id === 'general')
       ?.rows.map((row) => `${row.workspace.id} ${row.depth}`)
   const send = (method: 'POST' | 'PATCH', path: string, body = {}) =>

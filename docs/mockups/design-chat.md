@@ -268,10 +268,12 @@ background work, and the end of a fast turn that ran at standard speed.
     to another org, or to a workspace that the list does not hold, is a
     link, as [Links in text](design-links.md) says.
   - The chat finds each workspace in the list of the org, with the
-    archived ones and with the states of the list, through
+    archived ones, the removed ones, and the states of the list, through
     `ChatWorkspaces`. A phone finds the same workspaces with no list on
     the screen. An archived workspace keeps its chip, with the archived
-    mark.
+    mark. A removed workspace, whose 14 days ended, keeps that chip too,
+    and a press on it opens its read-only chat, from decision 519 B, as
+    `user-flows/open-a-removed-workspace` shows.
   - A pasted link becomes a chip in the message box at once: in the chat,
     and in New workspace as a page or a dialog. `MessageField` gives each
     box its field. A draft with a workspace link or a file mention shows

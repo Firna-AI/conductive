@@ -112,6 +112,11 @@ checks in GitHub's order, and the reviewers.
 - A prompt that did not go out shows the chat of its session, where the
   composer names the cause: a missing login, or a failed send. Without an
   open session, the chat shows. A sent prompt keeps the view.
+- Merge latest of the command palette sends its prompt through the same
+  `sendPrompt` of the store. `offersAgentActions` of
+  [barView.ts](barView.ts) gives it the access rule of the agent actions.
+  `useMergeLatest` of the workspace screen builds it, as
+  [the key code of the screen](../shell/workspace/key-code.md) says.
 
 ## Continue
 

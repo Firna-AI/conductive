@@ -27,7 +27,7 @@ export async function writeWorkspaceFromTool(
     () =>
       input.kind === 'rename'
         ? { name: input.name }
-        : { sectionId: input.sectionId },
+        : { sectionId: input.sectionId, target: input.target },
     input.kind === 'move',
   )
 }

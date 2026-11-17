@@ -91,6 +91,13 @@ Each agent action sends a fixed message to the chat session you viewed last.
 It uses that session's model, effort, **Fast** setting, and normal send rules.
 It preserves your draft and uploads.
 
+To bring the latest target branch into your branch at any time, open the command palette and choose **Merge latest**.
+The row names the target branch, as in **Merge latest main**.
+It asks the agent to merge that branch, fix conflicts, test, commit, and push.
+It sends its message in the same way as the agent actions of the bar.
+You see it when the agent actions are available to you.
+It is not offered after the pull request merges.
+
 **Address review** asks the agent to change code without replying on GitHub.
 Select the pull request number to read, reply to, or resolve review comment threads on GitHub.
 On a phone, use **Open on GitHub** at the top of **Checks**.
@@ -182,9 +189,11 @@ Continue waits while an agent turn runs in any session of the workspace.
 After a merge, the workspace owner and org admins can select **Archive** in the bar.
 Archive stops its cloud computer at once, without checking the work or asking a question.
 It keeps the computer and its files for 14 days.
-The chat stays read-only in **Archived**, with no file lists or tools.
+The workspace stays in **Archived** for those 14 days.
+Its chat is read-only, with no file lists or tools.
 
 The notification after Archive offers **Restore**.
+It also gives the day the workspace leaves the list.
 Every member of an active org can restore the workspace while its computer and Restore window remain available.
 Restore returns the workspace to its place in the list, stopped.
 Select **Resume** if the restored workspace is already open.
@@ -193,6 +202,9 @@ On a computer, point to its row in **Archived** to find **Restore**.
 
 Restore ends after 14 days.
 Conductive then deletes the computer and its files.
+The workspace leaves **Archived** and the command palette.
+A direct link or a chat link still opens its read-only chat.
+Conductive keeps its chat history until the org is deleted.
 The merge alone does not archive the workspace.
 
 - [Archive a workspace](/docs/workspaces#archive-a-workspace)

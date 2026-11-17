@@ -13,11 +13,11 @@ with `conductive`.
 
 | MCP tool | CLI command and options | Kind |
 | --- | --- | --- |
-| `list_workspaces` | `workspaces list [--owner MEMBER_ID] [--parent ID] [--state STATE] [--repository ID] [--query TEXT] [--updated-since MILLISECONDS] [--archived true\|false] [--limit NUMBER] [--offset NUMBER]` | Read |
+| `list_workspaces` | `workspaces list [--owner MEMBER_ID] [--parent ID] [--state STATE] [--repository ID] [--query TEXT] [--updated-since MILLISECONDS] [--archived true\|false] [--removed true\|false] [--limit NUMBER] [--offset NUMBER]` | Read |
 | `get_workspace` | `workspaces get [--workspace ID]` | Read |
 | `create_workspace` | `workspaces create --repository ID --message TEXT [--agent claude\|codex --model NAME] [--effort LEVEL] [--fast true\|false] [--section ID] [--parent ID] [--name TEXT] [--first-session-title TEXT] [--request-id ID]` | Write |
 | `rename_workspace` | `workspaces rename --name TEXT [--workspace ID]` | Write |
-| `move_workspace` | `workspaces move --section ID [--workspace ID]` | Write |
+| `move_workspace` | `workspaces move [--section ID] [--parent ID \| --top-level] [--workspace ID]` | Write |
 | `archive_workspace` | `workspaces archive [--workspace ID]` | Write |
 | `list_repositories` | `repositories list` | Read |
 | `list_sections` | `sections list` | Read |
@@ -49,8 +49,9 @@ The MCP fields take the values of the CLI options, with these names:
   for `send_message`.
 - `--agent` and `--model` give one `model` field with `agent` and `model`.
 - `--stop-running-turn` gives `stopRunningTurn: true`.
-- `--archived` takes the text `true` or `false`. The `archived` field
-  takes a boolean.
+- `--top-level` gives `topLevel: true` for a workspace move.
+- `--archived` and `--removed` take the text `true` or `false`. The
+  `archived` and `removed` fields take a boolean.
 - Each other option gives its name in camel case, such as `updatedSince`,
   `firstSessionTitle`, `requestId`, `startLine`, and `timeoutSeconds`.
 - `--message-file` has no MCP field, as [Message files](#message-files)
@@ -144,7 +145,8 @@ A repeat with the same `--request-id` returns the first workspace, session, and 
 An omitted ID makes a new ID for that call only.
 So keep and pass the same ID to retry without a second workspace.
 
-`workspaces list` without options returns every workspace in the org, including archived workspaces.
+`workspaces list` without options returns every workspace in the org that is not removed, including archived workspaces.
+A removed workspace is an archived workspace whose 14 days of Restore ended, so it left the list of the app, as [Removed workspaces](../docs/protocol/workspace-life.md#removed-workspaces) says.
 Each list item gives its number, canonical web link, name, branch, and state.
 It also gives `parentId`, or `null` for a top-level workspace.
 Its owner gives the member ID, GitHub login, and display name, with no avatar.
@@ -162,6 +164,11 @@ The filters combine, and each filter is optional:
   integer. It selects newer activity.
 - `--archived true` selects archived workspaces, and `--archived false`
   the others.
+- `--removed true` selects only removed workspaces. `--removed false`
+  selects the others, as a call without the option does.
+
+So without `--removed`, `--archived true` and `--state archived` give only the archived workspaces that are not removed.
+`--archived false --removed true` gives none.
 
 `--limit` takes 1 to 100, and `--offset` the number of entries to skip.
 A reply to a call with a limit gives `hasMore`.
@@ -173,18 +180,29 @@ For the workspaces of the member who sent a message, pass the member ID from the
 For another member, take the ID from the owner fields of a listed workspace.
 Do not infer an owner from the workspace token or the active turn.
 
-`workspaces get` gives the list fields with the repository, base branch, section, creation and newest activity times, and archive and restore times.
+`workspaces get` gives the list fields with the repository, base branch, section, creation and newest activity times, and archive, restore, and removal times.
 It also gives `parent`, a list entry or `null`, and `depth`, counting each stored parent link.
 Its `children` gives the direct sub-workspaces, oldest first, including archived ones.
-It also reads an archived workspace.
+It also reads an archived workspace, also a removed one, whose state stays `archived`.
 `workspaces rename`, `move`, and `archive` reply with the same details.
 A rename uses the name rule, and no automatic name replaces it later.
 A blank result gets HTTP 400 `invalid_input`.
-A move puts the workspace at the top of the section.
-A top-level row moves with each workspace nested under it, including archived workspaces.
-A nested row moves nothing. Its reply gives a `notice` that names the top-level workspace to move instead.
+A section-only move puts a top-level row first in the section, with its whole tree.
+A section-only move of a nested row moves nothing. Its reply gives a `notice` that names the top-level workspace to move instead.
+For a parent change, pass `--parent ID` or MCP `parentId` to nest the whole tree under that parent.
+Pass `--top-level` or MCP `topLevel: true` to take the tree out of its parent.
+A move needs a section, a target, or both. A call with two targets gets `invalid_input`.
+`topLevel: false` gives no target. A null `parentId` gets `invalid_input`.
+A nest joins the parent's shown section. Another named section gives a `notice`.
+A take-out puts the tree first in the named section, or in its shown section when no section is named.
+A target equal to the current place changes nothing.
+The Worker refuses a loop with `nesting_cycle` and a move past depth 3 with `nesting_limit`.
+The depth error names the deepest workspace and the deepest allowed parent depth.
+These checks cover archived links and leave the tree unchanged on refusal.
+An archived parent is allowed. An archived moved workspace gets `workspace_archived`.
+[Parent changes](../docs/protocol/parent-changes.md) states the requirements.
 CLI JSON and MCP text and structured results keep all these reply fields.
-An archive makes the same change as Archive in the app. A member can restore the workspace for 14 days.
+An archive makes the same change as Archive in the app. A member can restore the workspace for 14 days. Then the workspace is removed.
 Archiving the calling workspace ends the calling turn, so the caller can miss the reply.
 
 A workspace link in a message names that workspace.
@@ -236,7 +254,7 @@ A long line can span several replies. Keep each fragment to recover all its text
 `sessions get` gives one session entry: its title, choice, starter, state, closed mark, and link.
 `messages get` gives one message: its text, sender, state, turn ID, and acceptance time.
 Its text is the stored text, so a tool message keeps its `Sent by:` line. No text holds a sender line.
-Both reads also reach archived workspaces and closed sessions.
+Both reads also reach archived workspaces, also removed ones, and closed sessions.
 `sessions rename` uses the name rule. A blank result gets HTTP 400 `invalid_input`.
 `sessions close` refuses a running turn with HTTP 409 `stop_confirmation_required`, unless `--stop-running-turn` is given.
 With that flag, the running turn stops, and the session closes when the turn ends.

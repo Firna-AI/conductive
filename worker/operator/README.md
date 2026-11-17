@@ -54,7 +54,7 @@ Both searches treat `%`, `_`, and backslash as literal name text.
 Each D1 query binds its input values.
 
 Org entries give `id`, `name`, `initials`, `createdAt`, `members`, `workspaces`, `running`, `status`, and `match`.
-The workspace count includes archived workspaces.
+The workspace count includes every workspace, also archived and removed workspaces.
 Running counts only workspaces, not builds.
 Status is `deleted`, `suspended`, or `active`, in that priority.
 Match is `org-id`, `cloud-computer-id`, or `preview-address` for a resource match.
@@ -88,7 +88,8 @@ It also gives `suspension` and `deletion`, each null when absent.
 The deletion gives `deletedAt` and `purgeAt`.
 The purge time is null when no time is stored.
 
-The state buckets match the overview.
+The five state counts match the overview: Running, Stopped, Failed, Archived, and Removed.
+The reply counts removed workspaces in `archived` too, so that an older app adds up. The app subtracts `removed` from it.
 Running separates workspaces from unfinished builds and refreshes.
 
 The user page gives their identity, name, join time, last active time, and owned workspace counts.
@@ -253,7 +254,7 @@ The [operator test guide](tests.md) gives the commands and native provider setup
 - [`user-access-data.ts`](user-access-data.ts): user grant sources, email state, and referral recipients.
 - [`org-directory.ts`](org-directory.ts) and [`user-directory.ts`](user-directory.ts): list queries and cursors.
 - [`org-detail.ts`](org-detail.ts) and [`user-detail.ts`](user-detail.ts): page queries and reply mapping.
-- [`workspace-counts.ts`](workspace-counts.ts): the state buckets shared by the overview, the org page, and the account stats, and the 7-day and 30-day windows and daily counts of the overview and the account stats.
+- [`workspace-counts.ts`](workspace-counts.ts): the five state counts shared by the overview, the org page, and the account stats, with removal computed at the read time. `archived` counts every archived workspace, removed ones included, and `removed` counts the removed ones again. Each of the three replies sends both, and the app takes `removed` out of Archived. It also holds the 7-day and 30-day windows and daily counts of the overview and the account stats.
 - [`lift.ts`](lift.ts): the lifts and the checks of affected workspaces.
 - [`repair.ts`](../lifecycle/repair.ts): bounded Cron repair of overdue disk and image alarms.
 - [`events-data.ts`](events-data.ts): the shared atomic writer for suspension state, events, and access revocations.

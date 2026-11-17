@@ -92,7 +92,11 @@ export const privacyDocument: LegalDocument = {
           Its disk keeps your code, your files, your agent sessions, and each
           secret value that a script or an agent wrote there. ${productName}
           then deletes the cloud computer, unless a member restores the
-          workspace before then.`,
+          workspace before then. At the end of the 14 days, the workspace
+          leaves the Archived group and the command palette.`,
+        paragraph`Removing a workspace from the list keeps its chat history
+          until the org is deleted. A direct link or a chat link still opens
+          its read-only chat.`,
         paragraph`${productName} keeps each attached file until the cloud
           computer of its workspace has it and its first start succeeds.
           It then deletes its own copy. The file stays in the cloud computer.
@@ -106,8 +110,9 @@ export const privacyDocument: LegalDocument = {
           your last activity, and suspension records do not automatically expire when you stop
           using ${productName}. Workspace chat history, Mac command records,
           and secret request records stay while their org exists, including
-          while a cloud computer is stopped. When ${productName} passes on
-          model requests and their answers, it keeps no copy of them.`,
+          while a cloud computer is stopped or a workspace is removed. When
+          ${productName} passes on model requests and their answers, it keeps
+          no copy of them.`,
         paragraph`A secret in the Secrets settings of an org stays until a
           member who may delete it deletes it. A value that a member gives
           an agent for 15 minutes stays for 15 minutes. A value for a
