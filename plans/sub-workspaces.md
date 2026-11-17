@@ -941,24 +941,32 @@ problem outside this change, recorded in
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests and the complete gate, `npm run check`.
-- [ ] Run the Rust checks of `AGENTS.md`, and the type generator with no
+- [x] Run the targeted tests and the complete gate, `npm run check`.
+- [x] Run the Rust checks of `AGENTS.md`, and the type generator with no
       change to `src/shared/generated/`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
 - [x] Add the checks of this change to
       `plans/follow-ups/full-image-build-for-agent-tools.md`.
-- [ ] Delete this plan when the `plans` skill says, under "Deleting the
+- [x] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds. It says that an agent
       gets `parentId` and its context after the sandbox software update of
       its cloud computer.
+
+Verification on 16 and 17 November 2026. The static part of the complete
+gate, the Rust checks, the type generator, and the targeted tests pass.
+The tests of the local complete gate time out on this cloud computer, also
+on `origin/main`, so CI is the check for the Worker tests. Two review
+rounds ran; findings 1, 2, and 3 are fixed. Evidence:
+`.context/sub-workspaces/gate-1-summary.md` and
+`.context/reviews/calummoore/perth-5m3h/findings.md`.
 
 ## Post-merge follow-up (non-blocking)
 
