@@ -196,8 +196,11 @@ is relative to `src/chat/`, the folder of this guide.
 - `state/workspace-records.ts`: the order of the workspace record and its
   start steps and saved error by event number.
 - `state/session-login.ts`: whose login a message uses, from the session
-  record and the reader, the login label in the composer, and the models
-  that the picker of the composer offers.
+  record, the reader, and the default logins of the account: the login of
+  the session, a member's or the org's, or the login of a new linked
+  session. It also gives the login label in the composer, and the models
+  that the picker of the composer offers. `state/blockers.ts` gives the
+  Connect notice when no login serves the message.
 - `state/linked-replies.ts`: the message and the focus of a reply that names
   a linked session.
 - `components/SourceLine.tsx`: the line that links a linked session to its

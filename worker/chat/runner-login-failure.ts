@@ -12,7 +12,7 @@ import type { WorkspaceEventEnvelope } from './workspace-events'
  */
 export async function failCommandLogin(
   store: ChatStore,
-  dependencies: Pick<ChatDependencies, 'randomId'>,
+  dependencies: Pick<ChatDependencies, 'randomId' | 'readOrgName'>,
   publish: (events: readonly WorkspaceEventEnvelope[]) => void,
   workspaceId: string,
   command: Extract<PendingCommand, { messageId: string }>,
@@ -29,7 +29,13 @@ export async function failCommandLogin(
       if (!session || session.activeTurnId !== turn.id) return
       await new TurnLifecycle(transaction, session).fail(
         turn.id,
-        reason ?? unavailableLoginMessage(session),
+        reason ??
+          unavailableLoginMessage(
+            session,
+            session.login?.type === 'org'
+              ? await dependencies.readOrgName(session.login.orgId)
+              : null,
+          ),
         dependencies.randomId,
         completion,
       )

@@ -21,7 +21,9 @@ on one fake stream. `components/SessionLogin.test.tsx` renders the login
 label and its notices. `components/ComposerModels.dom.test.tsx` opens the
 model picker of a reader whose own endpoint list leaves models out, in the
 reader's own session, in the session of another member, and before a
-message that starts a linked session. `components/ModelPicker.dom.test.tsx`
+message that starts a linked session. In an empty session of another
+member, it checks that the label and the picker follow the default login
+that the record names, the org login. `components/ModelPicker.dom.test.tsx`
 checks the New session mark of each model of the other agent, and the Fast
 row of the model picker: the keys reach it, a change of it sends a choice
 that differs only in fast and keeps the menu open, the trigger names Fast,

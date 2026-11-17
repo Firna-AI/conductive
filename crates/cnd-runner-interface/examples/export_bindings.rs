@@ -98,6 +98,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     tools::resources::AgentCreateSectionRequest::export_all(&cfg)?;
     tools::resources::AgentCreateSectionResponse::export_all(&cfg)?;
     tools::resources::AgentDeleteSectionResponse::export_all(&cfg)?;
+    tools::session_types::DefaultAgentLogin::export_all(&cfg)?;
     tools::sessions::AgentCreateSessionRequest::export_all(&cfg)?;
     tools::sessions::AgentSendMessageRequest::export_all(&cfg)?;
     tools::sessions::AgentSessionAccepted::export_all(&cfg)?;

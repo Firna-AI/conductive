@@ -76,7 +76,8 @@ export type Workspace = {
   updated: string
   /**
    * The member who created it, until an admin reassigns it. Each session
-   * runs on the agent login of the member who started it.
+   * keeps its login, the login of its starter or the org login, so a
+   * reassign changes no login.
    */
   owner: PersonKey
   /**

@@ -14,6 +14,11 @@ import { memberViewer, people, viewerMembership } from '../fixtures/members'
 import { ORG_COLORS } from '../design/orgColors'
 import { type Org, orgList } from '../fixtures/orgs'
 import { repositoryChanges } from '../fixtures/repositories'
+import {
+  orgAgentsDefaults,
+  orgAgentsKeys,
+  orgAgentsProperties,
+} from './orgAgentsState'
 import { settingsViewer, TabBody } from './orgSettingsTabs'
 import { settingsOrg } from './settingsOrgs'
 
@@ -31,10 +36,18 @@ export const orgSettingsSchema = {
     'viewer',
     'org',
     'color',
+    ...orgAgentsKeys,
   ],
   properties: {
     tab: {
-      enum: ['general', 'repositories', 'computer', 'secrets', 'members'],
+      enum: [
+        'general',
+        'repositories',
+        'computer',
+        'agents',
+        'secrets',
+        'members',
+      ],
     },
     /**
      * The builds of the cloud computer, which its tab shows. `time-limit` is
@@ -96,7 +109,7 @@ export const orgSettingsSchema = {
     /**
      * The person signed in: an admin, or a member who is not an admin. A
      * member sees no actions on the members, no Delete org, and the name,
-     * the repositories, and the cloud computer read-only.
+     * the repositories, the cloud computer, and the agents read-only.
      */
     viewer: { enum: ['admin', 'member'] },
     /**
@@ -114,6 +127,7 @@ export const orgSettingsSchema = {
      * org that has none.
      */
     color: { enum: ORG_COLORS },
+    ...orgAgentsProperties,
   },
 } as const
 
@@ -131,14 +145,16 @@ export const acmeSettings: OrgSettingsState = {
   viewer: 'admin',
   org: 'active',
   color: 'blue',
+  ...orgAgentsDefaults,
 }
 
 /**
  * The settings of an org: its name and initials, the repositories that it
- * uses, its cloud computer, its secrets, and its members. The app-wide
- * connections live in the account. Only an admin changes the members and
- * deletes the org. Every member adds secrets. A suspended org shows its
- * notice first, and nobody changes its settings.
+ * uses, its cloud computer, its org logins, its secrets, and its members.
+ * The personal logins and the other app-wide connections live in the
+ * account. Only an admin changes the members, the org logins, and deletes
+ * the org. Every member adds secrets. A suspended org shows its notice
+ * first, and nobody changes its settings.
  */
 export function OrgSettingsScreen(props: {
   state: OrgSettingsState

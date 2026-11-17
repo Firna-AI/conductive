@@ -1,7 +1,9 @@
+import type { SessionLogin } from '../../src/shared/generated/SessionLogin'
 import type { Agent } from '../../src/shared/generated/Agent'
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
-import { readAgentLogin, senderLoginAccess } from './queries'
+import { readSessionLogin } from './queries'
+import { readLoginAccess, sessionLoginCandidate } from './login-access-data'
 import type { ChatDependencies } from './types'
 
 /** This failure closes the runner and leaves its commands queued. */
@@ -22,13 +24,13 @@ export class SenderAccessDenied extends HttpError {
 
 export async function readLogin(
   dependencies: ChatDependencies,
-  userId: string | null,
+  owner: SessionLogin | null,
   agent: Agent,
   runnerTokenHash?: string,
   senderId?: string,
 ) {
   const login = await dependencies.resolveLogin(
-    userId,
+    owner,
     agent,
     runnerTokenHash,
     senderId,
@@ -43,28 +45,36 @@ export function loginResolver(
 ): ChatDependencies['resolveLogin'] {
   const read: ChatDependencies['resolveLogin'] =
     override ??
-    ((userId, agent) =>
-      userId === null
+    ((login, agent) =>
+      login === null
         ? Promise.resolve(null)
-        : readAgentLogin(env, userId, agent))
-  return async (userId, agent, runnerTokenHash, senderId) => {
+        : readSessionLogin(env, login, agent))
+  return async (login, agent, runnerTokenHash, senderId) => {
     const id = workspaceId()
     if (!id) return null
-    const access = await senderLoginAccess(
-      env.DB,
-      id,
-      userId,
-      agent,
-      runnerTokenHash,
-      senderId,
-    )
-    if (runnerTokenHash !== undefined && !access.runnerAllowed)
+    const access = (
+      await readLoginAccess(
+        env,
+        { workspaceId: id },
+        [{ sessionId: 'credential', agent, ...(login ? { login } : {}) }],
+        { runnerTokenHash, senderId },
+      )
+    ).get('credential')
+    if (runnerTokenHash !== undefined && !access?.runnerAllowed)
       throw new RunnerAccessDenied()
-    if (senderId !== undefined && !access.senderAllowed)
+    if (senderId !== undefined && !access?.senderAllowed)
       throw new SenderAccessDenied()
-    if (!access.loginOwnerAllowed || userId === null) return null
-    if (!access.reuseAllowed) throw new LoginReuseDenied()
-    const login = await read(userId, agent, runnerTokenHash, senderId)
-    return login
+    const candidate =
+      login && access ? sessionLoginCandidate(access, login) : null
+    if (!candidate?.allowed || !login) return null
+    if (
+      candidate.available &&
+      !candidate.shared &&
+      senderId !== undefined &&
+      login.type === 'personal' &&
+      senderId !== login.userId
+    )
+      throw new LoginReuseDenied()
+    return read(login, agent, runnerTokenHash, senderId)
   }
 }

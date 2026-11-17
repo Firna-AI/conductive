@@ -3,6 +3,7 @@ import type { Agent } from './generated/Agent'
 import type { AgentChoice } from './generated/AgentChoice'
 import type { Timestamp } from './generated/Timestamp'
 import type { MessageSender } from './generated/MessageSender'
+import type { SessionLogin } from './generated/SessionLogin'
 import { orgPath } from './api'
 
 export function automationsPath(orgId: string): string {
@@ -142,6 +143,7 @@ export type UpdateAutomationRequest = Partial<CreateAutomationRequest>
 
 export interface AutomationResponse {
   automation: Automation
+  runLogin: SessionLogin | null
 }
 
 export interface AutomationsResponse {

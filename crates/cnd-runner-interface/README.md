@@ -23,6 +23,12 @@ Create and list requests accept an optional parent ID.
 Create and workspace write replies can carry an optional notice.
 Dependent types include workspace and session records, messages, attachments,
 model choices, file reports, port reports, startup reports, and commit authors.
+`SessionLogin` names a personal owner or org without a credential.
+`Session.login` is optional for older clients and stored records.
+`Session.defaultLogin` names the starter's current default owner before the first accepted message.
+It is optional and absent when no login serves the starter or `Session.login` is fixed.
+`DefaultAgentLogin` carries the server's default owner and model availability for an org and agent.
+Its separate org model list also serves sessions that keep the org login with a personal default.
 Browser-only events and local socket adapters remain in TypeScript.
 Secret tool contracts keep the raw Worker response separate from printable results.
 The value-bearing run response has no serializer and no debug output.

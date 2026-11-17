@@ -16,10 +16,10 @@ one.
 
 ## The Secrets tab
 
-- `SecretsTab` in `src/components/secrets/` draws the tab, after Cloud
-  computer in the tabs of the org settings. One section holds the list,
-  its notes, and Add secret. A phone puts the five tabs of the org
-  settings in three columns, on two lines.
+- `SecretsTab` in `src/components/secrets/` draws the tab, after Agents
+  in the tabs of the org settings. One section holds the list, its notes,
+  and Add secret. A phone puts the six tabs of the org settings in three
+  columns, on two lines.
 - `SecretRow` draws each secret: its name in the monospace font, its
   description, who added it, and the record of its last reveal. Then come
   the mark for all agents, the value as dots, and the actions. A narrow
