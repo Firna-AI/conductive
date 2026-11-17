@@ -229,6 +229,12 @@ through them while the workspace loads.
 - A GitHub state of another branch than the workspace's, such as the merged
   state just after Continue, shows as loading. The store then reads the
   state of the branch once.
+- The list mark of the workspace shows the GitHub state of this store
+  while the screen shows it, in the list, the palette, and the chips. So
+  the mark changes with the bar, and does not wait for the next read of
+  the list. `LiveGitHubStates` in `src/app/live-github.ts` puts the state
+  over the summary of each list read, because the Worker copies a new
+  state to the list only after its event.
 - On desktop, the bar tops the right column, with its main action and the
   line of a refusal or a stop under it. The number of a pull request links
   to it on GitHub. After a merge, its Archive archives
