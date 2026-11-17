@@ -94,8 +94,9 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         run keeps the GitHub login of the account outside the org whose
         event it skipped. They run the automations and show their runs.`,
       text`Keys and logins: the env var values and agent logins of each
-        org, and your personal agent logins. An own endpoint login holds the
-        endpoint address and its key. ${productName} stores these values encrypted. It
+        org, the values of its secrets, and your personal agent logins. An
+        own endpoint login holds the endpoint address and its key.
+        ${productName} stores these values encrypted. It
         uses a login only for the turns of sessions on it, including
         automation runs. The one
         exception is that ${productName} reads an own endpoint's model list
@@ -109,6 +110,14 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         turn runs. ${productName} renews your saved ChatGPT sign-in itself.
         An own endpoint's address and key never reach a cloud computer.
         ${productName} starts turns only with supported agent software.`,
+      text`Secrets: the Secrets settings of an org keep the name, the
+        description, and the value of each secret. They also keep the member
+        who added it, whether it is for all agents, and the admin and the
+        time of each reveal. ${productName} keeps the approvals of each
+        session and the pre-approvals of each workspace. It also keeps a
+        value that a member gives an agent, for 15 minutes or until its
+        workspace is archived. They let an agent use a secret in a command
+        only after a member allows it.`,
       text`Endpoint models: ${productName} reads the endpoint's model list
         with its key when you or an admin save the login or select Refresh. For a
         personal login, you use Refresh on your account page. For an org
@@ -153,6 +162,11 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         permissions stay only on your Mac. The Mac saves timed permissions,
         including the end time set by Extend. Permission until you stop
         stays only in memory and ends when you quit the Mac app or sign out.`,
+      text`Secret requests: ${productName} keeps each request of an agent
+        for a secret, and its result, in the chat history. They record the
+        names, the reason, the command that the agent said it would run, the
+        member who answered, and what let the command run. They never hold a
+        value or the output of the command.`,
       text`Your code: your repositories and files live in the cloud
         computers that ${productName} runs for your org. ${productName}
         reads a file or a diff when you open it, to show it to you. The
@@ -184,7 +198,8 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         app. They stay in your browser.`,
       text`Last workspaces: your browser keeps the address of the last
         workspace page that you opened in each org. The address holds the
-        IDs of the org, the workspace, and the session or the preview. It
+        IDs of the org, the workspace, and the session, the preview, or
+        the port of a preview. It
         can also hold the name of a tool and the path of an open file. A
         switch to the org opens that page again. The addresses stay in your
         browser, also after you sign out, until you clear its saved data.`,

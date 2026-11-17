@@ -1,9 +1,9 @@
 # Delete org
 
-This page belongs to [Orgs and members](orgs-and-members.md). It holds
-the requirements and the decisions in force for the end of an org. It
-covers Delete org, the 7 days before the app deletes everything of the
-org, and Restore. The terms are those of the
+This doc holds the requirements and the decisions in force for Delete org:
+the hide of a deleted org, its restore within 7 days, and the end of its
+data. It belongs to [Orgs and members](orgs-and-members.md), which covers
+orgs, sections, roles, and the first run. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says.

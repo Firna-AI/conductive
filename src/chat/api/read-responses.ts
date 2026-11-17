@@ -13,15 +13,12 @@ import type {
   SessionTranscriptResponse,
 } from '../../shared/sessions'
 import type {
-  TemporaryTab,
-  WorkspaceTab,
   WorkspaceView,
   WorkspaceViewResponse,
 } from '../../shared/workspace-view'
 import {
   count,
   flag,
-  isRecord,
   list,
   nullable,
   oneOf,
@@ -38,6 +35,7 @@ import {
   readSessionLogin,
   readUserMessage,
 } from './read-chat'
+import { readView } from './read-view'
 
 /**
  * The composer's login status, its unavailable cause, and the endpoint
@@ -183,55 +181,6 @@ export function readMembers(value: unknown): readonly MemberSummary[] {
 export function readOrg(value: unknown): OrgSummary {
   const org = record(record(value, 'org response').org, 'org')
   return { name: text(org.name) }
-}
-
-function readTab(value: unknown): WorkspaceTab {
-  const source = record(value, 'tab')
-  switch (source.kind) {
-    case 'session':
-      return { kind: 'session', sessionId: text(source.sessionId) }
-    case 'diff':
-      return { kind: 'diff', path: text(source.path) }
-    default:
-      return {
-        kind: oneOf({ file: true })(source.kind),
-        path: text(source.path),
-        mode: oneOf({ preview: true, source: true })(source.mode),
-      }
-  }
-}
-
-function readTemporaryTab(
-  value: unknown,
-  tabs: readonly WorkspaceTab[],
-): TemporaryTab | null {
-  if (
-    !isRecord(value) ||
-    (value.kind !== 'file' && value.kind !== 'diff') ||
-    typeof value.path !== 'string' ||
-    !value.path
-  )
-    return null
-  return tabs.some(
-    (tab) =>
-      tab.kind !== 'session' &&
-      tab.kind === value.kind &&
-      tab.path === value.path,
-  )
-    ? { kind: value.kind, path: value.path }
-    : null
-}
-
-export function readView(value: unknown): WorkspaceView {
-  const view = record(record(value, 'view response').view, 'view')
-  const tabs = list(readTab)(view.tabs)
-  return {
-    tabs,
-    activeTab: nullable(readTab)(view.activeTab),
-    temporaryTab: readTemporaryTab(view.temporaryTab, tabs),
-    fileList: oneOf({ all: true, changes: true, checks: true })(view.fileList),
-    tool: oneOf({ terminal: true, preview: true, desktop: true })(view.tool),
-  }
 }
 
 /**

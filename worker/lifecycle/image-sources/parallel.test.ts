@@ -35,10 +35,12 @@ it('overlaps two small copies and bounds parallel finalize commands by the saved
   const logs = await fixture.env.DB.prepare(
     'SELECT text FROM image_build_logs ORDER BY event_number',
   ).all<{ text: string }>()
-  expect(logs.results.map(({ text }) => text)).toEqual([
-    'Updating the repositories.\n',
-    'Repository copy complete.\n',
-    'Repository copy complete.\n',
+  const [heading, ...copies] = logs.results.map(({ text }) => text)
+  expect(heading).toBe('Updating the repositories.\n')
+  // The two copies end in the same tick, so their lines can come in either order.
+  expect(copies.sort()).toEqual([
+    'Repository copy complete: example/parallel-0\n',
+    'Repository copy complete: example/parallel-1\n',
   ])
 })
 

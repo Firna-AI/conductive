@@ -1,0 +1,12 @@
+/* The button of the menu of a phone composer, which its open menu hangs from. */
+.anchor {
+  display: flex;
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* A row of the menu that is a link keeps the look of a menu row. */
+.row {
+  color: var(--ui-ink);
+  text-decoration: none;
+}

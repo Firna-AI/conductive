@@ -20,7 +20,8 @@ list of Acme. Send feedback comes last among its actions. Its child pages:
   Its `archived` variant has the tab over an archived workspace, as Priya,
   a member who is not an admin, sees it: Session history and Restore workspace.
 - `app/command-palette/settings` has the Settings tab. The group of the
-  settings of Acme lists its five tabs, with Agents after Cloud computer.
+  settings of Acme lists its six tabs, with Agents and Secrets after Cloud
+  computer.
   Its Account group ends with Keyboard shortcuts, which opens
   `app/account/shortcuts`.
 - `app/command-palette/search` has a search that finds a workspace and an

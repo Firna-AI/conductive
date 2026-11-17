@@ -17,6 +17,10 @@ resend requests, file results, and temporary turn credentials.
 The workspace tools provide workspace, session, message, repository, section,
 model, preview, and Mac command requests and replies. Their replies preserve
 accepted message and turn pairs, resume errors, and transcript positions.
+Workspace records and list entries give a required nullable parent ID.
+Workspace details give the parent entry, stored depth, and direct children.
+Create and list requests accept an optional parent ID.
+Create and workspace write replies can carry an optional notice.
 Dependent types include workspace and session records, messages, attachments,
 model choices, file reports, port reports, startup reports, and commit authors.
 `SessionLogin` names a personal owner or org without a credential.
@@ -79,6 +83,8 @@ One test compares the TypeScript runtime limits with their Rust constants.
 - [Helper options](src/sdk_helper_options.rs) defines private start options and input.
 - [Provider events](src/provider_events.rs) defines adapter results and background state.
 - [Workspace tools](src/tools/mod.rs) defines tool payloads and the records that their replies use.
+- [Workspace calls](src/tools/workspaces.rs) defines parent-aware requests, list entries, details, and notices.
+- [Workspace records](src/tools/workspace_types.rs) defines the app's workspace record with its nullable parent ID.
 - [Wire helpers](src/wire.rs) preserves literal booleans and read-only array views.
 - [JSON decoder](src/json/decoder.rs) reads JavaScript JSON strings for the runner and workspace tools.
 - [Export example](examples/export_bindings.rs) registers and formats every shared type.
@@ -88,6 +94,7 @@ One test compares the TypeScript runtime limits with their Rust constants.
 
 - [Agent runner protocol](../../docs/protocol/agent-runner.md)
 - [Agent tools](../../docs/protocol/agent-tools.md)
+- [Sub-workspaces](../../docs/protocol/sub-workspaces.md)
 - [Chat and events](../../docs/protocol/chat-and-events.md)
 - [Shared contracts](../../src/shared/README.md)
 - [Architecture](../../docs/architecture.md)

@@ -20,7 +20,7 @@ tokens. A failed renewal makes the login unavailable to chat dispatch.
 ## Entry points
 
 `Workspace` in [`worker/workspace.ts`](../workspace.ts) is the Durable
-Object class. Its `fetch` gives device paths to the device feature first.
+Object class. Its `fetch` gives secret and device paths to those features first.
 It gives each other request to `WorkspaceChat.fetch` in `backend.ts`,
 which serves these routes. The path helpers live in
 `src/shared/sessions.ts`, `src/shared/events.ts`, and
@@ -46,6 +46,15 @@ workspace, as [the integration README](integration/README.md#the-outer-worker)
 says. `routeChat` in [`router.ts`](router.ts) forwards the browser routes.
 `routeRunner` forwards the runner socket of the machine hostname, by its
 bearer token.
+
+The [secret request feature](../secrets/README.md#browser-answers-and-events)
+adds browser list, answer, and temporary-value removal routes.
+`fetch-workspace-features.ts` composes their handling. `secret-notice.ts`
+admits a late answer as an app line in the original session. It starts
+for the original turn sender or joins that session's current turn.
+It sends no member message event and creates no linked session.
+Secret requests share this object's transaction, event sequence, needs
+input projection, turn-end callbacks, and lifecycle cleanup.
 
 Trusted Worker code can also call methods of `WorkspaceChat` that run no
 gate. [Trusted workspace calls](integration/README.md#trusted-workspace-calls)
@@ -214,6 +223,8 @@ npm run typecheck
 
 The shared chat and runner fixtures run the production workspace object in Miniflare with native SQLite.
 Their restart helpers evict the real object.
+The lifecycle fixture uses isolated temporary storage outside the repository.
+Restart keeps that storage, and disposal removes it.
 [Chat backend tests](tests.md) names the native controls and each group of tests.
 
 ## Seams for other milestones

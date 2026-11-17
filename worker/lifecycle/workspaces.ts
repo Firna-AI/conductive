@@ -11,6 +11,7 @@ import {
   type CreationClaim,
 } from './creation-claims'
 import { markCreationFailed } from './creation-attempt-data'
+import { requireCreationParent } from './creation-parent'
 import {
   prepareCreationRequest,
   type WorkspaceCreationBase,
@@ -68,6 +69,7 @@ export async function createWorkspace(
         base,
       )
   }
+  await requireCreationParent(runtime, orgId, input.parentId)
   const candidate = await prepareCreationRequest(
     runtime,
     orgId,
@@ -106,6 +108,7 @@ export async function replayCreation(
   const job = await recordedCreationJob(runtime.env.DB, key, existing.id, '')
   if (!job) return null
   const endpoint = runtime.workspace(existing.id)
+  await requireCreationParent(runtime, key.orgId, job.creation?.parentId)
   await endpoint.queueLifecycleStart(job)
   const result = await endpoint.waitCreationAdmission()
   if (!result.ok) throw workspaceStartFailure(result.error)
@@ -151,6 +154,7 @@ async function joinCreation(
   }
   if (!job) throw new Error('Missing recorded creation plan')
   const endpoint = runtime.workspace(claim.id)
+  await requireCreationParent(runtime, key.orgId, job.creation?.parentId)
   await endpoint.queueLifecycleStart(job)
   const result = await endpoint.waitCreationAdmission()
   if (!result.ok) throw workspaceStartFailure(result.error)

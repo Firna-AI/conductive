@@ -93,7 +93,7 @@ async function computerText(
 }
 
 describe('OrgSettingsScreen', () => {
-  test('an admin gets the tabs General, Repositories, Cloud computer, Agents, and Members, and fields for the name and the initials', async () => {
+  test('an admin gets the tabs General, Repositories, Cloud computer, Agents, Secrets, and Members, and fields for the name and the initials', async () => {
     const { app, org, user } = await signedIn(new FakeApiServer())
     const html = renderScreen(
       app,
@@ -104,6 +104,7 @@ describe('OrgSettingsScreen', () => {
       'Repositories',
       'Cloud computer',
       'Agents',
+      'Secrets',
       'Members',
     ])
     expect(

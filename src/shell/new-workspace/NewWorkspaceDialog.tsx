@@ -16,8 +16,10 @@ import {
 import { ChipTextField } from '../../chat/components/chip-field/ChipTextField'
 import type { FieldHandle } from '../../chat/components/chip-field/focus-plugins'
 import { useComposerDrop } from '../../chat/components/composer-drop'
+import { ToolButton } from '../../chat/components/ComposerTools'
 import { useSendKey } from '../../chat/components/send-key'
 import type { OrgSummary } from '../../shared/orgs'
+import { draftCapabilities } from '../capabilities/DraftCapabilities'
 import { useApp, useOrgAccess, useOrgModel } from '../context'
 import { ActionButton, IconButton } from '../ui/actions'
 import { useGo } from '../ui/AppLink'
@@ -221,6 +223,11 @@ function DialogCard(props: {
             ) : null}
             {form.login ? <SessionLoginLabel {...form.login} /> : null}
             <span className={styles.spacer} />
+            <ToolButton
+              disabled={sending}
+              placement="above-end"
+              tool={draftCapabilities(org, model)}
+            />
             <IconButton
               disabled={sending}
               icon={Paperclip}
@@ -259,9 +266,10 @@ function DialogCard(props: {
  * sections of the org. The message and
  * its files fill the middle, with the notices of the page under them. The
  * model picker sits at the bottom left, with the label of the org login
- * after it when the first message runs on it, and the attach button and
- * Create at the bottom right. The dialog and the page of an org and a section
- * share one draft, so a close keeps the message and its files.
+ * after it when the first message runs on it, and the Capabilities icon,
+ * the attach button, and Create at the bottom right. The dialog and the
+ * page of an org and a section share one draft, so a close keeps the
+ * message and its files.
  */
 export function NewWorkspaceDialog(props: {
   orgId: string

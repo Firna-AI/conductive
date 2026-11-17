@@ -9,6 +9,9 @@ pub enum Error {
     /// Invalid local input.
     #[error("[cnd-tools/input] {0}")]
     Input(InputError),
+    /// A child command could not start or finish.
+    #[error("[cnd-tools/process] command failed")]
+    Command,
     /// The Worker refused the request.
     #[error("[cnd-tools/http] {code}: {message}")]
     Worker {
@@ -49,6 +52,7 @@ impl Error {
     pub fn message(&self) -> String {
         match self {
             Self::Input(value) => value.to_string(),
+            Self::Command => "The command could not run. Check the command and try again.".into(),
             Self::Worker { code, message, .. } => format!("{code}: {message}"),
             Self::Network { mac } => format!("The {} request failed. Try again.", subject(*mac)),
             Self::Reply { mac } => format!("The {} reply is not valid. Try again.", subject(*mac)),
@@ -71,6 +75,9 @@ fn subject(mac: bool) -> &'static str {
 /// A checked user input error.
 #[derive(Debug, Clone, Copy, Error)]
 pub enum InputError {
+    /// Supply names and a command for a run, or use secrets list.
+    #[error("Use secrets list or secrets run --secret NAME [--reason TEXT] -- <command>.")]
+    Secrets,
     /// Start the workspace before you use its tools.
     #[error("Start the workspace before you use its tools.")]
     Credentials,

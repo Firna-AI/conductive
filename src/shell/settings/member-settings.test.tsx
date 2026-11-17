@@ -112,6 +112,7 @@ describe('the org settings of a member who is not an admin', () => {
       'Repositories',
       'Cloud computer',
       'Agents',
+      'Secrets',
       'Members',
     ])
     expect(textOf(pages.general)).toContain(

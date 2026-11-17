@@ -55,7 +55,7 @@ export type MenuListView = {
  * The archived workspaces of Acme. Those of the last 14 days offer Restore
  * on their rows.
  */
-const archivedRows: readonly WorkspaceRow[] = archivedWorkspaceList.map(
+export const archivedRows: readonly WorkspaceRow[] = archivedWorkspaceList.map(
   (workspace) => ({
     workspace,
     status: 'archived',
@@ -133,7 +133,7 @@ function rowsOf(
  * The phone sheet of the menu that a context event opened on the drawn
  * row, if any.
  */
-function sheetOf(view: Omit<MenuListView, 'over'>): ReactNode {
+export function sheetOf(view: Omit<MenuListView, 'over'>): ReactNode {
   const { focus } = view
   const row = [
     ...view.sections.flatMap((item) => item.rows),

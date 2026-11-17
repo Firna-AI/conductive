@@ -6,6 +6,7 @@ import type { RecordedChatScenario } from '../../test-support/recorded-chat'
 import { WORKSPACE_STATES } from '../api/read-workspaces'
 import { getStartedOrder } from '../get-started'
 import type { DevUploadMode } from './attachment-routes'
+import { SECRET_SCENARIOS, type SecretScenario } from './secret-request-seed'
 
 const ROLES = ['admin', 'member'] as const satisfies readonly OrgRole[]
 
@@ -71,6 +72,9 @@ type DevInviteCode = (typeof INVITE_CODES)[number]
  *   shows the GitHub state of that bar.
  * - `paths=masked`: two files whose real paths hold a fake secret value,
  *   with their labels, in the file lists and at the end of each turn.
+ * - `subWorkspaces=1`: Acme also has the sub-workspaces of the mockups,
+ *   nested under Apple Pay button and Checkout address autocomplete, down
+ *   to depth 3, so the list shows two trees in Checkout.
  * - `firstRun=github-app|org|agent-login`: Get started is not done from
  *   that step on. With `github-app` or `org`, the user has no org until
  *   Create org runs. In each first run, no agent login is connected.
@@ -174,6 +178,8 @@ export interface DevOptions {
   paused: boolean
   waitlistOff: boolean
   inviteCode: DevInviteCode
+  /** The state of the secret requests of `checkout-autocomplete`, or null. */
+  secrets: SecretScenario | null
 }
 
 /** The value of `key` when it is one of `values`. */
@@ -204,6 +210,7 @@ export function readDevOptions(search: string): DevOptions {
       conversation: pick(params, 'conversation', CONVERSATIONS),
       banner: pick(params, 'banner', BANNERS),
       paths: pick(params, 'paths', PATHS),
+      subWorkspaces: params.get('subWorkspaces') === '1',
     },
     // A person who waits has a new account, unless the options say otherwise.
     firstRun: firstRun ?? (waiting === null ? null : 'github-app'),
@@ -227,6 +234,7 @@ export function readDevOptions(search: string): DevOptions {
     paused: params.get('paused') === '1',
     waitlistOff: params.get('waitlist') === 'off',
     inviteCode: pick(params, 'inviteCode', INVITE_CODES) ?? 'left',
+    secrets: pick(params, 'secrets', SECRET_SCENARIOS) ?? null,
   }
 }
 

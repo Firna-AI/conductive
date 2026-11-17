@@ -2,13 +2,15 @@
 
 This doc holds the requirements and the decisions in force for orgs, their
 sections, and their members. Linked pages cover
-[the order of the org rail](org-rail-order.md),
-[the first run](get-started.md), and [the end of an org](delete-org.md).
-The terms are those of the [architecture doc](../architecture.md#terms). A
-decision number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says. An org login
-decision number names a decision of the change that adds the org logins,
-as [Tokens and secrets](tokens-and-secrets.md) says.
+[the order of the org rail](org-rail-order.md), the first run in
+[Get started](get-started.md), and the end of an org in
+[Delete org](delete-org.md). The terms are those of the
+[architecture doc](../architecture.md#terms). A decision number names a
+dated record, as [Decision numbers](../architecture.md#decision-numbers)
+says. A secrets decision number names a decision of the change that adds
+[secrets](secrets.md), as that doc says. An org login decision number
+names a decision of the change that adds the org logins, as
+[Tokens and secrets](tokens-and-secrets.md) says.
 
 ## Orgs
 
@@ -76,12 +78,16 @@ as [Tokens and secrets](tokens-and-secrets.md) says.
 ## Get started
 
 - [Get started](get-started.md) holds the requirements of the first run:
-  its steps, the agent step, the build of the first org, and its finish.
+  its steps, the agent step, the state of the first build in its org step,
+  and its finish.
 
 ## Sections
 
 - Sections are groupings of workspaces that the people of the org define.
   A section is not tied to a repository.
+- A section can hold trees of workspaces. Each sub-workspace shows nested
+  under the row of its parent, as [The list](sub-workspaces.md#the-list)
+  says.
 - Each section collapses, and has a menu with New workspace, Rename section,
   Move section up, Move section down, New section, and Delete section, in
   that order. The first section has no Move section up, and the last
@@ -113,6 +119,9 @@ as [Tokens and secrets](tokens-and-secrets.md) says.
   [Fixed keys](keyboard-shortcuts-fixed-keys.md#fixed-keys) gives the keys.
 - Move to section in the
   [menu of a workspace row](workspace-menu.md#move-to-section) moves it too.
+- Each of these moves of a row also moves each workspace nested under it.
+  A nested row has none of these moves, as
+  [Moves](sub-workspaces.md#moves) says.
 - Deleting a section moves its workspaces to General, also the archived
   ones. Reason: no workspace gets lost, and a Restore always has a section
   to go back to.
@@ -174,6 +183,17 @@ as [Tokens and secrets](tokens-and-secrets.md) says.
   [The Agents tab](org-logins.md#the-agents-tab) says.
 - Changes by every member were rejected, because a changed script reaches
   every new sandbox of the org and runs during other members' turns.
+- Every member adds [secrets](secrets.md) and uses each secret of the org.
+  A member replaces or deletes only the secrets that the member added
+  (secrets decision 3 B).
+- An admin replaces and deletes each secret. Only an admin sets the mark
+  for all agents and reveals a value (secrets decisions 2 A and 3 B).
+  [Rights](secrets.md#rights) gives the reasons.
+- Every member can see and change the Capabilities of each workspace: its
+  pre-approved secrets, its Mac access, and its other grants
+  (secrets decision 8 B).
+- Every member who sees a session can answer its secret requests
+  (secrets decision 4 B).
 - Every member of the org sees all of its workspaces (decision 39).
 - Every member also sees all of the automations of the org and their runs.
   Only the owner of an automation changes it, as [Access](automations.md#access)
@@ -251,5 +271,5 @@ as [Tokens and secrets](tokens-and-secrets.md) says.
 
 ## Delete org
 
-- [Delete org](delete-org.md) holds the requirements of Delete org, the 7
-  days before the app deletes everything of the org, and Restore.
+- [Delete org](delete-org.md) holds the requirements of Delete org, the
+  restore of a deleted org within 7 days, and the end of its data.

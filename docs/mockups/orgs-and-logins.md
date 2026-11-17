@@ -29,6 +29,10 @@ plan limits.
   General tab of a member is the child page `app/org-settings/member`,
   because `app/org-settings` has child pages. `DetailList` in
   `src/components/settings/` shows such values.
+- Every member adds secrets on the Secrets tab, and replaces or deletes
+  the secrets that they added, from secrets decision 3. Only an admin
+  switches the mark for all agents and reveals a value, as
+  `app/org-settings/secrets/member` shows.
 - Each session runs on its login: the agent login of the member who
   started it, or the org login of its org, from decision 1 B of the org
   logins plan, which the user chose on 16 November 2026. A session takes

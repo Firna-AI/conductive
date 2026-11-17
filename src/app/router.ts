@@ -7,6 +7,7 @@ export const SETTINGS_TABS = [
   'repositories',
   'cloud-computer',
   'agents',
+  'secrets',
   'members',
 ] as const
 

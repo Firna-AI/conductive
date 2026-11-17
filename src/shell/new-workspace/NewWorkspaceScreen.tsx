@@ -3,11 +3,12 @@ import { FolderGit2, Sparkles } from 'lucide-react'
 import chat from '../../../docs/mockups/src/components/chat/ChatPane.module.css'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/screens/NewWorkspaceScreen.module.css'
-import { currentBuild } from '../../app/org-model'
+import { currentBuild } from '../../app/current-build'
 import { routes } from '../../app/router'
 import { useStore, valueOf } from '../../app/store'
 import { whenOf, type When } from '../../app/time'
 import type { OrgSummary } from '../../shared/orgs'
+import { draftCapabilities } from '../capabilities/DraftCapabilities'
 import { useApp, useOrgAccess, useOrgModel } from '../context'
 import { Page } from '../layout/Page'
 import { ActionButton } from '../ui/actions'
@@ -152,6 +153,7 @@ export function NewWorkspaceScreen(props: {
                   models={form.models}
                   ready={form.ready}
                   send={form.send}
+                  tools={[draftCapabilities(org, model)]}
                 />
               </OrgLinks>
             </>

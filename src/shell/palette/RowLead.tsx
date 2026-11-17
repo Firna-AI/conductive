@@ -11,6 +11,7 @@ import {
   Globe,
   History,
   Keyboard,
+  KeyRound,
   Laptop,
   ListChecks,
   LogIn,
@@ -63,6 +64,7 @@ const orgSettingIcons: Readonly<Record<SettingsTab, LucideIcon>> = {
   repositories: FolderGit2,
   'cloud-computer': Server,
   agents: Bot,
+  secrets: KeyRound,
   members: Users,
 }
 

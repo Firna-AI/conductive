@@ -113,7 +113,8 @@ feedback draft.
 
 [Screens](screens.md) gives the rules of the screens of the app shell:
 the account and Get started, sign-in, invitations, orgs, panels and
-layers, the focus, saved drafts, New workspace as a page or a dialog,
+layers, the trees of the workspace list, the focus, saved drafts, New
+workspace as a page or a dialog,
 with its attached files and the send key that every composer shares, and
 the waitlist.
 [Command palette and keys](palette-and-keys.md) gives the rules of the
@@ -132,7 +133,10 @@ the Help row of the palette opens.
 - A screen never sets a value of an org. The stores of `OrgModel` are
   read-only for screens, and writes go through the actions and models.
 - A secret goes out once, through `SecretForm`, and the field is empty after
-  the save. No answer brings a stored secret back.
+  the save. No answer brings a stored secret back, except Reveal on the
+  Secrets tab: an admin gets the value of one secret of the org, which the
+  Worker records. Only the row of that secret shows it, until Hide, another
+  reveal, a Replace of its value, or its Delete.
 - The browser keeps only the panel sizes (`panels.ts` and
   `column-split.ts`) and the last workspaces (`last-workspaces.ts`). The
   panel sizes are the widths of the sidebar and the right column, and the
@@ -257,6 +261,11 @@ Run `npm run test -- src/app/dev/attachment-files.test.ts src/chat/dev/dev-attac
 for the API tests of the uploaded bytes and their copies in both
 development fakes. `dev/attachment-test-kit.ts` gives them a stub
 `window`, fake timers, a sample image, and a check of the exact bytes.
+
+`dev/secret-request-routes.test.ts` answers the secret requests of the dev
+fake. A waiting request gives the workspace the state `input` until an
+Allow in time sends its run. A late Allow of a value sends the line of the
+app, and the value stays for the workspace until Remove.
 
 ## Key code
 

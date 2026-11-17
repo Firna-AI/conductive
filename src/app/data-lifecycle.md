@@ -194,6 +194,16 @@ of the data that the screens read and write.
 - A suspended org takes no write except a leave. [A suspended
   org](suspended-org.md) gives how the app learns of it, from the org list
   or from an `org_suspended` refusal, and what its screens show.
+- The secrets of an org are one value of `OrgModel.secrets`, a
+  `SecretsModel`. The Secrets tab and the Capabilities control read them
+  each time that they show, and share the answer. A write shows its answer
+  in the list. The list never holds a value: a reveal gives its value to
+  its caller only, shows the record of the reveal at once, and reads the
+  list again for the record of the Worker.
+- The Capabilities of a workspace that exists are a
+  `WorkspaceCapabilitiesModel` of each open control, which reads them when
+  it opens. A change shows at once, and its answer is the whole value. A
+  failed change shows the saved value again, with a toast.
 - The settings of the cloud computer are one value of the org in
   `OrgModel`. Every opening of the Cloud computer tab shares them, so a
   save from a closed tab shows in the reopened tab.

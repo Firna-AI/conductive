@@ -6,13 +6,17 @@ an active turn, and whose rights each change uses. It belongs to
 [Agent tools](agent-tools.md), which lists the calls. The terms are those
 of the [architecture doc](../architecture.md#terms). A decision number
 names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says.
+[Decision numbers](../architecture.md#decision-numbers) says. A secrets
+decision number names a decision of the change that adds
+[secrets](secrets.md), as that doc says.
 
 ## Terms
 
 - **Calling workspace:** the workspace whose sandbox makes a call.
 - **Calling turn:** the agent turn that makes a call.
-- **Sender:** the member whose message started the calling turn.
+- **Sender:** the member whose message started the calling turn. A turn
+  that a late answer to a secret request starts has the sender of the turn
+  that asked, as [Late answers](secret-requests.md#late-answers) says.
 - **Read:** a call that changes nothing: a list, the read of a session, or
   the get of one workspace, session, or message.
 - **Write:** each other call of the workspace tools, except a Mac command
@@ -44,6 +48,10 @@ names a dated record, as
 - An org setting that lets an admin make the reach smaller was rejected.
   It needs a stored setting, a settings control, a mockup, and a protocol
   section.
+- `list_secrets` reaches the secrets of the org of the calling workspace.
+  `run_with_secrets` names no workspace and no session. It uses only the
+  grants of the session of the calling turn, as
+  [Secret requests](secret-requests.md) says.
 - [What the workspace tools reach](isolation.md#what-the-workspace-tools-reach)
   states the risks of this reach.
 
@@ -75,6 +83,9 @@ names a dated record, as
 - The Worker takes the sender from its own record of the calling turn. It
   never takes a sender from the call, and it never uses the workspace
   owner in place of the sender.
+- The record of a turn that a late answer to a secret request starts names
+  the sender of the turn that asked (secrets decision 10 B). It never names
+  the member who answered.
 - At each write, the Worker checks that the sender is still a member of
   the org and is not suspended. Otherwise the write gets HTTP 403 with the
   error code `membership_required`.
@@ -92,6 +103,9 @@ names a dated record, as
 - So every member can rename and move a workspace, rename, close, and stop
   a session, create and delete sections, and open and close previews, as
   in the app.
+- Every member uses each secret of the org (secrets decision 3 B). So each
+  sender can make a run call. Its values still need a grant, as
+  [Grants](secrets.md#grants) says.
 - Only the workspace owner or an admin can archive a workspace
   (decision 42).
 - A write that the sender may not make gets the refusal of the app, and

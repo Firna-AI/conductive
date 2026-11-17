@@ -36,6 +36,7 @@ import {
 } from './org-waits'
 import { Refresher, type Refreshing } from './refresh'
 import { Resource } from './resource'
+import { SecretsModel } from './secrets-model'
 import type { AppServices } from './services'
 import { derived, partOf, valueOf, type Loadable, type Readable } from './store'
 import { WorkspaceActions } from './workspace-actions'
@@ -51,11 +52,11 @@ export type OrgPart =
 /**
  * The data of one org: its list of sections and workspaces, its
  * repositories, the builds and settings of its cloud computer, its
- * members, its automations, and its org logins. A part reads while a
- * screen shows it, as `watch` says. The Cloud computer tab reads the
- * settings itself. Each request of the org that the API refuses with
- * `org_suspended` goes to `suspension`, so a page with an old org list
- * learns of the suspension.
+ * members, its automations, its org logins, and its secrets. A part reads
+ * while a screen shows it, as `watch` says. The Cloud computer tab reads
+ * the settings itself. The Secrets tab and the Capabilities control read
+ * the secrets. Each request that the API refuses with `org_suspended` goes to
+ * `suspension`, so a page with an old org list learns of the suspension.
  */
 export class OrgModel {
   readonly orgId: string
@@ -91,6 +92,8 @@ export class OrgModel {
   readonly automations: Readable<Loadable<readonly ListedAutomation[]>>
   /** The org logins of the agents, which the Agents tab shows. */
   readonly agentLogins: OrgAgentLogins
+  /** The secrets, which the Secrets tab and Capabilities read when they show. */
+  readonly secrets: SecretsModel
   /** The create requests of this tab, which a sign-out ends. */
   readonly creations = new Creations()
   /** The GitHub access of the signed-in member, by repository ID. */
@@ -141,6 +144,7 @@ export class OrgModel {
       ),
     }
     const { list, repositories, builds, members, automations } = this.resources
+    this.secrets = new SecretsModel(api, orgId, services.now)
     this.workspaceActions = new WorkspaceActions(this)
     this.sections = partOf(list.store, (value) => value.sections)
     this.confirmedWorkspaces = partOf(list.store, (value) => value.workspaces)
@@ -279,14 +283,6 @@ export class OrgModel {
       },
     }
   }
-}
-
-/** The build that new workspaces start from, the newest good build. */
-export function currentBuild(builds: BuildsResponse): ImageBuild | undefined {
-  return (
-    builds.builds.find((build) => build.id === builds.currentImageBuildId) ??
-    builds.builds.find((build) => build.state === 'succeeded')
-  )
 }
 
 /**

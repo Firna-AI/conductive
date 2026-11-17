@@ -33,6 +33,9 @@ import { automationRoutes } from './automation-routes'
 import { devFileTransport } from './progress-fixture'
 import { routeFetch, RouteError, type Route } from './router'
 import { runRoutes } from './run-routes'
+import { secretRequestRoutes } from './secret-request-routes'
+import { seedSecretRequests } from './secret-request-seed'
+import { secretRoutes } from './secret-routes'
 import { sectionRoutes } from './section-routes'
 import { seedState } from './seed'
 import { sessionLoginRoutes } from './session-login-routes'
@@ -63,6 +66,7 @@ export function createFakeServices(search: string): AppServices {
   const now = () => Date.now() + offset
   const newId = () => crypto.randomUUID()
   const backend = createBackend(state, server.events, now, newId)
+  seedSecretRequests(backend, server.events, options.secrets)
   const signedOut: Route[] = options.signedOut
     ? [
         {
@@ -89,6 +93,8 @@ export function createFakeServices(search: string): AppServices {
     ...attachmentFileRoutes(backend),
     ...settingsRoutes(backend),
     ...orgLoginRoutes(backend),
+    ...secretRoutes(backend),
+    ...secretRequestRoutes(backend),
     ...buildRoutes(backend),
     ...automationRoutes(backend),
     ...runRoutes(backend),

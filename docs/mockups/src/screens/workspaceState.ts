@@ -24,6 +24,11 @@ import {
   feedbackStateProperties,
 } from './feedbackState'
 import {
+  layoutStateDefaults,
+  layoutStateKeys,
+  layoutStateProperties,
+} from './layoutState'
+import {
   rowMenuStateDefaults,
   rowMenuStateKeys,
   rowMenuStateProperties,
@@ -53,9 +58,7 @@ export const workspaceStateSchema = {
     'tabRow',
     'temporary',
     ...composerStateKeys,
-    'resize',
-    'rightColumn',
-    'sidebar',
+    ...layoutStateKeys,
     'overlay',
     'archive',
     'viewer',
@@ -113,8 +116,9 @@ export const workspaceStateSchema = {
      */
     terminals: { enum: terminalStates },
     /**
-     * The Preview tool: a preview in its frame, or "+" beside the tabs of
-     * the open previews. With no preview open, the port form lists the
+     * The Preview tool: open previews, or on a phone "+" beside their tabs.
+     * The desktop shows the page in the Preview tab of `tab`, and a phone
+     * in a frame of the tool. With no preview open, the port form lists the
      * detected servers, says that the runner reports none, or reads as
      * before when the app has no report, as for an older image. After a
      * failed repair of the list (decision 96), it keeps its last list under
@@ -142,31 +146,18 @@ export const workspaceStateSchema = {
      */
     temporary: { enum: temporaryTabStates },
     ...composerStateProperties,
-    /**
-     * The user drags the handle of the right column to widen it, or the
-     * handle between the file lists and the tools to raise the split.
-     */
-    resize: { enum: ['none', 'right', 'split'] },
-    /**
-     * The right column of the desktop: shown, or hidden with the toggle at
-     * the end of the header. A phone has no right column.
-     */
-    rightColumn: { enum: ['shown', 'hidden'] },
-    /**
-     * The sidebar of the desktop: shown, hidden with its toggle, or hidden
-     * with the workspace list open as a popover of the tile of the org.
-     */
-    sidebar: { enum: ['shown', 'hidden', 'popover'] },
+    ...layoutStateProperties,
     /**
      * What lies open over the workspace: the session history, the question
      * before a running session closes, the owner of the workspace, the tab
      * menu of the first session or of the shown file or diff tab, such as
      * the temporary tab, or the question of Continue with work that is not
      * pushed. Or the question before a terminal closes, or the toast of a
-     * terminal that did not open or close. Or the menu of the header state,
-     * the question of Restart while an agent works, the time after Restart
-     * until the agents are back, or that time with the toast of a failed
-     * update check.
+     * terminal that did not open or close. Or the sheet of the values of a
+     * request, which Give a value opens on a phone. Or the menu of the header
+     * state, the question of Restart while an agent works, the time after
+     * Restart until the agents are back, or that time with the toast of a
+     * failed update check.
      */
     overlay: {
       enum: [
@@ -179,6 +170,7 @@ export const workspaceStateSchema = {
         'close-terminal',
         'terminal-open-failed',
         'terminal-close-failed',
+        'value-sheet',
         'restart',
         'restart-confirm',
         'restarting',
@@ -266,9 +258,7 @@ export const readyWorkspace: WorkspaceState = {
   tabRow: 'opened',
   temporary: 'none',
   ...composerStateDefaults,
-  resize: 'none',
-  rightColumn: 'shown',
-  sidebar: 'shown',
+  ...layoutStateDefaults,
   overlay: 'none',
   archive: 'kept',
   viewer: 'admin',

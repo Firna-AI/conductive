@@ -1,6 +1,7 @@
 import type { RunnerConnections } from '../chat/runner-connections'
 import type { BrowserTabs } from '../chat/browser-tabs'
 import type { DeviceRuntime } from '../devices/runtime'
+import type { SecretRuntime } from '../secrets/runtime'
 import type { WorkspaceCompositionEnv } from '../chat/workspace-integration'
 import type { WorkspaceMembersReceiver } from '../members/workspace-receiver'
 import type { ReceiverStorage } from '../members/receiver-storage'
@@ -25,6 +26,7 @@ interface WorkspaceAlarmInput {
   browsers: BrowserTabs
   runner: RunnerConnections
   devices: DeviceRuntime
+  secrets: SecretRuntime
   members: WorkspaceMembersReceiver
   github: WorkspaceGitHub
   features: WorkspaceFeatures
@@ -61,6 +63,10 @@ export class WorkspaceAlarmRunner {
           throw error
         }
       })
+    if (security.has('secrets'))
+      this.tasks.start('secrets', () =>
+        alarms.run('secrets', claimAt, () => this.input.secrets.reconcile()),
+      )
     await alarms.deferRegular(now() + 2_000)
     this.tasks.start('regular', () => this.regular(security))
   }

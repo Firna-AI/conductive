@@ -341,6 +341,7 @@ Any member who can send in a session can change its model, effort, and **Fast** 
 That choice applies to every member's messages on the session's login.
 
 GitHub operations follow the person whose message started the running turn.
+After a late answer to a secret request, the new turn follows the person whose message started the turn that asked.
 Commits name that person as both author and committer.
 In a workspace with older cloud computer software, agent commits name the workspace owner.
 Mac command requests go to that same person's connected Mac.

@@ -11,6 +11,7 @@ import { ComputerTab } from './ComputerTab'
 import { GeneralTab } from './GeneralTab'
 import { MembersSettings } from './MembersSettings'
 import { RepositoriesTab } from './RepositoriesTab'
+import { SecretsTab } from './SecretsTab'
 
 /** The parts of the org settings, in their order. */
 const tabs = [
@@ -18,6 +19,7 @@ const tabs = [
   { tab: 'repositories', label: 'Repositories' },
   { tab: 'cloud-computer', label: 'Cloud computer' },
   { tab: 'agents', label: 'Agents' },
+  { tab: 'secrets', label: 'Secrets' },
   { tab: 'members', label: 'Members' },
 ] as const satisfies readonly { tab: SettingsTab; label: string }[]
 
@@ -31,6 +33,8 @@ function TabBody(props: { org: OrgSummary; tab: SettingsTab; user: User }) {
       return <ComputerTab org={props.org} />
     case 'agents':
       return <AgentsTab org={props.org} />
+    case 'secrets':
+      return <SecretsTab org={props.org} user={props.user} />
     case 'members':
       return <MembersSettings org={props.org} user={props.user} />
   }
@@ -38,10 +42,11 @@ function TabBody(props: { org: OrgSummary; tab: SettingsTab; user: User }) {
 
 /**
  * The settings of an org: its name, its repositories, its cloud computer,
- * its org logins of the agents, and its members. Each tab is a link with
- * its own address. A member sees every tab without its edit actions. A
- * suspended org shows its notice above every tab, and every person sees
- * the tabs without edit actions.
+ * its org logins of the agents, its secrets, and its members. Each tab is
+ * a link with its own address. A member sees every tab without its edit
+ * actions, except Secrets, where every member adds secrets and changes the
+ * own ones. A suspended org shows its notice above every tab, and every
+ * person sees the tabs without edit actions.
  */
 export function OrgSettingsScreen(props: {
   org: OrgSummary

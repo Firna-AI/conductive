@@ -43,7 +43,7 @@ function turnOffWaitlist(records: OperatorRecords): void {
 }
 
 /** A deleted org stays for 7 days. */
-export const DELETE_AFTER = 604_800_000
+const DELETE_AFTER = 604_800_000
 
 /**
  * The records of the operator samples. Acme of the options is deleted or

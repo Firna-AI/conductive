@@ -22,6 +22,8 @@ import { automationRunsRoute } from './automations/run-route'
 import { hasAppAccess } from './waitlist/data'
 import { waitlistRoute } from './waitlist/route'
 import { feedbackRoute } from './app-api/feedback'
+import { secretsRoute } from './app-api/secrets'
+import { capabilitiesRoute } from './app-api/capabilities'
 
 export { routeDevice } from './devices/router'
 
@@ -33,6 +35,15 @@ export async function route(
   codexTasks: CodexTaskOwner,
   execution?: Pick<ExecutionContext, 'waitUntil'>,
 ): Promise<Response> {
+  const secrets = await secretsRoute(request, env, context, dependencies)
+  if (secrets) return secrets
+  const capabilities = await capabilitiesRoute(
+    request,
+    env,
+    context,
+    dependencies,
+  )
+  if (capabilities) return capabilities
   const codexDevice = await codexDeviceRoute(
     request,
     env,

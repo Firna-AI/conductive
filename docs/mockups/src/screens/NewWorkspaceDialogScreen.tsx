@@ -5,6 +5,7 @@ import { ChooseRepositoriesNotice } from '../components/new-workspace/notices'
 import { formWait } from '../components/new-workspace/waitingRepository'
 import { newOrg } from '../fixtures/repositories'
 import type { MenuEntry } from '../components/common/Menu'
+import { paths } from '../paths'
 import { defaultSection, sections } from '../fixtures/sections'
 import {
   NewWorkspaceScreen,
@@ -13,6 +14,7 @@ import {
 } from './NewWorkspaceScreen'
 import { FirstBuildNotice } from './firstBuildNotice'
 import { NewOrgEmpty } from './listParts'
+import { newWorkspaceCapabilities } from './newWorkspaceCapabilities'
 import { pageOrg, railOf, sidebarOf } from './newWorkspacePageParts'
 import {
   formLoginLabel,
@@ -38,6 +40,7 @@ export const newWorkspaceDialogSchema = {
     'repositoryMenu',
     'sectionMenu',
     'waitingBuild',
+    'capabilities',
     'result',
     'org',
     'firstBuild',
@@ -72,6 +75,7 @@ export const emptyDialog: NewWorkspaceDialogState = {
   repositoryMenu: 'closed',
   sectionMenu: 'closed',
   waitingBuild: 'building',
+  capabilities: 'closed',
   result: 'form',
   org: 'active',
   firstBuild: 'succeeded',
@@ -138,6 +142,12 @@ export function NewWorkspaceDialogScreen(props: {
   const dialog = (
     <NewWorkspaceDialog
       attachments={draft.files}
+      capabilities={newWorkspaceCapabilities(
+        state,
+        'desktop',
+        // Firna has no secrets yet, which the page of a phone shows.
+        state.org === 'new' ? undefined : paths.dialogCapabilities,
+      )}
       caret={ownDraft ? undefined : draft.caret}
       choice={page.choice}
       drop={state.files === 'drop-over'}

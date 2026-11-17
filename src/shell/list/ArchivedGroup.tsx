@@ -23,7 +23,7 @@ export function useArchivedOpen(
 ): [boolean, (open: boolean) => void] {
   const [opened, setOpened] = useState<boolean | null>(null)
   const isLive = groups.some((group) =>
-    group.workspaces.some((row) => row.id === selectedId),
+    group.rows.some((row) => row.workspace.id === selectedId),
   )
   /** The open workspace, while it stays open after the list showed it live. */
   const [held, setHeld] = useState<string | null>(isLive ? selectedId : null)

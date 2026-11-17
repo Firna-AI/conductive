@@ -11,7 +11,11 @@ This page lists each protocol doc and what it covers.
     app's own software, the updates of each sandbox, the install in a
     build, and the software image.
   - [Create a workspace](../protocol/create-a-workspace.md): New workspace as a
-    page or as a dialog, the create, the branch, and a failed first start.
+    page or as a dialog, its Capabilities icon, the create, the branch, and
+    a failed first start.
+    - [New workspace notices](../protocol/new-workspace-notices.md): the
+      notice before the first good build, and the notice of a waiting
+      repository.
   - [Repository folders](../protocol/repository-folders.md): the folder and the
     shell variable of each repository in a sandbox, and the context folder
     of each workspace.
@@ -20,10 +24,16 @@ This page lists each protocol doc and what it covers.
     restore, and Continue.
     - [Workspace list marks](../protocol/workspace-marks.md): GitHub colours,
       agent motion, unread output, and reduced motion.
+    - [Stop and resume](../protocol/stop-and-resume.md): the stop of an
+      idle sandbox, the resume, the starts from the agent tools, and the
+      restart near day 14 of a stop.
   - [Continue](../protocol/continue.md): the next task of a workspace after a
     merge, on a new branch with the same sandbox and sessions.
   - [Workspace menu](../protocol/workspace-menu.md): the menu of a workspace
     row, which moves, reassigns, renames, and archives the workspace.
+  - [Sub-workspaces](../protocol/sub-workspaces.md): the parent link, the
+    depth limit, the nested rows of the list, an archived parent, the moves
+    of a tree, and the agent context.
   - [Workspace tools](../protocol/workspace-tools.md)
     - [Temporary tabs](../protocol/temporary-tabs.md): the one file or diff
       tab that the next press replaces, what opens and keeps it, and its
@@ -83,6 +93,14 @@ This page lists each protocol doc and what it covers.
     - [Org logins](../protocol/org-logins.md): the login that an admin
       connects for each agent of an org, the Agents tab of the org
       settings, and the default login of a new session.
+    - [Secrets](../protocol/secrets.md): the secrets of an org that agents
+      use in one command, their storage, the Secrets tab, the rights,
+      Reveal, the mark for all agents, the grants, Capabilities with Mac
+      access, and their risks.
+      - [Secret requests](../protocol/secret-requests.md): the calls that
+        list the secrets and run a command with secrets, the requests and
+        their time limit, late answers, temporary values, and what the
+        chat shows.
   - [Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md)
   - [Attachment uploads](../protocol/attachment-uploads.md): the upload of
     an attached file in parts, with the gate rules and the body limit of
@@ -103,8 +121,9 @@ This page lists each protocol doc and what it covers.
   - [Agent tool access](../protocol/agent-tool-access.md): what each call
     reaches, which calls need an active turn, and the rights of the sender.
   - [Workspace calls](../protocol/workspace-calls.md): the calls that
-    create, list, get, rename, move, and archive workspaces, and the lists
-    that a create call takes.
+    create, list, get, rename, move, and archive workspaces.
+    - [Repository, section, and model lists](../protocol/create-call-lists.md):
+      the lists that a create call takes.
   - [Session calls](../protocol/session-calls.md): the calls that start,
     list, message, and read the sessions of the org.
     - [Session management](../protocol/session-management.md): the calls
@@ -112,17 +131,20 @@ This page lists each protocol doc and what it covers.
   - [Section and preview calls](../protocol/section-and-preview-calls.md):
     the calls that create and delete sections, and list, open, and close
     port previews.
+  - [Secret requests](../protocol/secret-requests.md): the calls that list
+    the secrets of the org and run a command with secrets.
   - [Names from the workspace tools](../protocol/tool-names.md): the rule
     for the names and titles that the calls give.
 - [Orgs and members](../protocol/orgs-and-members.md): orgs, sections,
-  roles, the first run, and the end of an org.
+  roles, and the first run.
   - [Org rail order](../protocol/org-rail-order.md): the order of the orgs
     in the rail that each person keeps, how the person changes it, what a
     tile opens, and the workspace list of a hidden sidebar.
   - [Get started](../protocol/get-started.md): the first run, its steps,
-    the build of the first org, and its finish.
-  - [Delete org](../protocol/delete-org.md): Delete org, the 7 days before
-    the app deletes everything of the org, and Restore.
+    the agent step, the state of the first build in its org step, and its
+    finish.
+  - [Delete org](../protocol/delete-org.md): the end of an org, its restore
+    within 7 days, and the delete of its data.
 - [Pricing](../protocol/pricing.md): the plans and their cloud hours, the
   extra hours, the seller and the tax, the pricing page, and the planned
   billing changes. Use is free until billing starts.
@@ -188,6 +210,8 @@ This page lists each protocol doc and what it covers.
   message.
   - [Base prompts](../protocol/base-prompts.md): the base prompt of Claude
     agents and the base instructions of Codex agents.
+  - [Agent instructions: how each agent gets them](../protocol/agent-instructions-delivery.md):
+    the system instructions of each agent, and the ways that were rejected.
 - [Waitlist](../protocol/waitlist.md): app access, the waitlist screen, the
   ways in, the approval email, and the record of app access.
 - [Invite and referral codes](../protocol/waitlist-codes.md): the codes of

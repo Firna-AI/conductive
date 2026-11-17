@@ -24,7 +24,9 @@ import {
 import {
   workspaceViewPath,
   type UpdateWorkspaceViewRequest,
+  type WorkspaceView,
 } from '../../shared/workspace-view'
+import { viewToWire } from '../../shared/workspace-view-wire'
 import {
   workspacePath,
   workspacePaths,
@@ -41,9 +43,9 @@ import {
   readSessionResponse,
   readSessions,
   readTranscript,
-  readView,
   readViewReply,
 } from './read-responses'
+import { readView } from './read-view'
 import { readNewestStoredEvents, readWorkspaceResponse } from './read-workspace'
 
 export interface WorkspaceTarget {
@@ -99,8 +101,13 @@ export function createChatApi(client: ApiClient, target: WorkspaceTarget) {
     /** The saved view, with the automation of a run workspace. */
     view: () =>
       client.get(workspaceViewPath(orgId, workspaceId), readViewReply),
-    saveView: (view: UpdateWorkspaceViewRequest) =>
-      client.send('PUT', workspaceViewPath(orgId, workspaceId), view, readView),
+    saveView: (view: WorkspaceView) =>
+      client.send(
+        'PUT',
+        workspaceViewPath(orgId, workspaceId),
+        viewToWire(view) satisfies UpdateWorkspaceViewRequest,
+        readView,
+      ),
     models: () => client.get(MODELS_PATH, readModels),
     account: () => client.get(ACCOUNT_PATHS.account, readAccount),
     org: () => client.get(orgPath(orgId), readOrg),

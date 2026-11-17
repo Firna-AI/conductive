@@ -12,6 +12,10 @@ import { memberViewer, you } from '../fixtures/members'
 import type { ShortcutChanges } from '../fixtures/shortcutChanges'
 import { paths } from '../paths'
 import { FirstBuildNotice } from './firstBuildNotice'
+import {
+  newWorkspaceCapabilities,
+  newWorkspaceCapabilitiesSheet,
+} from './newWorkspaceCapabilities'
 import { pageOrg, railOf, sidebarOf } from './newWorkspacePageParts'
 import {
   formLoginLabel,
@@ -35,6 +39,7 @@ export const newWorkspaceSchema = {
     'repositories',
     'repositoryMenu',
     'waitingBuild',
+    'capabilities',
     'result',
     'org',
     'firstBuild',
@@ -66,6 +71,7 @@ export const newWorkspaceForm: NewWorkspaceState = {
   repositories: 'chosen',
   repositoryMenu: 'closed',
   waitingBuild: 'building',
+  capabilities: 'closed',
   result: 'form',
   org: 'active',
   firstBuild: 'succeeded',
@@ -124,6 +130,18 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
     <ChatPane
       composer={{
         attachments: draft.files,
+        capabilities: newWorkspaceCapabilities(
+          state,
+          props.viewport,
+          state.org === 'new'
+            ? paths.newWorkspaceNoSecrets
+            : paths.newWorkspaceCapabilities,
+        ),
+        // The menu of a phone: Firna has no page with it open.
+        menu: {
+          open: state.capabilities === 'menu',
+          to: state.org === 'new' ? undefined : paths.newWorkspaceMenu,
+        },
         attachTo:
           state.files === 'none' && !failed && !linked && state.org !== 'new'
             ? paths.newWorkspaceFiles
@@ -212,6 +230,9 @@ export function NewWorkspaceScreen(props: {
       <MobileFrame>
         {page}
         {sheet}
+        {state.org === 'suspended'
+          ? null
+          : newWorkspaceCapabilitiesSheet(state)}
       </MobileFrame>
     )
   }

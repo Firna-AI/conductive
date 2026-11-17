@@ -3,7 +3,8 @@ import { useMemo, type ReactNode } from 'react'
 import type { Agent } from '../../shared/generated/Agent'
 import { modelLabel } from '../../shared/agents'
 
-import { PendingCommands } from '../device/PendingCommands'
+import { pendingCommandItems } from '../device/PendingCommands'
+import { sessionSecrets } from '../secrets/session-secrets'
 import { DeviceLoadNotice, sessionCommands } from '../device/session-commands'
 import { tabSessions } from '../state/archive-view'
 import { sendBlock } from '../state/blockers'
@@ -24,6 +25,7 @@ import { ChatPane } from './ChatPane'
 import { placeMemory } from './chat-place'
 import { ActionNotice, BlockNotice, LinkedSessionNotice } from './ChatNotices'
 import { Composer } from './Composer'
+import type { ComposerTool } from './ComposerTools'
 import type { ComposerFocus } from './composer-requests'
 import { SandboxBar, StartingCard, type SandboxProblem } from './SandboxState'
 import {
@@ -35,6 +37,7 @@ import {
 } from './SessionStatus'
 import { sourceInsert } from './SourceLine'
 import { TranscriptView } from './TranscriptView'
+import { WaitingRequests } from './WaitingRequests'
 
 function problemOf(state: WorkspaceState | undefined): SandboxProblem | null {
   return state === 'stopped' || state === 'error' || state === 'archived'
@@ -47,6 +50,7 @@ function problemOf(state: WorkspaceState | undefined): SandboxProblem | null {
  * workspace: the start steps at the end of the history while the sandbox
  * starts, and the bar under the chat while the sandbox is down. Null leaves
  * the place empty. Without a host, the chat draws both from its own record.
+ * The app also gives the tools of the composer, such as Capabilities.
  */
 export interface ChatHost {
   starting: ReactNode | null
@@ -56,6 +60,8 @@ export interface ChatHost {
    * members can still queue messages. Otherwise the bar takes its place.
    */
   keepsComposer: boolean
+  /** The tools of the composer, as `ComposerTool` says. */
+  tools?: readonly ComposerTool[]
 }
 
 export interface SessionChatProps {
@@ -164,6 +170,11 @@ export function SessionChat(props: SessionChatProps) {
   const content = showsContent(state, starting !== null)
   const viewerId = snapshot.account?.user.id ?? null
   const commands = sessionCommands(snapshot, id, state)
+  const secrets = sessionSecrets(snapshot, id, state, {
+    choices: !readOnly,
+    onAnswer: (requestId, answer) =>
+      void controller.answerSecret(requestId, answer),
+  })
   const reader = loginReader(snapshot)
   const login = session ? sessionLoginOf(session, reader) : null
   const linked =
@@ -204,14 +215,18 @@ export function SessionChat(props: SessionChatProps) {
       {snapshot.devices.load === 'failed' ? (
         <DeviceLoadNotice onRetry={() => void controller.loadDevices()} />
       ) : null}
-      <PendingCommands
-        devices={snapshot.devices}
-        onAnswer={(requestId, action) =>
-          void controller.answerCommand(requestId, action)
-        }
-        readOnly={readOnly}
-        readers={{ viewerId, orgName: snapshot.org?.name ?? null }}
-        requests={commands.waiting}
+      <WaitingRequests
+        items={[
+          ...pendingCommandItems({
+            devices: snapshot.devices,
+            onAnswer: (requestId, action) =>
+              void controller.answerCommand(requestId, action),
+            readOnly,
+            readers: { viewerId, orgName: snapshot.org?.name ?? null },
+            requests: commands.waiting,
+          }),
+          ...secrets.waiting,
+        ]}
       />
       {sandboxBar}
       {!down && session && snapshot.load.state === 'ready' ? (
@@ -244,6 +259,7 @@ export function SessionChat(props: SessionChatProps) {
           sessionAgent={hasMessages(state) ? session.choice.agent : undefined}
           startsSession={linked}
           stopping={state.stopping}
+          tools={props.host?.tools}
         />
       ) : null}
     </>
@@ -263,7 +279,11 @@ export function SessionChat(props: SessionChatProps) {
     >
       {content && status === 'loading' ? <EarlierLoading /> : null}
       <TranscriptView
-        inserts={source ? [source, ...commands.inserts] : commands.inserts}
+        inserts={[
+          ...(source ? [source] : []),
+          ...commands.inserts,
+          ...secrets.inserts,
+        ]}
         now={now}
         onOpenDiff={props.onOpenDiff}
         onRetry={(messageId) => id && void controller.retry(id, messageId)}

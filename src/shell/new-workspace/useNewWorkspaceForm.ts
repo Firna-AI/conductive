@@ -8,8 +8,8 @@ import {
   firstReadyRepository,
   type CreateState,
   type Draft,
-  type NewWorkspaceModel,
-} from '../../app/new-workspace-model'
+} from '../../app/new-workspace-draft'
+import type { NewWorkspaceModel } from '../../app/new-workspace-model'
 import { mayChangeSettings } from '../../app/permissions'
 import {
   waitingRepositoriesOf,

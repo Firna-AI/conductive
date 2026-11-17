@@ -9,4 +9,8 @@ export type AgentWorkspaceResponse = {
    * workspace.
    */
   workspace: AgentWorkspaceDetail
+  /**
+   * Notice about a workspace write.
+   */
+  notice?: string
 }

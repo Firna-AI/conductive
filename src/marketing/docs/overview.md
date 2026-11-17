@@ -85,7 +85,7 @@ If it stops while the workspace is open, select **Resume**, or open a file or a 
 
 Archive stops the computer and keeps its files for 14 days.
 The chat stays read-only in **Archived**, with no tools.
-Use **Restore** during that window to return the workspace to its section.
+Use **Restore** during that window to return the workspace to its place in the list.
 Restore leaves the computer stopped.
 
 - [Review files and changes](/docs/files-and-changes)

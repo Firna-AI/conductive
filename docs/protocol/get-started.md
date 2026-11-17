@@ -1,13 +1,15 @@
 # Get started
 
-This page belongs to [Orgs and members](orgs-and-members.md). It holds
-the requirements and the decisions in force for Get started, the first
-run. It covers its steps, the build of the first org, and its finish. The
-terms are those of the [architecture doc](../architecture.md#terms). A
-decision number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says. An org login
-decision number names a decision of the change that adds the org logins,
-as [Tokens and secrets](tokens-and-secrets.md) says.
+This doc holds the requirements and the decisions in force for Get
+started, the first run of the app. It covers its steps, the agent step,
+the state of the first build in its org step, and its finish. It belongs
+to [Orgs and members](orgs-and-members.md). The terms are those of the
+[architecture doc](../architecture.md#terms). A decision number names a
+dated record, as [Decision numbers](../architecture.md#decision-numbers)
+says. An org login decision number names a decision of the change that
+adds the org logins, as [Tokens and secrets](tokens-and-secrets.md) says.
+
+## The first run
 
 - Get started is the only first run.
 - Get started opens only after app access. A person who waits sees the
