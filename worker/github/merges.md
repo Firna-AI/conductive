@@ -170,7 +170,7 @@ each route under `/api/orgs/:orgId/workspaces/:workspaceId`.
 Run this from the repository root with Node 24:
 
 ```sh
-npm run test -- worker/github/merge-actions.test.ts worker/github/ready-actions.test.ts worker/github/merge-access.test.ts worker/github/merge-refusals.test.ts src/github/githubActions.test.ts worker/features/github-merge-routes.test.ts
+npm run test -- worker/github/merge-actions.test.ts worker/github/ready-actions.test.ts worker/github/ready-access.test.ts worker/github/merge-access.test.ts worker/github/merge-refusals.test.ts src/github/githubActions.test.ts worker/features/github-merge-routes.test.ts worker/features/github-ready-routes.test.ts
 ```
 
 - [merge-actions.test.ts](merge-actions.test.ts) covers the rights, the
@@ -182,12 +182,18 @@ npm run test -- worker/github/merge-actions.test.ts worker/github/ready-actions.
 - [ready-actions.test.ts](ready-actions.test.ts) covers Ready for review:
   the write, the shared publication, a pull request that is no longer a
   draft, missing rights, another pull request, a refusal, and bad bodies.
+- [ready-access.test.ts](ready-access.test.ts) covers the gates of Ready
+  for review, the token of the member who presses it, access races, and a
+  pull request that is not open.
 - [merge-access.test.ts](merge-access.test.ts) covers the gates, the fresh
   member tokens, the isolation of jobs, and access races.
 - [github-merge-routes.test.ts](../features/github-merge-routes.test.ts)
   runs the production Worker with SQLite object storage and a real browser
   socket. A pending job survives an eviction of the object, and a poll
   sends no second merge to GitHub.
+- [github-ready-routes.test.ts](../features/github-ready-routes.test.ts)
+  runs Ready for review through the production Worker with the member's
+  token.
 - [RepositoryMerges](fake-merges.ts) adds the merge model to
   [RepositoryGitHub](fake-repository.ts).
 - The browser client has its own test,

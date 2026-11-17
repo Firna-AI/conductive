@@ -144,7 +144,10 @@ export function serveReady(server: FakeApiServer, end: FakeReadyEnd): void {
       server.json(
         'POST',
         path,
-        refusal('github_ready_refused', 'GitHub refused the change.'),
+        refusal(
+          'github_ready_refused',
+          'Not marked ready: GitHub refused the change.',
+        ),
         409,
       )
   }

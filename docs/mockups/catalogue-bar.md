@@ -24,8 +24,9 @@ states of the workspace screen draw them. The child pages:
   Archive.
 - `app/banner/blocked` has a merge conflict with Resolve conflicts,
   requested changes with Address review, a draft with Ready for review,
-  Ready for review while it runs, a pull request closed without a merge,
-  and Blocked. A conflict, requested changes, and Blocked
+  Ready for review while it runs, its refusals for a missing right,
+  another pull request, and another reason, a pull request closed without
+  a merge, and Blocked. A conflict, requested changes, and Blocked
   tint the bar amber.
 - `app/banner/no-commits` has a branch without commits, whose bar offers no
   Create PR, as in `app/new-workspace/creating` and `first-turn`.

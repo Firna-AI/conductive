@@ -86,15 +86,23 @@ export function mergeOutcome(error: unknown): BarOutcome {
 }
 
 /**
- * The outcome of Ready for review that GitHub or the Worker refused. The
- * line keeps the Worker's safe words, as no GitHub error text reaches the
- * browser. Any other failure keeps the app's safe words.
+ * The outcome of Ready for review that GitHub or the app refused. A missing
+ * right, another pull request, and another refusal of GitHub take the
+ * words of the mockups. Any other failure keeps the app's safe words.
  */
 export function readyOutcome(error: unknown): BarOutcome {
-  return {
-    kind: 'ready-failed',
-    message:
-      error instanceof GitHubActionError ? error.message : unfinishedAction,
+  if (!(error instanceof GitHubActionError)) {
+    return { kind: 'ready-failed', message: unfinishedAction }
+  }
+  switch (error.code) {
+    case 'github_ready_forbidden':
+      return { kind: 'ready-refused', reason: 'ready-no-right' }
+    case 'github_pull_changed':
+      return { kind: 'ready-refused', reason: 'ready-pull-changed' }
+    case 'github_ready_refused':
+      return { kind: 'ready-refused', reason: 'ready-refused' }
+    default:
+      return { kind: 'ready-failed', message: error.message }
   }
 }
 

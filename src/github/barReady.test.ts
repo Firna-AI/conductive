@@ -62,12 +62,37 @@ describe('Ready for review in the bar', () => {
     expect(barCommands({ view: busy, onAction: () => {} }, () => {})).toEqual([
       { command: 'open-pull-request', run: expect.any(Function) },
     ])
-    const message = 'GitHub refused the change.'
-    const refused = draftView({ outcome: { kind: 'ready-failed', message } })
-    expect(refused.message).toEqual({
-      text: message,
+    const url = snapshotOf('draft').banner.pullRequest?.url
+    const refusal = (
+      reason: 'ready-no-right' | 'ready-pull-changed' | 'ready-refused',
+    ) => draftView({ outcome: { kind: 'ready-refused', reason } })
+    expect({
+      refused: refusal('ready-refused').message,
+      changed: refusal('ready-pull-changed').message,
+      noRight: refusal('ready-no-right'),
+    }).toMatchObject({
+      refused: {
+        text: 'Not marked ready: GitHub refused the change.',
+        tone: 'danger',
+        href: url,
+      },
+      changed: {
+        text: 'Not marked ready: the branch has another pull request now. Review it, then try again.',
+        href: null,
+      },
+      // A missing right hides the button at once, as for Merge.
+      noRight: { actions: [], message: { href: null } },
+    })
+    const failed = draftView({
+      outcome: {
+        kind: 'ready-failed',
+        message: 'GitHub is not available. Try again.',
+      },
+    })
+    expect(failed.message).toEqual({
+      text: 'GitHub is not available. Try again.',
       tone: 'danger',
-      href: snapshotOf('draft').banner.pullRequest?.url,
+      href: url,
     })
   })
 
@@ -137,23 +162,24 @@ describe('the run of Ready for review', () => {
     expect(bar.actions.getSnapshot().outcome).toBeNull()
   })
 
-  it("keeps the Worker's words of a refusal, and reads the access again after a missing right", async () => {
+  it('shows the words of each refusal, and reads the access again after a missing right', async () => {
     const server = new FakeApiServer()
     const bar = barFor(server)
     await vi.waitFor(() => expect(capabilityReads(server)).toBe(1), shortly)
     serveReady(server, 'refused')
     await bar.actions.markReady(snapshotOf('draft'))
     expect(bar.actions.getSnapshot().outcome).toEqual({
-      kind: 'ready-failed',
-      message: 'GitHub refused the change.',
+      kind: 'ready-refused',
+      reason: 'ready-refused',
     })
     expect(capabilityReads(server)).toBe(1)
 
     serveReady(server, 'no-right')
     serveAccess(server, 'read')
     await bar.actions.markReady(snapshotOf('draft'))
-    expect(bar.actions.getSnapshot().outcome).toMatchObject({
-      kind: 'ready-failed',
+    expect(bar.actions.getSnapshot().outcome).toEqual({
+      kind: 'ready-refused',
+      reason: 'ready-no-right',
     })
     await vi.waitFor(() => expect(capabilityReads(server)).toBe(2), shortly)
     expect(bar.refreshGitHub).not.toHaveBeenCalled()

@@ -96,9 +96,12 @@ checks in GitHub's order, and the reviewers.
   reads the GitHub state again and pushes it to every tab.
 - Marking ready shows until the bar shows a newer GitHub state, as after a
   merge. The store also reads the GitHub state once.
-- `readyOutcome` in [barRuns.ts](barRuns.ts) keeps the Worker's safe words
-  of a refusal, under the bar of the draft, with Open on GitHub. A missing
-  right also reads the access again, so the button hides.
+- `readyOutcome` in [barRuns.ts](barRuns.ts) turns a refusal into the line
+  under the bar of the draft. A missing right, another pull request, and
+  another refusal of GitHub take the words of the mockups. Another refusal
+  adds Open on GitHub. A missing right hides the button at once, and reads
+  the access again. Another failure keeps the app's safe words, with Open
+  on GitHub.
 
 ## Agent actions
 

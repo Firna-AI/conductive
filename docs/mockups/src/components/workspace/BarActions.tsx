@@ -197,7 +197,7 @@ export function BarMessage(props: {
       <span className={styles.text}>
         {barMessageText(props.kind, branches)}
       </span>
-      {props.kind === 'merge-refused' ? (
+      {props.kind === 'merge-refused' || props.kind === 'ready-refused' ? (
         <GitHubLink href={pullRequest.url} label={barLabels.openOnGitHub} />
       ) : null}
     </div>

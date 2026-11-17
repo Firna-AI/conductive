@@ -40,6 +40,27 @@ export const blocked = defineScreen({
       props: { banner: 'draft', appAction: 'marking-ready' },
     },
     {
+      slug: 'ready-no-right',
+      title: 'No right to mark ready',
+      description:
+        "GitHub refused Ready for review, because Cal's GitHub access does not allow changes to the pull request. The message says so in the app's own words, and the bar hides Ready for review, which would fail again.",
+      props: { banner: 'draft', appAction: 'ready-no-right' },
+    },
+    {
+      slug: 'ready-pull-changed',
+      title: 'Another pull request',
+      description:
+        'The branch has another pull request than the one that the bar showed, so the app changed nothing. The message says so in its own words. Ready for review stays for the pull request that the bar shows now.',
+      props: { banner: 'draft', appAction: 'ready-pull-changed' },
+    },
+    {
+      slug: 'ready-refused',
+      title: 'GitHub refused Ready for review',
+      description:
+        'GitHub refused Ready for review for another reason. The message says only that GitHub refused it, with Open on GitHub, where GitHub names the reason. No GitHub error text reaches the app.',
+      props: { banner: 'draft', appAction: 'ready-refused' },
+    },
+    {
       slug: 'closed',
       title: 'Closed without a merge',
       description:

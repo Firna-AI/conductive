@@ -36,7 +36,11 @@ const readyPullChanged = () =>
     'Not marked ready: the branch has another pull request now. Review it, then try again.',
   )
 const readyRefused = () =>
-  new HttpError(409, 'github_ready_refused', 'GitHub refused the change.')
+  new HttpError(
+    409,
+    'github_ready_refused',
+    'Not marked ready: GitHub refused the change.',
+  )
 
 /**
  * Marks the draft pull request of the workspace branch ready for review, as

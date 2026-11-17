@@ -12,13 +12,16 @@ type GitHubAccess = (typeof gitHubAccesses)[number]
 
 /**
  * The action of the app that the bar shows: none, a merge that runs or that
- * GitHub refused, Ready for review while it runs, or a Continue that runs
- * or that stopped.
+ * GitHub refused, Ready for review that runs or that GitHub refused, or a
+ * Continue that runs or that stopped.
  */
 export const appActions = [
   'none',
   'merging',
   'marking-ready',
+  'ready-no-right',
+  'ready-pull-changed',
+  'ready-refused',
   'merge-moved-head',
   'merge-no-right',
   'merge-refused',
@@ -149,7 +152,9 @@ function mainAction(facts: BarFacts): BarAction | undefined {
   const fix = fixOf(banner)
   if (fix) return agent(fix)
   if (banner === 'draft') {
-    if (facts.access !== 'write') return undefined
+    const mayChange =
+      facts.access === 'write' && facts.appAction !== 'ready-no-right'
+    if (!mayChange) return undefined
     return { kind: 'ready', busy: facts.appAction === 'marking-ready' }
   }
   const mayMerge =
@@ -161,14 +166,20 @@ function mainAction(facts: BarFacts): BarAction | undefined {
   return { kind: 'merge', method, busy }
 }
 
-/** A refusal of GitHub stays under the bar of Ready to merge. */
-function mergeMessage(facts: BarFacts): BarMessageKind | undefined {
-  if (facts.banner !== 'ready-to-merge') return undefined
+/**
+ * A refusal of a merge stays under the bar of Ready to merge, and a refusal
+ * of Ready for review under the bar of the draft.
+ */
+function refusalMessage(facts: BarFacts): BarMessageKind | undefined {
   switch (facts.appAction) {
     case 'merge-moved-head':
     case 'merge-no-right':
     case 'merge-refused':
-      return facts.appAction
+      return facts.banner === 'ready-to-merge' ? facts.appAction : undefined
+    case 'ready-no-right':
+    case 'ready-pull-changed':
+    case 'ready-refused':
+      return facts.banner === 'draft' ? facts.appAction : undefined
     default:
       return undefined
   }
@@ -201,6 +212,6 @@ export function barModel(facts: BarFacts): BarModel {
   return {
     ...bar,
     actions: main ? [main] : [],
-    message: mergeMessage(facts),
+    message: refusalMessage(facts),
   }
 }
