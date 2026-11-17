@@ -26,7 +26,14 @@ import { listWithArchives } from './archive-overlay'
 import { Creations } from './creations'
 import { workspaceUpdated, type ListData } from './list-changes'
 import { NewWorkspaceModel } from './new-workspace-model'
-import { buildsWait, listWait, onEntry, automationsWait } from './org-waits'
+import { OrgAgentLogins, type OrgLoginChanged } from './org-agent-logins'
+import {
+  automationsWait,
+  buildsWait,
+  listWait,
+  onEntry,
+  orgLoginsWait,
+} from './org-waits'
 import { Refresher, type Refreshing } from './refresh'
 import { Resource } from './resource'
 import { SecretsModel } from './secrets-model'
@@ -40,15 +47,15 @@ import {
 } from './suspension'
 
 export type OrgPart =
-  'list' | 'repositories' | 'builds' | 'members' | 'automations'
+  'list' | 'repositories' | 'builds' | 'members' | 'automations' | 'agentLogins'
 
 /**
  * The data of one org: its list of sections and workspaces, its
  * repositories, the builds and settings of its cloud computer, its
- * members, its automations, and its secrets. A part reads while a screen shows
- * it, as `watch` says. The Cloud computer tab reads the settings itself, and
- * the Secrets tab and the Capabilities control read the secrets. Each
- * request of the org that the API refuses with `org_suspended` goes to
+ * members, its automations, its org logins, and its secrets. A part reads
+ * while a screen shows it, as `watch` says. The Cloud computer tab reads
+ * the settings itself. The Secrets tab and the Capabilities control read
+ * the secrets. Each request that the API refuses with `org_suspended` goes to
  * `suspension`, so a page with an old org list learns of the suspension.
  */
 export class OrgModel {
@@ -83,6 +90,8 @@ export class OrgModel {
   readonly builds: Readable<Loadable<BuildsResponse>>
   readonly members: Readable<Loadable<MembersResponse>>
   readonly automations: Readable<Loadable<readonly ListedAutomation[]>>
+  /** The org logins of the agents, which the Agents tab shows. */
+  readonly agentLogins: OrgAgentLogins
   /** The secrets, which the Secrets tab and Capabilities read when they show. */
   readonly secrets: SecretsModel
   /** The create requests of this tab, which a sign-out ends. */
@@ -93,10 +102,16 @@ export class OrgModel {
   private readonly parts: Readonly<Record<OrgPart, Refreshing>>
   private readonly drafts = new Map<string, NewWorkspaceModel>()
 
+  /**
+   * `loginsChanged` runs after each change of an org login that an admin
+   * makes here, as `OrgLoginChanged` says. Without it, such as in a test
+   * of one org, the change reads no account.
+   */
   constructor(
     services: AppServices,
     orgId: string,
     suspension: OrgSuspension = neverSuspended,
+    loginsChanged?: OrgLoginChanged,
   ) {
     this.suspension = suspension
     const api = noteOrgRefusals(services.api, () => suspension.note())
@@ -142,12 +157,18 @@ export class OrgModel {
     this.builds = builds.store
     this.members = members.store
     this.automations = automations.store
+    this.agentLogins = new OrgAgentLogins(api, orgId, loginsChanged)
     this.parts = {
       list: new Refresher(list, listWait, this.services),
       repositories: new Refresher(repositories, onEntry, this.services),
       builds: new Refresher(builds, buildsWait, this.services),
       members: new Refresher(members, onEntry, this.services),
       automations: new Refresher(automations, automationsWait, this.services),
+      agentLogins: new Refresher(
+        this.agentLogins.resource,
+        orgLoginsWait,
+        this.services,
+      ),
     }
   }
 
@@ -266,14 +287,6 @@ export class OrgModel {
       },
     }
   }
-}
-
-/** The build that new workspaces start from, the newest good build. */
-export function currentBuild(builds: BuildsResponse): ImageBuild | undefined {
-  return (
-    builds.builds.find((build) => build.id === builds.currentImageBuildId) ??
-    builds.builds.find((build) => build.state === 'succeeded')
-  )
 }
 
 /**

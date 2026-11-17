@@ -51,6 +51,7 @@ export function workspaceInsertStatement(
   db: D1Database,
   input: Parameters<typeof insertWorkspace>[1],
   sectionId: string,
+  macAccess: boolean,
 ) {
   return db
     .prepare(
@@ -77,7 +78,7 @@ export function workspaceInsertStatement(
       input.branch,
       input.baseBranch ?? null,
       input.providerAccount,
-      Number(input.capabilities?.macAccess ?? true),
+      Number(macAccess),
       input.now,
       input.now,
       input.now,

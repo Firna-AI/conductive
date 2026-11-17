@@ -13,7 +13,10 @@ import { workspaceRestoreUntil } from '../../src/shared/workspaces'
 import { HttpError } from '../http'
 import { leasedImage, type LeasedImage } from './image-leases'
 import type { RepositoryLocation } from './repository-locations'
-import type { WorkspaceCapabilities } from '../../src/shared/secrets'
+import {
+  NEW_WORKSPACE_CAPABILITIES,
+  type WorkspaceCapabilities,
+} from '../../src/shared/secrets'
 import { creationPreapprovals } from '../secrets/capabilities-writes'
 import {
   parentDepthStatement,
@@ -119,6 +122,7 @@ export async function insertWorkspace(
     capabilities?: WorkspaceCapabilities
   },
 ): Promise<LeasedImage> {
+  const capabilities = input.capabilities ?? NEW_WORKSPACE_CAPABILITIES
   if (!input.sectionId) {
     await db
       .prepare(
@@ -142,7 +146,7 @@ export async function insertWorkspace(
     )
   const results = await db.batch<WorkspaceParent>([
     parentDepthStatement(db, input.orgId, input.parentId),
-    workspaceInsertStatement(db, input, section.id),
+    workspaceInsertStatement(db, input, section.id, capabilities.macAccess),
     db
       .prepare(
         `INSERT INTO workspace_runtime (workspace_id, org_id, created_by_user_id, session_id, first_turn_id, agent, model, effort, fast, first_message_id, repository_locations_json)
@@ -167,7 +171,7 @@ export async function insertWorkspace(
     creationPreapprovals(db, {
       orgId: input.orgId,
       workspaceId: input.id,
-      secretIds: input.capabilities?.preapprovedSecretIds ?? [],
+      secretIds: capabilities.preapprovedSecretIds,
       userId: input.senderUserId ?? input.user.id,
       now: input.now,
     }),

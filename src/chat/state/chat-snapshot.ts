@@ -14,8 +14,8 @@ import type {
   AccountSummary,
   MemberSummary,
   OrgSummary,
-  RunAutomation,
 } from '../api/read-responses'
+import type { RunAutomation } from '../api/read-view'
 import { initialDevices, type DeviceSnapshot } from '../device/device-snapshot'
 import {
   initialSecrets,

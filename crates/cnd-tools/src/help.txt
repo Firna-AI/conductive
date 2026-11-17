@@ -52,6 +52,10 @@ Close of an already closed preview succeeds with closed: false.
 Create uses the calling workspace's org and owner.
 Omitted workspace model and effort use the owner's defaults and the default section.
 For workspace create, --parent ID nests the new workspace under that parent.
+Nest work that belongs to the calling workspace's task: a part of a large task that can run in parallel,
+follow-up work that the task starts, work in another repository for the same task,
+or a change that needs its own pull request. Each separate pull request needs its own workspace.
+Omit --parent for unrelated work. When a member names the place, follow the member.
 Agents usually pass their own workspace ID from their instructions.
 The new workspace joins its parent's section. --section has no effect with --parent.
 Nesting stops at depth 3. A create under a workspace at depth 3 fails with nesting_limit.

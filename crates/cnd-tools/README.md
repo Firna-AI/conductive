@@ -24,7 +24,7 @@ Move nests the whole tree under that parent. `--top-level`, or MCP
 `topLevel: true`, takes the tree out of its parent. Move needs a section,
 a target, or both. A section-only move keeps its existing rules.
 The Worker checks cycles and the depth of the whole tree before it writes.
-The create help describes the depth limit and sibling advice.
+The create text gives the cases of when to nest, the depth limit, and sibling advice.
 Both adapters preserve `parentId` in workspace records and list entries.
 Workspace details also keep `parent`, `depth`, and `children`.
 Create and move replies keep their optional `notice`.

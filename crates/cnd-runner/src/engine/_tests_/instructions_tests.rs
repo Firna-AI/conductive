@@ -73,6 +73,7 @@ fn gives_exact_top_level_context_to_both_agents() -> Result<()> {
                 "Workspace ID: \"workspace\"",
                 "Workspace link: \"https://app.test/orgs/org/workspaces/workspace\"",
                 "This is a top-level workspace at depth 0.",
+                "Nest a new workspace under this one when its work belongs to the task of this workspace: a part of a large task that can run in parallel, follow-up work that the task starts, work in another repository for the same task, or a change that needs its own pull request. A workspace has one branch at a time, so each separate pull request needs its own workspace. Create a top-level workspace for unrelated work. When a member names the place of a new workspace, follow the member.",
                 "Nesting stops at depth 3. To nest a new workspace under this one, pass \"workspace\" as parentId to create_workspace.",
                 "Use get_workspace to find the parent and the sub-workspaces of a workspace. Use list_workspaces with parentId to list direct sub-workspaces.",
                 "A move with move_workspace can change the parent and depth, so use get_workspace to read their current values.",
@@ -90,6 +91,7 @@ fn gives_exact_depth_one_context() -> Result<()> {
             "Workspace ID: \"workspace\"",
             "Workspace link: \"https://app.test/orgs/org/workspaces/workspace\"",
             "This workspace is nested at depth 1 under its parent. Parent workspace ID: \"parent\". Parent workspace link: \"https://app.test/orgs/org/workspaces/parent\".",
+            "Nest a new workspace under this one when its work belongs to the task of this workspace: a part of a large task that can run in parallel, follow-up work that the task starts, work in another repository for the same task, or a change that needs its own pull request. A workspace has one branch at a time, so each separate pull request needs its own workspace. Create a top-level workspace for unrelated work. When a member names the place of a new workspace, follow the member.",
             "Nesting stops at depth 3. To nest a new workspace under this one, pass \"workspace\" as parentId to create_workspace.",
             "Use get_workspace to find the parent and the sub-workspaces of a workspace. Use list_workspaces with parentId to list direct sub-workspaces.",
             "A move with move_workspace can change the parent and depth, so use get_workspace to read their current values.",
@@ -106,6 +108,7 @@ fn gives_exact_sibling_advice_at_the_deepest_depth() -> Result<()> {
             "Workspace ID: \"workspace\"",
             "Workspace link: \"https://app.test/orgs/org/workspaces/workspace\"",
             "This workspace is nested at depth 3 under its parent. Parent workspace ID: \"parent\". Parent workspace link: \"https://app.test/orgs/org/workspaces/parent\".",
+            "Nest a new workspace under this one when its work belongs to the task of this workspace: a part of a large task that can run in parallel, follow-up work that the task starts, work in another repository for the same task, or a change that needs its own pull request. A workspace has one branch at a time, so each separate pull request needs its own workspace. Create a top-level workspace for unrelated work. When a member names the place of a new workspace, follow the member.",
             "Nesting stops at depth 3.",
             "This workspace cannot hold sub-workspaces. Create a sibling instead. Pass \"parent\" as parentId to create_workspace. Start its name with a one-word group prefix, such as \"Limits: \".",
             "Use get_workspace to find the parent and the sub-workspaces of a workspace. Use list_workspaces with parentId to list direct sub-workspaces.",
@@ -130,11 +133,11 @@ fn follows_the_depth_limit_supplied_by_the_worker() -> Result<()> {
     env.insert("CONDUCTIVE_WORKSPACE_MAX_DEPTH".into(), "4".into());
     let lines = instructions(&env, &Agent::Codex)?;
     assert_eq!(
-        lines.get(3).map(String::as_str),
+        lines.get(4).map(String::as_str),
         Some("Nesting stops at depth 4.")
     );
     assert_eq!(
-        lines.get(4).map(String::as_str),
+        lines.get(5).map(String::as_str),
         Some(
             "This workspace cannot hold sub-workspaces. Create a sibling instead. Pass \"parent\" as parentId to create_workspace. Start its name with a one-word group prefix, such as \"Limits: \"."
         )

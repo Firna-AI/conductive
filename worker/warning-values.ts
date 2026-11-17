@@ -21,6 +21,44 @@ export class WarningId {
   }
 }
 
+/** Production runner streams use UUIDs and retain them across process starts. */
+export class WarningStreamId {
+  private readonly value: string
+
+  private constructor(value: string) {
+    this.value = value
+  }
+
+  static checked(value: string): WarningStreamId {
+    return new WarningStreamId(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(
+        value,
+      )
+        ? value
+        : 'unknown',
+    )
+  }
+
+  get text(): string {
+    return this.value
+  }
+}
+
+export function warningProtocolVersion(value: number | null): number | null {
+  return value !== null && Number.isSafeInteger(value) && value > 0
+    ? value
+    : null
+}
+
+const TURN_END_STATES = ['finished', 'stopped', 'failed'] as const
+export type WarningTurnEndState = (typeof TURN_END_STATES)[number]
+
+export function warningTurnEndState(
+  value: string,
+): WarningTurnEndState | 'unknown' {
+  return TURN_END_STATES.find((state) => state === value) ?? 'unknown'
+}
+
 const PROVIDER_CODES = [
   'invalid_path',
   'invalid_name',

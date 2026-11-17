@@ -1,7 +1,9 @@
 {
   "order": [
+    "colour",
     "repositories",
     "cloud-computer",
+    "agents",
     "secrets",
     "members",
     "delete",

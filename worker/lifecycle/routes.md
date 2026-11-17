@@ -115,9 +115,20 @@ turn and the branch step use the sender.
    with a limit of 60 seconds. Its result is the `updateCheck` of the reply.
 4. It runs `RESTART_COMMAND`, which restarts the runner under the start
    lock, so that its pre-start step applies a complete download, and then
-   the preview relay.
+   the preview relay and ttyd. The ttyd command removes the old support
+   marker before the restart. It shares the bounded support probe of a
+   normal start and writes a marker only for confirmed support.
+   It never restarts the terminal shell server. A failed ttyd restart or
+   probe warns and leaves no marker, without failing the command.
 5. When that command fails, `softwareRestart(id, 'fail')` shows the error
    state with `restart_failed`, and the route answers HTTP 502.
+6. After success, `softwareRestart` asks the workspace object to read the
+   terminal password and support again for the captured sandbox ID and
+   provider account. A failed read, including a missing support marker,
+   warns and keeps the cache, with no failure of Restart or terminal list
+   event. A changed support value commits one full-list
+   `terminals.updated` event with `several` through the list event path.
+   Unchanged support emits no event.
 
 `readyLifecycle` clears `softwareRestartAt` when the new runner is ready.
 A turn end keeps Starting meanwhile. The alarm ends a restart whose runner

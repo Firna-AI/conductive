@@ -12,6 +12,7 @@ Each handler returns `null` for a path that it does not own. The
 | --- | --- |
 | `bootRoute` in [`boot.ts`](boot.ts) | `GET /api/account`, `GET /api/account/stats`, `GET /api/models`, `GET /api/get-started`, `PUT /api/account/default-model`, `PUT /api/account/new-workspace-view`, `PUT /api/account/shortcuts`, and `PUT`, `PATCH`, and `DELETE` of `/api/account/agent-logins/:agent` |
 | `endpointModelsRoute` in [`endpoint-models.ts`](endpoint-models.ts) | `POST /api/account/agent-logins/:agent/models/refresh` |
+| `orgAgentLoginsRoute` in [`org-agent-logins.ts`](org-agent-logins.ts) | `GET /api/orgs/:orgId/agent-logins`; admin `PUT`, `PATCH`, and `DELETE` of `/:agent`; admin `POST` of `/:agent/models/refresh` |
 | `codexDeviceRoute` in [`codex-device.ts`](codex-device.ts) | `POST /api/account/agent-logins/codex/device` starts a ChatGPT sign-in. `POST` of its `/:handle` polls and exchanges it |
 | `shellRoute` in [`shell.ts`](shell.ts) | `GET` of the sections, the repositories, the members, and the workspace list of an org. `GET` and `PUT` of the view of a workspace, and `PUT` of its read mark |
 | `featureShellRoute` in [`feature-shell.ts`](feature-shell.ts) | GitHub installations and available repositories of the account; Create org with initials and repositories; settings reads and writes; repository choices; section writes; workspace names and moves |
@@ -56,6 +57,13 @@ View writes cannot change this branch.
   so a screen links to that page without a GitHub read. A login write
   encrypts the secret with `agentLoginContext(userId, agent)` and
   `BOAT_KEY_ENCRYPTION_KEY`. No reply holds a stored secret.
+- Account and org-login reads include additive `defaultLogins` entries for
+  each current org and agent. [`default-agent-logins.ts`](default-agent-logins.ts)
+  uses the common login access query and default order from `worker/chat/`.
+  Each entry names the selected personal or org owner, or null when neither serves.
+  An endpoint entry includes the model availability used by member pickers.
+  Its separate `orgModelList` serves fixed org sessions even when the default is personal.
+  Suspended orgs give no usable default or model list. Deleted orgs are absent.
 - `GET /api/account/stats` returns `AccountStats` from the
   [account contract](../../src/shared/account.ts) for the signed-in user
   only. [`account-stats.ts`](account-stats.ts) reads every count from D1 in
@@ -65,6 +73,22 @@ View writes cannot change this branch.
   `owner_user_id` of its row. The route keeps no history and calls no
   sandbox provider.
   [Account stats](../../docs/protocol/account-stats.md) states the rules.
+- Org login routes use the paths in `org-settings.ts` and the contracts in
+  [`org-agent-logins.ts`](../../src/shared/org-agent-logins.ts).
+  [`org-agent-login-save.ts`](org-agent-login-save.ts) reuses the endpoint
+  address rule, model discovery, and authenticated encryption helpers.
+  A personal owner keeps its existing encryption context. An org owner
+  uses `org-agent-login:<orgId>:<agent>`.
+  [`org-agent-login-data.ts`](org-agent-login-data.ts) guards each write
+  with the current active admin predicate in the same SQL statement.
+  Replace keeps the switch across kinds. A switch write changes no login
+  version. [`org-agent-login-read.ts`](org-agent-login-read.ts) returns
+  metadata for both agents, with a disconnected entry for an absent login.
+  Only an admin of an active org receives `agentLogins.modelList`.
+  The selected default's model availability also serves member pickers. No reply holds
+  ciphertext, a key, or a full address. Save and Refresh report model read
+  failures. Endpoint saves also report whether they added `/v1`.
+  [Org logins](../../docs/protocol/org-logins.md) states the requirements.
 - An own endpoint save uses `readEndpointAddress` from
   [`endpoint-address.ts`](../../src/shared/endpoint-address.ts). It encrypts
   one JSON value with the normalized endpoint and the whitespace-free key,
@@ -144,6 +168,8 @@ View writes cannot change this branch.
   A connected Codex login can carry `unusableCause` after a refused renewal.
   Reconnect clears the failure and its refresh claim.
 - Get started has only the steps `github-app`, `org`, and `agent-login`.
+  The agent step completes with a usable personal login or an org login.
+  `get-started-data.ts` uses the same default resolver as message admission.
 - Create org requires at least one repository. `createShellOrg` starts its
   first image build after it saves the org, its admin, and its repositories.
   A failed build start writes one fixed warning through `warnWorker`.
@@ -306,6 +332,9 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   model variables.
 - [`shortcuts-data.ts`](shortcuts-data.ts): account shortcut reads and
   atomic batch saves, checked with the shared shortcut readers.
+- [`org-agent-logins.ts`](org-agent-logins.ts): member reads and admin
+  writes for org logins. Its save, read, and data modules keep discovery,
+  public metadata, and guarded SQL separate.
 - [`codex-device.ts`](codex-device.ts): the account routes for ChatGPT
   device sign-in, over the [Codex auth service](../codex-auth/README.md).
 - [`get-started-github.ts`](get-started-github.ts):

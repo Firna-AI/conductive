@@ -13,7 +13,8 @@ Use separate workspaces for tasks that need separate files and branches.
 
 You need access to Conductive and membership of an org.
 The org needs a successful cloud computer build that includes your repository.
-You also need a login for the agent you choose.
+You also need a usable personal or org login for the agent you choose.
+You need no personal login when the org login serves you.
 Your GitHub account needs read access to the repository for the new workspace's start.
 
 If you joined an org, its admin manages the repositories and shared setup.
@@ -181,7 +182,16 @@ Ask for your workspaces, or give another member's name or GitHub login.
 Workspace and session lists can return a smaller page of results.
 When an agent creates a workspace, it can set the workspace name and its first session's title.
 
-Ask an agent to create a sub-workspace for a task that needs its own files and branch.
+An agent puts related work in a sub-workspace of the current workspace:
+
+- A part of a large task that runs in parallel.
+- Follow-up work that the task starts.
+- Work in another repository for the same task.
+- Each change that needs its own pull request.
+
+Unrelated work goes in a top-level workspace.
+You can tell the agent where to put a new workspace.
+
 The agent can name a parent workspace in the same org when it creates the workspace.
 Without a parent, the new workspace shows at the top level.
 If the agent also names another section, the sub-workspace still follows its parent.
@@ -252,7 +262,8 @@ It is separate from the computer's automatic stop.
 ## Restart the software
 
 Select the state in the workspace header, such as **Ready**, then **Restart**.
-Restart restarts Conductive's agent software and the port previews in the running computer.
+Restart restarts Conductive's agent software, terminal software, and port previews in the running computer.
+After a software update, Restart also brings terminal tabs to a workspace that had only one terminal.
 Use it when an agent or a preview stops responding, or to apply a software update now.
 Any member can restart a workspace while it is ready, working, needs input, or has unread output.
 

@@ -108,6 +108,7 @@ Use the engine as the next handler of `ReportCommandHandler`.
 
 Each session pins its agent, instructions, and branch context.
 New sessions also name their workspace ID, link, parent, depth, and depth limit.
+The instructions give the cases of when to nest a new workspace.
 The Worker supplies these tree facts through the service environment at runner start.
 The instructions direct agents to `get_workspace` for the current parent and depth after a move.
 At the depth limit, the instructions give the parent ID for a sibling and a short name prefix.
@@ -151,7 +152,7 @@ and connection drops. It does not run the Worker.
 ### Key Code
 
 - [config.rs](src/config.rs): `Configuration::parse` reads supplied service settings.
-- [instructions.rs](src/engine/instructions.rs): `build` adds validated workspace tree facts and nesting guidance to new session instructions.
+- [instructions.rs](src/engine/instructions.rs): `build` adds validated workspace tree facts and the cases of when to nest to new session instructions.
 - [store.rs](src/state/store.rs): `EventStore` defines serialized state operations.
 - [records.rs](src/state/records.rs): `RunnerState` reads the existing JSON format.
 - [disk.rs](src/disk.rs): `AtomicDisk` replaces the private state file atomically.

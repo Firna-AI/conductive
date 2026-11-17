@@ -45,11 +45,19 @@ export function viewToWire(view: WorkspaceView): WorkspaceViewWire {
   }
 }
 
+/** The shown terminal of a view, as a field, or no field without one. */
+function terminalOf(view: Pick<WorkspaceView, 'terminal'>): {
+  terminal?: string
+} {
+  return view.terminal === undefined ? {} : { terminal: view.terminal }
+}
+
 /**
  * The view as the Worker sends it: without the two Preview fields when the
  * view has no Preview tab, so the reply keeps the shape of older Workers.
- * A save of the app always sends `previewTabs`, also an empty list, because
- * a save without it keeps the stored Preview tabs.
+ * It keeps the shown terminal, which older copies ignore. A save of the app
+ * always sends `previewTabs`, also an empty list, because a save without it
+ * keeps the stored Preview tabs.
  */
 export function viewReply(view: WorkspaceView): WorkspaceViewWire {
   const wire = viewToWire(view)
@@ -60,6 +68,7 @@ export function viewReply(view: WorkspaceView): WorkspaceViewWire {
     temporaryTab: wire.temporaryTab,
     fileList: wire.fileList,
     tool: wire.tool,
+    ...terminalOf(wire),
   }
 }
 
@@ -67,7 +76,8 @@ export function viewReply(view: WorkspaceView): WorkspaceViewWire {
  * The whole view from the fields of the route: each Preview tab at its
  * place in the row, or at the end when the row is shorter. A port keeps its
  * first tab. A Preview tab in `base.tabs` is not part of the format, so it
- * drops. The Preview tab of `activePreview` is active when it is open.
+ * drops. The Preview tab of `activePreview` is active when it is open. The
+ * shown terminal of `base` stays.
  */
 export function viewFromWire(
   base: WorkspaceViewWire,
@@ -95,5 +105,6 @@ export function viewFromWire(
     temporaryTab: base.temporaryTab,
     fileList: base.fileList,
     tool: base.tool,
+    ...terminalOf(base),
   }
 }

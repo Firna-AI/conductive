@@ -7,7 +7,7 @@ import {
 } from '../../shared/account'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_TIME } from '../../test-support/fixtures/core'
-import { readCodexDeviceStart } from '../api/read-core'
+import { readCodexDeviceStart } from '../api/read-codex-device'
 import { accountRoutes } from './account-routes'
 import { createBackend, guardScope } from './backend'
 import { readDevOptions } from './options'

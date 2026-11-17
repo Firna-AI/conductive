@@ -28,8 +28,11 @@ the folder of this page.
   `listed-commands.ts` gives `listedCommands`, the commands that the
   palette lists now with their rows, which the keys of the palette run.
   It leaves out Switch to org 1 to 9, which the org rail runs.
-  `page-actions.ts` gives the offers of the parts of the page and
-  `workspaceActionIds`. `palette-org.ts` chooses the org of the palette,
+  `page-actions.ts` gives the offers of the parts of the page,
+  `workspaceActionIds`, and `showsGoToRows`, where the Go to rows and New
+  terminal show. The group of the open workspace in `palette-groups.ts`
+  takes the rows of each part that offers for it, such as its screen and
+  its Terminal tool, in the order of `offeredActionIds`. `palette-org.ts` chooses the org of the palette,
   and gives `switchCommand`, the key of the Switch to row of an org by its
   place in the rail. `controller.ts` gives the open state and the offers
   of one tab, with `show`, the one way to open the palette.

@@ -2,9 +2,11 @@ import { MembersTab } from '../components/members/MembersTab'
 import { SecretsTab } from '../components/secrets/SecretsTab'
 import type { SecretsAccess } from '../components/secrets/secretRights'
 import { ComputerTab } from '../components/settings/ComputerTab'
+import { OrgAgentsTab } from '../components/settings/OrgAgents'
 import {
   DeleteOrgSection,
   LeaveOrgSection,
+  OrgColorSection,
   OrgDetailsSection,
   type ReadOnlyCause,
 } from '../components/settings/OrgSections'
@@ -19,6 +21,7 @@ import {
   type Membership,
   type PersonKey,
 } from '../fixtures/members'
+import { orgAgentsFor } from './orgAgentsState'
 import type { OrgSettingsState } from './OrgSettingsScreen'
 import { settingsOrg } from './settingsOrgs'
 import { settingsRepositoryNotice } from './settingsRepositoryNotice'
@@ -77,10 +80,12 @@ export function TabBody(props: { state: OrgSettingsState }) {
       return (
         <>
           <OrgDetailsSection
+            color={state.color}
             initials={org.initials}
             name={org.name}
             readOnly={readOnly}
           />
+          {readOnly ? null : <OrgColorSection color={state.color} />}
           {readOnly ? null : <DeleteOrgSection name={org.name} />}
           {readOnly === 'suspended' && mayLeave(viewer, settings.members) ? (
             <LeaveOrgSection name={org.name} />
@@ -115,6 +120,8 @@ export function TabBody(props: { state: OrgSettingsState }) {
           script={state.script}
         />
       )
+    case 'agents':
+      return <OrgAgentsTab {...orgAgentsFor(state, org.name, readOnly)} />
     case 'secrets':
       return (
         <SecretsTab

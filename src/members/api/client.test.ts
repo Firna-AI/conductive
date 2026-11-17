@@ -133,6 +133,33 @@ describe('createMembersApi', () => {
     ).rejects.toMatchObject({ status: 200, code: 'invalid_response' })
   })
 
+  it('keeps_the_initials_and_the_colour_of_a_deleted_and_a_restored_org', async () => {
+    const server = new FakeApiServer()
+    const saved = {
+      id: org,
+      name: 'Acme',
+      role: 'admin',
+      initials: 'AC',
+      color: 'green',
+    } as const
+    const deletion = { deletedAt: 1, deletesAt: 2 }
+    server.json('POST', deleteOrgPath(org), { org: { ...saved, deletion } })
+    server.json('POST', restoreOrgPath(org), { org: saved })
+    const api = createMembersApi(server.fetch)
+    expect({
+      deleted: await api.deleteOrg(org, { name: 'Acme' }),
+      restored: await api.restoreOrg(org),
+    }).toEqual({ deleted: { ...saved, deletion }, restored: saved })
+  })
+
+  it('rejects_an_org_reply_that_does_not_match_the_contract', async () => {
+    const server = new FakeApiServer()
+    server.json('POST', restoreOrgPath(org), { org: { id: org } })
+    await expect(
+      createMembersApi(server.fetch).restoreOrg(org),
+    ).rejects.toMatchObject({ status: 200, code: 'invalid_response' })
+  })
+
   it('reads_a_workspace_with_no_name_as_null', async () => {
     const server = new FakeApiServer()
     const { workspace } = workspaceFixtures().created

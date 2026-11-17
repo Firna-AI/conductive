@@ -1,5 +1,5 @@
 import type { Agent } from '../../src/shared/generated/Agent'
-import { decryptAgentLogin } from '../chat/queries'
+import { decryptAgentLogin, type AgentLoginOwner } from '../chat/queries'
 import type { AppDependencies, AppEnv } from '../env'
 import {
   claimEndpointModelRead,
@@ -10,24 +10,28 @@ import { readEndpointModels } from './endpoint-models'
 /** Refresh and dispatch read the saved base without changing the login. */
 export async function refreshEndpointModels(
   env: AppEnv,
-  userId: string,
+  owner: AgentLoginOwner,
   agent: Agent,
   dependencies: Pick<AppDependencies, 'fetch' | 'now'>,
-  { background = false }: { background?: boolean } = {},
+  {
+    background = false,
+    adminId,
+  }: { background?: boolean; adminId?: string } = {},
 ): Promise<boolean> {
   let modelListRead = false
   try {
     const read = await claimEndpointModelRead(
       env.DB,
-      userId,
+      owner,
       agent,
       dependencies.now(),
       background,
+      adminId,
     )
     if (!read) return false
     const login = await decryptAgentLogin(
       env,
-      userId,
+      owner,
       { agent, kind: 'endpoint' },
       read.ciphertext,
     )

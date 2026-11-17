@@ -1,8 +1,8 @@
 # Sub-workspaces
 
 This doc holds the requirements and the decisions in force for
-sub-workspaces. It covers the parent link, the depth limit, and the
-section of a new sub-workspace. It also covers the nested rows of the
+sub-workspaces. It covers the parent link, when to nest, the depth
+limit, and the section of a new sub-workspace. It also covers the nested rows of the
 workspace list, the place of a row, the moves of a tree, and the agent
 context. It belongs to [Workspaces and sandboxes](workspaces-and-sandboxes.md).
 [Workspace calls](workspace-calls.md) states the fields of the calls. A
@@ -18,9 +18,11 @@ A decision number names a dated record, as
 sub-workspace decision number, such as sub-workspace decision 4, names the
 dated record of one decision of the change that adds sub-workspaces. Its
 plan keeps these records while the change is open. Its pull request keeps
-them after the merge. A parent-move decision number names a decision of
-the change that adds parent changes, as
-[Parent changes](parent-changes.md) says.
+them after the merge. A nesting guidance decision number, such as nesting
+guidance decision 1, names the dated record of one decision of the change
+that says when to nest. The pull request of that change keeps its records.
+A parent-move decision number names a decision of the change that adds
+parent changes, as [Parent changes](parent-changes.md) says.
 
 ## Terms
 
@@ -70,6 +72,31 @@ the change that adds parent changes, as
   [Parent changes](parent-changes.md) says (parent-move decision 1 A). No
   other call or action changes it, also not a section move, an Archive, a
   Restore, or Continue.
+
+## When to nest
+
+- The agent instructions and the create text of the workspace tools say
+  when to nest a new workspace (nesting guidance decision 1).
+- The agent nests a new workspace under the calling workspace when the
+  work belongs to the task of the calling workspace. The cases are:
+  - A part of a large task that can run in parallel.
+  - Follow-up work that the task starts.
+  - Work in another repository for the same task.
+  - A change that needs its own pull request.
+- The agent makes a top-level workspace for work that does not belong to
+  the task.
+- A workspace has one branch at a time. So each separate pull request
+  needs its own workspace.
+- When a member names the place of the new workspace, the agent follows
+  the member. Reason: the cases are guidance, not a rule of the create
+  call.
+- At the deepest depth, the agent creates a sibling in place of a
+  sub-workspace, as [The sibling advice](#the-sibling-advice) says.
+- Reason for the cases: the user asked that agents group the workspaces
+  of one task, and that agents split each separate pull request into its
+  own workspace. Without the cases, the tools say only how to nest.
+- The Worker does not check the cases. A create call with or without a
+  parent works as before.
 
 ## The depth limit
 
@@ -257,7 +284,8 @@ the change that adds parent changes, as
 ## Agent context
 
 - The agent instructions of each new session say where the workspace is
-  in its tree, and how to nest a new workspace.
+  in its tree, how to nest a new workspace, and
+  [when to nest](#when-to-nest) one.
   [What the instructions hold](agent-instructions.md#what-the-instructions-hold)
   lists these facts and this guidance.
 - A parent change can make these facts old.
