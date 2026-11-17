@@ -10,7 +10,9 @@ of the agents. The other terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A secrets decision number names a decision of the change that adds
-[secrets](secrets.md), as that doc says.
+[secrets](secrets.md), as that doc says. A parent-move decision number
+names a decision of the change that adds
+[parent changes](parent-changes.md), as that doc says.
 
 ## Terms
 
@@ -78,6 +80,9 @@ says. A secrets decision number names a decision of the change that adds
   - `get_workspace` gives the parent and the sub-workspaces of a
     workspace. `list_workspaces` with a parent lists the sub-workspaces of
     one workspace.
+  - `move_workspace` with a target changes the parent of a workspace. A
+    move can change the parent and the depth of this workspace, and
+    `get_workspace` gives the current ones.
   - A message that ends with a `Sent by:` line comes from an agent of the
     session that the line links to, through the workspace tools.
   - The agent names a file or a folder of the repository in a chat reply
@@ -100,12 +105,6 @@ says. A secrets decision number names a decision of the change that adds
   Agents that decide from each refusal of a tool were rejected, because
   they spend calls on background input or ask a member. A guide that names
   each computer tool was rejected, because the provider can change them.
-- Reason for the parent and the depth: they never change. So they follow
-  [the rule for facts that change](#the-same-text-for-the-life-of-a-session).
-  The sub-workspaces change, so the instructions name the calls that list
-  them.
-- A line in each message with the parent and the depth, as the branch
-  line, was rejected. Reason: no fact of that line can change.
 - When an older or manual runner start lacks the link or the depth of the
   workspace, the runner warns and continues. Its instructions then leave
   out the workspace ID, link, depth, parent, and deepest depth, and the
@@ -147,6 +146,24 @@ says. A secrets decision number names a decision of the change that adds
   branch. The Worker's record then names the new branch, and the pull
   request bar follows it. Continue is a branch change of the app, not a
   rename by the agent.
+
+### The parent and the depth
+
+- A [parent change](parent-changes.md) changes the parent and the depth of
+  a workspace, and the depth of each workspace under it.
+- The instructions still hold the parent and the depth (parent-move
+  decision 2 A). They also say that a move can change them, and that
+  `get_workspace` gives the current ones. The sub-workspaces change too,
+  so the instructions name the calls that list them.
+- Accepted cost: a running session keeps the parent and the depth of its
+  instructions. A new session gets the parent and the depth of the last
+  start of the cloud computer.
+- These ways were rejected (parent-move decision 2), because the user
+  chose the smallest change:
+  - A tree line in each message with the current parent and depth, as
+    [the branch line](#the-branch-line) of decision 227.
+  - Instructions without the parent and the depth, so that each agent
+    reads them with `get_workspace`.
 
 ## The sender line
 
@@ -239,11 +256,14 @@ says. A secrets decision number names a decision of the change that adds
   base prompt changes later. An example is a new default branch of the
   repository at a later resume.
 - A new session gets the instructions with the current facts and wording.
+  The parent and the depth are the exception, as
+  [The parent and the depth](#the-parent-and-the-depth) says.
 - A session that started without agent instructions can get them once, at
   a later turn. It then keeps that text.
-- Apart from the branches, the instructions hold no fact that changes
-  during the work, such as the date, the Git state, or the pull request
-  state. The agent reads such facts with its tools.
+- Apart from the branches, the parent, and the depth, the instructions
+  hold no fact that changes during the work, such as the date, the Git
+  state, or the pull request state. The agent reads such facts with its
+  tools.
 - Reason: a change of the text rewrites the prompt cache of the
   conversation. An agent can also keep the first instructions of a session
   until it summarizes the conversation.

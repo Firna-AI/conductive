@@ -111,10 +111,18 @@ These are my calls, made on 2026-11-17 under the answers above.
   record already holds `parentId`, and the list places each row from it.
 - **The creator record:** a move changes only `parent_workspace_id`.
   `created_by_workspace_id` keeps the creator.
+- **Input edge cases:** `topLevel: false` is no target. `parentId: null`
+  gets 400 `invalid_input`, under the general wrong-form rule. A create
+  that fails its second depth check gets `nesting_limit`, as a create
+  does today. Reason: each follows an existing rule.
+- **The new protocol page:** the parent change rules live in
+  `docs/protocol/parent-changes.md`. Reason: `sub-workspaces.md` would
+  pass 300 lines with them.
 
 Contract owners:
 
-- [Sub-workspaces](../docs/protocol/sub-workspaces.md).
+- [Sub-workspaces](../docs/protocol/sub-workspaces.md) and
+  [Parent changes](../docs/protocol/parent-changes.md).
 - [Workspace calls](../docs/protocol/workspace-calls.md).
 - [Agent instructions](../docs/protocol/agent-instructions.md).
 - The [agent workspace tools README](../worker/tools/README.md) and its
@@ -129,27 +137,27 @@ Depends on: none
 The docs state the parent change, its refusals, and the agent context
 rule. No mockup changes, because the app gets no new control.
 
-- [ ] `docs/protocol/sub-workspaces.md`: replace "The parent link never
+- [x] `docs/protocol/sub-workspaces.md`: replace "The parent link never
       changes after the create" with the parent change of parent-move
       decision 1. Add the refusals of parent-move decision 3, the depth
       check over the moved tree, and the new reason for counting archived
       links. Keep the no-op of a section move on a nested row. Say that the
       app offers no way to change a parent.
-- [ ] `docs/protocol/workspace-calls.md`: give the new fields of "Move a
+- [x] `docs/protocol/workspace-calls.md`: give the new fields of "Move a
       workspace", the CLI flags, the errors, and the notices.
-- [ ] `docs/protocol/agent-instructions.md`: replace "they never change"
+- [x] `docs/protocol/agent-instructions.md`: replace "they never change"
       with parent-move decision 2. The instructions say that a move can
       change the parent and the depth, and that `get_workspace` gives the
       current ones. Keep the rejection of a tree line, with its new reason.
-- [ ] `docs/architecture.md`: change the term "Sub-workspace", which says
+- [x] `docs/architecture.md`: change the term "Sub-workspace", which says
       "that an agent created under".
-- [ ] Read both legal pages in full, `src/marketing/terms.ts` and
+- [x] Read both legal pages in full, `src/marketing/terms.ts` and
       `src/marketing/privacy.ts`. Update each sentence that restates a
       changed fact.
-- [ ] Read each public guide in `src/marketing/docs/` in full. Update each
+- [x] Read each public guide in `src/marketing/docs/` in full. Update each
       sentence that restates a changed fact, such as the moves in
       `src/marketing/docs/workspaces.md`.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
 
 ## Milestone 2: Worker parent change
 

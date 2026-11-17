@@ -165,14 +165,15 @@ Every member of the org sees the same order of sections.
 
 You can also select **Move to section** in the top-level row's menu.
 This moves the whole tree to the top of the section you choose.
-A nested row moves only with its top-level workspace.
+In the list, a nested row moves only with its top-level workspace.
 Its menu has no **Move to section**.
+To move a workspace under another parent, or out of its tree, ask an agent.
 
 ## Let an agent manage workspaces
 
 Ask an agent to create, inspect, or rename a workspace.
 It can also move a top-level workspace and its whole tree to the top of a section.
-If it tries to move a nested workspace, nothing moves.
+If it moves a nested workspace only to another section, nothing moves.
 The reply names the top-level workspace to move instead.
 It can find workspaces by owner, state, repository, name, parent, recent activity, and archive state.
 Ask for your workspaces, or give another member's name or GitHub login.
@@ -185,16 +186,26 @@ The agent can name a parent workspace in the same org when it creates the worksp
 Without a parent, the new workspace shows at the top level.
 If the agent also names another section, the sub-workspace still follows its parent.
 
+An agent can also move a workspace under another parent, or out of its tree to the top level.
+Every sub-workspace under the workspace moves with it.
+Under the new parent, the workspace and its sub-workspaces join the parent's section.
+At the top level, they go to the top of their section, or of a section that the agent names.
+A workspace cannot move under itself or under a workspace nested under it.
+
 Each sub-workspace has its own cloud computer, branch, sessions, and pull request.
 It also has its own Archive and Restore.
-The agent knows its workspace's parent and nesting level.
+The agent learns its workspace's parent and nesting level when its session starts.
+After a move, a new session gets the new ones only after the cloud computer starts again.
+A session that started before the move keeps the old ones.
+Ask the agent to look up its workspace for the current ones.
 It can find a workspace's parent and its direct sub-workspaces.
 
 Sub-workspaces can nest three levels below a top-level workspace.
-Archived parents still count toward this limit.
-A deeper request fails with advice to create a sibling of the deepest workspace.
+Archived workspaces still count toward this limit.
+A deeper create fails with advice to create a sibling of the deepest workspace.
 A sibling shares the same parent.
 The advice asks for a one-word name prefix that shows the group, such as `Limits: `.
+A move that goes deeper fails, and nothing moves.
 
 Agents can also create and delete sections.
 Deleting a section moves its workspaces to **General**.

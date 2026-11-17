@@ -34,6 +34,9 @@ This page lists each protocol doc and what it covers.
   - [Sub-workspaces](../protocol/sub-workspaces.md): the parent link, the
     depth limit, the nested rows of the list, an archived parent, the moves
     of a tree, and the agent context.
+    - [Parent changes](../protocol/parent-changes.md): the moves that nest
+      a workspace under another parent or take it out of its tree, the
+      place of the moved tree, and the refusals.
   - [Workspace tools](../protocol/workspace-tools.md)
     - [Temporary tabs](../protocol/temporary-tabs.md): the one file or diff
       tab that the next press replaces, what opens and keeps it, and its
