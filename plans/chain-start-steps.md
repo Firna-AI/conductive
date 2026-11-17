@@ -57,7 +57,11 @@ Contract owners:
   - Alarm event wall times in the Worker logs can include shared timers
     that the Durable Object drains, so they are upper bounds too. The
     exact 2.0 s records are watchdog slices of one slow task (workspace
-    317). The hop times above come from the sandbox logs, not from them.
+    317). Back-to-back records of 1.2–1.6 s come from a live activity
+    timer that keeps the event open until the next alarm, not from more
+    work. Workspace 317 reproduced this in the native runtime on 17
+    November 2026. The hop times above come from the sandbox logs, not
+    from these records.
 - **Problem:** each hop costs 2.3–3.9 s, while the commands often take
   under 1 s.
 - **Impact if no action:** every create keeps about 9–15 s of hops, and
