@@ -11,6 +11,7 @@ use tokio::task::JoinSet;
 use crate::clock::Clock;
 use crate::error::Result;
 use crate::link::ports::{LinkUpdate, RunnerLink};
+use crate::startup_log::StartupLog;
 use crate::state::store::EventStore;
 use crate::update::{IdleUpdate, ReleaseReadiness};
 
@@ -55,6 +56,7 @@ pub struct RunnerCore {
     clock: Arc<dyn Clock>,
     handler: Arc<dyn CommandHandler>,
     releases: Arc<dyn ReleaseReadiness>,
+    startup_log: Option<Arc<dyn StartupLog>>,
 }
 
 impl RunnerCore {
@@ -72,7 +74,14 @@ impl RunnerCore {
             clock,
             handler,
             releases,
+            startup_log: None,
         }
+    }
+
+    /// Share the process startup measurements supplied by the composition root.
+    pub fn with_startup_log(mut self, startup_log: Arc<dyn StartupLog>) -> Self {
+        self.startup_log = Some(startup_log);
+        self
     }
 
     async fn connected(
@@ -106,6 +115,7 @@ impl RunnerCore {
                 update = &mut step => {
                     match update {
                         Ok(LinkUpdate::Connected) => {
+                            if let Some(log) = &self.startup_log { log.welcomed(); }
                             welcomed = true;
                             let connected = self.handler.connected();
                             jobs.spawn(async move { (round, connected.await) });
@@ -166,10 +176,15 @@ impl Runner for RunnerCore {
                 _ = async { let _ = shutdown.wait_for(|stopped| *stopped).await; } => break,
                 connected = self.link.connect() => connected,
             };
-            if connected.is_ok() && self.connected(&mut shutdown, &mut jobs, round).await {
-                swap_close = self.link.close().await;
-                exit = RunExit::Swap;
-                break;
+            if connected.is_ok() {
+                if let Some(log) = &self.startup_log {
+                    log.connected();
+                }
+                if self.connected(&mut shutdown, &mut jobs, round).await {
+                    swap_close = self.link.close().await;
+                    exit = RunExit::Swap;
+                    break;
+                }
             }
             if *shutdown.borrow() || shutdown.has_changed().is_err() {
                 break;

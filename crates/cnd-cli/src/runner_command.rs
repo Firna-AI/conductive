@@ -30,12 +30,14 @@ use cnd_runner::repository::git::{Cancellation, ChildGit};
 use cnd_runner::repository::io::LocalRepositoryIo;
 use cnd_runner::runtime::{RunExit, Runner, RunnerCore};
 use cnd_runner::socket::WebSocketConnector;
+use cnd_runner::startup_log::{ProcessStartupLog, StartupLog};
 use cnd_runner::state::store::{DurableStore, EventStore};
 use cnd_runner::update::ReleaseReadiness;
 use cnd_runner::watcher::linux::LinuxWatchDriver;
 use cnd_runner::watcher::service::ReportWatchService;
 use tokio::signal::unix::{SignalKind, signal};
 use tokio::sync::watch;
+use tokio::time::Instant;
 use uuid::Uuid;
 
 use crate::error::{ErrorResultExt, Result};
@@ -45,6 +47,7 @@ use crate::release::VERSION;
 pub(crate) const SDK_HELPER_PART: &str = "sdk-helper";
 
 pub(crate) async fn execute() -> Result<()> {
+    let startup_log: Arc<dyn StartupLog> = Arc::new(ProcessStartupLog::new(Instant::now()));
     let environment: BTreeMap<String, String> = std::env::vars().collect();
     let cwd = std::env::current_dir().internal()?;
     let home = environment
@@ -109,6 +112,7 @@ pub(crate) async fn execute() -> Result<()> {
                 helpers.clone(),
                 executable.clone(),
                 updates.clone(),
+                startup_log.clone(),
                 shutdown.clone(),
             )
             .await?;
@@ -130,6 +134,7 @@ async fn run_once(
     helpers: Arc<NodeHelpers>,
     executable: PathBuf,
     releases: Arc<dyn ReleaseReadiness>,
+    startup_log: Arc<dyn StartupLog>,
     shutdown: watch::Receiver<bool>,
 ) -> Result<RunExit> {
     let clock = Arc::new(SystemClock);
@@ -158,13 +163,16 @@ async fn run_once(
         git: Arc::new(ChildGit),
         io: Arc::new(LocalRepositoryIo),
     });
-    let files = Arc::new(FileReporter::new(
-        repositories.open(Cancellation::default()),
-        configuration.default_branch.clone(),
-        saving.clone(),
-        filter.clone(),
-        loaded.file_revisions.clone(),
-    ));
+    let files = Arc::new(
+        FileReporter::new(
+            repositories.open(Cancellation::default()),
+            configuration.default_branch.clone(),
+            saving.clone(),
+            filter.clone(),
+            loaded.file_revisions.clone(),
+        )
+        .with_startup_log(startup_log.clone()),
+    );
     let ports: Arc<dyn PortReports> = Arc::new(PortReporter::new(
         Arc::new(ProcPortScanner::new(
             Arc::new(DiskProcReader),
@@ -200,20 +208,25 @@ async fn run_once(
         },
         loaded.clone(),
     ));
-    let handler = Arc::new(ReportCommandHandler::new(
-        ReportDependencies {
-            files,
-            ports: Some(ports),
-            emitter: saving,
-            link: link.clone(),
-            store: store.clone(),
-            clock: clock.clone(),
-            filter,
-            watches: Some(watches),
-            next: engine,
-        },
-        loaded.reports.commands,
-    ));
-    let runner: Arc<dyn Runner> = Arc::new(RunnerCore::new(link, store, clock, handler, releases));
+    let handler = Arc::new(
+        ReportCommandHandler::new(
+            ReportDependencies {
+                files,
+                ports: Some(ports),
+                emitter: saving,
+                link: link.clone(),
+                store: store.clone(),
+                clock: clock.clone(),
+                filter,
+                watches: Some(watches),
+                next: engine,
+            },
+            loaded.reports.commands,
+        )
+        .with_startup_log(startup_log.clone()),
+    );
+    let runner: Arc<dyn Runner> = Arc::new(
+        RunnerCore::new(link, store, clock, handler, releases).with_startup_log(startup_log),
+    );
     runner.run(shutdown).await.internal()
 }

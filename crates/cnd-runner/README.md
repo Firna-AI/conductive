@@ -51,6 +51,27 @@ The handler queues commands in wire order. It must stop its work when shutdown s
 The runtime keeps each socket step across report completions.
 A failed report releases that step before closing the socket.
 
+The CLI captures a monotonic start time on entry to `conductive runner`,
+before configuration and state loading. It shares one `StartupLog` across
+the runtime, file reporter, and report handler through `with_startup_log`.
+The service writes these four INFO lines to the journal once per process:
+
+```text
+The runner made its first connection. elapsed_ms=20
+The runner received its first welcome. elapsed_ms=35
+The runner finished its first repository scan. duration_ms=12 file_count=2
+The runner emitted its first ready event. elapsed_ms=58
+```
+
+Milliseconds are whole numbers. The lines contain fixed text and counts only.
+Connection time ends when the link connects successfully. Welcome time ends
+when the link accepts its first valid welcome. Scan time covers the first
+connection's repository capture, excluding queue waits and report output.
+The file count excludes directories and precedes report filtering.
+A failed capture reports zero files and keeps its existing warning.
+Ready time ends after the first successful `runner.ready` emission.
+Reconnects keep the same measurements and emit none of these lines again.
+
 While connected, the runtime checks the injected release store every minute.
 `CommandHandler::busy` covers active turns, background waits, queued and executing
 mailbox work, accepted turns without saved ends, and report requests.
@@ -162,6 +183,7 @@ and connection drops. It does not run the Worker.
 - [socket.rs](src/socket.rs): `WebSocketConnector` supplies the production TLS socket.
 - [emitter.rs](src/emitter.rs): `SavingEmitter` applies the failed-save retry policy.
 - [runtime.rs](src/runtime.rs): `RunnerCore` recovers turns and owns reconnection and shutdown.
+- [startup_log.rs](src/startup_log.rs): `ProcessStartupLog` records the four startup measurements once per process.
 - [update.rs](src/update.rs): `ReleaseReadiness` supplies local release conditions for an idle swap.
 - [handler.rs](src/engine/handler.rs): `AgentEngine` routes turns and Stop to independent session actors.
 - [service.rs](src/filter/service.rs): `CredentialFilter` filters chat, report labels, and helper warnings.

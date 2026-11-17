@@ -225,10 +225,12 @@ Verification evidence: `.context/runner-ready-sooner/milestone-3/`.
 
 Depends on: 2, 3
 
-- [ ] Log the four lines of design call 7 at info level.
-- [ ] Test that each line holds fixed text, a whole number of milliseconds,
+- [x] Log the four lines of design call 7 at info level.
+- [x] Test that each line holds fixed text, a whole number of milliseconds,
       and a count, and no path or ID.
-- [ ] Update the runner crate README with the log lines.
+- [x] Update the runner crate README with the log lines.
+
+Verification evidence: `.context/runner-ready-sooner/milestone-4/`.
 
 ## Milestone 5: Verification, commit, review, and pull request
 
