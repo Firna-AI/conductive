@@ -7,14 +7,33 @@ use unimock::{MockFn, Unimock, matching};
 
 use crate::error::{ErrorResultExt, Result};
 use crate::ports::{HttpMock, HttpResponse};
-use crate::process::{CommandInput, CommandResult, ProcessMock};
+use cnd_runner_interface::tools::secret_results::CommandResult;
+
+use crate::process::{CommandInput, ProcessMock};
 
 use super::support::{Adapter, allowed, http, run};
 
 #[tokio::test]
 async fn secret_list_in_both_adapters_removes_values_and_unknown_fields() -> Result<()> {
     for mcp in [false, true] {
-        let raw = json!({"secrets":[{"name":"TOKEN","description":"Deploy","available":true,"value":"never-return-this"}],"values":{"TOKEN":"never-return-this"}});
+        let names = [
+            ("TOKEN", "TOKEN"),
+            ("aMixed_9", "aMixed_9"),
+            ("__", "__"),
+            ("Cloudflare (read-only)", "CLOUDFLARE_READ_ONLY"),
+            ("9key", "_9KEY"),
+            ("9KEY", "_9KEY"),
+            ("9-key", "_9_KEY"),
+            ("__bad-key__", "BAD_KEY"),
+            ("Clé_API", "CL__API"),
+            ("...", "SECRET"),
+            ("全", "SECRET"),
+            ("", "SECRET"),
+            ("A=B", "A_B"),
+            ("A\0B", "A_B"),
+        ];
+        let entries: Vec<_> = names.iter().map(|(name, _)| json!({"name":name,"description":"Deploy","available":true,"value":"never-return-this"})).collect();
+        let raw = json!({"secrets":entries,"values":{"TOKEN":"never-return-this"}});
         let observed = run(
             if mcp {
                 Adapter::Mcp
@@ -32,8 +51,8 @@ async fn secret_list_in_both_adapters_removes_values_and_unknown_fields() -> Res
         assert_eq!(observed.stderr, "");
         assert!(!observed.stdout.contains("never-return-this"));
         let result = observed.result()?;
-        let expected =
-            json!({"secrets":[{"name":"TOKEN","description":"Deploy","available":true}]});
+        let entries: Vec<_> = names.iter().map(|(name, variable)| json!({"name":name,"description":"Deploy","available":true,"environmentVariable":variable})).collect();
+        let expected = json!({"secrets":entries});
         let expected = if mcp {
             json!({"content":[{"type":"text","text":expected.clone()}],"structuredContent":expected,"isError":false})
         } else {
@@ -46,7 +65,7 @@ async fn secret_list_in_both_adapters_removes_values_and_unknown_fields() -> Res
 
 #[tokio::test]
 async fn allowed_runs_send_context_and_put_values_only_in_the_process_environment() -> Result<()> {
-    for (mcp, exit_code) in [(false, 0), (false, 7), (true, 0), (true, 7)] {
+    for (mcp, exit_code) in [(true, 0), (true, 7), (false, 0), (false, 7)] {
         let http = Unimock::new(HttpMock::send.some_call(matching!(_)).answers(&|_, request| {
             assert_eq!(request.url, "https://machine.test/v1/tools/secrets/run");
             assert_eq!(request.token, "workspace-token");
@@ -81,15 +100,22 @@ async fn allowed_runs_send_context_and_put_values_only_in_the_process_environmen
                 })
             }),
         ));
-        let observed = run(if mcp { Adapter::Mcp } else { Adapter::CliSilent },
+        let observed = run(if mcp { Adapter::Mcp } else { Adapter::CliError },
             &["secrets","run","--secret","TOKEN","--secret=KEY","--reason","  Deploy\nnow  ","--","printf","%s","$TOKEN"],
             "run_with_secrets", json!({"names":["TOKEN","KEY"],"command":"printf %s '$TOKEN'","reason":"  Deploy\nnow  "}), http, process).await?;
-        assert_eq!(observed.stderr, "");
+        assert_eq!(
+            observed.stderr,
+            if mcp {
+                ""
+            } else {
+                "environmentVariables: {\"KEY\":\"KEY\",\"TOKEN\":\"TOKEN\"}\n"
+            }
+        );
         assert!(!observed.stdout.contains("child-value"));
         assert!(!observed.stdout.contains("second-value"));
         assert_eq!(observed.status, if mcp { 0 } else { exit_code });
         let result = if mcp { observed.result()? } else { Value::Null };
-        let completed = json!({"status":"completed","stdout":"[redacted]","stderr":"safe error","exitCode":exit_code});
+        let completed = json!({"status":"completed","stdout":"[redacted]","stderr":"safe error","exitCode":exit_code,"environmentVariables":{"TOKEN":"TOKEN","KEY":"KEY"}});
         let expected = if mcp {
             json!({"content":[{"type":"text","text":completed.clone()}],"structuredContent":completed,"isError":exit_code != 0})
         } else {

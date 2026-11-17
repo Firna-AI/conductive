@@ -39,7 +39,10 @@ Description and all-agents changes keep the version and last reveal.
 
 The two fixed machine routes use a workspace bearer token on the machine
 host. The outer Worker forwards them only to that token's workspace object.
-The contracts and path helpers live in
+The Rust-owned tool contracts live in
+[secrets.rs](../../crates/cnd-runner-interface/src/tools/secrets.rs).
+The Worker imports their generated TypeScript directly.
+The browser contracts and path helpers stay in
 [secret-requests.ts](../../src/shared/secret-requests.ts).
 
 | Method and path | Input | Reply |
@@ -166,6 +169,8 @@ filter state. No automation-specific rule changes these grants.
 - [data.ts](data.ts): `listSecrets`, `readSecret`, and the encryption context.
 - [access.ts](access.ts): the creator and admin rights and guarded SQL access.
 - [writes.ts](writes.ts): secret creation, replacement, deletion, and the all-agents mark.
+- [names.ts](names.ts): `requireSecretName`, used at insertion and before a combined save writes.
+- [secret-names.ts](../../src/shared/secret-names.ts): the shared browser-safe name predicate and refusal text.
 - [reveals.ts](reveals.ts): `recordSecretReveal`, the guarded reveal record and ciphertext read.
 - [capabilities-data.ts](capabilities-data.ts): workspace capabilities and session approval metadata.
 - [capabilities-writes.ts](capabilities-writes.ts): workspace pre-approvals and removal of session approvals.

@@ -1,7 +1,8 @@
+import type { RunWithSecretsRequest } from '../../src/shared/generated/RunWithSecretsRequest'
+import type { RunWithSecretsResponse } from '../../src/shared/generated/RunWithSecretsResponse'
+import type { ListSecretsResponse } from '../../src/shared/generated/ListSecretsResponse'
 import { TOOL_TURN_HEADER } from '../../src/shared/agent-tools'
 import type {
-  RunWithSecretsRequest,
-  RunWithSecretsResponse,
   SecretRequest,
   AnswerSecretRequest,
 } from '../../src/shared/secret-requests'
@@ -103,7 +104,7 @@ export class SecretRuntime {
       this.waiters.get(record.request.id)?.()
   }
 
-  async list(request: Request) {
+  async list(request: Request): Promise<ListSecretsResponse> {
     const workspace = await machineWorkspace(request, this.env)
     if (!this.matches(workspace.id))
       throw new HttpError(

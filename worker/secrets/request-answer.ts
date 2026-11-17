@@ -9,6 +9,7 @@ import { encrypt, randomToken } from '../security/crypto'
 import { requireSecretWriter } from './access'
 import { secretValueContext } from './data'
 import { secretGrants, sessionApproval } from './grant-data'
+import { requireSecretName } from './names'
 import type { StoredSecretRequest, TemporarySecret } from './request-records'
 import { openSecretRequest, temporaryValueContext } from './request-records'
 import { secretInputError } from './request-input'
@@ -56,6 +57,8 @@ export async function answerSecretRequest(
       throw secretInputError()
   }
   await requireSecretWriter(runtime.env.DB, record.orgId, member.id)
+  if (answer.kind === 'values' && answer.lifetime === 'save')
+    for (const secret of missing) requireSecretName(secret.name)
   const lateAnswer = record.request.state === 'late'
   const now = runtime.now()
   const approvals = record.request.secrets.flatMap((secret) =>

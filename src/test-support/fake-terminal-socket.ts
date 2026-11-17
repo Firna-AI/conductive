@@ -15,7 +15,11 @@ export class FakeTerminalSocket extends EventTarget implements TerminalSocket {
     super()
     this.terminalId = terminalId
     this.terminal = terminal
-    this.stopClose = terminal.onClose(() => this.close())
+    // The Worker closes with 1011 when the sandbox side ends, and a drop of
+    // the fake shell reaches the page with no close frame, as 1006.
+    this.stopClose = terminal.onClose((end) =>
+      this.close(end === 'lost' ? 1006 : 1011),
+    )
     queueMicrotask(() => {
       if (this.readyState !== 0) return
       this.readyState = 1
@@ -55,11 +59,15 @@ export class FakeTerminalSocket extends EventTarget implements TerminalSocket {
     })
   }
 
-  close(): void {
+  /**
+   * Ends the socket. Its close event carries `code`, as a browser socket
+   * does: 1006 for a drop with no close frame, such as at a deploy.
+   */
+  close(code = 1000): void {
     if (this.readyState === 3) return
     this.readyState = 3
     this.stopData?.()
     this.stopClose()
-    this.dispatchEvent(new Event('close'))
+    this.dispatchEvent(Object.assign(new Event('close'), { code }))
   }
 }

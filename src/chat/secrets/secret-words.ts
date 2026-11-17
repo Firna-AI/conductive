@@ -1,3 +1,4 @@
+import type { SecretRunGrant } from '../../shared/generated/SecretRunGrant'
 import type { MessageSender } from '../../shared/generated/MessageSender'
 import {
   deniedNote,
@@ -16,7 +17,6 @@ import {
 import type {
   SecretRequest,
   SecretRequestEnd,
-  SecretRunGrant,
   SecretValueLifetime,
   SecretWorkspaceEvent,
 } from '../../shared/secret-requests'

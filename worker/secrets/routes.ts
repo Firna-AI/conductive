@@ -115,7 +115,7 @@ export async function fetchSecretRequests(
     }
     return methodResponse(value ? 'DELETE' : app?.[1] ? 'POST' : 'GET')
   } catch (error) {
-    return privateResponse(errorResponse(error))
+    return privateResponse(errorResponse(error, request))
   }
 }
 

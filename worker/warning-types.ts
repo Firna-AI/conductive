@@ -11,6 +11,7 @@ import type {
 } from './warning-values'
 import type { GatewayCheckErrorKind } from './model-gateway/check-error'
 import type { GatewayRefusal } from './model-gateway/errors'
+import type { UnexpectedErrorFields } from './unexpected-error'
 
 export const SIMPLE_WARNINGS = {
   workspace_alarm_failed:
@@ -162,6 +163,7 @@ export type WorkerWarning =
       resource: RepairKind
       limit: number
     }
+  | ({ kind: 'unexpected_error' } & UnexpectedErrorFields)
   | {
       kind: 'lifecycle_repair_pending'
       workspaces: number

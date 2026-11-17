@@ -4,11 +4,13 @@ This doc holds the requirements and the decisions in force for the secrets
 of an org. A secret is a named value that agents use in one command at a
 time, after a member allows it. This doc covers the secrets and their
 storage, the Secrets tab, the rights of each role, Reveal, the mark for all
-agents, the grants, Capabilities with Mac access, automation runs, and the
-risks that stay. [Secret requests](secret-requests.md) covers the two calls
-of the workspace tools, the requests and their time limit, late answers,
-temporary values, and what the chat shows. This doc belongs to
-[Tokens and secrets](tokens-and-secrets.md). The
+agents, the grants, automation runs, and the risks that stay.
+[Capabilities](capabilities.md) covers the control with Mac access.
+[Secret variables](secret-variables.md) covers the names of new secrets
+and the environment of the command. [Secret requests](secret-requests.md)
+covers the two calls of the workspace tools, the requests and their time
+limit, late answers, temporary values, and what the chat shows. This doc
+belongs to [Tokens and secrets](tokens-and-secrets.md). The
 [mockup catalogue](../mockups/catalogue-secrets.md) draws each screen. The
 terms are those of the [architecture doc](../architecture.md#terms).
 
@@ -64,10 +66,12 @@ while the change is open. Its pull request keeps them after the merge.
 
 - The Worker returns the values of a run only to the workspace tool that
   made the run call. The tool starts one command with each value in its
-  environment, under the name of its secret. It puts the value nowhere
-  else (secrets decision 1 B).
-- The agent and the model see only the names of the secrets. No reply of
-  the workspace tools holds a value.
+  environment. It puts the value nowhere else (secrets decision 1 B).
+- The command reads each value under the variable name of its secret, as
+  [Secret variables](secret-variables.md) says.
+- The agent and the model see the names of the secrets and their variable
+  names, never a value. No reply and no error of the workspace tools holds
+  a value.
 - Reason: the value then stays out of the model, the agent session log,
   and the chat in normal use. Each program can read the value from its
   environment, as it reads an env var.
@@ -101,6 +105,10 @@ while the change is open. Its pull request keeps them after the merge.
 - The list never holds a value. Each value shows as dots.
 - Add secret takes a name, a description, and a value. The form of an
   admin also has the switch for all agents, which starts off.
+- The hint of the name gives the rule of
+  [New names](secret-variables.md#new-names). When the Worker refuses a
+  name that breaks the rule, the error shows in place of that hint. Each
+  field keeps its text.
 - In a suspended org, the tab shows no action, also no Reveal. The Worker
   refuses each change there, as
   [What members of a suspended org keep](operator-actions.md#what-members-of-a-suspended-org-keep)
@@ -180,7 +188,7 @@ while the change is open. Its pull request keeps them after the merge.
   one command only was rejected, because a process can name one command
   and run another.
 - The person who creates a workspace in New workspace can pre-approve each
-  secret of the org, as [Capabilities](#capabilities) says.
+  secret of the org, as [Capabilities](capabilities.md) says.
 - A workspace that an agent creates with the workspace tools starts with
   no pre-approval. So does the run workspace of an automation. Reason: the
   task gives the pre-approval to a person who creates a workspace.
@@ -190,73 +198,13 @@ while the change is open. Its pull request keeps them after the merge.
 
 ## Capabilities
 
-- New workspace has a small Capabilities icon, with its label on hover
-  (secrets decision 6 G). It opens a control with two parts for now: the
-  secrets to pre-approve, and Mac access.
-- Reason: the icon keeps the page and the dialog plain, and later
-  features, such as MCP servers, add their parts to the same control. A
-  separate picker of secrets in New workspace was rejected for that
-  reason.
-- The create takes the choices of the control, as
-  [The create](create-a-workspace.md#the-create) says.
-- Each workspace shows the same icon beside its message box
-  (secrets decision 8 B). Every member can see and change the
-  pre-approvals and Mac access there.
-- In a workspace, the control also lists each session approval, with its
-  session, the member who allowed it, and the time. It lists each value
-  for this workspace, with the member who gave it. Each of them has
-  Remove.
-- A value for 15 minutes is not in the list. It ends by itself.
-- A secret for all agents shows as checked, with the words "All agents",
-  and its checkbox does not change. The control links to the Secrets tab,
-  or to Add a secret when the org has no secret.
-- A change in the control applies to each session of the workspace from
-  that moment.
-- Reason: the control gives the undo of a wrong grant, and it keeps each
-  capability of a workspace in one place. A control that only the
-  workspace owner and the admins change was rejected, because every member
-  can already allow a request in each session (secrets decision 4 B).
+[Capabilities](capabilities.md) states the control of New workspace and of
+each workspace, with its secrets part.
 
 ### Mac access
 
-- Mac access is off in each new workspace, also in a workspace that an
-  agent or an automation creates (secrets decision 18 A). A member turns
-  it on in the Capabilities of the workspace, or in the Capabilities of
-  New workspace before the create.
-- Reason: agents can reach a Mac only after a member chooses it for the
-  workspace. So text that steers an agent cannot reach a Mac through a
-  new workspace or through an automation run.
-- Mac access was turned off one time in each workspace that existed
-  before this rule, also where a member had turned it on (secrets
-  decision 19 B). Reason: the switch was new, so few members had chosen
-  its value themselves.
-- Keeping Mac access on in the workspaces that existed then was rejected,
-  because they kept a default that no member chose.
-- While Mac access is off, the Worker refuses each Mac command request of
-  the workspace, as [Mac commands](agent-tools.md#mac-commands) says.
-- While it is on, the Mac app still asks before each command that its user
-  did not always allow, as decision 62 says.
-- Mac access that starts on in each new workspace was rejected, because
-  agents could then reach a Mac before a member chooses it. Mac access
-  that is on for workspaces that members create, and off only for
-  workspaces that agents and automations create, was rejected. Reason: one rule for every new
-  workspace is simpler, and the risk of a steered agent is the same.
-- Mac access that a new workspace copies from the workspace that creates
-  it was rejected, because a workspace that an agent creates could then
-  reach a Mac with no member's choice.
-- A Mac access switch that each member keeps for each workspace was
-  rejected, because one control would then have a shared part and a
-  personal part.
-- Risk: any member can turn Mac access on again after another member
-  turned it off.
-- Risk: an automation that needs a Mac cannot use it in the first turn of
-  a run. A member must turn Mac access on in the run workspace, then send
-  a message.
-- Risk: when a member turns Mac access on in a run workspace, text that
-  steers the agent of the run can ask for a command on the Mac of the
-  sender of the next turn. A command that the sender always allowed then
-  runs with no question, as
-  [The choices](desktop-commands.md#the-choices) says.
+[Mac access](capabilities.md#mac-access) states the switch of each
+workspace and its risks.
 
 ## Turns that no person started
 
