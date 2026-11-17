@@ -93,27 +93,14 @@ React.
 
 [Chat Markdown](../../docs/protocol/chat-markdown.md#lists) says that agent
 messages and the file preview share their list rules, the list rules of
-CommonMark. The chat reads its lists through the shared parser. The file
-preview reads its lists with the parts below:
+CommonMark. Both views read their lists through the shared parser of
+`src/markdown/parser.ts`:
 
-- `src/markdown/list-items.ts` holds them. `listMarker` reads the marker
-  of an item. `readList` reads the items of one list and the lines that
-  belong to each item: the lines indented to its text, and lazy lines that
-  continue its paragraph. `maxNesting` is the depth limit of the file
-  preview, and the chat has the same limit of 16.
-- The caller of `readList` gives its own rules. `startsBlock` says which
-  line ends the text of an item. `parseItem` parses the lines of one item
-  with the block rules of the caller. `tasks` says whether `[ ]` starts a
-  task box. The file preview reads task boxes. The parser of the chat
-  reads none, so the chat shows them as text.
-- `readList` passes `parseItem` the unindented lines of the item. The
-  block reader of the file preview stops at the first of them that
-  continues no paragraph, such as a line after a code block or a table,
-  and returns `end`. That line then leaves the item, as in CommonMark.
-- `interruptsParagraph` says whether a list can start directly after a
-  line of a paragraph: a bullet with text, or the number 1 with text.
-- `src/markdown/lines.ts` holds the line tests of the file preview, such
-  as `expandTabs`. Like `table-rows.ts`, these modules import no React.
+- `src/markdown/token-read.ts` holds the depth limit of 16 that both views
+  apply to lists and quotes. Deeper content, and each line that the parser
+  drops, shows as paragraph text.
+- The file preview reads task boxes, with `preview-tasks.ts` of
+  `src/files/markdown/`. The chat reads none, so it shows them as text.
 
 ## Heading parts
 
@@ -126,9 +113,8 @@ has. These parts read and draw the headings:
   keeps the level of each heading, and leaves out a heading with no text,
   such as `## ` while the agent writes. The heading still ends the
   paragraph above it.
-- `src/markdown/headings.ts` holds the heading rules of the file preview.
-  `atxHeading` reads a line of one to six hashes, without its closing
-  hashes. `setextLevel` reads an underline of `=` or `-`.
+- The file preview reads its headings through the same parser, in
+  `preview-blocks.ts` of `src/files/markdown/`.
 - `AgentText` draws a heading as `h1` to `h6`, at its level, with its text
   through `AnswerText`.
 - `MessageLine` draws a heading as a span with the `heading` class of the
@@ -166,10 +152,9 @@ mockups:
 - `rowsInTable` in `markdown/agent-tables.ts` says which body rows stay in
   the table. Today each row that the parser reads stays in it, also a line
   without a pipe. The rows after its count show as paragraph text.
-- `src/markdown/table-rows.ts` reads table text for the file preview.
-  `tableStarts` finds a header row with its separator row. `readTableRow`
-  reads the cells of a row, with escaped pipes and the optional outer
-  pipes. `readTableSeparator` reads the alignment of each column.
+- `src/markdown/table-tokens.ts` reads the tokens of a table for both
+  views. `src/markdown/table-rows.ts` holds `readTableRow`, which reads the
+  cells of a source row, with escaped pipes and the optional outer pipes.
   `CellAlign` and `TableCells` are the shared types.
 - The file preview fills short rows with empty cells, as
   [the Markdown preview](../files/markdown-preview.md#safety-limits) says.

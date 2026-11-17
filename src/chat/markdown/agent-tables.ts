@@ -1,30 +1,10 @@
 import type { Token } from 'markdown-it'
-import {
-  readTableRow,
-  type CellAlign,
-  type TableCells,
-} from '../../markdown/table-rows'
+import { readTableRow, type TableCells } from '../../markdown/table-rows'
+import { readTableTokens, type TableRow } from '../../markdown/table-tokens'
 import { inlineText, type InlineText } from './agent-inline'
-import { unquoted } from './agent-source'
 
 /** A table of an agent message. Each body row keeps its own cells. */
 export type TextTable = { kind: 'table' } & TableCells<InlineText>
-
-/** A body row as the parser read it, with its source line. */
-interface SourceRow {
-  /** The source line of the row, without the marks of its quotes. */
-  line: string
-  cells: InlineText[]
-}
-
-/** The alignment of a column, from the style of its header cell. */
-function alignOf(token: Token): CellAlign {
-  const style = token.attrGet('style')
-  if (style === 'text-align:left') return 'left'
-  if (style === 'text-align:center') return 'center'
-  if (style === 'text-align:right') return 'right'
-  return null
-}
 
 /**
  * The cells that a body row shows: the cells that its source line has, up
@@ -32,7 +12,7 @@ function alignOf(token: Token): CellAlign {
  * cells, and the chat adds none, so the last cell spans the rest, as
  * "Short rows" of `chat-tables.md` says.
  */
-function ownCells(row: SourceRow): InlineText[] {
+function ownCells(row: TableRow<InlineText>): InlineText[] {
   return row.cells.slice(0, readTableRow(row.line).length)
 }
 
@@ -45,7 +25,7 @@ function ownCells(row: SourceRow): InlineText[] {
  * line as one more row, as GitHub does. Until the user decides, each row
  * that the parser reads stays in the table.
  */
-function rowsInTable(rows: readonly SourceRow[]): number {
+function rowsInTable(rows: readonly TableRow<InlineText>[]): number {
   return rows.length
 }
 
@@ -71,35 +51,16 @@ export function readTable(
   lines: readonly string[],
   quotes: number,
 ): TableRead {
-  let head: InlineText[] = []
-  const align: CellAlign[] = []
-  const rows: SourceRow[] = []
-  let row: SourceRow = { line: '', cells: [] }
-  let body = false
-  let index = at + 1
-  for (; index < tokens.length; index += 1) {
-    const token = tokens[index]
-    if (token.type === 'table_close') break
-    if (token.type === 'tbody_open') body = true
-    else if (token.type === 'th_open') align.push(alignOf(token))
-    else if (token.type === 'inline') row.cells.push(inlineText(token.children))
-    else if (token.type === 'tr_open') {
-      const line = token.map ? (lines[token.map[0]] ?? '') : ''
-      row = { line: unquoted(line, quotes), cells: [] }
-    } else if (token.type === 'tr_close') {
-      if (body) rows.push(row)
-      else head = row.cells
-    }
-  }
-  const kept = rowsInTable(rows)
+  const read = readTableTokens(tokens, at, lines, quotes, inlineText)
+  const kept = rowsInTable(read.rows)
   return {
     table: {
       kind: 'table',
-      head,
-      rows: rows.slice(0, kept).map(ownCells),
-      align,
+      head: read.head,
+      rows: read.rows.slice(0, kept).map(ownCells),
+      align: read.align,
     },
-    rest: rows.slice(kept).map((source) => source.line),
-    next: index + 1,
+    rest: read.rows.slice(kept).map((source) => source.line),
+    next: read.next,
   }
 }

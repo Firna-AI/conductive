@@ -1,60 +1,49 @@
 import { expect, it } from 'vitest'
-import { parseInline, plainText, type MdInline } from './markdown-inline'
+import type { MdInline } from './markdown-document'
+import { previewDocument } from './preview-blocks'
 
-/** Definitions that count the characters of each key that the parser reads. */
-class CountedDefinitions extends Map<string, string> {
-  characters = 0
-
-  override get(key: string): string | undefined {
-    this.characters += key.length
-    return super.get(key)
-  }
+/** The inline content of a file of one paragraph. */
+function inline(source: string): MdInline[] {
+  const [block] = previewDocument(source).blocks
+  if (block?.kind !== 'paragraph') throw new Error(`No paragraph: ${source}`)
+  return block.text
 }
 
-const shapes = [
-  {
-    // The input of finding 8: nested brackets around a shortcut reference.
-    name: 'nested brackets',
-    text: (levels: number) => '['.repeat(levels) + 'x' + ']'.repeat(levels),
-    links: () => 1,
-    plain: (levels: number) =>
-      '['.repeat(levels - 1) + 'x' + ']'.repeat(levels - 1),
-  },
-  {
-    // Each level has a shortcut link, and a full reference that holds pairs.
-    name: 'reference chain',
-    text: (levels: number) =>
-      '[a]' + '[[b]'.repeat(levels) + ']'.repeat(levels),
-    links: (levels: number) => levels + 1,
-    plain: (levels: number) => 'a' + '[b'.repeat(levels) + ']'.repeat(levels),
-  },
-]
-
-function parse(text: string) {
-  const definitions = new CountedDefinitions([
-    ['x', 'https://e.com/x'],
-    ['a', 'https://e.com/a'],
-    ['b', 'https://e.com/b'],
-  ])
-  const nodes = parseInline(text, definitions)
-  return { nodes, characters: definitions.characters }
+/** The plain text of inline content, as a reader sees it. */
+function plain(nodes: readonly MdInline[]): string {
+  return nodes
+    .map((node) => {
+      if (node.kind === 'text' || node.kind === 'code') return node.text
+      if (node.kind === 'break') return ' '
+      return plain(node.children)
+    })
+    .join('')
 }
 
 function links(nodes: readonly MdInline[]): number {
   return nodes.filter((node) => node.kind === 'link').length
 }
 
-it('reads the name of each reference once, also inside nested brackets', () => {
-  for (const shape of shapes) {
-    const small = parse(shape.text(500))
-    const large = parse(shape.text(2_000))
-    expect(links(small.nodes), shape.name).toBe(shape.links(500))
-    expect(links(large.nodes), shape.name).toBe(shape.links(2_000))
-    expect(plainText(small.nodes), shape.name).toBe(shape.plain(500))
-    expect(plainText(large.nodes), shape.name).toBe(shape.plain(2_000))
-    expect(small.characters, shape.name).toBeGreaterThan(0)
-    expect(large.characters, shape.name).toBeLessThanOrEqual(
-      small.characters * 4.5,
+/** The reference definitions of the bracket shapes. */
+const references =
+  '\n\n[x]: https://e.com/x\n[a]: https://e.com/a\n[b]: https://e.com/b'
+
+it('keeps every bracket of nested brackets around a shortcut reference, and links only the reference', () => {
+  // The input of finding 8 of the old reader.
+  for (const levels of [500, 2_000]) {
+    const nested = inline(
+      `${'['.repeat(levels)}x${']'.repeat(levels)}${references}`,
+    )
+    expect(links(nested), `nested ${levels}`).toBe(1)
+    expect(plain(nested), `nested ${levels}`).toBe(
+      '['.repeat(levels - 1) + 'x' + ']'.repeat(levels - 1),
+    )
+    // Each level has a shortcut link, and a full reference that holds pairs.
+    const chain = inline(
+      `[a]${'[[b]'.repeat(levels)}${']'.repeat(levels)}${references}`,
+    )
+    expect(plain(chain).replace(/[[\]]/gu, ''), `chain ${levels}`).toBe(
+      'a' + 'b'.repeat(levels),
     )
   }
 })
@@ -64,7 +53,7 @@ it('keeps every part of a long link text whose address does not link', () => {
   const parts = 100_000
   let nodes: readonly MdInline[] = []
   expect(() => {
-    nodes = parseInline(`[${'`a` '.repeat(parts)}](docs/x.md)`, new Map())
+    nodes = inline(`[${'`a` '.repeat(parts)}](docs/x.md)`)
   }).not.toThrow()
   expect(nodes.filter((node) => node.kind === 'code')).toHaveLength(parts)
   expect(links(nodes)).toBe(0)
@@ -117,17 +106,15 @@ it('pairs emphasis and strong emphasis markers by the CommonMark rules', () => {
     ['snake_case_name and a*b*c', 'snake_case_name and a<em>b</em>c'],
     ['\\*not emphasis*', '*not emphasis*'],
     ['*a `*` b*', '<em>a <code>*</code> b</em>'],
-    // Tildes strike text through, around and inside emphasis.
+    // Two tildes strike text through, around and inside emphasis. One
+    // tilde stays text.
     [
       '~~Hi~~ Hello, ~there~ **world ~~now~~**',
-      '<del>Hi</del> Hello, <del>there</del> <strong>world <del>now</del></strong>',
+      '<del>Hi</del> Hello, ~there~ <strong>world <del>now</del></strong>',
     ],
   ] as const
   // One comparison of the whole table names each case that differs.
-  const actual = cases.map(([text]) => [
-    text,
-    markup(parseInline(text, new Map())),
-  ])
+  const actual = cases.map(([text]) => [text, markup(inline(text))])
   expect(actual).toEqual(cases)
 })
 
@@ -145,30 +132,43 @@ function strongLevels(nodes: readonly MdInline[]) {
 
 it('nests inline content at most 12 levels deep, and shows deeper markers and links as typed', () => {
   const markers = 10_000
-  const nodes = parseInline(
-    `${'*'.repeat(markers)}x${'*'.repeat(markers)}`,
-    new Map(),
+  const { levels, inner } = strongLevels(
+    inline(`${'*'.repeat(markers)}x${'*'.repeat(markers)}`),
   )
-  const { levels, inner } = strongLevels(nodes)
   expect(levels).toBe(12)
   // Each level of strong text takes two markers from each run.
   const rest = '*'.repeat(markers - 24)
   expect(inner).toEqual([{ kind: 'text', text: `${rest}x${rest}` }])
 
-  // Each link text holds the next link. A link text holds no link, so the
-  // inner links show their text, and the 13th level shows as typed.
-  const links = 1_000
-  const end = '](https://e.com)'
-  const linked = parseInline(
-    `${'['.repeat(links)}x${end.repeat(links)}`,
-    new Map(),
+  // A link 13 levels deep shows as typed.
+  const deep = strongLevels(
+    inline(`${'*'.repeat(24)}[x](https://e.com "X")${'*'.repeat(24)}`),
   )
-  const typed = `${'['.repeat(links - 12)}x${end.repeat(links - 12)}`
-  expect(linked).toEqual([
+  expect(deep).toEqual({
+    levels: 12,
+    inner: [{ kind: 'text', text: '[x](https://e.com "X")' }],
+  })
+
+  // Links do not nest, so of nested link texts only the inner one links.
+  const brackets = 1_000
+  const end = '](https://e.com)'
+  expect(inline(`${'['.repeat(brackets)}x${end.repeat(brackets)}`)).toEqual([
+    { kind: 'text', text: '['.repeat(brackets - 1) },
     {
       kind: 'link',
       href: 'https://e.com/',
-      children: [{ kind: 'text', text: typed }],
+      children: [{ kind: 'text', text: 'x' }],
+    },
+    { kind: 'text', text: end.repeat(brackets - 1) },
+  ])
+})
+
+it('shows a link in the label of a link as its text, so no link holds a link', () => {
+  expect(inline('[a <https://x.com> b](https://y.com)')).toEqual([
+    {
+      kind: 'link',
+      href: 'https://y.com/',
+      children: [{ kind: 'text', text: 'a https://x.com b' }],
     },
   ])
 })
@@ -213,22 +213,21 @@ it.each([
 ])(
   'keeps the file preview destination and title handling for %s',
   (source, href, label) => {
-    expect(parseInline(source, new Map())).toEqual([
+    expect(inline(source)).toEqual([
       { kind: 'link', href, children: [{ kind: 'text', text: label }] },
     ])
   },
 )
 
-it('keeps file preview destinations beyond the length and nesting limits as text', () => {
+it('links an address of any length, and keeps an address with parentheses past the nesting limit as text', () => {
   const long = `https://example.com/${'a'.repeat(2001)}`
-  const deep = `https://example.com/${'('.repeat(33)}x${')'.repeat(33)}`
-  for (const source of [
-    `[docs](${long})`,
-    `[docs](<${long}>)`,
-    `[docs](${deep})`,
-  ]) {
-    const nodes = parseInline(source, new Map())
-    expect(links(nodes)).toBe(0)
-    expect(plainText(nodes)).toBe(source)
+  for (const source of [`[docs](${long})`, `[docs](<${long}>)`]) {
+    expect(inline(source)).toEqual([
+      { kind: 'link', href: long, children: [{ kind: 'text', text: 'docs' }] },
+    ])
   }
+  const deep = `[docs](https://example.com/${'('.repeat(33)}x${')'.repeat(33)})`
+  const nodes = inline(deep)
+  expect(links(nodes)).toBe(0)
+  expect(plain(nodes)).toBe(deep)
 })

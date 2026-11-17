@@ -120,12 +120,13 @@ function diffOf(
   }
 }
 
-const readmePatch = `@@ -12,3 +12,6 @@ ## Checkout
+const readmePatch = `@@ -23 +23,5 @@ ## Checkout
 -Checkout suggests addresses as you type.
-+Checkout suggests addresses as you type. Suggestions come from \`/api/places\`, which needs \`PLACES_API_KEY\`. Without the key, the form falls back to manual entry.
++Checkout suggests addresses as you type. Suggestions come from \`/api/places\`, which needs \`PLACES_API_KEY\`. Without the key, the form falls back to *manual entry*.
 +
-+## Tests
-+`
++---
++
++## Tests`
 
 const extraEntries: readonly FileEntry[] = [
   { path: 'public/hero.png', name: 'hero.png', kind: 'file', change: null },

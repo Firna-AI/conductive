@@ -39,8 +39,7 @@ which shows its Markdown as typed.
 - `src/markdown/markdown-destination.ts` supplies `readInlineTarget`. It
   reads the target of an inline link after its `(`: the spaces and line
   breaks around the address, the address, an optional link title, and the
-  `)`. Sent messages, the message field, the mockups, and the file preview
-  share it, with its address boundaries, its escape decoding, and its
+  `)`. Sent messages, the message field, and the mockups share it, with its address boundaries, its escape decoding, and its
   length limits.
 - Sent messages, the message field, and the mockups read each target
   through `lineTargets` of the same module. It keeps each Markdown link on

@@ -1,7 +1,15 @@
-import type { Token } from 'markdown-it'
 import { parseMarkdownTokens } from '../../markdown/parser'
+import {
+  closeOf,
+  containerLines,
+  maxDepth,
+  takeDropped,
+  tokenRead,
+  unquoted,
+  type TokenRead,
+} from '../../markdown/token-read'
 import { inlineText, type InlineText } from './agent-inline'
-import { linesText, unquoted } from './agent-source'
+import { linesText } from './agent-source'
 import { readTable, type TextTable } from './agent-tables'
 
 export type { TextTable }
@@ -32,12 +40,6 @@ export type TextList = Extract<TextBlock, { kind: 'ul' | 'ol' }>
 /** The blocks of one list item, from the lines indented under its marker. */
 export type TextItem = readonly TextBlock[]
 
-/**
- * Lists and quotes nest at most this deep, as in the file preview. A
- * deeper list or quote shows as the text of a paragraph.
- */
-const maxDepth = 16
-
 /** The level of each heading element. */
 const headingLevels: ReadonlyMap<string, HeadingLevel> = new Map<
   string,
@@ -51,15 +53,6 @@ const headingLevels: ReadonlyMap<string, HeadingLevel> = new Map<
   ['h6', 6],
 ])
 
-/** A read of the tokens of one message, from the token at `index`. */
-interface Read {
-  tokens: readonly Token[]
-  lines: readonly string[]
-  index: number
-  /** The source lines that the parser dropped, by the index of their token. */
-  dropped: Map<number, string[]>
-}
-
 /** A paragraph of the text, or nothing when the text draws nothing. */
 function paragraph(text: InlineText): TextBlock[] {
   return text.length > 0 ? [{ kind: 'p', text }] : []
@@ -72,22 +65,9 @@ function withText(text: InlineText, more: string): InlineText {
   return [...text.slice(0, -1), { kind: 'text', text: last.text + more }]
 }
 
-/** The index of the token that closes the token at `at`. */
-function closeOf(tokens: readonly Token[], at: number): number {
-  let open = 0
-  for (let index = at; index < tokens.length; index += 1) {
-    open += tokens[index].nesting
-    if (open === 0) return index
-  }
-  return tokens.length - 1
-}
-
 /** The paragraphs of the lines that the parser dropped before `at`. */
-function droppedAt(read: Read, at: number, quotes: number): TextBlock[] {
-  const lines = read.dropped.get(at)
-  if (!lines) return []
-  read.dropped.delete(at)
-  return paragraph(linesText(lines, quotes))
+function droppedAt(read: TokenRead, at: number, quotes: number): TextBlock[] {
+  return paragraph(linesText(takeDropped(read, at), quotes))
 }
 
 /**
@@ -95,15 +75,8 @@ function droppedAt(read: Read, at: number, quotes: number): TextBlock[] {
  * source lines, with their marks. They also hold each line that the parser
  * dropped inside it.
  */
-function deepText(read: Read, quotes: number): TextBlock[] {
-  const open = read.tokens[read.index]
-  const close = closeOf(read.tokens, read.index)
-  for (const at of read.dropped.keys()) {
-    if (at > read.index && at <= close) read.dropped.delete(at)
-  }
-  read.index = close + 1
-  const [from, to] = open.map ?? [0, 0]
-  return paragraph(linesText(read.lines.slice(from, to), quotes))
+function deepText(read: TokenRead, quotes: number): TextBlock[] {
+  return paragraph(linesText(containerLines(read), quotes))
 }
 
 /**
@@ -111,7 +84,7 @@ function deepText(read: Read, quotes: number): TextBlock[] {
  * message that ends on an underline shows that line as text of the
  * paragraph above it. A heading with no text draws nothing.
  */
-function heading(read: Read, quotes: number): TextBlock[] {
+function heading(read: TokenRead, quotes: number): TextBlock[] {
   const open = read.tokens[read.index]
   const text = inlineText(read.tokens[read.index + 1].children)
   read.index += 3
@@ -132,7 +105,7 @@ function heading(read: Read, quotes: number): TextBlock[] {
  * "Lists" of `chat-markdown.md` says (open question, item 14 of the
  * Markdown parser plan).
  */
-function list(read: Read, depth: number, quotes: number): TextBlock[] {
+function list(read: TokenRead, depth: number, quotes: number): TextBlock[] {
   const open = read.tokens[read.index]
   const close = closeOf(read.tokens, read.index)
   const items: TextItem[] = []
@@ -150,7 +123,7 @@ function list(read: Read, depth: number, quotes: number): TextBlock[] {
 }
 
 /** The block at the index of the read, and the index after it. */
-function block(read: Read, depth: number, quotes: number): TextBlock[] {
+function block(read: TokenRead, depth: number, quotes: number): TextBlock[] {
   const token = read.tokens[read.index]
   switch (token.type) {
     case 'paragraph_open': {
@@ -206,7 +179,7 @@ function block(read: Read, depth: number, quotes: number): TextBlock[] {
  * around the blocks, and `quotes` the quotes alone.
  */
 function blocksUntil(
-  read: Read,
+  read: TokenRead,
   close: string | null,
   depth: number,
   quotes: number,
@@ -240,23 +213,9 @@ function blocksUntil(
  * update reads as a finished message with the same text.
  */
 export function agentBlocks(text: string): TextBlock[] {
-  const parsed = parseMarkdownTokens(text)
-  const dropped = new Map<number, string[]>()
-  for (const range of parsed.dropped) {
-    const lines = parsed.lines.slice(...range.map)
-    dropped.set(range.tokenIndex, [
-      ...(dropped.get(range.tokenIndex) ?? []),
-      ...lines,
-    ])
-  }
-  const read: Read = {
-    tokens: parsed.tokens,
-    lines: parsed.lines,
-    index: 0,
-    dropped,
-  }
+  const read = tokenRead(parseMarkdownTokens(text))
   const blocks = blocksUntil(read, null, 0, 0)
-  for (const lines of dropped.values())
+  for (const lines of read.dropped.values())
     blocks.push(...paragraph(linesText(lines, 0)))
   return blocks
 }

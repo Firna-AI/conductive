@@ -57,16 +57,12 @@
   margin: 3px 0 0;
 }
 
-.doc blockquote {
-  padding: 0 0 0 12px;
-  border-left: 2px solid var(--ui-border2);
-  color: var(--ui-muted);
-}
-
+/*
+ * The look of quotes and rules comes from MarkdownProse.module.css of the
+ * mockups, which the chat shares. A rule has 16px above and below it.
+ */
 .doc hr {
   margin: 16px 0;
-  border: 0;
-  border-top: 1px solid var(--ui-border);
 }
 
 .doc strong {

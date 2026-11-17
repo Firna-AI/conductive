@@ -36,33 +36,3 @@ export function readTableRow(line: string): string[] {
   cells.push(cell.trim())
   return cells
 }
-
-function alignOf(cell: string): CellAlign | undefined {
-  if (!/^:?-+:?$/.test(cell)) return undefined
-  const left = cell.startsWith(':')
-  const right = cell.endsWith(':')
-  if (left && right) return 'center'
-  if (right) return 'right'
-  return left ? 'left' : null
-}
-
-/** The column alignments of a separator row, or null for another line. */
-export function readTableSeparator(line: string): CellAlign[] | null {
-  if (!line.includes('-')) return null
-  const align: CellAlign[] = []
-  for (const cell of readTableRow(line)) {
-    const value = alignOf(cell)
-    if (value === undefined) return null
-    align.push(value)
-  }
-  return align
-}
-
-/** A header row with a pipe, then a separator row with as many cells. */
-export function tableStarts(lines: readonly string[], index: number): boolean {
-  const head = lines[index]
-  const delimiter = lines[index + 1]
-  if (!head.includes('|') || delimiter === undefined) return false
-  const align = readTableSeparator(delimiter)
-  return align !== null && align.length === readTableRow(head).length
-}

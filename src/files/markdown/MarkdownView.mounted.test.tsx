@@ -3,7 +3,7 @@
 import { StrictMode } from 'react'
 import { expect, it, vi } from 'vitest'
 import { fakeWorkers, mountRoot, press } from '../mount-test-kit'
-import { parseMarkdown } from './markdown-document'
+import { previewDocument } from './preview-blocks'
 import { MarkdownView } from './MarkdownView'
 
 /** The task boxes of a rendered document, in document order. */
@@ -25,7 +25,7 @@ function errorTitle(container: HTMLElement): string | null {
 it('shows the current state of each task box after the text changes, also in a reused box', () => {
   const view = mountRoot()
   const show = (text: string) =>
-    view.render(<MarkdownView parser={parseMarkdown} text={text} />)
+    view.render(<MarkdownView parser={previewDocument} text={text} />)
   show('- [ ] Plan\n- [x] Build\n  - [ ] Check\n')
   const first = boxes(view.container)
   expect(first.map((box) => box.checked)).toEqual([false, true, false])

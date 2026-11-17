@@ -316,12 +316,30 @@ Tags: ui
 
 Depends on: 3
 
-- [ ] Add the preview adapter in the parse worker, with the link rule and
-      the table budget of the file preview.
-- [ ] Move `MarkdownView` and its tests. Move its quote and rule styles to
-      the shared style module.
-- [ ] Delete the old preview reader and the shared readers of Replaced
-      ways.
+- [x] Add the preview adapter in the parse worker, with the link rule and
+      the table budget of the file preview. It is `previewDocument` in
+      `src/files/markdown/`. Both adapters share the depth limit and the
+      dropped lines of `src/markdown/token-read.ts`, the line breaks of
+      `kept-breaks.ts`, and the table read of `table-tokens.ts`. My calls,
+      17 November 2026: the preview counts the cells of a row as the
+      parser does, so a row of one pipe has none. So the parser never ends
+      a table before the budget of the file does. When the parser ends a
+      table at its own limit, that row starts the text of the rest of the
+      file. The preview draws line breaks by design call 3. A task box
+      counts only at the start of the first paragraph of an item, as on
+      GitHub. A link that the parser does not make, such as a script
+      address, shows as typed. A link in a label shows as its text. The
+      depth limit of 12 for marks and links stays. Measured in headless
+      Chrome with bundled workers, a new worker parses a 1 MiB file in
+      about 650 ms, and the old reader took about 360 ms.
+- [x] Move `MarkdownView` and its tests. Move its quote and rule styles to
+      the shared style module. The view stays in `src/files/markdown/`, on
+      the types of the adapter. My call, 17 November 2026: the README of
+      the Files development page follows the mockup's README again. The
+      logs, the timing, and the screenshots are in
+      `.context/markdown-it-reader/m5/`.
+- [x] Delete the old preview reader and the shared readers of Replaced
+      ways. `table-rows.ts` keeps its types and `readTableRow`.
 
 ## Milestone 6: Follow-up items
 
