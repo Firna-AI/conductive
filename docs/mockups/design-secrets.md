@@ -52,9 +52,9 @@ except to an admin who reveals one.
 - `CapabilitiesButton` in `src/components/capabilities/` draws the small
   Capabilities icon, the Blocks icon of lucide, with its label as the
   tooltip. On a computer it stands right after the attach button in the bar
-  of every composer, and right before the attach button in the footer of
-  the New workspace dialog. A press opens the control, which a computer
-  draws above the icon, as an open menu of the app.
+  of every composer and in the footer of the New workspace dialog. A press
+  opens the control, which a computer draws above the icon, as an open menu
+  of the app.
 - A phone has one + button in place of the attach button and the
   Capabilities icon, from `ComposerMenu` in `src/components/chat/`. Its
   menu opens above it, as the menu of the model picker does, with Attach
