@@ -122,6 +122,29 @@ describe('the Capabilities control of a workspace', () => {
     })
   })
 
+  test('the workspace pre-loads its Capabilities, so the control shows them as it opens and reads them again behind them', async () => {
+    const server = capabilitiesServer(new FakeApiServer())
+    const tab = await openTab(server)
+    await settle()
+    const reads = () =>
+      server.requests.filter(
+        (item) => item.method === 'GET' && new URL(item.url).pathname === path,
+      ).length
+    const before = reads()
+    click(byRole('button', 'Capabilities', tab.view))
+    const control = byRole('dialog', 'Capabilities', tab.view)
+    const shown = {
+      figma: checked(control, 'FIGMA_TOKEN'),
+      mac: byRole('switch', 'Mac access', control).getAttribute('aria-checked'),
+    }
+    await settle()
+    expect({ before, shown, after: reads() }).toEqual({
+      before: 1,
+      shown: { figma: true, mac: 'true' },
+      after: 2,
+    })
+  })
+
   test('on a phone, one More options button holds Attach files and Capabilities, Capabilities opens as a sheet, and Stop shows only its icon', async () => {
     const server = capabilitiesServer(
       new FakeApiServer({ conversation: 'running' }),

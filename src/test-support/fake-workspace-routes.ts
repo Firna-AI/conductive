@@ -9,6 +9,10 @@ import {
   type SecretRequestsResponse,
 } from '../shared/secret-requests'
 import {
+  workspaceCapabilitiesPath,
+  type WorkspaceCapabilitiesResponse,
+} from '../shared/secrets'
+import {
   retryMessagePath,
   sessionPath,
   sessionPaths,
@@ -153,6 +157,13 @@ export function fakeWorkspaceRoutes(
       requests: [],
       workspaceValues: [],
     } satisfies SecretRequestsResponse)
+    routes.json('GET', workspaceCapabilitiesPath(org, id), {
+      capabilities: {
+        preapprovedSecretIds: [],
+        macAccess: true,
+        sessionApprovals: [],
+      },
+    } satisfies WorkspaceCapabilitiesResponse)
     routes.json(
       'POST',
       sessionsPath(org, id),
