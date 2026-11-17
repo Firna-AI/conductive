@@ -11,6 +11,7 @@ import { DeleteOrgDialog } from '../components/settings/DeleteOrgDialog'
 import { SettingsTabs } from '../components/settings/OrgSections'
 import { Sidebar } from '../components/workspaces/Sidebar'
 import { memberViewer, people, viewerMembership } from '../fixtures/members'
+import { ORG_COLORS } from '../design/orgColors'
 import { type Org, orgList } from '../fixtures/orgs'
 import { repositoryChanges } from '../fixtures/repositories'
 import { settingsViewer, TabBody } from './orgSettingsTabs'
@@ -29,6 +30,7 @@ export const orgSettingsSchema = {
     'dialog',
     'viewer',
     'org',
+    'color',
   ],
   properties: {
     tab: {
@@ -106,6 +108,12 @@ export const orgSettingsSchema = {
      * lets leave.
      */
     org: { enum: ['active', 'suspended', 'new'] },
+    /**
+     * The colour of the org, which an admin picks on the General tab. The
+     * tile of the open org in the rail shows it. Blue is the colour of an
+     * org that has none.
+     */
+    color: { enum: ORG_COLORS },
   },
 } as const
 
@@ -122,6 +130,7 @@ export const acmeSettings: OrgSettingsState = {
   dialog: 'none',
   viewer: 'admin',
   org: 'active',
+  color: 'blue',
 }
 
 /**
@@ -196,7 +205,9 @@ export function OrgSettingsScreen(props: {
     <AppFrame
       overlay={dialog}
       rail={{
-        orgs: props.railOrgs ?? orgList,
+        orgs: (props.railOrgs ?? orgList).map((item) =>
+          item.key === org.key ? { ...item, color: state.color } : item,
+        ),
         current: org.key,
         suspended: suspended ? org.key : undefined,
         person: admin ? undefined : people[memberViewer],

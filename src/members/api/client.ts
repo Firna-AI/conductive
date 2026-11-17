@@ -31,13 +31,14 @@ import {
   workspacesPath,
   type WorkspacesResponse,
 } from '../../shared/workspaces'
+import { ParseError } from '../../app/api/parse'
+import { readOrg } from '../../app/api/read-core'
 import { isObject, ResponseShapeError } from './json'
 import {
   field,
   parseInvite,
   parseMember,
   parseMembers,
-  parseOrg,
   parseWorkspace,
   parseWorkspaces,
 } from './parseCore'
@@ -120,7 +121,13 @@ async function read<T>(
     const value: unknown = await response.json()
     return parse(value)
   } catch (error) {
-    if (error instanceof ResponseShapeError || error instanceof SyntaxError) {
+    // The org reader of the app throws `ParseError`. It is shared, so
+    // Delete and Restore keep every field of the app's org record.
+    if (
+      error instanceof ResponseShapeError ||
+      error instanceof ParseError ||
+      error instanceof SyntaxError
+    ) {
       throw new ApiRequestError(
         response.status,
         'invalid_response',
@@ -190,9 +197,9 @@ export function createMembersApi(fetch: FetchLike): MembersApi {
         field('workspace', parseWorkspace),
       ),
     deleteOrg: (orgId, request) =>
-      write('POST', deleteOrgPath(orgId), request, field('org', parseOrg)),
+      write('POST', deleteOrgPath(orgId), request, field('org', readOrg)),
     restoreOrg: (orgId) =>
-      write('POST', restoreOrgPath(orgId), empty, field('org', parseOrg)),
+      write('POST', restoreOrgPath(orgId), empty, field('org', readOrg)),
     repositories: (orgId) =>
       get(orgSettingsPaths.repositories(orgId), parseRepositories),
     settings: (orgId) => get(orgSettingsPaths.settings(orgId), parseSettings),

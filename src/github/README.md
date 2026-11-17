@@ -3,7 +3,8 @@
 These parts show the GitHub state of a workspace branch: the pull request bar
 of the right column, the compact pull request row of a phone, and the Checks
 tab. The bar shows the main action of each state beside its links to
-GitHub: a fixed prompt for the agent, Merge, or Continue and Archive. On a
+GitHub: a fixed prompt for the agent, Merge, Ready for review, or Continue
+and Archive. On a
 phone, the actions top the Checks tab. [GitHub banner](../../docs/protocol/github-banner.md)
 states the requirements, and the mockups under `app/banner` draw them.
 [The actions of the bar](actions.md) gives their state and their rules.

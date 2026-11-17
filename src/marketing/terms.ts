@@ -63,7 +63,8 @@ export const termsDocument: LegalDocument = {
             ${productName}. The app can reach each repository where you
             install its GitHub App and have access. It reads your repository
             rights and merge method from GitHub. It shows Merge only when
-            your GitHub rights let you merge.`,
+            your GitHub rights let you merge. It shows Ready for review on a
+            draft pull request only when you have write access or more.`,
           text`${productName} runs the cloud computers of every org in its
             own account with its cloud computer provider. You need no
             account or key of your own for them.`,

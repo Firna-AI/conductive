@@ -33,6 +33,8 @@ function buttons(bar: BarView): string[] {
         return action.action
       case 'merge':
         return `merge:${action.method}${action.busy ? ':busy' : ''}`
+      case 'ready':
+        return `ready${action.busy ? ':busy' : ''}`
       case 'continue':
         return `continue${action.busy ? ':busy' : ''}${action.waiting ? ':waiting' : ''}`
       case 'archive':
@@ -60,6 +62,7 @@ describe('the actions of the bar', () => {
       ['ready, report unknown', 'ready-to-merge', 'unknown'],
       ['running, local work', 'checks-running', 'changes'],
       ['draft', 'draft', 'none'],
+      ['draft, local work', 'draft', 'changes'],
       ['blocked', 'blocked', 'none'],
       ['closed, local work', 'closed', 'changes'],
       ['merged, local work', 'merged', 'changes'],
@@ -85,7 +88,8 @@ describe('the actions of the bar', () => {
       ['closed, only commits', []],
       ['ready, report unknown', []],
       ['running, local work', ['commit-and-push']],
-      ['draft', []],
+      ['draft', ['ready']],
+      ['draft, local work', ['commit-and-push']],
       ['blocked', []],
       ['closed, local work', []],
       ['merged, local work', ['continue', 'archive']],

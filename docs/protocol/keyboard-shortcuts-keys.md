@@ -67,6 +67,7 @@ decision number names a decision of the change that adds
 | Workspace | Resolve conflicts | – | – | Pull request bar |
 | Workspace | Address review | – | – | Pull request bar |
 | Workspace | Commit and push | ⇧⌘Y | Ctrl+Shift+Y | Pull request bar |
+| Workspace | Mark PR ready for review | – | – | Pull request bar |
 | Workspace | Merge PR | ⇧⌘M | Ctrl+Shift+M | Pull request bar |
 | Workspace | Continue after merge | – | – | Pull request bar |
 | Workspace | Open PR on GitHub | ⇧⌘G | Ctrl+Shift+G | Pull request link |
