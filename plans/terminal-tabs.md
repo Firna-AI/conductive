@@ -578,7 +578,7 @@ Depends on: every other milestone
 
 - [x] Run the targeted tests and the complete gate, `npm run check`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
@@ -648,7 +648,7 @@ Depends on: 9
 - [x] Finding 202: limit the palette steps of the guide to a computer with
       the right column, and reword the New terminal requirement of the
       palette so that its place comes first.
-- [ ] Re-review the fixes once, as the `implementation-review` skill says.
+- [x] Re-review the fixes once, as the `implementation-review` skill says.
 
 ## Post-merge follow-up (non-blocking)
 
