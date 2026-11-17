@@ -127,6 +127,74 @@ that rule.
 - **Chosen:** B, by the user on 10 November 2026.
 - **Later:** Main added keyboard shortcuts on 11 November 2026, in PR #216. Each palette action is now also a command of the Keyboard shortcuts tab. On Windows and Linux the terminal still keeps every key, so the trap of `plans/follow-ups/terminal-keyboard-trap.md` stays.
 
+### 4. The address of a closed terminal
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Implementation, Milestone 2.
+- **Category:** Docs or spec.
+- **Problem:** No rule said what the Terminal tool shows when its address
+  `terminal/<terminalId>` names a terminal that is not in the list, such as
+  an old bookmark or a shared link to a terminal that closed.
+- **Options:**
+  - **A.** Treat it as an address with no terminal: show the saved
+    terminal, or the first, and move the address to it.
+  - **B.** Always show the first terminal, and move the address to it.
+  - **C.** Show the first terminal with a notice that the named terminal
+    closed. It needs a new mockup state.
+- **Left out:** An error page in place of the tool, because the tool always
+  shows a terminal.
+- **Recommendation:** A. One rule covers each address that names no known
+  terminal, and the member lands on the terminal that they used last.
+- **Chosen:** A, by the user on 17 November 2026.
+
+### 5. The focus after a control that shows a terminal
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Implementation, Milestone 7, then main's PR #418.
+- **Category:** Product bug.
+- **Problem:** PR #418 moves the focus to the terminal after a click on the
+  Terminal tab and after Go to Terminal. New terminal in the palette, the
+  +, and a click on a terminal tab left the focus where it was, often in
+  the message box, so typed text and Enter went to the agent.
+- **Options:**
+  - **A.** Keep the focus where it was.
+  - **B.** Give the focus to the new terminal after New terminal in the
+    palette, on desktop.
+  - **C.** Do B, and also after the +.
+  - **D.** Do C, and also after a click on a terminal tab.
+- **Left out:** A notice that tells the user to click the terminal. It adds
+  a step and does not stop the wrong message.
+- **Recommendation:** D. It follows the rule that the user chose for the
+  Terminal tab and Go to Terminal.
+- **Chosen:** D, by the user on 17 November 2026. It replaces the
+  follow-up item `plans/follow-ups/terminal-focus-after-open.md`.
+
+### 6. When a running workspace gets terminal tabs
+
+- **Severity:** Low. **Effort:** Medium.
+- **Source:** Review, finding 201.
+- **Category:** Product bug.
+- **Problem:** An install of new software while the workspace is idle does
+  not restart the terminal service, and Restart restarts only the runner
+  and the preview relay. So a running workspace got terminal tabs only at
+  a later start of its cloud computer.
+- **Options:**
+  - **A.** Keep the rule: tabs come at a later start.
+  - **B.** Make Restart also restart the terminal service after the runner
+    applies the newest download, check the support again, save it, and let
+    the app read the terminal state again. The shells keep running. It
+    extends the user's decision 1 A of the Restart change.
+  - **C.** Let the Worker restart the terminal service when no terminal
+    socket is open.
+  - **D.** Carry the terminal ID inside the socket stream, so an older
+    terminal service opens several shells with no restart.
+- **Left out:** Applying the newest release before the terminal step of
+  each start, because a start never waits for a download.
+- **Recommendation:** B. Restart is the control that a member already
+  presses to apply new software, and it keeps every shell.
+- **Chosen:** B, by the user on 17 November 2026. It replaces the
+  follow-up item `plans/follow-ups/terminal-tabs-wait-for-start.md`.
+
 ## Design
 
 The mechanics below are the design of this change. The protocol docs get
@@ -649,6 +717,65 @@ Depends on: 9
       the right column, and reword the New terminal requirement of the
       palette so that its place comes first.
 - [x] Re-review the fixes once, as the `implementation-review` skill says.
+
+## Milestone 14: Requirements of decisions 4 to 6
+
+Depends on: 13
+
+- [ ] Decision 4 A: in `docs/protocol/terminal.md`, an address that names
+      a terminal that is not in the list shows the saved terminal, or the
+      first, and the address moves to it.
+- [ ] Decision 5 D: on desktop, New terminal in the palette, the +, and a
+      click on a terminal tab move the focus to the shown terminal, as the
+      Terminal tab and Go to Terminal do.
+- [ ] Decision 6 B: Restart also restarts the terminal service, keeps every
+      shell, and checks again whether it opens several shells. Update
+      "Older software" in `docs/protocol/terminal.md`,
+      "Restart the software" in `docs/protocol/workspace-life.md`, and
+      each other protocol doc that restates the Restart or the update rule.
+- [ ] Read both legal pages in full. Update each sentence that restates a
+      changed fact.
+- [ ] Delete the follow-up items that decisions 5 and 6 answer.
+- [ ] Check each relative link of each changed Markdown file.
+
+## Milestone 15: Restart starts the new terminal service
+
+Depends on: 14
+
+- [ ] After the runner restart applies the newest download, Restart
+      restarts the terminal service, with no restart of the shell server.
+      A failed terminal restart warns and does not fail the Restart.
+- [ ] Run the support check again and write the marker. Read it and save
+      it in the Worker, with the password, as at a start.
+- [ ] Test the command, the new marker, a failed terminal restart, and an
+      older release with no attach program.
+- [ ] Update `worker/terminal/README.md` and `worker/lifecycle/README.md`.
+
+## Milestone 16: Address and focus of terminal tabs
+
+Tags: ui
+
+Depends on: 14
+
+- [ ] Decision 4 A: an address with an unknown terminal shows the saved
+      terminal, or the first, and moves the address to it. Remove the
+      placeholder of the open question. Test it.
+- [ ] Decision 5 D: on desktop, New terminal in the palette, the +, and a
+      click on a terminal tab give the focus to the shown terminal. A
+      phone moves no focus. Test each control.
+- [ ] Decision 6 B: after a Restart, the Terminal tool reads the terminal
+      state again, so the tab row shows when the new terminal service
+      opens several shells. Test it.
+- [ ] Update `src/terminal/README.md`, `src/terminal/terminal-tabs.md`, and
+      `src/shell/workspace/tools-part.md`.
+
+## Milestone 17: Guide for decisions 5 and 6
+
+Depends on: 14
+
+- [ ] Read each public guide in full. Say that Restart brings terminal tabs
+      to a running workspace with new software, and that the controls of
+      the terminal tabs give the terminal the focus on a computer.
 
 ## Post-merge follow-up (non-blocking)
 
