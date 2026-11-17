@@ -91,6 +91,13 @@ Each agent action sends a fixed message to the chat session you viewed last.
 It uses that session's model, effort, **Fast** setting, and normal send rules.
 It preserves your draft and uploads.
 
+To bring the latest target branch into your branch at any time, open the command palette and choose **Merge latest**.
+The row names the target branch, as in **Merge latest main**.
+It asks the agent to merge that branch, fix conflicts, test, commit, and push.
+It sends its message in the same way as the agent actions of the bar.
+You see it when the agent actions are available to you.
+It is not offered after the pull request merges.
+
 **Address review** asks the agent to change code without replying on GitHub.
 Select the pull request number to read, reply to, or resolve review comment threads on GitHub.
 On a phone, use **Open on GitHub** at the top of **Checks**.

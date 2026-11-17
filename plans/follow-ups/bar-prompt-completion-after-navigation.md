@@ -3,7 +3,8 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-10, from checked review finding 6 on `calummoore/github-status-bar-actions`.
-- **Location:** `src/github/useBarControls.ts`, `src/github/barActions.ts`, and `src/shell/workspace/github/bar-controls.ts`.
+- **Location:** `src/github/useBarControls.ts`, `src/github/barActions.ts`, `src/shell/workspace/github/bar-controls.ts`, and `src/shell/workspace/github/merge-latest.ts`.
+- **Extended:** 2026-11-17, from checked review finding 1 on `calummoore/merge-main-with-latest-9orf`. Merge latest of the command palette sends its fixed prompt through the same `BarActions.sendPrompt` and calls the shared `useShowChat` when the send fails. So the late completion also reaches it. Option B covers it with no change to its caller, because the caller already skips a `null` result. The fix adds a held-reply regression for Merge latest to `src/shell/workspace/github/MergeLatest.test.tsx`.
 - **Reason:** This rare browser timing defect has a workaround, and its browser-only correction costs the same later.
 
 - **Terms:**

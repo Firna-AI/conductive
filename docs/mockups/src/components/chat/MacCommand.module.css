@@ -61,15 +61,40 @@
 
 /* The output that went back to the agent, in a tinted block. */
 .output {
-  margin: 4px 0 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  margin-top: 4px;
   padding: 8px 10px;
   border: 1px solid var(--ui-border);
   border-radius: var(--ui-radius-md);
   background: var(--ui-raised);
+}
+
+.outputText {
+  width: 100%;
+  margin: 0;
   color: var(--ui-ink2);
   font-family: var(--ui-font-mono);
   font-size: var(--ui-text-xs);
   line-height: 1.6;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+/* Short output shows at most its first ten lines. */
+.outputShort {
+  max-height: 16em;
+  overflow: hidden;
+}
+
+/* The last two lines of cut output fade out, so the output shows more. */
+.outputFaded {
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 3.2em), transparent);
+}
+
+/* The label of Show all lines up with the output, under its last line. */
+.outputMore {
+  margin: 0 0 -4px -10px;
 }

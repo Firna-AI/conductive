@@ -24,13 +24,18 @@ import { useScreenActions, useScreenControls } from './bar-controls'
 import { useBranchFeed, useLiveMark } from './bar-feed'
 import { BarKeys } from './bar-keys'
 import { githubSubscribe } from './github-events'
+import { useMergeLatest, type MergeLatest } from './merge-latest'
 
 const GitHubFeedContext = createContext<GitHubFeed | null>(null)
 
-/** The bar actions of the screen: their view, and the store of their runs. */
+/**
+ * The bar actions of the screen: their view, the store of their runs, and
+ * Merge latest, which the palette offers with the same store.
+ */
 interface ScreenBar {
   controls: BarControls | null
   actions: BarActions
+  mergeLatest: MergeLatest | null
 }
 
 const BarContext = createContext<ScreenBar | null>(null)
@@ -76,7 +81,11 @@ export function WorkspaceGitHub(props: {
   useLiveMark(model, workspace.id, feed)
   const actions = useScreenActions(props.context, github)
   const controls = useScreenControls(props.context, feed, actions)
-  const bar = useMemo(() => ({ controls, actions }), [controls, actions])
+  const mergeLatest = useMergeLatest(props.context, feed, actions)
+  const bar = useMemo(
+    () => ({ controls, actions, mergeLatest }),
+    [controls, actions, mergeLatest],
+  )
   return (
     <GitHubFeedContext.Provider value={feed}>
       <BarContext.Provider value={bar}>{props.children}</BarContext.Provider>

@@ -32,7 +32,9 @@ export const macCommandsInChat = defineScreen({
       slug: 'done',
       title: 'Done',
       description:
-        'The command ran on the Mac. Its card at its place in the chat shows the time that it took and its output, which went back to the agent. When the turn ends, the card folds with the work of the turn at its place, as `app/chat/work/mac-command` shows.',
+        'The command ran on the Mac. Its card at its place in the chat shows the time that it took and its output, which went back to the agent. Long output shows its first ten lines, and its last lines fade out, with Show all under it. Show all shows the whole output, and then Show less makes it short again. When the turn ends, the card folds with the work of the turn at its place, as `app/chat/work/mac-command` shows.',
+      rationale:
+        'On 17 November 2026 the user asked for long output cut short with a fade and Show all, so that the output of one command does not push the rest of the chat out of view. The whole output stays in the page, so a search of the page and a copy get all of it.',
       props: { conversation: 'mac-done' },
       useCasePaths: flow,
     },

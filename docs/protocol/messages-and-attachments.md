@@ -206,6 +206,8 @@ change that adds the org logins, as
 - It follows each rule of a message from the composer, and the draft stays
   as it is. The chat shows it as a message of that member, with no mark of
   the action. Reason: an action is a message (decision 220).
+- [Merge latest](command-palette-actions.md#merge-latest) of the command
+  palette sends its fixed prompt in the same way.
 
 ### Stops by the workspace tools
 
