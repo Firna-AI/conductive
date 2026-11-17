@@ -1,10 +1,12 @@
 import { activeOrgPredicate } from '../data/org-access'
 import type { Org } from '../../src/shared/api'
+import type { OrgColor } from '../../src/shared/org-colors'
 import type { MoveOrgRequest, OrgSummary } from '../../src/shared/orgs'
 import { activeAdminMemberPredicate } from '../data/active-admin'
 
 interface OrgRow extends Org {
   initials: string | null
+  color: string | null
   deletedAt: number | null
   deletesAt: number | null
   suspendedAt: number | null
@@ -13,6 +15,7 @@ interface OrgRow extends Org {
 function summary(row: OrgRow): OrgSummary {
   const org: OrgSummary = { id: row.id, name: row.name, role: row.role }
   if (row.initials !== null) org.initials = row.initials
+  if (row.color !== null) org.color = row.color
   if (row.deletedAt !== null && row.deletesAt !== null) {
     org.deletion = { deletedAt: row.deletedAt, deletesAt: row.deletesAt }
   }
@@ -28,7 +31,7 @@ export async function visibleOrg(
 ) {
   const row = await db
     .prepare(
-      `SELECT o.id, o.name, o.initials, m.role, o.deleted_at AS deletedAt, o.purge_after AS deletesAt, o.suspended_at AS suspendedAt
+      `SELECT o.id, o.name, o.initials, o.color, m.role, o.deleted_at AS deletedAt, o.purge_after AS deletesAt, o.suspended_at AS suspendedAt
      FROM orgs o JOIN org_members m ON m.org_id = o.id
      WHERE o.id = ? AND m.user_id = ? AND (o.deleted_at IS NULL OR m.role = 'admin')`,
     )
@@ -43,7 +46,7 @@ export async function visibleOrgs(
 ): Promise<OrgSummary[]> {
   const { results } = await db
     .prepare(
-      `SELECT o.id, o.name, o.initials, m.role, o.deleted_at AS deletedAt, o.purge_after AS deletesAt, o.suspended_at AS suspendedAt
+      `SELECT o.id, o.name, o.initials, o.color, m.role, o.deleted_at AS deletedAt, o.purge_after AS deletesAt, o.suspended_at AS suspendedAt
      FROM orgs o JOIN org_members m ON m.org_id = o.id
      WHERE m.user_id = ? AND (o.deleted_at IS NULL OR m.role = 'admin')
      ORDER BY m.rail_position IS NULL, m.rail_position, m.joined_at, o.id`,
@@ -91,20 +94,31 @@ export async function moveOrg(
   return result.meta.changes > 0
 }
 
-export async function renameOrg(
+/**
+ * Saves the name, the initials, and the colour of an org, for an active
+ * admin. A field that the request leaves out keeps its saved value.
+ */
+export async function updateOrg(
   db: D1Database,
   orgId: string,
   userId: string,
-  name: string,
-  initials?: string,
+  fields: { name?: string; initials?: string; color?: OrgColor },
 ) {
   return db
     .prepare(
-      `UPDATE orgs SET name = ?, initials = COALESCE(?, initials) WHERE id = ? AND deleted_at IS NULL
+      `UPDATE orgs SET name = COALESCE(?, name), initials = COALESCE(?, initials),
+     color = COALESCE(?, color) WHERE id = ? AND deleted_at IS NULL
      AND ${activeAdminPredicate}
      RETURNING id`,
     )
-    .bind(name, initials ?? null, orgId, orgId, userId)
+    .bind(
+      fields.name ?? null,
+      fields.initials ?? null,
+      fields.color ?? null,
+      orgId,
+      orgId,
+      userId,
+    )
     .first<{ id: string }>()
 }
 
