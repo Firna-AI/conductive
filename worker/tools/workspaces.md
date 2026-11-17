@@ -29,7 +29,7 @@ the first session title, and the create request ID, as
   token. Each other target must be a workspace of the calling org. An
   unknown target gives HTTP 404 `workspace_not_found`.
 - A get needs only the workspace token. It also reads an archived
-  workspace.
+  workspace, also a removed one.
 - A write calls `requireCallingToolTurn`. The stored active turn gives the
   sender. The sender must still be a member of the org who is not
   suspended. The request supplies no identity.
@@ -48,6 +48,9 @@ the first session title, and the create request ID, as
 - `createdAt`, and `lastActivityAt`, the row's `updated_at`, whose age the
   workspace list of the app shows
 - `archivedAt`, and `restoreUntil` while a sandbox is kept
+- `removedAt`: for a removed workspace, the time of the removal, 14 days
+  after `archivedAt`. Else `null`. A removed workspace keeps the state
+  `archived`.
 - `parentId`, the stored parent ID or `null`, and `parent`, its list entry or `null`
 - `depth`, counting stored parent links, including archived ancestors
 - `children`, the direct sub-workspaces, oldest first, including archived ones
@@ -135,6 +138,7 @@ states the rule.
 | `query` | Text after trimming. A blank value counts as no option. |
 | `updatedSince` | Signed epoch milliseconds, a safe integer, with no lower bound. |
 | `archived` | `true` or `false`. |
+| `removed` | `true` or `false`. A call without it counts as `false`. |
 | `limit` | 1 to 100. |
 | `offset` | A nonnegative safe integer. |
 
@@ -143,11 +147,15 @@ states the rule.
   Unicode lower case. A workspace without a name matches no text.
 - `updatedSince` compares with the row's `updated_at`.
 - `archived` uses the archive time and the archived state of the row.
+- `removed` uses the archive time of the row. The row is removed when
+  that time plus the 14 days of Restore is at or before the time of the
+  read. So without `removed`, `archived` true or `state` archived gives no
+  removed row. `archived` false with `removed` true gives an empty list.
 - The list keeps creation order, with the ID as the tie breaker.
 - `hasMore` is in the reply only when the call gives a limit.
 - A malformed option gives HTTP 400 `invalid_input`.
-- A call without options gives every workspace of the org, also the
-  archived ones.
+- A call without options gives every workspace of the org that is not
+  removed, also the archived ones.
 - The owner filter reads no login and has no mine form.
 - Each list entry gives `parentId`, or `null` for a top-level workspace.
 - An empty `parentId` is malformed, as an empty `ownerId` is.
@@ -203,8 +211,9 @@ states the rule.
 [handler.management.test.ts](handler.management.test.ts) checks the management route inputs and replies.
 The [Rust tools crate](../../crates/cnd-tools/README.md) tests CLI and MCP request construction.
 
-- `workspace-reads.test.ts`: token-only reads of archived workspace facts,
-  the parent, depth, direct children, shown section, and the refusal of another org.
+- `workspace-reads.test.ts`: token-only reads of archived and removed
+  workspace facts, the removal time, the parent, depth, direct children,
+  shown section, and the refusal of another org.
 - `workspace-actions.test.ts`: a rename that automatic naming keeps, stale
   and archived writes, moves to a section top, unchanged same-section moves,
   stored-sender archive rights, and a self-archive that stops its turn and
@@ -221,8 +230,15 @@ The [Rust tools crate](../../crates/cnd-tools/README.md) tests CLI and MCP reque
   pending creates, and the second create depth check.
 - [Corrupt tree tests](../app-api/workspace-tree-corruption.test.ts): bounded
   reads through repeated parent IDs in stored rows.
-- `workspace-lists.test.ts`: each filter alone and together, paging edges
-  and `hasMore`, the direct-parent filter, and malformed options.
+- `workspace-lists.test.ts`: each filter alone and together, removal at
+  the 14-day boundary, default lists without removed workspaces, paging
+  edges and `hasMore`, the direct-parent filter, and malformed options.
+- `session-management-reads.test.ts`: session lists, session and message
+  reads, and transcripts by ID after workspace removal.
+- `handler.management.test.ts`, with `management-cases.test-support.ts`:
+  the `removed` filter through the list route.
+- The Rust tools crate: the `removed` filter of the CLI and the MCP
+  server, and the removal time in a `get_workspace` reply.
 - `workspace-creation.test.ts`, with `workspace-creation.test-support.ts`:
   overlapping creates, a lost reply after a restart or changed defaults, a
   titled first session, and the replay of a failed first start.
@@ -235,3 +251,17 @@ The [Rust tools crate](../../crates/cnd-tools/README.md) tests CLI and MCP reque
   admission, failed provisional cleanup, and an admitted parent's later failure.
 - [creation-admission-wait.test.ts](../lifecycle/creation-admission-wait.test.ts):
   a saved creation failure without an admission and the bounded admission wait.
+
+## Key code
+
+- [workspace-input.ts](workspace-input.ts) reads and validates each list filter.
+- [workspace-data.ts](workspace-data.ts) applies the filters before paging
+  and builds workspace details with `removedAt`.
+- [lists.ts](lists.ts) and [workspace-routes.ts](workspace-routes.ts) pass
+  the injected clock to list and detail reads.
+- [workspaces.ts](../../src/shared/workspaces.ts) owns the Restore interval
+  and the shared `workspaceRemovedAt` helper.
+- [workspaces.rs](../../crates/cnd-runner-interface/src/tools/workspaces.rs)
+  defines the list filters and workspace reply fields.
+- [Workspace tool adapters](../../tools/README.md) expose the same calls
+  through CLI and MCP.

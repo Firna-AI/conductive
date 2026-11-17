@@ -28,12 +28,13 @@ export function filters(view: OpenPaletteView): PaletteFilters {
 /**
  * The line of the Workspaces tab when it has no workspace to show and the
  * field is empty. It says where the workspaces of the filters show: in the
- * chosen repository, or in the org.
+ * chosen repository, or in the org. An archived workspace shows for the 14
+ * days after its Archive, and then it leaves the list.
  */
 export function emptyLine(filters: PaletteFilters): string {
   const place =
     filters.repository === allRepositories ? orgs.acme.name : filters.repository
   return filters.state === 'Archived'
-    ? `Archived workspaces of ${place} show here`
+    ? `Archived workspaces of ${place} show here for 14 days`
     : `Workspaces of ${place} show here`
 }

@@ -154,7 +154,8 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         message. The cloud computer of the workspace then downloads them.
         When the cloud computer has a file and its first start succeeded,
         ${productName} deletes its own copy. The file stays in the cloud
-        computer.`,
+        computer. Removing the workspace from the list keeps its chat
+        history until the org is deleted.`,
       text`Operational logs: ${productName} records when the program that
         runs workspace agents connects to the service or disconnects.
         It also records turns that end without a Stop request, including

@@ -6,7 +6,7 @@ import paletteStyles from '../../../docs/mockups/src/components/palette/CommandP
 import { routes } from '../../app/router'
 import { requestLines } from '../../app/test-kit'
 import { workspacePaths } from '../../shared/workspaces'
-import { accessibleName, byRole } from '../../test-support/dom-queries'
+import { byRole } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import {
@@ -19,6 +19,7 @@ import {
   groupLabels,
   highlighted,
   openPaletteTab,
+  optionNames,
   options,
   palette,
   searchField,
@@ -35,11 +36,6 @@ function openedWorkspaces(): string[] {
   return options().map((option) =>
     (option.getAttribute('href') ?? '').replace(prefix, ''),
   )
-}
-
-/** The names of the options, as a screen reader reads them. */
-function optionNames(): string[] {
-  return options().map(accessibleName)
 }
 
 /** The first two texts of each option, in the order that the row shows them. */
@@ -215,7 +211,8 @@ describe('the rows of the command palette', () => {
       kept: { text: 'storefront', groups: ['Checkout', 'Infra'] },
       sections: ['General', 'Checkout', 'Infra'],
       billing: ['invoice-fonts', 'webhook-retries', 'retry-queue'],
-      archivedBilling: 'Archived workspaces of acme/billing-service show here',
+      archivedBilling:
+        'Archived workspaces of acme/billing-service show here for 14 days',
       archived: { groups: ['Archived'], opens: [workspace] },
       focusBack: true,
       noMatch:

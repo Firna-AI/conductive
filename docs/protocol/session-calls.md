@@ -49,10 +49,11 @@ at `app/workspace-links/sent-by`.
 - Each reply gives the session link of each session that it names, as the
   workspace replies give workspace links. Reason: an agent can then point
   to a session that it started.
-- The reads also reach an archived workspace and a closed session, as a
-  copy of a transcript does. Each write refuses an archived workspace with
-  HTTP 409 and the error code `workspace_archived`. Reason: the chat of an
-  archived workspace is read-only.
+- The reads also reach an archived workspace, also a
+  [removed one](workspace-life.md#removed-workspaces), and a closed
+  session, as a copy of a transcript does. Each write refuses an archived
+  workspace with HTTP 409 and the error code `workspace_archived`.
+  Reason: the chat of an archived workspace is read-only.
 - `create_session` and `send_message` take an optional request ID. A
   repeat of such a write with the same request ID gives the result of the
   first write, as a repeated message of the app does.

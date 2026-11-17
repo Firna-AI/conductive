@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest'
 
+import { TEST_TIME } from '../test-support/harness'
 import { toolWorkspaceDetail } from '../tools/workspace-data'
 import { workspaceParent } from '../tools/workspace-parent-data'
 import {
@@ -46,7 +47,13 @@ it('stops each reader at an already seen workspace in corrupt parent rows', asyn
     depth: 2,
   })
   expect(
-    await toolWorkspaceDetail(db, orgId, 'live', 'https://conductive.build'),
+    await toolWorkspaceDetail(
+      db,
+      orgId,
+      'live',
+      'https://conductive.build',
+      TEST_TIME,
+    ),
   ).toMatchObject({ depth: 2 })
   const result = await db
     .prepare(`${workspaceTreeSql} SELECT id FROM subtree ORDER BY id`)

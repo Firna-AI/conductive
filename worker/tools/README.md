@@ -31,7 +31,8 @@ Direct handler tests also use the shared entry policy before dispatch.
 
 ## Handler
 
-`createAgentToolsHandler` takes the database, the machine origin, the app origin, and `AgentToolServices`.
+`createAgentToolsHandler` takes the database, the machine origin, the app origin, `AgentToolServices`, and an injected clock.
+Workspace lists and details use that clock to compute removal at the time of the read.
 It accepts GET and POST at `MACHINE_PATHS.workspaces`, which is `/v1/tools/workspaces`, on that origin only.
 It also accepts GET at `/v1/tools/repositories`, `/v1/tools/sections`, and `/v1/tools/models`.
 It accepts the section writes and the preview routes, as [Routes](sections-and-previews.md#routes) says.
@@ -47,10 +48,11 @@ Its current owner must still belong to that org.
 The token must not be revoked.
 The handler grants no access to other routes, methods, hosts, or sockets.
 
-GET returns the number, web link, name, branch, state, parent ID, and owner of every workspace in the calling org.
+GET returns the number, web link, name, branch, state, parent ID, and owner of every workspace in the calling org that is not removed.
 The owner gives `id`, `githubLogin`, and `displayName`, with no avatar.
 The link uses the configured app origin, not the machine request origin.
 It includes other owners' workspaces and archived workspaces.
+A [removed workspace](../../docs/protocol/workspace-life.md#removed-workspaces) shows only with the `removed` option.
 Its optional filters and paging follow [Workspace lists](workspaces.md#workspace-lists).
 The repository list reads the calling org's newest good image, in GitHub name order.
 `current` marks the calling workspace's repository.
@@ -72,7 +74,7 @@ The reserved workspace path value `current` resolves to the calling workspace fr
 No new sandbox credential supplies that ID.
 The handler and the real target object both check the target's org and the org's active state.
 The object also checks its exact workspace identity before it reads chat storage.
-An archived target remains readable. The caller's own token still needs its normal live-workspace access.
+An archived target remains readable, also after its removal. The caller's own token still needs its normal live-workspace access.
 
 The session list includes closed sessions, in creation order with ID as the tie breaker.
 Its optional `limit` and `offset` follow [Session list paging](sessions.md#session-list-paging).
@@ -235,7 +237,7 @@ The real-object route tests live in [worker/features](../features/).
 - [workspace-routes.ts](workspace-routes.ts) matches the workspace routes and runs their reads and writes.
 - [workspace-move-input.ts](workspace-move-input.ts) reads a move's optional section and parent target.
 - [workspace-input.ts](workspace-input.ts) reads the options of the workspace list.
-- [workspace-data.ts](workspace-data.ts) queries the workspace list and the details of one workspace.
+- [workspace-data.ts](workspace-data.ts) queries the workspace list with its default removal filter and builds details with the removal time.
 - [workspace-parent-data.ts](workspace-parent-data.ts) reads a parent's stored depth within its org.
 - [workspace-tree.ts](../../src/shared/workspace-tree.ts) places live rows with their shown section, parent, and depth.
 - [workspace-write-composition.ts](workspace-write-composition.ts) runs a rename, a move, or an archive as the sender.

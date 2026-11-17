@@ -40,7 +40,7 @@ function orgWorkspaces(source: PaletteSource): OrgWorkspaces {
     return noWorkspaces
   }
   const { sections, workspaces } = source.list.value
-  const groups = groupWorkspaces(sections, workspaces)
+  const groups = groupWorkspaces(sections, workspaces, source.listTime)
   return {
     sections: groups.sections.map((group) => ({
       label: group.section.name,

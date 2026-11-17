@@ -30,7 +30,7 @@ fn detail() -> Value {
             "children":[entry("child", json!("workspace"))],
             "repository":{"id":"repo", "fullName":"org/repo", "defaultBranch":"main"},
             "baseBranch":"main", "section":{"id":"section", "name":"General"},
-            "createdAt":1, "lastActivityAt":2, "archivedAt":null, "restoreUntil":null
+            "createdAt":1, "lastActivityAt":2, "archivedAt":null, "restoreUntil":null, "removedAt":null
         })
         .as_object()
         .unwrap()

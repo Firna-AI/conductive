@@ -20,8 +20,8 @@ This page lists each protocol doc and what it covers.
     shell variable of each repository in a sandbox, and the context folder
     of each workspace.
   - [Life of a workspace](../protocol/workspace-life.md): the start steps,
-    the time limits, the states, the stop and resume, the archive, the
-    restore, and Continue.
+    the time limits, the states, the archive, the restore, the removal from
+    the list after 14 days, and Continue.
     - [Workspace list marks](../protocol/workspace-marks.md): GitHub colours,
       agent motion, unread output, and reduced motion.
     - [Stop and resume](../protocol/stop-and-resume.md): the stop of an

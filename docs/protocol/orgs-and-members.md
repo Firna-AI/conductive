@@ -141,8 +141,17 @@ names a decision of the change that adds the org logins, as
 - Deleting a section moves its workspaces to General, also the archived
   ones. Reason: no workspace gets lost, and a Restore always has a section
   to go back to.
-- The app keeps the archived workspaces in the Archived group at the end
-  of the list. The users do not edit that group.
+- The app keeps each archived workspace in the Archived group at the end
+  of the list until its Restore ends (decision 518). The users do not edit
+  that group. [Removed workspaces](workspace-life.md#removed-workspaces)
+  says what happens then.
+- Each count of workspaces on the screens of an org leaves out the removed
+  workspaces. These are the count of the Archived group and the count of
+  each member on the Members tab. They are also the counts in the
+  questions of Remove member and Leave org.
+- Reason: a count then matches the rows in the list.
+- The page of an org with an empty list asks for a first workspace, also
+  when the org has removed workspaces.
 - A workspace row offers Archive only to its owner and the org's admins.
   Only hover reveals its archive icon over the time without moving the row
   content. Selection and keyboard focus alone keep the time visible.
@@ -273,6 +282,8 @@ names a decision of the change that adds the org logins, as
   states the choice when no such admin exists (decision 123).
 - Reason: each workspace keeps a person in the org who is responsible for
   it.
+- The [removed workspaces](workspace-life.md#removed-workspaces) of the
+  member move too, because the app keeps their data.
 - Their automations in the org move to the member who gets the workspaces,
   turned off, as [When the owner leaves](automations.md#when-the-owner-leaves)
   says (decision 508 E).

@@ -143,6 +143,10 @@ pub struct AgentListWorkspacesRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub archived: Option<bool>,
+    /// Only removed workspaces when true. False or omission leaves them out.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub removed: Option<bool>,
     /// limit.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
@@ -216,6 +220,9 @@ pub struct AgentWorkspaceDetail {
     pub archived_at: Option<Timestamp>,
     /// restore until.
     pub restore_until: Option<Timestamp>,
+    /// When the workspace left the list, 14 days after its archive. Null
+    /// until then.
+    pub removed_at: Option<Timestamp>,
 }
 
 /// AgentWorkspaceResponse wire fields.

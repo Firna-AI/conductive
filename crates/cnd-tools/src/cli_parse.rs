@@ -77,7 +77,7 @@ fn options(name: Name) -> Vec<&'static str> {
             "repository message message-file agent model effort fast section parent name first-session-title request-id"
         }
         Name::ListWorkspaces => {
-            "owner parent state repository query updated-since archived limit offset"
+            "owner parent state repository query updated-since archived removed limit offset"
         }
         Name::GetWorkspace | Name::ArchiveWorkspace | Name::ListPreviews => "workspace",
         Name::RenameWorkspace => "workspace name",
@@ -236,13 +236,18 @@ pub(crate) fn parse(args: &[String]) -> Result<Arguments> {
         };
         fields.insert("fast".into(), Value::Bool(value));
     }
-    if let Some(Value::String(value)) = fields.get("archived") {
-        let value = match value.as_str() {
-            "true" => true,
-            "false" => false,
-            _ => return Err(Error::Input(InputError::Archived)),
-        };
-        fields.insert("archived".into(), Value::Bool(value));
+    for (key, error) in [
+        ("archived", InputError::Archived),
+        ("removed", InputError::Removed),
+    ] {
+        if let Some(Value::String(value)) = fields.get(key) {
+            let value = match value.as_str() {
+                "true" => true,
+                "false" => false,
+                _ => return Err(Error::Input(error)),
+            };
+            fields.insert(key.into(), Value::Bool(value));
+        }
     }
     if name == Name::CloseSession && !fields.contains_key("stopRunningTurn") {
         fields.insert("stopRunningTurn".into(), Value::Bool(false));

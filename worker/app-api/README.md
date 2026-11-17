@@ -68,10 +68,13 @@ View writes cannot change this branch.
   [account contract](../../src/shared/account.ts) for the signed-in user
   only. [`account-stats.ts`](account-stats.ts) reads every count from D1 in
   one batch, with the windows and the state SQL of the operator Overview
-  from [`workspace-counts.ts`](../operator/workspace-counts.ts). It leaves
-  out deleted orgs and skipped automation runs. A run counts for the
-  `owner_user_id` of its row. The route keeps no history and calls no
-  sandbox provider.
+  from [`workspace-counts.ts`](../operator/workspace-counts.ts). As the
+  Overview reply does, `archived` counts every archived workspace, removed
+  ones included, so an older app that reads four states still adds up to
+  the total. `removed` counts the removed ones again, and the app takes
+  them out of Archived. It leaves out deleted orgs and skipped automation
+  runs. A run counts for the `owner_user_id` of its row. The route keeps no
+  history and calls no sandbox provider.
   [Account stats](../../docs/protocol/account-stats.md) states the rules.
 - Org login routes use the paths in `org-settings.ts` and the contracts in
   [`org-agent-logins.ts`](../../src/shared/org-agent-logins.ts).
