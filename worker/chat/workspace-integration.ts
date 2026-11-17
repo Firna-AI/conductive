@@ -103,6 +103,7 @@ export function createWorkspaceIntegration(
       waitUntil: (promise) => context.waitUntil(promise),
       browserAlarm: (at) => alarms.set('browser', at),
       runnerAlarm: (at) => alarms.set('runner', at),
+      automationReportAlarm: (at) => alarms.set('automation-report', at, true),
       runnerAttached: (_workspaceId, connectionId, send) => {
         files.runner.attach(connectionId, (command) => {
           context.waitUntil(
