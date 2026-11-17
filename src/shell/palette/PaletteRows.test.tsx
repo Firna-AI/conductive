@@ -246,6 +246,7 @@ describe('the rows of the command palette', () => {
         'New session',
         'Session history',
         ...goTo,
+        'Merge latest main',
         'New workspace',
         'New section',
         ...otherOrgs,

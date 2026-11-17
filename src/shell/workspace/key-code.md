@@ -115,7 +115,8 @@ this guide.
 - `WorkspacePaletteActions.tsx`: the actions that the screen offers to the
   command palette, as `workspaceActionIds` chooses them. Each one runs the
   control of the screen: +, the clock of the history, a tab of the right
-  column, Archive, or Restore.
+  column, Archive, or Restore. Merge latest has no control: it runs
+  `github/merge-latest.ts`.
 - `tools/tool-events.ts`: `ToolEvents`, the events of the tools from the
   ordered stream. It keeps the revokes of previews, the latest report of the
   listening ports, and the first failed repair of that report since it. A
@@ -126,7 +127,11 @@ this guide.
   the bar and its controls, and `github/bar-feed.ts` shows a GitHub state of
   another branch as loading. `github/bar-keys.tsx`: `BarKeys`, the keys of
   the bar, beside the bar of the right column and beside the actions at
-  the top of the Checks tab of a phone.
+  the top of the Checks tab of a phone. `github/merge-latest.ts`:
+  `useMergeLatest`, the label and the run of the Merge latest row of the
+  palette. It sends its prompt through the store of the bar actions, and
+  `useShowChat` of `bar-controls.ts` shows the chat when the prompt did
+  not go out.
 - `kept-connections.tsx`: `KeptConnections`, the one connection of the
   kept files and of the kept previews for the whole screen.
 - `previews/kept-previews.ts`: the kept previews store of the open

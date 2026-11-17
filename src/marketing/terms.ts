@@ -217,8 +217,9 @@ export const termsDocument: LegalDocument = {
           of the repository. It keeps the cloud computer and its sessions.
           Changed files move to the new branch. Commits that are not pushed
           stay on their local branches.`,
-        paragraph`The agent actions in the pull request bar send messages as
-          the member who clicks. The chat history keeps these messages and a
+        paragraph`The agent actions in the pull request bar and Merge latest
+          in the command palette send messages as the member who uses them.
+          The chat history keeps these messages and a
           note that names who used Continue and the branches.`,
         paragraph`You keep any rights that you have in your repositories,
           files, messages, and other content. You give the operator

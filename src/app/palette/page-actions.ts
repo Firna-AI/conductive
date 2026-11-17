@@ -12,6 +12,12 @@ export interface OfferedAction {
    * click and Enter run `run`, as the control of the page does.
    */
   readonly href?: string
+  /**
+   * The label of the row when it names a fact of the page, such as the
+   * target branch of Merge latest. Without it, the row takes the label of
+   * `actionTexts`.
+   */
+  readonly label?: string
   readonly run: () => void
 }
 
@@ -50,6 +56,11 @@ export interface WorkspacePage {
   desktopTool: boolean
   /** The archived bar of the page offers Restore. */
   offersRestore: boolean
+  /**
+   * The page can send the prompt of Merge latest: it knows the target
+   * branch, and the member may push, as for an agent action of the bar.
+   */
+  mergeLatest: boolean
 }
 
 /** The actions that the screen of an open workspace offers. */
@@ -72,8 +83,10 @@ const goToActions: readonly WorkspaceActionId[] = [
  * order. A read-only workspace, archived or in a suspended org, offers no
  * New session. Session history stays, because it changes nothing. The Go
  * to rows need the tabs of the right column, which an archived workspace
- * does not show. Go to Desktop also needs the Desktop tool. Archive
- * follows `mayArchive`. Restore workspace follows the archived bar of the
+ * does not show. Go to Desktop also needs the Desktop tool. Merge latest
+ * needs a workspace that takes changes and a page that can send its
+ * prompt. It is the one row that no control of the page offers (merge
+ * latest decision 2 A). Archive follows `mayArchive`. Restore workspace follows the archived bar of the
  * chat, which offers it to every member until its last day.
  */
 export function workspaceActionIds(page: WorkspacePage): WorkspaceActionId[] {
@@ -88,6 +101,7 @@ export function workspaceActionIds(page: WorkspacePage): WorkspaceActionId[] {
       ...goToActions.filter((id) => id !== 'go-to-desktop' || page.desktopTool),
     )
   }
+  if (page.mergeLatest && !readOnly) ids.push('merge-latest')
   if (mayArchive(access, workspace, page.viewer)) ids.push('archive-workspace')
   if (page.chat && page.offersRestore) ids.push('restore-workspace')
   return ids

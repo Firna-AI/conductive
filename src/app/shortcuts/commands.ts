@@ -149,6 +149,7 @@ export const shortcutCommands: readonly ShortcutCommand[] = [
     agentActionLabels['resolve-conflicts'],
     ['merge', 'rebase', 'pull request'],
   ),
+  palette('merge-latest', 'Workspace'),
   command(
     'address-review',
     'Workspace',

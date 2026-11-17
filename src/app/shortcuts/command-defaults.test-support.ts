@@ -39,8 +39,17 @@ export const workspaceCommandDefaults = [
     defaults: { mac: [], other: [] },
   },
   {
-    id: 'address-review',
+    id: 'merge-latest',
     previous: 'resolve-conflicts',
+    group: 'Workspace',
+    scope: 'palette',
+    label: 'Merge latest target branch',
+    words: ['main', 'update', 'sync', 'pull', 'rebase', 'branch'],
+    defaults: { mac: [], other: [] },
+  },
+  {
+    id: 'address-review',
+    previous: 'merge-latest',
     group: 'Workspace',
     scope: 'workspace',
     label: 'Address review',

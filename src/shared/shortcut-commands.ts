@@ -40,6 +40,7 @@ export const shortcutCommandIds = [
   'create-pull-request',
   'fix-checks',
   'resolve-conflicts',
+  'merge-latest',
   'address-review',
   'commit-and-push',
   'mark-ready-for-review',

@@ -3,6 +3,10 @@ import {
   sendFeedbackWords,
 } from '../../../docs/mockups/src/components/feedback/feedbackCopy'
 import {
+  mergeLatestCommandLabel,
+  mergeLatestWords,
+} from '../../../docs/mockups/src/components/workspace/mergeLatestCopy'
+import {
   shortcutDigits,
   type ShortcutCommandId,
 } from '../../shared/shortcut-commands'
@@ -28,6 +32,7 @@ export const offeredActionIds = [
   'go-to-terminal',
   'go-to-preview',
   'go-to-desktop',
+  'merge-latest',
   'archive-workspace',
   'restore-workspace',
   'new-section',
@@ -55,6 +60,8 @@ export const actionTexts: Readonly<
   'go-to-terminal': { label: 'Go to Terminal', words: [] },
   'go-to-preview': { label: 'Go to Preview', words: ['port'] },
   'go-to-desktop': { label: 'Go to Desktop', words: [] },
+  // The row names the target branch, as `mergeLatestLabel` gives it.
+  'merge-latest': { label: mergeLatestCommandLabel, words: mergeLatestWords },
   'archive-workspace': { label: 'Archive workspace', words: [] },
   'restore-workspace': { label: 'Restore workspace', words: ['unarchive'] },
   'new-workspace': { label: 'New workspace', words: ['create', 'task'] },
@@ -87,6 +94,7 @@ export const actionCommands: Readonly<
   'go-to-terminal': 'go-to-terminal',
   'go-to-preview': 'go-to-preview',
   'go-to-desktop': null,
+  'merge-latest': 'merge-latest',
   'archive-workspace': 'archive-workspace',
   'restore-workspace': 'restore-workspace',
   'new-section': 'new-section',

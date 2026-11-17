@@ -7,7 +7,8 @@ group, with Send feedback. It belongs to
 palette. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says. The [mockup catalogue](../mockups/catalogue-palette.md) draws the
+says. A merge latest decision is a decision of the change that added
+[Merge latest](#merge-latest). The [mockup catalogue](../mockups/catalogue-palette.md) draws the
 actions at `app/command-palette/actions`, and the settings at
 `app/command-palette/settings`.
 
@@ -23,7 +24,8 @@ actions at `app/command-palette/actions`, and the settings at
   [The hidden sidebar](org-rail-order.md#the-hidden-sidebar) defines the
   list popover decisions.
 - The palette offers only the actions that the current page offers to the
-  person. Send feedback is the one exception, as [Help](#help) says.
+  person. Send feedback and Merge latest are the exceptions, as
+  [Help](#help) and [Merge latest](#merge-latest) say.
 - New workspace also shows on each page where the palette has an org that
   takes changes. It uses the
   [saved view of New workspace](create-a-workspace.md#page-or-dialog).
@@ -31,7 +33,8 @@ actions at `app/command-palette/actions`, and the settings at
 - The Go to rows show only where the page shows the right column.
 - On the All tab and on the Actions tab, the actions come in this order:
   1. While a workspace is open, its actions: New session, Session history,
-     a Go to row for each tab of the right column, and Archive workspace.
+     a Go to row for each tab of the right column, Merge latest, and
+     Archive workspace.
      The Go to rows lead to All files, Changes, Checks, Terminal, and
      Preview. Desktop has no Go to row while the app hides it, as
      [Desktop](workspace-tools.md#desktop) says. An archived workspace
@@ -54,8 +57,9 @@ actions at `app/command-palette/actions`, and the settings at
   [What members of a suspended org keep](operator-actions.md#what-members-of-a-suspended-org-keep)
   states what they can still do.
 - Each action does what the same control does in the app. So New workspace
-  opens New workspace, as the rest of the app does. Send feedback is the
-  one exception, as [Help](#help) says.
+  opens New workspace, as the rest of the app does. Send feedback and
+  Merge latest are the exceptions, as [Help](#help) and
+  [Merge latest](#merge-latest) say.
 - The palette does not offer Resume, the owner picker, Sign out, or the
   pull request actions. They stay where they are:
   - Resume shows on the stopped workspace itself.
@@ -63,6 +67,49 @@ actions at `app/command-palette/actions`, and the settings at
   - Sign out sits on the Account page, which the Sign-in row opens.
   - A pull request action runs from the pull request bar, or from its key,
     as [Keyboard shortcuts](keyboard-shortcuts.md#commands) says.
+- Merge latest is not an action of the pull request bar, so this rule
+  does not cover it.
+
+## Merge latest
+
+- Merge latest asks the agent to merge the latest target branch into the
+  branch of the open workspace. Its row names the target branch, such as
+  "Merge latest main". The target branch is the base branch that the
+  [pull request bar](github-banner.md) shows.
+- The row sends a fixed prompt at once, as an
+  [agent action](github-banner.md#agent-actions) of the bar does (merge
+  latest decision 1 A, 17 November 2026). The prompt asks the agent to
+  fetch the target branch from GitHub and merge it. When the branch
+  already has each commit, the agent says so and stops. Otherwise it
+  resolves each conflict, runs the tests, then commits and pushes.
+- It follows the rules of
+  [Messages from the bar](messages-and-attachments.md#messages-from-the-bar).
+- Reason: the agent does each step that changes code, on a fixed prompt
+  (decision 220).
+- These ways were rejected for merge latest decision 1:
+  - The row puts the prompt into the message field as a draft. It then
+    needs one more press, and no other agent action works that way.
+  - The app runs the merge in the sandbox itself. It then needs a new
+    runner message and a new way to name who pushed. Decision 220
+    rejected this way for the bar.
+  - The app asks GitHub to update the branch of the pull request. A branch
+    without a pull request then gets nothing, and the sandbox stays behind
+    GitHub.
+- No control of the page offers Merge latest. It shows only in the
+  palette, and it has a command of its own without a default key, as
+  [the default keys](keyboard-shortcuts-keys.md#the-default-keys) say
+  (merge latest decision 2 A, 17 November 2026).
+- Reason: the bar shows one main action for each state (decision 220). A
+  second control there needs its own design.
+- A control on the page beside the palette row was rejected for merge
+  latest decision 2. It needs a new mockup and a change of the bar.
+- The row shows while the page shows the GitHub state of the branch. It
+  shows only to a member who sees the agent actions of the bar, as
+  [Agent actions](github-banner.md#agent-actions) says.
+- An archived workspace and a workspace of a suspended org offer no
+  Merge latest. A merged pull request offers none either. Reason: a merged
+  branch continues from the target branch, as
+  [Continue](continue.md) says.
 
 ## Help
 
@@ -78,7 +125,7 @@ actions at `app/command-palette/actions`, and the settings at
 - Send feedback shows on each page where the palette opens, also without
   an org and in a suspended org. Reason: feedback changes no org.
 - Send feedback is not a link, because the Feedback dialog has no address.
-- Send feedback is the one exception to three rules of the palette:
+- Send feedback is an exception to three rules of the palette:
   - Each other action does what the same control does in the app. The app
     has no other control for feedback.
   - Each other action shows only where the current page offers it. The
