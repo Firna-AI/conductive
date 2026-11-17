@@ -154,16 +154,16 @@ Depends on: Milestone 2
 
 The `non-ui implementor` owns the shared tool contracts and Worker changes. This milestone keeps the product working with the current executable.
 
-- [ ] Update the shared interface, tools, and Worker READMEs with the new type and validation entry points.
-- [ ] Move touched secret tool boundary types to `crates/cnd-runner-interface/`. Preserve their existing wire fields and status variants.
-- [ ] Generate and commit TypeScript bindings. Import each generated type directly. Remove only the replaced handwritten declarations.
-- [ ] Keep new printable alias metadata separate from the Worker value-bearing response.
-- [ ] Implement the approved new-name check at the shared org secret creation boundary. Apply it to Add secret and Save as secret.
-- [ ] Preflight a combined save answer before writes. A refusal must not create a partial set of secrets or grants.
-- [ ] Keep existing invalid names available for list, run, Replace, Reveal, Delete, and grants.
-- [ ] Apply the same new-name rule in the development API. Keep fixtures that prove existing invalid names still load.
-- [ ] Add cases to the existing Worker creation and temporary-value tests. Prove the new assertions fail before the fix.
-- [ ] Verify that legacy Worker replies still fit the tool contracts. Verify that generated bindings match the Rust source.
+- [x] Update the shared interface, tools, and Worker READMEs with the new type and validation entry points.
+- [x] Move touched secret tool boundary types to `crates/cnd-runner-interface/`. Preserve their existing wire fields and status variants.
+- [x] Generate and commit TypeScript bindings. Import each generated type directly. Remove only the replaced handwritten declarations.
+- [x] Keep new printable alias metadata separate from the Worker value-bearing response.
+- [x] Implement the approved new-name check at the shared org secret creation boundary. Apply it to Add secret and Save as secret.
+- [x] Preflight a combined save answer before writes. A refusal must not create a partial set of secrets or grants.
+- [x] Keep existing invalid names available for list, run, Replace, Reveal, Delete, and grants.
+- [x] Apply the same new-name rule in the development API. Keep fixtures that prove existing invalid names still load.
+- [x] Add cases to the existing Worker creation and temporary-value tests. Prove the new assertions fail before the fix.
+- [x] Verify that legacy Worker replies still fit the tool contracts. Verify that generated bindings match the Rust source.
 
 ## Milestone 4: Tool mapping and child execution
 
@@ -171,16 +171,16 @@ Depends on: Milestone 3
 
 The `non-ui implementor` adds aliases to the shared CLI/MCP execution path.
 
-- [ ] Implement the approved mapping and collision policy. Construct one checked environment for both adapters.
-- [ ] Preserve original entries that the operating system accepts. Preserve valid-name case and inherited environment behavior.
-- [ ] Add variable metadata to list replies and run results. Give CLI metadata on stderr without mixing it into stdout.
-- [ ] Keep Worker values under exact requested names. Keep malformed and unrequested values out of the child and all printable replies.
-- [ ] Update `crates/cnd-tools/src/help.txt` and `crates/cnd-tools/src/mcp-tools.json` with variable lookup guidance and the collision outcome.
-- [ ] Extend the native process regression to prove a nested program sees an alias for `Cloudflare (read-only)`. Do not print a value.
-- [ ] Exercise direct environment readers through the CLI to prove original-name compatibility.
-- [ ] Cover normalization boundaries and the approved collision outcome at the lowest public tool boundary. Do not duplicate private helper tests.
-- [ ] Extend existing adapter cases for metadata, old Worker replies, nonzero exits, and redaction. Keep every unrelated assertion.
-- [ ] See each new assertion fail before the fix. Run every new asynchronous test 10 times and record its cost.
+- [x] Implement the approved mapping and collision policy. Construct one checked environment for both adapters.
+- [x] Preserve original entries that the operating system accepts. Preserve valid-name case and inherited environment behavior.
+- [x] Add variable metadata to list replies and run results. Give CLI metadata on stderr without mixing it into stdout.
+- [x] Keep Worker values under exact requested names. Keep malformed and unrequested values out of the child and all printable replies.
+- [x] Update `crates/cnd-tools/src/help.txt` and `crates/cnd-tools/src/mcp-tools.json` with variable lookup guidance and the collision outcome.
+- [x] Extend the native process regression to prove a nested program sees an alias for `Cloudflare (read-only)`. Do not print a value.
+- [x] Exercise direct environment readers through the CLI to prove original-name compatibility.
+- [x] Cover normalization boundaries and the approved collision outcome at the lowest public tool boundary. Do not duplicate private helper tests.
+- [x] Extend existing adapter cases for metadata, old Worker replies, nonzero exits, and redaction. Keep every unrelated assertion.
+- [x] See each new assertion fail before the fix. Run every new asynchronous test 10 times and record its cost.
 
 ## Milestone 5: Product UI
 
@@ -222,6 +222,10 @@ The shared skill scripts live in `/home/user/code/skills/skills/` in this worksp
 Mockup design calls from 17 November 2026: keep the invalid-name fixture scoped to its Replace variant. Reuse variants of the existing value page. Use disabled lifetime controls with one explanatory line. Reuse the name copy in the app during Milestone 5. These calls apply the approved validation behavior. No new requirement or user decision is needed.
 
 Documentation design calls from 17 November 2026: update both legal effective dates and the Terms revision identifier through their existing consent mechanism. Keep the complete mapping contract in the internal docs. Give public readers the variable lookup action, one example, and the separate-command recovery for conflicts.
+
+Backend design calls from 17 November 2026: use one browser-safe predicate and refusal message for creation. Keep raw Worker contracts separate from printable tool results. Prefix CLI metadata with `environmentVariables: `. Append it after the unchanged child stderr bytes, with JSON escaping and a final newline. These calls preserve the approved wire and stream behavior. No new user decision is needed.
+
+Backend evidence: `.context/secret-variable-names/non-ui-report.md`, `backend-preservation-searches.txt`, and `backend-deletion-audit-before.txt`.
 
 ## Approval and review record
 

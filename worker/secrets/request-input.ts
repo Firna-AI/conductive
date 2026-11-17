@@ -1,7 +1,5 @@
-import type {
-  AnswerSecretRequest,
-  RunWithSecretsRequest,
-} from '../../src/shared/secret-requests'
+import type { RunWithSecretsRequest } from '../../src/shared/generated/RunWithSecretsRequest'
+import type { AnswerSecretRequest } from '../../src/shared/secret-requests'
 import { HttpError } from '../http'
 
 export function secretInputError() {

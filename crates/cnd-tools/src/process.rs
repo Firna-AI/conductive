@@ -7,9 +7,10 @@ use std::os::unix::process::ExitStatusExt;
 use std::process::{ExitStatus, Stdio};
 
 use async_trait::async_trait;
-use serde::Serialize;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 use tokio::process::Command;
+
+use cnd_runner_interface::tools::secret_results::CommandResult;
 
 use crate::error::{Error, Result};
 use crate::secrets::filter::Filter;
@@ -21,18 +22,6 @@ pub enum CommandInput {
     Inherit(Vec<String>),
     /// Run shell text with closed stdin and return filtered stdout and stderr.
     Capture(String),
-}
-
-/// The filtered result of a child command.
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CommandResult {
-    /// Filtered stdout, empty for an inherited CLI stream.
-    pub stdout: String,
-    /// Filtered stderr, empty for an inherited CLI stream.
-    pub stderr: String,
-    /// Exit status, with Unix signals represented as 128 plus the signal number.
-    pub exit_code: u8,
 }
 
 /// Replaceable child process boundary. Values must never enter diagnostics or arguments.

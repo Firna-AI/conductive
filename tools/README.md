@@ -12,7 +12,7 @@ The [Worker handler](../worker/tools/README.md) verifies the workspace token
 and the calling turn. Rust owns the shared runner request and reply types in
 [cnd-runner-interface](../crates/cnd-runner-interface/README.md).
 The Worker imports their generated TypeScript directly.
-The tools decode the existing secret route contracts in `cnd-tools`.
+The shared interface also owns the secret route contracts and printable tool results.
 
 The sandbox release ships the tools in its Rust executable.
 The system installer links `/usr/local/bin/conductive` to
@@ -147,8 +147,8 @@ exact copies.
 
 The CLI executes the arguments after `--` directly. It keeps stdin and
 streams filtered stdout and stderr. It returns the child's exit status.
-After the child ends, it writes one stderr line with the JSON map of
-secret names to variable names. Stdout holds only the child's output.
+After the child ends, it writes `environmentVariables: ` and the JSON map of
+secret names to variable names on stderr. Stdout holds only the child's output.
 For shell syntax, pass `sh -c 'command'` after `--`.
 MCP runs its `command` text through `/bin/sh -c`, with closed stdin.
 It returns filtered `stdout`, `stderr`, `exitCode`, and the

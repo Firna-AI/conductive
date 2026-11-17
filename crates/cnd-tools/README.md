@@ -35,7 +35,7 @@ variable name, and under each exact name except an empty name or one with `=` or
 The Worker reply keeps its values under the exact requested names.
 The CLI runs the exact arguments after `--`, keeps stdin, streams filtered
 stdout and stderr, and returns the child's exit status.
-After the child ends, it writes the JSON map of names to variable names as one stderr line.
+After the child ends, it writes `environmentVariables: ` and the JSON map of names to variable names on stderr.
 MCP runs its command text through `/bin/sh -c` with closed stdin.
 It returns `status: "completed"`, filtered `stdout` and `stderr`, `exitCode`,
 and `environmentVariables`.
@@ -102,7 +102,8 @@ isolation and filtered output. Worker route tests need no Rust build.
 - [environment.rs](src/environment.rs) keeps runtime values ahead of injected saved settings.
 - [runtime.rs](src/runtime.rs) implements native HTTP, input, polling, and stdio.
 - [process.rs](src/process.rs) owns the child boundary, native execution, and filtered streams.
-- [secrets](src/secrets/mod.rs) validates the existing Worker contract and filters split byte matches.
+- [secrets](src/secrets/mod.rs) reads the Rust-owned Worker contracts and filters split byte matches.
+- [Secret environment](src/secrets/environment.rs) derives variable names and checks ownership of every child entry before HTTP.
 
 ### Related Docs
 

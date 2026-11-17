@@ -90,7 +90,8 @@ Keep each value out of output, files, and answers.
 The CLI keeps stdin and streams the filtered output. Its exit status is
 the child's status. A signal gives 128 plus the signal number.
 After the child ends, the CLI writes one stderr line with the JSON map of
-secret names to variable names.
+secret names to variable names: `environmentVariables: {"NAME":"VARIABLE"}`.
+Each name uses JSON escaping. If child stderr has no final newline, the metadata follows its last byte.
 MCP runs `command` with `/bin/sh -c` and closed stdin. Its reply is
 `{ status: "completed", stdout, stderr, exitCode, environmentVariables }`
 after filtering. `environmentVariables` maps each secret name to its
