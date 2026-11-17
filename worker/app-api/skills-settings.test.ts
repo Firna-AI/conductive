@@ -65,11 +65,16 @@ it('saves skills links as names, preserves other text, removes an empty setting,
   expect(await unchanged.json()).toMatchObject({
     settings: { skillsRepository: 'owner/skills' },
   })
-  for (const value of [
-    'not a repository',
-    'owner /name',
-    'owner/../other',
-    '',
+  for (const [value, expected] of [
+    ['not a repository', 'not a repository'],
+    ['owner /name', 'owner /name'],
+    ['owner/../other', 'owner/../other'],
+    [
+      ' \n https://github.com/invalid_owner/skills \n ',
+      'https://github.com/invalid_owner/skills',
+    ],
+    [' \n ', ''],
+    ['', ''],
   ]) {
     const saved = await fixture.request(path, {
       method: 'PATCH',
@@ -77,10 +82,10 @@ it('saves skills links as names, preserves other text, removes an empty setting,
     })
     expect(saved.status).toBe(200)
     expect(await saved.json()).toMatchObject({
-      settings: { skillsRepository: value },
+      settings: { skillsRepository: expected },
     })
     expect(await (await fixture.request(path)).json()).toMatchObject({
-      settings: { skillsRepository: value },
+      settings: { skillsRepository: expected },
     })
   }
   expect(

@@ -55,6 +55,7 @@ export function fakeSkillsGitHub(
     private?: boolean
     recordStatus?: number
     treeStatus?: number
+    treeMessage?: string
     record?: unknown
     tree?: unknown
   } = {},
@@ -83,13 +84,18 @@ export function fakeSkillsGitHub(
       )
     }
     return Response.json(
-      options.tree ?? {
-        truncated: options.truncated ?? false,
-        tree: (options.paths ?? ['skills/example/SKILL.md']).map((path) => ({
-          path: path.endsWith('/') ? path.slice(0, -1) : path,
-          type: path.endsWith('/') ? 'tree' : 'blob',
-        })),
-      },
+      options.tree ??
+        (options.treeMessage === undefined
+          ? {
+              truncated: options.truncated ?? false,
+              tree: (options.paths ?? ['skills/example/SKILL.md']).map(
+                (path) => ({
+                  path: path.endsWith('/') ? path.slice(0, -1) : path,
+                  type: path.endsWith('/') ? 'tree' : 'blob',
+                }),
+              ),
+            }
+          : { message: options.treeMessage }),
       { status: options.treeStatus ?? 200 },
     )
   }

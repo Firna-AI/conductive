@@ -59,7 +59,7 @@ export class ComputerModel {
     this.org = org
     this.delay = delay
     this.settings = org.resources.settings.store
-    this.lookup = new SkillsLookup(org.services.api, org.orgId)
+    this.lookup = new SkillsLookup(org.services.api, org.orgId, this.saved)
     this.skills = this.lookup.store
   }
 
@@ -82,9 +82,11 @@ export class ComputerModel {
    */
   start(): void {
     this.unfollow()
+    const run = this.generation
     this.following = [
       this.org.watch('builds'),
       this.org.builds.subscribe(() => this.followLog()),
+      this.lookup.follow(() => run === this.generation),
     ]
     this.followLog()
     void this.load()
@@ -186,8 +188,7 @@ export class ComputerModel {
     const run = this.generation
     await this.write({ skillsRepository: repository })
     if (run !== this.generation) return
-    this.lookup.clear()
-    void this.lookup.read(() => run === this.generation)
+    this.lookup.afterSave(() => run === this.generation)
   }
 
   /**

@@ -144,6 +144,30 @@ describe('the Skills section of an admin', () => {
     })
   })
 
+  test('saving an equivalent GitHub link settles the field and disables Save', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer()
+    const view = await mountedTab(server)
+    server.json('PATCH', settingsPath, { settings: saved })
+    server.json('GET', skillsPath, lookup({ skills: ['updated-skill'] }))
+    typeText(field(view), 'https://github.com/acme/agent-skills')
+    click(byRole('button', 'Save repository', view))
+    await settle()
+    expect({
+      value: field(view).value,
+      saveOff: saveOff(view),
+      skills: listed(view),
+      writes: await settingsWrites(server),
+      lookups: lookups(server),
+    }).toEqual({
+      value: 'acme/agent-skills',
+      saveOff: true,
+      skills: ['updated-skill'],
+      writes: [{ skillsRepository: 'https://github.com/acme/agent-skills' }],
+      lookups: 2,
+    })
+  })
+
   test('each answer of the lookup shows its notice or its list, with the words of an admin', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer()
@@ -159,6 +183,10 @@ describe('the Skills section of an admin', () => {
     )
     // The notices in the section, and the text of the list of skills.
     const shown = async (answer: SkillsRepositoryLookupResponse) => {
+      server.json('GET', settingsPath, {
+        settings: { ...saved, skillsRepository: answer.repository },
+      })
+      await act(() => computer.load())
       server.json('GET', skillsPath, answer)
       await act(() => computer.loadSkills())
       const list = skillsOf(view).querySelector(`.${skillListStyles.skills}`)

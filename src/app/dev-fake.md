@@ -37,8 +37,9 @@ option overrides this default, including queued chats that show no spinner.
   first good build start one added build. The fake compares settings
   revisions with builds as the Worker does.
 - `dev/skills-routes.ts` keeps the skills repository of each org. Acme
-  starts with acme/agent-skills. A save stores a link from GitHub as
-  owner/name, and other text as typed, as the Worker does. The lookup of
+  starts with acme/agent-skills. A save trims spaces and line breaks at
+  both ends, then stores a valid GitHub link as owner/name and keeps other
+  trimmed text. It uses the same rule as the Worker. The lookup of
   the Skills section knows only acme/agent-skills, whose 12 skills it
   lists, so it does not find any other repository. `?skills=<state>`
   gives Acme each state of the mockups: `none` saves no repository, and

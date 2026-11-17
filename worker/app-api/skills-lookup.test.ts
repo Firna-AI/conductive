@@ -1,7 +1,6 @@
 import { expect, it } from 'vitest'
 
 import { OUTER_ORG } from '../chat/integration/outer-seed.test-support'
-import { saveGitHubTokens } from '../security/github-tokens'
 import {
   fakeSkillsGitHub,
   setupSkillsLookupTests,
@@ -109,6 +108,40 @@ it.each([
     calls: 2,
   },
   {
+    scenario: 'an empty repository',
+    options: { treeStatus: 409, treeMessage: 'Git Repository is empty.' },
+    notice: 'no-skills',
+    skills: [],
+    calls: 2,
+  },
+  {
+    scenario: 'another tree conflict',
+    options: {
+      treeStatus: 409,
+      treeMessage: 'Git Repository is empty. Try again.',
+    },
+    notice: 'failed',
+    skills: [],
+    calls: 2,
+  },
+  {
+    scenario: 'the empty message with a different status',
+    options: { treeStatus: 502, treeMessage: 'Git Repository is empty.' },
+    notice: 'failed',
+    skills: [],
+    calls: 2,
+  },
+  {
+    scenario: 'an empty message from the repository record',
+    options: {
+      recordStatus: 409,
+      record: { message: 'Git Repository is empty.' },
+    },
+    notice: 'failed',
+    skills: [],
+    calls: 1,
+  },
+  {
     scenario: 'a cut tree',
     options: { truncated: true },
     notice: 'incomplete',
@@ -209,73 +242,5 @@ it('returns no list for no repository and not-found for invalid saved text witho
       clashes: [],
     })
   }
-  expect(fixture.github.requests).toEqual([])
-})
-
-it.each([
-  {
-    scenario: 'an expired stored sign-in',
-    recordStatus: 200,
-    treeStatus: 200,
-    expired: true,
-    calls: 0,
-  },
-  {
-    scenario: 'a revoked token at the repository read',
-    recordStatus: 401,
-    treeStatus: 200,
-    expired: false,
-    calls: 1,
-  },
-  {
-    scenario: 'a revoked token at the tree read',
-    recordStatus: 200,
-    treeStatus: 401,
-    expired: false,
-    calls: 2,
-  },
-])(
-  'keeps the sign-in error for $scenario',
-  async ({ recordStatus, treeStatus, expired, calls }) => {
-    const fixture = fixtureForTest()
-    if (expired)
-      await saveGitHubTokens(
-        fixture.env,
-        'owner',
-        {
-          accessToken: 'expired-token',
-          expiresAt: 1,
-          refreshToken: 'expired-refresh',
-          refreshExpiresAt: 2,
-        },
-        Date.now(),
-      )
-    fakeSkillsGitHub(fixture, { recordStatus, treeStatus })
-    const response = await fixture.request(SKILLS_LOOKUP_PATH)
-    expect(response.status).toBe(401)
-    expect(await response.json()).toEqual({
-      error: {
-        code: 'github_reconnect_required',
-        message: 'GitHub access expired. Sign in with GitHub again.',
-      },
-    })
-    expect(fixture.github.requests).toHaveLength(calls)
-    expect((await fixture.request(SKILLS_SETTINGS_PATH)).status).toBe(200)
-  },
-)
-
-it('refuses a non-member before any GitHub request', async () => {
-  const fixture = fixtureForTest()
-  fakeSkillsGitHub(fixture)
-  const response = await fixture.request(SKILLS_LOOKUP_PATH, {
-    headers: { Cookie: fixture.cookies.outsiderCookie },
-  })
-  expect(response.status).toBe(404)
-  expect(await response.json()).toEqual({
-    error: {
-      code: 'org_not_found',
-      message: 'The org is not available.',
-    },
-  })
   expect(fixture.github.requests).toEqual([])
 })

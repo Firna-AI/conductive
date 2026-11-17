@@ -1,17 +1,21 @@
 import type { NoSkillsCause } from '../../docs/mockups/src/components/settings/skillsCopy'
 import {
   orgSettingsPaths,
+  type OrgSettings,
   type SkillsRepositoryLookupResponse,
 } from '../shared/org-settings'
 import type { ApiClient } from './api/client'
 import { readSkillsLookup } from './api/read-settings'
+import type { Resource } from './resource'
 import {
   asApiError,
+  derived,
   loading,
   ready,
   Store,
   type Loadable,
   type Readable,
+  valueOf,
 } from './store'
 
 /**
@@ -62,16 +66,76 @@ export class SkillsLookup {
   private readonly shown = new Store<Loadable<SkillsRepositoryLookupResponse>>(
     loading,
   )
-  readonly store: Readable<Loadable<SkillsRepositoryLookupResponse>> =
-    this.shown
+  readonly store: Readable<Loadable<SkillsRepositoryLookupResponse>>
   private readonly api: ApiClient
   private readonly orgId: string
+  private readonly settings: Resource<OrgSettings>
+  private settingsAtRead: OrgSettings | undefined
+  private reconciled: SkillsRepositoryLookupResponse | null = null
   /** Counts the reads, so that an answer knows when a newer read started. */
   private reads = 0
 
-  constructor(api: ApiClient, orgId: string) {
+  constructor(api: ApiClient, orgId: string, settings: Resource<OrgSettings>) {
     this.api = api
     this.orgId = orgId
+    this.settings = settings
+    this.store = derived(settings.store, this.shown, (saved, found) =>
+      found.state === 'ready' &&
+      (saved.state !== 'ready' ||
+        found.value.repository !== (saved.value.skillsRepository ?? ''))
+        ? loading
+        : found,
+    )
+  }
+
+  private savedRepository(): string | undefined {
+    const saved = valueOf(this.settings.store.get())
+    return saved ? (saved.skillsRepository ?? '') : undefined
+  }
+
+  /**
+   * While the tab shows, every changed saved repository starts a lookup,
+   * whether a read, another setting's save, or a closed tab supplied it.
+   * The initial settings answer shares the lookup that opening starts.
+   */
+  follow(current: () => boolean): () => void {
+    let repository = this.savedRepository()
+    return this.settings.store.subscribe(() => {
+      const next = this.savedRepository()
+      const changed =
+        repository !== undefined && next !== undefined && next !== repository
+      repository = next
+      if (changed) {
+        this.clear()
+        void this.read(current)
+      } else void this.reconcile(current)
+    })
+  }
+
+  /**
+   * Every repository Save looks up again, even if its canonical value did
+   * not change. A lookup already started for this settings answer counts.
+   */
+  afterSave(current: () => boolean): void {
+    if (this.settingsAtRead === valueOf(this.settings.store.get())) return
+    this.clear()
+    void this.read(current)
+  }
+
+  /** A mismatched answer can be newer than settings. Read them once for it. */
+  private reconcile(current: () => boolean): Promise<void> {
+    const found = this.shown.get()
+    const repository = this.savedRepository()
+    if (
+      !current() ||
+      found.state !== 'ready' ||
+      repository === undefined ||
+      found.value.repository === repository ||
+      this.reconciled === found.value
+    )
+      return Promise.resolve()
+    this.reconciled = found.value
+    return this.settings.read(current)
   }
 
   /**
@@ -88,6 +152,7 @@ export class SkillsLookup {
    * newer read started.
    */
   async read(current: () => boolean): Promise<void> {
+    this.settingsAtRead = valueOf(this.settings.store.get())
     const run = ++this.reads
     const shows = () => current() && run === this.reads
     let found: SkillsRepositoryLookupResponse
@@ -100,6 +165,9 @@ export class SkillsLookup {
       if (shows()) this.shown.set({ state: 'failed', error: asApiError(error) })
       return
     }
-    if (shows()) this.shown.set(ready(found))
+    if (shows()) {
+      this.shown.set(ready(found))
+      await this.reconcile(current)
+    }
   }
 }

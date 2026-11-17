@@ -29,19 +29,34 @@ export function isSkillsRepository(value: string): boolean {
   )
 }
 
+/** Save removes surrounding whitespace and converts valid GitHub links. */
+export function normalizeSkillsRepository(value: string): string {
+  const trimmed = value.trim()
+  const link = /^https:\/\/github\.com\/([^/?#]+)\/([^/?#]+)/i.exec(trimmed)
+  if (!link) return trimmed
+  const name = `${link[1]}/${link[2].replace(/\.git$/i, '')}`
+  return isSkillsRepository(name) ? name : trimmed
+}
+
 /** Paths are relative to the repository. A root skill uses the path `.`. */
 export function findSkillFolders(
   paths: readonly string[],
   repositoryName: string,
 ): SkillFolders {
-  const hasSkills = paths.some((path) => path.startsWith('skills/'))
+  const layout = paths.some((path) => path.startsWith('skills/'))
+    ? 'skills'
+    : paths.includes('SKILL.md')
+      ? 'root'
+      : 'top-level'
+  if (layout === 'root')
+    return { skills: [{ name: repositoryName, path: '.' }], clashes: [] }
   const candidates = [...new Set(paths)]
     .filter((path) => !path.split('/').includes('.git'))
     .filter((path) => {
       const parts = path.split('/')
       return (
         parts.at(-1) === 'SKILL.md' &&
-        (hasSkills
+        (layout === 'skills'
           ? parts[0] === 'skills' && parts.length > 2
           : parts.length === 2)
       )
@@ -62,8 +77,6 @@ export function findSkillFolders(
       clashes.push({ name, keptPath: previous.path, skippedPath: path })
     else byName.set(name, { name, path })
   }
-  if (!hasSkills && !byName.size && paths.includes('SKILL.md'))
-    byName.set(repositoryName, { name: repositoryName, path: '.' })
   return {
     skills: [...byName.values()].sort((a, b) =>
       a.name < b.name ? -1 : a.name > b.name ? 1 : 0,

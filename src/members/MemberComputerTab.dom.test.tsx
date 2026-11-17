@@ -1,9 +1,15 @@
 // @vitest-environment happy-dom
+import { act } from 'react'
 import { expect, it, vi } from 'vitest'
+import { flushMicrotasks, HeldRequests, requestLines } from '../app/test-kit'
 import { orgSettingsPaths } from '../shared/org-settings'
 import { byRole, queryByRole } from '../test-support/dom-queries'
 import { FakeApiServer } from '../test-support/fake-api'
-import { FAKE_IDS, FAKE_TIME } from '../test-support/fixtures/core'
+import {
+  coreFixtures,
+  FAKE_IDS,
+  FAKE_TIME,
+} from '../test-support/fixtures/core'
 import {
   holdAnimationFrames,
   mount,
@@ -17,6 +23,53 @@ import { MemberComputerTab } from './MemberComputerTab'
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
 const skillsPath = orgSettingsPaths.skills(FAKE_IDS.org)
+const settingsPath = orgSettingsPaths.settings(FAKE_IDS.org)
+
+it('reconciles a newer lookup with settings once and hides the mismatched skills', async () => {
+  holdAnimationFrames()
+  const server = new FakeApiServer({ role: 'member' })
+  const held = new HeldRequests(server)
+  held.holdAnswer('GET', settingsPath)
+  server.json('GET', skillsPath, {
+    repository: 'acme/new-skills',
+    skills: ['new-skill'],
+    notice: null,
+    clashes: [],
+  })
+  const { container } = await mount(
+    <MemberComputerTab
+      api={createMembersApi(held.fetch)}
+      now={FAKE_TIME}
+      org={{ id: FAKE_IDS.org, name: 'Acme', role: 'member' }}
+      viewport="desktop"
+    />,
+  )
+  held.hold('GET', settingsPath)
+  await act(async () => {
+    held.release('GET', settingsPath)
+    await flushMicrotasks()
+  })
+  const mismatched =
+    queryByRole('list', 'Skills in the repository', container)?.textContent ??
+    null
+  server.json('GET', settingsPath, {
+    settings: {
+      ...coreFixtures().settings.settings,
+      skillsRepository: 'acme/new-skills',
+    },
+  })
+  await act(async () => {
+    held.release('GET', settingsPath)
+    await flushMicrotasks()
+  })
+  expect({
+    mismatched,
+    skills: queryByRole('list', 'Skills in the repository', container)
+      ?.textContent,
+    reads: requestLines(server).filter((line) => line === `GET ${settingsPath}`)
+      .length,
+  }).toEqual({ mismatched: null, skills: 'new-skill', reads: 2 })
+})
 
 it('shows_the_tab_when_the_lookup_of_the_skills_fails_and_lists_the_skills_after_try_again', async () => {
   holdAnimationFrames()

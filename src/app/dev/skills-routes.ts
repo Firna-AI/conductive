@@ -8,7 +8,7 @@ import {
   orgSettingsPaths,
   type SkillsRepositoryLookupResponse,
 } from '../../shared/org-settings'
-import { isSkillsRepository } from '../../shared/skill-folders'
+import { normalizeSkillsRepository } from '../../shared/skill-folders'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { requireOrg, type DevBackend } from './backend'
 import type { DevSkills } from './options'
@@ -17,14 +17,12 @@ import type { DevState } from './state'
 
 /**
  * The saved form of the text of the Skills field, as the Worker saves it:
- * a link from GitHub becomes owner/name, and other text stays as typed, so
- * empty text removes the repository.
+ * the shared rule trims spaces and line breaks at both ends, converts a
+ * valid GitHub link to owner/name, and keeps other trimmed text. Empty
+ * text removes the repository.
  */
 export function savedSkillsRepository(typed: string): string {
-  const link = /^https:\/\/github\.com\/([^/?#]+)\/([^/?#]+)/i.exec(typed)
-  if (!link) return typed
-  const name = `${link[1]}/${link[2].replace(/\.git$/i, '')}`
-  return isSkillsRepository(name) ? name : typed
+  return normalizeSkillsRepository(typed)
 }
 
 /**

@@ -5,7 +5,12 @@ import { findSkillFolders, isSkillsRepository } from './skill-folders'
 it.each([
   {
     layout: 'skills folders',
-    paths: ['skills/zebra/SKILL.md', 'skills/apple/SKILL.md', 'other/SKILL.md'],
+    paths: [
+      'skills/zebra/SKILL.md',
+      'skills/apple/SKILL.md',
+      'other/SKILL.md',
+      'SKILL.md',
+    ],
     skills: [
       { name: 'apple', path: 'skills/apple' },
       { name: 'zebra', path: 'skills/zebra' },
@@ -25,13 +30,8 @@ it.each([
     ],
   },
   {
-    layout: 'top-level folders before a root skill',
-    paths: [
-      'zebra/SKILL.md',
-      'apple/SKILL.md',
-      'deep/nested/SKILL.md',
-      'SKILL.md',
-    ],
+    layout: 'top-level folders without a root skill',
+    paths: ['zebra/SKILL.md', 'apple/SKILL.md', 'deep/nested/SKILL.md'],
     skills: [
       { name: 'apple', path: 'apple' },
       { name: 'zebra', path: 'zebra' },
@@ -40,6 +40,11 @@ it.each([
   {
     layout: 'the repository root',
     paths: ['SKILL.md', 'scripts/run.sh'],
+    skills: [{ name: 'repository-name', path: '.' }],
+  },
+  {
+    layout: 'a root skill with example skills inside it',
+    paths: ['SKILL.md', 'examples/SKILL.md', 'examples/nested/SKILL.md'],
     skills: [{ name: 'repository-name', path: '.' }],
   },
   {

@@ -1,5 +1,5 @@
 import type { UpdateOrgSettingsRequest } from '../../src/shared/org-settings'
-import { isSkillsRepository } from '../../src/shared/skill-folders'
+import { normalizeSkillsRepository } from '../../src/shared/skill-folders'
 import type { AppDependencies, AppEnv } from '../env'
 import { isRecord, requiredString } from '../http'
 import {
@@ -20,17 +20,6 @@ import {
 } from './feature-settings-data'
 
 type EnvChange = NonNullable<UpdateOrgSettingsRequest['envVars']>[number]
-
-function normalizedSkillsRepository(
-  value: string | undefined,
-): string | undefined {
-  if (value === undefined) return undefined
-  const trimmed = value.trim()
-  const link = /^https:\/\/github\.com\/([^/?#]+)\/([^/?#]+)/i.exec(trimmed)
-  if (!link) return trimmed
-  const name = `${link[1]}/${link[2].replace(/\.git$/i, '')}`
-  return isSkillsRepository(name) ? name : value
-}
 
 function environmentChanges(value: unknown): EnvChange[] | undefined {
   if (value === undefined) return undefined
@@ -66,9 +55,11 @@ export async function featureSettings(
   if (write) {
     const installScript = optionalShellString(context.body?.installScript)
     const startupScript = optionalShellString(context.body?.startupScript)
-    const skillsRepository = normalizedSkillsRepository(
-      optionalShellString(context.body?.skillsRepository),
-    )
+    const typedRepository = optionalShellString(context.body?.skillsRepository)
+    const skillsRepository =
+      typedRepository === undefined
+        ? undefined
+        : normalizeSkillsRepository(typedRepository)
     const changes = environmentChanges(context.body?.envVars)
     for (;;) {
       await assertCanChangeSharedSettings(env.DB, orgId, userId)

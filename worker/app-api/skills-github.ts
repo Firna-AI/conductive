@@ -10,27 +10,40 @@ import {
 import { readBoundedBody } from '../http/bounded-body'
 import { reconnectRequired } from '../security/github-tokens'
 
+async function githubObject(
+  response: Response,
+): Promise<Record<string, unknown>> {
+  const body =
+    response.body === null
+      ? new Uint8Array(0)
+      : await readBoundedBody(response.body, GITHUB_API_BODY_BYTES)
+  const value: unknown = JSON.parse(new TextDecoder().decode(body))
+  return object(value)
+}
+
 async function readGitHub(
   dependencies: AppDependencies,
   token: string,
   path: string,
+  kind: 'repository' | 'tree',
 ): Promise<Record<string, unknown> | null> {
   return withGitHubResponse(
     dependencies.fetch,
     githubRequest(path, token),
     async (response) => {
+      if (kind === 'tree' && response.status === 409) {
+        const body = await githubObject(response)
+        if (body.message === 'Git Repository is empty.')
+          return { truncated: false, tree: [] }
+        throw githubFailure()
+      }
       if (!response.ok) {
         void response.body?.cancel().catch(() => undefined)
         if (response.status === 401) throw reconnectRequired()
         if (response.status === 404) return null
         throw githubFailure()
       }
-      const body =
-        response.body === null
-          ? new Uint8Array(0)
-          : await readBoundedBody(response.body, GITHUB_API_BODY_BYTES)
-      const value: unknown = JSON.parse(new TextDecoder().decode(body))
-      return object(value)
+      return githubObject(response)
     },
   )
 }
@@ -47,7 +60,12 @@ export async function lookupGitHubSkills(
     notice: null,
     clashes: [],
   }
-  const record = await readGitHub(dependencies, token, `/repos/${repository}`)
+  const record = await readGitHub(
+    dependencies,
+    token,
+    `/repos/${repository}`,
+    'repository',
+  )
   if (!record) return { ...result, notice: 'not-found' }
   if (flag(record.private)) return { ...result, notice: 'private' }
   const branch = text(record.default_branch)
@@ -56,6 +74,7 @@ export async function lookupGitHubSkills(
     dependencies,
     token,
     `/repos/${repository}/git/trees/${encodeURIComponent(branch)}?recursive=1`,
+    'tree',
   )
   if (!tree) return { ...result, notice: 'not-found' }
   const paths: string[] = []
