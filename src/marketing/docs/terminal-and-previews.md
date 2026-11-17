@@ -23,7 +23,7 @@ A preview shows a web server that runs there too.
 1. Open **Terminal** in the workspace.
 2. Enter the command you want to run.
 
-On a computer, select the **Terminal** tab to give the terminal focus.
+On a computer, select the **Terminal** tab to give the terminal keyboard focus.
 **Go to Terminal** in the command palette does the same.
 So does its keyboard shortcut, by default **⌘J** on a Mac or **Ctrl+J** on another computer.
 If the terminal is still connecting, it gets focus when it appears.
@@ -53,7 +53,8 @@ When a program shows a link with a label, its hint names the website that it ope
 
 Each terminal's shell keeps running when its connection drops.
 Select **Reconnect** to return to the same shell and running commands.
-**Restart** in the workspace header also drops the connection until the agents are back.
+**Restart** in the workspace header drops terminal connections until the agents are back.
+It keeps the shells and their commands running.
 If you end its shell with `exit`, **Reconnect** opens a new shell in the same tab.
 Stopping the cloud computer ends every terminal's shell and running commands.
 The terminal tabs stay after a resume.
@@ -62,7 +63,7 @@ Start any needed server again in its terminal.
 The commands that you typed stay in the shell's command history after a stop.
 After a resume, press the Up arrow or Ctrl-R to find them.
 A command that still runs at the stop, such as a server, is not kept.
-A workspace with older cloud computer software gets this with an automatic software update at a later start.
+After an automatic software update, an older cloud computer gets the new terminal software at **Restart** or a later computer start.
 
 ## Use terminal tabs
 
@@ -73,6 +74,9 @@ Use one terminal for a development server and another for tests.
 1. Select **+**, named **New terminal**, at the end of the row.
 2. Run a command in the new terminal.
 3. Select another terminal's tab to switch to it.
+
+On a computer, **+**, **New terminal** in the palette, and a click on a terminal tab give the shown terminal keyboard focus.
+When you move along the tabs with the keyboard, focus stays on the row.
 
 Switching tabs keeps the other shells and their commands running.
 On a phone, the tabs appear at the top of **Terminal**.
@@ -108,7 +112,8 @@ The last terminal has no close button.
 
 An older cloud computer can show one terminal with no tab row or **+** button.
 Its existing terminal still works.
-Terminal tabs become available at a later start of the cloud computer, after an automatic software update.
+After an automatic software update, select **Restart** in the workspace header to get terminal tabs.
+A later start of the cloud computer also brings them.
 
 - [Understand cloud computer software updates](/docs/cloud-computer#apply-setup-changes)
 
@@ -129,7 +134,7 @@ Another panel can show smaller text, or empty space after the terminal.
 Type in a panel to give the terminal its size.
 
 A workspace with older cloud computer software shows only the visible screen when you drag.
-An automatic software update brings the newer terminal at a later start.
+After an automatic software update, **Restart** or a later cloud computer start brings the newer terminal.
 [Apply setup changes](/docs/cloud-computer#apply-setup-changes) explains when updates apply.
 
 ## Know which GitHub account a command uses
@@ -188,7 +193,8 @@ Use the port of your server when it reports a different one.
 
 An older cloud computer can show only the **Port** field.
 Use the manual steps there.
-If Preview says it needs newer cloud computer software, an automatic update brings the required preview support at a later start.
+If Preview asks for newer software, select **Restart** in the workspace header.
+A later computer start also applies the update.
 An existing workspace also gets the server list with an automatic software update.
 
 - [Understand cloud computer software updates](/docs/cloud-computer#apply-setup-changes)

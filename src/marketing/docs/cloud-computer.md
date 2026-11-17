@@ -153,11 +153,12 @@ The update never interrupts a running turn.
 Agents keep their context.
 Programs that agents started, including development servers, keep running.
 Terminals keep running.
-Terminal and preview software update at the next cloud computer start.
+Terminal and preview software update when you select **Restart**, or at the next cloud computer start.
 
 To apply the newest release now, select the state in the workspace header, then **Restart**.
 Restart first downloads the newest release, for up to 60 seconds, as [Restart the software](/docs/workspaces#restart-the-software) says.
 Unlike the idle update, Restart stops running turns and programs that agents started.
+The shells and commands in your terminals keep running during Restart.
 
 A failed check or download leaves the current release in use.
 Conductive checks each downloaded file against its expected digest and refuses a broken release.

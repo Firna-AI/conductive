@@ -814,9 +814,11 @@ and `.context/terminal-tabs/m16/`.
 
 Depends on: 14
 
-- [ ] Read each public guide in full. Say that Restart brings terminal tabs
+- [x] Read each public guide in full. Say that Restart brings terminal tabs
       to a running workspace with new software, and that the controls of
       the terminal tabs give the terminal the focus on a computer.
+
+Evidence: `.context/terminal-tabs/reports/m17.md`.
 
 ## Post-merge follow-up (non-blocking)
 

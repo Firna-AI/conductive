@@ -201,7 +201,8 @@ It is separate from the computer's automatic stop.
 ## Restart the software
 
 Select the state in the workspace header, such as **Ready**, then **Restart**.
-Restart restarts Conductive's agent software and the port previews in the running computer.
+Restart restarts Conductive's agent software, terminal software, and port previews in the running computer.
+After a software update, Restart also brings terminal tabs to a workspace that had only one terminal.
 Use it when an agent or a preview stops responding, or to apply a software update now.
 Any member can restart a workspace while it is ready, working, needs input, or has unread output.
 
