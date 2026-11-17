@@ -1,3 +1,4 @@
+import type { SecretRunGrant } from './generated/SecretRunGrant'
 import type { MessageSender } from './generated/MessageSender'
 import { workspacePath } from './workspaces'
 
@@ -26,43 +27,7 @@ export function workspaceSecretValuePath(
   return `${workspacePath(orgId, workspaceId)}/secret-values/${encodeURIComponent(id)}`
 }
 
-export type SecretGrant =
-  'all-agents' | 'workspace' | 'session' | '15-minutes' | 'workspace-value'
 export type SecretValueLifetime = '15-minutes' | 'workspace' | 'save'
-
-interface ToolSecret {
-  name: string
-  description: string
-  available: boolean
-}
-
-/** @public Machine list contract for the workspace tools. */
-export interface ListSecretsResponse {
-  secrets: readonly ToolSecret[]
-}
-
-export interface RunWithSecretsRequest {
-  names: readonly string[]
-  command: string
-  reason?: string
-}
-
-export type RunWithSecretsResponse =
-  | {
-      status: 'allowed'
-      values: Record<string, string>
-      grants: readonly SecretRunGrant[]
-    }
-  | {
-      status: 'pending' | 'denied' | 'not-answered'
-      requestId: string
-      message: string
-    }
-
-export interface SecretRunGrant {
-  name: string
-  grant: SecretGrant
-}
 
 export interface RequestedSecret {
   name: string

@@ -1,0 +1,85 @@
+# Capabilities
+
+This doc holds the requirements and the decisions in force for the
+Capabilities control of New workspace and of each workspace. It covers the
+control, its secrets part, and Mac access. It belongs to
+[Secrets](secrets.md), which covers the secrets, their rights, and their
+grants. The [mockup catalogue](../mockups/catalogue-secrets.md) draws the
+control. The terms are those of [Secrets](secrets.md#terms) and of the
+[architecture doc](../architecture.md#terms).
+
+A decision number names a dated record, as
+[Decision numbers](../architecture.md#decision-numbers) says. A secrets
+decision number names a decision of the change that adds
+[secrets](secrets.md), as that doc says.
+
+## The control
+
+- New workspace has a small Capabilities icon, with its label on hover
+  (secrets decision 6 G). It opens a control with two parts for now: the
+  secrets to pre-approve, and Mac access.
+- Reason: the icon keeps the page and the dialog plain, and later
+  features, such as MCP servers, add their parts to the same control. A
+  separate picker of secrets in New workspace was rejected for that
+  reason.
+- The create takes the choices of the control, as
+  [The create](create-a-workspace.md#the-create) says.
+- Each workspace shows the same icon beside its message box
+  (secrets decision 8 B). Every member can see and change the
+  pre-approvals and Mac access there.
+- In a workspace, the control also lists each session approval, with its
+  session, the member who allowed it, and the time. It lists each value
+  for this workspace, with the member who gave it. Each of them has
+  Remove.
+- A value for 15 minutes is not in the list. It ends by itself.
+- A secret for all agents shows as checked, with the words "All agents",
+  and its checkbox does not change. The control links to the Secrets tab,
+  or to Add a secret when the org has no secret.
+- A change in the control applies to each session of the workspace from
+  that moment.
+- Reason: the control gives the undo of a wrong grant, and it keeps each
+  capability of a workspace in one place. A control that only the
+  workspace owner and the admins change was rejected, because every member
+  can already allow a request in each session (secrets decision 4 B).
+
+
+## Mac access
+
+- Mac access is off in each new workspace, also in a workspace that an
+  agent or an automation creates (secrets decision 18 A). A member turns
+  it on in the Capabilities of the workspace, or in the Capabilities of
+  New workspace before the create.
+- Reason: agents can reach a Mac only after a member chooses it for the
+  workspace. So text that steers an agent cannot reach a Mac through a
+  new workspace or through an automation run.
+- Mac access was turned off one time in each workspace that existed
+  before this rule, also where a member had turned it on (secrets
+  decision 19 B). Reason: the switch was new, so few members had chosen
+  its value themselves.
+- Keeping Mac access on in the workspaces that existed then was rejected,
+  because they kept a default that no member chose.
+- While Mac access is off, the Worker refuses each Mac command request of
+  the workspace, as [Mac commands](agent-tools.md#mac-commands) says.
+- While it is on, the Mac app still asks before each command that its user
+  did not always allow, as decision 62 says.
+- Mac access that starts on in each new workspace was rejected, because
+  agents could then reach a Mac before a member chooses it. Mac access
+  that is on for workspaces that members create, and off only for
+  workspaces that agents and automations create, was rejected. Reason: one rule for every new
+  workspace is simpler, and the risk of a steered agent is the same.
+- Mac access that a new workspace copies from the workspace that creates
+  it was rejected, because a workspace that an agent creates could then
+  reach a Mac with no member's choice.
+- A Mac access switch that each member keeps for each workspace was
+  rejected, because one control would then have a shared part and a
+  personal part.
+- Risk: any member can turn Mac access on again after another member
+  turned it off.
+- Risk: an automation that needs a Mac cannot use it in the first turn of
+  a run. A member must turn Mac access on in the run workspace, then send
+  a message.
+- Risk: when a member turns Mac access on in a run workspace, text that
+  steers the agent of the run can ask for a command on the Mac of the
+  sender of the next turn. A command that the sender always allowed then
+  runs with no question, as
+  [The choices](desktop-commands.md#the-choices) says.

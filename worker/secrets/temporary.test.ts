@@ -164,6 +164,54 @@ it('requires every missing value before writing any approval', async () => {
   }
   await active.answer(pending.request.id, { kind: 'deny' })
   expect((await pending.response).status).toBe(200)
+
+  const invalid = await active.waiting({
+    names: ['STORED', 'FIRST', 'SECOND\n'],
+    command: 'deploy',
+  })
+  const refused = await active.request(
+    secretAnswerPath(OUTER_ORG, OUTER_WORKSPACE, invalid.request.id),
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        kind: 'values',
+        lifetime: 'save',
+        values: { FIRST: 'first-value', 'SECOND\n': 'second-value' },
+      }),
+    },
+  )
+  expect(refused.status).toBe(400)
+  expect(await refused.json()).toMatchObject({
+    error: { code: 'invalid_secret_name' },
+  })
+  expect(
+    await active.env.DB.prepare(
+      'SELECT COUNT(*) AS count FROM org_secrets',
+    ).first('count'),
+  ).toBe(1)
+  expect(
+    await active.env.DB.prepare(
+      'SELECT COUNT(*) AS count FROM session_secret_approvals',
+    ).first('count'),
+  ).toBe(0)
+  expect(
+    (await active.listRequests()).requests.find(
+      (item) => item.id === invalid.request.id,
+    )?.state,
+  ).toBe('waiting')
+  await active.answer(invalid.request.id, {
+    kind: 'values',
+    lifetime: '15-minutes',
+    values: { FIRST: 'first-value', 'SECOND\n': 'second-value' },
+  })
+  expect(await (await invalid.response).json()).toMatchObject({
+    status: 'allowed',
+    values: {
+      STORED: 'stored-value',
+      FIRST: 'first-value',
+      'SECOND\n': 'second-value',
+    },
+  })
 })
 
 it('saves missing names as org secrets owned by the answerer without the all-agents mark', async () => {

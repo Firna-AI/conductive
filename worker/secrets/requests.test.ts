@@ -28,13 +28,16 @@ it('lists metadata without values and returns only grants available to the calli
   const active = (f = await secretFixture(bundle))
   await active.seed('GLOBAL', 'global-value', true)
   const pre = await active.seed('PRE', 'pre-value')
-  await active.seed('SESSION', 'session-value')
+  const legacy = await active.seed('SESSION', 'session-value')
+  await active.env.DB.prepare('UPDATE org_secrets SET name = ? WHERE id = ?')
+    .bind('Cloudflare (read-only)', legacy.id)
+    .run()
   await active.request(workspaceCapabilitiesPath(OUTER_ORG, OUTER_WORKSPACE), {
     method: 'PATCH',
     body: JSON.stringify({ preapprovedSecretIds: [pre.id] }),
   })
   const pending = await active.waiting({
-    names: ['SESSION'],
+    names: ['Cloudflare (read-only)'],
     command: 'deploy',
   })
   expect(
@@ -45,15 +48,19 @@ it('lists metadata without values and returns only grants available to the calli
   await active.answer(pending.request.id, { kind: 'allow' })
   expect(await (await pending.response).json()).toEqual({
     status: 'allowed',
-    values: { SESSION: 'session-value' },
-    grants: [{ name: 'SESSION', grant: 'session' }],
+    values: { 'Cloudflare (read-only)': 'session-value' },
+    grants: [{ name: 'Cloudflare (read-only)', grant: 'session' }],
   })
   const list = await (await active.machine(SECRET_TOOL_PATHS.list)).json()
   expect(list).toEqual({
     secrets: [
+      {
+        name: 'Cloudflare (read-only)',
+        description: 'Use SESSION',
+        available: true,
+      },
       { name: 'GLOBAL', description: 'Use GLOBAL', available: true },
       { name: 'PRE', description: 'Use PRE', available: true },
-      { name: 'SESSION', description: 'Use SESSION', available: true },
     ],
   })
   const withoutTurn = await (
@@ -61,9 +68,13 @@ it('lists metadata without values and returns only grants available to the calli
   ).json()
   expect(withoutTurn).toEqual({
     secrets: [
+      {
+        name: 'Cloudflare (read-only)',
+        description: 'Use SESSION',
+        available: false,
+      },
       { name: 'GLOBAL', description: 'Use GLOBAL', available: true },
       { name: 'PRE', description: 'Use PRE', available: true },
-      { name: 'SESSION', description: 'Use SESSION', available: false },
     ],
   })
   const allowed = await active.run({

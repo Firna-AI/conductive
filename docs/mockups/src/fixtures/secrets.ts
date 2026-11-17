@@ -68,6 +68,18 @@ export const acmeSecrets: readonly OrgSecret[] = [
   vercelToken,
 ]
 
+/**
+ * A secret that Jonas added before new names took only letters, digits,
+ * and underscores. Its name stays as it is, and agents still use it. Only
+ * the Replace state of the Secrets tab for an older name lists it.
+ */
+export const olderSecret: OrgSecret = {
+  name: 'Cloudflare (read-only)',
+  description: 'Reads DNS records and analytics in Cloudflare.',
+  creator: 'jonas',
+  allAgents: false,
+}
+
 /** The value of `PROD_DATABASE_URL`, which Cal reveals. */
 export const revealedValue =
   'postgres://readonly:Vb7q2mXkL9@replica.acme.internal:5432/acme'
@@ -78,6 +90,12 @@ export const newSecret = {
   description: 'Reads and updates the issues of the checkout team.',
   value: 'lin_api_4f8Kq2nWx7',
 } as const
+
+/**
+ * The name of the same secret as Cal first types it, with spaces. Add
+ * secret refuses it and keeps each field as he typed it.
+ */
+export const refusedName = 'Linear API key'
 
 /**
  * The secret whose value changes: Cal, an admin, replaces a secret of

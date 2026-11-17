@@ -1,7 +1,7 @@
+import type { SecretGrant } from '../../shared/generated/SecretGrant'
+import type { SecretRunGrant } from '../../shared/generated/SecretRunGrant'
 import type {
-  SecretGrant,
   SecretRequest,
-  SecretRunGrant,
   SecretWorkspaceEvent,
 } from '../../shared/secret-requests'
 import { readSecretRequest } from '../../shared/secret-requests-read'

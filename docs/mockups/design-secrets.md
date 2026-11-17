@@ -10,8 +10,9 @@ chat. They come from the secrets decisions of 13 November 2026.
 A secret is a named value of an org: its name, its description, its
 encrypted value, its creator, and the mark for all agents. An agent runs
 one command with a secret through the workspace tools, after a member
-allows it. The agent gets only the name, and no screen shows a value,
-except to an admin who reveals one.
+allows it. The agent gets the name and the variable name of the secret,
+never its value. No screen shows a value, except to an admin who reveals
+one.
 
 ## The Secrets tab
 
@@ -41,6 +42,12 @@ except to an admin who reveals one.
 - Add secret opens the form under the list: the name, the description, and
   the value, each with its hint. The form of an admin ends with the switch
   for all agents, which starts off.
+- The hint of the name says to use only letters, digits, and underscores.
+  When Save secret refuses a name with other characters, the error of the
+  name shows in the place of its hint, and each field keeps what the
+  member typed. A secret with an older name, such as Cloudflare
+  (read-only), keeps its name. Its row shows like the others, and Replace
+  has no name field. `secretNameCopy.ts` holds the words of the name rule.
 - The notes under the list say what the mark for all agents does and, for
   a member, which secrets the member can change. The last line says to use
   the environment variables of the Cloud computer tab for values that every
@@ -102,6 +109,11 @@ except to an admin who reveals one.
   the agent as its description. Deny and Allow follow the choices, and
   Allow stays off until each value is typed. `RequestActions` holds the
   actions.
+- Save as secret is off when a name that the org does not have holds
+  characters other than letters, digits, and underscores. A line under the
+  choices says what Save as secret needs. One choice covers every value,
+  so one such name turns it off for the whole answer. 15 minutes and This
+  workspace stay.
 - A phone keeps a request for a value short: the card shows Deny and Give
   a value, which opens a sheet with each value field, the choice of how
   long the values last, and Allow. The `value-sheet` overlay of the

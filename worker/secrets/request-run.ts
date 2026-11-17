@@ -1,8 +1,6 @@
-import type {
-  RunWithSecretsRequest,
-  RunWithSecretsResponse,
-  SecretRequest,
-} from '../../src/shared/secret-requests'
+import type { RunWithSecretsRequest } from '../../src/shared/generated/RunWithSecretsRequest'
+import type { RunWithSecretsResponse } from '../../src/shared/generated/RunWithSecretsResponse'
+import type { SecretRequest } from '../../src/shared/secret-requests'
 import { machineWorkspace } from '../devices/access'
 import { HttpError } from '../http'
 import { randomToken } from '../security/crypto'
