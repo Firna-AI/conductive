@@ -59,9 +59,13 @@ const METHODS = ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
 const MAX_SEGMENTS = 12
 const MAX_FRAMES = 8
 
-/** A stack line with only a code place, such as `at f (index.js:10:4)`. */
+/**
+ * A stack line with only a code place in a code file, such as
+ * `at f (index.js:10:4)`. A line with `[as key]` drops, because V8 writes a
+ * property key of the run there.
+ */
 const FRAME =
-  /^ {4}at (?:async )?(?:new )?(?:[\w$.]+(?: \[as [\w$]+\])? \()?[\w./@-]+:\d+:\d+\)?$/
+  /^ {4}at (?:async )?(?:new )?(?:[\w$.]+ \()?[\w./@-]+\.(?:js|mjs|cjs|ts):\d+:\d+\)?$/
 
 type ErrorName = (typeof ERROR_NAMES)[number]
 type KnownText = (typeof KNOWN_TEXTS)[number][0]
@@ -75,6 +79,18 @@ export interface UnexpectedErrorFields {
   method: string | null
   route: string | null
   frames: string[]
+}
+
+/** The fields of an error that throws when the log reads it. */
+export const unreadableErrorFields: UnexpectedErrorFields = {
+  errorName: 'unknown',
+  knownText: null,
+  retryable: false,
+  overloaded: false,
+  durableObjectReset: false,
+  method: null,
+  route: null,
+  frames: [],
 }
 
 function flag(error: unknown, name: string): boolean {

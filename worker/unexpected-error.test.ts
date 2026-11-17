@@ -17,6 +17,8 @@ it('keeps the name, the route words, and the code places, and drops the message,
     '    at async Object.fetch (index.js:20:7)',
     '    at JSON.parse (<anonymous>)',
     `    at ${marker} secret`,
+    `    at ${marker}:1:1`,
+    `    at Object.handler [as ${marker}] (index.js:3:1)`,
   ])
   const request = new Request(
     `https://app.conductive.build/api/orgs/abc_DEF-123/workspaces/${marker}/sessions/x/close?token=${marker}`,

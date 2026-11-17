@@ -41,6 +41,42 @@ describe('errorResponse', () => {
     expect(JSON.stringify(record)).not.toContain(marker)
   })
 
+  it('keeps the JSON reply when the error throws on a read, and logs fixed fields', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    const error = new Error('private')
+    Object.defineProperty(error, 'name', {
+      get() {
+        throw new Error('unreadable')
+      },
+    })
+
+    expect(await answer(error)).toEqual({
+      status: 500,
+      body: {
+        error: {
+          code: 'internal_error',
+          message: 'The request failed. Try again.',
+        },
+      },
+    })
+    expect(warn.mock.calls).toEqual([
+      [
+        {
+          kind: 'unexpected_error',
+          message: 'A request failed with an unexpected error.',
+          errorName: 'unknown',
+          knownText: null,
+          retryable: false,
+          overloaded: false,
+          durableObjectReset: false,
+          method: null,
+          route: null,
+          frames: [],
+        },
+      ],
+    ])
+  })
+
   it('answers a restart of a Durable Object as a restart of the server', async () => {
     const cases = [
       new Error('Durable Object reset because its code was updated.'),

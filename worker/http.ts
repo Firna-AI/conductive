@@ -1,5 +1,9 @@
 import type { ApiErrorBody } from '../src/shared/api'
-import { unexpectedErrorFields } from './unexpected-error'
+import {
+  unexpectedErrorFields,
+  unreadableErrorFields,
+  type UnexpectedErrorFields,
+} from './unexpected-error'
 import { warnWorker } from './warnings'
 
 export class HttpError extends Error {
@@ -29,9 +33,24 @@ export class HttpError extends Error {
 const CODE_UPDATED = /Durable Object\b.*\bcode (?:was|has been) updated/i
 
 function objectRestarted(error: unknown): boolean {
-  if (!isRecord(error)) return false
-  if (error.durableObjectReset === true) return true
-  return error instanceof Error && CODE_UPDATED.test(error.message)
+  try {
+    if (!isRecord(error)) return false
+    if (error.durableObjectReset === true) return true
+    return error instanceof Error && CODE_UPDATED.test(error.message)
+  } catch {
+    return false
+  }
+}
+
+/** The log never changes the reply, also when the error throws on a read. */
+function warnUnexpected(error: unknown, request?: Request): void {
+  let fields: UnexpectedErrorFields
+  try {
+    fields = unexpectedErrorFields(error, request)
+  } catch {
+    fields = unreadableErrorFields
+  }
+  warnWorker({ kind: 'unexpected_error', ...fields })
 }
 
 /**
@@ -40,11 +59,7 @@ function objectRestarted(error: unknown): boolean {
  * the caller gives it.
  */
 export function errorResponse(error: unknown, request?: Request): Response {
-  if (!(error instanceof HttpError))
-    warnWorker({
-      kind: 'unexpected_error',
-      ...unexpectedErrorFields(error, request),
-    })
+  if (!(error instanceof HttpError)) warnUnexpected(error, request)
   if (objectRestarted(error)) {
     return Response.json(
       {

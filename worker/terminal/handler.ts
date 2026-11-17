@@ -133,7 +133,7 @@ export function createTerminalHandler(
         return bridge.response
       } catch (error) {
         registration?.dispose()
-        return toolError(error)
+        return toolError(error, request)
       }
     },
   }

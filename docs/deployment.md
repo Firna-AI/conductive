@@ -45,15 +45,22 @@ examples.
   - Issues sends no alert by itself. An automation in the dashboard sends
     an issue to a chat, an incident tool, a webhook, or a coding agent.
   - The reply to an unexpected error that the Worker catches is
-    `500 internal_error`. The Worker then logs the `unexpected_error`
-    warning. It holds the error name, a fixed kind for a known Cloudflare
-    text, the Cloudflare flags, the method, the route words, and the code
-    places of the stack. It holds no error message, so that no secret or
-    request body reaches the log.
+    `500 internal_error`, so Issues shows the reply but not its cause.
   - An error of a Durable Object that restarted, such as for a deploy,
     gets `503 server_restarted` instead, as
     [Effects on open pages](automatic-deploys.md#effects-on-open-pages)
     says.
+- For each unexpected error, also a restart of a Durable Object, the
+  Worker logs the `unexpected_error` warning. It is a warning line, so it
+  shows in Workers Logs and not in Issues. Filter on
+  `kind = unexpected_error`.
+  - It holds the error name, a fixed kind for a known Cloudflare text,
+    such as `code_updated` for a restart, the Cloudflare flags, the
+    method, the route words, and the code places of the stack.
+  - It holds no error message, so that no secret or request body reaches
+    the log.
+  - The preview proxy logs no route, because its paths are the paths of
+    the user's app.
 - Set each secret with `npx wrangler secret put <NAME>`. The command asks
   for the value. Never put a secret in `wrangler.jsonc` or in Git.
 - The Worker reads each variable as text. Write a JSON value as one
