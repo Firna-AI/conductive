@@ -1,10 +1,12 @@
 import type { ReactNode } from 'react'
 import { Archive, ArchiveRestore } from 'lucide-react'
+import type { TreeLines } from '../../../../../src/shared/workspace-tree-lines'
 import { paths } from '../../paths'
 import { ScreenLink } from '../common/ScreenLink'
 import { IconButton } from '../common/actions'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
+import { guideClasses } from './guideLines'
 import { RowPointMenu, type RowControls } from './RowMenu'
 import type { WorkspaceRow } from './sections'
 import { activityPresentation, listMarkLabel } from './status'
@@ -19,12 +21,20 @@ export type RowDrag = 'lifted' | 'placeholder'
 type Variant = 'sidebar' | 'page'
 
 /**
- * The classes of a nested row: its indent, by the steps of `indent`, and
- * the guide lines of its tree. A top-level row has none.
+ * The classes of a row of a tree: the indent of a nested row, by the steps
+ * of `indent`, and the guide lines of its tree from `lines`. A top-level
+ * row has only the stub under its mark, when rows show under it.
  */
-function nestedClasses(indent: RowIndent | undefined): string | undefined {
-  if (!indent) return undefined
-  return classes(styles.nested, styles[`indent${indent}`])
+function nestedClasses(
+  indent: RowIndent | undefined,
+  lines: TreeLines | undefined,
+): string {
+  const steps = indent ?? 0
+  return classes(
+    steps > 0 && styles.nested,
+    steps > 0 && styles[`indent${steps}`],
+    guideClasses(steps, lines),
+  )
 }
 
 /**
@@ -45,7 +55,7 @@ function RenameRow(props: {
         styles.row,
         page && styles.page,
         row.selected && styles.selected,
-        nestedClasses(row.indent),
+        nestedClasses(row.indent, row.lines),
       )}
     >
       <WorkspaceMark github={row.github} status={row.status} />
@@ -93,10 +103,10 @@ function rowAction(
  * time since its last activity. The mark shows the GitHub state of its
  * pull request in colour, and whether its agent works. The action of the
  * row, Archive or Restore, covers the time on hover only. A nested row
- * indents by the steps of `row.indent`, with the guide lines of its tree.
- * A drag lifts the row and leaves a faint copy behind. `controls` draws the
- * menu that a right click opened, the field of Rename, or a hover, because
- * a view runs no script.
+ * indents by the steps of `row.indent`, and a row of a tree draws the guide
+ * lines of `row.lines`, as a file tree does. A drag lifts the row and leaves
+ * a faint copy behind. `controls` draws the menu that a right click opened,
+ * the field of Rename, or a hover, because a view runs no script.
  */
 export function WorkspaceRowView(props: {
   row: WorkspaceRow
@@ -120,7 +130,8 @@ export function WorkspaceRowView(props: {
     )
   }
   const status = activityPresentation[row.status]
-  const carried = props.drag === 'lifted' ? (props.carried ?? 0) : 0
+  const lifted = props.drag === 'lifted'
+  const carried = lifted ? (props.carried ?? 0) : 0
   const className = classes(
     styles.row,
     props.variant === 'page' && styles.page,
@@ -128,7 +139,8 @@ export function WorkspaceRowView(props: {
     styles[status.emphasis],
     props.drag && styles[props.drag],
     carried > 0 && styles.liftedTree,
-    nestedClasses(row.indent),
+    // The lifted row stands for its whole tree, so it draws no guide lines.
+    nestedClasses(row.indent, lifted ? undefined : row.lines),
   )
   const content = (
     <>

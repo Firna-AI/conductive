@@ -1,4 +1,5 @@
 import type { Workspace } from '../../shared/generated/Workspace'
+import type { TreeLines } from '../../shared/workspace-tree-lines'
 import {
   useLayoutEffect,
   useRef,
@@ -43,16 +44,16 @@ function setRef<T>(ref: Ref<T> | undefined, value: T | null): void {
  * alone marks unread output. Its shortcut, Archive or Restore on an
  * archived row, covers the time on hover only, and stays while it runs. A
  * nested row indents by one step for each row that the list shows above it
- * in its tree, with the guide lines of the tree, and the fill of a hover or
- * a selection still spans the whole row. A drag lifts the row, and a faint
- * copy stays where it was. With `menu`, a
- * right click or the menu keys open the menu of the row, which keeps the
- * fill of a hover while it is open. The row has no button for the menu. The
- * field of Rename takes the place of the name and the time. Rename in the
- * menu opens it, and so does a plain double click on a row whose menu
- * offers Rename. A plain click on a row of the sidebar asks the message
- * field of the workspace to take the focus when its chat shows, so the
- * person can type at once. The second click of a double click does not
+ * in its tree. A row of a tree draws the guide lines of `lines`, as a file
+ * tree does, and the fill of a hover or a selection still spans the whole
+ * row. A drag lifts the row, and a faint copy stays where it was. With
+ * `menu`, a right click or the menu keys open the menu of the row, which
+ * keeps the fill of a hover while it is open. The row has no button for the
+ * menu. The field of Rename takes the place of the name and the time.
+ * Rename in the menu opens it, and so does a plain double click on a row
+ * whose menu offers Rename. A plain click on a row of the sidebar asks the
+ * message field of the workspace to take the focus when its chat shows, so
+ * the person can type at once. The second click of a double click does not
  * open the workspace again.
  */
 export function WorkspaceRow({
@@ -69,6 +70,8 @@ export function WorkspaceRow({
    * top-level row has 0.
    */
   depth?: number
+  /** The guide lines of the row in its tree. A lifted row has none. */
+  lines?: TreeLines
   drag?: RowDrag
   /**
    * The nested rows that move with a lifted row of a tree. The lifted row
@@ -115,7 +118,7 @@ export function WorkspaceRow({
     }
   }, [renaming])
   const page = props.variant === 'page'
-  const nested = nestedClasses(props.depth ?? 0)
+  const nested = nestedClasses(props.depth ?? 0, props.lines)
   const carried = props.drag === 'lifted' ? (props.carried ?? 0) : 0
   const className = classes(
     styles.row,

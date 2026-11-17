@@ -173,7 +173,7 @@ export function SectionList(props: {
               />
               {section.collapsed ? null : (
                 <ul className={styles.rows}>
-                  {treeRows(rows).map(({ row, treeId, place }) => {
+                  {treeRows(rows).map(({ row, treeId, place, lines }) => {
                     const { workspace } = row
                     const moving =
                       drag?.item.id === workspace.id ||
@@ -197,6 +197,7 @@ export function SectionList(props: {
                             drag={moving ? 'placeholder' : undefined}
                             focusRow={() => rowFocus.focusLink(workspace.id)}
                             linkRef={rowFocus.linkRef(workspace.id)}
+                            lines={lines}
                             menu={props.menus?.(workspace)}
                             now={props.now}
                             onArchive={props.archiveAction?.(workspace)}

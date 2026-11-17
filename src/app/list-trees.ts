@@ -1,5 +1,6 @@
 import type { Workspace } from '../shared/generated/Workspace'
 import type { WorkspacePlacement } from '../shared/workspace-tree'
+import { treeLines, type TreeLines } from '../shared/workspace-tree-lines'
 
 /**
  * A row of the workspace list: a live workspace, the section that shows
@@ -127,22 +128,25 @@ export interface TreeRow {
   treeId: string
   /** The place of its tree among the top-level rows of the section. */
   place: number
+  /** The guide lines of the row in its tree, as the mockups draw them. */
+  lines: TreeLines
 }
 
 /**
  * The rows of a section in tree order, each with its tree: the top-level
- * row above it, or itself, and the place of that row among the top-level
- * rows.
+ * row above it, or itself, the place of that row among the top-level rows,
+ * and the guide lines of the row from `treeLines` of `src/shared/`.
  */
 export function treeRows(rows: readonly ListRow[]): TreeRow[] {
+  const lines = treeLines(rows)
   const trees: TreeRow[] = []
-  for (const row of rows) {
+  for (const [index, row] of rows.entries()) {
     const last = trees.at(-1)
-    trees.push(
+    const tree =
       row.parentId === null || last === undefined
-        ? { row, treeId: row.workspace.id, place: (last?.place ?? -1) + 1 }
-        : { row, treeId: last.treeId, place: last.place },
-    )
+        ? { treeId: row.workspace.id, place: (last?.place ?? -1) + 1 }
+        : { treeId: last.treeId, place: last.place }
+    trees.push({ row, ...tree, lines: lines[index] })
   }
   return trees
 }

@@ -10,6 +10,7 @@ import {
   keptArchives,
 } from '../../fixtures/archivedWorkspaces'
 import type { GitHubSummary } from '../../../../../src/shared/generated/GitHubSummary'
+import type { TreeLines } from '../../../../../src/shared/workspace-tree-lines'
 import {
   checkoutAutocomplete,
   workspaceList,
@@ -34,6 +35,8 @@ export type WorkspaceRow = {
   restoreOpen?: boolean
   /** The steps of its indent under the rows of its tree. Without it, 0. */
   indent?: RowIndent
+  /** The guide lines of the row in its tree. Without them, none. */
+  lines?: TreeLines
 }
 
 export type SidebarSection = {

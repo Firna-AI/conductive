@@ -1,22 +1,31 @@
 import type { Workspace } from '../../shared/generated/Workspace'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
+import { guideClasses } from '../../../docs/mockups/src/components/workspaces/guideLines'
 import { WorkspaceMark } from '../../../docs/mockups/src/components/workspaces/WorkspaceMark'
 import styles from '../../../docs/mockups/src/components/workspaces/WorkspaceRow.module.css'
 import { listMarkLabel } from '../../../docs/mockups/src/components/workspaces/status'
 import { formatAgo } from '../../app/time'
 import { nameLabel } from '../../shared/name-label'
 import { MAX_WORKSPACE_DEPTH } from '../../shared/workspace-tree'
+import type { TreeLines } from '../../shared/workspace-tree-lines'
 import ui from '../ui/ui.module.css'
 
 /**
- * The classes of a nested row: the indent of each level that the list
- * shows above it, and the guide lines of its tree. A top-level row has
- * none.
+ * The classes of a row of a tree: the indent of each level that the list
+ * shows above a nested row, and the guide lines of its tree from `lines`,
+ * as the mockups draw them. A top-level row has only the stub under its
+ * mark, when rows show under it.
  */
-export function nestedClasses(depth: number): string | undefined {
-  if (depth <= 0) return undefined
-  const steps = Math.min(depth, MAX_WORKSPACE_DEPTH)
-  return classes(styles.nested, styles[`indent${steps}`])
+export function nestedClasses(
+  depth: number,
+  lines: TreeLines | undefined,
+): string {
+  const steps = Math.min(Math.max(depth, 0), MAX_WORKSPACE_DEPTH)
+  return classes(
+    steps > 0 && styles.nested,
+    steps > 0 && styles[`indent${steps}`],
+    guideClasses(steps, lines),
+  )
 }
 
 /**

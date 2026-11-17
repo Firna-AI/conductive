@@ -2,6 +2,7 @@
 
 import { act } from 'react'
 import { describe, expect, test } from 'vitest'
+import guideStyles from '../../../docs/mockups/src/components/workspaces/GuideLines.module.css'
 import sectionStyles from '../../../docs/mockups/src/components/workspaces/SectionList.module.css'
 import rowStyles from '../../../docs/mockups/src/components/workspaces/WorkspaceRow.module.css'
 import { memoryNavigation } from '../../app/navigation'
@@ -61,8 +62,46 @@ function indents(view: HTMLElement, section: string): string[] {
   })
 }
 
+/**
+ * The column of the parent of a nested row: ├─ or └─ with its corner, by
+ * whether the line runs on through the row, or │ or a blank without one.
+ */
+function parentColumn(corner: boolean, runs: boolean): string {
+  if (!corner) return runs ? '│  ' : '   '
+  return runs ? '├─ ' : '└─ '
+}
+
+/**
+ * The rows of a section as a file tree draws them, from the guide classes
+ * of each row: for each outer column, │ where its line runs on through the
+ * row or a blank, then the column of the parent of a nested row, the
+ * workspace, and ╷ for the stub under its mark. Only a row with `.tree`
+ * draws its lines.
+ */
+function guideLines(view: HTMLElement, section: string): string[] {
+  const links = view.querySelectorAll(`section[aria-label="${section}"] li a`)
+  return Array.from(links, (link) => {
+    const names = link.className.split(' ')
+    const draws = (name: string) =>
+      names.includes(guideStyles.tree) && names.includes(guideStyles[name])
+    const steps =
+      [1, 2, 3].find((step) => names.includes(rowStyles[`indent${step}`])) ?? 0
+    const runs = Array.from({ length: steps }, (_, column) =>
+      draws(`through${column}`),
+    )
+    const outer = runs
+      .slice(0, -1)
+      .map((on) => (on ? '│  ' : '   '))
+      .join('')
+    const own =
+      steps === 0 ? '' : parentColumn(draws('corner'), runs.at(-1) === true)
+    const stub = draws('stub') ? ' ╷' : ''
+    return `${outer}${own}${workspaceAt(link.getAttribute('href'))}${stub}`
+  })
+}
+
 describe('the trees of the workspace list', () => {
-  test('a nested row indents by each row above it in its tree, with the guide lines, in the sidebar and on the page, and a collapsed section counts its nested rows', async () => {
+  test('a nested row indents by each row above it in its tree, in the sidebar and on the page, the guide lines join the rows of a tree as a file tree does, and a collapsed section counts its nested rows', async () => {
     const app = await startedApp(new FakeApiServer())
     const { sections } = coreFixtures().sectionList
     const groups = groupWorkspaces(sections, trees).sections
@@ -87,6 +126,7 @@ describe('the trees of the workspace list', () => {
     const collapsed = mount('sidebar', true).querySelector(
       `section[aria-label="Checkout"] .${sectionStyles.count}`,
     )
+    const sidebar = mount('sidebar')
     const tree = [
       'fix-cart-flake 0',
       'webhook-retries 0',
@@ -101,10 +141,28 @@ describe('the trees of the workspace list', () => {
       'suggestion-list 1',
     ]
     expect({
-      sidebar: indents(mount('sidebar'), 'Checkout'),
+      sidebar: indents(sidebar, 'Checkout'),
       page: indents(mount('page'), 'Checkout'),
+      lines: guideLines(sidebar, 'Checkout'),
       count: collapsed?.textContent,
-    }).toEqual({ sidebar: tree, page: tree, count: '11' })
+    }).toEqual({
+      sidebar: tree,
+      page: tree,
+      lines: [
+        'fix-cart-flake',
+        'webhook-retries',
+        'apple-pay ╷',
+        '├─ merchant-validation',
+        '└─ wallet-button-tests',
+        'checkout-autocomplete ╷',
+        '├─ address-search-api ╷',
+        '│  └─ places-client ╷',
+        '│     ├─ rate-limits',
+        '│     └─ rate-limit-load-test',
+        '└─ suggestion-list',
+      ],
+      count: '11',
+    })
   })
 
   test('the keys of the list open its rows in tree order, Alt with Down moves a tree past the whole next tree, and on a nested row it moves nothing', async () => {

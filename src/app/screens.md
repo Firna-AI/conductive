@@ -132,10 +132,18 @@ the Help row of the command palette opens.
   `groupWorkspaces` in `sections.ts` places the rows of each section with
   `placeWorkspaces`, the shared rule of the Worker, so a row whose parent
   is archived shows under the nearest live row above it. Each row that the
-  list shows above a row in its tree indents it by one step, with the
-  guide lines of the tree, through the classes `.nested` and `.indent1` to
-  `.indent3` of the mockups. A collapsed section counts its nested rows
-  too. The Archived group and the command palette stay flat.
+  list shows above a row in its tree indents it by one step, through the
+  classes `.nested` and `.indent1` to `.indent3` of the mockups. The guide
+  lines join the rows of a tree as in a file tree, as
+  [the design](../../docs/mockups/design.md) says. A stub runs down from
+  the mark of a row with nested rows, and a connector runs to the mark of
+  each nested row. A line ends at its last nested row. An outer line runs
+  through a row only while its row has a nested row further down.
+  `treeRows` in `list-trees.ts` gives each row its lines from `treeLines`,
+  a shared helper. The mockups use the same helper, and their
+  `guideClasses` gives the classes of the lines. A collapsed section
+  counts its nested rows too. The Archived group and the command palette
+  stay flat.
 - Only a top-level row moves, and it takes its whole tree: by a drag, by a
   long press on a phone, by Alt with Up or Down, and by Move to section.
   The lifted row shows the count of the nested rows that move with it,

@@ -97,13 +97,26 @@ sessions as tabs above the chat, and four tabs at the bottom.
   place of the archived row. Each level indents the row by one step, 12 px
   in the sidebar and 16 px on the list page of a phone, so a tree shows at
   most four levels. The indent follows the rows that the list shows, not
-  the depth of the record. A hairline in the `border2` colour runs down
-  from under the middle of the mark of each parent to its last nested row,
-  as the indent guides of a file tree do. The guides are neutral lines of
-  the tree, not an accent edge, and the fill of a hover or a selection
-  still spans the whole row. A tree has no collapse control. `.nested` and
-  `.indent1` to `.indent3` of `WorkspaceRow.module.css` draw the indent and
-  the guides, and the app shares them.
+  the depth of the record. The guide lines join the rows of a tree as the
+  lines of a file tree do, as the user asked on 17 November 2026. Each
+  line is a 1 px hairline in the `border2` colour. In forced colours, the
+  lines take the system colour of quiet text. A short stub runs down
+  from the bottom of the mark of each row with nested rows. The line of
+  that row then runs down under the middle of its mark. A short connector
+  runs from that line to the mark of each nested row (├─). The line
+  ends at the connector of the last nested row, in the middle of that row
+  (└─). An outer line runs through a row only while its row has a nested
+  row further down (│). Elsewhere its column stays empty. `treeLines` in
+  [`src/shared/workspace-tree-lines.ts`](../../src/shared/workspace-tree-lines.ts)
+  gives each row these facts. `withTrees` and the app both use it, so they
+  draw the same lines. The guides are neutral lines of the tree, not an
+  accent edge. They lie over the fill of a hover or a selection, and the
+  fill still spans the whole row. The faint tree of a drag keeps its
+  guides, and the lifted card shows none. A tree has no collapse control.
+  `.nested` and `.indent1` to `.indent3` of `WorkspaceRow.module.css` draw
+  the indent. `GuideLines.module.css` beside it draws the guides, and
+  `guideClasses` in `src/components/workspaces/guideLines.ts` gives their
+  classes. The app shares all three.
 - Only a top-level row drags, and its whole tree moves with it. The lifted
   row stands for the tree: in place of its time it shows the count of the
   nested rows that move with it, such as +2, over the edge of a second

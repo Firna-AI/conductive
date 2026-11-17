@@ -2,6 +2,7 @@ import {
   placeWorkspaces,
   type TreeWorkspace,
 } from '../../../../../src/shared/workspace-tree'
+import { treeLines } from '../../../../../src/shared/workspace-tree-lines'
 import { defaultSection } from '../../fixtures/sections'
 import type { SidebarSection, WorkspaceRow } from './sections'
 
@@ -50,7 +51,8 @@ function indentOf(depth: number): RowIndent {
  * indents one step less than its depth. A workspace without such a row is
  * a top-level row of its own section. Each top-level row comes first, then
  * its sub-workspaces, oldest first, each followed by its own
- * sub-workspaces.
+ * sub-workspaces. Each row gets the guide lines of its tree from
+ * `treeLines`, which the app uses too.
  */
 export function withTrees(
   sections: readonly SidebarSection[],
@@ -75,15 +77,20 @@ export function withTrees(
       isDefault: section.key === defaultSection,
     })),
   )
-  return sections.map((item) => ({
-    ...item,
-    rows: placed
-      .filter(({ sectionId }) => sectionId === item.section.key)
-      .map(({ workspace, depth }) => ({
+  return sections.map((item) => {
+    const rows = placed.filter(
+      ({ sectionId }) => sectionId === item.section.key,
+    )
+    const lines = treeLines(rows)
+    return {
+      ...item,
+      rows: rows.map(({ workspace, depth }, index) => ({
         ...workspace.row,
         indent: indentOf(depth),
+        lines: lines[index],
       })),
-  }))
+    }
+  })
 }
 
 /** The list shows the row under another row of its tree. */
