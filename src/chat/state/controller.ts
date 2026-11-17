@@ -5,30 +5,16 @@ import type { DeviceApprovalAction } from '../../shared/device'
 import type { AnswerSecretRequest } from '../../shared/secret-requests'
 
 import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
-import { createChatApi, type WorkspaceTarget } from '../api/client'
-import type { SessionReads } from '../links/session-reads'
 import { answerCommand, refreshDevices } from '../device/device-actions'
 import { answerSecret } from '../secrets/secret-actions'
-import { browserTimers } from '../stream/workspace-stream'
+import type { MentionTarget } from '../mentions/MentionsContext'
 import { copyTranscript, type CopyServices } from '../transcript-copy'
-import {
-  ChatStore,
-  initialSnapshot,
-  type ChatSnapshot,
-  type Overlay,
-} from './chat-snapshot'
 import { showAddressSession } from './address-session'
-import { closeLocally, isArchived, showLocally } from './archive-view'
+import { closeLocally, showLocally } from './archive-view'
 import { attachFiles } from './attachment-actions'
-import type { ChatContext } from './context'
-import {
-  createChatContext,
-  type ChatContextOptions,
-} from './controller-context'
-import { hydrate, watchShownSession } from './history'
-import { followSources, withSources } from './sources'
-import { loadChat } from './load'
-import { withEndedDraftFiles } from './drafts'
+import { ChatRuns } from './chat-runs'
+import type { MentionRequest } from './chat-snapshot'
+import { hydrate } from './history'
 import {
   interruptTurn,
   resumeWorkspace,
@@ -36,12 +22,12 @@ import {
   sendDraft,
   setDraftText,
 } from './message-actions'
+import { addToChat, takeMention } from './mention-actions'
 import { chooseModel } from './model-actions'
 import { draftFileSource } from './draft-file-source'
 import { sendPrompt, type PromptOutcome } from './prompt-actions'
 import { moveTab } from './tab-actions'
 import type { TabPlace } from './tab-order'
-import { ownWorkspaceList, type WorkspaceList } from './workspace-list'
 import { confirmClose, requestClose } from './close-actions'
 import {
   newSession,
@@ -51,144 +37,16 @@ import {
   updateView,
 } from './session-actions'
 
-export interface ChatControllerOptions extends ChatContextOptions {
-  /**
-   * Whether the host shows the workspace read-only, such as while its org
-   * is suspended. The controller reads it at each action, because a
-   * suspension can start during a visit.
-   */
-  readOnly?: () => boolean
-}
-
 /**
  * The chat of one workspace. It loads the sessions and the history of the
  * shown session, reads the workspace stream, and runs the user's actions
  * against the API. React reads it through `subscribe` and `getSnapshot`.
  * Each `start` begins a fresh run, and `stop` makes late responses of the
  * run change nothing. An app that keeps the chat while it shows another page
- * calls `hide` and `show` instead, as `show` says.
+ * calls `hide` and `show` instead, as `show` says. `ChatRuns` holds the
+ * runs, and this class adds the actions.
  */
-export class ChatController {
-  /** The org and the workspace of the chat. */
-  readonly target: WorkspaceTarget
-  /**
-   * The workspaces whose links show as chips. The chat watches them while
-   * it shows, from `start` or `show` to `hide` or `stop`.
-   */
-  readonly workspaceList: WorkspaceList
-  private readonly options: ChatControllerOptions
-  private readonly store = new ChatStore()
-  /** The reader's place in each session tab, while the app keeps the chat. */
-  readonly places = this.store.places
-  private context: ChatContext
-  private run = 0
-  private started = false
-  private unwatch: (() => void) | null = null
-  private unfollow: (() => void) | null = null
-  private unlist: (() => void) | null = null
-
-  constructor(options: ChatControllerOptions) {
-    this.options = options
-    this.target = options.target
-    this.context = this.createContext(this.run)
-    const { sources, client, target } = options
-    this.workspaceList = sources
-      ? { workspaces: sources.workspaces, watch: sources.watchWorkspaces }
-      : ownWorkspaceList(
-          createChatApi(client, target),
-          options.timers ?? browserTimers,
-        )
-  }
-
-  readonly subscribe = (listener: () => void) => this.store.subscribe(listener)
-  readonly getSnapshot = (): ChatSnapshot => this.store.get()
-
-  /** The reads of the sessions of linked workspaces for this load. */
-  get sessionReads(): SessionReads {
-    return this.context.sessionReads
-  }
-
-  /**
-   * Loads the chat, then opens its stream. From now on, each session that
-   * becomes the shown session loads its history.
-   */
-  readonly start = (): Promise<void> => {
-    this.stop()
-    this.started = true
-    this.context = this.createContext(this.run)
-    const { sources } = this.options
-    const fresh = { ...initialSnapshot, draftEpoch: this.run }
-    // The values of the app replace the reset ones at once, then follow it.
-    this.store.update(() => (sources ? withSources(fresh, sources) : fresh))
-    this.unfollow = sources ? followSources(this.store, sources) : null
-    this.unwatch = watchShownSession(this.context)
-    this.unlist = this.workspaceList.watch()
-    return loadChat(this.context)
-  }
-
-  readonly stop = (): void => {
-    this.run += 1
-    this.context.sessionReads.close()
-    for (const upload of this.context.uploads.values()) upload.abort()
-    this.context.uploads.clear()
-    this.store.update(withEndedDraftFiles)
-    this.unwatch?.()
-    this.unwatch = null
-    this.unfollow?.()
-    this.unfollow = null
-    this.unlist?.()
-    this.unlist = null
-    this.context.stream.stop()
-  }
-
-  /**
-   * Shows the chat. The first show loads it, as `start` does, and so does a
-   * show after a failed load. A later show opens the stream again after its
-   * cursor, so the chat shows at once and gets only the newer events. A load
-   * that still runs keeps going, and its end opens the stream.
-   */
-  readonly show = (): void => {
-    if (!this.started || this.store.get().load.state === 'failed') {
-      void this.start()
-      return
-    }
-    this.context.stream.release()
-    this.unlist ??= this.workspaceList.watch()
-  }
-
-  /**
-   * Closes the stream while the app shows another page. The chat keeps its
-   * sessions, drafts, transcripts, and cursor, and the actions and loads that
-   * run still finish.
-   */
-  readonly hide = (): void => {
-    this.context.stream.hold()
-    this.unlist?.()
-    this.unlist = null
-  }
-
-  private createContext(run: number): ChatContext {
-    const live = () => this.run === run
-    return createChatContext(this.options, this.store, live, run)
-  }
-
-  private overlay(overlay: Overlay): void {
-    this.store.update((snapshot) => ({ ...snapshot, overlay }))
-  }
-
-  /**
-   * A read-only workspace, archived or shown read-only by the host, changes
-   * its tabs in the browser only, and sends no write.
-   */
-  private readOnly(): boolean {
-    return isArchived(this.store.get()) || (this.options.readOnly?.() ?? false)
-  }
-
-  /** Runs a write of the user, unless the workspace is read-only. */
-  private write(action: () => Promise<unknown>): Promise<void> {
-    return this.readOnly() ? Promise.resolve() : action().then(() => undefined)
-  }
-
+export class ChatController extends ChatRuns {
   readonly select = (sessionId: string) =>
     this.readOnly()
       ? showLocally(this.context, sessionId)
@@ -247,6 +105,16 @@ export class ChatController {
     this.readOnly()
       ? Promise.resolve('unavailable')
       : sendPrompt(this.context, text)
+  /**
+   * Puts the chip of a file or a folder into the message field of the
+   * session of the chat, as `addToChat` says. A read-only workspace takes
+   * no chip.
+   */
+  readonly addToChat = (target: MentionTarget) =>
+    this.write(() => addToChat(this.context, target))
+  /** The message field took the chip of a request, as `takeMention` says. */
+  readonly takeMention = (request: MentionRequest) =>
+    takeMention(this.context, request)
   readonly retry = (sessionId: string, messageId: string) =>
     this.write(() => retryTurn(this.context, sessionId, messageId))
   readonly interrupt = (sessionId: string) =>

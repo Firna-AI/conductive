@@ -281,6 +281,12 @@ of the data that the screens read and write.
   - After the replay, the newest live event.
 - A live event during an unfinished replay moves no number. The store holds
   that event until the final page.
+- `WorkspaceStream.subscribe` gives each event of the workspace once, in
+  order, both from the replay and live. It also tells a replayed event
+  from a live one. Its optional `replayEnded` runs after the final page of
+  each replay, before the live events that waited for it. A part
+  that keeps only the newest state of a kind, such as the GitHub state of
+  the pull request bar, uses it to skip the old states of a replay.
 - `WorkspaceStream.reconnects` counts the replays that end after a dropped
   connection or a gap. A part that keeps its own reads, such as the
   member's GitHub access of the pull request bar, reads again at each new

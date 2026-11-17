@@ -1,13 +1,9 @@
 import type { AgentModel } from '../../shared/generated/AgentModel'
-import { useEffect, useRef, useState, type RefObject } from 'react'
+import { useRef, useState, type RefObject } from 'react'
 import { Button } from '@firna/ui/button'
 import { ArrowUp, Paperclip } from 'lucide-react'
 import type { Agent } from '../../shared/generated/Agent'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
-import {
-  focusStayed,
-  type ComposerFocusRequest,
-} from '../../app/composer-focus'
 import { filesWait, type IntakeRefusals } from '../../app/draft-files'
 
 import { classes } from '../../../docs/mockups/src/components/common/classes'
@@ -19,7 +15,7 @@ import {
   type SessionLogin,
 } from '../../../docs/mockups/src/components/chat/SessionLogin'
 import { useShortcutOffer } from '../../shell/shortcuts/shortcut-context'
-import type { Draft } from '../state/chat-snapshot'
+import type { Draft, MentionRequest } from '../state/chat-snapshot'
 import { IconButton } from '../ui/actions'
 import { FolderNotice, noticedFolder, OversizeNotice } from './AttachmentChips'
 import type { FieldFiles } from './chip-field/attached-files'
@@ -31,15 +27,13 @@ import { useComposerDrop } from './composer-drop'
 import { StopButton } from './ComposerButtons'
 import { ComposerStart } from './ComposerMenu'
 import type { ComposerTool } from './ComposerTools'
+import {
+  useRequestedFocus,
+  useRequestedMention,
+  type ComposerFocus,
+} from './composer-requests'
 import { ModelPicker } from './ModelPicker'
 import { useSendKey } from './send-key'
-
-/** A request that the message field takes the focus once. */
-export interface ComposerFocus {
-  readonly request: ComposerFocusRequest
-  /** The composer took the request: it focused, or the focus had moved. */
-  readonly done: () => void
-}
 
 export interface ComposerProps {
   draft: Draft
@@ -92,23 +86,13 @@ export interface ComposerProps {
    * the menu of one + button.
    */
   tools?: readonly ComposerTool[]
-}
-
-/**
- * Gives the focus to the field once for each request, when the composer
- * shows it, unless the focus moved to another element since the request.
- */
-function useRequestedFocus(
-  field: RefObject<FieldHandle | null>,
-  focus: ComposerFocus | null,
-) {
-  const request = focus?.request ?? null
-  const done = focus?.done
-  useEffect(() => {
-    if (request === null) return
-    if (focusStayed(request)) field.current?.focus()
-    done?.()
-  }, [field, request, done])
+  /**
+   * The chip that Add to chat asks the field for. The field takes it once,
+   * when the composer shows it, as `useRequestedMention` says.
+   */
+  mention?: MentionRequest | null
+  /** The field took the chip of `mention`. */
+  onMentionTaken?: (request: MentionRequest) => void
 }
 
 /**
@@ -152,7 +136,8 @@ function useComposerKeys(props: {
  * In a chat with the files of its workspace, `@` opens the list of the files
  * and folders just above the box, and a pick shows as a file chip. A focus
  * request, such as from a click on the workspace in the sidebar, puts the
- * caret in the field when it shows.
+ * caret in the field when it shows. The chip of Add to chat goes into the
+ * field when it shows, before the focus of a request of the same render.
  */
 export function Composer(props: ComposerProps) {
   const control = useControlSizes()
@@ -169,7 +154,9 @@ export function Composer(props: ComposerProps) {
   const off = empty || props.blocked || props.sending || filesWait(draft.files)
   const steers = props.running && props.startsSession !== true
   const sendKey = useSendKey(!off, props.onSend)
-  useRequestedFocus(field, props.focus ?? null)
+  const focus = props.focus ?? null
+  useRequestedMention(field, props.mention ?? null, props.onMentionTaken, focus)
+  useRequestedFocus(field, focus)
   // The field takes changes while the composer shows, so the box takes a
   // drop also while Send is off.
   const drop = useComposerDrop({

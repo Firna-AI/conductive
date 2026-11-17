@@ -42,7 +42,7 @@ decision number names a decision of the change that adds
 | General | Account page | ⌘, | Ctrl+, | Every page |
 | General | Create org | – | – | Palette |
 | General | Send feedback | ⌥⌘F | Alt+Shift+F | Palette |
-| View | Hide or show the sidebar | ⌘B, [ | – | Palette, Mac app |
+| View | Hide or show the sidebar | ⌘B, [ | Ctrl+B, [ | Palette |
 | View | Hide or show the right column | ⌥⌘B, ] | Alt+Shift+B, ] | Workspace |
 | Navigation | Back | ⌘[ | – | Mac app |
 | Navigation | Forward | ⌘] | – | Mac app |
@@ -90,6 +90,14 @@ decision number names a decision of the change that adds
   Ctrl+Shift+E (fast mode decision 258). Reason: members who move from
   Conductor press that key. No key, a row of the palette, and a key that
   opens the model menu were rejected for that reason.
+- Hide or show the sidebar runs in every host, with ⌘B and [ on a Mac and
+  their twins Ctrl+B and [ on Windows and Linux (list popover decision 5 A,
+  16 November 2026). Reason: the browser has the sidebar toggle too, and
+  the keys follow the rules in force, as for Hide or show the right
+  column. Risk: Firefox opens its bookmarks sidebar on ⌘B and Ctrl+B, and
+  the app takes that key while the command runs.
+  [The hidden sidebar](org-rail-order.md#the-hidden-sidebar) defines the
+  list popover decisions.
 - No two commands share a default key on the same keyboard.
 - The command Commit and push also presses Push, which the bar shows in
   its place when the local work is only commits, as

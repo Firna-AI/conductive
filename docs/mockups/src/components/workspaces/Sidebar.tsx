@@ -1,3 +1,4 @@
+import { PanelLeft } from 'lucide-react'
 import type { Org } from '../../fixtures/orgs'
 import type { Membership } from '../../fixtures/members'
 import {
@@ -7,6 +8,8 @@ import {
 import { paths } from '../../paths'
 import { classes } from '../common/classes'
 import { LoadFailure } from '../common/LoadFailure'
+import { IconButton } from '../common/actions'
+import { useSidebarToggle } from '../layout/sidebarPlace'
 import type { RowFocus } from './rowControls'
 import type {
   ListDrag,
@@ -28,6 +31,8 @@ import styles from './Sidebar.module.css'
  * cog, New workspace, Automations, Search, and the sections of the org.
  * A suspended org keeps Automations and Search, with read-only sections.
  * A list that did not load shows its failure in place of the sections.
+ * In the browser the sidebar toggle sits beside the cog. It hides the
+ * sidebar, or it shows it again from the popover of the hidden sidebar.
  * An open menu of a row may pass the edge of the sidebar.
  */
 export function Sidebar(props: {
@@ -57,6 +62,7 @@ export function Sidebar(props: {
 }) {
   const suspended = props.suspended ?? false
   const drawing = props.focus?.drawing.kind
+  const toggle = useSidebarToggle()
   return (
     <>
       <div className={styles.top}>
@@ -66,6 +72,12 @@ export function Sidebar(props: {
           current={props.current === 'settings'}
           to={suspended ? paths.suspendedSettings : undefined}
         />
+        {toggle ? (
+          <IconButton
+            icon={PanelLeft}
+            label={toggle === 'show' ? 'Show the sidebar' : 'Hide the sidebar'}
+          />
+        ) : null}
       </div>
       <div
         className={classes(

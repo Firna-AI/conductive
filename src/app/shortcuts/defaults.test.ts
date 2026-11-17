@@ -135,7 +135,7 @@ test('commands follow their groups, start with the checked keys, and run only wh
   }
 })
 
-test('a plain ] toggles the right column and a plain [ the sidebar of the Mac app outside a text field, and each goes on to the message field', () => {
+test('a plain ] toggles the right column and a plain [ the sidebar outside a text field, in every host, and each goes on to the message field', () => {
   const right = press({ key: ']', code: 'BracketRight', metaKey: false })
   const left = press({ key: '[', code: 'BracketLeft', metaKey: false })
   const cases = [
@@ -152,6 +152,18 @@ test('a plain ] toggles the right column and a plain [ the sidebar of the Mac ap
       command: 'toggle-right-column',
     },
     { keyboard: 'mac', host: macApp, press: left, command: 'toggle-sidebar' },
+    {
+      keyboard: 'mac',
+      host: tab('chrome'),
+      press: left,
+      command: 'toggle-sidebar',
+    },
+    {
+      keyboard: 'other',
+      host: tab('chrome', 'windows'),
+      press: left,
+      command: 'toggle-sidebar',
+    },
   ] as const
   for (const { command, ...item } of cases) {
     // A pass leaves the press to the message field, which types its character.

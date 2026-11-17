@@ -1,6 +1,6 @@
 import { createApiClient } from '../../src/app/api/client'
 import { xhrFileTransport } from '../../src/app/api/xhr-files'
-import { socketEventSource } from '../../src/app/events'
+import { socketEventSource } from '../../src/app/event-socket'
 import { createLiveServices } from '../../src/app/live-services'
 import type { AppServices } from '../../src/app/services'
 

@@ -1,7 +1,10 @@
 import type {
   AriaAttributes,
   CSSProperties,
+  KeyboardEventHandler,
   MouseEvent,
+  MouseEventHandler,
+  PointerEventHandler,
   ReactNode,
   Ref,
 } from 'react'
@@ -28,7 +31,8 @@ function isPlainClick(event: MouseEvent<HTMLAnchorElement>): boolean {
  * the history of the browser tab gets no second entry, and it selects no
  * text. `onDoubleClick` runs at a plain double-click, such as to keep the
  * tab that the link opens. `ref` gets the element of the link, such as to
- * give it the focus.
+ * give it the focus. The other handlers, such as those of the menu of a
+ * row, run as the browser sends their events.
  */
 export function FilesLink(props: {
   to: FilesTarget
@@ -42,6 +46,9 @@ export function FilesLink(props: {
   'aria-label'?: string
   /** The key of the command that the link runs, for a screen reader. */
   'aria-keyshortcuts'?: string
+  onContextMenu?: MouseEventHandler<HTMLAnchorElement>
+  onKeyDown?: KeyboardEventHandler<HTMLAnchorElement>
+  onPointerDown?: PointerEventHandler<HTMLAnchorElement>
   children: ReactNode
 }) {
   const { to, navigation, ref, onDoubleClick } = props
@@ -60,13 +67,16 @@ export function FilesLink(props: {
         if (event.detail > 1) return
         navigation.navigate(to)
       }}
+      onContextMenu={props.onContextMenu}
       onDoubleClick={(event) => {
         if (onDoubleClick && isPlainClick(event)) onDoubleClick()
       }}
+      onKeyDown={props.onKeyDown}
       onMouseDown={(event) => {
         // The second press of a double-click would select a word.
         if (event.detail > 1) event.preventDefault()
       }}
+      onPointerDown={props.onPointerDown}
       ref={ref}
       style={props.style}
       title={props.title}

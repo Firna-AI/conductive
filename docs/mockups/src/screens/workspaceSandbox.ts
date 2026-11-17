@@ -1,8 +1,9 @@
 import { waitsForAnswer } from '../components/chat/requests'
-import type {
-  ArchiveRestore,
-  SandboxNoticeState,
-  SandboxPanelState,
+import {
+  replacesList,
+  type ArchiveRestore,
+  type SandboxNoticeState,
+  type SandboxPanelState,
 } from '../components/workspace/sandboxNoticeState'
 import { orgSuspendedReason } from '../components/orgs/suspension'
 import { conversations, type ConversationKey } from '../fixtures/conversations'
@@ -129,4 +130,17 @@ export function panelState(
 ): SandboxPanelState | undefined {
   if (state.sandbox === 'starting') return { problem: 'starting' }
   return sandboxNotice(state)
+}
+
+/**
+ * All files and Changes show their rows, and not the state of the sandbox
+ * in their place. A stopped sandbox, one whose later start failed, and one
+ * that starts with saved lists keep them. A refused start, also in a
+ * suspended org, a failed first start, and the first start of a new
+ * workspace take their place, and an archived workspace has no lists.
+ */
+export function listsShow(state: WorkspaceState): boolean {
+  const panel = panelState(state)
+  if (!panel) return true
+  return panel.problem !== 'archived' && !replacesList(panel, !isNew(state))
 }

@@ -23,8 +23,9 @@ import {
 import { ChatPane } from './ChatPane'
 import { placeMemory } from './chat-place'
 import { ActionNotice, BlockNotice, LinkedSessionNotice } from './ChatNotices'
-import { Composer, type ComposerFocus } from './Composer'
+import { Composer } from './Composer'
 import type { ComposerTool } from './ComposerTools'
+import type { ComposerFocus } from './composer-requests'
 import { SandboxBar, StartingCard, type SandboxProblem } from './SandboxState'
 import {
   EarlierLoading,
@@ -149,7 +150,7 @@ export function SessionChat(props: SessionChatProps) {
   // of a failed first start keeps the composer under it.
   const down = (sandboxBar !== null && !keepsComposer) || readOnly
   const block = sendBlock(snapshot, id)
-  const { notice } = snapshot
+  const { notice, mentionRequest: mention } = snapshot
   const shownNotice =
     notice && (notice.sessionId === null || notice.sessionId === id)
       ? notice
@@ -232,6 +233,7 @@ export function SessionChat(props: SessionChatProps) {
           files={files}
           focus={props.composerFocus}
           login={loginLabelOf(login)}
+          mention={mention?.sessionId === session.id ? mention : null}
           models={composerModels(
             login,
             snapshot.models,
@@ -245,6 +247,7 @@ export function SessionChat(props: SessionChatProps) {
           onChooseModel={(choice) =>
             void controller.chooseModel(session.id, choice)
           }
+          onMentionTaken={controller.takeMention}
           onSend={() => void controller.send(session.id)}
           onStop={() => void controller.interrupt(session.id)}
           running={state.transcript.turn !== null}

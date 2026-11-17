@@ -19,7 +19,10 @@ screens live under `mac-app`, and their parts in `src/components/mac/`.
   sit inset at the top left of the left panel, above every layer of the
   app, as macOS draws them. `WindowControls` keeps their space, then shows
   the sidebar toggle, and back and forward at the right. In full screen
-  the buttons are gone, and the toggle takes their space.
+  the buttons are gone, and the toggle takes their space. While the toggle
+  hides the sidebar, the controls keep their own width in the top left
+  corner, and the top bar of the main area starts after them, as
+  `mac-app/window/sidebar-popover` shows.
 - `MacApp` marks the screens inside it as the Mac app, so that `AppFrame`
   draws the window controls and a banner of the Mac app. The account of
   the Mac app keeps the sidebar of the org and adds the This Mac tab last.
@@ -84,8 +87,8 @@ screens live under `mac-app`, and their parts in `src/components/mac/`.
   its child pages `search`, `recording`, and `changes`. A search field at
   the top finds a row by its words, from decision 195. The line under it
   says that keys without ⌘ go to the terminal while it has the focus.
-  Only the Mac app has Hide or show the sidebar, Back, Forward, Paste and
-  match style, and the Mac app group of its menu keys. From decision 193,
+  Only the Mac app has Back, Forward, Paste and match style, and the Mac
+  app group of its menu keys. From decision 193,
   the Workspace group ends with the fixed keys of a focused workspace row
   and a focused divider. Reset all asks first, in a `ConfirmDialog`. A
   browser shows the same tab with the keys of its tab, as

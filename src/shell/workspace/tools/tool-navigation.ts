@@ -22,7 +22,10 @@ export interface ToolNavigation {
   tool: ToolKey
   /** The address of a tool, for its tab. */
   href: (tool: ToolKey) => string
-  /** Shows a tool after a plain click on its tab. */
+  /**
+   * Shows a tool after a plain click on its tab, or Go to of the palette
+   * or its key. On desktop, Terminal also takes the keyboard focus.
+   */
   select: (tool: ToolKey) => void
   /**
    * The route of the Preview tool: the preview or the port of the address,
@@ -34,13 +37,14 @@ export interface ToolNavigation {
 /**
  * The address of each tool, and the select of its tab: it saves the tool
  * in the view. On a phone it opens the page of the tool. On desktop it
- * moves the address only from the address of a tool.
+ * moves the address only from the address of a tool, and a choice of
+ * Terminal asks for the keyboard focus of the terminal.
  */
 export function useToolSelect(
   context: WorkspaceContext,
 ): Pick<ToolNavigation, 'href' | 'select'> {
   const navigation = useNavigation()
-  const { org, workspace, viewport, savedView } = context
+  const { org, workspace, viewport, savedView, terminalFocus } = context
   const placeTool = toolPlace(context.view)?.tool ?? null
   const phone = viewport === 'phone'
   const href = useCallback(
@@ -49,11 +53,15 @@ export function useToolSelect(
   )
   const select = useCallback(
     (tool: ToolKey) => {
+      // On desktop a choice of Terminal moves the focus to it. A phone
+      // keyboard would cover the page, so a phone moves no focus.
+      if (tool === 'terminal' && !phone) terminalFocus.ask()
+      else terminalFocus.clear()
       saveView(savedView, withTool(tool))
       if (phone) navigation.push(href(tool))
       else if (placeTool) navigation.replace(href(tool))
     },
-    [savedView, phone, navigation, href, placeTool],
+    [savedView, terminalFocus, phone, navigation, href, placeTool],
   )
   return { href, select }
 }

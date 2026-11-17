@@ -161,8 +161,10 @@ that those chips show, from the attach to the send.
   Outside each box and its drop area, `useFileDropGuard` of the app makes a drop of files do
   nothing, as [Composition](../app/README.md#composition) says.
 - `FieldHandle` gives `focus()`, `insertFiles(ids, point?)`,
-  `showDropCaret(point)`, and `clearDropCaret()`. A `FieldPoint` is a point
-  of the page, from `clientX` and `clientY` of a pointer event.
+  `insertMention(target, focus)`, `showDropCaret(point)`, and
+  `clearDropCaret()`.
+  A `FieldPoint` is a point of the page, from `clientX` and `clientY` of a
+  pointer event.
   `insertFiles` puts a chip for each file of `ids` that `files()` gives.
   The chips go to the place under the point over the text, else to the
   caret, else to the end. They go in order, each with a space after it, as
@@ -171,6 +173,21 @@ that those chips show, from the attach to the send.
   takes the focus. A caret that selects text keeps the text, and the chips
   go to its focus. A field without the focus keeps its caret for
   `insertFiles`. A field that takes no change puts no chip.
+- `insertMention(target, focus)` puts the chip of a file or a folder, for
+  Add to chat, as a pick from the list of `@` puts it: at the caret, else
+  at the end, with a space after it unless a space or a line break follows,
+  as one step of undo. A field that mounts again has no caret, so the chip
+  goes to the end. The draft gets the mention from `onChangeText`, as for
+  each edit, so the undo history stays. With `focus`, the field takes the
+  focus, and the caret stands after the chip. Without it, a field without
+  the focus keeps no caret, and the caret of the page leaves it. Else a
+  later change of the editor would put the caret of the page into the
+  field, such as when its root attaches again in the strict mode of React,
+  and Chrome then gives the field the focus. A later focus puts the caret
+  at the end. An entry that the list of `@` does not offer gets no chip,
+  and neither does a field that takes no change or no mention. The composer
+  of the chat calls it for the request of `addToChat`, as
+  [Add to chat](loads-and-sends.md#add-to-chat) says.
 - `showDropCaret` draws the drop caret at the place under the point over
   the text, and hides it elsewhere. The drop caret is a layer over the
   text, and it never moves the caret or the selection. `insertFiles` and
@@ -205,11 +222,13 @@ that those chips show, from the attach to the send.
   `attached-file-node.tsx` holds the node of an attached file, whose text
   is its mark, and `attached-file-chip.tsx` draws its live chip.
   `owned-files.ts` takes the chip of a file that leaves the draft out of
-  the text. `insert-files.ts` puts the chips of `insertFiles` in place.
+  the text. `insert-files.ts` puts the chips of `insertFiles` and
+  `insertMention` in place.
   `point-caret.ts` finds the caret and the box of the drop caret at a
   point. `drop-caret.tsx` draws the drop caret, and `drop-move.ts` puts
   the nodes of a drop in place. `field-focus.ts` and `use-latest.ts` hold
   small helpers of the plugins. `focusField` commits a waiting change
   before it moves the focus. A waiting change that leaves the caret of the
   page, such as a reconcile of the chips, then cannot take the caret of
-  the focus with it.
+  the focus with it. `releasePageCaret` takes the caret of the page out of
+  a field without the focus, after `insertMention` without `focus`.

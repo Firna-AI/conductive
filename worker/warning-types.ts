@@ -46,12 +46,14 @@ export const SIMPLE_WARNINGS = {
   shortcut_keys_skipped:
     'Some stored shortcut keys are no longer valid and were skipped.',
   shortcut_change_skipped: 'An unreadable stored shortcut change was skipped.',
+  model_gateway_check_late:
+    'A model turn check took longer than its interval. The answer keeps streaming.',
 } as const
 
 /** Each kind permits only its fixed text and the safe values that it needs. */
 export type WorkerWarning =
   | {
-      kind: 'model_gateway_check_failed' | 'model_gateway_check_retry'
+      kind: 'model_gateway_check_failed'
       workspaceId: WarningId
       errorKind: GatewayCheckErrorKind
     }
