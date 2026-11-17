@@ -11,7 +11,9 @@ sender. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A secrets decision number names a decision of the change that adds
-[secrets](secrets.md), as that doc says.
+[secrets](secrets.md), as that doc says. A parent-move decision number
+names a decision of the change that adds
+[parent changes](parent-changes.md), as that doc says.
 
 ## The calls
 
@@ -216,19 +218,44 @@ says. A secrets decision number names a decision of the change that adds
 
 ## Move a workspace
 
-- `move_workspace` takes a workspace and a section of the org.
-- The call moves the workspace to the top of that section, as
-  [Move to section](workspace-menu.md#move-to-section) does. A move to
-  the section of the workspace changes nothing.
+- `move_workspace` takes a workspace, and a section of the org, a target,
+  or both. A target is a new parent or the top level, as
+  [Parent changes](parent-changes.md) says (parent-move decision 1 A).
+- The MCP tool takes a new parent as `parentId`, and the top level as
+  `topLevel: true`. The CLI takes `--parent ID` and `--top-level`.
+- Reason for the names: a create call and the list take a parent with
+  the same names. "Top-level" is the term of the docs.
+- The section is optional only when the call names a target. A call with
+  no section and no target gets HTTP 400 with the error code
+  `invalid_input`. Reason: older tools always send a section, so each
+  request that they send keeps its result.
+- A call with both `parentId` and `topLevel: true` gets HTTP 400 with the
+  error code `invalid_input` (parent-move decision 3 A).
+- Without a target, the call moves the workspace to the top of that
+  section, as [Move to section](workspace-menu.md#move-to-section) does.
+  A move to the section of the workspace changes nothing.
 - A move of a workspace that the list shows as a top-level row also moves
-  each workspace nested under it. A workspace that the list shows as a
-  nested row moves nothing, and the reply gives a `notice`.
-  [Moves](sub-workspaces.md#moves) gives these rules.
+  each workspace nested under it. Without a target, a workspace that the
+  list shows as a nested row moves nothing, and the reply gives a
+  `notice`. [Moves](sub-workspaces.md#moves) gives these rules.
+- With a target, the call changes the parent of the workspace, and moves
+  each workspace nested under it too.
+  [Parent changes](parent-changes.md) gives the section and the place of
+  the moved tree, and its `notice`. It also gives the errors of a target:
+  `nesting_cycle` and `nesting_limit` with HTTP 409, and
+  `workspace_not_found` with HTTP 404.
 - An unknown section gets HTTP 404 with the error code
   `section_not_found`.
 - An archived workspace refuses the move with HTTP 409 and the error code
   `workspace_archived`, as the app does.
-- The reply gives the workspace with its section.
+- The reply gives the workspace with its section, its `parent`, and its
+  `depth` after the move. It can also give a `notice`.
+- The reply to a move with a target has the same form as the reply to a
+  section move. Reason: older tools then accept the reply.
+- The help of the CLI and the description of `move_workspace` say how to
+  nest a workspace under a parent, and how to take it out of its tree.
+  Reason: the notice of a nested row names no target, as
+  [Moves](sub-workspaces.md#moves) says.
 
 ## Archive a workspace
 

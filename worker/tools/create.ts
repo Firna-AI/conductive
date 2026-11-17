@@ -1,7 +1,6 @@
 import type { AgentCreateWorkspaceRequest } from '../../src/shared/generated/AgentCreateWorkspaceRequest'
 
 import { sessionTitleFrom } from '../../src/shared/session-title'
-import { MAX_WORKSPACE_DEPTH } from '../../src/shared/workspace-tree'
 import { hash } from '../security/crypto'
 import { HttpError } from '../http'
 import { sessionLink } from '../../src/shared/session-link'
@@ -10,6 +9,7 @@ import { choice } from './input'
 import { agentToolMessage } from './message-text'
 import type { AgentToolServices } from './services'
 import { workspaceParent } from './workspace-parent-data'
+import { requireWorkspaceParentDepth } from '../lifecycle/workspace-insert-data'
 import {
   type CallingWorkspace,
   creationSection,
@@ -50,18 +50,7 @@ export async function createFromTool(
   if (previous) return previous
   if (input.parentId !== undefined) {
     const parent = await workspaceParent(db, caller.orgId, input.parentId)
-    if (!parent)
-      throw new HttpError(
-        404,
-        'workspace_not_found',
-        'The parent workspace is not available.',
-      )
-    if (parent.depth === MAX_WORKSPACE_DEPTH)
-      throw new HttpError(
-        409,
-        'nesting_limit',
-        `W-${parent.number} is at the deepest level. Create a sibling instead. Pass parentId "${parent.parentId}". Start the name with a one-word group prefix, such as "Limits: ".`,
-      )
+    requireWorkspaceParentDepth(parent)
   }
   const owner = await memberSender(db, caller.orgId, caller.ownerUserId)
   if (!sender || !owner) {

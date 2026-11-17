@@ -62,6 +62,7 @@ export interface RunnerWarningFields {
   workspaceId: WarningId
   connectionId: WarningId | null
   streamId: WarningStreamId | null
+  processStartId: WarningStreamId | null
   protocolVersion: number | null
 }
 

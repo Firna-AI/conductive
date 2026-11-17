@@ -54,6 +54,10 @@ fn created() -> Value {
 }
 
 pub(super) fn cases() -> Vec<Case> {
+    let mut detached = detail();
+    detached["parentId"] = Value::Null;
+    detached["parent"] = Value::Null;
+    detached["depth"] = json!(0);
     vec![
         Case {
             name: "create_workspace",
@@ -99,6 +103,35 @@ pub(super) fn cases() -> Vec<Case> {
             reply: json!({"workspace":detail(), "notice":"Move W-1 instead."}),
             path: "/v1/tools/workspaces/current/move",
             body: Some(json!({"sectionId":"section"})),
+        },
+        Case {
+            name: "move_workspace",
+            cli: vec![
+                "workspaces",
+                "move",
+                "--parent",
+                "parent",
+                "--section",
+                "section",
+            ],
+            fields: json!({"parentId":"parent", "sectionId":"section"}),
+            reply: json!({"workspace":detail(), "notice":"The workspace joined the section of its parent."}),
+            path: "/v1/tools/workspaces/current/move",
+            body: Some(json!({"parentId":"parent", "sectionId":"section"})),
+        },
+        Case {
+            name: "move_workspace",
+            cli: vec![
+                "workspaces",
+                "move",
+                "--workspace",
+                "workspace",
+                "--top-level",
+            ],
+            fields: json!({"workspaceId":"workspace", "topLevel":true}),
+            reply: json!({"workspace":detached}),
+            path: "/v1/tools/workspaces/workspace/move",
+            body: Some(json!({"topLevel":true})),
         },
     ]
 }

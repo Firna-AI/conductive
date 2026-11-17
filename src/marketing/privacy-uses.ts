@@ -162,9 +162,10 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         whether they finished, stopped, or failed.
         These records include the workspace ID and any available turn,
         connection, and event stream IDs, and communication protocol version.
-        The team uses these logs to investigate connection problems and
-        interrupted agent work. These logs hold no tokens, secret values,
-        message text, file contents, or connection close reasons.`,
+        When available, they also include a random ID for each start of that
+        program. The team uses these logs to investigate connection problems,
+        program restarts, and interrupted agent work. These logs hold no tokens,
+        secret values, message text, file contents, or connection close reasons.`,
       text`Mac commands: ${productName} keeps each request and its result.
         They record the command, its folder, its reason, its time limit,
         and the output. A request also names the Mac that gets it.

@@ -37,6 +37,9 @@ This page lists each protocol doc and what it covers.
   - [Sub-workspaces](../protocol/sub-workspaces.md): the parent link, when
     to nest, the depth limit, the nested rows of the list, an archived parent, the moves
     of a tree, and the agent context.
+    - [Parent changes](../protocol/parent-changes.md): the moves that nest
+      a workspace under another parent or take it out of its tree, the
+      place of the moved tree, and the refusals.
   - [Workspace tools](../protocol/workspace-tools.md)
     - [Terminal](../protocol/terminal.md): the terminals of a workspace
       and their tabs, and the shell of each terminal.
@@ -85,7 +88,8 @@ This page lists each protocol doc and what it covers.
       reports that belong to no session, the repair request after a refused
       update, and the notice of a failed repair.
     - [Runner warnings](../protocol/runner-warnings.md): the warnings of the
-      Worker for runner connections and for turn ends with no Stop request.
+      Worker for runner connections and for turn ends with no Stop request,
+      and the process-start ID of the runner.
   - [Session transcripts](../protocol/session-transcripts.md): copying a
     session as concise or full Markdown, and the text of a copy.
     - [Transcript routes](../protocol/transcript-routes.md): the route of

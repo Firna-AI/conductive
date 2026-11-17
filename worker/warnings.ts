@@ -170,6 +170,7 @@ function runnerFields(warning: RunnerWarningFields) {
     workspaceId: warning.workspaceId.text,
     connectionId: warning.connectionId?.text ?? null,
     streamId: warning.streamId?.text ?? null,
+    processStartId: warning.processStartId?.text ?? null,
     protocolVersion: warningProtocolVersion(warning.protocolVersion),
   }
 }

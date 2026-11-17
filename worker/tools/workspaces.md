@@ -20,7 +20,7 @@ the first session title, and the create request ID, as
 | --- | --- | --- |
 | Get | `GET /v1/tools/workspaces/<workspaceId>` | `AgentWorkspaceResponse` |
 | Rename | `POST /v1/tools/workspaces/<workspaceId>/rename`, with `name` | `AgentWorkspaceResponse` |
-| Move | `POST /v1/tools/workspaces/<workspaceId>/move`, with `sectionId` | `AgentWorkspaceResponse` |
+| Move | `POST /v1/tools/workspaces/<workspaceId>/move`, with a section, a parent target, or both | `AgentWorkspaceResponse` |
 | Archive | `POST /v1/tools/workspaces/<workspaceId>/archive` | `AgentWorkspaceResponse` |
 
 - `workspace-routes.ts` matches these fixed routes. A read allows only GET,
@@ -78,7 +78,7 @@ states the rule.
   A blank result gives HTTP 400 `invalid_input`. The branch stays.
 - The stored name blocks later automatic titles, because the app names only
   a workspace without a name.
-- A move puts the workspace first in its destination section. A move to
+- A section-only move puts the workspace first in its destination section. A move to
   the section that already holds the workspace changes nothing.
 - A top-level row moves with every descendant, including archived ones.
   `writeWorkspaceTree` in [feature-workspaces-data.ts](../app-api/feature-workspaces-data.ts)
@@ -86,12 +86,25 @@ states the rule.
   inside its D1 batch. It ranks those top-level rows and writes each
   descendant's section. `RETURNING` supplies the moved IDs for metadata
   publication. The current-section check also runs inside the batch.
-- A nested row changes nothing. The route still runs the existing member,
+- A section-only move of a nested row changes nothing. The route still runs the existing member,
   workspace, and section checks. `readWorkspaceMove` reads the shown
   top-level workspace with the shared rule for the reply's `notice`:
   "Move W-<number> to move this workspace."
 - A top-level row whose parent is archived moves independently.
   Restore of an ancestor shows it under the nearest live ancestor again.
+- `workspace-move-input.ts` accepts `parentId` or `topLevel: true` as the
+  target. With a target, `sectionId` is optional. Two targets, a null
+  parent, or no section and no target get `invalid_input`.
+- With a target, `changeWorkspaceMetadata` calls
+  [workspace-parent-change-data.ts](../app-api/workspace-parent-change-data.ts).
+  Its batch checks the current tree, pending creates, parent depth, archive
+  state, membership, and section. It changes the parent link and each
+  descendant's section together. It keeps the creator link.
+- A nest follows the parent's shown section. A conflicting section gives
+  the same notice as a create. A take-out puts the tree first in the named
+  section, or in its shown section. A target equal to the current place
+  changes nothing. [Parent changes](../../docs/protocol/parent-changes.md)
+  states the placement rules and errors.
 
 ## Archive
 
@@ -186,6 +199,7 @@ states the rule.
   The parent read stays within the calling org. A replay checks its saved
   parent before it queues a pending creation.
 - The insert reads the parent's own section in the statement that creates the workspace row.
+  It also checks the parent's depth again inside the insert batch.
   `sectionId` still passes the org section check.
   When it differs from the inherited section, the saved admission and the create reply give a `notice`.
   An omitted section beside a parent stays omitted in the plan, so it gives no notice.
@@ -207,6 +221,15 @@ The [Rust tools crate](../../crates/cnd-tools/README.md) tests CLI and MCP reque
 - `workspace-tree-actions.test.ts`: a nested move's notice, its unchanged
   placement and activity time, its existing section check, and a tree move
   that also publishes a descendant's changed metadata.
+- `workspace-parent-moves.test.ts`: parent move routes, target input,
+  inherited section notices, and publication of each moved record.
+- [Parent change tests](../app-api/workspace-parent-change.test.ts),
+  [refusal tests](../app-api/workspace-parent-refusals.test.ts), and
+  [race tests](../app-api/workspace-parent-races.test.ts): tree sections,
+  places, unchanged targets, archived parents, all refusals, crossing moves,
+  pending creates, and the second create depth check.
+- [Corrupt tree tests](../app-api/workspace-tree-corruption.test.ts): bounded
+  reads through repeated parent IDs in stored rows.
 - `workspace-lists.test.ts`: each filter alone and together, removal at
   the 14-day boundary, default lists without removed workspaces, paging
   edges and `hasMore`, the direct-parent filter, and malformed options.

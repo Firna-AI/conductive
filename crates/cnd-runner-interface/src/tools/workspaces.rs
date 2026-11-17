@@ -249,6 +249,16 @@ pub struct AgentRenameWorkspaceRequest {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 pub struct AgentMoveWorkspaceRequest {
-    /// section id.
-    pub section_id: String,
+    /// Destination section. Optional when the call gives a parent target.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub section_id: Option<String>,
+    /// New parent workspace for the moved tree.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub parent_id: Option<String>,
+    /// Move the tree to the top level when true.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub top_level: Option<bool>,
 }

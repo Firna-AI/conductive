@@ -63,6 +63,7 @@ pub(crate) async fn open(disk: Arc<dyn Disk>) -> Arc<dyn EventStore> {
 pub(crate) fn link(store: Arc<dyn EventStore>, endpoint: Arc<Endpoint>) -> Arc<dyn RunnerLink> {
     Arc::new(SavedRunnerLink::new(
         "workspace".into(),
+        "abcdef01-2345-4678-89ab-cdef01234567".into(),
         request(),
         Arc::new(EndpointConnector(endpoint)),
         Arc::new(FixedClock),

@@ -61,6 +61,7 @@ it('reads positive integer protocol versions before the handshake owns support',
     expect(parseRunnerTransport({ ...hello, protocolVersion })).toEqual({
       ...hello,
       protocolVersion,
+      processStartId: null,
     })
   for (const protocolVersion of [0, -1, 0.5, '2', null, undefined])
     expect(() =>
@@ -68,6 +69,36 @@ it('reads positive integer protocol versions before the handshake owns support',
     ).toThrowError(
       expect.objectContaining({ status: 400, code: 'invalid_input' }),
     )
+})
+
+it('normalizes optional process-start diagnostics without refusing hello', () => {
+  const hello = {
+    type: 'hello',
+    workspaceId: 'workspace',
+    streamId: 'stream',
+    protocolVersion: 2,
+  }
+  for (const [processStartId, expected] of [
+    [undefined, null],
+    [null, null],
+    [
+      'abcdef01-2345-4678-89ab-cdef01234567',
+      'abcdef01-2345-4678-89ab-cdef01234567',
+    ],
+    ['ABCDEF01-2345-4678-89AB-CDEF01234567', 'unknown'],
+    ['abcdef01-2345-1678-89ab-cdef01234567', 'unknown'],
+    ['private-message-and-token', 'unknown'],
+    ['', 'unknown'],
+    [42, 'unknown'],
+    [{ token: 'private-message-and-token' }, 'unknown'],
+  ])
+    expect(
+      parseRunnerTransport({
+        ...hello,
+        processStartId,
+        token: 'private-token',
+      }),
+    ).toEqual({ ...hello, processStartId: expected })
 })
 
 it('preserves omission counts and a known optional turn end reason in runner chat events', () => {

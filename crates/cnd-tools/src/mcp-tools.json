@@ -263,7 +263,7 @@
   },
   {
     "name": "move_workspace",
-    "description": "Move a workspace to the top of an org section. Needs an active calling turn. Acts for the member whose message started that turn. These calls reach workspaces in this org. An omitted workspaceId names the calling workspace. Use names and returned links in normal answers. Workspace and session links show as chips. A session link holds both IDs. A Sent by: line names the sending session. Do not reply only to confirm it. A top-level row moves with its whole tree. A nested row moves nothing. Its reply can give a notice that names the top-level workspace to move.",
+    "description": "Move a workspace tree to an org section, under a parent, or to the top level. Needs an active calling turn. Acts for the member whose message started that turn. These calls reach workspaces in this org. An omitted workspaceId names the calling workspace. Use names and returned links in normal answers. Workspace and session links show as chips. A session link holds both IDs. A Sent by: line names the sending session. Do not reply only to confirm it. Pass parentId to nest the whole tree under that parent, or topLevel: true to take it out of its tree. Use only one target. A section is required without a target. A nest joins the parent's shown section. A different sectionId gives a notice. At the top level, the tree goes first in the named or shown section. A target equal to the current place changes nothing. Loops and moves past depth 3 are refused without changes. A section-only move of a nested row moves nothing. Its notice names the top-level workspace to move.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -275,10 +275,18 @@
         "sectionId": {
           "type": "string",
           "minLength": 1,
-          "description": "A section ID from list_sections."
+          "description": "A section ID from list_sections. Required without a target. A parent target uses the parent's shown section."
+        },
+        "parentId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "A workspace ID from list_workspaces or get_workspace. Nest the moved tree under this parent. Do not combine with topLevel: true."
+        },
+        "topLevel": {
+          "type": "boolean",
+          "description": "Use true to take the moved tree to the top level. Do not combine with parentId. False gives no target."
         }
-      },
-      "required": ["sectionId"]
+      }
     },
     "annotations": {
       "readOnlyHint": false,
