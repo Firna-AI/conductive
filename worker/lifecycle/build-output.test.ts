@@ -126,3 +126,50 @@ it('keeps UTF-8 characters and event order across all build log writers', async 
     stderrOffset: 4,
   })
 })
+
+it('logs the start of a failed snapshot save and no saved line', async () => {
+  const fixture = await backendFixture()
+  const { images, org, user, runtime } = fixture
+  const id = await startImageBuild(images, {
+    orgId: org.id,
+    userId: user.id,
+    kind: 'build',
+    software: SOFTWARE,
+  })
+  let job = await readBuildJob(runtime.env.DB, org.id, id)
+  for (let step = 0; step < 20 && job.phase !== 'snapshot'; step++) {
+    await advanceImageBuild(images, org.id, id)
+    job = await readBuildJob(runtime.env.DB, org.id, id)
+  }
+  expect(job.phase).toBe('snapshot')
+  const fetch = images.dependencies.fetch
+  images.dependencies = {
+    ...images.dependencies,
+    fetch: async (request) => {
+      if (
+        request.method === 'POST' &&
+        new URL(request.url).pathname.endsWith('/saved-snapshots')
+      ) {
+        const body: { sandboxId: string; name: string } = await request.json()
+        return Response.json({
+          ok: true,
+          type: 'snapshot.saved.info',
+          snapshot: {
+            name: body.name,
+            sourceSandboxId: body.sandboxId,
+            status: 'failed',
+          },
+        })
+      }
+      return fetch(request)
+    },
+  }
+  await advanceImageBuild(images, org.id, id)
+
+  const failed = await readBuild(runtime.env.DB, org.id, id)
+  expect(failed.build.state).toBe('failed')
+  const texts = failed.log.map((event) => event.text)
+  expect(texts.filter((text) => text === SNAPSHOT_START_LOG)).toHaveLength(1)
+  expect(texts).not.toContain(SNAPSHOT_DONE_LOG)
+  expect(texts.slice(-2)).toEqual([SNAPSHOT_START_LOG, failed.build.error])
+})

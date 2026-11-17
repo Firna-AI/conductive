@@ -1,3 +1,4 @@
+import { buildSnapshotStatement } from './build-data'
 import { buildLogStatements } from './build-log-statements'
 
 /** The log lines of the snapshot step of a build or refresh. */
@@ -31,11 +32,7 @@ export async function recordBuildSnapshot(
   now: number,
 ): Promise<void> {
   await db.batch([
-    db
-      .prepare(
-        'UPDATE image_builds SET snapshot_name = ?, provider_account = ? WHERE id = ?',
-      )
-      .bind(snapshotName, providerAccount, buildId),
+    buildSnapshotStatement(db, buildId, snapshotName, providerAccount),
     ...buildLogStatements(db, buildId, SNAPSHOT_START_LOG, now),
   ])
 }
