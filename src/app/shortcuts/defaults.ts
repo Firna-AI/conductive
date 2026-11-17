@@ -77,6 +77,7 @@ const defaults: Readonly<Record<PlainId, Defaults>> = {
   'resolve-conflicts': { mac: [], other: [] },
   'address-review': { mac: [], other: [] },
   'commit-and-push': { mac: ['Shift+Meta+Y'], other: ['Ctrl+Shift+Y'] },
+  'mark-ready-for-review': { mac: [], other: [] },
   'merge-pull-request': { mac: ['Shift+Meta+M'], other: ['Ctrl+Shift+M'] },
   'continue-after-merge': { mac: [], other: [] },
   'open-pull-request': { mac: ['Shift+Meta+G'], other: ['Ctrl+Shift+G'] },

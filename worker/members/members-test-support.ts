@@ -18,7 +18,7 @@ import { seedAppAccess } from '../test-support/app-access'
 import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import { membersSeed } from './fixture-data.test-support'
 import { maintainDisksForTests } from './maintenance-test-support'
-import { workspaceCreator } from './ownership'
+import { requireMember } from './membership'
 import { membersRoute, type MembersHooks } from './route'
 
 export function membersClient(harness: TestHarness) {
@@ -154,7 +154,9 @@ export async function seedWorkspace(
   sandboxId: string | null = `sandbox-${id}`,
 ) {
   const db = harness.env.DB
-  const creator = await workspaceCreator(db, org.id, owner.id)
+  // Only the membership row: a migration test seeds at an older schema,
+  // which can lack org columns that the full org read selects.
+  const { user: creator } = await requireMember(db, org.id, owner.id)
   await db.batch([
     db
       .prepare(

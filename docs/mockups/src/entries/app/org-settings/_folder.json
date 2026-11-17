@@ -1,5 +1,6 @@
 {
   "order": [
+    "colour",
     "repositories",
     "cloud-computer",
     "secrets",

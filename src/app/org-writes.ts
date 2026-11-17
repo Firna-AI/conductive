@@ -1,6 +1,7 @@
 import { API_PATHS, orgPath } from '../shared/api'
 import type {
   CreateOrgRequest,
+  OrgColorRequest,
   OrgSummary,
   RenameOrgRequest,
 } from '../shared/orgs'
@@ -23,11 +24,14 @@ export function postOrg(
   return api.send('POST', API_PATHS.orgs, request, readOrgResponse)
 }
 
-/** Saves the name and the initials of an org with the client of the org. */
+/**
+ * Saves the name and the initials of an org, or its colour alone, with the
+ * client of the org.
+ */
 export function patchOrg(
   api: ApiClient,
   orgId: string,
-  request: RenameOrgRequest,
+  request: RenameOrgRequest | OrgColorRequest,
 ): Promise<OrgSummary> {
   return api.send('PATCH', orgPath(orgId), request, readOrgResponse)
 }
