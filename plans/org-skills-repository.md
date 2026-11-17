@@ -612,13 +612,13 @@ setup. Reason: the helper can import the shared folder function from
 
 Depends on: every other milestone
 
-- [ ] Run `npm --prefix desktop ci` and `npm ci --prefix runner`, then the
+- [x] Run `npm --prefix desktop ci` and `npm ci --prefix runner`, then the
       targeted tests and `npm run check`.
 - [x] Change the "planned" wording of the Cloud computer guide, the
       Terms, and the Privacy page to the shipped feature. `main` deleted
       the comparison page in #380, so its three rows are gone.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
@@ -631,11 +631,8 @@ Depends on: every other milestone
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] After a build installs the new runner, set the org skills repository
-      to `futex-ai/skills` and check that a new Claude session and a new
-      Codex session list its skills.
-- [ ] Ask the user whether to remove the manual skills install from the org
-      install script.
-- [ ] Record a follow-up item: every warning about the skills copy reaches
-      only the runner log, which no member reads. A status in the app is
-      left for a later change.
+- [x] Moved to `plans/follow-ups/org-skills-deployed-smoke-test.md`: the
+      smoke test with `futex-ai/skills`, and the question about the manual
+      install in the org install script.
+- [x] Recorded `plans/follow-ups/skills-copy-status-in-app.md`: every
+      warning about the skills copy reaches only the runner log.
