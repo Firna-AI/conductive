@@ -184,7 +184,7 @@ and added decisions 5 and 6. Its report is in
 - **Previous examples:** None found.
 - **Related:** Decision 3: with its answer B, a local address in code also
   follows this decision. Decision 4 extends this rule.
-  [plans/follow-ups/local-address-path-in-preview.md](https://github.com/Firna-AI/remote-code/blob/9f1a39283/plans/follow-ups/local-address-path-in-preview.md) records E.
+  [plans/follow-ups/local-address-path-in-preview.md](https://github.com/Firna-AI/remote-code/blob/9f1a39283/plans/follow-ups/local-address-path-in-preview.md) recorded E until its deletion on 2026-11-17.
 - **Recommendation:** C. It opens the server with one press where the
   answer shows its address.
 - **Action:** ask the user, because with C a press in chat text opens a
@@ -333,8 +333,8 @@ and added decisions 5 and 6. Its report is in
 - **Background:** A copy of chat text gives the mention of each file chip,
   through one copy handler in `src/chat/links/mention-copy.ts`. A browser
   copies a link as its text in the plain copy. The session menu copies a
-  whole transcript as Markdown. The open item
-  [plans/follow-ups/workspace-chip-copy-in-messages.md](https://github.com/Firna-AI/remote-code/blob/9f1a39283/plans/follow-ups/workspace-chip-copy-in-messages.md) recommends that a
+  whole transcript as Markdown. The item
+  [plans/follow-ups/workspace-chip-copy-in-messages.md](https://github.com/Firna-AI/remote-code/blob/9f1a39283/plans/follow-ups/workspace-chip-copy-in-messages.md), deleted on 2026-11-17, recommended that a
   copy of a workspace chip gives its link.
 - **Problem:** With decision 1D, a plain copy of an answer gives the label
   of each label link and loses its address.
@@ -352,7 +352,7 @@ and added decisions 5 and 6. Its report is in
     nor Markdown uses. Effort: Small.
 - **Left out:** None.
 - **Wider fix:** B, with the same mark on workspace chips, as
-  [plans/follow-ups/workspace-chip-copy-in-messages.md](https://github.com/Firna-AI/remote-code/blob/9f1a39283/plans/follow-ups/workspace-chip-copy-in-messages.md) recommends. One
+  [plans/follow-ups/workspace-chip-copy-in-messages.md](https://github.com/Firna-AI/remote-code/blob/9f1a39283/plans/follow-ups/workspace-chip-copy-in-messages.md) recommended. One
   copy rule then gives the source of each part.
 - **Previous examples:** None found.
 - **Related:** [plans/follow-ups/workspace-chip-copy-in-messages.md](https://github.com/Firna-AI/remote-code/blob/9f1a39283/plans/follow-ups/workspace-chip-copy-in-messages.md): the
