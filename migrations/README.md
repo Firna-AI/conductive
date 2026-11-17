@@ -4,6 +4,47 @@ D1 applies SQL files in filename order. Each filename starts with a full
 date, hour, and minute: `YYYYMMDDHHMM_description.sql`.
 Never change a migration that has merged or has been applied to a shared database.
 
+## Keep the previous Worker working
+
+Each migration keeps the previous Worker working on the new schema. The
+previous Worker is the version that was live before the deploy. The deploy
+applies the migrations before it uploads the new Worker. Old Durable Objects
+then keep the previous Worker for minutes after the upload, as
+[Migrations and the previous Worker](../docs/automatic-deploys.md#migrations-and-the-previous-worker)
+says. A failed upload or a rollback also leaves the previous Worker on the
+new schema.
+
+- Do not rename or drop a table, a column, an index, or a trigger that the
+  previous Worker uses.
+- Do not add a check, a `NOT NULL` column without a default, or a unique
+  rule that rejects a write of the previous Worker.
+- Do not rewrite stored values into a form that the previous Worker cannot
+  read.
+- A rebuild of a table is safe when it keeps every name, every column, and
+  every value that the previous Worker reads or writes.
+
+A rename or a drop takes two pull requests:
+
+1. The first pull request adds the new name and copies the rows. It keeps
+   the old name working for the previous Worker until the second pull
+   request. Each Worker must see the rows that the other one writes. For
+   example, the migration adds a view with the old name, and triggers that
+   pass the writes of the view to the new table. This pull request also
+   adds a follow-up item of the kind Post-merge task under
+   `plans/follow-ups/`. The item names the old name and each part of the
+   compatibility code, and asks for their removal.
+2. The second pull request does that follow-up item. It removes the
+   compatibility code and drops the old name with a new migration. It
+   merges only after the deploy of the first pull request is live. Two
+   merges close together can deploy in one run, because GitHub keeps only
+   the newest waiting deploy.
+
+When a migration cannot keep the previous Worker working, ask the user
+before it merges. Then name it in the pull request description and in
+[When a deploy fails](../docs/automatic-deploys.md#when-a-deploy-fails).
+
+## The migrations
+
 `202611060000_worker_core.sql` creates sign-in and the first org records.
 `202611060100_contracts.sql` adds the tables used by the feature backends.
 It keeps existing rows and gives each existing org its General section.
