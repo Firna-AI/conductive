@@ -107,9 +107,9 @@ as [Tokens and secrets](tokens-and-secrets.md) says.
 - Each new session takes the default login of its starter when it accepts
   its first message, as [Agents](agents-and-sessions.md#agents) says. This
   holds for each way to start a session, also for a call of the agent
-  tools and a routine run.
+  tools and an automation run.
 - Reason: one rule then serves the sessions, the agent tools, and the
-  routine runs.
+  automation runs.
 - A choice of the login by each member, in a login menu or in a setting
   for each org, was rejected. The user chose the fixed order (org login
   decision 6 A).
@@ -136,7 +136,7 @@ as [Tokens and secrets](tokens-and-secrets.md) says.
 - A member whom the org login serves needs no personal login (org login
   decision 4). The agent step of Get started is complete for that member,
   as [Get started](orgs-and-members.md#get-started) says.
-- For such a member, the composer, the New workspace form, the routine
+- For such a member, the composer, the New workspace form, the automation
   form, and the agent tools show no Connect notice. They refuse no message
   for a missing login.
 - The account read names the default login of the member for each org and
@@ -152,7 +152,7 @@ as [Tokens and secrets](tokens-and-secrets.md) says.
 
 - Risk: the account of the org key or of the org endpoint pays for each
   turn on the org login. These are the turns of every member of the org.
-  They are also the turns of routine runs that no person watches.
+  They are also the turns of automation runs that no person watches.
 - Risk: an org endpoint gets the messages, the files, and the command
   results of each turn on it, whoever sends the message. So it gets the
   code of the org that those turns read. The admin who connects it chooses

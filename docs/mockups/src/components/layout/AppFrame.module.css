@@ -36,6 +36,45 @@
   min-height: 0;
 }
 
+/* The left panel of the Mac app below the window controls in the corner. */
+.cornerLeft {
+  padding-top: var(--ui-bar-height);
+}
+
+/* Full screen drops the space of the window buttons from the corner. */
+.fullScreenCorner {
+  --mac-corner-width: 98px;
+}
+
+/*
+ * The workspace list of the hidden sidebar, open beside the tile of the
+ * current org. It lies over the main area, with the width of the sidebar
+ * and the height of the window, less a small margin. It lies below the
+ * menus at a point, so a row menu opens over it, and below the palette and
+ * the dialogs. The app uses this rule too.
+ */
+.popover {
+  display: flex;
+  position: absolute;
+  z-index: 15;
+  top: 6px;
+  bottom: 6px;
+  left: calc(var(--ui-rail-width) + 4px);
+  flex-direction: column;
+  width: var(--ui-sidebar-width);
+  max-width: calc(100% - var(--ui-rail-width) - 12px);
+  overflow: hidden;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-sidebar);
+  box-shadow: 0 8px 28px var(--ui-shadow);
+}
+
+/* In the Mac app the popover starts below the window controls in the corner. */
+.cornerPopover {
+  top: calc(var(--ui-bar-height) + 4px);
+}
+
 .main {
   display: flex;
   flex: 1;
@@ -57,9 +96,9 @@
   }
 }
 
-/* A phone raises every local touch target to 44px. */
+/* A phone raises every local touch target to 40px. */
 .mobile {
-  --ui-touch-min: 44px;
+  --ui-touch-min: 40px;
 
   display: flex;
   position: relative;

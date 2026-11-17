@@ -15,7 +15,7 @@ const none = Promise.resolve(null)
  * Loads the chat of a workspace, then starts its event stream.
  *
  * 1. The session list and the view choose the session to show. The read
- *    of the view also names the routine whose run made the workspace. The
+ *    of the view also names the automation whose run made the workspace. The
  *    workspace loads with them, so the chat shows its records, its start
  *    steps, and its composer while the history loads.
  * 2. The newest history page of the shown session shows at once. Its cutoff
@@ -83,7 +83,8 @@ export async function loadChat(context: ChatContext): Promise<void> {
     ...snapshot,
     ...read,
     view,
-    routine: viewReply?.routine ?? null,
+    automation: viewReply?.automation ?? null,
+    repositoryFolder: viewReply?.repositoryFolder ?? null,
     load: { state: 'ready' },
   }))
   const active = store.get().activeSessionId

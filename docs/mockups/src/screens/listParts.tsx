@@ -26,7 +26,7 @@ import {
 import { Sidebar } from '../components/workspaces/Sidebar'
 import {
   NewWorkspaceLink,
-  RoutinesLink,
+  AutomationsLink,
   SearchLink,
   SettingsLink,
 } from '../components/workspaces/SidebarLinks'
@@ -77,7 +77,7 @@ export function ListHeader(props: {
 /**
  * The workspace list as a page: on a phone, and in a narrow window. A
  * suspended org shows its notice first, and no New workspace and no
- * section menus, because nothing in it can change. Its Routines link
+ * section menus, because nothing in it can change. Its Automations link
  * stays. Search opens the command palette. Its key shows only in a
  * desktop window. A list that did not load shows its failure in place of
  * the sections.
@@ -117,8 +117,8 @@ export function HomeList(props: {
           {suspended ? null : (
             <NewWorkspaceLink to={props.newWorkspaceTo} variant="page" />
           )}
-          <RoutinesLink
-            to={suspended ? paths.suspendedRoutines : undefined}
+          <AutomationsLink
+            to={suspended ? paths.suspendedAutomations : undefined}
             variant="page"
           />
           <SearchLink

@@ -58,7 +58,7 @@ It uses your usable personal login, or else the org login.
 An admin can give the org login priority for new sessions with **Use for every member**.
 Older sessions keep their login when that switch changes.
 
-Routine runs follow the same rule for their owner, with that owner's GitHub account.
+Automation runs follow the same rule for their owner, with that owner's GitHub account.
 Any member who can send in a session can still change its model, effort, and **Fast** setting.
 That choice applies to every member's messages on the session's login.
 The agent can identify the member who sent each message.
@@ -110,8 +110,8 @@ Tool messages follow the receiving session's login rules.
 These workspace actions need no separate approval screen.
 Previews that agents open need sign-in and workspace access.
 
-A routine can start agent work from a pull request.
-Comments and reviews on that pull request can steer these reads and changes across the org, with the routine owner's rights.
+An automation can start agent work from a pull request.
+Comments and reviews on that pull request can steer these reads and changes across the org, with the automation owner's rights.
 Conductive sets no limit on the number of sessions or messages that agents create.
 Agents that keep replying to each other can spend logins and keep computers running.
 Use **Stop** in each affected session to end its turn.
@@ -137,7 +137,7 @@ Conductive adds the session's personal or org login before sending each request 
 A chosen endpoint gets the messages, files, and command results of each turn on its login, whoever sent the message.
 It processes them where its owner runs it.
 An admin who connects an org endpoint chooses that server for the members whose sessions use it.
-This includes routine runs that no person watches.
+This includes automation runs that no person watches.
 A personal own endpoint login starts with sharing on.
 Its owner can turn sharing off in **Account**.
 
@@ -149,7 +149,9 @@ That token can use the session's personal or org login through Conductive while 
 It also works from outside the cloud computer during that turn.
 
 After **Stop**, the token can start no new request.
-Any request that still runs ends within 30 seconds after the turn ends.
+A request that still runs ends at the first turn check that answers after the turn ends.
+Conductive checks the turn every 15 seconds.
+While no check answers, the request can run to the end of its answer.
 Changing or removing the session's login ends the turn at its next model request.
 A turn on a personal login also ends there if its owner loses org access.
 A session on the org login can continue after its starter leaves the org.

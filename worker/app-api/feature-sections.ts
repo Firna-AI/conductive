@@ -35,6 +35,7 @@ export async function featureSectionWrite(
       userId,
       name: requiredString(context.body?.name),
       now: dependencies.now(),
+      afterSectionId: optionalShellString(context.body?.afterSectionId),
     })
     if (!inserted) await requireShellWriter(env.DB, orgId, userId)
     return Response.json(

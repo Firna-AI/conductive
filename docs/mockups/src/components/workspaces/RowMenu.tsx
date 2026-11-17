@@ -1,14 +1,5 @@
-import { Menu, type MenuEntry } from '../common/Menu'
-import styles from './RowMenu.module.css'
-
-/** The choices of an open submenu, beside its item of the menu. */
-export type OpenSubmenu = {
-  label: string
-  entries: readonly MenuEntry[]
-  /** The place of its item among the items of the menu: first or second. */
-  item: 0 | 1
-  wide?: boolean
-}
+import type { MenuEntry } from '../common/Menu'
+import { PointMenu, type OpenSubmenu } from '../common/PointMenu'
 
 /**
  * The open menu of a row, which a right click or the menu keys opened: at
@@ -32,33 +23,17 @@ export type RowControls = {
 }
 
 /**
- * The menu of a right click at a pointer over the name of the row. Its top
- * left corner takes the point, and an open submenu sits beside it, level
- * with its item.
+ * The menu of a right click, drawn in place at the pointer over the name of
+ * the row on desktop.
  */
-function PointMenu(props: { menu: RowMenuOpen }) {
-  const { menu } = props
-  const { submenu } = menu
-  return (
-    <span className={styles.pointer}>
-      <Menu entries={menu.entries} label={menu.label} placement="point" />
-      {submenu ? (
-        <span className={submenu.item === 1 ? styles.second : undefined}>
-          <Menu
-            entries={submenu.entries}
-            label={submenu.label}
-            placement="point"
-            wide={submenu.wide}
-          />
-        </span>
-      ) : null}
-    </span>
-  )
-}
-
-/** The menu of a right click, drawn in place at the pointer on desktop. */
 export function RowPointMenu(props: { controls: RowControls }) {
   const { open } = props.controls
   if (open?.at !== 'pointer') return null
-  return <PointMenu menu={open} />
+  return (
+    <PointMenu
+      entries={open.entries}
+      label={open.label}
+      submenu={open.submenu}
+    />
+  )
 }

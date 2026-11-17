@@ -39,8 +39,8 @@ Contract owners:
 - [Own endpoint logins](../docs/protocol/own-endpoint-logins.md).
 - [Messages and attachments](../docs/protocol/messages-and-attachments.md).
 - [Orgs and members](../docs/protocol/orgs-and-members.md).
-- [Routines](../docs/protocol/routines.md) and
-  [Routine runs](../docs/protocol/routine-runs.md), for decision 5.
+- [Automations](../docs/protocol/automations.md) and
+  [Automation runs](../docs/protocol/automation-runs.md), for decision 5.
 - [Session calls](../docs/protocol/session-calls.md), for the agent tools.
 - The [model gateway](../docs/protocol/model-gateway.md).
 - The [mockup catalogue](../docs/mockups/catalogue.md),
@@ -62,8 +62,8 @@ Replaced ways:
 - The "own login or refuse" check of a first message, a tool session, and
   a linked session → one default login resolver. Consumers:
   `worker/chat/first-message.ts:117-125`, `worker/chat/send-message.ts:46-56`,
-  `worker/chat/tool-session-write.ts:131-139`,
-  `worker/routines/run-starter.ts:69`, and
+  `worker/chat/tool-session-write.ts:132-140`,
+  `worker/automations/run-starter.ts:75`, and
   `worker/app-api/get-started-data.ts:30`. Moved and deleted in
   Milestone 4.
 
@@ -97,7 +97,7 @@ Its report is in `.context/org-shared-logins/options-check-decisions-5-6.md`.
 - **Category:** Docs or spec.
 - **Location:** `docs/protocol/agents-and-sessions.md:26-28`,
   `docs/protocol/own-endpoint-logins.md:26-27`,
-  `worker/chat/session-login.ts:59-65`, and
+  `worker/chat/session-login.ts:60-66`, and
   `worker/chat/first-message.ts:117-125`.
 - **Background:** Each option makes a session record the login that it
   starts on, and keep it. That keeps the prompt cache, the reason of
@@ -129,7 +129,7 @@ Its report is in `.context/org-shared-logins/options-check-decisions-5-6.md`.
   - Subscriptions too: the consumer terms forbid it.
 - **Wider fix:** None. This is a new feature.
 - **Previous examples:** Decision 502 E offered an org login for
-  routines. The user chose 502 B on 8 November 2026. Decision 21 left out
+  automations. The user chose 502 B on 8 November 2026. Decision 21 left out
   a login for each org, because Boat credential profiles needed
   `account.admin`, as `plans/boat-native-remote-workspaces.md:890-893`
   records. Decision 120 later moved every login into the Worker, so that
@@ -187,49 +187,50 @@ Its report is in `.context/org-shared-logins/options-check-decisions-5-6.md`.
   agent tools show no Connect notice and refuse no message for a missing
   login.
 
-### 5. Routine runs of an owner without a login
+### 5. Automation runs of an owner without a login
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design.
 - **Category:** Docs or spec.
-- **Location:** `docs/protocol/routines.md:81-83` and `:94-95`,
-  `docs/protocol/routine-runs.md:34-43`, and
-  `worker/routines/run-starter.ts:69`.
+- **Location:** `docs/protocol/automations.md:81-83` and `:94-95`,
+  `docs/protocol/automation-runs.md:34-43`, and
+  `worker/automations/run-starter.ts:75`.
 - **Terms:**
-  - **Routine:** a saved prompt that starts a workspace on a schedule or
+  - **Automation:** a saved prompt that starts a workspace on a schedule or
     a GitHub event, with no person watching. Its owner is the member who
     created it.
-- **Background:** A routine run starts its first session as the routine
-  owner, on the owner's own login. `docs/protocol/routine-runs.md:41-42`
-  takes that rule from decision 105 and decision 50. The routines doc
-  rejects "org routines on an agent login of the org". Today a run of an
+- **Background:** An automation run starts its first session as the
+  automation owner, on the owner's own login.
+  `docs/protocol/automation-runs.md:41-42` takes that rule from decision
+  105 and decision 50. The automations doc rejects "org automations on an
+  agent login of the org". Today a run of an
   owner without a login stops with `agent_login_required`.
-- **Problem:** No rule says whether a routine run of an owner without a
+- **Problem:** No rule says whether an automation run of an owner without a
   login can use a login that the org makes available.
 - **Impact if no action:** A member who relies on that login can save a
-  routine whose runs all fail.
-- **Root question:** May a routine run, which no person watches, spend a
+  automation whose runs all fail.
+- **Root question:** May an automation run, which no person watches, spend a
   login that the owner did not connect, and who decides that?
 - **Options:**
   - **A.** A run takes the owner's default login, as a new session of the
     owner does. Effort: Small.
   - **B.** A run uses only the owner's own login. Effort: Small.
-  - **C.** A second switch allows routines on the login. Effort: Medium.
-  - **D.** The routine saves the login of its runs. Effort: Medium.
-  - **E.** As A, and the login's page lists the routines that use it.
+  - **C.** A second switch allows automations on the login. Effort: Medium.
+  - **D.** The automation saves the login of its runs. Effort: Medium.
+  - **E.** As A, and the login's page lists the automations that use it.
     Effort: Medium.
 - **Left out:** A spend cap, because the provider and the endpoint can
   limit spend, and limits are out of scope.
 - **Wider fix:** A. One default login rule serves sessions, the agent
-  tools, and routines.
-- **Previous examples:** Decision 502 B chose who sees and changes a
-  routine. Decision 502 E, an org login for routines, was not chosen.
+  tools, and automations.
+- **Previous examples:** Decision 502 B chose who sees and changes an
+  automation. Decision 502 E, an org login for automations, was not chosen.
 - **Recommendation:** A. It follows the rule of decision 4.
 - **Decision:** The user chose A on 16 November 2026. With decision 1 B, a
   run uses the owner's default login: the own login, or else the org
   login. The run still acts as its owner for GitHub, so its pushes show as
-  the owner. So the rejection of org routines in
-  `docs/protocol/routines.md:94-96` stays, because its reason is decision
+  the owner. So the rejection of org automations in
+  `docs/protocol/automations.md:94-96` stays, because its reason is decision
   50, and the org login changes only the model login.
 
 ### 6. A member with more than one usable login
@@ -324,9 +325,9 @@ from A to B. Its report is in
     chose decision 6 A over a login menu and an account setting.
   - A check at each gateway request. It only adds the last requests of
     running turns, and it fails those turns in the middle.
-- **Assumptions:** Every way to start a session, also a routine run and
+- **Assumptions:** Every way to start a session, also an automation run and
   an agent tool call, takes its login from the one default login resolver.
-  So B, D, E, and F also apply to routine runs and agent tool sessions.
+  So B, D, E, and F also apply to automation runs and agent tool sessions.
 - **Wider fix:** D. The rule then lives in the resolver and the access
   helper, which check each message, so it covers older sessions too.
 - **Previous examples:** Option E of decision 6, an order that the owner of
@@ -471,18 +472,21 @@ is the agent's call.
   `migrations/202611110407_agent_login_models.sql` adds to personal
   logins. It cascades on the delete of the org. When decision 7 adds a
   switch, a save of the switch leaves `updated_at` unchanged, as
-  `worker/app-api/account-data.ts:182` does for the share switch.
+  `worker/app-api/account-data.ts:196` does for the share switch.
   Reason: `updated_at` is the login version that running turns check.
 - Org API: routes for admins that save and remove an org login, and a read
   for members that gives each org login without its secret, with the
   model list of an endpoint and the time of its last read.
 - Model lists: the endpoint model refresh of
   `worker/model-gateway/endpoint-model-refresh.ts` gets an org owner.
-- Session: a `login` field next to `startedBy` in `src/shared/sessions.ts`
-  that names a member or the org.
+- Session: a `login` field that names a member or the org, next to
+  `started_by` in the Rust type `Session` of
+  `crates/cnd-runner-interface/src/tools/session_types.rs`. `ts-rs` writes
+  it to `src/shared/generated/Session.ts`, which `src/shared/sessions.ts`
+  imports.
 - Worker: one default login resolver and one access helper in
   `worker/chat/`, which the first message, the send, the linked session,
-  the agent tools, the gateway, Get started, and routine runs use.
+  the agent tools, the gateway, Get started, and automation runs use.
 
 ## Milestone 1: Mockups
 
@@ -580,6 +584,11 @@ Depends on: 1
       and 6.
 - [ ] Check each relative link of each changed Markdown file.
 
+The merge of `origin/main` on 17 November 2026 saved the reason for each
+intentional resolution in
+`.context/org-shared-logins/merge-justifications.md`. The pull request
+description copies them, as the `git-merge` skill says.
+
 ## Milestone 3: Org logins in the data and the org API
 
 Depends on: 2
@@ -612,12 +621,12 @@ Depends on: 3
       `worker/chat/model-changes.ts`, and `readLoginMetadata` to the login
       of the session.
 - [ ] Move `worker/app-api/get-started-data.ts` to decision 4.
-- [ ] Move `worker/routines/run-starter.ts` to decision 5.
+- [ ] Move `worker/automations/run-starter.ts` to decision 5.
 - [ ] Update the READMEs that name the login functions of the Worker:
       `worker/chat/access.md`, `worker/chat/README.md`, `key-code.md`,
       `tests.md`, `integration/README.md`, `integration/session-logins.md`,
       `integration/logins-and-attachments.md`,
-      `worker/model-gateway/README.md`, `worker/routines/README.md`,
+      `worker/model-gateway/README.md`, `worker/automations/README.md`,
       `worker/members/README.md`, and
       `worker/operator/suspension-access.md`.
 - [ ] Tests: a first message on the org login, a message of another member
@@ -654,7 +663,7 @@ Depends on: 1, 4
       the login of the session and decision 4.
 - [ ] Move `src/app/setup-steps.ts` to decision 4.
 - [ ] Show the default login from the server in the new workspace form,
-      the routine form, the account page, and Get started. Take the words
+      the automation form, the account page, and Get started. Take the words
       from `docs/mockups/src/components/settings/OrgLoginLines.tsx` and
       `docs/mockups/src/screens/getStartedCopy.ts`.
 - [ ] Change the note of the owner menu in `src/members/OwnerChoices.tsx`
@@ -668,7 +677,7 @@ Depends on: 1, 4
       `docs/mockups/src/components/chat/SessionLogin.tsx` to `owner`, with
       its users in `src/chat/`, because it can name the org.
 - [ ] Make the model pickers follow the list of the org endpoint, by
-      decision 3, also in `src/shell/routines/RoutineEditor.tsx:72`.
+      decision 3, also in `src/shell/automations/AutomationEditor.tsx:72`.
 - [ ] Update the READMEs that name the login code of the app:
       `src/app/README.md`, `src/chat/README.md`, `src/chat/sessions.md`,
       `src/chat/dev/README.md`, and `src/shared/README.md`.

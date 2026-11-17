@@ -3,7 +3,7 @@
 This guide belongs to the [workspace lifecycle README](README.md). It gives
 the fetch step of a create, which prepares the base branch of the new
 workspace. The base branch of a create by a person is the default branch.
-The run of a routine can have another base branch, as
+The run of an automation can have another base branch, as
 [Browser routes](README.md#browser-routes) says.
 [The branch and the name](../../docs/protocol/create-a-workspace.md#the-branch-and-the-name)
 states the requirements, and [Repository layout](repository-layout.md)

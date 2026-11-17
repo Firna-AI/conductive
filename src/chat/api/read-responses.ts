@@ -1,5 +1,7 @@
+import type { AgentModel } from '../../shared/generated/AgentModel'
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import type { AgentLoginStatus, EndpointModelList } from '../../shared/account'
-import type { AgentChoice, AgentModel } from '../../shared/agents'
+
 import type { Org, User } from '../../shared/api'
 import type { SendMessageResponse } from '../../shared/messages'
 import type {
@@ -211,38 +213,54 @@ export function readView(value: unknown): WorkspaceView {
 }
 
 /**
- * The routine whose run made the workspace, with the pull request of a
+ * The automation whose run made the workspace, with the pull request of a
  * pull request run, or null for a run of a schedule or of Run now.
  */
-export type RunRoutine = Required<NonNullable<WorkspaceViewResponse['routine']>>
+export type RunAutomation = Required<
+  NonNullable<WorkspaceViewResponse['automation']>
+>
 
-/** The saved view, and the routine of a run workspace. */
+/** The saved view, and the automation of a run workspace. */
 export interface ViewReply {
   view: WorkspaceView
   /** Null for a workspace that a person created. */
-  routine: RunRoutine | null
+  automation: RunAutomation | null
+  /**
+   * The absolute folder of the workspace repository, or null when the
+   * reply gives none or gives a folder that is not absolute.
+   */
+  repositoryFolder: string | null
 }
 
-function readPullRequest(value: unknown): RunRoutine['pullRequest'] {
+function readPullRequest(value: unknown): RunAutomation['pullRequest'] {
   const pullRequest = record(value, 'pull request')
   return { number: count(pullRequest.number), url: text(pullRequest.url) }
 }
 
-function readRunRoutine(value: unknown): RunRoutine {
-  const routine = record(value, 'routine')
-  const pullRequest = optional(nullable(readPullRequest))(routine.pullRequest)
+function readRunAutomation(value: unknown): RunAutomation {
+  const automation = record(value, 'automation')
+  const pullRequest = optional(nullable(readPullRequest))(
+    automation.pullRequest,
+  )
   return {
-    id: text(routine.id),
-    name: text(routine.name),
+    id: text(automation.id),
+    name: text(automation.name),
     pullRequest: pullRequest ?? null,
   }
 }
 
+/** A folder of the cloud computer: an absolute path without a last `/`. */
+function readFolder(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  return /^\/[^\r\n]*[^/\r\n]$/u.test(value) ? value : null
+}
+
 export function readViewReply(value: unknown): ViewReply {
-  const routine = record(value, 'view response').routine
+  const reply = record(value, 'view response')
   return {
     view: readView(value),
-    routine: optional(nullable(readRunRoutine))(routine) ?? null,
+    automation: optional(nullable(readRunAutomation))(reply.automation) ?? null,
+    repositoryFolder: readFolder(reply.repositoryFolder),
   }
 }
 

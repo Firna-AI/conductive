@@ -51,7 +51,9 @@ as that doc also says.
   request may reach.
 - One R2 bucket holds the uploaded files of all orgs (decision 132). So the
   bucket does not keep the orgs apart. The checks in this section do.
-- Only the Worker reads and writes that bucket.
+- Only the Worker reads and writes that bucket. A cloud computer gets each
+  file from a route of the Worker, as
+  [The transfer](attachment-transfers.md#the-transfer) says.
 - Each upload names one workspace, or the first message of a new workspace
   of one org (decision 132). Only a message of the uploader in that
   workspace, or that first message, can use the file.
@@ -62,9 +64,10 @@ as that doc also says.
   sandbox belongs to a workspace or a build of that org.
 - The Worker calls only a fixed list of Boat routes. It has no general
   pass-through to Boat.
-- To copy an attachment, the Worker also sends the file to the upload
-  address that Boat returns for that sandbox (decision 132). It sends the
-  file only to that exact address.
+- The Worker gives the token of an attachment download only to the sandbox
+  that the workspace of the file names. The token gives only that one
+  file, as [Hostnames and gates](access-and-security.md#hostnames-and-gates)
+  says.
 - Lifecycle, saved snapshot, file metadata, and error replies from Boat
   can contain at most 1 MiB, or 1,048,576 bytes (decision 84).
 - A successful command reply from Boat can contain at most 18 MiB, or
@@ -159,10 +162,10 @@ as that doc also says.
 - The GitHub token of a turn and its Mac requests still follow its sender,
   as [GitHub tokens](tokens-and-secrets.md#github-tokens) and
   [Mac commands](agent-tools.md#mac-commands) say.
-- A routine run uses the default login and the GitHub token of its owner
-  while no person watches. Its sandbox follows the same rules below.
-  [Risks that stay open](routines.md#risks-that-stay-open) states the
-  risks of routines.
+- An automation run uses the default login and the GitHub token of its
+  owner while no person watches. Its sandbox follows the same rules below.
+  [Risks that stay open](automations.md#risks-that-stay-open) states the
+  risks of automations.
 - With each turn, the agent runner gets a turn token for the login of its
   session, over its connection to the Durable Object. Reason: the sandbox
   gets its secrets only at a start, and the sessions of one sandbox can
@@ -171,8 +174,8 @@ as that doc also says.
   workspace (decision 120). This holds for the org login too. The
   [model gateway](model-gateway.md) adds the login of the session to each
   model request of the turn.
-- The runner of a sandbox comes from its org image. A workspace accepts
-  only a runner of a supported protocol version, as
+- The runner follows the [sandbox software update rules](sandbox-software.md#updates).
+  A workspace accepts only a runner of a supported protocol version, as
   [Runner versions](version-pins.md#runner-versions) says.
 - An own endpoint login never reaches a sandbox, also when it is the org
   login. The gateway keeps its address and its key in the Worker (gateway

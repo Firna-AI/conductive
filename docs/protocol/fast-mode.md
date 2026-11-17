@@ -23,7 +23,7 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the switch at
   higher price. Claude calls it fast mode. Codex calls it the Fast service
   tier.
 - **Choice:** the agent, the model, the effort, and the fast mode of a
-  message. A session, a saved default, and a routine each keep a choice.
+  message. A session, a saved default, and an automation each keep a choice.
 - **Fast turn:** a turn that runs with fast mode on.
 - **Fast fields:** the parts of a model request that ask the provider for
   fast mode.
@@ -108,7 +108,7 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the switch at
   the starter does not share the login. On the org login, the org pays. A
   costlier model or effort has the same risk.
 
-## Saved defaults, new workspaces, and routines
+## Saved defaults, new workspaces, and automations
 
 - The saved default of Preferences keeps fast mode with the model and the
   effort, as [The preference](create-a-workspace.md#the-preference) says.
@@ -118,9 +118,9 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the switch at
   fast mode in the saved default, was rejected for that reason (fast mode
   decision 255).
 - The default choice of the app has fast mode off.
-- A routine keeps fast mode in its choice, as
-  [A routine](routines.md#a-routine) says. Reason: each choice holds fast
-  mode, and a routine keeps a choice.
+- An automation keeps fast mode in its choice, as
+  [An automation](automations.md#an-automation) says. Reason: each choice holds fast
+  mode, and an automation keeps a choice.
 
 ## Agent tools
 

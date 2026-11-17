@@ -14,6 +14,9 @@ names a dated record, as
 decision number names a decision of the change that adds the gateway, as
 [Model gateway](model-gateway.md) says. An egress decision number names a
 decision of the change that adds the egress container, as that doc says.
+A stream drop decision number, such as stream drop decision 1, names a
+decision of the change for model answers that drop before they are
+complete.
 
 ## Requests and answers
 
@@ -155,14 +158,49 @@ decision of the change that adds the egress container, as that doc says.
   back no part of an answer.
 - Reason: an agent program stalls on an answer that a gateway holds back,
   as Anthropic's gateway guide says.
-- A model request that still runs when its turn ends stops within 30
-  seconds, also while its upload runs or while it waits for the answer
-  (gateway decision 6).
-- Reason: the runner reports the end of a turn only after the agent
-  program of the turn exits. So only a copied turn token can still stream
-  after the turn.
-- An answer that runs to its end was rejected, because a copied token
-  could then spend the login for minutes after the turn.
+- A model request starts only after a turn check passes. When that check
+  does not pass within 30 seconds, the request fails, and the agent
+  program can send it again.
+- After the start, the gateway checks the turn every 15 seconds, also
+  while the upload runs or while it waits for the answer. A refusal, such
+  as an ended turn or a changed login, stops the request at once (gateway
+  decision 6).
+- A check that answers late or fails does not stop the request (stream
+  check decision 1, 16 November 2026). The next check starts 15 seconds
+  after the start of the previous check, or at once when the previous
+  check took longer.
+- Reason: slow checks cut long answers in the middle. The agent program
+  then sent the whole request again, and spent the login again on each
+  attempt.
+- So a request that still runs when its turn ends stops at the first check
+  that answers after the end. While no check answers, the answer can run
+  to its end. A copied turn token still starts no new request after the
+  turn, because each new request needs a check that passes.
+- Reason for the checks: the runner reports the end of a turn only after
+  the agent program of the turn exits. So only a copied turn token can
+  still stream after the turn.
+- A stop within 30 seconds whatever the check does was replaced by
+  stream check decision 1, because it cut the answers of turns that still
+  ran whenever the workspace answered slowly.
+- When the first check of a request fails with an error, it gets no new
+  try. The gateway answers HTTP 503 with
+  `model_gateway_unavailable`. Reason: no part of the answer exists yet.
+  Claude then sends the request again by itself.
+- A check first reads the turn without waiting for other work of the
+  workspace, such as a start or a stop of its sandbox (stream drop
+  decision 1). When that read accepts the token, the check does not wait.
+  Reason: such work can take more than 30 seconds.
+- A refusal always comes from a check that waited for that work. So no
+  check refuses a turn that is only half saved. A check that saves the
+  renewal claim of a ChatGPT sign-in also waits.
+- A copy of the turn in D1 for the checks was rejected, because the read
+  in the workspace needs no second copy of the turn.
+- The gateway writes a warning to the log of the Worker for each check
+  that fails with an error, and for each check that answers late. It also
+  writes one for each request that its checks stop (stream drop decision 1).
+- A warning holds no error text. It can hold only the workspace ID and
+  the error kind or refusal code. Reason: without the warnings, nobody can
+  see whether answers still end early.
 - When the agent program closes its connection, the gateway cancels the
   request to the upstream.
 - A new version of the egress container takes each new ChatGPT request at
@@ -200,4 +238,12 @@ decision of the change that adds the egress container, as that doc says.
   key of its own. That run then spends the login of the session while the
   turn runs.
 - Risk: a deploy of the Worker or an update of the Cloudflare runtime can
-  end a long answer. The agent program then sends the request again.
+  reset the workspace object. A check during the reset fails. The gateway
+  keeps the answer open and checks again, as [Streams](#streams) says.
+- Risk: after an update of its runtime, Cloudflare gives a running
+  request up to 20 minutes to finish. A request that still runs then
+  ends. Anthropic or the network can also end an answer.
+- Claude keeps the part of an answer that ends early. It does not send the
+  request again.
+  [Dropped answers](dropped-answers.md) states
+  what each agent then does.

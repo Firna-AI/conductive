@@ -19,7 +19,7 @@ The file flow adds no renderer bridge.
 
 The desktop entry supplies the configured Worker origin to the app's API and event services.
 API calls use `credentials: include`, so Chromium sends the HttpOnly desktop session cookie.
-File uploads go to the same origin as one raw `XMLHttpRequest` with credentials, so they send the same cookie and report their progress.
+File uploads go to the same origin in parts. Each part is one raw `XMLHttpRequest` `PUT` with credentials and no other header than `Content-Type`, so it sends the same cookie and reports its progress.
 Workspace sockets use the same Worker origin.
 The renderer keeps its normal `fetch` function and has no OS bridge.
 
@@ -169,6 +169,8 @@ It then follows the width of the rail and the sidebar.
 The sidebar does not show after the toggle hides it, in a window narrower than 900px, or on a page without one.
 Then the bar keeps its own width at the top left of the window.
 The top bar of the main area starts after the bar.
+While the sidebar is hidden, the tile of the current org opens the workspace list as a popover below the bar.
+The sidebar shows no second toggle beside the Settings cog in the Mac app.
 
 The app disables the toggle in a window narrower than 900px and on a page without a sidebar.
 Other pages without the org rail, such as sign-in, show the bar in a 34px strip.

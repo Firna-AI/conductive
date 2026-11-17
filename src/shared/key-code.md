@@ -17,6 +17,8 @@ page.
   keeps inline and block fences longer than their content's backticks.
 - [Lost data](transcript/lost-data.ts) maps refusal event types to the same
   product names for the browser line and the copied transcript.
+- [Workspace tool types](../../crates/cnd-runner-interface/src/tools/mod.rs) own the Rust requests, replies, workspace and session records, and Mac command records. `generated/` contains their TypeScript.
+- [Agent tool runtime](agent-tools.ts) owns the machine paths, turn environment names, turn header, and workspace MCP registration.
 - [Agent words](agents.ts) supply the effort labels, model lookup, and model
   labels for the chat, the new-workspace picker, and the mockups.
 - [Duration](transcript/duration.ts) formats elapsed chat and command times.
@@ -53,10 +55,11 @@ page.
 - [Attachment mentions](attachment-mentions.ts): `attachmentForMention`
   finds the attached file that a file mention of the message names.
   `textWithAttachmentNames` puts the original name of each such file in
-  place of its mention. `hasOwnWords` says whether the text holds more than
-  spaces and those mentions.
-- [Session title](session-title.ts): `sessionTitleFrom` puts in those names
-  before it takes the first line and cuts it to 60 code points. It gives
+  place of its mention. `titleSourceText` does the same for titles, but it
+  leaves out each mention of an attached image. `hasOwnWords` says whether
+  the text holds more than spaces and those mentions.
+- [Session title](session-title.ts): `sessionTitleFrom` applies
+  `titleSourceText` before it takes the first line and cuts it to 60 code points. It gives
   null when the text holds nothing but those mentions. `modelTitleFrom`
   first changes each underscore of a model answer to a space.
 - [Port reports](ports.ts) carry sorted listening ports and their safe labels.
@@ -65,7 +68,27 @@ page.
 - [Commit author](commit-author.ts) builds a GitHub user's commit author and its four Git variables.
 - [Org contracts](orgs.ts) carry custom initials and GitHub repository choices for org creation, and the request reader for org moves.
 - [Member contracts](members.ts) name each invitation by its email. Each member keeps the `User` with their GitHub login. `PendingOrgInvite` adds the org ID and name, for the invitations that the signed-in user can accept.
-- [Account contracts](account.ts) include the repository list available before an org exists. An own endpoint write carries its endpoint and key. Its status carries the host and normal login metadata. The owner's account can also carry `modelList`, with missing app model IDs in `missing` and the last successful read time in `checkedAt`. No successful read means no field. `refreshAgentLoginModelsPath` names the POST route that answers 204 before the browser reads the account again. `AgentLoginStatus.noReuse` of a connected login is true when other members cannot use it. `UpdateAgentLoginRequest` changes only that value, without the secret. Stored statuses also include a Codex ChatGPT sign-in as `token`. A Codex save accepts `api-key` or `endpoint`; ChatGPT uses the device flow. `defaultAgentLoginNoReuse` gives the typed default for each agent and kind. The Worker and the dev backend use these defaults.
+- [Account contracts](account.ts) include the repository list available before an org exists.
+  An own endpoint write carries its endpoint and key.
+  Its status carries the host and normal login metadata.
+  The owner's account can also carry `modelList`, with missing app model IDs in `missing` and the last successful read time in `checkedAt`.
+  No successful read means no field.
+
+  `SaveAgentLoginResponse` adds `endpointV1Added` and `modelListReadFailed` for endpoint saves.
+  The first reports a selected `/v1` base. The second reports that no read produced a list.
+  Native saves omit both flags. Neither response holds the full address.
+
+  `refreshAgentLoginModelsPath` names the POST route that returns HTTP 200 with `RefreshAgentLoginModelsResponse.modelListReadFailed`.
+  False means Refresh read a list. True also covers a removed or native login.
+  The browser reads the account again for the last successful list.
+
+  `AgentLoginStatus.noReuse` of a connected login is true when other members cannot use it.
+  `UpdateAgentLoginRequest` changes only that value, without the secret.
+  Stored statuses also include a Codex ChatGPT sign-in as `token`.
+  A Codex save accepts `api-key` or `endpoint`. ChatGPT uses the device flow.
+
+  `defaultAgentLoginNoReuse` gives the typed default for each agent and kind.
+  The Worker and the dev backend use these defaults.
 - [Waitlist contracts](waitlist.ts) define the state read, code use, and join paths. Their state gives app access, the pause, the required `waitlistOn` flag of the waitlist switch, the approval email, and the personal referral code's totals. `SessionResponse` in [account.ts](account.ts) adds app access to the sign-in session reply.
 - [Operator waitlist contracts](operator-waitlist.ts) define approval results, email states, code management, pause and switch changes, and user access details.
 - [GitHub setup](github-setup.ts) names the address where GitHub returns after an install, and the `state` values of the install link.
@@ -75,17 +98,17 @@ page.
 - [Org settings](org-settings.ts) carry the base image software for the Cloud computer tab.
 - [Feedback contracts](feedback.ts) define the feedback path, its request and reply, and its byte limits.
 - [Image signatures](images.ts) give `readImage` and `CheckedImage`. [images.test.ts](images.test.ts) checks the four formats, both GIF signatures, and refused or short signatures.
-- [Routines](routines.ts) define routine paths, editable fields, triggers, inactive reasons, and run states.
+- [Automations](automations.ts) define automation paths, editable fields, triggers, inactive reasons, and run states.
   Author-filter requests carry logins. Saved filters carry account IDs and canonical logins.
   Run now takes a page request ID and returns its run after workspace admission.
-  Run history returns up to 50 runs and a `nextCursor` for `routinePaths.runs`.
-  Each run carries its own `agent` and `owner`, independent of later routine edits or owner moves.
+  Run history returns up to 50 runs and a `nextCursor` for `automationPaths.runs`.
+  Each run carries its own `agent` and `owner`, independent of later automation edits or owner moves.
   An unknown historical agent or owner is null.
   Removed workspaces have a null run workspace ID, while first-turn failures keep their workspace link.
   A pull request trigger can carry `skipLogin`, the account login of an author or sender skip.
   Older runs and skips without an account omit it.
-- [Workspace views](workspace-view.ts) add the routine ID and name of a run, or null, in backend replies.
-  The routine's `pullRequest` holds the run's pull request number and URL, or null for scheduled and Run now runs.
+- [Workspace views](workspace-view.ts) add the automation ID and name of a run, or null, in backend replies.
+  The automation's `pullRequest` holds the run's pull request number and URL, or null for scheduled and Run now runs.
   Replies also carry `baseBranch`, resolved by the Worker. View writes cannot change it.
 - [Base image](base-image.ts) records the software labels, their primary source, and the source check date.
 - [Browser fakes](../test-support/README.md) use these response types.

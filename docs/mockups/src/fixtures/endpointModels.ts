@@ -27,6 +27,15 @@ export const proxyModelCheck: ModelListCheck = {
 }
 
 /**
+ * The last Claude list of Cal's proxy that the app read, from the day
+ * before the reads that failed. A failed read keeps the list and its time.
+ */
+export const keptModelCheck: ModelListCheck = {
+  unlisted: [fable],
+  checked: 'yesterday',
+}
+
+/**
  * The last read of the list of the gateway of Acme for Claude, the endpoint
  * of the org login of Acme. It lacks Fable 5.1 too.
  */

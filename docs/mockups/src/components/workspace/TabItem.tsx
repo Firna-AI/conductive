@@ -15,6 +15,7 @@ import { IconButton } from '../common/actions'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
 import { RenameField } from './RenameField'
+import { SessionTabIcon } from './SessionTabIcon'
 import tabDrag from './TabDrag.module.css'
 import styles from './WorkspaceTabs.module.css'
 
@@ -33,11 +34,18 @@ export type WorkspaceTab = {
   /** The screen that the tab shows, when the mockups draw it. */
   to?: string
   selected: boolean
+  running?: boolean
   /**
    * The temporary tab, from decision 284: the next press on a file or a
    * diff replaces its file. Only its title changes, in italics.
    */
   temporary?: boolean
+  /**
+   * The label of the file can hide a secret value: it holds "[redacted]",
+   * or the app does not know the name of the file yet. Its menu then
+   * leaves out Copy path.
+   */
+  hidesPath?: boolean
 }
 
 /** The open menu of a tab: beside it, or in a sheet that the screen draws. */
@@ -63,7 +71,11 @@ function TabContent(props: { tab: WorkspaceTab }) {
   const Icon = icons[tab.kind]
   return (
     <>
-      <Icon aria-hidden className={styles.icon} size={13} />
+      {tab.kind === 'session' ? (
+        <SessionTabIcon running={tab.running ?? false} />
+      ) : (
+        <Icon aria-hidden className={styles.icon} size={13} />
+      )}
       <span
         className={classes(styles.title, tab.temporary && styles.temporary)}
       >

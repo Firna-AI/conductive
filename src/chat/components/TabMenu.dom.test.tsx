@@ -71,6 +71,7 @@ describe('the tab menu', () => {
           { name: 'Copy full transcript', off: false },
           { name: 'Move left', off: true },
           { name: 'Move right', off: false },
+          { name: 'Close tabs to the right', off: false },
         ],
         place: { left: '0px', top: '34px' },
         focus: 'Rename session',
@@ -135,6 +136,7 @@ describe('the tab menu', () => {
       items: [
         { name: 'Move left', off: false },
         { name: 'Move right', off: true },
+        { name: 'Close tabs to the right', off: true },
       ],
       place: { left: '250px', top: '12px' },
     })
@@ -198,8 +200,9 @@ describe('the tab menu', () => {
           { name: 'Keep open', off: false },
           { name: 'Move left', off: false },
           { name: 'Move right', off: false },
+          { name: 'Close tabs to the right', off: false },
         ],
-        lines: 1,
+        lines: 2,
       },
       kept: [file],
       saves: 0,
@@ -210,7 +213,7 @@ describe('the tab menu', () => {
     })
   })
 
-  it('leaves Keep open out of a read-only row, so the temporary tab opens no menu, and the browser shows its own', async () => {
+  it('leaves Keep open out of a read-only row, so the temporary tab, whose label hides a secret value and so has no Copy path, opens no menu, and the browser shows its own', async () => {
     await mountChat({
       server: new FakeApiServer(),
       tabs: [first, file, second],
@@ -248,6 +251,7 @@ describe('the tab menu', () => {
       { name: 'Copy full transcript', off: false },
       { name: 'Move left', off: false },
       { name: 'Move right', off: true },
+      { name: 'Close tabs to the right', off: true },
     ])
     await press(byRole('menuitem', 'Rename session'))
 

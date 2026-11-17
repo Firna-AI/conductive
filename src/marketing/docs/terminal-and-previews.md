@@ -21,8 +21,13 @@ A preview shows a web server that runs there too.
 ## Open Terminal
 
 1. Open **Terminal** in the workspace.
-2. Select the terminal area to give it focus.
-3. Enter the command you want to run.
+2. Enter the command you want to run.
+
+On a computer, select the **Terminal** tab to give the terminal focus.
+**Go to Terminal** in the command palette does the same.
+So does its keyboard shortcut, by default **⌘J** on a Mac or **Ctrl+J** on another computer.
+If the terminal is still connecting, it gets focus when it appears.
+On a phone, or after you select something else, select the terminal area to give it focus.
 
 The shell starts in the workspace's repository folder.
 Its prompt shows the current folder name.
@@ -37,10 +42,43 @@ git status
 Use your repository's instructions for dependency installation, tests, and development commands.
 The phone terminal adds a row of keys that a phone keyboard lacks.
 
+Web addresses in the terminal output are links.
+On a Mac, hold Cmd and click a link to open it.
+On Windows and Linux, hold Ctrl and click it.
+On a touch screen, tap the link.
+A local address, such as `http://localhost:3000`, opens **Preview** at its port.
+Other links open in a new browser tab.
+When a program shows a link with a label, its hint names the website that it opens.
+
 The shell keeps running when its connection drops.
 Reconnect to return to the same shell and running commands.
+**Restart** in the workspace header also drops the connection until the agents are back.
 A stop of the cloud computer ends those commands.
 After a resume, start any needed server again.
+
+The commands that you typed stay in the shell's command history after a stop.
+After a resume, press the Up arrow or Ctrl-R to find them.
+A command that still runs at the stop, such as a server, is not kept.
+A workspace with older cloud computer software gets this with an automatic software update at a later start.
+
+## Copy output
+
+1. Drag over the output to select it.
+2. Drag past the top or bottom edge to scroll and select more of the earlier output.
+3. Copy the selection, for example with Cmd+C on a Mac.
+
+The wheel scrolls the earlier output.
+A new connection shows up to 2,000 lines of earlier output.
+Every key goes to the shell, also Ctrl-b.
+
+Every member who opens the same terminal sees it at one shared size.
+The panel where someone last typed, pasted, or resized sets that size.
+Another panel can show smaller text, or empty space after the terminal.
+Type in a panel to give the terminal its size.
+
+A workspace with older cloud computer software shows only the visible screen when you drag.
+An automatic software update brings the newer terminal at a later start.
+[Apply setup changes](/docs/cloud-computer#apply-setup-changes) explains when updates apply.
 
 ## Know which GitHub account a command uses
 
@@ -85,6 +123,8 @@ The list updates as servers start and stop.
 Servers that already have an open preview appear in their tabs.
 When the list is empty, the form asks you to start a server in **Terminal** or ask the agent.
 
+When the terminal shows the local address of your server, open it from there.
+
 To open a server by its port:
 
 1. Note the port that the server reports.
@@ -96,11 +136,10 @@ Use the port of your server when it reports a different one.
 
 An older cloud computer can show only the **Port** field.
 Use the manual steps there.
-If Preview says it needs newer cloud computer software, ask an admin to run **Build computer**.
-After that build succeeds, create a new workspace.
-An existing workspace keeps its installed software after a resume.
+If Preview says it needs newer cloud computer software, an automatic update brings the required preview support at a later start.
+An existing workspace also gets the server list with an automatic software update.
 
-- [Prepare a new cloud computer for the server list](/docs/cloud-computer#apply-setup-changes)
+- [Understand cloud computer software updates](/docs/cloud-computer#apply-setup-changes)
 
 The preview opens inside the workspace.
 Use **Open** to show the app in a new browser tab when it works better there.

@@ -129,6 +129,10 @@ The session reply has app access, and `GET /api/waitlist` answers with `accessSt
 The operator samples in `fixtures/operator-samples.ts` have the names and the counts of the operator mockups, with an ID for each org and user, and the people of the other fixtures. Ten of them wait, with the names of the waitlist mockups. Each time counts back from the time of the samples. Hexwave is suspended, Pinecrest is deleted, and Dana Kim is suspended. `SAMPLE_IDS` names them, Sam Okafor and Kenji Watanabe, who wait with and without a verified email, and Zed K, the newest person who waits, as `SAMPLE_IDS.newestWaiting`.
 `fixtures/operator-access-samples.ts` gives the way in of each user who came after the waitlist, the age of each GitHub account, the referral code of each user with app access, and the invite codes of the mockups. `fixtures/operator-access.ts` turns them into the app access of a user, the waitlist, and the codes, with the records that an operator changes: the approvals, the open sign-ups in `openSignups`, the codes, the pause, and the switch in `waitlistSwitch`. `sampleAccessRecords` in `fixtures/operator-access-records.ts` builds those records at a time, with the waitlist on. An open sign-up names its operator on the page of a user. The approval email of Ana Pereira went, and the one of Joe Quinn never went. The suspension of Dana Kim disabled her referral code.
 `fixtures/operator.ts` builds the replies from the samples and their records: the page of an org or a user, its row in a list, and the Overview with the 30 UTC days up to the day of the read and the count of the people who wait. The dev fake changes the records with Suspend, Lift, Approve, New code, Disable, the pause, and the switch. Its waitlist reads the same codes, pause, and switch, and a code that works there counts its use and gives a referral code.
+The Overview also includes long runs with workspace, org, and owner identities and raw Unix millisecond times.
+These samples include deleted and suspended orgs, a suspended owner, and a start without a cloud computer ID.
+`operatorOverview` accepts a fixed sample time separately from the read time, so a dev refresh keeps each start.
+`sampleComputerId` gives the computer ID that the dev Orgs search also finds.
 `macCommands` chooses the Mac commands of the fake workspace, and `onMac` makes the window the Mac app on the Mac of the fake user.
 Without `onMac`, the window is a browser: it has no pairing, and the Mac settings refuse it as the Worker does.
 Each fake record has a `requestKey` from `fakeRequestKey`, which differs from its `requestId` and is safe in an address.
@@ -163,7 +167,7 @@ await view.rerender(<OwnerPicker {...props} workspace={next} />)
 - `mount(element)` renders the element inside `act` into a new container on `document.body`.
   It returns `container`, `rerender(element)`, and `unmount()`. Each mounted tree unmounts after its test.
 - `press(element)` clicks the element. `typeText(field, text)` types into an input or a text area, so React sees the change. A message field takes the text as `typeMessage` types it.
-- `message-field.ts` acts on the message field of a composer, the chip text field: `focusMessage(field)` moves the focus into the field as Tab does, with no press of the pointer, `typeMessage(field, text)` selects all and types the text, `pasteMessage(field, text)` pastes plain text at the caret through a paste event, `pressInField(field, key)` presses a key, `clearMessage(field)` deletes all the text as Ctrl+A and Backspace do, and `messageText(field)` gives the plain draft with the link of each chip. Each one commits the change of the field, as a browser does before the next input. `asMessageField(element)` checks that an element is such a field, also while it takes no change.
+- `message-field.ts` acts on the message field of a composer, the chip text field: `focusMessage(field)` moves the focus into the field as Tab does, with no press of the pointer, `typeMessage(field, text)` selects all and types the text, `pasteMessage(field, text)` pastes plain text at the caret through a paste event, `pressInField(field, key)` presses a key, `clearMessage(field)` deletes all the text as Ctrl+A and Backspace do, and `messageText(field)` gives the plain draft with the link of each chip. Each one commits the change of the field, as a browser does before the next input. `asMessageField(element)` checks that an element is such a field, also while it takes no change. `chromeCaretOnFocus()` puts the caret at the start of a field that takes the focus with the caret of the page outside it, and `chromeFocusOnCaret()` gives the focus to an editable element when a script puts the caret of the page into it, as Chrome does.
   `messageText` reads each field as a field without a files source. For a field with attached files, it gives the text without escapes and the mark of each attached file, so it is not the draft text. Read the draft that the owner keeps instead.
   `pressKey(key)` sends a keydown and a keyup to the focused element. Each runs inside `act`.
   Each fails with a named error when a person cannot use the target. `pressKey` checks the focused element.
@@ -206,18 +210,20 @@ Replies, timers, and `waitFor` go on.
 
 ## Key code
 
-- `fake-api.ts` handles requests and records them. A reply for the path of
-  an upload route answers each raw file sent there, whatever file the query
-  names.
-- `fake-files.ts`: `fetchFiles`, the raw file upload over a fetch for tests
-  and the dev fakes, which reports no progress, and `sentFiles`, the files
-  that a fake got.
+- `fake-api.ts` handles requests and records them. `fake-tool-routes.ts`
+  gives each start of an upload the same upload of one part,
+  `FAKE_IDS.upload`, and its complete call the file. A test replaces the
+  reply of one of these calls, such as the complete call, to change the
+  file or to make the upload fail.
+- `fake-files.ts`: `fetchFiles`, the transport of the raw parts of uploads
+  over a fetch, for tests and the dev fakes, which reports no progress, and
+  `sentParts`, the parts that a fake got.
 - `mount.ts` mounts React components in DOM tests, acts as a person does, and waits for a state.
 - `dom-queries.ts` finds shown elements in DOM tests, and says whether a person can use them.
 - `message-field.ts` focuses, types into, pastes into, presses keys in, clears, and reads the message field of a composer.
 - `file-picker.ts` picks files with the first Attach files button of a composer.
 - `file-drop.ts` drags and drops files, folders, and text, as Chrome gives them.
-- `fake-core-routes.ts` records account, org, settings, section, member, and routine replies: the list, and the read, update, and delete of each routine, and a create. Each routine, and the routine that a create answers, also has each page of its runs and a Run now that starts a run on a new workspace.
+- `fake-core-routes.ts` records account, org, settings, section, member, and automation replies: the list, and the read, update, and delete of each automation, and a create. Each automation, and the automation that a create answers, also has each page of its runs and a Run now that starts a run on a new workspace.
 - `fake-workspace-routes.ts` records workspace, session, message, and view replies.
 - `fake-tool-routes.ts` records file, terminal, preview, desktop, and GitHub replies, also the member action routes of GitHub.
   Its upload replies give each file the `path` that `attachmentPath` in `src/shared/attachment-paths.ts` builds, as the Worker does.
@@ -236,11 +242,11 @@ Replies, timers, and `waitFor` go on.
 - `fixtures/operator-samples.ts` and `fixtures/operator.ts` give the sample orgs and users of the operator section, and build its replies.
 - `fixtures/operator-access-samples.ts` and `fixtures/operator-access.ts` give the waitlist, the codes, and the app access of the samples, and `disabledCode`, the reply of a disable. `fixtures/operator-access-records.ts` gives `sampleAccessRecords`, the records that an operator changes.
 - `fixtures/repositories.ts` supplies GitHub repository choices before org creation and the org's repository records.
-- `fixtures/routines.ts` maps the routines of the mockups, newest first, with the last run of each, to the shared contracts. Its `runs` are the runs that the page of each routine lists in the mockups, or else its last run. Its `created` is the reply of a create: the routine that the flow "Create a routine" saves.
-- `fixtures/routine-runs.ts` maps the run lists of the mockups to the runs of the API: each cause of a failed run and each reason of a skipped run as the Worker stores them, with the login of an account outside the org. `runsPage` gives one page of runs as the Worker pages them.
+- `fixtures/automations.ts` maps the automations of the mockups, newest first, with the last run of each, to the shared contracts. Its `runs` are the runs that the page of each automation lists in the mockups, or else its last run. Its `created` is the reply of a create: the automation that the flow "Create an automation" saves.
+- `fixtures/automation-runs.ts` maps the run lists of the mockups to the runs of the API: each cause of a failed run and each reason of a skipped run as the Worker stores them, with the login of an account outside the org. `runsPage` gives one page of runs as the Worker pages them.
   Each run includes its agent and owner for the shared run contract. A member who left the org stays the owner of their runs, as the Worker keeps their user record.
   A run whose first start or first turn failed keeps its workspace, and a run that a check failed has none.
-- `fixtures/routine-triggers.ts` turns a trigger of a save into the trigger of a reply: a preset with its cron, and each login with a fake GitHub ID.
+- `fixtures/automation-triggers.ts` turns a trigger of a save into the trigger of a reply: a preset with its cron, and each login with a fake GitHub ID.
 - `fixtures/workspaces.ts` maps workspace and session samples, and `senderSnapshot` copies the identity of a person as a session starter.
 - `fixtures/tools.ts` maps file, GitHub, and tool samples. `FAKE_GITHUB_HEAD_SHA` is the head commit of each fake pull request.
 - `fixtures/devices.ts` maps the Mac command samples of the mockups: requests in each state, the pairing, and the Mac settings.

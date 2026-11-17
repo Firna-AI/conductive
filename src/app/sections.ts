@@ -1,5 +1,5 @@
+import type { Workspace } from '../shared/generated/Workspace'
 import type { Section } from '../shared/sections'
-import type { Workspace } from '../shared/workspaces'
 
 export interface SectionGroup {
   section: Section
@@ -19,7 +19,8 @@ export function defaultSection(
   return sections.find((section) => section.isDefault) ?? sections[0]
 }
 
-function ordered(sections: readonly Section[]): Section[] {
+/** The sections in the order of the list. */
+export function ordered(sections: readonly Section[]): Section[] {
   return [...sections].sort((a, b) => a.position - b.position)
 }
 

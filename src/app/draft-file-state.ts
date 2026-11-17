@@ -37,7 +37,11 @@ export function markedFiles(
   return ordered
 }
 
-/** Reconciles a field change without discarding bytes needed by undo. */
+/**
+ * Reconciles a field change without discarding bytes needed by undo. A
+ * stopped upload that comes back starts again from its kept upload, so it
+ * sends only the parts with no receipt.
+ */
 export function reconcileFiles(
   state: DraftFileState,
   text: string,
@@ -46,7 +50,7 @@ export function reconcileFiles(
   const attached = new Set(state.files.map(({ id }) => id))
   const files = markedFiles(text, held).map((item) =>
     !attached.has(item.id) && item.state === 'uploading'
-      ? uploadingFile(item.id, item.file)
+      ? uploadingFile(item.id, item.file, item.upload)
       : item,
   )
   const marked = new Set(files.map(({ id }) => id))

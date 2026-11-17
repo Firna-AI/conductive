@@ -12,6 +12,7 @@ import { classes } from '../common/classes'
 import { ScreenLink } from '../common/ScreenLink'
 import { AgentConnectForm } from './AgentConnectForm'
 import { connected, type OpenAgentForm } from './AgentList'
+import { EndpointRefresh } from './EndpointDetails'
 import { EndpointModels } from './EndpointModels'
 import { LoginEndpoint } from './LoginEndpoint'
 import type { ReadOnlyCause } from './OrgSections'
@@ -191,9 +192,9 @@ export function OrgAgentsTab(props: {
               ) : null}
               {!readOnly && login?.kind === 'endpoint' && login.models ? (
                 <EndpointModels
-                  agent={agents[key].name}
                   check={login.models}
                   owner="org"
+                  refresh={<EndpointRefresh agent={key} />}
                 />
               ) : null}
               {form && !readOnly ? (

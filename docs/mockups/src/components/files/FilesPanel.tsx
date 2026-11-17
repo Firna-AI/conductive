@@ -11,6 +11,7 @@ import { LinkTabs } from '../common/LinkTabs'
 import { PanelBar } from '../workspace/PanelBar'
 import { ChangeList } from './ChangeList'
 import { ChecksList } from './ChecksList'
+import type { FileRowMenu } from './FileRowMenu'
 import { FileTree } from './FileTree'
 import styles from './FilesPanel.module.css'
 
@@ -29,13 +30,15 @@ export type TreeState = (typeof treeStates)[number]
 
 /**
  * The kinds of file that open as a tab in the centre column: a code file,
- * a Markdown file, a diff, the diff of a file whose label hides a secret
- * value, and a file whose name the app does not know. Then a picture of
+ * the code file at a range of lines that an answer named, a Markdown file,
+ * a diff, the diff of a file whose label hides a secret value, and a file
+ * whose name the app does not know. Then a picture of
  * the branch, an image whose bytes the browser cannot draw, and the copy
  * of an attached screenshot, which All files does not list.
  */
 export type FileTabView =
   | 'code'
+  | 'code-lines'
   | 'markdown'
   | 'diff'
   | 'masked-diff'
@@ -47,6 +50,8 @@ export type FileTabView =
 /** The open tab whose row All files marks: a file of the tree. */
 function treeTab(open: FileTabView | undefined) {
   switch (open) {
+    case 'code-lines':
+      return 'code'
     case 'code':
     case 'markdown':
     case 'image':
@@ -100,7 +105,8 @@ function FileTabs(props: {
  * is available. `paths` adds two files whose labels hide a secret value.
  * `checksTop` stands above the checks, such as the actions of the pull
  * request bar on a phone. `only` keeps the changes of these paths, such as
- * the changed files that moved to the new branch of Continue.
+ * the changed files that moved to the new branch of Continue. `menu` is the
+ * open menu of a row of the shown list.
  */
 export function FilesPanel(props: {
   view: FileList
@@ -112,6 +118,7 @@ export function FilesPanel(props: {
   paths?: PathState
   checksTop?: ReactNode
   only?: readonly string[]
+  menu?: FileRowMenu
 }) {
   const { view, open, only } = props
   const masked = props.paths === 'masked'
@@ -145,7 +152,7 @@ export function FilesPanel(props: {
       ) : null}
       {view === 'all' && lists && props.tree !== 'none' ? (
         <div className={styles.scroll} data-mokly-scroll="file-tree">
-          <FileTree entries={tree} open={treeOpen} />
+          <FileTree entries={tree} menu={props.menu} open={treeOpen} />
         </div>
       ) : null}
       {view === 'changes' && lists ? (
@@ -153,6 +160,7 @@ export function FilesPanel(props: {
           diffOpen={open === 'diff' || open === 'masked-diff'}
           diffTo={masked ? paths.maskedPaths : paths.diff}
           files={changes}
+          menu={props.menu}
         />
       ) : null}
       {props.tree === 'saved' ? (

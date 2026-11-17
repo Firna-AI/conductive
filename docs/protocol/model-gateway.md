@@ -16,7 +16,10 @@ while the change is open. Its pull request keeps them after the merge. An
 own endpoint decision number names a decision of the change that adds the
 own endpoint logins, as [Tokens and secrets](tokens-and-secrets.md) says.
 An egress decision number, such as egress decision 1, names the dated
-record of one decision of the change that adds the egress container.
+record of one decision of the change that adds the egress container. A
+stream check decision number, such as stream check decision 1, names the
+dated record of one decision of the change that keeps an answer running
+through a slow turn check. Its pull request keeps these records.
 
 ## Terms
 

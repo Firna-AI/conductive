@@ -26,6 +26,8 @@ import { useGitHubFeed, useScreenBar } from '../github/WorkspaceGitHub'
 import { SandboxPanel } from '../SandboxNotice'
 import { contentState } from '../sandbox-view'
 import { useSavedView } from '../saved-view'
+import { useAddressLines } from './address-lines'
+import { useRowMenuItems } from './copy-path'
 import { filesPlace, tabOf } from './files-address'
 import {
   useAddressList,
@@ -69,6 +71,7 @@ function TabPage(props: {
 }) {
   const { tab, context } = props
   useOpenTab(context.savedView, tab)
+  const lines = useAddressLines()
   const targets = useFileTargets(context.org.id)
   const common = {
     files: props.files,
@@ -79,7 +82,7 @@ function TabPage(props: {
     targets,
   }
   return tab.kind === 'file' ? (
-    <FilePage {...common} key={tab.path} tab={tab} />
+    <FilePage {...common} key={tab.path} lines={lines} tab={tab} />
   ) : (
     <DiffPage {...common} key={tab.path} tab={tab} />
   )
@@ -143,12 +146,16 @@ function useListKeys(): Partial<Record<FileListKind, CommandKey>> {
  * reads the kept files that the workspace screen connects. Checks shows the
  * GitHub state of the workspace screen, also while the sandbox shows in
  * place of the lists. On a phone, the actions of the bar top the Checks tab,
- * and their keys run while it shows them.
+ * and their keys run while it shows them. The menu of each row of the
+ * lists holds Add to chat and Copy path, as `useRowMenuItems` says. The
+ * lists that a stopped sandbox keeps offer Copy path only, because its bar
+ * takes the place of the composer.
  */
 function FilesPart(props: { context: WorkspaceContext }) {
   const { context } = props
   const files = useKeptFiles(context)
   const navigation = useFilesNavigation(context)
+  const rowMenu = useRowMenuItems(context)
   const github = useGitHubFeed()
   const bar = useScreenBar()
   const { now } = useServices()
@@ -192,6 +199,7 @@ function FilesPart(props: { context: WorkspaceContext }) {
       navigation={navigation}
       now={now}
       placeholder={sandboxPlaceholder(context)}
+      rowMenu={rowMenu}
       waiting={listWait(context)}
     />
   )

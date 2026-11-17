@@ -11,7 +11,7 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
   title: 'Working in an org',
   blocks: [
     list(
-      text`Every member of an org sees all of its workspaces and routines.
+      text`Every member of an org sees all of its workspaces and automations.
         In an active org, members can send messages in workspaces that are
         not archived.
         After a pull request merges, every member can use Continue to start
@@ -43,7 +43,7 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
       text`Members see the org login read-only in the Agents tab of Settings.
         Nobody sees the saved key or full endpoint address. The org login
         stays when the admin who connected it leaves. The account of the
-        key or endpoint pays for model use, including routine runs.`,
+        key or endpoint pays for model use, including automation runs.`,
       text`Each session keeps its starter's personal login or the org
         login. Each member can send messages on a session's org login.
         Other members use a personal login only when its owner allows it.
@@ -96,23 +96,26 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         content and the credential of the turn, to another address. A commit,
         the agent, or other code can change those settings. After Stop, a
         credential can start no new request. A request that still runs
-        ends within 30 seconds after the turn ends. If the login is removed
-        or changed, the turn ends at its next model request. A turn on a
-        personal login also ends there if its owner loses org access.`,
+        ends at the first check of its turn that answers after the turn
+        ends. ${productName} checks every 15 seconds. While no check
+        answers, the request can run to the end of its answer. If the login
+        is removed or changed, the turn ends at its next model request. A
+        turn on a personal login also ends there if its owner loses org
+        access.`,
       text`The setting of your personal login does not change these risks.
         Work in an org only with people whom you trust with your logins.`,
-      text`A routine runs an agent without a person, on a schedule or when
+      text`An automation runs an agent without a person, on a schedule or when
         a pull request opens, gets new commits, or merges. Each run starts
-        a new workspace as the member who owns the routine. Its agent login
+        a new workspace as the member who owns the automation. Its agent login
         follows the same rule as a new session of that member. Its GitHub
         token belongs to that member, so its pushes and pull requests show
         as that member.`,
-      text`Only the owner of a routine changes it or turns it on. An admin
+      text`Only the owner of an automation changes it or turns it on. An admin
         can turn it off or delete it. When the owner leaves the org, the
-        routine moves to the member who gets their workspaces. It stays
+        automation moves to the member who gets their workspaces. It stays
         off until that member turns it on. Later runs follow the same
         agent login rule and use that member's GitHub token.`,
-      text`The run of a routine for a pull request reads that pull request,
+      text`The run of an automation for a pull request reads that pull request,
         also the comments, reviews, and descriptions of other GitHub
         accounts. Such text can steer the agent while the run uses the
         session's agent login, the owner's GitHub token, and the org's

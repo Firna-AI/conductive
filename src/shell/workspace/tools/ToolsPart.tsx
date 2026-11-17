@@ -4,6 +4,7 @@ import tabs from '../../../../docs/mockups/src/components/common/LinkTabs.module
 import { PanelBar } from '../../../../docs/mockups/src/components/workspace/PanelBar'
 import panel from '../../../../docs/mockups/src/components/workspace/ToolsPanel.module.css'
 import { useServices } from '../../../app/services'
+import { useStore } from '../../../app/store'
 import { createTerminalConnector } from '../../../app/terminal-transport'
 import { DesktopTool } from '../../../desktop/DesktopTool'
 import { PreviewTool } from '../../../previews/PreviewTool'
@@ -15,6 +16,7 @@ import { useOrgServices } from '../../context'
 import { useShortcutTerminal } from '../../shortcuts/shortcut-context'
 import { shortcutTip, useShortcutHint } from '../../shortcuts/shortcut-hints'
 import type { WorkspaceContext } from '../features'
+import { useTerminalLinks } from './terminal-links'
 import { offeredToolTabs, type ToolKey } from './tool-address'
 import { useToolNavigation, type ToolNavigation } from './tool-navigation'
 import styles from './tools.module.css'
@@ -134,6 +136,7 @@ export function ToolsPart(props: {
   const navigation = useToolNavigation(context)
   const connect = useTerminalConnect()
   const { org, workspace, toolEvents } = context
+  const links = useTerminalLinks(org.id, workspace.id)
   const toolWorkspace = useMemo<ToolWorkspace>(
     () => ({
       orgId: org.id,
@@ -150,12 +153,18 @@ export function ToolsPart(props: {
   const { tool } = navigation
   const terminalShown = useShownOnce(tool === 'terminal')
   const previewShown = useShownOnce(tool === 'preview')
+  // A choice of Terminal on desktop moves the focus to the terminal, also
+  // when the terminal connects later. A hidden terminal does not take it.
+  const focusRequest = useStore(context.terminalFocus.request)
   const body = props.placeholder ?? (
     <>
       {terminalShown ? (
         <div className={styles.tool} hidden={tool !== 'terminal'}>
           <TerminalTool
             connect={connect}
+            focusRequest={tool === 'terminal' ? focusRequest : null}
+            links={links}
+            onFocusDone={context.terminalFocus.clear}
             screenRef={terminal}
             touch={touch}
             workspace={toolWorkspace}

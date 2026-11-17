@@ -7,6 +7,9 @@ This page lists each protocol doc and what it covers.
 
 - [Workspaces and sandboxes](../protocol/workspaces-and-sandboxes.md): the org
   image, the life of a workspace, and the disk flushes of a sandbox.
+  - [Sandbox software](../protocol/sandbox-software.md): the releases of the
+    app's own software, the updates of each sandbox, the install in a
+    build, and the software image.
   - [Create a workspace](../protocol/create-a-workspace.md): New workspace as a
     page or as a dialog, the create, the branch, and a failed first start.
   - [Repository folders](../protocol/repository-folders.md): the folder and the
@@ -25,21 +28,30 @@ This page lists each protocol doc and what it covers.
     - [Temporary tabs](../protocol/temporary-tabs.md): the one file or diff
       tab that the next press replaces, what opens and keeps it, and its
       mark in the saved view.
+    - [File row menu](../protocol/file-row-menu.md): the menu of a row of
+      All files and Changes, with Add to chat and Copy path, Copy path in
+      the tab menu of a file or diff tab, and the paths whose label hides a
+      secret value.
     - [Port previews](../protocol/port-previews.md): detected servers, manual
-      opening, preview tabs, and the relay requirement.
+      opening, the open from a local address in the chat, preview tabs,
+      and the relay requirement.
 - [Chat and events](../protocol/chat-and-events.md): sessions, messages, what
   the chat shows, and the events.
   - [Messages and attachments](../protocol/messages-and-attachments.md)
     - [Message attachments](../protocol/message-attachments.md): the size
-      limit, the upload, the storage, the copy into the cloud computer, and
-      the deletion of the files of a message, and their chips and their
-      drop in the message field.
+      limit, the upload, the storage, and the deletion of the files of a
+      message, and their chips and their drop in the message field.
+      - [Attachment transfers](../protocol/attachment-transfers.md): the
+        transfer of each file into the cloud computer, the deletion of its
+        stored copy, the check of a later message, and what the agent gets.
     - [Fast mode](../protocol/fast-mode.md): the Fast switch of the model
       menu, the models that show it, who may turn it on, and the speed of a
       turn that cannot run fast.
+    - [Dropped answers](../protocol/dropped-answers.md): the continue
+      message of a Claude turn after its model answer drops.
   - [File mentions](../protocol/file-mentions.md): the list of `@` in the
-    composer, the chips of files and folders, the sent chips of attached
-    files, and the removal of each chip of the composer.
+    composer, the chips of files and folders, Add to chat, the sent chips
+    of attached files, and the removal of each chip of the composer.
   - [Agent runner](../protocol/agent-runner.md): the connection of the runner,
     its events and their limits, its turns, the background work of Claude
     turns with its note and its time limit, its port reports, and the repair
@@ -69,6 +81,9 @@ This page lists each protocol doc and what it covers.
       connects for each agent of an org, the Agents tab of the org
       settings, and the default login of a new session.
   - [Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md)
+  - [Attachment uploads](../protocol/attachment-uploads.md): the upload of
+    an attached file in parts, with the gate rules and the body limit of
+    its routes.
   - [Step timing](../protocol/step-timing.md): the `Server-Timing` header of
     the preview replies and of the create reply, and what it may hold.
 - [Model gateway](../protocol/model-gateway.md): the turn token, and the
@@ -99,7 +114,11 @@ This page lists each protocol doc and what it covers.
 - [Orgs and members](../protocol/orgs-and-members.md): orgs, sections,
   roles, the first run, and the end of an org.
   - [Org rail order](../protocol/org-rail-order.md): the order of the orgs
-    in the rail that each person keeps, and how the person changes it.
+    in the rail that each person keeps, how the person changes it, what a
+    tile opens, and the workspace list of a hidden sidebar.
+- [Pricing](../protocol/pricing.md): the plans and their cloud hours, the
+  extra hours, the seller and the tax, the pricing page, and the planned
+  billing changes. Use is free until billing starts.
 - [Mac app](../protocol/desktop-app.md): the shell for macOS, its sign-in, and
   Mac commands.
   - [Mac packages and updates](../protocol/desktop-packages-and-updates.md)
@@ -110,6 +129,8 @@ This page lists each protocol doc and what it covers.
   reports.
 - [Operator section](../protocol/operator-section.md): the pages of the
   operator in the web app, their counts, and their searches.
+  - [Operator section: the Overview](../protocol/operator-overview.md): the
+    live counts of the Overview, and the long runs of cloud computers.
 - [Command palette](../protocol/command-palette.md): the key and the search
   that finds the workspaces, the actions, and the settings.
 - [Command palette: empty and unavailable states](../protocol/command-palette-states.md):
@@ -128,6 +149,8 @@ This page lists each protocol doc and what it covers.
   - [Keyboard shortcuts: the hosts](../protocol/keyboard-shortcuts-hosts.md)
   - [Keyboard shortcuts: matching a press](../protocol/keyboard-shortcuts-matching.md)
   - [Keyboard shortcuts: the settings tab](../protocol/keyboard-shortcuts-tab.md)
+- [Account stats](../protocol/account-stats.md): the Stats tab of the
+  Account page, its counts of the person signed in, and its reads.
 - [Org image](../protocol/org-image.md): the org image, its builds and its
   refreshes, and the first build of a new org.
 - [Agents and sessions](../protocol/agents-and-sessions.md): the agents and
@@ -142,9 +165,13 @@ This page lists each protocol doc and what it covers.
   - [Chat tables](../protocol/chat-tables.md): the tables of agent
     messages, their short rows and wide tables, and the table rules that
     they share with the file preview.
+  - [Chat links](../protocol/chat-links.md): the links of agent messages
+    and of sent messages, the labels of Markdown links, local addresses,
+    and links in code.
 - [GitHub tokens](../protocol/github-tokens.md): the git and CLI account
   scope of a cloud computer, the author of each commit in a sandbox, and the
-  GitHub actions of the Worker as a member.
+  GitHub actions of the Worker as a member, and the GitHub tokens that an
+  image job uses to copy the repositories.
 - [Agent instructions](../protocol/agent-instructions.md): the text that each
   agent session gets, and the sender line and the branch line of each
   message.
@@ -159,10 +186,7 @@ This page lists each protocol doc and what it covers.
 - [Website docs](../protocol/website-docs.md): the public guides of the
   marketing site, their addresses and navigation, and the rules for their
   words.
-- [Conductor comparison](../protocol/conductor-comparison.md): the public
-  page for people who move from Conductor, with the status of each
-  Conductor feature.
-- [Routines](../protocol/routines.md): routines and their schedules, with the
-  linked pages [Routine runs](../protocol/routine-runs.md),
+- [Automations](../protocol/automations.md): automations and their schedules, with the
+  linked pages [Automation runs](../protocol/automation-runs.md),
   [Pull request runs](../protocol/pull-request-runs.md), and
   [Base branches](../protocol/base-branches.md).

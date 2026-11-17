@@ -66,6 +66,14 @@ says.
     the sender of the turn.
   - A message that ends with a `Sent by:` line comes from an agent of the
     session that the line links to, through the workspace tools.
+  - The agent names a file or a folder of the repository in a chat reply
+    as `@` and its path inside the repository, such as `@src/app.ts` or
+    `@src/app.ts:42`. The chat shows each one as a file chip, as
+    [Files in answers](file-mentions.md#files-in-answers) says (answer
+    chip decision 1).
+  - In commits, pull requests, issues, and files, the agent writes paths
+    in backticks. Reason: GitHub reads `@` and a name as a mention of a
+    person or a team, and notifies them.
   - Several members can write in one session. The sender line of each
     message names its sender, with the member ID of that member.
   - The agent gives the member ID of a sender to the owner filter of the
@@ -82,7 +90,8 @@ says.
   the app hides, such as Desktop. [Desktop](workspace-tools.md#desktop)
   says why the app hides it.
 - The instructions do not ask the agent to show a screenshot in a reply.
-  Reason: the chat shows the Markdown of an image as text, as
+  Reason: the chat shows no picture in an answer. The Markdown of an image
+  of a file of the workspace shows as a link that opens the file, as
   [Chat Markdown](chat-markdown.md#formatting) says.
 - The instructions hold no secret, such as the workspace token or an agent
   login.

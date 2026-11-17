@@ -22,6 +22,13 @@ this guide.
 - `ChatArea.tsx`: the chat of the centre, with the start steps and the
   sandbox bar of the shell, the open file tabs, and the file page in place
   of the chat of the session, or the shell's own column for the chat slots.
+- `link-opening.tsx`: `WorkspaceLinks`, which gives each part of the
+  screen the link opener of its untrusted text: the pages of the app, and
+  the port previews of the workspace. `TextLinks.test.tsx` mounts the
+  whole app. It presses a local address and a link of the app in the chat
+  on desktop, and a link of the app to the address that shows. It checks
+  that an archived workspace keeps a local address as text, and presses a
+  link of the app in a Markdown file on a phone.
 - `files/files-features.tsx`: the Files part, which reads the kept files
   that the screen connects, and the file or diff page of the centre. The
   page gives its tab to `KeptScroll`, so each file and diff tab keeps its
@@ -46,6 +53,23 @@ this guide.
 - `files/files-store.ts` and `files/workspace-files.ts`: the store of one
   workspace over the transport of the app, its connection, and Copy and
   Download.
+- `files/copy-path.ts`: `useCopyPath`, Copy path of the row menu and of
+  the tab menu, which copies a real path with the clipboard of the org
+  and says its result in a toast, and `useRowMenuItems`, the items of the
+  row menu of the Files panel. `files/RowCopyPath.test.tsx` copies the path
+  of a file, a folder, and a deleted file of Changes, also from the lists
+  of a stopped sandbox, with each toast and no request.
+- `files/add-to-chat.ts`: `useAddToChat`, Add to chat of the row menu,
+  which gives the entry of a row to the kept chat, and the rules of the
+  rows and the states that offer it. `files/RowAddToChat.test.tsx` checks
+  the items of a file row, the chip at the caret of the shown session, a
+  folder chip behind a file tab, a new session, and a phone. It checks the
+  focus on desktop and none on a phone, and the item left out while the
+  chat loads, while a stopped sandbox shows its bar, on a path that the
+  list of `@` does not offer, and on a deleted file of Changes.
+  `files/TabCopyPath.test.tsx` copies the path of a diff tab, and checks
+  the tab menu of a read-only file tab, with only Copy path, and of a tab
+  whose label is not known yet, with none.
 - `files/FilesWiring.test.tsx`: mounts the whole app over the fake API. It
   opens a file beside the sessions, goes back by a session tab, and checks
   the saved view. It also checks a failed chat load, the diff of a turn on
@@ -56,7 +80,8 @@ this guide.
   API: a load, a replace, a switch of mode, a close, and an address. It
   also checks a double-click on a row and on the tab, with one history
   entry each, and a press and a keep in a suspended org.
-  `files/TemporaryTabMenu.test.tsx` checks Keep open of its tab menu.
+  `files/TemporaryTabMenu.test.tsx` checks Keep open of its tab menu, and
+  Copy path before the moves.
 - `files/StartingPages.test.tsx`: mounts the whole app over the fake API at
   a file address and at a diff address while the sandbox starts. It checks
   the sandbox panel in place of the page, with no read, and the read once
@@ -77,13 +102,16 @@ this guide.
 - `WorkspaceOwner.tsx` and `WorkspaceMacBar.tsx`: the owner picker of the
   members UI, and the bar of the 15 minutes in the Mac app.
 - `saved-view.ts`: the saved view of the kept chat, `saveView`, which
-  writes a change only once the chat read the view, and `useRunRoutine`,
-  the routine of a run workspace, which the chat reads with the view.
+  writes a change only once the chat read the view, and `useRunAutomation`,
+  the automation of a run workspace, which the chat reads with the view.
 - `tools/ToolsPart.tsx`, `tools/tool-navigation.ts`, and
   `tools/tool-address.ts`: the tools panel and its `placeholder`, which
-  takes the place of the tools inside the tabs, the tool and preview of the
-  address or the saved view, and their addresses. `useToolSelect` is the
-  select of a tool tab, which the Go to rows of the command palette share.
+  takes the place of the tools inside the tabs, the tool of the address or
+  the saved view, the preview or the port of the address, and their
+  addresses. `previewPortHref` gives the address of the Preview tool with a
+  port. `useToolSelect` is the select of a tool tab, which the Go to rows
+  of the command palette share. `tools/terminal-links.ts` gives the links
+  of the terminal: a local address opens `previewPortHref` of its port.
 - `WorkspacePaletteActions.tsx`: the actions that the screen offers to the
   command palette, as `workspaceActionIds` chooses them. Each one runs the
   control of the screen: +, the clock of the history, a tab of the right
@@ -115,9 +143,9 @@ this guide.
   the whole app over the fake API. They check the terminal socket across
   tool switches, the saved tool, the tabs and the state of a stopped
   sandbox with no tool mounted, a revoke before the Preview tool shows, a
-  preview address on a phone, one GitHub read for the bar and Checks with a
-  live event, the Checks row of a phone, an archived phone, and the key of
-  Open PR on GitHub.
+  preview address on a phone, a port address on desktop and on a phone,
+  one GitHub read for the bar and Checks with a live event, the Checks row
+  of a phone, an archived phone, and the key of Open PR on GitHub.
   `wiring-test-kit.tsx` holds their helpers.
 - `header-notices.ts`: `HeaderNotices`, the failed repairs of the name and
   the start steps. `follow` reads a stream, `dismiss` hides a notice in
@@ -153,7 +181,7 @@ this guide.
   does while the button shows, and on desktop the tooltip names the key.
   `CopyLink.test.tsx` mounts the whole app and presses the button for a
   copy and for a failed copy, and the key.
-- `RunLine.tsx`: the line under the header of a run workspace, which links to its routine and the pull request of a pull request run. `RunLine.test.tsx` checks the line and its links.
+- `RunLine.tsx`: the line under the header of a run workspace, which links to its automation and the pull request of a pull request run. `RunLine.test.tsx` checks the line and its links.
 - `SandboxNotice.tsx`, `notice-copy.ts`, and `StartingCard.tsx`: the
   states of the cloud computer, their words, and the start steps. The bar
   of an archived workspace offers Restore until its last day, then says

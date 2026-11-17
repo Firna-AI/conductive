@@ -14,8 +14,8 @@ import { DeletedOrg, OrgHome } from './list/OrgHome'
 import { HomeList, ListHeader } from './list/HomeList'
 import { Sidebar, type ListCurrent } from './list/Sidebar'
 import { NewWorkspaceScreen } from './new-workspace/NewWorkspaceScreen'
-import { RoutineScreen } from './routines/RoutineScreen'
-import { RoutinesScreen } from './routines/RoutinesScreen'
+import { AutomationScreen } from './automations/AutomationScreen'
+import { AutomationsScreen } from './automations/AutomationsScreen'
 import { OrgSettingsScreen } from './settings/OrgSettingsScreen'
 import { useShortcutOffer } from './shortcuts/shortcut-context'
 import { ActionButton } from './ui/actions'
@@ -32,6 +32,8 @@ export function RailFrame(props: {
   user: User
   current: RailCurrent
   sidebar?: ReactNode
+  /** The page is the list page of the current org. */
+  listPage?: boolean
   children: ReactNode
 }) {
   const app = useApp()
@@ -45,8 +47,10 @@ export function RailFrame(props: {
         <OrgRail
           current={props.current}
           firstRun={inFirstRun(getStarted)}
+          listPage={props.listPage}
           operator={operator}
           orgs={orgs}
+          sidebar={props.sidebar}
           user={props.user}
         />
       }
@@ -100,24 +104,24 @@ function screenOf(route: OrgRoute, org: OrgSummary, user: User): ReactNode {
       )
     case 'settings':
       return <OrgSettingsScreen org={org} tab={route.tab} user={user} />
-    case 'routines':
-      return <RoutinesScreen org={org} />
-    case 'new-routine':
+    case 'automations':
+      return <AutomationsScreen org={org} />
+    case 'new-automation':
       return (
-        <RoutineScreen
-          key={`${org.id}:new-routine`}
+        <AutomationScreen
+          key={`${org.id}:new-automation`}
           org={org}
-          routineId={null}
-          tab="routine"
+          automationId={null}
+          tab="automation"
           user={user}
         />
       )
-    case 'routine':
+    case 'automation':
       return (
-        <RoutineScreen
-          key={`${org.id}:${route.routineId}`}
+        <AutomationScreen
+          key={`${org.id}:${route.automationId}`}
           org={org}
-          routineId={route.routineId}
+          automationId={route.automationId}
           tab={route.tab}
           user={user}
         />
@@ -135,17 +139,17 @@ function listCurrent(route: OrgRoute): ListCurrent {
       return { screen: 'workspace', workspaceId: route.workspaceId }
     case 'settings':
       return { screen: 'settings' }
-    case 'routines':
-    case 'new-routine':
-    case 'routine':
-      return { screen: 'routines' }
+    case 'automations':
+    case 'new-automation':
+    case 'automation':
+      return { screen: 'automations' }
   }
 }
 
 /**
  * The screens of one org, in the desktop frame or the phone frame. Each
  * page of an org that is not deleted takes the key of Workspace list,
- * which opens the list page of the org, as its tile in the rail does.
+ * which opens the list page of the org.
  */
 export function OrgRoutes(props: { route: OrgRoute; user: User }) {
   const app = useApp()
@@ -197,6 +201,7 @@ export function OrgRoutes(props: { route: OrgRoute; user: User }) {
   return (
     <RailFrame
       current={current}
+      listPage={screen === null}
       sidebar={
         <Sidebar
           current={listCurrent(props.route)}

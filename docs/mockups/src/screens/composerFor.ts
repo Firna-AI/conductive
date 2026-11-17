@@ -19,7 +19,11 @@ import {
 import { barRunningConversations } from '../fixtures/barConversations'
 import { followUpDraft, steerDraft } from '../fixtures/conversations'
 import { unlistedChoice, unlistedLabels } from '../fixtures/endpointModels'
-import { mentionChipsDraft, mentionDrafts } from '../fixtures/fileMentions'
+import {
+  addedChipDraft,
+  mentionChipsDraft,
+  mentionDrafts,
+} from '../fixtures/fileMentions'
 import { savedCartsDraft } from '../fixtures/newWorkspaceConversations'
 import { sessionLinkDraft } from '../fixtures/sessionLinkConversations'
 import { workspaceLinkDraft } from '../fixtures/workspaceLinkConversations'
@@ -39,6 +43,7 @@ const runningConversations = new Set([
   'sent-files',
   'sent-files-listed',
   'link-sent',
+  'chat-links-sent',
   ...barRunningConversations,
   'sent-by',
   'sent-by-other',
@@ -102,13 +107,14 @@ const mentionLists: Partial<
 }
 
 /**
- * The draft of a state with chips: file chips, a workspace link, or two
- * session links.
+ * The draft of a state with chips: file chips, the chip of Add to chat, a
+ * workspace link, or two session links.
  */
 function chipDraft(composer: ComposerKey): string | undefined {
   if (composer === 'file-chips' || composer === 'file-chip-pointer') {
     return mentionChipsDraft
   }
+  if (composer === 'file-added') return addedChipDraft
   if (composer === 'session-link') return sessionLinkDraft
   const link =
     composer === 'workspace-link' || composer === 'workspace-link-pointer'
@@ -169,7 +175,8 @@ export function isRunning(state: WorkspaceState): boolean {
  * A message with a pasted link to another workspace shows the link as a
  * chip, and the draft keeps the plain link. A pasted link to a session
  * shows as a session chip in the same way. `@` opens the list of the
- * files and folders above the box, and a picked entry shows as a chip.
+ * files and folders above the box, and a picked entry shows as a chip. Add
+ * to chat of a row menu puts a chip at the end of the draft.
  *
  * Each attached file is a chip at its place in the text. While files hover
  * over the box, the desktop shows the drop state with the drop caret in the
@@ -198,6 +205,12 @@ export function composerFor(
   const drop = fresh ? undefined : dropDrafts[state.composer]
   const mention = fresh ? undefined : mentionLists[state.composer]
   const chips = fresh ? undefined : chipDraft(state.composer)
+  // After Add to chat, the field takes the focus on desktop only, so only
+  // desktop draws the caret, after the chip and its space.
+  const addedCaret =
+    !fresh && state.composer === 'file-added' && viewport === 'desktop'
+      ? addedChipDraft.length
+      : undefined
   const choice =
     state.conversation === 'model-not-served'
       ? unlistedChoice
@@ -242,7 +255,7 @@ export function composerFor(
       drop !== undefined &&
       state.composer === 'drop-over' &&
       viewport === 'desktop',
-    caret: drop?.caret,
+    caret: drop?.caret ?? addedCaret,
     pointer: !fresh && pointerStates.has(state.composer),
   }
 }

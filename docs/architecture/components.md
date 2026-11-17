@@ -5,7 +5,8 @@ its boundaries. It uses the terms of the
 [architecture doc](../architecture.md#terms). The [flows page](flows.md)
 describes how the components work together. A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says.
+says. A large-upload decision number names a decision of the change that
+lets a message carry files of up to 1 GB.
 
 ## Marketing site
 
@@ -15,7 +16,7 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 
 - A React app, built with Vite, that uses the `@firna/ui` components.
 - It lives on `app.conductive.build`, behind the GitHub sign-in.
-- It shows the orgs, the workspaces, the routines, the chat, the files, the tools, and
+- It shows the orgs, the workspaces, the automations, the chat, the files, the tools, and
   the org settings. It follows the phone and the desktop layouts of the
   [mockups](../mockups/README.md) (decision 15).
 - For an operator, it also shows the operator section at `/operator`. The
@@ -69,7 +70,7 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 
 - Two Cron Triggers run the timed work. One runs every 15 minutes for
   deleted orgs, lifecycle repairs, and pending approval emails. One runs
-  every minute for due routine runs and runs that stayed queued.
+  every minute for due automation runs and runs that stayed queued.
 
 ## ChatGPT egress Worker
 
@@ -87,7 +88,7 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 ## D1
 
 - D1 holds the records of the app: users, orgs, members, sections,
-  repositories, workspaces, routines and their runs, settings, the active preview hostnames, and the
+  repositories, workspaces, automations and their runs, settings, the active preview hostnames, and the
   records of attached files. D1 also holds app access, codes and their uses,
   the sign-up pause, the waitlist switch, and the state of approval emails.
 - The record of each workspace holds a copy of its
@@ -129,13 +130,16 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   [Access and security](../protocol/isolation.md#orgs-and-workspaces)
   says.
 - Only the Worker reads and writes the bucket. The browser sends each file
-  as raw bytes in one request, and the Worker streams it into the bucket
-  (decision 144).
-- Before the agent runner gets a message, the Worker copies the files of
-  the message into the sandbox, through an upload address that Boat gives
-  for each file.
-- [Chat and events](../protocol/messages-and-attachments.md#attachments) states how
-  long a file stays.
+  in raw parts, and the Worker streams each part into the bucket
+  (large-upload decision 1).
+- Before the agent runner gets a message, the sandbox downloads each new
+  file of the message from a route of the Worker, with a one-use token
+  (large-upload decisions 2 and 5). The Worker starts that download
+  through Boat.
+- Once the sandbox has a file, the Worker deletes its bytes from the
+  bucket, and D1 keeps its record (large-upload decision 3).
+- [Attachment transfers](../protocol/attachment-transfers.md#the-stored-copy)
+  states how long the bucket keeps a file.
 
 ## Boat
 
@@ -157,53 +161,9 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 
 ## Sandbox software
 
-Every org image holds the app's own sandbox software:
-
-- the agent runner, a Node program that runs as an always-on service
-- the terminal service, on a private port
-- the preview relay, on a private port
-- the agent tools: an MCP server and a CLI that create, list, and change
-  the workspaces of the org, start, read, message, close, and stop its
-  sessions, change its sections, open port previews, and ask for Mac
-  commands
-- a git credential helper that gets a fresh GitHub token for each git
-  operation
-- a udev rule that stops disk flushes at each boot, as
-  [Disk flushes](../protocol/workspaces-and-sandboxes.md#disk-flushes) says
-
-The Worker builds one software image for each version of this software,
-when the deploy run asks. The software image holds the base image and this
-software, and no org data. A build of an org without an org image starts
-from it, so that build installs none of this software.
-
-The agent runner runs Claude through the Claude Agent SDK, with the agent
-program that the SDK bundles at its own version. A pinned version guards
-against a change in how the agent program reads its credential and its
-model address. The runner runs Codex through the Codex SDK or the Codex
-App Server (decision 36).
-
-The runner finds the listening ports in the sandbox itself, with no Boat
-call (decision 220).
-
-The runner makes both agent programs send their model requests to the
-[model gateway](../protocol/model-gateway.md). It gives each agent program
-the turn token of its turn, and no agent login. A settings file in the
-repository can send the requests of Claude to another address, as
-[How the agents reach the gateway](../protocol/model-gateway.md#how-the-agents-reach-the-gateway)
-says. Each sandbox keeps the runner of the org image that it starts from.
-The workspace refuses a runner of an unsupported protocol version, as
-[Runner versions](../protocol/version-pins.md#runner-versions) says.
-
-The preview relay forwards each preview request to a local port of the
-sandbox. The previewed server then gets its local address as `Host`
-(decision 218).
-[Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md#port-previews)
-states the rules of the relay.
-
-The Worker gives each sandbox the commit author of its workspace owner.
-The agent runner gives each agent the commit author of the sender of its
-turn. [Commit author](../protocol/github-tokens.md#commit-author) states
-the rules.
+The [sandbox software page](sandbox-software.md) describes the app's own
+software in each sandbox: its two programs, its releases and updates, and
+the software image.
 
 ## External services
 
@@ -231,8 +191,8 @@ the rules.
   workspace that has no name, from its first message. Its use bills to the
   Cloudflare account of the app (decision 184).
 - **Boat:** the app's Boat account pays for every sandbox and every saved
-  snapshot. Use of the app is free, as
-  [Orgs and members](../protocol/orgs-and-members.md#orgs) says.
+  snapshot. Use of the app is free until billing starts, as
+  [Pricing](../protocol/pricing.md) says.
 - **Resend:** the email service sends every email of the app, from
   `mail.conductive.build`. These are the org invitations, the approval
   emails, and the feedback emails. The Worker sends each feedback email,

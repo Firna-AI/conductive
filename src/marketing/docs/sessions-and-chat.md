@@ -49,6 +49,22 @@ The workspace keeps accepted messages for the agent.
 The org must have a successful build before you create a new workspace.
 That first build is separate from the start of an existing workspace's computer.
 
+## Mention a repository file
+
+Use a mention for a file or folder already in the workspace.
+
+1. Type `@` at the start of your message, or after a space or line break.
+2. Type part of the file or folder name.
+3. Select its entry from the list.
+
+The entry becomes a chip, a small box with its name, in the message field.
+Your message gives the agent its path, such as `@src/app.ts` or `@src/lib/`.
+Use **Attach files** for a file from your own computer.
+
+You can also select **Add to chat** from a row's menu in **All files** or **Changes**.
+
+- [Copy a path or add a file to chat](/docs/files-and-changes#copy-a-path-or-add-a-file-to-chat)
+
 ## Attach files
 
 Use **Attach files** to pick files, or drop files into the message box.
@@ -62,7 +78,12 @@ A file dropped on the text goes where you drop it.
 A drop elsewhere uses the text cursor or the end.
 The text cursor then moves after the new chips.
 
-Each file can be up to 100 MB.
+A paste of a long text, with 2,000 characters or 40 lines, attaches as a text file.
+Its chip, such as **Pasted text.txt**, goes in place of the pasted text.
+Undo takes the chip off, and the pasted text does not come back.
+To keep the text in the message, paste it in smaller parts.
+
+Each file can be up to 1 GB.
 Wait for uploads to finish before you send.
 If an upload fails, use **Try again** or remove its chip.
 Removing a chip takes its file off the draft.
@@ -71,7 +92,7 @@ Undo brings back the chip and its file.
 To attach a folder, drop it into the message box.
 Your browser zips the folder before the upload, so the folder becomes one `.zip` file chip.
 The zip holds every file and folder in it, also hidden files.
-The zip can be up to 100 MB, as each file can.
+The zip can be up to 1 GB, as each file can.
 If the browser cannot read the folder, use **Attach files** in the notice to pick its files.
 
 Each chip keeps its place in the sent message.
@@ -81,11 +102,21 @@ This can start a stopped cloud computer.
 Restore an archived workspace before opening its attached files.
 
 Attached files arrive in `.context/attachments/` in the workspace's repository folder.
+Conductive keeps each attached file until the workspace's cloud computer has it and its first start succeeds.
+It then deletes its own copy.
+The file stays in the cloud computer.
+Conductive deletes an unsent file 7 days after you upload it.
+
 Each file keeps the same path when you retry its message.
-New workspaces from a new computer build also get a `.context/` folder for agent notes, screenshots, and files for other sessions.
+A later message or **Try again** uses the file already in the cloud computer.
+If a file is missing or its size changed, the turn fails and names it.
+Attach that file again in a new message.
+
+With current cloud computer software, workspaces also get a `.context/` folder for agent notes, screenshots, and files for other sessions.
 Git ignores the folder's files unless your repository already tracks them.
-After a new computer build, **All files** lists them, so you can open them there.
+**All files** lists them, so you can open them there.
 **Changes** does not list them.
+An older workspace gets this folder and its file list with an [automatic software update](/docs/cloud-computer#apply-setup-changes) at a later start or when it is idle.
 
 - [Read files and pictures](/docs/files-and-changes#read-a-file)
 
@@ -118,7 +149,9 @@ The link shows the workspace's state, number, a session icon, and the session ti
 A session without a title shows **Untitled**.
 
 Select the link to open that session.
-A closed or unknown session opens the workspace page without reopening the session.
+A closed session reopens, as it does from **Session history**, and its tab shows again for every member.
+In an archived or other read-only workspace, the session shows only in your browser and stays closed.
+An unknown session opens the workspace page.
 If that workspace is already open, its selected tab stays.
 The title of a session in another workspace updates when the chat loads.
 Session links also show as small boxes in agent answers and pasted message drafts.
@@ -199,9 +232,18 @@ The answer stays visible beside it.
 
 ## Read replies and tables
 
-Agent replies can contain headings, paragraphs, lists, code, and tables.
+Agent replies can contain headings, paragraphs, lists, code, tables, and file chips.
 A wide table scrolls sideways inside the message.
 The text around it keeps the width of the chat.
+
+Agents name the files of your repository as `@` and a path, such as `@src/app.ts`.
+Each one shows as a file chip.
+Code that holds only the path of a file of the workspace also shows as a file chip.
+Select a chip to open its file.
+A Markdown link or image to a file of the workspace shows as a link with its label.
+Select the link to open the file.
+A path can end with a line or a range of lines, such as `@src/app.ts:42` or `src/app.ts:42-50`.
+Its chip opens the file as text, with those lines in view and marked.
 To copy a code block, select **Copy code** in its top corner.
 With a mouse, the button shows when you point at the block.
 **Code copied** confirms the copy.
@@ -211,7 +253,7 @@ In the folded work of a turn, open a message line to read its table.
 
 ## Manage session tabs
 
-Use a tab's menu to rename or move it, or to copy its link.
+Use a tab's menu to rename or move it, to copy its link, or to close the tabs after it.
 Open the menu with a right click on a computer.
 You can also use **Shift+F10** while the tab has focus.
 On a phone, use a long press.
@@ -219,6 +261,8 @@ On a phone, use a long press.
 - **Rename session** changes the tab's title.
 - **Copy link** copies a link that opens the workspace with that session shown.
 - **Move left** and **Move right** move it one place.
+- **Close tabs to the right** closes every tab after it in the row.
+  If the shown tab closes, this tab shows.
 - Drag a tab to place it elsewhere in the row.
 
 File and diff tabs share the row on a computer.
@@ -231,6 +275,7 @@ Closing a tab or reloading the page forgets these places.
 
 Closing a session keeps its conversation in **Session history**.
 If its agent is working, closing asks first because it stops the turn.
+When you close several working sessions at once, one question names them all.
 Open **Session history** to reopen the conversation.
 
 After a merge, **Continue** keeps these sessions and their conversation context on the workspace's new branch.

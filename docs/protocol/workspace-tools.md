@@ -7,7 +7,11 @@ previews, and the desktop. It belongs to
 provider, the org image, and the startup script. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
+says. A chat link decision number names a decision of the change that
+makes each web address of chat text a link, as
+[Chat links](chat-links.md) says. A terminal links decision number names
+a decision of the change that makes the addresses in the terminal open.
+The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 `app/files` and `app/tools`.
 
 ## Files and changes
@@ -22,6 +26,34 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   the temporary tab, as [Temporary tabs](temporary-tabs.md) says.
 - Markdown shows rendered, with a switch to its source. Code shows with line
   numbers and syntax colours.
+- A file tab can open at a line or a range of lines, such as from a file
+  chip of an answer with a line target, as
+  [Line targets](file-mentions.md#line-targets) says (answer chip
+  decision 2). The tab then shows the text of the file, also for a
+  Markdown file. It scrolls the first line to the middle of the view, and
+  marks each line of the range with a background colour.
+- The address of such a tab names the lines in its query, as
+  `?line=42` or `?line=42-50`. So a link opened in a new browser tab
+  shows the same lines. Each new address with lines scrolls again.
+- The lines win over the scroll place that the tab keeps. A later change
+  of the file does not scroll the tab again, so the reader keeps the
+  place.
+- The saved view of the workspace keeps the tab without the lines.
+  Reason: the view follows the member in each browser tab, and another
+  tab must not jump.
+- A range that runs past the end of the file stops at its last line. A
+  first line past the end shows the top of the file and marks nothing.
+- A link of the Markdown preview has the look and the title of a
+  [link of chat text](chat-links.md) (chat link decision 1 D). A link to a
+  page of the app opens that page in the app, in the same window, as in
+  chat text. Reason: a link of the app in a file then works in the Mac app
+  too.
+- A link that names neither a page of the app nor a
+  [local address](chat-links.md#local-addresses) opens a new tab with
+  `noopener noreferrer`, as in chat text.
+- Unlike chat text, the Markdown preview also links a `mailto` address,
+  an address with a user name or a password, and an address of the app
+  that names no page.
 - The header of a file tab can copy and download the file.
 - Reading a file has a size limit of 5 MiB, or 5,242,880 bytes.
   Reason: Boat's file read stops at 5 MiB, so a file read that falls back
@@ -62,6 +94,8 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 - A new temporary tab opens at the end of the tab row of the centre column.
   A replaced one keeps its place, as
   [The tab row](agents-and-sessions.md#the-tab-row) says.
+- A right click on a row of All files or Changes opens its row menu, with
+  Add to chat and Copy path, as [File row menu](file-row-menu.md) says.
 - The agent runner watches the repository and reports both lists.
   Branch changes count uncommitted and untracked work too.
 - The report of the branch changes also gives the number of commits of
@@ -158,6 +192,17 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   workspace's repository (decision 94).
 - The default shell prompt shows only the current folder name, such as
   `mokly`, in place of the full path.
+- On desktop, a click on the Terminal tab of the tools panel moves the
+  keyboard focus to the terminal. So does Go to Terminal, from its row of
+  the command palette or its key, ⌘J on a Mac or Ctrl+J elsewhere. A
+  terminal that still connects takes the focus when it shows, unless the
+  user moved the focus in the meantime. A choice of another tool drops
+  that wait. The user asked for the tab on 16 November 2026, and chose the
+  same for Go to Terminal on the same day.
+- Reason: a click on the tab says that the user wants to type in the
+  shell, so a second click in the terminal is a wasted step. A terminal
+  that takes the focus after the user chose another field was rejected,
+  because the user's keys then go to the shell.
 - The Terminal shell of a workspace keeps running when its connection
   drops. Each new connection attaches to that shell, with its running
   commands and its current screen (decision 118).
@@ -181,15 +226,87 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   the path in its prompt was rejected, because it also moves a shell
   outside a restore. A check of the provider's path of the old view was
   rejected, because the provider does not document that path.
-- A plain drag selects text on the screen, and the user can copy it, such
-  as with Cmd+C on a Mac. This also holds while a program in the shell,
-  such as tmux, uses the mouse (decision 246).
-- The wheel, the right button, and the middle button still reach such a
-  program, so the wheel scrolls the output history. A held Cmd on a Mac,
-  or Ctrl on Windows and Linux, gives a click or a drag to the program.
+- Every byte of output reaches the screen and its output history, also
+  when a program writes faster than the screen redraws. The user chose
+  this on 13 November 2026.
+- Reason: the user copies long output, such as a build log. A terminal
+  that keeps only the lines that end on the screen was rejected, because a
+  test showed that it lost most lines of fast output. A copy of the
+  history through the clipboard writes of tmux, a separate history view,
+  and a join of screens during a drag were also rejected. The first lets a
+  sandbox process write the user's clipboard, and the others leave the
+  drag in the terminal broken or fragile.
+- A new connection first shows the output history of the shell, up to
+  2,000 lines, then its current screen. The screen keeps up to 2,000 lines
+  of history. The user chose 2,000 lines on 13 November 2026.
+- Reason: a reload shows the same history as a live screen. 5,000 and
+  10,000 lines were rejected, because each connection then sends more
+  data, which is slow on a phone.
+- A plain drag selects text on the screen and in its output history, and
+  the user can copy it, such as with Cmd+C on a Mac. A drag past the top
+  or the bottom edge scrolls the history. This also holds while a program
+  in the shell, such as vim, uses the mouse (decision 246).
+- The wheel scrolls the output history. While a program in the shell uses
+  the mouse, the wheel, the right button, and the middle button reach the
+  program. A held Cmd on a Mac, or Ctrl on Windows and Linux, gives a
+  click or a drag to the program, except a click on a link, as the
+  rules of links below say.
 - Reason: the user expects to select and copy as in the rest of the page.
   A copy through the clipboard writes of the program was rejected, because
   any process in the sandbox could then write the user's clipboard.
+- All viewers of a shell share one size, at most 500 columns and 200 rows.
+  A new connection sets it, and so does the viewer where the user last
+  typed, pasted, or resized. Each other viewer shows the shell at that
+  size: with smaller text when the size is larger than its panel, and with
+  empty space when it is smaller.
+- Reason: the output of a program fits one size, so one size keeps the
+  line breaks right for every viewer. The limit stops a program in the
+  shell from setting a size that no browser can hold.
+- Each key reaches the program in the shell. The terminal has no key
+  commands and no status line of its own, so Ctrl-b reaches the shell. The
+  user accepted this on 13 November 2026.
+- Reason: terminal tabs open more shells, so the shell needs no window
+  keys of its own.
+- A paste reaches a program as a paste, also after a reconnect, so a
+  program that marks pastes, such as vim or Bash, does not run the pasted
+  text as keys.
+- A workspace with older terminal software shows only its visible screen
+  in the history until an automatic software update applies, as
+  [Software updates](sandbox-software.md#updates) says.
+- Each `http` and `https` address in the output is a link. A held Cmd on
+  a Mac, or Ctrl on Windows and Linux, and a click open it (terminal links
+  decision 2 A). Such a click does not reach a program that uses the
+  mouse.
+- Reason: a plain click starts a selection, so a plain click that opens a
+  link was rejected. A rule that gives the click to a program that uses
+  the mouse was rejected, because the same click would then act in two
+  ways.
+- A local address opens the Preview tool at its port, as
+  [Port previews](port-previews.md) says. Its host is `localhost`,
+  `127.0.0.1`, `[::1]`, or `0.0.0.0`. Every other link opens in a new tab
+  of the browser, or in the default browser from the Mac app (terminal
+  links decision 1 B).
+- Reason: a local address in the terminal names the cloud computer, not
+  the user's computer. A new tab with the preview was rejected, because
+  the Preview tool keeps the user in the workspace.
+- A link under the mouse pointer shows an underline and a hint with the
+  key, such as "⌘-click to open".
+- A touch on a link opens it with no key, on each screen size. A mouse
+  always needs the key (terminal links decision 3 D).
+- Reason: a touch screen has no Cmd or Ctrl key. A rule by screen size
+  was rejected, because a narrow desktop window has a mouse, and a tablet
+  has the desktop layout. A menu, a long press, and Ctrl of the key row
+  then a tap were rejected, because each needs a second step or is hard
+  to find.
+- A program can print a link with a label, an OSC 8 link. The hint of
+  such a link also names the host of its real address, such as
+  "⌘-click to open reports.storefront.dev" (terminal links decision 4 B).
+- Reason: a label can hide where its link leads, and code in the sandbox
+  is untrusted. A dialog before each such link was rejected, because it
+  adds a step. A rule that such links open nothing was rejected, because
+  tools such as `ls --hyperlink` lose their links.
+- An address with a user name or a password, and an address with another
+  scheme, open nothing and show no hint.
 - When the connection ends, the user can still select and copy the text
   that stays on the screen (decision 245).
 - Reason: the screen keeps its output so that the user can still use it,
@@ -199,6 +316,21 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 - A stop of the sandbox ends the shell and its commands, as
   [Stop and resume](workspace-life.md#stop-and-resume) says. The first connection after the
   resume opens a new shell.
+- The commands that the user typed in the shell stay in its command
+  history after a stop. The new shell after the resume finds them, such as
+  with the Up arrow or Ctrl-R (terminal history decision 1). Terminal
+  history decisions are the decisions of the change that added this rule.
+- Each command goes into the history file when it ends, before the next
+  prompt. A command that still runs at the stop, such as a dev server, does
+  not go in. An empty or unset `HISTFILE` keeps the history out of the
+  file.
+- Reason: Bash writes its history file only when the shell exits. The
+  shell exits only during the shutdown at a stop, and a test on
+  16 November 2026 found no history file after the resume. The append
+  writes each command while the sandbox runs. A
+  shell that also reads the new commands of the other shells at each
+  prompt was rejected, because it changes the order of the Up arrow while
+  the user works.
 - On a phone, a row of keys adds the keys that a phone keyboard lacks.
 
 ## Port previews

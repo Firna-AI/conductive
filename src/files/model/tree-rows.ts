@@ -1,5 +1,6 @@
-import type { FileEntry } from '../../shared/files'
+import type { FileEntry } from '../../shared/generated/FileEntry'
 import { splitPath } from '../navigation'
+import { hidesSecret } from './file-labels'
 import type { FileTree } from './tree-model'
 
 /** One visible row of the All files tree. */
@@ -8,12 +9,21 @@ export interface TreeRow {
   depth: number
   /** A folder shows the entries inside it. Always false for a file. */
   expanded: boolean
+  /**
+   * The label of the row hides a secret value, as `hidesSecret` says, so no
+   * item of its menu takes its real path. A folder that the tree lacks has
+   * no label of its own: it hides one when the label of the entry that
+   * names it hides one.
+   */
+  hidesSecret: boolean
 }
 
 interface TreeIndex {
   children: ReadonlyMap<string, readonly FileEntry[]>
   /** Folders that hold an added or changed entry at any depth. */
   changedFolders: ReadonlySet<string>
+  /** Each folder that the tree lacks, with the entry that names it. */
+  namedBy: ReadonlyMap<string, FileEntry>
 }
 
 const collator = new Intl.Collator('en', { numeric: true, sensitivity: 'base' })
@@ -55,6 +65,7 @@ function indexOf(tree: FileTree): TreeIndex {
   const children = new Map<string, FileEntry[]>()
   const known = new Set(tree.entries.keys())
   const changedFolders = new Set<string>()
+  const namedBy = new Map<string, FileEntry>()
   const add = (entry: FileEntry) => {
     const parent = parentOf(entry.path)
     const list = children.get(parent)
@@ -67,6 +78,7 @@ function indexOf(tree: FileTree): TreeIndex {
     for (let folder = parentOf(entry.path); folder !== '';) {
       if (known.has(folder)) break
       known.add(folder)
+      namedBy.set(folder, entry)
       const name = folderName(folder, entry)
       add({ path: folder, name, kind: 'directory', change: null })
       folder = parentOf(folder)
@@ -79,7 +91,7 @@ function indexOf(tree: FileTree): TreeIndex {
     }
   }
   for (const list of children.values()) list.sort(compareEntries)
-  const index = { children, changedFolders }
+  const index = { children, changedFolders, namedBy }
   indexes.set(tree, index)
   return index
 }
@@ -112,7 +124,8 @@ export function treeRows(
   const visit = (parent: string, depth: number) => {
     for (const entry of index.children.get(parent) ?? []) {
       const expanded = entry.kind === 'directory' && isOpen(entry.path)
-      rows.push({ entry, depth, expanded })
+      const named = index.namedBy.get(entry.path) ?? entry
+      rows.push({ entry, depth, expanded, hidesSecret: hidesSecret(named) })
       if (expanded) visit(entry.path, depth + 1)
     }
   }

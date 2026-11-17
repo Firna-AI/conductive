@@ -5,9 +5,9 @@ how a screen is built, and links to the other pages.
 
 ## Orgs and members
 
-The product is free, as the user decided on 5 November 2026 in decision
-45. On 13 November 2026, the user chose not to release it commercially. So
-the screens show no plans, no billing, no seats, and no plan limits.
+The product is free for now, as the user decided on 5 November 2026 in
+decision 45. So the screens show no plans, no billing, no seats, and no
+plan limits.
 
 - An admin invites a person by email, from decision 78. An open invite shows
   its email, and a member row shows the GitHub login. The roles are admin and
@@ -156,7 +156,9 @@ the screens show no plans, no billing, no seats, and no plan limits.
   API key, ChatGPT plan, and Own endpoint for Codex. For a token or a key, the words above the field
   say what to paste and where to make it.
 - [Own endpoint login mockups](own-endpoint-logins.md) describes the fields,
-  connected host, model list, and address refusal for both agents.
+  connected host, model list, and address refusal for both agents. It also
+  describes the note after a Codex save that added `/v1`, and the warning
+  after a model list read that failed.
 - An admin connects an org login for each agent of an org, an API key or
   an own endpoint, on the Agents tab of the org settings, after Cloud
   computer, as `app/org-settings/agents` shows. This comes from decision
@@ -172,7 +174,9 @@ the screens show no plans, no billing, no seats, and no plan limits.
   buttons, as `app/org-settings/agents/form/not-saved` shows.
   `OrgAgents.tsx` in `src/components/settings/` draws the tab, with
   `AgentConnectForm`, `EndpointFields`, `LoginEndpoint`, and
-  `EndpointModels` of the account.
+  `EndpointModels` of the account. `EndpointRefresh` of
+  `EndpointDetails.tsx` gives the model list its Refresh, as on the
+  account.
 - Under each org login, the switch "Use for every member" of decision 7 B
   starts off. While it is off, the org login serves each member with no
   usable login of their own (decisions 4 and 6 A). While it is on, each new
@@ -289,13 +293,13 @@ the screens show no plans, no billing, no seats, and no plan limits.
   In a session on the login of another member or on the org login, a
   message uses that login while it serves the sender, so no agent notice
   shows.
-- A routine run takes the default login of the owner of its routine: the
-  own login, or the org login (decision 5 A of the org logins plan). It
-  keeps the GitHub access of the owner. The line under the prompt names
-  both, such as "Runs use Acme's Claude login and your GitHub access.", as
-  `app/routines/routine/new/org-login` shows. The model picker of the form
-  follows the model list of the org endpoint (decision 3 A), as its
-  `org-models` variant shows.
+- An automation run takes the default login of the owner of its
+  automation: the own login, or the org login (decision 5 A of the org
+  logins plan). It keeps the GitHub access of the owner. The line under the
+  prompt names both, such as "Runs use Acme's Claude login and your GitHub
+  access.", as `app/automations/automation/new/org-login` shows. The model
+  picker of the form follows the model list of the org endpoint (decision
+  3 A), as its `org-models` variant shows.
 
 ## The waitlist
 

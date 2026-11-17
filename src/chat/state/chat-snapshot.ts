@@ -1,16 +1,20 @@
+import type { AgentModel } from '../../shared/generated/AgentModel'
+import type { Session } from '../../shared/generated/Session'
+import type { Workspace } from '../../shared/generated/Workspace'
+import type { UserMessage } from '../../shared/generated/UserMessage'
+import type { WorkspaceStart } from '../../shared/generated/WorkspaceStart'
 import { TabPlaces } from '../../app/tab-places'
 import type { ChatPlace } from '../components/chat-place'
+import type { MentionTarget } from '../mentions/MentionsContext'
 import type { DraftFile } from '../../app/draft-files'
-import type { AgentModel } from '../../shared/agents'
-import type { UserMessage } from '../../shared/messages'
-import type { Session } from '../../shared/sessions'
+
 import type { WorkspaceView } from '../../shared/workspace-view'
-import type { Workspace, WorkspaceStart } from '../../shared/workspaces'
+
 import type {
   AccountSummary,
   MemberSummary,
   OrgSummary,
-  RunRoutine,
+  RunAutomation,
 } from '../api/read-responses'
 import { initialDevices, type DeviceSnapshot } from '../device/device-snapshot'
 import {
@@ -73,7 +77,8 @@ export interface SessionState {
 export type Overlay =
   | { kind: 'none' }
   | { kind: 'history' }
-  | { kind: 'close'; sessionId: string }
+  /** The question before the tabs of running sessions close. */
+  | { kind: 'close'; sessionIds: readonly string[] }
   | { kind: 'rename'; sessionId: string }
 
 /** A failed action, shown above the composer until the user dismisses it. */
@@ -82,6 +87,16 @@ export interface ChatNotice {
   sessionId: string | null
   title: string
   message: string
+}
+
+/**
+ * A chip that Add to chat asks the message field of a session for, as
+ * `addToChat` says. The field of that session takes it once, when it shows.
+ * Each request is a new object.
+ */
+export interface MentionRequest {
+  sessionId: string
+  target: MentionTarget
 }
 
 type LoadState =
@@ -117,14 +132,22 @@ export interface ChatSnapshot {
   archiveTabs: readonly string[] | null
   view: WorkspaceView | null
   /**
-   * The routine whose run made the workspace, from the read of the view.
+   * The automation whose run made the workspace, from the read of the view.
    * Null for a workspace that a person created, and until the view reads.
    */
-  routine: RunRoutine | null
+  automation: RunAutomation | null
+  /**
+   * The folder of the workspace repository in the cloud computer, from the
+   * read of the view. The chat reads a path under it as a file of the tree.
+   * Null until the view reads, and when the reply gives no folder.
+   */
+  repositoryFolder: string | null
   activeSessionId: string | null
   sessionStates: Readonly<Record<string, SessionState>>
   overlay: Overlay
   notice: ChatNotice | null
+  /** The chip that waits for the message field of its session, if any. */
+  mentionRequest: MentionRequest | null
   resuming: boolean
   /** The Mac commands of the workspace, as `device/device-snapshot.ts` says. */
   devices: DeviceSnapshot
@@ -167,11 +190,13 @@ export const initialSnapshot: ChatSnapshot = {
   history: [],
   archiveTabs: null,
   view: null,
-  routine: null,
+  automation: null,
+  repositoryFolder: null,
   activeSessionId: null,
   sessionStates: {},
   overlay: { kind: 'none' },
   notice: null,
+  mentionRequest: null,
   resuming: false,
   devices: initialDevices,
 }

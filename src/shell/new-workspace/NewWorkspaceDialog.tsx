@@ -189,6 +189,7 @@ function DialogCard(props: {
                 label="Message"
                 lines={7}
                 maxLines={14}
+                onAttach={(files) => model.attach(files)}
                 onChangeText={(text) => model.setText(text)}
                 onEnter={sendKey}
                 owner={model}

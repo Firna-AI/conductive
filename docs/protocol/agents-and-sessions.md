@@ -7,6 +7,11 @@ their links, and the names of workspaces and sessions. It belongs to
 [Chat and events](chat-and-events.md). The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
+says. A title image decision number names a decision of the change that
+leaves the names of attached images out of titles, as
+[Messages and attachments](messages-and-attachments.md) says. A file row
+menu decision number names a decision of the change that adds the menu of
+the rows of All files and Changes, as [File row menu](file-row-menu.md)
 says. An org login decision number names a decision of the change that
 adds the org logins, as [Tokens and secrets](tokens-and-secrets.md) says.
 
@@ -40,9 +45,9 @@ adds the org logins, as [Tokens and secrets](tokens-and-secrets.md) says.
     [Messages](messages-and-attachments.md#messages) says
   - through a call of the agent tools in a turn that the member sent, as
     [The sender](session-calls.md#the-sender) says
-- A routine run starts the first session of its workspace in the name of
-  the routine owner, as
-  [A run acts as its owner](routine-runs.md#a-run-acts-as-its-owner) says.
+- An automation run starts the first session of its workspace in the name of
+  the automation owner, as
+  [A run acts as its owner](automation-runs.md#a-run-acts-as-its-owner) says.
 - The session record names its starter in `startedBy`, and its login in
   `login`: a member or the org. A stored session with messages but no
   login runs on the personal login of its starter. A session without a
@@ -120,9 +125,15 @@ adds the org logins, as [Tokens and secrets](tokens-and-secrets.md) says.
   no title. A message whose text holds only the mentions of its own
   attached files counts as a message with no text.
 - In a title from a message, each mention of one of its attached files
-  becomes the name of the file (decision 262 D). Reason: a path makes a
+  that is not an image becomes the name of the file (decision 262 D). Reason: a path makes a
   poor title. A title with the copy path of each file was rejected for
   that reason.
+- In a title from a message, each mention of an attached image goes out,
+  with no name (title image decision 2 A). The workspace title follows the
+  same rule, as [Messages](messages-and-attachments.md#messages) says.
+  Reason: image names such as "Screenshot 2026-11-16 at 10.23.45.png" do
+  not name the task. Different rules for the two titles were rejected,
+  because an image name is just as poor in a session title.
 - In a title from a message, each run of spaces becomes one space. The app
   removes one final full stop, but it keeps an ellipsis.
 - A title from a message holds at most 60 characters. The limit counts
@@ -142,6 +153,15 @@ adds the org logins, as [Tokens and secrets](tokens-and-secrets.md) says.
   the session history (decision 31).
 - Closing the tab of a session whose turn runs asks first. After the
   confirm, the app stops the turn and moves the session to the history.
+- A close shows at once. The tab moves to the session history before the
+  server confirms the close. When the close fails, the tab returns to its
+  place in the row, and a notice says that the session did not close. The
+  user asked for this on 16 November 2026.
+- One close of several tabs, such as Close tabs to the right, asks one
+  question for all the running sessions among them. The question names
+  each of these sessions. The other sessions close at once. Cancel keeps
+  each running session open. The user asked for Close tabs to the right on
+  16 November 2026.
 - Reason: no agent runs where the user cannot see it, and no history gets
   lost. A close that only hides a running session was rejected for the
   first reason. A close that deletes the history was rejected for the
@@ -203,20 +223,39 @@ adds the org logins, as [Tokens and secrets](tokens-and-secrets.md) says.
   menu. This holds on every system.
 - On a phone, a long press that ends without a move opens the tab menu as
   a sheet.
-- The tab menu of a session tab holds three groups, with a line between
+- The tab menu of a session tab holds four groups, with a line between
   them: Rename session, then Copy link, Copy concise transcript, and Copy
-  full transcript, then Move left and Move right. The tab menu of a kept
-  file or diff tab holds Move left and Move right.
+  full transcript, then Move left and Move right, then Close tabs to the
+  right. The tab menu of a kept file or diff tab holds three groups, with
+  a line between them: Copy path, then Move left and Move right, then
+  Close tabs to the right.
 - Copy link copies the link of the session of its tab, as
   [Session links](#session-links) says. The user added it on 12 November
   2026.
-- The tab menu of the temporary tab holds two groups, with a line between
-  them: Keep open, then Move left and Move right (decision 286 B).
-- Reason: the tab menu groups its items by kind (decision 188).
+- The tab menu of the temporary tab holds four groups, with a line between
+  them: Keep open (decision 286 B), then Copy path, then Move left and
+  Move right, then Close tabs to the right.
+- Reason: the tab menu groups its items by kind (decision 188). Copy path
+  comes after Keep open and before the moves, as the copy items of a
+  session tab come after Rename session and before the moves.
 - [Session transcripts](session-transcripts.md) states what each copy item
   copies (decisions 213 and 215).
+- [Copy path](file-row-menu.md#copy-path) states what the Copy path item
+  copies, and the tabs that leave it out (file row menu decision 3 B).
+- Reason: a member can copy the path of the open file from its tab, with
+  no need to find its row. Copy path only on the rows, a Copy path button
+  in the header of the file, and a Copy path command in the command palette
+  were not chosen.
 - Move left and Move right move the tab one place in the row. On the first
   tab, Move left is off. On the last tab, Move right is off.
+- Close tabs to the right closes each tab after the tab in the row, of
+  each kind, as the same item of a browser does. On the last tab, it is
+  off. The user asked for it on 16 November 2026.
+- When the shown tab is among the closed tabs, the tab of the menu shows
+  first, as in a browser. Each session tab closes as its Close does, so
+  its session moves to the history for every member.
+- On a phone, the row shows only the session tabs, so Close tabs to the
+  right closes only the session tabs after the tab. Each file tab stays.
 - After a move from the tab menu, a screen reader user hears the name of
   the tab and its new place, such as "Address autocomplete moves to place
   2 of 4". The focus then goes back to the tab.
@@ -247,15 +286,19 @@ adds the org logins, as [Tokens and secrets](tokens-and-secrets.md) says.
 - The tab menu of a read-only workspace leaves out each item that changes
   the workspace, and keeps each item that changes nothing (decision 214).
   So the tab menu of a session tab there holds only Copy link, Copy
-  concise transcript, and Copy full transcript. A file or diff tab there
-  opens no tab menu.
+  concise transcript, and Copy full transcript. It leaves out Close tabs to
+  the right. The tab menu of a file or diff tab there holds only Copy path
+  (file row menu decision 3 B).
+- A file or diff tab there without Copy path, such as a tab whose label
+  hides a secret value, has no item. So it opens no tab menu, and the
+  browser shows its own.
 - Reason: a read-only workspace accepts no change, but a member can still
   copy there, as
   [Read-only workspaces](session-transcripts.md#read-only-workspaces)
   says. The rule also covers each item that the menu gets later.
-- So a read-only workspace also leaves out Keep open. The temporary tab
-  there opens no tab menu either, and only a double-click keeps a tab
-  (decision 286 B).
+- So a read-only workspace also leaves out Keep open. The tab menu of the
+  temporary tab there holds only Copy path, and only a double-click keeps
+  a tab (decision 286 B).
 - The tab menu opens there in the same ways as in other workspaces. A long
   press on a phone opens it, but lifts no tab.
 - An item that the place of a tab rules out, such as Move left on the
@@ -276,11 +319,20 @@ adds the org logins, as [Tokens and secrets](tokens-and-secrets.md) says.
 - A session link opens its workspace and shows that session. The address
   then becomes the link of the workspace. Reason: the session tabs keep
   their behaviour, and the address does not follow the shown tab.
-- A link to a closed or an unknown session opens the page of its
-  workspace, as a workspace link does. When that workspace already shows,
-  its shown tab stays. The link reopens no session.
-- Reason: the members share the sessions of a workspace, so a reopen would
-  show the tab again to every member.
+- A link to a closed session reopens that session and shows it, as an
+  entry of the session history does. In a read-only workspace, the link
+  shows the stored chat of the session as a tab in this browser only, and
+  reopens nothing. The user chose this on 13 November 2026.
+- Reason: a press on a session chip must show its session, and agents
+  close the sessions that they start when the work ends. A link that
+  opens only the workspace of a closed session was rejected, because the
+  press then shows nothing. A reopen only for a press on a chip was
+  rejected, so that each session link works the same way.
+- A reopen shows the tab again to every member, because the members share
+  the sessions of a workspace.
+- A link to an unknown session opens the page of its workspace, as a
+  workspace link does. When that workspace already shows, its shown tab
+  stays.
 - A session link in chat text shows as a session chip, as
   [Session chips](workspace-links.md#session-chips) says.
 - The agent tools give the link of each session that they name, as

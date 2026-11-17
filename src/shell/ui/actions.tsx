@@ -49,7 +49,7 @@ function triggerProps(props: MenuTrigger) {
 
 /**
  * A compact labelled button: the Firna button in the dense size of the
- * design, with the lighter label of the mockups. On a phone it is 44px high.
+ * design, with the lighter label of the mockups. On a phone it is 40px high.
  *
  * With `keepFocus`, a button that turns off while it has the focus keeps
  * it, as Save does after a save: a browser takes the focus from a natively
@@ -125,7 +125,7 @@ export function ActionButton(
 /**
  * A compact icon-only button with a muted icon, for bars and toolbars. A
  * quiet button has a fainter, smaller icon, for actions on every row. On a
- * phone its box is 44px. A button that runs a command of the keys names
+ * phone its box is 40px. A button that runs a command of the keys names
  * the key of that command in its tooltip and to a screen reader.
  */
 export function IconButton(

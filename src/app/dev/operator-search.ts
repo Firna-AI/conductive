@@ -13,6 +13,7 @@ import {
 } from '../../test-support/fixtures/operator-access'
 import {
   orgRow,
+  sampleComputerId,
   sampleOrgDetail,
   sampleUserDetail,
   userRow,
@@ -43,7 +44,8 @@ function hostnameOf(search: string): string | null {
  */
 function matchOf(org: SampleOrg, search: string): OperatorOrgMatch | null {
   if (org.id === search) return 'org-id'
-  if (org.computers.includes(search)) return 'cloud-computer-id'
+  if (org.computers.includes(search) || sampleComputerId(org) === search)
+    return 'cloud-computer-id'
   const hostname = hostnameOf(search)
   if (hostname && org.previews.includes(hostname)) return 'preview-address'
   return null

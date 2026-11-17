@@ -31,7 +31,8 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         verified email addresses of your GitHub account, and which one is
         primary. An org invitation reaches you through one of them. The
         approval email goes to the primary one. The team uses the same
-        address to reply to your feedback.`,
+        address to reply to your feedback. The operator sees the primary
+        one on the page of your account.`,
       text`Your GitHub token: the sign-in gives ${productName} a GitHub
         token for your account. ${productName} stores it encrypted, for
         every account, also while you wait for app access. It uses the
@@ -54,6 +55,10 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         waitlist off. ${productName} also keeps the time and operator of
         the last change to the waitlist setting. These records let the
         operator trace misuse back to a code or a person.`,
+      text`Your last activity: ${productName} keeps one time for your
+        account. It is the time when you last created a workspace or sent a
+        chat message in the app. It keeps no history. The operator sees
+        this time, to know which accounts are still in use.`,
       text`Invite codes: each account with app access has an invite code
         with 5 invites. ${productName} keeps who used each code, and when.
         You see how many of your invites are left, but not who used them.
@@ -79,20 +84,20 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         second cookie protects the GitHub sign-in while it runs. A third
         cookie keeps the screen that you left for GitHub, for up to 1 hour.`,
       text`Your orgs: the orgs, members, roles, invites, sections,
-        repositories, workspaces, routines, scripts, and settings that you and your
+        repositories, workspaces, automations, scripts, and settings that you and your
         team make. Each invite includes the invited email address. They
         run the service.`,
-      text`Routines: the prompt, the triggers, and the author filters of
-        each routine, with the GitHub accounts that a filter names. Each
+      text`Automations: the prompt, the triggers, and the author filters of
+        each automation, with the GitHub accounts that a filter names. Each
         run keeps its owner, its agent, its trigger, its state, and its pull
         request. A skipped
         run keeps the GitHub login of the account outside the org whose
-        event it skipped. They run the routines and show their runs.`,
+        event it skipped. They run the automations and show their runs.`,
       text`Keys and logins: the env var values and agent logins of each
         org, and your personal agent logins. An own endpoint login holds the
         endpoint address and its key. ${productName} stores these values encrypted. It
-        uses a login only for the turns of sessions on it, including routine
-        runs. The one
+        uses a login only for the turns of sessions on it, including
+        automation runs. The one
         exception is that ${productName} reads an own endpoint's model list
         with its key, at the times in Endpoint models below.
         A personal login serves the sessions that its owner starts on it.
@@ -108,11 +113,14 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         with its key when you or an admin save the login or select Refresh. For a
         personal login, you use Refresh on your account page. For an org
         login, an admin uses Refresh on the Agents tab of the org settings.
-        It also reads the list in the background when a turn on that
-        login starts, at most once in 10 minutes. It stores the model IDs
-        from the last list it could read to set the models in your pickers.
-        For an org endpoint, that list sets the pickers of every member on
-        the org login.`,
+        When you or an admin save a Codex endpoint whose address gives no
+        model list, it can read the list a second time, at that address with
+        /v1 added. When only that read gives a list, it saves the address
+        with /v1 added. It also reads the list in the background when a turn
+        on that login starts, at most once in 10 minutes. It stores the model
+        IDs from the last list it could read to set the models in your
+        pickers. For an org endpoint, that list sets the pickers of every
+        member on the org login.`,
       text`Own endpoints: ${productName} sends each model request of a turn
         on an own endpoint login to that endpoint, with its key. The endpoint
         gets the messages, the files, and the command results of each turn
@@ -131,10 +139,12 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         workspace. With the chat history, it keeps each list of the
         servers that run in the cloud computer of a workspace: the port,
         a short program name, and the folder of each server. The files
-        that you attach to a message stay in the
-        storage of ${productName} at Cloudflare. When the agent starts
-        work on the message, ${productName} copies them to the cloud
-        computer of the workspace.`,
+        that you attach to a message stay in the storage of
+        ${productName} at Cloudflare until the agent starts work on the
+        message. The cloud computer of the workspace then downloads them.
+        When the cloud computer has a file and its first start succeeded,
+        ${productName} deletes its own copy. The file stays in the cloud
+        computer.`,
       text`Mac commands: ${productName} keeps each request and its result.
         They record the command, its folder, its reason, its time limit,
         and the output. A request also names the Mac that gets it.
@@ -157,7 +167,7 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         of them to its logs. ${productName} still keeps the chat history and
         the Mac command records above.`,
       text`GitHub events: the state of the pull requests and the checks
-        of your branches, which GitHub sends to ${productName}. A routine
+        of your branches, which GitHub sends to ${productName}. An automation
         also uses the GitHub accounts that open, push to, or merge a pull
         request, to decide whether the event starts a run.`,
       text`Feedback: your message and any screenshots help the team answer

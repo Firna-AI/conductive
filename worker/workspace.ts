@@ -17,13 +17,14 @@ import type { ImageCoordinatorState } from './lifecycle/image-timers'
 import type { GitHubRefresh, GitHubWorkspace } from './github/contracts'
 import { handleGitHubRead } from './github/app-handler'
 import { hostSurface } from './hosts'
-import { readWorkspace, workspaceRecord } from './lifecycle/workspace-data'
+import { workspaceUpdate } from './chat/workspace-update'
 import { featureResult } from './features/result'
 import { archiveWorkspace } from './lifecycle/archive-workspace'
 import { continueBusy } from './lifecycle/continue-admission'
 import type { WorkspaceContinue } from './lifecycle/continue'
 import { createWorkspaceContinue } from './lifecycle/continue-composition'
 import { pendingContinue } from './lifecycle/continue-types'
+import { changeRestart, type RestartStep } from './lifecycle/software-restart'
 import type { User } from '../src/shared/api'
 import type { ContinueWorkspaceRequest } from '../src/shared/workspaces'
 import { resumeCreationCheckpoint } from './members/creation-checkpoint'
@@ -181,13 +182,10 @@ export class Workspace extends AgentSessionWorkspace {
   ): Promise<void> {
     if (!this.env.WORKSPACES.idFromName(workspaceId).equals(this.ctx.id)) return
     await this.chat.runLifecycle(async () => {
-      const workspace = workspaceRecord(
-        await readWorkspace(this.env.DB, orgId, workspaceId),
+      await this.chat.commitWorkspaceEvent(
+        workspaceId,
+        await workspaceUpdate(this.env.DB, orgId, workspaceId),
       )
-      await this.chat.commitWorkspaceEvent(workspaceId, {
-        type: 'workspace.updated',
-        workspace,
-      })
     })
   }
 
@@ -251,6 +249,14 @@ export class Workspace extends AgentSessionWorkspace {
     return featureResult(() =>
       this.run(() =>
         this.controller.restoreWorkspace(orgId, workspaceId, userId, origin),
+      ),
+    )
+  }
+
+  softwareRestart(workspaceId: string, step: RestartStep) {
+    return featureResult(() =>
+      this.run(() =>
+        changeRestart(this.integration, workspaceId, step, this.now()),
       ),
     )
   }

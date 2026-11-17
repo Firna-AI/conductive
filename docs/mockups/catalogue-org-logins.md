@@ -61,7 +61,7 @@ group of the settings of Acme.
   has the dialog of Cal while the switch is on.
 - `app/chat/endpoint-models/org` has the open picker of Priya in a session
   on the org login, without Fable 5.1.
-- `app/routines/routine/new/org-login` has a new routine of Priya, whose
-  runs use the org login: "Runs use Acme's Claude login and your GitHub
-  access." Its `org-models` variant has the open model picker without
-  Fable 5.1.
+- `app/automations/automation/new/org-login` has a new automation of Priya,
+  whose runs use the org login: "Runs use Acme's Claude login and your
+  GitHub access." Its `org-models` variant has the open model picker
+  without Fable 5.1.

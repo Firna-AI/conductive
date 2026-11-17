@@ -1,7 +1,7 @@
 {
   "name": "remote-code",
   "private": true,
-  "version": "0.17.0",
+  "version": "0.22.0",
   "type": "module",
   "scripts": {
     "dev": "npm run site:build && vite",
@@ -29,13 +29,14 @@
     "desktop:typecheck": "npm --prefix desktop run typecheck",
     "desktop:lint": "npm --prefix desktop run lint",
     "desktop:format:check": "npm --prefix desktop run format:check",
-    "runner:typecheck": "npm --prefix runner run typecheck",
-    "runner:test": "npm --prefix runner run test"
+    "runner:typecheck": "npm --prefix runner/sdk-helper run typecheck",
+    "runner:test": "npm --prefix runner/sdk-helper test"
   },
   "dependencies": {
     "@firna/ui": "4.0.0",
     "@lexical/react": "0.53.0",
     "@xterm/addon-fit": "^0.11.0",
+    "@xterm/addon-web-links": "^0.12.0",
     "@xterm/xterm": "^6.0.0",
     "croner": "^11.0.0",
     "fflate": "^0.8.3",
@@ -55,6 +56,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.2.1",
+    "@xterm/headless": "^6.0.0",
     "astro": "^7.4.7",
     "eslint": "^10.14.0",
     "eslint-plugin-astro": "^3.2.1",
