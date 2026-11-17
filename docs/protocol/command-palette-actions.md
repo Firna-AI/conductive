@@ -125,11 +125,12 @@ actions at `app/command-palette/actions`, and the settings at
 - Send feedback shows on each page where the palette opens, also without
   an org and in a suspended org. Reason: feedback changes no org.
 - Send feedback is not a link, because the Feedback dialog has no address.
-- Send feedback is an exception to three rules of the palette:
-  - Each other action does what the same control does in the app. The app
-    has no other control for feedback.
-  - Each other action shows only where the current page offers it. The
-    app offers Send feedback on each page.
+- Send feedback is an exception to three rules of the palette. The first
+  two are rules of [Actions](#actions):
+  - An action does what the same control does in the app. The app has no
+    other control for feedback.
+  - An action shows only where the current page offers it. The app offers
+    Send feedback on each page.
   - Without an org, the palette offers only Create org, Send feedback, and
     the Account settings, as
     [The org of the palette](command-palette.md#the-org-of-the-palette)
