@@ -10,12 +10,15 @@ import {
   FAKE_IDS,
   FAKE_TIME,
 } from '../../test-support/fixtures/core'
-import { MOUNTED_TEST_TIMEOUT, press } from '../../test-support/mount'
+import { mount, MOUNTED_TEST_TIMEOUT, press } from '../../test-support/mount'
 import {
   accountWithDefaults,
   orgListWithout,
 } from '../../app/default-logins.test-support'
 import { loginPrivate, withSessions } from '../state/linked-kit'
+import { newSessionRecord } from '../state/test-kit'
+import { now, renderChat } from './render-kit'
+import { SessionChat } from './SessionChat'
 import { first, mountChat, second } from './tab-drag-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
@@ -54,14 +57,19 @@ function serverWith(role: OrgRole): FakeApiServer {
   return server
 }
 
-/** The models that the picker of the composer offers, in their order. */
-async function offeredModels(server: FakeApiServer): Promise<string[]> {
-  await mountChat({ server, tabs: [first, second], viewport: 'desktop' })
+/** The models of the open picker of the composer, in their order. */
+async function pickedModels(): Promise<string[]> {
   await press(byRole('button', 'Model and effort: Opus 5.5, High'))
   const menu = byRole('menu', 'Model and effort')
   return Array.from(menu.querySelectorAll('[role="menuitemradio"]')).flatMap(
     (item) => labels.filter((label) => item.textContent?.startsWith(label)),
   )
+}
+
+/** The models that the picker of the composer offers, in their order. */
+async function offeredModels(server: FakeApiServer): Promise<string[]> {
+  await mountChat({ server, tabs: [first, second], viewport: 'desktop' })
+  return pickedModels()
 }
 
 describe('the models of the composer of a session', () => {
@@ -98,6 +106,48 @@ describe('the models of the composer of a session', () => {
       'GPT-6.1 Sol',
       'GPT-6 Astra',
     ])
+  })
+
+  it('follow the default login that the record names in an empty session of another member, and the label names it: the org login, with the last list of the org endpoint', async () => {
+    const rendered = await renderChat({
+      role: 'member',
+      setup: (server) =>
+        server.json('GET', ACCOUNT_PATHS.account, {
+          ...accountWithDefaults(
+            'member',
+            { claude: 'own', codex: null },
+            { orgModelList: orgListWithout('Fable 5.1') },
+          ),
+          agentLogins: endpointLogins,
+        } satisfies AccountResponse),
+    })
+    // Cal, the starter of the fixtures, opened the session and sent nothing.
+    rendered.chat.emit({
+      type: 'session.updated',
+      session: newSessionRecord(
+        'started',
+        { agent: 'claude', model: 'Opus 5.5', effort: 'high', fast: false },
+        null,
+        { defaultLogin: { type: 'org', orgId: FAKE_IDS.org } },
+      ),
+    })
+    await rendered.chat.controller.select('started')
+    const { container } = await mount(
+      <SessionChat
+        controller={rendered.chat.controller}
+        mobile={false}
+        now={now}
+        onConnectAgent={() => {}}
+        snapshot={rendered.chat.controller.getSnapshot()}
+      />,
+    )
+    const label = Array.from(container.querySelectorAll('span'), (span) =>
+      span.textContent?.trim(),
+    ).find((text) => text?.endsWith("'s login"))
+    expect({ label, models: await pickedModels() }).toEqual({
+      label: "Acme's login",
+      models: ['Opus 5.5', 'Sonnet 5.5', 'GPT-6.1 Sol', 'GPT-6 Astra'],
+    })
   })
 
   it("follow the reader's own list when a message starts a linked session on the reader's own login", async () => {

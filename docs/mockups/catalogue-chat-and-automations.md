@@ -109,7 +109,8 @@ New workspace opens. Its child pages:
   new automation of Priya whose runs use the org login of Acme, from decision
   5 A of the org logins plan, and whose `org-models` variant has its open
   model picker without Fable 5.1, from decision 3 A. `member` has the view
-  of a member,
+  of a member, whose `org-login` variant has the runs of Cal on the org
+  login of Acme: "Runs use Acme's Claude login and Cal's GitHub access.",
   `admin` the view of an admin with Turn off and Delete, `owner-left` an
   automation that moved, turned off, to Cal, the admin who got the
   workspaces of a member who left, `turned-off` an automation that turned

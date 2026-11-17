@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest'
 import { ACCOUNT_PATHS, agentLoginPath } from '../shared/account'
-import { orgAgentLoginPath } from '../shared/org-settings'
+import { orgAgentLoginPath, orgSettingsPaths } from '../shared/org-settings'
 import { FakeApiServer } from '../test-support/fake-api'
 import { FAKE_TIME } from '../test-support/fixtures/core'
 import { AppModel } from './app-model'
@@ -76,14 +76,24 @@ describe('the default logins of the account', () => {
     serveDefaults(server, { claude: 'own', codex: 'own' }, true)
     const { app } = await started(server)
     const before = claudeDefault(app)
-    server.json('PATCH', orgAgentLoginPath(acme.id, 'claude'), {
+    const saved = {
       agent: 'claude',
       connected: true,
       kind: 'api-key',
       useForEveryMember: true,
       updatedAt: FAKE_TIME,
+    } as const
+    server.json('PATCH', orgAgentLoginPath(acme.id, 'claude'), saved)
+    // The read of the org logins after the change names the new default
+    // logins of the person in Acme.
+    server.json('GET', orgSettingsPaths.agentLogins(acme.id), {
+      agentLogins: [saved, { agent: 'codex', connected: false }],
+      defaultLogins: accountWithDefaults(
+        'admin',
+        { claude: 'org', codex: 'own' },
+        { ownLogins: true },
+      ).defaultLogins,
     })
-    serveDefaults(server, { claude: 'org', codex: 'own' }, true)
     await app.org(acme.id).agentLogins.setUseForEveryMember('claude', true)
     await vi.waitFor(() => expect(claudeDefault(app)).toBe('org'))
     expect(before).toBe('own')

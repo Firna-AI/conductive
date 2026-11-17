@@ -8,6 +8,7 @@ import {
   automationPath,
   automationsPath,
   type Automation,
+  type AutomationResponse,
   type AutomationsResponse,
 } from '../../shared/automations'
 import {
@@ -136,6 +137,42 @@ describe('the automation page', () => {
       actions: [],
     })
   })
+
+  test.each([
+    {
+      runs: 'the org login',
+      runLogin: { type: 'org', orgId: org },
+      line: "Runs use Acme's Claude login and Cal's GitHub access.",
+    },
+    {
+      runs: 'the own login of the owner',
+      runLogin: { type: 'personal', userId: fixture('review-prs').owner.id },
+      line: "Runs use Cal's Claude login and GitHub access.",
+    },
+    {
+      runs: 'no login',
+      runLogin: null,
+      line: "Runs use Cal's Claude login and GitHub access.",
+    },
+  ] as const)(
+    'a member reads the login of the runs that the server names, with $runs',
+    async ({ runLogin, line }) => {
+      const server = new FakeApiServer({ role: 'member' })
+      server.json('GET', automationPath(org, 'review-prs'), {
+        automation: fixture('review-prs'),
+        runLogin,
+      } satisfies AutomationResponse)
+      const { view } = await openApp(
+        server,
+        routes.automation(org, 'review-prs'),
+      )
+      await waitFor(
+        () => queryByText('Only Cal can change this automation.', view),
+        'the automation as a member reads it',
+      )
+      expect(page(view).split('High ').at(-1)).toBe(line)
+    },
+  )
 
   test("an admin reads another member's automation, and turns it off", async () => {
     const server = new FakeApiServer()

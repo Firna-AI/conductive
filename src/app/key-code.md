@@ -93,9 +93,11 @@ Each path is relative to `src/app/`, the folder of this page.
   `OrgModel.startBuild` sends Build computer and Try again for each screen
   that offers them.
 - `org-agent-logins.ts`: `OrgAgentLogins`, the org logins of one org with
-  the save, the switch, Remove, and Refresh of an admin. Each save, switch
-  change, and remove calls `changed`, which reads the default logins of
-  the account again.
+  the save, the switch, Remove, and Refresh of an admin. Each read gives
+  the default logins of the person in that org to the account through
+  `OrgLoginDefaults`. Each save, switch change, remove, and Refresh ends
+  in `completed`, which reads the org logins again, as
+  [Login data](login-data.md#rules) says.
   `api/read-org-logins.ts` reads them. `../shell/settings/AgentsTab.tsx`,
   `OrgLoginList.tsx`, and `EveryMemberSetting.tsx` draw the Agents tab.
 - `first-build.ts`: `firstBuildOf` and `useFirstBuild`, the state of the
@@ -108,6 +110,7 @@ Each path is relative to `src/app/`, the folder of this page.
   saves, and its runs, and `automationModel`, the model that the org keeps for
   each automation. Its `client` sends the other requests of the automation page,
   and an `automation_not_found` from any of them reads the automation again.
+  Its `runLogin` is the login of the runs that the last answer names.
   `automation-actions.ts`: create, update, Turn off, Delete, and Run now,
   which also update the Automations list.
 - `automation-runs.ts`: `AutomationRuns`, the Runs list of one automation: the
@@ -147,8 +150,14 @@ Each path is relative to `src/app/`, the folder of this page.
   `CodexSignIn`, the steps, the polls, and the timer of that sign-in.
   `api/read-core.ts`: `loginUsable`, whether turns can run on a login.
   After a save, a remove, or a connected sign-in, `readDefaults` reads the
-  logins of the agent again for the default logins of the account, and
-  `orgLoginChanged` does so after a change of an org login.
+  logins of the agent again for the default logins of the account.
+  `account-login-reads.ts`: `AccountLoginReads`, the one owner of the
+  reads of the logins. It also reads the account once when an org joins
+  the orgs of the person, and gives each read of the org logins its
+  place in the account.
+  `login-owner.ts`: `loginOwnerName`, the name of the owner of a login,
+  the org or a member, for the label of the composer and the line under
+  the prompt of an automation.
   `default-logins.ts`: `newSessionLogin`, the login of a new session of
   the person in an org, from the default logins that the server names,
   and the readers of those default logins for the screens.
@@ -347,7 +356,8 @@ Each path is relative to `src/app/`, the folder of this page.
 - `../shell/automations/AutomationScreen.tsx`: the automation page and the page of
   a new automation. `AutomationEditor.tsx` is the form of the owner, and
   `AutomationReader.tsx` the read-only view of every other member, with Turn
-  off and Delete for an admin. `useAutomationSave.ts` is Save, with the login
+  off and Delete for an admin. Its line under the prompt names the login of
+  the runs that the answer names, with `loginOwnerName`. `useAutomationSave.ts` is Save, with the login
   that a save refused. `AutomationFrame.tsx` puts the Runs list beside the
   form on desktop, and on the Runs tab of a phone. It alone shows the
   notice of a suspended org, in every view of the page. `AutomationNote.tsx`

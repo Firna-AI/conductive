@@ -96,6 +96,7 @@ The Durable Object runs the gates itself.
   runner token together. A personal login also needs its owner to remain
   a member who is not suspended. An org login must belong to the workspace's
   active org. Its starter need not remain a member.
+  A default lookup checks its member as the sender, including each empty session's starter in a batch.
 - `defaultLogin` in `default-login.ts` owns the default order. A usable
   personal login comes first. A usable org login comes first while its
   `use_for_every_member` switch is on. Either serves while the other cannot.
@@ -116,7 +117,7 @@ The Durable Object runs the gates itself.
 - `readLoginMetadata` uses one common access query for all requested
   sessions. It checks membership, suspension, login kind, failure state,
   endpoint origin, and personal sharing without reading ciphertext.
-  It returns `loginAvailable` and `loginShared` by session ID. A missing
+  It returns `loginAvailable`, `loginShared`, and an empty session's optional `defaultLogin` by session ID. A missing
   login is unavailable. An org session remains shared after removal.
   These observations leave history and event subscriptions readable.
 - A revoked or replaced runner token closes that connection without a

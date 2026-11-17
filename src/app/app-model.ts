@@ -211,7 +211,7 @@ export class AppModel {
           suspended: suspendedOrg(orgId, this.orgs, this.refusedOrgs),
           note: () => this.noteSuspended(orgId),
         },
-        (agent) => void this.account.orgLoginChanged(agent),
+        this.account.orgLoginDefaults,
       )
       this.orgModels.set(orgId, model)
     }

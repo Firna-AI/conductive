@@ -1,6 +1,9 @@
-import type { OrgAgentLoginStatus } from '../../shared/org-agent-logins'
+import type {
+  OrgAgentLoginsResponse,
+  OrgAgentLoginStatus,
+} from '../../shared/org-agent-logins'
 import { choice, count, flag, items, nested, record, text } from './parse'
-import { AGENTS, readEndpointModelList } from './read-core'
+import { AGENTS, readDefaultLogins, readEndpointModelList } from './read-core'
 
 type OrgLoginKind = Extract<OrgAgentLoginStatus, { connected: true }>['kind']
 
@@ -36,7 +39,15 @@ export function readOrgLogin(value: unknown): OrgAgentLoginStatus {
   }
 }
 
-/** The org logins of an org, one for each agent. */
-export function readOrgLogins(value: unknown): readonly OrgAgentLoginStatus[] {
-  return items(record(value, 'org logins'), 'agentLogins', readOrgLogin)
+/**
+ * The org logins of an org, one for each agent, and the default logins of
+ * the person in that org, which the resolver of the Worker names (org login
+ * decision 6 F), as `readDefaultLogins` says.
+ */
+export function readOrgLogins(value: unknown): OrgAgentLoginsResponse {
+  const reply = record(value, 'org logins')
+  return {
+    agentLogins: items(reply, 'agentLogins', readOrgLogin),
+    ...readDefaultLogins(reply),
+  }
 }

@@ -64,7 +64,11 @@ decision number names a dated record, as
   triggers, the prompt with the model picker, and the Runs list.
 - A line under the prompt names the agent login and the GitHub access that
   the runs use. The login is the default login of the owner, such as the
-  org login.
+  org login. The line names that login for every reader, including a
+  member who does not own the automation. GitHub access still belongs to
+  the automation owner.
+- The automation reply names the resolved login owner for its saved agent.
+  It names no login owner when no login serves the automation owner.
 - Save stays off while nothing changed, while the prompt is empty, and
   while the form refuses a cron.
 - A desktop shows the Runs list in a column at the right. A phone shows a

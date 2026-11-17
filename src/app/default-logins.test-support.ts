@@ -17,11 +17,39 @@ export const acme = coreFixtures().orgs.orgs.find(
 export type DefaultsOf = Readonly<Record<Agent, 'org' | 'own' | null>>
 
 /**
- * The account of the person of `role` in the fake API, whose server names
- * the default logins of Acme as `defaults` gives them. Without `ownLogins`,
- * the person has no login of their own. `orgModelList` is the last model
+ * The default logins that the server names for the person `userId` in the
+ * org `org`, as `defaults` gives them. `orgModelList` is the last model
  * list of the org endpoint of Claude, which the server gives for the org
  * login of each agent that it serves.
+ */
+export function defaultsIn(
+  org: { id: string; name: string },
+  defaults: DefaultsOf,
+  userId: string,
+  orgModelList?: EndpointModelList,
+): DefaultAgentLogin[] {
+  return (['claude', 'codex'] as const).map((agent): DefaultAgentLogin => {
+    const login = defaults[agent]
+    const orgList = agent === 'claude' ? orgModelList : undefined
+    return {
+      orgId: org.id,
+      orgName: org.name,
+      agent,
+      login:
+        login === 'org'
+          ? { type: 'org', orgId: org.id }
+          : login === 'own'
+            ? { type: 'personal', userId }
+            : null,
+      ...(orgList ? { orgModelList: orgList } : {}),
+    }
+  })
+}
+
+/**
+ * The account of the person of `role` in the fake API, whose server names
+ * the default logins of Acme as `defaults` gives them, as `defaultsIn`
+ * says. Without `ownLogins`, the person has no login of their own.
  */
 export function accountWithDefaults(
   role: OrgRole,
@@ -29,25 +57,6 @@ export function accountWithDefaults(
   options: { ownLogins?: boolean; orgModelList?: EndpointModelList } = {},
 ): AccountResponse {
   const account = coreFixtures(role).account
-  const userId = account.user.id
-  const defaultLogins = (['claude', 'codex'] as const).map(
-    (agent): DefaultAgentLogin => {
-      const login = defaults[agent]
-      const orgList = agent === 'claude' ? options.orgModelList : undefined
-      return {
-        orgId: acme.id,
-        orgName: acme.name,
-        agent,
-        login:
-          login === 'org'
-            ? { type: 'org', orgId: acme.id }
-            : login === 'own'
-              ? { type: 'personal', userId }
-              : null,
-        ...(orgList ? { orgModelList: orgList } : {}),
-      }
-    },
-  )
   return {
     ...account,
     agentLogins: options.ownLogins
@@ -56,7 +65,12 @@ export function accountWithDefaults(
           { agent: 'claude', connected: false },
           { agent: 'codex', connected: false },
         ],
-    defaultLogins,
+    defaultLogins: defaultsIn(
+      acme,
+      defaults,
+      account.user.id,
+      options.orgModelList,
+    ),
   }
 }
 

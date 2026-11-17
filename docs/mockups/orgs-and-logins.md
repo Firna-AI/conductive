@@ -46,7 +46,9 @@ plan limits.
   says. A session on the org login names the org, such as "Acme's login",
   for every member, also for its starter, as `app/composer/org-login`
   shows. A new session names the org login while it is the default login
-  of the viewer, as its `new-session` and `every-member` variants show. A
+  of the viewer, as its `new-session` and `every-member` variants show. An
+  empty session of another member names the default login of its starter,
+  which its first message takes, as the `started-session` variant shows. A
   message on the own login of the viewer shows no name. When the login of
   the member who started a session is not available, a message of another
   member starts a new session. The notice over the composer of the first

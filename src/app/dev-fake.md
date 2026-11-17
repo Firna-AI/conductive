@@ -143,6 +143,11 @@ option overrides this default, including queued chats that show no spinner.
   Worker does. Its author filter knows the members of the org and a few
   bots, such as `dependabot[bot]`. Any other login gets the refusal of a
   login that names no GitHub account, with its trigger and its list.
+  Each reply of one automation names the login of its runs, as the
+  Worker does: the default login of the person signed in for an own
+  automation. The fake knows no logins of other people, so the runs of
+  another owner use the org login while `?orgLogin=every-member` turns its
+  switch on, and else the own login of that owner.
 - Run now makes the workspace of the run as Create workspace does, in the
   section of the automation, and the run takes the state of that workspace.
   Without the agent login of the automation's model, as with `?login=none`,
@@ -176,10 +181,18 @@ Each read of the account names the default login of each org and agent,
 from the own logins and the org logins of the state, as the resolver of
 the Worker does. `dev/default-logins.ts` works out the order, because the
 fake stands in for the Worker. So `?login=none&orgLogin=endpoint` gives a
-person whose new Claude sessions in Acme take the org login.
+person whose new Claude sessions in Acme take the org login. Each read of
+the org logins of an org names the default logins of that org in the same
+way, as the Worker does.
 `?sessionLogin=org` makes each session of `checkout-autocomplete` run on the
 org login of Acme, as after a first message on it. `?sessionLogin=removed`
 says in each record that an admin removed that login later.
+`?sessionLogin=empty` adds an empty session of Cal after the recorded
+sessions. Its record names the default login of Cal as `defaultLogin`,
+which its first message takes, from the logins of Cal in the fixtures and
+the org logins of the state, as the Worker does. So
+`?role=member&orgLogin=every-member&sessionLogin=empty` gives Priya an
+empty session of Cal whose composer names "Acme's login".
 `dev/session-login-routes.ts` changes the recorded sessions in this way.
 
 The development fake saves shortcut batches through `dev/shortcut-routes.ts`.

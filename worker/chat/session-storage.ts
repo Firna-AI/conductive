@@ -15,7 +15,7 @@ export function normalizeSession(
   session: StoredSession,
   hasMessages = Boolean(session.activeTurnId || session.retryMessageId),
 ): Session {
-  return {
+  const normalized: Session = {
     ...session,
     ...(session.login
       ? { login: session.login }
@@ -36,4 +36,6 @@ export function normalizeSession(
       : false,
     loginShared: session.loginShared ?? true,
   }
+  if (normalized.login) delete normalized.defaultLogin
+  return normalized
 }

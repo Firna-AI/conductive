@@ -13,6 +13,9 @@ state the rules.
 - `Session.login` names a personal owner or the workspace's org.
   It fixes the owner at the first accepted message and never moves.
   An empty session keeps it unset, including after an agent change.
+- `Session.defaultLogin` names the starter's current default owner while the session is empty.
+  Its batched access read checks that starter as the sender, as the send path does.
+  It is absent when no login serves the starter and clears when `login` is fixed.
 - The first message of a new workspace must create its session with
   `FirstWorkspaceMessage.sender` as the starter, never the workspace owner.
   `admitFirstMessage` in `first-message.ts` passes that sender, as
@@ -37,7 +40,8 @@ state the rules.
   `env.PREVIEW_DOMAIN`. This path selects no ciphertext and decrypts nothing.
   The credential path still decrypts and checks the full saved address.
   It returns a map of `SessionLoginMetadata` by session ID, with
-  `loginAvailable` and `loginShared`. An unavailable personal login gets
+  `loginAvailable`, `loginShared`, and an empty session's `defaultLogin`.
+  An unavailable personal login gets
   false for both. An unavailable org login remains shared.
   A refused endpoint makes an own endpoint login
   unavailable.
@@ -57,7 +61,7 @@ state the rules.
   `loginShared: false`, because the starter can still use the login. After
   a successful read, `observe` takes both values from the metadata path.
   A missing personal login gets false for both. A missing org login stays shared.
-- When a path finds a changed `loginAvailable` or `loginShared` of an
+- When a path finds a changed `loginAvailable`, `loginShared`, or `defaultLogin` of an
   existing session, it commits the new values and a `session.updated` event
   in its own change. An unchanged result writes nothing.
 - `ChatOperation` in `operation.ts` gives each caller its reads and changes

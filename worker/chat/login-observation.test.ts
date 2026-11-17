@@ -64,7 +64,12 @@ describe('committed session login observations', () => {
           occurredAt: TEST_TIME,
           event: {
             type: 'session.updated',
-            session: { ...session, loginAvailable: false, loginShared: false },
+            session: {
+              ...session,
+              defaultLogin: undefined,
+              loginAvailable: false,
+              loginShared: false,
+            },
           },
         },
       },
@@ -168,7 +173,12 @@ describe('committed session login observations', () => {
           occurredAt: TEST_TIME,
           event: {
             type: 'session.updated',
-            session: { ...session, loginAvailable: false, loginShared: false },
+            session: {
+              ...session,
+              defaultLogin: undefined,
+              loginAvailable: false,
+              loginShared: false,
+            },
           },
         },
       },

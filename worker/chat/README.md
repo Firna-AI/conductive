@@ -78,6 +78,10 @@ its login only at the first accepted message. A
 repeated request gets the same session. An unrelated occupied ID is refused. A
 same-agent change ignores this field.
 
+An empty session's `defaultLogin` names its starter's current default owner for every reader.
+The metadata check treats the starter as the sender and uses the shared login access query.
+The first accepted message fixes `login` and clears `defaultLogin`.
+
 ## Session transcripts
 
 [Session transcripts](../../docs/protocol/session-transcripts.md) states the

@@ -16,6 +16,14 @@ An update can send only the fields that changed.
 A disable-only update sends `{ "active": false }` and needs no GitHub read.
 The list includes each automation's latest run with its current state, or null.
 
+Each detail, create, or update reply includes `AutomationResponse.runLogin`.
+It names the owner's current default login for the saved agent, through `resolveDefaultLogin`.
+It is null when no login serves that owner.
+Every reader gets the same owner, independently of their own default login.
+`publicLoginOwner` also serves empty-session metadata and returns only an owner type and ID.
+The value has no credential, endpoint host, or full address.
+The automation owner still supplies GitHub access.
+
 `POST` of `automationPaths.runNow` takes a `RunAutomationRequest` with the page's request ID.
 Only the owner can use it, also while the automation is off.
 An automation whose triggers are all pull request triggers refuses Run now.
@@ -136,6 +144,7 @@ The batch-limit test passes 2 for each limit and checks the stored operation cou
 - [route.ts](route.ts) dispatches the record routes and enforces ownership.
 - [prepare-automation.ts](prepare-automation.ts) validates a save and prepares its stored record.
 - [automation-data.ts](automation-data.ts) reads automations and checks their repository and section.
+- [automation-response.ts](automation-response.ts) adds the resolved public login owner to each record reply.
 - [automation-write-data.ts](automation-write-data.ts) guards mutations with current membership and ownership.
 - [schedules.ts](schedules.ts) validates schedules and computes their next time through `croner`.
 - [schedule-scan.ts](schedule-scan.ts) starts due schedules and retries old queued runs through the shared starter.

@@ -95,6 +95,9 @@ pub struct Session {
     /// Absent before the first message and in older records.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub login: Option<Box<SessionLogin>>,
+    /// The starter's current default owner, only before the first accepted message.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub default_login: Option<Box<SessionLogin>>,
     /// source session id.
     pub source_session_id: Option<String>,
     /// login available.

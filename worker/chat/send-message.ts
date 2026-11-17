@@ -82,6 +82,7 @@ export async function send(
     )
     if (!target.login && targetLogin) {
       target.login = targetLogin
+      delete target.defaultLogin
       await transaction.saveSession(target)
     }
     const response = await acceptMessage(

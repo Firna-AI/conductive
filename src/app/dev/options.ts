@@ -52,7 +52,7 @@ const MODEL_LISTS = ['unlisted', 'none', 'v1-only', 'read-failed'] as const
 const ORG_LOGINS = ['endpoint', 'unlisted', 'every-member'] as const
 
 /** The logins of the open sessions of `checkout-autocomplete`. */
-const SESSION_LOGINS = ['org', 'removed'] as const
+const SESSION_LOGINS = ['org', 'removed', 'empty'] as const
 
 /** The states of the invite code of the user, besides the pause. */
 const INVITE_CODES = ['left', 'used-up', 'disabled'] as const
@@ -93,6 +93,10 @@ type DevInviteCode = (typeof INVITE_CODES)[number]
  *   `checkout-autocomplete` runs on the org login of Acme, as after a
  *   first message on it. With `removed`, an admin removed that login
  *   later, so the records say that it is not available.
+ * - `sessionLogin=empty`: `checkout-autocomplete` also has an empty
+ *   session that Cal started. Its record names the default login of Cal,
+ *   which its first message takes, as the Worker resolves it, such as the
+ *   org login with `orgLogin=every-member`.
  * - `deleted=1`: Acme is deleted, as its admins see it.
  * - `suspended=1`: the operator suspended Acme. Each write of Acme gets
  *   `org_suspended`, except a leave, as the Worker does.
@@ -145,7 +149,10 @@ export interface DevOptions {
   modelList: (typeof MODEL_LISTS)[number] | null
   /** The seeded org login of Acme, or `null` for none. */
   orgLogin: (typeof ORG_LOGINS)[number] | null
-  /** The login of the open sessions of `checkout-autocomplete`, or `null`. */
+  /**
+   * The login of the open sessions of `checkout-autocomplete`, or the empty
+   * session of Cal beside them, or `null`.
+   */
   sessionLogin: (typeof SESSION_LOGINS)[number] | null
   deleted: boolean
   suspended: boolean

@@ -146,11 +146,14 @@ export function readSessionLogin(value: unknown): SessionLogin {
 
 /**
  * A session record. An empty session and an older record have no `login`,
- * so the record then has none either.
+ * so the record then has none either. An empty session names the default
+ * login of its starter as `defaultLogin`, which its first message takes,
+ * while a login serves that starter. An older record names none.
  */
 export function readSession(value: unknown): Session {
   const source = record(value, 'session')
   const login = optional(nullable(readSessionLogin))(source.login)
+  const defaultLogin = optional(nullable(readSessionLogin))(source.defaultLogin)
   return {
     id: text(source.id),
     workspaceId: text(source.workspaceId),
@@ -163,6 +166,7 @@ export function readSession(value: unknown): Session {
     retryMessageId: nullable(text)(source.retryMessageId),
     startedBy: nullable(readSender)(source.startedBy),
     ...(login === undefined ? {} : { login }),
+    ...(defaultLogin === undefined ? {} : { defaultLogin }),
     sourceSessionId: nullable(text)(source.sourceSessionId),
     loginAvailable: flag(source.loginAvailable),
     loginShared: flag(source.loginShared),

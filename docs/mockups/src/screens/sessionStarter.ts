@@ -1,7 +1,11 @@
 import type { SessionLogin } from '../components/chat/SessionLogin'
 import { memberViewer, people, you, type PersonKey } from '../fixtures/members'
 import { orgWithLogin } from '../fixtures/orgLogins'
-import { linkedSession, workspaceSessions } from '../fixtures/sessions'
+import {
+  linkedSession,
+  startedSession,
+  workspaceSessions,
+} from '../fixtures/sessions'
 import type { Workspace } from '../fixtures/workspaces'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
@@ -14,7 +18,8 @@ export function viewerOf(state: WorkspaceState): PersonKey {
 /**
  * The starter of the open session. The viewer starts a new session with +,
  * and the creator of a new workspace started its one session. Cal started
- * both sessions of Checkout address autocomplete.
+ * both sessions of Checkout address autocomplete, and the empty session
+ * that the viewer opens from his tab.
  */
 function starterOf(state: WorkspaceState, workspace: Workspace): PersonKey {
   switch (state.tab) {
@@ -24,6 +29,8 @@ function starterOf(state: WorkspaceState, workspace: Workspace): PersonKey {
       return linkedSession.starter
     case 'later-session':
       return workspaceSessions[1].starter
+    case 'started-session':
+      return startedSession.starter
     case 'session':
     case 'code':
     case 'code-lines':

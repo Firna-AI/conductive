@@ -29,6 +29,7 @@ import {
   record,
   text,
   texts,
+  type JsonObject,
 } from './parse'
 import { readShortcuts } from './read-shortcuts'
 
@@ -181,8 +182,11 @@ export function loginUsable(login: LoginUse | undefined): boolean {
   return login?.connected === true && login.unusableCause === undefined
 }
 
-/** The owner of the login of a session: a member, or the org. */
-function readSessionLogin(value: unknown): SessionLogin {
+/**
+ * The owner of a login: a member, or the org, such as the login of a
+ * session or the login of the runs of an automation.
+ */
+export function readSessionLogin(value: unknown): SessionLogin {
   const login = record(value, 'session login')
   if (choice(login, 'type', ['personal', 'org']) === 'org') {
     return { type: 'org', orgId: text(login, 'orgId') }
@@ -210,8 +214,21 @@ function readDefaultLogin(value: unknown): DefaultAgentLogin {
 }
 
 /**
- * The account of the person signed in. An older reply has no
- * `defaultLogins`, so the account then names no default login.
+ * The default logins that a reply names: the reply of the account, for each
+ * org of the person, or the reply of the org logins, for that org. An older
+ * reply has no `defaultLogins`, so it names no default login.
+ */
+export function readDefaultLogins(
+  reply: JsonObject,
+): Pick<AccountResponse, 'defaultLogins'> {
+  return reply.defaultLogins === undefined
+    ? {}
+    : { defaultLogins: items(reply, 'defaultLogins', readDefaultLogin) }
+}
+
+/**
+ * The account of the person signed in, with the default logins of each org
+ * of the person, as `readDefaultLogins` says.
  */
 export function readAccount(value: unknown): AccountResponse {
   const account = record(value, 'account')
@@ -221,9 +238,7 @@ export function readAccount(value: unknown): AccountResponse {
     newWorkspaceView: choice(account, 'newWorkspaceView', NEW_WORKSPACE_VIEWS),
     shortcuts: nested(account, 'shortcuts', readShortcuts),
     agentLogins: items(account, 'agentLogins', readLogin),
-    ...(account.defaultLogins === undefined
-      ? {}
-      : { defaultLogins: items(account, 'defaultLogins', readDefaultLogin) }),
+    ...readDefaultLogins(account),
     operator: flag(account, 'operator'),
     githubAppUrl: text(account, 'githubAppUrl'),
   }

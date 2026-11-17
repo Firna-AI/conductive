@@ -590,22 +590,31 @@ Milestone 6 added these calls on 17 November 2026. Each is the agent's call.
   server names it. Otherwise the own login serves while the app can use it.
   Reason: the account shows a change of an own login at once, before the
   next read names the new default, and the order stays with the server.
-- After a save, a remove, or a connected sign-in of an own login, and after
-  a save, a switch change, or a remove of an org login in the same tab, the
+- After a save, a remove, or a connected sign-in of an own login, the
   account reads the logins of that agent again for the new default logins.
+  Agent's call of 17 November 2026, after review findings 1 and 2: after a
+  save, a switch change, a remove, or a Refresh of an org login, the app
+  reads the org logins again, and merges only that org's default logins
+  into the account. The account reads its logins once when an org joins
+  the active org set: an accepted invitation, a restore, or a create. The
+  account timer also runs while an org login serves new sessions or an org
+  endpoint list is kept, and the Agents tab reads its org logins once a
+  minute while an org endpoint is connected. After an accepted invitation,
+  the org opens at once, and the read runs in the background, so New
+  workspace can show the Connect notice until it answers.
   A read shows the default logins of an agent only while that agent had no
   change during the read. Reason: the screens then show the default login
   of the server also just after a change, as option F of decision 6 asks.
 - The screens count the default logins only of the orgs that the org list
   shows. Reason: a leave or a delete then shows at once, as the org step of
   Get started does.
-- A session record without a login takes the default login of its starter,
-  as the Worker does. In the own session of the reader, the composer names
-  the org login while the server names it as the default login. In an empty
-  session of another member, the composer follows the record as for the
-  personal login of that member. Reason: only the account of that member
-  names their default login. The open question of this case is in the
-  report of the milestone.
+- Agent's call of 17 November 2026, after review findings 3 and 4:
+  an empty session record names the starter's current default owner in
+  `defaultLogin` for every reader. The check uses the starter as the
+  sender, with the send path's rule and access reader. The composer uses
+  that owner for the login label and the model list of an org endpoint.
+  Reason: the reader's account cannot name another member's default.
+  The first accepted message fixes `login` and clears `defaultLogin`.
 - When the own login of the reader's session can no longer be used and the
   org login serves the reader, the notice of the new session says "The
   login for this session is not available.", and the label names the org
@@ -627,14 +636,31 @@ Milestone 6 added these calls on 17 November 2026. Each is the agent's call.
   agent step says Ready, with the words of the org login, only when no own
   login serves. Its words name the first org, in the order of the account,
   whose default login is its org login.
-- The line under the prompt of an automation of the person names the org
-  login, as the mockups do. A member who reads the automation of another
-  member still reads the login of the owner, such as "Cal's". Reason: only
-  the account of the owner names the default login of the owner.
+- Agent's call of 17 November 2026, after review findings 3 and 4:
+  the line under an automation prompt names the login that its runs use
+  for every reader. The automation reply gives that owner in `runLogin`,
+  from the default login resolver for the automation owner and saved agent.
+  It is null when no login serves that owner. Session metadata and
+  automation replies share one public owner projection. Reason: the
+  server knows whose login pays, while GitHub access stays with the
+  automation owner.
 - The development fake keeps the org logins in its state, and its account
   names the default logins. `?orgLogin=every-member` turns the switch on,
   and `?sessionLogin=org|removed` puts the sessions of
   `checkout-autocomplete` on the org login.
+
+Review round 1 added these browser calls on 17 November 2026. Each is
+the agent's call.
+
+- The composer uses `defaultLogin` only in an empty session that another
+  member started. A fixed `login` wins, and the reader's own empty session
+  keeps the account default. Without `defaultLogin`, the flags of the
+  record decide.
+- One helper, `loginOwnerName` in `src/app/login-owner.ts`, turns a
+  `SessionLogin` into the owner's name for the composer label and the
+  automation line. The line names `runLogin` for every reader, and the
+  automation owner when it is null. A reply without `runLogin` reads as
+  null, so an older Worker reply still loads.
 
 ## Components
 

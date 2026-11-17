@@ -56,6 +56,10 @@ change that adds the org logins, as
 - The session record shows the result of the last login check in
   `loginAvailable`. Each tab gets a changed result. The check does not ask
   the provider whether it accepts the login.
+- For an empty session, the same check names the starter's current default
+  owner in `defaultLogin`, as [The default login](org-logins.md#the-default-login)
+  says. Every reader gets that owner. The field is absent when no login
+  serves the starter, and after the first accepted message fixes `login`.
 - The same check shows in `loginShared` whether the starter shares a
   personal login with the other members. Every member reads the same
   value. Each tab gets a changed value. `loginAvailable` stays true for a

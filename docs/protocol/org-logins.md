@@ -109,6 +109,12 @@ as [Tokens and secrets](tokens-and-secrets.md) says.
   its first message, as [Agents](agents-and-sessions.md#agents) says. This
   holds for each way to start a session, also for a call of the agent
   tools and an automation run.
+- Before that first message, the session record names the starter's
+  current default login owner for every reader. The check treats the
+  starter as the sender and follows the same access rule as Send.
+  A starter who left the org or is suspended has no default login there.
+- This value does not fix the session's login. The composer uses it for
+  its login label and the model list of an org endpoint.
 - Reason: one rule then serves the sessions, the agent tools, and the
   automation runs.
 - A choice of the login by each member, in a login menu or in a setting

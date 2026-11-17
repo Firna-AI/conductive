@@ -72,9 +72,18 @@ draft moves, the login of each session, and the linked sessions.
   session. `composerModels` in `state/session-login.ts` decides, with
   `offeredModels` of the app.
 - An empty session of another member takes the default login of that
-  member at its first message. Only that member's account names it, so
-  the composer of another member follows the record as for the personal
-  login of that member, and names that member.
+  member at its first message. Its record names that login in
+  `defaultLogin` until then, while a login serves that member. So the
+  composer of the reader follows it as the login of the session: the label
+  names the org, such as "Acme's login", or that member, and the picker of
+  the org login follows the last list of the org endpoint. A fixed `login`
+  wins over `defaultLogin`. The reader's own empty session follows the
+  default logins of the reader's account instead, as above. When the
+  record names no default login, the record's `loginAvailable` and
+  `loginShared` decide, as for the personal login of that member, so a
+  message then starts a linked session. `loginOwnerName` in
+  `../app/login-owner.ts` names the owner of each login, also for the line
+  under the prompt of an automation.
 - The reply of Send and of Try again names the session that took the
   message. The session record of the reply follows the
   [record order rule](loads-and-sends.md#record-order).

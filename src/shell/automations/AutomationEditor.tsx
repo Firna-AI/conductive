@@ -182,7 +182,7 @@ export function AutomationEditor(
         changeChoice={(choice) => change({ ...draft, choice })}
         changePrompt={(prompt) => change({ ...draft, prompt })}
         choice={draft.choice}
-        login={runsOnOrg ? `${org.name}'s` : undefined}
+        login={runsOnOrg ? `${org.name}'s` : 'your'}
         models={models}
         prompt={draft.prompt}
       />

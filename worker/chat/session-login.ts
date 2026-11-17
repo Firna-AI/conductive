@@ -5,6 +5,7 @@ import type { Agent } from '../../src/shared/generated/Agent'
 import { usableAgentLogin, type AgentLogin } from './login-kind'
 import { LoginReuseDenied, readLogin } from './login-access'
 import type { SessionLoginMetadata } from './login-availability'
+import { publicLoginOwner } from './login-owner'
 import type { ChatOperation } from './operation'
 import { sessionFor } from './session-record'
 import type { ChatDependencies } from './types'
@@ -115,7 +116,12 @@ export class SessionLogins {
       }
     } catch (error) {
       if (!(error instanceof LoginReuseDenied)) throw error
-      await this.save(session, { loginAvailable: true, loginShared: false })
+      const defaultLogin = publicLoginOwner(session.login ? null : owner)
+      await this.save(session, {
+        loginAvailable: true,
+        loginShared: false,
+        ...(defaultLogin ? { defaultLogin } : {}),
+      })
       return { session, owner, login: null, reason: undefined }
     }
     const invalidEndpoint =
@@ -131,7 +137,13 @@ export class SessionLogins {
             owner,
           )
         : { ...unavailableMetadata, loginShared: owner?.type === 'org' }
-    await this.save(session, metadata)
+    const defaultLogin = publicLoginOwner(
+      !session.login && metadata.loginAvailable ? owner : null,
+    )
+    await this.save(session, {
+      ...metadata,
+      ...(defaultLogin ? { defaultLogin } : {}),
+    })
     const mayUseLogin =
       metadata.loginAvailable &&
       (metadata.loginShared ||
@@ -184,12 +196,16 @@ export class SessionLogins {
     session: Session,
     metadata: SessionLoginMetadata,
   ): Promise<void> {
+    const defaultLogin = session.login ? undefined : metadata.defaultLogin
     if (
       session.loginAvailable !== metadata.loginAvailable ||
-      session.loginShared !== metadata.loginShared
+      session.loginShared !== metadata.loginShared ||
+      JSON.stringify(session.defaultLogin) !== JSON.stringify(defaultLogin)
     ) {
       session.loginAvailable = metadata.loginAvailable
       session.loginShared = metadata.loginShared
+      if (defaultLogin) session.defaultLogin = defaultLogin
+      else delete session.defaultLogin
       await this.operation.change(async (transaction) => {
         await transaction.saveSession(session)
         await transaction.emit({ type: 'session.updated', session })

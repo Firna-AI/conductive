@@ -22,7 +22,8 @@ the Help row of the command palette opens.
   logins that the account names as default logins of the orgs of the
   person (org login decision 4). So a leave of
   the last org offers Create org again, and a connect on Account completes
-  its step at once. `setupSteps` in `setup-steps.ts` derives them, and each
+  its step at once. An accepted invitation to an org whose org login
+  serves the person completes it after one read of the account. `setupSteps` in `setup-steps.ts` derives them, and each
   screen reads them through `AppModel.getStarted`.
 - Once the org exists, the org step shows its cloud computer from the
   builds of the org, as

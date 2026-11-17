@@ -105,24 +105,33 @@ agent login forms, and model lists in the web app.
   says. New workspace then names the org login after the model picker,
   such as "Acme's login". The line under the prompt of an automation of
   the person names it too, such as "Runs use Acme's Claude login and your
-  GitHub access."
+  GitHub access." Each member who reads the automation of another member
+  reads the login of its runs that the reply of the automation names, such
+  as "Runs use Acme's Claude login and Cal's GitHub access.". When the
+  reply names none, the line names the owner. `loginOwnerName` in
+  `login-owner.ts` names the owner of the login, as it does for the label
+  of the composer.
 - Under each agent, the account and Get started name each org whose org
   login the new sessions of the person take, such as "Your new sessions in
   Acme use Acme's login.", also under an own login. The words come from
   `OrgLoginLines.tsx` of the mockups. With only an org login, the agent
   step of Get started says Ready, with the words of `getStartedCopy.ts`
   that name the org login.
-- After each change of a login of an agent, an own login or an org login,
-  the account reads the default logins of that agent again, as
-  [Login data](login-data.md#rules) says.
+- After each change of a login of an agent, the screens show the default
+  logins that the server names after the change. A change of an own login
+  reads the account again. A change of an org login reads the org logins
+  of its org again. An org that joins the orgs of the person, such as
+  after an accepted invitation, reads the account once.
+  [Login data](login-data.md#rules) gives the rules.
 
 ## The Agents tab of the org settings
 
 - The Agents tab of the org settings, at `/orgs/:orgId/settings/agents`,
   follows Cloud computer. It shows the org login of each agent, as
   [The Agents tab](../../docs/protocol/org-logins.md#the-agents-tab)
-  says. It reads the logins while it shows, and again at each return to
-  the page. Its words come from `orgAgentsCopy.ts` of the mockups.
+  says. It reads the logins while it shows, again at each return to the
+  page, and once a minute while an org endpoint is connected. Its words
+  come from `orgAgentsCopy.ts` of the mockups.
 - An admin uses the parts of the account. `AgentConnectForm` with `org`
   offers only API key and Own endpoint, and its words ask for a key of
   the account of the org. Replace opens that form under the login, on the
@@ -132,7 +141,9 @@ agent login forms, and model lists in the web app.
   saves and of Refresh of an org endpoint in this page, which
   `OrgAgentLogins` keeps as the account keeps its own. Its line of the
   models names the model pickers on the login. The answer of a save
-  holds the model list, so only Refresh reads the logins again.
+  holds the model list. So a save reads the logins again only for the
+  default logins of the person, while the account names them. Refresh
+  always reads them again.
 - The switch "Use for every member" saves at once. While it saves, it
   shows the new value and takes no other change. A failed save shows its
   cause under the hint until the next change, and the switch shows the

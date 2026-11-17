@@ -1,6 +1,7 @@
 import type { Session } from '../../src/shared/generated/Session'
 import type { AppEnv } from '../env'
 import { defaultLogin } from './default-login'
+import { publicLoginOwner } from './login-owner'
 import {
   readLoginAccess,
   sessionLoginCandidate,
@@ -9,7 +10,7 @@ import {
 
 export type SessionLoginMetadata = Pick<
   Session,
-  'loginAvailable' | 'loginShared'
+  'loginAvailable' | 'loginShared' | 'defaultLogin'
 >
 
 export async function readLoginMetadata(
@@ -22,6 +23,7 @@ export async function readLoginMetadata(
   for (const target of targets) {
     const entry = access.get(target.sessionId)
     const login = target.login ?? (target.userId ? defaultLogin(entry) : null)
+    const owner = publicLoginOwner(login)
     const candidate =
       entry && login ? sessionLoginCandidate(entry, login) : null
     result.set(target.sessionId, {
@@ -29,6 +31,7 @@ export async function readLoginMetadata(
       loginShared:
         login?.type === 'org' ||
         (candidate?.available === true && candidate.shared),
+      ...(!target.login && owner ? { defaultLogin: owner } : {}),
     })
   }
   return result

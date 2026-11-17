@@ -87,18 +87,6 @@ export class AccountLoginWrites {
   }
 
   /**
-   * An admin saved or removed an org login of `agent`, or changed its
-   * switch. The default logins of the agent can then name another login, so
-   * they are read again. The change counts, so a read that started before
-   * it does not show its older default logins.
-   */
-  async orgLoginChanged(agent: Agent): Promise<void> {
-    if (!this.logins.namesDefaults()) return
-    this.logins.change(agent)
-    await this.readDefaults(agent)
-  }
-
-  /**
    * Starts a ChatGPT sign-in of Codex. The Worker asks OpenAI for a code,
    * and keeps the sign-in under the handle of the answer. No token comes to
    * the browser.
@@ -133,10 +121,13 @@ export class AccountLoginWrites {
 
   /**
    * Refreshes an endpoint list, without restoring a changed login. Its
-   * answer says whether it read a list, for the warning of the login.
+   * answer says whether it read a list, for the warning of the login. The
+   * read after it follows the changes from before the Refresh, and takes
+   * its place among the reads when it starts, so a read that ran during
+   * the Refresh does not hide the new list.
    */
   async refreshModels(agent: Agent): Promise<void> {
-    const show = this.logins.mark()
+    const since = this.logins.changesSoFar()
     const pressed = this.logins.get(agent)
     const { modelListReadFailed } = await this.services.api.send(
       'POST',
@@ -149,7 +140,7 @@ export class AccountLoginWrites {
       this.logins.get(agent),
       modelListReadFailed,
     )
-    await this.loginReads.readAgent(agent, show)
+    await this.loginReads.readAgent(agent, this.logins.mark(since))
   }
 
   /**

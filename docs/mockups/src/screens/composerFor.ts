@@ -30,7 +30,7 @@ import { workspaceLinkDraft } from '../fixtures/workspaceLinkConversations'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import { loginOwnerOf, otherStarter, sessionLoginFor } from './sessionStarter'
-import { isNew } from './workspaceTabs'
+import { isNew, noMessages } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
 
 const runningConversations = new Set([
@@ -238,7 +238,8 @@ export function composerFor(
     attachTo:
       files && state.composer === 'attachments' ? paths.attachments : undefined,
     picker: state.composer === 'picker' || unlistedPicker,
-    sessionAgent: fresh ? undefined : choice.agent,
+    // A session takes its agent at its first message.
+    sessionAgent: noMessages(state) ? undefined : choice.agent,
     fastKey: true,
     // The pickers of the owner of a personal login and every picker on the
     // org login follow its model list, and a session keeps its model.

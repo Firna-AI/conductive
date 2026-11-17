@@ -209,6 +209,9 @@ It is null only for an older record whose starter is not known.
 `Session.login` names a personal owner or an org, through generated `SessionLogin`.
 It is optional for old records and empty sessions.
 The Worker fixes it at the first accepted message.
+`Session.defaultLogin` names the starter's current default owner before that message.
+It is absent when no login serves the starter and clears when `login` is fixed.
+The check uses the starter as the sender, so every reader gets the same owner.
 An older session with messages keeps the starter's personal login.
 `Session.sourceSessionId` names the session where a message opened this linked session, and null otherwise.
 `Session.loginAvailable` is the result of the last server check of the session login.
@@ -223,6 +226,11 @@ The Worker supplies the order so screens do not compute it.
 `SendMessageResponse.session` in `messages.ts` is the record of the session that took the message.
 It can differ from the session of the request.
 [Org logins](../../docs/protocol/org-logins.md) states the fixed and default login rules.
+
+`AutomationResponse.runLogin` in `automations.ts` names the automation owner's default login for its saved agent.
+It uses generated `SessionLogin`, or null when no login serves that owner.
+Every reader gets that value without a secret, endpoint host, or full address.
+It does not change the automation owner's GitHub identity.
 
 `terms.ts` names the current revision of the Terms, `TERMS_VERSION`.
 `acceptedTermsSignInPath(inviteCode?)` gives the sign-in path that carries that revision and an optional join code.

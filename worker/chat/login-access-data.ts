@@ -14,7 +14,7 @@ export interface SessionLoginTarget {
   sessionId: string
   agent: Agent
   login?: SessionLogin
-  /** Only an empty session asks for this member's default login. */
+  /** A default lookup also checks this member as its sender. */
   userId?: string
 }
 
@@ -88,13 +88,15 @@ export async function readLoginAccess(
     `WITH requested AS (
        SELECT json_extract(value, '$.sessionId') AS sessionId,
          json_extract(value, '$.agent') AS agent,
+         json_extract(value, '$.userId') AS defaultSenderId,
          COALESCE(json_extract(value, '$.login.userId'), json_extract(value, '$.userId')) AS userId,
          json_extract(value, '$.login.orgId') AS loginOrgId
        FROM json_each(?)
      ), context AS (${context})
      SELECT r.sessionId, r.agent, r.userId, c.orgId, c.orgName,
        c.allowed AS workspaceAllowed, c.runnerAllowed,
-       CASE WHEN ? IS NULL OR ${member('?')} THEN 1 ELSE 0 END AS senderAllowed,
+       CASE WHEN COALESCE(?, r.defaultSenderId) IS NULL OR ${member('COALESCE(?, r.defaultSenderId)')}
+         THEN 1 ELSE 0 END AS senderAllowed,
        CASE WHEN ${member('r.userId')} THEN 1 ELSE 0 END AS personalAllowed,
        CASE WHEN c.orgId IS NOT NULL AND (r.loginOrgId IS NULL OR r.loginOrgId = c.orgId)
          THEN 1 ELSE 0 END AS orgAllowed,

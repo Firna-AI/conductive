@@ -76,7 +76,7 @@ export function createFakeServices(search: string): AppServices {
     : []
   const routes = [
     ...signedOut,
-    ...sessionLoginRoutes(options.sessionLogin, server.fetch),
+    ...sessionLoginRoutes(options.sessionLogin, server.fetch, state),
     ...waitlistRoutes(backend),
     ...feedbackRoutes(backend, options),
     ...accountRoutes(backend),

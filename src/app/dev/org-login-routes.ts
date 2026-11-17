@@ -18,6 +18,7 @@ import { coreFixtures, FAKE_TIME } from '../../test-support/fixtures/core'
 import { choice, flag, record } from '../api/parse'
 import { AGENTS } from '../api/read-core'
 import { requireOrg, type DevBackend } from './backend'
+import { devDefaultLogins } from './default-logins'
 import { devEndpointHosts } from './endpoint-logins'
 import type { DevOptions } from './options'
 import type { DevOrgLogin } from './state'
@@ -67,11 +68,13 @@ export function seededOrgLogins(
 /**
  * The org logins of the dev fake, from its state, as the Worker serves
  * them: each member reads them, and only an admin of an active org gets
- * the model list of an own endpoint. Only an admin saves,
- * changes the switch, removes, or refreshes, and a suspended org refuses
- * each write. The fake keeps no key or full address. Saves and Refresh read
- * the model lists of the fake hosts of `devEndpointHosts`, as the account
- * routes do. With `shareSave=fail`, each change of the switch fails.
+ * the model list of an own endpoint. The read also names the default
+ * logins of the person in that org, as the read of the account does. Only
+ * an admin saves, changes the switch, removes, or refreshes, and a
+ * suspended org refuses each write. The fake keeps no key or full address.
+ * Saves and Refresh read the model lists of the fake hosts of
+ * `devEndpointHosts`, as the account routes do. With `shareSave=fail`,
+ * each change of the switch fails.
  */
 export function orgLoginRoutes(backend: DevBackend): Route[] {
   const { orgLogins } = backend.state
@@ -114,7 +117,12 @@ export function orgLoginRoutes(backend: DevBackend): Route[] {
       method: 'GET',
       path: orgSettingsPaths.agentLogins(ID.org),
       answer: ({ params }) =>
-        json({ agentLogins: shown(params) } satisfies OrgAgentLoginsResponse),
+        json({
+          agentLogins: shown(params),
+          defaultLogins: devDefaultLogins(backend.state).filter(
+            (entry) => entry.orgId === params.org,
+          ),
+        } satisfies OrgAgentLoginsResponse),
     },
     ...AGENTS.flatMap((agent): Route[] => [
       {

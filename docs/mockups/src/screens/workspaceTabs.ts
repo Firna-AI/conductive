@@ -5,6 +5,7 @@ import { historyEntries } from '../components/workspace/WorkspaceTabs'
 import {
   linkedSession,
   newSession,
+  startedSession,
   workspaceSessions,
 } from '../fixtures/sessions'
 import { screenshotCopy } from '../fixtures/attachments'
@@ -35,6 +36,15 @@ function sessionLinkStates(state: WorkspaceState): boolean {
     state.conversation === 'sent-by' ||
     state.composer === 'session-link'
   )
+}
+
+/**
+ * Whether the open session has no message yet: a new session of the viewer,
+ * or an empty session that another member started. Its chat shows the
+ * empty state of a new session.
+ */
+export function noMessages(state: WorkspaceState): boolean {
+  return state.tab === 'new-session' || state.tab === 'started-session'
 }
 
 /** The history of the workspace, with a note while a new workspace has none. */
@@ -196,6 +206,16 @@ export function tabsFor(
       kind: 'session',
       title: nameLabel(title),
       to: paths.linkedSession,
+      selected: true,
+    })
+  }
+  if (state.tab === 'started-session') {
+    const { key, title } = startedSession
+    tabs.push({
+      key,
+      kind: 'session',
+      title: nameLabel(title),
+      to: paths.orgLoginStartedSession,
       selected: true,
     })
   }

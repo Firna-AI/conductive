@@ -68,6 +68,17 @@ export const workspaceSessions: readonly StartedSession[] = [
 export const newSession: Session = { key: 'new', title: null }
 
 /**
+ * A session that Cal started with + and has sent no message in yet. Its
+ * first message takes the default login of Cal, so the record names that
+ * login to each member before then. Its tab shows Untitled.
+ */
+export const startedSession: StartedSession = {
+  key: 'started',
+  title: null,
+  starter: 'cal',
+}
+
+/**
  * More open sessions of the workspace, oldest first, for a row with more
  * tabs than fit. None of them is in the session history.
  */

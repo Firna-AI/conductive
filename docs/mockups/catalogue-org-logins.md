@@ -65,7 +65,10 @@ group of the settings of Acme.
   says "Acme's login", also for Cal. Its `new-session` variant has a new
   session of Priya, who has no Claude login, with the same label and no
   Connect notice. Its `every-member` variant has a new session of Cal, who
-  has his own login, while the switch is on. Its `removed` variant has a
+  has his own login, while the switch is on. Its `started-session` variant
+  has an empty session that Cal started, which Priya opens: the bar says
+  "Acme's login", because the first message takes the default login of
+  Cal, and the open picker hides Fable 5.1. Its `removed` variant has a
   message of Priya after an admin removed the org login, which starts a new
   session.
 - `app/new-workspace/dialog/org-login` has the dialog of Priya with the
@@ -77,3 +80,6 @@ group of the settings of Acme.
   whose runs use the org login: "Runs use Acme's Claude login and your
   GitHub access." Its `org-models` variant has the open model picker
   without Fable 5.1.
+- `app/automations/automation/member/org-login` has the automation of Cal
+  as Priya reads it, while its runs use the org login: "Runs use Acme's
+  Claude login and Cal's GitHub access."

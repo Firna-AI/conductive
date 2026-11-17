@@ -127,7 +127,8 @@ npm run typecheck
 - `retry.test.ts`, `retry-queue.test.ts`, and `retry-crash.test.ts` cover
   the newest failed turn: stale tabs, refused ends, waiting work, rollback,
   and commit crashes. `retry.test-support.ts` sends retries and reads the
-  session records.
+  session records. `retry-crash.test-support.ts` prepares the running turn
+  and checks its saved gateway before each commit-crash case.
 - `session-logins.test.ts`, `linked-sessions.test.ts`, `linked-retry.test.ts`,
   and `legacy-sessions.test.ts` test starters, linked sessions, and old data.
   `login-observation.test.ts` tests that an observed change stays after a
@@ -140,6 +141,9 @@ npm run typecheck
   `org-login-legacy.test.ts` checks stored sessions with and without messages,
   and an empty session that changes its agent before admission.
   `org-login.test-support.ts` saves org logins through the real API.
+- `empty-session-login.test.ts` checks another member's record read before the first accepted message.
+  It checks default-owner updates, secret and host privacy, and a starter who left or was suspended.
+  The last cases compare unavailable record metadata with the linked session that Send accepts.
 - `login-reuse.test.ts` tests a starter who does not share the login.
   Another member gets an empty linked session, and the first session keeps
   `loginAvailable: true` with `loginShared: false`. A queued message of

@@ -104,6 +104,21 @@ export function loginModels(
 }
 
 /**
+ * Whether a picker of the person can follow the model list of an org
+ * login, which the Worker can read again in the background: an org login
+ * that a new session of the person takes, or an org endpoint whose last
+ * list the account keeps for the sessions on it, also while the default
+ * login is the own login again (org login decision 3 A). The account does
+ * not say whether an org login is an endpoint, so each org login that a
+ * new session takes counts.
+ */
+export function orgLoginsInUse(source: LoginSource): boolean {
+  return (source.defaultLogins ?? []).some(
+    (entry) => entry.login?.type === 'org' || entry.orgModelList,
+  )
+}
+
+/**
  * The model lists that a picker of a new session of the person in the org
  * `orgId` follows: for each agent, the list of the login that its new
  * session takes.

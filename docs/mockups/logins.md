@@ -166,6 +166,9 @@ other pages.
   automation: the own login, or the org login (decision 5 A of the org
   logins plan). It keeps the GitHub access of the owner. The line under the
   prompt names both, such as "Runs use Acme's Claude login and your GitHub
-  access.", as `app/automations/automation/new/org-login` shows. The model
-  picker of the form follows the model list of the org endpoint (decision
-  3 A), as its `org-models` variant shows.
+  access.", as `app/automations/automation/new/org-login` shows. Each
+  member who reads the automation of another member reads the same logins,
+  such as "Runs use Acme's Claude login and Cal's GitHub access.", as
+  `app/automations/automation/member/org-login` shows. The model picker of
+  the form follows the model list of the org endpoint (decision 3 A), as
+  its `org-models` variant shows.

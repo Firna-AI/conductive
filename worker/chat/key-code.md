@@ -209,6 +209,8 @@ first.
   personal and org owners, senders, and optional runner tokens.
 - `default-login.ts`: `defaultLogin`, the sole ordering rule, and
   `resolveDefaultLogin`, its member lookup for a workspace or org.
+- `login-owner.ts`: `publicLoginOwner`, the shared owner projection for
+  empty-session metadata and automation replies, with no credential or endpoint.
 - `session-login.ts` and `session-storage.ts`: the two login paths of
   `SessionLogins`, credential-aware default resolution, and older session defaults.
 - `session-record.ts`: `sessionFor`, the read of one session record.

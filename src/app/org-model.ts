@@ -1,4 +1,3 @@
-import type { Agent } from '../shared/generated/Agent'
 import type { Workspace } from '../shared/generated/Workspace'
 import type { GitHubCapabilities } from '../shared/github'
 import { membersPath, type MembersResponse } from '../shared/members'
@@ -27,8 +26,14 @@ import { listWithArchives } from './archive-overlay'
 import { Creations } from './creations'
 import { workspaceUpdated, type ListData } from './list-changes'
 import { NewWorkspaceModel } from './new-workspace-model'
-import { OrgAgentLogins } from './org-agent-logins'
-import { buildsWait, listWait, onEntry, automationsWait } from './org-waits'
+import { OrgAgentLogins, type OrgLoginDefaults } from './org-agent-logins'
+import {
+  automationsWait,
+  buildsWait,
+  listWait,
+  onEntry,
+  orgLoginsWait,
+} from './org-waits'
 import { Refresher, type Refreshing } from './refresh'
 import { Resource } from './resource'
 import type { AppServices } from './services'
@@ -95,14 +100,15 @@ export class OrgModel {
   private readonly drafts = new Map<string, NewWorkspaceModel>()
 
   /**
-   * `loginsChanged` runs after each change of an org login that an admin
-   * makes here, because it can change the default logins of the account.
+   * `loginDefaults` keeps the default logins of the account current after
+   * each read and each change of the org logins, as `OrgLoginDefaults` says.
+   * Without it, such as in a test of one org, they change no account.
    */
   constructor(
     services: AppServices,
     orgId: string,
     suspension: OrgSuspension = neverSuspended,
-    loginsChanged: (agent: Agent) => void = () => undefined,
+    loginDefaults?: OrgLoginDefaults,
   ) {
     this.suspension = suspension
     const api = noteOrgRefusals(services.api, () => suspension.note())
@@ -147,7 +153,7 @@ export class OrgModel {
     this.builds = builds.store
     this.members = members.store
     this.automations = automations.store
-    this.agentLogins = new OrgAgentLogins(api, orgId, loginsChanged)
+    this.agentLogins = new OrgAgentLogins(api, orgId, loginDefaults)
     this.parts = {
       list: new Refresher(list, listWait, this.services),
       repositories: new Refresher(repositories, onEntry, this.services),
@@ -156,7 +162,7 @@ export class OrgModel {
       automations: new Refresher(automations, automationsWait, this.services),
       agentLogins: new Refresher(
         this.agentLogins.resource,
-        onEntry,
+        orgLoginsWait,
         this.services,
       ),
     }

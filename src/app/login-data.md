@@ -32,32 +32,65 @@ says what the screens show.
 - Each open of the agent list, on the account and in Get started, reads
   the logins again through `AccountModel.refreshLogins`. So a login that
   the Worker stopped after the app opened shows Signed out. The Worker
-  gives the logins only in `GET /api/account`, and the read takes only
-  the logins and the default logins of that answer.
-  `AgentLogins` in `agent-logins.ts` counts each local change of a login:
-  a save, a remove, a connected sign-in, a share change, and a change of
-  an org login, at its start and when its reply shows. A read shows the
-  login and the default logins of an agent only while that agent had no
-  change during the read. An open shares a read that runs already, and a
-  failed read keeps what shows.
+  gives the own logins only in `GET /api/account`, and the read takes only
+  the logins and the default logins of that answer. An open shares a read
+  that runs already, and a failed read keeps what shows.
+- `AgentLogins` in `agent-logins.ts` orders what shows. It counts each
+  local change of a login: a save, a remove, a connected sign-in, a share
+  change, a change of an org login, and an org that joins the orgs of the
+  person, at its start and when its reply shows. It also numbers each read
+  at its start. A read shows the login and the default logins of an agent
+  only while that agent had no change during the read, and while no read
+  that started later showed them. So an older answer never takes back a
+  newer one.
 - After a save, a remove, or a connected sign-in of an own login, the
   account reads the logins of its agent again, so that the screens show
-  the default logins that the server names after the change. The same
-  holds after each save, switch change, and remove of an org login in this
-  tab, which `OrgModel` reports through `AccountModel.orgLoginChanged`. An
-  account that names no default login needs no such read, except the read
-  of the model list after the save of an own endpoint.
+  the default logins that the server names after the change. An account
+  that names no default login needs no such read, except the read of the
+  model list after the save of an own endpoint.
+- The read of the org logins of an org also names the default logins of
+  the person in that org. `OrgAgentLogins` in `org-agent-logins.ts` gives
+  them to the account through `OrgLoginDefaults`, which `AccountLoginReads`
+  implements. They take the place of the default logins of that org only.
+  The default logins of the other orgs stay.
+- Each operation on the org logins in this tab ends in one completion
+  path, `OrgAgentLogins.completed`. A save, a switch change, a remove, and
+  Refresh count a change of their agent, and the org logins read again. So
+  the pickers follow each operation, with no read of the account. A write
+  reads again only while the account names default logins, because its
+  answer holds the login. Refresh always reads again, because only that
+  read holds the new list.
+- When an org joins the orgs of the person that are not deleted, the
+  account reads once, as a change of each agent. An org joins after an
+  accepted invitation, a restore, or a create. So a member whom only the
+  org login of the new org serves can start a session at once, and Get
+  started counts that login. The orgs of an app start read nothing,
+  because the start read the account with them.
 - `AccountLoginReads` in `account-login-reads.ts` shares those reads with
-  each return to the visible page. While the account has an own endpoint
-  login, it also reads once a minute while the page shows. Each read merges
-  only the logins and the default logins, with the same guards against
-  local changes. A read across
-  a new app start or a sign-out changes nothing. Polling stops without an
-  own endpoint login or while the app is not ready. A hidden page cancels
-  its timer. When the page shows again, the reader reads once and resumes
-  polling.
+  each return to the visible page. It also reads once a minute while the
+  page shows and a picker of the person follows a model list that the
+  Worker can read again in the background. Such a list belongs to an own
+  endpoint login, to an org login that a new session takes, or to an org
+  endpoint whose list the account keeps for older sessions.
+  `orgLoginsInUse` in `default-logins.ts` gives the rule of the org
+  logins. The account does not say whether an org login is an endpoint,
+  so an org API key that serves also keeps the timer. `modelListWait` in
+  `endpoint-models.ts` gives the wait. Each read merges only the logins
+  and the default logins, with the same guards. A read across a new app
+  start or a sign-out changes nothing. Polling stops without such a list
+  or while the app is not ready. A hidden page cancels its timer. When the
+  page shows again, the reader reads once and resumes polling.
   The same reader owns the reads after an endpoint save or Refresh.
-  Those reads use the caller's mark to preserve later login changes.
+  Those reads use the caller's mark to preserve later login changes. The
+  read after a Refresh follows the changes from before the Refresh, as
+  `AgentLogins.changesSoFar` gives them. It takes its number among the
+  reads when it starts, so a read that ran during the Refresh does not hide
+  the new list.
+- The Agents tab of the org settings reads the org logins at its open, at
+  each return to the page, and once a minute while an org endpoint is
+  connected, as `orgLoginsWait` in `org-waits.ts` says. So the model list
+  that an admin sees follows the reads of the Worker in the background
+  too.
 
 ## Key code
 
@@ -82,7 +115,12 @@ says what the screens show.
   [Screens](screens.md) says. `loginModels` and `newSessionModels` of
   `default-logins.ts` give it the list of the login that a message runs
   on: the own endpoint, or the org endpoint of org login decision 3 A.
-- `api/read-core.ts`: `readAccount` also reads the default logins of the
-  account, with the owner of each login, a member or the org. The readers
-  of the ChatGPT sign-in are in `api/read-codex-device.ts`, and the readers
+- `api/read-core.ts`: `readDefaultLogins` reads the default logins of a
+  reply, with the owner of each login, a member or the org. `readAccount`
+  uses it for the account, and `readOrgLogins` in
+  `api/read-org-logins.ts` for the org logins of an org. The readers of
+  the ChatGPT sign-in are in `api/read-codex-device.ts`, and the readers
   of the GitHub installations and repositories in `api/read-github.ts`.
+- `dev/org-login-routes.ts`: the read of the org logins of the dev fake
+  names the default logins of the person in that org, from
+  `dev/default-logins.ts`, as the Worker does.

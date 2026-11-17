@@ -53,6 +53,10 @@ export type Session = {
    */
   login?: SessionLogin | null
   /**
+   * The starter's current default owner, only before the first accepted message.
+   */
+  defaultLogin?: SessionLogin | null
+  /**
    * source session id.
    */
   sourceSessionId: string | null

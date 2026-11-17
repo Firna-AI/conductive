@@ -2,9 +2,9 @@ import type { AgentModel } from '../../shared/generated/AgentModel'
 import type { Agent } from '../../shared/generated/Agent'
 import type { Session } from '../../shared/generated/Session'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
-import type { MessageSender } from '../../shared/generated/MessageSender'
+import type { SessionLogin } from '../../shared/generated/SessionLogin'
 import type { LinkedReason } from '../../../docs/mockups/src/components/chat/linkedCopy'
-import type { SessionLogin } from '../../../docs/mockups/src/components/chat/SessionLogin'
+import type { SessionLogin as LoginLabel } from '../../../docs/mockups/src/components/chat/SessionLogin'
 import { AGENTS, loginUsable } from '../../app/api/read-core'
 import {
   loginModels,
@@ -12,6 +12,8 @@ import {
   type LoginSource,
 } from '../../app/default-logins'
 import { offeredModels } from '../../app/endpoint-models'
+import { loginOwnerName } from '../../app/login-owner'
+import { personName } from '../../app/people'
 import type { ChatSnapshot } from './chat-snapshot'
 
 /**
@@ -78,13 +80,6 @@ export function loginReader(snapshot: ChatSnapshot): LoginReader | null {
   }
 }
 
-/** The name of a member: the display name, or else the GitHub login. */
-function memberName(
-  person: Pick<MessageSender, 'displayName' | 'githubLogin'>,
-): string {
-  return person.displayName?.trim() || person.githubLogin
-}
-
 /**
  * The login of a new session of the reader for `agent`, which a linked
  * session takes: the default login that the server names. `excluded` is
@@ -121,10 +116,24 @@ function linkedTo(
 }
 
 /**
- * The view of a session on the personal login of another member, or of a
- * session with no login of another starter: an empty session, whose first
- * message takes the default login of its starter, which only that starter
- * knows. The record says whether that login serves other members.
+ * The login that the composer follows for a session: the login that the
+ * session keeps, or, in an empty session of another member, the default
+ * login of its starter. The server names that default login in the record
+ * until the first message, which takes it. The reader's own empty session
+ * follows the default logins of the reader's account instead, as
+ * `sessionLoginOf` says.
+ */
+function loginOf(session: Session, reader: LoginReader): SessionLogin | null {
+  if (session.login) return session.login
+  const starter = session.startedBy
+  if (starter === null || starter.id === reader.id) return null
+  return session.defaultLogin ?? null
+}
+
+/**
+ * The view of a session on the personal login of another member, or of an
+ * empty session of another starter whose record names no default login.
+ * The record says whether that login serves other members.
  */
 function otherMember(
   session: Session,
@@ -150,22 +159,21 @@ export function sessionLoginOf(
   reader: LoginReader | null,
 ): SessionLoginView | null {
   const { startedBy } = session
-  const login = session.login ?? null
   const agent = session.choice.agent
   if (reader === null) {
-    return startedBy === null && login === null
+    return startedBy === null && !session.login
       ? { kind: 'linked', owner: null, reason: 'unavailable', login: own }
       : null
   }
+  const login = loginOf(session, reader)
+  const ownerName = (owner: SessionLogin) =>
+    loginOwnerName(owner, reader.orgName, startedBy ? [startedBy] : [])
   if (login?.type === 'org') {
+    const name = ownerName(login)
     if (session.loginAvailable) {
-      return { kind: 'session', login: { owner: 'org', name: reader.orgName } }
+      return { kind: 'session', login: { owner: 'org', name } }
     }
-    return linkedTo(
-      newLogin(reader, agent, 'org'),
-      reader.orgName,
-      'unavailable',
-    )
+    return linkedTo(newLogin(reader, agent, 'org'), name, 'unavailable')
   }
   if (login?.type === 'personal' && login.userId === reader.id) {
     if (session.loginAvailable) return { kind: 'session', login: own }
@@ -175,14 +183,15 @@ export function sessionLoginOf(
       : { kind: 'missing', linked: false }
   }
   if (login?.type === 'personal') {
-    const name = startedBy?.id === login.userId ? memberName(startedBy) : null
-    return otherMember(session, reader, name)
+    return otherMember(session, reader, ownerName(login))
   }
   if (startedBy === null) {
     return linkedTo(newLogin(reader, agent), null, 'unavailable')
   }
+  // An empty session of another member whose record names no default login:
+  // no login serves its starter, or an older record does not say.
   if (startedBy.id !== reader.id) {
-    return otherMember(session, reader, memberName(startedBy))
+    return otherMember(session, reader, personName(startedBy))
   }
   // The reader's own session with no login yet: its first message takes the
   // default login of the reader, while the record says that one serves.
@@ -197,7 +206,7 @@ export function sessionLoginOf(
  */
 export function loginLabelOf(
   view: SessionLoginView | null,
-): SessionLogin | undefined {
+): LoginLabel | undefined {
   if (view === null || view.kind === 'missing') return undefined
   const { login } = view
   if (login.owner === 'own' || login.name === null) return undefined
