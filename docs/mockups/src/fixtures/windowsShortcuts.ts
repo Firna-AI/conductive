@@ -81,6 +81,7 @@ export const windowsKeys: Readonly<Record<CommandId, readonly Shortcut[]>> = {
   'go-to-checks': [],
   'go-to-terminal': ['Ctrl+J'],
   'go-to-preview': [],
+  'new-terminal': [],
   'new-session': ['Ctrl+T', 'Alt+Shift+T'],
   'session-history': [],
   'focus-message': ['Ctrl+L', 'Ctrl+Shift+L'],

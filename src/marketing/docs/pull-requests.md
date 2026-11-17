@@ -51,7 +51,7 @@ You can also ask the agent to create a pull request with the GitHub CLI.
 The CLI is authenticated on computers with the current software.
 
 GitHub operations in an agent turn use the person whose message started that turn.
-Commands in the shared Terminal use the workspace owner's GitHub account.
+Commands in any workspace terminal use the workspace owner's GitHub account.
 
 Commits in each place name that same person as both author and committer.
 An `author` or `committer` setting in the repository or in the global Git settings takes priority over the workspace owner's author.

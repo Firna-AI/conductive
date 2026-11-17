@@ -24,6 +24,7 @@ import {
   Server,
   Settings2,
   SlidersHorizontal,
+  SquarePlus,
   SquareTerminal,
   Users,
 } from 'lucide-react'
@@ -49,6 +50,7 @@ const actionIcons: Readonly<Record<OfferedActionId | OwnActionId, LucideIcon>> =
     'go-to-terminal': SquareTerminal,
     'go-to-preview': Globe,
     'go-to-desktop': Monitor,
+    'new-terminal': SquarePlus,
     'merge-latest': GitMerge,
     'archive-workspace': Archive,
     'restore-workspace': ArchiveRestore,
@@ -65,6 +67,7 @@ const orgSettingIcons: Readonly<Record<SettingsTab, LucideIcon>> = {
   general: Settings2,
   repositories: FolderGit2,
   'cloud-computer': Server,
+  agents: Bot,
   secrets: KeyRound,
   members: Users,
 }

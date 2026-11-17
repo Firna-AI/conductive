@@ -11,7 +11,6 @@ import {
 } from '../shared/terminal-bridge'
 import { ToolButton } from './tool-parts/ToolButtons'
 import { useTouch } from './tool-parts/ToolRoot'
-import type { ReadyTerminal } from './terminalApi'
 import type { ExtraKey } from './terminalKeys'
 import type { TerminalLinks } from './terminalLinks'
 import { linkKey } from './terminalLinks'
@@ -24,10 +23,10 @@ import { XtermScreen } from './xtermScreen'
 import styles from './TerminalScreen.module.css'
 
 /**
- * Opens the decoded transport of a ready terminal, such as the ttyd socket at
- * its `socketPath`. Keep the function stable across renders.
+ * Opens the decoded transport of one terminal at its socket path, such as
+ * the ttyd socket of the terminal. Keep the function stable across renders.
  */
-export type ConnectTerminal = (terminal: ReadyTerminal) => TerminalTransport
+export type ConnectTerminal = (socketPath: string) => TerminalTransport
 
 type RowKey = ExtraKey | 'control'
 
@@ -60,7 +59,8 @@ function fitVisible(host: HTMLElement, fit: FitAddon): void {
  * space after it.
  */
 export function TerminalScreen(props: {
-  terminal: ReadyTerminal
+  /** The socket path of the terminal. A new path opens a new connection. */
+  socketPath: string
   connect: ConnectTerminal
   /** The connection ended, so the screen takes no more input. */
   ended: boolean
@@ -81,7 +81,7 @@ export function TerminalScreen(props: {
   const [control, setControl] = useState(false)
   const touch = useTouch()
   const { scheme } = useSharedUiTheme()
-  const { terminal, connect, ended, screenRef } = props
+  const { socketPath, connect, ended, screenRef } = props
   const onClosed = useEffectEvent(() => props.onClosed())
   const onInput = useEffectEvent(() => props.onInput?.())
   const currentLinks = useEffectEvent(() => props.links)
@@ -103,7 +103,7 @@ export function TerminalScreen(props: {
     if (!host) return undefined
     let transport: TerminalTransport
     try {
-      transport = connect(terminal)
+      transport = connect(socketPath)
     } catch {
       // A transport that can't open shows as ended, with Reconnect.
       onClosed()
@@ -178,7 +178,7 @@ export function TerminalScreen(props: {
       xtermRef.current = null
       sessionRef.current = null
     }
-  }, [terminal, connect])
+  }, [socketPath, connect])
 
   useEffect(() => {
     const host = hostRef.current

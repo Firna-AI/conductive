@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-11-16, during the merge of main into pull request #366.
-- **Location:** `worker/operator/org-activity-race.test.ts:22,94`, `worker/features/workspace-links.test.ts:27`, `worker/app-api/feature-repository-builds.test.ts:112`, `worker/operator/org-native.test.ts:81`, and `worker/operator/ownership-stop-race.test.ts:68`.
+- **Location:** `worker/operator/org-activity-race.test.ts:22,94`, `worker/features/workspace-links.test.ts:27`, `worker/app-api/feature-repository-builds.test.ts:112`, `worker/operator/org-native.test.ts:81`, `worker/operator/ownership-stop-race.test.ts:68`, `worker/model-gateway/codex-concurrent.test.ts`, `worker/lifecycle/restore-watch.test.ts`, and `worker/tools/workspace-creation.test.ts`.
 - **Reason:** These files match main, and every failed test passed in a focused rerun without a source change.
 
 - **Background:**
@@ -25,6 +25,11 @@
     - `worker/lifecycle/saved-script-execution.test.ts`: `runs retention startup in Bash with its org environment without marking ready or restarting the runner`.
     - `worker/lifecycle/start-runner-readiness.test.ts`: `completes a resume only after runner readiness without rerunning its startup script`.
   - All three files exactly matched main commit `196da1706`. A focused rerun of the three files at the same path, with the same source and timeouts, passed all 13 tests with no skips in 15.19 seconds. Both runs set `TMPDIR` to a directory on the repository filesystem. Resource contention during the full run is a suspected source. The blocked await and the cause remain unknown.
+  - On 17 November 2026, a full `npm run check` on `calummoore/when-nested-workspaces-used-96i7` at commit `5b48c2f24` passed every static check. The suite passed 3,923 tests, failed three tests, and skipped 12, across 1,223 files. The run did not set `TMPDIR`, so the site build test also failed with the cross-device rename error. Each other failure was `Error: Test timed out in 15000ms.`:
+    - `worker/model-gateway/codex-concurrent.test.ts`: `returns retryable 502 after a bounded wait while the winning recovery still runs`.
+    - `worker/lifecycle/restore-watch.test.ts`: `writes the restore marker when hydrated is absent after create and resume`.
+    - `worker/tools/workspace-creation.test.ts`: `keeps one titled admission for overlapping creates and a lost reply after restart or changed defaults`.
+  - The branch changes no Worker code. A focused rerun of the four files at the same path, with `TMPDIR` on the repository filesystem, passed all 28 tests. Resource contention during the full run is still the suspected source.
 - **Task:** Find the source of these timeouts. Compare focused and full runs at the same path, then compare paths with the same test set. Make the tests deterministic with readiness signals, event order, or isolated state. Keep each assertion. Add no retry, sleep, skip, or longer timeout.
 - **Impact if no action:** A complete check can fail while a focused run passes. This can hide a real regression or delay another branch.
 - **Needs:** Node 24 and a Conductive workspace that can run the full suite.

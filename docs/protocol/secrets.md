@@ -93,8 +93,8 @@ while the change is open. Its pull request keeps them after the merge.
 
 ## The Secrets tab
 
-- The org settings have a Secrets tab after the Cloud computer tab. Every
-  member can open it.
+- The org settings have a Secrets tab after the
+  [Agents tab](org-logins.md#the-agents-tab). Every member can open it.
 - Each row shows the name, the description, the member who added the
   secret, and the record of its last reveal. Every member sees that
   record.
@@ -219,29 +219,43 @@ while the change is open. Its pull request keeps them after the merge.
 
 ### Mac access
 
-- Mac access is on in each new workspace, also in a workspace that an
-  agent or an automation creates (secrets decision 9 A).
-- Reason: the Mac app still asks before each command that its user did
-  not always allow. So the switch only adds a stop, and each Mac still
-  decides, as decision 62 says.
+- Mac access is off in each new workspace, also in a workspace that an
+  agent or an automation creates (secrets decision 18 A). A member turns
+  it on in the Capabilities of the workspace, or in the Capabilities of
+  New workspace before the create.
+- Reason: agents can reach a Mac only after a member chooses it for the
+  workspace. So text that steers an agent cannot reach a Mac through a
+  new workspace or through an automation run.
+- Mac access was turned off one time in each workspace that existed
+  before this rule, also where a member had turned it on (secrets
+  decision 19 B). Reason: the switch was new, so few members had chosen
+  its value themselves.
+- Keeping Mac access on in the workspaces that existed then was rejected,
+  because they kept a default that no member chose.
 - While Mac access is off, the Worker refuses each Mac command request of
   the workspace, as [Mac commands](agent-tools.md#mac-commands) says.
-- Mac access that starts off was rejected, in each new workspace and in a
-  workspace that an agent or an automation creates. So was Mac access that a
-  new workspace copies from the workspace that creates it. Reason: each
-  of them adds a refusal to the behaviour of decision 62.
+- While it is on, the Mac app still asks before each command that its user
+  did not always allow, as decision 62 says.
+- Mac access that starts on in each new workspace was rejected, because
+  agents could then reach a Mac before a member chooses it. Mac access
+  that is on for workspaces that members create, and off only for
+  workspaces that agents and automations create, was rejected. Reason: one rule for every new
+  workspace is simpler, and the risk of a steered agent is the same.
+- Mac access that a new workspace copies from the workspace that creates
+  it was rejected, because a workspace that an agent creates could then
+  reach a Mac with no member's choice.
 - A Mac access switch that each member keeps for each workspace was
   rejected, because one control would then have a shared part and a
   personal part.
 - Risk: any member can turn Mac access on again after another member
   turned it off.
-- Risk: an agent in a workspace with Mac access off can create a new
-  workspace, where Mac access is on. The first turn there has the same
-  sender, so its requests reach the Mac of that sender.
-- Risk: a run workspace starts with Mac access on, and the automation owner
-  sends its first turn. So text that steers the agent of a run can ask for
-  a command on the Mac of the owner. A command that the owner always
-  allowed then runs with no question, as
+- Risk: an automation that needs a Mac cannot use it in the first turn of
+  a run. A member must turn Mac access on in the run workspace, then send
+  a message.
+- Risk: when a member turns Mac access on in a run workspace, text that
+  steers the agent of the run can ask for a command on the Mac of the
+  sender of the next turn. A command that the sender always allowed then
+  runs with no question, as
   [The choices](desktop-commands.md#the-choices) says.
 
 ## Turns that no person started

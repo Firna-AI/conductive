@@ -49,7 +49,7 @@ export const macCommandsInChat = defineScreen({
       description:
         'A member turned Mac access off in the Capabilities of the workspace, as app/capabilities/mac-access-off shows. The workspace refused the request at once, with no question on the Mac. The card at its place says Mac access off, and its line says that Mac access is off in the Capabilities of this workspace. The tool gave the agent the same reason, and the agent goes on without the Mac.',
       rationale:
-        'A workspace with Mac access off refuses each Mac command request of its agents, with a reason (secrets decisions 8 B and 9 A). When a member turns Mac access off, each waiting request of the workspace ends with that reason, and a running command runs to its end, because the Mac app owns it.',
+        'A workspace with Mac access off refuses each Mac command request of its agents, with a reason (secrets decisions 8 B and 18 A). When a member turns Mac access off, each waiting request of the workspace ends with that reason, and a running command runs to its end, because the Mac app owns it.',
       props: { conversation: 'mac-access-off' },
     },
   ],

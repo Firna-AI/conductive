@@ -64,14 +64,14 @@ describe('the Capabilities control of New workspace', () => {
       after: { vercel: again.state('VERCEL_TOKEN'), mac: again.mac() },
     }).toEqual({
       allAgents: { checked: true, off: true },
-      before: { vercel: { checked: false, off: false }, mac: 'true' },
+      before: { vercel: { checked: false, off: false }, mac: 'false' },
       sent: expect.objectContaining({
         capabilities: {
           preapprovedSecretIds: ['vercel-token'],
-          macAccess: false,
+          macAccess: true,
         },
       }),
-      after: { vercel: { checked: false, off: false }, mac: 'true' },
+      after: { vercel: { checked: false, off: false }, mac: 'false' },
     })
   })
 })

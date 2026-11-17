@@ -35,6 +35,7 @@ export interface WorkspaceView {
   temporaryTab: TemporaryTab | null
   fileList: 'all' | 'changes' | 'checks'
   tool: 'terminal' | 'preview' | 'desktop'
+  terminal?: string
 }
 export interface WorkspaceViewResponse {
   /** The view in the shape of the route, as `WorkspaceViewWire` says. */

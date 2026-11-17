@@ -1,3 +1,4 @@
+import type { Agent } from '../../shared/generated/Agent'
 import type { Workspace } from '../../shared/generated/Workspace'
 import type { Attachment } from '../../shared/generated/Attachment'
 import type { AccountResponse } from '../../shared/account'
@@ -13,6 +14,7 @@ import type {
   OrgSettings,
   Repository,
 } from '../../shared/org-settings'
+import type { OrgAgentLoginStatus } from '../../shared/org-agent-logins'
 import type { OrgSummary } from '../../shared/orgs'
 import type { Automation, AutomationRun } from '../../shared/automations'
 import type { Section } from '../../shared/sections'
@@ -70,9 +72,18 @@ export interface DevWaitlist {
   invitations: { invite: PendingOrgInvite; org: OrgState }[]
 }
 
+/** A connected org login, as the dev fake keeps it, with no key. */
+export type DevOrgLogin = Extract<OrgAgentLoginStatus, { connected: true }>
+
 /** Everything that the writes of the dev fake change. */
 export interface DevState {
+  /**
+   * The account, without its default logins, which the account route
+   * names from the logins at each read, as the Worker does.
+   */
   account: AccountResponse
+  /** The org logins of each org, by org ID and agent. */
+  orgLogins: Map<string, Map<Agent, DevOrgLogin>>
   getStarted: GetStartedResponse
   /** In the order of the org rail. */
   orgs: readonly OrgState[]

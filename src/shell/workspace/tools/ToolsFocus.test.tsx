@@ -21,6 +21,7 @@ import { openPaletteTab } from '../../palette/palette-test-kit'
 import { pressCommand } from '../../shortcuts/shortcut-test-kit'
 import { click, settle } from '../../test-mount'
 import { linkTo, openTab, socketsOf } from '../wiring-test-kit'
+import { openTerminals } from './terminal-tabs-kit'
 import { toolHref } from './tool-address'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
@@ -100,6 +101,30 @@ describe('the focus after a click on the Terminal tab', () => {
 
     expect(opened).toHaveLength(1)
     expect(terminalFocused(panel)).toBe(true)
+  })
+
+  test('moves to the shown terminal, and no hidden terminal takes it', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer()
+    await openTerminals(server, 2)
+    const { events } = socketsOf(server)
+    const { view } = await openTab(server, routes.workspace(org, id), {
+      events,
+    })
+    const panel = toolsPanel(view)
+
+    // Terminal 1 stays mounted and hidden while Terminal 3 shows.
+    click(byRole('link', 'Terminal 3', panel))
+    await settle()
+    click(linkTo(panel, toolHref(org, id, 'preview')))
+    await settle()
+    click(linkTo(panel, toolHref(org, id, 'terminal')))
+    await settle()
+
+    expect({
+      terminal: terminalFocused(panel),
+      hidden: document.activeElement?.closest('[hidden]') !== null,
+    }).toEqual({ terminal: true, hidden: false })
   })
 
   test('stays where the user moved it before the terminal connected', async () => {

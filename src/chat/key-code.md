@@ -196,8 +196,11 @@ is relative to `src/chat/`, the folder of this guide.
 - `state/workspace-records.ts`: the order of the workspace record and its
   start steps and saved error by event number.
 - `state/session-login.ts`: whose login a message uses, from the session
-  record and the reader, the login label in the composer, and the models
-  that the picker of the composer offers.
+  record, the reader, and the default logins of the account: the login of
+  the session, a member's or the org's, or the login of a new linked
+  session. It also gives the login label in the composer, and the models
+  that the picker of the composer offers. `state/blockers.ts` gives the
+  Connect notice when no login serves the message.
 - `state/linked-replies.ts`: the message and the focus of a reply that names
   a linked session.
 - `components/SourceLine.tsx`: the line that links a linked session to its
@@ -258,6 +261,8 @@ is relative to `src/chat/`, the folder of this guide.
   and drops an unknown value. It keeps a speed that `readTurnSpeed` reads,
   and drops any other value. `api/read-changed-file.ts` reads the changed
   files of a turn end, with their real paths and display labels.
+  `api/read-view.ts` reads the saved view of the view route, with each
+  Preview tab at its place in the row and the shown terminal.
 - `components/`: the tabs, the chat, the composer, the model picker, and the
   overlays. `ui/`: interactive buttons, menus, sheets, and dialogs.
 - `components/send-key.ts`: `useSendKey`, the send key that the composer

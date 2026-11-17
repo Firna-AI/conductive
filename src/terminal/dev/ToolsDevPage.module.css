@@ -47,8 +47,12 @@
   height: 389px;
 }
 
-/* The tool page of a phone at 390 x 800, between its bars. */
+/*
+ * The tool page of a phone at 390 x 800, between its bars. A sheet, such as
+ * the question before a terminal closes, rises from its bottom edge.
+ */
 .phone {
+  position: relative;
   width: 390px;
   height: 636px;
   background: var(--ui-surface);

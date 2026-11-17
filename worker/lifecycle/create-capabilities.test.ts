@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest'
 
+import { NEW_WORKSPACE_CAPABILITIES } from '../../src/shared/secrets'
 import { readWorkspaceCapabilities } from '../secrets/capabilities-data'
 import { insertSecret } from '../secrets/writes'
 import { setupBackendTests } from './backend-test-hooks'
@@ -7,6 +8,8 @@ import { FIRST_MESSAGE } from './durable-test-support'
 import { createWorkspace } from './workspaces'
 
 const fixtureForTest = setupBackendTests()
+// The test chooses the Mac access that a create without a choice does not get.
+const chosen = !NEW_WORKSPACE_CAPABILITIES.macAccess
 
 it('recovers the saved capabilities after a create handoff fails before workspace records exist', async () => {
   const fixture = fixtureForTest()
@@ -24,7 +27,7 @@ it('recovers the saved capabilities after a create handoff fails before workspac
   const input = {
     repositoryId,
     firstMessage: FIRST_MESSAGE,
-    capabilities: { preapprovedSecretIds: ['saved-secret'], macAccess: false },
+    capabilities: { preapprovedSecretIds: ['saved-secret'], macAccess: chosen },
   }
   const workspace = runtime.workspace
   runtime.workspace = () => {
@@ -37,7 +40,7 @@ it('recovers the saved capabilities after a create handoff fails before workspac
     "SELECT workspace_id AS id FROM workspace_creation_attempts WHERE state = 'pending'",
   ).first<{ id: string }>()
   if (!claim) throw new Error('Missing creation claim')
-  input.capabilities = { preapprovedSecretIds: [], macAccess: true }
+  input.capabilities = { preapprovedSecretIds: [], macAccess: !chosen }
   runtime.workspace = workspace
   const created = await fixture.run(() =>
     createWorkspace(runtime, org.id, user, input),
@@ -47,12 +50,12 @@ it('recovers the saved capabilities after a create handoff fails before workspac
     await readWorkspaceCapabilities(runtime.env.DB, org.id, claim.id),
   ).toEqual({
     preapprovedSecretIds: ['saved-secret'],
-    macAccess: false,
+    macAccess: chosen,
     sessionApprovals: [],
   })
 })
 
-it('gives an internal workspace create no pre-approval and Mac access on without capabilities', async () => {
+it('gives an internal workspace create no pre-approval and Mac access off without capabilities', async () => {
   const fixture = fixtureForTest()
   const { runtime, org, user, repositoryId } = fixture
   const created = await fixture.run(() =>
@@ -69,7 +72,7 @@ it('gives an internal workspace create no pre-approval and Mac access on without
     ),
   ).toEqual({
     preapprovedSecretIds: [],
-    macAccess: true,
+    macAccess: false,
     sessionApprovals: [],
   })
 })

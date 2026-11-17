@@ -47,6 +47,8 @@ On the app hostname, the Worker serves these API routes:
 - The session, sign-out, the org list, a new org, and one org.
 - The waitlist state and code use, through the [waitlist backend](waitlist/README.md).
 - The account, its default model, its agent logins, the model list, and Get started.
+- The org login metadata for members, and admin writes and endpoint model
+  refreshes, through [org login routes](app-api/org-agent-logins.ts).
 - The start and poll of a Codex ChatGPT device code sign-in, through
   [Codex authentication](codex-auth/README.md).
 - The sections, the repositories, the members, and the workspace list of an org.
@@ -54,6 +56,10 @@ On the app hostname, the Worker serves these API routes:
 - Leave org, under the existing last-active-admin rule.
 - The create, read, resume, and activity routes of a workspace.
 - The view and the read mark of a workspace.
+- `GET /api/orgs/<orgId>/workspaces/<workspaceId>/terminal`, the terminal state, list, and software support.
+- `POST /api/orgs/<orgId>/workspaces/<workspaceId>/terminal/terminals`, a new terminal entry.
+- `DELETE /api/orgs/<orgId>/workspaces/<workspaceId>/terminal/terminals/<terminalId>`, the close of a terminal and its shell.
+- `GET /api/orgs/<orgId>/workspaces/<workspaceId>/terminal/socket`, the legacy terminal socket.
 - Org secret settings, workspace capabilities, and secret request answers, through the [secrets backend](secrets/README.md).
 - The Mac device routes.
 - `GET /api/feedback`, the reply address of feedback, and `POST /api/feedback`, the send of feedback, as [Feedback routes](app-api/feedback.md) says.
@@ -113,7 +119,7 @@ These handlers use their own machine credentials and skip the browser gate.
 The [secret tool routes](secrets/README.md#workspace-tool-routes) list metadata
 with a workspace token and return approved run values only during a running turn.
 The [model gateway](model-gateway/README.md) accepts only a turn token.
-It adds the starter's login to allowed Anthropic, OpenAI, or own endpoint requests.
+It adds the login of the session to allowed Anthropic, OpenAI, or own endpoint requests.
 Its request upload and model answer both stream.
 The chat backend checks the login kinds of the runner before delivery.
 Each `turn` command carries a turn token and never a real login.
@@ -302,7 +308,7 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [operator/route.ts](operator/route.ts) serves the operator routes after the request gate.
 - [automations/route.ts](automations/route.ts) serves automation records after the request gate.
 - [automations/run-route.ts](automations/run-route.ts) serves Run now and paginated run history.
-- [automations/run-starter.ts](automations/run-starter.ts) starts queued runs with the owner's logins.
+- [automations/run-starter.ts](automations/run-starter.ts) starts queued runs in the name of the automation owner.
 - [automations/pull-request-dispatch.ts](automations/pull-request-dispatch.ts) applies author filters, trust, and loop guards before it stores pull request runs.
 - [automations/schedule-scan.ts](automations/schedule-scan.ts) claims up to 50 due automations and retries up to 50 old queued runs each minute.
 - [operator/approval-email.ts](operator/approval-email.ts) sends approval messages and retries pending deliveries from the scheduled entry.
