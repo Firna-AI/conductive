@@ -64,8 +64,9 @@ says. A secrets decision number names a decision of the change that adds
   [The section of a new sub-workspace](sub-workspaces.md#the-section-of-a-new-sub-workspace)
   says.
 - The help of the CLI and the description of `create_workspace` say when
-  to name a parent. They also give the deepest depth, the sibling advice,
-  and the section of a sub-workspace.
+  to name a parent, with the cases of
+  [When to nest](sub-workspaces.md#when-to-nest). They also give the
+  deepest depth, the sibling advice, and the section of a sub-workspace.
 - The agent of the new workspace starts on the first message at once.
 - The sender of the calling turn sends the first message. So the GitHub
   token of the first turn belongs to that member.
