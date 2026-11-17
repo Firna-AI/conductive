@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
+import { WORKSPACE_RESTORE_MS } from '../../src/shared/workspaces'
 import {
   createHarness,
   TEST_TIME,
@@ -39,7 +40,9 @@ it('ranks five live orgs by all workspaces, breaks ties by name, and counts memb
       await seedWorkspace(harness, {
         id: `${org.id}-${index}`,
         orgId: org.id,
-        ...(org.id === 'alpha' && index === 1 ? { archivedAt: TEST_TIME } : {}),
+        ...(org.id === 'alpha' && index === 1
+          ? { archivedAt: TEST_TIME - WORKSPACE_RESTORE_MS }
+          : {}),
       })
   }
   await seedUser(harness, 8, TEST_TIME)

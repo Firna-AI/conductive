@@ -7,7 +7,7 @@ The `conductive runner` command composes this crate. The installed service runs 
 
 ## Responsibilities
 
-- Open an authenticated outbound TLS WebSocket and send the version 2 hello.
+- Open an authenticated outbound TLS WebSocket and send the version 2 hello with the caller's process-start ID.
 - Save numbered events before sending them. Keep unconfirmed events across restarts.
 - Process welcome, confirmations, gaps, resends, and connection retries.
 - Keep conversation references, instructions, file revisions, turn records, and report receipts.
@@ -102,6 +102,9 @@ Compose `Arc<dyn Disk>`, `Arc<dyn EventStore>`, `Arc<dyn Clock>`,
 `Arc<dyn Connector>`, and `Arc<dyn RunnerLink>`. Give `DurableStore` a fresh
 random stream ID for a missing file. Call `EventStore::load` once before
 sharing the store. An existing file supplies its saved stream ID.
+Give each `SavedRunnerLink` the process-start ID of the runner start.
+Make one random version 4 UUID when the program starts. Give that ID to
+each later link of the same program. Never save it in the store.
 Give `RunnerCore` the loaded store, link, clock, a `CommandHandler`, and a
 `ReleaseReadiness` port. `NoUpdates` disables swaps for other embeddings.
 Drive `Runner::run` with a Tokio watch channel for shutdown. Handle its
@@ -123,7 +126,8 @@ Use the engine as the next handler of `ReportCommandHandler`.
 Each session pins its agent, instructions, and branch context.
 New sessions also name their workspace ID, link, parent, depth, and depth limit.
 The instructions give the cases of when to nest a new workspace.
-The Worker supplies these stable tree facts through the service environment.
+The Worker supplies these tree facts through the service environment at runner start.
+The instructions direct agents to `get_workspace` for the current parent and depth after a move.
 At the depth limit, the instructions give the parent ID for a sibling and a short name prefix.
 Missing or malformed tree settings produce one warning and omit all tree guidance.
 Saved sessions keep their exact instructions across runner updates.
@@ -184,7 +188,7 @@ and connection drops. It does not run the Worker.
 - [lease.rs](src/skills/lease.rs): `SkillsLease` retains a complete copy while a helper reads it.
 - [sweep.rs](src/skills/sweep.rs): the background sweep reclaims retired copies and crash leftovers.
 - [git.rs](src/skills/git.rs): `CleanGit` owns credential-free Git children and their time limit.
-- [runner_command.rs](../cnd-cli/src/runner_command.rs): the CLI composes the full runner and signal handling.
+- [runner_command.rs](../cnd-cli/src/runner_command.rs): the CLI makes the process-start ID once, and composes the full runner and signal handling.
 - [limits.rs](src/limits.rs): `bound_event` applies serialized chat excerpts.
 - [commands.rs](src/json/commands.rs): `workspace_message` repairs and validates command JSON.
 - [service.rs](src/repository/service.rs): `Repository` supplies scans, reads, diffs, and checkpoints.
@@ -200,8 +204,10 @@ and connection drops. It does not run the Worker.
 
 - [Agent runner protocol](../../docs/protocol/agent-runner.md)
 - [Org skills](../../docs/protocol/org-skills.md)
+- [Runner warnings](../../docs/protocol/runner-warnings.md)
 - [Agent instructions](../../docs/protocol/agent-instructions.md)
 - [Sub-workspaces](../../docs/protocol/sub-workspaces.md)
+- [Parent changes](../../docs/protocol/parent-changes.md)
 - [Lost workspace updates](../../docs/protocol/lost-workspace-updates.md)
 - [Version pins](../../docs/protocol/version-pins.md)
 - [Sandbox architecture](../../docs/architecture/components.md#sandbox-software)

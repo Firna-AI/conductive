@@ -67,9 +67,9 @@ pub(super) fn cases() -> Result<Vec<Case>> {
         read(
             Name::ListWorkspaces,
             json!({"ownerId":"member","state":"ready","repositoryId":"repository","query":"Par",
-            "updatedSince":-1,"archived":false,"limit":1,"offset":0}),
+            "updatedSince":-1,"archived":false,"removed":false,"limit":1,"offset":0}),
             &["workspaces"],
-            json!({"ownerId":"member","state":"ready","repositoryId":"repository","query":"Par","updatedSince":"-1","archived":"false","limit":"1","offset":"0"}),
+            json!({"ownerId":"member","state":"ready","repositoryId":"repository","query":"Par","updatedSince":"-1","archived":"false","removed":"false","limit":"1","offset":"0"}),
         )?,
         read(
             Name::GetWorkspace,

@@ -32,6 +32,7 @@ interface WorkspaceAlarmInput {
   features: WorkspaceFeatures
   continuation: Pick<WorkspaceContinue, 'advance'>
   lifecycle: () => Promise<void>
+  automationReport: () => Promise<void>
 }
 
 export class WorkspaceAlarmRunner {
@@ -112,6 +113,7 @@ export class WorkspaceAlarmRunner {
             const id = await storage.get<string>('previews:workspace-id')
             if (id) await features.publishRevocations(id)
           },
+          automationReport: this.input.automationReport,
         },
         { securityHandled: true, fallbackLifecycle: security.size === 0 },
       )

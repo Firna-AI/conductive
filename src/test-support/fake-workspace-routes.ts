@@ -64,6 +64,9 @@ export function fakeWorkspaceRoutes(
 ) {
   const data = workspaceFixtures(state, github)
   const org = FAKE_IDS.org
+  // The list keeps the removed workspace of the fixtures, as the Worker
+  // does, so that its links still resolve. The app leaves it out of its
+  // groups.
   const listed = subWorkspaces
     ? withSubWorkspaces(data.workspaces.workspaces)
     : data.workspaces.workspaces

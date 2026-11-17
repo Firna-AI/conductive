@@ -24,7 +24,7 @@ let fixture: OuterRuntime | undefined
 const readSections = (value: unknown) =>
   items(record(value), 'sections', readSection)
 beforeAll(async () => {
-  bundle = await outerWorkerBundle()
+  bundle = await outerWorkerBundle('worker/features/entry.test-support.ts')
 })
 afterEach(async () => {
   await fixture?.dispose()
@@ -188,6 +188,17 @@ it('persists section order and private collapse, moves a workspace, and returns 
     body: JSON.stringify({ name: 'Hidden' }),
   })
   expect(outsider.status).toBe(404)
+  const removedList = await fixture.request(workspacesPath(OUTER_ORG))
+  expect(removedList.status).toBe(200)
+  expect(readWorkspaces(await removedList.json())).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        id: OUTER_WORKSPACE,
+        state: 'archived',
+        archivedAt: 1,
+      }),
+    ]),
+  )
 
   const toDelete = await fixture.request(sectionsPath(OUTER_ORG), {
     method: 'POST',

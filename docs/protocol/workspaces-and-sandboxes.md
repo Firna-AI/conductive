@@ -22,8 +22,8 @@ These docs belong to this doc:
 - [Org skills](org-skills.md): the skills repository of the org, its copy
   in each cloud computer, the skills that load, and the list of skills.
 - [Life of a workspace](workspace-life.md): the start steps, the time
-  limits, the states, the stop and resume, the archive, the restore, and
-  Continue.
+  limits, the states, the stop and resume, the archive, the restore, the
+  removal from the list after 14 days, and Continue.
 - [Continue](continue.md): the next task of a workspace after a merge, on
   a new branch with the same sandbox and sessions.
 - [Workspace menu](workspace-menu.md): the menu of a workspace row, which

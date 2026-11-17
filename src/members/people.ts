@@ -1,3 +1,4 @@
+import { listedWorkspaces, type ArchiveTime } from '../app/workspace-removal'
 import type { OrgRole } from '../shared/api'
 
 /** The fields of a person that the members UI shows. */
@@ -32,12 +33,19 @@ export function initials(person: PersonName): string {
   return letters.join('').toUpperCase()
 }
 
-/** The number of workspaces of each owner, by user ID. */
+/** A workspace as the member counts read it: its owner and its Archive. */
+export type OwnedWorkspace = ArchiveTime & { owner: { id: string } }
+
+/**
+ * The number of workspaces of each owner that the list shows at `now`, by
+ * user ID. A removed workspace leaves the list, so no count holds it.
+ */
 export function countOwners(
-  workspaces: readonly { owner: { id: string } }[],
+  workspaces: readonly OwnedWorkspace[],
+  now: number,
 ): Record<string, number> {
   const counts: Record<string, number> = {}
-  for (const workspace of workspaces) {
+  for (const workspace of listedWorkspaces(workspaces, now)) {
     counts[workspace.owner.id] = (counts[workspace.owner.id] ?? 0) + 1
   }
   return counts

@@ -2,6 +2,7 @@ import type { Workspace } from '../shared/generated/Workspace'
 import type { Section } from '../shared/sections'
 import { placeWorkspaces } from '../shared/workspace-tree'
 import { topLevelRows, workspacesUnder, type ListRow } from './list-trees'
+import { listedWorkspaces } from './workspace-removal'
 
 export interface SectionGroup {
   section: Section
@@ -31,16 +32,22 @@ export function ordered(sections: readonly Section[]): Section[] {
 }
 
 /**
- * The sections of the list, each with its rows as `placeWorkspaces`, the
- * shared rule of the app and the Worker, places them: each top-level row
- * in the order of the workspace list, and each live sub-workspace under
- * the row of its parent, or of the nearest live workspace above it while
- * its parent is archived. An unknown section falls back to General.
- * Archived workspaces leave their sections for the flat Archived group.
+ * The sections of the list at `now`, each with its rows as
+ * `placeWorkspaces`, the shared rule of the app and the Worker, places
+ * them: each top-level row in the order of the workspace list, and each
+ * live sub-workspace under the row of its parent, or of the nearest live
+ * workspace above it while its parent is archived. An unknown section
+ * falls back to General. Archived workspaces leave their sections for the
+ * flat Archived group. A removed workspace, whose Restore ended by `now`,
+ * shows in neither, as `isListed` says. It is archived, so it has no row,
+ * but its live sub-workspaces still show under the nearest live workspace
+ * above it, as the Worker places them. This is the one place that leaves
+ * it out of the list, its counts, its keys, and the groups of the palette.
  */
 export function groupWorkspaces(
   sections: readonly Section[],
   workspaces: readonly Workspace[],
+  now: number,
 ): WorkspaceGroups {
   const rows = placeWorkspaces(workspaces, sections)
   return {
@@ -48,7 +55,7 @@ export function groupWorkspaces(
       section,
       rows: rows.filter((row) => row.sectionId === section.id),
     })),
-    archived: workspaces
+    archived: listedWorkspaces(workspaces, now)
       .filter((workspace) => workspace.state === 'archived')
       .sort((a, b) => (b.archivedAt ?? 0) - (a.archivedAt ?? 0)),
   }

@@ -216,12 +216,24 @@ export const termsDocument: LegalDocument = {
         paragraph`When ${productName} passes on the model requests of a cloud
           computer, it keeps no copy of a request or of its answer.
           It writes no body or header value of them to its logs.`,
+        paragraph`Archive stops a workspace's cloud computer and keeps it
+          for 14 days. Members of an active org can restore it during
+          those 14 days while its computer is kept. When the 14 days end, ${productName} deletes
+          the cloud computer and its files. The workspace leaves the
+          Archived group, the command palette, and the workspace counts of
+          the org.
+          Its read-only chat still opens through a direct link or a chat
+          link.`,
+        paragraph`${productName} keeps the removed workspace's chat history
+          until the org is deleted. Removing the workspace from the list
+          does not delete this data.`,
         paragraph`Continue starts a new branch from the latest default branch
           of the repository. It keeps the cloud computer and its sessions.
           Changed files move to the new branch. Commits that are not pushed
           stay on their local branches.`,
-        paragraph`The agent actions in the pull request bar send messages as
-          the member who clicks. The chat history keeps these messages and a
+        paragraph`The agent actions in the pull request bar and Merge latest
+          in the command palette send messages as the member who uses them.
+          The chat history keeps these messages and a
           note that names who used Continue and the branches.`,
         paragraph`You keep any rights that you have in your repositories,
           files, messages, and other content. You give the operator

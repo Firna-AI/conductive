@@ -192,11 +192,15 @@ Each path is relative to `src/app/`, the folder of this page.
   writes, their changes, moves, and the Archived group. `groupWorkspaces`
   places the rows of each section with `placeWorkspaces` of
   `../shared/workspace-tree.ts`, and `moveWorkspace` moves the tree of a
-  top-level row. `list-trees.ts`: `ListRow`, a placed row, `treeOf` and
-  `treeRows`, the trees of a section, and `replaceWorkspace`, which gives
-  the place of an archived workspace to the live rows under it, as the
-  Worker does. `sections.test.ts` and `archive-overlay.test.ts` check the
-  trees of a section, their moves, and an Archive of a parent.
+  top-level row. `groupWorkspaces` takes the time of the list and leaves
+  out each removed workspace. `list-trees.ts`: `ListRow`, a placed row,
+  `treeOf` and `treeRows`, the trees of a section, and `replaceWorkspace`,
+  which gives the place of an archived workspace to the live rows under
+  it, as the Worker does. `workspace-removal.ts`: `listEndOf`, the end of
+  Restore of an archived workspace from its `archivedAt`, and
+  `listedWorkspaces`, which the list, its counts, and the palette share.
+  `sections.test.ts` and `archive-overlay.test.ts` check the trees of a
+  section, their moves, and an Archive of a parent.
 - `workspace-actions.ts`: `OrgModel.workspaceActions`, the Rename write,
   owner-only confirmation, the Archive and Restore flows of unopened rows,
   and `running`, the Archive or the Restore that runs for each workspace.
@@ -207,10 +211,13 @@ Each path is relative to `src/app/`, the folder of this page.
   no workspace and create no model for an unopened row.
 - `../shell/workspace/useArchiveActions.ts`: `useArchiveActions`, Archive
   and Restore for each control, with their toasts. The toast of a done
-  Archive offers Restore only while the workspace can come back.
+  Archive gives the day when the workspace leaves the list, and offers
+  Restore only while the workspace can come back.
 - `deadlines.ts`: `usePassedDeadlines`, which renders a screen again at
   each deadline, such as the last day of a Restore, through the clock and
-  the timers of `AppServices`.
+  the timers of `AppServices`. `useListTime` gives the time of a screen
+  that shows the list or a count of it, and renders it again when a
+  workspace leaves the list.
 - `../shell/list/`: the workspace list. `WorkspaceRow.tsx` draws a row,
   with its Archive shortcut over the time on hover, and the Rename field
   of `WorkspaceNameField.tsx`. Its list mark is the mockups' `WorkspaceMark`,

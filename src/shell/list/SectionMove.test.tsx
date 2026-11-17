@@ -128,6 +128,7 @@ describe('the move of a section', () => {
     const groups = groupWorkspaces(
       sections,
       workspaceFixtures().workspaces.workspaces,
+      FAKE_TIME,
     )
     const moves: { section: string; index: number }[] = []
     const toggled: string[] = []

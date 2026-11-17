@@ -77,7 +77,13 @@ with the message of the API.
 | `MemberComputerTab`     | The same tab, with its data loaded once from the API       | `api`, `org`, `viewport`, `now`, optional `timeZone`                                                                   |
 
 - `now` is the time in Unix milliseconds. It sets the age of each invite, the
-  times of the builds, and the date in the Delete org question.
+  times of the builds, and the date in the Delete org question. The
+  Members tab counts the workspaces of each member that the list shows at
+  that time, also in the question of Remove member. So the counts leave
+  out the workspaces that were removed from the list, as
+  [Removed workspaces](../../docs/protocol/workspace-life.md#removed-workspaces)
+  says. A removal still moves them to the admin, because the app keeps
+  their data.
 - `suspended` says that the operator suspended the org. Nothing in it
   changes, also for an admin, and the shell shows the notice of the org
   above the component. The component then shows no action, no invite, and

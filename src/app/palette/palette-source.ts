@@ -60,6 +60,11 @@ export interface PaletteBase {
 export interface PaletteSource extends PaletteBase {
   /** The sections and the workspaces of the org, as they load. */
   list: Loadable<ListData>
+  /**
+   * The time of the list, as `useListTime` says. A workspace whose Restore
+   * ended by then is removed, so no group of the palette shows it.
+   */
+  listTime: number
   /** The repositories of the org, with their names, as they load. */
   repositories: Loadable<readonly Repository[]>
 }

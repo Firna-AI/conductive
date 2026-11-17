@@ -12,6 +12,8 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
   blocks: [
     list(
       text`Every member of an org sees all of its workspaces and automations.
+        A removed workspace opens by direct link or chat link, with
+        read-only chat.
         In an active org, members can send messages in workspaces that are
         not archived.
         After a pull request merges, every member can use Continue to start
@@ -19,6 +21,9 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
       text`The workspace tools let agents read workspace, session, and
         message details, list sessions and previews, list the names and
         descriptions of the org's secrets, and read chats across the org.
+        Agents can read removed workspaces and their sessions by ID.
+        Workspace lists leave out removed workspaces unless the agent asks
+        for them.
         A workspace token is a credential for those tools. Any program
         with it can make these reads without a running turn.
         A copied token keeps that access after the person who copied

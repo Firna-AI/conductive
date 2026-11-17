@@ -11,6 +11,7 @@ import { requireCallingToolTurn } from './calling-turn'
 import type { AgentToolServices } from './services'
 import type { CallingWorkspace } from './store'
 import { toolWorkspaceDetail } from './workspace-data'
+import { workspaceMoveInput } from './workspace-move-input'
 
 const WORKSPACE_ROUTE = new RegExp(
   `^${MACHINE_PATHS.workspaces}/([^/]+)(?:/(rename|move|archive))?$`,
@@ -38,6 +39,7 @@ export async function readWorkspaceFromTool(
   db: D1Database,
   caller: CallingWorkspace,
   origin: string,
+  now: number,
 ): Promise<AgentWorkspaceResponse | null> {
   const match = url.pathname.match(WORKSPACE_ROUTE)
   if (!match || match[2] !== undefined) return null
@@ -47,6 +49,7 @@ export async function readWorkspaceFromTool(
       caller.orgId,
       target(match[1], caller),
       origin,
+      now,
     ),
   }
 }
@@ -58,6 +61,7 @@ export async function writeWorkspaceFromTool(
   caller: CallingWorkspace,
   services: AgentToolServices,
   origin: string,
+  now: number,
 ): Promise<Response | null> {
   const match = url.pathname.match(WORKSPACE_ROUTE)
   if (!match || !match[2]) return null
@@ -68,7 +72,7 @@ export async function writeWorkspaceFromTool(
     services,
   )
   const workspaceId = target(match[1], caller)
-  await toolWorkspaceDetail(db, caller.orgId, workspaceId, origin)
+  await toolWorkspaceDetail(db, caller.orgId, workspaceId, origin, now)
   const body: Record<string, unknown> =
     match[2] === 'archive' ? {} : await readJsonObject(request)
   const input =
@@ -78,7 +82,7 @@ export async function writeWorkspaceFromTool(
           name: sessionTitleFrom(identifier(body.name)) ?? invalidInput(),
         }
       : match[2] === 'move'
-        ? { kind: 'move' as const, sectionId: identifier(body.sectionId) }
+        ? workspaceMoveInput(body)
         : { kind: 'archive' as const }
   await services.writeWorkspace({
     ...input,
@@ -87,11 +91,24 @@ export async function writeWorkspaceFromTool(
     senderUserId: sender.id,
   })
   const move =
-    input.kind === 'move'
+    input.kind === 'move' && input.target === undefined
       ? await readWorkspaceMove(db, caller.orgId, workspaceId)
       : undefined
+  const workspace = await toolWorkspaceDetail(
+    db,
+    caller.orgId,
+    workspaceId,
+    origin,
+    now,
+  )
   return Response.json({
-    workspace: await toolWorkspaceDetail(db, caller.orgId, workspaceId, origin),
+    workspace,
+    ...(input.kind === 'move' &&
+      input.target?.kind === 'parent' &&
+      input.sectionId !== undefined &&
+      input.sectionId !== workspace.section.id && {
+        notice: 'The workspace joined the section of its parent.',
+      }),
     ...(move?.nested &&
       move.root && {
         notice: `Move W-${move.root.number} to move this workspace.`,
