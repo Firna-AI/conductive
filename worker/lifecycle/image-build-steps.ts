@@ -10,6 +10,7 @@ import {
 import { allocateImageBuild } from './image-allocation'
 import { advanceBuildCommand, cleanupBuild } from './build-execution'
 import { completeBuildPhase } from './build-phase-data'
+import { SNAPSHOT_DONE_LOG } from './build-command-data'
 import { clearImageCommands } from './command-intents'
 import type { ImageRuntime } from './image-builds'
 import { SourceCommandPort } from './image-sources/source-commands'
@@ -58,7 +59,7 @@ export async function advanceBuildStep(
     const snapshot = await createResource(
       runtime.env.DB,
       provider,
-      buildSnapshotIntent(env.DB, job),
+      buildSnapshotIntent(env.DB, job, dependencies.now()),
     )
     await assignBuildSnapshot(
       env.DB,
@@ -68,7 +69,10 @@ export async function advanceBuildStep(
     )
     if (snapshot.status === 'failed') throw new Error('Image save failed')
     if (snapshot.status === 'ready')
-      await completeBuildPhase(env.DB, buildId, 'publish')
+      await completeBuildPhase(env.DB, buildId, 'publish', {
+        text: SNAPSHOT_DONE_LOG,
+        now: dependencies.now(),
+      })
     return false
   }
   if (job.phase === 'publish') {
