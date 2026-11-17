@@ -33,7 +33,7 @@ option overrides this default, including queued chats that show no spinner.
   one part. Create org of the dev fake
   requires at least one repository and starts a simulated build. Its
   repository catalogue keeps the saved choices, and its custom initials
-  stay through rename, delete, and restore. Settings changes during the
+  and its colour stay through rename, delete, and restore. Settings changes during the
   first good build start one added build. The fake compares settings
   revisions with builds as the Worker does.
 - Acme also holds Postcode lookup for the shipping and billing forms,
@@ -42,6 +42,22 @@ option overrides this default, including queued chats that show no spinner.
   palette leave it out. The list route still sends it, as the Worker does,
   so its link and its chip still open its read-only chat, at
   `/orgs/acme/workspaces/postcode-lookup`, with the Removed bar.
+- `?subWorkspaces=1` gives Acme the sub-workspaces of the mockup page
+  `app/sub-workspaces`, from `fixtures/sub-workspaces.ts` of
+  `src/test-support/`: two trees in Checkout, under Apple Pay button and
+  under Checkout address autocomplete, down to depth 3, with the sibling
+  Rate limits: Load test. They come first in Checkout, the newest first,
+  as the Worker lists new workspaces, and each opens with the recorded
+  chat, as the other rows do. Without the option, no workspace has a
+  parent.
+- The writes of the fake place the trees as the Worker does, with or
+  without the option. A move of a top-level row, by a drag, by keys, or by
+  Move to section, takes its whole tree, and writes the section of each
+  workspace under it, live or archived. A move of a nested row changes
+  nothing, and a rename of it changes only the name. An Archive gives each
+  live workspace that showed under the archived row its section and its
+  place, so the next read shows them where that row was.
+  `dev/workspace-writes.ts` holds these writes.
 - Own endpoint saves return `endpointV1Added` and `modelListReadFailed`, as
   the Worker does. Refresh returns HTTP 200 with `modelListReadFailed`.
   False means the read produced a list. These response flags never enter
@@ -159,6 +175,35 @@ option overrides this default, including queued chats that show no spinner.
   a workspace that the fake made, so its chat does not load, and the line
   of its automation does not show.
   The dev backend records each run's agent and owner when Run now starts it.
+
+- `dev/secret-routes.ts` serves the secrets of each org, as the Worker
+  does. Acme starts with the secrets of the mockups, with made-up values,
+  and the other orgs with none (`dev/secret-store.ts`). The list holds no
+  value. A member changes only the own secrets, and only an admin sets the
+  mark for all agents or reveals a value, which the fake records. A Replace
+  of the value ends the record of the last reveal, and a Delete ends each
+  grant of the secret. A suspended org refuses each write, also a reveal.
+  `dev/capability-routes.ts` serves the Capabilities of each workspace:
+  `checkout-autocomplete` pre-approves FIGMA_TOKEN and has two approvals of
+  its sessions, and a create keeps the choices of its control. The fake
+  keeps no value for a workspace, and a reload starts the secrets again.
+- `dev/secret-request-routes.ts` serves the secret requests of each
+  workspace: the list with the values of the workspace, the answer of a
+  member, and the removal of a value. An Allow in time sends the run of
+  its request, and a late Allow sends the line of the app with the notice
+  of a new turn. A value for this workspace joins the list of the
+  workspace, and Save adds a secret of the org. `?secrets=<state>` puts a
+  state into the session of `checkout-autocomplete`, from
+  `dev/secret-request-seed.ts`. `waiting`, `value`, and `mixed` wait for an
+  answer above the composer, so use them with `conversation=running`.
+  `late`, `late-value`, `results`, and `ended` sit in a short turn after
+  the recorded one: a late request, a late request for a value, the runs
+  with a denied request and a late Allow with its line, and a request that
+  an Archive ended. The results also give MAPBOX_TOKEN a value for the
+  workspace, which Capabilities lists. As the Worker does, a request that
+  waits or is late gives the workspace the state `input`, so the header
+  says Needs input. The last answer gives back the state from before
+  (`followOpenRequests` of `dev/secret-store.ts`).
 
 The development fake keeps each org's workspace number counter.
 A create gets the next number and a web link on the fake API origin.

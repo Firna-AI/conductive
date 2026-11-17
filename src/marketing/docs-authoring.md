@@ -213,7 +213,7 @@ pages.
 | Workspaces | `/docs/workspaces` | [Create a workspace](../../docs/protocol/create-a-workspace.md), [Workspaces](../../docs/protocol/workspaces-and-sandboxes.md), [Life of a workspace](../../docs/protocol/workspace-life.md), [Stop and resume](../../docs/protocol/stop-and-resume.md) |
 | Sessions and chat | `/docs/sessions-and-chat` | [Chat and events](../../docs/protocol/chat-and-events.md), [Messages and attachments](../../docs/protocol/messages-and-attachments.md), [Repository folders](../../docs/protocol/repository-folders.md#the-context-folder) |
 | Files and changes | `/docs/files-and-changes` | [Workspace tools](../../docs/protocol/workspace-tools.md#files-and-changes) |
-| Terminal and previews | `/docs/terminal-and-previews` | [Workspace tools](../../docs/protocol/workspace-tools.md), [Terminal, previews, and desktop](../../docs/protocol/terminal-previews-and-desktop.md) |
+| Terminal and previews | `/docs/terminal-and-previews` | [Terminal](../../docs/protocol/terminal.md), [Port previews](../../docs/protocol/port-previews.md), [Terminal, previews, and desktop](../../docs/protocol/terminal-previews-and-desktop.md) |
 | Pull requests | `/docs/pull-requests` | [GitHub banner](../../docs/protocol/github-banner.md) |
 | Cloud computer | `/docs/cloud-computer` | [Org image](../../docs/protocol/org-image.md#the-org-image) |
 | Orgs and members | `/docs/orgs-and-members` | [Orgs and members](../../docs/protocol/orgs-and-members.md), [Delete org](../../docs/protocol/delete-org.md) |

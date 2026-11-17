@@ -44,7 +44,7 @@ export async function routeChat(
   if (attachment) return attachment
   const path = new URL(request.url).pathname
   const match = path.match(
-    /^\/api\/orgs\/[^/]+\/workspaces\/([^/]+)\/(?:events|history|sessions(?:\/.*)?)$/,
+    /^\/api\/orgs\/[^/]+\/workspaces\/([^/]+)\/(?:events|history|sessions(?:\/.*)?|secret-requests(?:\/[^/]+\/answer)?|secret-values\/[^/]+)$/,
   )
   if (!match) return null
   const person = await sessionGate(request, env, now())

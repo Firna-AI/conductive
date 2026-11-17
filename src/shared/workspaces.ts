@@ -5,6 +5,7 @@ import type { WorkspaceStart } from './generated/WorkspaceStart'
 import { orgPath } from './api'
 
 import type { SendMessageRequest } from './messages'
+import type { WorkspaceCapabilities } from './secrets'
 
 export const WORKSPACE_RESTORE_MS = 14 * 24 * 60 * 60 * 1_000
 
@@ -61,6 +62,7 @@ export interface WorkspacesResponse {
 export interface CreateWorkspaceRequest {
   repositoryId: string
   sectionId?: string
+  capabilities?: WorkspaceCapabilities
   firstMessage: SendMessageRequest
 }
 export interface CreateWorkspaceResponse extends WorkspaceResponse {

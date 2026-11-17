@@ -61,8 +61,12 @@ of the shell, their addresses, and the saved view.
 
 ## The tools part
 
-[The tools part](screen-parts.md#the-tools-part) gives the Terminal and
-Preview tools of the shell, the hidden Desktop tool, and their addresses.
+[The tools part](tools-part.md) gives the Terminal and Preview tools of
+the shell, the hidden Desktop tool, their addresses, and the Preview tabs
+of the centre row. On desktop it keeps the terminals of the workspace
+while the sandbox runs, so the command palette offers New terminal after
+the Go to rows while the + of the terminal tabs takes a press. The row
+runs that +, as [New terminal](tools-part.md#new-terminal) says.
 
 ## The GitHub part
 
@@ -127,7 +131,7 @@ A new `create` makes a new view, so keep `app` and `viewer` stable.
   tab no longer keeps.
 
 The context of the features gives the kept chat as `savedView` and as
-`chat`, and the tool events as `toolEvents`. `KeptFilesConnection`
+`chat`, and the tool events as `toolEvents`. `KeptConnections`
 connects the kept files of the tab through `useWorkspaceStore`, as
 [the Files screens](../../files/README.md#integration) show, and the parts
 that show files read the same store.

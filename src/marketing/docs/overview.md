@@ -64,7 +64,8 @@ The workspace keeps your conversation beside the code and tools.
 - Use **Preview** to open a running app on one of its ports.
 
 The pull request bar offers actions for the next step.
-It can ask the agent to prepare or fix a pull request, and merge it with your GitHub account.
+It can ask the agent to prepare or fix a pull request.
+It can mark a draft ready for review and merge it with your GitHub account.
 After a merge, **Continue** starts a new branch in the same workspace.
 The cloud computer and sessions stay.
 
@@ -80,7 +81,7 @@ If it stops while the workspace is open, select **Resume**, or open a file or a 
 
 Archive stops the computer and keeps its files for 14 days.
 The workspace stays in **Archived** for those 14 days, with read-only chat and no tools.
-Use **Restore** during that window to return the workspace to its section.
+Use **Restore** during that window to return the workspace to its place in the list.
 Restore leaves the computer stopped.
 
 After 14 days, Conductive deletes the cloud computer and its files.

@@ -83,23 +83,44 @@ it.each([
       })
       expect(await hello(fixture, version)).toEqual({ closed: 1, messages: [] })
       expect(await failures()).toHaveLength(1)
+      const mismatch = {
+        kind: 'runner_protocol_version_mismatch',
+        workspaceId: 'unknown',
+        message:
+          'The runner closes because its protocol version is not supported or does not meet the workspace version pin.',
+      }
+      const connectionFields = {
+        workspaceId: 'unknown',
+        connectionId: 'unknown',
+        streamId: null,
+        protocolVersion: null,
+      }
+      const connected = {
+        kind: 'runner_connected',
+        message: 'The runner of a workspace connected.',
+        ...connectionFields,
+      }
+      const disconnected = {
+        kind: 'runner_disconnected',
+        message: 'The runner of a workspace disconnected.',
+        ...connectionFields,
+      }
       expect(await fixture.actor.api.controls.warningCalls()).toEqual([
+        [mismatch],
         [
           {
-            kind: 'runner_protocol_version_mismatch',
-            workspaceId: 'unknown',
-            message:
-              'The runner closes because its protocol version is not supported or does not meet the workspace version pin.',
+            kind: 'turn_ended_without_stop_request',
+            message: 'A turn ended without a Stop request.',
+            ...connectionFields,
+            turnId: 'unknown',
+            state: 'failed',
           },
         ],
-        [
-          {
-            kind: 'runner_protocol_version_mismatch',
-            workspaceId: 'unknown',
-            message:
-              'The runner closes because its protocol version is not supported or does not meet the workspace version pin.',
-          },
-        ],
+        [connected],
+        [disconnected],
+        [mismatch],
+        [connected],
+        [disconnected],
       ])
     } finally {
       await fixture.actor.api.controls.captureWarnings(false)

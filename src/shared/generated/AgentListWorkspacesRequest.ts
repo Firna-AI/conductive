@@ -11,6 +11,10 @@ export type AgentListWorkspacesRequest = {
    */
   ownerId?: string
   /**
+   * Filter by the direct parent workspace.
+   */
+  parentId?: string
+  /**
    * state.
    */
   state?: WorkspaceState

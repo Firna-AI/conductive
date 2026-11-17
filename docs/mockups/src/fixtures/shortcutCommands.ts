@@ -54,6 +54,7 @@ export type CommandId =
   | 'resolve-conflicts'
   | 'address-review'
   | 'commit-and-push'
+  | 'mark-ready-for-review'
   | 'merge-pull-request'
   | 'continue-after-merge'
   | 'open-pull-request'
@@ -62,6 +63,7 @@ export type CommandId =
   | 'go-to-checks'
   | 'go-to-terminal'
   | 'go-to-preview'
+  | 'new-terminal'
   | 'new-session'
   | 'session-history'
   | 'focus-message'
@@ -118,11 +120,13 @@ const commandWords: Partial<Record<CommandId, readonly string[]>> = {
   'resolve-conflicts': ['merge', 'rebase', 'pull request'],
   'address-review': ['comments', 'feedback', 'pull request'],
   'commit-and-push': ['git', 'save', 'publish'],
+  'mark-ready-for-review': ['draft', 'pull request', 'github'],
   'merge-pull-request': ['pull request', 'github', 'squash', 'rebase'],
   'continue-after-merge': ['new branch', 'merged', 'workspace'],
   'open-pull-request': ['pull request', 'github', 'browser'],
   'go-to-checks': ['ci'],
   'go-to-preview': ['port'],
+  'new-terminal': ['shell', 'tab'],
   'new-session': ['tab', 'agent', 'chat'],
   'session-history': ['closed', 'reopen'],
   'attach-files': ['upload'],
@@ -179,7 +183,9 @@ export function orgCommand(index: number): CommandId | undefined {
  * and Copy full transcript. Firefox keeps ⇧⌘P, so Create PR also has
  * ⌥⇧⌘P, and Firefox switches the text direction of a text field on ⇧⌘X, so
  * Fix checks has ⌥⌘X. Fast mode decision 258 C of 12 November 2026 adds Fast
- * mode, the switch of the model menu, with ⇧⌘E, the key of Conductor. The
+ * mode, the switch of the model menu, with ⇧⌘E, the key of Conductor.
+ * Terminal tabs decision 3 B adds New terminal after Go to Preview, with no
+ * default key: Conductor's ⌘T for a new terminal runs New session here. The
  * commands that a person can change come first.
  * The fixed shortcuts of a group follow them, and the groups of fixed
  * shortcuts close the list.
@@ -246,6 +252,7 @@ export const shortcutSpecs: readonly GroupSpec[] = [
       agentCommand('resolve-conflicts'),
       agentCommand('address-review'),
       agentCommand('commit-and-push', '⇧⌘Y'),
+      command('mark-ready-for-review', 'Mark PR ready for review'),
       command('merge-pull-request', 'Merge PR', '⇧⌘M'),
       command('continue-after-merge', 'Continue after merge'),
       command('open-pull-request', 'Open PR on GitHub', '⇧⌘G'),
@@ -254,6 +261,7 @@ export const shortcutSpecs: readonly GroupSpec[] = [
       command('go-to-checks', 'Go to Checks'),
       command('go-to-terminal', 'Go to Terminal', '⌘J'),
       command('go-to-preview', 'Go to Preview'),
+      command('new-terminal', 'New terminal'),
       ...focusedKeys,
     ],
   },

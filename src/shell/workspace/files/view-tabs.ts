@@ -28,6 +28,8 @@ function equalTabs(left: WorkspaceTab | null, right: WorkspaceTab): boolean {
       )
     case 'diff':
       return left.kind === 'diff' && left.path === right.path
+    case 'preview':
+      return left.kind === 'preview' && left.port === right.port
   }
 }
 

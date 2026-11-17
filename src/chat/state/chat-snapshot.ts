@@ -14,9 +14,13 @@ import type {
   AccountSummary,
   MemberSummary,
   OrgSummary,
-  RunAutomation,
 } from '../api/read-responses'
+import type { RunAutomation } from '../api/read-view'
 import { initialDevices, type DeviceSnapshot } from '../device/device-snapshot'
+import {
+  initialSecrets,
+  type SecretsSnapshot,
+} from '../secrets/secret-snapshot'
 import {
   emptyTranscript,
   type Transcript,
@@ -151,6 +155,8 @@ export interface ChatSnapshot {
   resuming: boolean
   /** The Mac commands of the workspace, as `device/device-snapshot.ts` says. */
   devices: DeviceSnapshot
+  /** The secret requests, runs, and late answers, as `SecretsSnapshot` says. */
+  secrets: SecretsSnapshot
 }
 
 /** A draft with nothing in it, and no work in flight. */
@@ -199,6 +205,7 @@ export const initialSnapshot: ChatSnapshot = {
   mentionRequest: null,
   resuming: false,
   devices: initialDevices,
+  secrets: initialSecrets,
 }
 
 /**

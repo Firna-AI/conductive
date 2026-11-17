@@ -27,6 +27,8 @@ These docs belong to this doc:
 - [Workspace menu](workspace-menu.md): the menu of a workspace row, which
   moves, reassigns, renames, and archives the workspace, and copies its
   link.
+- [Sub-workspaces](sub-workspaces.md): the parent link of a workspace, the
+  depth limit, the nested rows of the list, and the moves of a tree.
 - [Tools of a workspace](workspace-tools.md): the files and changes, the
   terminal, the port previews, and the desktop.
 
@@ -184,8 +186,8 @@ for, downloads, and applies an update.
 
 ### Terminal
 
-- [Terminal](workspace-tools.md#terminal) holds the requirements of the
-  shell of a workspace.
+- [Terminal](terminal.md) holds the requirements of the terminals of a
+  workspace and their shells.
 
 ### Port previews
 

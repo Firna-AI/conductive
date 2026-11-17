@@ -17,4 +17,8 @@ export type AgentCreateWorkspaceResponse = {
    * session link.
    */
   sessionLink: string
+  /**
+   * Notice about the section chosen for the workspace.
+   */
+  notice?: string
 }

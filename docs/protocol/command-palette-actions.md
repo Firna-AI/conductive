@@ -7,7 +7,9 @@ group, with Send feedback. It belongs to
 palette. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says. The [mockup catalogue](../mockups/catalogue-palette.md) draws the
+says. A terminal tabs decision number names a decision of the change that
+adds terminal tabs to the Terminal tool, as [Terminal](terminal.md) says.
+The [mockup catalogue](../mockups/catalogue-palette.md) draws the
 actions at `app/command-palette/actions`, and the settings at
 `app/command-palette/settings`.
 
@@ -29,13 +31,25 @@ actions at `app/command-palette/actions`, and the settings at
   [saved view of New workspace](create-a-workspace.md#page-or-dialog).
 - New section shows only where the page shows the workspace list.
 - The Go to rows show only where the page shows the right column.
+- New terminal shows only where the Go to rows show (terminal tabs
+  decision 3 B). There, it shows only while the + of the Terminal tool
+  takes a press: while the cloud computer runs, its terminal service
+  opens more than one shell, and the workspace has fewer than 10
+  terminals, as [Terminal tabs](terminal.md#terminal-tabs) says.
+- A phone shows the + on its Terminal page, but its palette offers no New
+  terminal, because a phone has no Go to rows.
+- New terminal opens a terminal, as that + button does. It then shows the
+  new terminal in the Terminal tool, also when another tool showed.
+- Reason: the palette offers each control of an open workspace, as it
+  offers New session beside the + of the sessions. A Go to row for each
+  terminal was left out, because it switches terminals and opens none.
 - On the All tab and on the Actions tab, the actions come in this order:
   1. While a workspace is open, its actions: New session, Session history,
-     a Go to row for each tab of the right column, and Archive workspace.
-     The Go to rows lead to All files, Changes, Checks, Terminal, and
-     Preview. Desktop has no Go to row while the app hides it, as
-     [Desktop](workspace-tools.md#desktop) says. An archived workspace
-     offers only Session history and Restore workspace.
+     a Go to row for each tab of the right column, New terminal, and
+     Archive workspace. The Go to rows lead to All files, Changes, Checks,
+     Terminal, and Preview. Desktop has no Go to row while the app hides
+     it, as [Desktop](workspace-tools.md#desktop) says. An archived
+     workspace offers only Session history and Restore workspace.
   2. The actions of the org: New workspace and New section.
   3. Create org, then a Switch to row for each other org of the person, in
      the order of the org rail.
@@ -95,9 +109,10 @@ actions at `app/command-palette/actions`, and the settings at
 
 ## Settings
 
-- The Settings tab shows two groups. The first group holds the four tabs
-  of the org settings: General, Repositories, Cloud computer, and Members.
-  Its label is the name of the org and "settings", such as "Acme settings".
+- The Settings tab shows two groups. The first group holds the five tabs
+  of the org settings: General, Repositories, Cloud computer, Secrets, and
+  Members. Its label is the name of the org and "settings", such as "Acme
+  settings".
 - The second group, Account, holds four sections of the Account page:
   Sign-in, GitHub, Agents, and New workspaces. It also holds Keyboard
   shortcuts, the fourth tab of the Account page.

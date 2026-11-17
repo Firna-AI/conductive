@@ -121,6 +121,11 @@ export function options(): HTMLElement[] {
   return Array.from(list.querySelectorAll<HTMLElement>('[role="option"]'))
 }
 
+/** The names of the options, as a screen reader reads them. */
+export function optionNames(): string[] {
+  return options().map(accessibleName)
+}
+
 /** The labels of the groups of the results, in their order. */
 export function groupLabels(): string[] {
   const list = queryByRole('listbox', 'Results')

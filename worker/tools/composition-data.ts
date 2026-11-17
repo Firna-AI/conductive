@@ -26,17 +26,17 @@ export async function toolUser(
   return user
 }
 
-export async function saveWorkspaceToolParent(
+export async function saveWorkspaceToolCreator(
   db: D1Database,
   orgId: string,
   workspaceId: string,
-  parentId: string,
+  creatorId: string,
 ): Promise<void> {
   await db
     .prepare(
       `UPDATE workspaces SET created_by_workspace_id = ? WHERE id = ? AND org_id = ?
        AND ${activeOrgIdPredicate('workspaces.org_id')}`,
     )
-    .bind(parentId, workspaceId, orgId)
+    .bind(creatorId, workspaceId, orgId)
     .run()
 }

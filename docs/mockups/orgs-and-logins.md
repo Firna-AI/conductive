@@ -28,6 +28,10 @@ plan limits.
   fields, Save, or Build computer. The General tab of a member is the child
   page `app/org-settings/member`, because `app/org-settings` has child
   pages. `DetailList` in `src/components/settings/` shows such values.
+- Every member adds secrets on the Secrets tab, and replaces or deletes
+  the secrets that they added, from secrets decision 3. Only an admin
+  switches the mark for all agents and reveals a value, as
+  `app/org-settings/secrets/member` shows.
 - Each session runs on the agent login of the member who started it. The
   messages of other members use that login only while that member shares
   it, with the switch under each login of the account. So a reassign

@@ -2,6 +2,7 @@ import type { AgentModel } from '../shared/generated/AgentModel'
 
 import { API_PATHS, type User } from '../shared/api'
 import { GET_STARTED_PATH, type GetStartedResponse } from '../shared/onboarding'
+import type { OrgColor } from '../shared/org-colors'
 import {
   leaveOrgPath,
   type CreateOrgRequest,
@@ -277,6 +278,11 @@ export class AppModel {
   /** Saves the name and the initials of an org. */
   async renameOrg(orgId: string, request: RenameOrgRequest): Promise<void> {
     this.putOrg(await patchOrg(this.orgApi(orgId), orgId, request))
+  }
+
+  /** Saves the colour of an org, which the rail shows while it is open. */
+  async setOrgColor(orgId: string, color: OrgColor): Promise<void> {
+    this.putOrg(await patchOrg(this.orgApi(orgId), orgId, { color }))
   }
 
   /**

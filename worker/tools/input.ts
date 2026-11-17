@@ -81,5 +81,6 @@ export function createWorkspaceInput(
     ...(fields.sectionId !== undefined && {
       sectionId: text(fields.sectionId),
     }),
+    ...(fields.parentId !== undefined && { parentId: text(fields.parentId) }),
   }
 }

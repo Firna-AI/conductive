@@ -6,6 +6,8 @@ import { workspaceBranch } from './workspace-branch'
 import { readCreationImage } from './published-image-data'
 import type { WorkspaceRuntime } from './workspace-runtime'
 import type { WorkspaceStartJob } from './start-types'
+import { readCreationCapabilities } from '../secrets/capabilities-input'
+import { requireOrgSecrets } from '../secrets/capabilities-data'
 
 export interface WorkspaceCreationBase {
   branch: string
@@ -15,12 +17,13 @@ export interface WorkspaceCreationBase {
 export interface WorkspaceCreationInput extends CreateWorkspaceRequest {
   name?: string
   firstSessionTitle?: string
+  parentId?: string
 }
 
 /**
- * The plan of a new create. It checks no access: each caller has already
- * checked that the org is active and that the user and the sender are
- * members, in the same request.
+ * The plan of a new create checks the selected secrets. Each caller has
+ * already checked that the org is active and that the user and the sender
+ * are members, in the same request.
  */
 export async function prepareCreationRequest(
   runtime: WorkspaceRuntime,
@@ -33,6 +36,8 @@ export async function prepareCreationRequest(
   base?: WorkspaceCreationBase,
 ): Promise<WorkspaceStartJob> {
   const { env, dependencies } = runtime
+  const capabilities = readCreationCapabilities(input.capabilities)
+  await requireOrgSecrets(env.DB, orgId, capabilities.preapprovedSecretIds)
   const image = await readCreationImage(
     env.DB,
     orgId,
@@ -68,6 +73,7 @@ export async function prepareCreationRequest(
       sender,
       repositoryId: repository.id,
       sectionId: input.sectionId,
+      parentId: input.parentId,
       city,
       ...(input.name !== undefined && { name: input.name }),
       branch,
@@ -78,6 +84,7 @@ export async function prepareCreationRequest(
         choice: modelChoice(env, input.firstMessage.choice),
       },
       createdAt: dependencies.now(),
+      capabilities,
     },
     processId: null,
     stdoutOffset: 0,

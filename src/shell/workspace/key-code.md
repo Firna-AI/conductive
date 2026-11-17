@@ -107,19 +107,31 @@ this guide.
 - `tools/ToolsPart.tsx`, `tools/tool-navigation.ts`, and
   `tools/tool-address.ts`: the tools panel and its `placeholder`, which
   takes the place of the tools inside the tabs, the tool of the address or
-  the saved view, the preview or the port of the address, and their
-  addresses. `previewPortHref` gives the address of the Preview tool with a
-  port. `useToolSelect` is the select of a tool tab, which the Go to rows
-  of the command palette share. `tools/terminal-links.ts` gives the links
-  of the terminal: a local address opens `previewPortHref` of its port.
+  the saved view, the preview, the port, or the terminal of the address,
+  and their addresses. `previewPortHref` gives the address of the Preview
+  tool with a port, and `terminalHref` the address of a terminal.
+  `useToolSelect` is the select of a tool tab, which the Go to rows of the
+  command palette share. `tools/terminal-links.ts` gives the links of the
+  terminal: a local address opens `previewPortHref` of its port.
+  `tools/terminal-route.ts` gives the route of the Terminal tool: the
+  terminal of the address or of the saved view, and the show of a
+  terminal, which saves it and moves the address of the Terminal tool.
+  `tools/TerminalPart.tsx` keeps the terminals of the workspace, also
+  before the Terminal tool shows, mounts the tool at its first show, and
+  offers New terminal to the command palette. The
+  [tools part](tools-part.md) gives the rules.
 - `WorkspacePaletteActions.tsx`: the actions that the screen offers to the
   command palette, as `workspaceActionIds` chooses them. Each one runs the
   control of the screen: +, the clock of the history, a tab of the right
-  column, Archive, or Restore.
+  column, Archive, or Restore. `useNewTerminalOffer` offers New terminal
+  for the Terminal tool, where the Go to rows show, while the + of the
+  terminal tabs takes a press.
 - `tools/tool-events.ts`: `ToolEvents`, the events of the tools from the
   ordered stream. It keeps the revokes of previews, the latest report of the
   listening ports, and the first failed repair of that report since it. A
-  tool that shows later gets them first, in event order.
+  tool that shows later gets them first, in event order. It passes each
+  readable list of terminals, and keeps none, because the Terminal tool
+  reads the list with its state.
 - `github/WorkspaceGitHub.tsx` and `github/github-events.ts`: the one
   GitHub store of the screen, the bar or the row, and the GitHub events of
   the ordered stream. `github/bar-controls.ts` gives the one action state of
@@ -127,8 +139,10 @@ this guide.
   another branch as loading. `github/bar-keys.tsx`: `BarKeys`, the keys of
   the bar, beside the bar of the right column and beside the actions at
   the top of the Checks tab of a phone.
-- `files/kept-files.tsx`: `KeptFilesConnection`, the one connection of the
-  kept files for the whole screen.
+- `kept-connections.tsx`: `KeptConnections`, the one connection of the
+  kept files and of the kept previews for the whole screen.
+- `previews/kept-previews.ts`: the kept previews store of the open
+  workspace, its snapshot, and its connection while the sandbox runs.
 - `ContinueDialog.tsx`: the question of Continue with the local work, which
   `LocalWorkList` of the mockups lists.
 - `github/BarMerge.test.tsx`, `github/BarAgent.test.tsx`,
@@ -146,7 +160,27 @@ this guide.
   preview address on a phone, a port address on desktop and on a phone,
   one GitHub read for the bar and Checks with a live event, the Checks row
   of a phone, an archived phone, and the key of Open PR on GitHub.
-  `wiring-test-kit.tsx` holds their helpers.
+- `tools/TerminalTabs.test.tsx`, `tools/TerminalAddress.test.tsx`,
+  `tools/TerminalReconnect.test.tsx`, `tools/TerminalTabsFocus.test.tsx`,
+  `tools/TerminalRestart.test.tsx`, and
+  `tools/TerminalPreviewTabs.test.tsx` mount the whole app over the fake
+  API, with the helpers of `tools/terminal-tabs-kit.ts`. They check the +
+  and the limit, a switch, the connections of the shown terminals, a close
+  and its question, the focus after a close, a close by another member,
+  the failed open and close, the saved terminal after a reload, the
+  address of a terminal and of a terminal that is not in the list, a reply
+  of an open after a newer close, older software, and the Reconnect of one
+  terminal over the fake sockets of the server. They also check the focus
+  after a tab, the +, and New terminal, on desktop and on a phone, and the
+  row of tabs after a Restart. On desktop, the saved terminal, a press on
+  a terminal tab, and New terminal of the palette keep the address of a
+  Preview tab of the centre. `wiring-test-kit.tsx` holds their helpers.
+- `../palette/PaletteNewTerminal.test.tsx` mounts the whole app over the
+  fake API for New terminal of the palette. It runs the row while Preview
+  shows and while the Terminal tool shows. It checks the place of the row,
+  no row at the limit, with a stopped cloud computer, with software for
+  one shell, or with the right column hidden, and a key that the person
+  gave the command, also while an open runs.
 - `header-notices.ts`: `HeaderNotices`, the failed repairs of the name and
   the start steps. `follow` reads a stream, `dismiss` hides a notice in
   this view, `newView` shows each notice again, and `shown` gives the

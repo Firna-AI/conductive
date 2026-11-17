@@ -28,18 +28,21 @@ A session is one conversation in a workspace.
 Its starter is the member who began it.
 A turn is one period of work by its agent.
 Its sender is the person whose message started that turn.
+A turn that a late answer to a secret request starts keeps the sender of the turn that asked.
 
 | Action | Account or person it uses |
 | --- | --- |
 | Agent model use | The session starter's agent login, including a chosen endpoint |
 | Git and GitHub CLI in a turn | The turn sender's GitHub account |
-| GitHub commands in the shared Terminal | The workspace owner's GitHub account |
+| GitHub commands in any workspace terminal | The workspace owner's GitHub account |
 | GitHub CLI outside a turn | The workspace owner's GitHub account |
 | Merge from the pull request bar | The GitHub account of the member who selects Merge |
+| Ready for review from the pull request bar | The GitHub account of the member who selects Ready for review |
 | Continue's repository fetch | The GitHub account of the member who selects Continue |
 | Commit in an agent turn | The turn sender, as author and committer |
 | Commit outside a turn, including Terminal and scripts | The workspace owner by default, as author and committer |
 | A request to run a Mac command | The turn sender's connected Mac |
+| An answer to a request for a secret | Any member who sees the session |
 | Session created through agent tools | The calling turn's sender, as the session starter |
 | Message sent through agent tools | The calling turn's sender, under the receiving session's login rules |
 | Other changes through workspace tools | The calling turn's sender, under that member's app rights |
@@ -54,11 +57,12 @@ That choice also applies to the starter's own messages, which use the starter's 
 The agent can identify the member who sent each message.
 Another member's message during a turn does not change its GitHub account, commit author, or receiving Mac.
 
-Every member using a workspace's Terminal uses the same owner identity for GitHub commands.
+Every member using a workspace terminal uses the same owner identity for GitHub commands.
 GitHub access can include repositories outside the Conductive org.
 It reaches repositories that both the GitHub account and the GitHub App can reach.
 
 GitHub checks the clicking member's access and branch rules for a merge.
+GitHub also checks the clicking member's access for Ready for review.
 Every org member can Continue after a merge, but their GitHub account needs repository read access for its fetch.
 
 ## Understand what agents can reach
@@ -75,6 +79,7 @@ The workspace tools can list workspaces and usable repositories, sections, and m
 They can also list sessions and previews.
 They can read details of a workspace, session, or message, and read transcripts across the org.
 This includes workspaces that members created themselves.
+They can also list the names and descriptions of the org's secrets, without values.
 Agents can read archived and removed workspaces by ID.
 Workspace lists leave out removed workspaces unless the agent asks for them.
 Agents can also read closed sessions.
@@ -97,6 +102,7 @@ The tools can:
 - Send messages to sessions.
 - Create and delete sections.
 - Open and close private previews.
+- Run a command with a secret that the session may use, or ask members to allow it.
 
 An agent can archive the workspace where it runs, which ends its turn.
 Tool messages follow the receiving session's login-sharing rules.
@@ -213,6 +219,35 @@ Some displayed path labels hide values, but the browser still receives real file
 
 - [Set environment variables](/docs/cloud-computer#set-environment-variables)
 
+## Understand secrets
+
+Conductive stores the value of each secret encrypted.
+Every member sees each secret's name and description, and who added it.
+Values show as dots.
+An admin can reveal one value at a time, also of a secret that another member added.
+Every member sees who revealed a value last, and when.
+
+An agent gets a secret's value only for one command.
+The command gets the value, and the agent sees only the name.
+Each session needs a member's approval, unless the secret is for **All agents** or pre-approved in the workspace's **Capabilities**.
+Any member who sees the session can allow the request.
+The approval lasts for that session.
+Every member can remove approvals in **Capabilities**.
+
+A request waits 90 seconds for an answer.
+After that, it stays in the chat, and a later **Allow** tells the agent in a new turn.
+An automation run follows the same rules.
+Text in a pull request can steer its agent to use the secrets that need no new approval.
+
+While a command runs with a secret, its value is on the cloud computer.
+Programs and members with terminal access can read it then.
+A command can also write it to a file.
+During a turn, a program on the computer can run its own command with each secret that the session may use.
+Conductive hides exact copies of a value in the command's output and in the chat.
+Changed or encoded values can still appear, also to the agent and its model provider.
+
+- [Add secrets for agents](/docs/cloud-computer#add-secrets-for-agents)
+
 ## Understand previews and Mac commands
 
 Preview apps run on a separate domain from Conductive.
@@ -223,6 +258,9 @@ Your browser can still keep the preview files that it loaded, as the preview app
 
 Mac commands run locally with the Mac user's permissions.
 Only the connected Mac that receives a request can approve it.
+**Mac access** starts off in each new workspace, also in one that an agent or an automation creates.
+While it is off, the agents of that workspace cannot ask for Mac commands.
+Any member can turn it on or off in a workspace's **Capabilities**.
 **Always allow** covers the exact command text in any requested folder on that Mac.
 Workspace permission covers every command from one workspace for 15 minutes, or until you stop it.
 Permission until you stop also ends when you quit the Mac app or sign out.

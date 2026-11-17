@@ -1,24 +1,34 @@
 # Stop and resume
 
-This page belongs to [Life of a workspace](workspace-life.md). It holds
-the requirements and the decisions in force for the stop of a sandbox
-without activity, its resume, the starts from the agent tools, and the
-restart near day 14 of a stop. The terms are those of the
+This doc holds the requirements and the decisions in force for the stop
+and the resume of the sandbox of a workspace. It also covers the restart
+near day 14 of a stop. It belongs to
+[Life of a workspace](workspace-life.md). The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says.
 
+## The stop
+
 - A sandbox stops after 30 minutes without user activity on its workspace
   and without a running agent turn (decisions 11 and 29).
 - Activity is input in the tabs of the workspace, such as typing, clicks,
-  and scrolling. Terminal input and requests to a port preview are
-  activity too.
+  and scrolling. Terminal input is activity too.
+- A request to a port preview is not activity (decision 293). A preview
+  works while the sandbox runs, but it never makes the sandbox run longer.
+  Reason: a page that polls by itself, or a page that a user forgot, must
+  not keep a sandbox running. The user chose this on 16 November 2026. A
+  count of only the page loads that the user starts, and a count of the
+  user's clicks in the frame, were rejected.
 - An open tab alone is not activity. An open connection is not activity
   either, such as the live reload of a dev server.
 - Reason: a forgotten tab must not keep a sandbox running, and a stop must
   not cut off real work.
 - A stop ends every process in the sandbox. Its files and its agent
   sessions stay.
+
+## The resume
+
 - Opening a stopped workspace resumes its sandbox. A workspace whose owner
   is suspended does not start, as
   [Operator actions](operator-actions.md#starts-stops-and-builds) says.
@@ -53,6 +63,10 @@ says.
   also starts the sandbox (decision 260). It does so in the same cases as
   an open, and with the same checks. These cases are a stopped workspace
   and a workspace whose later start failed, such as a failed resume.
+- An accepted notice for a late Allow or value answer to a secret request
+  also starts the sandbox in the same cases, with the same checks. The
+  notice starts a turn in the asking session, as
+  [Late answers](secret-requests.md#late-answers) says.
 - A failed first start keeps waiting for Try again, as
   [A failed first start](create-a-workspace.md#a-failed-first-start)
   says. An empty session from the agent tools starts nothing.
@@ -69,6 +83,9 @@ says.
   state takes the place of the composer.
 - A start that fails shows the error state with Try again. The chat history
   stays.
+
+## The restart near day 14
+
 - Near day 14 of a stop, the app starts the sandbox briefly and stops it
   again, so that Boat keeps its disk (decision 43). A workspace whose owner
   is suspended gets no such restart, as

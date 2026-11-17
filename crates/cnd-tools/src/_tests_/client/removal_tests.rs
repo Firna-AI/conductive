@@ -14,6 +14,10 @@ use super::fixtures::{client, response, workspace};
 fn detail(removed_at: Option<Value>) -> Value {
     let mut item = workspace();
     item["state"] = json!("archived");
+    item["parentId"] = Value::Null;
+    item["parent"] = Value::Null;
+    item["depth"] = json!(0);
+    item["children"] = json!([]);
     item["owner"] = json!({"id":"owner", "githubLogin":"owner-login", "displayName":null});
     item["repository"] =
         json!({"id":"repo", "fullName":"example/repository", "defaultBranch":"main"});

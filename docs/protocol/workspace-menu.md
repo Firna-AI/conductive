@@ -10,7 +10,8 @@ number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. The
 [mockup catalogue](../mockups/catalogue.md) draws the menu at
 `app/workspace-menu`, on desktop and on a phone, and in the flow
-`user-flows/archive-from-list`.
+`user-flows/archive-from-list`. It draws the menu of a nested row at
+`app/sub-workspaces/menu`.
 
 ## The menu
 
@@ -46,7 +47,8 @@ number names a dated record, as
   the menu opens as a sheet.
 - No row has a button for the menu, on any screen. A touch screen gets
   no other way to open it. A long press of a finger still only lifts the
-  row for a drag.
+  row for a drag. On a nested row, it does nothing, as
+  [Moves](sub-workspaces.md#moves) says.
 - Reason: the user asked for no such button, for the Archive shortcut as
   it was, and for a right click that opens the menu. A More button on
   each row, or only on touch screens, was rejected for that reason.
@@ -101,6 +103,8 @@ number names a dated record, as
   [What members of a suspended org keep](operator-actions.md#what-members-of-a-suspended-org-keep)
   says.
 - Move to section shows only when the org has more than one section.
+- A nested row has no Move to section, as [Moves](sub-workspaces.md#moves)
+  says.
 - A change of the role, the workspace, or the org can take an action away
   while the menu is open. The menu then drops that action and its choices.
   Copy link stays, so the menu stays open.
@@ -131,6 +135,8 @@ number names a dated record, as
   sheet, under the name of the workspace.
 - A choice of another section moves the workspace to the top of that
   section. A choice of the section of the workspace changes nothing.
+- The move also moves each workspace nested under the row, as
+  [Moves](sub-workspaces.md#moves) says.
 - When the move fails, the row goes back to its place, and a toast names
   the failure.
 

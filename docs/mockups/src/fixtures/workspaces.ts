@@ -159,7 +159,7 @@ export const savedCarts: Workspace = {
 }
 
 /** The Codex model and effort of the workspaces that use Codex. */
-const codex: AgentChoice = {
+export const codex: AgentChoice = {
   agent: 'codex',
   model: 'GPT-6.1 Sol',
   effort: 'medium',

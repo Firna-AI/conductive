@@ -7,6 +7,7 @@ import {
 } from '../../fixtures/sections'
 import { archivedWorkspaceList } from '../../fixtures/archivedWorkspaces'
 import type { GitHubSummary } from '../../../../../src/shared/generated/GitHubSummary'
+import type { TreeLines } from '../../../../../src/shared/workspace-tree-lines'
 import {
   checkoutAutocomplete,
   workspaceList,
@@ -14,6 +15,7 @@ import {
   type Workspace,
 } from '../../fixtures/workspaces'
 import { paths } from '../../paths'
+import type { RowIndent } from './trees'
 
 export type WorkspaceRow = {
   workspace: Workspace
@@ -28,6 +30,10 @@ export type WorkspaceRow = {
    * its row offers Restore, except in a suspended org.
    */
   restoreOpen?: boolean
+  /** The steps of its indent under the rows of its tree. Without it, 0. */
+  indent?: RowIndent
+  /** The guide lines of the row in its tree. Without them, none. */
+  lines?: TreeLines
 }
 
 export type SidebarSection = {
@@ -55,7 +61,9 @@ export type ListMenu = { section: SectionKey }
 
 /**
  * A workspace that the user drags to another section: the list lifts its
- * row, and a line shows where it lands, before the row at `index`.
+ * row, and a line shows where it lands, before the top-level row at
+ * `index`. The index counts the top-level rows of the section without the
+ * dragged one. Only a top-level row drags, and its tree moves with it.
  */
 type WorkspaceDrag = {
   kind: 'workspace'

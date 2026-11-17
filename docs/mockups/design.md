@@ -14,8 +14,9 @@ The desktop layout has four columns. The org rail holds the mark, the orgs
 as squares with their initials, Create org, and the account at the bottom.
 The sidebar shows the org name with its Settings cog, New workspace, Automations, Search, and
 the sections that the user made. Each workspace is one line: a dot-matrix
-mark in the colour of its GitHub state, the name, and the time, and it
-moves to another section by drag and drop. Archive covers the time on
+mark in the colour of its GitHub state, the name, and the time. A
+sub-workspace shows indented under the row of its parent, and a top-level
+row moves to another section by drag and drop, with the rows under it. Archive covers the time on
 hover only, without moving the row content, and Restore does so in the
 Archived group, which holds the archived workspaces of the last 14 days.
 Selection and
@@ -26,13 +27,14 @@ workspace and its number, such as `W-395`, the repository, and
 the owner of the workspace, and ends with the toggle of the
 right column. The toggle hides the right column, so the centre column
 takes its width, and shows it again. Then come a tab for each agent
-session and each open file or diff, in the order that the user gives them
-by drag, + for a new session, and a clock that opens the session history.
+session, each open file or diff, and a Preview tab for each previewed
+port, in the order that the user gives them by drag, + for a new
+session, and a clock that opens the session history.
 The file or diff of the last press shows in the temporary tab, with its
 title in italics, until the next press replaces it.
 The right column has the pull request bar on top, the All files, Changes,
 and Checks lists below it, and the Terminal and Preview tabs at the bottom.
-It shows no file content. A phone shows an org switcher at the top of the list,
+It shows no file content, and on desktop no page of a preview. A phone shows an org switcher at the top of the list,
 then New workspace, Automations, and Search. It shows the
 workspace with its number under its name, a compact pull request row, the
 sessions as tabs above the chat, and four tabs at the bottom.
@@ -85,10 +87,50 @@ sessions as tabs above the chat, and four tabs at the bottom.
   A move that the place of a tab rules out keeps its place, greyed.
   A read-only workspace leaves out each item that it does not allow,
   from decision 214.
+- A sub-workspace shows under the row of its parent, from sub-workspace
+  decisions 1 C, 4 F, 5 C, and 6 A, as `app/sub-workspaces` shows.
+  `withTrees` in `src/components/workspaces/trees.ts` places the rows of
+  each section with `placeWorkspaces`, the rule of the app in
+  [`src/shared/workspace-tree.ts`](../../src/shared/workspace-tree.ts).
+  So the mockups and the app place each row in the same way: a top-level
+  row, then its sub-workspaces, oldest first, each followed by its own. A
+  sub-workspace whose parent the list does not show, such as an archived
+  parent, shows under the nearest live row above it in its tree, in the
+  place of the archived row. Each level indents the row by one step, 12 px
+  in the sidebar and 16 px on the list page of a phone, so a tree shows at
+  most four levels. The indent follows the rows that the list shows, not
+  the depth of the record. The guide lines join the rows of a tree as the
+  lines of a file tree do, as the user asked on 17 November 2026. Each
+  line is a 1 px hairline in the `border2` colour. In forced colours, the
+  lines take the system colour of quiet text. A short stub runs down
+  from the bottom of the mark of each row with nested rows. The line of
+  that row then runs down under the middle of its mark. A short connector
+  runs from that line to the mark of each nested row (├─). The line
+  ends at the connector of the last nested row, in the middle of that row
+  (└─). An outer line runs through a row only while its row has a nested
+  row further down (│). Elsewhere its column stays empty. `treeLines` in
+  [`src/shared/workspace-tree-lines.ts`](../../src/shared/workspace-tree-lines.ts)
+  gives each row these facts. `withTrees` and the app both use it, so they
+  draw the same lines. The guides are neutral lines of the tree, not an
+  accent edge. They lie over the fill of a hover or a selection, and the
+  fill still spans the whole row. The faint tree of a drag keeps its
+  guides, and the lifted card shows none. A tree has no collapse control.
+  `.nested` and `.indent1` to `.indent3` of `WorkspaceRow.module.css` draw
+  the indent. `GuideLines.module.css` beside it draws the guides, and
+  `guideClasses` in `src/components/workspaces/guideLines.ts` gives their
+  classes. The app shares all three.
+- Only a top-level row drags, and its whole tree moves with it. The lifted
+  row stands for the tree: in place of its time it shows the count of the
+  nested rows that move with it, such as +2, over the edge of a second
+  card. The rows of the tree stay faint in their place, and the line falls
+  only between two trees, at the edge of a top-level row, as
+  `app/sub-workspaces/drag` shows. A nested row has no drag, no long press,
+  no move by keys, and no Move to section.
 - The menu of a workspace row has Move to section, Reassign to, Rename,
   Copy link, a line, then Archive, as `app/workspace-menu` shows. It lists
   only the actions that the person can use, from `workspaceMenu.ts` in
-  `src/components/workspaces/`. Every row offers Copy link, so every row
+  `src/components/workspaces/`. A nested row has no Move to section,
+  because it moves only with its tree. Every row offers Copy link, so every row
   has a menu. `linkCopy.ts` in `src/components/workspace/` gives the words
   of Copy link and of its result. The app
   reads the same list, so `workspaceMenu.ts` imports no fixture. A right
@@ -118,6 +160,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
   menu. On a phone, a long press lifts an org in the org switcher with the
   same look, and opens no menu. `OrgDrop` and `OrgDrag.module.css` beside
   `orgTileMenu.ts` draw the drag on the rail and in the org switcher.
+- `OrgTile` in `src/components/orgs/` draws the initials and the outline
+  of the open org in the colour of the org, as `app/org-settings/colour`
+  shows. `src/design/orgColors.ts` gives the eight presets, each with its
+  own ink and outline for the light and the dark scheme. Blue takes the
+  accent. `OrgColorField` in `src/components/settings/` draws the presets
+  as round radio swatches, and a ring marks the chosen one.
 - `FailureToast` in `src/components/common/` draws the toast that names a
   change of the list that failed, with the message of the server, in the
   `ToastLayer` beside it, as `app/workspace-menu/rename/failed` shows.
@@ -184,8 +232,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
   org and the section of the new workspace, in plain text, at the top
   right. The message and its files fill the middle, and the notices of the
   New workspace page follow them. The model picker sits at the bottom left,
-  and the attach button and Create, with the hint of the Enter key, at the
-  bottom right. A phone always opens the page, so the dialog has no phone
+  and the Capabilities icon, the attach button, and Create, with the hint
+  of the Enter key, at the bottom right. A phone always opens the page, so the dialog has no phone
   layout.
 - The account has five tabs, General, Agents, Preferences, Keyboard
   shortcuts, and Stats, as links, as the org settings have. The Mac app
@@ -342,6 +390,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   Markdown tables and headings of a reply and of a file preview, and the
   fold of the work of a turn. It also gives the data that the chat does
   not have, and the files that the cloud computer could not read.
+- [Secrets and Capabilities](design-secrets.md) gives the Secrets tab of
+  the org settings, the Capabilities icon beside every message box with
+  its control, and the requests and results of the secrets in the chat.
 - The app frame is a size container (`app-frame`), so the layout follows the
   width of the frame, not of the window. In the app the two are the same. A
   screen is as high as `--ui-screen-height`, which is the visible part of
@@ -352,8 +403,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
   the Waitlist tab, the codes, and the approval email. It also gives
   Suspend, Lift, and Approve, the daily chart, the notice of a pause, and
   the waitlist switch.
-- On a phone the org settings put their four tabs in three columns, so every
-  tab shows. The session tabs all shrink, and the current one keeps the start
+- On a phone the org settings put their five tabs in three columns, on two
+  lines, so every tab shows. The session tabs all shrink, and the current one keeps the start
   of its title beside its close button. When the session tabs still do not
   fit, their row scrolls sideways. A phone tab stays 40 px high to touch,
   but its fill is 32 px high, with 4 px of the row above and below it.

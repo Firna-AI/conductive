@@ -97,6 +97,8 @@ describe('workspace chat recorded events', () => {
         if (
           !('turnId' in event) ||
           event.type === 'message.sent' ||
+          event.type === 'secrets.run' ||
+          event.type === 'secrets.notice' ||
           event.type === 'runner.event-refused'
         )
           continue

@@ -23,7 +23,7 @@ import { useArchiveEnds } from './archive-ends'
 import { ChatArea } from './ChatArea'
 import { ContinueDialog } from './ContinueDialog'
 import { sandboxState, useFeatures, type WorkspaceContext } from './features'
-import { KeptFilesConnection } from './files/kept-files'
+import { KeptConnections } from './kept-connections'
 import { ResumeOnTabOpen } from './files/tab-open-resume'
 import { WorkspaceGitHub } from './github/WorkspaceGitHub'
 import { HeaderNoticeBars } from './HeaderNoticeBars'
@@ -266,14 +266,14 @@ export function WorkspaceScreen(props: {
     // row and no Checks, so it reads no GitHub state and no files.
     if (archived) return screen
     return (
-      <KeptFilesConnection context={context}>
+      <KeptConnections context={context}>
         <WorkspaceGitHub context={context}>{screen}</WorkspaceGitHub>
-      </KeptFilesConnection>
+      </KeptConnections>
     )
   }
   // The bar of the Mac app tops the main area, above the whole workspace.
   return (
-    <KeptFilesConnection context={context}>
+    <KeptConnections context={context}>
       <WorkspaceGitHub context={context}>
         <WorkspaceLinks context={context}>
           <WorkspaceMacBar context={context} />
@@ -292,6 +292,6 @@ export function WorkspaceScreen(props: {
           </div>
         </WorkspaceLinks>
       </WorkspaceGitHub>
-    </KeptFilesConnection>
+    </KeptConnections>
   )
 }

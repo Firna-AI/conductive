@@ -9,10 +9,12 @@ import {
   workspaceRemovedAt,
   workspaceRestoreUntil,
 } from '../../src/shared/workspaces'
+import { placeWorkspaces } from '../../src/shared/workspace-tree'
 import { requireActiveOrg } from '../data/user-access'
 import { workspaceLink } from '../data/workspace-link'
 import { workspaceNameColumn } from '../data/workspace-name'
 import { HttpError } from '../http'
+import { orgSections } from './store'
 
 interface WorkspaceRow {
   id: string
@@ -28,6 +30,7 @@ interface WorkspaceRow {
   defaultBranch: string
   baseBranch: string
   sectionId: string
+  parentId: string | null
   sectionName: string
   createdAt: number
   lastActivityAt: number
@@ -39,7 +42,7 @@ const source = `SELECT w.id, w.number, ${workspaceNameColumn('w')}, w.branch, w.
   u.id AS ownerId, u.github_login AS githubLogin, u.display_name AS displayName,
   r.id AS repositoryId, r.full_name AS fullName, r.default_branch AS defaultBranch,
   COALESCE(w.base_branch, r.default_branch) AS baseBranch,
-  s.id AS sectionId, s.name AS sectionName, w.created_at AS createdAt,
+  s.id AS sectionId, s.name AS sectionName, w.parent_workspace_id AS parentId, w.created_at AS createdAt,
   w.updated_at AS lastActivityAt, w.archived_at AS archivedAt, w.sandbox_id AS sandboxId
   FROM workspaces w JOIN users u ON u.id = w.owner_user_id
   JOIN repositories r ON r.id = w.repository_id AND r.org_id = w.org_id
@@ -53,6 +56,7 @@ function summary(
 ): AgentWorkspaceListEntry {
   return {
     id: row.id,
+    parentId: row.parentId,
     number: row.number,
     link: workspaceLink(origin, orgId, row.id),
     name: row.name,
@@ -80,6 +84,7 @@ export async function listToolWorkspaces(
     ['w.owner_user_id', input.ownerId],
     ['w.state', input.state],
     ['w.repository_id', input.repositoryId],
+    ['w.parent_workspace_id', input.parentId],
   ] as const) {
     if (value !== undefined) {
       filters.push(`${column} = ?`)
@@ -134,25 +139,52 @@ export async function toolWorkspaceDetail(
   now: number,
 ): Promise<AgentWorkspaceDetail> {
   await requireActiveOrg(db, orgId)
-  const row = await db
-    .prepare(`${source} AND w.id = ?`)
-    .bind(orgId, workspaceId)
-    .first<WorkspaceRow>()
+  const { results } = await db
+    .prepare(`${source} ORDER BY w.position, w.created_at, w.id`)
+    .bind(orgId)
+    .all<WorkspaceRow>()
+  const row = results.find(({ id }) => id === workspaceId)
   if (!row)
     throw new HttpError(
       404,
       'workspace_not_found',
       'The workspace is not available.',
     )
+  const sections = await orgSections(db, orgId)
+  const placement = placeWorkspaces(
+    results,
+    sections.map((section, position) => ({
+      id: section.id,
+      position,
+      isDefault: section.default,
+    })),
+  ).find(({ workspace }) => workspace.id === row.id)
+  const sectionId = placement?.sectionId ?? row.sectionId
+  const section = sections.find(({ id }) => id === sectionId)
+  const byId = new Map(results.map((workspace) => [workspace.id, workspace]))
+  const parent = row.parentId === null ? null : byId.get(row.parentId)
+  let depth = 0
+  for (
+    let ancestor = parent;
+    ancestor;
+    ancestor = ancestor.parentId === null ? null : byId.get(ancestor.parentId)
+  )
+    depth += 1
   return {
     ...summary(row, origin, orgId),
+    parent: parent ? summary(parent, origin, orgId) : null,
+    depth,
+    children: results
+      .filter(({ parentId }) => parentId === row.id)
+      .sort((a, b) => a.createdAt - b.createdAt || a.id.localeCompare(b.id))
+      .map((child) => summary(child, origin, orgId)),
     repository: {
       id: row.repositoryId,
       fullName: row.fullName,
       defaultBranch: row.defaultBranch,
     },
     baseBranch: row.baseBranch,
-    section: { id: row.sectionId, name: row.sectionName },
+    section: { id: sectionId, name: section?.name ?? row.sectionName },
     createdAt: row.createdAt,
     lastActivityAt: row.lastActivityAt,
     archivedAt: row.archivedAt,

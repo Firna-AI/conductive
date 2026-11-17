@@ -26,6 +26,7 @@ export function workspaceListInput(
   query: URLSearchParams,
 ): AgentListWorkspacesRequest {
   const ownerId = query.get('ownerId')
+  const parentId = query.get('parentId')
   const state = query.get('state')
   const repositoryId = query.get('repositoryId')
   const name = query.get('query')
@@ -40,10 +41,11 @@ export function workspaceListInput(
     return invalid()
   if (limit !== null && (counter(limit) < 1 || counter(limit) > 100))
     return invalid()
-  if (ownerId === '' || repositoryId === '') return invalid()
+  if (ownerId === '' || parentId === '' || repositoryId === '') return invalid()
   try {
     return {
       ...(ownerId !== null && { ownerId }),
+      ...(parentId !== null && { parentId }),
       ...(state !== null && { state: workspaceState(state) }),
       ...(repositoryId !== null && { repositoryId }),
       ...(name?.trim() && { query: name.trim() }),

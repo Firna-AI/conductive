@@ -108,17 +108,6 @@ export async function toolFixture(harness: TestHarness) {
         TEST_TIME,
       ],
       [
-        'removed-workspace',
-        'org-a',
-        'repo-a',
-        'owner',
-        'general-a',
-        'Madrid',
-        'owner-login/madrid-kl12',
-        'archived',
-        TEST_TIME - WORKSPACE_RESTORE_MS,
-      ],
-      [
         'outside-workspace',
         'org-b',
         'repo-b',
@@ -169,7 +158,8 @@ export async function toolFixture(harness: TestHarness) {
       link: `${harness.env.APP_ORIGIN}${routes.workspace(input.orgId, 'created-workspace')}`,
       orgId: input.orgId,
       repositoryId: input.repositoryId,
-      sectionId: input.sectionId,
+      sectionId: input.sectionId ?? 'general-a',
+      parentId: input.parentId ?? null,
       owner: input.owner,
       name: 'Berlin',
       branch: `${input.owner.githubLogin}/berlin-ij90`,
@@ -237,6 +227,17 @@ export async function toolFixture(harness: TestHarness) {
       now = at
     },
   }
+}
+
+export async function seedRemovedWorkspace(db: D1Database) {
+  await db
+    .prepare(
+      `INSERT INTO workspaces
+       (id, org_id, repository_id, owner_user_id, section_id, name, branch, state, archived_at, created_at, updated_at)
+       VALUES ('removed-workspace', 'org-a', 'repo-a', 'owner', 'general-a', 'Madrid', 'owner-login/madrid-kl12', 'archived', ?, ?, ?)`,
+    )
+    .bind(TEST_TIME - WORKSPACE_RESTORE_MS, TEST_TIME + 3, TEST_TIME + 3)
+    .run()
 }
 
 export type ToolFixture = Awaited<ReturnType<typeof toolFixture>>

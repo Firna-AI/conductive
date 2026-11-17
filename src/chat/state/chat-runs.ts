@@ -13,7 +13,7 @@ import {
   createChatContext,
   type ChatContextOptions,
 } from './controller-context'
-import { endDraftFiles } from './drafts'
+import { withEndedDraftFiles } from './drafts'
 import { watchShownSession } from './history'
 import { loadChat } from './load'
 import { followSources, withSources } from './sources'
@@ -98,15 +98,7 @@ export class ChatRuns {
     this.context.sessionReads.close()
     for (const upload of this.context.uploads.values()) upload.abort()
     this.context.uploads.clear()
-    this.store.update((snapshot) => ({
-      ...snapshot,
-      sessionStates: Object.fromEntries(
-        Object.entries(snapshot.sessionStates).map(([id, state]) => [
-          id,
-          { ...state, draft: endDraftFiles(state.draft) },
-        ]),
-      ),
-    }))
+    this.store.update(withEndedDraftFiles)
     this.unwatch?.()
     this.unwatch = null
     this.unfollow?.()

@@ -32,6 +32,22 @@ text as `developerInstructions` on `thread/start` and `thread/resume`.
 The text names the context folder for notes, screenshots, and files for
 other sessions of the workspace.
 
+After the branch paragraphs, new instructions give the workspace ID and
+canonical link. They say whether the workspace is top-level or nested.
+For a sub-workspace, they give its depth and its direct parent's ID and
+link. The deepest depth comes from the Worker's environment, without a
+second runner constant.
+
+The text tells the agent to pass its workspace ID as `parentId` to
+`create_workspace`, below that limit. At the limit, it gives the parent's
+ID for a sibling and asks for a one-word group prefix, such as "Limits: ".
+It names `get_workspace` for parent and sub-workspace details, and
+`list_workspaces` with `parentId` for direct sub-workspaces.
+
+The runner validates the complete set of tree variables. Missing or
+malformed values produce one warning and omit all these paragraphs.
+The [configuration page](configuration.md) lists those variables.
+
 The runner saves the text of a session before its first agent start. Later
 starts reuse it exactly, also after a restart or a change of configuration
 or wording. A saved session without text takes the current text once.

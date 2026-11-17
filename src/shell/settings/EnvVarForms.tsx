@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Input } from '@firna/ui/input'
-import { useToast } from '@firna/ui/toast'
 import { Plus, X } from 'lucide-react'
 import { productName } from '../../../docs/mockups/src/brand'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
@@ -9,44 +8,9 @@ import { SecretSwitch } from '../../../docs/mockups/src/components/settings/EnvV
 import styles from '../../../docs/mockups/src/components/settings/EnvironmentSections.module.css'
 import sections from '../../../docs/mockups/src/components/settings/Section.module.css'
 import type { ComputerModel } from '../../app/computer-model'
-import { SecretForm } from '../../app/secret-form'
-import { useStore } from '../../app/store'
-import { isOrgRefusal } from '../../app/suspension'
 import { ActionButton, IconButton } from '../ui/actions'
 import { MarkSwitch, useMark, type EnvVar } from './EnvVarMark'
-
-/**
- * The value of a variable through a secret form. `save` sends the typed
- * value with the write of its caller, and closes the form after the save.
- * The value leaves the browser once and never comes back. A failed save
- * shows its message under the field. A refusal because the org is
- * suspended also ends the permission, so the form closes, and a toast
- * shows the message instead.
- */
-function useValueForm(close: () => void) {
-  // The value goes out as typed: it may be empty, and its spaces stay.
-  const [form] = useState(() => new SecretForm({ raw: true }))
-  const value = useStore(form.value)
-  const state = useStore(form.state)
-  const { toast } = useToast()
-  const save = (name: string, write: (value: string) => Promise<void>) => {
-    void form.submit(write).then((saved) => {
-      if (saved) {
-        close()
-        return
-      }
-      const { error } = form.state.get()
-      if (error && isOrgRefusal(error)) {
-        toast({
-          title: `${name} was not saved`,
-          description: error.message,
-          tone: 'error',
-        })
-      }
-    })
-  }
-  return { form, value, state, save }
-}
+import { useValueForm } from './useValueForm'
 
 /**
  * A new value for a variable, in its row, with Save and Cancel. The save

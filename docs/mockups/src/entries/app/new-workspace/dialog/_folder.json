@@ -2,6 +2,7 @@
   "order": [
     "first-build",
     "section",
+    "capabilities",
     "files",
     "no-login",
     "not-created",

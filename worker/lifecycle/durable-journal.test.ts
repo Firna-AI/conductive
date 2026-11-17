@@ -22,6 +22,7 @@ it.each([{ kind: 'resume' }, { kind: 'create' }] as const)(
         orgId: 'org-one',
         repositoryId: 'repository-one',
         sectionId: 'general',
+        parentId: null,
         owner: {
           id: 'sender-one',
           githubLogin: 'octocat',

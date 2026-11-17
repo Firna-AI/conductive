@@ -13,12 +13,18 @@ use crate::ports::{HttpMock, HttpResponse, RuntimeMock, StreamsMock};
 fn arguments(values: &[&str]) -> Vec<String> {
     values.iter().map(|value| (*value).into()).collect()
 }
-fn config() -> Result<Configuration> {
-    Configuration::new(
-        Some("https://machine.test".into()),
-        Some("token".into()),
-        Some("turn".into()),
-    )
+fn configured_program(mock: &Arc<Unimock>) -> Result<ToolProgram> {
+    Ok(ToolProgram::new(
+        Configuration::new(
+            Some("https://machine.test".into()),
+            Some("token".into()),
+            Some("turn".into()),
+        )?,
+        mock.clone(),
+        mock.clone(),
+        mock.clone(),
+        mock.clone(),
+    ))
 }
 
 #[tokio::test]
@@ -51,7 +57,7 @@ async fn help_and_invalid_options_send_no_request() -> Result<()> {
             .some_call(matching!())
             .returns(String::from("retry-id")),
     )));
-    let program = ToolProgram::new(config()?, mock.clone(), mock.clone(), mock.clone());
+    let program = configured_program(&mock)?;
     assert_eq!(
         program
             .cli(&arguments(&["sessions", "send", "--help"]))
@@ -100,7 +106,7 @@ async fn message_files_and_stdin_preserve_utf8_and_conflicts_send_no_request() -
             .answers(&|_,_|Ok(HttpResponse {status:403,body:json!({"error":{"code":"stopped","message":"Stop"}}).to_string()})),
         StreamsMock::stderr.each_call(matching!((text) if ["stopped: Stop\n","Use --message or --message-file for one message.\n","The message file could not be read. Check its path and try again.\n"].contains(text))).answers(&|_, _| Ok(())),
     )));
-    let program = ToolProgram::new(config()?, mock.clone(), mock.clone(), mock.clone());
+    let program = configured_program(&mock)?;
     for prefix in [
         &["workspaces", "create", "--repository", "repo"][..],
         &["sessions", "create"][..],
@@ -146,12 +152,7 @@ async fn message_files_and_stdin_preserve_utf8_and_conflicts_send_no_request() -
             ))
             .answers(&|_, _| Ok(())),
     )));
-    let program = ToolProgram::new(
-        config()?,
-        failing_stdin.clone(),
-        failing_stdin.clone(),
-        failing_stdin,
-    );
+    let program = configured_program(&failing_stdin)?;
     assert_eq!(
         program
             .cli(&arguments(&["sessions", "create", "--message-file", "-"]))
@@ -169,7 +170,7 @@ async fn dash_prefixed_session_values_are_sent_exactly() -> Result<()> {
             .returns(Ok(HttpResponse {status:404,body:json!({"error":{"code":"session_not_found","message":"Session missing."}}).to_string()})),
         StreamsMock::stderr.some_call(matching!("session_not_found: Session missing.\n")).answers(&|_, _| Ok(())),
     )));
-    let program = ToolProgram::new(config()?, mock.clone(), mock.clone(), mock.clone());
+    let program = configured_program(&mock)?;
     assert_eq!(
         program
             .cli(&arguments(&[
@@ -214,7 +215,7 @@ async fn fast_overrides_are_boolean_and_invalid_values_send_no_request() -> Resu
                 .some_call(matching!("stopped: Stop\n"))
                 .answers(&|_, _| Ok(())),
         )));
-        let program = ToolProgram::new(config()?, mock.clone(), mock.clone(), mock.clone());
+        let program = configured_program(&mock)?;
         let mut args = vec![
             "sessions",
             "send",
@@ -231,7 +232,7 @@ async fn fast_overrides_are_boolean_and_invalid_values_send_no_request() -> Resu
             .some_call(matching!("Choose true or false for fast mode.\n"))
             .answers(&|_, _| Ok(())),
     ));
-    let program = ToolProgram::new(config()?, mock.clone(), mock.clone(), mock.clone());
+    let program = configured_program(&mock)?;
     assert_eq!(
         program
             .cli(&arguments(&["sessions", "create", "--fast", "yes"]))
@@ -267,7 +268,7 @@ async fn removed_filters_are_boolean_and_reach_the_list_query() -> Result<()> {
             ))
             .answers(&|_, _| Ok(())),
     )));
-    let program = ToolProgram::new(config()?, mock.clone(), mock.clone(), mock.clone());
+    let program = configured_program(&mock)?;
     for args in [
         &[
             "workspaces",

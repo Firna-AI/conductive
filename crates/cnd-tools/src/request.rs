@@ -24,6 +24,8 @@ fn write(path: String, body: &impl Serialize) -> Result<Request> {
 
 pub(crate) fn request(call: &Call) -> Result<Request> {
     Ok(match call {
+        Call::ListSecrets => read("/v1/tools/secrets".into()),
+        Call::RunWithSecrets(input, _) => write("/v1/tools/secrets/run".into(), input)?,
         Call::RunMacCommand(input) => write("/v1/tools/mac-command".into(), input)?,
         Call::CreateWorkspace(input) => write("/v1/tools/workspaces".into(), input)?,
         Call::ListWorkspaces(input) => read(query("/v1/tools/workspaces".into(), input)?),

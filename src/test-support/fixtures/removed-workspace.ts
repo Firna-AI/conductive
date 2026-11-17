@@ -27,6 +27,7 @@ export function removedWorkspace(): Workspace {
     orgId: FAKE_IDS.org,
     repositoryId: postcodeLookup.repository,
     sectionId: postcodeLookup.section,
+    parentId: null,
     owner:
       fakeUsers.find((user) => user.id === postcodeLookup.owner) ?? fakeUser,
     name: postcodeLookup.name,

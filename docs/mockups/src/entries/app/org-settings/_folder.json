@@ -1,3 +1,11 @@
 {
-  "order": ["repositories", "cloud-computer", "members", "delete", "member"]
+  "order": [
+    "colour",
+    "repositories",
+    "cloud-computer",
+    "secrets",
+    "members",
+    "delete",
+    "member"
+  ]
 }

@@ -203,6 +203,10 @@ describe('ChatController', () => {
       temporaryTab: null,
       fileList: 'changes',
       tool: 'terminal',
+      // The app always sends its Preview tabs, so the Worker keeps none of
+      // an older save.
+      previewTabs: [],
+      activePreview: null,
     })
   })
 

@@ -30,6 +30,8 @@ interface TabMenuItem {
 export interface TabMenuActions {
   onRename: (id: string) => void
   onStep: (tab: RowTab, by: -1 | 1) => void
+  /** Closes every tab but the tab, as Close other tabs says. */
+  onCloseOthers: (tab: RowTab) => void
   /** Closes every tab after the tab, as Close tabs to the right says. */
   onCloseRight: (tab: RowTab) => void
   /** Keeps the temporary tab in its place, through the `keep` of its host. */
@@ -55,8 +57,8 @@ const copyIcons: Readonly<Record<TranscriptDetail, LucideIcon>> = {
  * and the moves. The temporary tab has Keep open, Copy path, and the moves,
  * and a kept file or diff tab has Copy path and the moves. A file or diff
  * tab whose host gives no `copyPath`, such as one whose label hides a
- * secret value, has no Copy path. Every tab ends with Close tabs to the
- * right. A move or a close that the place of the tab rules out is off.
+ * secret value, has no Copy path. Every tab ends with Close other tabs and
+ * Close tabs to the right. A move or a close that the row rules out is off.
  */
 function groupsOf(
   tabs: readonly RowTab[],
@@ -89,7 +91,18 @@ function groupsOf(
       changes: true,
     },
   ]
-  const closeRight: TabMenuItem[] = [
+  const closes: TabMenuItem[] = [
+    {
+      entry: {
+        kind: 'item',
+        key: 'close-others',
+        label: 'Close other tabs',
+        icon: X,
+        disabled: tabs.length === 1,
+        onSelect: act(() => actions.onCloseOthers(tab)),
+      },
+      changes: true,
+    },
     {
       entry: {
         kind: 'item',
@@ -118,7 +131,7 @@ function groupsOf(
           },
         ]
       : []
-    if (tab.keep === null) return [copy, moves, closeRight]
+    if (tab.keep === null) return [copy, moves, closes]
     // The icon is a bookmark with a check, as the mockups draw it, because
     // a pin names the pinned tabs of a browser.
     const keep: TabMenuItem = {
@@ -131,7 +144,7 @@ function groupsOf(
       },
       changes: true,
     }
-    return [[keep], copy, moves, closeRight]
+    return [[keep], copy, moves, closes]
   }
   const copy = (detail: TranscriptDetail): TabMenuItem => ({
     entry: {
@@ -167,7 +180,7 @@ function groupsOf(
     },
     changes: true,
   }
-  return [[rename], [...link, copy('concise'), copy('full')], moves, closeRight]
+  return [[rename], [...link, copy('concise'), copy('full')], moves, closes]
 }
 
 /**

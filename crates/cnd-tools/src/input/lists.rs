@@ -44,7 +44,7 @@ pub(super) fn sessions(fields: &Map<String, Value>) -> Result<AgentListSessionsR
 
 pub(super) fn workspaces(fields: &Map<String, Value>) -> Result<AgentListWorkspacesRequest> {
     let mut parsed = page(fields)?;
-    for key in ["ownerId", "repositoryId"] {
+    for key in ["ownerId", "repositoryId", "parentId"] {
         if fields.contains_key(key) {
             parsed.insert(key.into(), Value::String(text(fields, key)?));
         }

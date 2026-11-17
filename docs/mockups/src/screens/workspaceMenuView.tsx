@@ -120,7 +120,7 @@ function rowsOf(
  * The phone sheet of the menu that a context event opened on the drawn
  * row, if any.
  */
-function sheetOf(view: Omit<MenuListView, 'over'>): ReactNode {
+export function sheetOf(view: Omit<MenuListView, 'over'>): ReactNode {
   const { focus } = view
   const row = [
     ...view.sections.flatMap((item) => item.rows),

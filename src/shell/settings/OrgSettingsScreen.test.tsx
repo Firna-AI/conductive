@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest'
 import { ComputerModel } from '../../app/computer-model'
 import type { SettingsTab } from '../../app/router'
 import { flushMicrotasks, ManualDelay } from '../../app/test-kit'
+import { ORG_COLORS } from '../../shared/org-colors'
 import {
   buildPath,
   orgSettingsPaths,
@@ -92,7 +93,7 @@ async function computerText(
 }
 
 describe('OrgSettingsScreen', () => {
-  test('an admin gets the tabs General, Repositories, Cloud computer, and Members, and fields for the name and the initials', async () => {
+  test('an admin gets the tabs General, Repositories, Cloud computer, Secrets, and Members, fields for the name and the initials, and the colour swatches', async () => {
     const { app, org, user } = await signedIn(new FakeApiServer())
     const html = renderScreen(
       app,
@@ -102,13 +103,14 @@ describe('OrgSettingsScreen', () => {
       'General',
       'Repositories',
       'Cloud computer',
+      'Secrets',
       'Members',
     ])
     expect(
       [...html.matchAll(/<input[^>]*value="([^"]*)"/g)].map(
         ([, value]) => value,
       ),
-    ).toEqual(['Acme', 'AC'])
+    ).toEqual(['Acme', 'AC', ...ORG_COLORS])
   })
 
   test('a suspended org shows its notice above each tab, and no edit control, also for its only admin', async () => {

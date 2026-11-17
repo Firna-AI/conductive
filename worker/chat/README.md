@@ -20,7 +20,7 @@ tokens. A failed renewal makes the login unavailable to chat dispatch.
 ## Entry points
 
 `Workspace` in [`worker/workspace.ts`](../workspace.ts) is the Durable
-Object class. Its `fetch` gives device paths to the device feature first.
+Object class. Its `fetch` gives secret and device paths to those features first.
 It gives each other request to `WorkspaceChat.fetch` in `backend.ts`,
 which serves these routes. The path helpers live in
 `src/shared/sessions.ts`, `src/shared/events.ts`, and
@@ -46,6 +46,15 @@ workspace, as [the integration README](integration/README.md#the-outer-worker)
 says. `routeChat` in [`router.ts`](router.ts) forwards the browser routes.
 `routeRunner` forwards the runner socket of the machine hostname, by its
 bearer token.
+
+The [secret request feature](../secrets/README.md#browser-answers-and-events)
+adds browser list, answer, and temporary-value removal routes.
+`fetch-workspace-features.ts` composes their handling. `secret-notice.ts`
+admits a late answer as an app line in the original session. It starts
+for the original turn sender or joins that session's current turn.
+It sends no member message event and creates no linked session.
+Secret requests share this object's transaction, event sequence, needs
+input projection, turn-end callbacks, and lifecycle cleanup.
 
 Trusted Worker code can also call methods of `WorkspaceChat` that run no
 gate. [Trusted workspace calls](integration/README.md#trusted-workspace-calls)
@@ -125,12 +134,14 @@ all call `TurnLifecycle.stop` with a `TurnStopRequester` from
 - `recordStopRequest` in `stop-request.ts` emits `turn.stop-requested`
   before the stop saves its interrupt. So the event commits before the
   runner gets the interrupt.
-- `StoredTurn.stopRequest` keeps the first requester. A later request emits
-  its own event and leaves that field. The transcript fold keeps the first
-  request of each turn, so the chat and the copy name the first stopper.
-- An older turn record has no `stopRequest`. When such a turn is stopping
-  or has ended, the next request reads the session history for its first
-  request.
+- `StoredTurn.stopRequest` keeps the first requester. A new turn record
+  starts with `null`, which marks that no request has arrived. A later
+  request emits its own event and leaves that field. The transcript fold
+  keeps the first request of each turn, so the chat and the copy name the
+  first stopper.
+- An older turn record has no `stopRequest` field. When such a turn is
+  stopping or has ended, the next request reads the session history for its
+  first request.
 - The browser rename and the tool rename share `renameSession` in
   `session-management.ts`.
 - `readStopRequester` in `src/chat/api/read-stop.ts` reads both event forms
@@ -175,6 +186,11 @@ runner commands.
 [Retries](retries.md) gives the stored retry state, and the rules of the
 retry route for `Session.retryMessageId`.
 
+## Runner warnings
+
+[Runner warnings](runner-warnings.md) gives the warning kinds and the
+fields for runner connections and for turn ends with no Stop request.
+
 ## Automation first turns
 
 A run workspace reports the stored outcome of its first turn to its D1 run record.
@@ -209,6 +225,8 @@ npm run typecheck
 
 The shared chat and runner fixtures run the production workspace object in Miniflare with native SQLite.
 Their restart helpers evict the real object.
+The lifecycle fixture uses isolated temporary storage outside the repository.
+Restart keeps that storage, and disposal removes it.
 [Chat backend tests](tests.md) names the native controls and each group of tests.
 
 ## Seams for other milestones
@@ -267,6 +285,7 @@ mode. `runner-delivery.ts` owns the prepared command's send.
 - [Chat and events: Messages](../../docs/protocol/messages-and-attachments.md#messages)
 - [Chat and events: Events](../../docs/protocol/chat-and-events.md#events)
 - [Agent runner: Lost workspace updates](../../docs/protocol/agent-runner.md#lost-workspace-updates)
+- [Agent runner: Runner warnings](../../docs/protocol/runner-warnings.md)
 - [Chat backend integration](integration/README.md)
 - [Report repairs](report-repairs.md)
 - [GitHub banner backend](../github/README.md)

@@ -52,6 +52,10 @@ pub struct AgentCreateWorkspaceRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub section_id: Option<String>,
+    /// Parent workspace for the new sub-workspace.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub parent_id: Option<String>,
     /// name.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
@@ -76,6 +80,10 @@ pub struct AgentCreateWorkspaceResponse {
     pub session_id: String,
     /// session link.
     pub session_link: String,
+    /// Notice about the section chosen for the workspace.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub notice: Option<String>,
 }
 
 /// AgentWorkspaceOwner wire fields.
@@ -97,6 +105,8 @@ pub struct AgentWorkspaceListEntry {
     /// summary.
     #[serde(flatten)]
     pub summary: AgentWorkspaceSummary,
+    /// Parent workspace, or null for a top-level workspace.
+    pub parent_id: Option<String>,
     /// owner.
     pub owner: AgentWorkspaceOwner,
 }
@@ -109,6 +119,10 @@ pub struct AgentListWorkspacesRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub owner_id: Option<String>,
+    /// Filter by the direct parent workspace.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub parent_id: Option<String>,
     /// state.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
@@ -185,6 +199,13 @@ pub struct AgentWorkspaceDetail {
     /// entry.
     #[serde(flatten)]
     pub entry: AgentWorkspaceListEntry,
+    /// Parent entry, including an archived parent, or null.
+    pub parent: Option<AgentWorkspaceListEntry>,
+    /// Number of parent links, including archived parents.
+    pub depth: u64,
+    /// Direct sub-workspaces in creation order, including archived ones.
+    #[ts(as = "ReadonlyVec<AgentWorkspaceListEntry>")]
+    pub children: Vec<AgentWorkspaceListEntry>,
     /// repository.
     pub repository: AgentWorkspaceRepository,
     /// base branch.
@@ -210,6 +231,10 @@ pub struct AgentWorkspaceDetail {
 pub struct AgentWorkspaceResponse {
     /// workspace.
     pub workspace: AgentWorkspaceDetail,
+    /// Notice about a workspace write.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub notice: Option<String>,
 }
 
 /// AgentRenameWorkspaceRequest wire fields.

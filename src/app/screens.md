@@ -2,9 +2,9 @@
 
 This guide belongs to [Web app: data and composition](README.md). It
 gives the rules of the screens of the app shell: the account and Get
-started, sign-in, invitations, orgs, panels and layers, the focus, saved
-drafts, New workspace as a page or a dialog, and
-[the waitlist](#the-waitlist).
+started, sign-in, invitations, orgs, panels and layers, the trees of the
+workspace list, the focus, saved drafts, New workspace as a page or a
+dialog, and [the waitlist](#the-waitlist).
 [Command palette and keys](palette-and-keys.md) gives the rules of the
 command palette and of the keyboard shortcuts.
 [Feedback](palette-screens.md) gives the rules of the Feedback dialog that
@@ -58,6 +58,11 @@ the Help row of the command palette opens.
   chooses at least one, also while the list is empty or did not load.
 - The rail, the org switcher, and General show the saved initials of an
   org. An org without them shows the initials of its name.
+- The tile of the open org shows the colour of the org in its initials
+  and its outline. An org without a colour, or with a colour that this
+  copy of the app does not know, shows Blue. An admin picks the colour on
+  General, and a choice saves at once. A failed save shows a toast and the
+  saved colour again.
 - The rail and the org switcher show the orgs in the person's own order.
   The person moves an org tile by drag, by its tile menu with Move up and
   Move down, or by Alt and Up or Down on a focused tile. On a phone, a
@@ -126,6 +131,39 @@ the Help row of the command palette opens.
   and the keys of the workspace list.
 - [Feedback](palette-screens.md) gives the rules of the Feedback dialog
   that the Help row of the palette opens, with its screenshots.
+- The workspace list shows each live sub-workspace nested under the row of
+  its parent, in the sidebar and on the list page, as
+  [The list](../../docs/protocol/sub-workspaces.md#the-list) says.
+  `groupWorkspaces` in `sections.ts` places the rows of each section with
+  `placeWorkspaces`, the shared rule of the Worker, so a row whose parent
+  is archived shows under the nearest live row above it. Each row that the
+  list shows above a row in its tree indents it by one step, through the
+  classes `.nested` and `.indent1` to `.indent3` of the mockups. The guide
+  lines join the rows of a tree as in a file tree, as
+  [the design](../../docs/mockups/design.md) says. A stub runs down from
+  the mark of a row with nested rows, and a connector runs to the mark of
+  each nested row. A line ends at its last nested row. An outer line runs
+  through a row only while its row has a nested row further down.
+  `treeRows` in `list-trees.ts` gives each row its lines from `treeLines`,
+  a shared helper. The mockups use the same helper, and their
+  `guideClasses` gives the classes of the lines. A collapsed section
+  counts its nested rows too. The Archived group and the command palette
+  stay flat.
+- Only a top-level row moves, and it takes its whole tree: by a drag, by a
+  long press on a phone, by Alt with Up or Down, and by Move to section.
+  The lifted row shows the count of the nested rows that move with it,
+  the tree stays faint in its place, and the drop line falls only between
+  two trees. The place of a move counts the top-level rows of the section
+  without the moved one, as the Worker counts them. A move shows the tree
+  at its new place at once. A nested row has no drag, no move by keys, and
+  no Move to section, and a long press on it does nothing, as
+  [Moves](../../docs/protocol/sub-workspaces.md#moves) says.
+- An Archive of a workspace gives each live workspace that showed under
+  its row the section and the place of the archived workspace, in the
+  list of the app as in the Worker (`replaceWorkspace` in
+  `list-trees.ts`). So these rows stay where they showed: while the
+  Archive runs, after its reply, after an event of the archived record,
+  and after the next read of the list.
 - A move of a workspace row by keys keeps the focus on the row. The list
   gives back only a lost focus, as a layer does: when a render takes the
   focused row out of the page and the focus falls to the page, the
@@ -251,6 +289,30 @@ the Help row of the command palette opens.
   files of the draft follow its marks, and a create that succeeds or a
   sign-out ends them, as
   [Attached files of a draft](../chat/draft-files.md) says.
+- The page and the dialog have the Capabilities icon, the Blocks icon with
+  its label as a native tooltip (secrets decision 6 G). On a computer the
+  page shows it after the attach button, and the dialog before it. Its
+  control opens above the icon. On a phone, one + button, "More options",
+  holds Attach files and Capabilities, which opens the control as a sheet
+  (secrets decision 16 G). The control lists the secrets of the org, which
+  it reads each time that it opens, with a checkbox that pre-approves each
+  one for the new workspace, and the switch of Mac access, off by default.
+  A secret for all agents stays checked and off. The draft keeps the
+  choices, the create sends them, and a create that succeeds ends them, so
+  the next draft starts again from the defaults. The create leaves out
+  each pre-approved secret that the last read no longer lists, and a
+  refusal of a missing secret reads the secrets again for Try again.
+- The Secrets tab of the org settings follows Cloud computer (secrets
+  decisions 2, 3, and 6). Its rights come from `secretRights` in
+  `permissions.ts`: every member adds secrets, a member replaces and
+  deletes only the secrets that the member added, and an admin replaces
+  and deletes each one, switches the mark for all agents, and reveals one
+  value at a time. A suspended org shows the tab with no action. The list
+  shows each value as dots, and the reader of the list keeps no value from
+  a reply. A revealed value shows on its own line with Copy and Hide, and
+  a new reveal, a Replace of its value, and its Delete hide it. Replace
+  sends only the fields that changed, and an empty new value keeps the
+  stored value. Delete asks first.
 - A create request that fails keeps the message in the form, with "The
   workspace wasn't created". Try again sends the same message ID. A failed
   first start keeps its workspace instead, as

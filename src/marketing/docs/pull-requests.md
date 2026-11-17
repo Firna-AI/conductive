@@ -51,7 +51,7 @@ You can also ask the agent to create a pull request with the GitHub CLI.
 The CLI is authenticated on computers with the current software.
 
 GitHub operations in an agent turn use the person whose message started that turn.
-Commands in the shared Terminal use the workspace owner's GitHub account.
+Commands in any workspace terminal use the workspace owner's GitHub account.
 
 Commits in each place name that same person as both author and committer.
 An `author` or `committer` setting in the repository or in the global Git settings takes priority over the workspace owner's author.
@@ -76,13 +76,13 @@ The actions and GitHub links sit at the top of that view.
 | Checks failed | **Fix checks** asks the agent to investigate, fix, commit, and push. |
 | Merge conflict | **Resolve conflicts** asks the agent to merge the latest target branch, fix conflicts, test, commit, and push. |
 | Changes requested | **Address review** asks the agent to read the comments, change code, commit, and push. |
-| Draft | Open GitHub when you want to change its draft state. |
+| Draft | **Ready for review** marks it ready for review on GitHub. |
 | Blocked | Open GitHub for the reason it blocks the merge. |
 | Ready to merge | Select the displayed merge action when available. |
 | Merged | Choose **Continue**, or **Archive** when you own the workspace or are an admin. |
 | Closed without a merge | Open GitHub to review what happened. |
 
-On an open pull request, local work gives **Commit and push** or **Push** priority over Merge and the fix actions.
+On an open pull request, local work gives **Commit and push** or **Push** priority over Merge, **Ready for review**, and the fix actions.
 Local work means files not committed or commits that have not been pushed.
 When any file is not committed, **Commit and push** asks the agent to commit and push that work.
 When only commits are left, **Push** asks the agent to push the branch.
@@ -117,6 +117,21 @@ The merge alone does not archive the workspace.
 If the branch has new commits, review them before merging again.
 If the error says your GitHub access does not allow the merge, ask a GitHub repository admin for access.
 For another refusal, use **Open on GitHub** to inspect the cause.
+
+## Mark a draft ready for review
+
+Select **Ready for review** in the bar of a draft pull request.
+Conductive marks the pull request ready for review on GitHub at once.
+No agent turn runs.
+
+The change uses your GitHub account.
+You need GitHub write access or more to see the action.
+If Conductive cannot read that access, it hides **Ready for review**.
+The bar shows **Marking ready** until GitHub answers.
+The bar then shows the new state of the pull request.
+
+If GitHub refuses the change, a message under the bar says so.
+Use **Open on GitHub** to inspect the cause.
 
 ## Inspect checks
 
@@ -173,7 +188,7 @@ Its chat is read-only, with no file lists or tools.
 The notification after Archive offers **Restore**.
 It also gives the day the workspace leaves the list.
 Every member of an active org can restore the workspace while its computer and Restore window remain available.
-Restore returns it to its section and place in the list, stopped.
+Restore returns the workspace to its place in the list, stopped.
 Select **Resume** if the restored workspace is already open.
 The archived bar and the command palette also offer Restore during that window.
 On a computer, point to its row in **Archived** to find **Restore**.
