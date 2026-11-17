@@ -59,8 +59,10 @@ examples.
     method, the route words, and the code places of the stack.
   - It holds no error message, so that no secret or request body reaches
     the log.
-  - The preview proxy logs no route, because its paths are the paths of
-    the user's app.
+  - An error of the preview proxy logs no route, because its paths are
+    the paths of the user's app. A preview request that fails before the
+    proxy, such as when a deploy restarts the workspace object, still
+    logs the route words of its path, with each other segment as `*`.
 - Set each secret with `npx wrangler secret put <NAME>`. The command asks
   for the value. Never put a secret in `wrangler.jsonc` or in Git.
 - The Worker reads each variable as text. Write a JSON value as one
