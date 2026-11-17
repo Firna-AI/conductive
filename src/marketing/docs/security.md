@@ -255,9 +255,9 @@ Your browser can still keep the preview files that it loaded, as the preview app
 
 Mac commands run locally with the Mac user's permissions.
 Only the connected Mac that receives a request can approve it.
-Any member can turn off **Mac access** in a workspace's **Capabilities**.
-The agents of that workspace then cannot ask for Mac commands.
-Any member can turn it on again.
+**Mac access** starts off in each new workspace, also in one that an agent or an automation creates.
+While it is off, the agents of that workspace cannot ask for Mac commands.
+Any member can turn it on or off in a workspace's **Capabilities**.
 **Always allow** covers the exact command text in any requested folder on that Mac.
 Workspace permission covers every command from one workspace for 15 minutes, or until you stop it.
 Permission until you stop also ends when you quit the Mac app or sign out.

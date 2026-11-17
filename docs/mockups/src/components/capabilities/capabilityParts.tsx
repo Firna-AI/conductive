@@ -121,8 +121,7 @@ function MacAccessSwitch(props: { on: boolean }) {
 
 /**
  * The parts of the Capabilities control, in their order: the secrets that
- * the workspace pre-approves, with its grants, and Mac access, which is on
- * by default (secrets decision 9).
+ * the workspace pre-approves, with its grants, and Mac access.
  */
 export function capabilityParts(view: CapabilitiesView): CapabilityPart[] {
   return [
