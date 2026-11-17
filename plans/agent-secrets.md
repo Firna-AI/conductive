@@ -1,6 +1,6 @@
 # Agent secrets
 
-Status: Active. [PR #379](https://github.com/Firna-AI/conductive/pull/379) is open. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. [PR #379](https://github.com/Firna-AI/conductive/pull/379) merged the first part of the work on 17 November 2026. A later pull request completes the work and deletes this plan, as the `plans` skill says.
 
 Today an admin saves org env vars in the org settings, and every cloud
 computer gets all of them at each start, with no approval. Cal asked on
@@ -342,7 +342,7 @@ grants of their workspace and session with no question. The options:
   calling turn. A turn that no person started uses no grant. It gets only
   the secrets marked for all agents, and each other request fails at once
   with a reason. The open item
-  `plans/follow-ups/routine-turns-mac-commands.md` can use the same
+  [plans/follow-ups/automation-turns-mac-commands.md](https://github.com/Firna-AI/remote-code/blob/9f1a39283/plans/follow-ups/automation-turns-mac-commands.md) can use the same
   record. Effort: Medium.
 
 Left out: no secret at all in pull request runs, because it breaks the
@@ -497,7 +497,7 @@ workspace, and a member can turn it off in Capabilities. Reason: the Mac
 app still asks before each command, so the switch is an extra stop and
 today's behaviour stays. The gap of always-allowed commands in routine
 runs stays with the open follow-up
-`plans/follow-ups/routine-turns-mac-commands.md`.
+[plans/follow-ups/automation-turns-mac-commands.md](https://github.com/Firna-AI/remote-code/blob/9f1a39283/plans/follow-ups/automation-turns-mac-commands.md).
 
 The record of the options as they were asked:
 
@@ -529,7 +529,7 @@ text in every workspace (`desktop/src/device/permissions.ts`). The
 routine owner sends the first turn of a run workspace. So under A, text
 in a pull request can make the agent of a run run an always-allowed
 command on the owner's Mac with no question. This is the open High
-follow-up `plans/follow-ups/routine-turns-mac-commands.md`. Under A, an
+follow-up [plans/follow-ups/automation-turns-mac-commands.md](https://github.com/Firna-AI/remote-code/blob/9f1a39283/plans/follow-ups/automation-turns-mac-commands.md). Under A, an
 agent can also create a new workspace with Mac access on, past a switch
 that is off.
 

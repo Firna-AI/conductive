@@ -1,6 +1,6 @@
 # Pressable links in the chat
 
-Status: Active. [PR #386](https://github.com/Firna-AI/conductive/pull/386) is open. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. [PR #386](https://github.com/Firna-AI/conductive/pull/386) merged the links in chat text on 16 November 2026. A later pull request completes the work and deletes this plan, as the `plans` skill says.
 
 The chat shows each web address of an agent answer or a sent message as
 plain text, except a link to a workspace of the same org, which shows as a
@@ -184,7 +184,7 @@ and added decisions 5 and 6. Its report is in
 - **Previous examples:** None found.
 - **Related:** Decision 3: with its answer B, a local address in code also
   follows this decision. Decision 4 extends this rule.
-  `plans/follow-ups/local-address-path-in-preview.md` records E.
+  [plans/follow-ups/local-address-path-in-preview.md](https://github.com/Firna-AI/remote-code/blob/9f1a39283/plans/follow-ups/local-address-path-in-preview.md) records E.
 - **Recommendation:** C. It opens the server with one press where the
   answer shows its address.
 - **Action:** ask the user, because with C a press in chat text opens a
@@ -224,7 +224,7 @@ and added decisions 5 and 6. Its report is in
 - **Wider fix:** None, because this rule applies to one view only.
 - **Previous examples:** None found.
 - **Related:** Decision 2: with B, a local address in code also follows
-  decision 2. `plans/follow-ups/chat-code-not-read-as-markdown.md`: the
+  decision 2. [plans/follow-ups/chat-code-not-read-as-markdown.md](https://github.com/Firna-AI/remote-code/blob/9f1a39283/plans/follow-ups/chat-code-not-read-as-markdown.md): the
   chat reads inline code with single backticks only, so B links only such
   code.
 - **Recommendation:** B. An address alone in code is meant to be opened,
@@ -334,7 +334,7 @@ and added decisions 5 and 6. Its report is in
   through one copy handler in `src/chat/links/mention-copy.ts`. A browser
   copies a link as its text in the plain copy. The session menu copies a
   whole transcript as Markdown. The open item
-  `plans/follow-ups/workspace-chip-copy-in-messages.md` recommends that a
+  [plans/follow-ups/workspace-chip-copy-in-messages.md](https://github.com/Firna-AI/remote-code/blob/9f1a39283/plans/follow-ups/workspace-chip-copy-in-messages.md) recommends that a
   copy of a workspace chip gives its link.
 - **Problem:** With decision 1D, a plain copy of an answer gives the label
   of each label link and loses its address.
@@ -352,10 +352,10 @@ and added decisions 5 and 6. Its report is in
     nor Markdown uses. Effort: Small.
 - **Left out:** None.
 - **Wider fix:** B, with the same mark on workspace chips, as
-  `plans/follow-ups/workspace-chip-copy-in-messages.md` recommends. One
+  [plans/follow-ups/workspace-chip-copy-in-messages.md](https://github.com/Firna-AI/remote-code/blob/9f1a39283/plans/follow-ups/workspace-chip-copy-in-messages.md) recommends. One
   copy rule then gives the source of each part.
 - **Previous examples:** None found.
-- **Related:** `plans/follow-ups/workspace-chip-copy-in-messages.md`: the
+- **Related:** [plans/follow-ups/workspace-chip-copy-in-messages.md](https://github.com/Firna-AI/remote-code/blob/9f1a39283/plans/follow-ups/workspace-chip-copy-in-messages.md): the
   same handler and the same question for chips. Decision 5.
 - **Recommendation:** B. A copy keeps each address, in the words that the
   agent wrote.

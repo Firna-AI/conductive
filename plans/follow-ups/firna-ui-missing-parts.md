@@ -23,7 +23,7 @@
 - **Problem:** Every Firna app that needs these parts builds its own copy. The accounting mockups keep notices, tags, and page chrome local for the same reason.
 - **Impact if no action:** The copies drift apart in look and in accessibility.
 - **Root question:** Where do the parts that `@firna/ui` lacks live?
-- **Status on 8 November 2026:** `@firna/ui` 5.1.0 shipped the parts, but Milestone 15n found that five of them cannot draw the mockups yet:
+- **Status on 8 November 2026:** `@firna/ui` 5.1.0 shipped the parts, but a trial swap found that five of them cannot draw the mockups yet:
   - `LinkTabs` cannot wrap the phone settings tabs into three columns.
   - `Notice` moves Retry below the text.
   - `InlineMenuSheet` has a fixed larger title and a close button.
@@ -37,4 +37,9 @@
 - **Wider fix:** B.
 - **Previous examples:** The accounting mockups keep notices, tags, and page chrome local.
 - **Recommendation:** B. One shared version keeps the look and the accessibility the same in every app.
-- **Action:** fix after merge, apply B, as the user chose on 8 November 2026 (decision 119): A now, and B in parallel. A workspace on `futex-ai/ui` adds the parts and publishes them, and Milestone 15n replaces the local copies.
+- **Action:** fix after merge, apply B, as the user chose on 8 November 2026 (decision 119): A now, and B in parallel. A workspace on `futex-ai/ui` adds the parts and the five missing options above, and publishes them. Then a branch of this repository does the swap:
+  1. Update `@firna/ui` in `package.json`. It is 4.0.0 on 2026-11-17. Keep `legacy-peer-deps=true` in `.npmrc`.
+  2. Replace the local copies in `docs/mockups/src/components/common/`, `docs/mockups/src/design/`, and the app under `src/` with the parts of the library.
+  3. Keep each screen as its mockup draws it. Compare each changed screen before and after.
+  4. Delete this item.
+- **Note:** The deleted Boat-native remote workspaces plan held this swap as its Milestone 15n until 2026-11-17.
