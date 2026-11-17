@@ -1,5 +1,5 @@
 import type { Workspace } from '../../shared/generated/Workspace'
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { ChevronLeft, FolderGit2 } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import owner from '../../../docs/mockups/src/components/workspace/OwnerPicker.module.css'
@@ -67,8 +67,6 @@ export function WorkspaceHeader(props: {
   const bar = useMacBar()
   const automation = useRunAutomation(props.context.savedView)
   const menu = useHeaderMenu(props.context)
-  const { toggle } = menu
-  const nameButton = useRef<HTMLElement | null>(null)
   useEffect(() => model.watch('repositories'), [model])
   const repository =
     repositories?.find((item) => item.id === workspace.repositoryId)
@@ -89,16 +87,12 @@ export function WorkspaceHeader(props: {
       page={false}
       rename={menu.rename}
     />
-  ) : toggle ? (
+  ) : menu.toggle ? (
     <NameMenuButton
-      buttonRef={(node) => {
-        nameButton.current = node instanceof HTMLElement ? node : null
-      }}
+      buttonRef={menu.buttonRef}
       name={name}
       onPointerDown={menu.pressStart}
-      onPress={() => {
-        if (nameButton.current) toggle(nameButton.current)
-      }}
+      onPress={menu.toggle}
       open={menu.open}
     />
   ) : (

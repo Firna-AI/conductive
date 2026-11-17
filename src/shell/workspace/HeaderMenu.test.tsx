@@ -46,8 +46,8 @@ function title(): HTMLElement {
 }
 
 /** The name of the open workspace in its header, as the button of its menu. */
-function nameButton(): HTMLElement {
-  return byRole('button', `${name}. Workspace menu`, header())
+function nameButton(shown = name): HTMLElement {
+  return byRole('button', `${shown}. Workspace menu`, header())
 }
 
 /**
@@ -136,7 +136,7 @@ describe('the workspace menu in the header', () => {
     ])
   })
 
-  test('Rename puts the field in place of the name in the header, and Enter saves the new name in the header and in the row', async () => {
+  test('Rename puts the field in place of the name in the header, Escape keeps the name, Enter saves the new name in the header and in the row, and each close gives the focus back to the name', async () => {
     const server = new FakeApiServer()
     const { detail } = workspaceFixtures()
     const newName = 'Address autocomplete at checkout'
@@ -145,6 +145,15 @@ describe('the workspace menu in the header', () => {
       workspace: { ...detail.workspace, name: newName },
     })
     await openPaletteTab(open, { server })
+
+    click(nameButton())
+    click(menuItem('Rename'))
+    press(byRole('textbox', 'Workspace name', header()), 'Escape')
+    await settle()
+    const escaped = {
+      field: queryByRole('textbox', 'Workspace name'),
+      focus: document.activeElement === nameButton(),
+    }
 
     click(nameButton())
     click(menuItem('Rename'))
@@ -161,12 +170,15 @@ describe('the workspace menu in the header', () => {
     await settle()
 
     expect({
+      escaped,
       opened,
       writes: await nameWrites(server),
       field: queryByRole('textbox', 'Workspace name'),
       title: title().textContent,
       row: rowLink(workspace).textContent?.includes(newName),
+      focus: document.activeElement === nameButton(newName),
     }).toEqual({
+      escaped: { field: null, focus: true },
       opened: {
         value: name,
         selection: [0, name.length],
@@ -177,6 +189,37 @@ describe('the workspace menu in the header', () => {
       field: null,
       title: newName,
       row: true,
+      focus: true,
+    })
+  })
+
+  test('a right click on the name of an open menu closes it, and the next press by the keys opens it again', async () => {
+    await openPaletteTab(open)
+    const button = nameButton()
+    click(button)
+    const opened = menuOf(name).length
+    // A right click: the press closes the menu, and no click follows.
+    act(() => {
+      for (const type of ['pointerdown', 'pointerup']) {
+        button.dispatchEvent(
+          new PointerEvent(type, {
+            bubbles: true,
+            button: 2,
+            pointerType: 'mouse',
+          }),
+        )
+      }
+    })
+    rightClick(button)
+    await settle()
+    const closed = menuOf(name)
+    // Enter on a button clicks it, with no pointer press.
+    click(button)
+
+    expect({ opened, closed, reopened: menuOf(name).length }).toEqual({
+      opened: 5,
+      closed: [],
+      reopened: 5,
     })
   })
 })

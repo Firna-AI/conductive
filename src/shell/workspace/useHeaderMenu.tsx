@@ -25,9 +25,11 @@ function focusBack(node: HTMLElement | null): void {
  * the name is plain text.
  */
 export function useHeaderMenu(context: WorkspaceContext): {
-  /** Opens the menu below `button`, the name, or closes it. */
-  toggle: ((button: HTMLElement) => void) | null
-  /** Notes a press on the name, before the menu closes at a press outside. */
+  /** Opens the menu below the name, or closes it. Null without a menu. */
+  toggle: (() => void) | null
+  /** Takes the element of the name button, also after Rename replaced it. */
+  buttonRef: (node: unknown) => void
+  /** Notes a pointer press on the name, before its click. */
   pressStart: () => void
   open: boolean
   rename: RowMenu['rename']
@@ -60,8 +62,12 @@ export function useHeaderMenu(context: WorkspaceContext): {
   ].find((item) => item.id === workspace.id)
   const menu = listed ? menus(listed) : undefined
   const rename = menu?.rename ?? null
-  // The name that opened the menu, which takes the focus back.
+  // The current name button, which places the menu and takes the focus back.
+  // Rename replaces the button, so the ref follows the new one.
   const name = useRef<HTMLElement | null>(null)
+  const buttonRef = (node: unknown) => {
+    name.current = node instanceof HTMLElement ? node : null
+  }
   const renaming = rename !== null
   const wasRenaming = useRef(false)
   useLayoutEffect(() => {
@@ -72,17 +78,29 @@ export function useHeaderMenu(context: WorkspaceContext): {
       focusBack(name.current)
     }
   }, [renaming])
-  // The menu was open as the press on the name started. That press closed
-  // it, as a press outside the menu, and its click opens nothing.
+  // The menu was open as a pointer press on the name started. That press
+  // closed it, as a press outside the menu, so its click opens nothing. The
+  // note lasts for that one press: it ends after the release of the pointer,
+  // also when no click follows, as after a right click.
   const openAtPress = useRef(false)
   const pressStart = () => {
     openAtPress.current = menu?.open ?? false
+    const end = () => {
+      document.removeEventListener('pointerup', end, true)
+      document.removeEventListener('pointercancel', end, true)
+      // The click of the press comes in the same task as its release.
+      setTimeout(() => {
+        openAtPress.current = false
+      })
+    }
+    document.addEventListener('pointerup', end, true)
+    document.addEventListener('pointercancel', end, true)
   }
-  const toggle = (button: HTMLElement) => {
+  const toggle = () => {
     const closing = openAtPress.current
     openAtPress.current = false
-    if (!menu || menu.open || closing) return
-    name.current = button
+    const button = name.current
+    if (!menu || menu.open || closing || !button) return
     const box = button.getBoundingClientRect()
     menu.show({
       anchor: { x: box.left, y: box.bottom + belowRow },
@@ -91,6 +109,7 @@ export function useHeaderMenu(context: WorkspaceContext): {
   }
   return {
     toggle: menu ? toggle : null,
+    buttonRef,
     pressStart,
     open: menu?.open ?? false,
     rename,
