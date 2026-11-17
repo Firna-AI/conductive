@@ -78,17 +78,19 @@ Depends on: none
 State the cases as a requirement of the agent instructions and the tool
 text.
 
-- [ ] Add a section "When to nest" to `docs/protocol/sub-workspaces.md`
+- [x] Add a section "When to nest" to `docs/protocol/sub-workspaces.md`
       with the cases, the member's choice, and the decision record.
-- [ ] Add the cases to the guidance list of
+- [x] Add the cases to the guidance list of
       `docs/protocol/agent-instructions.md`.
-- [ ] Say in `docs/protocol/workspace-calls.md` that the create text gives
+- [x] Say in `docs/protocol/workspace-calls.md` that the create text gives
       the cases.
-- [ ] Read both legal pages, `src/marketing/terms.ts` and
+- [x] Read both legal pages, `src/marketing/terms.ts` and
       `src/marketing/privacy.ts`, in full. Update each sentence that
       restates a changed fact.
-- [ ] Read each public guide in `src/marketing/docs/` in full. Note each
-      sentence that restates a changed fact for Milestone 3.
+- [x] Read each public guide in `src/marketing/docs/` in full. Note each
+      sentence that restates a changed fact for Milestone 3. No legal
+      page restates a changed fact. The notes are in
+      `.context/when-to-nest-workspaces/guide-read.md`.
 
 ## Milestone 2: Agent text
 
@@ -119,7 +121,8 @@ Tell members when to ask for a sub-workspace.
       task that needs its own files and branch." in
       `src/marketing/docs/workspaces.md` with the cases, under the rules
       of [Website docs](../docs/protocol/website-docs.md).
-- [ ] Update each other guide sentence that Milestone 1 noted.
+- [ ] Update each other guide sentence that Milestone 1 noted: the
+      delegation sentence in `src/marketing/docs/sessions-and-chat.md`.
 - [ ] Check each relative link of each changed Markdown file.
 
 ## Milestone 4: Verification, commit, review, and pull request

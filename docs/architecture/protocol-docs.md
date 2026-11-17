@@ -31,8 +31,8 @@ This page lists each protocol doc and what it covers.
     merge, on a new branch with the same sandbox and sessions.
   - [Workspace menu](../protocol/workspace-menu.md): the menu of a workspace
     row, which moves, reassigns, renames, and archives the workspace.
-  - [Sub-workspaces](../protocol/sub-workspaces.md): the parent link, the
-    depth limit, the nested rows of the list, an archived parent, the moves
+  - [Sub-workspaces](../protocol/sub-workspaces.md): the parent link, when
+    to nest, the depth limit, the nested rows of the list, an archived parent, the moves
     of a tree, and the agent context.
   - [Workspace tools](../protocol/workspace-tools.md)
     - [Temporary tabs](../protocol/temporary-tabs.md): the one file or diff
