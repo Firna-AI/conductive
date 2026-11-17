@@ -53,6 +53,23 @@ this guide.
 - `files/files-store.ts` and `files/workspace-files.ts`: the store of one
   workspace over the transport of the app, its connection, and Copy and
   Download.
+- `files/copy-path.ts`: `useCopyPath`, Copy path of the row menu and of
+  the tab menu, which copies a real path with the clipboard of the org
+  and says its result in a toast, and `useRowMenuItems`, the items of the
+  row menu of the Files panel. `files/RowCopyPath.test.tsx` copies the path
+  of a file, a folder, and a deleted file of Changes, also from the lists
+  of a stopped sandbox, with each toast and no request.
+- `files/add-to-chat.ts`: `useAddToChat`, Add to chat of the row menu,
+  which gives the entry of a row to the kept chat, and the rules of the
+  rows and the states that offer it. `files/RowAddToChat.test.tsx` checks
+  the items of a file row, the chip at the caret of the shown session, a
+  folder chip behind a file tab, a new session, and a phone. It checks the
+  focus on desktop and none on a phone, and the item left out while the
+  chat loads, while a stopped sandbox shows its bar, on a path that the
+  list of `@` does not offer, and on a deleted file of Changes.
+  `files/TabCopyPath.test.tsx` copies the path of a diff tab, and checks
+  the tab menu of a read-only file tab, with only Copy path, and of a tab
+  whose label is not known yet, with none.
 - `files/FilesWiring.test.tsx`: mounts the whole app over the fake API. It
   opens a file beside the sessions, goes back by a session tab, and checks
   the saved view. It also checks a failed chat load, the diff of a turn on
@@ -63,7 +80,8 @@ this guide.
   API: a load, a replace, a switch of mode, a close, and an address. It
   also checks a double-click on a row and on the tab, with one history
   entry each, and a press and a keep in a suspended org.
-  `files/TemporaryTabMenu.test.tsx` checks Keep open of its tab menu.
+  `files/TemporaryTabMenu.test.tsx` checks Keep open of its tab menu, and
+  Copy path before the moves.
 - `files/StartingPages.test.tsx`: mounts the whole app over the fake API at
   a file address and at a diff address while the sandbox starts. It checks
   the sandbox panel in place of the page, with no read, and the read once

@@ -1,29 +1,8 @@
 /*
- * The menu of a workspace row and its field of Rename. A right click or
- * the menu keys open the menu: a row has no button of its own for it.
+ * The field of Rename of a workspace row. A right click or the menu keys
+ * open the menu of the row: a row has no button of its own for it.
+ * `PointMenu.module.css` in `../common/` styles the menu at the pointer.
  */
-
-/*
- * A view runs no script, so it draws the menu of a right click at a pointer
- * over the name. The top left corner of the menu takes the point, and an
- * open submenu sits beside the menu, level with its item. The app draws
- * the menu above the page, at the pointer.
- */
-.pointer {
-  display: flex;
-  position: absolute;
-  z-index: 20;
-  top: calc(50% + 6px);
-  left: 96px;
-  align-items: flex-start;
-  gap: 4px;
-  width: max-content;
-}
-
-/* The submenu of the second item starts one row lower. */
-.second {
-  margin-top: calc(var(--ui-row-height) + 1px);
-}
 
 /*
  * The field of Rename, in place of the name and the time of the row. A

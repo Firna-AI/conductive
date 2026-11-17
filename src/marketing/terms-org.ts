@@ -86,7 +86,9 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         content and the credential of the turn, to another address. A commit,
         the agent, or other code can change those settings. After Stop, a
         credential can start no new request. A request that still runs
-        ends within 30 seconds after the turn ends. If the member who
+        ends at the first check of its turn that answers after the turn
+        ends. ${productName} checks every 15 seconds. While no check
+        answers, the request can run to the end of its answer. If the member who
         started the session removes or changes the login, or loses access
         to the org, the turn ends at its next model request.`,
       text`The setting of your login does not change these risks. Work in

@@ -112,6 +112,8 @@ export async function mountChat(options: {
  * the row takes from a real path shows the secret value. The tab that
  * `temporary` names is the temporary tab: it draws in italics, and Keep open
  * of its tab menu calls `keep` of the navigation, which changes no view.
+ * Each label hides a secret value, so no tab has Copy path, as the app
+ * gives it.
  */
 export function fileTabs(
   navigation: FilesNavigation,
@@ -143,6 +145,7 @@ export function fileTabs(
         ),
       show: () => navigation.navigate(tab),
       keep: isTemporary ? () => navigation.keep(tab) : null,
+      copyPath: null,
     }
   }
 }

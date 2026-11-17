@@ -21,8 +21,13 @@ A preview shows a web server that runs there too.
 ## Open Terminal
 
 1. Open **Terminal** in the workspace.
-2. Select the terminal area to give it focus.
-3. Enter the command you want to run.
+2. Enter the command you want to run.
+
+On a computer, select the **Terminal** tab to give the terminal focus.
+**Go to Terminal** in the command palette does the same.
+So does its keyboard shortcut, by default **⌘J** on a Mac or **Ctrl+J** on another computer.
+If the terminal is still connecting, it gets focus when it appears.
+On a phone, or after you select something else, select the terminal area to give it focus.
 
 The shell starts in the workspace's repository folder.
 After a repository change, a new shell starts in the folder of the new repository.

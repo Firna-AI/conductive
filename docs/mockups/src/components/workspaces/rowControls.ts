@@ -1,8 +1,9 @@
 import type { Membership } from '../../fixtures/members'
 import { sections, type SectionKey } from '../../fixtures/sections'
 import type { MenuEntry } from '../common/Menu'
+import type { OpenSubmenu } from '../common/PointMenu'
 import { reassignMenu } from '../workspace/OwnerPicker'
-import type { OpenSubmenu, RowControls } from './RowMenu'
+import type { RowControls } from './RowMenu'
 import type { WorkspaceRow } from './sections'
 import { renames, workspaceMenuOf, type Submenu } from './workspaceMenu'
 

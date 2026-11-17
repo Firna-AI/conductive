@@ -13,11 +13,17 @@ import { terminalStates } from '../fixtures/terminals'
 import { openableWorkspaces } from '../fixtures/workspaces'
 import { barStateDefaults, barStateKeys, barStateProperties } from './barState'
 import { composerStates, tabStates, temporaryTabStates } from './chatStates'
+import { overlayStates } from './overlayStates'
 import {
   feedbackStateDefaults,
   feedbackStateKeys,
   feedbackStateProperties,
 } from './feedbackState'
+import {
+  rowMenuStateDefaults,
+  rowMenuStateKeys,
+  rowMenuStateProperties,
+} from './rowMenuState'
 
 /**
  * The state of the workspace screen. Each catalogue entry of the screen is a
@@ -56,6 +62,7 @@ export const workspaceStateSchema = {
     'org',
     'palette',
     ...feedbackStateKeys,
+    ...rowMenuStateKeys,
     ...barStateKeys,
   ],
   properties: {
@@ -154,38 +161,8 @@ export const workspaceStateSchema = {
      * with the workspace list open as a popover of the tile of the org.
      */
     sidebar: { enum: ['shown', 'hidden', 'popover'] },
-    /**
-     * What lies open over the workspace: the session history, the question
-     * before a running session closes, the owner of the workspace, the tab
-     * menu of the first session or of the temporary tab, or the question of
-     * Continue with work that is not pushed. Or the question before a
-     * terminal closes, or the toast of a terminal that did not open or close.
-     * Or the menu of the header state, the question of Restart while an
-     * agent works, the time after Restart until the agents are back, or
-     * that time with the toast of a failed update check.
-     * Or the menu of the repository, the question before a repository
-     * change, or the toast of a change that stopped.
-     */
-    overlay: {
-      enum: [
-        'none',
-        'history',
-        'close-session',
-        'reassign',
-        'tab-menu',
-        'continue-unpushed',
-        'close-terminal',
-        'terminal-open-failed',
-        'terminal-close-failed',
-        'repository',
-        'repository-change',
-        'repository-failed',
-        'restart',
-        'restart-confirm',
-        'restarting',
-        'restart-update-failed',
-      ],
-    },
+    /** What lies open over the workspace, as `overlayStates` says. */
+    overlay: { enum: overlayStates },
     /**
      * The cloud computer of an archived workspace: kept, until the app
      * deletes it 14 days after the Archive, kept past the last day of
@@ -242,6 +219,7 @@ export const workspaceStateSchema = {
      */
     palette: { enum: paletteViews },
     ...feedbackStateProperties,
+    ...rowMenuStateProperties,
     ...barStateProperties,
   },
 } as const
@@ -279,6 +257,7 @@ export const readyWorkspace: WorkspaceState = {
   org: 'active',
   palette: 'closed',
   ...feedbackStateDefaults,
+  ...rowMenuStateDefaults,
   ...barStateDefaults,
 }
 

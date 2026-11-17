@@ -19,7 +19,7 @@ beforeEach(() => harness.reset())
 afterEach(() => vi.restoreAllMocks())
 afterAll(() => harness.dispose())
 
-it('keeps an answer open after one thrown periodic check and renews its lease on retry', async () => {
+it('keeps an answer open after one thrown periodic check and checks again at the next interval', async () => {
   const client = await gatewayHttp(harness)
   const answer = openModelStream()
   client.anthropic.response = () => new Response(answer.body)
@@ -31,7 +31,7 @@ it('keeps an answer open after one thrown periodic check and renews its lease on
       .mockRejectedValueOnce(new Error(`private ${client.token}`))
     await client.fixture.clock.advance(15_000)
     expect(client.anthropic.requests[0].signal.aborted).toBe(false)
-    await client.fixture.clock.advance(999)
+    await client.fixture.clock.advance(14_999)
     expect(check).toHaveBeenCalledTimes(1)
     await client.fixture.clock.advance(1)
     expect(check).toHaveBeenCalledTimes(2)
@@ -52,93 +52,67 @@ it('keeps an answer open after one thrown periodic check and renews its lease on
           errorKind: 'error',
         },
       ],
-      [
-        {
-          kind: 'model_gateway_check_retry',
-          message: 'A periodic model turn check retries.',
-          workspaceId: 'unknown',
-          errorKind: 'error',
-        },
-      ],
     ])
   } finally {
     await client.dispose()
   }
 })
 
-it('retries thrown checks after 1, 2, then 4 seconds and ends the answer at lease expiry', async () => {
+it('keeps an answer open through repeated failed checks until the answer completes', async () => {
   const client = await gatewayHttp(harness)
   const answer = openModelStream()
   client.anthropic.response = () => new Response(answer.body)
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
   try {
     const response = await client.request()
-    const ended = response.text().then(
-      () => null,
-      (error: unknown) => error,
-    )
     const check = vi
       .spyOn(client.endpoint, 'checkTurnToken')
       .mockRejectedValue(new Error(`private ${client.token}`))
     await client.fixture.clock.advance(15_000)
     expect(client.anthropic.requests[0].signal.aborted).toBe(false)
-    for (const [delay, calls] of [
-      [1_000, 2],
-      [2_000, 3],
-      [4_000, 4],
-      [4_000, 5],
-    ]) {
-      await client.fixture.clock.advance(delay - 1)
+    for (const calls of [2, 3, 4, 5]) {
+      await client.fixture.clock.advance(14_999)
       expect(check).toHaveBeenCalledTimes(calls - 1)
       await client.fixture.clock.advance(1)
       expect(check).toHaveBeenCalledTimes(calls)
     }
-    await client.fixture.clock.advance(3_999)
     expect(client.anthropic.requests[0].signal.aborted).toBe(false)
-    await client.fixture.clock.advance(1)
-    expect(client.anthropic.requests[0].signal.aborted).toBe(true)
-    expect(await ended).toMatchObject({
-      code: 'model_gateway_unavailable',
-      message: 'The model turn could not be checked.',
-    })
-    await answer.cancelled
+    answer.source.enqueue(new TextEncoder().encode('continued'))
+    answer.source.close()
+    expect(await response.text()).toBe('continued')
     expect(client.workspaceCalls).toHaveLength(6)
-    expect(warn).toHaveBeenCalledTimes(10)
+    expect(warn).toHaveBeenCalledTimes(5)
     expect(warn).toHaveBeenLastCalledWith({
-      kind: 'model_gateway_answer_ended',
-      message: 'The gateway ended a model answer.',
+      kind: 'model_gateway_check_failed',
+      message: 'A periodic model turn check failed.',
       workspaceId: 'unknown',
-      code: 'lease_expired',
+      errorKind: 'error',
     })
     await client.fixture.clock.advance(60_000)
     expect(check).toHaveBeenCalledTimes(5)
     expect(client.anthropic.requests).toHaveLength(1)
-    expect(warn).toHaveBeenCalledTimes(10)
+    expect(warn).toHaveBeenCalledTimes(5)
   } finally {
     await client.dispose()
   }
 })
 
-it('ends an answer on an overloaded check without a retry and logs only its kind', async () => {
+it('keeps an answer open after an overloaded check and logs only its kind', async () => {
   const client = await gatewayHttp(harness)
   const answer = openModelStream()
   client.anthropic.response = () => new Response(answer.body)
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
   try {
     const response = await client.request()
-    const rejected = expect(response.text()).rejects.toThrow(
-      'The model turn could not be checked.',
-    )
-    const check = vi.spyOn(client.endpoint, 'checkTurnToken').mockRejectedValue(
-      Object.assign(new Error(`private ${client.token}`), {
-        overloaded: true,
-      }),
-    )
+    const check = vi
+      .spyOn(client.endpoint, 'checkTurnToken')
+      .mockRejectedValueOnce(
+        Object.assign(new Error(`private ${client.token}`), {
+          overloaded: true,
+        }),
+      )
     await client.fixture.clock.advance(15_000)
-    await rejected
-    await answer.cancelled
-    expect(client.anthropic.requests[0].signal.aborted).toBe(true)
-    await client.fixture.clock.advance(60_000)
+    expect(client.anthropic.requests[0].signal.aborted).toBe(false)
     expect(check).toHaveBeenCalledTimes(1)
     expect(warn.mock.calls).toEqual([
       [
@@ -149,15 +123,16 @@ it('ends an answer on an overloaded check without a retry and logs only its kind
           errorKind: 'overloaded',
         },
       ],
-      [
-        {
-          kind: 'model_gateway_answer_ended',
-          message: 'The gateway ended a model answer.',
-          workspaceId: 'unknown',
-          code: 'overloaded',
-        },
-      ],
     ])
+    await client.fixture.clock.advance(15_000)
+    expect(check).toHaveBeenCalledTimes(2)
+    expect(client.workspaceCalls).toHaveLength(3)
+    expect(client.anthropic.requests[0].signal.aborted).toBe(false)
+    answer.source.enqueue(new TextEncoder().encode('continued'))
+    answer.source.close()
+    expect(await response.text()).toBe('continued')
+    await client.fixture.clock.advance(60_000)
+    expect(check).toHaveBeenCalledTimes(2)
   } finally {
     await client.dispose()
   }
