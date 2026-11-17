@@ -280,7 +280,7 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [server-timing.ts](server-timing.ts): `ServerTiming` records the steps of one request for its `Server-Timing` header. The preview proxy and the create of a workspace use it.
 - [codex-auth/README.md](codex-auth/README.md) owns device authorization,
   encrypted ChatGPT sign-ins, and serialized refresh-token renewal.
-- [http.ts](http.ts) serializes `HttpError` as the shared API error body, with optional structured details.
+- [http.ts](http.ts) serializes `HttpError` as the shared API error body, with optional structured details. It answers an error of a Durable Object that restarted, such as for a deploy, as `503 server_restarted`, and each other unexpected error as `500 internal_error`.
 - [waitlist/route.ts](waitlist/route.ts) reads the signed-in user's waitlist state and uses invite or referral codes.
 - [waitlist/grant.ts](waitlist/grant.ts) supplies the shared app access grant statements for D1 batches.
 - [app-api/README.md](app-api/README.md) names the entry points of the account, shell, and workspace routes.

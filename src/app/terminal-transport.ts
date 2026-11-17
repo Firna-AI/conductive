@@ -1,4 +1,4 @@
-import type { TerminalTransport } from '../shared/terminal'
+import type { TerminalEnd, TerminalTransport } from '../shared/terminal'
 import type { ReadyTerminal } from '../terminal/terminalApi'
 
 type SocketEvent = 'open' | 'message' | 'close' | 'error'
@@ -17,6 +17,23 @@ export type OpenTerminalSocket = (
   protocol: 'tty',
 ) => TerminalSocket
 
+/**
+ * The close codes of a lost connection. The Worker sends a close frame when
+ * the sandbox side ends, such as when the shell exits. A connection that
+ * drops with no close frame, such as at a restart of the Worker's Durable
+ * Object or a network failure, reaches the page as 1006. 1001 and 1012 say
+ * that the server goes away or restarts.
+ */
+const LOST_CODES: ReadonlySet<number> = new Set([1001, 1006, 1012])
+
+/** The `readyState` of a socket that waits for its close event. */
+const CLOSING = 2
+
+function closeEnd(event: Event): TerminalEnd {
+  const code = 'code' in event ? event.code : undefined
+  return typeof code !== 'number' || LOST_CODES.has(code) ? 'lost' : 'closed'
+}
+
 /** The opener owns the configured origin. The codec owns only ttyd framing. */
 export function createTerminalConnector(
   open: OpenTerminalSocket,
@@ -30,11 +47,13 @@ class TtydTransport implements TerminalTransport {
   private readonly decoder = new TextDecoder('utf-8', { ignoreBOM: true })
   private readonly encoder = new TextEncoder()
   private readonly dataListeners = new Set<(output: string) => void>()
-  private readonly closeListeners = new Set<() => void>()
+  private readonly closeListeners = new Set<(end: TerminalEnd) => void>()
   private readonly pending: string[] = []
   private size: { columns: number; rows: number } | null = null
   private initialized = false
   private ended = false
+  /** How the connection ended, once it ended. */
+  private end: TerminalEnd = 'closed'
 
   constructor(socket: TerminalSocket) {
     this.socket = socket
@@ -67,9 +86,9 @@ class TtydTransport implements TerminalTransport {
     }
   }
 
-  onClose(listener: () => void): () => void {
+  onClose(listener: (end: TerminalEnd) => void): () => void {
     if (this.ended) {
-      listener()
+      listener(this.end)
       return () => {}
     }
     this.closeListeners.add(listener)
@@ -79,12 +98,13 @@ class TtydTransport implements TerminalTransport {
   }
 
   close(): void {
-    this.finish(true)
+    this.finish(true, 'closed')
   }
 
   private readonly opened = () => this.flush()
-  private readonly peerClosed = () => this.finish(false)
-  private readonly failed = () => this.finish(true)
+  private readonly peerClosed = (event: Event) =>
+    this.finish(false, closeEnd(event))
+  private readonly failed = () => this.finish(true, 'lost')
   private readonly message: EventListener = (event) => {
     if (this.ended || !('data' in event)) return
     const bytes =
@@ -104,8 +124,13 @@ class TtydTransport implements TerminalTransport {
 
   private flush(): void {
     if (this.ended) return
-    if (this.socket.readyState >= 2) {
-      this.finish(false)
+    // A closing socket drops its data. Its close event says how it ended.
+    if (this.socket.readyState === CLOSING) {
+      this.pending.length = 0
+      return
+    }
+    if (this.socket.readyState > CLOSING) {
+      this.finish(false, 'lost')
       return
     }
     if (this.socket.readyState !== 1 || this.size === null) return
@@ -120,22 +145,24 @@ class TtydTransport implements TerminalTransport {
 
   private send(data: string): boolean {
     if (this.ended) return false
+    if (this.socket.readyState === CLOSING) return false
     if (this.socket.readyState !== 1) {
-      this.finish(false)
+      this.finish(false, 'lost')
       return false
     }
     try {
       this.socket.send(data)
       return true
     } catch {
-      this.finish(true)
+      this.finish(true, 'lost')
       return false
     }
   }
 
-  private finish(closeSocket: boolean): void {
+  private finish(closeSocket: boolean, end: TerminalEnd): void {
     if (this.ended) return
     this.ended = true
+    this.end = end
     this.pending.length = 0
     this.socket.removeEventListener('open', this.opened)
     this.socket.removeEventListener('message', this.message)
@@ -152,6 +179,6 @@ class TtydTransport implements TerminalTransport {
     this.dataListeners.clear()
     const listeners = [...this.closeListeners]
     this.closeListeners.clear()
-    for (const listener of listeners) listener()
+    for (const listener of listeners) listener(end)
   }
 }

@@ -18,7 +18,32 @@ export class HttpError extends Error {
   }
 }
 
+/**
+ * Cloudflare marks an error of a Durable Object that restarted, such as for
+ * a deploy, with `durableObjectReset`. An old object that a deploy replaced
+ * can still run a request, and its storage calls fail with a text that
+ * names the code update.
+ */
+const CODE_UPDATED = /Durable Object\b.*\bcode (?:was|has been) updated/i
+
+function objectRestarted(error: unknown): boolean {
+  if (!isRecord(error)) return false
+  if (error.durableObjectReset === true) return true
+  return error instanceof Error && CODE_UPDATED.test(error.message)
+}
+
 export function errorResponse(error: unknown): Response {
+  if (objectRestarted(error)) {
+    return Response.json(
+      {
+        error: {
+          code: 'server_restarted',
+          message: 'The server restarted. Try again.',
+        },
+      } satisfies ApiErrorBody,
+      { status: 503 },
+    )
+  }
   if (error instanceof HttpError) {
     return Response.json(
       {

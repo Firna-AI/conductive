@@ -60,9 +60,13 @@ class FakeSocket extends EventTarget implements TerminalSocket {
   message(data: string | ArrayBuffer): void {
     this.dispatchEvent(new MessageEvent('message', { data }))
   }
-  end(): void {
+  /** A close event of a browser socket carries the close code. */
+  end(code?: number): void {
     this.readyState = 3
-    this.dispatchEvent(new Event('close'))
+    const event = new Event('close')
+    this.dispatchEvent(
+      code === undefined ? event : Object.assign(event, { code }),
+    )
   }
   fail(): void {
     this.dispatchEvent(new Event('error'))
@@ -204,4 +208,40 @@ it('reports send failure through close and releases the failed connection', () =
   expect(closed).toHaveBeenCalledTimes(1)
   expect(socket.closes).toBe(1)
   expect(socket.listenerCount).toBe(0)
+})
+
+it('reports a close frame of the server as the end of the shell, and a drop or a restart as a lost connection', () => {
+  const ends = [
+    { end: (socket: FakeSocket) => socket.end(1011), expected: 'closed' },
+    { end: (socket: FakeSocket) => socket.end(1000), expected: 'closed' },
+    { end: (socket: FakeSocket) => socket.end(1006), expected: 'lost' },
+    { end: (socket: FakeSocket) => socket.end(1012), expected: 'lost' },
+    { end: (socket: FakeSocket) => socket.fail(), expected: 'lost' },
+  ]
+  for (const { end, expected } of ends) {
+    const { socket, transport } = fixture(1)
+    const closed = vi.fn()
+    transport.onClose(closed)
+    end(socket)
+    const late = vi.fn()
+    transport.onClose(late)
+    expect([closed.mock.calls, late.mock.calls], end.toString()).toEqual([
+      [[expected]],
+      [[expected]],
+    ])
+  }
+})
+
+it('drops input while its socket closes, and lets the close event say how it ended', () => {
+  const { socket, transport } = fixture(1)
+  const closed = vi.fn()
+  transport.onClose(closed)
+  transport.resize(80, 24)
+  socket.readyState = 2
+  transport.write('typed during the close')
+  transport.resize(100, 30)
+  expect(closed).not.toHaveBeenCalled()
+  socket.end(1011)
+  expect(closed.mock.calls).toEqual([['closed']])
+  expect(socket.sent).toEqual(['{"columns":80,"rows":24}'])
 })

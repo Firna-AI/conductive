@@ -51,6 +51,8 @@ Other links open in a new browser tab.
 When a program shows a link with a label, its hint names the website that it opens.
 
 The shell keeps running when its connection drops.
+When the connection drops, such as during an update of Conductive, the terminal connects again once by itself.
+If that does not work, it shows **Disconnected**.
 Reconnect to return to the same shell and running commands.
 **Restart** in the workspace header also drops the connection until the agents are back.
 A stop of the cloud computer ends those commands.

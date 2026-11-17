@@ -47,6 +47,10 @@ examples.
   - Issues shows no cause for an unexpected error that the Worker
     catches. The reply is then `500 internal_error`, and the Worker logs
     no error line.
+  - An error of a Durable Object that restarted, such as for a deploy,
+    gets `503 server_restarted` instead, as
+    [Effects on open pages](automatic-deploys.md#effects-on-open-pages)
+    says.
 - Set each secret with `npx wrangler secret put <NAME>`. The command asks
   for the value. Never put a secret in `wrangler.jsonc` or in Git.
 - The Worker reads each variable as text. Write a JSON value as one

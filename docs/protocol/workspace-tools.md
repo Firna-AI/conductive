@@ -313,6 +313,22 @@ The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   such as an error message.
 - When the user ends the shell, such as with `exit`, the next connection
   opens a new shell.
+- When the connection drops with no close of the server, such as at a
+  deploy of the Worker or a network failure, the terminal connects again
+  once by itself. While the try reads the terminal, the ended screen stays
+  with its output, as decision 245 says. It shows Disconnected with
+  Reconnect only when that try fails: the read finds no ready terminal, or
+  the new connection ends without output or within one minute of its first
+  output. After a failed read, the ended screen keeps its output. A
+  connection that stays open for one minute after its first output works,
+  so a later drop gets its own try. Cal chose this on 17 November
+  2026, as option B of item 4 of the investigation of a failed session
+  close.
+- A close of the server, such as at the end of the shell, at a stop, at a
+  Restart, or at a loss of access, still shows Disconnected at once.
+- Reason: a deploy restarts the Durable Object of each workspace, which
+  drops each open terminal. More tries with a wait between them were
+  rejected for now, because one try covers a deploy.
 - A stop of the sandbox ends the shell and its commands, as
   [Stop and resume](workspace-life.md#stop-and-resume) says. The first connection after the
   resume opens a new shell.

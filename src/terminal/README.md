@@ -96,11 +96,16 @@ change can move the shared parts to the app's shared components.
   `openSocket` of the app's event source. It opens `socketPath` on the
   Worker of the app, also in the Mac app, and decodes the ttyd protocol into
   the `TerminalTransport` of the
-  [shared contracts](../shared/README.md). Keep the function stable. A
-  transport that closes, or a `connect` that throws, shows Disconnected with
-  Reconnect. A source without `openSocket`, as in the development fake,
-  throws. The transport takes text only. The rules for the binary mouse
-  reports of xterm.js are under Behaviour.
+  [shared contracts](../shared/README.md). Keep the function stable. The
+  transport says how it ended: `closed` for a close of the server, and
+  `lost` for a drop with no close frame, code 1006, or code 1001 or 1012.
+  A lost connection connects again once by itself. A `connect` that throws
+  shows Disconnected at once, because a retry cannot open it either. The ended screen stays while that try reads the terminal. The
+  screen shows Disconnected with Reconnect at a close of the server, and
+  when the try finds no ready terminal, or its connection ends within one
+  minute of its first output, as `terminalReadiness.ts` says. A source without `openSocket`,
+  as in the development fake, throws. The transport takes text only. The
+  rules for the binary mouse reports of xterm.js are under Behaviour.
 - `links` is optional. It gives the app origin with the page check of the
   router, and the `open` of each `TerminalLink`: a local address with its
   port, an app page, or a web link. Without it, no link opens and no hint

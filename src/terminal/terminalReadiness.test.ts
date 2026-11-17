@@ -1,11 +1,16 @@
 import type { WorkspaceState } from '../shared/generated/WorkspaceState'
 import { describe, expect, it } from 'vitest'
 import type { WorkspaceEvent } from '../shared/events'
-import { terminalPaths, type TerminalResponse } from '../shared/terminal'
+import {
+  terminalPaths,
+  type TerminalEnd,
+  type TerminalResponse,
+} from '../shared/terminal'
 
 import { workspaceFixtures } from '../test-support/fixtures/workspaces'
 import type { ToolResult } from './tool-parts/request'
 import {
+  disconnected,
   initialReadiness,
   readinessReducer,
   type TerminalReadinessAction,
@@ -31,6 +36,10 @@ function updated(state: WorkspaceState): WorkspaceEvent {
   return { type: 'workspace.updated', workspace: { ...workspace, state } }
 }
 
+function ended(end: TerminalEnd, lasted: number): TerminalReadinessAction {
+  return { type: 'ended', end, lasted }
+}
+
 function reduce(...actions: (TerminalReadinessAction | WorkspaceEvent)[]) {
   return actions.reduce(readinessReducer, initialReadiness)
 }
@@ -42,10 +51,15 @@ describe('terminal readiness', () => {
       answer(1, { state: 'starting', socketPath: null }),
     )
 
-    expect(state).toEqual({ view: { state: 'loading' }, read: 2 })
+    expect(state).toEqual({
+      view: { state: 'loading' },
+      read: 2,
+      automatic: false,
+    })
     expect(readinessReducer(state, answer(2, ready))).toEqual({
       view: { state: 'ready', terminal: ready, ended: false },
       read: 2,
+      automatic: false,
     })
   })
 
@@ -60,6 +74,79 @@ describe('terminal readiness', () => {
     expect(state).toEqual({
       view: { state: 'ready', terminal: ready, ended: false },
       read: 1,
+      automatic: false,
+    })
+  })
+
+  it('connects again once by itself after each lost connection that worked, and shows Disconnected when that try ends within a minute', () => {
+    // The ended screen stays while the try reads the terminal.
+    const afterDrop = reduce(answer(1, ready), ended('lost', 300_000))
+    expect(afterDrop).toEqual({
+      view: { state: 'ready', terminal: ready, ended: true },
+      read: 2,
+      automatic: true,
+    })
+    expect(disconnected(afterDrop)).toBe(false)
+
+    // The try stayed open for a minute, so it worked.
+    const afterWorkingTry = [answer(2, ready), ended('lost', 60_000)].reduce(
+      readinessReducer,
+      afterDrop,
+    )
+    expect(afterWorkingTry).toEqual({
+      view: { state: 'ready', terminal: ready, ended: true },
+      read: 3,
+      automatic: true,
+    })
+
+    const afterFailedTry = [answer(3, ready), ended('lost', 59_999)].reduce(
+      readinessReducer,
+      afterWorkingTry,
+    )
+    expect(afterFailedTry).toEqual({
+      view: { state: 'ready', terminal: ready, ended: true },
+      read: 3,
+      automatic: false,
+    })
+    expect(disconnected(afterFailedTry)).toBe(true)
+
+    // Reconnect starts a new first connection.
+    const afterReconnect = [
+      { type: 'retry' } as const,
+      answer(4, ready),
+      ended('lost', 0),
+    ].reduce(readinessReducer, afterFailedTry)
+    expect(afterReconnect).toEqual({
+      view: { state: 'ready', terminal: ready, ended: true },
+      read: 5,
+      automatic: true,
+    })
+  })
+
+  it('keeps the ended screen with Disconnected when the automatic try finds no ready terminal', () => {
+    const failure: TerminalReadinessAction = {
+      type: 'answer',
+      read: 2,
+      result: {
+        ok: false,
+        error: { code: 'network', message: 'The request failed. Try again.' },
+      },
+    }
+    const state = reduce(answer(1, ready), ended('lost', 300_000), failure)
+
+    expect(state).toEqual({
+      view: { state: 'ready', terminal: ready, ended: true },
+      read: 2,
+      automatic: false,
+    })
+    expect(disconnected(state)).toBe(true)
+  })
+
+  it('shows Disconnected at once when the server closes the connection', () => {
+    expect(reduce(answer(1, ready), ended('closed', 300_000))).toEqual({
+      view: { state: 'ready', terminal: ready, ended: true },
+      read: 1,
+      automatic: false,
     })
   })
 })

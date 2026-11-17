@@ -6,6 +6,7 @@ import { ToolRoot } from './tool-parts/ToolRoot'
 import { ToolMessage, ToolWaiting } from './tool-parts/ToolStates'
 import { workspaceKey, type ToolWorkspace } from './tool-parts/workspace'
 import { createTerminalStore, type TerminalStore } from './terminalStore'
+import { disconnected } from './terminalReadiness'
 import type { TerminalFocusRequest } from './terminalFocus'
 import type { TerminalLinks } from './terminalLinks'
 import { TerminalScreen, type ConnectTerminal } from './TerminalScreen'
@@ -98,12 +99,12 @@ function TerminalToolBody(props: TerminalToolProps) {
             focusRequest={props.focusRequest}
             links={props.links}
             onFocusDone={props.onFocusDone}
-            onClosed={() => dispatch({ type: 'ended' })}
+            onClosed={(end, lasted) => dispatch({ type: 'ended', end, lasted })}
             onInput={props.onActivity}
             screenRef={props.screenRef}
             terminal={view.terminal}
           />
-          {view.ended ? (
+          {disconnected(snapshot) ? (
             <div className={styles.ended} role="status">
               <span className={styles.endedLabel}>
                 <Unplug aria-hidden size={13} />

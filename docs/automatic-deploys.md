@@ -208,6 +208,19 @@ A failed run does not roll back.
   `npx wrangler d1 time-travel restore DB --timestamp=<time>`, with a Unix
   timestamp or an RFC 3339 time.
 
+## Effects on open pages
+
+- A deploy restarts the Durable Object of each workspace with the new
+  code. Cloudflare can restart an object some minutes after the deploy
+  ends. On 17 November 2026, one object restarted 5 minutes after the
+  deploy.
+- A request that runs in an object at its restart fails. The Worker
+  answers `503 server_restarted`, and the page shows "The server
+  restarted. Try again." A retry reaches the new object.
+- Each socket of the object drops. The chat event stream connects again
+  by itself. The terminal connects again once by itself, as
+  [Terminal](protocol/workspace-tools.md#terminal) says.
+
 ## Deploys from other branches
 
 Only `main` deploys. A Worker deploy by hand from another branch stays live

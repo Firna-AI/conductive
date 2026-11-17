@@ -4,7 +4,7 @@ import type { MouseEvent, Ref } from 'react'
 import { FitAddon } from '@xterm/addon-fit'
 import { Terminal } from '@xterm/xterm'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import type { TerminalTransport } from '../shared/terminal'
+import type { TerminalEnd, TerminalTransport } from '../shared/terminal'
 import {
   TERMINAL_HISTORY_LINES,
   type BridgeSize,
@@ -64,7 +64,11 @@ export function TerminalScreen(props: {
   connect: ConnectTerminal
   /** The connection ended, so the screen takes no more input. */
   ended: boolean
-  onClosed: () => void
+  /**
+   * The connection ended `lasted` milliseconds after its first output, or
+   * with no output, as 0.
+   */
+  onClosed: (end: TerminalEnd, lasted: number) => void
   onInput?: () => void
   /** The element of the xterm.js screen, without the key row. */
   screenRef?: Ref<HTMLDivElement>
@@ -82,7 +86,9 @@ export function TerminalScreen(props: {
   const touch = useTouch()
   const { scheme } = useSharedUiTheme()
   const { terminal, connect, ended, screenRef } = props
-  const onClosed = useEffectEvent(() => props.onClosed())
+  const onClosed = useEffectEvent((end: TerminalEnd, lasted: number) =>
+    props.onClosed(end, lasted),
+  )
   const onInput = useEffectEvent(() => props.onInput?.())
   const currentLinks = useEffectEvent(() => props.links)
   const currentTheme = useEffectEvent((host: Element) =>
@@ -105,8 +111,9 @@ export function TerminalScreen(props: {
     try {
       transport = connect(terminal)
     } catch {
-      // A transport that can't open shows as ended, with Reconnect.
-      onClosed()
+      // A transport that can't open shows as ended, with Reconnect. A retry
+      // can't open it either.
+      onClosed('closed', 0)
       return undefined
     }
     const xterm = new Terminal({
@@ -154,8 +161,15 @@ export function TerminalScreen(props: {
       const smaller = shared.columns < panel.cols || shared.rows < panel.rows
       host.dataset.shared = smaller ? 'smaller' : 'fits'
     }
+    let firstOutput: number | null = null
+    const stopTiming = transport.onData(() => {
+      firstOutput ??= Date.now()
+    })
     const session = new TerminalSession(screen, transport, {
-      onClosed: () => onClosed(),
+      // A connection counts from its first output, so one that never worked
+      // lasted no time.
+      onClosed: (end) =>
+        onClosed(end, firstOutput === null ? 0 : Date.now() - firstOutput),
       onControlChange: setControl,
       onInput: () => onInput(),
       onSharedSize: (size) => {
@@ -171,6 +185,7 @@ export function TerminalScreen(props: {
     takeFocus()
     return () => {
       observer.disconnect()
+      stopTiming()
       outputLinks?.dispose()
       session.dispose()
       screen.dispose()
