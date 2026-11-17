@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 import { parseMarkdownTokens } from './parser'
 
-test('allocates only source cells for short rows, including repeated sparse tables', () => {
+test('allocates one cell per empty body row, including repeated sparse tables', () => {
   for (const [columns, rows, tables] of [
     [2, 1, 1],
     [200, 200, 40],
@@ -15,7 +15,9 @@ test('allocates only source cells for short rows, including repeated sparse tabl
       '|\n'.repeat(rows)
     const source = Array(tables).fill(sparse).join('\n')
     const { tokens } = parseMarkdownTokens(source)
-    expect(tokens.filter((token) => token.type === 'td_open')).toHaveLength(0)
+    expect(tokens.filter((token) => token.type === 'td_open')).toHaveLength(
+      rows * tables,
+    )
     expect(tokens.filter((token) => token.type === 'table_open')).toHaveLength(
       tables,
     )

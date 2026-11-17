@@ -1,7 +1,15 @@
 import { expect, test } from 'vitest'
 import { agentBlocks } from './agent-blocks'
 
-test('adds no cells to sparse chat rows, including repeated wide tables', () => {
+test('keeps a blank chat table row and the next short row as one cell each', () => {
+  const tables = agentBlocks('a|b\n-|-\n|\n| kept |').filter(
+    (block) => block.kind === 'table',
+  )
+  expect(tables).toHaveLength(1)
+  expect(tables[0].rows.map((row) => row.length)).toEqual([1, 1])
+})
+
+test('keeps one cell per empty chat row, including repeated wide tables', () => {
   for (const [columns, rows, count] of [
     [2, 1, 1],
     [200, 200, 40],
@@ -23,6 +31,6 @@ test('adds no cells to sparse chat rows, including repeated wide tables', () => 
           sum + table.rows.reduce((cells, row) => cells + row.length, 0),
         0,
       ),
-    ).toBe(0)
+    ).toBe(rows * count)
   }
 })

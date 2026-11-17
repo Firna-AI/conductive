@@ -23,10 +23,10 @@
 import type { StateBlock, Token } from 'markdown-it'
 import { tableColumns, tableHeader, tableLine } from './table-source'
 
-/** The library's per-table stop. It counts missing cells without adding them. */
+/** The library's per-table stop. It counts missing source cells. */
 const maxAutocompletedCells = 65_536
 
-/** Emits only the cells that a source row has, up to the header width. */
+/** Emits the given cells, up to the header width. */
 function cells(
   state: StateBlock,
   columns: string[],
@@ -108,7 +108,8 @@ export function sparseTable(
       state.push('tbody_open', 'tbody', 1).map = bodyLines
     }
     state.push('tr_open', 'tr', 1).map = [nextLine, nextLine + 1]
-    cells(state, row, align, false)
+    // Keep an empty row visible after both budgets count its source cells.
+    cells(state, row.length ? row : [''], align, false)
     state.push('tr_close', 'tr', -1)
   }
   if (bodyLines) {

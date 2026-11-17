@@ -85,8 +85,10 @@ Each is my call, with its reason. Calls 1 to 9 date from 16 November
 5. The chat keeps its own rules on top of the parser:
    - A short table row spans its last cell. The table rule of the parser
      gives each row only the cells of its source line, up to the width of
-     the header, so the chat adds no empty cell. The file preview fills a
-     short row with empty cells, within its table budget.
+     the header. A body row with no source cell gets one empty cell, so it
+     stays visible. Both the per-table stop and the preview budget still
+     count the missing source cells. The file preview fills a short row
+     with empty cells, within its table budget.
    - While the agent writes, an underline on the last line shows as text.
    - A heading with no text draws nothing.
    - Lists and quotes deeper than 16 levels show as paragraph text. The

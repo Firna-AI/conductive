@@ -158,7 +158,8 @@ mockups:
   `markdown/agent-tables.ts` turns the tokens of a table into a
   `TextTable`. The table rule of the parser, `src/markdown/table-rule.ts`,
   gives each row only the cells that its source line has, up to the width
-  of the header. So the chat adds no empty cell to a short row.
+  of the header. A body row with no source cell gets one empty cell, so it
+  stays visible. The table budgets still count the missing source cells.
 - `rowsInTable` in `markdown/agent-tables.ts` says which body rows stay in
   the table. Today each row that the parser reads stays in it, also a line
   without a pipe. The rows after its count show as paragraph text.

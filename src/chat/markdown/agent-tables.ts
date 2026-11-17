@@ -3,14 +3,13 @@ import type { TableCells } from '../../markdown/table-rows'
 import { readTableTokens, type TableRow } from '../../markdown/table-tokens'
 import { inlineText, type InlineText } from './agent-inline'
 
-/** A table of an agent message. Each body row keeps its own cells. */
+/** A table of an agent message. Each body row has at least one cell. */
 export type TextTable = { kind: 'table' } & TableCells<InlineText>
 
 /**
- * The cells that a body row shows: the cells that its source line has, up
- * to the width of the header. The parser and the chat add no empty
- * cells, so the last cell spans the rest, as
- * "Short rows" of `chat-tables.md` says.
+ * A body row keeps its source cells, up to the width of the header. The
+ * parser gives a row with no source cell one empty cell. The last cell
+ * spans the rest, as "Short rows" of `chat-tables.md` says.
  */
 function ownCells(row: TableRow<InlineText>): InlineText[] {
   return row.cells
