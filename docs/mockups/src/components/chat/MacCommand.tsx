@@ -9,6 +9,7 @@ import {
   type MacCommandState,
 } from '../../fixtures/mac'
 import { people } from '../../fixtures/members'
+import { ActionButton } from '../common/actions'
 import { StatusText, type StatusTone } from '../common/StatusText'
 import styles from './MacCommand.module.css'
 
@@ -79,7 +80,8 @@ export function CommandStatus(props: { state: MacCommandState }) {
 /**
  * A command that the agent asked to run on the Mac of the person who sent
  * the turn (decision 62), at its place in the chat: the Mac, the state, the
- * command, its folder and time limit, and the output once it ran.
+ * command, its folder and time limit, and the output once it ran. Long
+ * output shows its first ten lines with a fade and Show all.
  */
 export function MacCommand(props: {
   request: MacCommandRequest
@@ -101,7 +103,16 @@ export function MacCommand(props: {
         {request.limit}
       </span>
       {state === 'done' ? (
-        <pre className={styles.output}>{safariOutput}</pre>
+        <div className={styles.output}>
+          <pre
+            className={`${styles.outputText} ${styles.outputShort} ${styles.outputFaded}`}
+          >
+            {safariOutput}
+          </pre>
+          <span className={styles.outputMore}>
+            <ActionButton tone="plain">Show all</ActionButton>
+          </span>
+        </div>
       ) : null}
       {note ? <span className={styles.note}>{note}</span> : null}
     </section>
