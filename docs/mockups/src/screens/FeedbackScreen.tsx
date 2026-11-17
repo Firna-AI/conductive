@@ -2,10 +2,8 @@ import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { offlineMessage } from '../components/common/LoadFailure'
 import { successToast } from '../entries/components/common/SuccessToast.mockup'
 import { sentToastTitle } from '../components/feedback/feedbackCopy'
-import {
-  FeedbackDialog,
-  type FeedbackProblem,
-} from '../components/feedback/FeedbackDialog'
+import { feedbackDialog } from '../entries/components/feedback/FeedbackDialog.mockup'
+import type { FeedbackProblem } from '../components/feedback/FeedbackDialog'
 import type { FeedbackReply } from '../components/feedback/FeedbackReply'
 import {
   feedbackMessage,
@@ -18,6 +16,7 @@ import {
   replyEmail,
 } from '../fixtures/feedback'
 import { paths } from '../paths'
+import { defined } from '../defined'
 import { WorkspaceListScreen } from './WorkspaceListScreen'
 
 export const feedbackSchema = {
@@ -122,8 +121,8 @@ export function FeedbackScreen(props: {
         title={sentToastTitle}
       />
     ) : (
-      <FeedbackDialog
-        problem={problemOf(state)}
+      <feedbackDialog.Component
+        moklyInstance="feedback-dialog"
         reply={replies[state.reply]}
         retryTo={paths.feedback}
         screenshots={screenshots[state.draft]}
@@ -131,6 +130,7 @@ export function FeedbackScreen(props: {
         sending={state.send === 'sending'}
         text={texts[state.draft]}
         viewport={viewport}
+        {...defined({ problem: problemOf(state) })}
       />
     )
   return (

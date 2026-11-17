@@ -1,8 +1,8 @@
 import type { UserPage } from '../../fixtures/operatorUserPages'
 import { paths } from '../../paths'
 import { notice as noticePart } from '../../entries/components/common/Notice.mockup'
-import { DetailList } from '../settings/DetailList'
-import { Section } from '../settings/Section'
+import { detailList } from '../../entries/components/settings/DetailList.mockup'
+import { section } from '../../entries/components/settings/Section.mockup'
 import { AppAccessSection, ReferralSection } from './AccessSections'
 import { noVerifiedEmail, waitingNotice } from './accessCopy'
 import { suspendedTitle, suspendedUserBody } from './operatorCopy'
@@ -59,8 +59,9 @@ export function UserDetails(props: {
   return (
     <>
       <UserNotice user={user} />
-      <Section title="Details">
-        <DetailList
+      <section.Component moklyInstance="details-section" title="Details">
+        <detailList.Component
+          moklyInstance="user-details-list"
           rows={[
             ...(user.name ? [{ term: 'Name', value: user.name }] : []),
             { term: 'Email', value: user.email ?? noVerifiedEmail },
@@ -74,7 +75,7 @@ export function UserDetails(props: {
             },
           ]}
         />
-      </Section>
+      </section.Component>
       {user.access.state === 'granted' ? (
         <AppAccessSection access={user.access} />
       ) : null}
@@ -82,7 +83,7 @@ export function UserDetails(props: {
         <ReferralSection code={user.referral} disable={props.disableCode} />
       ) : null}
       {user.orgs.length > 0 ? (
-        <Section title="Orgs">
+        <section.Component moklyInstance="orgs-section" title="Orgs">
           <TargetList label={`Orgs of @${user.login}`}>
             {user.orgs.map((org) => (
               <TargetRow
@@ -93,7 +94,7 @@ export function UserDetails(props: {
               />
             ))}
           </TargetList>
-        </Section>
+        </section.Component>
       ) : null}
     </>
   )

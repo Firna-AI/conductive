@@ -7,7 +7,10 @@ import { notice } from '../../entries/components/common/Notice.mockup'
 import { statusText } from '../../entries/components/common/StatusText.mockup'
 import { useControlSizes } from '../common/touch'
 import { inviteCodeCopy as copy, type InviteState } from './inviteCodeCopy'
-import { Section, SectionText } from './Section'
+import {
+  section,
+  sectionText,
+} from '../../entries/components/settings/Section.mockup'
 import styles from './InviteCodeSection.module.css'
 
 /** How many of the invites are left, beside the title. */
@@ -39,12 +42,12 @@ function Share() {
           {copy.copy}
         </actionButton.Component>
       </div>
-      <SectionText muted>
+      <sectionText.Component moklyInstance="invite-code-text" muted>
         <inlineText.Component
           moklyInstance="invite-code"
           text={copy.code(ownInvite.code)}
         />
-      </SectionText>
+      </sectionText.Component>
     </>
   )
 }
@@ -68,7 +71,11 @@ export function InviteCodeSection(props: {
     case 'left':
       if (props.openSignUp) {
         return (
-          <Section status={<Count left={left} />} title={copy.title}>
+          <section.Component
+            moklyInstance="section"
+            status={<Count left={left} />}
+            title={copy.title}
+          >
             <notice.Component
               body={copy.open.body}
               icon="door-open"
@@ -76,21 +83,26 @@ export function InviteCodeSection(props: {
               title={copy.open.title}
             />
             <Share />
-          </Section>
+          </section.Component>
         )
       }
       return (
-        <Section
+        <section.Component
           description={copy.description}
+          moklyInstance="section"
           status={<Count left={left} />}
           title={copy.title}
         >
           <Share />
-        </Section>
+        </section.Component>
       )
     case 'paused':
       return (
-        <Section status={<Count left={left} />} title={copy.title}>
+        <section.Component
+          moklyInstance="section"
+          status={<Count left={left} />}
+          title={copy.title}
+        >
           <notice.Component
             body={copy.paused.body}
             icon="circle-pause"
@@ -98,17 +110,24 @@ export function InviteCodeSection(props: {
             title={copy.paused.title}
           />
           <Share />
-        </Section>
+        </section.Component>
       )
     case 'used-up':
       return (
-        <Section status={<Count left={0} />} title={copy.title}>
-          <SectionText>{copy.usedUp(inviteLimit)}</SectionText>
-        </Section>
+        <section.Component
+          moklyInstance="section"
+          status={<Count left={0} />}
+          title={copy.title}
+        >
+          <sectionText.Component moklyInstance="used-up-text">
+            {copy.usedUp(inviteLimit)}
+          </sectionText.Component>
+        </section.Component>
       )
     case 'disabled':
       return (
-        <Section
+        <section.Component
+          moklyInstance="section"
           status={
             <statusText.Component
               label={copy.off}
@@ -118,8 +137,10 @@ export function InviteCodeSection(props: {
           }
           title={copy.title}
         >
-          <SectionText>{copy.disabled}</SectionText>
-        </Section>
+          <sectionText.Component moklyInstance="disabled-text">
+            {copy.disabled}
+          </sectionText.Component>
+        </section.Component>
       )
   }
 }

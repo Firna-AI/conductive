@@ -5,7 +5,7 @@ import type { LongRun, RunOwner } from '../../fixtures/operatorRuns'
 import { instanceKey } from '../../instanceKey'
 import { IconButton } from '../common/actions'
 import a11y from '../common/a11y.module.css'
-import { Section } from '../settings/Section'
+import { section } from '../../entries/components/settings/Section.mockup'
 import { workspaceLabel } from '../workspaces/label'
 import { activityPresentation } from '../workspaces/status'
 import { StatusGlyph } from '../workspaces/StatusGlyph'
@@ -200,7 +200,10 @@ export function LongRuns(props: {
   viewport: Viewport
 }) {
   return (
-    <Section title={longRunsWords.title}>
+    <section.Component
+      moklyInstance="long-runs-section"
+      title={longRunsWords.title}
+    >
       {props.runs.length === 0 ? (
         <p className={directory.empty}>{longRunsWords.empty}</p>
       ) : (
@@ -213,6 +216,6 @@ export function LongRuns(props: {
           size={orgTableSize[props.viewport]}
         />
       )}
-    </Section>
+    </section.Component>
   )
 }

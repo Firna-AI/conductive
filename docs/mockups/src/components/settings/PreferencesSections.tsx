@@ -3,7 +3,7 @@ import { defaultChoice, fastChoice } from '../../fixtures/agents'
 import { noop } from '../../noop'
 import { modelPicker } from '../../entries/components/chat/ModelPicker.mockup'
 import { useControlSizes } from '../common/touch'
-import { Section } from './Section'
+import { section } from '../../entries/components/settings/Section.mockup'
 import styles from './AccountSections.module.css'
 
 /**
@@ -57,7 +57,11 @@ export function DefaultsSection(props: {
   fastMenu?: boolean
 }) {
   return (
-    <Section description="How you start new workspaces." title="New workspaces">
+    <section.Component
+      description="How you start new workspaces."
+      moklyInstance="new-workspaces"
+      title="New workspaces"
+    >
       <div className={styles.defaults}>
         <span className={styles.defaultsLabel}>Model and effort</span>
         <modelPicker.Component
@@ -74,6 +78,6 @@ export function DefaultsSection(props: {
           />
         </div>
       </div>
-    </Section>
+    </section.Component>
   )
 }

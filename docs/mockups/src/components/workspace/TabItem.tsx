@@ -15,7 +15,7 @@ import { iconButton } from '../../entries/components/common/actions.mockup'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
 import { renameField } from '../../entries/components/workspace/RenameField.mockup'
-import { SessionTabIcon } from './SessionTabIcon'
+import { sessionTabIcon } from '../../entries/components/workspace/SessionTabIcon.mockup'
 import tabDrag from './TabDrag.module.css'
 import styles from './WorkspaceTabs.module.css'
 
@@ -69,7 +69,10 @@ function TabContent(props: { tab: WorkspaceTab }) {
   return (
     <>
       {tab.kind === 'session' ? (
-        <SessionTabIcon running={tab.running ?? false} />
+        <sessionTabIcon.Component
+          moklyInstance="session-icon"
+          running={tab.running ?? false}
+        />
       ) : (
         <Icon aria-hidden className={styles.icon} size={13} />
       )}

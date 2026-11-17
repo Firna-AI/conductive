@@ -13,8 +13,8 @@ import { actionButton } from '../../entries/components/common/actions.mockup'
 import { statusText } from '../../entries/components/common/StatusText.mockup'
 import { ChangeOutcome, type ChangeStatus } from '../mac/ChangeOutcome'
 import { useMacApp, type MacChange } from '../mac/MacApp'
-import { DetailList } from './DetailList'
-import { Section } from './Section'
+import { detailList } from '../../entries/components/settings/DetailList.mockup'
+import { section } from '../../entries/components/settings/Section.mockup'
 import { instanceKey } from '../../instanceKey'
 import styles from './ThisMacSection.module.css'
 
@@ -57,8 +57,9 @@ export function ThisMacSection() {
     (command) => !gone || command !== removedCommand,
   )
   return (
-    <Section
+    <section.Component
       description="Agents can ask to run commands on this Mac while it is awake and the app is open. Each command asks you first."
+      moklyInstance="this-mac"
       status={
         <statusText.Component
           label="Available"
@@ -68,7 +69,10 @@ export function ThisMacSection() {
       }
       title="This Mac"
     >
-      <DetailList rows={[{ term: 'Name', value: thisMac.name }]} />
+      <detailList.Component
+        moklyInstance="mac-details"
+        rows={[{ term: 'Name', value: thisMac.name }]}
+      />
       <span className={styles.label}>Always allowed</span>
       <ul aria-label="Always allowed commands" className={styles.list}>
         {commands.map((command) => (
@@ -145,6 +149,6 @@ export function ThisMacSection() {
           title={removal.title}
         />
       ) : null}
-    </Section>
+    </section.Component>
   )
 }

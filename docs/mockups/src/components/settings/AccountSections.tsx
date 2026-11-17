@@ -8,22 +8,22 @@ import {
   type LoginKind,
 } from '../../fixtures/logins'
 import { account, installations } from '../../fixtures/orgs'
-import { noop } from '../../noop'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { classes } from '../common/classes'
 import { accountAvatar } from '../../entries/components/orgs/OrgTile.mockup'
 import { statusText } from '../../entries/components/common/StatusText.mockup'
-import { AgentConnectForm } from './AgentConnectForm'
-import { EndpointDetails } from './EndpointDetails'
+import { agentConnectForm } from '../../entries/components/settings/AgentConnectForm.mockup'
+import { endpointDetails } from '../../entries/components/settings/EndpointDetails.mockup'
 import type { EndpointEntry } from './EndpointFields'
 import type { SignInStep } from './chatGptSignInCopy'
 import {
-  LoginNotUsable,
-  SignedOutStatus,
-  type UnusableLogin,
-} from './LoginNotUsable'
-import { LoginShare } from './LoginShare'
-import { Section } from './Section'
+  loginNotUsable,
+  signedOutStatus,
+} from '../../entries/components/settings/LoginNotUsable.mockup'
+import type { UnusableLogin } from './LoginNotUsable'
+import { loginShare } from '../../entries/components/settings/LoginShare.mockup'
+import { section } from '../../entries/components/settings/Section.mockup'
+import { defined } from '../../defined'
 import styles from './AccountSections.module.css'
 
 /** The state of a connected app or login. `name` names it for Mokly. */
@@ -57,7 +57,7 @@ export function SignInSection() {
 export function GitHubSection(props: { connected: boolean }) {
   if (!props.connected) {
     return (
-      <Section
+      <section.Component
         actions={
           <actionButton.Component
             icon="arrow-up-right"
@@ -68,12 +68,13 @@ export function GitHubSection(props: { connected: boolean }) {
           </actionButton.Component>
         }
         description="Install the GitHub App on the accounts whose repositories your orgs use."
+        moklyInstance="github"
         title="GitHub"
       />
     )
   }
   return (
-    <Section
+    <section.Component
       actions={
         <actionButton.Component
           icon="arrow-up-right"
@@ -83,6 +84,7 @@ export function GitHubSection(props: { connected: boolean }) {
         </actionButton.Component>
       }
       description="Each org chooses its repositories from these accounts."
+      moklyInstance="github"
       status={<Connected name="github-connected" />}
       title="GitHub"
     >
@@ -96,7 +98,7 @@ export function GitHubSection(props: { connected: boolean }) {
           </li>
         ))}
       </ul>
-    </Section>
+    </section.Component>
   )
 }
 
@@ -186,7 +188,9 @@ export function AgentList(props: {
                 {login ? (
                   <>
                     {unusable ? (
-                      <SignedOutStatus />
+                      <signedOutStatus.Component
+                        moklyInstance={`signed-out-${key}`}
+                      />
                     ) : (
                       <Connected name={`${key}-connected`} />
                     )}
@@ -201,32 +205,43 @@ export function AgentList(props: {
               {action}
             </div>
             {login?.kind === 'endpoint' ? (
-              <EndpointDetails agent={key} login={login} />
+              <endpointDetails.Component
+                agent={key}
+                login={login}
+                moklyInstance={`endpoint-${key}`}
+              />
             ) : null}
             {unusable && !form ? (
-              <LoginNotUsable
+              <loginNotUsable.Component
                 cause={unusable.cause}
+                moklyInstance={`not-usable-${key}`}
                 signInTo={unusable.signInTo}
               />
             ) : null}
             {form ? (
-              <AgentConnectForm
+              <agentConnectForm.Component
                 agent={key}
                 cancel={form.cancel}
                 connectTo={form.connectTo}
-                kind={form.kind}
-                signIn={form.signIn}
-                endpoint={form.endpoint}
+                moklyInstance={`connect-form-${key}`}
+                {...defined({
+                  kind: form.kind,
+                  signIn: form.signIn,
+                  endpoint: form.endpoint,
+                })}
               />
             ) : null}
             {login && props.shares ? (
-              <LoginShare
-                error={
-                  props.shares.notSaved === key ? shareNotSavedCause : null
-                }
+              <loginShare.Component
+                moklyInstance={`share-${key}`}
                 nameId={nameId}
-                onChange={noop}
                 shared={sharedByDefault[key][login.kind]}
+                {...defined({
+                  error:
+                    props.shares.notSaved === key
+                      ? shareNotSavedCause
+                      : undefined,
+                })}
               />
             ) : null}
           </li>
@@ -250,7 +265,11 @@ export function AgentsSection(props: {
   unusable?: UnusableLogin
 }) {
   return (
-    <Section description="Every org uses these agents." title="Agents">
+    <section.Component
+      description="Every org uses these agents."
+      moklyInstance="agents"
+      title="Agents"
+    >
       <AgentList
         form={props.form}
         logins={props.logins}
@@ -258,6 +277,6 @@ export function AgentsSection(props: {
         shares={props.shares}
         unusable={props.unusable}
       />
-    </Section>
+    </section.Component>
   )
 }

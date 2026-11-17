@@ -14,7 +14,7 @@ import {
   TriggerList,
 } from '../components/automations/TriggerList'
 import { eventLabels, hasSchedule } from '../components/automations/triggerCopy'
-import { SectionText } from '../components/settings/Section'
+import { sectionText } from '../entries/components/settings/Section.mockup'
 import { agents } from '../fixtures/agents'
 import { orgs } from '../fixtures/orgs'
 import type { TriggerEdit } from '../fixtures/automationTriggers'
@@ -58,9 +58,9 @@ function ReadOnlyNote(props: {
       : ' You can delete it.'
   }
   return (
-    <SectionText muted>
+    <sectionText.Component moklyInstance="owner-only-text" muted>
       {`Only ${automation.owner.name} can change this automation.${actions}`}
-    </SectionText>
+    </sectionText.Component>
   )
 }
 

@@ -5,8 +5,8 @@ import { actionButton } from '../../entries/components/common/actions.mockup'
 import { linkTabs } from '../../entries/components/common/LinkTabs.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { useControlSizes } from '../common/touch'
-import { DetailList } from './DetailList'
-import { Section } from './Section'
+import { detailList } from '../../entries/components/settings/DetailList.mockup'
+import { section } from '../../entries/components/settings/Section.mockup'
 import { defined } from '../../defined'
 import styles from './OrgSections.module.css'
 
@@ -97,34 +97,38 @@ export function OrgDetailsSection(props: {
 }) {
   if (props.readOnly) {
     return (
-      <Section
-        description={
-          props.readOnly === 'member'
-            ? 'Only an admin can change it.'
-            : undefined
-        }
+      <section.Component
+        moklyInstance="org"
         title="Org"
+        {...defined({
+          description:
+            props.readOnly === 'member'
+              ? 'Only an admin can change it.'
+              : undefined,
+        })}
       >
-        <DetailList
+        <detailList.Component
+          moklyInstance="org-details"
           rows={[
             { term: 'Name', value: props.name },
             { term: 'Initials', value: props.initials },
           ]}
         />
-      </Section>
+      </section.Component>
     )
   }
   return (
-    <Section
+    <section.Component
       actions={
         <actionButton.Component disabled moklyInstance="save-org">
           Save
         </actionButton.Component>
       }
+      moklyInstance="org"
       title="Org"
     >
       <OrgNameFields initials={props.initials} name={props.name} />
-    </Section>
+    </section.Component>
   )
 }
 
@@ -135,7 +139,7 @@ export function OrgDetailsSection(props: {
  */
 export function DeleteOrgSection(props: { name: string }) {
   return (
-    <Section
+    <section.Component
       actions={
         <ScreenLink asChild to={paths.deleteOrg}>
           <actionButton.Component
@@ -148,6 +152,7 @@ export function DeleteOrgSection(props: { name: string }) {
         </ScreenLink>
       }
       description={`Stops every cloud computer of ${props.name} and hides it from its members. Everything is deleted after 7 days, unless an admin restores it.`}
+      moklyInstance="delete-org-section"
       title="Delete org"
     />
   )
@@ -160,7 +165,7 @@ export function DeleteOrgSection(props: { name: string }) {
  */
 export function LeaveOrgSection(props: { name: string }) {
   return (
-    <Section
+    <section.Component
       actions={
         <ScreenLink asChild to={paths.suspendedLeaveConfirm}>
           <actionButton.Component
@@ -173,6 +178,7 @@ export function LeaveOrgSection(props: { name: string }) {
         </ScreenLink>
       }
       description={`You can no longer open ${props.name}. Your workspaces stay in it.`}
+      moklyInstance="leave-org-section"
       title="Leave org"
     />
   )

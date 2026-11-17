@@ -1,25 +1,27 @@
-import { MembersTab } from '../components/members/MembersTab'
-import { ComputerTab } from '../components/settings/ComputerTab'
+import { membersTab } from '../entries/components/members/MembersTab.mockup'
+import { computerData } from '../components/settings/ComputerTab'
+import { computerTab } from '../entries/components/settings/ComputerTab.mockup'
 import {
-  DeleteOrgSection,
-  LeaveOrgSection,
-  OrgDetailsSection,
-  type ReadOnlyCause,
-} from '../components/settings/OrgSections'
+  deleteOrgSection,
+  leaveOrgSection,
+  orgDetailsSection,
+} from '../entries/components/settings/OrgSections.mockup'
+import type { ReadOnlyCause } from '../components/settings/OrgSections'
 import {
-  OrgRepositoryList,
-  RepositoryList,
-} from '../components/settings/RepositoryList'
-import { Section } from '../components/settings/Section'
+  orgRepositoryList,
+  repositoryList,
+} from '../entries/components/settings/RepositoryList.mockup'
+import { section } from '../entries/components/settings/Section.mockup'
 import {
   memberViewer,
   you,
   type Membership,
   type PersonKey,
 } from '../fixtures/members'
-import type { OrgSettingsState } from './OrgSettingsScreen'
+import type { OrgSettingsState } from './orgSettingsState'
 import { settingsOrg } from './settingsOrgs'
 import { settingsRepositoryNotice } from './settingsRepositoryNotice'
+import { defined, plainData } from '../defined'
 
 /** The person signed in: Cal, an admin, or Priya, a member who is not. */
 export function settingsViewer(state: OrgSettingsState): PersonKey {
@@ -64,51 +66,73 @@ export function TabBody(props: { state: OrgSettingsState }) {
     case 'general':
       return (
         <>
-          <OrgDetailsSection
+          <orgDetailsSection.Component
             initials={org.initials}
+            moklyInstance="org-details"
             name={org.name}
-            readOnly={readOnly}
+            {...defined({ readOnly })}
           />
-          {readOnly ? null : <DeleteOrgSection name={org.name} />}
+          {readOnly ? null : (
+            <deleteOrgSection.Component
+              moklyInstance="delete-org"
+              name={org.name}
+            />
+          )}
           {readOnly === 'suspended' && mayLeave(viewer, settings.members) ? (
-            <LeaveOrgSection name={org.name} />
+            <leaveOrgSection.Component
+              moklyInstance="leave-org"
+              name={org.name}
+            />
           ) : null}
         </>
       )
     case 'repositories': {
       const note = repositoryNotes[readOnly ?? 'editable']
       return (
-        <Section
+        <section.Component
           description={`The cloud computer of ${org.name} holds these repositories, and its workspaces start in them.${note}`}
+          moklyInstance="repositories"
           title="Repositories"
         >
           {settingsRepositoryNotice(state, settings)}
           {readOnly ? (
-            <OrgRepositoryList repositories={settings.repositories} />
+            <orgRepositoryList.Component
+              moklyInstance="repository-list"
+              repositories={settings.repositories}
+            />
           ) : (
-            <RepositoryList repositories={settings.repositories} search="" />
+            <repositoryList.Component
+              moklyInstance="repository-list"
+              repositories={settings.repositories}
+              search=""
+            />
           )}
-        </Section>
+        </section.Component>
       )
     }
     case 'computer':
       return (
-        <ComputerTab
+        <computerTab.Component
           build={state.build}
-          computer={settings.computer}
+          computer={plainData(computerData(settings.computer))}
           envForm={state.envForm}
+          moklyInstance="computer"
           org={org.name}
-          readOnly={readOnly}
-          repositoryNotice={settingsRepositoryNotice(state, settings)}
           script={state.script}
+          {...defined({
+            readOnly,
+            repositoryNotice:
+              settingsRepositoryNotice(state, settings) ?? undefined,
+          })}
         />
       )
     case 'members':
       return (
-        <MembersTab
+        <membersTab.Component
           canManage={readOnly === undefined}
           invites={settings.invites}
           members={settings.members}
+          moklyInstance="members"
           viewer={viewer}
           workspaces={settings.workspaces}
         />

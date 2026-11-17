@@ -2,10 +2,11 @@ import type { ReactNode } from 'react'
 import { actionButton } from '../entries/components/common/actions.mockup'
 import type { BuildState } from '../components/settings/BuildSection'
 import type { RepositoryWait } from '../components/settings/repositoryChangeCopy'
-import { RepositoryNotice } from '../components/settings/RepositoryNotice'
+import { repositoryNotice } from '../entries/components/settings/RepositoryNotice.mockup'
 import { changedNames } from '../fixtures/repositories'
-import type { OrgSettingsState } from './OrgSettingsScreen'
+import type { OrgSettingsState } from './orgSettingsState'
 import type { SettingsOrg } from './settingsOrgs'
+import { defined } from '../defined'
 
 /**
  * How the repository changes wait, from the builds of the org. The first
@@ -79,12 +80,15 @@ export function settingsRepositoryNotice(
   const editable =
     admin && state.org === 'active' && state.tab === 'repositories'
   return (
-    <RepositoryNotice
-      action={editable ? adminAction(wait, state.build) : undefined}
+    <repositoryNotice.Component
       added={added}
       admin={admin}
+      moklyInstance="repository-notice"
       removed={removed}
       wait={wait}
+      {...defined({
+        action: editable ? adminAction(wait, state.build) : undefined,
+      })}
     />
   )
 }

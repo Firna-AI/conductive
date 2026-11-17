@@ -4,7 +4,7 @@ import { actionButton } from '../entries/components/common/actions.mockup'
 import { notice } from '../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { useControlSizes } from '../components/common/touch'
-import { PendingInviteList } from '../components/members/PendingInvites'
+import { pendingInviteList } from '../entries/components/members/PendingInvites.mockup'
 import { personAvatar } from '../entries/components/orgs/OrgTile.mockup'
 import {
   typedCode,
@@ -15,7 +15,7 @@ import {
 import { noop } from '../noop'
 import { paths } from '../paths'
 import { inviteRows } from './inviteRows'
-import { SignInFrame } from './signInFrame'
+import { signInFrame } from '../entries/components/screens/signInFrame.mockup'
 import { codeFailures, waitlistCopy as copy } from './waitlistCopy'
 import forms from './forms.module.css'
 import signIn from './SignInScreen.module.css'
@@ -135,8 +135,9 @@ function Invitations(props: { paused: boolean; stacked: boolean }) {
           title={copy.paused.title}
         />
       ) : null}
-      <PendingInviteList
+      <pendingInviteList.Component
         invites={inviteRows(waitingInvites, 'primary')}
+        moklyInstance="invitations"
         stacked={props.stacked}
       />
     </div>
@@ -182,7 +183,12 @@ export function WaitlistScreen(props: {
   const { invitations } = props.state
   const verified = props.state.email === 'verified'
   return (
-    <SignInFrame label={copy.title} viewport={props.viewport} wide>
+    <signInFrame.Component
+      label={copy.title}
+      moklyInstance="sign-in-frame"
+      viewport={props.viewport}
+      wide
+    >
       <h1 className={signIn.title}>{copy.title}</h1>
       <p className={signIn.text}>
         {verified ? copy.email(waitingEmail) : copy.noEmail}
@@ -196,6 +202,6 @@ export function WaitlistScreen(props: {
       <CodeNotice state={props.state} />
       <CodeField state={props.state} />
       <AccountRow />
-    </SignInFrame>
+    </signInFrame.Component>
   )
 }

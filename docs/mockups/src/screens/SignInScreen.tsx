@@ -7,7 +7,7 @@ import { ScreenLink } from '../components/common/ScreenLink'
 import { CatalogueText } from '../components/marketing/CatalogueText'
 import { noop } from '../noop'
 import { paths } from '../paths'
-import { SignInFrame } from './signInFrame'
+import { signInFrame } from '../entries/components/screens/signInFrame.mockup'
 import { signInCopy } from './signInCopy'
 import { waitlistCopy } from './waitlistCopy'
 import frame from './signInFrame.module.css'
@@ -37,7 +37,11 @@ function LinkCode(props: { code: string }) {
  */
 export function SignInScreen(props: { viewport: Viewport; code?: string }) {
   return (
-    <SignInFrame label={signInCopy.title} viewport={props.viewport}>
+    <signInFrame.Component
+      label={signInCopy.title}
+      moklyInstance="sign-in-frame"
+      viewport={props.viewport}
+    >
       <h1 className={styles.title}>{signInCopy.title}</h1>
       <p className={styles.text}>{signInCopy.text}</p>
       {props.code ? <LinkCode code={props.code} /> : null}
@@ -61,6 +65,6 @@ export function SignInScreen(props: { viewport: Viewport; code?: string }) {
           {signInCopy.action}
         </Button>
       </ScreenLink>
-    </SignInFrame>
+    </signInFrame.Component>
   )
 }

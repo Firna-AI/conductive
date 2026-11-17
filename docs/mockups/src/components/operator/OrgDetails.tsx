@@ -2,8 +2,8 @@ import type { OrgMember } from '../../fixtures/operatorDirectory'
 import type { OrgPage } from '../../fixtures/operatorPages'
 import { paths } from '../../paths'
 import { notice } from '../../entries/components/common/Notice.mockup'
-import { DetailList } from '../settings/DetailList'
-import { Section } from '../settings/Section'
+import { detailList } from '../../entries/components/settings/DetailList.mockup'
+import { section } from '../../entries/components/settings/Section.mockup'
 import { TargetState } from './directory'
 import {
   deletedOrgBody,
@@ -108,21 +108,23 @@ export function OrgDetails(props: { org: OrgPage }) {
   return (
     <>
       <OrgNotices org={org} />
-      <Section title="Details">
-        <DetailList
+      <section.Component moklyInstance="details-section" title="Details">
+        <detailList.Component
+          moklyInstance="org-details-list"
           rows={[
             { term: 'Org ID', value: org.id, mono: true },
             { term: 'Created', value: org.created },
             { term: 'Repositories', value: String(org.repositories) },
           ]}
         />
-      </Section>
+      </section.Component>
       <WorkspaceStates
         builds={{ count: org.builds, page: 'org' }}
         counts={org.states}
       />
-      <Section
+      <section.Component
         description={`${members} ${members === 1 ? 'member' : 'members'}`}
+        moklyInstance="members-section"
         title="Members"
       >
         <TargetList label={`Members of ${org.name}`}>
@@ -130,7 +132,7 @@ export function OrgDetails(props: { org: OrgPage }) {
             <MemberRow key={member.login} member={member} />
           ))}
         </TargetList>
-      </Section>
+      </section.Component>
     </>
   )
 }

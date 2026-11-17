@@ -9,7 +9,7 @@ renders plain React parts. An edit to a shared part therefore gives one
 Changes row for each screen and variant that looks different, and no row
 names the part. Commit `cc3ea647` changed `WorkspaceMark`, which 196 screen
 modules import. This change registers every part of the catalogue with
-Mokly's `defineComponent`: 358 parts. An edit to a registered part then gives one row for the
+Mokly's `defineComponent`: 357 parts. An edit to a registered part then gives one row for the
 part, and the screens that use it go under its Affected screens. The
 change adds no HTML entry, changes no screen picture, and changes no app
 code.
@@ -126,14 +126,16 @@ counts and test under `.context/mokly-html/` of this workspace.
 
 These are design calls of the agent, made on 2026-11-13:
 
-- **The parts.** On 2026-11-16 the plan added `ChatWorkspaces` back, as
-  the design of inputs from React context says. A part is an exported React component with a PascalCase
+- **The parts.** A part is an exported React component with a PascalCase
   name that draws UI. The plan registers each such export:
-  - All 328 exports of the 238 files in `docs/mockups/src/components/`,
-    except six that draw nothing of their own: the link primitives
-    `ScreenLink` and `StillLinks`, and the context providers
-    `TouchScreen`, `TintedTheme`, `MacApp`, and `ChatWorkspaces`. That
-    leaves 322 parts.
+  - Every export of the files in `docs/mockups/src/components/`, except
+    six that draw nothing of their own: the link primitives `ScreenLink`
+    and `StillLinks`, the link helper `Linked` of
+    `components/settings/ShortcutParts.tsx`, and the context providers
+    `TouchScreen`, `TintedTheme`, and `MacApp`. The context provider
+    `ChatWorkspaces` is registered in Milestone 6, as the design of inputs
+    from React context says. Milestone 6 checks the whole list with the
+    inventory script, after the last merge of `main`.
   - The 26 helper parts that live in `docs/mockups/src/screens/`, except
     `PictureCapture`, which only frames the marketing captures. That
     leaves 25 parts.
@@ -148,7 +150,7 @@ These are design calls of the agent, made on 2026-11-13:
   reviewable, and no two milestones conflict.
 - **More than one mockup milestone.** All mockup work comes first, in
   Milestones 1 to 6, and the documentation milestone comes directly
-  after. Reason: the whole change is mockup work, and one milestone of 358
+  after. Reason: the whole change is mockup work, and one milestone of 357
   parts is too large to delegate and check.
 - **The place of a registration.** One entry module for each source file,
   at `docs/mockups/src/entries/components/<folder>/<file>.mockup.tsx`. It
@@ -235,6 +237,20 @@ These are design calls of the agent, made on 2026-11-13:
   a row to its registered parent. The follow-up item
   `mokly-repeated-instance-diagnostic.md` covers the scope rule; a Mokly
   change that accepts one name for equal uses would cover these too.
+- **JSON rows for shared lists** (2026-11-16). `DeletedOrgList` and
+  `PendingInviteList` take JSON rows, and their adapters draw the tile, the
+  actions, and the failure notice. `CommandShortcuts` takes the host as
+  data, and its adapter derives the browser tab, because a tab holds a
+  `Set`. The org settings state moved to `screens/orgSettingsState.ts`,
+  and the row keys of the shortcut rows to
+  `components/settings/shortcutRowKeys.tsx`. `screens/inviteRows.ts` returns
+  row data. Reason: props are JSON, and the old place made an import cycle.
+- **More uses that stay plain** (2026-11-16). `CodeBlock` in the blocks of
+  `AgentBlocks`, and `MentionChip` and `FileLinkText` in message text, as
+  for the other chat text. The two `DetailList` uses in the operator access
+  sections, because their values hold parts. The Copy button of
+  `CodeBlock` takes its name from the code text, so two equal code blocks
+  in one answer on a phone would repeat a name; no fixture has that.
 - **Uses that stay plain** (2026-11-16). `TextLink` in `WebLinkText` stays
   plain, because a link in chat text has no stable key, and one chat
   fixture shows the same address twice. `MarkGrid` has no wrapper use,
@@ -383,9 +399,9 @@ Tags: mockup
 Depends on: 3
 
 Register the parts of the settings, the members, the feedback, sign-in,
-and Get started, and the nine parts of the third merge: 83 parts.
+and Get started, and the nine parts of the third merge: 82 parts.
 
-- [ ] Register the nine parts that the third merge of `main` added:
+- [x] Register the nine parts that the third merge of `main` added:
       `CodeBlock`, `MentionChip`, `FileLinkText`, and `ChipCopyText` of
       `components/chat/`, `StatsNumbers`, `StatsLoading`, and `StatsFailed`
       of `components/settings/StatsSections.tsx`, `SessionTabIcon` of
@@ -393,23 +409,23 @@ and Get started, and the nine parts of the third merge: 83 parts.
       `screens/accountStats.tsx`. Move the plain `IconButton` in
       `CodeBlock.tsx`, `LogoTile` in `screens/PreviewOpeningScreen.tsx`, and
       `ActionButton` in `screens/accountStats.tsx` to wrappers.
-- [ ] Register the 59 parts of `components/settings/`.
-- [ ] Register the 5 parts of `components/members/` and the 4 of
+- [x] Register the 58 parts of `components/settings/`, all but `Linked`.
+- [x] Register the 5 parts of `components/members/` and the 4 of
       `components/feedback/`.
-- [ ] Register the 6 helper parts of `screens/orgSettingsTabs.tsx`,
+- [x] Register the 6 helper parts of `screens/orgSettingsTabs.tsx`,
       `screens/getStartedBuild.tsx`, `screens/getStartedSteps.tsx`, and
       `screens/signInFrame.tsx`.
-- [ ] Move each mockup-only consumer of these parts to the wrapper.
+- [x] Move each mockup-only consumer of these parts to the wrapper.
       Keep the plain part in each file that the app reaches. Check this
       with `.context/mokly-html/closure2.mjs`.
-- [ ] Run `npm run mockups:check`, `npm run lint`, `npm run format:check`,
+- [x] Run `npm run mockups:check`, `npm run lint`, `npm run format:check`,
       and `npm run exports:check`.
-- [ ] Compare the built screen documents with a build of the merge base
+- [x] Compare the built screen documents with a build of the merge base
       without markers, as the design says. Save the result under
       `.context/registered-mockup-parts/`.
-- [ ] Smoke-test the new component pages and five screens that use them,
+- [x] Smoke-test the new component pages and five screens that use them,
       at both sizes, in light and dark.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
 ## Milestone 5: Mockups, operator and automations
@@ -460,7 +476,12 @@ Mac app, and `ChatWorkspaces`: 35 parts.
       include `CopyLinkButton`, `OwnerPicker`, `GitHubLink`, `ChipIconCell`,
       `ChipTextField`, `MessageField`, `ModelPicker`, `Composer`,
       `FilePage`, `ServerList`, `PortMessage`, `PreviewTabs`,
-      `TerminalView`, `TurnFileList`, and `CodeBlock`.
+      `TerminalView`, `TurnFileList`, `CodeBlock`, `OrgNameFields`,
+      `OrgDetailsSection`, `EndpointFields`, `AgentConnectForm`,
+      `DefaultsSection`, `DeleteOrgDialog`, `EnvVarsSection`,
+      `ScriptSection`, `InviteCodeSection`, `SecretSwitch`, `LoginShare`,
+      `MembersTab`, and `ScreenshotRow`. `ThisMacSection` and `SignInFrame`
+      read the Mac app.
 - [ ] Check with `.context/registered-mockup-parts/inventory.mjs` that
       every part of the design is registered.
 - [ ] Move each mockup-only consumer of these parts to the wrapper.

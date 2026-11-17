@@ -1,9 +1,9 @@
 import { defineScreen } from '@mokly/mokly'
+import { OrgSettingsScreen } from '../../../../../screens/OrgSettingsScreen'
 import {
   acmeSettings,
-  OrgSettingsScreen,
   orgSettingsSchema,
-} from '../../../../../screens/OrgSettingsScreen'
+} from '../../../../../screens/orgSettingsState'
 
 const decision =
   'The user chose option C of decision 241 on 10 November 2026, and asked for a notice on the Cloud computer tab too: a repository change gets its own notice on the Repositories and Cloud computer tabs, for admins and members, and the notice of the install script shows only for a change of the install script.'

@@ -1,11 +1,12 @@
 import { actionButton } from '../entries/components/common/actions.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { statusText } from '../entries/components/common/StatusText.mockup'
+import { agentList } from '../entries/components/settings/AccountSections.mockup'
+import type { OpenAgentForm } from '../components/settings/AccountSections'
 import {
-  AgentList,
-  type OpenAgentForm,
-} from '../components/settings/AccountSections'
-import { Section, SectionText } from '../components/settings/Section'
+  section,
+  sectionText,
+} from '../entries/components/settings/Section.mockup'
 import { defaultChoice } from '../fixtures/agents'
 import type { FirstBuildState } from '../fixtures/computer'
 import type { AgentLogins } from '../fixtures/logins'
@@ -17,7 +18,9 @@ import {
 } from '../fixtures/orgs'
 import { newOrg } from '../fixtures/repositories'
 import { paths } from '../paths'
-import { OrgBuild, orgBuildActions } from './getStartedBuild'
+import { orgBuildActions } from './getStartedBuild'
+import { orgBuild } from '../entries/components/screens/getStartedBuild.mockup'
+import { defined } from '../defined'
 import { getStartedCopy as copy } from './getStartedCopy'
 import styles from './GetStartedScreen.module.css'
 
@@ -71,7 +74,7 @@ export function InstallStep(props: {
   const { install } = copy
   if (!isPast(props.step, 'install')) {
     return (
-      <Section
+      <section.Component
         actions={
           <ScreenLink asChild to={paths.getStartedInstalled}>
             <actionButton.Component
@@ -84,27 +87,29 @@ export function InstallStep(props: {
           </ScreenLink>
         }
         description={install.description}
+        moklyInstance="install"
         title={install.title}
       />
     )
   }
   const installation = installationOf[props.person]
   return (
-    <Section
+    <section.Component
       actions={
         <actionButton.Component icon="plus" moklyInstance="install-another">
           {install.another}
         </actionButton.Component>
       }
+      moklyInstance="install"
       status={done(install.done, 'install-done')}
       title={install.title}
     >
-      <SectionText>
+      <sectionText.Component moklyInstance="installed-on">
         Installed on{' '}
         <span className={styles.strong}>{installation.account}</span>, with{' '}
         {installation.repositories} repositories.
-      </SectionText>
-    </Section>
+      </sectionText.Component>
+    </section.Component>
   )
 }
 
@@ -120,17 +125,18 @@ export function OrgStep(props: {
   if (isPast(props.step, 'org')) {
     const used = newOrg.repositories.filter((item) => item.used).length
     return (
-      <Section
-        actions={orgBuildActions(props.build)}
+      <section.Component
+        moklyInstance="org"
         status={done(org.done, 'org-done')}
         title={org.title}
+        {...defined({ actions: orgBuildActions(props.build) })}
       >
-        <SectionText>
+        <sectionText.Component moklyInstance="org-repositories">
           <span className={styles.strong}>{newOrg.name}</span>, with {used}{' '}
           repositories.
-        </SectionText>
-        <OrgBuild build={props.build} />
-      </Section>
+        </sectionText.Component>
+        <orgBuild.Component build={props.build} moklyInstance="org-build" />
+      </section.Component>
     )
   }
   const next = props.step === 'org'
@@ -145,7 +151,7 @@ export function OrgStep(props: {
     </actionButton.Component>
   )
   return (
-    <Section
+    <section.Component
       actions={
         next ? (
           <ScreenLink asChild to={paths.createFirstOrg}>
@@ -156,6 +162,7 @@ export function OrgStep(props: {
         )
       }
       description={org.description}
+      moklyInstance="org"
       title={org.title}
     />
   )
@@ -190,12 +197,19 @@ export function AgentStep(props: {
         }
       : undefined
   return (
-    <Section
+    <section.Component
       description={copy.agent.description}
-      status={connected ? done(copy.agent.done, 'agent-done') : undefined}
+      moklyInstance="agent"
       title={copy.agent.title}
+      {...defined({
+        status: connected ? done(copy.agent.done, 'agent-done') : undefined,
+      })}
     >
-      <AgentList form={form} logins={logins} />
-    </Section>
+      <agentList.Component
+        logins={logins}
+        moklyInstance="agent-list"
+        {...defined({ form })}
+      />
+    </section.Component>
   )
 }

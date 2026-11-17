@@ -16,8 +16,9 @@ import { actionButton } from '../../entries/components/common/actions.mockup'
 import { externalLink } from '../../entries/components/common/ExternalLink.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { useControlSizes } from '../common/touch'
-import { ChatGptSignIn } from './ChatGptSignIn'
-import { EndpointFields, type EndpointEntry } from './EndpointFields'
+import { chatGptSignIn } from '../../entries/components/settings/ChatGptSignIn.mockup'
+import { endpointFields } from '../../entries/components/settings/EndpointFields.mockup'
+import type { EndpointEntry } from './EndpointFields'
 import type { SignInStep } from './chatGptSignInCopy'
 import styles from './AgentConnectForm.module.css'
 
@@ -170,10 +171,11 @@ export function AgentConnectForm(props: {
       />
       {ask.type === 'endpoint' ? (
         <>
-          <EndpointFields
+          <endpointFields.Component
             agent={props.agent}
             entry={props.endpoint ?? 'empty'}
             keyHint={`${productName} keeps it encrypted, and never shows it again.`}
+            moklyInstance="endpoint-fields"
           />
           <div className={styles.actions}>
             {props.cancel ? (
@@ -198,9 +200,10 @@ export function AgentConnectForm(props: {
           connectTo={props.connectTo}
         />
       ) : (
-        <ChatGptSignIn
+        <chatGptSignIn.Component
           cancel={props.cancel}
           codeTo={props.connectTo}
+          moklyInstance="chatgpt-sign-in"
           step={props.signIn ?? 'start'}
         />
       )}

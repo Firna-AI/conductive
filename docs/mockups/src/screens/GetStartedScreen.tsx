@@ -7,7 +7,7 @@ import {
 } from '../entries/components/layout/AppFrame.mockup'
 import type { RailState } from '../components/layout/OrgRail'
 import { page as pagePart } from '../entries/components/layout/Page.mockup'
-import { DeletedOrgsSection } from '../components/settings/DeletedOrgsSection'
+import { deletedOrgsSection } from '../entries/components/settings/DeletedOrgsSection.mockup'
 import { people } from '../fixtures/members'
 import { orgs } from '../fixtures/orgs'
 import { type FirstBuildState, firstBuildStates } from '../fixtures/computer'
@@ -15,14 +15,16 @@ import { newOrg } from '../fixtures/repositories'
 import { paths } from '../paths'
 import { getStartedCopy as copy } from './getStartedCopy'
 import {
-  AgentStep,
   agentStates,
   getStartedPeople,
   getStartedSteps,
-  InstallStep,
   isPast,
-  OrgStep,
 } from './getStartedSteps'
+import {
+  agentStep,
+  installStep,
+  orgStep,
+} from '../entries/components/screens/getStartedSteps.mockup'
 import styles from './GetStartedScreen.module.css'
 
 export const getStartedSchema = {
@@ -123,19 +125,33 @@ export function GetStartedScreen(props: {
       viewport={props.viewport}
     >
       <p className={styles.intro}>{copy.intro(person.name)}</p>
-      <DeletedOrgsSection
+      <deletedOrgsSection.Component
+        moklyInstance="deleted-orgs"
         restoredTo={paths.shell}
         state={props.state.deletedOrgs}
       />
       <ol className={styles.steps}>
         <li>
-          <InstallStep person={props.state.person} step={step} />
+          <installStep.Component
+            moklyInstance="install-step"
+            person={props.state.person}
+            step={step}
+          />
         </li>
         <li>
-          <OrgStep build={firstBuild} step={step} />
+          <orgStep.Component
+            build={firstBuild}
+            moklyInstance="org-step"
+            step={step}
+          />
         </li>
         <li>
-          <AgentStep agent={agent} build={firstBuild} step={step} />
+          <agentStep.Component
+            agent={agent}
+            build={firstBuild}
+            moklyInstance="agent-step"
+            step={step}
+          />
         </li>
       </ol>
       {step === 'done' && agent === 'connected' ? (

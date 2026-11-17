@@ -10,7 +10,7 @@ import { acmeRail } from '../components/layout/OrgRail'
 import { page as pagePart } from '../entries/components/layout/Page.mockup'
 import { suspendedOrgNotice } from '../entries/components/orgs/SuspendedOrgNotice.mockup'
 import { AutomationList } from '../components/automations/AutomationList'
-import { SectionText } from '../components/settings/Section'
+import { sectionText } from '../entries/components/settings/Section.mockup'
 import {
   suspendedSections,
   workspaceSections,
@@ -112,7 +112,9 @@ export function AutomationsScreen(props: {
               org={{ name: orgs[suspendedOrg].name }}
             />
           ) : null}
-          <SectionText muted>{automationWords}</SectionText>
+          <sectionText.Component moklyInstance="automations-text" muted>
+            {automationWords}
+          </sectionText.Component>
           <AutomationList
             links={suspended ? suspendedLinks : automationLinks}
             rows={suspended ? suspendedAutomationRows : automationRows}

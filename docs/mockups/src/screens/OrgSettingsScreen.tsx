@@ -1,102 +1,24 @@
 import type { ReactNode } from 'react'
-import type { SchemaProps, Viewport } from '@mokly/mokly'
+import type { Viewport } from '@mokly/mokly'
 import {
   appFrame,
   mobileFrame,
 } from '../entries/components/layout/AppFrame.mockup'
 import { page as pagePart } from '../entries/components/layout/Page.mockup'
-import { LeaveOrgDialog } from '../components/members/LeaveOrgDialog'
-import { RemoveMemberDialog } from '../components/members/RemoveMemberDialog'
+import { leaveOrgDialog } from '../entries/components/members/LeaveOrgDialog.mockup'
+import { removeMemberDialog } from '../entries/components/members/RemoveMemberDialog.mockup'
 import { suspendedOrgNotice } from '../entries/components/orgs/SuspendedOrgNotice.mockup'
 import { failedBuildOf } from '../components/settings/BuildSection'
-import { DeleteOrgDialog } from '../components/settings/DeleteOrgDialog'
-import { SettingsTabs } from '../components/settings/OrgSections'
+import { deleteOrgDialog } from '../entries/components/settings/DeleteOrgDialog.mockup'
+import { settingsTabs } from '../entries/components/settings/OrgSections.mockup'
 import { sidebar as sidebarPart } from '../entries/components/workspaces/Sidebar.mockup'
 import { memberViewer, people, viewerMembership } from '../fixtures/members'
 import { type Org, orgList } from '../fixtures/orgs'
-import { repositoryChanges } from '../fixtures/repositories'
-import { settingsViewer, TabBody } from './orgSettingsTabs'
+import { settingsViewer } from './orgSettingsTabs'
+import { tabBody } from '../entries/components/screens/orgSettingsTabs.mockup'
+import type { OrgSettingsState } from './orgSettingsState'
 import { settingsOrg } from './settingsOrgs'
 import { defined, plainData } from '../defined'
-
-export const orgSettingsSchema = {
-  type: 'object',
-  additionalProperties: false,
-  required: [
-    'tab',
-    'build',
-    'script',
-    'repositoryChange',
-    'envForm',
-    'dialog',
-    'viewer',
-    'org',
-  ],
-  properties: {
-    tab: { enum: ['general', 'repositories', 'computer', 'members'] },
-    /**
-     * The builds of the cloud computer, which its tab shows. `time-limit` is
-     * a build that the app stopped at its 60-minute limit. `none` is an org
-     * with no build yet, such as a new org whose first build did not start.
-     */
-    build: { enum: ['ready', 'building', 'failed', 'time-limit', 'none'] },
-    /**
-     * The install script: the one that the newest build started with, or
-     * one that an admin changed and saved after that start, which a later
-     * build runs.
-     */
-    script: { enum: ['built', 'changed'] },
-    /**
-     * The saved repository changes of Acme that its cloud computer does not
-     * hold yet: none, acme/admin-dashboard added, acme/marketing-site
-     * removed, or both. The repository notice then shows on the
-     * Repositories and Cloud computer tabs, in the state that `build`
-     * gives. Firna draws no change, because the notices of its first build
-     * cover the time before its first good build.
-     */
-    repositoryChange: { enum: repositoryChanges },
-    /**
-     * The open form of the environment variables, which the cloud computer
-     * tab of an admin shows: none, Add variable, or the new value of
-     * DATABASE_URL.
-     */
-    envForm: { enum: ['none', 'add', 'change'] },
-    /**
-     * A dialog over the page: Delete org, the removal of a member, or the
-     * leave of a suspended org.
-     */
-    dialog: { enum: ['none', 'delete-org', 'remove-member', 'leave-org'] },
-    /**
-     * The person signed in: an admin, or a member who is not an admin. A
-     * member sees no actions on the members, no Delete org, and the name,
-     * the repositories, and the cloud computer read-only.
-     */
-    viewer: { enum: ['admin', 'member'] },
-    /**
-     * The org: Acme in use, Acme suspended by the operator, or Firna, the
-     * new org of the sign-up, whose builds start with its first build. A
-     * suspended org shows its notice above every tab, and every person,
-     * also an admin, sees the settings read-only, without Delete org. Its
-     * one action is Leave org, for each person whom the last-admin rule
-     * lets leave.
-     */
-    org: { enum: ['active', 'suspended', 'new'] },
-  },
-} as const
-
-export type OrgSettingsState = SchemaProps<typeof orgSettingsSchema>
-
-/** The settings of Acme, on its General tab, with no dialog open. */
-export const acmeSettings: OrgSettingsState = {
-  tab: 'general',
-  build: 'ready',
-  script: 'built',
-  repositoryChange: 'none',
-  envForm: 'none',
-  dialog: 'none',
-  viewer: 'admin',
-  org: 'active',
-}
 
 /**
  * The settings of an org: its name and initials, the repositories that it
@@ -120,12 +42,24 @@ export function OrgSettingsScreen(props: {
   // change. An org in use has no Leave org.
   const dialogs: Readonly<Record<OrgSettingsState['dialog'], ReactNode>> = {
     none: null,
-    'delete-org': suspended ? null : <DeleteOrgDialog viewport={viewport} />,
+    'delete-org': suspended ? null : (
+      <deleteOrgDialog.Component
+        moklyInstance="delete-org-dialog"
+        viewport={viewport}
+      />
+    ),
     'remove-member': suspended ? null : (
-      <RemoveMemberDialog viewport={viewport} />
+      <removeMemberDialog.Component
+        moklyInstance="remove-member-dialog"
+        viewport={viewport}
+      />
     ),
     'leave-org': suspended ? (
-      <LeaveOrgDialog viewer={settingsViewer(state)} viewport={viewport} />
+      <leaveOrgDialog.Component
+        moklyInstance="leave-org-dialog"
+        viewer={settingsViewer(state)}
+        viewport={viewport}
+      />
     ) : null,
   }
   const dialog = dialogs[state.dialog]
@@ -136,7 +70,12 @@ export function OrgSettingsScreen(props: {
         back: mobile ? { label: 'Workspaces', to: settings.list } : undefined,
       })}
       tabs={
-        <SettingsTabs links={settings.links} tab={state.tab} wrap={mobile} />
+        <settingsTabs.Component
+          links={settings.links}
+          moklyInstance="settings-tabs"
+          tab={state.tab}
+          wrap={mobile}
+        />
       }
       title={org.name}
       viewport={viewport}
@@ -147,7 +86,7 @@ export function OrgSettingsScreen(props: {
           org={{ name: org.name }}
         />
       ) : null}
-      <TabBody state={state} />
+      <tabBody.Component moklyInstance="tab-body" state={state} />
     </pagePart.Component>
   )
   if (mobile) {

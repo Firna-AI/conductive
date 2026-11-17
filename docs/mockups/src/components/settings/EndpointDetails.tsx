@@ -1,10 +1,14 @@
 import { agents, type AgentKey } from '../../fixtures/agents'
 import { loginLabels, type EndpointLogin } from '../../fixtures/logins'
 import { actionButton } from '../../entries/components/common/actions.mockup'
-import { EndpointModels } from './EndpointModels'
-import { EndpointAddressNote, EndpointReadFailed } from './EndpointRead'
+import { endpointModels } from '../../entries/components/settings/EndpointModels.mockup'
+import {
+  endpointAddressNote,
+  endpointReadFailed,
+} from '../../entries/components/settings/EndpointRead.mockup'
 import { endpointReadCopy as copy } from './endpointReadCopy'
-import { LoginEndpoint } from './LoginEndpoint'
+import { loginEndpoint } from '../../entries/components/settings/LoginEndpoint.mockup'
+import { defined } from '../../defined'
 
 /**
  * The lines under the row of an own endpoint login: its kind with the host
@@ -30,16 +34,25 @@ export function EndpointDetails(props: {
   )
   return (
     <>
-      <LoginEndpoint
+      <loginEndpoint.Component
         host={login.host}
         kind={loginLabels[props.agent].endpoint}
+        moklyInstance="endpoint"
       />
-      {login.addedV1 ? <EndpointAddressNote /> : null}
-      {login.readFailed ? <EndpointReadFailed refresh={refresh} /> : null}
+      {login.addedV1 ? (
+        <endpointAddressNote.Component moklyInstance="address-note" />
+      ) : null}
+      {login.readFailed ? (
+        <endpointReadFailed.Component
+          moklyInstance="read-failed"
+          refresh={refresh}
+        />
+      ) : null}
       {login.models ? (
-        <EndpointModels
+        <endpointModels.Component
           check={login.models}
-          refresh={login.readFailed ? null : refresh}
+          moklyInstance="models"
+          {...defined({ refresh: login.readFailed ? undefined : refresh })}
         />
       ) : null}
     </>

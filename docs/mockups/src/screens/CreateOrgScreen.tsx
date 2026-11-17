@@ -3,8 +3,8 @@ import { ScreenLink } from '../components/common/ScreenLink'
 import { actionButton } from '../entries/components/common/actions.mockup'
 import { mobileFrame } from '../entries/components/layout/AppFrame.mockup'
 import { page as pagePart } from '../entries/components/layout/Page.mockup'
-import { OrgNameFields } from '../components/settings/OrgSections'
-import { RepositoryList } from '../components/settings/RepositoryList'
+import { orgNameFields } from '../entries/components/settings/OrgSections.mockup'
+import { repositoryList } from '../entries/components/settings/RepositoryList.mockup'
 import {
   anotherOrg,
   newOrg,
@@ -102,14 +102,22 @@ export function CreateOrgScreen(props: {
       viewport={props.viewport}
     >
       <div className={styles.form}>
-        <OrgNameFields initials={form.initials} name={form.name} />
+        <orgNameFields.Component
+          initials={form.initials}
+          moklyInstance="org-name"
+          name={form.name}
+        />
         <div className={styles.field}>
           <span className={styles.fieldLabel}>Repositories</span>
           <span className={styles.fieldHint}>
             The cloud computer of the org holds these repositories, and its
             workspaces start in them. Add at least one.
           </span>
-          <RepositoryList repositories={repositories} search={form.search} />
+          <repositoryList.Component
+            moklyInstance="repositories"
+            repositories={repositories}
+            search={form.search}
+          />
         </div>
         {mobile ? null : <div className={styles.actions}>{actions}</div>}
       </div>

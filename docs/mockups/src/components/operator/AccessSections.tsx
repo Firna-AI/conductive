@@ -9,7 +9,10 @@ import { paths } from '../../paths'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { DetailList, type Detail } from '../settings/DetailList'
-import { Section, SectionText } from '../settings/Section'
+import {
+  section,
+  sectionText,
+} from '../../entries/components/settings/Section.mockup'
 import {
   accessTerms,
   approvalEmailWords,
@@ -19,6 +22,7 @@ import {
 import { disableCodeWords } from './codeCopy'
 import { CodeStateText, CopyableCode } from './codes'
 import { InlineLink, TargetList, TargetRow } from './targets'
+import { defined } from '../../defined'
 import styles from './AccessSections.module.css'
 
 /**
@@ -115,9 +119,9 @@ export function AppAccessSection(props: {
     })
   }
   return (
-    <Section title="App access">
+    <section.Component moklyInstance="app-access-section" title="App access">
       <DetailList rows={rows} />
-    </Section>
+    </section.Component>
   )
 }
 
@@ -179,15 +183,18 @@ export function ReferralSection(props: {
     button
   )
   return (
-    <Section
-      actions={state === 'active' ? action : undefined}
+    <section.Component
+      moklyInstance="referral-code-section"
       status={<CodeStateText code={code.code} state={state} />}
       title={referralWords.title}
+      {...defined({ actions: state === 'active' ? action : undefined })}
     >
       <DetailList rows={rows} />
       {code.usedBy.length > 0 ? (
         <>
-          <SectionText muted>{referralWords.usedBy}</SectionText>
+          <sectionText.Component moklyInstance="used-by-text" muted>
+            {referralWords.usedBy}
+          </sectionText.Component>
           <TargetList label={referralWords.usedByLabel(code.code)}>
             {code.usedBy.map((use) => (
               <TargetRow
@@ -205,6 +212,6 @@ export function ReferralSection(props: {
           </TargetList>
         </>
       ) : null}
-    </Section>
+    </section.Component>
   )
 }

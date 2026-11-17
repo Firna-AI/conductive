@@ -22,8 +22,12 @@ import {
   sendingLabel,
   sendLabel,
 } from './feedbackCopy'
-import { ReplyFailure, ReplyLine, type FeedbackReply } from './FeedbackReply'
-import { ScreenshotRow } from './ScreenshotRow'
+import {
+  replyFailure,
+  replyLine,
+} from '../../entries/components/feedback/FeedbackReply.mockup'
+import type { FeedbackReply } from './FeedbackReply'
+import { screenshotRow } from '../../entries/components/feedback/ScreenshotRow.mockup'
 import styles from './FeedbackDialog.module.css'
 
 /**
@@ -162,7 +166,10 @@ export function FeedbackDialog(props: FeedbackDialogProps) {
     >
       <div className={styles.box}>
         {props.screenshots.length > 0 ? (
-          <ScreenshotRow screenshots={props.screenshots} />
+          <screenshotRow.Component
+            moklyInstance="screenshots"
+            screenshots={props.screenshots}
+          />
         ) : null}
         <messageField.Component
           lines={shownLines(props.text, phone ? 5 : 6)}
@@ -196,9 +203,13 @@ export function FeedbackDialog(props: FeedbackDialogProps) {
           <Info aria-hidden className={styles.factIcon} size={14} />
           <span>{contextLine}</span>
         </li>
-        <ReplyLine reply={props.reply} />
+        <replyLine.Component moklyInstance="reply-line" reply={props.reply} />
       </ul>
-      <ReplyFailure reply={props.reply} retryTo={props.retryTo} />
+      <replyFailure.Component
+        moklyInstance="reply-failure"
+        reply={props.reply}
+        {...defined({ retryTo: props.retryTo })}
+      />
     </confirmDialog.Component>
   )
 }

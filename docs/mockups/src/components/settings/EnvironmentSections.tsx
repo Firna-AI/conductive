@@ -4,8 +4,12 @@ import { useSharedUiTheme } from '@firna/ui/theme'
 import { noop } from '../../noop'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { useControlSizes } from '../common/touch'
-import { MonoBlock, Section } from './Section'
+import {
+  monoBlock,
+  section,
+} from '../../entries/components/settings/Section.mockup'
 import { instanceKey } from '../../instanceKey'
+import { defined } from '../../defined'
 
 /**
  * The script in a code field, which an admin edits. The field shows at
@@ -41,26 +45,27 @@ export function ScriptSection(props: {
   readOnly?: boolean
 }) {
   return (
-    <Section
-      actions={
-        props.readOnly ? undefined : (
+    <section.Component
+      description={props.description}
+      moklyInstance="script"
+      title={props.title}
+      {...defined({
+        actions: props.readOnly ? undefined : (
           <actionButton.Component
             disabled
             moklyInstance={`save-${instanceKey(props.title)}`}
           >
             Save script
           </actionButton.Component>
-        )
-      }
-      description={props.description}
-      title={props.title}
+        ),
+      })}
     >
       {props.readOnly ? (
-        <MonoBlock text={props.script} />
+        <monoBlock.Component moklyInstance="script-text" text={props.script} />
       ) : (
         <ScriptField script={props.script} title={props.title} />
       )}
       {props.notice}
-    </Section>
+    </section.Component>
   )
 }

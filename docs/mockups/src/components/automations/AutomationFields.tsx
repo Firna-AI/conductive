@@ -10,7 +10,7 @@ import { actionButton } from '../../entries/components/common/actions.mockup'
 import type { IconKey } from '../../entries/components/common/icons'
 import { useControlSizes } from '../common/touch'
 import { personAvatar } from '../../entries/components/orgs/OrgTile.mockup'
-import { DetailList } from '../settings/DetailList'
+import { detailList } from '../../entries/components/settings/DetailList.mockup'
 import form from './form.module.css'
 import styles from './AutomationFields.module.css'
 
@@ -140,7 +140,8 @@ export function AutomationFacts(props: {
 }) {
   const { automation } = props
   return (
-    <DetailList
+    <detailList.Component
+      moklyInstance="facts"
       rows={[
         { term: 'State', value: automation.active ? 'Active' : 'Off' },
         { term: 'Repository', value: repositoryOf(automation) },

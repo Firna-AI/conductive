@@ -5,6 +5,15 @@ import { instanceKey } from '../../instanceKey'
 import styles from './BuildSection.module.css'
 
 /**
+ * A build as the data of its result: its time, its result, and its length,
+ * without the saved message of a failed build. A Mokly part takes only the
+ * fields of its schema.
+ */
+export function buildOf(build: Build): Build {
+  return { when: build.when, result: build.result, duration: build.duration }
+}
+
+/**
  * The result of a build that ended: its length, and whether it failed.
  * `id` names the result for Mokly, such as the time of its build.
  */

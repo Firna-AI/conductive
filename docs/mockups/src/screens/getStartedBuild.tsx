@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { actionButton } from '../entries/components/common/actions.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { statusText } from '../entries/components/common/StatusText.mockup'
-import { SectionText } from '../components/settings/Section'
+import { sectionText } from '../entries/components/settings/Section.mockup'
 import {
   failedBuild,
   type FirstBuildState,
@@ -66,7 +66,9 @@ export function OrgBuild(props: { build: FirstBuildState }) {
         <BuildStatus build={props.build} />
       </div>
       {props.build === 'failed' ? (
-        <SectionText>{failedBuild.error}</SectionText>
+        <sectionText.Component moklyInstance="build-error">
+          {failedBuild.error}
+        </sectionText.Component>
       ) : null}
     </>
   )

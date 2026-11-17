@@ -8,7 +8,7 @@ import {
 import { notice } from '../../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { statusText } from '../../entries/components/common/StatusText.mockup'
-import { Section } from '../settings/Section'
+import { section } from '../../entries/components/settings/Section.mockup'
 import { pausedTitle, pauseWords, waitlistWords } from './codeCopy'
 import { codesTabLinks, pauseQuestionLinks } from './signUpLinks'
 import { TurnOffWaitlistButton, type WaitlistState } from './waitlistSwitch'
@@ -56,8 +56,9 @@ export function SignUpsSection(props: { waitlist: WaitlistState }) {
   )
   if (props.waitlist === 'off') {
     return (
-      <Section
+      <section.Component
         actions={pause}
+        moklyInstance="sign-ups-section"
         status={
           <statusText.Component
             label={pauseWords.open}
@@ -70,7 +71,7 @@ export function SignUpsSection(props: { waitlist: WaitlistState }) {
     )
   }
   return (
-    <Section
+    <section.Component
       actions={
         <>
           <TurnOffWaitlistButton />
@@ -78,6 +79,7 @@ export function SignUpsSection(props: { waitlist: WaitlistState }) {
         </>
       }
       description={pauseWords.openLine}
+      moklyInstance="sign-ups-section"
       status={
         <statusText.Component
           label={waitlistWords.on}

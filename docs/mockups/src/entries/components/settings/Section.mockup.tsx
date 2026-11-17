@@ -1,0 +1,141 @@
+import { defineComponent } from '@mokly/mokly'
+import {
+  MonoBlock,
+  Section,
+  SectionText,
+} from '../../../components/settings/Section'
+import { secretNote } from '../../../components/settings/envVarCopy'
+import { inviteCodeCopy } from '../../../components/settings/inviteCodeCopy'
+import { startupScript } from '../../../fixtures/computer'
+import { inviteLimit } from '../../../fixtures/waitlist'
+import { actionButton } from '../common/actions.mockup'
+
+/**
+ * A line of body text in a section, registered with Mokly. A screen
+ * supplies the text in the `children` slot.
+ */
+export const sectionText = defineComponent({
+  slug: 'section-text',
+  title: 'Section text',
+  description:
+    'A line of body text in a settings section, such as the message of a failed build, or a muted note under a list. A screen supplies the text, so its own page shows an empty line.',
+  relatedDocs: ['docs/mockups/design.md'],
+  propSchema: {
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      /** The quieter tone of a note or a hint. */
+      muted: { type: 'boolean' },
+    },
+  } as const,
+  slots: ['children'],
+  render: (props) => (
+    <SectionText muted={props.muted}>{props.children}</SectionText>
+  ),
+  variants: [
+    {
+      slug: 'text',
+      title: 'Text',
+      description: 'A line of body text, such as the message of a build.',
+      props: {},
+      slots: {
+        children:
+          'The cloud computer image could not build. Check the log and try again.',
+      },
+    },
+    {
+      slug: 'muted',
+      title: 'Muted',
+      description: 'A muted note, such as the note under the env vars.',
+      props: { muted: true },
+      slots: { children: secretNote },
+    },
+  ],
+})
+
+/** Preformatted text in a tinted block, registered with Mokly. */
+export const monoBlock = defineComponent({
+  slug: 'mono-block',
+  title: 'Mono block',
+  description:
+    'Preformatted text in a tinted block, such as a script that a member reads without an edit field. Its own page shows the startup script of Acme.',
+  relatedDocs: ['docs/mockups/design.md'],
+  propSchema: {
+    type: 'object',
+    additionalProperties: false,
+    required: ['text'],
+    properties: { text: { type: 'string' } },
+  } as const,
+  props: { text: startupScript },
+  render: (props) => <MonoBlock text={props.text} />,
+})
+
+/**
+ * A titled card of settings, registered with Mokly. A screen supplies the
+ * state beside the title, the content, and the actions in slots. The pages
+ * use a plain state, because another part here would move its styles in
+ * the screens that load this card.
+ */
+export const section = defineComponent({
+  slug: 'section',
+  title: 'Section',
+  description:
+    'A titled card of settings, in the account, the org settings, Get started, and the operator section: its title with an optional state beside it, a description, its content, and its actions at the bottom. A screen supplies the state, the content, and the actions, so its own page shows the title alone.',
+  relatedDocs: ['docs/mockups/design.md'],
+  propSchema: {
+    type: 'object',
+    additionalProperties: false,
+    required: ['title'],
+    properties: {
+      title: { type: 'string' },
+      description: { type: 'string' },
+    },
+  } as const,
+  slots: ['status', 'children', 'actions'],
+  props: { title: inviteCodeCopy.title },
+  render: (props) => (
+    <Section
+      actions={props.actions}
+      description={props.description}
+      status={props.status}
+      title={props.title}
+    >
+      {props.children}
+    </Section>
+  ),
+  variants: [
+    {
+      slug: 'actions',
+      title: 'With an action',
+      description:
+        'A section with its description and its action at the bottom, such as Delete org.',
+      props: {
+        title: 'Delete org',
+        description:
+          'Stops every cloud computer of Acme and hides it from its members. Everything is deleted after 7 days, unless an admin restores it.',
+      },
+      slots: {
+        actions: (
+          <actionButton.Component icon="trash-2" tone="danger">
+            Delete org
+          </actionButton.Component>
+        ),
+      },
+    },
+    {
+      slug: 'content',
+      title: 'With content and a state',
+      description:
+        'A section with a state beside its title and a line of content, such as an invite code whose invites are used up.',
+      props: {},
+      slots: {
+        status: <span>{inviteCodeCopy.left(0, inviteLimit)}</span>,
+        children: (
+          <sectionText.Component>
+            {inviteCodeCopy.usedUp(inviteLimit)}
+          </sectionText.Component>
+        ),
+      },
+    },
+  ],
+})

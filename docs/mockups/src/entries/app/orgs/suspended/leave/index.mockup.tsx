@@ -1,10 +1,10 @@
 import { defineScreen } from '@mokly/mokly'
 import { orgs } from '../../../../../fixtures/orgs'
+import { OrgSettingsScreen } from '../../../../../screens/OrgSettingsScreen'
 import {
   acmeSettings,
-  OrgSettingsScreen,
   orgSettingsSchema,
-} from '../../../../../screens/OrgSettingsScreen'
+} from '../../../../../screens/orgSettingsState'
 
 export const suspendedOrgLeave = defineScreen({
   title: 'Leave a suspended org',

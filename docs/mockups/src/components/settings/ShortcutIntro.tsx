@@ -9,7 +9,7 @@ import {
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { keyChips } from '../../entries/components/common/KeyChips.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import { RowMessage } from './ShortcutParts'
+import { rowMessage } from '../../entries/components/settings/ShortcutParts.mockup'
 import styles from './ShortcutsSections.module.css'
 
 /**
@@ -93,9 +93,9 @@ export function ShortcutIntro(props: {
       {props.changed && !props.resetAllTo ? resetAll : null}
       {props.resetAllFailed ? (
         <div className={styles.introError}>
-          <RowMessage tone="danger">
+          <rowMessage.Component moklyInstance="reset-all-failed" tone="danger">
             The shortcuts weren't reset. Try again.
-          </RowMessage>
+          </rowMessage.Component>
         </div>
       ) : null}
     </div>

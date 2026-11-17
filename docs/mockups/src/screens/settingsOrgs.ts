@@ -51,7 +51,7 @@ import {
 } from '../fixtures/terminal'
 import { type Workspace, workspaceList } from '../fixtures/workspaces'
 import { paths } from '../paths'
-import type { OrgSettingsState } from './OrgSettingsScreen'
+import type { OrgSettingsState } from './orgSettingsState'
 
 /** The org whose settings show, and what its tabs hold. */
 export type SettingsOrg = {

@@ -11,7 +11,6 @@ import {
   type ShortcutChanges,
 } from '../../fixtures/shortcutChanges'
 import {
-  browserTabOf,
   keyboardOf,
   type Keyboard,
   type ShortcutHost,
@@ -26,20 +25,22 @@ import {
 } from '../../fixtures/shortcuts'
 import { searchField } from '../../entries/components/common/SearchField.mockup'
 import { noResults } from '../../entries/components/palette/PaletteEmpty.mockup'
-import { Section } from './Section'
-import { ShortcutIntro } from './ShortcutIntro'
+import { section } from '../../entries/components/settings/Section.mockup'
+import { shortcutIntro } from '../../entries/components/settings/ShortcutIntro.mockup'
 import { shortcutPages, type ShortcutPages } from './shortcutPages'
 import type { RefusedShortcut } from './ShortcutParts'
 import {
-  CommandShortcuts,
-  FixedShortcuts,
-  type CommandRowState,
-} from './ShortcutRows'
+  commandShortcuts,
+  fixedShortcuts,
+} from '../../entries/components/settings/ShortcutRows.mockup'
+import type { CommandRowState } from './ShortcutRows'
 import {
   matchingGroups,
   shortcutQueries,
   type ShortcutSearch,
 } from './shortcutSearch'
+import { instanceKey } from '../../instanceKey'
+import { defined, plainData } from '../../defined'
 import styles from './ShortcutsSections.module.css'
 
 /**
@@ -175,7 +176,6 @@ export function ShortcutsTab(props: {
   const query = shortcutQueries[props.search]
   const shown = matchingGroups(query, shortcutGroups(host))
   const pages = shortcutPages[host]
-  const tab = browserTabOf(host)
   const context: RowContext = {
     changes: props.changes,
     change: props.change,
@@ -191,11 +191,12 @@ export function ShortcutsTab(props: {
         placeholder="Search shortcuts"
         query={query}
       />
-      <ShortcutIntro
+      <shortcutIntro.Component
         changed={changed}
         host={host}
+        moklyInstance="intro"
         resetAllFailed={props.change === 'reset-all-failed'}
-        resetAllTo={pages.resetAll}
+        {...defined({ resetAllTo: pages.resetAll })}
       />
       {shown.length === 0 ? (
         <noResults.Component
@@ -205,33 +206,38 @@ export function ShortcutsTab(props: {
         />
       ) : null}
       {shown.map(({ group, rows }) => (
-        <Section
-          description={
-            group.description ?? (allFixed(group) ? fixedGroupLine : undefined)
-          }
+        <section.Component
           key={group.label}
+          moklyInstance={`group-${instanceKey(group.label)}`}
           title={group.label}
+          {...defined({
+            description:
+              group.description ??
+              (allFixed(group) ? fixedGroupLine : undefined),
+          })}
         >
           <ul aria-label={group.label} className={styles.list}>
             {rows.map((row) => (
               <li className={styles.row} key={row.label}>
                 {row.kind === 'command' ? (
-                  <CommandShortcuts
+                  <commandShortcuts.Component
+                    host={host}
                     label={row.label}
-                    state={rowState(row, context)}
-                    tab={tab}
+                    moklyInstance={`row-${instanceKey(row.label)}`}
+                    state={plainData(rowState(row, context))}
                   />
                 ) : (
-                  <FixedShortcuts
+                  <fixedShortcuts.Component
                     keys={row.keys}
                     label={row.label}
+                    moklyInstance={`row-${instanceKey(row.label)}`}
                     note={!allFixed(group)}
                   />
                 )}
               </li>
             ))}
           </ul>
-        </Section>
+        </section.Component>
       ))}
     </>
   )

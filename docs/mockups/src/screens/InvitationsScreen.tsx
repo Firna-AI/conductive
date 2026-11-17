@@ -9,7 +9,7 @@ import {
   mobileFrame,
 } from '../entries/components/layout/AppFrame.mockup'
 import { page as pagePart } from '../entries/components/layout/Page.mockup'
-import { PendingInviteList } from '../components/members/PendingInvites'
+import { pendingInviteList } from '../entries/components/members/PendingInvites.mockup'
 import { orgLinks } from '../components/orgs/orgLinks'
 import { pendingInvites } from '../fixtures/members'
 import { account, orgs } from '../fixtures/orgs'
@@ -96,8 +96,9 @@ function Body(props: { state: InvitationsState; mobile: boolean }) {
     <>
       <p className={styles.intro}>Accept an invitation to join its org.</p>
       {props.state.result === 'accept-failed' ? <AcceptFailure /> : null}
-      <PendingInviteList
+      <pendingInviteList.Component
         invites={inviteRows(pendingInvites)}
+        moklyInstance="invitations"
         stacked={props.mobile}
       />
     </>

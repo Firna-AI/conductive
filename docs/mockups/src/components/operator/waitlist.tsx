@@ -10,7 +10,7 @@ import { actionButton } from '../../entries/components/common/actions.mockup'
 import { emptyState } from '../../entries/components/common/EmptyState.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { statusText } from '../../entries/components/common/StatusText.mockup'
-import { Section } from '../settings/Section'
+import { section } from '../../entries/components/settings/Section.mockup'
 import { approvedEmailLines, approvedLabel, emptyWaitlist } from './accessCopy'
 import { NameCell } from './directory'
 import { ProfileLink, TargetMark } from './targets'
@@ -115,13 +115,13 @@ export function waitlistCell(
 /** Nobody waits: the tab says so, and where new people show. */
 export function EmptyWaitlist() {
   return (
-    <Section title="Waitlist">
+    <section.Component moklyInstance="waitlist-section" title="Waitlist">
       <emptyState.Component
         moklyInstance="waitlist-empty"
         body={emptyWaitlist.body}
         icon="hourglass"
         title={emptyWaitlist.title}
       />
-    </Section>
+    </section.Component>
   )
 }

@@ -12,7 +12,8 @@ import {
   type ScreenViewport,
 } from './marketingPictureList'
 import { MacAppScreen, type MacAppState } from './MacAppScreen'
-import { acmeSettings, OrgSettingsScreen } from './OrgSettingsScreen'
+import { OrgSettingsScreen } from './OrgSettingsScreen'
+import { acmeSettings } from './orgSettingsState'
 import { WorkspaceListScreen } from './WorkspaceListScreen'
 import { WorkspaceScreen } from './WorkspaceScreen'
 import { readyWorkspace, type WorkspaceState } from './workspaceState'

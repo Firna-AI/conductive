@@ -5,7 +5,8 @@ import type { TargetStatus } from '../../fixtures/operatorDirectory'
 import type { UserStatus } from '../../fixtures/operatorUsers'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { statusText } from '../../entries/components/common/StatusText.mockup'
-import { Section } from '../settings/Section'
+import { section } from '../../entries/components/settings/Section.mockup'
+import { instanceKey } from '../../instanceKey'
 import styles from './directory.module.css'
 
 /**
@@ -95,7 +96,11 @@ export function DirectoryTable<Row>(props: {
 }) {
   const mobile = props.viewport === 'mobile'
   return (
-    <Section description={props.summary} title={props.title}>
+    <section.Component
+      description={props.summary}
+      moklyInstance={`${instanceKey(props.title)}-section`}
+      title={props.title}
+    >
       {props.rows.length === 0 ? (
         <p className={styles.empty}>{props.empty}</p>
       ) : (
@@ -115,6 +120,6 @@ export function DirectoryTable<Row>(props: {
           </actionButton.Component>
         </div>
       ) : null}
-    </Section>
+    </section.Component>
   )
 }
