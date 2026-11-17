@@ -149,6 +149,15 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         When the cloud computer has a file and its first start succeeded,
         ${productName} deletes its own copy. The file stays in the cloud
         computer.`,
+      text`Operational logs: ${productName} records when the program that
+        runs workspace agents connects to the service or disconnects.
+        It also records turns that end without a Stop request, including
+        whether they finished, stopped, or failed.
+        These records include the workspace ID and any available turn,
+        connection, and event stream IDs, and communication protocol version.
+        The team uses these logs to investigate connection problems and
+        interrupted agent work. These logs hold no tokens, secret values,
+        message text, file contents, or connection close reasons.`,
       text`Mac commands: ${productName} keeps each request and its result.
         They record the command, its folder, its reason, its time limit,
         and the output. A request also names the Mac that gets it.

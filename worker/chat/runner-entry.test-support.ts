@@ -6,6 +6,7 @@ import { record, string, number } from './inputs'
 import { BROWSER_TEST_NOW } from './browser-clock.test-support'
 import { NativeCloseProbe } from '../test-support/native-close.test-support'
 import { RunnerConnectionStore } from './runner-connection-store'
+import { nativeWarningObservation } from '../test-support/native-warnings'
 
 const CLOCK = '__test:runner-clock'
 
@@ -33,6 +34,7 @@ export class Workspace extends ProductionWorkspace {
   private fileBinding: string | null = null
   private readonly fileAttached: string[] = []
   private readonly fileDetached: string[] = []
+  private readonly warnings = nativeWarningObservation()
 
   constructor(context: DurableObjectState, env: WorkspaceCompositionEnv) {
     const closeProbe = new NativeCloseProbe(context)
@@ -137,6 +139,7 @@ export class Workspace extends ProductionWorkspace {
     if (path !== '/__test/runner') return super.fetch(request)
     const input = record(await readJsonObject(request))
     const action = string(input.action)
+    if (action === 'capture-warnings') await this.warnings.captureWarnings(true)
     if (action === 'prepare-close') {
       await this.closeProbe.prepare()
     } else if (action === 'close-handled') {
@@ -190,6 +193,7 @@ export class Workspace extends ProductionWorkspace {
       ready: this.ctx.storage.kv.get('__test:runner-ready') ?? 0,
       detached: this.ctx.storage.kv.get('__test:runner-detached') ?? 0,
       reads: this.ctx.storage.kv.get('__test:runner-access-reads') ?? 0,
+      warnings: await this.warnings.warningCalls(),
       autoResponse: this.ctx.getWebSocketAutoResponse()?.request ?? null,
       sockets: this.ctx.getWebSockets().map((socket) => ({
         readyState: socket.readyState,

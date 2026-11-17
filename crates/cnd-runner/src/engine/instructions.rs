@@ -32,6 +32,7 @@ pub(super) fn build(
         format!(
             "You work in a workspace of {product}. A workspace has its own cloud computer and one branch at a time. It can hold one task after another."
         ),
+        "Every workspace agent runs in conductive-runner.service. Stopping or restarting that service ends every running turn in every session. Use sudo journalctl -u conductive-runner.service to see why it stopped.".into(),
         format!(
             "Workspace repository folder: {}",
             quoted(&config.cwd.to_string_lossy())?

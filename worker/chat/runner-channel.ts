@@ -109,6 +109,7 @@ export class RunnerChannel {
       active.loginKinds = message.loginKinds
       active.ready = welcome.ready
       await this.connections.persist(active)
+      this.connections.reportConnected(active)
       if (active.ready) this.connections.attachFiles(active)
       await active.peer.send({
         type: 'welcome',
