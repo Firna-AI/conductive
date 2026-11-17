@@ -7,7 +7,8 @@ sections, and their members. Linked pages cover
 [Delete org](delete-org.md). The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says.
+says. A secrets decision number names a decision of the change that adds
+[secrets](secrets.md), as that doc says.
 
 ## Orgs
 
@@ -171,6 +172,17 @@ says.
   them read-only.
 - Changes by every member were rejected, because a changed script reaches
   every new sandbox of the org and runs during other members' turns.
+- Every member adds [secrets](secrets.md) and uses each secret of the org.
+  A member replaces or deletes only the secrets that the member added
+  (secrets decision 3 B).
+- An admin replaces and deletes each secret. Only an admin sets the mark
+  for all agents and reveals a value (secrets decisions 2 A and 3 B).
+  [Rights](secrets.md#rights) gives the reasons.
+- Every member can see and change the Capabilities of each workspace: its
+  pre-approved secrets, its Mac access, and its other grants
+  (secrets decision 8 B).
+- Every member who sees a session can answer its secret requests
+  (secrets decision 4 B).
 - Every member of the org sees all of its workspaces (decision 39).
 - Every member also sees all of the automations of the org and their runs.
   Only the owner of an automation changes it, as [Access](automations.md#access)
@@ -246,5 +258,5 @@ says.
 
 ## Delete org
 
-- [Delete org](delete-org.md) holds the requirements of the delete of an
-  org, its 7 days, and its Restore.
+- [Delete org](delete-org.md) holds the requirements of Delete org, the
+  restore of a deleted org within 7 days, and the end of its data.

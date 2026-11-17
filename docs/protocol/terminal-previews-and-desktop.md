@@ -87,8 +87,13 @@ decision number names a dated record, as
   tab each get their own cookie, and another site that frames a preview
   gets none.
 - The Durable Object of the workspace revokes the preview when the sandbox
-  stops, when the user closes the preview, and after 24 hours. Reason: the
-  cookies and the grants of a revoked preview stop working at once.
+  stops, when a user or an agent closes the preview, and after 24 hours.
+  Reason: the cookies and the grants of a revoked preview stop working at
+  once. A preview has no other end, such as a clock of use (decision 294),
+  as [Port previews](port-previews.md#preview-tabs-and-the-end-of-a-preview)
+  says.
+- A preview request reports no activity of the workspace (decision 293),
+  as [Stop and resume](workspace-life.md#stop-and-resume) says.
 - Each grant and each credential cookie belongs to one viewer: the user
   and the session that launched the preview.
 - Each preview request and each batch of preview data checks the preview

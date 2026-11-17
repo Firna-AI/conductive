@@ -69,3 +69,35 @@ describe('readViewReply', () => {
     )
   })
 })
+
+describe('Preview tabs', () => {
+  it('reads each Preview tab at its place, also as the active tab', () => {
+    const reply = readViewReply({
+      view: {
+        ...view,
+        previewTabs: [{ port: 3000, place: 1 }],
+        activePreview: 3000,
+      },
+    })
+    expect(reply.view.tabs).toEqual([
+      view.tabs[0],
+      { kind: 'preview', port: 3000 },
+      view.tabs[1],
+    ])
+    expect(reply.view.activeTab).toEqual({ kind: 'preview', port: 3000 })
+  })
+
+  it('reads a view of an older Worker, with no Preview tab', () => {
+    expect(readViewReply({ view }).view.tabs).toEqual(view.tabs)
+  })
+
+  it('refuses a Preview tab without a port from 1 to 65535', () => {
+    for (const port of [0, 65536, 80.5, '3000', null]) {
+      expect(() =>
+        readViewReply({
+          view: { ...view, previewTabs: [{ port, place: 0 }] },
+        }),
+      ).toThrow()
+    }
+  })
+})

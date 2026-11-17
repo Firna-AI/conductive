@@ -15,6 +15,9 @@ export const ID = {
   automation: ':automation',
   user: ':user',
   invite: ':invite',
+  secret: ':secret',
+  request: ':request',
+  value: ':value',
   upload: ':upload',
   part: ':part',
 } as const

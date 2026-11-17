@@ -95,6 +95,19 @@ Each path is relative to `src/app/`, the folder of this page.
   gives the wait of each part, such as `workspacesWait`.
   `OrgModel.startBuild` sends Build computer and Try again for each screen
   that offers them.
+- `secrets-model.ts`: `SecretsModel`, the secrets of one org with their
+  create, Replace, delete, mark for all agents, and reveal.
+  `api/read-secrets.ts` reads them and the capabilities of a workspace,
+  and keeps no value from a reply of the list.
+- `capabilities-model.ts`: `WorkspaceCapabilitiesModel`, the pre-approved
+  secrets, the approvals of the sessions, the values for the workspace, and
+  Mac access of one workspace, with their changes. It reads the values from
+  the list of the secret requests, and removes one with its route.
+- `new-workspace-draft.ts`: `Draft`, with the Capabilities choices of New
+  workspace, `defaultCapabilities`, and the pure rules of a draft that
+  `new-workspace-model.ts` applies.
+- `permissions.ts`: `secretRights` and `mayAddSecret`, the rights of the
+  Secrets tab, beside the other rights of an org.
 - `first-build.ts`: `firstBuildOf` and `useFirstBuild`, the state of the
   first build of an org from its builds, which Get started and New
   workspace show until the org has a good image. `changedScriptNotice`

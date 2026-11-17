@@ -246,6 +246,20 @@ Replies, timers, and `waitFor` go on.
 - `recorded-files.ts` supplies complete browser reports, runner parts, consecutive tree deltas, reads, diffs, and a size error.
 - `recorded-repairs.ts` supplies the first losses, failed repairs, complete reports, and tree deltas of the data without a session, and stores failed repairs in the fake history.
 - `fixtures/core.ts` maps account and org samples to the shared contracts.
+- `fixtures/secrets.ts` maps the secrets of Acme in the mockups to the
+  shared contracts, with a made-up value of each, and the grants of
+  `checkout-autocomplete`. The tests and the dev fake share them.
+- `fixtures/secret-requests.ts` gives sample secret requests of the session
+  of `checkout-autocomplete`, and the results of a turn: a run that Cal
+  allowed, a pre-approved run, a request that Priya denied, and a late
+  request that Priya allowed, with its line. `fixtures/secret-turn.ts`
+  wraps such records in a short turn of Cal with its tool call line and
+  its final answer, so they fold with its work. The tests and the dev fake
+  share them.
+- The history route of `fake-api.ts` gives each event that names the
+  session, as the Worker does, so a page also holds the secret requests,
+  runs, and late answers of the session. `fake-workspace-routes.ts`
+  answers the list of the secret requests of the workspace with none.
 - `suspended-org.ts` serves Acme as a suspended org, and gives the body of an `org_suspended` refusal.
 - `operator.ts` serves the operator section of the samples, and gives the body of an `operator_required` refusal.
 - `waitlist.ts` serves a person who waits for app access, and gives the reply of a refused code. `fixtures/waitlist.ts` gives the person, the waitlist states, and the codes of the mockups.

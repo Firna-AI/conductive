@@ -14,7 +14,6 @@ import {
 } from '../../../chat/components/tab-row-test-kit'
 import type { FilesTab } from '../../../files/navigation'
 import { sessionsPath } from '../../../shared/sessions'
-import { workspaceViewPath } from '../../../shared/workspace-view'
 import { workspacePaths } from '../../../shared/workspaces'
 import {
   byLabel,
@@ -35,7 +34,7 @@ import {
 } from '../../../test-support/mount'
 import { serveSuspendedAcme } from '../../../test-support/suspended-org'
 import { click, settle } from '../../test-mount'
-import { bodiesOf } from '../kept-test-kit'
+import { savedViewsOf } from '../kept-test-kit'
 import { currents, linkTo, openTab } from '../wiring-test-kit'
 import { filesHref } from './files-address'
 
@@ -55,8 +54,8 @@ const fileTab: FilesTab = {
 const fileName = 'AddressForm.tsx'
 
 /** The views that the tab saved, from the request with index `from` on. */
-function savedViews(server: FakeApiServer, from: number): Promise<unknown[]> {
-  return bodiesOf(server, 'PUT', workspaceViewPath(org, id), from)
+function savedViews(server: FakeApiServer, from: number) {
+  return savedViewsOf(server, from)
 }
 
 describe('the Files screens in the workspace', () => {
@@ -159,6 +158,7 @@ describe('the Files screens in the workspace', () => {
         { name: 'Keep open', off: false },
         { name: 'Move left', off: false },
         { name: 'Move right', off: true },
+        { name: 'Close other tabs', off: false },
         { name: 'Close tabs to the right', off: true },
       ],
       moved: 'seed-[redacted].sql changes moves to place 2 of 3',

@@ -5,6 +5,10 @@ import { chatHistoryPath } from '../shared/events'
 
 import { workspaceOwnerPath } from '../shared/members'
 import {
+  secretRequestsPath,
+  type SecretRequestsResponse,
+} from '../shared/secret-requests'
+import {
   retryMessagePath,
   sessionPath,
   sessionPaths,
@@ -145,6 +149,10 @@ export function fakeWorkspaceRoutes(
     routes.json('GET', workspaceViewPath(org, id), data.view)
     routes.json('PUT', workspaceViewPath(org, id), data.view)
     routes.json('GET', sessionsPath(org, id), sessions)
+    routes.json('GET', secretRequestsPath(org, id), {
+      requests: [],
+      workspaceValues: [],
+    } satisfies SecretRequestsResponse)
     routes.json(
       'POST',
       sessionsPath(org, id),

@@ -45,6 +45,10 @@ struct Schema {
     #[serde(skip_serializing_if = "Option::is_none")]
     min_length: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    min_items: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    items: Option<Box<Schema>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     minimum: Option<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     maximum: Option<i64>,

@@ -5,16 +5,20 @@ import type { WorkspaceStart } from '../../shared/generated/WorkspaceStart'
 import type { ChatEvent } from '../../shared/chat-events'
 import type { WorkspaceEvent } from '../../shared/events'
 import { readGitHubSummary } from '../../shared/github-read'
+import type { SecretWorkspaceEvent } from '../../shared/secret-requests'
 import type { OrderedWorkspaceResponse } from '../../shared/workspaces'
+import { readSecretEvent } from '../secrets/read-secret-events'
 import { count, isRecord, list, nullable, oneOf, record, text } from './json'
 import { readChatEvent, readChoice, readSender } from './read-chat'
 
 /**
- * The workspace events that the chat reads. The stream also carries file,
- * GitHub, and preview events. Those only move the stream cursor on.
+ * The workspace events that the chat reads, with the requests, the runs,
+ * and the late answers of secrets. The stream also carries file, GitHub,
+ * and preview events. Those only move the stream cursor on.
  */
 type ChatStreamEvent =
   | ChatEvent
+  | SecretWorkspaceEvent
   | Extract<
       WorkspaceEvent,
       { type: 'workspace.updated' | 'workspace.title' | 'start.updated' }
@@ -154,6 +158,10 @@ function readEvent(value: unknown): ChatStreamEvent | null {
       return { type: value.type, name: text(value.name) }
     case 'start.updated':
       return { type: value.type, start: readStart(value.start) }
+    case 'secrets.request.updated':
+    case 'secrets.run':
+    case 'secrets.notice':
+      return readSecretEvent(value)
     default:
       return readChatEvent(value)
   }

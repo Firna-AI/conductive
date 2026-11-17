@@ -38,7 +38,6 @@ export class WorkspaceFeatures {
     files: WorkspaceFiles,
     matches: (id: string) => boolean,
     schedulePreview: (workspaceId: string, at: number | null) => Promise<void>,
-    activity: (workspaceId: string, at: number) => void,
     publishPreviews: (
       workspaceId: string,
       ids: readonly string[],
@@ -49,7 +48,7 @@ export class WorkspaceFeatures {
     this.matches = matches
     this.schedulePreview = schedulePreview
     this.publishPreviews = publishPreviews
-    const tools = { ...dependencies, onActivity: activity }
+    const tools = dependencies
     this.previews = createPreviewHandler(env, tools)
     this.terminal = createTerminalHandler(env, tools)
     this.desktop = createDesktopHandler(env, tools)

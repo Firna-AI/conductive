@@ -24,6 +24,7 @@ pub(super) fn configured(http: Unimock, runtime: Unimock, turn: Option<&str>) ->
         )?,
         Arc::new(http),
         Arc::new(runtime),
+        Arc::new(Unimock::new(())),
     ))
 }
 

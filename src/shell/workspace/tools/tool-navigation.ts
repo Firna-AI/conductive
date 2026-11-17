@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useNavigation } from '../../../app/navigation'
 import type { PreviewRoute } from '../../../previews/PreviewTool'
 import type { WorkspaceView } from '../../../shared/workspace-view'
@@ -7,8 +7,8 @@ import { saveView, useSavedView, useViewKnown } from '../saved-view'
 import {
   shownTool,
   toolHref,
+  panelToolPlace,
   toolOffered,
-  toolPlace,
   type ToolKey,
 } from './tool-address'
 
@@ -45,8 +45,8 @@ export function useToolSelect(
 ): Pick<ToolNavigation, 'href' | 'select'> {
   const navigation = useNavigation()
   const { org, workspace, viewport, savedView, terminalFocus } = context
-  const placeTool = toolPlace(context.view)?.tool ?? null
   const phone = viewport === 'phone'
+  const placeTool = panelToolPlace(context.view, !phone)?.tool ?? null
   const href = useCallback(
     (tool: ToolKey) => toolHref(org.id, workspace.id, tool),
     [org.id, workspace.id],
@@ -73,22 +73,20 @@ export function useToolSelect(
  * Terminal, and saves nothing, so the saved view keeps the hidden tool. A
  * click saves the tool. On a phone each tool is a page with its own
  * address. On desktop the tools belong to the right column, so the address
- * keeps the tab of the centre: only a tool address follows the new tool,
- * and a preview tab changes the address only from a preview address. The
- * Preview tool gets the port of an address, and replaces that address
- * once it shows the port.
+ * keeps the tab of the centre: only a tool address follows the new tool.
+ * The Preview page of a phone gets the port of an address, and replaces
+ * that address once it shows the port. On desktop, the address of a port
+ * shows its Preview tab in the centre.
  */
 export function useToolNavigation(context: WorkspaceContext): ToolNavigation {
   const navigation = useNavigation()
-  const { org, workspace, viewport, savedView } = context
-  const place = toolPlace(context.view)
+  const { org, workspace, savedView } = context
+  const place = panelToolPlace(context.view, context.viewport !== 'phone')
   const placeTool = place?.tool ?? null
   const placePreview = place?.previewId ?? null
   const placePort = place?.port ?? null
   const saved = useSavedView(savedView)
   const known = useViewKnown(savedView)
-  const [chosenPreview, setChosenPreview] = useState<string | null>(null)
-  const phone = viewport === 'phone'
   useEffect(() => {
     // The address of a hidden tool must not replace the saved tool.
     if (known && placeTool && toolOffered(placeTool)) {
@@ -101,31 +99,16 @@ export function useToolNavigation(context: WorkspaceContext): ToolNavigation {
       id === null
         ? toolHref(org.id, workspace.id, 'preview')
         : toolHref(org.id, workspace.id, 'preview', id)
-    // On desktop, only a preview address follows the preview.
-    const addressed = phone || placeTool === 'preview'
+    // Only the Preview page of a phone reads this route. The desktop shows
+    // each page in the Preview tab of its port.
     return {
-      previewId: placeTool === 'preview' ? placePreview : chosenPreview,
+      previewId: placeTool === 'preview' ? placePreview : null,
       port: placePort,
       href: previewHref,
-      navigate: (id) => {
-        if (addressed) navigation.push(previewHref(id))
-        else setChosenPreview(id)
-      },
-      replace: (id) => {
-        if (addressed) navigation.replace(previewHref(id))
-        else setChosenPreview(id)
-      },
+      navigate: (id) => navigation.push(previewHref(id)),
+      replace: (id) => navigation.replace(previewHref(id)),
     }
-  }, [
-    org.id,
-    workspace.id,
-    placeTool,
-    placePreview,
-    placePort,
-    chosenPreview,
-    phone,
-    navigation,
-  ])
+  }, [org.id, workspace.id, placeTool, placePreview, placePort, navigation])
   return {
     tool: shownTool(placeTool ?? saved?.tool ?? 'terminal'),
     href,

@@ -28,10 +28,9 @@ fn configuration() -> Result<Configuration> {
 }
 
 #[test]
-fn advertises_optional_parent_fields_without_changing_the_24_calls() -> Result<()> {
+fn advertises_optional_parent_fields_on_create_and_list() -> Result<()> {
     let tools = serde_json::to_value(schema::tools()?).internal()?;
     let tools = tools.as_array().unwrap();
-    assert_eq!(tools.len(), 24);
     for name in ["create_workspace", "list_workspaces"] {
         let tool = tools.iter().find(|tool| tool["name"] == name).unwrap();
         assert_eq!(
@@ -96,7 +95,13 @@ async fn cli_sends_parent_options_and_keeps_tree_fields_and_notices() -> Result<
                 })
             }),
         )));
-        let program = ToolProgram::new(configuration()?, Arc::new(http(&case)), mock.clone(), mock);
+        let program = ToolProgram::new(
+            configuration()?,
+            Arc::new(http(&case)),
+            mock.clone(),
+            mock.clone(),
+            mock,
+        );
         let args: Vec<String> = case.cli.iter().map(|value| (*value).into()).collect();
         assert_eq!(program.cli(&args).await?, 0, "{}", case.name);
         assert_eq!(*output.lock().unwrap(), vec![case.reply], "{}", case.name);
@@ -131,7 +136,13 @@ async fn mcp_sends_parent_fields_and_keeps_tree_fields_and_notices() -> Result<(
                 })
             }),
         )));
-        let program = ToolProgram::new(configuration()?, Arc::new(http(&case)), mock.clone(), mock);
+        let program = ToolProgram::new(
+            configuration()?,
+            Arc::new(http(&case)),
+            mock.clone(),
+            mock.clone(),
+            mock,
+        );
         assert_eq!(program.mcp().await?, 0, "{}", case.name);
         let replies = output.lock().unwrap();
         let result = &replies.iter().find(|reply| reply["id"] == "call").unwrap()["result"];

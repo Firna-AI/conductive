@@ -64,7 +64,6 @@ export class Workspace extends AgentSessionWorkspace {
         await this.integration.storage.put('previews:workspace-id', workspaceId)
         await this.integration.alarms.set('previews', at)
       },
-      (id, at) => this.activity.record(id, at),
       (id, ids, queueOwned) =>
         queueOwned
           ? this.chat.commitPreviewRevocations(id, ids)
@@ -104,6 +103,7 @@ export class Workspace extends AgentSessionWorkspace {
       browsers: this.chat.browsers,
       runner: this.chat.runner.connections,
       devices: this.devices,
+      secrets: this.integration.secrets,
       members: this.members,
       github: this.github,
       continuation: this.continuation,
@@ -127,6 +127,7 @@ export class Workspace extends AgentSessionWorkspace {
     return featureResult(async () => {
       await this.continuation.cancel()
       await this.members.suspend(ownership, workspaceId)
+      await this.integration.secrets.reconcile()
       this.controller.cancelLifecycleWaiters()
       await this.integration.reconcileStopped()
     })

@@ -10,6 +10,12 @@ import { orgPath } from '../../shared/api'
 import type { WorkspaceEvent } from '../../shared/events'
 import { githubPaths } from '../../shared/github'
 import { membersPath } from '../../shared/members'
+import { readView } from '../../chat/api/read-responses'
+import { previewsPath } from '../../shared/previews'
+import {
+  workspaceViewPath,
+  type WorkspaceView,
+} from '../../shared/workspace-view'
 import { terminalPaths } from '../../shared/terminal'
 import { workspacePath } from '../../shared/workspaces'
 import { byLabel } from '../../test-support/dom-queries'
@@ -91,12 +97,14 @@ export function chatRequests(server: FakeApiServer, from: number): string[] {
  * The reads of a return to a kept workspace, in path order: the terminal and
  * the GitHub bar read their state again, as at each show, the bar first
  * shows the state that the Worker stored, the bar reads the member's own
- * GitHub access, and the model reads the workspace. The chat
- * and the files read nothing again. The parts read on their own, so the
- * order in which they read is not fixed.
+ * GitHub access, and the model reads the workspace. The kept previews read
+ * their list again, because no event announces a preview that opened while
+ * away. The chat and the files read nothing again. The parts read on their
+ * own, so the order in which they read is not fixed.
  */
 export const returnReads = [
   `GET ${terminalPaths.connection(org, id)}`,
+  `GET ${previewsPath(org, id)}`,
   `GET ${githubPaths.banner(org, id)}`,
   `GET ${githubPaths.checks(org, id)}`,
   `GET ${githubPaths.stored(org, id)}`,
@@ -158,3 +166,21 @@ export function fieldNamed(view: HTMLElement, label: string): HTMLInputElement {
 export const isOff = (control: HTMLElement) =>
   control.hasAttribute('disabled') ||
   control.getAttribute('aria-disabled') === 'true'
+
+/**
+ * The views that the app saved, from `from` on, read back as the app reads
+ * a view: the whole tab row, with each Preview tab at its place, and no
+ * fields of the shape of the route.
+ */
+export async function savedViewsOf(
+  server: FakeApiServer,
+  from: number,
+): Promise<WorkspaceView[]> {
+  const bodies = await bodiesOf(
+    server,
+    'PUT',
+    workspaceViewPath(FAKE_IDS.org, FAKE_IDS.workspace),
+    from,
+  )
+  return bodies.map((body) => readView({ view: body }))
+}

@@ -17,6 +17,12 @@ The real application dispatches those paths before the machine stub.
 The object resolves the stored active sender and selects that sender's connected Mac.
 Command reads use the returned `requestKey` in the URL.
 The raw request ID stays in retry input and device messages.
+The [secret request feature](../secrets/README.md#workspace-tool-routes)
+uses the same machine entry point. `secrets.ts` forwards only
+`GET /v1/tools/secrets` and `POST /v1/tools/secrets/run` to the token's
+workspace object. The list needs only the token. A run needs the stored
+running turn. The feature README gives the command, grant, pending-result,
+browser-answer, and event contracts for the workspace tools.
 The create handler, the session writes, the workspace rename and move routes, and the Mac command handler use `readJsonObject` from the [shared request reader](../http/README.md#json-request-objects).
 The entry owns the 1,000,000-byte cap, and the reader owns the media type policy.
 The entry preserves HTTP 413, and the handler preserves HTTP 415.

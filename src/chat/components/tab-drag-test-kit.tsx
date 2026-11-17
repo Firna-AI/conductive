@@ -119,7 +119,10 @@ export function fileTabs(
   navigation: FilesNavigation,
   temporary: TemporaryTab | null = null,
 ): RenderTab {
-  return (tab) => {
+  return (host) => {
+    // These rows hold no Preview tab, so each host tab is a file or a diff.
+    if (host.kind === 'preview') throw new Error('No Preview tab here')
+    const tab = host
     const label = labelOf(tab.path)
     const isTemporary =
       temporary !== null &&

@@ -40,6 +40,7 @@ import { lifecycleDependencies } from './lifecycle/runtime'
 import type { ConnectionScheduler } from './security/connection-access'
 import type { ComputerIdentity } from './lifecycle/computer-ledger'
 import type { TurnTokenCheck } from './model-gateway/types'
+import { fetchWorkspaceFeatures } from './chat/fetch-workspace-features'
 
 export class WorkspaceLifecycle
   extends DurableObject<WorkspaceCompositionEnv>
@@ -289,11 +290,6 @@ export class WorkspaceLifecycle
   }
 
   protected async fetchChat(request: Request): Promise<Response> {
-    const deviceResponse = await this.devices.fetch(request)
-    if (deviceResponse) return deviceResponse
-    const response = await this.chat.fetch(request)
-    if (request.method !== 'GET' && request.method !== 'HEAD')
-      this.context.waitUntil(this.devices.reconcile())
-    return response
+    return fetchWorkspaceFeatures(this.integration, this.context, request)
   }
 }

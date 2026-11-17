@@ -31,11 +31,13 @@ export class AgentSessionWorkspace extends AgentSessionReadWorkspace {
   }
 
   manageAgentSession(input: ToolSessionManagement, origin: string) {
-    return featureResult(() =>
-      this.chat.manageToolSession(input, origin, () =>
+    return featureResult(async () => {
+      const result = await this.chat.manageToolSession(input, origin, () =>
         this.writeAccess(input, origin),
-      ),
-    )
+      )
+      await this.integration.secrets.reconcile()
+      return result
+    })
   }
 
   private async writeAccess(

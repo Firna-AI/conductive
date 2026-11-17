@@ -5,13 +5,15 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use serde_json::Value;
 
-use crate::call::Name;
+use crate::call::{Call, Name};
 use crate::cli_parse;
 use crate::client::{Client, Configuration, Dispatch};
 use crate::error::{ErrorResultExt, Result};
 use crate::input;
 use crate::mcp::{Mcp, Server};
 use crate::ports::{Http, Runtime, Streams};
+use crate::process::{CommandInput, Process};
+use crate::reply::Reply;
 
 /// Complete tool help, available without credentials.
 pub const HELP: &str = include_str!("help.txt");
@@ -44,9 +46,15 @@ impl ToolProgram {
         http: Arc<dyn Http>,
         runtime: Arc<dyn Runtime>,
         streams: Arc<dyn Streams>,
+        process: Arc<dyn Process>,
     ) -> Self {
         Self {
-            client: Arc::new(Client::new(configuration, http, Arc::clone(&runtime))),
+            client: Arc::new(Client::new(
+                configuration,
+                http,
+                Arc::clone(&runtime),
+                process,
+            )),
             runtime,
             streams,
         }
@@ -66,8 +74,19 @@ impl ToolProgram {
                 Value::String(text),
             );
         }
-        let call = input::parse(args.name, &args.fields, &self.runtime.request_id())?;
+        let mut call = input::parse(args.name, &args.fields, &self.runtime.request_id())?;
+        if let Call::RunWithSecrets(_, command) = &mut call
+            && let Some(arguments) = args.command
+        {
+            *command = CommandInput::Inherit(arguments);
+        }
         let reply = self.client.execute(call).await?;
+        if let Reply::RunWithSecrets(result) = &reply {
+            if let Some(message) = result.message() {
+                self.streams.stderr(&format!("{message}\n")).await?;
+            }
+            return Ok(result.exit_code());
+        }
         self.streams
             .stdout(&format!("{}\n", serde_json::to_string(&reply).internal()?))
             .await?;
@@ -107,6 +126,10 @@ mod cli_tests;
 #[cfg(test)]
 #[path = "_tests_/mac_adapter_tests.rs"]
 mod mac_adapter_tests;
+
+#[cfg(test)]
+#[path = "_tests_/secrets/mod.rs"]
+mod secrets_tests;
 
 #[cfg(test)]
 #[path = "_tests_/workspace_tests.rs"]

@@ -1,3 +1,14 @@
+export function workspaceExists(
+  db: D1Database,
+  orgId: string,
+  workspaceId: string,
+): Promise<{ id: string } | null> {
+  return db
+    .prepare('SELECT id FROM workspaces WHERE org_id = ? AND id = ?')
+    .bind(orgId, workspaceId)
+    .first<{ id: string }>()
+}
+
 export async function registerCreationAttempt(
   db: D1Database,
   input: {

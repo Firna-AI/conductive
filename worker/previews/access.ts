@@ -5,7 +5,7 @@ import { suspendedWorkspaceOwnerError } from '../data/user-access'
 import { errorResponse, HttpError, privateResponse } from '../http'
 import { ProviderError } from '../sandbox/errors'
 import { gate } from '../security/gate'
-import type { ToolDependencies, WorkspaceTarget } from './types'
+import type { WorkspaceTarget } from './types'
 import {
   readWorkspaceTarget,
   type WorkspaceAccessTarget,
@@ -96,13 +96,6 @@ export async function toolRequest(
   }
   const target = await workspaceTarget(env, orgId, workspaceId, context.user.id)
   return { context, target, tail }
-}
-
-export function recordActivity(
-  dependencies: ToolDependencies,
-  workspaceId: string,
-): void {
-  dependencies.onActivity?.(workspaceId, dependencies.now())
 }
 
 export function toolFailure(error: unknown): unknown {
