@@ -100,6 +100,19 @@ Adding a repository starts a build automatically.
 
 - [Manage the shared cloud computer setup](/docs/cloud-computer)
 
+## Choose the org colour
+
+The org list shows the open org in its colour.
+Give each org its own colour to tell your orgs apart at a glance.
+Only an admin can change the colour.
+
+1. Open the org's **Settings**.
+2. Open **General**.
+3. Select a colour under **Colour**.
+
+The colour saves at once.
+An org that has no chosen colour shows blue.
+
 ## Invite a member
 
 Only an admin can invite members.

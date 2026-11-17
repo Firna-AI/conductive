@@ -118,6 +118,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
   menu. On a phone, a long press lifts an org in the org switcher with the
   same look, and opens no menu. `OrgDrop` and `OrgDrag.module.css` beside
   `orgTileMenu.ts` draw the drag on the rail and in the org switcher.
+- `OrgTile` in `src/components/orgs/` draws the initials and the outline
+  of the open org in the colour of the org, as `app/org-settings/colour`
+  shows. `src/design/orgColors.ts` gives the eight presets, each with its
+  own ink and outline for the light and the dark scheme. Blue takes the
+  accent. `OrgColorField` in `src/components/settings/` draws the presets
+  as round radio swatches, and a ring marks the chosen one.
 - `FailureToast` in `src/components/common/` draws the toast that names a
   change of the list that failed, with the message of the server, in the
   `ToastLayer` beside it, as `app/workspace-menu/rename/failed` shows.

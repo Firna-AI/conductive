@@ -81,11 +81,14 @@ export function readOrg(value: unknown): OrgSummary {
     suspendedAt: count(record(item, 'suspension'), 'suspendedAt'),
   }))
   const initials = maybeText(org, 'initials')
+  // A colour key that this client does not know stays, and draws as Blue.
+  const color = maybeText(org, 'color')
   return {
     id: text(org, 'id'),
     name: text(org, 'name'),
     role: choice(org, 'role', ROLES),
     ...(initials === null ? {} : { initials }),
+    ...(color === null ? {} : { color }),
     ...(suspension === null ? {} : { suspension }),
     ...(deletion === null ? {} : { deletion }),
   }

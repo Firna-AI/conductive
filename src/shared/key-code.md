@@ -66,7 +66,8 @@ page.
 - [Terminal contracts](terminal.ts) own the port shared with the listener exclusion.
 - [Restore marker](restore-marker.ts) names the file that the Worker writes at the end of the disk restore. The terminal and the agent runner read it.
 - [Commit author](commit-author.ts) builds a GitHub user's commit author and its four Git variables.
-- [Org contracts](orgs.ts) carry custom initials and GitHub repository choices for org creation, and the request reader for org moves.
+- [Org contracts](orgs.ts) carry custom initials, the colour of the org, and GitHub repository choices for org creation, and the request reader for org moves.
+- [Org colours](org-colors.ts) list the preset keys of an org colour, with Blue as the default for an org without one or with an unknown key.
 - [Member contracts](members.ts) name each invitation by its email. Each member keeps the `User` with their GitHub login. `PendingOrgInvite` adds the org ID and name, for the invitations that the signed-in user can accept.
 - [Account contracts](account.ts) include the repository list available before an org exists.
   An own endpoint write carries its endpoint and key.

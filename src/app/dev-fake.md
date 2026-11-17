@@ -33,7 +33,7 @@ option overrides this default, including queued chats that show no spinner.
   one part. Create org of the dev fake
   requires at least one repository and starts a simulated build. Its
   repository catalogue keeps the saved choices, and its custom initials
-  stay through rename, delete, and restore. Settings changes during the
+  and its colour stay through rename, delete, and restore. Settings changes during the
   first good build start one added build. The fake compares settings
   revisions with builds as the Worker does.
 - Own endpoint saves return `endpointV1Added` and `modelListReadFailed`, as

@@ -58,6 +58,11 @@ the Help row of the command palette opens.
   chooses at least one, also while the list is empty or did not load.
 - The rail, the org switcher, and General show the saved initials of an
   org. An org without them shows the initials of its name.
+- The tile of the open org shows the colour of the org in its initials
+  and its outline. An org without a colour, or with a colour that this
+  copy of the app does not know, shows Blue. An admin picks the colour on
+  General, and a choice saves at once. A failed save shows a toast and the
+  saved colour again.
 - The rail and the org switcher show the orgs in the person's own order.
   The person moves an org tile by drag, by its tile menu with Move up and
   Move down, or by Alt and Up or Down on a focused tile. On a phone, a

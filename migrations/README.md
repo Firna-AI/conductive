@@ -393,3 +393,8 @@ workspaces, automations, and automation runs. The
 [Stats tab of the account](../docs/protocol/account-stats.md) counts the
 records of one person, and these indexes keep each read to that person's
 rows.
+
+`202611171100_org_color.sql` adds the nullable `orgs.color` column. It keeps
+the preset colour that an admin picks for the tile of the open org, as
+[Orgs and members](../docs/protocol/orgs-and-members.md) says. Existing orgs
+get null, which the app shows as Blue.
