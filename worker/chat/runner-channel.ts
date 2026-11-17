@@ -105,6 +105,7 @@ export class RunnerChannel {
       )
       if (!welcome) return
       active.streamId = message.streamId
+      active.processStartId = message.processStartId
       active.protocolVersion = welcome.protocolVersion
       active.loginKinds = message.loginKinds
       active.ready = welcome.ready

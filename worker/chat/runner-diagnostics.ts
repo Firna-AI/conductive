@@ -4,7 +4,7 @@ import type { ActiveRunner } from './types'
 
 export type RunnerDiagnosticIdentity = Pick<
   ActiveRunner,
-  'id' | 'workspace' | 'streamId'
+  'id' | 'workspace' | 'streamId' | 'processStartId'
 > & { protocolVersion: number | null }
 
 export function runnerWarningFields(
@@ -18,6 +18,10 @@ export function runnerWarningFields(
     streamId: runner?.streamId
       ? WarningStreamId.checked(runner.streamId)
       : null,
+    processStartId:
+      runner?.processStartId === null || runner?.processStartId === undefined
+        ? null
+        : WarningStreamId.checked(runner.processStartId),
     protocolVersion: runner?.protocolVersion ?? null,
   }
 }

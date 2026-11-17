@@ -44,6 +44,13 @@ export class WarningStreamId {
   }
 }
 
+/** A diagnostic value cannot reject a hello or prevent saved connection restore. */
+export function warningProcessStartId(value: unknown): string | null {
+  if (value === undefined || value === null) return null
+  return WarningStreamId.checked(typeof value === 'string' ? value : 'unknown')
+    .text
+}
+
 export function warningProtocolVersion(value: number | null): number | null {
   return value !== null && Number.isSafeInteger(value) && value > 0
     ? value

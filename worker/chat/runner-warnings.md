@@ -36,17 +36,18 @@ explicitly, because a typed caller can still supply extra fields.
   as `unknown`. `protocolVersion` must be a positive safe integer, or it
   shows as null. [`worker/warning-values.ts`](../warning-values.ts) holds
   these checks.
-- The hello reader refuses no hello for its `processStartId`. A value that
-  fails the UUID check, of any type, shows as `unknown`.
+- `warningProcessStartId` in the same file reads `processStartId` from the
+  hello and from the saved record. It never throws, so this field refuses
+  no hello and fails no restore. It keeps a value that passes the UUID
+  check. A missing or null value becomes null, and each other value
+  becomes `unknown`.
 - [`runner-diagnostics.ts`](runner-diagnostics.ts) builds the connection
   fields and writes the connection warnings.
 - A restore of the saved runner connection writes no `runner_connected`.
   A restored connection with no accepted hello yet still gets it at its
   first accepted hello, or just before its `runner_disconnected`.
 - A restored connection keeps the saved `processStartId`. A saved record
-  without it restores by the same rules. An invalid ID never fails the
-  restore. The reader keeps only a checked UUID, `unknown` for another
-  present value, or null for an unavailable value.
+  without it restores by the same rules.
 - When `restore` refuses the matching saved connection, such as for an
   unsupported protocol version, it writes `runner_disconnected` with the
   checked values of the saved record. A socket that does not match the
@@ -65,13 +66,19 @@ explicitly, because a typed caller can still supply extra fields.
 - `turn-end-diagnostics.test.ts` checks the turn warnings of each state,
   an older turn whose Stop request is only in its history, a rolled-back
   end, and a resent end.
+- `turn-end-reports.test.ts` checks that a turn warning takes the runner
+  that is current at its commit. A runner of another workspace, or no
+  runner, gives null connection fields.
 - `runner-native-close.test.ts` checks that a hibernation writes no
   warning, and that a close as the first wake event writes the disconnect.
+  Its cases restore a saved `processStartId` that is valid, missing, or
+  invalid.
 - `runner-version.test.ts` checks a refused hello: the version warning,
   then the connect and disconnect warnings with null `streamId` and
   `protocolVersion`.
 - `runner-native-version.test.ts` checks a refused restore of the saved
   connection: no new connect warning, and one disconnect warning with the
-  saved values.
+  saved values. Its saved `processStartId` is valid, missing, invalid, or
+  null.
 - [`worker/warnings.test.ts`](../warnings.test.ts) checks that the
   explicit field selection drops private fields and invalid values.

@@ -33,6 +33,10 @@ Cal answered stop diagnostics decision **5 = B** on **17 November 2026**: "5 = B
 - **Orchestrator call after options check, 17 November 2026:** Use lenient readers for this diagnostic field. An invalid ID must not reject hello or fail a saved connection restore. Keep only a checked UUID, a fixed `unknown` for another present value, or null for an unavailable value. This preserves connection behavior and bounds the saved field.
 - **Orchestrator call, 17 November 2026:** Keep protocol version 2 and all version-pin rules. The optional field permits rolling updates without a new version.
 - **Orchestrator call, 17 November 2026:** Select warning fields explicitly. A pre-hello connection has no ID. A turn end uses the connection current at commit. These choices preserve existing diagnostic timing and safe selection.
+- **Implementor call, 17 November 2026:** Use a small CLI `RunnerStart` owner to make the ID and construct each link with it. This permits a controlled test of real UUID creation without a startup or update refactor.
+- **Implementor call, 17 November 2026:** Derive the incoming hello shape and its normalized identity value from generated `RunnerHello`. Keep the raw numeric version for unsupported-version handling. This preserves Rust ownership of the message shape.
+- **Implementor call, 17 November 2026:** Keep the normalized ID in `RunnerConnectionStore` metadata. Keep the small native WebSocket attachment unchanged. This preserves the existing socket authority boundary.
+- **Implementor call, 17 November 2026:** Use the existing workspace interface crate as a CLI dev dependency. The controlled socket test then captures the real hello type without a new third-party dependency.
 - **External docs implementor call, 17 November 2026:** Disclose a random ID for each program start in Privacy. Keep internal field names out of public prose.
 - **External docs implementor call, 17 November 2026:** Keep the guides and legal dates unchanged. All twelve guides remain accurate. Both legal dates already read 17 November 2026.
 - Keep connection authority, hibernation behavior, commit timing, Stop attribution, replay handling, and diagnostic failure tolerance.
@@ -66,22 +70,29 @@ The options check confirmed B and found no new user choice. Its corrections clar
 
 Depends on: 1
 
-- [ ] Add the optional Rust-owned hello field. Create one ID per process and keep it across reconnects and runtime reconstruction.
-- [ ] Regenerate all shared TypeScript with the locked generator.
-- [ ] Carry identity through readers, active connections, saved runner connection records, restore paths, and all three safe warnings.
-- [ ] Prove reconnect stability, new-process identity, old hello and saved metadata compatibility, and safe field selection. Observe assertion failures first.
-- [ ] Preserve existing connection, transaction, Stop, replay, and diagnostic failure semantics through focused coverage.
-- [ ] Repeat each new async case ten times. Record per-test cost from one run.
-- [ ] Recheck code-facing READMEs and test guides against the final API and focused tests.
-- [ ] Apply Cal's answer to `plans/follow-ups/runner-process-start-identity.md`. Delete it after implementation and its focused checks pass.
+- [x] Add the optional Rust-owned hello field. Create one ID per process and keep it across reconnects and runtime reconstruction.
+- [x] Regenerate all shared TypeScript with the locked generator.
+- [x] Carry identity through readers, active connections, saved runner connection records, restore paths, and all three safe warnings.
+- [x] Prove reconnect stability, new-process identity, old hello and saved metadata compatibility, and safe field selection. Observe assertion failures first.
+- [x] Preserve existing connection, transaction, Stop, replay, and diagnostic failure semantics through focused coverage.
+- [x] Repeat each new async case ten times. Record per-test cost from one run.
+- [x] Recheck code-facing READMEs and test guides against the final API and focused tests.
+- [x] Apply Cal's answer to `plans/follow-ups/runner-process-start-identity.md`. Delete it after implementation and its focused checks pass.
+
+Implementation evidence is in `.context/runner-process-start-identity/reports/implementation.md`.
+Checks after the main merge and per-test costs are under `post-main/` in that context folder.
 
 ## Milestone 3: Verification, review, and pull request
 
 Depends on: 1, 2
 
-- [ ] Run early checks and focused tests. Run a safe smoke check with controlled construction and transport boundaries. Start no live runner. Stop or restart no service.
-- [ ] Run the complete npm gate, Rust format, workspace clippy, workspace tests, and musl release build. Verify generated drift.
+The merge of main at `9f1a3928321e9eeb7fd3698175f3f31801c9fa3f` had no conflict or manual resolution. Its preservation audit is `.context/runner-process-start-identity/merge-audit.log`.
+
+- [x] Run early checks and focused tests. Run a safe smoke check with controlled construction and transport boundaries. Start no live runner. Stop or restart no service.
+- [x] Run the complete npm gate, Rust format, workspace clippy, workspace tests, and musl release build. Verify generated drift.
 - [ ] Commit with Conventional Commits and push this workspace branch.
 - [ ] Review the complete diff against `origin/main` after push with the `implementation-review` skill. Check each finding independently. Apply the fix rule and re-review fixes.
 - [ ] Delete this plan after all other required work and review pass. Preserve its dated decisions in the PR description.
 - [ ] Open a separate PR into `main`. Watch every workflow of the final commit to its end. Leave the PR for a member to merge.
+
+Combined gate evidence is `.context/runner-process-start-identity/post-main/gates.json` and its named logs.

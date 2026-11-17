@@ -137,7 +137,8 @@ The musl build needs a C compiler for musl. On Ubuntu, install the
 - [update/ports.rs](src/update/ports.rs) defines disk, process, and updater boundaries.
 - [update/disk.rs](src/update/disk.rs) stores complete versions and locks.
 - [update_tests.rs](tests/update_tests.rs) checks real files and local HTTP downloads.
-- [runner_command.rs](src/runner_command.rs) makes the process-start ID once, and composes the full runner and graceful shutdown.
+- [runner_command.rs](src/runner_command.rs) makes one `RunnerStart` before its reconstruction loop, and composes the full runner and graceful shutdown.
+- [runner_start.rs](src/runner_start.rs) owns `RunnerStart`, which makes the process-start ID and gives it to each `SavedRunnerLink`.
 - [runner_update/idle.rs](src/runner_update/idle.rs) shares one idle update attempt across fresh runner instances and disables readiness afterward.
 - [runner_update/releases.rs](src/runner_update/releases.rs) checks complete releases and running-release confirmation through `DiskStore`.
 - [runner_update/swap.rs](src/runner_update/swap.rs) applies a release and checks whether to reconnect or exec the current launcher.
