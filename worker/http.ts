@@ -1,4 +1,10 @@
 import type { ApiErrorBody } from '../src/shared/api'
+import {
+  unexpectedErrorFields,
+  unreadableErrorFields,
+  type UnexpectedErrorFields,
+} from './unexpected-error'
+import { warnWorker } from './warnings'
 
 export class HttpError extends Error {
   readonly status: number
@@ -18,7 +24,53 @@ export class HttpError extends Error {
   }
 }
 
-export function errorResponse(error: unknown): Response {
+/**
+ * Cloudflare marks an error of a Durable Object that restarted, such as for
+ * a deploy, with `durableObjectReset`. An old object that a deploy replaced
+ * can still run a request, and its storage calls fail with a text that
+ * names the code update.
+ */
+const CODE_UPDATED = /Durable Object\b.*\bcode (?:was|has been) updated/i
+
+function objectRestarted(error: unknown): boolean {
+  try {
+    if (!isRecord(error)) return false
+    if (error.durableObjectReset === true) return true
+    return error instanceof Error && CODE_UPDATED.test(error.message)
+  } catch {
+    return false
+  }
+}
+
+/** The log never changes the reply, also when the error throws on a read. */
+function warnUnexpected(error: unknown, request?: Request): void {
+  let fields: UnexpectedErrorFields
+  try {
+    fields = unexpectedErrorFields(error, request)
+  } catch {
+    fields = unreadableErrorFields
+  }
+  warnWorker({ kind: 'unexpected_error', ...fields })
+}
+
+/**
+ * The API error body of an error. An error that is not an `HttpError` also
+ * writes the `unexpected_error` warning, with the route of `request` when
+ * the caller gives it.
+ */
+export function errorResponse(error: unknown, request?: Request): Response {
+  if (!(error instanceof HttpError)) warnUnexpected(error, request)
+  if (objectRestarted(error)) {
+    return Response.json(
+      {
+        error: {
+          code: 'server_restarted',
+          message: 'The server restarted. Try again.',
+        },
+      } satisfies ApiErrorBody,
+      { status: 503 },
+    )
+  }
   if (error instanceof HttpError) {
     return Response.json(
       {

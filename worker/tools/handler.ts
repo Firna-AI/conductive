@@ -172,7 +172,7 @@ export function createAgentToolsHandler(
         Response.json(createdWorkspace(result), { status: 201 }),
       )
     } catch (error) {
-      return privateResponse(errorResponse(error))
+      return privateResponse(errorResponse(error, request))
     }
   }
 }

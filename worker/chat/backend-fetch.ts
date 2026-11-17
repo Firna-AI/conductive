@@ -37,6 +37,6 @@ export async function fetchWorkspaceChat(
       () => chat.flushRunner(),
     )
   } catch (error) {
-    return privateResponse(errorResponse(error))
+    return privateResponse(errorResponse(error, request))
   }
 }
