@@ -107,8 +107,9 @@ These are my calls, made on 2026-11-17 under the answers above.
 - **The notice of a nested section move:** its text stays. The tool
   description and the CLI help teach the new target. Reason: older tools
   cannot send the new fields.
-- **Open tabs:** the write publishes each changed workspace. The published
-  record already holds `parentId`, and the list places each row from it.
+- **Open tabs:** the write publishes each changed workspace. An open tab
+  keeps the listed parent, section, and order together. A record with a
+  different `parentId` requests a fresh list read after any current read finishes.
 - **The creator record:** a move changes only `parent_workspace_id`.
   `created_by_workspace_id` keeps the creator.
 - **Input edge cases:** `topLevel: false` is no target. `parentId: null`

@@ -1,5 +1,7 @@
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
+import { requireCreationParent } from '../lifecycle/creation-parent'
+import { workspaceRuntime } from '../lifecycle/runtime'
 import { readWorkspace } from '../lifecycle/workspace-data'
 import { requireShellWriter } from './feature-shell-access'
 import {
@@ -30,6 +32,12 @@ export async function changeWorkspaceMetadata(
   const current = await readWorkspace(env.DB, orgId, workspaceId)
   requireWritableWorkspace(current)
   const input = readInput()
+  if (input.target?.kind === 'parent')
+    await requireCreationParent(
+      workspaceRuntime(env, dependencies),
+      orgId,
+      input.target.id,
+    )
   if (
     input.sectionId !== undefined &&
     !(await shellSectionExists(env.DB, orgId, input.sectionId))

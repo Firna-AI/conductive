@@ -257,6 +257,7 @@ The machine tools use the configured app origin instead.
   inside the batch. `readWorkspaceMove` reads only the tool reply's notice.
 - Agent move targets use `writeWorkspaceParentChange` in
   [`workspace-parent-change-data.ts`](workspace-parent-change-data.ts).
+  The shared metadata writer waits for a target parent's creation admission.
   The batch checks the target, depth, pending creates, archive state, and
   current membership before it writes. It changes the root parent link,
   each descendant's section, and the top-level places together. A target

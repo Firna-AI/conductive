@@ -5,6 +5,7 @@ import { workspaceParent } from '../tools/workspace-parent-data'
 import {
   beforeFirstListBatch,
   setupShellListTests,
+  suspendBeforeFirstListBatch,
   type ShellListFixture,
 } from './shell-list.test-support'
 import { writeWorkspaceParentChange } from './workspace-parent-change-data'
@@ -163,4 +164,40 @@ it('refuses the insert when a move deepens its parent after the first create che
       )
       .first(),
   ).toBeNull()
+})
+
+it('keeps every placement and timestamp when org suspension wins a detachment batch', async () => {
+  const fixture = fixtureForTest()
+  const { db, orgId, user, generalId, reviewId } = fixture
+  await seedWorkspaceTree(fixture, [
+    { id: 'root', sectionId: generalId, position: 0 },
+    { id: 'moving', sectionId: generalId, position: 1, parentId: 'root' },
+    { id: 'child', sectionId: generalId, position: 2, parentId: 'moving' },
+    { id: 'first', sectionId: reviewId, position: 0 },
+    { id: 'second', sectionId: reviewId, position: 1 },
+  ])
+  const stored = async () => ({
+    places: await storedTreePlaces(fixture),
+    timestamps: (
+      await db
+        .prepare(
+          'SELECT id, updated_at AS updatedAt FROM workspaces WHERE org_id = ? ORDER BY id',
+        )
+        .bind(orgId)
+        .all<{ id: string; updatedAt: number }>()
+    ).results,
+  })
+  const before = await stored()
+  const intercepted = suspendBeforeFirstListBatch(fixture)
+  const result = await writeWorkspaceParentChange(intercepted.db, {
+    orgId,
+    userId: user.id,
+    workspaceId: 'moving',
+    sectionId: reviewId,
+    target: { kind: 'top-level' },
+    now: TEST_TIME + 200,
+  })
+  expect(intercepted.calls()).toBe(1)
+  expect.soft(result).toEqual({ updated: false, workspaceIds: [] })
+  expect(await stored()).toEqual(before)
 })
