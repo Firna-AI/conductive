@@ -1024,7 +1024,7 @@ Depends on: every other milestone
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
-- [ ] Bump `TERMS_VERSION` in `src/shared/terms.ts` and set the
+- [x] Bump `TERMS_VERSION` in `src/shared/terms.ts` and set the
       effective dates of the Terms and Privacy pages, because Milestone 2
       changed both pages.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
