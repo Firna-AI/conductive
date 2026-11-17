@@ -20,6 +20,7 @@ pub(super) struct LocalGit {
     pub(super) requests: Mutex<Vec<Vec<String>>>,
     pub(super) fail_checkout: AtomicBool,
     pub(super) hold_checkout: AtomicBool,
+    pub(super) timeout_fetch: AtomicBool,
     pub(super) entered: Notify,
     pub(super) released: watch::Sender<bool>,
 }
@@ -27,7 +28,19 @@ pub(super) struct LocalGit {
 impl SkillsGit for LocalGit {
     async fn run(&self, mut request: SkillsGitRequest) -> Result<String> {
         self.requests.lock().unwrap().push(request.args.clone());
-        if request.args.iter().any(|argument| argument == "checkout") {
+        if request.args.iter().any(|argument| argument == "fetch")
+            && self.timeout_fetch.swap(false, Ordering::SeqCst)
+        {
+            let store = Path::new(&request.args[1]);
+            std::fs::write(store.join("index.lock"), "interrupted index").unwrap();
+            std::fs::write(store.join("shallow.lock"), "interrupted fetch").unwrap();
+            return Err(Error::Timeout);
+        }
+        if request
+            .args
+            .iter()
+            .any(|argument| argument == "checkout-index")
+        {
             if self.fail_checkout.load(Ordering::SeqCst) {
                 return Err(Error::Git { code: Some(1) });
             }
@@ -78,6 +91,7 @@ impl Fixture {
                 requests: Mutex::new(vec![]),
                 fail_checkout: AtomicBool::new(false),
                 hold_checkout: AtomicBool::new(false),
+                timeout_fetch: AtomicBool::new(false),
                 entered: Notify::new(),
                 released: watch::channel(false).0,
             }),

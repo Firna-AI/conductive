@@ -70,7 +70,7 @@ it.each(['claude', 'codex'] as const)(
     )
     const first = paths[2]
     const original = await realpath(first)
-    expect(original).toBe(join(h.copy, 'skills', 'unique'))
+    expect(original).not.toBe(join(h.copy, 'skills', 'unique'))
     expect(await readFile(join(first, 'SKILL.md'), 'utf8')).toContain(
       'Original org skill',
     )
@@ -111,7 +111,8 @@ it.each(['claude', 'codex'] as const)(
     const next = await h.open()
     onTestFinished(() => next.close())
     const second = (await h.paths())[2]
-    expect(await realpath(second)).toBe(join(nextCopy, 'skills', 'unique'))
+    expect(await realpath(second)).not.toBe(join(nextCopy, 'skills', 'unique'))
+    expect(await realpath(second)).not.toBe(original)
     expect(await readFile(join(second, 'SKILL.md'), 'utf8')).toContain(
       'Updated org skill',
     )
@@ -121,7 +122,7 @@ it.each(['claude', 'codex'] as const)(
         () => true,
         () => false,
       ),
-    ).toBe(agent === 'codex')
+    ).toBe(false)
     expect(await readdir(second)).toEqual(['SKILL.md', 'nested'])
     await next.close()
   },
@@ -134,7 +135,7 @@ it('gives a root skill its repository name and removes the temporary Claude link
   onTestFinished(() => provider.close())
   const paths = await h.paths()
   expect(paths.map((path) => basename(path))).toEqual(['org-skills'])
-  expect(await realpath(paths[0])).toBe(h.copy)
+  expect(await realpath(paths[0])).not.toBe(h.copy)
   await provider.close()
   expect(
     await access(paths[0]).then(

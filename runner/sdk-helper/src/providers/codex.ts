@@ -105,7 +105,7 @@ export function createCodexFactory(
       await lifetime.close()
       throw error
     }
-    const skills = await prepareCodexSkills(options)
+    const skills = await prepareCodexSkills(options, lifetime)
     const configs = {
       ...settings.config,
       'mcp_servers.conductive.command': WORKSPACE_TOOLS_MCP.command,

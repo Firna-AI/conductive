@@ -1,7 +1,8 @@
 import { readdir, realpath, stat } from 'node:fs/promises'
 import { join } from 'node:path'
 
-import { selectAgentSkills } from './skills'
+import type { ProviderLifetime } from './lifetime'
+import { prepareSkillView } from './skill-view'
 import type { ProviderOptions } from './types'
 
 async function nestedSkills(root: string): Promise<string[]> {
@@ -26,9 +27,14 @@ async function nestedSkills(root: string): Promise<string[]> {
   return paths.sort()
 }
 
-export async function prepareCodexSkills(options: ProviderOptions) {
+export async function prepareCodexSkills(
+  options: ProviderOptions,
+  lifetime: ProviderLifetime,
+) {
   try {
-    const selected = await selectAgentSkills(options, 'codex')
+    const view = await prepareSkillView(options, 'codex', lifetime)
+    if (!view) return { extraRoots: [], args: [] }
+    const selected = view.skills
     const disabled = (
       await Promise.all(selected.map((skill) => nestedSkills(skill.path)))
     ).flat()

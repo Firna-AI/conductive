@@ -1,21 +1,17 @@
 import { readFile, realpath, readdir, stat } from 'node:fs/promises'
-import { basename, join } from 'node:path'
+import { join, relative } from 'node:path'
 
 import type { Agent } from '../generated/Agent'
 import { orgSkillFolders } from './skill-folders'
+import { skillMetadata } from './skill-metadata'
 import type { ProviderOptions } from './types'
 
-async function names(path: string): Promise<string[]> {
+async function metadata(path: string, agent: Agent) {
   const content = await readFile(join(path, 'SKILL.md'), 'utf8')
-  const frontmatter = /^---\r?\n([\s\S]*?)\r?\n---/u.exec(content)?.[1]
-  const name = /^name:\s*(.*?)\s*$/mu
-    .exec(frontmatter ?? '')?.[1]
-    .replace(/\s+#.*$/u, '')
-    .replace(/^['"]|['"]$/gu, '')
-  return name ? [basename(path), name] : [basename(path)]
+  return skillMetadata(content, path, agent)
 }
 
-async function repositoryNames(cwd: string, agent: Agent) {
+async function repositoryNames(options: ProviderOptions, agent: Agent) {
   const result = new Set<string>()
   const visited = new Set<string>()
   const walk = async (directory: string): Promise<void> => {
@@ -36,7 +32,12 @@ async function repositoryNames(cwd: string, agent: Agent) {
           (entry.isFile() || entry.isSymbolicLink()),
       )
     ) {
-      for (const name of await names(directory)) result.add(name)
+      const value = await metadata(directory, agent)
+      for (const name of value.aliases) result.add(name)
+      if (!value.name)
+        options.warn(
+          `The workspace skill ${relative(options.cwd, directory)} has no usable ${agent === 'claude' ? 'Claude' : 'Codex'} name. It will not take precedence.`,
+        )
       if (agent === 'claude') return
     }
     for (const entry of entries)
@@ -47,7 +48,7 @@ async function repositoryNames(cwd: string, agent: Agent) {
         await walk(join(directory, entry.name))
   }
   for (const folder of agent === 'claude' ? ['.claude'] : ['.agents', '.codex'])
-    await walk(join(cwd, folder, 'skills'))
+    await walk(join(options.cwd, folder, 'skills'))
   return result
 }
 
@@ -57,14 +58,31 @@ export async function selectAgentSkills(
 ) {
   const skills = await orgSkillFolders(options)
   if (!skills.length) return []
-  const local = await repositoryNames(options.cwd, agent)
+  const local = await repositoryNames(options, agent)
   const selected: typeof skills = []
+  const shown = new Map<string, string>()
   for (const skill of skills) {
-    if ((await names(skill.path)).some((name) => local.has(name))) {
+    const value = await metadata(skill.path, agent)
+    const path = relative(options.skillsDirectory ?? '', skill.path)
+    if (!value.name) {
+      options.warn(
+        `The org skill ${path} has no usable ${agent === 'claude' ? 'Claude' : 'Codex'} name. It will not load.`,
+      )
+    } else if (value.aliases.some((name) => local.has(name))) {
       options.warn(
         `The workspace skill ${skill.name} takes precedence. The org skill will not load.`,
       )
-    } else selected.push(skill)
+    } else {
+      const kept = shown.get(value.name)
+      if (kept !== undefined)
+        options.warn(
+          `The org skill ${value.name} uses ${kept}. The duplicate ${path} will not load.`,
+        )
+      else {
+        shown.set(value.name, path)
+        selected.push(skill)
+      }
+    }
   }
   return selected
 }

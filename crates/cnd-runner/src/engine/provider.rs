@@ -65,11 +65,12 @@ impl Session {
             turn_id,
             ..
         } = &turn.first;
+        turn.skills_lease = self.skills.current();
         let options = HelperOptions {
-            skills_directory: self
-                .skills
-                .current()
-                .map(|path| path.to_string_lossy().into_owned()),
+            skills_directory: turn
+                .skills_lease
+                .as_ref()
+                .map(|lease| lease.path().to_string_lossy().into_owned()),
             cwd: self
                 .dependencies
                 .configuration

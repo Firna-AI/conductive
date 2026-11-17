@@ -160,6 +160,7 @@ impl Session {
             resolved: BTreeSet::new(),
             waiting: VecDeque::new(),
             helper: None,
+            skills_lease: None,
             baseline: None,
             output: TurnOutput::new(context),
             background: (message.choice.agent == Agent::Claude).then(Background::default),

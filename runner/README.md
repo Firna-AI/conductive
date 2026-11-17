@@ -50,10 +50,18 @@ minutes. It keeps complete commit folders under `~/.conductive/skills/`.
 Its Git process has no inherited credentials or credential helper.
 A failed copy warns and stops no start or turn.
 
-Each helper start gets the current complete folder through `skillsDirectory`.
-The helper uses the shared folder rule, omits workspace name clashes, and
-gives Claude skill links in an additional directory and Codex extra skill
+Each helper start leases the current complete folder through `skillsDirectory`.
+The helper uses the shared folder rule and compares names as each agent
+shows them. Workspace skills win. Duplicate org names keep the first path.
+The helper exports a safe view for both agents. It removes executable
+metadata and makes inline shell commands inert. Its
+[README](sdk-helper/README.md) explains the metadata allowlist.
+Claude gets skill links in an additional directory. Codex gets extra skill
 roots. Existing turns keep their folders. The next turn gets updates.
+
+The runner removes escaping and dangling links before publication.
+It reclaims retired copies after their last helper closes. Its startup
+sweep removes crash leftovers and prunes unreachable Git objects.
 [Org skills](../docs/protocol/org-skills.md) states the requirements.
 
 ## Event limits

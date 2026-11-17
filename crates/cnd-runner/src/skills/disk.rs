@@ -11,10 +11,12 @@ use crate::config::is_skills_repository;
 
 use super::boundary::{SkillsGit, SkillsGitRequest, SkillsStorage};
 use super::error::{Error, ErrorResultExt, Result};
+use super::files::{commit_id, exists, read_link, recover_locks, remove, text};
+use super::links::close_snapshot;
 
 /// Disk storage for immutable public repository copies outside workspace folders.
 pub struct DiskSkills {
-    root: PathBuf,
+    pub(super) root: PathBuf,
     git: Arc<dyn SkillsGit>,
 }
 
@@ -27,7 +29,7 @@ impl DiskSkills {
         }
     }
 
-    async fn git(&self, args: Vec<String>) -> Result<String> {
+    pub(super) async fn git(&self, args: Vec<String>) -> Result<String> {
         self.git
             .run(SkillsGitRequest {
                 home: self.root.join("git-home"),
@@ -36,11 +38,11 @@ impl DiskSkills {
             .await
     }
 
-    fn named(&self, repository: &str) -> PathBuf {
+    pub(super) fn named(&self, repository: &str) -> PathBuf {
         self.root.join("repositories").join(repository)
     }
 
-    async fn current(&self, repository: &str) -> Result<Option<PathBuf>> {
+    pub(super) async fn current(&self, repository: &str) -> Result<Option<PathBuf>> {
         let Some(snapshot) = read_link(&self.root.join("repository")).await? else {
             return Ok(None);
         };
@@ -57,11 +59,21 @@ impl DiskSkills {
         }
         Ok(exists(&snapshot).await?.then_some(snapshot))
     }
+
+    async fn publish(&self, snapshot: &Path) -> Result<()> {
+        let staging = tempfile::tempdir_in(&self.root).internal()?;
+        let link = staging.path().join("repository");
+        fs::symlink(snapshot, &link).await.internal()?;
+        fs::rename(&link, self.root.join("repository"))
+            .await
+            .internal()
+    }
 }
 
 #[async_trait]
 impl SkillsStorage for DiskSkills {
     async fn prepare(&self, repository: Option<&str>) -> Result<Option<PathBuf>> {
+        self.remove_sessions().await?;
         let repository = repository.filter(|name| is_skills_repository(name));
         let selected = match fs::read_to_string(self.root.join("name")).await {
             Ok(name) => Some(name),
@@ -77,13 +89,18 @@ impl SkillsStorage for DiskSkills {
                     .internal()?;
             }
         }
-        match repository {
-            Some(repository) => self.current(repository).await,
-            None => Ok(None),
+        let Some(repository) = repository else {
+            return Ok(None);
+        };
+        let current = self.current(repository).await?;
+        if let Some(current) = &current {
+            close_snapshot(current).await?;
         }
+        self.sweep(repository, &[]).await?;
+        Ok(current)
     }
 
-    async fn update(&self, repository: &str) -> Result<PathBuf> {
+    async fn update(&self, repository: &str) -> Result<Option<PathBuf>> {
         if !is_skills_repository(repository) {
             return Err(Error::InvalidRepository);
         }
@@ -94,6 +111,7 @@ impl SkillsStorage for DiskSkills {
         fs::create_dir_all(self.root.join("git-home"))
             .await
             .internal()?;
+        recover_locks(&git).await?;
         self.git(vec![
             "init".into(),
             "--bare".into(),
@@ -101,6 +119,27 @@ impl SkillsStorage for DiskSkills {
             text(&git),
         ])
         .await?;
+        let url = format!("https://github.com/{repository}.git");
+        match self
+            .git(vec![
+                "-C".into(),
+                text(&git),
+                "ls-remote".into(),
+                "--exit-code".into(),
+                "--".into(),
+                url.clone(),
+                "HEAD".into(),
+            ])
+            .await
+        {
+            Err(Error::Git { code: Some(2) }) => {
+                remove(&self.root.join("repository")).await?;
+                return Ok(None);
+            }
+            result => {
+                result?;
+            }
+        }
         self.git(vec![
             "-C".into(),
             text(&git),
@@ -108,7 +147,7 @@ impl SkillsStorage for DiskSkills {
             "--depth=1".into(),
             "--no-tags".into(),
             "--".into(),
-            format!("https://github.com/{repository}.git"),
+            url,
             "HEAD".into(),
         ])
         .await?;
@@ -126,85 +165,49 @@ impl SkillsStorage for DiskSkills {
             return Err(Error::InvalidCommit);
         }
         let complete = commits.join(commit);
-        let snapshot = complete.join(
-            Path::new(repository)
-                .file_name()
-                .ok_or(Error::InvalidRepository)?,
-        );
-        if self.current(repository).await?.as_ref() == Some(&snapshot) {
-            return Ok(snapshot);
-        }
+        let name = Path::new(repository)
+            .file_name()
+            .ok_or(Error::InvalidRepository)?;
+        let snapshot = complete.join(name);
         if !exists(&snapshot).await? {
             let staging = tempfile::tempdir_in(&commits).internal()?;
-            let folder = staging.path().join(
-                Path::new(repository)
-                    .file_name()
-                    .ok_or(Error::InvalidRepository)?,
-            );
+            let folder = staging.path().join(name);
             fs::create_dir(&folder).await.internal()?;
             self.git(vec![
                 "-C".into(),
                 text(&git),
-                format!("--work-tree={}", folder.display()),
-                "checkout".into(),
-                "--force".into(),
+                "read-tree".into(),
                 commit.into(),
-                "--".into(),
-                ".".into(),
             ])
             .await?;
+            self.git(vec![
+                "-C".into(),
+                text(&git),
+                format!("--work-tree={}", folder.display()),
+                "checkout-index".into(),
+                "--all".into(),
+                "--force".into(),
+            ])
+            .await?;
+            close_snapshot(&folder).await?;
             fs::rename(staging.path(), &complete).await.internal()?;
         }
         self.git(vec![
             "-C".into(),
             text(&git),
             "update-ref".into(),
-            format!("refs/skills/{commit}"),
+            "refs/skills/published".into(),
             commit.into(),
         ])
         .await?;
-        let staging = tempfile::tempdir_in(&self.root).internal()?;
-        let link = staging.path().join("repository");
-        fs::symlink(&snapshot, &link).await.internal()?;
-        fs::rename(&link, self.root.join("repository"))
-            .await
-            .internal()?;
-        Ok(snapshot)
+        self.publish(&snapshot).await?;
+        Ok(Some(snapshot))
     }
-}
 
-fn text(path: &Path) -> String {
-    path.to_string_lossy().into_owned()
-}
-
-fn commit_id(value: &str) -> bool {
-    matches!(value.len(), 40 | 64)
-        && value
-            .bytes()
-            .all(|c| c.is_ascii_digit() || (b'a'..=b'f').contains(&c))
-}
-
-async fn exists(path: &Path) -> Result<bool> {
-    match fs::metadata(path).await {
-        Ok(metadata) => Ok(metadata.is_dir()),
-        Err(error) if error.kind() == ErrorKind::NotFound => Ok(false),
-        Err(error) => Err(error).internal(),
-    }
-}
-
-async fn read_link(path: &Path) -> Result<Option<PathBuf>> {
-    match fs::read_link(path).await {
-        Ok(target) => Ok(Some(target)),
-        Err(error) if error.kind() == ErrorKind::NotFound => Ok(None),
-        Err(error) => Err(error).internal(),
-    }
-}
-
-async fn remove(path: &Path) -> Result<()> {
-    match fs::symlink_metadata(path).await {
-        Ok(metadata) if metadata.is_dir() => fs::remove_dir_all(path).await.internal(),
-        Ok(_) => fs::remove_file(path).await.internal(),
-        Err(error) if error.kind() == ErrorKind::NotFound => Ok(()),
-        Err(error) => Err(error).internal(),
+    async fn sweep(&self, repository: &str, retained: &[PathBuf]) -> Result<()> {
+        if !is_skills_repository(repository) {
+            return Err(Error::InvalidRepository);
+        }
+        self.reclaim(repository, retained).await
     }
 }

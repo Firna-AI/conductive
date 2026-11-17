@@ -16,7 +16,7 @@ async fn copies_updates_and_retains_complete_snapshots_after_failed_fetch_and_re
     h.publish();
     let storage = h.storage();
     assert_eq!(storage.prepare(Some("org/skills")).await.unwrap(), None);
-    let original = storage.update("org/skills").await.unwrap();
+    let original = storage.update("org/skills").await.unwrap().unwrap();
     assert_eq!(
         std::fs::read_to_string(original.join("skills/alpha/SKILL.md")).unwrap(),
         "Original complete skill"
@@ -56,17 +56,26 @@ async fn copies_updates_and_retains_complete_snapshots_after_failed_fetch_and_re
     );
     h.git.released.send_replace(true);
     h.git.hold_checkout.store(false, Ordering::SeqCst);
-    let updated = update.await.unwrap().unwrap();
+    let updated = update.await.unwrap().unwrap().unwrap();
     assert_ne!(original, updated);
     assert_eq!(
         std::fs::read_to_string(updated.join("skills/alpha/SKILL.md")).unwrap(),
         "Updated complete skill"
     );
+    storage
+        .sweep("org/skills", std::slice::from_ref(&original))
+        .await
+        .unwrap();
     assert_eq!(
         std::fs::read_to_string(original.join("skills/alpha/SKILL.md")).unwrap(),
         "Original complete skill"
     );
-    assert_eq!(storage.update("org/skills").await.unwrap(), updated);
+    storage.sweep("org/skills", &[]).await.unwrap();
+    assert!(!original.exists());
+    assert_eq!(
+        storage.update("org/skills").await.unwrap().unwrap(),
+        updated
+    );
     std::fs::rename(&h.remote, h.remote.with_extension("gone")).unwrap();
     assert!(matches!(
         storage.update("org/skills").await,
@@ -111,7 +120,7 @@ async fn empty_invalid_and_replaced_selections_delete_the_old_copy_before_a_fail
     for selection in [None, Some("../unsafe"), Some("org/private-or-missing")] {
         let storage = h.storage();
         storage.prepare(Some("org/skills")).await.unwrap();
-        let original = storage.update("org/skills").await.unwrap();
+        let original = storage.update("org/skills").await.unwrap().unwrap();
         assert_eq!(storage.prepare(selection).await.unwrap(), None);
         assert!(!original.exists());
         if selection == Some("org/private-or-missing") {
@@ -134,7 +143,7 @@ async fn follows_default_branch_head_without_changing_an_existing_snapshot() {
     h.publish();
     let storage = h.storage();
     storage.prepare(Some("org/skills")).await.unwrap();
-    let original = storage.update("org/skills").await.unwrap();
+    let original = storage.update("org/skills").await.unwrap().unwrap();
     git(&h.source, &["checkout", "-b", "new-default"]);
     h.write("SKILL.md", "New default branch");
     git(&h.source, &["add", "."]);
@@ -152,7 +161,7 @@ async fn follows_default_branch_head_without_changing_an_existing_snapshot() {
         &h.remote,
         &["symbolic-ref", "HEAD", "refs/heads/new-default"],
     );
-    let updated = storage.update("org/skills").await.unwrap();
+    let updated = storage.update("org/skills").await.unwrap().unwrap();
     assert_eq!(
         std::fs::read_to_string(updated.join("SKILL.md")).unwrap(),
         "New default branch"

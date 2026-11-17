@@ -33,11 +33,14 @@ async fn turns_start_without_a_copy_and_resumed_turns_capture_the_latest_complet
     h.command(turn("skills-session", "after-copy")?).await?;
     let second = h.latest()?;
     assert_eq!(directory(&second).as_deref(), Some("/commit-one/skills"));
+    let mut released = Box::pin(h.skills.1.notified());
     *h.skills.0.lock().map_err(|_| "test lock poisoned")? =
         Some(PathBuf::from("/commit-two/skills"));
     assert_eq!(directory(&second).as_deref(), Some("/commit-one/skills"));
+    assert!(futures_util::poll!(&mut released).is_pending());
     second.result(&[]);
     h.engine.idle().await?;
+    assert!(futures_util::poll!(&mut released).is_ready());
     h.command(turn("skills-session", "after-update")?).await?;
     let third = h.latest()?;
     assert_eq!(directory(&third).as_deref(), Some("/commit-two/skills"));

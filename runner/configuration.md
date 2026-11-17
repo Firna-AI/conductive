@@ -62,8 +62,10 @@ The [agent runner](README.md) reads these variables when the service starts.
   including a resume. An empty value removes the copy. A changed name
   removes the previous repository before the new copy starts. Invalid
   names warn and load no org skills. The runner never uses a GitHub token
-  for this copy. [Org skills](../docs/protocol/org-skills.md#the-copy)
-  gives its background timing and failure behavior.
+  for this copy. A repository with no commits gives no skills. Its empty
+  state warns once until the state changes.
+  [Org skills](../docs/protocol/org-skills.md#the-copy) gives its background
+  timing and failure behavior.
 - After a failed or dropped connection, the runner connects again in 1 second.
 
 When a required variable is missing or the state file cannot be read,

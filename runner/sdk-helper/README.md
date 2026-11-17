@@ -38,6 +38,42 @@ inputs and the image sentence after the read line.
 [What the agent gets](../../docs/protocol/attachment-transfers.md#what-the-agent-gets)
 states the read line and the size rule.
 
+## Org skills
+
+Both adapters load org skills from a temporary view in
+`~/.conductive/skill-sessions/turn-*/`. They do not load the raw snapshot.
+The runner closes snapshot links before publication and keeps the source
+snapshot until the helper closes. The view maps each support link to its
+target inside the view. It walks physical directories, so a link to an
+ancestor cannot cause a loop. It sanitizes every `SKILL.md`, including
+nested files and linked instruction files. Close removes the view. The
+runner's startup sweep removes views left by a killed helper.
+
+The frontmatter allowlist keeps `name`, `description`, `argument-hint`,
+`arguments`, `disable-model-invocation`, `user-invocable`, `when_to_use`,
+`version`, `license`, `compatibility`, and `metadata.short-description`.
+These fields describe a skill or control its invocation. All execution,
+tool-grant, model-setting, and unknown fields are omitted. Shell markers
+in the body become ordinary inline or fenced code. Scripts and other
+support files remain available for an agent to choose to read or run.
+
+Codex also reads `agents/openai.yaml`. The view keeps only its descriptive
+`interface` fields (`display_name`, `short_description`, `icon_small`,
+`icon_large`, `brand_color`, `default_prompt`) and
+`policy.allow_implicit_invocation`. It omits MCP dependencies, install and
+execution fields, and unknown fields. This also applies through support
+links. Per-process settings disable each nested Codex skill.
+
+One YAML reader follows each pinned agent's parsing and repair rules for
+both workspace and org names. Workspace skills take precedence. Claude
+also reserves its folder alias. Codex uses the folder only as a fallback
+when the parsed name is empty. It requires a description and limits names
+to 64 characters. After shared folder selection, the first org skill in
+path order with a given agent-shown name wins. Unusable names and duplicate
+names produce warnings. Workspace skill files are unchanged.
+[Org skills](../../docs/protocol/org-skills.md#what-loads) gives the loading
+requirements.
+
 ## Development
 
 Run from the repository root with Node 24:
@@ -81,5 +117,7 @@ The Rust runner drives the helper directly. The release contains no separate run
 - [read-request.ts](src/read-request.ts) and [read-output.ts](src/read-output.ts) validate boundary data.
 - [claude.ts](src/providers/claude.ts) and [codex.ts](src/providers/codex.ts) start the two adapters.
 - [lifetime.ts](src/providers/lifetime.ts) waits for agent exit and removes credentials.
+- [skill-view.ts](src/providers/skill-view.ts) exports and removes the safe org skills view.
+- [skill-metadata.ts](src/providers/skill-metadata.ts) reads names and limits exported metadata.
 - [test-support](test-support/) holds the fake SDK query, App Server, and provider fixtures.
 - [Rust driver](../../crates/cnd-runner/src/helper/driver.rs) drives helper processes.

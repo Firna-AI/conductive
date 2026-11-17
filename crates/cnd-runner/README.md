@@ -70,9 +70,14 @@ The skills schedule runs its first copy without blocking startup and checks
 every five minutes. It retains the last complete copy across failed fetches
 and resumes. A removed or replaced selection deletes the old repository.
 Git runs with a clean environment, no credential helper, and a thirty-second
-time limit. Complete commit folders remain immutable while turns use them.
-Each helper start captures the current folder. The helper owns skill folder
-selection and the agent setup. Failures warn and stop no start or turn.
+time limit. The export replaces the whole tree, including an empty tree.
+Before publication, it removes links that escape the copy or point nowhere.
+Each helper leases the current folder until it closes. The background job
+reclaims unleased retired copies. At startup it also removes crash staging
+and abandoned helper views, and prunes unreachable Git objects.
+The helper owns skill folder selection and the safe agent view.
+Failures warn and stop no start or turn. An unborn repository gives no
+skills and warns only when its state changes.
 
 File reports keep separate tree and changes histories. Filtering runs on each
 complete report before splitting. Multipart reports keep whole entries and
@@ -168,6 +173,8 @@ and connection drops. It does not run the Worker.
 - [startup.rs](src/helper/startup.rs): `RunnerStartup` clears stale credentials, warms the SDK, and confirms a welcome.
 - [service.rs](src/skills/service.rs): `SkillsCopy` owns the background copy schedule and current complete folder.
 - [disk.rs](src/skills/disk.rs): `DiskSkills` owns selection cleanup and atomic publication of Git snapshots.
+- [lease.rs](src/skills/lease.rs): `SkillsLease` retains a complete copy while a helper reads it.
+- [sweep.rs](src/skills/sweep.rs): the background sweep reclaims retired copies and crash leftovers.
 - [git.rs](src/skills/git.rs): `CleanGit` owns credential-free Git children and their time limit.
 - [runner_command.rs](../cnd-cli/src/runner_command.rs): the CLI composes the full runner and signal handling.
 - [limits.rs](src/limits.rs): `bound_event` applies serialized chat excerpts.

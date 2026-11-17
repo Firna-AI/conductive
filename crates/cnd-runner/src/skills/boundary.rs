@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use async_trait::async_trait;
 
 use super::error::Result;
+use super::lease::SkillsLease;
 
 /// Lifecycle and last complete copy shared by independent agent sessions.
 #[cfg_attr(test, unimock::unimock(api = OrgSkillsMock))]
@@ -12,8 +13,8 @@ use super::error::Result;
 pub trait OrgSkills: Send + Sync {
     /// Schedule the first copy without waiting for storage or Git.
     async fn start(&self);
-    /// Capture the last complete immutable folder without waiting for a check.
-    fn current(&self) -> Option<PathBuf>;
+    /// Lease the last complete immutable folder without waiting for a check.
+    fn current(&self) -> Option<SkillsLease>;
     /// Cancel background work and await its cleanup.
     async fn close(&self);
 }
@@ -24,8 +25,10 @@ pub trait OrgSkills: Send + Sync {
 pub trait SkillsStorage: Send + Sync {
     /// Remove an old selection and restore only a complete copy of this selection.
     async fn prepare(&self, repository: Option<&str>) -> Result<Option<PathBuf>>;
-    /// Fetch and publish a complete snapshot, retaining every earlier snapshot.
-    async fn update(&self, repository: &str) -> Result<PathBuf>;
+    /// Publish a complete snapshot, or no copy when the repository has no commits.
+    async fn update(&self, repository: &str) -> Result<Option<PathBuf>>;
+    /// Reclaim retired snapshots except those retained by the runner or live helpers.
+    async fn sweep(&self, repository: &str, retained: &[PathBuf]) -> Result<()>;
 }
 
 /// One Git call with a private home and literal command arguments.

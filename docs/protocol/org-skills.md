@@ -141,6 +141,7 @@ Skills section at `app/org-settings/cloud-computer` and
 
 - The agents get the skill folders of the copy. A skill folder is a
   folder that holds a `SKILL.md` file.
+- A link that leaves the copy, or points nowhere, is removed.
 - The skill folders lie at any depth under the `skills` folder at the top
   of the repository. This includes the folders whose names start with a
   dot. A folder inside a skill folder is not a skill folder of its own.
@@ -150,16 +151,19 @@ Skills section at `app/org-settings/cloud-computer` and
 - A repository without a `skills` folder that holds a `SKILL.md` file at
   its top level is one skill folder itself. Reason: a repository can hold
   a single skill.
+  The top-level folders of a root skill are not skill folders.
 - Reason: popular skills repositories use these layouts.
   `anthropics/skills` and `futex-ai/skills` use `skills/<name>/`.
   `openai/skills` uses `skills/.curated/<name>/` and
   `skills/.system/<name>/`. `ComposioHQ/awesome-claude-skills` uses
   folders at its top level.
-- When two skill folders have the same name, only the first in path order
-  loads. The runner writes a warning to its log.
+- When two skill folders have the same name that the agent shows, only
+  the first in path order loads. The runner writes a warning to its log.
 - Only the skill folders load. The agents get no hooks, MCP servers,
   agents, commands, or settings from the repository. Reason: hooks and the
   rest run code that no agent chose.
+- The agents get no frontmatter key that runs code or grants tools.
+  No inline command from a skill runs.
 - No rules file of the repository, such as a root `AGENTS.md`, reaches the
   agents (skills decision 3 A).
 - Reason: popular skills repositories keep no always-on rules in a common
@@ -171,7 +175,7 @@ Skills section at `app/org-settings/cloud-computer` and
   without those rules. For example, the skills of `futex-ai/skills` rely
   on its `global/AGENTS.md`.
 - A skill of the workspace's own repository wins over a skill of the copy
-  with the same name.
+  with the same name that the agent shows.
 
 ## Skills in a session
 
