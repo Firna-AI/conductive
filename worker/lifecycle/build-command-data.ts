@@ -1,5 +1,9 @@
 import { buildLogStatements } from './build-log-statements'
 
+/** The log lines of the snapshot step of a build or refresh. */
+export const SNAPSHOT_START_LOG = 'Saving the cloud computer image.\n'
+export const SNAPSHOT_DONE_LOG = 'Saved the cloud computer image.\n'
+
 export async function recordBuildCommand(
   db: D1Database,
   buildId: string,
@@ -12,6 +16,27 @@ export async function recordBuildCommand(
       .prepare('UPDATE image_build_jobs SET process_id = ? WHERE build_id = ?')
       .bind(processId, buildId),
     ...buildLogStatements(db, buildId, heading, now),
+  ])
+}
+
+/**
+ * Saves the name of a new snapshot with its log line, before the provider
+ * call. A retry finds the saved name and writes no second line.
+ */
+export async function recordBuildSnapshot(
+  db: D1Database,
+  buildId: string,
+  snapshotName: string,
+  providerAccount: string,
+  now: number,
+): Promise<void> {
+  await db.batch([
+    db
+      .prepare(
+        'UPDATE image_builds SET snapshot_name = ?, provider_account = ? WHERE id = ?',
+      )
+      .bind(snapshotName, providerAccount, buildId),
+    ...buildLogStatements(db, buildId, SNAPSHOT_START_LOG, now),
   ])
 }
 

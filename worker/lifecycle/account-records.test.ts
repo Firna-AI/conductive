@@ -170,7 +170,7 @@ it('keeps separate accounts for a build, its previous image, and its source job'
     providerAccount: 'boat-secondary',
     previousProviderAccount: 'boat',
   })
-  const intent = buildSnapshotIntent(db, job)
+  const intent = buildSnapshotIntent(db, job, runtime.dependencies.now())
   await intent.persist(intent.input)
   expect(await readBuildJob(db, org.id, job.buildId)).toMatchObject({
     snapshotName: intent.input.name,

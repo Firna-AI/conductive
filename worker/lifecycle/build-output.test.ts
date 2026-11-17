@@ -10,6 +10,7 @@ import {
   saveBuildOutput,
   writeBuildLog,
 } from './build-data'
+import { SNAPSHOT_DONE_LOG, SNAPSHOT_START_LOG } from './build-command-data'
 import { advanceImageBuild, startImageBuild } from './image-builds'
 import { finishImageBuild } from './image-test-support'
 
@@ -67,7 +68,11 @@ it('stores a detached status reply above two million output bytes in bounded row
       .map((event) => event.text)
       .join(''),
   ).toBe('x'.repeat(2_100_000))
-  expect(completed.log.at(-1)?.text).toBe('install done\n')
+  expect(completed.log.slice(-3).map((event) => event.text)).toEqual([
+    'install done\n',
+    SNAPSHOT_START_LOG,
+    SNAPSHOT_DONE_LOG,
+  ])
 })
 
 it('keeps UTF-8 characters and event order across all build log writers', async () => {

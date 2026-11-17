@@ -135,6 +135,13 @@ export function startBuild(backend: DevBackend, org: OrgState): BuildResponse {
     lines: [
       'Running the install script',
       ...commands(script).map((command) => `$ ${command}`),
+      // The Worker saves the snapshot only after a good install script.
+      ...(script.includes('exit 1')
+        ? []
+        : [
+            'Saving the cloud computer image.',
+            'Saved the cloud computer image.',
+          ]),
     ],
   }
   const chosen = org.repositories.filter((item) => item.selected).length
