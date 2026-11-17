@@ -34,7 +34,7 @@ import { startedApp } from '../test-render'
 import type { Viewport } from '../ui/viewport'
 import { filesHref } from './files/files-address'
 import { bodiesOf, emit, here, org, recordingSocket } from './kept-test-kit'
-import { previewPortHref, toolHref } from './tools/tool-address'
+import { previewPortHref } from './tools/tool-address'
 import { linksTo, linkTo, openTab } from './wiring-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
@@ -101,6 +101,9 @@ describe('links of chat text in the workspace screen', () => {
       at: navigation.href(),
       opens: await bodiesOf(server, 'POST', previewsPath(org, id), 0),
     }
+    // The Preview tab took the place of the chat, so go back to the chat.
+    navigation.push(here)
+    await settle()
     click(linkTo(view, agents))
     await settle()
     expect({ hidden, shown, page: navigation.href() }).toEqual({
@@ -108,7 +111,8 @@ describe('links of chat text in the workspace screen', () => {
       shown: {
         column: true,
         frame: 'Preview of port 8080',
-        at: toolHref(org, id, 'preview', opened.id),
+        // The address of the Preview tab keeps naming the port.
+        at: portHref,
         opens: [{ port: 8080 }],
       },
       page: agents,

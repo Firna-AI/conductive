@@ -10,6 +10,7 @@ import { useStore } from '../../app/store'
 import type { ComposerFocus } from '../../chat/components/composer-requests'
 import type { ChatHost } from '../../chat/components/SessionChat'
 import type { ChatController } from '../../chat/state/controller'
+import type { RenderTab } from '../../chat/components/tab-row'
 import { WorkspaceChatView } from '../../chat/WorkspaceChat'
 import { workspaceCapabilities } from '../capabilities/WorkspaceCapabilities'
 import { useApp } from '../context'
@@ -17,6 +18,7 @@ import { useGo } from '../ui/AppLink'
 import type { Action } from '../ui/useAction'
 import { useFeatures, type WorkspaceContext } from './features'
 import { useChatFiles } from './files/chat-files'
+import { usePreviewCentre } from './previews/preview-centre'
 import { filesCenter } from './files/files-features'
 import { SandboxBar } from './SandboxNotice'
 import { StartingCard } from './StartingCard'
@@ -47,8 +49,10 @@ function useComposerFocus(
 
 /**
  * The kept chat of the workspace, with the parts that the shell draws, and
- * the open files: their tabs at their places in the tab row, and `content`,
- * a file or diff tab in place of the chat of the session.
+ * the open files and Preview tabs: their tabs at their places in the tab
+ * row, and `content`, a file or diff tab in place of the chat of the
+ * session. A Preview tab that the address shows takes that place too, and
+ * the pages of the Preview tabs stay loaded under it.
  */
 function KeptChat(props: {
   context: WorkspaceContext
@@ -60,14 +64,21 @@ function KeptChat(props: {
   const services = useServices()
   const go = useGo()
   const clock = useMemo(() => ({ now: services.now }), [services])
-  const files = useChatFiles(context, props.content)
+  const previews = usePreviewCentre(context)
+  const content = props.content ?? previews.content
+  const files = useChatFiles(context, content)
+  const fileTab = files.renderTab
+  const renderTab: RenderTab | undefined = fileTab
+    ? (tab) => (tab.kind === 'preview' ? previews.renderTab(tab) : fileTab(tab))
+    : undefined
   const phone = context.viewport === 'phone'
   const focus = useComposerFocus(context.workspace.id, phone)
   return (
     <WorkspaceChatView
       clock={clock}
       composerFocus={focus}
-      content={props.content}
+      content={content}
+      kept={previews.kept}
       controller={props.chat}
       copy={services}
       host={props.host}
@@ -76,7 +87,7 @@ function KeptChat(props: {
       onOpenDiff={files.onOpenDiff}
       onOpenPage={go}
       readOnly={context.readOnly}
-      renderTab={files.renderTab}
+      renderTab={renderTab}
       viewport={phone ? 'mobile' : 'desktop'}
     />
   )

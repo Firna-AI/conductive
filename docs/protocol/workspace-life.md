@@ -102,8 +102,13 @@ keeps them after the merge.
 - A sandbox stops after 30 minutes without user activity on its workspace
   and without a running agent turn (decisions 11 and 29).
 - Activity is input in the tabs of the workspace, such as typing, clicks,
-  and scrolling. Terminal input and requests to a port preview are
-  activity too.
+  and scrolling. Terminal input is activity too.
+- A request to a port preview is not activity (decision 293). A preview
+  works while the sandbox runs, but it never makes the sandbox run longer.
+  Reason: a page that polls by itself, or a page that a user forgot, must
+  not keep a sandbox running. The user chose this on 16 November 2026. A
+  count of only the page loads that the user starts, and a count of the
+  user's clicks in the frame, were rejected.
 - An open tab alone is not activity. An open connection is not activity
   either, such as the live reload of a dev server.
 - Reason: a forgotten tab must not keep a sandbox running, and a stop must

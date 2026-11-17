@@ -11,12 +11,17 @@ import type {
   SessionsResponse,
   SessionTranscriptResponse,
 } from '../../shared/sessions'
-import type {
-  TemporaryTab,
-  WorkspaceTab,
-  WorkspaceView,
-  WorkspaceViewResponse,
+import {
+  isTabPort,
+  type TemporaryTab,
+  type WorkspaceTab,
+  type WorkspaceView,
+  type WorkspaceViewResponse,
 } from '../../shared/workspace-view'
+import {
+  viewFromWire,
+  type PreviewTabPlace,
+} from '../../shared/workspace-view-wire'
 import {
   count,
   flag,
@@ -27,6 +32,7 @@ import {
   optional,
   record,
   text,
+  UnreadableResponse,
 } from './json'
 import {
   readAgent,
@@ -170,6 +176,9 @@ function readTab(value: unknown): WorkspaceTab {
       return { kind: 'session', sessionId: text(source.sessionId) }
     case 'diff':
       return { kind: 'diff', path: text(source.path) }
+    case 'preview':
+      if (!isTabPort(source.port)) throw new UnreadableResponse('port')
+      return { kind: 'preview', port: source.port }
     default:
       return {
         kind: oneOf({ file: true })(source.kind),
@@ -192,7 +201,7 @@ function readTemporaryTab(
     return null
   return tabs.some(
     (tab) =>
-      tab.kind !== 'session' &&
+      (tab.kind === 'file' || tab.kind === 'diff') &&
       tab.kind === value.kind &&
       tab.path === value.path,
   )
@@ -200,16 +209,37 @@ function readTemporaryTab(
     : null
 }
 
+/** A Preview tab of the route: its port and its place in the row. */
+function readPreviewPlace(value: unknown): PreviewTabPlace {
+  const place = record(value, 'preview tab')
+  if (!isTabPort(place.port)) throw new UnreadableResponse('port')
+  return { port: place.port, place: count(place.place) }
+}
+
+/**
+ * The saved view from the shape of the route, as `WorkspaceViewWire` says:
+ * the tabs, with each Preview tab at its place in the row.
+ */
 export function readView(value: unknown): WorkspaceView {
   const view = record(record(value, 'view response').view, 'view')
   const tabs = list(readTab)(view.tabs)
-  return {
-    tabs,
-    activeTab: nullable(readTab)(view.activeTab),
-    temporaryTab: readTemporaryTab(view.temporaryTab, tabs),
-    fileList: oneOf({ all: true, changes: true, checks: true })(view.fileList),
-    tool: oneOf({ terminal: true, preview: true, desktop: true })(view.tool),
+  const activePreview = optional(nullable(count))(view.activePreview) ?? null
+  if (activePreview !== null && !isTabPort(activePreview)) {
+    throw new UnreadableResponse('port')
   }
+  return viewFromWire(
+    {
+      tabs,
+      activeTab: nullable(readTab)(view.activeTab),
+      temporaryTab: readTemporaryTab(view.temporaryTab, tabs),
+      fileList: oneOf({ all: true, changes: true, checks: true })(
+        view.fileList,
+      ),
+      tool: oneOf({ terminal: true, preview: true, desktop: true })(view.tool),
+    },
+    optional(list(readPreviewPlace))(view.previewTabs) ?? [],
+    activePreview,
+  )
 }
 
 /**

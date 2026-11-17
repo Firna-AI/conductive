@@ -64,7 +64,6 @@ export class Workspace extends AgentSessionWorkspace {
         await this.integration.storage.put('previews:workspace-id', workspaceId)
         await this.integration.alarms.set('previews', at)
       },
-      (id, at) => this.activity.record(id, at),
       (id, ids, queueOwned) =>
         queueOwned
           ? this.chat.commitPreviewRevocations(id, ids)
