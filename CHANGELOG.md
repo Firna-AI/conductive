@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.23.0](https://github.com/Firna-AI/conductive/compare/v0.22.0...v0.23.0) (2026-11-17)
+
+
+### Features
+
+* **chat:** add Close other tabs to the tab menu ([#424](https://github.com/Firna-AI/conductive/issues/424)) ([17d4b86](https://github.com/Firna-AI/conductive/commit/17d4b860da097bae6780bdcd0e3a49b8bab27f5a))
+* **files:** add a menu with Add to chat and Copy path to Files rows ([#419](https://github.com/Firna-AI/conductive/issues/419)) ([8a0db96](https://github.com/Firna-AI/conductive/commit/8a0db96045c1109eab532e021c22a068593d8592))
+* **previews:** show each previewed port in its own centre tab ([#421](https://github.com/Firna-AI/conductive/issues/421)) ([1e01de2](https://github.com/Firna-AI/conductive/commit/1e01de21fbab61769ee18dcd0b2386c4fcd27b9d))
+* **secrets:** add agent secrets and Capabilities (milestones 1-3) ([#379](https://github.com/Firna-AI/conductive/issues/379)) ([a54fe39](https://github.com/Firna-AI/conductive/commit/a54fe39818b2bd5913c08d002800c48684fa1f93))
+* **terminal:** focus the terminal after its tab or Go to Terminal ([#418](https://github.com/Firna-AI/conductive/issues/418)) ([e12c3cb](https://github.com/Firna-AI/conductive/commit/e12c3cb3de92764f865a67937801089caaad5bfe))
+
 ## [0.22.0](https://github.com/Firna-AI/conductive/compare/v0.21.0...v0.22.0) (2026-11-16)
 
 
