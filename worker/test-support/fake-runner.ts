@@ -5,6 +5,7 @@ import type { WorkspaceToRunner } from '../../src/shared/generated/WorkspaceToRu
 import type { RunnerProtocolVersion } from '../../src/shared/generated/RunnerProtocolVersion'
 import type { RunnerLoginKind } from '../../src/shared/generated/RunnerLoginKind'
 import type { RunnerFileResponse } from '../../src/shared/generated/RunnerFileResponse'
+import type { RunnerHello } from '../../src/shared/generated/RunnerHello'
 import type {
   RunnerConnection,
   RunnerConnectionRequest,
@@ -17,6 +18,7 @@ export interface FakeRunnerOptions {
   now?: () => number
   protocolVersion?: RunnerProtocolVersion
   loginKinds?: readonly RunnerLoginKind[]
+  processStartId?: RunnerHello['processStartId']
 }
 
 /**
@@ -55,6 +57,9 @@ export class FakeRunner {
       protocolVersion: this.options.protocolVersion ?? 2,
       workspaceId: this.options.workspaceId,
       streamId: this.streamId,
+      ...(this.options.processStartId === undefined
+        ? {}
+        : { processStartId: this.options.processStartId }),
       ...(this.options.loginKinds
         ? { loginKinds: this.options.loginKinds }
         : {}),

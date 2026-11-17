@@ -67,6 +67,7 @@ Terminal tool, as [Terminal](terminal.md) says.
 | Workspace | Create PR | ⇧⌘P, ⌥⇧⌘P | Ctrl+Shift+P, Alt+Shift+P | Pull request bar |
 | Workspace | Fix checks | ⌥⌘X | Alt+Shift+X | Pull request bar |
 | Workspace | Resolve conflicts | – | – | Pull request bar |
+| Workspace | Merge latest target branch | – | – | Palette |
 | Workspace | Address review | – | – | Pull request bar |
 | Workspace | Commit and push | ⇧⌘Y | Ctrl+Shift+Y | Pull request bar |
 | Workspace | Mark PR ready for review | – | – | Pull request bar |

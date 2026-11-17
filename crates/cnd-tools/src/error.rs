@@ -131,6 +131,9 @@ pub enum InputError {
     /// Choose true or false for archived workspaces.
     #[error("Choose true or false for archived workspaces.")]
     Archived,
+    /// Choose true or false for removed workspaces.
+    #[error("Choose true or false for removed workspaces.")]
+    Removed,
     /// Use text for the workspace name filter.
     #[error("Use text for the workspace name filter.")]
     Query,

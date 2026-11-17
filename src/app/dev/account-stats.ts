@@ -1,5 +1,6 @@
 import type { AccountStats } from '../../shared/account'
 import type { WorkspaceState } from '../../shared/generated/WorkspaceState'
+import { workspaceRemovedAt } from '../../shared/workspaces'
 import type { DevState } from './state'
 
 const DAY = 24 * 60 * 60 * 1_000
@@ -33,7 +34,8 @@ function days(times: readonly number[], now: number) {
  * The counts of the Stats tab from the orgs of the dev fake, by the rules
  * of the Worker: the orgs that are not deleted, the workspaces and the
  * automations that the person owns in them, and the runs that were not
- * skipped, by their owner.
+ * skipped, by their owner. As the Worker does, `archived` keeps the
+ * removed workspaces, which `removed` counts too.
  */
 export function devAccountStats(state: DevState, now: number): AccountStats {
   const userId = state.account.user.id
@@ -67,6 +69,9 @@ export function devAccountStats(state: DevState, now: number): AccountStats {
       stopped: live.filter((workspace) => workspace.state === 'stopped').length,
       failed: live.filter((workspace) => workspace.state === 'error').length,
       archived: workspaces.length - live.length,
+      removed: workspaces.filter(
+        (workspace) => workspaceRemovedAt(workspace.archivedAt, now) !== null,
+      ).length,
     },
     automations: automations.length,
     newWorkspacesByDay: days(

@@ -19,7 +19,9 @@ model, preview, Mac command, and secret requests and replies. Their replies pres
 accepted message and turn pairs, resume errors, and transcript positions.
 Workspace records and list entries give a required nullable parent ID.
 Workspace details give the parent entry, stored depth, and direct children.
-Create and list requests accept an optional parent ID.
+Create, list, and move requests accept an optional parent ID.
+Move requests can instead name the top level. Their section ID is optional
+when the request gives a target.
 Create and workspace write replies can carry an optional notice.
 Dependent types include workspace and session records, messages, attachments,
 model choices, file reports, port reports, startup reports, and commit authors.
@@ -52,6 +54,7 @@ let hello = RunnerHello::Hello {
     workspace_id: "workspace-1".into(),
     stream_id: "stream-1".into(),
     login_kinds: None,
+    process_start_id: None,
 };
 ```
 
@@ -97,6 +100,7 @@ One test compares the TypeScript runtime limits with their Rust constants.
 ### Related Docs
 
 - [Agent runner protocol](../../docs/protocol/agent-runner.md)
+- [Runner warnings](../../docs/protocol/runner-warnings.md)
 - [Agent tools](../../docs/protocol/agent-tools.md)
 - [Secret requests](../../docs/protocol/secret-requests.md)
 - [Secret variables](../../docs/protocol/secret-variables.md)

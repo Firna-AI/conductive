@@ -45,7 +45,8 @@ shows stopped. Its child pages:
 
 - `app/orgs/suspended/workspace` has a workspace with the refused bar of the
   org. Its `archived` variant has an archived workspace, with the notice of
-  the org above the archived bar and no Restore. Its `files` variant has
+  the org above the archived bar and no Restore. The bar still gives the
+  day when the workspace leaves the list. Its `files` variant has
   the Files tab of a phone, whose panel shows the words of the org.
 - `app/orgs/suspended/new-workspace` has the New workspace page, which an
   old tab can still open. The refused bar takes the place of the composer.
@@ -69,7 +70,9 @@ shows stopped. Its child pages:
 
 `app/operator` shows the Overview tab of the operator, the person who runs
 the app for everyone, from decision 142. It holds live counts across every
-org, as decision 144 chose for now. A line under the users counts the
+org, as decision 144 chose for now. The workspaces by state count Removed
+apart from Archived: the archived workspaces whose 14 days ended, which
+left the list. The page of an org counts them in the same way. A line under the users counts the
 people on the waitlist, from decision 160. Long runs, under the workspaces
 by state, lists the 10 workspaces whose cloud computers have run the
 longest since their last start, from long runs decision 1. Each row gives

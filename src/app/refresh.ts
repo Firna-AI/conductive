@@ -11,6 +11,8 @@ export interface Refreshing {
   watch(): () => void
   /** Reads the value now. A read that runs already counts for this call. */
   refresh(): Promise<void>
+  /** Starts a fresh read after any current read finishes. */
+  reread(): Promise<void>
 }
 
 /**

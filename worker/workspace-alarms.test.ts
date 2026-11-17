@@ -184,3 +184,27 @@ it('preserves a rescheduled Continue lease and holds lifecycle work until its re
   expect(await storage.get('number', 'alarm:continue')).toBeUndefined()
   expect(await storage.get('number', 'alarm:lifecycle:start')).toBeUndefined()
 })
+
+it('clears the automation report after a retry and keeps it for later after a failed retry', async () => {
+  const { storage, alarms, tasks } = await fixture()
+  const report = vi
+    .fn<() => Promise<void>>()
+    .mockRejectedValueOnce(new Error('D1_ERROR: no such table: x'))
+    .mockResolvedValueOnce(undefined)
+  await alarms.set('automation-report', at(100))
+  await alarms.set('previews', at(100))
+  await runWorkspaceAlarms(alarms, () => at(100), {
+    ...tasks,
+    automationReport: report,
+  })
+  expect(tasks.previews).toHaveBeenCalledTimes(1)
+  expect(await storage.get('number', 'alarm:automation-report')).toBe(
+    at(30_100),
+  )
+  await runWorkspaceAlarms(alarms, () => at(30_100), {
+    ...tasks,
+    automationReport: report,
+  })
+  expect(report).toHaveBeenCalledTimes(2)
+  expect(await storage.get('number', 'alarm:automation-report')).toBeUndefined()
+})

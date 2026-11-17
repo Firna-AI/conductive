@@ -12,6 +12,7 @@ import {
   updateBuildJob,
   type BuildJob,
 } from './build-data'
+import { recordBuildSnapshot } from './build-command-data'
 import {
   capturedRepositoryLocations,
   repositoryEnvironment,
@@ -177,6 +178,7 @@ export function buildSandboxIntent(
 export function buildSnapshotIntent(
   db: D1Database,
   job: BuildJob,
+  now: number,
 ): SnapshotResourceIntent {
   if (!job.sandboxId) throw new Error('Missing build sandbox')
   return {
@@ -186,7 +188,10 @@ export function buildSnapshotIntent(
       sandboxId: job.sandboxId,
       name: job.snapshotName ?? savedImageName(job.buildId),
     },
+    // Only the first save writes its log line, with the new name.
     persist: ({ name }) =>
-      assignBuildSnapshot(db, job.buildId, name, job.providerAccount),
+      job.snapshotName === null
+        ? recordBuildSnapshot(db, job.buildId, name, job.providerAccount, now)
+        : assignBuildSnapshot(db, job.buildId, name, job.providerAccount),
   }
 }

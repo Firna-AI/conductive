@@ -90,7 +90,10 @@ They can also list sessions and previews.
 They can read details of a workspace, session, or message, and read transcripts across the org.
 This includes workspaces that members created themselves.
 They can also list each org secret's name, description, and environment variable name, without its value.
-Agents can read archived workspaces and closed sessions, but cannot send messages to them.
+Agents can read archived and removed workspaces by ID.
+Workspace lists leave out removed workspaces unless the agent asks for them.
+Agents can also read closed sessions.
+They cannot send messages to archived or removed workspaces or closed sessions.
 The tools reach only the org of the calling workspace.
 
 A workspace token is a credential that lets programs use these tools.
@@ -194,7 +197,7 @@ If you suspect exposure, stop the agent's turn.
 Use the provider's controls to revoke exposed logins or tokens.
 Archive stops its cloud computer and ends that workspace's connection access.
 It also revokes that workspace's token, including copies used to read other chats.
-Conductive keeps its files for 14 days.
+The cloud computer keeps its disk files for 14 days.
 Those files can still hold copied credentials during that window.
 
 - [Replace an agent login](/docs/agent-logins#replace-or-remove-a-login)
@@ -301,7 +304,10 @@ Restore returns the workspace stopped.
 
 Restore ends after 14 days.
 Conductive then deletes the computer and its files.
-Its chat remains read-only after deletion.
+The workspace leaves **Archived**, the command palette, and the workspace counts of the org.
+A direct link or a chat link still opens its read-only chat.
+The bar says **Removed on** followed by the removal date.
+Conductive keeps its chat history until the org is deleted.
 
 Deleting an org stops its computers and starts a seven-day restore window.
 After that window, deletion removes its data and computers.

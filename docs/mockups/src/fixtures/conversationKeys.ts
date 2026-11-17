@@ -65,6 +65,7 @@ export const conversationKeys = [
   'nested-lists-in-work',
   'headings',
   'headings-in-work',
+  'postcode-history',
   'chat-links',
   'chat-link-labels',
   'chat-link-local',
