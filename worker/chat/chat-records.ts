@@ -40,7 +40,10 @@ export class ChatRecords {
   async session(id: string): Promise<Session | undefined> {
     const stored = await this.data.get<StoredSession>(chatKey('session', id))
     if (!stored) return undefined
-    const session = normalizeSession(stored)
+    const session = normalizeSession(
+      stored,
+      (await this.newestTurn(id)) !== undefined,
+    )
     const active = session.activeTurnId
       ? await this.turn(session.activeTurnId)
       : undefined

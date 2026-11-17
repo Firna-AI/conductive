@@ -58,8 +58,13 @@ export function DevControls(props: {
   params: DevParams
   server: FakeApiServer
   hold: DevHold
+  /** Ends the connection of the shown terminal. */
   onDisconnect: () => void
-  /** Sends output of the shell to the last terminal, as a program would. */
+  /** Opens a terminal as another member does, which sends its event. */
+  onOpenElsewhere: () => void
+  /** Closes the shown terminal as another member does. */
+  onCloseElsewhere: () => void
+  /** Sends output of the shell to the shown terminal, as a program would. */
   onTerminalOutput: (output: string) => void
 }) {
   const { params, server, hold } = props
@@ -80,13 +85,15 @@ export function DevControls(props: {
     <div className={styles.controls}>
       <Choice
         label="Tool"
-        onChange={(tool) => go(devHref(params, { tool, state: null }))}
+        onChange={(tool) =>
+          go(devHref(params, { tool, state: null, terminal: null }))
+        }
         value={params.tool}
         values={devTools}
       />
       <Choice
         label="State"
-        onChange={(state) => change('state', state)}
+        onChange={(state) => go(devHref(params, { state, terminal: null }))}
         value={params.state}
         values={devStates[params.tool]}
       />
@@ -122,6 +129,12 @@ export function DevControls(props: {
       </button>
       <button onClick={props.onDisconnect} type="button">
         Disconnect terminal
+      </button>
+      <button onClick={props.onOpenElsewhere} type="button">
+        Open a terminal elsewhere
+      </button>
+      <button onClick={props.onCloseElsewhere} type="button">
+        Close the terminal elsewhere
       </button>
       <button
         onClick={() => props.onTerminalOutput('\x1b[6n')}
@@ -192,11 +205,14 @@ export function DevControls(props: {
       </button>
       <button
         onClick={() =>
-          change(
-            'workspace',
-            params.workspace === otherWorkspace
-              ? FAKE_IDS.workspace
-              : otherWorkspace,
+          go(
+            devHref(params, {
+              workspace:
+                params.workspace === otherWorkspace
+                  ? FAKE_IDS.workspace
+                  : otherWorkspace,
+              terminal: null,
+            }),
           )
         }
         type="button"

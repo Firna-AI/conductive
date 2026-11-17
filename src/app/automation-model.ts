@@ -1,11 +1,16 @@
-import { automationPath, type Automation } from '../shared/automations'
+import type { SessionLogin } from '../shared/generated/SessionLogin'
+import {
+  automationPath,
+  type Automation,
+  type AutomationResponse,
+} from '../shared/automations'
 import { ApiError, type ApiClient } from './api/client'
 import { readAutomationResponse } from './api/read-automations'
 import type { OrgModel } from './org-model'
 import { Refresher } from './refresh'
 import { Resource } from './resource'
 import { AutomationRuns } from './automation-runs'
-import type { Loadable, Readable } from './store'
+import { partOf, type Loadable, type Readable } from './store'
 
 /** The code of the API for an automation that the org does not have. */
 const automationNotFound = 'automation_not_found'
@@ -46,12 +51,18 @@ function noteMissingAutomation(api: ApiClient, recheck: () => void): ApiClient {
  * out one at a time, and each answer shows the whole automation. A read that
  * the API refuses with `automation_not_found` shows that the automation is not
  * available, also in place of the automation. Any other failed read keeps the
- * automation that shows.
+ * automation that shows. Each answer also names the login of the runs.
  */
 export class AutomationModel {
   readonly automationId: string
-  readonly resource: Resource<Automation>
+  readonly resource: Resource<AutomationResponse>
   readonly automation: Readable<Loadable<Automation>>
+  /**
+   * The login of the runs, as the last answer names it: the default login
+   * of the owner for the agent of the automation, or null when no login
+   * serves the owner.
+   */
+  readonly runLogin: Readable<Loadable<SessionLogin | null>>
   /**
    * The client of each request of the page beside the read of the automation:
    * the reads of the runs, Show older runs, Save, Turn off, Run now, and
@@ -59,7 +70,7 @@ export class AutomationModel {
    */
   readonly client: ApiClient
   readonly runs: AutomationRuns
-  private readonly reads: Refresher<Automation>
+  private readonly reads: Refresher<AutomationResponse>
 
   constructor(org: OrgModel, automationId: string) {
     this.automationId = automationId
@@ -71,7 +82,8 @@ export class AutomationModel {
         ),
       { missing: isAutomationMissing },
     )
-    this.automation = this.resource.store
+    this.automation = partOf(this.resource.store, (reply) => reply.automation)
+    this.runLogin = partOf(this.resource.store, (reply) => reply.runLogin)
     this.reads = new Refresher(this.resource, () => null, org.services)
     this.client = noteMissingAutomation(
       org.services.api,

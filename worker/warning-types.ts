@@ -2,7 +2,13 @@ import type { BuildPhase } from './lifecycle/build-data'
 import type { RepairKind } from './lifecycle/repair-data'
 import type { WorkspaceStartJob } from './lifecycle/start-types'
 import type { WorkspaceArchiveState } from './lifecycle/archive-types'
-import type { ErrorSummary, WarningCode, WarningId } from './warning-values'
+import type {
+  ErrorSummary,
+  WarningCode,
+  WarningId,
+  WarningStreamId,
+  WarningTurnEndState,
+} from './warning-values'
 import type { GatewayCheckErrorKind } from './model-gateway/check-error'
 import type { GatewayRefusal } from './model-gateway/errors'
 import type { UnexpectedErrorFields } from './unexpected-error'
@@ -10,6 +16,8 @@ import type { UnexpectedErrorFields } from './unexpected-error'
 export const SIMPLE_WARNINGS = {
   workspace_alarm_failed:
     'Workspace alarm work failed. Its durable deadline will retry.',
+  terminal_restart_refresh_failed:
+    'The terminal credentials and support could not be refreshed after Restart.',
   automation_schedule_failed:
     'An automation schedule could not run. The next scan will try again.',
   automation_queued_start_failed:
@@ -51,8 +59,23 @@ export const SIMPLE_WARNINGS = {
     'A model turn check took longer than its interval. The answer keeps streaming.',
 } as const
 
+export interface RunnerWarningFields {
+  workspaceId: WarningId
+  connectionId: WarningId | null
+  streamId: WarningStreamId | null
+  protocolVersion: number | null
+}
+
 /** Each kind permits only its fixed text and the safe values that it needs. */
 export type WorkerWarning =
+  | (RunnerWarningFields & {
+      kind: 'runner_connected' | 'runner_disconnected'
+    })
+  | (RunnerWarningFields & {
+      kind: 'turn_ended_without_stop_request'
+      turnId: WarningId
+      state: WarningTurnEndState
+    })
   | {
       kind: 'model_gateway_check_failed'
       workspaceId: WarningId

@@ -17,7 +17,7 @@ import type { OrgState, StartRecord } from './state'
 type CoreFixtures = ReturnType<typeof coreFixtures>
 
 /** A deleted org stays for 7 days. */
-export const DELETE_AFTER = 604_800_000
+const DELETE_AFTER = 604_800_000
 
 /** The run that `run=` makes the run of `checkout-autocomplete`. */
 const runOfWorkspace = {

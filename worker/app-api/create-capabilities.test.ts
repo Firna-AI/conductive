@@ -1,7 +1,10 @@
 import { afterEach, beforeAll, expect, it } from 'vitest'
 
 import { readCreated } from '../../src/app/api/read-workspaces'
-import { workspaceCapabilitiesPath } from '../../src/shared/secrets'
+import {
+  NEW_WORKSPACE_CAPABILITIES,
+  workspaceCapabilitiesPath,
+} from '../../src/shared/secrets'
 import { workspacesPath } from '../../src/shared/workspaces'
 import { CLAUDE } from '../chat/harness.test-support'
 import {
@@ -14,6 +17,9 @@ import {
   OUTER_REPOSITORY,
 } from '../chat/integration/outer-seed.test-support'
 import { addSecret } from './secrets.test-support'
+
+// The test chooses the Mac access that a create without a choice does not get.
+const chosen = !NEW_WORKSPACE_CAPABILITIES.macAccess
 
 let bundle: string
 let fixture: OuterRuntime | undefined
@@ -37,7 +43,7 @@ it('saves the app capabilities with its workspace and keeps those choices on a r
   const secret = await addSecret(fixture, OUTER_ORG)
   const input = {
     repositoryId: OUTER_REPOSITORY,
-    capabilities: { preapprovedSecretIds: [secret.id], macAccess: false },
+    capabilities: { preapprovedSecretIds: [secret.id], macAccess: chosen },
     firstMessage: {
       id: 'capabilities-create',
       text: 'Build',
@@ -58,7 +64,7 @@ it('saves the app capabilities with its workspace and keeps those choices on a r
   expect(await (await fixture.request(path)).json()).toEqual({
     capabilities: { ...input.capabilities, sessionApprovals: [] },
   })
-  input.capabilities = { preapprovedSecretIds: [], macAccess: true }
+  input.capabilities = { preapprovedSecretIds: [], macAccess: !chosen }
   const retry = await create()
   expect(retry.status).toBe(201)
   expect(readCreated(await retry.json()).workspace.id).toBe(
@@ -67,7 +73,7 @@ it('saves the app capabilities with its workspace and keeps those choices on a r
   expect(await (await fixture.request(path)).json()).toEqual({
     capabilities: {
       preapprovedSecretIds: [secret.id],
-      macAccess: false,
+      macAccess: chosen,
       sessionApprovals: [],
     },
   })

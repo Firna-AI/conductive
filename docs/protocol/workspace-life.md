@@ -104,53 +104,10 @@ keeps them after the merge.
 
 ## Restart the software
 
-- The state in the workspace header opens a menu with Restart, while the
-  workspace is ready, working, needs input, or finished with unread output.
-  On a phone the menu opens as a sheet. Cal asked for it on 16 November
-  2026.
-- The other states, and a read-only workspace, show the state as plain
-  text. Reason: Starting already restarts, and the stopped and the error
-  states keep their Resume and Try again bars.
-- Restart restarts the agent runner and the preview relay in the running
-  sandbox (Cal's decision 1 A of 16 November 2026). It does not stop or
-  resume the sandbox, so it uses no start of the provider.
-- The shells of the terminals and the commands in them keep running.
-  Each process that an agent started under the runner ends. Each running
-  turn ends, as after any restart of the runner.
-- An open terminal tab disconnects while the workspace shows Starting,
-  and it offers Reconnect. Reconnect works again when the runner is ready.
-  Previews and the activity of the workspace also pause in that time. Cal
-  chose this on 16 November 2026, as option A of review item 2 of the
-  Restart change.
-- Terminal access during a restart was rejected for now, because it needs
-  a stored restart flag and a migration. A tab that reconnects by itself
-  was rejected for the same choice.
-- A stop and resume, a one-step restart of the whole sandbox, and a
-  restart of a dev server of the project were rejected. Reason: Restart
-  fixes a stuck runner or relay in seconds and keeps the shells of the
-  terminals.
-- Before the restart, the sandbox downloads the newest release of the
-  [sandbox software](sandbox-software.md#updates), with a limit of 60
-  seconds (Cal's decision 2 B of 16 November 2026). The restart of the
-  runner then applies it.
-- When that download fails, a toast says "Couldn't check for updates." and
-  the restart goes on with the installed release. Reason: a member who
-  presses Restart usually wants the newest fix, and a failed download must
-  not block the restart.
-- Every member of an org that is not suspended can restart a workspace
-  whose owner is not suspended. Reason: a restart deletes no work, as for
-  a resume.
-- While an agent works, Restart first asks "Stop the agent and restart?".
-  Cancel changes nothing.
-- The header and the row show Starting from the press until the runner is
-  ready again.
-- When the restart fails, or the runner is not ready 3 minutes after the
-  press, the workspace shows the error state with "The software didn't
-  restart. Try again." Try again resumes the workspace, as after each
-  failed start.
-- The Worker refuses a restart of a workspace in another state with HTTP
-  409 and the error code `workspace_not_running`. The app shows the
-  refusal in a toast.
+- [Restart the software](restart-the-software.md) holds the requirements
+  of Restart in the workspace header: the states that offer it, what it
+  restarts, the download of the newest release, who may restart, and a
+  failed restart.
 
 ## Archive
 

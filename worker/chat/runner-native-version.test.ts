@@ -26,6 +26,7 @@ it.each([
       'worker/chat/runner-entry.test-support.ts',
     )
     const controls = runnerControls(runtime, headers)
+    await controls.request('capture-warnings')
     const runner = await controls.connect('native-runner', 0, 2)
     const sockets = [runner.socket]
     try {
@@ -81,6 +82,33 @@ it.each([
       expect(after.fileAttached).toEqual([])
       expect(after.fileBinding).toBeNull()
       expect(runner.received).toEqual(sent)
+      const connectionWarnings = array(after.warnings, (call) =>
+        array(call, record),
+      )
+        .flat()
+        .filter(
+          ({ kind }) =>
+            kind === 'runner_connected' || kind === 'runner_disconnected',
+        )
+      const connectionFields = {
+        workspaceId: 'unknown',
+        connectionId: string(connection.id),
+        streamId: 'unknown',
+      }
+      expect(connectionWarnings).toEqual([
+        {
+          kind: 'runner_connected',
+          message: 'The runner of a workspace connected.',
+          ...connectionFields,
+          protocolVersion: 2,
+        },
+        {
+          kind: 'runner_disconnected',
+          message: 'The runner of a workspace disconnected.',
+          ...connectionFields,
+          protocolVersion: protocolVersion ?? null,
+        },
+      ])
       const response = await runtime.dispatchFetch(
         `${TEST_ORIGIN}${chatHistoryPath('org', WORKSPACE_ID, sessionId)}`,
         { headers },
@@ -88,6 +116,27 @@ it.each([
       expect(response.status).toBe(200)
       const events = array(record(await response.json()).events, record).map(
         ({ event }) => record(event),
+      )
+      const failures = events.filter(({ type }) => type === 'turn.failed')
+      expect(
+        array(after.warnings, (call) => array(call, record))
+          .flat()
+          .filter(({ kind }) => kind === 'turn_ended_without_stop_request'),
+      ).toEqual(
+        obsolete
+          ? [
+              {
+                kind: 'turn_ended_without_stop_request',
+                message: 'A turn ended without a Stop request.',
+                workspaceId: 'unknown',
+                turnId: string(failures[1].turnId),
+                state: 'failed',
+                connectionId: null,
+                streamId: null,
+                protocolVersion: null,
+              },
+            ]
+          : [],
       )
       expect(events.filter(({ type }) => type === 'turn.failed')).toMatchObject(
         obsolete

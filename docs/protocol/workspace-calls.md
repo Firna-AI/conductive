@@ -45,8 +45,8 @@ says. A secrets decision number names a decision of the change that adds
 - A create call can also turn on [fast mode](fast-mode.md) for a model
   that has it. Otherwise the first message runs at standard speed. The
   saved default of the owner gives the call no fast mode. Reason: that
-  default belongs to the owner, but the first message runs on the login of
-  the sender of the calling turn.
+  default belongs to the owner, but the first message runs on the default
+  login of the sender of the calling turn.
 - The new workspace gets the org and the workspace owner of the calling
   workspace.
 - Without a choice in the call, the new workspace gets the default section
@@ -64,8 +64,9 @@ says. A secrets decision number names a decision of the change that adds
   [The section of a new sub-workspace](sub-workspaces.md#the-section-of-a-new-sub-workspace)
   says.
 - The help of the CLI and the description of `create_workspace` say when
-  to name a parent. They also give the deepest depth, the sibling advice,
-  and the section of a sub-workspace.
+  to name a parent, with the cases of
+  [When to nest](sub-workspaces.md#when-to-nest). They also give the
+  deepest depth, the sibling advice, and the section of a sub-workspace.
 - The agent of the new workspace starts on the first message at once.
 - The sender of the calling turn sends the first message. So the GitHub
   token of the first turn belongs to that member.
@@ -73,12 +74,12 @@ says. A secrets decision number names a decision of the change that adds
   [The `Sent by:` line](session-calls.md#the-sent-by-line) says
   (decision 259).
 - The new workspace starts with no pre-approved secret, as
-  [Grants](secrets.md#grants) says. Its Mac access is on, also when the
-  calling workspace has Mac access off (secrets decision 9 A).
-  [Mac access](secrets.md#mac-access) states the risk.
+  [Grants](secrets.md#grants) says. Its Mac access is off, also when the
+  calling workspace has Mac access on (secrets decision 18 A), as
+  [Mac access](secrets.md#mac-access) says.
 - A create call takes no pre-approval and no choice of Mac access.
   Reason: the task gives the pre-approval to a person who creates a
-  workspace, and Mac access starts on in each workspace.
+  workspace, and only a member turns Mac access on.
 - A create call can also give the new workspace a name, and the title of
   its first session. The Worker cleans both with the rule of
   [Names from the workspace tools](tool-names.md).

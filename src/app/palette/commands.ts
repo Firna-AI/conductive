@@ -18,6 +18,7 @@ export interface CommandText {
 /**
  * The actions that a part of the page offers while it shows, in the order
  * of the palette: the open workspace, the workspace list, and the window.
+ * The tools of the open workspace offer New terminal after the Go to rows.
  */
 export const offeredActionIds = [
   'new-session',
@@ -28,6 +29,7 @@ export const offeredActionIds = [
   'go-to-terminal',
   'go-to-preview',
   'go-to-desktop',
+  'new-terminal',
   'archive-workspace',
   'restore-workspace',
   'new-section',
@@ -55,6 +57,7 @@ export const actionTexts: Readonly<
   'go-to-terminal': { label: 'Go to Terminal', words: [] },
   'go-to-preview': { label: 'Go to Preview', words: ['port'] },
   'go-to-desktop': { label: 'Go to Desktop', words: [] },
+  'new-terminal': { label: 'New terminal', words: ['shell', 'tab'] },
   'archive-workspace': { label: 'Archive workspace', words: [] },
   'restore-workspace': { label: 'Restore workspace', words: ['unarchive'] },
   'new-workspace': { label: 'New workspace', words: ['create', 'task'] },
@@ -87,6 +90,7 @@ export const actionCommands: Readonly<
   'go-to-terminal': 'go-to-terminal',
   'go-to-preview': 'go-to-preview',
   'go-to-desktop': null,
+  'new-terminal': 'new-terminal',
   'archive-workspace': 'archive-workspace',
   'restore-workspace': 'restore-workspace',
   'new-section': 'new-section',
@@ -118,6 +122,11 @@ export const orgSettings: readonly (CommandText & { tab: SettingsTab })[] = [
     tab: 'cloud-computer',
     label: 'Cloud computer',
     words: ['install', 'startup script', 'env', 'build', 'sandbox'],
+  },
+  {
+    tab: 'agents',
+    label: 'Agents',
+    words: ['claude', 'codex', 'org login', 'api key', 'endpoint'],
   },
   {
     tab: 'secrets',

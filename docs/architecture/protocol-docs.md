@@ -27,14 +27,24 @@ This page lists each protocol doc and what it covers.
     - [Stop and resume](../protocol/stop-and-resume.md): the stop of an
       idle sandbox, the resume, the starts from the agent tools, and the
       restart near day 14 of a stop.
+    - [Restart the software](../protocol/restart-the-software.md): Restart
+      in the workspace header, what it restarts, and the download of the
+      newest release before it.
   - [Continue](../protocol/continue.md): the next task of a workspace after a
     merge, on a new branch with the same sandbox and sessions.
   - [Workspace menu](../protocol/workspace-menu.md): the menu of a workspace
     row, which moves, reassigns, renames, and archives the workspace.
-  - [Sub-workspaces](../protocol/sub-workspaces.md): the parent link, the
-    depth limit, the nested rows of the list, an archived parent, the moves
+  - [Sub-workspaces](../protocol/sub-workspaces.md): the parent link, when
+    to nest, the depth limit, the nested rows of the list, an archived parent, the moves
     of a tree, and the agent context.
   - [Workspace tools](../protocol/workspace-tools.md)
+    - [Terminal](../protocol/terminal.md): the terminals of a workspace
+      and their tabs, and the shell of each terminal.
+      - [Terminal screen](../protocol/terminal-screen.md): the screen of
+        each terminal, its output history, its selection, its size, and its
+        keys.
+      - [Terminal links](../protocol/terminal-links.md): the links in the
+        output of a terminal.
     - [Temporary tabs](../protocol/temporary-tabs.md): the one file or diff
       tab that the next press replaces, what opens and keeps it, and its
       mark in the saved view.
@@ -66,11 +76,16 @@ This page lists each protocol doc and what it covers.
     its events and their limits, its turns, the background work of Claude
     turns with its note and its time limit, its port reports, and the repair
     of lost workspace updates.
+    - [Background work of Claude turns](../protocol/background-work.md):
+      the wait of a Claude turn for background work, its note, and its time
+      limit.
     - [Listening ports](../protocol/listening-ports.md): the scanner's
       eligibility, labels, limits, and full reports.
     - [Lost workspace updates](../protocol/lost-workspace-updates.md): the
       reports that belong to no session, the repair request after a refused
       update, and the notice of a failed repair.
+    - [Runner warnings](../protocol/runner-warnings.md): the warnings of the
+      Worker for runner connections and for turn ends with no Stop request.
   - [Session transcripts](../protocol/session-transcripts.md): copying a
     session as concise or full Markdown, and the text of a copy.
     - [Transcript routes](../protocol/transcript-routes.md): the route of
@@ -83,10 +98,16 @@ This page lists each protocol doc and what it covers.
     - [Version pins](../protocol/version-pins.md): the runner version that
       a workspace accepts, the version pin, and the risks of the turn
       token in a sandbox.
+    - [The share setting](../protocol/share-setting.md): whether the
+      messages of other members can run on a personal login, its default,
+      its checks, and its risks.
   - [Tokens and secrets](../protocol/tokens-and-secrets.md)
     - [Own endpoint logins](../protocol/own-endpoint-logins.md): the
       endpoint and the key of each agent, the model list of the endpoint,
       and the addresses that the app accepts.
+    - [Org logins](../protocol/org-logins.md): the login that an admin
+      connects for each agent of an org, the Agents tab of the org
+      settings, and the default login of a new session.
     - [Secrets](../protocol/secrets.md): the secrets of an org that agents
       use in one command, their storage, the Secrets tab, the rights,
       Reveal, the mark for all agents, the grants, Capabilities with Mac
@@ -135,7 +156,8 @@ This page lists each protocol doc and what it covers.
     in the rail that each person keeps, how the person changes it, what a
     tile opens, and the workspace list of a hidden sidebar.
   - [Get started](../protocol/get-started.md): the first run, its steps,
-    the state of the first build in its org step, and its finish.
+    the agent step, the state of the first build in its org step, and its
+    finish.
   - [Delete org](../protocol/delete-org.md): the end of an org, its restore
     within 7 days, and the delete of its data.
 - [Pricing](../protocol/pricing.md): the plans and their cloud hours, the
@@ -177,8 +199,12 @@ This page lists each protocol doc and what it covers.
   refreshes, and the first build of a new org.
 - [Agents and sessions](../protocol/agents-and-sessions.md): the agents and
   their logins, the sessions, and the names of workspaces and sessions.
+  - [The tab row](../protocol/tab-row.md): the order of the tabs of the
+    centre column, their moves, the scroll of the row, the place that each
+    tab keeps, and the tab menu.
   - [Workspace and session names](../protocol/workspace-and-session-names.md):
-    the missing and the automatic names of workspaces and sessions.
+    the missing and the automatic names of workspaces and sessions, and
+    the title that a small model gives a new workspace.
 - [Workspace links](../protocol/workspace-links.md): Copy link, and the chips
   that show workspace links in chat.
 - [Chat Markdown](../protocol/chat-markdown.md): the formatting of agent
@@ -197,6 +223,9 @@ This page lists each protocol doc and what it covers.
 - [Agent instructions](../protocol/agent-instructions.md): the text that each
   agent session gets, and the sender line and the branch line of each
   message.
+  - [Agent instructions: the sender line](../protocol/agent-instructions-sender-line.md):
+    the sender line of each message, and the access of a turn, which does
+    not depend on that line.
   - [Base prompts](../protocol/base-prompts.md): the base prompt of Claude
     agents and the base instructions of Codex agents.
   - [Agent instructions: how each agent gets them](../protocol/agent-instructions-delivery.md):

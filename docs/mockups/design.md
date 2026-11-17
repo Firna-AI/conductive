@@ -159,6 +159,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
   menu. On a phone, a long press lifts an org in the org switcher with the
   same look, and opens no menu. `OrgDrop` and `OrgDrag.module.css` beside
   `orgTileMenu.ts` draw the drag on the rail and in the org switcher.
+- `OrgTile` in `src/components/orgs/` draws the initials and the outline
+  of the open org in the colour of the org, as `app/org-settings/colour`
+  shows. `src/design/orgColors.ts` gives the eight presets, each with its
+  own ink and outline for the light and the dark scheme. Blue takes the
+  accent. `OrgColorField` in `src/components/settings/` draws the presets
+  as round radio swatches, and a ring marks the chosen one.
 - `FailureToast` in `src/components/common/` draws the toast that names a
   change of the list that failed, with the message of the server, in the
   `ToastLayer` beside it, as `app/workspace-menu/rename/failed` shows.
@@ -393,7 +399,7 @@ sessions as tabs above the chat, and four tabs at the bottom.
   the Waitlist tab, the codes, and the approval email. It also gives
   Suspend, Lift, and Approve, the daily chart, the notice of a pause, and
   the waitlist switch.
-- On a phone the org settings put their five tabs in three columns, on two
+- On a phone the org settings put their six tabs in three columns, on two
   lines, so every tab shows. The session tabs all shrink, and the current one keeps the start
   of its title beside its close button. When the session tabs still do not
   fit, their row scrolls sideways. A phone tab stays 40 px high to touch,

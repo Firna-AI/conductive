@@ -11,8 +11,14 @@ import { DeleteOrgDialog } from '../components/settings/DeleteOrgDialog'
 import { SettingsTabs } from '../components/settings/OrgSections'
 import { Sidebar } from '../components/workspaces/Sidebar'
 import { memberViewer, people, viewerMembership } from '../fixtures/members'
+import { ORG_COLORS } from '../design/orgColors'
 import { type Org, orgList } from '../fixtures/orgs'
 import { repositoryChanges } from '../fixtures/repositories'
+import {
+  orgAgentsDefaults,
+  orgAgentsKeys,
+  orgAgentsProperties,
+} from './orgAgentsState'
 import { settingsViewer, TabBody } from './orgSettingsTabs'
 import { settingsOrg } from './settingsOrgs'
 
@@ -29,10 +35,19 @@ export const orgSettingsSchema = {
     'dialog',
     'viewer',
     'org',
+    'color',
+    ...orgAgentsKeys,
   ],
   properties: {
     tab: {
-      enum: ['general', 'repositories', 'computer', 'secrets', 'members'],
+      enum: [
+        'general',
+        'repositories',
+        'computer',
+        'agents',
+        'secrets',
+        'members',
+      ],
     },
     /**
      * The builds of the cloud computer, which its tab shows. `time-limit` is
@@ -83,7 +98,7 @@ export const orgSettingsSchema = {
     /**
      * The person signed in: an admin, or a member who is not an admin. A
      * member sees no actions on the members, no Delete org, and the name,
-     * the repositories, and the cloud computer read-only.
+     * the repositories, the cloud computer, and the agents read-only.
      */
     viewer: { enum: ['admin', 'member'] },
     /**
@@ -95,6 +110,13 @@ export const orgSettingsSchema = {
      * lets leave.
      */
     org: { enum: ['active', 'suspended', 'new'] },
+    /**
+     * The colour of the org, which an admin picks on the General tab. The
+     * tile of the open org in the rail shows it. Blue is the colour of an
+     * org that has none.
+     */
+    color: { enum: ORG_COLORS },
+    ...orgAgentsProperties,
   },
 } as const
 
@@ -111,14 +133,17 @@ export const acmeSettings: OrgSettingsState = {
   dialog: 'none',
   viewer: 'admin',
   org: 'active',
+  color: 'blue',
+  ...orgAgentsDefaults,
 }
 
 /**
  * The settings of an org: its name and initials, the repositories that it
- * uses, its cloud computer, its secrets, and its members. The app-wide
- * connections live in the account. Only an admin changes the members and
- * deletes the org. Every member adds secrets. A suspended org shows its
- * notice first, and nobody changes its settings.
+ * uses, its cloud computer, its org logins, its secrets, and its members.
+ * The personal logins and the other app-wide connections live in the
+ * account. Only an admin changes the members, the org logins, and deletes
+ * the org. Every member adds secrets. A suspended org shows its notice
+ * first, and nobody changes its settings.
  */
 export function OrgSettingsScreen(props: {
   state: OrgSettingsState
@@ -185,7 +210,9 @@ export function OrgSettingsScreen(props: {
     <AppFrame
       overlay={dialog}
       rail={{
-        orgs: props.railOrgs ?? orgList,
+        orgs: (props.railOrgs ?? orgList).map((item) =>
+          item.key === org.key ? { ...item, color: state.color } : item,
+        ),
         current: org.key,
         suspended: suspended ? org.key : undefined,
         person: admin ? undefined : people[memberViewer],

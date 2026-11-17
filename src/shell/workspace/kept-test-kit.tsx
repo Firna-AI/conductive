@@ -10,7 +10,7 @@ import { orgPath } from '../../shared/api'
 import type { WorkspaceEvent } from '../../shared/events'
 import { githubPaths } from '../../shared/github'
 import { membersPath } from '../../shared/members'
-import { readView } from '../../chat/api/read-responses'
+import { readView } from '../../chat/api/read-view'
 import { previewsPath } from '../../shared/previews'
 import {
   workspaceViewPath,

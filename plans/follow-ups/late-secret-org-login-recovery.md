@@ -1,0 +1,51 @@
+# A late secret answer names the wrong login
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-17, from the merge of `origin/main` into branch `calummoore/delft-zjk2` (pull request #427), which joined the org logins with the agent secrets.
+- **Location:** `src/chat/secrets/secret-words.ts:124`, `src/chat/secrets/session-secrets.tsx:59`, `docs/mockups/src/components/chat/secretRunCopy.ts:149`, `src/shared/secret-request-markdown.ts:20`, `worker/chat/secret-notice.ts:56`, `src/chat/state/session-login.ts:157`, `src/app/login-owner.ts:14`, `docs/protocol/secret-requests.md:165`, `docs/mockups/design-secrets.md:127`, `worker/secrets/README.md:108`, `src/chat/secrets/secret-requests.test.tsx:148`, and `src/shared/transcript/secret-requests.test.ts:127`.
+- **Reason:** The case is rare, and the org login branch already used its two review fix rounds.
+
+- **Source:** Implementation. **Category:** Product bug.
+- **Terms:**
+  - **Late request:** a secret request that no member answered in 90 seconds, so the tool call of the agent ended. A later Allow can still tell the agent.
+  - **Late notice:** the line of the app that tells the agent of a late Allow. It starts or joins a turn in the session that asked.
+  - **Org login:** an API key or an own endpoint that an admin connects for one agent of an org, on the Agents tab of the org settings.
+  - **Session login:** `Session.login`, the owner of the login that a session keeps after its first message. It is `{ type: 'personal', userId }` or `{ type: 'org', orgId }`.
+  - **Session-login view:** `sessionLoginOf` in `src/chat/state/session-login.ts`. It gives the owner of the login of a session and its name, through `loginOwnerName` in `src/app/login-owner.ts`.
+- **Background:**
+  - A session takes its login at its first message and keeps it: the personal login of its starter, or the org login. The user chose this rule on 16 November 2026, as `docs/protocol/org-logins.md` says.
+  - The composer label already names the owner of that login through the session-login view, such as "Acme's login".
+  - The user chose on 14 November 2026 that a late Allow tells the agent in the session that asked. The turn acts for the sender of the turn that asked, and no linked session starts.
+  - `acceptSecretNotice` in `worker/chat/secret-notice.ts` admits that turn. When no login serves it, the notice gets the state `not-sent` with the reason `login-unavailable`.
+  - The late answers rule in `docs/protocol/secret-requests.md` then says that the late request names the action that gets the agent going again.
+  - `endLine` in `src/chat/secrets/secret-words.ts` writes that line with `reconnectNote` of `docs/mockups/src/components/chat/secretRunCopy.ts`. `src/chat/secrets/session-secrets.tsx` gives `endLine` only `session.startedBy` and the agent, not `Session.login`.
+  - The transcript text for the same reason comes from `secretRequestMarkdown` in `src/shared/secret-request-markdown.ts`. It always says "The session starter must connect the login again and send a message so the agent learns of this."
+- **Problem:**
+  - Take a session that keeps the org login, after an admin removes that login. A late Allow there shows "Priya Raman answered. The agent learns of it when Cal connects Claude again."
+  - That action is false. A new personal login of the starter does not serve the session, because the session keeps the org login.
+  - Only an admin who connects the org login again repairs the session. After that, the next message in the session reaches the agent.
+  - Before that, a message of a member starts a new linked session, or the composer asks to connect a login. Neither reaches this agent.
+  - The transcript names the same false step.
+- **Impact if no action:** The starter can connect a personal login for nothing. The agent does not learn of the answer until a member finds the real cause.
+- **Root question:** How does late secret recovery name the login that needs reconnecting?
+- **Options:**
+  - **A.** Carry the resolved session login into the recovery text, through the existing session-login view. Effort: Small.
+    - `session-secrets.tsx` gives `endLine` the owner of `Session.login` and its name, in place of only the starter.
+    - For an org owner, the line names the org login and its admin, such as "The agent learns of it when an admin connects Acme's Claude login again."
+    - For a personal owner, or an older record without `login`, the words stay as they are now. Such a session keeps the personal login of its starter.
+    - `secretRequestMarkdown` takes the same owner from the session of its transcript document, which `src/shared/transcript/session-markdown.ts` already holds.
+    - Change the words in `secretRunCopy.ts`, so that the app and the mockups share them.
+    - In `docs/protocol/secret-requests.md`, write "the login of the session" in place of "the login of the starter", and add the org example.
+    - Update the same sentence in `docs/mockups/design-secrets.md` and `worker/secrets/README.md`.
+    - Add a focused regression to `src/chat/secrets/secret-requests.test.tsx`. In it, a session keeps the org login, and a late Allow gets the reason `login-unavailable`. The line must name the admin action, never the starter.
+    - Add the same case to `src/shared/transcript/secret-requests.test.ts`.
+  - **B.** Use one generic line for every owner, such as "The agent learns of it when the login of this session works again." It removes the false action and needs no new input. But it loses the specific recovery action that the late answers rule asks for, so no member learns who must act. Effort: Small.
+- **Left out:**
+  - An owner field in the `not-sent` notice of the Worker. The session record already holds `Session.login`, and the transcript already has the session. A is better on every point, with no change to the stored request or the wire.
+  - A late notice that starts a linked session on the login of the member who answered. It breaks the rule of 14 November 2026 that keeps the answer in the session that asked.
+  - No change, because the false action stays.
+- **Wider fix:** A. Each recovery text then names the owner of `Session.login`, as the composer label and the line under the prompt of an automation already do with `loginOwnerName`.
+- **Previous examples:** Commit `a852c33c7`, review round 1 of the org login change on 17 November 2026. It made the label of an empty session and the line under the prompt of an automation name the real login owner.
+- **Recommendation:** A. It names the one action that repairs the session, from data that the app already has, and it keeps the late answers rule.
+- **Action:** fix after merge, apply A, because the case is rare and the org login branch already used its two review fix rounds.

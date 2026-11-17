@@ -11,6 +11,7 @@ import type { FakeMethod, FakeRouteWriter } from './fake-api-routes'
 import { fakeCoreRoutes } from './fake-core-routes'
 import { fakeDeviceRoutes } from './fake-device-routes'
 import { FakeWorkspaceEvents } from './fake-events'
+import { FakeTerminalRoutes } from './fake-terminal-routes'
 import { fakeToolRoutes } from './fake-tool-routes'
 import { fakeWorkspaceRoutes } from './fake-workspace-routes'
 import { FAKE_IDS, FAKE_ORIGIN } from './fixtures/core'
@@ -51,6 +52,8 @@ export interface FakeApiOptions {
    * workspace whose runner has not reported its lists yet.
    */
   savedLists?: boolean
+  /** Older sandbox software can open only Terminal 1. */
+  terminalSeveral?: boolean
   /**
    * `true` adds the sub-workspaces of the mockups to the list of Acme,
    * nested under Apple Pay button and Checkout address autocomplete, each
@@ -79,13 +82,14 @@ function routeKey(method: string, path: string): string {
 
 /**
  * Fetch-compatible, in-memory server for development and tests.
- * Writes return recorded replies, except org moves, which update the org list.
+ * Org moves and terminal writes keep their state. Other writes return recorded replies.
  * Override a reply with json(), empty(), or response() for the next screen state.
  * This module is opt-in. The production Worker never imports it.
  */
 export class FakeApiServer implements FakeRouteWriter {
   readonly requests: Request[] = []
   readonly events: FakeWorkspaceEvents
+  readonly terminals: FakeTerminalRoutes
   private readonly replies = new Map<
     string,
     Response | Promise<Response> | ((request: Request) => Promise<Response>)
@@ -124,6 +128,14 @@ export class FakeApiServer implements FakeRouteWriter {
     const listed = subWorkspaces
       ? withSubWorkspaces(workspaces.workspaces)
       : workspaces.workspaces
+    this.terminals = new FakeTerminalRoutes(
+      this.events,
+      [...listed, created.workspace].map((workspace) => ({
+        ...workspace,
+        state: options.workspaceStates?.get(workspace.id) ?? workspace.state,
+      })),
+      options.terminalSeveral ?? true,
+    )
     fakeDeviceRoutes(
       this,
       options.macCommands ?? 'none',
@@ -181,6 +193,8 @@ export class FakeApiServer implements FakeRouteWriter {
     const response = await this.replies.get(key)
     if (typeof response === 'function') return response(request)
     if (response) return response.clone()
+    const terminal = this.terminals.fetch(request)
+    if (terminal) return terminal
     const historyPath = new URL(
       chatHistoryPath(FAKE_IDS.org, FAKE_IDS.workspace, FAKE_IDS.session),
       FAKE_ORIGIN,

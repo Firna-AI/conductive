@@ -24,9 +24,11 @@ export interface ToolNavigation {
   href: (tool: ToolKey) => string
   /**
    * Shows a tool after a plain click on its tab, or Go to of the palette
-   * or its key. On desktop, Terminal also takes the keyboard focus.
+   * or its key. On desktop, Terminal also takes the keyboard focus. With
+   * `focus` false, Terminal leaves the focus request as it is, for New
+   * terminal, which asks for the focus with the element of its own run.
    */
-  select: (tool: ToolKey) => void
+  select: (tool: ToolKey, options?: { focus?: boolean }) => void
   /**
    * The route of the Preview tool: the preview or the port of the address,
    * and the address of each preview.
@@ -52,11 +54,11 @@ export function useToolSelect(
     [org.id, workspace.id],
   )
   const select = useCallback(
-    (tool: ToolKey) => {
+    (tool: ToolKey, options: { focus?: boolean } = {}) => {
       // On desktop a choice of Terminal moves the focus to it. A phone
       // keyboard would cover the page, so a phone moves no focus.
-      if (tool === 'terminal' && !phone) terminalFocus.ask()
-      else terminalFocus.clear()
+      if (tool !== 'terminal' || phone) terminalFocus.clear()
+      else if (options.focus ?? true) terminalFocus.ask()
       saveView(savedView, withTool(tool))
       if (phone) navigation.push(href(tool))
       else if (placeTool) navigation.replace(href(tool))

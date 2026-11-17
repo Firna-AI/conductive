@@ -3,7 +3,7 @@ import type { Session } from '../../src/shared/generated/Session'
 import type { AgentLoginKind } from '../chat/login-kind'
 import type { WorkspaceChat } from '../chat/backend'
 import type { ChatOperation } from '../chat/operation'
-import { unavailableLoginMessage } from '../chat/session-login'
+import { loginOwnerLabel, unavailableLoginMessage } from '../chat/session-login'
 import { TurnLifecycle } from '../chat/turn-lifecycle'
 import { activeStoredTurn } from '../devices/access'
 import type { AppEnv } from '../env'
@@ -51,8 +51,9 @@ export class WorkspaceTurnTokens {
     const login = await gatewayLogin(
       this.env,
       workspaceId,
-      session.startedBy?.id ?? null,
+      session.login ?? null,
       session.choice.agent,
+      turn.senderId,
     )
     if (
       !login ||
@@ -65,8 +66,17 @@ export class WorkspaceTurnTokens {
         this.operation(workspaceId),
         turn.id,
         login
-          ? changedLoginMessage(session)
-          : unavailableLoginMessage({ ...session, loginAvailable: false }),
+          ? changedLoginMessage(session, login.orgName)
+          : unavailableLoginMessage(
+              { ...session, loginAvailable: false },
+              session.login?.type === 'org'
+                ? await this.env.DB.prepare(
+                    'SELECT name FROM orgs WHERE id = ?',
+                  )
+                    .bind(session.login.orgId)
+                    .first<string>('name')
+                : null,
+            ),
         false,
       )
       return null
@@ -139,14 +149,22 @@ export class WorkspaceTurnTokens {
     const login = await gatewayLogin(
       this.env,
       workspaceId,
-      session.startedBy?.id ?? null,
+      session.login ?? null,
       session.choice.agent,
+      turn.senderId,
     )
     if (!login || login.updatedAt !== turn.gateway.loginVersion) {
       const reason = login ? 'agent_login_changed' : 'agent_login_unavailable'
       const message = login
-        ? changedLoginMessage(session)
-        : unavailableLoginMessage({ ...session, loginAvailable: false })
+        ? changedLoginMessage(session, login.orgName)
+        : unavailableLoginMessage(
+            { ...session, loginAvailable: false },
+            session.login?.type === 'org'
+              ? await this.env.DB.prepare('SELECT name FROM orgs WHERE id = ?')
+                  .bind(session.login.orgId)
+                  .first<string>('name')
+              : null,
+          )
       if (!readOnly)
         await this.fail(this.operation(workspaceId), turn.id, message)
       return { ok: false, reason }
@@ -183,7 +201,10 @@ export class WorkspaceTurnTokens {
           }
         : {}),
       ...(login.loginKind.agent === 'codex' && login.loginKind.kind === 'token'
-        ? { loginOwnerId: login.userId }
+        ? {
+            loginOwnerId:
+              login.owner.type === 'personal' ? login.owner.userId : undefined,
+          }
         : {}),
     }
   }
@@ -208,11 +229,8 @@ export class WorkspaceTurnTokens {
   }
 }
 
-function changedLoginMessage(session: Session): string {
-  const starter = session.startedBy
-  const owner = starter
-    ? `${starter.displayName ?? starter.githubLogin}'s`
-    : "The session's"
+function changedLoginMessage(session: Session, orgName: string | null): string {
+  const owner = loginOwnerLabel(session, orgName)
   const agent = session.choice.agent === 'claude' ? 'Claude' : 'Codex'
   return `${owner} ${agent} login changed. Try again to use the new login.`
 }

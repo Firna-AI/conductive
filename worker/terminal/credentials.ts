@@ -14,13 +14,16 @@ export async function cacheTerminalPassword(
   target: WorkspaceTarget,
   password: string,
   now: number,
+  several = false,
 ): Promise<void> {
   const ciphertext = await encrypt(
     password,
     context(target.workspaceId),
     env.BOAT_KEY_ENCRYPTION_KEY,
   )
-  if (!(await saveTerminalCredential(env.DB, target, ciphertext, now))) {
+  if (
+    !(await saveTerminalCredential(env.DB, target, ciphertext, now, several))
+  ) {
     throw new HttpError(
       404,
       'workspace_not_found',
@@ -44,4 +47,19 @@ export async function terminalPassword(
   return row
     ? decrypt(row.ciphertext, context(workspaceId), env.BOAT_KEY_ENCRYPTION_KEY)
     : null
+}
+
+export async function terminalSeveral(
+  env: AppEnv,
+  workspaceId: string,
+  sandboxId: string | null,
+  providerAccount: string,
+): Promise<boolean> {
+  const row = await readTerminalCredential(
+    env.DB,
+    workspaceId,
+    sandboxId,
+    providerAccount,
+  )
+  return row?.several === 1
 }

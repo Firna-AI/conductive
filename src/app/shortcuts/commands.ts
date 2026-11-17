@@ -193,6 +193,7 @@ export const shortcutCommands: readonly ShortcutCommand[] = [
   palette('go-to-checks', 'Workspace'),
   palette('go-to-terminal', 'Workspace'),
   palette('go-to-preview', 'Workspace'),
+  palette('new-terminal', 'Workspace'),
   palette('new-session', 'Chat'),
   palette('session-history', 'Chat'),
   command('focus-message', 'Chat', 'workspace', 'Focus the message field'),
