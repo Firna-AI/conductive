@@ -115,8 +115,8 @@ passes with no change.
 
 Depends on: 2
 
-- [ ] Add the rule to `eslint.config.js` for the writer files.
-- [ ] Check that the rule fails on a raw `.prepare(` in a writer file,
+- [x] Add the rule to `eslint.config.js` for the writer files.
+- [x] Check that the rule fails on a raw `.prepare(` in a writer file,
       and passes on the moved code.
 
 ## Milestone 4: Verification, commit, review, and pull request
