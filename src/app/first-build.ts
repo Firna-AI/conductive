@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import type { BuildsResponse, ImageBuild } from '../shared/org-settings'
-import { currentBuild, latestBuild, type OrgModel } from './org-model'
+import { currentBuild } from './current-build'
+import { latestBuild, type OrgModel } from './org-model'
 import { ready, useStore, type Loadable } from './store'
 
 /**

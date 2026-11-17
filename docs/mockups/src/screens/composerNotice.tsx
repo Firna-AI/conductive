@@ -17,18 +17,21 @@ import { Notice } from '../components/common/Notice'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { agents } from '../fixtures/agents'
 import { droppedFolder, largeRecording } from '../fixtures/attachments'
-import { people } from '../fixtures/members'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
-import { otherStarter } from './sessionStarter'
+import { loginOwnerOf } from './sessionStarter'
 import type { WorkspaceState } from './workspaceState'
 
-/** Why a message of the viewer starts a new session, in a composer state. */
-function linkedReason(
-  composer: WorkspaceState['composer'],
-): LinkedReason | undefined {
-  if (composer === 'no-starter-login') return 'unavailable'
-  if (composer === 'not-shared') return 'private'
+/**
+ * Why a message of the viewer starts a new session, in a state. The org
+ * login has no share switch, so only a removal of it, which makes it not
+ * available, starts one.
+ */
+function linkedReason(state: WorkspaceState): LinkedReason | undefined {
+  if (state.composer === 'no-starter-login') return 'unavailable'
+  if (state.composer === 'not-shared' && state.login !== 'org') {
+    return 'private'
+  }
   return undefined
 }
 
@@ -84,12 +87,15 @@ function folderNotice() {
  * A file over the size limit and an unreadable folder have their own
  * notices.
  *
- * A message in the session of another member runs on the login of that
- * starter, so the own login of the viewer does not matter there. When the
- * login of the starter is not available, or the starter keeps it for their
- * own messages, the notice says that the message starts a new session, and
- * why. The starter whose login is not available sees the notice that asks
- * to connect.
+ * A message in a session on the login of another member, or on the org
+ * login, runs on that login, so the own login of the viewer does not
+ * matter there. When that login is not available, or its starter keeps it
+ * for their own messages, the notice says that the message starts a new
+ * session, and why, such as "Acme's Claude login is not available." after
+ * an admin removed the org login. The starter whose own login is not
+ * available sees the notice that asks to connect. A viewer whose default
+ * login is the org login sees no such notice (decision 4 of the org logins
+ * plan).
  */
 export function composerNotice(state: WorkspaceState, workspace: Workspace) {
   if (state.composer === 'too-large' && state.tab !== 'new-session') {
@@ -100,12 +106,14 @@ export function composerNotice(state: WorkspaceState, workspace: Workspace) {
   }
   const { choice } = workspace
   const agent = agents[choice.agent].name
-  const starter = otherStarter(state, workspace)
-  const reason = linkedReason(state.composer)
-  if (starter !== undefined && reason !== undefined) {
+  const owner = loginOwnerOf(state, workspace)
+  const reason = linkedReason(state)
+  // A new session takes the default login of the viewer, so it opens none.
+  const fresh = state.tab === 'new-session'
+  if (owner !== undefined && reason !== undefined && !fresh) {
     return (
       <Notice
-        body={linkedReasonText(reason, people[starter].name, agent)}
+        body={linkedReasonText(reason, owner, agent)}
         icon={MessageSquarePlus}
         title={linkedTitle}
       />
@@ -113,6 +121,6 @@ export function composerNotice(state: WorkspaceState, workspace: Workspace) {
   }
   const noLogin =
     state.composer === 'no-agent' || state.composer === 'no-starter-login'
-  if (!noLogin || starter !== undefined) return undefined
+  if (!noLogin || owner !== undefined) return undefined
   return <ConnectAgentNotice choice={choice} />
 }

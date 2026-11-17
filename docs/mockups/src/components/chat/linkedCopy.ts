@@ -13,9 +13,11 @@ export type LinkedReason = 'unavailable' | 'private'
 export const linkedTitle = 'Your message starts a new session'
 
 /**
- * The reason under the title. `starter` is the name of the member who
- * started the session, or null for an older record that names nobody, and
- * `agent` is the name of the agent, such as "Claude".
+ * The reason under the title. `starter` is the name of the owner of the
+ * login of the session: the member who started it, or the org for the org
+ * login, such as "Acme's Claude login is not available." after an admin
+ * removed it. It is null for an older record that names nobody. `agent` is
+ * the name of the agent, such as "Claude".
  */
 export function linkedReasonText(
   reason: LinkedReason,

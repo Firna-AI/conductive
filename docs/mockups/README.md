@@ -80,10 +80,12 @@ pages of `app/command-palette` and `app/feedback`, the Feedback dialog,
 and the flow that sends feedback.
 The [attachments and files](catalogue-attachments-and-files.md) page
 gives the child pages of `app/attachments` and `app/files`, and the flow
-`user-flows/drop-a-file`. The [secrets and Capabilities](catalogue-secrets.md)
-page gives the Secrets tab of the org settings, the Capabilities pages, the
-child pages of `app/secret-requests`, and the flow
-`user-flows/secret-request`.
+`user-flows/drop-a-file`. The [org logins](catalogue-org-logins.md) page
+gives the child pages of `app/org-settings/agents`, and the states of the
+other pages that name the org login of an org. The
+[secrets and Capabilities](catalogue-secrets.md) page gives the Secrets tab
+of the org settings, the Capabilities pages, the child pages of
+`app/secret-requests`, and the flow `user-flows/secret-request`.
 
 `app/attachments` shows each attached file as a chip at its place in the
 text of the message box. `app/attachments/drop` shows a drop of files into
@@ -143,6 +145,8 @@ a dropped folder that the browser cannot read. The app shares these words.
   temporary tab, which `src/screens/workspaceTemporaryTab.ts` draws in the
   row. `composerStates` covers the composer, with its links, mentions,
   attached files, drops, and the chip of Add to chat.
+  `src/screens/composerState.ts` adds that composer to the workspace state,
+  with the login of the open session and the model of the next message.
   `src/screens/rowMenuState.ts` holds the open menu of a row of All files
   or Changes, which `src/screens/workspaceRowMenu.ts` draws, and the toast
   after Copy path. `src/screens/layoutState.ts` holds the layout of the
@@ -195,9 +199,9 @@ workspace screen draws them, as `app/chat/masked-paths` shows.
 
 ## Logins
 
-[Logins](orgs-and-logins.md#logins) gives the agent logins of the account,
-the steps of Get started, and the notice for an agent that is not
-connected.
+[Logins](logins.md) gives the agent logins of the account,
+the org logins of the Agents tab of the org settings, the steps of Get
+started, and the notice for an agent that is not connected.
 
 ## The waitlist
 

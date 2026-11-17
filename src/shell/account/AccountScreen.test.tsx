@@ -129,7 +129,7 @@ describe('AccountScreen', () => {
     await settle()
     const [claude, codex] = listItems(view.innerHTML, 'Agents')
     expect(textOf(claude)).toBe(
-      'Claude Connected Subscription token Remove Let other members use this login Their messages in your sessions start a new session on their own login.',
+      'Claude Connected Subscription token Remove Let other members use this login Their messages in your sessions start a new session.',
     )
     expect(buttonsOf(claude)).toEqual([
       { label: 'Remove Claude', disabled: false },
@@ -155,7 +155,7 @@ describe('AccountScreen', () => {
     )
     await settle()
     expect(codexItem(view)).toBe(
-      `Codex ${copy.signedOut} ChatGPT plan Remove ${cause} ${copy.signInAgain} Let other members use this login Their messages in your sessions start a new session on their own login.`,
+      `Codex ${copy.signedOut} ChatGPT plan Remove ${cause} ${copy.signInAgain} Let other members use this login Their messages in your sessions start a new session.`,
     )
   })
 

@@ -17,6 +17,7 @@ import { coreFixtures } from '../../test-support/fixtures/core'
 import { nested, record } from '../api/parse'
 import { AGENTS, readChoice, readNewWorkspaceView } from '../api/read-core'
 import { devAccountStats } from './account-stats'
+import { devDefaultLogins } from './default-logins'
 import type { DevBackend } from './backend'
 import { json, RouteError, type Route } from './router'
 import { shortcutRoutes } from './shortcut-routes'
@@ -116,7 +117,11 @@ export function accountRoutes(backend: DevBackend): Route[] {
     {
       method: 'GET',
       path: ACCOUNT_PATHS.account,
-      answer: () => json(state.account satisfies AccountResponse),
+      answer: () =>
+        json({
+          ...state.account,
+          defaultLogins: devDefaultLogins(state),
+        } satisfies AccountResponse),
     },
     {
       method: 'GET',
