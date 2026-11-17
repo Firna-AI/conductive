@@ -947,11 +947,12 @@ Depends on: every other milestone
 - [x] Run the targeted tests and `npm run check`. The log is in
       `.context/org-shared-logins/m7-check-3.log`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
-      once, and report.
+      once, and report. Round 1 fixed findings 1 to 4 in `a852c33c7`.
+      Round 2 fixed finding 5 in `a3c64ffda`.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
