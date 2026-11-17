@@ -99,14 +99,15 @@ first.
   or refusal marker of each runner event. An accepted connection has the
   protocol version `RUNNER_PROTOCOL_VERSION`, and its `welcome` repeats
   that version. It also keeps `hello.loginKinds` for the connection's
-  dispatch checks.
+  dispatch checks, and `hello.processStartId` for its warnings.
 - `runner-connections.ts` and `runner-connection-store.ts`:
   `RunnerConnections`, the native acceptance, restore, close, and idle
   alarm of the current runner, and the chunked durable record of a
-  physical runner socket. That record keeps the protocol version and the
-  login kinds declared in `hello`. A record without login kinds keeps
-  that list absent, as its `hello` did. So after a wake, the runner keeps
-  its login support with no second `hello` or `welcome`. A restore retires
+  physical runner socket. That record keeps the protocol version, the
+  process-start ID, and the login kinds declared in `hello`. A record
+  without login kinds keeps that list absent, as its `hello` did. So after
+  a wake, the runner keeps its login support and its process-start ID
+  with no second `hello` or `welcome`. A restore retires
   a record of an unsupported version, or with a stream and no version.
 - `runner-output.ts` and `runner-output-state.ts`: the filter from the
   actual start capture, and its encrypted state. Each runner stream keeps

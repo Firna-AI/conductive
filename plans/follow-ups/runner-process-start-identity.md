@@ -1,10 +1,12 @@
 # Distinguish runner restarts from connection retries
 
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-17, from `calummoore/stops-show-why-a-turn-stopped-ccqn`, decision 5.
 - **Location:** `crates/cnd-runner-interface/src/runner_handshake.rs`, `crates/cnd-runner/src/state/store.rs`, `worker/chat/runner-diagnostics.ts`, and `docs/protocol/runner-warnings.md`.
-- **Reason:** A unique runner-start identity needs a new message field, which the user must choose before implementation.
+- **Reason:** Cal approved the optional runner-start identity as a separate change on 17 November 2026. This branch implements that answer.
+
+- **Decision:** Cal chose **5 = B** on **17 November 2026**: "5 = B - as a new worksapce under this parent". The answer authorizes a separate workspace under "agent stopped bug" #251 and a separate pull request into `main` from PR 439. The recorded reason for B is that existing connection and stream metadata cannot identify a process start.
 
 - **Terms:**
   - **Runner:** The program in a workspace cloud computer that runs agent turns and connects to the Worker.
@@ -22,4 +24,4 @@
 - **Wider fix:** B. A process identity makes the difference explicit instead of inferring it from connection events.
 - **Previous examples:** On 16 November 2026, workspace 134 connected 32 times. Twenty-one connects followed Worker deploys. Eleven did not, and only some had a known cause.
 - **Recommendation:** B, in a separate change. It removes the ambiguity while preserving older runners. The existing diagnostic logs can ship independently.
-- **Action:** ask the user, because the task requires a decision before a new runner message field is added.
+- **Action:** fix after merge, apply B. PR 439 has merged. Cal approved the optional field and the separate change. Delete this item in the implementing branch after its focused checks pass.

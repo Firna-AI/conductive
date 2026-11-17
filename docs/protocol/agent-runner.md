@@ -26,6 +26,9 @@ the change that keeps a turn open for background work.
   a workspace accepts, and what a refused runner and its turns get.
   [The version pin](version-pins.md#the-version-pin) states the lowest
   version that each workspace accepts.
+- Each hello of the runner also carries the process-start ID of its
+  runner start, for the warnings of the Worker, as
+  [Process starts](runner-warnings.md#process-starts) says.
 - Each build of the org image installs the newest runner. Each sandbox then
   updates its runner itself, at a later start or when its workspace is
   idle, as [Updates](sandbox-software.md#updates) says. Reason: a fix of
@@ -178,4 +181,5 @@ the notice of a failed repair.
 
 The [runner warning requirements](runner-warnings.md) give the warnings of
 the Worker for each runner connection, for its end, and for each turn end
-with no Stop request.
+with no Stop request. They also give the process-start ID that the runner
+sends for these warnings.

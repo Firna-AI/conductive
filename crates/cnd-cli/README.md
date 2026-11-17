@@ -53,7 +53,12 @@ It then checks `current` again. A newer release replaces the runner through
 `current/system/runner-start.sh` with the same process ID.
 An unchanged release starts a fresh connection and fresh handlers on the
 running version. A failed activation also reconnects when `current` still names
-the running release and no pending marker exists. Each process attempts only
+the running release and no pending marker exists.
+`runner` makes one process-start ID when the program starts, as
+[Process starts](../../docs/protocol/runner-warnings.md#process-starts) says.
+Each fresh connection and each set of fresh handlers of that program keep it.
+A newer release that replaces the runner makes a new ID, although the process
+ID stays the same. Each process attempts only
 one idle update. A reconnect after that attempt disables further idle updates
 until the next service start. Failed activation after a state change, or failed
 execution, exits for the service's existing restart and rollback path.
@@ -132,7 +137,7 @@ The musl build needs a C compiler for musl. On Ubuntu, install the
 - [update/ports.rs](src/update/ports.rs) defines disk, process, and updater boundaries.
 - [update/disk.rs](src/update/disk.rs) stores complete versions and locks.
 - [update_tests.rs](tests/update_tests.rs) checks real files and local HTTP downloads.
-- [runner_command.rs](src/runner_command.rs) composes the full runner and graceful shutdown.
+- [runner_command.rs](src/runner_command.rs) makes the process-start ID once, and composes the full runner and graceful shutdown.
 - [runner_update/idle.rs](src/runner_update/idle.rs) shares one idle update attempt across fresh runner instances and disables readiness afterward.
 - [runner_update/releases.rs](src/runner_update/releases.rs) checks complete releases and running-release confirmation through `DiskStore`.
 - [runner_update/swap.rs](src/runner_update/swap.rs) applies a release and checks whether to reconnect or exec the current launcher.
@@ -149,5 +154,6 @@ The musl build needs a C compiler for musl. On Ubuntu, install the
 
 - [Architecture](../../docs/architecture.md) describes the system components.
 - [Agent runner](../../docs/protocol/agent-runner.md) defines the runner contract.
+- [Runner warnings](../../docs/protocol/runner-warnings.md) defines the process-start ID.
 - [Workspaces and sandboxes](../../docs/protocol/workspaces-and-sandboxes.md) defines cloud computer behaviour.
 - [Workspace tools](../../tools/README.md) describes the workspace command interface.

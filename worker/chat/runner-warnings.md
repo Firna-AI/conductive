@@ -11,27 +11,42 @@ explicitly, because a typed caller can still supply extra fields.
 
 | Kind | When | Fields after `kind` and `message` |
 | --- | --- | --- |
-| `runner_connected` | After the first accepted hello of a runner connection. A connection that closes before such a hello gets it just before its `runner_disconnected` | `workspaceId`, `connectionId`, `streamId`, `protocolVersion` |
-| `runner_disconnected` | When the runner connection ends | `workspaceId`, `connectionId`, `streamId`, `protocolVersion` |
-| `turn_ended_without_stop_request` | After the commit that stores a turn end with no Stop request | `workspaceId`, `turnId`, `state`, `connectionId`, `streamId`, `protocolVersion` |
+| `runner_connected` | After the first accepted hello of a runner connection. A connection that closes before such a hello gets it just before its `runner_disconnected` | `workspaceId`, `connectionId`, `streamId`, `processStartId`, `protocolVersion` |
+| `runner_disconnected` | When the runner connection ends | `workspaceId`, `connectionId`, `streamId`, `processStartId`, `protocolVersion` |
+| `turn_ended_without_stop_request` | After the commit that stores a turn end with no Stop request | `workspaceId`, `turnId`, `state`, `connectionId`, `streamId`, `processStartId`, `protocolVersion` |
 
 - `message` is a fixed text for each kind.
 - `state` is `finished`, `stopped`, or `failed`.
 - `connectionId` is `ActiveRunner.id`, the ID that the workspace gives the
   runner connection. A turn end takes the connection that is current at
   its commit, not the connection that got the turn.
+- `processStartId` is the `hello.processStartId` of the runner connection.
+  One runner start keeps it across reconnects, and each new start sends a
+  new one, as
+  [Process starts](../../docs/protocol/runner-warnings.md#process-starts)
+  says.
 - A value that is not available is null. A connection that closes before an
-  accepted hello has a null `streamId` and `protocolVersion`.
+  accepted hello has a null `streamId`, `processStartId`, and
+  `protocolVersion`. A hello without `processStartId`, such as from an
+  older runner, and a saved record without it also give a null
+  `processStartId`.
 - `workspaceId`, `connectionId`, and `turnId` must pass
-  `WarningId.checked`, and `streamId` must pass `WarningStreamId.checked`,
-  a UUID check. An ID that fails its check shows as `unknown`.
-  `protocolVersion` must be a positive safe integer, or it shows as null.
-  [`worker/warning-values.ts`](../warning-values.ts) holds these checks.
+  `WarningId.checked`. `streamId` and `processStartId` must pass
+  `WarningStreamId.checked`, a UUID check. An ID that fails its check shows
+  as `unknown`. `protocolVersion` must be a positive safe integer, or it
+  shows as null. [`worker/warning-values.ts`](../warning-values.ts) holds
+  these checks.
+- The hello reader refuses no hello for its `processStartId`. A value that
+  fails the UUID check, of any type, shows as `unknown`.
 - [`runner-diagnostics.ts`](runner-diagnostics.ts) builds the connection
   fields and writes the connection warnings.
 - A restore of the saved runner connection writes no `runner_connected`.
   A restored connection with no accepted hello yet still gets it at its
   first accepted hello, or just before its `runner_disconnected`.
+- A restored connection keeps the saved `processStartId`. A saved record
+  without it restores by the same rules. An invalid ID never fails the
+  restore. The reader keeps only a checked UUID, `unknown` for another
+  present value, or null for an unavailable value.
 - When `restore` refuses the matching saved connection, such as for an
   unsupported protocol version, it writes `runner_disconnected` with the
   checked values of the saved record. A socket that does not match the

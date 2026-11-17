@@ -7,7 +7,7 @@ The `conductive runner` command composes this crate. The installed service runs 
 
 ## Responsibilities
 
-- Open an authenticated outbound TLS WebSocket and send the version 2 hello.
+- Open an authenticated outbound TLS WebSocket and send the version 2 hello with the caller's process-start ID.
 - Save numbered events before sending them. Keep unconfirmed events across restarts.
 - Process welcome, confirmations, gaps, resends, and connection retries.
 - Keep conversation references, instructions, file revisions, turn records, and report receipts.
@@ -88,6 +88,9 @@ Compose `Arc<dyn Disk>`, `Arc<dyn EventStore>`, `Arc<dyn Clock>`,
 `Arc<dyn Connector>`, and `Arc<dyn RunnerLink>`. Give `DurableStore` a fresh
 random stream ID for a missing file. Call `EventStore::load` once before
 sharing the store. An existing file supplies its saved stream ID.
+Give each `SavedRunnerLink` the process-start ID of the runner start.
+Make one random version 4 UUID when the program starts. Give that ID to
+each later link of the same program. Never save it in the store.
 Give `RunnerCore` the loaded store, link, clock, a `CommandHandler`, and a
 `ReleaseReadiness` port. `NoUpdates` disables swaps for other embeddings.
 Drive `Runner::run` with a Tokio watch channel for shutdown. Handle its
@@ -165,7 +168,7 @@ and connection drops. It does not run the Worker.
 - [driver.rs](src/helper/driver.rs): `HelperConnection` correlates requests while agent events stream.
 - [process.rs](src/helper/process.rs): `NodeHelpers` owns private pipes and process-group cleanup.
 - [startup.rs](src/helper/startup.rs): `RunnerStartup` clears stale credentials, warms the SDK, and confirms a welcome.
-- [runner_command.rs](../cnd-cli/src/runner_command.rs): the CLI composes the full runner and signal handling.
+- [runner_command.rs](../cnd-cli/src/runner_command.rs): the CLI makes the process-start ID once, and composes the full runner and signal handling.
 - [limits.rs](src/limits.rs): `bound_event` applies serialized chat excerpts.
 - [commands.rs](src/json/commands.rs): `workspace_message` repairs and validates command JSON.
 - [service.rs](src/repository/service.rs): `Repository` supplies scans, reads, diffs, and checkpoints.
@@ -180,6 +183,7 @@ and connection drops. It does not run the Worker.
 ### Related Docs
 
 - [Agent runner protocol](../../docs/protocol/agent-runner.md)
+- [Runner warnings](../../docs/protocol/runner-warnings.md)
 - [Agent instructions](../../docs/protocol/agent-instructions.md)
 - [Sub-workspaces](../../docs/protocol/sub-workspaces.md)
 - [Lost workspace updates](../../docs/protocol/lost-workspace-updates.md)

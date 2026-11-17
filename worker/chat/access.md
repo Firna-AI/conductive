@@ -179,9 +179,10 @@ access logic, with the access scheduler that the test injects.
   [`runner-connection-store.ts`](runner-connection-store.ts) keeps the
   current physical connection in chunked raw records under
   `native:runner:`. They hold the connection ID, the generation, the
-  workspace record with the token hash, the stream ID, the protocol version
-  of the runner's `hello`, the readiness, and the next check time. They
-  hold no agent login and no turn token.
+  workspace record with the token hash, the readiness, and the next check
+  time. They also hold the stream ID, the process-start ID, and the
+  protocol version of the runner's `hello`. They hold no agent login and
+  no turn token.
 - A restore retires a saved record whose version is not
   `RUNNER_PROTOCOL_VERSION`, or that has a stream but no version. It
   closes that socket, and nothing throws in the constructor of the
