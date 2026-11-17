@@ -114,6 +114,7 @@ describe('Copy path in the tab menu of a file or diff tab', () => {
           { name: 'Copy path', off: false },
           { name: 'Move left', off: false },
           { name: 'Move right', off: false },
+          { name: 'Close other tabs', off: false },
           { name: 'Close tabs to the right', off: false },
         ],
         lines: 2,
