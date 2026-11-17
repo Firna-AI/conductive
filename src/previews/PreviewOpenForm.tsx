@@ -26,6 +26,8 @@ interface FormProps {
   opening: boolean
   error: ToolError | null
   onOpen: (port: number) => void
+  /** The port whose Preview tab shows, on desktop, or null. */
+  current?: number | null
 }
 
 /** The port field: a typed port, or a mark when a press has no port. */
@@ -107,6 +109,7 @@ export function PreviewOpenForm(props: FormProps) {
       <p className={servers ? rows.intro : message.body}>{body}</p>
       {servers ? (
         <ServerRows
+          current={props.current}
           disabled={props.opening}
           onOpen={props.onOpen}
           servers={list.servers}

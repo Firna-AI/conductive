@@ -8,6 +8,7 @@ import type {
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
 import { advanceStartRecords } from './start-records'
+import { waitCreationAdmission } from './creation-admission-wait'
 import { publishCreationResult } from './creation-publication'
 import { warnWorker } from '../warnings'
 import { errorSummary, WarningId } from '../warning-values'
@@ -97,8 +98,8 @@ export class WorkspaceStartCoordinator {
   creationResult() {
     return this.storage.creationResult()
   }
-  waitAdmission(): Promise<WorkspaceCreationAdmission> {
-    return this.admissionWaiters.wait(() => this.storage.admission())
+  waitAdmission(timeoutMs?: number): Promise<WorkspaceCreationAdmission> {
+    return waitCreationAdmission(this.storage, this.admissionWaiters, timeoutMs)
   }
   async pending(): Promise<boolean> {
     return Boolean(await this.storage.job())

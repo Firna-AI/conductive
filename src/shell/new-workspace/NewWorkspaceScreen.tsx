@@ -8,6 +8,7 @@ import { routes } from '../../app/router'
 import { useStore, valueOf } from '../../app/store'
 import { whenOf, type When } from '../../app/time'
 import type { OrgSummary } from '../../shared/orgs'
+import { draftCapabilities } from '../capabilities/DraftCapabilities'
 import { useApp, useOrgAccess, useOrgModel } from '../context'
 import { Page } from '../layout/Page'
 import { ActionButton } from '../ui/actions'
@@ -151,6 +152,7 @@ export function NewWorkspaceScreen(props: {
                   models={form.models}
                   ready={form.ready}
                   send={form.send}
+                  tools={[draftCapabilities(org, model)]}
                 />
               </OrgLinks>
             </>

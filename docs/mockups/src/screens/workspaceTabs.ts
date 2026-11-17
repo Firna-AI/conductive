@@ -8,6 +8,8 @@ import {
   workspaceSessions,
 } from '../fixtures/sessions'
 import { screenshotCopy } from '../fixtures/attachments'
+import { detectedServers, openPort, openPorts } from '../fixtures/previews'
+import { previewTabLabel } from '../components/tools/previewCopy'
 import { branchPictures, splitPath } from '../fixtures/files'
 import { maskedDiffPath } from '../fixtures/maskedFiles'
 import type { Workspace } from '../fixtures/workspaces'
@@ -86,6 +88,26 @@ function pictureTab(state: WorkspaceState): WorkspaceTab | undefined {
 }
 
 /**
+ * The Preview tabs of the row, while the state keeps them (decision 291):
+ * one tab for each port, ports 3000 and 6006, opened after the code file.
+ * Each shows the label of its port, as the list of the tool names it. The
+ * tab of port 3000 shows in `preview`.
+ */
+function previewTabs(state: WorkspaceState): WorkspaceTab[] {
+  if (state.tab !== 'preview' && state.tab !== 'preview-behind') return []
+  return openPorts.map((port) => {
+    const server = detectedServers.find((each) => each.port === port)
+    return {
+      key: `preview:${port}`,
+      kind: 'preview',
+      title: previewTabLabel(port, server),
+      to: paths.preview,
+      selected: state.tab === 'preview' && port === openPort,
+    }
+  })
+}
+
+/**
  * The tabs of the centre column: the sessions, the code file that stays
  * open, and the file, the diff, or the new session that the state opens.
  * Each new tab opens at the end of the row, as the linked session does. A
@@ -100,7 +122,7 @@ function pictureTab(state: WorkspaceState): WorkspaceTab | undefined {
  * to that view. After the second session sent its messages, the second
  * session can show, and each session tab leads to its chat of that time.
  * The file or the diff that the state opens can be the temporary tab, as
- * `withTemporaryTab` draws it.
+ * `withTemporaryTab` draws it. The Preview tabs show after the code file.
  */
 export function tabsFor(
   state: WorkspaceState,
@@ -124,7 +146,7 @@ export function tabsFor(
       kind: 'session',
       title: nameLabel(first.title),
       to: firstPath,
-      selected: state.tab === 'session',
+      selected: state.tab === 'session' || state.tab === 'preview-behind',
     },
     {
       key: second.key,
@@ -160,10 +182,12 @@ export function tabsFor(
       title: masked ? splitPath(maskedDiffPath).name : 'AddressForm.tsx',
       to: masked ? paths.maskedPaths : paths.diff,
       selected: true,
+      hidesPath: masked,
     })
   }
   const picture = pictureTab(state)
   if (picture) tabs.push(picture)
+  tabs.push(...previewTabs(state))
   if (state.tab === 'unnamed-file') {
     tabs.push({
       key: 'unnamed',
@@ -171,6 +195,7 @@ export function tabsFor(
       title: 'File',
       to: paths.maskedPathsUnnamed,
       selected: true,
+      hidesPath: true,
     })
   }
   if (state.tab === 'new-session') {

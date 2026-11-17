@@ -5,6 +5,11 @@ The [agent runner](README.md) reads these variables when the service starts.
 | Variable                             | Required | Value                                                                 |
 | ------------------------------------ | -------- | --------------------------------------------------------------------- |
 | `CONDUCTIVE_WORKSPACE_ID`            | Yes      | The workspace ID. The runner sends it in `hello`.                     |
+| `CONDUCTIVE_WORKSPACE_LINK`          | No       | The canonical workspace link. |
+| `CONDUCTIVE_WORKSPACE_DEPTH`         | No       | Its depth as an unsigned decimal number. Top-level workspaces have depth `0`. |
+| `CONDUCTIVE_WORKSPACE_MAX_DEPTH`     | No       | The deepest permitted depth, supplied by the Worker. |
+| `CONDUCTIVE_PARENT_WORKSPACE_ID`     | No       | The direct parent's ID, for a sub-workspace only. |
+| `CONDUCTIVE_PARENT_WORKSPACE_LINK`   | No       | The direct parent's canonical link, for a sub-workspace only. |
 | `CONDUCTIVE_WORKSPACE_TOKEN`         | Yes      | The workspace token. The runner sends it as a bearer token.           |
 | `CONDUCTIVE_RUNNER_URL`              | Yes      | The `https:` or `wss:` URL of the runner route.                       |
 | `CONDUCTIVE_REPOSITORY`              | Yes      | The folder of the workspace repository.                               |
@@ -52,6 +57,17 @@ The [agent runner](README.md) reads these variables when the service starts.
   folder variable with its folder in name order, and the two branches. A
   saved session keeps its saved text. So a changed value reaches only new
   sessions, as [What it does](README.md#what-it-does) says.
+- The workspace link, depth, and deepest depth form one optional tree
+  context. A sub-workspace must also supply both parent variables.
+  Links must be absolute HTTP or HTTPS URLs. Depths must be unsigned
+  decimal integers, and the deepest depth must be positive.
+  The workspace depth must not exceed it. A top-level workspace has no
+  parent variables. IDs must be nonblank and contain no white space or
+  control characters. A workspace cannot name itself as its parent.
+  Missing or malformed context keeps the runner working and produces
+  one warning:
+  `The workspace tree context is unavailable. Agent instructions will omit it.`
+  Its instructions then omit all tree facts and nesting guidance.
 - The home folder also holds `.conductive/claude` and `.conductive/codex`,
   where the agents keep their sessions. Boat keeps the disk across a stop
   and a resume, so the sessions stay.

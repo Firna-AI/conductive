@@ -10,12 +10,14 @@ import { ComputerTab } from './ComputerTab'
 import { GeneralTab } from './GeneralTab'
 import { MembersSettings } from './MembersSettings'
 import { RepositoriesTab } from './RepositoriesTab'
+import { SecretsTab } from './SecretsTab'
 
 /** The parts of the org settings, in their order. */
 const tabs = [
   { tab: 'general', label: 'General' },
   { tab: 'repositories', label: 'Repositories' },
   { tab: 'cloud-computer', label: 'Cloud computer' },
+  { tab: 'secrets', label: 'Secrets' },
   { tab: 'members', label: 'Members' },
 ] as const satisfies readonly { tab: SettingsTab; label: string }[]
 
@@ -27,6 +29,8 @@ function TabBody(props: { org: OrgSummary; tab: SettingsTab; user: User }) {
       return <RepositoriesTab org={props.org} />
     case 'cloud-computer':
       return <ComputerTab org={props.org} />
+    case 'secrets':
+      return <SecretsTab org={props.org} user={props.user} />
     case 'members':
       return <MembersSettings org={props.org} user={props.user} />
   }
@@ -34,9 +38,11 @@ function TabBody(props: { org: OrgSummary; tab: SettingsTab; user: User }) {
 
 /**
  * The settings of an org: its name, its repositories, its cloud computer,
- * and its members. Each tab is a link with its own address. A member sees
- * every tab without its edit actions. A suspended org shows its notice
- * above every tab, and every person sees the tabs without edit actions.
+ * its secrets, and its members. Each tab is a link with its own address. A
+ * member sees every tab without its edit actions, except Secrets, where
+ * every member adds secrets and changes the own ones. A suspended org shows
+ * its notice above every tab, and every person sees the tabs without edit
+ * actions.
  */
 export function OrgSettingsScreen(props: {
   org: OrgSummary

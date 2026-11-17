@@ -51,9 +51,9 @@ fn preserves_exact_write_text_and_generates_only_missing_request_ids() -> Result
             Name::CreateWorkspace,
             json!({"repositoryId":"repo", "firstMessage":"  -Work\nNext  ",
             "firstSessionTitle":"", "name":"", "model":{"agent":"claude", "model":"model", "secret":"ignored"},
-            "effort":"max", "fast":true, "sectionId":"section", "sender":"ignored"}),
+            "effort":"max", "fast":true, "sectionId":"section", "parentId":"parent", "sender":"ignored"}),
             json!({"repositoryId":"repo", "firstMessage":"  -Work\nNext  ", "firstSessionTitle":"", "name":"",
-                "model":{"agent":"claude", "model":"model"}, "effort":"max", "fast":true, "sectionId":"section", "requestId":"generated-id"}),
+                "model":{"agent":"claude", "model":"model"}, "effort":"max", "fast":true, "sectionId":"section", "parentId":"parent", "requestId":"generated-id"}),
         ),
         (
             Name::CreateSession,
@@ -91,6 +91,11 @@ fn rejects_invalid_shared_write_and_resource_fields() -> Result<()> {
         (
             Name::CreateWorkspace,
             json!({"repositoryId":"repo", "firstMessage":" "}),
+            InputError::Required,
+        ),
+        (
+            Name::CreateWorkspace,
+            json!({"repositoryId":"repo", "firstMessage":"Work", "parentId":" "}),
             InputError::Required,
         ),
         (
@@ -140,7 +145,7 @@ fn rejects_invalid_shared_write_and_resource_fields() -> Result<()> {
 
 #[test]
 fn preserves_list_filters_and_safe_transcript_boundaries() -> Result<()> {
-    let filters = json!({"ownerId":"member", "repositoryId":"repo", "state":"ready", "query":"", "updatedSince":-1,
+    let filters = json!({"ownerId":"member", "parentId":"parent", "repositoryId":"repo", "state":"ready", "query":"", "updatedSince":-1,
         "archived":false, "limit":100, "offset":9007199254740991u64});
     assert_eq!(
         body(parsed(Name::ListWorkspaces, filters.clone()).internal()?)?,
@@ -174,6 +179,11 @@ fn preserves_list_filters_and_safe_transcript_boundaries() -> Result<()> {
 fn rejects_invalid_filters_and_transcript_positions() -> Result<()> {
     for (name, fields, expected) in [
         (Name::ListWorkspaces, json!({"limit":0}), InputError::List),
+        (
+            Name::ListWorkspaces,
+            json!({"parentId":false}),
+            InputError::Required,
+        ),
         (Name::ListSessions, json!({"limit":101}), InputError::List),
         (Name::ListSessions, json!({"offset":-1}), InputError::List),
         (

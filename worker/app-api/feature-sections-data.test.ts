@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest'
 
 import { TEST_TIME } from '../test-support/harness'
-import { updateShellSection } from './feature-sections-data'
+import { deleteShellSection, updateShellSection } from './feature-sections-data'
 import { shellSections } from './shell-data'
 import {
   beforeFirstListBatch,
@@ -9,8 +9,55 @@ import {
   suspendBeforeFirstListBatch,
   type ShellListFixture,
 } from './shell-list.test-support'
+import {
+  seedWorkspaceTree,
+  storedTreePlaces,
+  workspacePlaces,
+} from './workspace-tree.test-support'
 
 const fixtureForTest = setupShellListTests()
+
+it('deletes a section with a tree and keeps its live and archived workspaces in General', async () => {
+  const fixture = fixtureForTest()
+  const { db, orgId, user, generalId, reviewId } = fixture
+  await seedWorkspaceTree(fixture, [
+    { id: 'general-root', sectionId: generalId, position: 0 },
+    { id: 'tree-root', sectionId: reviewId, position: 0 },
+    {
+      id: 'middle',
+      sectionId: reviewId,
+      position: 1,
+      parentId: 'tree-root',
+      archived: true,
+    },
+    { id: 'child', sectionId: reviewId, position: 2, parentId: 'middle' },
+  ])
+  const result = await deleteShellSection(db, {
+    orgId,
+    userId: user.id,
+    sectionId: reviewId,
+    now: TEST_TIME + 100,
+  })
+  expect(result.deleted).toBe(true)
+  expect(result.workspaceIds.sort()).toEqual(['child', 'middle', 'tree-root'])
+  expect(
+    (await storedTreePlaces(fixture)).map(({ id, sectionId, parentId }) => [
+      id,
+      sectionId,
+      parentId,
+    ]),
+  ).toEqual([
+    ['general-root', generalId, null],
+    ['tree-root', generalId, null],
+    ['middle', generalId, 'tree-root'],
+    ['child', generalId, 'middle'],
+  ])
+  expect(await workspacePlaces(fixture)).toEqual([
+    ['general-root', generalId, null],
+    ['tree-root', generalId, null],
+    ['child', generalId, 'tree-root'],
+  ])
+})
 
 function moveSection(
   db: D1Database,

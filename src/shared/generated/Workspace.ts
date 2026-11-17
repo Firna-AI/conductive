@@ -34,6 +34,10 @@ export type Workspace = {
    */
   sectionId: string
   /**
+   * Parent workspace, or null for a top-level workspace.
+   */
+  parentId: string | null
+  /**
    * owner.
    */
   owner: MessageSender

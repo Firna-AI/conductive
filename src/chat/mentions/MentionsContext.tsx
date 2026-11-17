@@ -46,6 +46,15 @@ export interface ChatMentions {
 }
 
 /**
+ * A file or a folder of the tree, as a mention names it: its path inside
+ * the repository, without the final `/` of a folder.
+ */
+export interface MentionTarget {
+  path: string
+  folder: boolean
+}
+
+/**
  * The tree as the list of `@` and the chips find it: still loading, not
  * available, or ready with its entries.
  */
@@ -120,18 +129,28 @@ function followNothing(): () => void {
 }
 
 /**
+ * The tree of `files` as the list of `@` finds it, or null without files.
+ * The value changes only when the tree changes, as `treeOf` says. A part
+ * outside the chat reads it too, such as the row menu of the Files panel.
+ */
+export function useFilesMentionTree(
+  files: MentionFiles | null,
+): MentionTree | null {
+  const read = useCallback(
+    () => (files ? treeOf(files.getSnapshot()) : null),
+    [files],
+  )
+  return useSyncExternalStore(files?.subscribe ?? followNothing, read, read)
+}
+
+/**
  * The tree that the chat follows now, or null without mentions. A reader
  * that `follows` nothing, such as an answer, gets null and follows no
  * change.
  */
 export function useMentionTree(follows = true): MentionTree | null {
   const mentions = useChatMentions()
-  const files = follows ? (mentions?.files ?? null) : null
-  const read = useCallback(
-    () => (files ? treeOf(files.getSnapshot()) : null),
-    [files],
-  )
-  return useSyncExternalStore(files?.subscribe ?? followNothing, read, read)
+  return useFilesMentionTree(follows ? (mentions?.files ?? null) : null)
 }
 
 /**

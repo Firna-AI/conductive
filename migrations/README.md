@@ -23,7 +23,8 @@ So a build whose create reply was lost finds that sandbox again. When the user w
 
 Chat history, sessions, runner event cursors, start steps, and banner state
 belong to workspace Durable Object storage. They have no D1 tables.
-Stored secrets use ciphertext columns. The browser reads only metadata.
+Stored secrets use ciphertext columns. The browser reads metadata, except
+when an org admin reveals one secret value through the recorded Reveal action.
 The git credential helper uses the GitHub user token of the turn's sender, as
 [GitHub tokens](../docs/protocol/github-tokens.md) says.
 The older comment on `github_connections` in `202611060100_contracts.sql`
@@ -246,6 +247,23 @@ It keeps every other preference and every saved view.
 An unset view now uses the dialog, so only accounts made after this migration get the dialog without a choice.
 [The preference](../docs/protocol/create-a-workspace.md#the-preference) gives the requirement.
 
+`202611141345_agent_secrets.sql` adds encrypted org secrets, workspace
+pre-approvals, and session approvals. A name is unique in its org.
+Composite foreign keys keep each grant within its org and delete its rows
+with its secret or workspace. Creator and approver IDs are opaque
+attribution IDs, so account removal keeps the records.
+The migration adds `workspaces.mac_access`, on for each existing and new
+row, and `workspace_creation_plans.capabilities_json` for create recovery.
+The [secrets backend](../worker/secrets/README.md) owns these records.
+
+`202611161353_secret_reveals.sql` adds retained reveal records with the
+secret ID and name, value version, admin ID, and time. An org foreign key
+removes its records at org purge. Secret and admin IDs have no foreign
+key, so their deletion keeps the records. No record holds a secret value.
+The migration gives each existing secret value version 1. Replacement
+increments that version, so metadata shows only a reveal of the current
+value. An index serves the last reveal of each value version.
+
 `202611161200_parallel_image_sources.sql` rebuilds `image_source_jobs` with the primary key `(build_id, source_index)`, so an image job keeps one row for each repository.
 It copies every column of each older row, including the encrypted token, process, output offsets, source index, and provider account.
 The new `estimate_bytes` column holds the memory estimate of the Git commands of a repository, 256 MiB by default.
@@ -285,6 +303,13 @@ Existing rows keep null until their next lifecycle save. It guesses no time.
 The partial index `workspaces_running_since` holds running, unarchived rows
 with a non-null time. Its running states match `runningWorkspacePredicate`.
 The [operator Overview](../worker/operator/overview.md) uses this index to read the ten oldest runs.
+
+`202611161700_workspace_parents.sql` adds the nullable parent workspace link
+to `workspaces` and `workspace_creation_plans`. Existing rows keep `NULL`.
+The workspace link references `workspaces(id)`. The index on
+`(org_id, parent_workspace_id)` serves direct sub-workspace reads.
+The creation plan keeps the parent through creation retries and replay.
+[Sub-workspaces](../docs/protocol/sub-workspaces.md) gives the parent rules.
 
 ## Reserved ranges
 
@@ -332,6 +357,7 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | Keyboard shortcuts storage | `202611101600`–`202611101659` |
 | Agent workspace calls | `202611111200`–`202611111259` |
 | Parallel image sources | `202611161200`–`202611161259` |
+| Sub-workspaces | `202611161700`–`202611161759` |
 
 `202611131221_attachment_download_tokens.sql` adds one-use attachment download grants.
 Each row holds a token digest, the file and destination identities, its expiry, and its claim time.

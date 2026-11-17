@@ -48,6 +48,22 @@ The workspace keeps accepted messages for the agent.
 The org must have a successful build before you create a new workspace.
 That first build is separate from the start of an existing workspace's computer.
 
+## Mention a repository file
+
+Use a mention for a file or folder already in the workspace.
+
+1. Type `@` at the start of your message, or after a space or line break.
+2. Type part of the file or folder name.
+3. Select its entry from the list.
+
+The entry becomes a chip, a small box with its name, in the message field.
+Your message gives the agent its path, such as `@src/app.ts` or `@src/lib/`.
+Use **Attach files** for a file from your own computer.
+
+You can also select **Add to chat** from a row's menu in **All files** or **Changes**.
+
+- [Copy a path or add a file to chat](/docs/files-and-changes#copy-a-path-or-add-a-file-to-chat)
+
 ## Attach files
 
 Use **Attach files** to pick files, or drop files into the message box.
@@ -235,7 +251,7 @@ In the folded work of a turn, open a message line to read its table.
 
 ## Manage session tabs
 
-Use a tab's menu to rename or move it, to copy its link, or to close the tabs after it.
+Use a tab's menu to rename or move it, to copy its link, or to close other tabs or the tabs after it.
 Open the menu with a right click on a computer.
 You can also use **Shift+F10** while the tab has focus.
 On a phone, use a long press.
@@ -243,8 +259,9 @@ On a phone, use a long press.
 - **Rename session** changes the tab's title.
 - **Copy link** copies a link that opens the workspace with that session shown.
 - **Move left** and **Move right** move it one place.
+- **Close other tabs** closes every other tab in the row.
 - **Close tabs to the right** closes every tab after it in the row.
-  If the shown tab closes, this tab shows.
+  With either close, if the shown tab closes, this tab shows.
 - Drag a tab to place it elsewhere in the row.
 
 File and diff tabs share the row on a computer.
@@ -314,6 +331,7 @@ Any member who can send in a session can change its model, effort, and **Fast** 
 That choice also applies to the messages of the member whose login the session uses.
 
 GitHub operations follow the person whose message started the running turn.
+After a late answer to a secret request, the new turn follows the person whose message started the turn that asked.
 Commits name that person as both author and committer.
 In a workspace with older cloud computer software, agent commits name the workspace owner.
 Mac command requests go to that same person's connected Mac.

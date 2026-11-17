@@ -137,3 +137,60 @@ it('loads a mark with no matching open kind and path as null', async () => {
     })
   }
 })
+
+it('keeps Preview tabs through a save and a load, apart from the tabs that older copies read', async () => {
+  const withPreviews = {
+    ...view,
+    temporaryTab: null,
+    activeTab: null,
+    previewTabs: [
+      { port: 3000, place: 1 },
+      { port: 65535, place: 3 },
+    ],
+    activePreview: 3000,
+  }
+  const saved = await requestView('PUT', withPreviews)
+  expect(saved.status).toBe(200)
+  expect(await saved.json()).toMatchObject({ view: withPreviews })
+  const loaded: unknown = await (await requestView()).json()
+  expect(loaded).toMatchObject({ view: withPreviews })
+  // An older copy reads `tabs` and `activeTab`, which hold no Preview tab.
+  expect(JSON.stringify(loaded)).not.toContain('"kind":"preview"')
+})
+
+it('keeps the stored Preview tabs when an older copy saves the view', async () => {
+  await requestView('PUT', {
+    ...view,
+    previewTabs: [{ port: 3000, place: 0 }],
+    activePreview: 3000,
+  })
+  // An older copy knows no Preview tab, so its save has no `previewTabs`.
+  const older = { ...view, tabs: [tabs[1], tabs[0]], activeTab: tabs[1] }
+  const saved = await requestView('PUT', older)
+  expect(saved.status).toBe(200)
+  expect(await (await requestView()).json()).toMatchObject({
+    view: {
+      ...older,
+      previewTabs: [{ port: 3000, place: 0 }],
+      activePreview: null,
+    },
+  })
+})
+
+it('refuses a Preview tab without a port from 1 to 65535 or a place', async () => {
+  const wrong: readonly unknown[] = [
+    [{ port: 0, place: 0 }],
+    [{ port: 65536, place: 0 }],
+    [{ port: 3000.5, place: 0 }],
+    [{ port: '3000', place: 0 }],
+    [{ port: 3000, place: -1 }],
+    [{ port: 3000 }],
+    'none',
+  ]
+  for (const previewTabs of wrong) {
+    const saved = await requestView('PUT', { ...view, previewTabs })
+    expect(saved.status, JSON.stringify(previewTabs)).toBe(400)
+  }
+  const active = await requestView('PUT', { ...view, activePreview: 0 })
+  expect(active.status).toBe(400)
+})

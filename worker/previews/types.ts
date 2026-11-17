@@ -23,7 +23,6 @@ export interface ToolDependencies {
   fetch: HttpFetch
   now: () => number
   sockets?: SocketRuntime
-  onActivity?: (workspaceId: string, at: number) => void
   /** How long one access read covers a viewer's checks. Production uses `PREVIEW_ACCESS_WINDOW_MS`. */
   previewAccessWindowMs?: number
 }

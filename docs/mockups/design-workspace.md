@@ -3,8 +3,9 @@
 This page belongs to [the design](design.md), which gives the style, the
 layouts, the design tokens, and the shared parts. This page gives the
 messages that wait for the sandbox and the tab row of the centre column,
-with its temporary tab. It also gives the number of a workspace with Copy
-link, and the bars of the cloud computer.
+with its temporary tab, and the menu of a row of the Files panel. It also
+gives the number of a workspace with Copy link, and the bars of the cloud
+computer.
 
 - While a sandbox starts, also for the first time, Send queues each
   message in the workspace, as `app/new-workspace/waiting` shows. A queued
@@ -23,13 +24,17 @@ link, and the bars of the cloud computer.
   their minimum width, the row scrolls sideways with no scrollbar, keeps the
   shown tab in view, and fades each end that clips tabs. A right click on a
   tab opens its menu at the pointer: Rename session, a line, Copy link,
-  Copy concise transcript, and Copy full transcript, a line, then Move left
-  and Move right, from decisions 188 and 215. Copy link copies the link of
-  the session. A kept file or diff tab has only the moves. In a read-only
-  workspace, the menu of a session tab holds only the three copy items,
-  and a file or diff tab opens no menu. A copy keeps the shown
-  tab, and a toast gives its result, as `app/transcripts` shows. The menu
-  is the one way to rename a session, so no tab shows a rename button.
+  Copy concise transcript, and Copy full transcript, a line, Move left and
+  Move right, a line, then Close other tabs and Close tabs to the right,
+  from decisions 188 and 215. Copy link copies the link of the session. A
+  kept file or diff tab has Copy path, a line, the moves, a line, and the
+  two closes, from decision 3 B of the file row menu change. Copy path
+  copies the path of the file, as in the menu of its row. A tab whose label can hide a secret value
+  leaves it out. In a read-only workspace, the menu of a session tab holds
+  only the three copy items, and the menu of a file or diff tab only Copy
+  path. A copy keeps the shown tab, and a toast gives its result, as
+  `app/transcripts` shows. The menu is the one way to rename a session, so
+  no tab shows a rename button.
   Rename session opens a field in place of the title of that tab, also when
   the tab does not show. The field marks that tab, which takes no fill, so
   only the shown tab is filled. On a phone, a long press that ends without a
@@ -49,13 +54,34 @@ link, and the bars of the cloud computer.
   ", temporary". The tab menu and the move messages keep the plain name. A
   double-click on the tab or on the row of its file keeps it as a normal
   tab, with an upright title, in its place. Its tab menu leads with Keep
-  open, which keeps it too, then a line, then Move left and Move right.
+  open, which keeps it too, then a line, Copy path, a line, and the moves.
   Keep open has the icon of a bookmark with a check, because a pin names
   the pinned tabs of a browser. A drag, Move left, or Move right that
   changes its place keeps it. A drag that Escape cancels, or that ends in
   the same place, keeps it temporary. A phone row shows no file tabs, so a
   phone draws no temporary tab. `.temporary` of `WorkspaceTabs.module.css`
   styles the title.
+- `FileTree` and `ChangeList` in `src/components/files/` draw the menu of
+  a row of All files and Changes, from the file row menu change, as
+  `app/files/menu` shows. A right click on a file or a folder row opens it
+  at the pointer, through `PointMenu` in `src/components/common/`, and
+  Shift+F10 and the Menu key open it below a focused row. A long press on
+  a phone opens it as a sheet with the name of the row as its title. The
+  menu holds Add to chat, a line, then Copy path, and no row has a button
+  for it. Copy path copies the path from the root of the repository, with
+  no final slash, and a toast gives its result, in the words of Copy link.
+  Add to chat puts the chip of the file or the folder in the message field
+  of the session tab that the member saw last, and shows that tab. On
+  desktop the field takes the focus, and on a phone no keyboard opens. Add
+  to chat shows only for a path that the list of `@` offers, while the
+  message field shows. So a deleted file of Changes, and a bar of the
+  cloud computer in place of the field, leave it out. A row whose label
+  hides a secret value opens no menu. A read-only workspace shows no rows.
+  The row of an open menu keeps the fill of a hover, as a tab with an open
+  menu does, also under the sheet of a phone. `FileRowMenu.tsx` beside the
+  lists gives the items and the sheet, and `rowMenuCopy.ts` gives the
+  words of the items and of the toast. Add to chat has the icon of the `@`
+  of a mention, because the speech bubble with a plus names New session.
 - `TerminalTabs` in `src/components/tools/` draws the terminals of a
   workspace as a row of tabs above the shown terminal, with + at its end,
   from decisions 1 to 3 of the terminal tabs change, as `app/tools` shows. Its tabs are

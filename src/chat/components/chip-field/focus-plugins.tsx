@@ -8,11 +8,18 @@ import {
   FOCUS_COMMAND,
   HISTORY_PUSH_TAG,
   mergeRegister,
+  SKIP_DOM_SELECTION_TAG,
 } from 'lexical'
+import { mentionText } from '../../../shared/mention-text'
+import {
+  findMentioned,
+  useMentionTree,
+  type MentionTarget,
+} from '../../mentions/MentionsContext'
 import { heldFile, useFieldFiles } from './attached-files'
 import type { DropCaretControl } from './drop-caret'
-import { focusField } from './field-focus'
-import { $insertFiles } from './insert-files'
+import { focusField, isFocused, releasePageCaret } from './field-focus'
+import { $insertFiles, $insertMention } from './insert-files'
 import type { FieldPoint } from './point-caret'
 import { useLatest } from './use-latest'
 
@@ -34,6 +41,18 @@ export interface FieldHandle {
    */
   insertFiles(ids: readonly string[], point?: FieldPoint): void
   /**
+   * Puts the chip of a file or a folder at the caret, else at the end, with
+   * a space after it unless one follows, as one step of undo, as a pick from
+   * the list of `@` does. With `focus`, the field takes the focus, and the
+   * caret stands after the chip. Without it, a field without the focus
+   * keeps no caret. Else a later change of the editor would put the caret of
+   * the page into the field, and a browser such as Chrome gives the field
+   * the focus then. A later focus puts the caret at the end. An entry that
+   * the list does not offer gets no chip, and neither does a field that
+   * takes no change or no mention.
+   */
+  insertMention(target: MentionTarget, focus: boolean): void
+  /**
    * Draws the drop caret at the place under `point` while files hover over
    * the text, and hides it while the point is elsewhere. The caret and the
    * selection of the field do not change. A field that takes no change draws
@@ -51,6 +70,7 @@ export function HandlePlugin(props: {
 }) {
   const [editor] = useLexicalComposerContext()
   const files = useLatest(useFieldFiles())
+  const tree = useLatest(useMentionTree())
   const { dropCaret } = props
   useImperativeHandle(
     props.handle,
@@ -67,13 +87,33 @@ export function HandlePlugin(props: {
         })
         focusField(editor)
       },
+      insertMention: ({ path, folder }, focus) => {
+        const offered = tree.current
+        if (!editor.isEditable() || !offered) return
+        if (!findMentioned(offered, path, folder)) return
+        const caret = focus || isFocused(editor)
+        editor.update(
+          () => {
+            $insertMention(mentionText(path, folder))
+            if (!caret) $setSelection(null)
+          },
+          {
+            discrete: true,
+            tag: caret
+              ? [HISTORY_PUSH_TAG]
+              : [HISTORY_PUSH_TAG, SKIP_DOM_SELECTION_TAG],
+          },
+        )
+        if (focus) focusField(editor)
+        else releasePageCaret(editor)
+      },
       showDropCaret: (point) => {
         if (editor.isEditable()) dropCaret.current?.show(point)
         else dropCaret.current?.clear()
       },
       clearDropCaret: () => dropCaret.current?.clear(),
     }),
-    [editor, files, dropCaret],
+    [editor, files, tree, dropCaret],
   )
   return null
 }

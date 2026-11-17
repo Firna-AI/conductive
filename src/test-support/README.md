@@ -73,6 +73,16 @@ and the end of each finished turn. `fixtures/masked-paths.ts` holds them.
 history, as for a new workspace whose runner has not reported its lists.
 Override the tree and changes routes too, such as with a 503 reply.
 
+`subWorkspaces: true` adds the sub-workspaces of the mockup page
+`app/sub-workspaces` to the list of Acme: two trees in Checkout, under
+Apple Pay button and under Checkout address autocomplete, down to depth 3.
+They come first in Checkout, the newest first, as the Worker lists new
+workspaces, and each has the recorded replies of the other workspaces.
+`fixtures/sub-workspaces.ts` holds them, and `withSubWorkspaces` gives the
+same list to a test or to the dev fake. `workspaceRecord` of
+`fixtures/workspaces.ts` turns a workspace of the mockups into the record
+of the API.
+
 Writes return recorded replies, except org moves.
 `fake-org-order-routes.ts` serves `PUT /api/org-order` and saves its order for later org list reads.
 It validates the shared move request and returns 204, or the Worker's validation and visibility errors.
@@ -167,7 +177,7 @@ await view.rerender(<OwnerPicker {...props} workspace={next} />)
 - `mount(element)` renders the element inside `act` into a new container on `document.body`.
   It returns `container`, `rerender(element)`, and `unmount()`. Each mounted tree unmounts after its test.
 - `press(element)` clicks the element. `typeText(field, text)` types into an input or a text area, so React sees the change. A message field takes the text as `typeMessage` types it.
-- `message-field.ts` acts on the message field of a composer, the chip text field: `focusMessage(field)` moves the focus into the field as Tab does, with no press of the pointer, `typeMessage(field, text)` selects all and types the text, `pasteMessage(field, text)` pastes plain text at the caret through a paste event, `pressInField(field, key)` presses a key, `clearMessage(field)` deletes all the text as Ctrl+A and Backspace do, and `messageText(field)` gives the plain draft with the link of each chip. Each one commits the change of the field, as a browser does before the next input. `asMessageField(element)` checks that an element is such a field, also while it takes no change.
+- `message-field.ts` acts on the message field of a composer, the chip text field: `focusMessage(field)` moves the focus into the field as Tab does, with no press of the pointer, `typeMessage(field, text)` selects all and types the text, `pasteMessage(field, text)` pastes plain text at the caret through a paste event, `pressInField(field, key)` presses a key, `clearMessage(field)` deletes all the text as Ctrl+A and Backspace do, and `messageText(field)` gives the plain draft with the link of each chip. Each one commits the change of the field, as a browser does before the next input. `asMessageField(element)` checks that an element is such a field, also while it takes no change. `chromeCaretOnFocus()` puts the caret at the start of a field that takes the focus with the caret of the page outside it, and `chromeFocusOnCaret()` gives the focus to an editable element when a script puts the caret of the page into it, as Chrome does.
   `messageText` reads each field as a field without a files source. For a field with attached files, it gives the text without escapes and the mark of each attached file, so it is not the draft text. Read the draft that the owner keeps instead.
   `pressKey(key)` sends a keydown and a keyup to the focused element. Each runs inside `act`.
   Each fails with a named error when a person cannot use the target. `pressKey` checks the focused element.
@@ -236,6 +246,20 @@ Replies, timers, and `waitFor` go on.
 - `recorded-files.ts` supplies complete browser reports, runner parts, consecutive tree deltas, reads, diffs, and a size error.
 - `recorded-repairs.ts` supplies the first losses, failed repairs, complete reports, and tree deltas of the data without a session, and stores failed repairs in the fake history.
 - `fixtures/core.ts` maps account and org samples to the shared contracts.
+- `fixtures/secrets.ts` maps the secrets of Acme in the mockups to the
+  shared contracts, with a made-up value of each, and the grants of
+  `checkout-autocomplete`. The tests and the dev fake share them.
+- `fixtures/secret-requests.ts` gives sample secret requests of the session
+  of `checkout-autocomplete`, and the results of a turn: a run that Cal
+  allowed, a pre-approved run, a request that Priya denied, and a late
+  request that Priya allowed, with its line. `fixtures/secret-turn.ts`
+  wraps such records in a short turn of Cal with its tool call line and
+  its final answer, so they fold with its work. The tests and the dev fake
+  share them.
+- The history route of `fake-api.ts` gives each event that names the
+  session, as the Worker does, so a page also holds the secret requests,
+  runs, and late answers of the session. `fake-workspace-routes.ts`
+  answers the list of the secret requests of the workspace with none.
 - `suspended-org.ts` serves Acme as a suspended org, and gives the body of an `org_suspended` refusal.
 - `operator.ts` serves the operator section of the samples, and gives the body of an `operator_required` refusal.
 - `waitlist.ts` serves a person who waits for app access, and gives the reply of a refused code. `fixtures/waitlist.ts` gives the person, the waitlist states, and the codes of the mockups.

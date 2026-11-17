@@ -24,7 +24,9 @@ No person can give a fixed key to a command. The fixed keys are:
 - Shift+F10 and the Menu key on a focused tab, which open the tab menu, as
   [The tab row](agents-and-sessions.md#the-tab-row) says
 - on a focused workspace row, Alt with Up or Down and no other modifier,
-  which moves the workspace
+  which moves the workspace with each workspace nested under it. On a
+  nested row, the key does nothing, as [Moves](sub-workspaces.md#moves)
+  says.
 - on a focused panel divider, Left and Right with no modifier or with
   Shift, and Home and End, which move the divider. The divider between
   the file lists and the tools of the right column lies across the

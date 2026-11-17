@@ -45,8 +45,8 @@ mount the chat.
 - The rename field of a session with no title starts empty, with
   "Untitled" as its hint, so the label never becomes the name of the
   session. An empty field keeps the old name.
-- `renderTab(tab)` renders a file or diff tab of the saved view, such as an
-  open file. Its `title` is the name of the tab, as a screen reader reads
+- `renderTab(tab)` renders a file, diff, or Preview tab of the saved view,
+  such as an open file or the page of a port. Its `title` is the name of the tab, as a screen reader reads
   it from the tab, with each secret value hidden, such as "app.ts changes"
   for a diff. The tab menu and the status of the row name the tab by it,
   and the chat takes no name from a path. Its `draw(draw)` draws the tab
@@ -67,8 +67,13 @@ mount the chat.
   its place, as a double-click on the tab does, for Keep open of its tab
   menu. The host gives `keep` only to the temporary tab of the saved view,
   and null to each kept tab, whose menu then has no Keep open. The chat
-  calls it and saves nothing of its own. The host gives the key of Close
-  tab to its shown tab itself, as the shell does in `FileTab`.
+  calls it and saves nothing of its own. Its `copyPath` copies the real
+  path of the file of the tab, for Copy path of its tab menu, also in a
+  read-only chat. The host gives null to a tab whose label hides a secret
+  value or is not known yet, whose menu then has no Copy path. The host
+  gives the key of Close tab to its shown tab itself, as the shell does in
+  `FileTab` and `PreviewTab`. A Preview tab has no path, so its
+  `copyPath` is null.
   Without `renderTab`, the row shows only the session tabs, as on a phone.
   `components/tab-row.ts` holds these types.
 - `onOpenDiff` gets the real path of a changed file of a finished turn. The
@@ -106,6 +111,9 @@ mount the chat.
 - `content` takes a page that the app shows in place of the chat of the
   open session, such as an open file. The session tabs and the overlays
   stay, and no session tab is the current one.
+- `kept` takes parts that the app keeps mounted under the chat or the
+  `content`, such as the pages of the Preview tabs, so a page stays loaded
+  while another tab shows. The app hides each part that does not show.
 - The controller's `updateView(change)` changes the saved view with a
   change of the app, such as an open file tab or the list of the Files
   panel. It saves through the same writer as the session tabs, so a later
@@ -118,13 +126,19 @@ mount the chat.
   `keepsComposer` keeps the composer under the bar, as after a failed first
   start. Without a host, the chat draws both from its own record of the
   workspace, with the message that the workspace saved for a failed start.
+  `host.tools` gives the tools of the composer, such as Capabilities, as
+  `ComposerTool` in `components/ComposerTools.tsx` says. A computer shows
+  the icon of each tool after the attach button, and a phone holds Attach
+  files and the tools in the menu of one + button. Without tools, the bar
+  keeps its attach button on a phone too.
 - `readOnly` says that the workspace takes no write, such as while its org
   is suspended. The app gives `WorkspaceContext.readOnly`. The chat then
   shows its history, as an archived workspace does, and the host's bar
   takes the place of the composer.
 - `composerFocus` asks the message field of the composer to take the focus
-  once, as `ComposerFocus` in `components/Composer.tsx` says. The app gives
-  it after a click on the workspace in the sidebar, from
+  once, as `ComposerFocus` in `components/composer-requests.ts` says. The
+  app gives it after a click on the workspace in the sidebar, and after
+  Add to chat of the Files panel on desktop, from
   `AppModel.composerFocus`. The request waits until the composer shows,
   such as after the first load of the chat. The field then takes the focus
   only while the focus is still on the element of the request, or on no

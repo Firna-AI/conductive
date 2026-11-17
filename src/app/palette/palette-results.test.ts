@@ -66,6 +66,7 @@ describe('the All tab of the palette', () => {
           'General · Acme settings',
           'Repositories · Acme settings',
           'Cloud computer · Acme settings',
+          'Secrets · Acme settings',
           'Members · Acme settings',
           ...accountRows.map((row) => `${row} · Account`),
         ],
@@ -106,7 +107,7 @@ describe('the All tab of the palette', () => {
         ['Archived', ['Stripe SDK upgrade']],
       ],
       words: [['Settings', ['Agents · Account']]],
-      token: [['Settings', ['Agents · Account']]],
+      token: [['Settings', ['Secrets · Acme settings', 'Agents · Account']]],
     })
   })
 
