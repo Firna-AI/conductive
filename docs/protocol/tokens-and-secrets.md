@@ -15,9 +15,13 @@ decision number names a decision of the change that adds the
 decision number, such as own endpoint decision 9, names the dated record of
 one decision of the change that adds the
 [own endpoint logins](own-endpoint-logins.md). Its plan keeps these records
-while the change is open. Its pull request keeps them after the merge. A
-secrets decision number names a decision of the change that adds
-[secrets](secrets.md), as that doc says.
+while the change is open. Its pull request keeps them after the merge. An
+org login decision number, such as org login decision 4, names the dated
+record of one decision of the change that adds the
+[org logins](org-logins.md). Its plan keeps these records while the change
+is open. Its pull request keeps them after the merge. A secrets decision
+number names a decision of the change that adds [secrets](secrets.md), as
+that doc says.
 
 ## The workspace token
 
@@ -124,6 +128,9 @@ secrets decision number names a decision of the change that adds
 
 ## Agent logins
 
+- Each user connects their personal logins on the account page. An admin
+  connects the org logins of an org on the Agents tab of the org settings,
+  as [Org logins](org-logins.md) says.
 - A user connects Claude with a subscription token from
   `claude setup-token`, or with an Anthropic API key (decisions 24 and 37).
 - A user can also connect each agent with an own endpoint, as
@@ -190,10 +197,11 @@ secrets decision number names a decision of the change that adds
   the sandbox. Its processes and members with terminal access can read them.
 - A sign-in inside a sandbox was rejected, because the login would stay on
   the disk of one workspace.
-- A user's agent logins serve all of that user's orgs (decision 21).
-- The app uses a user's agent login only for a turn of a session that the
-  user started. The one exception is that the Worker reads the model list
-  of an own endpoint with its key, at the times that
+- A user's personal logins serve all of that user's orgs (decision 21). An
+  org login serves only the members of its org (org login decision 1 B).
+- The app uses a personal login only for the turns of the sessions that
+  its owner started on it. The one exception is that the Worker reads the
+  model list of an own endpoint with its key, at the times that
   [Own endpoint logins](own-endpoint-logins.md) gives.
   The login itself never reaches a sandbox, as
   [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
@@ -203,3 +211,8 @@ secrets decision number names a decision of the change that adds
 ### Own endpoint logins
 
 [Own endpoint logins](own-endpoint-logins.md) holds these requirements.
+
+### Org logins
+
+[Org logins](org-logins.md) holds the requirements of the org logins, the
+Agents tab of the org settings, and the default login of a new session.

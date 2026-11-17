@@ -1,3 +1,4 @@
+import type { SessionLogin } from '../../src/shared/generated/SessionLogin'
 import type { Session } from '../../src/shared/generated/Session'
 import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
 import type { MessageSender } from '../../src/shared/generated/MessageSender'
@@ -16,6 +17,7 @@ export async function createSession(
   startedBy: MessageSender,
   dependencies: ChatDependencies,
   sourceSessionId: string | null = null,
+  login?: SessionLogin,
 ): Promise<Session> {
   choice = dependencies.normalizeChoice(choice)
   const metadata = await SessionLogins.initial(
@@ -23,6 +25,7 @@ export async function createSession(
     id,
     startedBy.id,
     choice.agent,
+    login,
   )
   const session: Session = {
     id,
@@ -41,6 +44,7 @@ export async function createSession(
       avatarUrl: startedBy.avatarUrl,
     },
     sourceSessionId,
+    ...(login ? { login } : {}),
     ...metadata,
   }
   await transaction.saveSession(session)

@@ -21,7 +21,7 @@ sees it. Its child pages:
   has the Replace form of one of her secrets.
 - `empty` has Firna, a new org, without secrets.
 
-The `secrets` variant of `app/orgs/suspended/settings` has the tab of a
+The child page `app/orgs/suspended/settings/secrets` has the tab of a
 suspended org, with no action.
 
 `app/new-workspace/capabilities` has the Capabilities control open on the

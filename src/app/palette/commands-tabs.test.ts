@@ -124,7 +124,14 @@ describe('the Actions and Settings tabs of the palette', () => {
       browser: [
         [
           'Acme settings',
-          ['General', 'Repositories', 'Cloud computer', 'Secrets', 'Members'],
+          [
+            'General',
+            'Repositories',
+            'Cloud computer',
+            'Agents',
+            'Secrets',
+            'Members',
+          ],
         ],
         ['Account', accountRows],
       ],

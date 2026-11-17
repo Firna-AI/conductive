@@ -276,7 +276,7 @@ decision of the change that lets a message carry files of up to 1 GB. The
   Each mention still names the copy of its file, because the copy path
   comes from the file only. [Later messages](attachment-transfers.md#later-messages)
   states how Try again uses the copy in the cloud computer.
-- [Messages](messages-and-attachments.md#messages) and
-  [Sessions](agents-and-sessions.md#sessions) state how a title names each
-  file. [The text](session-transcripts.md#the-text) states how a transcript
-  copy names it.
+- [The title of a new workspace](workspace-and-session-names.md#the-title-of-a-new-workspace)
+  and [Sessions](agents-and-sessions.md#sessions) state how a title names
+  each file. [The text](session-transcripts.md#the-text) states how a
+  transcript copy names it.

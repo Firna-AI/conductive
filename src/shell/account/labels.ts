@@ -12,6 +12,18 @@ export const agentLoginKinds: Readonly<
   codex: ['api-key', 'token', 'endpoint'],
 }
 
+/**
+ * The kinds of an org login, in the order of its Connect form: an API key
+ * or an own endpoint, from decision 1 B of the org logins plan. A
+ * subscription token and a ChatGPT plan are each for one person.
+ */
+export const orgLoginKinds: Readonly<
+  Record<Agent, readonly [LoginKind, ...LoginKind[]]>
+> = {
+  claude: ['api-key', 'endpoint'],
+  codex: ['api-key', 'endpoint'],
+}
+
 /** The names of the agents in the rows of the account and of Get started. */
 export const agentNames: Readonly<Record<Agent, string>> = {
   claude: 'Claude',

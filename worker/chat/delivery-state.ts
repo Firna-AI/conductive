@@ -88,9 +88,12 @@ export class DeliveryState {
           if (turn) await markSent(transaction, turn, command.messageId)
           if (command.type === 'turn' && turn?.endpointModel) {
             const session = await transaction.session(turn.sessionId)
-            if (session?.startedBy)
+            if (session?.login)
               return {
-                userId: session.startedBy.id,
+                owner:
+                  session.login.type === 'personal'
+                    ? session.login.userId
+                    : { orgId: session.login.orgId },
                 agent: session.choice.agent,
               }
           }
@@ -100,7 +103,7 @@ export class DeliveryState {
     )
     if (refresh)
       this.dependencies.waitUntil(
-        this.dependencies.refreshEndpointModels(refresh.userId, refresh.agent),
+        this.dependencies.refreshEndpointModels(refresh.owner, refresh.agent),
       )
   }
 }

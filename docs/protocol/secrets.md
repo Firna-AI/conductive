@@ -93,8 +93,8 @@ while the change is open. Its pull request keeps them after the merge.
 
 ## The Secrets tab
 
-- The org settings have a Secrets tab after the Cloud computer tab. Every
-  member can open it.
+- The org settings have a Secrets tab after the
+  [Agents tab](org-logins.md#the-agents-tab). Every member can open it.
 - Each row shows the name, the description, the member who added the
   secret, and the record of its last reveal. Every member sees that
   record.

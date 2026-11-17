@@ -27,6 +27,7 @@ import { feedbackRoutes } from './feedback-routes'
 import { APP_VERSION } from '../version'
 import { operatorRoutes } from './operator-routes'
 import { readDevOptions } from './options'
+import { orgLoginRoutes } from './org-login-routes'
 import { orgRoutes } from './org-routes'
 import { automationRoutes } from './automation-routes'
 import { devFileTransport } from './progress-fixture'
@@ -37,6 +38,7 @@ import { seedSecretRequests } from './secret-request-seed'
 import { secretRoutes } from './secret-routes'
 import { sectionRoutes } from './section-routes'
 import { seedState } from './seed'
+import { sessionLoginRoutes } from './session-login-routes'
 import { settingsRoutes } from './settings-routes'
 import { admitOpenSignup, waitlistRoutes } from './waitlist-routes'
 import { workspaceRoutes } from './workspace-routes'
@@ -78,6 +80,7 @@ export function createFakeServices(search: string): AppServices {
     : []
   const routes = [
     ...signedOut,
+    ...sessionLoginRoutes(options.sessionLogin, server.fetch, state),
     ...waitlistRoutes(backend),
     ...feedbackRoutes(backend, options),
     ...accountRoutes(backend),
@@ -89,6 +92,7 @@ export function createFakeServices(search: string): AppServices {
     ...attachmentRoutes(backend, options.upload),
     ...attachmentFileRoutes(backend),
     ...settingsRoutes(backend),
+    ...orgLoginRoutes(backend),
     ...secretRoutes(backend),
     ...secretRequestRoutes(backend),
     ...buildRoutes(backend),

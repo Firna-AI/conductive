@@ -8,7 +8,9 @@ those of the [architecture doc](../architecture.md#terms). A decision
 number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. A secrets
 decision number names a decision of the change that adds
-[secrets](secrets.md), as that doc says.
+[secrets](secrets.md), as that doc says. An org login decision number
+names a decision of the change that adds the org logins, as
+[Tokens and secrets](tokens-and-secrets.md) says.
 
 ## A run is a workspace
 
@@ -38,15 +40,22 @@ decision number names a decision of the change that adds
 - The owner of the automation is the workspace owner of each run workspace.
   The owner is also the starter of its first session and the sender of its
   first message.
-- So the first turn uses the owner's agent login and the owner's GitHub
-  access. Its pushes and pull requests show as the owner.
-- Reason: a session runs on the login of its starter (decision 105), and
-  pushes show as the sender of the turn (decision 50).
-- The first session runs on the owner's own login, so the share setting of
-  that login does not block it.
-- A later message of another member follows the share setting, as
+- So the first session takes the default login of the owner: the personal
+  login of the owner, or the org login (org login decision 5 A).
+- The first turn uses the owner's GitHub access. So its pushes and pull
+  requests show as the owner.
+- Reason: a new session takes the default login of its starter, as
+  [The default login](org-logins.md#the-default-login) says. Pushes show
+  as the sender of the turn (decision 50).
+- A run that uses only the personal login of the owner was rejected.
+  Reason: a member who relies on the org login could then save an automation
+  whose runs all fail. One rule for the default login serves the sessions,
+  the agent tools, and the automation runs.
+- The owner starts the first session, so no share setting blocks it.
+- A later message of another member follows the rules of the login of
+  the session, as
   [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
-  says (decision 116).
+  says.
 - A run workspace starts with no pre-approved secret, as
   [Grants](secrets.md#grants) says. Its Mac access is off, as
   [Mac access](secrets.md#mac-access) says (secrets decision 18 A).
@@ -76,9 +85,10 @@ decision number names a decision of the change that adds
 - Before each create, the app checks that the owner is still a member of
   the org. It also checks that neither the owner nor the org is suspended
   or deleted.
-- It then checks the owner's agent login for the agent of the run, and the
-  owner's GitHub access.
-- Each turn of the first session uses that owner's login through the
+- It then checks that a login serves the owner for the agent of the run,
+  as [The default login](org-logins.md#the-default-login) says. It also
+  checks the owner's GitHub access.
+- Each turn of the first session uses that login through the
   [model gateway](model-gateway.md). The sandbox gets
   a turn token, as [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
   says.
@@ -86,8 +96,9 @@ decision number names a decision of the change that adds
   automation at its first start, and keeps them for its check and its create.
 - Reason: a change of the automation during the start cannot give the check
   and the create two different agents.
-- A missing agent login fails the run with the code `agent_login_required`.
-  Expired GitHub access fails it with the code `github_reconnect_required`.
+- When no login serves the owner for the agent of the run, the run fails
+  with the code `agent_login_required`. Expired GitHub access fails it
+  with the code `github_reconnect_required`.
 - Reason: the run fails before it spends a start, and the Runs list names
   the real cause.
 - A run that fails a check creates no workspace.
@@ -123,7 +134,7 @@ decision number names a decision of the change that adds
 - Reason: a failed turn counts as output for the state of a workspace. So
   the state of the workspace would hide the failure.
 - A run fails for one of these causes:
-  - The owner has no agent login for the agent of the run.
+  - No login serves the owner for the agent of the run.
   - The owner's GitHub access expired.
   - The cloud computer did not start.
   - The first turn failed.

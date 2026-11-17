@@ -18,9 +18,12 @@ the Help row of the command palette opens.
 - Only the GitHub App step comes from that reply. The org step and the org
   of Get started follow the orgs that are not deleted, as the address `/`
   does. A person whose orgs are all deleted gets Create org again, and
-  Get started lists those orgs with Restore before its steps. The agent step follows the logins of the account. So a leave of
+  Get started lists those orgs with Restore before its steps. The agent step follows the logins of the account, and the org
+  logins that the account names as default logins of the orgs of the
+  person (org login decision 4). So a leave of
   the last org offers Create org again, and a connect on Account completes
-  its step at once. `setupSteps` in `setup-steps.ts` derives them, and each
+  its step at once. An accepted invitation to an org whose org login
+  serves the person completes it after one read of the account. `setupSteps` in `setup-steps.ts` derives them, and each
   screen reads them through `AppModel.getStarted`.
 - Once the org exists, the org step shows its cloud computer from the
   builds of the org, as
@@ -240,7 +243,8 @@ the Help row of the command palette opens.
 - New workspace sends and uploads one at a time: the create waits for the
   files, and the paperclip is off while the create runs. Send, Create, Try
   again, and Enter read one readiness: the text outside the chips of its
-  files, the files of its chips, the agent login, the image of the org, the
+  files, the files of its chips, a login that serves the agent in the org,
+  the own login or the org login, the image of the org, the
   repository and its build, the model, and an org that is not suspended.
   In a suspended org, the refused bar takes the place of the composer of
   the dialog, as on the page.
@@ -302,7 +306,7 @@ the Help row of the command palette opens.
   the next draft starts again from the defaults. The create leaves out
   each pre-approved secret that the last read no longer lists, and a
   refusal of a missing secret reads the secrets again for Try again.
-- The Secrets tab of the org settings follows Cloud computer (secrets
+- The Secrets tab of the org settings follows the Agents tab (secrets
   decisions 2, 3, and 6). Its rights come from `secretRights` in
   `permissions.ts`: every member adds secrets, a member replaces and
   deletes only the secrets that the member added, and an admin replaces

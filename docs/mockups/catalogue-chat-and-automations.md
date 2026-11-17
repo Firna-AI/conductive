@@ -78,7 +78,10 @@ session of Cal, the picker shows the models of the app without Fable 5.1,
 because the model list of Cal's proxy does not name it. Its `not-served`
 variant has a stopped turn on Fable 5.1, which the session kept as its
 model, and the notice names the model ID and no host. Its `member`
-variant has the same notice as Priya sees it.
+variant has the same notice as Priya sees it. Its `org` variant has the
+open picker of Priya in a session on the org login of Acme, without Fable
+5.1, because the model list of the gateway of Acme does not name it, from
+decision 3 A of the org logins plan of 16 November 2026.
 
 `app/chat/background-limit` draws a turn that waited for the background
 work of its agent, a watch of the checks of pull request #482. The checks
@@ -102,7 +105,12 @@ New workspace opens. Its child pages:
 
 - `app/automations/empty` has an org without automations.
 - `app/automations/automation` has the owner's view of a saved automation. Its
-  child pages: `new` has a new automation, `member` the view of a member,
+  child pages: `new` has a new automation, whose `org-login` variant has a
+  new automation of Priya whose runs use the org login of Acme, from decision
+  5 A of the org logins plan, and whose `org-models` variant has its open
+  model picker without Fable 5.1, from decision 3 A. `member` has the view
+  of a member, whose `org-login` variant has the runs of Cal on the org
+  login of Acme: "Runs use Acme's Claude login and Cal's GitHub access.",
   `admin` the view of an admin with Turn off and Delete, `owner-left` an
   automation that moved, turned off, to Cal, the admin who got the
   workspaces of a member who left, `turned-off` an automation that turned
