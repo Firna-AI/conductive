@@ -180,33 +180,9 @@ the Help row of the palette opens.
   open, it can schedule the next mark of the new visit.
 - One follower owns the requests and the timer of a build log. After it
   stops, an answer changes nothing and schedules nothing.
-- One ChatGPT sign-in of Codex owns its request for a code, its polls, and
-  its timer. Cancel, the other kind in the switch, and the end of its form
-  stop it. After that, an answer changes nothing and schedules nothing.
-  A connected answer applies the current login status that the Worker returns.
-- One rule, `loginUsable` in `api/read-core.ts`, says whether turns can
-  run on a login. A connected login with an `unusableCause` cannot. The
-  composers and Get started count such a login as missing.
-- Each open of the agent list, on the account and in Get started, reads
-  the logins again through `AccountModel.refreshLogins`. So a login that
-  the Worker stopped after the app opened shows Signed out. The Worker
-  gives the logins only in `GET /api/account`, and the read takes only
-  the logins of that answer.
-  `AgentLogins` in `agent-logins.ts` counts each local change of a login:
-  a save, a remove, a connected sign-in, and a share change, at its start
-  and when its reply shows. A read shows the login of an agent only while
-  that login had no change during the read. An open shares a read that
-  runs already, and a failed read keeps what shows.
-- `AccountLoginReads` in `account-login-reads.ts` shares those reads with
-  each return to the visible page. While the account has an own endpoint
-  login, it also reads once a minute while the page shows. Each read merges
-  only the logins, with the same guards against local changes. A read across
-  a new app start or a sign-out changes nothing. Polling stops without an
-  own endpoint login or while the app is not ready. A hidden page cancels
-  its timer. When the page shows again, the reader reads once and resumes
-  polling.
-  The same reader owns the reads after an endpoint save or Refresh.
-  Those reads use the caller's mark to preserve later login changes.
+- [Login data](login-data.md) gives the rules of the agent logins of the
+  account: the ChatGPT sign-in, the logins that can run turns, the default
+  logins that the server names, and the reads after each change.
 - Timers, the focus, the visibility, the input, and the keys of the page
   come from `AppServices` (`delay`, `onFocus`, `visible`, `onInput`, and
   `onKey`), so that no unit test runs a real timer or needs a browser
@@ -315,20 +291,6 @@ workspace share.
 covers the command palette, the layers, the frames, New workspace as a
 dialog, and feedback with its screenshots.
 
-- `api/read-core.ts`: `readLogin` reads own endpoint metadata for both agents.
-  It keeps the host, kind, share choice, update time, and optional `modelList`.
-  The list has missing app model IDs and the last successful read time.
-  `dev/agent-login-routes.ts` returns the endpoint save and Refresh flags from the shared account types.
-  [The development fake](dev-fake.md) gives its successful and failed list hosts and seeds.
-  `dev/agent-login-routes.ts` uses the shared address rule and keeps no secret
-  or full endpoint in development state. Its save uses the same public HTTPS
-  address builder and agent-specific normalization as the Worker.
-  The builder requires a public host name and refuses every IPv4 and IPv6 address.
-  The builder reads the product domain from the shared brand source.
-  The fake needs no preview domain configuration.
-  `?login=endpoint` seeds shared
-  own endpoint logins for both agents. `dev/endpoint-logins.ts` seeds them,
-  with the model lists of `?modelList`.
 - `tab-places.ts`: `TabPlaces`, the places of the tabs of one workspace in
   memory, by tab and view, such as the reader's place in a session tab and
   the scroll offset of a file tab. `useFollowTabs` gives it each known list
@@ -336,8 +298,5 @@ dialog, and feedback with its screenshots.
   [tab row](../chat/tab-row.md) and the
   [Files README](../files/README.md#kept-scroll-offsets) say how the chat
   and the files use it.
-- `endpoint-models.ts`: the one rule of the model lists of own endpoints.
-  `unlistedModels` gives the app models that the last list of a login does
-  not name, for the account page. `offeredModels` gives the models that a
-  picker of the owner offers. Every picker of the owner calls it, as
-  [Screens](screens.md) says.
+- [Login data](login-data.md#key-code) names the files of the agent
+  logins, the default logins, and the model lists.

@@ -29,8 +29,8 @@ quotes, and Markdown marks. It then applies `modelTitleFrom` from
 `src/shared/session-title.ts`. That rule changes each underscore to a
 space, then applies `sessionTitleFrom`, the shared session title rule.
 Only the title model uses `modelTitleFrom`.
-[Messages](../../docs/protocol/messages-and-attachments.md#messages) states
-the requirements of the title request and its answer.
+[The title of a new workspace](../../docs/protocol/workspace-and-session-names.md#the-title-of-a-new-workspace)
+states the requirements of the title request and its answer.
 
 A missing configuration logs one safe warning per workspace object and
 keeps the name empty. A failed call or an empty title also warns and keeps

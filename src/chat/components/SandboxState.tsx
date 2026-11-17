@@ -3,6 +3,7 @@ import { useSharedUiTheme } from '@firna/ui/theme'
 import type { LucideIcon } from 'lucide-react'
 import { Archive, CircleAlert, CirclePause } from 'lucide-react'
 import type { WorkspaceStart } from '../../shared/generated/WorkspaceStart'
+import type { WorkspaceState } from '../../shared/generated/WorkspaceState'
 import {
   WORKSPACE_RESTORE_MS,
   workspaceRemovedAt,
@@ -58,6 +59,15 @@ export function StartingCard(props: {
 }
 
 export type SandboxProblem = 'stopped' | 'error' | 'archived'
+
+/** The problem of a workspace in `state`, or null when its sandbox has none. */
+export function workspaceProblemOf(
+  state: WorkspaceState | undefined,
+): SandboxProblem | null {
+  return state === 'stopped' || state === 'error' || state === 'archived'
+    ? state
+    : null
+}
 
 interface Problem {
   icon: LucideIcon

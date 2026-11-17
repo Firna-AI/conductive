@@ -43,14 +43,14 @@ export const sessions = defineScreen({
       description:
         'Cal started Address autocomplete, then removed the Claude login from the account. Priya opens the session, whose chat stays as it was, and writes a message. The notice over the composer says that the message starts a new session. Send opens the new session.',
       rationale:
-        "The user chose option A of decision 115 on 7 November 2026. When the starter's login cannot be used, another member's message starts a new, empty session on that member's own login. Examples are a starter who left the org or removed the login. The first session stays as it was. The notice shows before Send, so the member knows where the message goes. Cal sees the notice that asks to connect Claude, as the Agent not connected state of the composer shows.",
+        "The user chose option A of decision 115 on 7 November 2026. When the starter's login cannot be used, another member's message starts a new, empty session on that member's default login, their own login or the org login, from decisions 6 A and 7 B of the org logins plan of 16 November 2026. Examples are a starter who left the org or removed the login. The first session stays as it was. The notice shows before Send, so the member knows where the message goes. Cal sees the notice that asks to connect Claude, as the Agent not connected state of the composer shows.",
       props: { tab: 'session', viewer: 'member', composer: 'no-starter-login' },
     },
     {
       slug: 'linked',
       title: 'Linked session',
       description:
-        'The message of Priya opened a new session as the last tab. The title of the tab is the first line of that message, cut at a word boundary to 60 characters. The session starts empty. It holds a line that links back to Address autocomplete, then the message, and the agent works on it. It runs on the Claude login of Priya, its starter. A message of Priya also opens such a session when Cal keeps the login for the messages of Cal, as app/composer/not-shared shows.',
+        'The message of Priya opened a new session as the last tab. The title of the tab is the first line of that message, cut at a word boundary to 60 characters. The session starts empty. It holds a line that links back to Address autocomplete, then the message, and the agent works on it. It runs on the default login of Priya, its starter, here her own Claude login. A message of Priya also opens such a session when Cal keeps the login for the messages of Cal, as app/composer/not-shared shows, and after an admin removed the org login of a session, as app/composer/org-login/removed shows.',
       rationale:
         'The user chose option A of decision 115 on 7 November 2026: a new, empty session with a link to the first session, not a copy of its chat. The link line uses the style of the other event lines of the chat: centred, muted, and with an icon. It names no reason, because the reason can change after the session opens. Other members see "Priya Raman\'s login" in the composer of this session.',
       props: {

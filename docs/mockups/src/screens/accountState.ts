@@ -20,6 +20,7 @@ export const accountSchema = {
     'view',
     'save',
     'shareChange',
+    'orgLogin',
     'invites',
     'ownEndpoint',
     'openSignUp',
@@ -85,6 +86,13 @@ export const accountSchema = {
      * login that the app did not save.
      */
     shareChange: { enum: ['none', 'not-saved'] },
+    /**
+     * The org login that serves the new sessions of Cal in Acme, from
+     * decisions 4 and 7 B of the org logins plan: none, the Claude login of
+     * Acme while Cal has no Claude login of his own, or the same login with
+     * "Use for every member" on, which serves Cal also while he has one.
+     */
+    orgLogin: { enum: ['none', 'no-own-login', 'every-member'] },
     /**
      * The own endpoint login: none, the open form on the own endpoint kind
      * with an empty address, with a typed address that the shared rule
@@ -179,6 +187,7 @@ export const accountGeneral: AccountState = {
   view: 'page',
   save: 'saved',
   shareChange: 'none',
+  orgLogin: 'none',
   invites: 'left',
   ownEndpoint: 'none',
   openSignUp: 'off',

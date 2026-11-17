@@ -126,6 +126,7 @@ export async function expectAccountState(
   profile: {
     githubLogin: string
     orgId: string | null
+    orgName?: string
     githubComplete: boolean
   },
 ): Promise<void> {
@@ -141,6 +142,17 @@ export async function expectAccountState(
   expect(body, `${profile.githubLogin} account`).toEqual({
     user,
     ...expectedAccount,
+    defaultLogins:
+      profile.orgId === null
+        ? []
+        : expected.agentLogins.map((login) => ({
+            orgId: profile.orgId,
+            orgName: profile.orgName,
+            agent: login.agent,
+            login: login.connected
+              ? { type: 'personal', userId: user.id }
+              : null,
+          })),
   })
   expect(account.defaultChoice, `${profile.githubLogin} default model`).toEqual(
     expected.defaultChoice,

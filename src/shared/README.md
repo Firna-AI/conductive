@@ -31,6 +31,11 @@ Its imports carry types only.
 `nameLabel` in `name-label.ts` gives the display label "Untitled" for null.
 
 Each area owns its paths and payloads. Import from that area directly.
+`org-settings.ts` owns org login paths beside the other org settings paths.
+`org-agent-logins.ts` defines org login writes, metadata, and model-read
+responses. A member's metadata omits the optional endpoint model list.
+Only an admin of an active org receives it. No response holds a stored
+secret or a full endpoint address.
 `OrgSettings.envVars` in `org-settings.ts` returns only names and secret marks.
 Its `set` change carries a value and an optional mark. An omitted mark
 keeps the stored mark inside each compare-and-swap attempt. A missing or
@@ -210,15 +215,31 @@ Each other message of the session gets HTTP 409 with the code `retry_not_availab
 [Messages](../../docs/protocol/messages-and-attachments.md#messages) states the rule.
 `Session.startedBy` names the member who started the session.
 It is null only for an older record whose starter is not known.
+`Session.login` names a personal owner or an org, through generated `SessionLogin`.
+It is optional for old records and empty sessions.
+The Worker fixes it at the first accepted message.
+`Session.defaultLogin` names the starter's current default owner before that message.
+It is absent when no login serves the starter and clears when `login` is fixed.
+The check uses the starter as the sender, so every reader gets the same owner.
+An older session with messages keeps the starter's personal login.
 `Session.sourceSessionId` names the session where a message opened this linked session, and null otherwise.
-`Session.loginAvailable` is the result of the last server check of the starter's login.
-It stays true when the starter does not share that login.
-`Session.loginShared` says whether the starter lets other members use that login, from the same check.
-Each member reads the same values. None of these fields holds a login.
+`Session.loginAvailable` is the result of the last server check of the session login.
+It stays true when a personal owner does not share that login.
+`Session.loginShared` gives that personal share setting and is always true for an org login.
+Each member reads the same values. These fields carry no credential.
+The additive `defaultLogins` of account and org-login replies uses generated `DefaultAgentLogin`.
+Each entry names an org, agent, resolved owner, and optional selected endpoint model list.
+Its `orgModelList` gives model availability for fixed org sessions, including with a personal default.
+The Worker supplies the order so screens do not compute it.
 [Messages](../../docs/protocol/messages-and-attachments.md#messages) states how the composer uses both values.
 `SendMessageResponse.session` in `messages.ts` is the record of the session that took the message.
 It can differ from the session of the request.
-[Agents](../../docs/protocol/agents-and-sessions.md#agents) states the starter rule.
+[Org logins](../../docs/protocol/org-logins.md) states the fixed and default login rules.
+
+`AutomationResponse.runLogin` in `automations.ts` names the automation owner's default login for its saved agent.
+It uses generated `SessionLogin`, or null when no login serves that owner.
+Every reader gets that value without a secret, endpoint host, or full address.
+It does not change the automation owner's GitHub identity.
 
 `terms.ts` names the current revision of the Terms, `TERMS_VERSION`.
 `acceptedTermsSignInPath(inviteCode?)` gives the sign-in path that carries that revision and an optional join code.

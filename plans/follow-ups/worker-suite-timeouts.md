@@ -42,6 +42,28 @@
     - `worker/lifecycle/restore-watch.test.ts`: `writes the restore marker when hydrated is absent after create and resume`.
     - `worker/tools/workspace-creation.test.ts`: `keeps one titled admission for overlapping creates and a lost reply after restart or changed defaults`.
   - The branch changes no Worker code. A focused rerun of the four files at the same path, with `TMPDIR` on the repository filesystem, passed all 28 tests. Resource contention during the full run is still the suspected source.
+  - On 17 November 2026, integration of main `273582d8a` into `calummoore/quito-q38c` passed the complete static gate. A first complete gate command ended with signal 15 during Vitest and produced no final totals. A detached complete gate passed every static check again. Its test step then ran for more than 30 minutes. It reported these failed cases before the run was stopped:
+    - `worker/lifecycle/workspace-runtime.test.ts`: `runs the production Workspace across caller loss, a full runtime restart, and idle stop`. The runner reported failure after 31,458 ms.
+    - `worker/lifecycle/image-sources/parallel.test.ts`: `retries a definite refused copy start within the saved window and Retry-After`. The runner reported failure after 15,402 ms.
+    - `worker/lifecycle/image-sources/parallel.test.ts`: `limits Git commands to eight and uses the minimum estimate when metadata has no size`. The runner reported failure after 16,194 ms.
+    - `worker/lifecycle/image-sources/parallel.test.ts`: `reserves the sum of command estimates within half the sandbox memory`. The runner reported failure after 17,261 ms.
+    - `worker/lifecycle/retention-dates.test.ts`: `restarts a physically stopped failed resume on day thirteen and keeps its saved error and dates through ownership changes`. The runner reported failure after 17,294 ms.
+    - `worker/lifecycle/retention-dates.test.ts`: `clears suspended maintenance on confirmed stop and starts a fresh overdue attempt after delayed reassignment`. The runner reported failure after 16,800 ms.
+    - `worker/lifecycle/retention-dates.test.ts`: `keeps the real disk date when maintenance resume is refused through its original deadline`. The runner reported failure after 17,337 ms.
+    - `worker/lifecycle/retention-dates.test.ts`: `renews disk retention from its own saved stop request across stopping replies, reconstruction, and external confirmation`. The runner reported failure after 17,449 ms.
+    - `worker/features/agent-tools-routes.test.ts`: `uses the active stored sender and inherited owner when a machine tool creates a workspace with a cleaned name`. The runner reported failure after 15,439 ms.
+    - `worker/lifecycle/image-sources/local-materialize.test.ts`: `clones default history and tags natively and refreshes captured clean folders without losing dependencies`. The runner reported failure after 16,586 ms.
+    - `worker/chat/stop-queue.test.ts`: `keeps post-Stop messages queued until stopped, failed, and finished turns end`. The runner reported failure after 16,341 ms.
+    - `worker/lifecycle/account-routing.test.ts`: `replays a lost allocation and resumes its disk through the stored secondary account`. The runner reported failure after 16,536 ms.
+    - `worker/lifecycle/account-routing.test.ts`: `uses the cleanup account and retains an unknown account without a provider request`. The runner reported failure after 30,435 ms.
+    - `worker/lifecycle/account-routing.test.ts`: `deletes an equal-named previous image through its own account after builder cleanup`. The runner reported failure after 47 ms.
+    - `worker/lifecycle/resource-intents.test.ts`: `recovers a saved image after a lost reply and retains its name for Delete org`. The runner reported failure after 18,104 ms.
+    - `worker/lifecycle/repository-capture.test.ts`: `captures the published image folder map and environment for a created workspace`. The runner reported failure after 16,682 ms.
+    - `worker/lifecycle/repository-capture.test.ts`: `keeps the captured image folder map at resume and retention after a later build adds name collisions`. The runner reported failure after 16,699 ms.
+    - `worker/features/retained-creation-commands.test.ts`: `replays a saved branch after Restore with a new journal and preserves the existing branch and its files`. The runner reported failure after 15,268 ms.
+    - `worker/features/retained-creation-commands.test.ts`: `runs interrupted saved startup after Restore instead of following its dead journal owner`. The runner reported failure after 15,080 ms.
+    - `worker/chat/integration/attachment-multipart-complete.test.ts`: `streams two native R2 parts and publishes the exact file and its copy path`. The runner reported failure after 15,226 ms.
+  - The interrupted full run produced no final pass or skip totals. All 11 reported failing files exactly matched main `273582d8a`. At the same `/tmp` checkout and source tree, with `TMPDIR` still on that checkout filesystem, an isolated `--maxWorkers=1` rerun passed all 35 tests in those files. It took 118.95 seconds and skipped no test. No source, assertion, or timeout changed. Resource contention is suspected. The root cause remains unknown.
 - **Task:** Find the source of these timeouts. Compare focused and full runs at the same path, then compare paths with the same test set. Make the tests deterministic with readiness signals, event order, or isolated state. Keep each assertion. Add no retry, sleep, skip, or longer timeout.
 - **Impact if no action:** A complete check can fail while a focused run passes. This can hide a real regression or delay another branch.
 - **Needs:** Node 24 and a Conductive workspace that can run the full suite.

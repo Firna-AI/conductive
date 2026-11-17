@@ -54,7 +54,7 @@ import {
 } from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
 import { tabRowOf } from './workspaceTabRow'
-import { historyFor, tabsFor, workspaceName } from './workspaceTabs'
+import { historyFor, noMessages, tabsFor, workspaceName } from './workspaceTabs'
 import styles from './WorkspaceScreen.module.css'
 
 /** The right column in the middle of a drag that widens it, in px. */
@@ -113,7 +113,7 @@ export function WorkspaceScreen(props: {
   const restorable = archiveRestore(state) === 'available'
   const bar = barOf(state, { archivable, readOnly })
   const problem = sandboxNotice(state)
-  const fresh = state.tab === 'new-session'
+  const empty = noMessages(state)
   const rightHidden = state.rightColumn === 'hidden'
   const rows = chatWorkspacesOf(state, { workspace, status })
   const chat = (
@@ -128,7 +128,7 @@ export function WorkspaceScreen(props: {
           />
         }
         fold={state.fold}
-        items={fresh ? [] : chatItemsFor(open.items, state.paths)}
+        items={empty ? [] : chatItemsFor(open.items, state.paths)}
         notice={
           // An archived workspace keeps its archived bar, so the notice of a
           // suspended org shows above it.

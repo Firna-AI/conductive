@@ -13,7 +13,12 @@ import { terminalStates } from '../fixtures/terminals'
 import { openableWorkspaces } from '../fixtures/workspaces'
 import { archiveStateProperties } from './archiveState'
 import { barStateDefaults, barStateKeys, barStateProperties } from './barState'
-import { composerStates, tabStates, temporaryTabStates } from './chatStates'
+import { tabStates, temporaryTabStates } from './chatStates'
+import {
+  composerStateDefaults,
+  composerStateKeys,
+  composerStateProperties,
+} from './composerState'
 import {
   feedbackStateDefaults,
   feedbackStateKeys,
@@ -53,8 +58,7 @@ export const workspaceStateSchema = {
     'tab',
     'tabRow',
     'temporary',
-    'composer',
-    'modelChoice',
+    ...composerStateKeys,
     ...layoutStateKeys,
     'overlay',
     'archive',
@@ -142,14 +146,7 @@ export const workspaceStateSchema = {
      * `overlay` opens on it.
      */
     temporary: { enum: temporaryTabStates },
-    /** The composer, as `composerStates` says. */
-    composer: { enum: composerStates },
-    /**
-     * The model, the effort, and the speed of the next message: those of
-     * the workspace, the same with fast mode on, or Sonnet 5.5 High, a model
-     * that offers no fast mode.
-     */
-    modelChoice: { enum: ['workspace', 'fast', 'no-fast'] },
+    ...composerStateProperties,
     ...layoutStateProperties,
     /**
      * What lies open over the workspace: the session history, the question
@@ -254,8 +251,7 @@ export const readyWorkspace: WorkspaceState = {
   tab: 'session',
   tabRow: 'opened',
   temporary: 'none',
-  composer: 'empty',
-  modelChoice: 'workspace',
+  ...composerStateDefaults,
   ...layoutStateDefaults,
   overlay: 'none',
   archive: 'kept',

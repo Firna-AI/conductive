@@ -1,3 +1,4 @@
+import type { DefaultAgentLogin } from './generated/DefaultAgentLogin'
 import type { Agent } from './generated/Agent'
 import type { AgentChoice } from './generated/AgentChoice'
 import type { Timestamp } from './generated/Timestamp'
@@ -167,6 +168,8 @@ export interface AccountResponse {
   newWorkspaceView: NewWorkspaceView
   shortcuts: ShortcutPreferences
   agentLogins: readonly AgentLoginStatus[]
+  /** Resolved defaults by org and agent. Older account replies omit this field. */
+  defaultLogins?: readonly DefaultAgentLogin[]
   /**
    * The page of the shared GitHub App on GitHub. It lists the GitHub
    * accounts of the person. An account with the app opens the settings

@@ -8,15 +8,21 @@ sections, and their members. Linked pages cover
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A secrets decision number names a decision of the change that adds
-[secrets](secrets.md), as that doc says.
+[secrets](secrets.md), as that doc says. An org login decision number
+names a decision of the change that adds the org logins, as
+[Tokens and secrets](tokens-and-secrets.md) says.
 
 ## Orgs
 
 - An org owns its workspaces, its sections, its repositories, and the
   settings of its org image (decision 21).
+- An org also owns the org logins that its admins connect, at most one for
+  each agent, as [Org logins](org-logins.md) says (org login decision
+  1 B).
 - An org also has members and [automations](automations.md).
-- All orgs share the app's GitHub App. The agent logins of a user serve all
-  of that user's orgs (decision 21).
+- All orgs share the app's GitHub App. The personal logins of a user serve
+  all of that user's orgs (decision 21). An org login serves only the
+  members of its own org.
 - All orgs share the app's Boat account and its plan limits, as
   [The provider](workspaces-and-sandboxes.md#the-provider) says
   (decision 80). No org has a Boat key.
@@ -88,7 +94,8 @@ says. A secrets decision number names a decision of the change that adds
 ## Get started
 
 - [Get started](get-started.md) holds the requirements of the first run:
-  its steps, the state of the first build in its org step, and its finish.
+  its steps, the agent step, the state of the first build in its org step,
+  and its finish.
 
 ## Sections
 
@@ -195,6 +202,10 @@ says. A secrets decision number names a decision of the change that adds
   read-only.
 - Only an admin changes the org's name, initials, and colour. Other
   members see them read-only.
+- Only an admin connects, replaces, or removes an org login, and changes
+  its switch "Use for every member" (org login decision 1 B). Other
+  members see the Agents tab read-only, as
+  [The Agents tab](org-logins.md#the-agents-tab) says.
 - Changes by every member were rejected, because a changed script reaches
   every new sandbox of the org and runs during other members' turns.
 - Every member adds [secrets](secrets.md) and uses each secret of the org.
@@ -213,8 +224,8 @@ says. A secrets decision number names a decision of the change that adds
   Only the owner of an automation changes it, as [Access](automations.md#access)
   says (decision 502 B).
 - Every member can send messages in every workspace of the org. Each
-  session runs on the agent login of its starter, as
-  [Agents and sessions](agents-and-sessions.md#agents) says.
+  session runs on its login: the personal login of its starter, or the
+  org login, as [Agents and sessions](agents-and-sessions.md#agents) says.
 - Every member can move a workspace to another section and rename it,
   while the workspace is not archived.
 - Every member of an org that is not suspended can restart the software of
@@ -256,8 +267,10 @@ says. A secrets decision number names a decision of the change that adds
   with Reassign to in the
   [menu of its row](workspace-menu.md#reassign-to).
 - The header of a workspace names its workspace owner.
-- Model use on an account of the app was rejected. Each session runs on
-  the own agent login of its starter.
+- A reassign changes no login. Each session keeps its login.
+- Model use on an account of the app was rejected. Each session runs on a
+  login that its starter or an admin of the org connected, as
+  [Agents and sessions](agents-and-sessions.md#agents) says.
 
 ## When a member leaves
 

@@ -47,8 +47,8 @@ stats decision" names a decision of the change that added the tab. The
   reassign a workspace, and the owner is the person who is responsible for
   it.
 - A automation counts for its automation owner now.
-- A automation run counts for the automation owner at the time of the run, whose
-  logins the run used. Reason: a later change of the automation owner then
+- A automation run counts for the automation owner at the time of the run, in
+  whose name the run acted. Reason: a later change of the automation owner then
   does not move past runs to another person.
 - The automation runs leave out skipped runs, because a skipped run started no
   agent. [Automation runs](automation-runs.md) states when a run is skipped.

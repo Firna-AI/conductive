@@ -13,7 +13,7 @@ import { Section } from './Section'
 import styles from './OrgSections.module.css'
 
 export type SettingsTab =
-  'general' | 'repositories' | 'computer' | 'secrets' | 'members'
+  'general' | 'repositories' | 'computer' | 'agents' | 'secrets' | 'members'
 
 /**
  * Why the settings show without edit fields and actions: the person signed
@@ -28,6 +28,7 @@ export const settingsLinks: Readonly<Record<SettingsTab, string>> = {
   general: paths.orgSettings,
   repositories: paths.repositories,
   computer: paths.cloudComputer,
+  agents: paths.orgAgents,
   secrets: paths.secrets,
   members: paths.members,
 }
@@ -37,13 +38,15 @@ export const suspendedSettingsLinks: Readonly<Record<SettingsTab, string>> = {
   general: paths.suspendedSettings,
   repositories: paths.suspendedRepositories,
   computer: paths.suspendedComputer,
+  agents: paths.suspendedAgents,
   secrets: paths.suspendedSecrets,
   members: paths.suspendedMembers,
 }
 
 /**
  * The parts of the org settings, as tabs that link to each part. Every
- * person of the org sees the same tabs. `wrap` puts the tabs on two lines,
+ * person of the org sees the same tabs. Agents, with the org logins of
+ * decision 1 B of the org logins plan, follows Cloud computer. `wrap` puts the tabs on two lines,
  * for a phone, where they do not fit on one.
  */
 export function SettingsTabs(props: {
@@ -56,6 +59,7 @@ export function SettingsTabs(props: {
     { label: 'General', tab: 'general' },
     { label: 'Repositories', tab: 'repositories' },
     { label: 'Cloud computer', tab: 'computer' },
+    { label: 'Agents', tab: 'agents' },
     { label: 'Secrets', tab: 'secrets' },
     { label: 'Members', tab: 'members' },
   ] satisfies readonly { label: string; tab: SettingsTab }[]

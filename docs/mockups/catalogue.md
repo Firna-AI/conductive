@@ -13,7 +13,7 @@ how a screen is built, and links to the other pages.
 | `marketing/not-found` | The page of the site for an address that it does not have                   |
 | `marketing/pictures` | One capture page for each picture of the home page, without a frame         |
 | `app`               | A ready workspace: two sessions and a file tab, and a pull request to merge   |
-| `app/sign-in`       | GitHub sign-in with the agreement to the Terms, the page before GitHub, the waitlist, the sign-in of an invite link, and the invitations that wait after it. Get started, the only first run, in three steps, with the first build of the new org. The return page after a GitHub App install in the Mac app. |
+| `app/sign-in`       | GitHub sign-in with the agreement to the Terms, the page before GitHub, the waitlist, the sign-in of an invite link, and the invitations that wait after it. Get started, the only first run, in three steps, with the first build of the new org, and its agent step done by an org login. The return page after a GitHub App install in the Mac app. |
 | `app/shell`         | The workspace list, and the sandbox starting, also with a diff tab open, stopped, with an error, and with a refused start |
 | `app/sections`      | The menu of a section with its move items, a workspace dragged to another section, and a section dragged to another place |
 | `app/workspace-menu` | The menu of a workspace row from a right click: its section and owner choices, Rename, Copy link, Archive from the list with its toast and Restore, and the menus of each role |
@@ -21,12 +21,12 @@ how a screen is built, and links to the other pages.
 | `app/command-palette` | The command palette over the list, with the keys of a browser tab: the All tab, then the other tabs with the Help group, searches and their states, and a search by number |
 | `app/feedback`      | The Feedback dialog that Send feedback opens over the list, then its states, the toast after a send, and the files that it does not add |
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended, and the order of the orgs |
-| `app/account`       | General with the GitHub sign-in, the GitHub App, and the invite code, then Agents with the agent logins and own endpoints, Preferences with the model, its menu with Fast on, and how New workspace opens, Keyboard shortcuts in a browser, Stats with the person's own counts, the first run, the Connect forms with the ChatGPT sign-in of Codex, Codex on a ChatGPT plan and its sign-in that stopped working, and a share not saved |
+| `app/account`       | General with the GitHub sign-in, the GitHub App, and the invite code, then Agents with the agent logins, own endpoints, and the lines of an org login, Preferences with the model, its menu with Fast on, and how New workspace opens, Keyboard shortcuts in a browser, Stats with the person's own counts, the first run, the Connect forms with the ChatGPT sign-in of Codex, Codex on a ChatGPT plan and its sign-in that stopped working, and a share not saved |
 | `app/operator`      | The operator's Overview with the long runs of cloud computers, the Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, the waitlist switch, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, its other states, Merge, local work, the agent actions in the chat, and Continue |
 | `app/new-workspace` | An empty chat, the first build of a new org, a repository that waits for its build, its error, files on the first message, the Capabilities control, the model menu with Fast on, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/automations` | The automations of the org, an automation, its triggers, its runs, and a run workspace |
-| `app/org-settings`  | General with Delete org, the colour of the org in the rail, then Repositories and Cloud computer with the notice of a repository change, the first build of a new org, Secrets with Reveal for an admin and the view of a member, and Members |
+| `app/org-settings`  | General with Delete org, the colour of the org in the rail, then Repositories and Cloud computer with the notice of a repository change, the first build of a new org, Agents with the org logins, Secrets with Reveal for an admin and the view of a member, and Members |
 | `app/chat`          | A finished turn with its work folded, then running turns, turns that an agent stopped, open work, tables in replies, lists in replies, headings in replies, links in chat text, lost data, lost updates, unread files, the time limit of background work, and a fast turn at standard speed |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat, and one that a workspace with Mac access off refused |
 | `app/secret-requests` | A request for secrets above the composer, two secrets, a mixed request, a temporary request with its sheet on a phone, the results in the chat, and a request that outlived its tool call or ended with no answer |
@@ -34,7 +34,7 @@ how a screen is built, and links to the other pages.
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
 | `app/restart`       | The menu of the header state with Restart, the question while an agent works, Starting after Restart, a failed update check, and a failed restart |
 | `app/archive`       | An archived workspace with Restore, the toast after Archive, the Archived group, the restored workspace, an archive without a kept cloud computer, and a workspace that left the list after its 14 days |
-| `app/composer`      | Two uploaded files in a sentence, the picker, another member's login, and a missing agent |
+| `app/composer`      | Two uploaded files in a sentence, then the picker, a missing agent, another member's login, a login that is not shared, and the org login |
 | `app/capabilities`  | The Capabilities control of a workspace, with the approvals of its sessions and its values, and Mac access off |
 | `app/fast-mode`     | The Fast switch of the model menu on and off, with its key, the trigger with Fast, and a model without fast mode |
 | `app/attachments`   | A file that uploads in the text, then a drop, a failed upload, a file over 1 GB, sent files, the file tab of a sent screenshot, a first message with files, and a file that is no longer in the cloud computer |
@@ -51,10 +51,10 @@ how a screen is built, and links to the other pages.
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `marketing/docs`, `app`,
 `app/sign-in`, `app/sign-in/get-started`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`, `app/workspace-menu`, `app/sub-workspaces`, `app/command-palette`, `app/command-palette/search`, `app/feedback`, `app/orgs`,
-`app/orgs/suspended`, `app/account`, `app/account/connect-codex`, `app/new-workspace`,
+`app/orgs/suspended`, `app/account`, `app/account/connect-codex`, `app/composer`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings`,
-`app/org-settings/cloud-computer`, `app/org-settings/secrets`, `app/secret-requests`, `app/secret-requests/temporary`, `app/secret-requests/late`, `app/operator`, `app/operator/user`, `app/operator/user/access`, `app/operator/codes`, `app/banner`, `app/chat`, `app/archive`, `app/workspace-links`, `app/automations`, `app/automations/automation`,
-`app/automations/triggers`, `app/orgs/suspended/automations`, `app/file-mentions`, `app/attachments`, `app/files`, `app/files/menu`, `app/tools`, `app/account/shortcuts`, and `mac-app/shortcuts` do. `marketing/pictures` has no screen of its own. Each picture's capture
+`app/org-settings/cloud-computer`, `app/org-settings/agents`, `app/org-settings/secrets`, `app/secret-requests`, `app/secret-requests/temporary`, `app/secret-requests/late`, `app/operator`, `app/operator/user`, `app/operator/user/access`, `app/operator/codes`, `app/banner`, `app/chat`, `app/archive`, `app/workspace-links`, `app/automations`, `app/automations/automation`,
+`app/automations/triggers`, `app/orgs/suspended/automations`, `app/orgs/suspended/settings`, `app/file-mentions`, `app/attachments`, `app/files`, `app/files/menu`, `app/tools`, `app/account/shortcuts`, and `mac-app/shortcuts` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
@@ -63,13 +63,15 @@ from `app/archive/deleted`, and its `deleting` variant moved from
 `app/archive/restore-ended`, and both declare `movedFrom`. The states of `app/shell`,
 `app/account`, `app/sign-in/waitlist`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings/cloud-computer`,
-`app/operator/user/access`, `app/archive`, `app/command-palette/search`, `app/attachments`, and
-`app/files` moved into their own folders and kept their paths. Each page
+`app/operator/user/access`, `app/archive`, `app/command-palette/search`, `app/attachments`,
+`app/composer`, and `app/files` moved into their own folders and kept their paths. Each page
 shows only its canonical screen. `app/sign-in/get-started` moved into its
 own folder and
 kept its path. Its saved states `installed`, `org-created`, `connected`,
 and `no-org` moved into their own folders and kept their paths, so that
-the page shows only its canonical screen. Get started is the only first
+the page shows only its canonical screen. Its child page `org-login` has
+the agent step done by an org login, as
+[org logins](catalogue-org-logins.md) gives. Get started is the only first
 run, so the first run of `app/shell` and the not-connected state of
 `app/orgs/new` are gone, and their links lead to Get started. Its second
 step opens `app/orgs/new/first`, whose Create org and Cancel return to Get
@@ -160,7 +162,9 @@ settings are. Its child pages:
 
 - `app/account/agents` shows the Agents tab, with Claude connected by a
   subscription token and Codex by an API key. The user asked for this tab
-  on 13 November 2026.
+  on 13 November 2026. Its `org-login` and `every-member` variants have the
+  line of the org login of Acme under Claude, as
+  [org logins](catalogue-org-logins.md) gives.
 - `app/account/preferences` shows the Preferences tab, from decision 142
   of PR #73: the New workspaces section with Model and effort, and the
   choice of how New workspace opens on a computer, the page or a dialog.
@@ -245,7 +249,20 @@ pasted workspace link as a chip. The dialog uses the file chips of
 `app/new-workspace/files`. A phone always opens the page, so each phone
 view shows the New workspace page in the same state.
 `user-flows/create-workspace-dialog` goes from Preferences through the
-dialog to the new workspace.
+dialog to the new workspace. Its child page `org-login` has a draft on the
+org login, as [org logins](catalogue-org-logins.md) gives.
+
+`app/composer` shows a message with two uploaded files in a sentence. Its
+other states are child pages: `picker` has the open model picker,
+`no-agent` the notice of an agent that no login serves, `login` the label
+"Cal's login" in a session of Cal, and `not-shared` the notice of a message
+that starts a new session, because Cal keeps his login for his own
+messages. `org-login` has a session on the org login of Acme, with its
+variants, as [org logins](catalogue-org-logins.md) gives.
+
+[Org logins](catalogue-org-logins.md) gives `app/org-settings/agents` and
+its child pages, and the states of the account, Get started, the composer,
+New workspace, the chat, and automations that name the org login.
 
 `app/orgs/reorder` draws the order of the orgs that each person keeps,
 from decisions 515 C, 516 A, and 517 B of 11 November 2026. Its canonical

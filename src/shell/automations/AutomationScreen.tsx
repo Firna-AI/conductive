@@ -7,7 +7,7 @@ import { newAutomationDraft } from '../../app/automation-draft'
 import { automationModel } from '../../app/automation-model'
 import { routes, type AutomationTab } from '../../app/router'
 import { useServices } from '../../app/services'
-import { useStore } from '../../app/store'
+import { useStore, valueOf } from '../../app/store'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp, useOrgAccess, useOrgModel } from '../context'
@@ -66,6 +66,7 @@ function SavedAutomation(props: {
   const orgModel = useOrgModel(org.id)
   const model = automationModel(orgModel, props.automationId)
   const automation = useStore(model.automation)
+  const runLogin = useStore(model.runLogin)
   const runs = useStore(model.runs.shown)
   const repositories = useStore(orgModel.repositories)
   const sections = useStore(orgModel.sections)
@@ -122,6 +123,7 @@ function SavedAutomation(props: {
       }
       org={org}
       automation={automation.value}
+      runLogin={valueOf(runLogin) ?? null}
       user={props.user}
       {...shared}
     />

@@ -41,6 +41,14 @@ export const getStartedCopy = {
     description:
       'Your agents run on your own Claude or OpenAI account, or on your own endpoint. Connect at least one now, and the other at any time in your account.',
     done: 'Connected',
+    /**
+     * The step when the person has no login of their own, and the org login
+     * of their org serves an agent (decision 4 of the org logins plan). A
+     * line under the agent names that login.
+     */
+    orgDone: 'Ready',
+    orgDescription: (org: string) =>
+      `You can start now with ${org}'s login. Connect your own at any time in your account.`,
   },
   finish: (org: string) => `${org} is ready for a new workspace.`,
   /** The finish while the first build of the org runs. */

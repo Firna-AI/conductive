@@ -208,8 +208,8 @@ pages.
 | Page | Public path | Internal source |
 | --- | --- | --- |
 | Overview | `/docs` | [Architecture](../../docs/architecture.md) |
-| Get started | `/docs/get-started` | [Orgs and members](../../docs/protocol/orgs-and-members.md#get-started) |
-| Agent logins | `/docs/agent-logins` | [Agents and sessions](../../docs/protocol/agents-and-sessions.md#agents), [Security](../../docs/protocol/access-and-security.md), [Tokens and secrets](../../docs/protocol/tokens-and-secrets.md#agent-logins), [Isolation of orgs and sandboxes](../../docs/protocol/isolation.md#agent-logins-in-a-sandbox) |
+| Get started | `/docs/get-started` | [Get started](../../docs/protocol/get-started.md) |
+| Agent logins | `/docs/agent-logins` | [Agents and sessions](../../docs/protocol/agents-and-sessions.md#agents), [Security](../../docs/protocol/access-and-security.md), [Tokens and secrets](../../docs/protocol/tokens-and-secrets.md#agent-logins), [Isolation of orgs and sandboxes](../../docs/protocol/isolation.md#agent-logins-in-a-sandbox), [The share setting](../../docs/protocol/share-setting.md), [Org logins](../../docs/protocol/org-logins.md) |
 | Workspaces | `/docs/workspaces` | [Create a workspace](../../docs/protocol/create-a-workspace.md), [Workspaces](../../docs/protocol/workspaces-and-sandboxes.md), [Life of a workspace](../../docs/protocol/workspace-life.md), [Stop and resume](../../docs/protocol/stop-and-resume.md) |
 | Sessions and chat | `/docs/sessions-and-chat` | [Chat and events](../../docs/protocol/chat-and-events.md), [Messages and attachments](../../docs/protocol/messages-and-attachments.md), [Repository folders](../../docs/protocol/repository-folders.md#the-context-folder) |
 | Files and changes | `/docs/files-and-changes` | [Workspace tools](../../docs/protocol/workspace-tools.md#files-and-changes) |

@@ -100,6 +100,21 @@ Adding a repository starts a build automatically.
 
 - [Manage the shared cloud computer setup](/docs/cloud-computer)
 
+## Connect an org agent login
+
+An admin can connect one API key or own endpoint for each agent on the org's **Agents** tab.
+Open **Settings**, then **Agents**, after **Cloud computer**.
+Other members can read the login's kind, an endpoint's host, and the **Use for every member** setting.
+They cannot change the login or see its saved key or full endpoint address.
+
+Your usable personal login comes first unless an admin turns on **Use for every member**.
+Without a usable personal login, new sessions use the org login when available.
+You need no personal login when the org login serves you.
+Automation runs follow the same rule for their owner.
+The org login stays when the admin who connected it leaves.
+
+- [Connect and manage an org login](/docs/agent-logins#use-an-org-login)
+
 ## Choose the org colour
 
 The org list shows the open org in its colour.
@@ -201,7 +216,9 @@ It does not move an existing session to the new owner's agent login.
 
 Every member can see every workspace and chat in the org.
 Sessions share the files and branch of their workspace.
-Each session uses its starter's agent login under that login's share setting.
+Each session keeps its starter's personal login or the org login.
+The personal login's share setting controls whether other members can use it in that session.
+Every member can send messages on a session's org login.
 
 Members with terminal access can read credentials available on the computer.
 Work with people you trust with your agent and GitHub logins.
@@ -256,6 +273,7 @@ Deleting the org does not extend a workspace's 14 days of Restore.
 Other stopped workspaces start their computers when you open them.
 
 After the org's restore window, deletion removes its remaining data and computers.
+This includes its org agent logins.
 An archived workspace's computer can be deleted earlier when its own Restore window ends.
 
 Keep important work in GitHub before you delete an org.
