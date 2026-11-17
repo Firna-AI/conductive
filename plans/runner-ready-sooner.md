@@ -21,8 +21,8 @@ then waited for the terminal steps and for the desktop of the provider's
 `computer` tool server. So this change helps a create much more than a
 resume.
 
-This change makes the runner connect before its warm-up, and it makes the
-first scan cheaper. The Worker, the provider, the start steps, and the wire
+This change removes the warm-up, so that the runner connects at once, and
+it makes the first scan cheaper. The Worker, the provider, the start steps, and the wire
 messages do not change. The other start delays stay as they are: the
 Worker's one-second steps, the provider's hold of the first command, the
 downloads at boot, and the wait for the tool servers.
@@ -59,50 +59,43 @@ resumed workspaces?
   E and K, not the first recommendation of C and E, then D, B, and J. Its
   report is in `.context/runner-ready-sooner/options-check.md`.
 
-**Start-speed decision 2** (open, asked on 17 November 2026). Cal chose C
-alone. The resume sample shows that C saves little on a resume. Which other
-options join this change?
+**Start-speed decision 2** (asked and answered on 17 November 2026, Cal
+chose C). Cal chose C of decision 1 alone. The resume sample shows that C
+saves little on a resume. Which other options join this change?
 
-- **A.** C alone. A resume gains a few seconds at most. Effort: none more.
-- **B.** C, and the background warm-up also reads the Codex program. This is
-  option L of the options check. A Codex first turn then finds its program
-  warm. Each start downloads about 306 MiB more, also for Claude users.
-  Effort: Small.
-- **C.** C without any warm-up. This is option N of the options check. It
-  removes code on `origin/main`. The first agent start can then wait for
-  its program. Effort: Small.
-- **D.** C, and a slow tool server does not hold the first model request.
-  This is option K of the options check. Claude waited 2.8 s for the
-  `computer` server on the resume. The setting that does this is not
-  documented, so a sandbox test must prove it first. The first request can
-  then go without the computer tools. Effort: Medium.
-- **E.** C, and Claude gets the message while the turn checkpoint runs,
-  with its tool calls held until the checkpoint ends. This is option M of
-  the options check. A Codex turn keeps today's order. The gain is near
-  0 s for this repository. Effort: Medium.
-- **F.** C, and option E of start-speed decision 1, the shorter Worker
-  start loop. Effort: Medium.
-- **G.** C, option E of start-speed decision 1, and option K. Effort: Large.
-- **Recommendation:** A. It keeps Cal's choice, and the log lines of this
-  change give the data for the next step. The options check recommends G.
-- **Action:** ask the user, because each other option grows the change
-  beyond Cal's choice of C alone.
+- **A. Not chosen.** C alone. It was the recommendation, because the log
+  lines of this change give the data for the next step.
+- **B. Not chosen.** C, and the background warm-up also reads the Codex
+  program. It is option L of the options check. Each start would download
+  about 306 MiB more.
+- **C. Chosen.** C without any warm-up. It is option N of the options
+  check. The runner connects as soon as its credentials are gone and its
+  watches run. No background read competes with the first scan, and no
+  helper needs a stop path. The first agent start reads its program
+  itself. This removes the warm-up on `origin/main`, with Cal's approval.
+- **D. Not chosen.** C, and a slow tool server does not hold the first
+  model request. It is option K of the options check.
+- **E. Not chosen.** C, and Claude gets the message while the turn
+  checkpoint runs, with its tool calls held. It is option M of the options
+  check.
+- **F. Not chosen.** C, and the shorter Worker start loop of decision 1.
+- **G. Not chosen.** F and D together. The options check recommended it.
 
 ## Design
 
 Design calls of the agent, 17 November 2026:
 
-1. **Only the warm-up moves to the background.** The removal of old agent
-   credentials and the watch start stay before the first connection. The
-   credentials must be gone before any turn. The watches must run before
-   the first scan, so that no change is lost. A failed warm-up logs a
-   warning and does not stop the runner. Reason: the warm-up only fills the
-   disk cache, and a turn that starts first reads the same binary itself.
-2. **The warm-up does not make the runner busy.** Shutdown and a release
-   swap end the warm-up within 1 s and wait for the helper exit. Today the
-   helper ignores a close during its read loop, and only the SIGKILL after
-   10 s ends it. Reason: an idle swap must not wait for a cache fill, and no
-   helper process may outlive the runner.
+1. **The runner has no warm-up.** The removal of old agent credentials
+   and the watch start stay before the first connection. The credentials
+   must be gone before any turn. The watches must run before the first
+   scan, so that no change is lost. Reason: start-speed decision 2.
+2. **The warm request leaves the runner, the helper, and the generated
+   helper types, if each release pins its own helper.** The release parts
+   list names the helper beside the runner, so a runner never talks to a
+   helper of another release. If the parts list does not pin it, the
+   helper keeps its handler and only the runner stops sending the request.
+   `warmClaude` stays, because the measurement tool `measure.ts` uses it.
+   Reason: code that no runner calls is dead code.
 3. **`runner.ready` still comes after the first scan.** Reason: the file
    lists must not show empty while the workspace shows ready, and the first
    turn needs the full checkpoint anyway.
@@ -124,8 +117,8 @@ Design calls of the agent, 17 November 2026:
    stamp of the provider's restore, and a probe cut the object reads of the
    first comparison from 6,313 to 504.
 7. **The runner logs its start times.** One info line each: process start to
-   first connection, the end of the warm-up, the first welcome, the first
-   scan with its duration and file count, and `runner.ready`. The lines hold
+   first connection, the first welcome, the first scan with its duration
+   and file count, and `runner.ready`. The lines hold
    fixed text, whole milliseconds, and counts. They hold no path, ID, or
    secret. Reason: the next measurement can then split the start without
    guesses.
@@ -135,7 +128,7 @@ Design calls of the agent, 17 November 2026:
    `runner/behavior.md` state the order, so they change with the code.
 
 Compatibility: no wire message, stored state, or Worker code changes. Older
-runners keep today's order. A sandbox gets the new runner from a new org
+runners keep their warm-up. A sandbox gets the new runner from a new org
 image, or from a staged update at a later start, as
 [Sandbox software](../docs/protocol/sandbox-software.md) says.
 
@@ -155,35 +148,34 @@ No requirement changes, as design call 8 says. This milestone confirms it.
 - [ ] Read `docs/protocol/agent-runner.md`,
       `docs/protocol/workspace-tools.md#files-and-changes`, and
       `docs/protocol/sandbox-software.md`. Confirm that no sentence states
-      the order of the warm-up, the connection, and the first scan, or the
-      order of the reads in a scan. If one does, stop and add a decision to
-      this plan.
+      a warm-up of the agent programs, the order of the connection and the
+      first scan, or the order of the reads in a scan. If one does, stop
+      and add a decision to this plan.
 
-## Milestone 2: Connect before the warm-up
+## Milestone 2: Remove the warm-up
 
 Depends on: 1
 
 The runner connects when its old credentials are gone and its watches run.
-The warm-up runs in the background. Code:
-`crates/cnd-runner/src/helper/startup.rs`, `crates/cnd-runner/src/engine/handler.rs`,
-`crates/cnd-runner/src/runtime.rs`, and `runner/sdk-helper/src/`.
+Code: `crates/cnd-runner/src/helper/startup.rs`,
+`crates/cnd-runner/src/helper/driver.rs`, the helper request type in
+`crates/cnd-runner-interface/`, and `runner/sdk-helper/src/`.
 
-- [ ] Split `RunnerStartup::prepare` into the credential removal, which
-      `start` still awaits, and the warm-up, which starts in a task that
-      the startup owns.
-- [ ] Log a warning when the warm-up fails, and keep the runner running.
-- [ ] Keep the warm-up out of `CommandHandler::busy`.
-- [ ] End the warm-up within 1 s on shutdown and on a release swap, and wait
-      for the helper exit. The helper's read loop stops when the helper
-      closes.
+- [ ] Remove the warm-up from `RunnerStartup::prepare`. Keep the credential
+      removal.
+- [ ] Check that the release parts list pins the helper of each release.
+      Record the result in this plan. Then remove the warm request as
+      design call 2 says, and regenerate the shared types with the command
+      in `CLAUDE.md`.
+- [ ] Remove the tests of the warm-up under the removal rule of the
+      `testing` skill.
 - [ ] Tests:
-  - [ ] The runner connects while a held warm-up has not ended.
-  - [ ] A failed warm-up logs a warning, and the runner still connects and
-        runs a turn.
-  - [ ] A shutdown during the warm-up ends the helper within 1 s, and the
-        run returns.
-  - [ ] A turn that starts during the warm-up runs as before.
-- [ ] Update the runner crate README, its key code line of `startup.rs`, and
+  - [ ] The runner connects with no helper request before the connection.
+  - [ ] A first turn starts and runs as before.
+- [ ] Update the doc comments that name the warm-up: `runtime.rs:30`,
+      `repository/service.rs:39`, `helper/boundary.rs:53` and `:65`, and
+      `engine/dependencies.rs:40`.
+- [ ] Update the runner crate README lines 101 and 159, and
       `runner/behavior.md:167-168`.
 
 ## Milestone 3: A cheaper first scan
@@ -215,7 +207,7 @@ same. Code: `crates/cnd-runner/src/repository/snapshot.rs`,
 
 Depends on: 2, 3
 
-- [ ] Log the five lines of design call 7 at info level.
+- [ ] Log the four lines of design call 7 at info level.
 - [ ] Test that each line holds fixed text, a whole number of milliseconds,
       and a count, and no path or ID.
 - [ ] Update the runner crate README with the log lines.
