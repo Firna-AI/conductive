@@ -55,9 +55,10 @@ says.
   diff, or Preview tab, its address replaces the address of the workspace.
   It decides once, when the chat first knows the view, so a later move to
   the address of the workspace, such as a click on a session tab, shows
-  the chat. An address that names a view or a session, a move to another
-  address before the view is known, a phone, and an archived workspace
-  keep the address, as
+  the chat. Such a later move, such as a move back in the browser
+  history, also saves the shown session as the active tab. An address that names a
+  view or a session, a move of the address before the view is known, a
+  phone, and an archived workspace keep the address, as
   [The tab row](../../../docs/protocol/tab-row.md#the-shown-tab-at-a-return)
   says. The screen keeps the arrival address in a `TabRestore` for its
   whole show, so a switch between the phone and the desktop layout

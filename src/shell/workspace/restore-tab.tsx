@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useEffectEvent, useState } from 'react'
 import { routeOf, useNavigation } from '../../app/navigation'
+import { viewShowing } from '../../chat/state/sessions'
 import { tabKey } from '../../chat/state/tab-order'
 import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import type { WorkspaceContext } from './features'
 import { filesHref } from './files/files-address'
-import { useSavedView, useViewKnown } from './saved-view'
+import { saveView, useSavedView, useViewKnown } from './saved-view'
 import { replaceWithoutVisit } from './tab-visits'
 import { previewPortHref } from './tools/tool-address'
 
@@ -54,9 +55,11 @@ function savedTabHref(
 
 /**
  * The arrival of one show of the screen: its first address, which the
- * restore takes once. The screen keeps it for its whole show, so a new
- * mount of `RestoreShownTab`, such as at a switch between the phone and
- * the desktop layout, decides nothing again.
+ * restore takes once. The first move of the address drops it, so a move
+ * away and back before the view is known restores nothing. The screen
+ * keeps it for its whole show, so a new mount of `RestoreShownTab`, such
+ * as at a switch between the phone and the desktop layout, decides
+ * nothing again.
  */
 export class TabRestore {
   private arrival: string | null
@@ -71,13 +74,59 @@ export class TabRestore {
     this.arrival = null
     return arrival
   }
+
+  /** Forgets the arrival, after a move of the address. */
+  drop(): void {
+    this.arrival = null
+  }
 }
 
 /** The arrival of this show of the screen, at its first address. */
 export function useTabRestore(): TabRestore {
   const navigation = useNavigation()
   const [restore] = useState(() => new TabRestore(navigation.href()))
+  useEffect(
+    () => navigation.subscribe(() => restore.drop()),
+    [navigation, restore],
+  )
   return restore
+}
+
+/**
+ * The view with the shown session as the active tab, when a file, diff, or
+ * Preview tab was active. The same view otherwise, so nothing saves.
+ */
+function showingChat(
+  view: WorkspaceView,
+  sessionId: string | null,
+): WorkspaceView {
+  const active = view.activeTab
+  if (active === null || active.kind === 'session') return view
+  return sessionId === null
+    ? { ...view, activeTab: null }
+    : viewShowing(view, sessionId)
+}
+
+/**
+ * Saves the shown session as the active tab at each move of the address
+ * to the workspace alone, such as a move back from a tab, while a file,
+ * diff, or Preview tab is active. The chat shows there, so a later return
+ * shows the chat again.
+ */
+function useChatAtBareAddress(context: WorkspaceContext, shows: boolean): void {
+  const navigation = useNavigation()
+  const workspaceId = context.workspace.id
+  const save = useEffectEvent(() => {
+    const { savedView } = context
+    const shown = savedView.getSnapshot().activeSessionId
+    saveView(savedView, (view) => showingChat(view, shown))
+  })
+  useEffect(() => {
+    if (!shows) return
+    return navigation.subscribe(() => {
+      if (bareAddress(navigation.href(), workspaceId)) save()
+    })
+  }, [navigation, shows, workspaceId])
 }
 
 /**
@@ -87,8 +136,10 @@ export function useTabRestore(): TabRestore {
  * address of that tab takes the place of the arrival address, and counts as
  * the address of the first show, so it starts no Resume. It decides once,
  * when the chat first knows the view. An address that names a view or a
- * session, a move to another address before then, a session that was
- * active, a phone, and an archived workspace keep the address.
+ * session, a move of the address before then, a session that was active, a
+ * phone, and an archived workspace keep the address. A later move to the
+ * address of the workspace alone makes the shown session active, as
+ * `useChatAtBareAddress` says.
  */
 export function RestoreShownTab(props: {
   context: WorkspaceContext
@@ -101,12 +152,15 @@ export function RestoreShownTab(props: {
   const shows = context.viewport !== 'phone' && context.sandbox !== 'archived'
   const workspaceId = context.workspace.id
   const target = view && shows ? savedTabHref(context, view) : null
+  useChatAtBareAddress(context, shows)
   useEffect(() => {
     if (!known) return
     const arrival = restore.take()
-    if (arrival === null) return
-    const stayed = navigation.href() === arrival
-    if (target !== null && stayed && bareAddress(arrival, workspaceId)) {
+    if (
+      target !== null &&
+      arrival !== null &&
+      bareAddress(arrival, workspaceId)
+    ) {
       replaceWithoutVisit(navigation, target)
     }
   }, [navigation, restore, known, target, workspaceId])

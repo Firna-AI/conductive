@@ -67,11 +67,17 @@ adds the menu of the rows of All files and Changes, as
   address. The user asked for this on 17 November 2026.
 - Reason: a member who leaves a Preview tab and comes back expects that
   tab, not the chat.
-- The shown tab comes from the saved view, so it is the same on each
-  device of the member, and it stays after a reload.
+- The shown tab comes from the saved view that the browser tab read. A
+  reload, a new browser tab, and another device of the member read the
+  saved view again. A workspace that the browser tab keeps uses its kept
+  copy of the view, as
+  [Events](chat-and-events.md#events) says of its chat.
 - An address that names a tab, a tool, or a session shows what it names.
 - A move to the address of the workspace during the same visit shows the
-  chat, as a click on a session tab does.
+  chat, as a click on a session tab does. Such a move, such as a move back
+  in the browser history, makes the shown session the active tab. So a
+  later return shows the chat too.
+- A move away and back before the view is read keeps the address.
 - On a phone, the workspace opens at the chat, because its row holds only
   the session tabs.
 - A restore of the shown tab starts no Resume of a stopped cloud computer

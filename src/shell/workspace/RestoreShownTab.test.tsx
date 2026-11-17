@@ -3,6 +3,8 @@
 import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 import { routes } from '../../app/router'
+import { HeldRequests } from '../../app/test-kit'
+import { readView } from '../../chat/api/read-view'
 import type { FilesTab } from '../../files/navigation'
 import {
   workspaceViewPath,
@@ -20,6 +22,7 @@ import {
 } from '../../test-support/mount'
 import { settle } from '../test-mount'
 import { filesHref } from './files/files-address'
+import { bodiesOf } from './kept-test-kit'
 import { previewPortHref } from './tools/tool-address'
 import { openTab } from './wiring-test-kit'
 
@@ -116,15 +119,50 @@ describe('the restore of the shown tab at a return to the workspace', () => {
     expect(navigation.history).toEqual([href])
   })
 
-  test('a move to the address of the workspace from a tab of the same show keeps the chat', async () => {
+  test('a move back to the address of the workspace from a tab saves the shown session, so a return shows the chat', async () => {
     holdAnimationFrames()
     const server = serverWith([diffTab], diffTab)
     const diff = filesHref(org, id, diffTab)
     const { navigation } = await openTab(server, diff)
+    const from = server.requests.length
 
     act(() => navigation.push(bare))
     await settle()
+    const saved = await bodiesOf(
+      server,
+      'PUT',
+      workspaceViewPath(org, id),
+      from,
+    )
+    act(() => navigation.push(routes.automations(org)))
+    await settle()
+    act(() => navigation.push(bare))
+    await settle()
 
-    expect(navigation.history).toEqual([diff, bare])
+    expect({
+      active: readView({ view: saved.at(-1) }).activeTab,
+      history: navigation.history,
+    }).toEqual({
+      active: { kind: 'session', sessionId: session },
+      history: [diff, bare, routes.automations(org), bare],
+    })
+  })
+
+  test('a move away and back before the read of the view keeps the address', async () => {
+    holdAnimationFrames()
+    const server = serverWith([diffTab], diffTab)
+    const held = new HeldRequests(server)
+    held.hold('GET', workspaceViewPath(org, id))
+    const { navigation } = await openTab(server, bare, { fetch: held.fetch })
+    const diff = filesHref(org, id, diffTab)
+
+    act(() => navigation.push(diff))
+    await settle()
+    act(() => navigation.push(bare))
+    await settle()
+    held.release('GET', workspaceViewPath(org, id))
+    await settle()
+
+    expect(navigation.history).toEqual([bare, diff, bare])
   })
 })
