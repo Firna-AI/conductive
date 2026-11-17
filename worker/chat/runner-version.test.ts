@@ -30,6 +30,7 @@ async function hello(fixture: ChatFixture, protocolVersion: number) {
     protocolVersion,
     workspaceId: WORKSPACE_ID,
     streamId: 'version-stream',
+    processStartId: 'abcdef01-2345-4678-89ab-cdef01234567',
   })
   const { closed, messages } = await fixture.actor.api.peers.take(peer)
   return { closed, messages }
@@ -93,6 +94,7 @@ it.each([
         workspaceId: 'unknown',
         connectionId: 'unknown',
         streamId: null,
+        processStartId: null,
         protocolVersion: null,
       }
       const connected = {

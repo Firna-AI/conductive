@@ -29,6 +29,7 @@ describe('the drag of a workspace row', () => {
     const groups = groupWorkspaces(
       coreFixtures().sectionList.sections,
       workspaceFixtures().workspaces.workspaces,
+      FAKE_TIME,
     )
     const moves: { workspaceId: string; target: DropTarget }[] = []
     const view = mountScreen(
@@ -102,6 +103,7 @@ describe('the drag of a workspace row', () => {
     const groups = groupWorkspaces(
       coreFixtures().sectionList.sections,
       workspaceFixtures().workspaces.workspaces,
+      FAKE_TIME,
     )
     const shown: { workspaceId: string; anchor: MenuAnchor }[] = []
     const menus = (workspace: Workspace): RowMenu => ({

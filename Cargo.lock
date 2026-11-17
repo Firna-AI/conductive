@@ -308,6 +308,7 @@ dependencies = [
  "cnd-relay",
  "cnd-release",
  "cnd-runner",
+ "cnd-runner-interface",
  "cnd-tools",
  "flate2",
  "internal-error",

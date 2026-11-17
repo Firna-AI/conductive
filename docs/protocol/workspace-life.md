@@ -3,7 +3,8 @@
 This doc holds the requirements and the decisions in force for the life of a
 workspace. It covers the create, the start steps, the time limits, the
 states, the stop and resume, the restart of the software, the archive, the
-restore, and Continue of a workspace.
+restore, the removal from the list after 14 days, and Continue of a
+workspace.
 It belongs to [Workspaces and sandboxes](workspaces-and-sandboxes.md),
 which covers the provider, the org image, and the startup script. The
 terms are those of the
@@ -91,7 +92,8 @@ keeps them after the merge.
   mark shape, so no state there depends on colour alone. Reason: they also
   show the state of the cloud computer. So the header can show ready beside
   a bar with failed checks.
-- Archived workspaces sit in the Archived group at the end of the list.
+- An archived workspace sits in the Archived group at the end of the list
+  until its Restore ends, as [Archive](#archive) says.
 
 ### The list mark
 
@@ -112,8 +114,8 @@ keeps them after the merge.
 ## Archive
 
 - Archive keeps the sandbox of a workspace for 14 days, and stops it at
-  once when it runs (decision 1 of PR #138). The chat stays read-only in
-  the Archived group (decision 16).
+  once when it runs (decision 1 of PR #138). The chat stays read-only
+  (decision 16).
 - Archive runs no check of the work in the sandbox and asks no question.
   It works in each state of the workspace. It ends a start that runs.
 - An Archive of a parent workspace archives none of its sub-workspaces.
@@ -128,17 +130,24 @@ keeps them after the merge.
 - A check for work that is not committed or not pushed was rejected,
   because it needs a running sandbox. The Archive of a stopped workspace
   would then wait for a start.
-- After Archive, a toast names the workspace and offers Restore.
-- The bar of an archived workspace gives the day of the Archive. Until
-  Restore ends, the bar also gives the last day of Restore, with Restore.
+- After Archive, a toast names the workspace, gives the day when it leaves
+  the list, and offers Restore.
+- The bar of an archived workspace gives the day of the Archive and the
+  day when the workspace leaves the list. Until Restore ends, the bar
+  offers Restore until that day.
+- The bar gives that day also when it offers no Restore, such as in a
+  suspended org or without a kept sandbox. Reason: a workspace never
+  leaves the list without a notice.
 - Restore ends 14 days after the Archive. The app then deletes the
-  sandbox, with its files and its agent sessions. The chat stays read-only
-  in the Archived group.
+  sandbox, with its files and its agent sessions. The workspace leaves the
+  Archived group and the list, as
+  [Removed workspaces](#removed-workspaces) says (decision 518).
 - The end of Restore does not wait for the delete. While the delete still
   retries, the sandbox can still exist, but the workspace offers no
   Restore. Reason: the last day of Restore on the bar stays true.
 - The bar says that the cloud computer is deleted only after the delete.
-  Before that, it gives the day when Restore ended.
+  Before that, the bar of a removed workspace says that the cloud computer
+  is being deleted.
 - A sandbox that the app never deletes was rejected, because each archived
   workspace then uses about two starts a month for its restarts.
 - A saved snapshot at Archive was rejected, because the stopped sandbox
@@ -181,8 +190,8 @@ keeps them after the merge.
   with Resume. A later open of the workspace resumes its sandbox, as for
   each stopped workspace.
 - A repeat of a Restore changes nothing.
-- After its 14 days, an archived workspace offers no Restore, as
-  [Archive](#archive) says.
+- After its 14 days, an archived workspace is removed and offers no
+  Restore, as [Removed workspaces](#removed-workspaces) says.
 - An archived workspace without a kept sandbox offers no Restore either.
   Reason: nothing is left to bring back.
 - The app refuses a Restore after the 14 days, or without a kept sandbox,
@@ -193,6 +202,79 @@ keeps them after the merge.
   history.
 - [Orgs and members](orgs-and-members.md#members-and-roles) says who may
   restore a workspace.
+
+## Removed workspaces
+
+- An archived workspace is removed when its Restore ends, 14 days after
+  the Archive (decision 518). It then leaves the workspace list, the count
+  of the Archived group, and each group of the command palette.
+- Reason: the Archived group then does not grow with no end, and no data
+  is lost.
+- The app deletes only the sandbox of a removed workspace, as
+  [Archive](#archive) says. It keeps all the other data: the record of the
+  workspace, the chat history of its sessions, and the record of each file
+  attached to its messages. They stay until the org is deleted, as
+  [Delete org](delete-org.md) says.
+- The removal deletes no attached file. The app deletes its stored copy of
+  each file after the sandbox has it, as
+  [The stored copy](attachment-transfers.md#the-stored-copy) says. So a
+  file that reached the sandbox goes with the sandbox at the end of the
+  14 days.
+- A delete of the chat and the files, at the end of the 14 days or later,
+  was rejected (decision 518). An org setting for the days in the list was
+  left out, because the list follows the end of Restore.
+- A removed workspace keeps the state archived. So each rule of an
+  archived workspace holds for it, unless a rule says otherwise for a
+  removed workspace.
+- Every archived workspace is removed at the end of its 14 days, also in a
+  suspended org and without a kept sandbox. Reason: the removal loses no
+  data, so no case needs an exception.
+- The removal does not wait for the delete of the sandbox, as the end of
+  Restore does not.
+- An open list leaves the workspace out from the end of its Restore, also
+  without a reload.
+- No action puts a removed workspace back in the list.
+- Only a direct link opens a removed workspace (decision 519). A workspace
+  link, its chip in a chat, a session link, and the run row of an
+  automation still open its read-only chat.
+- The last workspace of an org counts as a direct link (decision 522). So
+  the tile of the org, Switch to org, and the Switch to rows of the
+  palette still open a removed workspace that the person opened last, as
+  [Opening an org](org-rail-order.md#opening-an-org) says.
+- Reason: a link names the workspace by its ID, and the chat of the
+  workspace stays. The last workspace names it in the same way, and its
+  page says Removed.
+- Opening the list of the org in place of a removed last workspace was
+  rejected (decision 522), and so was forgetting the last workspace at
+  Archive. Both change the memory of the org for little gain.
+- While a removed workspace is open, no row of the list is selected, and
+  the Archived group does not open for it.
+- The agent tools read a removed workspace by its ID. Their workspace list
+  leaves it out unless the call asks for it, as
+  [List the workspaces](workspace-calls.md#list-the-workspaces) says.
+- A link that shows only that the workspace was removed, with agent tools
+  that act as if it does not exist, was rejected (decision 519). A link in
+  a chat would then lead nowhere.
+- A Removed view or filter in the list was rejected too, because the list
+  then keeps the old archives that the removal takes out. A group of
+  removed workspaces in the search of the palette was left out, as
+  [Tabs and groups](command-palette.md#tabs-and-groups) says.
+- The bar of a removed workspace has the title "Removed on" and the day of
+  the removal. It says that the workspace left the list, and that the chat
+  is read-only. It gives the state of the cloud computer, as
+  [Archive](#archive) says.
+- The file and tool panels of a removed workspace have the title Removed.
+- The header and the chips of a removed workspace keep the word and the
+  mark of Archived. Reason: its state stays archived, also in the agent
+  tools.
+- The app says that the workspace is removed, and never that it is
+  deleted (decision 520). Only its cloud computer is deleted. Reason: the
+  app keeps the data, and "deleted" can read as a promise that the data is
+  gone.
+- "Deleted" with a note on the Privacy page was rejected for that reason.
+  So was "deleted" with a real delete that an admin asks for. The title
+  "Archived on" with a line on the day when the workspace left the list
+  was rejected, because a reader can miss the change of state.
 
 ## Continue
 

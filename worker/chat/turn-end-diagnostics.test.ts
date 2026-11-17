@@ -35,6 +35,7 @@ it('warns once for committed finished, stopped, and failed turns without a Stop 
     new FakeRunner({
       workspaceId: WORKSPACE_ID,
       streamId: '12345678-1234-4234-8234-123456789abc',
+      processStartId: 'abcdef01-2345-4678-89ab-cdef01234567',
     }),
   )
   runner.emit({ type: 'runner.ready' })
@@ -60,6 +61,7 @@ it('warns once for committed finished, stopped, and failed turns without a Stop 
           state,
           connectionId: 'unknown',
           streamId: '12345678-1234-4234-8234-123456789abc',
+          processStartId: 'abcdef01-2345-4678-89ab-cdef01234567',
           protocolVersion: 2,
         },
       ]),
@@ -135,6 +137,7 @@ it('does not warn for a rolled-back end and warns once when the runner retries i
         state: 'stopped',
         connectionId: 'unknown',
         streamId: 'unknown',
+        processStartId: null,
         protocolVersion: 2,
       },
     ])
@@ -194,6 +197,7 @@ it('fails a new system-stopped turn without reading Stop history', async () => {
         state: 'failed',
         connectionId: null,
         streamId: null,
+        processStartId: null,
         protocolVersion: null,
       },
     ],

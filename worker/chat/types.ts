@@ -131,6 +131,7 @@ export interface ActiveRunner {
   peer: AuthenticatedRunner
   workspace: RunnerWorkspaceRecord
   streamId: string | null
+  processStartId: string | null
   protocolVersion: RunnerProtocolVersion | null
   loginKinds?: readonly RunnerLoginKind[]
   ready: boolean
@@ -210,6 +211,8 @@ export interface ChatDependencies {
   browserAlarm?: (at: number | null) => Promise<void>
   scheduleRunnerCheck?: ConnectionScheduler
   runnerAlarm?: (at: number | null) => Promise<void>
+  /** Stores the due time of the automation report retry, unless an earlier one is due. */
+  automationReportAlarm?: (at: number) => Promise<void>
   readRunnerAccess: (workspaceId: string, tokenHash: string) => Promise<boolean>
   readRunnerProtocolVersion: (workspaceId: string) => Promise<number | null>
   readConnectionAccess: (

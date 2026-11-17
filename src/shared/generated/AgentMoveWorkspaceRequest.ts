@@ -5,7 +5,15 @@
  */
 export type AgentMoveWorkspaceRequest = {
   /**
-   * section id.
+   * Destination section. Optional when the call gives a parent target.
    */
-  sectionId: string
+  sectionId?: string
+  /**
+   * New parent workspace for the moved tree.
+   */
+  parentId?: string
+  /**
+   * Move the tree to the top level when true.
+   */
+  topLevel?: boolean
 }

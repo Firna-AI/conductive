@@ -8,6 +8,7 @@ export type AlarmSource =
   | 'previews'
   | 'github'
   | 'continue'
+  | 'automation-report'
   | 'browser'
   | 'runner'
 

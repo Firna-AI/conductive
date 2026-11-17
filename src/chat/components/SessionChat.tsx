@@ -1,4 +1,3 @@
-import type { WorkspaceState } from '../../shared/generated/WorkspaceState'
 import { useMemo, type ReactNode } from 'react'
 import type { Agent } from '../../shared/generated/Agent'
 import { modelLabel } from '../../shared/agents'
@@ -27,7 +26,7 @@ import { ActionNotice, BlockNotice, LinkedSessionNotice } from './ChatNotices'
 import { Composer } from './Composer'
 import type { ComposerTool } from './ComposerTools'
 import type { ComposerFocus } from './composer-requests'
-import { SandboxBar, StartingCard, type SandboxProblem } from './SandboxState'
+import { workspaceProblemOf, SandboxBar, StartingCard } from './SandboxState'
 import {
   EarlierLoading,
   emptyView,
@@ -38,12 +37,6 @@ import {
 import { sourceInsert } from './SourceLine'
 import { TranscriptView } from './TranscriptView'
 import { WaitingRequests } from './WaitingRequests'
-
-function problemOf(state: WorkspaceState | undefined): SandboxProblem | null {
-  return state === 'stopped' || state === 'error' || state === 'archived'
-    ? state
-    : null
-}
 
 /**
  * The parts of the chat that the app draws from its own record of the
@@ -92,7 +85,7 @@ function sandboxParts(props: SessionChatProps): ChatHost {
   if (props.host) return props.host
   const { snapshot, controller, now } = props
   const { workspace } = snapshot
-  const problem = problemOf(workspace?.state)
+  const problem = workspaceProblemOf(workspace?.state)
   const readOnly = props.readOnly ?? false
   const firstStart = failedFirstStart(workspace, snapshot.start)
   return {
@@ -107,6 +100,7 @@ function sandboxParts(props: SessionChatProps): ChatHost {
           busy={snapshot.resuming}
           firstStart={firstStart}
           message={snapshot.savedError}
+          now={now}
           onResume={() => void controller.resume()}
           problem={problem}
         />
