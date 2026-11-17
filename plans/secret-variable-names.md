@@ -209,7 +209,7 @@ The orchestrator checks the combined result and owns the gate, review, and pull 
 - [x] Run targeted tests for the changed behavior. Record commands, counts, expected failures, repetitions, and added test times.
 - [x] Run early `npm run format:check` and `npm run lint` before long checks.
 - [x] Smoke-test the CLI and MCP against a local fake Worker. Verify a nested program receives the alias without outputting a value.
-- [ ] Run `npm --prefix desktop ci` and `npm ci --prefix runner`. Run `npm run check` with Node 24.
+- [x] Run `npm --prefix desktop ci` and `npm ci --prefix runner`. Run `npm run check` with Node 24.
 - [x] Run `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, and `cargo test --workspace`.
 - [x] Run `cargo build --release --target x86_64-unknown-linux-musl -p cnd-cli`. Install the target and `musl-tools` if needed.
 - [x] Run the binding generator and verify that generated files have no uncommitted drift.
@@ -241,3 +241,5 @@ Product UI design calls from 17 November 2026: let the Worker refusal drive the 
 - The initial plan-only change runs Markdown validation and a read-only review. The npm and Rust gates wait for implementation.
 
 Final integration evidence: `.context/secret-variable-names/org-login-merge.md`. The merge keeps main’s org-login facts and the approved secrets-variable facts.
+
+Final verification evidence: `.context/secret-variable-names/npm-result-two-workers.json` and `rust-gates-org-login.json`. The fresh review has no findings. All required TODOs except plan deletion and PR/CI are complete.
