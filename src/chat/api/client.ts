@@ -43,9 +43,8 @@ import {
   readSessionResponse,
   readSessions,
   readTranscript,
-  readViewReply,
 } from './read-responses'
-import { readView } from './read-view'
+import { readView, readViewReply } from './read-view'
 import { readNewestStoredEvents, readWorkspaceResponse } from './read-workspace'
 
 export interface WorkspaceTarget {

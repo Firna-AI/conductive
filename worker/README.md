@@ -56,6 +56,10 @@ On the app hostname, the Worker serves these API routes:
 - Leave org, under the existing last-active-admin rule.
 - The create, read, resume, and activity routes of a workspace.
 - The view and the read mark of a workspace.
+- `GET /api/orgs/<orgId>/workspaces/<workspaceId>/terminal`, the terminal state, list, and software support.
+- `POST /api/orgs/<orgId>/workspaces/<workspaceId>/terminal/terminals`, a new terminal entry.
+- `DELETE /api/orgs/<orgId>/workspaces/<workspaceId>/terminal/terminals/<terminalId>`, the close of a terminal and its shell.
+- `GET /api/orgs/<orgId>/workspaces/<workspaceId>/terminal/socket`, the legacy terminal socket.
 - Org secret settings, workspace capabilities, and secret request answers, through the [secrets backend](secrets/README.md).
 - The Mac device routes.
 - `GET /api/feedback`, the reply address of feedback, and `POST /api/feedback`, the send of feedback, as [Feedback routes](app-api/feedback.md) says.

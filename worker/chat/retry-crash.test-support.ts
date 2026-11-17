@@ -45,6 +45,7 @@ export async function createRunningRetryFixture(harness: TestHarness) {
     state: 'failed',
     error: { code: 'agent_unavailable', message: 'Try again.' },
     closeAfterStop: false,
+    stopRequest: null,
     nextTurnId: null,
     started: true,
     startedAt: TEST_TIME,

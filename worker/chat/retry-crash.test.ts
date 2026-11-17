@@ -135,6 +135,7 @@ it('keeps the full accepted retry after a crash immediately after its commit', a
     messageIds: ['retry-message'],
     state: 'queued',
     closeAfterStop: false,
+    stopRequest: null,
     nextTurnId: null,
   }
   const retryCommand = {

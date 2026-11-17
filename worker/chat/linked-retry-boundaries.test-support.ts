@@ -101,6 +101,7 @@ export async function linkedRetryBoundaryFixture(harness: TestHarness) {
       messageIds: ['retry-message'],
       state: 'queued',
       closeAfterStop: false,
+      stopRequest: null,
       nextTurnId: null,
     },
     commands: [

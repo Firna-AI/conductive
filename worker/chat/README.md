@@ -139,12 +139,14 @@ all call `TurnLifecycle.stop` with a `TurnStopRequester` from
 - `recordStopRequest` in `stop-request.ts` emits `turn.stop-requested`
   before the stop saves its interrupt. So the event commits before the
   runner gets the interrupt.
-- `StoredTurn.stopRequest` keeps the first requester. A later request emits
-  its own event and leaves that field. The transcript fold keeps the first
-  request of each turn, so the chat and the copy name the first stopper.
-- An older turn record has no `stopRequest`. When such a turn is stopping
-  or has ended, the next request reads the session history for its first
-  request.
+- `StoredTurn.stopRequest` keeps the first requester. A new turn record
+  starts with `null`, which marks that no request has arrived. A later
+  request emits its own event and leaves that field. The transcript fold
+  keeps the first request of each turn, so the chat and the copy name the
+  first stopper.
+- An older turn record has no `stopRequest` field. When such a turn is
+  stopping or has ended, the next request reads the session history for its
+  first request.
 - The browser rename and the tool rename share `renameSession` in
   `session-management.ts`.
 - `readStopRequester` in `src/chat/api/read-stop.ts` reads both event forms
@@ -188,6 +190,11 @@ runner commands.
 
 [Retries](retries.md) gives the stored retry state, and the rules of the
 retry route for `Session.retryMessageId`.
+
+## Runner warnings
+
+[Runner warnings](runner-warnings.md) gives the warning kinds and the
+fields for runner connections and for turn ends with no Stop request.
 
 ## Automation first turns
 
@@ -291,6 +298,7 @@ mode. `runner-delivery.ts` owns the prepared command's send.
 - [Chat and events: Messages](../../docs/protocol/messages-and-attachments.md#messages)
 - [Chat and events: Events](../../docs/protocol/chat-and-events.md#events)
 - [Agent runner: Lost workspace updates](../../docs/protocol/agent-runner.md#lost-workspace-updates)
+- [Agent runner: Runner warnings](../../docs/protocol/runner-warnings.md)
 - [Chat backend integration](integration/README.md)
 - [Report repairs](report-repairs.md)
 - [GitHub banner backend](../github/README.md)

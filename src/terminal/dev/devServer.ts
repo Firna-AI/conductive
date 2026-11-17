@@ -15,13 +15,34 @@ import {
 import { isRecord, type ApiFetch } from '../tool-parts/request'
 import type { SubscribeWorkspaceEvents } from '../tool-parts/workspace'
 import type { DevHold } from './devTerminal'
+import {
+  failedTerminalWrite,
+  openDevTerminal,
+  openedTerminals,
+} from './devTerminals'
 
 export const devTools = ['terminal', 'preview', 'desktop'] as const
 export type DevTool = (typeof devTools)[number]
 
-/** The states that the development page can draw for each tool. */
+/**
+ * The states that the development page can draw for each tool. The terminal
+ * states `several`, `limit`, and `failing` start with 3, 10, and 3
+ * terminals. In `failing`, each open and close of a terminal fails. `older`
+ * has the software of a sandbox that opens one shell.
+ */
 export const devStates: Readonly<Record<DevTool, readonly string[]>> = {
-  terminal: ['ready', 'starting', 'stopped', 'error', 'malformed', 'late'],
+  terminal: [
+    'ready',
+    'several',
+    'limit',
+    'failing',
+    'older',
+    'starting',
+    'stopped',
+    'error',
+    'malformed',
+    'late',
+  ],
   preview: ['open', 'none', 'error'],
   desktop: ['ready', 'error'],
 }
@@ -87,8 +108,18 @@ export function createDevServer(
   state: string,
   ports: DevPortReport,
 ): FakeApiServer {
-  const server = new FakeApiServer({ conversation: 'running' })
+  const terminal = tool === 'terminal' ? state : null
+  const server = new FakeApiServer({
+    conversation: 'running',
+    terminalSeveral: terminal !== 'older',
+  })
   storePortReport(server, ports)
+  for (
+    let opened = 0;
+    opened < (openedTerminals[terminal ?? ''] ?? 0);
+    opened++
+  )
+    openDevTerminal(server)
   const org = FAKE_IDS.org
   const id = FAKE_IDS.workspace
   server.json('GET', previewsPath(org, id), {
@@ -98,19 +129,18 @@ export function createDevServer(
     url: fixtureUrl('desktop', '#fake-desktop-token'),
     expiresAt: FAKE_TIME + 600_000,
   })
-  const terminal = terminalPaths.connection(org, id)
-  const waiting = state === 'starting' || state === 'stopped'
-  if (tool === 'terminal' && waiting) {
-    server.json('GET', terminal, { state, socketPath: null })
+  const terminalPath = terminalPaths.connection(org, id)
+  if (terminal === 'starting' || terminal === 'stopped') {
+    server.json('GET', terminalPath, { state: terminal, socketPath: null })
   }
-  if (tool === 'terminal' && state === 'late') {
-    server.json('GET', terminal, { state: 'starting', socketPath: null })
+  if (terminal === 'late') {
+    server.json('GET', terminalPath, { state: 'starting', socketPath: null })
   }
-  if (tool === 'terminal' && state === 'error') {
-    server.json('GET', terminal, failure, 503)
+  if (terminal === 'error') {
+    server.json('GET', terminalPath, failure, 503)
   }
-  if (tool === 'terminal' && state === 'malformed') {
-    server.json('GET', terminal, { state: 'ready' })
+  if (terminal === 'malformed') {
+    server.json('GET', terminalPath, { state: 'ready' })
   }
   if (tool === 'preview' && state === 'none') {
     server.json('GET', previewsPath(org, id), { previews: [] })
@@ -137,18 +167,25 @@ function requestedPort(body: string): number | null {
  * The fake API's fetch, with a log. It records a reply for each preview write
  * first, so that any port opens and any preview closes. Each open gets a new
  * preview ID, so a port opens again after a revoke. `hold` can keep a
- * terminal read from its answer.
+ * terminal read from its answer. With `failing`, each open and close of a
+ * terminal fails, as when the sandbox does not answer.
  */
 export function devFetch(
   server: FakeApiServer,
   log: (request: DevRequest) => void,
   hold: DevHold,
+  failing: boolean,
 ): ApiFetch {
   const previews = previewsPath(FAKE_IDS.org, FAKE_IDS.workspace)
   const terminal = terminalPaths.connection(FAKE_IDS.org, FAKE_IDS.workspace)
+  const terminals = terminalPaths.terminals(FAKE_IDS.org, FAKE_IDS.workspace)
   return async (path, init) => {
     const method = init?.method ?? 'GET'
     const body = typeof init?.body === 'string' ? init.body : ''
+    if (failing && method !== 'GET' && path.startsWith(terminals)) {
+      log({ method, path, body, status: 503 })
+      return Response.json(failedTerminalWrite, { status: 503 })
+    }
     const port = requestedPort(body)
     if (method === 'POST' && path === previews && port !== null) {
       opens += 1

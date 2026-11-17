@@ -6,7 +6,7 @@ import { routes } from '../../../app/router'
 import { readView } from '../../../chat/api/read-view'
 import { desktopPath } from '../../../shared/desktop'
 import { previewsPath } from '../../../shared/previews'
-import { terminalPaths } from '../../../shared/terminal'
+import { FIRST_TERMINAL_ID, terminalPaths } from '../../../shared/terminal'
 import {
   workspaceViewPath,
   type WorkspaceViewResponse,
@@ -37,6 +37,8 @@ vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
 const { org, workspace: id, preview } = FAKE_IDS
 const previewHref = toolHref(org, id, 'preview', preview)
+/** The socket of Terminal 1, which each new workspace has. */
+const firstSocket = terminalPaths.terminalSocket(org, id, FIRST_TERMINAL_ID)
 
 /** The tool of a saved view, read as the reply of the view route. */
 const toolOf = (body: unknown) => readView({ view: body }).tool
@@ -59,7 +61,7 @@ describe('the tools in the workspace', () => {
     const from = server.requests.length
 
     expect(opened.map(({ path, protocol }) => [path, protocol])).toEqual([
-      [terminalPaths.socket(org, id), 'tty'],
+      [firstSocket, 'tty'],
     ])
     click(linkTo(toolsPanel(view), toolHref(org, id, 'preview')))
     await settle()
@@ -165,9 +167,7 @@ describe('the tools in the workspace', () => {
 
       expect(currents(view, toolHref(org, id, 'terminal'))).toEqual(['page'])
       expect(linksTo(view, toolHref(org, id, 'desktop'))).toEqual([])
-      expect(opened.map(({ path }) => path)).toEqual([
-        terminalPaths.socket(org, id),
-      ])
+      expect(opened.map(({ path }) => path)).toEqual([firstSocket])
       const desktopReads = requestLines(server).filter(
         (line) => line === `GET ${desktopPath(org, id)}`,
       )

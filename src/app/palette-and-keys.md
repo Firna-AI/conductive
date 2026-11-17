@@ -65,9 +65,9 @@ state what they do.
   key closes an open palette, and does nothing while a dialog or a sheet
   of another owner is open over it, such as the sheet of a filter.
 - A part of the page offers its actions to the palette while it shows,
-  through `usePaletteOffer`: the workspace screen, the workspace list
-  that the page shows, and the sidebar toggle of the frame, in every host.
-  A row
+  through `usePaletteOffer`: the workspace screen, its Terminal tool with
+  New terminal, the workspace list that the page shows, and the sidebar
+  toggle of the frame, in every host. A row
   closes the palette first. Its action runs once the palette has left
   the page, so a field that the action opens can take the focus, and a
   question shows alone. `useRowAction` gives the action of a row, for a

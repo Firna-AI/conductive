@@ -129,4 +129,35 @@ describe('the tool events of a workspace', () => {
     })
     expect(replayOf(tools).map(({ eventNumber }) => eventNumber)).toEqual([6])
   })
+
+  test('pass each readable list of terminals to a shown tool in order, and keep none for a later tool', () => {
+    const { source, tools } = followed()
+    const terminal = (id: string, number: number) => ({
+      id,
+      number,
+      socketPath: `/socket/${id}`,
+    })
+    const first = terminal('workspace', 1)
+    const second = terminal('a'.repeat(32), 2)
+    const seen: unknown[] = []
+    const stop = tools.subscribe((envelope) => seen.push(envelope.event))
+    for (const [number, terminals] of [
+      [1, [second, first]],
+      [2, []],
+      [3, [{ ...second, id: 'not an ID' }]],
+      [4, [first]],
+    ] as const) {
+      source.send({
+        type: 'event',
+        envelope: raw(number, { type: 'terminals.updated', terminals }),
+      })
+    }
+    stop()
+
+    expect(seen).toEqual([
+      { type: 'terminals.updated', terminals: [first, second] },
+      { type: 'terminals.updated', terminals: [first] },
+    ])
+    expect(replayOf(tools)).toEqual([])
+  })
 })

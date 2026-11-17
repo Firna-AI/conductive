@@ -1,6 +1,9 @@
 import type { AgentChoice } from '../shared/generated/AgentChoice'
 import type { FieldFiles } from '../chat/components/chip-field/attached-files'
-import type { WorkspaceCapabilities } from '../shared/secrets'
+import {
+  NEW_WORKSPACE_CAPABILITIES,
+  type WorkspaceCapabilities,
+} from '../shared/secrets'
 import {
   workspacesPath,
   type CreateWorkspaceRequest,
@@ -16,7 +19,6 @@ import {
   withoutFileMarks,
 } from './draft-file-state'
 import {
-  defaultCapabilities,
   draftReady,
   sentCapabilities,
   withShownRepository,
@@ -97,7 +99,7 @@ export class NewWorkspaceModel {
       repository: keep?.repository?.picked ? keep.repository : null,
       choice: keep?.choice ?? null,
       sectionId: null,
-      capabilities: defaultCapabilities,
+      capabilities: NEW_WORKSPACE_CAPABILITIES,
       files: [],
       detached: [],
       refused: [],

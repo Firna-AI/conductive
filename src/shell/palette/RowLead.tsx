@@ -23,6 +23,7 @@ import {
   Server,
   Settings2,
   SlidersHorizontal,
+  SquarePlus,
   SquareTerminal,
   Users,
 } from 'lucide-react'
@@ -48,6 +49,7 @@ const actionIcons: Readonly<Record<OfferedActionId | OwnActionId, LucideIcon>> =
     'go-to-terminal': SquareTerminal,
     'go-to-preview': Globe,
     'go-to-desktop': Monitor,
+    'new-terminal': SquarePlus,
     'archive-workspace': Archive,
     'restore-workspace': ArchiveRestore,
     'new-section': FolderPlus,

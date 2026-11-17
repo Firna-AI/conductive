@@ -93,6 +93,15 @@ export const workspaceCommandDefaults = [
     defaults: { mac: ['Shift+Meta+G'], other: ['Ctrl+Shift+G'] },
   },
   {
+    id: 'new-terminal',
+    previous: 'go-to-preview',
+    group: 'Workspace',
+    scope: 'palette',
+    label: 'New terminal',
+    words: ['shell', 'tab'],
+    defaults: { mac: [], other: [] },
+  },
+  {
     id: 'fast-mode',
     previous: 'next-effort',
     group: 'Chat',

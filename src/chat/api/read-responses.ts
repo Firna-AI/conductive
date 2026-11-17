@@ -12,10 +12,6 @@ import type {
   SessionsResponse,
   SessionTranscriptResponse,
 } from '../../shared/sessions'
-import type {
-  WorkspaceView,
-  WorkspaceViewResponse,
-} from '../../shared/workspace-view'
 import {
   count,
   flag,
@@ -35,7 +31,6 @@ import {
   readSessionLogin,
   readUserMessage,
 } from './read-chat'
-import { readView } from './read-view'
 
 /**
  * The composer's login status, its unavailable cause, and the endpoint
@@ -181,58 +176,6 @@ export function readMembers(value: unknown): readonly MemberSummary[] {
 export function readOrg(value: unknown): OrgSummary {
   const org = record(record(value, 'org response').org, 'org')
   return { name: text(org.name) }
-}
-
-/**
- * The automation whose run made the workspace, with the pull request of a
- * pull request run, or null for a run of a schedule or of Run now.
- */
-export type RunAutomation = Required<
-  NonNullable<WorkspaceViewResponse['automation']>
->
-
-/** The saved view, and the automation of a run workspace. */
-export interface ViewReply {
-  view: WorkspaceView
-  /** Null for a workspace that a person created. */
-  automation: RunAutomation | null
-  /**
-   * The absolute folder of the workspace repository, or null when the
-   * reply gives none or gives a folder that is not absolute.
-   */
-  repositoryFolder: string | null
-}
-
-function readPullRequest(value: unknown): RunAutomation['pullRequest'] {
-  const pullRequest = record(value, 'pull request')
-  return { number: count(pullRequest.number), url: text(pullRequest.url) }
-}
-
-function readRunAutomation(value: unknown): RunAutomation {
-  const automation = record(value, 'automation')
-  const pullRequest = optional(nullable(readPullRequest))(
-    automation.pullRequest,
-  )
-  return {
-    id: text(automation.id),
-    name: text(automation.name),
-    pullRequest: pullRequest ?? null,
-  }
-}
-
-/** A folder of the cloud computer: an absolute path without a last `/`. */
-function readFolder(value: unknown): string | null {
-  if (typeof value !== 'string') return null
-  return /^\/[^\r\n]*[^/\r\n]$/u.test(value) ? value : null
-}
-
-export function readViewReply(value: unknown): ViewReply {
-  const reply = record(value, 'view response')
-  return {
-    view: readView(value),
-    automation: optional(nullable(readRunAutomation))(reply.automation) ?? null,
-    repositoryFolder: readFolder(reply.repositoryFolder),
-  }
 }
 
 /** The Markdown of a session, for its pending clipboard write. */

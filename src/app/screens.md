@@ -300,7 +300,7 @@ the Help row of the command palette opens.
   holds Attach files and Capabilities, which opens the control as a sheet
   (secrets decision 16 G). The control lists the secrets of the org, which
   it reads each time that it opens, with a checkbox that pre-approves each
-  one for the new workspace, and the switch of Mac access, on by default.
+  one for the new workspace, and the switch of Mac access, off by default.
   A secret for all agents stays checked and off. The draft keeps the
   choices, the create sends them, and a create that succeeds ends them, so
   the next draft starts again from the defaults. The create leaves out

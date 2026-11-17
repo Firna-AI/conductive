@@ -97,6 +97,41 @@ it('returns no temporary tab for a new view and for older saved views', async ()
   })
 })
 
+it('keeps a valid terminal ID through saves and reads, including unknown IDs', async () => {
+  for (const terminal of ['workspace', '0123456789abcdef0123456789abcdef']) {
+    const expected = { ...view, temporaryTab: null, terminal }
+    const saved = await requestView('PUT', { ...view, terminal })
+    expect(saved.status).toBe(200)
+    expect(await saved.json()).toMatchObject({ view: expected })
+    expect(await (await requestView()).json()).toMatchObject({ view: expected })
+    await storeRawView({ ...view, terminal })
+    expect(await (await requestView()).json()).toMatchObject({ view: expected })
+  }
+})
+
+it('drops invalid terminal IDs and accepts views without a terminal', async () => {
+  for (const terminal of [
+    undefined,
+    null,
+    2,
+    'other',
+    'A'.repeat(32),
+    `${'a'.repeat(32)}\n`,
+  ]) {
+    const saved = await requestView('PUT', { ...view, terminal })
+    expect(saved.status).toBe(200)
+    const expected = { view: { ...view, temporaryTab: null } }
+    const savedBody: unknown = await saved.json()
+    expect(savedBody).toMatchObject(expected)
+    expect(savedBody).not.toHaveProperty('view.terminal')
+    await storeRawView({ ...view, terminal })
+    const loaded = await requestView()
+    const loadedBody: unknown = await loaded.json()
+    expect(loadedBody).toMatchObject(expected)
+    expect(loadedBody).not.toHaveProperty('view.terminal')
+  }
+})
+
 it('accepts invalid temporary marks and loads them as null', async () => {
   const marks: readonly unknown[] = [
     null,
@@ -156,6 +191,20 @@ it('keeps Preview tabs through a save and a load, apart from the tabs that older
   expect(loaded).toMatchObject({ view: withPreviews })
   // An older copy reads `tabs` and `activeTab`, which hold no Preview tab.
   expect(JSON.stringify(loaded)).not.toContain('"kind":"preview"')
+})
+
+it('keeps the shown terminal next to Preview tabs through a save and a load', async () => {
+  const withBoth = {
+    ...view,
+    temporaryTab: null,
+    previewTabs: [{ port: 3000, place: 0 }],
+    activePreview: null,
+    terminal: 'workspace',
+  }
+  const saved = await requestView('PUT', withBoth)
+  expect(saved.status).toBe(200)
+  expect(await saved.json()).toMatchObject({ view: withBoth })
+  expect(await (await requestView()).json()).toMatchObject({ view: withBoth })
 })
 
 it('keeps the stored Preview tabs when an older copy saves the view', async () => {

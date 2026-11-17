@@ -112,8 +112,9 @@ Each path is relative to `src/app/`, the folder of this page.
   Mac access of one workspace, with their changes. It reads the values from
   the list of the secret requests, and removes one with its route.
 - `new-workspace-draft.ts`: `Draft`, with the Capabilities choices of New
-  workspace, `defaultCapabilities`, and the pure rules of a draft that
-  `new-workspace-model.ts` applies.
+  workspace, and the pure rules of a draft that `new-workspace-model.ts`
+  applies. Each draft starts from `NEW_WORKSPACE_CAPABILITIES` in
+  [`../shared/secrets.ts`](../shared/secrets.ts).
 - `permissions.ts`: `secretRights` and `mayAddSecret`, the rights of the
   Secrets tab, beside the other rights of an org.
 - `first-build.ts`: `firstBuildOf` and `useFirstBuild`, the state of the
