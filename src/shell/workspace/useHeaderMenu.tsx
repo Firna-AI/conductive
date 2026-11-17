@@ -37,8 +37,14 @@ const controls = [
   '[tabindex]',
 ].join(', ')
 
-function onControl(target: EventTarget): boolean {
-  return target instanceof Element && target.closest(controls) !== null
+/**
+ * The press hit a control inside `bar`. An element around the bar, such as
+ * a main area that holds the focus with its `tabindex`, is no control of it.
+ */
+function onControl(target: EventTarget, bar: Element): boolean {
+  if (!(target instanceof Element)) return false
+  const control = target.closest(controls)
+  return control !== null && control !== bar && bar.contains(control)
 }
 
 /** Gives the focus back to `node`, when the page still shows it. */
@@ -102,7 +108,12 @@ export function useHeaderMenu(context: WorkspaceContext): {
     }
   }, [renaming])
   const onContextMenu = (event: MouseEvent<HTMLElement>) => {
-    if (!menu || event.defaultPrevented || onControl(event.target)) return
+    if (
+      !menu ||
+      event.defaultPrevented ||
+      onControl(event.target, event.currentTarget)
+    )
+      return
     event.preventDefault()
     if (menu.open) return
     const active = document.activeElement

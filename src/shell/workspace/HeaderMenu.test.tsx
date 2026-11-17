@@ -77,6 +77,14 @@ describe('the workspace menu in the header', () => {
     rightClick(header(), { clientX: 600, clientY: 20 })
     const onBar = menuOf(name)
     press(document.activeElement ?? document.body, 'Escape')
+    // The main area holds the focus for a new screen with a `tabindex`, as
+    // after a create. It is no control of the header.
+    const area = header().parentElement
+    area?.setAttribute('tabindex', '-1')
+    rightClick(title(), { clientX: 200, clientY: 20 })
+    const inFocusedArea = menuOf(name)
+    press(document.activeElement ?? document.body, 'Escape')
+    area?.removeAttribute('tabindex')
     await settle()
 
     expect({
@@ -84,6 +92,7 @@ describe('the workspace menu in the header', () => {
       closed,
       onControl,
       onBar,
+      inFocusedArea,
       history: navigation.history,
       requests: requestsFor(server, workspace, from),
     }).toEqual({
@@ -96,6 +105,7 @@ describe('the workspace menu in the header', () => {
       closed: [],
       onControl: { browserMenu: true, items: [] },
       onBar: rowItems,
+      inFocusedArea: rowItems,
       history: [open],
       requests: [],
     })
