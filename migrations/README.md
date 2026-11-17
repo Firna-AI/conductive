@@ -17,26 +17,29 @@ says when and for how long it runs on the new schema.
   rule that rejects a write of the previous Worker.
 - Do not rewrite stored values into a form that the previous Worker cannot
   read.
-- A rebuild of a table is safe when it keeps every name, every column, and
-  every value that the previous Worker reads or writes.
+- A rebuild of a table is safe when it keeps every name, every column,
+  every default, every unique rule, and every value that the previous
+  Worker reads or writes.
 
 A rename or a drop takes two pull requests:
 
 1. The first pull request keeps the old name working for the previous
-   Worker. It also adds a follow-up item of the kind Post-merge task under
-   `plans/follow-ups/`. The item names the old name and each part of the
-   compatibility path, and asks for their removal.
+   Worker. Its own Worker code does not read or write the old name, because
+   that code is the previous Worker at the second deploy. It also adds a
+   follow-up item of the kind Post-merge task under `plans/follow-ups/`.
+   The item names the old name and each part of the compatibility path,
+   and asks for their removal.
    - For a rename, the migration adds the new name and copies the rows.
-     The old table or column stays a real table or column. Each Worker
-     must see the rows that the other one writes. For example, triggers
-     copy each write from one name to the other, or the new Worker reads
-     and writes both names.
+     The old table or column stays a real table or column. Triggers copy
+     each write from one name to the other, in both directions. So each
+     Worker sees the rows that the other one writes. Guard each trigger, so
+     that a copied write does not copy back or fail on the row that exists.
    - Do not replace the old table with a view. D1 counts no changed rows
      for a write through the triggers of a view. An upsert on a view fails
      with `cannot UPSERT a view`.
-   - For a drop, the first pull request removes the last use of the old
-     name from the Worker. It keeps each write that the schema requires or
-     that the previous Worker reads.
+   - For a drop, the Worker code stops each use of the old name. When the
+     schema rejects a write without the old column, the migration first
+     makes the column accept a missing value, for example with a rebuild.
 2. The second pull request does that follow-up item. It removes the
    compatibility path and drops the old name with a new migration. It
    merges only after the deploy of the first pull request has been live

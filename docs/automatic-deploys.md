@@ -176,8 +176,8 @@ on the new schema for some time in each deploy:
   together.
 - A failed upload leaves the previous Worker on the new schema until the
   next deploy.
-- A rollback puts an older Worker on the new schema. A rollback to the
-  previous Worker works until the old name of a rename or a drop is gone.
+- A rollback puts an older Worker on the new schema. A rollback to a
+  Worker that uses a name that a later migration renamed or dropped fails.
 
 So each migration keeps the previous Worker working. A rename or a drop
 takes two pull requests.
