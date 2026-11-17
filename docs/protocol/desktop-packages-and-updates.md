@@ -17,9 +17,10 @@ It includes the download names and addresses of the public GitHub releases.
   signed and notarized. Each app and DMG has a stapled notarization ticket.
 - Release packaging fails if credentials are missing, the signing team is
   wrong, or signature, ticket, or Gatekeeper verification fails.
-- Each wait for Apple's notarization has a time limit of 20 minutes. When
-  a wait runs out of time, the release stops it and sends the package
-  again, once. A second time-out fails the release. Reason: Apple usually
+- Each release step that waits for Apple's notarization has a time limit
+  of 20 minutes. One step builds, signs, and notarizes the app. Each DMG
+  submission is another step. When a step runs out of time, the release
+  stops it and runs it again, once. A second time-out fails the release. Reason: Apple usually
   answers in one or two minutes, but one submission can stay in progress
   for an hour or more, and a new submission then usually passes. Without
   a limit, a stuck submission held the release of `v0.25.0` for 55 minutes,

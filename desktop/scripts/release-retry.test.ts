@@ -9,6 +9,7 @@ afterEach(() => {
 /** A try that ends only when its signal aborts, as a stuck Apple wait does. */
 function stuck(signal: AbortSignal): Promise<never> {
   return new Promise((_resolve, reject) => {
+    if (signal.aborted) reject(new Error('stopped'))
     signal.addEventListener('abort', () => reject(new Error('stopped')))
   })
 }

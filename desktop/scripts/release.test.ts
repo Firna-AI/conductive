@@ -49,12 +49,9 @@ async function runRelease(flags: string[], images: string[]) {
   vi.mocked(verifyReleaseApp).mockClear()
   // @ts-expect-error The mock lists names only, not directory entries.
   vi.mocked(readdir).mockResolvedValue(images)
+  const release = new AbortController().signal
   vi.mocked(withReleaseKeychain).mockImplementation(async (work) => {
-    await work(
-      { APPLE_API_KEY: '/private/key.p8' },
-      'UV85J3PKBX',
-      new AbortController().signal,
-    )
+    await work({ APPLE_API_KEY: '/private/key.p8' }, 'UV85J3PKBX', release)
   })
   vi.mocked(runReleaseCommand).mockResolvedValue({
     stdout: '{"id":"submission","status":"Accepted"}',
@@ -64,6 +61,14 @@ async function runRelease(flags: string[], images: string[]) {
   await import('./release.ts')
   const calls = vi.mocked(runReleaseCommand).mock.calls
   return {
+    release,
+    // The signal of each call to electron-builder and notarytool.
+    appleSignals: calls
+      .filter(
+        ([program, args]) =>
+          program === builderPath || args[0] === 'notarytool',
+      )
+      .map(([, , , signal]) => signal),
     builder: calls.find(([program]) => program === builderPath)?.[1],
     submitted: calls
       .filter(([, args]) => args[0] === 'notarytool')
@@ -92,14 +97,20 @@ it.each([
   async (architecture, other, folder) => {
     const image = `Renamed-download-${architecture}.dmg`
     const release = resolve(import.meta.dirname, '../dist/release')
-    const { builder, submitted, verified } = await runRelease(
-      [`--${architecture}`],
-      [image],
-    )
+    const {
+      builder,
+      submitted,
+      verified,
+      release: signal,
+      appleSignals,
+    } = await runRelease([`--${architecture}`], [image])
 
     expect(builder).toContain(`--${architecture}`)
     expect(builder).not.toContain(`--${other}`)
     expect(verified).toEqual([resolve(release, folder, 'Renamed.app')])
     expect(submitted).toEqual([resolve(release, image)])
+    // Each wait for Apple gets the signal that its time limit can abort.
+    expect(appleSignals).toHaveLength(2)
+    for (const limited of appleSignals) expect(limited).not.toBe(signal)
   },
 )

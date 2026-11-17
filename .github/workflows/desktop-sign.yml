@@ -33,8 +33,9 @@ jobs:
     name: Signed and notarized Mac package ${{ inputs.architecture }}
     if: github.ref == 'refs/heads/main'
     runs-on: blacksmith-6vcpu-macos-15
-    # Two 20-minute tries for the app and two for the DMG fit in this limit.
-    timeout-minutes: 90
+    # The release script allows two 20-minute tries for the app and two for
+    # the DMG. The limit leaves 20 minutes for the other steps.
+    timeout-minutes: 100
     environment: desktop-release
     permissions:
       contents: read
