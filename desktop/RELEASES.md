@@ -14,6 +14,10 @@ Without a flag, the command packages both. It enables Hardened Runtime with only
 that Electron needs. It notarizes and staples the app before ZIP packaging.
 It also signs, notarizes, and staples each DMG.
 It fails when a credential is missing or an app has the wrong Apple team.
+Each step that waits for Apple has a time limit of 20 minutes: the electron-builder step, which signs and notarizes the apps, and the submission of each DMG.
+`desktop/scripts/release-retry.ts` stops a step that runs out of time and starts it once more.
+A second time-out fails the command.
+A rejection by Apple or a cancellation fails it at once.
 It checks each app with `codesign --verify --deep --strict`, `stapler validate`,
 and Gatekeeper. It checks each finished DMG as well.
 

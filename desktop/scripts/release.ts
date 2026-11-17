@@ -4,6 +4,7 @@ import { resolve } from 'node:path'
 import { macDmgNames, productName } from '../../docs/mockups/src/brand.ts'
 import { runReleaseCommand } from './release-command.ts'
 import { withReleaseKeychain } from './release-keychain.ts'
+import { retryAfterTimeLimit } from './release-retry.ts'
 import { verifyReleaseApp } from './release-signature.ts'
 
 if (process.platform !== 'darwin')
@@ -34,26 +35,32 @@ await withReleaseKeychain(async (environment, teamId, signal) => {
     signal,
     { inherit: true },
   )
-  await runReleaseCommand(
-    resolve(desktop, 'node_modules/.bin/electron-builder'),
-    [
-      '--mac',
-      ...architectures.map((architecture) => `--${architecture}`),
-      '--publish',
-      'never',
-      '-c.forceCodeSigning=true',
-      `-c.mac.identity=${teamId}`,
-      '-c.mac.type=distribution',
-      '-c.mac.hardenedRuntime=true',
-      '-c.mac.notarize=true',
-      '-c.mac.entitlements=entitlements.mac.plist',
-      '-c.mac.entitlementsInherit=entitlements.mac.plist',
-      `-c.dmg.artifactName=${dmgArtifactName}`,
-      '-c.dmg.sign=true',
-    ],
-    environment,
+  // electron-builder signs each app and waits for Apple to notarize it.
+  await retryAfterTimeLimit(
+    'Signing and notarizing the apps',
     signal,
-    { cwd: desktop, inherit: true },
+    (limited) =>
+      runReleaseCommand(
+        resolve(desktop, 'node_modules/.bin/electron-builder'),
+        [
+          '--mac',
+          ...architectures.map((architecture) => `--${architecture}`),
+          '--publish',
+          'never',
+          '-c.forceCodeSigning=true',
+          `-c.mac.identity=${teamId}`,
+          '-c.mac.type=distribution',
+          '-c.mac.hardenedRuntime=true',
+          '-c.mac.notarize=true',
+          '-c.mac.entitlements=entitlements.mac.plist',
+          '-c.mac.entitlementsInherit=entitlements.mac.plist',
+          `-c.dmg.artifactName=${dmgArtifactName}`,
+          '-c.dmg.sign=true',
+        ],
+        environment,
+        limited,
+        { cwd: desktop, inherit: true },
+      ),
   )
   await mkdir(evidence, { recursive: true })
   const signatures = []
@@ -78,24 +85,29 @@ await withReleaseKeychain(async (environment, teamId, signal) => {
     throw new Error(`Missing release disk images: ${missing.join(', ')}`)
   for (const name of images) {
     const image = resolve(release, name)
-    const { stdout: output } = await runReleaseCommand(
-      'xcrun',
-      [
-        'notarytool',
-        'submit',
-        image,
-        '--key',
-        environment.APPLE_API_KEY!,
-        '--key-id',
-        environment.APPLE_API_KEY_ID!,
-        '--issuer',
-        environment.APPLE_API_ISSUER!,
-        '--wait',
-        '--output-format',
-        'json',
-      ],
-      environment,
+    const { stdout: output } = await retryAfterTimeLimit(
+      `Notarizing ${name}`,
       signal,
+      (limited) =>
+        runReleaseCommand(
+          'xcrun',
+          [
+            'notarytool',
+            'submit',
+            image,
+            '--key',
+            environment.APPLE_API_KEY!,
+            '--key-id',
+            environment.APPLE_API_KEY_ID!,
+            '--issuer',
+            environment.APPLE_API_ISSUER!,
+            '--wait',
+            '--output-format',
+            'json',
+          ],
+          environment,
+          limited,
+        ),
     )
     const submission: { id?: string; status?: string } = JSON.parse(output)
     await writeFile(
