@@ -3,13 +3,20 @@
 import type { Terminal } from '@xterm/xterm'
 import { afterEach, expect, it, vi } from 'vitest'
 import type { TerminalEnd, TerminalTransport } from '../shared/terminal'
+import {
+  BRIDGE_MESSAGE_START,
+  bridgeOutputMessage,
+} from '../shared/terminal-bridge'
 import { connectScreen, openScreen } from './screenConnection'
 
 /** A transport whose output and end the test gives. */
 class Controlled implements TerminalTransport {
   private readonly data = new Set<(output: string) => void>()
   private readonly ends = new Set<(end: TerminalEnd) => void>()
-  write(): void {}
+  readonly writes: string[] = []
+  write(input: string): void {
+    this.writes.push(input)
+  }
   resize(): void {}
   onData(listener: (output: string) => void): () => void {
     this.data.add(listener)
@@ -92,6 +99,58 @@ it('keeps the output of an ended connection until a new connection shows its own
       ],
     },
   )
+  parts.dispose()
+  host.remove()
+})
+
+it('gives each connection its own bridge, and turns off the modes of the program of an earlier connection', async () => {
+  const host = document.createElement('div')
+  document.body.append(host)
+  const parts = openScreen(
+    host,
+    {},
+    { links: () => undefined, hintClass: 'hint' },
+  )
+  const events = {
+    onClosed: () => undefined,
+    onControlChange: () => undefined,
+    onInput: () => undefined,
+  }
+  const size = { columns: 80, rows: 24 }
+  const hello = (nonce: string) =>
+    bridgeOutputMessage(nonce, { kind: 'hello', version: 1, size })
+  const screenHellos = (transport: Controlled, nonce: string) =>
+    transport.writes.filter((each) =>
+      each.startsWith(`${BRIDGE_MESSAGE_START}${nonce};hello`),
+    ).length
+
+  const first = new Controlled()
+  const firstConnection = connectScreen(parts, host, first, events)
+  // The program of the first connection turns on its cursor keys.
+  first.emit(`${hello('a'.repeat(32))}\x1b[?1h`)
+  await parsed(parts.xterm)
+  const cursorKeysBefore = parts.xterm.modes.applicationCursorKeysMode
+  first.end('lost')
+  firstConnection.dispose()
+
+  const second = new Controlled()
+  connectScreen(parts, host, second, events)
+  await parsed(parts.xterm)
+  const cursorKeysAfter = parts.xterm.modes.applicationCursorKeysMode
+  second.emit(hello('b'.repeat(32)))
+  await parsed(parts.xterm)
+
+  expect({
+    cursorKeysBefore,
+    cursorKeysAfter,
+    first: screenHellos(first, 'a'.repeat(32)),
+    second: screenHellos(second, 'b'.repeat(32)),
+  }).toEqual({
+    cursorKeysBefore: true,
+    cursorKeysAfter: false,
+    first: 1,
+    second: 1,
+  })
   parts.dispose()
   host.remove()
 })

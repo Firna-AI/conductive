@@ -13,15 +13,21 @@ import { cssTokens, terminalFont } from './terminalTheme'
 import { watchLinks } from './xtermLinks'
 import { XtermScreen } from './xtermScreen'
 
-/** The xterm.js screen of one terminal. It outlives each connection. */
+/**
+ * The xterm.js screen of one terminal. It outlives each connection. Each
+ * connection gets its own `XtermScreen`, because its bridge reader keeps
+ * the nonce of the bridge of one connection.
+ */
 export interface ScreenParts {
   readonly xterm: Terminal
   readonly fit: FitAddon
-  readonly screen: XtermScreen
   /** The font size of the theme, before a shared size makes it smaller. */
   readonly normalFont: number
   dispose(): void
 }
+
+/** DECSTR, the soft reset of the terminal modes. */
+const SOFT_RESET = '\x1b[!p'
 
 function fitVisible(host: HTMLElement, fit: FitAddon): void {
   if (host.clientWidth > 0 && host.clientHeight > 0) fit.fit()
@@ -49,7 +55,6 @@ export function openScreen(
   xterm.loadAddon(fit)
   xterm.open(host)
   fitVisible(host, fit)
-  const screen = new XtermScreen(xterm, { links: true })
   const outputLinks = watchLinks(xterm, {
     links: options.links,
     linkKey: linkKey(navigator.platform),
@@ -58,11 +63,9 @@ export function openScreen(
   return {
     xterm,
     fit,
-    screen,
     normalFont: xterm.options.fontSize ?? 12,
     dispose() {
       outputLinks?.dispose()
-      screen.dispose()
       xterm.dispose()
     },
   }
@@ -93,7 +96,11 @@ export function connectScreen(
   transport: TerminalTransport,
   events: ConnectionEvents,
 ): { session: TerminalSession; dispose(): void } {
-  const { xterm, fit, screen, normalFont } = parts
+  const { xterm, fit, normalFont } = parts
+  // A soft reset turns off the modes of the program of an earlier
+  // connection, such as its cursor keys, and keeps the text to copy.
+  xterm.write(SOFT_RESET)
+  const screen = new XtermScreen(xterm, { links: true })
   if (xterm.options.fontSize !== normalFont) xterm.options.fontSize = normalFont
   delete host.dataset.shared
   let shared: BridgeSize | null = null
@@ -150,6 +157,7 @@ export function connectScreen(
       observer.disconnect()
       stopFirstOutput()
       session.dispose()
+      screen.dispose()
     },
   }
 }

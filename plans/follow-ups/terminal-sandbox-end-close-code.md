@@ -14,12 +14,13 @@
   - On 17 November 2026, ttyd 1.7.4 closed with no close frame when its shell exited, also with exit code 0. A WebSocket client saw 1006.
   - `bridgeSocket` relays that end to the page through `wireCloseCode`, which maps 1006 to 1011. So `exit` reaches the page as 1011.
   - On the same day, a local `wrangler dev` reload of a Durable Object's code dropped the client socket with an error event and 1006. Production was not measured.
-  - The Worker also closes with 1011 after a relay error, and with 1008 at a loss of access.
+  - The Worker also closes with 1011 after a relay error, and with 1008 at a loss of access and at the close of a terminal tab.
+  - A Restart of the workspace restarts the terminal service. `docs/protocol/terminal.md` and `docs/protocol/restart-the-software.md` say that a Restart shows Disconnected at once. That holds only when the end of ttyd at a Restart reaches the page as a close frame, such as 1011, and not as 1001 or 1012. It was not measured.
 - **Problem:** The rule rests on a local measurement. If Cloudflare closes the page socket with a close frame, such as 1011, when it restarts a Durable Object in production, a deploy counts as an end of the shell, and the automatic try never runs.
 - **Impact if no action:** If production differs, the terminal still shows Disconnected after each deploy, as before the change.
 - **Root question:** How does the page tell an end of the shell from a drop of the server with certainty?
 - **Options:**
-  - **A.** Check one production deploy: keep a terminal open in a browser with its developer tools, deploy, and read the close code. Change `LOST_CODES` when the code differs. Effort: Small.
+  - **A.** Check one production deploy and one Restart: keep a terminal open in a browser with its developer tools, deploy or restart, and read the close code. Change `LOST_CODES` when the code differs. Effort: Small.
   - **B.** Do A. Also make `bridgeSocket` close the page socket with a code of its own in the range 4000 to 4999 when the sandbox side ends. The page then counts only that code and the closes of the Worker, 1000 and 1008, as an end of the shell, and every other code as lost. Older pages treat each close as ended, so they keep working. Effort: Small.
   - **C.** Change nothing. Effort: Small.
 - **Left out:** A message in the terminal stream before the close, because ttyd sends none at the exit of its shell.
