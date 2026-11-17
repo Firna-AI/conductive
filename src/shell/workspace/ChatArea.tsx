@@ -11,6 +11,7 @@ import type { ComposerFocus } from '../../chat/components/composer-requests'
 import type { ChatHost } from '../../chat/components/SessionChat'
 import type { ChatController } from '../../chat/state/controller'
 import { WorkspaceChatView } from '../../chat/WorkspaceChat'
+import { workspaceCapabilities } from '../capabilities/WorkspaceCapabilities'
 import { useApp } from '../context'
 import { useGo } from '../ui/AppLink'
 import type { Action } from '../ui/useAction'
@@ -93,7 +94,8 @@ function KeptChat(props: {
  * the notice of a suspended org above the bar of an archived workspace. A
  * read-only workspace shows its chat read-only. The chat shows the open
  * file tabs, and on desktop the file or diff tab of the address in place of
- * the chat of its session. A host that gives the `tabs`, `transcript`, or
+ * the chat of its session. The composer of the chat gets the Capabilities
+ * tool of the workspace. A host that gives the `tabs`, `transcript`, or
  * `composer` slot gets the shell's own column with those slots instead. A
  * `center` part of the host takes the place of the chat.
  */
@@ -161,7 +163,19 @@ export function ChatArea(props: {
         chat={props.chat}
         content={features.center ? null : filesCenter(context)}
         context={context}
-        host={{ starting, sandboxBar, keepsComposer }}
+        host={{
+          starting,
+          sandboxBar,
+          keepsComposer,
+          tools: [
+            workspaceCapabilities({
+              org: context.org,
+              workspaceId: workspace.id,
+              viewer: context.viewer,
+              chat: props.chat,
+            }),
+          ],
+        }}
       />
     )
   )

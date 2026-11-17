@@ -375,6 +375,9 @@ after Resume gives it to the agent. `../app/dev/attachment-files.test.ts`
 checks the same store in the fake of the app. `../app/dev/attachment-test-kit.ts`
 holds the helpers of both tests.
 
+The tests of the secret requests are in the
+[README of the secret requests](secrets/README.md#tests).
+
 `components/ReadOnlyChat.dom.test.tsx` checks the read-only behavior of both hosts.
 A right click and Shift and F10 open a tab menu with only the copy items, with no line.
 It changes `readOnly` during a rename and archives a kept chat during a close question.

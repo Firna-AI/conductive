@@ -104,7 +104,7 @@ test('the Mac app keeps many waiting commands above a reachable composer, scroll
     await page.goto(new URL(`src/chat/dev/?${requests}`, origin).href)
 
     const region = page.getByRole('group', {
-      name: 'Commands that wait for an answer',
+      name: 'Requests that wait for an answer',
     })
     const waiting = region.getByRole('region', {
       name: 'Run a command on this Mac?',

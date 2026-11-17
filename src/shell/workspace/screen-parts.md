@@ -13,6 +13,13 @@ says.
 - The shell draws the start steps, with the time of each step, and the
   sandbox bar, with Resume. It draws them from its own record of the
   workspace, and gives them to the chat as `host`. The chat places them.
+- The shell also gives the composer the Capabilities tool of the
+  workspace, from `../capabilities/WorkspaceCapabilities.tsx` (secrets
+  decision 8 B). Its control reads the secrets of the org and the
+  capabilities of the workspace each time that it opens. Every member
+  changes the pre-approved secrets and Mac access there, and removes each
+  approval of a session, which names its session by the title that the
+  chat holds, and each value that a member gave for the workspace. The control shows only where the composer shows.
 - An open reads the workspace, shows it, and starts the stream. Only then
   does a stopped or failed workspace resume. A Resume answers when the
   server queued the start, with the state `starting`. The stored chat

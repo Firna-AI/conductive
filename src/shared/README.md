@@ -36,6 +36,15 @@ Its `set` change carries a value and an optional mark. An omitted mark
 keeps the stored mark inside each compare-and-swap attempt. A missing or
 deleted name starts secret. An explicit mark changes it with the value.
 Its `classify` change carries only a name and a mark, so it keeps the value.
+
+`secrets.ts` owns the org secret settings paths and metadata contracts.
+Create and replace requests carry values. Their replies never do.
+It also owns workspace capability reads and patches, with pre-approved
+secret IDs, Mac access, and session approval metadata and removals.
+`CreateWorkspaceRequest.capabilities` in `workspaces.ts` carries the
+capabilities of a new workspace. An absent choice gives no pre-approval
+and Mac access on.
+
 `api.ts` keeps the existing sign-in and org paths and common records.
 `API_PATHS.orgOrder` names `PUT /api/org-order`, outside the paths of one org.
 `MoveOrgRequest` in `orgs.ts` carries `orgId` and the zero-based `index` among the other visible orgs.

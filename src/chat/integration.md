@@ -122,6 +122,11 @@ mount the chat.
   `keepsComposer` keeps the composer under the bar, as after a failed first
   start. Without a host, the chat draws both from its own record of the
   workspace, with the message that the workspace saved for a failed start.
+  `host.tools` gives the tools of the composer, such as Capabilities, as
+  `ComposerTool` in `components/ComposerTools.tsx` says. A computer shows
+  the icon of each tool after the attach button, and a phone holds Attach
+  files and the tools in the menu of one + button. Without tools, the bar
+  keeps its attach button on a phone too.
 - `readOnly` says that the workspace takes no write, such as while its org
   is suspended. The app gives `WorkspaceContext.readOnly`. The chat then
   shows its history, as an archived workspace does, and the host's bar

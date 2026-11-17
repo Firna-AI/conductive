@@ -6,6 +6,7 @@ import { LeaveOrgDialog } from '../components/members/LeaveOrgDialog'
 import { RemoveMemberDialog } from '../components/members/RemoveMemberDialog'
 import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
 import { failedBuildOf } from '../components/settings/BuildSection'
+import { DeleteSecretDialog } from '../components/secrets/DeleteSecretDialog'
 import { DeleteOrgDialog } from '../components/settings/DeleteOrgDialog'
 import { SettingsTabs } from '../components/settings/OrgSections'
 import { Sidebar } from '../components/workspaces/Sidebar'
@@ -24,12 +25,15 @@ export const orgSettingsSchema = {
     'script',
     'repositoryChange',
     'envForm',
+    'secrets',
     'dialog',
     'viewer',
     'org',
   ],
   properties: {
-    tab: { enum: ['general', 'repositories', 'computer', 'members'] },
+    tab: {
+      enum: ['general', 'repositories', 'computer', 'secrets', 'members'],
+    },
     /**
      * The builds of the cloud computer, which its tab shows. `time-limit` is
      * a build that the app stopped at its 60-minute limit. `none` is an org
@@ -58,10 +62,24 @@ export const orgSettingsSchema = {
      */
     envForm: { enum: ['none', 'add', 'change'] },
     /**
-     * A dialog over the page: Delete org, the removal of a member, or the
-     * leave of a suspended org.
+     * The Secrets tab: the list, the value of PROD_DATABASE_URL that an
+     * admin just revealed, the Add secret form, or the field of a new
+     * value in the row of a secret.
      */
-    dialog: { enum: ['none', 'delete-org', 'remove-member', 'leave-org'] },
+    secrets: { enum: ['list', 'revealed', 'add', 'replace'] },
+    /**
+     * A dialog over the page: Delete org, the removal of a member, the
+     * leave of a suspended org, or the question before Delete of a secret.
+     */
+    dialog: {
+      enum: [
+        'none',
+        'delete-org',
+        'remove-member',
+        'leave-org',
+        'delete-secret',
+      ],
+    },
     /**
      * The person signed in: an admin, or a member who is not an admin. A
      * member sees no actions on the members, no Delete org, and the name,
@@ -89,6 +107,7 @@ export const acmeSettings: OrgSettingsState = {
   script: 'built',
   repositoryChange: 'none',
   envForm: 'none',
+  secrets: 'list',
   dialog: 'none',
   viewer: 'admin',
   org: 'active',
@@ -96,9 +115,10 @@ export const acmeSettings: OrgSettingsState = {
 
 /**
  * The settings of an org: its name and initials, the repositories that it
- * uses, its cloud computer, and its members. The app-wide connections live
- * in the account. Only an admin changes the members and deletes the org. A
- * suspended org shows its notice first, and nobody changes its settings.
+ * uses, its cloud computer, its secrets, and its members. The app-wide
+ * connections live in the account. Only an admin changes the members and
+ * deletes the org. Every member adds secrets. A suspended org shows its
+ * notice first, and nobody changes its settings.
  */
 export function OrgSettingsScreen(props: {
   state: OrgSettingsState
@@ -123,6 +143,9 @@ export function OrgSettingsScreen(props: {
     'leave-org': suspended ? (
       <LeaveOrgDialog viewer={settingsViewer(state)} viewport={viewport} />
     ) : null,
+    'delete-secret': suspended ? null : (
+      <DeleteSecretDialog viewport={viewport} />
+    ),
   }
   const dialog = dialogs[state.dialog]
   const page = (

@@ -15,10 +15,15 @@ use cnd_runner_interface::tools::{
     },
 };
 
-/// The 24 public tool identities.
+use crate::process::CommandInput;
+use crate::secrets::types::RunRequest;
+
+/// The 26 public tool identities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub(crate) enum Name {
+    ListSecrets,
+    RunWithSecrets,
     RunMacCommand,
     CreateWorkspace,
     ListWorkspaces,
@@ -48,6 +53,8 @@ pub(crate) enum Name {
 /// Fully parsed domain input for one tool operation.
 #[derive(Debug, Clone)]
 pub(crate) enum Call {
+    ListSecrets,
+    RunWithSecrets(RunRequest, CommandInput),
     RunMacCommand(DeviceCommandInput),
     CreateWorkspace(AgentCreateWorkspaceRequest),
     ListWorkspaces(AgentListWorkspacesRequest),
@@ -77,6 +84,8 @@ pub(crate) enum Call {
 impl Call {
     pub(crate) fn name(&self) -> Name {
         match self {
+            Self::ListSecrets => Name::ListSecrets,
+            Self::RunWithSecrets(..) => Name::RunWithSecrets,
             Self::RunMacCommand(..) => Name::RunMacCommand,
             Self::CreateWorkspace(..) => Name::CreateWorkspace,
             Self::ListWorkspaces(..) => Name::ListWorkspaces,

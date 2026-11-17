@@ -18,6 +18,8 @@ Each handler returns `null` for a path that it does not own. The
 | `archiveRoute` in [`archive.ts`](archive.ts) | `POST` of a workspace’s `archive` and `restore` |
 | `chatLifecycleRoute` in [`lifecycle.ts`](lifecycle.ts) | `POST` of the workspace list, which creates a workspace. `GET` of a workspace, `POST` of its `resume` and `activity`, and image build, refresh, and log routes |
 | `feedbackRoute` in [`feedback.ts`](feedback.ts) | `GET` and `POST` of `/api/feedback`. [Feedback routes](feedback.md) gives their checks, their errors, and the email |
+| `secretsRoute` in [`secrets.ts`](secrets.ts) | `GET` and `POST /api/orgs/:orgId/secrets`, `PATCH` and `DELETE` of `/:secretId`, and `PUT` of `/:secretId/all-agents` |
+| `capabilitiesRoute` in [`capabilities.ts`](capabilities.ts) | `GET` and `PATCH /api/orgs/:orgId/workspaces/:workspaceId/capabilities` |
 
 `featureShellRoute` in [feature-shell.ts](feature-shell.ts) serves account GitHub
 access, org creation with initials and repository choices, shared settings,
@@ -193,6 +195,23 @@ Org suspension keeps shell reads available.
 The common browser gate refuses every org write except Leave.
 The view, read-mark, shared-shell, settings, repository, Archive, and Restore SQL writes also check stored org state, so an earlier permission read cannot admit a later write.
 
+The [secrets backend](../secrets/README.md) stores encrypted org secrets.
+Every member can create one. Creator and admin rights guard replacement
+and deletion. Only admins set or clear the all-agents mark.
+Create, replace, and mark replies return one secret's metadata.
+List replies return only metadata. Delete takes an empty JSON object and
+returns 204. Replace keeps the value when its value field is empty or absent.
+Its description field can replace the description with an empty string.
+Each secret write repeats its rights check in SQL.
+
+Every member can read and change a workspace's capabilities.
+The capability reply gives `macAccess`, `preapprovedSecretIds`, and
+`sessionApprovals`, including the approver and date.
+A patch can replace the pre-approved IDs, change Mac access, and remove
+named session approvals. A secret ID must belong to the workspace's org.
+Turning Mac access off also asks the workspace object to settle its waiting
+Mac requests. Running commands continue.
+
 The workspace responses give an org-local number and a canonical web link.
 They give `restoreUntil` while the archived cloud computer exists, including while an expired delete retries.
 Restore refuses an expired window even when the cloud computer remains.
@@ -242,6 +261,9 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 [App API tests](tests.md) lists the cases and their test helpers.
 
 ### Key code
+
+- [`secrets.ts`](secrets.ts) and [`capabilities.ts`](capabilities.ts): org
+  secret settings and workspace capabilities, over the [secrets data](../secrets/README.md).
 
 - [`boot.ts`](boot.ts), [`account-data.ts`](account-data.ts),
   [`get-started-data.ts`](get-started-data.ts), and

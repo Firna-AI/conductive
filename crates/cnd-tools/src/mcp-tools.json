@@ -1,5 +1,44 @@
 [
   {
+    "name": "list_secrets",
+    "description": "List the secrets of this org with each name, description, and availability. Needs only the workspace token. An active turn adds its session approvals to availability. Never returns values. Keep secret values out of output, files, and answers.",
+    "inputSchema": { "type": "object", "properties": {} },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true
+    }
+  },
+  {
+    "name": "run_with_secrets",
+    "description": "Run a shell command on this cloud computer with named secrets in its environment. Needs an active calling turn. Acts for the member whose message started that turn. Requests approval when needed and waits up to 90 seconds. A pending result ends without a command. After a late-answer notice, call again. Returns filtered stdout, stderr, and exitCode. Keep each value out of output, files, and answers. The filter hides only exact copies.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "names": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 },
+          "description": "One or more secret names. A missing name asks a member for a temporary value."
+        },
+        "command": {
+          "type": "string",
+          "description": "Shell command to run with /bin/sh in this workspace. The request shows this text as the command you say you will run. Read values from the environment. Never put a value in this text."
+        },
+        "reason": {
+          "type": "string",
+          "description": "Why this command needs the named secrets."
+        }
+      },
+      "required": ["names", "command"]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false
+    }
+  },
+  {
     "name": "run_mac_command",
     "description": "Ask to run a command on the active turn sender's connected Mac. Approval stays on that Mac.",
     "inputSchema": {

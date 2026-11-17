@@ -182,12 +182,20 @@ export class FakeApiServer implements FakeRouteWriter {
         url.searchParams.get('through') ?? history.throughEventNumber,
       )
       const before = Number(url.searchParams.get('before') ?? through + 1)
-      const numbers = new Set(
-        chatEventsOf(
-          url.searchParams.get('sessionId') ?? '',
-          history.events,
-        ).map(({ eventNumber }) => eventNumber),
-      )
+      // A page holds the chat events of the session and each other event
+      // that names the session, such as a secret request, as the Worker's.
+      const sessionId = url.searchParams.get('sessionId') ?? ''
+      const numbers = new Set([
+        ...chatEventsOf(sessionId, history.events).map(
+          ({ eventNumber }) => eventNumber,
+        ),
+        ...history.events
+          .filter(
+            ({ event }) =>
+              'sessionId' in event && event.sessionId === sessionId,
+          )
+          .map(({ eventNumber }) => eventNumber),
+      ])
       return Response.json({
         events: history.events.filter(
           ({ eventNumber }) =>

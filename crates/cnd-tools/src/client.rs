@@ -10,8 +10,11 @@ use cnd_runner_interface::json::decoder;
 use crate::call::{Call, Name};
 use crate::error::{Error, InputError, Result};
 use crate::ports::{Http, HttpRequest, Runtime};
+use crate::process::Process;
 use crate::reply::{self, Reply};
 use crate::request::{self, Request};
+use crate::secrets::response::{self, RunResponse};
+use crate::secrets::types::RunResult;
 
 /// Validated runtime configuration, without printable credentials.
 #[derive(Clone)]
@@ -66,6 +69,7 @@ pub(crate) struct Client {
     configuration: Configuration,
     http: Arc<dyn Http>,
     runtime: Arc<dyn Runtime>,
+    process: Arc<dyn Process>,
 }
 
 impl Client {
@@ -74,11 +78,13 @@ impl Client {
         configuration: Configuration,
         http: Arc<dyn Http>,
         runtime: Arc<dyn Runtime>,
+        process: Arc<dyn Process>,
     ) -> Self {
         Self {
             configuration,
             http,
             runtime,
+            process,
         }
     }
 }
@@ -95,6 +101,20 @@ impl Dispatch for Client {
         if name == Name::RunMacCommand && self.configuration.turn_id.is_none() {
             return Err(Error::Input(InputError::ActiveTurn));
         }
+        if let Call::RunWithSecrets(input, command) = &call {
+            let body = self.body(name, request::request(&call)?).await?;
+            let response = response::parse(&body, &input.names)?;
+            let result = match response {
+                RunResponse::Allowed { values, .. } => {
+                    RunResult::Completed(self.process.run(command.clone(), values).await?)
+                }
+                response => match response.into_result() {
+                    Some(result) => result,
+                    None => return Err(Error::Reply { mac: false }),
+                },
+            };
+            return Ok(Reply::RunWithSecrets(result));
+        }
         let mut reply = self.read(name, request::request(&call)?).await?;
         while let Some(key) = reply.pending_mac() {
             let path = format!("/v1/tools/mac-command/{}", request::component(key));
@@ -107,6 +127,10 @@ impl Dispatch for Client {
 
 impl Client {
     async fn read(&self, name: Name, request: Request) -> Result<Reply> {
+        reply::parse(name, &self.body(name, request).await?)
+    }
+
+    async fn body(&self, name: Name, request: Request) -> Result<String> {
         let mac = name == Name::RunMacCommand;
         let body = request
             .body
@@ -152,7 +176,7 @@ impl Client {
                 status: response.status,
             });
         }
-        reply::parse(name, &response.body)
+        Ok(response.body)
     }
 }
 

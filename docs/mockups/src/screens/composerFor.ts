@@ -30,6 +30,7 @@ import { workspaceLinkDraft } from '../fixtures/workspaceLinkConversations'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import { otherStarter, sessionLoginFor } from './sessionStarter'
+import { workspaceCapabilities } from './workspaceCapabilities'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
 
@@ -47,6 +48,22 @@ const runningConversations = new Set([
   ...barRunningConversations,
   'sent-by',
   'sent-by-other',
+  'secret-waiting',
+  'secret-waiting-two',
+  'secret-running',
+  'secret-done',
+  'secret-denied',
+  'secret-pre-approved',
+  'secret-value',
+  'secret-late-ran',
+  'secret-temporary',
+  'secret-temporary-value',
+  'secret-temporary-workspace',
+  'secret-temporary-saved',
+  'secret-waiting-mixed',
+  'secret-waiting-mixed-value',
+  'secret-late-allowed',
+  'secret-late-given',
 ])
 
 type ComposerKey = WorkspaceState['composer']
@@ -178,6 +195,9 @@ export function isRunning(state: WorkspaceState): boolean {
  * over the box, the desktop shows the drop state with the drop caret in the
  * text. A phone shows a pick at the caret in place of the drag, so it draws
  * only the caret, where the attach button puts the files.
+ *
+ * The Capabilities icon beside the attach button opens what the agents of
+ * the workspace can use. A phone holds both in the menu of one button.
  */
 export function composerFor(
   state: WorkspaceState,
@@ -250,5 +270,7 @@ export function composerFor(
       viewport === 'desktop',
     caret: drop?.caret ?? addedCaret,
     pointer: !fresh && pointerStates.has(state.composer),
+    capabilities: workspaceCapabilities(state, viewport),
+    menu: { open: state.composer === 'menu', to: paths.capabilitiesMenu },
   }
 }
