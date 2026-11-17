@@ -109,13 +109,19 @@ Design calls of the agent, 17 November 2026:
    `index_changes`. The content hashes only find changes between two scans,
    and a change during a scan starts another scan. Reason: Git's own reads
    stay one at a time, and a warm cache makes them fast.
-6. **The temporary index keeps its rebuild without stat data, and then runs
-   `git update-index -q --refresh`.** The refresh compares each file's
-   content with its index entry, and it stores fresh file times and sizes.
-   The later comparisons then skip the files that did not change, and read
-   fewer objects from `.git/objects`. Reason: the refresh trusts no time
-   stamp of the provider's restore, and a probe cut the object reads of the
-   first comparison from 6,313 to 504.
+6. **The temporary index keeps its rebuild without stat data. The comparison
+   step starts with `git update-index -q --unmerged --refresh`.** In a
+   snapshot, `index_changes` runs the refresh after the parallel content
+   reads warm the disk cache. The refresh compares each file's content with
+   its index entry, and it stores fresh file times and sizes. `--unmerged`
+   skips conflict entries without failing the scan. Later comparisons skip
+   the files that did not change, and read fewer objects from `.git/objects`.
+   Checkpoints, including submodule checkpoints, do not refresh because
+   `update-index --info-only` already reads each file and stores fresh stat
+   data. Reason: the refresh trusts no time stamp of the provider's restore,
+   and a probe cut the object reads of the first comparison from 6,313 to
+   504. Cal chose this order as option D of review finding 1 on
+   17 November 2026.
 7. **The runner logs its start times.** One info line each: process start to
    first connection, the first welcome, the first scan with its duration
    and file count, and `runner.ready`. The lines hold

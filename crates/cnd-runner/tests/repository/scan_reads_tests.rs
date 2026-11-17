@@ -77,7 +77,13 @@ struct ObservedGit(Arc<AtomicUsize>);
 #[async_trait]
 impl GitRunner for ObservedGit {
     async fn run(&self, request: GitRequest) -> Result<Vec<u8>> {
-        if request.args.first().is_some_and(|arg| arg == "diff") {
+        if request.args.first().is_some_and(|arg| arg == "diff")
+            || (request
+                .args
+                .first()
+                .is_some_and(|arg| arg == "update-index")
+                && request.args.iter().any(|arg| arg == "--refresh"))
+        {
             self.0.fetch_add(1, Ordering::SeqCst);
         }
         ChildGit.run(request).await
@@ -162,7 +168,7 @@ async fn scan_holds_sixteen_reads_and_finishes_them_before_git_comparisons() {
         assert_eq!(io.active.load(Ordering::SeqCst), 0);
         assert_eq!(io.completed.load(Ordering::SeqCst), 36);
         assert_eq!(io.peak.load(Ordering::SeqCst), 16);
-        assert_eq!(comparisons.load(Ordering::SeqCst), 2);
+        assert_eq!(comparisons.load(Ordering::SeqCst), 3);
     })
     .await
     .expect("held scan hang guard");

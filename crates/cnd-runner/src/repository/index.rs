@@ -41,7 +41,6 @@ impl GitRepository {
         )
     }
 
-    /// Rebuild before refresh so restored stat data cannot hide changed content.
     pub(super) async fn index(&self, base: Option<&str>) -> Result<TemporaryIndex> {
         let original = self
             .run(&["rev-parse", "--path-format=absolute", "--git-path", "index"])
@@ -117,8 +116,6 @@ impl GitRepository {
                 .collect();
             self.runner.run(request).await?;
         }
-        self.index_run(&index, &["update-index", "-q", "--unmerged", "--refresh"])
-            .await?;
         let untracked = zero_paths(
             &self
                 .run(&["ls-files", "--others", "--exclude-standard", "-z"])

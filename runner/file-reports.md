@@ -60,14 +60,18 @@ identities. They do not join the Git changes or checkpoint identities.
 Symlinks keep their Git link text and their readable target identities.
 Submodule directories keep their separate Git checkpoint identities.
 
-The private index rebuild discards stat data from the real index. The runner
-then runs `git update-index -q --unmerged --refresh` on the private index.
+The private index rebuild discards stat data from the real index. At the start
+of the comparison step, the runner runs
+`git update-index -q --unmerged --refresh` on the private index.
+For snapshots, this step follows the parallel content reads.
 The refresh skips unmerged entries without failing the scan. It checks file
 contents and records fresh times and sizes for unchanged files.
 A restored file with changed content still shows as changed when its size
-and modification time match the real index. Later comparisons and checkpoint
-updates can use the fresh stat data to skip unchanged files. The real index
-and object store stay unchanged.
+and modification time match the real index. Later comparisons can use the
+fresh stat data to skip unchanged files. Checkpoints, including submodule
+checkpoints, do not refresh. Their `update-index --add --remove --info-only`
+step already reads each file and stores fresh stat data. The real index and
+object store stay unchanged.
 
 Each snapshot reads SHA-256 content identities with at most 16 concurrent
 reads before its Git comparisons. This warms the disk cache for those

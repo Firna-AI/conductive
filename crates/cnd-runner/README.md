@@ -86,8 +86,11 @@ Comparisons preserve the real index and object store. Reads check the opened
 descriptor, reject escaped paths and Git metadata, and preserve binary bytes.
 Diffs use Git representations, including filters, link text, and submodules.
 Snapshot scans read content identities with at most 16 concurrent reads before
-Git comparisons. Private indexes discard restored stat data before refreshing
-it from file contents. The first scan still completes before `runner.ready`.
+Git comparisons. Private indexes discard restored stat data. The comparison
+step starts with a refresh from file contents, after the parallel reads in a
+snapshot. Checkpoints, including submodule checkpoints, do not refresh because
+`update-index --info-only` already stores fresh stat data.
+The first scan still completes before `runner.ready`.
 
 File reports keep separate tree and changes histories. Filtering runs on each
 complete report before splitting. Multipart reports keep whole entries and
