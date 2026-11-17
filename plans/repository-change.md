@@ -197,8 +197,10 @@ Answered on 16 November 2026: B.
 ## Design
 
 The change follows [Continue](../docs/protocol/continue.md) where it can.
-It reuses the durable job, the fetch with the member's GitHub access, the
-local-work check, and the publication of the new branch.
+It shares the fetch command, the staging folder, and the local-work check
+with Continue. Its durable job and its publication follow the shape of the
+Continue job in their own files. Review finding 8 records the shared job
+as a follow-up item, `plans/follow-ups/shared-branch-move-job.md`.
 
 Design calls (my calls, 13 November 2026):
 

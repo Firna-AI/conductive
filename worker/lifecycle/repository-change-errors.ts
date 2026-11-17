@@ -37,3 +37,10 @@ export function repositoryChangeFailed(
     return failed("The cloud computer isn't ready. Try again.")
   return failed('The repository change could not finish. Try again.')
 }
+
+/** The branch read of the new folder exited with a failure or timed out. */
+export class BranchReadFailed extends Error {
+  constructor() {
+    super('The repository change still needs reconciliation.')
+  }
+}

@@ -212,6 +212,12 @@ names a decision of the change that added this action.
   latest default branch. The toast then says to commit or discard the
   files and try again.
 - A repeat of a change that already finished changes nothing more.
+- A change can fail after Git moved the new folder to the new branch, for
+  example when its record cannot be stored for 10 minutes. The new folder
+  then keeps the new branch, and the record keeps the old repository.
+  Reason: the change never runs Git again to undo a move, because an undo
+  can lose the changed files that moved. A change that never ends would
+  hold Continue, Restart, Archive, and each new message of the workspace.
 
 ## After the change
 

@@ -69,6 +69,12 @@ export interface RepositoryChangeJob {
   stderrOffset: number
   publication?: { after: number; through: number }
   failure?: { status: number; code: string; message: string }
+  /**
+   * When the first failed step after the move happened: a failed branch
+   * read of the new folder, or a failed publication. A job of an older
+   * deploy has no value, and its next failure sets it.
+   */
+  failingSince?: number
   cancelled?: true
   outcome?: FeatureResult<StoredReply>
 }

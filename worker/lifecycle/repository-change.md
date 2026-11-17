@@ -99,10 +99,12 @@ object: their credential grant, their cancel, and the check of Archive.
 ## Phases
 
 The `repository-change` alarm source advances the job one phase at a
-time. Each phase first runs `authorizeRepositoryChange` in
-[`repository-change-data.ts`](repository-change-data.ts): the member
+time. Each phase before `publish` first runs `authorizeRepositoryChange`
+in [`repository-change-data.ts`](repository-change-data.ts): the member
 still has access, the record still names the old repository, branch,
 sandbox, and provider account, and the org still chose the new repository.
+Once the fetch or the move started, a failed check only saves the error,
+and the command still settles.
 
 1. `verify` reads the default branch of the new repository, and the open
    pull request and the pushed commits of the old branch, as the member.
@@ -146,7 +148,9 @@ the new folder with the isolated source command, in this order:
 After a lost process or a failed exit, `repositoryChangeBranchCommand`
 reads the branch of the new folder. On the new branch it repairs the base
 settings, and the move is done. Any other branch ends the job. A failed
-read keeps the reservation, and the step retries.
+read, such as in a removed folder or without `refs/remotes/origin/<base>`,
+keeps the reservation, and the step retries until the end rule of
+[Failures and recovery](#failures-and-recovery) ends it.
 
 ## Publication
 
@@ -158,8 +162,11 @@ runs after a good move. It never runs Git again.
   branch, sets `github_summary` to NULL, and adds 1 to the task number. It
   writes only while the row still names the old repository and branch,
   the same sandbox and provider account, in an active org, a workspace
-  that is not archived, and a chosen new repository. The installation
-  follows the repository row.
+  that is not archived, and a new repository of the same org. The guard
+  does not ask whether the org still chose the new repository. Each phase
+  before the move checked it, and Git already moved, so the record
+  follows Git also when an admin unchose the repository while the move
+  ran. The installation follows the repository row.
 - The same batch first closes the file and diff tabs and the temporary-tab
   mark in the saved view of every member, in `workspace_views`, because
   their paths belong to the old folder. The session tabs stay. An active
@@ -191,6 +198,29 @@ command journal, a failure during publication retries after one second,
 and a suspension or a stop cancels the job. A failed change keeps the old
 repository and branch, and its error message is the reason of the toast.
 
+The repository change adds an end rule for the steps after the move, in
+[`repository-change-end.ts`](repository-change-end.ts). Continue does not
+have it.
+
+- A failed publication and a failed branch read of the new folder are the
+  steps after the move. The first such failure saves its time in
+  `failingSince` of the job. A job of an older deploy has no
+  `failingSince`, and its next failure saves it.
+- The time starts again when the move is done and the job goes to
+  `publish`.
+- While less than 10 minutes passed, the step retries after one second.
+- After 10 minutes, the job reads the record. When the record still names
+  the old repository and the old branch, the job ends with its saved
+  error, or with "The repository change could not finish. Try again.". It
+  logs the warning `repository_change_ended` with the phase. The
+  reservation then ends, so turns, Continue, Restart, and Archive go on.
+- When the record no longer names the old repository and the old branch,
+  as after the publish write, the publication keeps the retry. The record
+  already changed, so the chat must still get the change. A failed read
+  of the record also keeps the retry.
+- A job that ended this way can leave the new folder on the new branch,
+  while the record keeps the old repository.
+
 ## Tests
 
 - [`repository-change.test.ts`](repository-change.test.ts): a change by
@@ -204,6 +234,12 @@ repository and branch, and its error message is the reason of the toast.
 - [`repository-change-access.test.ts`](repository-change-access.test.ts):
   the admission refusals, a runner that cannot move, and a runner that
   does not say hello.
+- [`repository-change-recovery.test.ts`](repository-change-recovery.test.ts):
+  a change that publishes after an admin unchose the new repository during
+  the move, the end after 10 minutes of a publication whose guard never
+  matches and of a failed branch read, the retry of a publication whose
+  record already changed, and the new time of the publication after a
+  failed branch read.
 - [`repository-change-concurrency.test.ts`](repository-change-concurrency.test.ts):
   the hold of turns, Continue, Restart, and Archive, and the runner move
   after publication.

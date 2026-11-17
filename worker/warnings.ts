@@ -135,6 +135,14 @@ function warningFields(warning: WorkerWarning) {
           'A step after a repository change failed: the second context copy or the terminal folder.',
         workspaceId: warning.workspaceId.text,
       }
+    case 'repository_change_ended':
+      return {
+        kind: warning.kind,
+        message:
+          'A repository change ended after the steps after its move failed for 10 minutes. The record keeps the old repository.',
+        workspaceId: warning.workspaceId.text,
+        phase: warning.phase,
+      }
     case 'lifecycle_repair_limited':
       return {
         kind: warning.kind,

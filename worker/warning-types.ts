@@ -77,6 +77,11 @@ export type WorkerWarning =
     }
   | { kind: 'repository_change_settle_failed'; workspaceId: WarningId }
   | {
+      kind: 'repository_change_ended'
+      workspaceId: WarningId
+      phase: 'move' | 'publish'
+    }
+  | {
       kind: 'workspace_title_request_failed' | 'workspace_title_save_failed'
       error: ErrorSummary
     }

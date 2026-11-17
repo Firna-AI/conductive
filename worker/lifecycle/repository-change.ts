@@ -11,6 +11,7 @@ import { providerForAccount } from '../sandbox/client'
 import { ProviderError } from '../sandbox/errors'
 import { reserveRepositoryChange } from './repository-change-admission'
 import { authorizeRepositoryChange } from './repository-change-data'
+import { endAfterMove, failedAfterMove } from './repository-change-end'
 import { repositoryChangeFailed } from './repository-change-errors'
 import {
   advanceRepositoryChange,
@@ -181,23 +182,10 @@ export class WorkspaceRepositoryChange implements RepositoryChangeProgress {
         job.processId = null
         await this.save(job)
       }
-      if (
-        job.phase === 'publish' ||
-        (job.commandStarted && (job.phase === 'move' || job.phase === 'fetch'))
-      ) {
+      if (await this.retries(job, error)) {
         await this.options.schedule(this.options.dependencies.now() + 1_000)
         return
       }
-      const failure =
-        error instanceof HttpError ? error : repositoryChangeFailed(job)
-      await this.finish(job, {
-        ok: false,
-        error: {
-          status: failure.status,
-          code: failure.code,
-          message: failure.message,
-        },
-      })
     }
     const pending = await readRepositoryChangeJob(this.options.storage)
     await this.options.schedule(
@@ -208,6 +196,32 @@ export class WorkspaceRepositoryChange implements RepositoryChangeProgress {
         await this.options.moveRunner()
         await this.options.chat.flushRunner()
       })
+  }
+
+  /**
+   * Whether a failed step retries after one second. A started fetch or move
+   * settles first. A step after the move retries until its end rule ends
+   * the job. Any other failure ends the job.
+   */
+  private async retries(
+    job: RepositoryChangeJob,
+    error: unknown,
+  ): Promise<boolean> {
+    if (failedAfterMove(job, error))
+      return !(await endAfterMove(this.options, this, job, error))
+    if (job.commandStarted && (job.phase === 'move' || job.phase === 'fetch'))
+      return true
+    const failure =
+      error instanceof HttpError ? error : repositoryChangeFailed(job)
+    await this.finish(job, {
+      ok: false,
+      error: {
+        status: failure.status,
+        code: failure.code,
+        message: failure.message,
+      },
+    })
+    return false
   }
 
   /** The member who started the change, for the Git credential of its fetch. */

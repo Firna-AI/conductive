@@ -70,13 +70,16 @@ export async function authorizeRepositoryChange(
 /**
  * The guard of the publish write, on the `workspaces` table: the row still
  * names the old repository, branch, sandbox, and provider account, in an
- * active org, a workspace that is not archived, and a chosen new repository.
+ * active org, a workspace that is not archived, and a new repository of the
+ * same org. The guard does not ask for a chosen new repository: each phase
+ * before the move checked the choice, and once the move ran, the record
+ * must follow Git, also when an admin unchose the repository meanwhile.
  */
 const OLD_WORKSPACE = `workspaces.id = ? AND workspaces.org_id = ? AND workspaces.repository_id = ?
       AND workspaces.sandbox_id = ? AND workspaces.provider_account = ? AND workspaces.branch = ?
       AND workspaces.archived_at IS NULL AND workspaces.state != 'archived'
       AND EXISTS (SELECT 1 FROM orgs o WHERE o.id = workspaces.org_id AND ${activeOrgPredicate('o')})
-      AND EXISTS (SELECT 1 FROM repositories r WHERE r.id = ? AND r.org_id = workspaces.org_id AND r.selected = 1)`
+      AND EXISTS (SELECT 1 FROM repositories r WHERE r.id = ? AND r.org_id = workspaces.org_id)`
 
 function oldWorkspaceBindings(job: RepositoryChangeJob) {
   const { binding, target } = job

@@ -8,7 +8,10 @@ import {
   repositoryChangeMoveCommand,
 } from './repository-change-commands'
 import { authorizeRepositoryChange } from './repository-change-data'
-import { repositoryChangeFailed } from './repository-change-errors'
+import {
+  BranchReadFailed,
+  repositoryChangeFailed,
+} from './repository-change-errors'
 import type { RepositoryChangeProgress } from './repository-change-progress'
 import type {
   RepositoryChangeJob,
@@ -63,6 +66,8 @@ async function completeCommand(
     return
   }
   job.phase = job.phase === 'fetch' ? 'move' : 'publish'
+  // The publication gets its own time limit, after a branch read that failed.
+  delete job.failingSince
   job.processId = null
   job.commandStarted = false
   job.stdoutOffset = 0
@@ -148,7 +153,8 @@ async function step(
 /**
  * The new branch makes the move done, so publication runs with no second
  * checkout. Another branch, also no branch, keeps the old repository. A
- * failed read keeps the reservation, and the step retries.
+ * failed read keeps the reservation, and the step retries until the end
+ * rule of `endAfterMove` ends the job.
  */
 async function switchedBranch(
   provider: SandboxProvider,
@@ -160,5 +166,5 @@ async function switchedBranch(
   )
   if (result.exitCode === 0 && !result.timedOut)
     return result.stdout === `${job.branch}\n`
-  throw new Error('The repository change still needs reconciliation.')
+  throw new BranchReadFailed()
 }
