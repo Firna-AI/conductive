@@ -52,6 +52,7 @@ let hello = RunnerHello::Hello {
     workspace_id: "workspace-1".into(),
     stream_id: "stream-1".into(),
     login_kinds: None,
+    process_start_id: None,
 };
 ```
 
@@ -95,6 +96,7 @@ One test compares the TypeScript runtime limits with their Rust constants.
 ### Related Docs
 
 - [Agent runner protocol](../../docs/protocol/agent-runner.md)
+- [Runner warnings](../../docs/protocol/runner-warnings.md)
 - [Agent tools](../../docs/protocol/agent-tools.md)
 - [Sub-workspaces](../../docs/protocol/sub-workspaces.md)
 - [Chat and events](../../docs/protocol/chat-and-events.md)

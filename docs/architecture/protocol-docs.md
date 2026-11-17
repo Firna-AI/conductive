@@ -88,7 +88,8 @@ This page lists each protocol doc and what it covers.
       reports that belong to no session, the repair request after a refused
       update, and the notice of a failed repair.
     - [Runner warnings](../protocol/runner-warnings.md): the warnings of the
-      Worker for runner connections and for turn ends with no Stop request.
+      Worker for runner connections and for turn ends with no Stop request,
+      and the process-start ID of the runner.
   - [Session transcripts](../protocol/session-transcripts.md): copying a
     session as concise or full Markdown, and the text of a copy.
     - [Transcript routes](../protocol/transcript-routes.md): the route of

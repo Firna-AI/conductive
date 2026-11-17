@@ -131,6 +131,7 @@ export interface ActiveRunner {
   peer: AuthenticatedRunner
   workspace: RunnerWorkspaceRecord
   streamId: string | null
+  processStartId: string | null
   protocolVersion: RunnerProtocolVersion | null
   loginKinds?: readonly RunnerLoginKind[]
   ready: boolean
