@@ -61,8 +61,8 @@ it('renames a placeholder branch with Rename until the start settles it', async 
        WHERE id = 'w'`,
     )
     .run()
-  const rename = async (name: string | undefined, now: number) => {
-    const result = await updateShellWorkspace(db, {
+  const rename = (name: string | undefined, now: number) =>
+    updateShellWorkspace(db, {
       orgId,
       userId: user.id,
       workspaceId: 'w',
@@ -70,8 +70,6 @@ it('renames a placeholder branch with Rename until the start settles it', async 
       sectionId: name === undefined ? generalId : undefined,
       now,
     })
-    return result.updated
-  }
   const branch = () =>
     db.prepare("SELECT branch FROM workspaces WHERE id = 'w'").first('branch')
   expect(await rename('Saved carts', TEST_TIME + 1)).toBe(true)

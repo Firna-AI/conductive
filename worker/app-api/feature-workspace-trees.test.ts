@@ -2,7 +2,7 @@ import { expect, it } from 'vitest'
 
 import { TEST_TIME } from '../test-support/harness'
 import { markWorkspaceArchived } from './archive-data'
-import { updateShellWorkspace } from './feature-workspaces-data'
+import { writeShellWorkspace } from './feature-workspaces-data'
 import {
   setupShellListTests,
   type ShellListFixture,
@@ -22,7 +22,7 @@ async function move(
   sectionId: string,
   position: number,
 ) {
-  const result = await updateShellWorkspace(fixture.db, {
+  const result = await writeShellWorkspace(fixture.db, {
     orgId: fixture.orgId,
     userId: fixture.user.id,
     workspaceId,

@@ -4,7 +4,7 @@ import { readWorkspace } from '../lifecycle/workspace-data'
 import { requireShellWriter } from './feature-shell-access'
 import {
   shellSectionExists,
-  updateShellWorkspace,
+  writeShellWorkspace,
 } from './feature-workspaces-data'
 import { requireWritableWorkspace, workspaceBinding } from './workspace-state'
 
@@ -27,7 +27,7 @@ export async function changeWorkspaceMetadata(
   )
     throw sectionNotFound()
   const binding = workspaceBinding(env)
-  const result = await updateShellWorkspace(env.DB, {
+  const result = await writeShellWorkspace(env.DB, {
     ...input,
     orgId,
     userId,

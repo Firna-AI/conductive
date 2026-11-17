@@ -13,14 +13,14 @@ import {
 
 const fixtureForTest = setupShellListTests()
 
-async function moveWorkspace(
+function moveWorkspace(
   db: D1Database,
   fixture: ShellListFixture,
   workspaceId: string,
   sectionId: string,
   position: number,
 ) {
-  const result = await updateShellWorkspace(db, {
+  return updateShellWorkspace(db, {
     orgId: fixture.orgId,
     userId: fixture.user.id,
     workspaceId,
@@ -28,7 +28,6 @@ async function moveWorkspace(
     position,
     now: TEST_TIME + 100,
   })
-  return result.updated
 }
 
 it('keeps an accepted move out of the target section when another workspace moves', async () => {
@@ -125,15 +124,13 @@ it('moves within the current section when a position-only move follows a cross-s
     otherAccepted = await moveWorkspace(db, fixture, 'c', reviewId, 1)
   })
   expect(
-    (
-      await updateShellWorkspace(intercepted.db, {
-        orgId,
-        userId: user.id,
-        workspaceId: 'c',
-        position: 0,
-        now: TEST_TIME + 200,
-      })
-    ).updated,
+    await updateShellWorkspace(intercepted.db, {
+      orgId,
+      userId: user.id,
+      workspaceId: 'c',
+      position: 0,
+      now: TEST_TIME + 200,
+    }),
   ).toBe(true)
   expect(intercepted.calls()).toBe(1)
   expect(otherAccepted).toBe(true)

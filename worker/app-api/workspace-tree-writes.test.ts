@@ -2,7 +2,7 @@ import { expect, it } from 'vitest'
 
 import { TEST_TIME } from '../test-support/harness'
 import { markWorkspaceArchived } from './archive-data'
-import { updateShellWorkspace } from './feature-workspaces-data'
+import { writeShellWorkspace } from './feature-workspaces-data'
 import {
   beforeFirstListBatch,
   setupShellListTests,
@@ -25,7 +25,7 @@ async function move(
   sectionId: string,
   position: number,
 ) {
-  const result = await updateShellWorkspace(db, {
+  const result = await writeShellWorkspace(db, {
     orgId: fixture.orgId,
     userId: fixture.user.id,
     workspaceId,
@@ -115,7 +115,7 @@ it('restores a child created during its tree move in the destination section', a
   const intercepted = beforeFirstListBatch(db, () =>
     createTreeWorkspace(fixture, 'child', generalId, 'parent'),
   )
-  const result = await updateShellWorkspace(intercepted.db, {
+  const result = await writeShellWorkspace(intercepted.db, {
     orgId: fixture.orgId,
     userId: fixture.user.id,
     workspaceId: 'parent',

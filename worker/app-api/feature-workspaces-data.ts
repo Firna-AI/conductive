@@ -191,7 +191,11 @@ export function shellSectionExists(
     .first<{ id: string }>()
 }
 
-export async function updateShellWorkspace(
+/**
+ * Renames or moves a workspace, and gives the IDs of each workspace that
+ * the write changed, for the metadata publish.
+ */
+export async function writeShellWorkspace(
   db: D1Database,
   input: {
     orgId: string
@@ -237,4 +241,12 @@ export async function updateShellWorkspace(
     updated: result[0].meta.changes > 0,
     workspaceIds: result[0].results.map(({ id }) => id),
   }
+}
+
+/** Renames or moves a workspace, and says whether the write changed it. */
+export async function updateShellWorkspace(
+  db: D1Database,
+  input: Parameters<typeof writeShellWorkspace>[1],
+): Promise<boolean> {
+  return (await writeShellWorkspace(db, input)).updated
 }
