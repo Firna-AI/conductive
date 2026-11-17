@@ -38,7 +38,8 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         every account, also while you wait for app access. It uses the
         token to read GitHub for you, and for the git calls of your
         turns. It reads your repository rights and merge method. A merge
-        uses the token of the member who clicks. Continue fetches the
+        and Ready for review of a draft pull request use the token of the
+        member who clicks. Continue fetches the
         latest default branch with the token of the member who clicks
         Continue.`,
       text`The waitlist: a new account without app access waits while the

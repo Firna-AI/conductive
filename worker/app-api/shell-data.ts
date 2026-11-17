@@ -58,7 +58,7 @@ export async function shellWorkspaces(
   const { results } = await db
     .prepare(
       `SELECT w.id, w.number, w.org_id AS orgId, w.repository_id AS repositoryId,
-     w.section_id AS sectionId, w.owner_user_id AS ownerUserId,
+     w.section_id AS sectionId, w.parent_workspace_id AS parentId, w.owner_user_id AS ownerUserId,
      u.github_login AS githubLogin, u.display_name AS displayName, u.avatar_url AS avatarUrl,
      ${workspaceNameColumn('w')}, w.branch, w.sandbox_id AS sandboxId,
      w.provider_account AS providerAccount, w.state, w.github_summary AS github,
@@ -72,8 +72,7 @@ export async function shellWorkspaces(
      LEFT JOIN sections s ON s.id = w.section_id
      LEFT JOIN workspace_read_states m ON m.workspace_id = w.id AND m.user_id = ?
      WHERE w.org_id = ? AND o.deleted_at IS NULL
-     ORDER BY CASE WHEN w.archived_at IS NULL AND w.state != 'archived' THEN 0 ELSE 1 END,
-       s.position, w.position, w.created_at, w.id`,
+     ORDER BY s.position, w.position, w.created_at, w.id`,
     )
     .bind(userId, orgId)
     .all<ListedWorkspaceRow>()

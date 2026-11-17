@@ -17,6 +17,12 @@ These facts belong to this implementation, not to the protocol docs.
   [Agent logins](agent-logins.md#codex) gives both routes through the gateway.
   [Conversation continuation](codex-logins.md#conversation-continuation)
   gives the resume and fork sequence after a login kind change.
+- Codex runs each subagent in its own thread. The App Server sends the
+  notifications of all threads on one connection. The Codex adapter keeps
+  only the notifications of the conversation thread. So a subagent turn
+  does not change the turn that a message steers. It also does not end the
+  session's turn or add an answer to the chat. The Claude adapter also
+  ignores the events of a subagent.
 - Claude takes `fastMode` in its start settings and in `applyFlagSettings`.
   Codex takes `serviceTierForTurn` on each `turn/start`: `priority` for fast
   and `default` for standard. No thread setting keeps a tier across turns.

@@ -1,7 +1,10 @@
-/** Where a dragged workspace lands: a section, and an index in it. */
+/** Where a dragged tree lands: a section, and an index in it. */
 export interface DropTarget {
   sectionId: string
-  /** The place in the section, counted without the moved workspace. */
+  /**
+   * The place in the section among its top-level rows, counted without the
+   * moved one.
+   */
   index: number
 }
 
@@ -16,7 +19,7 @@ export class DropLayout {
   private readonly sections = new Map<string, HTMLElement>()
   private readonly rows = new Map<
     string,
-    { sectionId: string; element: HTMLElement }
+    { sectionId: string; treeId: string; element: HTMLElement }
   >()
 
   section(sectionId: string): ElementRef {
@@ -26,9 +29,13 @@ export class DropLayout {
     }
   }
 
-  row(workspaceId: string, sectionId: string): ElementRef {
+  /**
+   * The ref of the row of a workspace. `treeId` is the workspace of the
+   * top-level row of its tree: its own for a top-level row.
+   */
+  row(workspaceId: string, sectionId: string, treeId: string): ElementRef {
     return (node) => {
-      if (node) this.rows.set(workspaceId, { sectionId, element: node })
+      if (node) this.rows.set(workspaceId, { sectionId, treeId, element: node })
       else if (this.rows.get(workspaceId)?.sectionId === sectionId) {
         this.rows.delete(workspaceId)
       }
@@ -53,8 +60,10 @@ export class DropLayout {
   }
 
   /**
-   * The drop place under the pointer: the section whose box holds it, and
-   * the index before the first row whose middle is below it.
+   * The drop place of a dragged tree under the pointer: the section whose
+   * box holds it, and the index before the first other tree whose middle
+   * is below it. A tree spans its top-level row and each row nested under
+   * it, so a drop never falls between two rows of one tree.
    */
   targetAt(workspaceId: string, y: number): DropTarget | null {
     const hit = [...this.sections].find(([, element]) => {
@@ -63,12 +72,18 @@ export class DropLayout {
     })
     if (!hit) return null
     const [sectionId] = hit
-    const middles = [...this.rows]
-      .filter(([id, row]) => id !== workspaceId && row.sectionId === sectionId)
-      .map(([, row]) => {
-        const box = row.element.getBoundingClientRect()
-        return box.top + box.height / 2
+    const trees = new Map<string, { top: number; bottom: number }>()
+    for (const row of this.rows.values()) {
+      if (row.sectionId !== sectionId || row.treeId === workspaceId) continue
+      const box = row.element.getBoundingClientRect()
+      const tree = trees.get(row.treeId)
+      trees.set(row.treeId, {
+        top: Math.min(tree?.top ?? box.top, box.top),
+        bottom: Math.max(tree?.bottom ?? box.bottom, box.bottom),
       })
+    }
+    const middles = [...trees.values()]
+      .map(({ top, bottom }) => (top + bottom) / 2)
       .sort((a, b) => a - b)
     const index = middles.findIndex((middle) => y < middle)
     return { sectionId, index: index === -1 ? middles.length : index }

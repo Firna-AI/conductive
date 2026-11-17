@@ -35,7 +35,7 @@ function rows(model: OrgModel) {
   return Object.fromEntries(
     groups.sections.map((group) => [
       group.section.id,
-      group.workspaces.map((workspace) => workspace.id),
+      group.rows.map((row) => row.workspace.id),
     ]),
   )
 }

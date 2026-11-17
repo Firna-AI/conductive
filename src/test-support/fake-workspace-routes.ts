@@ -9,6 +9,10 @@ import {
   type SecretRequestsResponse,
 } from '../shared/secret-requests'
 import {
+  workspaceCapabilitiesPath,
+  type WorkspaceCapabilitiesResponse,
+} from '../shared/secrets'
+import {
   retryMessagePath,
   sessionPath,
   sessionPaths,
@@ -23,6 +27,7 @@ import {
 } from '../shared/workspaces'
 import type { FakeRouteWriter } from './fake-api-routes'
 import { FAKE_IDS, FAKE_TIME } from './fixtures/core'
+import { withSubWorkspaces } from './fixtures/sub-workspaces'
 import { workspaceFixtures } from './fixtures/workspaces'
 import {
   maskedChangedFiles,
@@ -54,15 +59,17 @@ export function fakeWorkspaceRoutes(
   /** The GitHub state of the default workspace, as `workspaceFixtures` takes it. */
   github?: GitHubSummary | null,
   workspaceStates?: ReadonlyMap<string, WorkspaceState>,
+  /** The list has the sub-workspaces of the mockups too. */
+  subWorkspaces = false,
 ) {
   const data = workspaceFixtures(state, github)
   const org = FAKE_IDS.org
-  routes.json('GET', workspacesPath(org), data.workspaces)
+  const listed = subWorkspaces
+    ? withSubWorkspaces(data.workspaces.workspaces)
+    : data.workspaces.workspaces
+  routes.json('GET', workspacesPath(org), { workspaces: listed })
   routes.json('POST', workspacesPath(org), data.created, 201)
-  for (const workspace of [
-    ...data.workspaces.workspaces,
-    data.created.workspace,
-  ]) {
+  for (const workspace of [...listed, data.created.workspace]) {
     const id = workspace.id
     const detail =
       workspace.id === data.created.workspace.id
@@ -150,6 +157,13 @@ export function fakeWorkspaceRoutes(
       requests: [],
       workspaceValues: [],
     } satisfies SecretRequestsResponse)
+    routes.json('GET', workspaceCapabilitiesPath(org, id), {
+      capabilities: {
+        preapprovedSecretIds: [],
+        macAccess: true,
+        sessionApprovals: [],
+      },
+    } satisfies WorkspaceCapabilitiesResponse)
     routes.json(
       'POST',
       sessionsPath(org, id),

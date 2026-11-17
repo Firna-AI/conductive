@@ -42,6 +42,7 @@ export const shortcutCommandIds = [
   'resolve-conflicts',
   'address-review',
   'commit-and-push',
+  'mark-ready-for-review',
   'merge-pull-request',
   'continue-after-merge',
   'open-pull-request',

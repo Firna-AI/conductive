@@ -27,10 +27,16 @@ This page lists each protocol doc and what it covers.
     restore, and Continue.
     - [Workspace list marks](../protocol/workspace-marks.md): GitHub colours,
       agent motion, unread output, and reduced motion.
+    - [Stop and resume](../protocol/stop-and-resume.md): the stop of an
+      idle sandbox, the resume, the starts from the agent tools, and the
+      restart near day 14 of a stop.
   - [Continue](../protocol/continue.md): the next task of a workspace after a
     merge, on a new branch with the same sandbox and sessions.
   - [Workspace menu](../protocol/workspace-menu.md): the menu of a workspace
     row, which moves, reassigns, renames, and archives the workspace.
+  - [Sub-workspaces](../protocol/sub-workspaces.md): the parent link, the
+    depth limit, the nested rows of the list, an archived parent, the moves
+    of a tree, and the agent context.
   - [Workspace tools](../protocol/workspace-tools.md)
     - [Temporary tabs](../protocol/temporary-tabs.md): the one file or diff
       tab that the next press replaces, what opens and keeps it, and its
@@ -112,8 +118,9 @@ This page lists each protocol doc and what it covers.
   - [Agent tool access](../protocol/agent-tool-access.md): what each call
     reaches, which calls need an active turn, and the rights of the sender.
   - [Workspace calls](../protocol/workspace-calls.md): the calls that
-    create, list, get, rename, move, and archive workspaces, and the lists
-    that a create call takes.
+    create, list, get, rename, move, and archive workspaces.
+    - [Repository, section, and model lists](../protocol/create-call-lists.md):
+      the lists that a create call takes.
   - [Session calls](../protocol/session-calls.md): the calls that start,
     list, message, and read the sessions of the org.
     - [Session management](../protocol/session-management.md): the calls
@@ -130,6 +137,8 @@ This page lists each protocol doc and what it covers.
   - [Org rail order](../protocol/org-rail-order.md): the order of the orgs
     in the rail that each person keeps, how the person changes it, what a
     tile opens, and the workspace list of a hidden sidebar.
+  - [Get started](../protocol/get-started.md): the first run, its steps,
+    the state of the first build in its org step, and its finish.
   - [Delete org](../protocol/delete-org.md): the end of an org, its restore
     within 7 days, and the delete of its data.
 - [Pricing](../protocol/pricing.md): the plans and their cloud hours, the
@@ -194,6 +203,8 @@ This page lists each protocol doc and what it covers.
   message.
   - [Base prompts](../protocol/base-prompts.md): the base prompt of Claude
     agents and the base instructions of Codex agents.
+  - [Agent instructions: how each agent gets them](../protocol/agent-instructions-delivery.md):
+    the system instructions of each agent, and the ways that were rejected.
 - [Waitlist](../protocol/waitlist.md): app access, the waitlist screen, the
   ways in, the approval email, and the record of app access.
 - [Invite and referral codes](../protocol/waitlist-codes.md): the codes of

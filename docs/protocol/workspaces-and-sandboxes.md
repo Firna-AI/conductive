@@ -29,6 +29,8 @@ These docs belong to this doc:
 - [Workspace menu](workspace-menu.md): the menu of a workspace row, which
   moves, reassigns, renames, and archives the workspace, and copies its
   link.
+- [Sub-workspaces](sub-workspaces.md): the parent link of a workspace, the
+  depth limit, the nested rows of the list, and the moves of a tree.
 - [Tools of a workspace](workspace-tools.md): the files and changes, the
   terminal, the port previews, and the desktop.
 
@@ -220,7 +222,7 @@ for, downloads, and applies an update.
 
 ## Stop and resume
 
-[Stop and resume](workspace-life.md#stop-and-resume) holds these workspace requirements.
+[Stop and resume](stop-and-resume.md) holds these workspace requirements.
 
 ## Archive
 

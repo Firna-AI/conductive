@@ -56,7 +56,7 @@ export interface BarScreen {
 /**
  * The view and the presses of the bar actions, or null while no GitHub
  * state shows. An agent action sends the prompt of the state that shows,
- * Merge merges its head, and Continue starts from the branch of the bar.
+ * Merge merges its head, Ready for review marks the draft ready, and Continue starts from the branch of the bar.
  */
 export function useBarControls(screen: BarScreen): BarControls | null {
   const { github, actions, localWork, turnRuns, readOnly } = screen
@@ -77,6 +77,9 @@ export function useBarControls(screen: BarScreen): BarControls | null {
           return
         case 'merge':
           void actions.merge(snapshot)
+          return
+        case 'ready':
+          void actions.markReady(snapshot)
           return
         case 'continue':
           void actions.continueWorkspace()

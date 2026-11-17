@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-08, from the branch `calummoore/chat-title-rename`, where several agents ran tests, a mockup build, and Chrome on one machine at the same time.
-- **Location:** `worker/chat/retry.test.ts`, `worker/chat/retry-queue.test.ts`, `worker/lifecycle/runner-environment.test.ts`, `worker/lifecycle/disk-retention.test.ts`, `worker/operator/suspension-race.test.ts:20`, two Git tests of the agent runner under `runner/src/`, and `worker/tools/sessions.test.ts:48`.
+- **Location:** `worker/chat/retry.test.ts`, `worker/chat/retry-queue.test.ts`, `worker/lifecycle/runner-environment.test.ts`, `worker/lifecycle/disk-retention.test.ts`, `worker/operator/suspension-race.test.ts:20`, two Git tests of the agent runner under `runner/src/`, `worker/tools/sessions.test.ts:48`, `worker/chat/adapter.test.ts`, `worker/lifecycle/skills-environment.test.ts`, and `worker/lifecycle/image-lease-builds.test.ts`.
 - **Reason:** The original branch changed none of the first five tests. Each passed alone and in two complete gate runs.
 
 - **Source:** Implementation. **Category:** Test.
@@ -163,6 +163,35 @@
   This proves that the Continue timeout occurs without the merge.
   The other failures were not reproduced on main in this attempt.
   The blocked await and cause remain unknown.
+- On 17 November 2026, the main merge into `calummoore/oslo-3u7a`
+  ran four selected test files beside Rust compilation, lint, and format checks.
+  Eleven tests passed and these two cases failed with
+  `Error: Test timed out in 15000ms.`:
+  - `worker/lifecycle/runner-environment.test.ts`, "captures fresh resume settings, preserves the ready computer capture, and pins retention settings after rotation".
+  - `worker/lifecycle/skills-environment.test.ts`, "sets skills at create and refreshes them at each resume, overriding org env vars also when invalid or removed".
+  Both files then passed together without competing checks: six tests,
+  no failures or skips, in 34.44 seconds. No assertion or timeout changed.
+  The runner-environment file matches main at
+  `94924b6d59c57d5a230eb2350e84f2869c653c19`.
+  The skills file belongs to the skills feature of this branch; the merge
+  did not change it. Contention during native fixture work is suspected.
+  The blocked await and the cause are not established.
+- The complete gate on that merged tree then passed every static check
+  and all 121 SDK helper tests. The app and Worker suite passed 4,012
+  tests and failed two, with no skipped tests. These cases failed with
+  `Error: Test timed out in 15000ms.`:
+  - `worker/chat/adapter.test.ts:24`, "serves the actual Durable Object with SQLite storage and authenticated WebSockets".
+  - `worker/lifecycle/image-lease-builds.test.ts:15`, "keeps a leased image until its workspace starts across a replacement publication".
+  Both files match main at `94924b6d59c57d5a230eb2350e84f2869c653c19`.
+  A rerun of just these two files without competing checks passed the chat
+  adapter case and timed out in the image case again.
+  A clean detached checkout of that main commit then ran the image file
+  alone. Its only case also failed with `Error: Test timed out in 15000ms.`
+  in a 32.66-second run. This proves that the image failure occurs without
+  the merge. No assertion, fixture, timeout, or test configuration changed.
+  No further local image-test attempt ran after these three failures.
+  Native runtime or storage delays are suspected; the blocked await and
+  the cause remain unknown.
 - **Problem:** These tests depend on wall-clock time limits, so a busy machine can fail them with no defect in the code.
 - **Impact if no action:** A slow CI runner or a busy developer machine can fail the gate now and then, and a person must rerun it.
 - **Root question:** How do these tests stay correct on a slow or busy machine?

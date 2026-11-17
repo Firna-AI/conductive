@@ -88,7 +88,8 @@ with the message of the API.
   is not deleted, else Get started. The Account page lists the org with
   Restore, and its address still opens `DeletedOrgPage`.
 - `onRestored` gets the active org of the API's answer, with its `initials`
-  when the answer has them. The shell shows it as an active org again. Its
+  and its colour when the answer has them. Delete and Restore read the org
+  with `readOrg` of the app, so they keep every field of the org record. The shell shows it as an active org again. Its
   workspaces start only when they open.
 - `onReassigned` gets the workspace of the API's answer. The header shows its
   new owner. The cloud computer keeps running. One exception: a workspace

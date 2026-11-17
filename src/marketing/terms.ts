@@ -72,7 +72,8 @@ export const termsDocument: LegalDocument = {
             ${productName}. The app can reach each repository where you
             install its GitHub App and have access. It reads your repository
             rights and merge method from GitHub. It shows Merge only when
-            your GitHub rights let you merge.`,
+            your GitHub rights let you merge. It shows Ready for review on a
+            draft pull request only when you have write access or more.`,
           text`When an admin saves a skills repository, and when a member
             opens Skills, ${productName} reads its repository details and
             file tree on GitHub. The lookup uses that member's GitHub

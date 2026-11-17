@@ -28,6 +28,8 @@ conductive repositories list
 conductive sections list
 conductive models list
 conductive workspaces create --repository repo-id --message 'Build this feature.'
+conductive workspaces create --repository repo-id --parent workspace-id --message 'Build the subtask.'
+conductive workspaces list --parent workspace-id
 conductive workspaces create --repository repo-id --message-file task.md \
   --agent codex --model model-name --effort high --fast true --section section-id \
   --name 'Review the change' --first-session-title 'First review' --request-id review-1
@@ -49,6 +51,10 @@ conductive secrets run --secret API_TOKEN --reason 'Deploy the service' -- ./dep
 
 The CLI writes one JSON response to stdout, except for `secrets run`.
 Local and HTTP failures print a message on stderr and return exit status 1.
+Workspace create and list accept `--parent ID`, or `parentId` through MCP.
+The create help gives the depth limit, the section rule, and sibling advice.
+Both adapters keep parent IDs, parent entries, depth, direct children, and notices in their JSON replies.
+The [workspace calls](calls.md#workspaces) describe these fields.
 Both tools preserve the Worker's error code and message, such as `session_closed: Reopen the session to send a message.`
 They give a generic failure for malformed replies and network failures.
 Error text never includes the known workspace credential.

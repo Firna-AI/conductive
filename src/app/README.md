@@ -113,7 +113,8 @@ feedback draft.
 
 [Screens](screens.md) gives the rules of the screens of the app shell:
 the account and Get started, sign-in, invitations, orgs, panels and
-layers, the focus, saved drafts, New workspace as a page or a dialog,
+layers, the trees of the workspace list, the focus, saved drafts, New
+workspace as a page or a dialog,
 with its attached files and the send key that every composer shares, and
 the waitlist.
 [Command palette and keys](palette-and-keys.md) gives the rules of the

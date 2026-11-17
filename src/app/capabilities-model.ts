@@ -10,6 +10,7 @@ import {
 } from '../shared/secrets'
 import type { ApiClient } from './api/client'
 import { ignore, ParseError } from './api/parse'
+import type { OrgModel } from './org-model'
 import { readWorkspaceGrants, type WorkspaceGrants } from './api/read-secrets'
 import { Resource, type Change } from './resource'
 import { valueOf } from './store'
@@ -58,6 +59,17 @@ export class WorkspaceCapabilitiesModel {
     return Promise.all([this.grants.read(), this.values.read()]).then(
       () => undefined,
     )
+  }
+
+  /**
+   * Reads each part that has no answer yet, such as before the control first
+   * opens. A part that shows keeps its answer until the next `read`.
+   */
+  preload(): Promise<void> {
+    const parts = [this.grants, this.values].filter(
+      (part) => part.store.get().state !== 'ready',
+    )
+    return Promise.all(parts.map((part) => part.read())).then(() => undefined)
   }
 
   /**
@@ -119,6 +131,35 @@ export class WorkspaceCapabilitiesModel {
       macAccess: on,
     })
   }
+}
+
+/** The kept Capabilities of each org, by workspace ID. */
+const kept = new WeakMap<OrgModel, Map<string, WorkspaceCapabilitiesModel>>()
+
+/**
+ * The Capabilities of a workspace of `org`. They stay while the org model
+ * stays, so a workspace can read them before its control opens, and the
+ * control shows the last answer at once.
+ */
+export function keptCapabilities(
+  org: OrgModel,
+  workspaceId: string,
+): WorkspaceCapabilitiesModel {
+  let models = kept.get(org)
+  if (!models) {
+    models = new Map()
+    kept.set(org, models)
+  }
+  let model = models.get(workspaceId)
+  if (!model) {
+    model = new WorkspaceCapabilitiesModel(
+      org.services.api,
+      org.orgId,
+      workspaceId,
+    )
+    models.set(workspaceId, model)
+  }
+  return model
 }
 
 /** The values of the workspace from the list of its requests. */

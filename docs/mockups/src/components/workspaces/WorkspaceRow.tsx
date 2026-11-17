@@ -1,13 +1,16 @@
 import type { ReactNode } from 'react'
 import { Archive, ArchiveRestore } from 'lucide-react'
+import type { TreeLines } from '../../../../../src/shared/workspace-tree-lines'
 import { paths } from '../../paths'
 import { ScreenLink } from '../common/ScreenLink'
 import { IconButton } from '../common/actions'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
+import { guideClasses } from './guideLines'
 import { RowPointMenu, type RowControls } from './RowMenu'
 import type { WorkspaceRow } from './sections'
 import { activityPresentation, listMarkLabel } from './status'
+import type { RowIndent } from './trees'
 import { WorkspaceMark } from './WorkspaceMark'
 import rowMenu from './RowMenu.module.css'
 import styles from './WorkspaceRow.module.css'
@@ -16,6 +19,23 @@ import styles from './WorkspaceRow.module.css'
 export type RowDrag = 'lifted' | 'placeholder'
 
 type Variant = 'sidebar' | 'page'
+
+/**
+ * The classes of a row of a tree: the indent of a nested row, by the steps
+ * of `indent`, and the guide lines of its tree from `lines`. A top-level
+ * row has only the stub under its mark, when rows show under it.
+ */
+function nestedClasses(
+  indent: RowIndent | undefined,
+  lines: TreeLines | undefined,
+): string {
+  const steps = indent ?? 0
+  return classes(
+    steps > 0 && styles.nested,
+    steps > 0 && styles[`indent${steps}`],
+    guideClasses(steps, lines),
+  )
+}
 
 /**
  * The row of a workspace that the user renames from its menu. The field
@@ -35,6 +55,7 @@ function RenameRow(props: {
         styles.row,
         page && styles.page,
         row.selected && styles.selected,
+        nestedClasses(row.indent, row.lines),
       )}
     >
       <WorkspaceMark github={row.github} status={row.status} />
@@ -81,15 +102,21 @@ function rowAction(
  * One workspace on one line: its list mark on the left, its name, and the
  * time since its last activity. The mark shows the GitHub state of its
  * pull request in colour, and whether its agent works. The action of the
- * row, Archive or Restore, covers the time on hover only. A drag lifts the
- * row and leaves a faint copy behind. `controls` draws the menu that a
- * right click opened, the field of Rename, or a hover, because a view runs
- * no script.
+ * row, Archive or Restore, covers the time on hover only. A nested row
+ * indents by the steps of `row.indent`, and a row of a tree draws the guide
+ * lines of `row.lines`, as a file tree does. A drag lifts the row and leaves
+ * a faint copy behind. `controls` draws the menu that a right click opened,
+ * the field of Rename, or a hover, because a view runs no script.
  */
 export function WorkspaceRowView(props: {
   row: WorkspaceRow
   variant: Variant
   drag?: RowDrag
+  /**
+   * The nested rows that move with a lifted row of a tree. The lifted row
+   * shows their count in place of its time.
+   */
+  carried?: number
   archivable?: boolean
   /** An archived row offers Restore. */
   restorable?: boolean
@@ -103,18 +130,27 @@ export function WorkspaceRowView(props: {
     )
   }
   const status = activityPresentation[row.status]
+  const lifted = props.drag === 'lifted'
+  const carried = lifted ? (props.carried ?? 0) : 0
   const className = classes(
     styles.row,
     props.variant === 'page' && styles.page,
     row.selected && styles.selected,
     styles[status.emphasis],
     props.drag && styles[props.drag],
+    carried > 0 && styles.liftedTree,
+    // The lifted row stands for its whole tree, so it draws no guide lines.
+    nestedClasses(row.indent, lifted ? undefined : row.lines),
   )
   const content = (
     <>
       <WorkspaceMark github={row.github} status={row.status} />
       <span className={styles.name}>{row.workspace.name}</span>
-      <span className={styles.time}>{row.workspace.updated}</span>
+      {carried > 0 ? (
+        <span className={styles.moving}>+{carried}</span>
+      ) : (
+        <span className={styles.time}>{row.workspace.updated}</span>
+      )}
       <span className={a11y.hidden}>
         , {listMarkLabel(row.github, row.status)}
       </span>

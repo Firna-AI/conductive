@@ -20,6 +20,7 @@ import {
   withMaskedTurnFiles,
 } from './fixtures/masked-paths'
 import { toolFixtures } from './fixtures/tools'
+import { withSubWorkspaces } from './fixtures/sub-workspaces'
 import { workspaceFixtures } from './fixtures/workspaces'
 import { recordedChatEvents, type RecordedChatScenario } from './recorded-chat'
 import { recordedFileEvents } from './recorded-files'
@@ -50,6 +51,12 @@ export interface FakeApiOptions {
    * workspace whose runner has not reported its lists yet.
    */
   savedLists?: boolean
+  /**
+   * `true` adds the sub-workspaces of the mockups to the list of Acme,
+   * nested under Apple Pay button and Checkout address autocomplete, each
+   * with the recorded replies of every workspace of the list.
+   */
+  subWorkspaces?: boolean
 }
 
 /**
@@ -102,6 +109,7 @@ export class FakeApiServer implements FakeRouteWriter {
         : recordedFileEvents(FAKE_IDS.workspace, chat.length + 1, paths)),
     ])
     fakeCoreRoutes(this, options.role ?? 'admin')
+    const subWorkspaces = options.subWorkspaces ?? false
     fakeWorkspaceRoutes(
       this,
       options.workspaceState ?? 'ready',
@@ -109,17 +117,18 @@ export class FakeApiServer implements FakeRouteWriter {
       paths,
       fakeGitHubSummary(options),
       options.workspaceStates,
+      subWorkspaces,
     )
     fakeToolRoutes(this, options.banner ?? 'ready-to-merge', paths)
     const { workspaces, created } = workspaceFixtures(options.workspaceState)
+    const listed = subWorkspaces
+      ? withSubWorkspaces(workspaces.workspaces)
+      : workspaces.workspaces
     fakeDeviceRoutes(
       this,
       options.macCommands ?? 'none',
       options.onMac ?? false,
-      [
-        ...workspaces.workspaces.map((workspace) => workspace.id),
-        created.workspace.id,
-      ],
+      [...listed.map((workspace) => workspace.id), created.workspace.id],
     )
   }
 

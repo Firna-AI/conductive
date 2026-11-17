@@ -4,6 +4,7 @@ import { gate } from '../security/gate'
 import type { GitHubRefreshWorkspace } from './contracts'
 import { readMergeWorkspace } from './merge-access'
 import { GitHubMerge } from './merge'
+import { markReady } from './ready'
 
 export interface MergeStorage {
   get(key: string): Promise<unknown>
@@ -24,7 +25,7 @@ export async function handleGitHubMerge(
     const context = await gate(request, env, dependencies.now())
     const path = new URL(request.url).pathname
     const match = path.match(
-      /^\/api\/orgs\/[^/]+\/workspaces\/([^/]+)\/github\/(capabilities|merge)(?:\/([^/]+))?$/,
+      /^\/api\/orgs\/[^/]+\/workspaces\/([^/]+)\/github\/(capabilities|merge|ready)(?:\/([^/]+))?$/,
     )
     if (!match || !context.org || request.headers.has('Upgrade'))
       throw new HttpError(404, 'not_found', 'The page is not available.')
@@ -50,7 +51,9 @@ export async function handleGitHubMerge(
       match[2] === 'merge' &&
       mergeId !== null &&
       ['GET', 'HEAD'].includes(request.method)
-    if (!capability && !start && !poll)
+    const ready =
+      match[2] === 'ready' && mergeId === null && request.method === 'POST'
+    if (!capability && !start && !poll && !ready)
       throw new HttpError(404, 'not_found', 'The page is not available.')
     const workspace = await readMergeWorkspace(
       env.DB,
@@ -72,6 +75,27 @@ export async function handleGitHubMerge(
       )
     }
     const body = context.body
+    if (ready) {
+      const pullNumber = body?.pullNumber
+      if (
+        typeof pullNumber !== 'number' ||
+        !Number.isSafeInteger(pullNumber) ||
+        pullNumber < 1
+      )
+        throw new HttpError(
+          400,
+          'invalid_input',
+          'Review the pull request, then try again.',
+        )
+      const result = await markReady(
+        env,
+        dependencies,
+        workspace,
+        context.user.id,
+        { pullNumber },
+      )
+      return privateResponse(Response.json(result))
+    }
     if (
       !body ||
       typeof body.headSha !== 'string' ||
