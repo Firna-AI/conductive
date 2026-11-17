@@ -61,6 +61,12 @@ These are my calls, made on 2026-11-17.
   `worker/app-api/feature-sections-data.ts`, and
   `worker/automations/automation-write-data.ts`. Reason: these are the
   files that hold the guard today.
+- **Archive:** Archive keeps its own access check, which also allows only
+  an admin or the owner. Its branch of `writeWorkspaceTree`, with the
+  promotion write, moves into `worker/app-api/archive-data.ts`, outside
+  the lint scope. Reason: the shared member check cannot express the
+  owner or admin rule, and the move keeps one guarded-only path in the
+  writer files with no behaviour change.
 - **Errors:** each writer keeps its current results and errors. Only the
   way the SQL gets the guard changes.
 - **Tests:** one race test of the builder suspends the org before the
@@ -97,6 +103,8 @@ passes with no change.
 - [ ] `worker/app-api/feature-workspaces-data.ts`.
 - [ ] `worker/app-api/workspace-parent-change-data.ts`.
 - [ ] `worker/app-api/feature-sections-data.ts`.
+- [ ] Move the Archive branch of `writeWorkspaceTree` into
+      `worker/app-api/archive-data.ts`.
 - [ ] `worker/automations/automation-write-data.ts`.
 - [ ] Stop exporting `activeShellMemberPredicate` from
       `worker/app-api/feature-shell-access.ts`.
