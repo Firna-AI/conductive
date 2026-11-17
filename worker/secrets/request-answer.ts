@@ -1,4 +1,7 @@
-import type { AnswerSecretRequest } from '../../src/shared/secret-requests'
+import type {
+  AnswerSecretRequest,
+  SecretRequest,
+} from '../../src/shared/secret-requests'
 import type { MessageSender } from '../../src/shared/generated/MessageSender'
 import type { WorkspaceOperation } from '../chat/workspace-operation'
 import { HttpError } from '../http'
@@ -9,16 +12,26 @@ import { secretGrants, sessionApproval } from './grant-data'
 import type { StoredSecretRequest, TemporarySecret } from './request-records'
 import { openSecretRequest, temporaryValueContext } from './request-records'
 import { secretInputError } from './request-input'
+import {
+  allowCoveredRequests,
+  coveredRequests,
+  sessionsWithCall,
+} from './request-covered'
 import type { SecretRuntime } from './runtime'
 import { insertSecret } from './writes'
 
+/**
+ * Answers one request. An Allow also allows each other open request that
+ * its grants cover. Returns the answered request and the covered requests
+ * whose late notice started a turn.
+ */
 export async function answerSecretRequest(
   runtime: SecretRuntime,
   operation: WorkspaceOperation,
   record: StoredSecretRequest,
   answer: AnswerSecretRequest,
   member: MessageSender,
-) {
+): Promise<{ request: SecretRequest; notices: StoredSecretRequest[] }> {
   if (!openSecretRequest(record.request)) {
     if (record.request.state === 'not-answered')
       throw new HttpError(
@@ -26,7 +39,7 @@ export async function answerSecretRequest(
         'secret_request_ended',
         'This request is no longer open.',
       )
-    return record.request
+    return { request: record.request, notices: [] }
   }
   const missing = record.request.secrets.filter(
     (secret) => secret.secretId === null,
@@ -137,8 +150,23 @@ export async function answerSecretRequest(
     }
     await runtime.save(view, record)
   })
-  if (lateAnswer && answer.kind !== 'deny')
+  if (answer.kind === 'deny') {
+    await runtime.publish(operation, record)
+    return { request: record.request, notices: [] }
+  }
+  const covered = await coveredRequests(runtime, record)
+  const withCall = sessionsWithCall(record, covered)
+  if (withCall.has(record.request.sessionId)) record.lateAnswer = false
+  if (record.lateAnswer)
     record.request.notice = await runtime.chat.secretNotice(record)
   await runtime.publish(operation, record)
-  return record.request
+  const notices = await allowCoveredRequests(
+    runtime,
+    operation,
+    record.request,
+    answer,
+    covered,
+    new Set([...withCall, record.request.sessionId]),
+  )
+  return { request: record.request, notices }
 }

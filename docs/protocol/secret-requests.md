@@ -2,9 +2,9 @@
 
 This doc holds the requirements and the decisions in force for the use of
 secrets by agents. It covers the two calls of the workspace tools, the
-requests, their time limit, late requests and late answers, temporary
-values, mixed requests, what the chat shows, the exact-copy filter, and
-the end of a request. It belongs to [Secrets](secrets.md), which covers
+requests, covered requests, their time limit, late requests and late
+answers, temporary values, mixed requests, what the chat shows, the
+exact-copy filter, and the end of a request. It belongs to [Secrets](secrets.md), which covers
 the secrets, their rights, their grants, and Capabilities. The terms are
 those of [Secrets](secrets.md#terms) and of the
 [architecture doc](../architecture.md#terms). The
@@ -106,6 +106,29 @@ decision number names a decision of the change that adds
 - Only the request and needs input show that a request waits. The Mac app
   shows no notification for it, as it does for a Mac command request.
 
+## Covered requests
+
+- An Allow also allows each other open request, waiting or late, that its
+  new grants cover. A request is covered when it names a secret of the
+  answer, and each secret that it asks for now has a grant or a temporary
+  value for its session.
+- The scope of each grant sets the reach. An approval for the session and
+  a value for 15 minutes reach the session that asked. A value for this
+  workspace reaches each session of the workspace.
+- A covered request names the member who answered. A waiting call of a
+  covered request gets its values at once.
+- A request that names a secret that is still not covered stays open, and
+  does not change.
+- Reason: an agent often asks again after its request becomes late. The
+  member then answers once, and no call waits for an answer that it
+  already has.
+- A Deny ends only its own request. Reason: a Deny judges one command, and
+  the agent can ask again with a better reason.
+- A settle of the requests that a grant of Capabilities covers was
+  rejected. Each such write must then reach every workspace that it
+  covers, for a rare case. So was a new call that waits on the open
+  request of the same secrets, because its card then shows an old command.
+
 ## Who answers
 
 - Any member who sees the session answers a request, in any browser or in
@@ -181,6 +204,9 @@ decision number names a decision of the change that adds
   So was a new linked session, because it has none of the earlier history.
 - A late Deny sends nothing. The late request then shows that it was
   denied. Reason: no agent waits, because its call already ended.
+- One answer sends at most one line for each session, also when it allows
+  [covered requests](#covered-requests). It sends none to a session where
+  a waiting call gets the values. Reason: that agent already has them.
 
 ## Temporary values
 
