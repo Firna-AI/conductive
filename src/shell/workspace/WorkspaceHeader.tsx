@@ -1,8 +1,9 @@
 import type { Workspace } from '../../shared/generated/Workspace'
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { ChevronLeft, FolderGit2 } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import owner from '../../../docs/mockups/src/components/workspace/OwnerPicker.module.css'
+import { NameMenuButton } from '../../../docs/mockups/src/components/workspace/NameMenuButton'
 import styles from '../../../docs/mockups/src/components/workspace/WorkspaceHeader.module.css'
 import { personName } from '../../app/people'
 import { routes } from '../../app/router'
@@ -49,9 +50,10 @@ function Owner(props: { workspace: Workspace; compact: boolean }) {
  * of the right column. A run workspace links to its automation below it.
  * While the open of the workspace resumes its sandbox, the state shows
  * Starting at once, before the Resume reply. While the software runs, the
- * state opens the menu with Restart. A right click on the bar, but not on
- * one of its controls, opens the workspace menu of the list, and its Rename
- * puts the field in place of the name.
+ * state opens the menu with Restart. The name is a button with no caret. It
+ * opens the workspace menu of the list below it, and Rename in that menu
+ * puts the field in place of the name. Until the list of the org loads, the
+ * name is plain text.
  */
 export function WorkspaceHeader(props: {
   context: WorkspaceContext
@@ -65,6 +67,8 @@ export function WorkspaceHeader(props: {
   const bar = useMacBar()
   const automation = useRunAutomation(props.context.savedView)
   const menu = useHeaderMenu(props.context)
+  const { toggle } = menu
+  const nameButton = useRef<HTMLElement | null>(null)
   useEffect(() => model.watch('repositories'), [model])
   const repository =
     repositories?.find((item) => item.id === workspace.repositoryId)
@@ -85,6 +89,18 @@ export function WorkspaceHeader(props: {
       page={false}
       rename={menu.rename}
     />
+  ) : toggle ? (
+    <NameMenuButton
+      buttonRef={(node) => {
+        nameButton.current = node instanceof HTMLElement ? node : null
+      }}
+      name={name}
+      onPointerDown={menu.pressStart}
+      onPress={() => {
+        if (nameButton.current) toggle(nameButton.current)
+      }}
+      open={menu.open}
+    />
   ) : (
     <h1 className={styles.title}>{name}</h1>
   )
@@ -92,7 +108,7 @@ export function WorkspaceHeader(props: {
     <CopyLink inline={phone} key={workspace.link} workspace={workspace} />
   )
   const header = phone ? (
-    <header className={styles.mobile} onContextMenu={menu.onContextMenu}>
+    <header className={styles.mobile}>
       <IconButton
         icon={ChevronLeft}
         label="All workspaces"
@@ -109,10 +125,7 @@ export function WorkspaceHeader(props: {
       {stateView}
     </header>
   ) : (
-    <header
-      className={classes(styles.bar, bar)}
-      onContextMenu={menu.onContextMenu}
-    >
+    <header className={classes(styles.bar, bar)}>
       {title}
       {copyLink}
       <span className={styles.metas}>

@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 
+import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 import { requestLines } from '../../app/test-kit'
 import { routes } from '../../app/router'
@@ -15,6 +16,7 @@ import {
   menuItem,
   menuOf,
   menuPlace,
+  placeBox,
   requestsFor,
   rowLink,
 } from '../list/row-menu-test-kit'
@@ -43,6 +45,24 @@ function title(): HTMLElement {
   return found
 }
 
+/** The name of the open workspace in its header, as the button of its menu. */
+function nameButton(): HTMLElement {
+  return byRole('button', `${name}. Workspace menu`, header())
+}
+
+/**
+ * Presses the pointer on an element, then clicks it, as a mouse does. A
+ * browser applies the changes of the press before the click.
+ */
+function pointerPress(element: HTMLElement): void {
+  act(() => {
+    element.dispatchEvent(
+      new PointerEvent('pointerdown', { bubbles: true, pointerType: 'mouse' }),
+    )
+  })
+  act(() => element.click())
+}
+
 /** The bodies of the writes of the name of the open workspace. */
 async function nameWrites(server: FakeApiServer): Promise<unknown[]> {
   const path = workspacePath(org, workspace)
@@ -53,59 +73,57 @@ async function nameWrites(server: FakeApiServer): Promise<unknown[]> {
 }
 
 describe('the workspace menu in the header', () => {
-  test('a right click on the bar opens the menu of the row of the open workspace at the pointer, a right click on a control of the bar opens none, and Escape closes it with no request', async () => {
+  test('a click on the name opens the menu of the row of the open workspace below the name, a second press on the name closes it, Escape gives the focus back to the name, and a right click on the bar opens no menu and sends no request', async () => {
     const { server, navigation } = await openPaletteTab(open)
     rightClick(rowLink(workspace), { clientX: 120, clientY: 300 })
     const rowItems = menuOf(name)
     press(document.activeElement ?? document.body, 'Escape')
     const from = requestLines(server).length
 
-    const browserMenu = rightClick(title(), { clientX: 200, clientY: 20 })
+    const button = nameButton()
+    placeBox(button, { left: 290, top: 8, width: 220, height: 26 })
+    const closedState = button.getAttribute('aria-expanded')
+    click(button)
     const opened = {
-      browserMenu,
       items: menuOf(name),
       place: menuPlace(name),
       focus: focusName(),
+      expanded: button.getAttribute('aria-expanded'),
     }
+    // A pointer press on the name of an open menu closes it.
+    pointerPress(button)
+    const pressedAgain = menuOf(name)
+    click(button)
     press(document.activeElement ?? document.body, 'Escape')
-    const closed = menuOf(name)
-    const control = byRole('button', 'Hide the right column', header())
-    const onControl = {
-      browserMenu: rightClick(control, { clientX: 900, clientY: 20 }),
+    const escaped = {
+      items: menuOf(name),
+      focus: document.activeElement === button,
+    }
+    const onBar = {
+      browserMenu: rightClick(header(), { clientX: 700, clientY: 20 }),
       items: menuOf(name),
     }
-    rightClick(header(), { clientX: 600, clientY: 20 })
-    const onBar = menuOf(name)
-    press(document.activeElement ?? document.body, 'Escape')
-    // The main area holds the focus for a new screen with a `tabindex`, as
-    // after a create. It is no control of the header.
-    const area = header().parentElement
-    area?.setAttribute('tabindex', '-1')
-    rightClick(title(), { clientX: 200, clientY: 20 })
-    const inFocusedArea = menuOf(name)
-    press(document.activeElement ?? document.body, 'Escape')
-    area?.removeAttribute('tabindex')
     await settle()
 
     expect({
+      closedState,
       opened,
-      closed,
-      onControl,
+      pressedAgain,
+      escaped,
       onBar,
-      inFocusedArea,
       history: navigation.history,
       requests: requestsFor(server, workspace, from),
     }).toEqual({
+      closedState: 'false',
       opened: {
-        browserMenu: false,
         items: rowItems,
-        place: { left: '200px', top: '20px' },
+        place: { left: '290px', top: '38px' },
         focus: 'Move to section',
+        expanded: 'true',
       },
-      closed: [],
-      onControl: { browserMenu: true, items: [] },
-      onBar: rowItems,
-      inFocusedArea: rowItems,
+      pressedAgain: [],
+      escaped: { items: [], focus: true },
+      onBar: { browserMenu: true, items: [] },
       history: [open],
       requests: [],
     })
@@ -128,7 +146,7 @@ describe('the workspace menu in the header', () => {
     })
     await openPaletteTab(open, { server })
 
-    rightClick(title(), { clientX: 200, clientY: 20 })
+    click(nameButton())
     click(menuItem('Rename'))
     const field = byRole('textbox', 'Workspace name', header())
     if (!(field instanceof HTMLInputElement)) throw new Error('No field.')

@@ -38,8 +38,8 @@ in a toast, as
 [Restart the software](../../../docs/protocol/workspace-life.md#restart-the-software)
 says. The mockups are at `app/restart`.
 
-A right click on the header bar, but not on one of its controls, opens
-the workspace menu of the list for the open workspace.
+A press on the name in the header opens the workspace menu of the list
+for the open workspace, below the name.
 [`useHeaderMenu`](useHeaderMenu.tsx) reuses the menus of the list, so the
 two menus have the same actions for the same people. Rename puts its field
 in place of the name in the header, as

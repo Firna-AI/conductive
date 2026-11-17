@@ -83,26 +83,32 @@ number names a dated record, as
 
 ## The menu in the header
 
-- A right click on the header of the open workspace opens the menu of its
-  row at the pointer. In the phone layout, the menu opens as a sheet.
-- The user asked for it on 17 November 2026.
-- The right click opens the menu only on the bar itself, such as on the
-  name or the repository. A right click on a control of the header, such
-  as the label of the number, the owner picker, the state, or the toggle
-  of the right column, opens no workspace menu.
+- The name of the open workspace in its header is a button. A press on it
+  opens the menu of its row below the name. In the phone layout, the menu
+  opens as a sheet. A second press on the name closes the menu.
+- The name shows no caret. It looks like the name, and only a hover or a
+  press shows that it is a button.
+- The user asked on 17 November 2026 for the menu in the header, and then
+  chose a press on the name.
+- A right click on the header bar was rejected. In the Mac app the bar
+  moves the window, so macOS takes its presses and the page never hears a
+  right click there. The name is a button, so it takes its press in the
+  Mac app too, as [the Mac app](desktop-app.md) says of the controls of a
+  top bar.
+- A right click on the header opens the menu of the browser, as before.
 - The menu has the same actions, for the same people, as the menu of the
   row, as [Who sees each action](#who-sees-each-action) says. It shows
   only when the list of the org has loaded, because the list gives the
-  section and the tree of the workspace. Until then, a right click opens
-  the menu of the browser.
+  section and the tree of the workspace. Until then, the name is plain
+  text.
 - Each action works as in the menu of the row, with one exception: Rename
   puts its field in the header, in place of the name, as
   [Rename](#rename) says.
 - The rules of [Opening and closing](#opening-and-closing) hold for the
   menu in the header too. When the menu closes, the focus goes back to the
-  element that had it before the right click.
-- The header has no keys that open the menu. The keys of a focused row
-  still open the menu of that row.
+  name.
+- The name takes the focus as other buttons do. Enter or Space on it opens
+  the menu.
 
 ## Who sees each action
 

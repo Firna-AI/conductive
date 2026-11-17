@@ -5,8 +5,8 @@ import { viewerOf } from './sessionStarter'
 import type { WorkspaceState } from './workspaceState'
 
 /**
- * The workspace menu that a right click on the header of the open workspace
- * opens: the menu of its row in the list, for the person signed in. The org
+ * The workspace menu that a press on the name of the open workspace in its
+ * header opens: the menu of its row in the list, for the person signed in. The org
  * of the views has more than one section.
  */
 export function headerMenuOf(

@@ -130,7 +130,7 @@ Use **+** for a new conversation on that same task.
 
 You can also copy the link from the workspace's menu.
 Right-click the workspace's row, or press **Shift+F10** while the row has focus.
-You can also right-click an empty part of the open workspace's header.
+You can also select the workspace's name in the header of the open workspace.
 Then select **Copy link**.
 This works for archived workspaces too.
 
@@ -327,7 +327,7 @@ You can also open the workspace's menu:
 
 - On a computer, right-click the row.
 - With a keyboard, press **Shift+F10** while the row has focus.
-- On a computer, right-click an empty part of the open workspace's header.
+- Select the workspace's name in the header of the open workspace.
 
 Then select **Archive**.
 

@@ -22,6 +22,7 @@
 }
 
 .title {
+  display: block;
   overflow: hidden;
   min-width: 0;
   margin: 0;
@@ -52,9 +53,30 @@
   width: 100%;
 }
 
-/* A view draws the workspace menu of a right click in the bar. */
-.menuAnchor {
+/*
+ * The heading that holds the name as a button. It does not clip, so the
+ * focus ring of the button shows. The name in the button clips itself. The
+ * padding of the button lies before the name, so the name keeps its place.
+ */
+.titleHeading {
+  display: flex;
+  min-width: 0;
+  margin: 0 0 0 -6px;
+  font: inherit;
+}
+
+/* The name and the workspace menu below it, as a view draws them. */
+.nameAnchor {
+  display: flex;
   position: relative;
+  min-width: 0;
+}
+
+.nameMenu {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  left: -6px;
 }
 
 /* The repository gives up its room before the name. */
