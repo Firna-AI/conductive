@@ -131,14 +131,14 @@ function strongLevels(nodes: readonly MdInline[]) {
 }
 
 it('nests inline content at most 12 levels deep, and shows deeper markers and links as typed', () => {
-  const markers = 10_000
+  const markers = 20_000
   const { levels, inner } = strongLevels(
-    inline(`${'*'.repeat(markers)}x${'*'.repeat(markers)}`),
+    inline(`${'*'.repeat(markers)}leaf${'*'.repeat(markers)}`),
   )
   expect(levels).toBe(12)
   // Each level of strong text takes two markers from each run.
   const rest = '*'.repeat(markers - 24)
-  expect(inner).toEqual([{ kind: 'text', text: `${rest}x${rest}` }])
+  expect(inner).toEqual([{ kind: 'text', text: `${rest}leaf${rest}` }])
 
   // A link 13 levels deep shows as typed.
   const deep = strongLevels(

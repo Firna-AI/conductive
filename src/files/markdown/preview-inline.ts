@@ -1,14 +1,6 @@
 import type { Token } from 'markdown-it'
 import { keptBreaks, type BreakNodes } from '../../markdown/kept-breaks'
-import { linkTail } from '../../markdown/parser'
 import type { MdInline } from './markdown-document'
-
-/**
- * Marks and links nest at most this deep. A deeper mark or link shows its
- * Markdown as typed around its content, so a crafted file cannot build a
- * deep tree.
- */
-const maxDepth = 12
 
 const safeProtocols = new Set(['http:', 'https:', 'mailto:'])
 
@@ -99,30 +91,10 @@ function plainText(tokens: readonly Token[]): string {
 /** A mark or a link that is still open, with its content so far. */
 interface Open {
   nodes: MdInline[]
-  /** Whether it nests its content one level deeper. */
-  nests: boolean
   /** Whether it holds the label of a link, which holds no other link. */
   label: boolean
   /** Adds what it shows to the content around it. */
   close: (into: MdInline[]) => void
-}
-
-/** The opening token of a mark or a link as typed, around its content. */
-function typed(token: Token): Open {
-  const tail = token.type === 'link_open' ? linkTail(token) : null
-  const before = token.type !== 'link_open' ? token.markup : tail ? '[' : '<'
-  const after = token.type !== 'link_open' ? token.markup : (tail ?? '>')
-  const nodes: MdInline[] = []
-  return {
-    nodes,
-    nests: false,
-    label: false,
-    close: (into) => {
-      addText(into, before)
-      addNodes(into, nodes)
-      addText(into, after)
-    },
-  }
 }
 
 /**
@@ -138,15 +110,13 @@ function link(token: Token, inLabel: boolean): Open {
       ? (into: MdInline[]) => addNodes(into, nodes)
       : (into: MdInline[]) =>
           into.push({ kind: 'link', href, children: previewBreaks(nodes) })
-  return { nodes, nests: href !== null, label: true, close }
+  return { nodes, label: true, close }
 }
 
 /** The inline content of one block, as a read of its tokens builds it. */
 class InlineTree {
   readonly root: MdInline[] = []
   private readonly open: Open[] = []
-  /** The open marks and links that nest their content. */
-  private depth = 0
   /** The open links, whose labels hold no other link. */
   private labels = 0
 
@@ -158,7 +128,6 @@ class InlineTree {
   /** Opens the mark or the link of an opening token. */
   enter(token: Token): void {
     const node = this.opened(token)
-    if (node.nests) this.depth += 1
     if (node.label) this.labels += 1
     this.open.push(node)
   }
@@ -167,7 +136,6 @@ class InlineTree {
   leave(): void {
     const node = this.open.pop()
     if (!node) return
-    if (node.nests) this.depth -= 1
     if (node.label) this.labels -= 1
     node.close(this.nodes)
   }
@@ -179,13 +147,11 @@ class InlineTree {
   }
 
   private opened(token: Token): Open {
-    if (this.depth >= maxDepth) return typed(token)
     const mark = markOf.get(token.type)
     if (mark === undefined) return link(token, this.labels > 0)
     const nodes: MdInline[] = []
     return {
       nodes,
-      nests: true,
       label: false,
       close: (into) => into.push({ kind: mark, children: nodes }),
     }

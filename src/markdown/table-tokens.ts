@@ -33,9 +33,9 @@ function alignOf(token: Token): CellAlign {
  * Reads the table whose `table_open` token is at `at`. `lines` are the
  * source lines, and `quotes` is the number of quotes around the table.
  * `cell` gives the cell of the view for the inline tokens of one cell. The
- * parser fills a short row with empty cells up to the width of the header.
- * The read ends at the first body row that `keeps` refuses, before its
- * cells, and `stop` gives the source line of that row.
+ * parser emits only the source cells, up to the width of the header.
+ * `stop` gives the recorded source line of a missing-cell stop, or the
+ * first row that `keeps` refuses before the view creates its cells.
  */
 export function readTableTokens<Cell>(
   tokens: readonly Token[],
@@ -50,7 +50,8 @@ export function readTableTokens<Cell>(
   const rows: TableRow<Cell>[] = []
   let row: TableRow<Cell> = { line: '', cells: [] }
   let body = false
-  let stop: number | null = null
+  const stopLine = tokens[at].meta?.tableStopLine
+  let stop = typeof stopLine === 'number' ? stopLine : null
   let index = at + 1
   for (; index < tokens.length; index += 1) {
     const token = tokens[index]

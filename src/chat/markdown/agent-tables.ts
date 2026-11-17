@@ -1,5 +1,5 @@
 import type { Token } from 'markdown-it'
-import { readTableRow, type TableCells } from '../../markdown/table-rows'
+import type { TableCells } from '../../markdown/table-rows'
 import { readTableTokens, type TableRow } from '../../markdown/table-tokens'
 import { inlineText, type InlineText } from './agent-inline'
 
@@ -8,12 +8,12 @@ export type TextTable = { kind: 'table' } & TableCells<InlineText>
 
 /**
  * The cells that a body row shows: the cells that its source line has, up
- * to the width of the header. The parser fills a short row with empty
- * cells, and the chat adds none, so the last cell spans the rest, as
+ * to the width of the header. The parser and the chat add no empty
+ * cells, so the last cell spans the rest, as
  * "Short rows" of `chat-tables.md` says.
  */
 function ownCells(row: TableRow<InlineText>): InlineText[] {
-  return row.cells.slice(0, readTableRow(row.line).length)
+  return row.cells
 }
 
 /**

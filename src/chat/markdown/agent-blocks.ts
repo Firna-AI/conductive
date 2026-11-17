@@ -1,9 +1,7 @@
-import { parseMarkdownTokens } from '../../markdown/parser'
+import { maxDepth, parseMarkdownTokens } from '../../markdown/parser'
 import {
   closeOf,
   containerLines,
-  maxDepth,
-  takeDropped,
   tokenRead,
   unquoted,
   type TokenRead,
@@ -65,15 +63,9 @@ function withText(text: InlineText, more: string): InlineText {
   return [...text.slice(0, -1), { kind: 'text', text: last.text + more }]
 }
 
-/** The paragraphs of the lines that the parser dropped before `at`. */
-function droppedAt(read: TokenRead, at: number, quotes: number): TextBlock[] {
-  return paragraph(linesText(takeDropped(read, at), quotes))
-}
-
 /**
  * A list or a quote past the depth limit, as the text of a paragraph: its
- * source lines, with their marks. They also hold each line that the parser
- * dropped inside it.
+ * source lines, with their marks.
  */
 function deepText(read: TokenRead, quotes: number): TextBlock[] {
   return paragraph(linesText(containerLines(read), quotes))
@@ -186,9 +178,6 @@ function blocksUntil(
 ): TextBlock[] {
   const blocks: TextBlock[] = []
   while (read.index < read.tokens.length) {
-    if (read.dropped.size > 0) {
-      blocks.push(...droppedAt(read, read.index, quotes))
-    }
     if (read.tokens[read.index].type === close) {
       read.index += 1
       return blocks
@@ -204,8 +193,8 @@ function blocksUntil(
  * the rules of CommonMark, with the tables and the strikethrough of GitHub.
  * The chat adds its own rules, as `chat-markdown.md` says: an underline
  * counts only when a line break follows it, a short table row keeps its
- * own cells, lists and quotes nest at most 16 deep, and a line that the
- * parser drops shows as text. Each update of a live message reads the
+ * own cells, and lists and quotes nest at most 16 deep, with deeper source
+ * kept as paragraph text. Each update of a live message reads the
  * whole text again, so it shows as the same message from the history.
  *
  * Open question, item 9 of the Markdown parser plan: while the agent
@@ -213,9 +202,6 @@ function blocksUntil(
  * update reads as a finished message with the same text.
  */
 export function agentBlocks(text: string): TextBlock[] {
-  const read = tokenRead(parseMarkdownTokens(text))
-  const blocks = blocksUntil(read, null, 0, 0)
-  for (const lines of read.dropped.values())
-    blocks.push(...paragraph(linesText(lines, 0)))
-  return blocks
+  const read = tokenRead(parseMarkdownTokens(text, { chat: true }))
+  return blocksUntil(read, null, 0, 0)
 }

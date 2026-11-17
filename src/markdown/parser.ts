@@ -1,25 +1,32 @@
 import MarkdownIt, { type Env, type Token } from 'markdown-it'
+import { limitBlockDepth } from './block-depth'
+import { limitInlineDepth } from './inline-depth'
+import { sparseTable } from './table-rule'
+import { bareAddressAt } from './web-links'
 
-/** Source lines that reached the parser's block nesting limit. */
-export interface DroppedMarkdownLines {
-  /** Zero-based line range, with an exclusive end, as in a token's map. */
-  map: readonly [number, number]
-  /** Insert the source text before this index in the block token array. */
-  tokenIndex: number
+/** Per-parse rules that the adapters add to the shared reader. */
+export interface MarkdownOptions {
+  /** Keeps bare web addresses intact before the chat reads their links. */
+  chat?: boolean
+  /** The maximum empty cells that tables may add across the whole file. */
+  tableBudget?: number
 }
 
-/** Tokens and source lines for an adapter that must keep dropped text. */
+/** Tokens and source lines for the two Markdown adapters. */
 export interface ParsedMarkdown {
   tokens: Token[]
   /** Source lines split at LF, CRLF, or CR, for the token maps. */
   lines: readonly string[]
-  dropped: readonly DroppedMarkdownLines[]
+  /** The original source line where the file's literal tail starts. */
+  tailLine: number | null
 }
 
-// A list uses two block levels. Keep room for sixteen nested containers.
-const maxNesting = 64
+/** Lists and quotes deeper than this show their source as paragraph text. */
+export const maxDepth = 16
+
+// A list uses two block levels. Keep room beyond the views' limit.
+const maxNesting = maxDepth * 4
 const breakTag = /<br *(?:\/ *)?>/iy
-const droppedByEnv = new WeakMap<Env, DroppedMarkdownLines[]>()
 
 /** The shared parser for the chat and the Markdown file preview. */
 export const markdownParser = new MarkdownIt('commonmark', {
@@ -29,6 +36,23 @@ export const markdownParser = new MarkdownIt('commonmark', {
   maxNesting,
 }).enable(['table', 'strikethrough'])
 
+markdownParser.core.ruler.after('inline', 'inline_depth', limitInlineDepth)
+markdownParser.block.ruler.at('table', sparseTable, {
+  alt: ['paragraph', 'reference'],
+})
+limitBlockDepth(markdownParser, maxDepth)
+
+markdownParser.core.ruler.after('block', 'table_budget', (state) => {
+  const tail = state.env.tableTailLine
+  if (typeof tail !== 'number') return
+  const budget = state.env.tableBudget
+  state.src = state.src.split('\n').slice(0, tail).join('\n')
+  // Rebuild the prefix before reference resolution and inline parsing.
+  state.env = { tableCellsLeft: budget, chat: state.env.chat }
+  state.tokens = []
+  state.md.block.parse(state.src, state.md, state.env, state.tokens)
+})
+
 markdownParser.inline.ruler.before('text', 'break_tag', (state, silent) => {
   if (state.src[state.pos] !== '<') return false
   breakTag.lastIndex = state.pos
@@ -36,6 +60,31 @@ markdownParser.inline.ruler.before('text', 'break_tag', (state, silent) => {
   if (!match || breakTag.lastIndex > state.posMax) return false
   if (!silent) state.push('hardbreak', 'br', 0).markup = match[0]
   state.pos += match[0].length
+  return true
+})
+
+markdownParser.inline.ruler.after('text', 'bare_address', (state, silent) => {
+  if (
+    state.env.chat !== true ||
+    state.linkLevel > 0 ||
+    !state.src.startsWith('://', state.pos)
+  )
+    return false
+  const scheme = state.pending.endsWith('https')
+    ? 5
+    : state.pending.endsWith('http')
+      ? 4
+      : 0
+  if (scheme === 0) return false
+  const address = bareAddressAt(state.src, state.pos - scheme)
+  if (
+    !address ||
+    address.length <= scheme + 3 ||
+    state.pos - scheme + address.length > state.posMax
+  )
+    return false
+  if (!silent) state.pending += address.slice(scheme)
+  state.pos += address.length - scheme
   return true
 })
 
@@ -58,6 +107,17 @@ inlineRules.at('link', (state, silent) => {
   return true
 })
 
+const readImage = inlineRules.__rules__[inlineRules.__find__('image')].fn
+inlineRules.at('image', (state, silent) => {
+  const start = state.pos
+  if (!readImage(state, silent)) return false
+  const image = state.tokens.at(-1)
+  if (!silent && image?.type === 'image') {
+    image.meta = { ...image.meta, source: state.src.slice(start, state.pos) }
+  }
+  return true
+})
+
 /**
  * The source text of a link after its label, from its `]`, such as
  * `](src/a.ts "A")` or `][ref]`. A view that opens no such link shows it as
@@ -68,33 +128,15 @@ export function linkTail(token: Token): string | null {
   return typeof tail === 'string' ? tail : null
 }
 
-const tokenizeBlocks = markdownParser.block.tokenize.bind(markdownParser.block)
-markdownParser.block.tokenize = (state, startLine, endLine) => {
-  // The block parser skips the remaining lines here without a leaf token.
-  // Container maps cover those lines too, so map coverage cannot find them.
-  if (state.level >= state.md.options.maxNesting) {
-    const line = state.skipEmptyLines(startLine)
-    if (line < endLine && state.sCount[line] >= state.blkIndent) {
-      droppedByEnv.get(state.env)?.push({
-        map: [line, endLine],
-        tokenIndex: state.tokens.length,
-      })
-    }
-  }
-  tokenizeBlocks(state, startLine, endLine)
-}
-
-/**
- * Parses blocks and exposes source ranges that need a text fallback.
- * Insert `lines.slice(...range.map)` before `tokens[range.tokenIndex]`.
- */
-export function parseMarkdownTokens(source: string): ParsedMarkdown {
-  const env: Env = {}
-  const dropped: DroppedMarkdownLines[] = []
-  droppedByEnv.set(env, dropped)
+/** Parses blocks, keeping the original source lines for depth and table tails. */
+export function parseMarkdownTokens(
+  source: string,
+  options: MarkdownOptions = {},
+): ParsedMarkdown {
+  const env: Env = { ...options, tableCellsLeft: options.tableBudget }
   return {
     tokens: markdownParser.parse(source, env),
     lines: source.split(/\r\n?|\n/),
-    dropped,
+    tailLine: typeof env.tableTailLine === 'number' ? env.tableTailLine : null,
   }
 }

@@ -34,8 +34,8 @@ which shows its Markdown as typed.
   shows an address as words, it shows the readable form from
   `normalizeLinkText` of the parser.
 - `answerParts` reads each bare address in the text nodes of the tree with
-  `bareAddressAt`. So a bare address ends at the mark that closes bold
-  text around it.
+  `bareAddressAt`. Before marks pair, the parser keeps each bare address as
+  plain text, with the existing trailing-mark boundaries.
 - `src/markdown/markdown-destination.ts` supplies `readInlineTarget`. It
   reads the target of an inline link after its `(`: the spaces and line
   breaks around the address, the address, an optional link title, and the

@@ -110,6 +110,8 @@ Each is my call, with its reason. Calls 1 to 9 date from 16 November
    chat shows an address as words, it shows the readable form from
    `normalizeLinkText`. Reason: the reader sees the address as the agent
    wrote it.
+   The chat parser keeps bare addresses as text before marks pair, including
+   formatting marks inside their paths or queries.
 9. The new dependency adds about 44 KiB, after compression, to the app.
    Reason: the chat is the first screen, so the parser cannot load later.
 10. The rules of [Files in answers](../docs/protocol/file-mentions.md#files-in-answers)

@@ -1,5 +1,40 @@
 import { expect, it } from 'vitest'
+import { agentBlocks } from './agent-blocks'
 import { blocksOf, h, p, table } from './agent-text-test-kit'
+
+it('keeps ten thousand paired marks without a deep chat tree or lost text', () => {
+  const source = '**'.repeat(10_000) + 'leaf' + '**'.repeat(10_000)
+  expect(() => agentBlocks(source)).not.toThrow()
+  expect(blocksOf(source)).toEqual([
+    p(
+      '<b>'.repeat(12) +
+        '**'.repeat(9_988) +
+        'leaf' +
+        '**'.repeat(9_988) +
+        '</b>'.repeat(12),
+    ),
+  ])
+})
+
+it('keeps repository paths and query marks inside bare addresses while outer bold still pairs', () => {
+  for (const address of [
+    'https://github.com/acme/app/tree/main/__tests__/a.test.ts',
+    'https://github.com/acme/app/blob/main/pkg/__init__.py',
+    'https://example.com/a*b*c',
+    'https://example.com/?q=**two**',
+  ]) {
+    expect(blocksOf(address), address).toEqual([p(address)])
+  }
+  const address = 'https://github.com/acme/app/tree/main/__tests__/a.test.ts'
+  expect(blocksOf(`**See ${address}**`)).toEqual([p(`<b>See ${address}</b>`)])
+})
+
+it('protects bare addresses when the chat reparses a flattened deep container', () => {
+  const address = 'https://example.com/a*b*c'
+  expect(JSON.stringify(agentBlocks('> '.repeat(17) + address))).toContain(
+    address,
+  )
+})
 
 it('reads marks, entities, escapes, and code as CommonMark does, so bold holds code and a mark without its pair shows as typed', () => {
   expect({

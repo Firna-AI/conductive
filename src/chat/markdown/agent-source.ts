@@ -11,5 +11,5 @@ export function linesText(
   lines: readonly string[],
   quotes: number,
 ): InlineText {
-  return inlineText(linesInline(lines, quotes))
+  return inlineText(linesInline(lines, quotes, { chat: true }))
 }

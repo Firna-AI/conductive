@@ -90,6 +90,13 @@ at `app/chat/links`.
 - Inline code between two or more backticks can hold a backtick. Strong
   text, emphasis, and strikethrough can hold inline code, links, and
   chips.
+- Together, strong text, emphasis, strikethrough, links, and images nest
+  at most 12 levels deep, as in the file preview. A deeper one shows its
+  Markdown as typed, around its text. No text of the agent message is
+  lost.
+- Reason: sandbox code can shape the text of an agent message. Without
+  the limit, a crafted agent message with deeply nested marks could stop
+  the chat.
 - Inline code, strong text, emphasis, strikethrough, line breaks, links,
   workspace chips, and file chips also show in headings, list items,
   quotes, and table cells. A code block shows its text with no formatting.

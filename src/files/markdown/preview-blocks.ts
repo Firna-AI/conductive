@@ -1,10 +1,8 @@
-import { parseMarkdownTokens } from '../../markdown/parser'
+import { maxDepth, parseMarkdownTokens } from '../../markdown/parser'
 import {
   closeOf,
   containerLines,
   linesInline,
-  maxDepth,
-  takeDropped,
   tokenRead,
   type TokenRead,
 } from '../../markdown/token-read'
@@ -16,7 +14,7 @@ import type {
   MdListItem,
 } from './markdown-document'
 import { previewInline } from './preview-inline'
-import { previewTable, TableBudget } from './preview-tables'
+import { maxAddedCells, previewTable, TableBudget } from './preview-tables'
 import { taskItem } from './preview-tasks'
 
 /** A read of the tokens of one file, with its table budget and its tail. */
@@ -145,9 +143,6 @@ function blocksUntil(
 ): MdBlock[] {
   const blocks: MdBlock[] = []
   while (read.index < read.tokens.length && read.tail === null) {
-    if (read.dropped.size > 0) {
-      blocks.push(...linesParagraph(takeDropped(read, read.index), quotes))
-    }
     if (read.tokens[read.index].type === close) {
       read.index += 1
       return blocks
@@ -162,26 +157,23 @@ function blocksUntil(
  * and their inline content, as the parser reads them by the rules of
  * CommonMark, with the tables and the strikethrough of GitHub. The preview
  * adds its own rules, as `workspace-tools.md` and the Files README say: a
- * task box at the start of a list item, lists and quotes at most 16 deep,
- * each line that the parser drops as text, and the table budget of the
+ * task box at the start of a list item, lists and quotes at most 16 deep
+ * with deeper source kept as text, and the table budget of the
  * file, after which the rest of the file shows as typed. The Markdown
  * worker runs this parse. No HTML of the file reaches the page.
  */
 export function previewDocument(source: string): MarkdownDocument {
-  const parsed = parseMarkdownTokens(source)
+  const parsed = parseMarkdownTokens(source, { tableBudget: maxAddedCells })
   const read: PreviewRead = {
     ...tokenRead(parsed),
     budget: new TableBudget(),
     tail: null,
   }
   const blocks = blocksUntil(read, null, 0, 0)
-  if (read.tail !== null) {
-    const text = parsed.lines.slice(read.tail).join('\n').trimEnd()
+  const tail = read.tail ?? parsed.tailLine
+  if (tail !== null) {
+    const text = parsed.lines.slice(tail).join('\n').trimEnd()
     blocks.push({ kind: 'literal', text })
-  } else {
-    for (const lines of read.dropped.values()) {
-      blocks.push(...linesParagraph(lines, 0))
-    }
   }
   return { blocks }
 }

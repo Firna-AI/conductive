@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { parseMarkdownTokens } from './parser'
-import { inlineValues, textWithFallback } from './parser.test-support'
+import { blockText, inlineValues } from './parser.test-support'
 
 describe('shared Markdown parser', () => {
   test('reads CommonMark, tables, and strikethrough without automatic links or typography', () => {
@@ -107,14 +107,15 @@ describe('shared Markdown parser', () => {
       .map((item, index) => `${'  '.repeat(index)}- ${item}`)
       .join('\n')
     const parsedList = parseMarkdownTokens(list)
-    expect(parsedList.dropped).toEqual([])
+    expect(
+      parsedList.tokens.filter((token) => token.type === 'bullet_list_open'),
+    ).toHaveLength(16)
     expect(
       parsedList.tokens
         .filter((token) => token.type === 'inline')
         .map((token) => token.content),
     ).toEqual(items)
     const quote = parseMarkdownTokens(`${'> '.repeat(16)}leaf`)
-    expect(quote.dropped).toEqual([])
     expect(
       quote.tokens.filter((token) => token.type === 'blockquote_open'),
     ).toHaveLength(16)
@@ -125,14 +126,16 @@ describe('shared Markdown parser', () => {
     ).toEqual(['leaf'])
   })
 
-  test('exposes every word of forty-level lists and quotes, including dropped ranges in order', () => {
+  test('keeps every word of forty-level lists and quotes in order with bounded block parsing', () => {
     const items = Array.from({ length: 40 }, (_, index) => `item(${index})`)
     const list = items
       .map((item, index) => `${'  '.repeat(index)}- ${item}`)
       .join('\n')
     const parsedList = parseMarkdownTokens(`${list}\n\nafter`)
-    expect(parsedList.dropped).toHaveLength(1)
-    expect(textWithFallback(parsedList).match(/item\(\d+\)|after/g)).toEqual([
+    expect(
+      parsedList.tokens.filter((token) => token.type === 'bullet_list_open'),
+    ).toHaveLength(17)
+    expect(blockText(parsedList).match(/item\(\d+\)|after/g)).toEqual([
       ...items,
       'after',
     ])
@@ -140,19 +143,18 @@ describe('shared Markdown parser', () => {
       .map((item, index) => `${'> '.repeat(index + 1)}${item}`)
       .join('\n')
     expect(
-      textWithFallback(parseMarkdownTokens(`${quote}\n\nafter`)).match(
+      blockText(parseMarkdownTokens(`${quote}\n\nafter`)).match(
         /item\(\d+\)|after/g,
       ),
     ).toEqual([...items, 'after'])
-    const droppedQuote = parseMarkdownTokens(`${'> '.repeat(80)}leaf\n\nafter`)
-    expect(droppedQuote.dropped.map(({ map }) => map)).toEqual([[0, 1]])
-    expect(textWithFallback(droppedQuote).match(/leaf|after/g)).toEqual([
-      'leaf',
-      'after',
-    ])
+    const deepQuote = parseMarkdownTokens(`${'> '.repeat(80)}leaf\n\nafter`)
+    expect(
+      deepQuote.tokens.filter((token) => token.type === 'blockquote_open'),
+    ).toHaveLength(17)
+    expect(blockText(deepQuote).match(/leaf|after/g)).toEqual(['leaf', 'after'])
   })
 
-  test('keeps line maps aligned across CRLF and CR without restoring references or leaking earlier drops', () => {
+  test('keeps line maps aligned across CRLF and CR without restoring references or leaking earlier containers', () => {
     parseMarkdownTokens(`${'> '.repeat(80)}deep`)
     const parsed = parseMarkdownTokens(
       '[ref]: /doc\r\n\r\n[label][ref]\r\r```\rliteral\r```\r',
@@ -167,7 +169,9 @@ describe('shared Markdown parser', () => {
       '```',
       '',
     ])
-    expect(parsed.dropped).toEqual([])
+    expect(
+      parsed.tokens.filter((token) => token.type === 'blockquote_open'),
+    ).toEqual([])
     expect(
       parsed.tokens
         .filter((token) => token.type === 'inline')

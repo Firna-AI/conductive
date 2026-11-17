@@ -2,7 +2,7 @@
 
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
-- **Added:** 2026-11-14, from `calummoore/riga-m3j3`, review round 1, finding 2.
+- **Added:** 2026-11-14, from `calummoore/riga-m3j3`, review round 1, finding 2. Updated on 2026-11-17 on branch `calummoore/output-summary-f7sm`, after the shared Markdown parser brought in `linkify-it` 6.1.0.
 - **Location:** `src/markdown/web-links.ts`, `endMarks` and `bareAddressAt`. `src/markdown/web-links.test.ts`, the end rule test. `docs/protocol/chat-links.md`, "Bare addresses and Markdown links". `docs/mockups/design-links.md`, the end rule. `src/chat/text-links.md`, the end rule of `bareAddressAt` under "Web addresses".
 - **Reason:** Only an IPv6 address with no port and no path, or a path that ends in a balanced `[...]`, meets the bug.
 
@@ -23,10 +23,11 @@
 - **Root question:** How does a bare address that holds square brackets become a link to its whole address?
 - **Options:**
   - **A.** Find the bracketed host before the end marks are cut, and keep its `]`. Cost: a path that ends in `[...]` still loses its `]`. Effort: Small.
-  - **B.** Use a URL linkify library. Cost: a new dependency. `linkify-it` 5.0.0 reads no bracketed IPv6 host, so `http://[::1]:3000` would stop being a link. Effort: Medium.
+  - **B.** Find bare addresses with `linkify-it` 6.1.0, which the app already loads as a dependency of `markdown-it`. A probe of 17 November 2026 linked the whole address, with its `]`, in `http://[::1]`, `(https://[::1]).`, and `http://example.com/a[1]`. It also linked `http://[::1]:3000`. Cost: it reverses the rejection of a link library in `docs/protocol/chat-markdown.md`, so it needs the user's decision and a safety review. The end rules of the library then replace the end rule of `docs/protocol/chat-links.md`. Effort: Medium.
   - **C.** Give a `]` at the end the rule of a `)`: it stays only when it closes a `[` inside the address. Remove `]` from `endMarks`, and count `[` and `]` as the loop counts `(` and `)`. Change the end rule sentence in `docs/protocol/chat-links.md`, `docs/mockups/design-links.md`, and `src/chat/text-links.md` to: "A `)` or a `]` at its end stays in only when it closes a `(` or a `[` inside the address." Add `http://[::1]`, `(https://[::1]).`, and `http://example.com/a[1]` to the end rule test. Cost: a balanced `[...]` at the end of a path stays in the link. Effort: Small.
 - **Left out:** A rule that asks for a slash after the host breaks the local address rule. A repair when the link is drawn comes too late, because the reader already moved the `]` into the next text part. A reader that puts back cut characters until the URL parser accepts the address is worse than C on every point.
 - **Wider fix:** C. It keeps each balanced `]`, in the host, the path, the query, or the hash, with no special case for a host.
 - **Previous examples:** None found. On `main` before this change, the old reader also cut a trailing `]`, but a bare address was a link only when it named a workspace.
+- **Related:** `plans/follow-ups/uppercase-scheme-addresses-unlinked.md` changes the start of `bareAddressAt`, and this item changes its end. Option B of this item is option D of that item: one `linkify-it` reader would fix both.
 - **Recommendation:** C. One rule, the same as the rule for `)`, at the effort of A.
 - **Action:** fix after merge, apply C, because only an unusual input meets the bug.
