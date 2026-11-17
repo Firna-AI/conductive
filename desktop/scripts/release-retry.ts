@@ -5,7 +5,7 @@
  * for Apple gets this time limit, and one more try when the first try runs
  * out of time.
  */
-export const notaryTimeLimit = 20 * 60_000
+const notaryTimeLimit = 20 * 60_000
 
 /**
  * Runs `work` with the time limit. When the limit ends the first try, this
