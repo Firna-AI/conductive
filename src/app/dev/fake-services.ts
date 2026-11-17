@@ -35,6 +35,7 @@ import { runRoutes } from './run-routes'
 import { sectionRoutes } from './section-routes'
 import { seedState } from './seed'
 import { settingsRoutes } from './settings-routes'
+import { seedSkills, skillsRoutes } from './skills-routes'
 import { admitOpenSignup, waitlistRoutes } from './waitlist-routes'
 import { workspaceRoutes } from './workspace-routes'
 
@@ -52,7 +53,9 @@ export function createFakeServices(search: string): AppServices {
   const offset = FAKE_TIME - Date.now()
   const now = () => Date.now() + offset
   const newId = () => crypto.randomUUID()
-  const backend = createBackend(seedState(options), server.events, now, newId)
+  const state = seedState(options)
+  seedSkills(state, options.skills)
+  const backend = createBackend(state, server.events, now, newId)
   const signedOut: Route[] = options.signedOut
     ? [
         {
@@ -77,6 +80,7 @@ export function createFakeServices(search: string): AppServices {
     ...attachmentRoutes(backend, options.upload),
     ...attachmentFileRoutes(backend),
     ...settingsRoutes(backend),
+    ...skillsRoutes(backend, options.skills),
     ...buildRoutes(backend),
     ...routineRoutes(backend),
     ...runRoutes(backend),

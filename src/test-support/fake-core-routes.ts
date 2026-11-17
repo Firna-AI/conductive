@@ -110,6 +110,7 @@ export function fakeCoreRoutes(routes: FakeRouteWriter, role: OrgRole) {
   }
   routes.json('GET', orgSettingsPaths.settings(id), data.settings)
   routes.json('PATCH', orgSettingsPaths.settings(id), data.settings)
+  routes.json('GET', orgSettingsPaths.skills(id), data.skills)
   routes.json('GET', orgSettingsPaths.builds(id), data.builds)
   routes.json('POST', orgSettingsPaths.builds(id), data.build, 202)
   routes.json('POST', orgSettingsPaths.refresh(id), data.build, 202)

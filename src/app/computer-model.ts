@@ -3,12 +3,14 @@ import {
   type BuildsResponse,
   type ImageBuild,
   type OrgSettings,
+  type SkillsRepositoryLookupResponse,
   type UpdateOrgSettingsRequest,
 } from '../shared/org-settings'
 import { readSettings } from './api/read-settings'
 import { BuildLogFollower, type BuildLog } from './build-log-follower'
 import type { Delay } from './events'
 import { latestBuild, type OrgModel } from './org-model'
+import { SkillsLookup } from './skills-lookup'
 import { Store, type Loadable, type Readable } from './store'
 
 export type ScriptKind = 'installScript' | 'startupScript'
@@ -28,11 +30,17 @@ interface Following {
 
 /**
  * The Cloud computer tab: the scripts, the env var names with their Secret
- * marks, the builds, and the log of the newest build. Env var values are
- * write-only: a write carries a value, and no answer brings one back.
+ * marks, the skills repository, the builds, and the log of the newest
+ * build. Env var values are write-only: a write carries a value, and no
+ * answer brings one back.
  */
 export class ComputerModel {
   readonly settings: Readable<Loadable<OrgSettings>>
+  /**
+   * What the lookup of the saved skills repository found on GitHub. Each
+   * opening of the tab looks it up again, because nothing stores the list.
+   */
+  readonly skills: Readable<Loadable<SkillsRepositoryLookupResponse>>
   private readonly shownLog = new Store<BuildLog | null>(null)
   /**
    * The log of the newest build while it runs or after it failed, as the
@@ -41,6 +49,7 @@ export class ComputerModel {
   readonly log: Readable<BuildLog | null> = this.shownLog
   private readonly org: OrgModel
   private readonly delay: Delay
+  private readonly lookup: SkillsLookup
   /** `stop` counts one up, so an older request knows that its tab closed. */
   private generation = 0
   private following: (() => void)[] = []
@@ -50,6 +59,8 @@ export class ComputerModel {
     this.org = org
     this.delay = delay
     this.settings = org.resources.settings.store
+    this.lookup = new SkillsLookup(org.services.api, org.orgId)
+    this.skills = this.lookup.store
   }
 
   private get api() {
@@ -62,11 +73,12 @@ export class ComputerModel {
   }
 
   /**
-   * The tab shows. It reads the settings, and it follows the builds of the
-   * org and the log of the newest build until `stop`. The builds, not the
-   * settings, say which saved changes the org image lacks, such as a
-   * changed install script. They read again while a build runs and at its
-   * end, so the end of a build reads no settings.
+   * The tab shows. It reads the settings and looks up the skills
+   * repository, and it follows the builds of the org and the log of the
+   * newest build until `stop`. The builds, not the settings, say which
+   * saved changes the org image lacks, such as a changed install script.
+   * They read again while a build runs and at its end, so the end of a
+   * build reads no settings.
    */
   start(): void {
     this.unfollow()
@@ -76,6 +88,7 @@ export class ComputerModel {
     ]
     this.followLog()
     void this.load()
+    void this.loadSkills()
   }
 
   /**
@@ -86,6 +99,16 @@ export class ComputerModel {
   load(): Promise<void> {
     const run = this.generation
     return this.saved.read(() => run === this.generation)
+  }
+
+  /**
+   * Looks up the skills of the saved skills repository on GitHub, such as
+   * for Try again. A failed lookup never stops the settings. An answer
+   * after `stop` changes nothing.
+   */
+  loadSkills(): Promise<void> {
+    const run = this.generation
+    return this.lookup.read(() => run === this.generation)
   }
 
   /**
@@ -150,6 +173,21 @@ export class ComputerModel {
     }
     await this.write({ installScript: script })
     void this.org.reload('builds')
+  }
+
+  /**
+   * Saves the skills repository as the admin typed it. The Worker stores a
+   * link from GitHub as owner/name, and empty text removes the repository.
+   * The list belongs to the saved repository, so after the save the list
+   * of the old repository goes, and the lookup runs again while the tab
+   * shows.
+   */
+  async saveSkillsRepository(repository: string): Promise<void> {
+    const run = this.generation
+    await this.write({ skillsRepository: repository })
+    if (run !== this.generation) return
+    this.lookup.clear()
+    void this.lookup.read(() => run === this.generation)
   }
 
   /**

@@ -7,6 +7,7 @@ import {
 import { choice, items, record, text, type JsonObject } from '../api/parse'
 import { requireOrg, type DevBackend } from './backend'
 import { startBuild } from './build-routes'
+import { savedSkillsRepository } from './skills-routes'
 import {
   ID,
   json,
@@ -67,9 +68,9 @@ function envChanges(object: JsonObject, key: string) {
 }
 
 /**
- * The scripts and the env vars. Only the names and the marks of env vars
- * stay, so no reply holds a value. A changed install script asks for a
- * build.
+ * The scripts, the env vars, and the skills repository. Only the names and
+ * the marks of env vars stay, so no reply holds a value. A changed install
+ * script asks for a build.
  */
 function updateSettings(
   backend: DevBackend,
@@ -79,6 +80,7 @@ function updateSettings(
   const fields = record(body)
   const installScript = optional(fields, 'installScript', text)
   const startupScript = optional(fields, 'startupScript', text)
+  const skillsRepository = optional(fields, 'skillsRepository', text)
   const changes = optional(fields, 'envVars', envChanges) ?? []
   const current = org.settings
   const changedInstall =
@@ -87,6 +89,10 @@ function updateSettings(
     ...current,
     installScript: installScript ?? current.installScript,
     startupScript: startupScript ?? current.startupScript,
+    skillsRepository:
+      skillsRepository === undefined
+        ? current.skillsRepository
+        : savedSkillsRepository(skillsRepository),
     envVars: changes.reduce(applyEnvChange, current.envVars),
     updatedAt: backend.now(),
   }

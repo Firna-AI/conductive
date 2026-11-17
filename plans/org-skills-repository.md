@@ -353,6 +353,9 @@ Milestone 2.
 - A repository without a `skills/` folder that holds a `SKILL.md` at its
   top level is one skill. Added on 2026-11-16 by the agent, from the
   documentation milestone.
+- Save trims spaces and line breaks at both ends. Added on 2026-11-17 by
+  the agent, from the UI milestone, because a pasted link often carries
+  them.
 - Text that is neither `owner/name` nor a GitHub link is saved as typed.
   The lookup shows the notice of a repository that is not found, and the
   runner copies nothing and warns. The runner and the lookup check the
@@ -495,23 +498,39 @@ Depends on: 3
 
 Depends on: 4
 
-- [ ] Confirm with the installed Agent SDK (0.3.318) and Codex (0.167.0)
+- [x] Confirm with the installed Agent SDK (0.3.318) and Codex (0.167.0)
       how each agent loads skills from a folder outside the repository.
       Prefer a way that keeps each skill's own name. Record the result in
       this plan.
-- [ ] Add `runner/src/skills-repository.ts`: copy at start, check every
+  - Confirmed on 2026-11-17. Claude's `supportedCommands()` keeps names
+    through `additionalDirectories` with only `.claude/skills` links.
+    Codex's `skills/list` confirms `skills/extraRoots/set` with each
+    selected folder, including hidden folders. It also scans
+    `$CODEX_HOME/skills` and `$HOME/.agents/skills`. No plugin loads.
+  - Agent call on 2026-11-17: disable nested skill files through Codex's
+    per-process `skills.config`. Codex otherwise loads them too. Their
+    content stays available. Each turn starts a fresh provider process
+    with the latest complete copy, before conversation resume.
+  - Probe scripts and output: `.context/org-skills-repository/m5/`.
+- [x] Add `runner/src/skills-repository.ts`: copy at start, check every
       5 minutes, swap to a new commit only after a complete fetch, warn on
       failure. Run Git with no credential helper and no prompt. Delete the
       copy of a removed or replaced repository. Use the shared folder
       function of Milestone 4.
-- [ ] Confirm which skill each agent loads when the workspace's own
+- [x] Confirm which skill each agent loads when the workspace's own
       repository has a skill with the same name. Make the workspace's skill
       win, or record what the agents allow and update `org-skills.md`.
-- [ ] Give the skill folders to Claude in `runner/src/providers/claude.ts`
+  - The runner omits org skills with a repository name clash. Claude
+    otherwise exposes the org duplicate under a qualified name. Codex
+    lists both copies. Both binaries confirm that the filtered setup
+    exposes only the workspace's skill. No protocol change is needed.
+- [x] Give the skill folders to Claude in `runner/src/providers/claude.ts`
       and to Codex in `runner/src/providers/codex.ts`.
-- [ ] Tests with a local Git repository: first copy, update, failed fetch
+- [x] Tests with a local Git repository: first copy, update, failed fetch
       keeps the last copy, no setting, and a turn that does not wait.
-- [ ] Update `runner/README.md`.
+  - Test costs, repeated runs, failure proofs, binary probes, and check
+    results: `.context/org-skills-repository/m5/test-evidence.md`.
+- [x] Update `runner/README.md`.
 
 ## Milestone 6: Skills section in the app
 
@@ -519,18 +538,43 @@ Tags: ui
 
 Depends on: 1, 2, 4
 
-- [ ] Add the Skills section to `src/shell/settings/ComputerTab.tsx`, as the
+- [x] Add the Skills section to `src/shell/settings/ComputerTab.tsx`, as the
       mockup shows. Admins edit it. Use the words of
       `docs/mockups/src/components/settings/skillsCopy.ts`.
-- [ ] Add the read-only section to the member view in
+  - The shell imports `skillsCopy.ts` and the pure parts `SkillList`,
+    `Notice`, and `InlineText` from the mockups, as it imports
+    `envVarCopy.ts`. The section is `src/shell/settings/SkillsSection.tsx`.
+  - Agent call on 2026-11-17: Enter in the field saves, as in the name
+    field of the General tab. A failed save shows the toast "The skills
+    repository was not saved" with the message of the API.
+- [x] Add the read-only section to the member view in
       `src/members/ComputerSections.tsx` and `MemberComputerView.tsx`.
-- [ ] Show the skills list and its notices, as the mockups of Milestone 2
+  - The members UI imports only the words of `skillsCopy.ts`, and draws
+    the list, the row of the repository, and the inline code with its own
+    parts, as its README requires. `MemberComputerView` takes the lookup
+    as `skills` and `onRetrySkills`. `MemberComputerTab` loads the lookup
+    on its own.
+- [x] Show the skills list and its notices, as the mockups of Milestone 2
       show. An expired GitHub sign-in shows the app's existing sign-in
       error.
-- [ ] Add the search word `skills` to the Cloud computer row of the command
+  - `ComputerModel` looks up the skills at each opening of the tab and
+    after each Save that succeeds. `shownSkills` in
+    `src/app/skills-lookup.ts` chooses the list or the notice for both
+    tabs.
+  - A failed request of the lookup, such as an expired GitHub sign-in,
+    shows "The list of skills did not load" with the message of the API
+    and Try again, as the other GitHub reads of the settings do.
+  - The dev fake answers the lookup, with `?skills=<state>` for each state
+    of the mockups. The browser check is in
+    `.context/org-skills-repository/screens-m6/` and
+    `.context/org-skills-repository/m6/`.
+- [x] Add the search word `skills` to the Cloud computer row of the command
       palette.
-- [ ] DOM tests for the admin state, the empty state, a pasted link, the
+- [x] DOM tests for the admin state, the empty state, a pasted link, the
       read-only state, the skills list, and each notice.
+  - `src/shell/settings/SkillsSection.test.tsx`, `member-skills.test.tsx`,
+    `src/members/skillsSection.test.tsx`, `MemberComputerTab.dom.test.tsx`,
+    and a search case in `src/app/palette/commands-tabs.test.ts`.
 
 ## Milestone 7: Verification, commit, review, and pull request
 

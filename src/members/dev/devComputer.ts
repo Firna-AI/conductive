@@ -5,6 +5,7 @@ import {
   type BuildsResponse,
   type ImageBuild,
   type OrgSettingsResponse,
+  type SkillsRepositoryLookupResponse,
 } from '../../shared/org-settings'
 import {
   coreFixtures,
@@ -139,6 +140,7 @@ export function computerReplies(
 /** The data of the live scene, which the dev page gives the controlled view. */
 export type LiveComputer = {
   settings: OrgSettingsResponse['settings']
+  skills: SkillsRepositoryLookupResponse
   builds: BuildsResponse
   log: BuildResponse['log']
 }
@@ -147,6 +149,7 @@ export type LiveComputer = {
 export function liveComputer(): LiveComputer {
   return {
     settings: coreFixtures().settings.settings,
+    skills: coreFixtures().skills,
     builds: {
       builds: [runningBuild, ...history],
       currentImageBuildId: 'build-5',

@@ -30,6 +30,8 @@ it('saves skills links as names, preserves other text, removes an empty setting,
     'https://github.com/owner/skills/',
     'https://github.com/owner/skills/tree/main',
     'https://github.com/owner/skills.git/tree/main?tab=readme#skills',
+    '  https://github.com/owner/skills\n',
+    ' owner/skills ',
   ]) {
     const saved = await fixture.request(path, {
       method: 'PATCH',
@@ -65,7 +67,7 @@ it('saves skills links as names, preserves other text, removes an empty setting,
   })
   for (const value of [
     'not a repository',
-    ' owner/name ',
+    'owner /name',
     'owner/../other',
     '',
   ]) {

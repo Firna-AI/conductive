@@ -213,6 +213,8 @@ Skills section at `app/org-settings/cloud-computer` and
   public repository with this name. Reason: GitHub also answers "not
   found" for a private repository that the sign-in of the viewer cannot
   see.
+- Save removes spaces and line breaks at the start and the end of the
+  text. Reason: a pasted link often carries them.
 - Text that is neither `owner/name` nor a link from GitHub is saved as
   typed. It gives the notice of a repository that is not found, and the
   agents get no skills from it. Reason: a refusal at Save is a new

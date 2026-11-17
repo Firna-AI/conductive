@@ -91,7 +91,7 @@ The org settings mount the members UI of `../members/`: `MembersSettings`
 for the Members tab, Delete org in the General tab of an admin, the restore
 page at the address of a deleted org, and the read-only Repositories and Cloud computer
 tabs of a member. The Cloud computer tab of a member gets the live builds,
-log, and settings of `ComputerModel`. The Repositories tab of a member gets
+log, settings, and skills lookup of `ComputerModel`. The Repositories tab of a member gets
 the live builds of `OrgModel`, for its repository notice.
 `useMembersApi(orgId)` in
 `../shell/settings/members-api.ts` gives one members client for each org,

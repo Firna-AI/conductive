@@ -27,6 +27,16 @@ the dev wiring in `dev/`, and what its fake routes do.
   stay through rename, delete, and restore. Settings changes during the
   first good build start one added build. The fake compares settings
   revisions with builds as the Worker does.
+- `dev/skills-routes.ts` keeps the skills repository of each org. Acme
+  starts with acme/agent-skills. A save stores a link from GitHub as
+  owner/name, and other text as typed, as the Worker does. The lookup of
+  the Skills section knows only acme/agent-skills, whose 12 skills it
+  lists, so it does not find any other repository. `?skills=<state>`
+  gives Acme each state of the mockups: `none` saves no repository, and
+  `not-found` saves acme/agent-skils. `private`, `without-skills`,
+  `incomplete`, and `lookup-failed` give that answer for each saved
+  repository, and `expired` refuses the lookup as an expired GitHub
+  sign-in.
 - The upload routes also keep the exact bytes of each upload, in a private
   store of the page. A send that names uploaded files gets a reply with its
   own message ID, text, model choice, and files. An archived workspace,

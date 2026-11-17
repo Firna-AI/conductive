@@ -25,8 +25,9 @@ function normalizedSkillsRepository(
   value: string | undefined,
 ): string | undefined {
   if (value === undefined) return undefined
-  const link = /^https:\/\/github\.com\/([^/?#]+)\/([^/?#]+)/i.exec(value)
-  if (!link) return value
+  const trimmed = value.trim()
+  const link = /^https:\/\/github\.com\/([^/?#]+)\/([^/?#]+)/i.exec(trimmed)
+  if (!link) return trimmed
   const name = `${link[1]}/${link[2].replace(/\.git$/i, '')}`
   return isSkillsRepository(name) ? name : value
 }

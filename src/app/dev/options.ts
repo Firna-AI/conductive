@@ -51,6 +51,19 @@ const MODEL_LISTS = ['unlisted', 'none'] as const
 /** The states of the invite code of the user, besides the pause. */
 const INVITE_CODES = ['left', 'used-up', 'disabled'] as const
 
+/** The states of the skills repository of Acme, as the mockups name them. */
+const SKILLS = [
+  'none',
+  'private',
+  'not-found',
+  'without-skills',
+  'incomplete',
+  'lookup-failed',
+  'expired',
+] as const
+
+export type DevSkills = (typeof SKILLS)[number]
+
 type DevInviteCode = (typeof INVITE_CODES)[number]
 
 /**
@@ -111,6 +124,12 @@ type DevInviteCode = (typeof INVITE_CODES)[number]
  * - `inviteCode=used-up|disabled`: every invite of the code of the user is
  *   used, or an operator turned the code off. The operator section shows
  *   the same code.
+ * - `skills=<state>`: the skills repository of Acme. Without it, Acme saved
+ *   acme/agent-skills, whose lookup lists its skills, and the lookup finds
+ *   no other repository. `none`: no repository is saved. `not-found`: the
+ *   saved acme/agent-skils is not found. `private`, `without-skills`,
+ *   `incomplete`, and `lookup-failed`: the lookup of each saved repository
+ *   answers so. `expired`: the GitHub sign-in of the user expired.
  */
 export interface DevOptions {
   /** The options of the recorded server. */
@@ -141,6 +160,8 @@ export interface DevOptions {
   paused: boolean
   waitlistOff: boolean
   inviteCode: DevInviteCode
+  /** The state of the skills repository of Acme, or `null` for its list. */
+  skills: DevSkills | null
 }
 
 /** The value of `key` when it is one of `values`. */
@@ -192,6 +213,7 @@ export function readDevOptions(search: string): DevOptions {
     paused: params.get('paused') === '1',
     waitlistOff: params.get('waitlist') === 'off',
     inviteCode: pick(params, 'inviteCode', INVITE_CODES) ?? 'left',
+    skills: pick(params, 'skills', SKILLS) ?? null,
   }
 }
 

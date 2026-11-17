@@ -134,7 +134,11 @@ describe('the environment variables of the cloud computer', () => {
     await settle()
     click(byRole('button', `Delete ${secondName}`, view))
     await settle()
-    expect(fields(view)).toEqual(['Install software', 'Startup script'])
+    expect(fields(view)).toEqual([
+      'Install software',
+      'Startup script',
+      'Repository',
+    ])
     click(byRole('button', 'Add variable', view))
     expect({
       newMark,
@@ -233,6 +237,7 @@ describe('the environment variables of the cloud computer', () => {
         `New value of ${firstName}`,
         'Name',
         'Value',
+        'Repository',
       ],
       openSwitches: names.length + 1,
       fields: [],

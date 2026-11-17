@@ -34,9 +34,10 @@ async function loadComputer(api: MembersApi, orgId: string): Promise<Computer> {
 /**
  * The Cloud computer tab of a member who is not an admin, with its data
  * loaded once from the API: a convenience around `MemberComputerView`. It
- * does not follow a running build. A caller with live builds and log events
- * renders `MemberComputerView` itself. Mount it in the page column of the
- * org settings.
+ * does not follow a running build. The lookup of the skills loads on its
+ * own, so a lookup that fails never keeps the tab from showing. A caller
+ * with live builds and log events renders `MemberComputerView` itself.
+ * Mount it in the page column of the org settings.
  */
 export function MemberComputerTab(props: {
   api: MembersApi
@@ -48,15 +49,19 @@ export function MemberComputerTab(props: {
 }) {
   const { api, org } = props
   const load = useCallback(() => loadComputer(api, org.id), [api, org.id])
+  const lookup = useCallback(() => api.skills(org.id), [api, org.id])
   const { state, retry } = useResource(load)
+  const skills = useResource(lookup)
   if (state.status === 'ready') {
     return (
       <MemberComputerView
         builds={state.value.builds}
         log={state.value.log}
         now={props.now}
+        onRetrySkills={skills.retry}
         org={org}
         settings={state.value.settings}
+        skills={skills.state}
         timeZone={props.timeZone}
         viewport={props.viewport}
       />
