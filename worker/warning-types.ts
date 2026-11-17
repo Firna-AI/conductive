@@ -9,6 +9,8 @@ import type { GatewayRefusal } from './model-gateway/errors'
 export const SIMPLE_WARNINGS = {
   workspace_alarm_failed:
     'Workspace alarm work failed. Its durable deadline will retry.',
+  terminal_restart_refresh_failed:
+    'The terminal credentials and support could not be refreshed after Restart.',
   automation_schedule_failed:
     'An automation schedule could not run. The next scan will try again.',
   automation_queued_start_failed:

@@ -71,6 +71,10 @@ says. A secrets decision number names a decision of the change that adds
     delete the sections of the org, and ask to run a command on the Mac of
     the sender of the turn. They also list the secrets of the org, and run
     a command with secrets, as [Secret requests](secret-requests.md) says.
+  - The agent nests a new workspace under this workspace when the work
+    belongs to the task of this workspace. It makes a top-level workspace
+    for other work. [When to nest](sub-workspaces.md#when-to-nest) gives
+    the cases.
   - To nest a new workspace under this workspace, the agent passes the ID
     of this workspace as the parent of the create call.
   - At the deepest depth, the agent creates a sibling in place of a
@@ -109,7 +113,7 @@ says. A secrets decision number names a decision of the change that adds
 - When an older or manual runner start lacks the link or the depth of the
   workspace, the runner warns and continues. Its instructions then leave
   out the workspace ID, link, depth, parent, and deepest depth, and the
-  guidance on sub-workspaces. They never call such a workspace top-level.
+  guidance on sub-workspaces, also the cases of when to nest. They never call such a workspace top-level.
 - The instructions never tell the agent to send a member to a tool that
   the app hides, such as Desktop. [Desktop](workspace-tools.md#desktop)
   says why the app hides it.

@@ -51,6 +51,7 @@ export const shortcutCommandIds = [
   'go-to-checks',
   'go-to-terminal',
   'go-to-preview',
+  'new-terminal',
   'new-session',
   'session-history',
   'focus-message',

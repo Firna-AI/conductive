@@ -43,7 +43,7 @@ It also owns workspace capability reads and patches, with pre-approved
 secret IDs, Mac access, and session approval metadata and removals.
 `CreateWorkspaceRequest.capabilities` in `workspaces.ts` carries the
 capabilities of a new workspace. An absent choice gives no pre-approval
-and Mac access on.
+and Mac access off.
 
 `api.ts` keeps the existing sign-in and org paths and common records.
 `API_PATHS.orgOrder` names `PUT /api/org-order`, outside the paths of one org.

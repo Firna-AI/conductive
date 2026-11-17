@@ -6,7 +6,7 @@ with an "Open" link to a new tab. On desktop, `PreviewPanel` is the Preview
 tool of the tools panel: the list of ports, with no bar and no frame. The
 page of each port then shows in its Preview tab of the centre row, which
 the workspace screen draws, as
-[the tools part](../shell/workspace/screen-parts.md#the-tools-part) says.
+[Preview tabs](../shell/workspace/tools-part.md#preview-tabs) says.
 
 ## The desktop tool
 

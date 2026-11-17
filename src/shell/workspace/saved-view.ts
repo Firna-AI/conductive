@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import type { RunAutomation } from '../../chat/api/read-responses'
+import type { RunAutomation } from '../../chat/api/read-view'
 import type { WorkspaceView } from '../../shared/workspace-view'
 import type { SavedView } from './features'
 

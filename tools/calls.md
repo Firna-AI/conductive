@@ -134,6 +134,7 @@ An omitted model or effort uses the owner's default.
 Create uses fast mode only with `--fast true`, for a marked model.
 An omitted section uses the org's default section.
 `--parent ID` makes a sub-workspace. Agents usually pass their own workspace ID from their instructions.
+Nest work that belongs to the calling workspace's task: a part of a large task that can run in parallel, follow-up work that the task starts, work in another repository for the same task, or a change that needs its own pull request. Each separate pull request needs its own workspace. Omit `--parent` for unrelated work. When a member names the place, follow the member. See [When to nest](../docs/protocol/sub-workspaces.md#when-to-nest).
 The sub-workspace joins its parent's section. A supplied `--section` has no effect with `--parent`.
 Nesting stops at depth 3. A create under a workspace at depth 3 fails with `nesting_limit`.
 The error gives the `parentId` for a sibling. Pass that ID with `--parent`.

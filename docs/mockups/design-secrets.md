@@ -84,7 +84,7 @@ one.
   sessions, each with its session, who allowed it, and when, and each value
   for this workspace, with who gave it. Each has Remove. `GrantList` draws
   them, and a group without grants hides.
-- The Mac access part is a switch at the end of its title, on by default.
+- The Mac access part is a switch at the end of its title, off by default.
 - `capabilitiesCopy.ts` holds the words of the control.
 
 ## Requests and results in the chat

@@ -34,7 +34,7 @@ A turn that a late answer to a secret request starts keeps the sender of the tur
 | --- | --- |
 | Agent model use | The session starter's agent login, including a chosen endpoint |
 | Git and GitHub CLI in a turn | The turn sender's GitHub account |
-| GitHub commands in the shared Terminal | The workspace owner's GitHub account |
+| GitHub commands in any workspace terminal | The workspace owner's GitHub account |
 | GitHub CLI outside a turn | The workspace owner's GitHub account |
 | Merge from the pull request bar | The GitHub account of the member who selects Merge |
 | Ready for review from the pull request bar | The GitHub account of the member who selects Ready for review |
@@ -57,7 +57,7 @@ That choice also applies to the starter's own messages, which use the starter's 
 The agent can identify the member who sent each message.
 Another member's message during a turn does not change its GitHub account, commit author, or receiving Mac.
 
-Every member using a workspace's Terminal uses the same owner identity for GitHub commands.
+Every member using a workspace terminal uses the same owner identity for GitHub commands.
 GitHub access can include repositories outside the Conductive org.
 It reaches repositories that both the GitHub account and the GitHub App can reach.
 
@@ -256,9 +256,9 @@ Your browser can still keep the preview files that it loaded, as the preview app
 
 Mac commands run locally with the Mac user's permissions.
 Only the connected Mac that receives a request can approve it.
-Any member can turn off **Mac access** in a workspace's **Capabilities**.
-The agents of that workspace then cannot ask for Mac commands.
-Any member can turn it on again.
+**Mac access** starts off in each new workspace, also in one that an agent or an automation creates.
+While it is off, the agents of that workspace cannot ask for Mac commands.
+Any member can turn it on or off in a workspace's **Capabilities**.
 **Always allow** covers the exact command text in any requested folder on that Mac.
 Workspace permission covers every command from one workspace for 15 minutes, or until you stop it.
 Permission until you stop also ends when you quit the Mac app or sign out.

@@ -1,6 +1,8 @@
 import {
+  showsGoToRows,
   workspaceActionIds,
   type OfferedAction,
+  type PaletteOffer,
   type WorkspaceActionId,
 } from '../../app/palette/page-actions'
 import { useStore } from '../../app/store'
@@ -16,12 +18,55 @@ import { useToolSelect } from './tools/tool-navigation'
 import { phoneView } from './WorkspaceColumns'
 import { nameLabel } from '../../shared/name-label'
 
+/** The page shows the tabs of the right column: on desktop, while it shows. */
+function useRightColumnTabs(context: WorkspaceContext): boolean {
+  const rightShown = useStore(usePanelLayout().rightShown)
+  return context.viewport !== 'phone' && rightShown
+}
+
+/** Where the actions of the open workspace go: under its name. */
+function workspaceScope(context: WorkspaceContext): PaletteOffer['scope'] {
+  const { workspace } = context
+  return {
+    kind: 'workspace',
+    workspaceId: workspace.id,
+    name: nameLabel(workspace.name),
+  }
+}
+
+/**
+ * Offers New terminal of the open workspace to the command palette while
+ * the Terminal tool offers its +: where the page offers the Go to rows,
+ * while `open` runs the +. `open` is null while the + takes no press:
+ * while the sandbox does not run, at the limit of terminals, while an open
+ * runs, and while the sandbox software opens only one shell. The palette
+ * puts the row after the Go to rows. It draws nothing.
+ */
+export function useNewTerminalOffer(
+  context: WorkspaceContext,
+  open: (() => void) | null,
+): void {
+  const rightColumn = useRightColumnTabs(context)
+  const offered =
+    open !== null &&
+    showsGoToRows({ rightColumn, workspace: context.workspace })
+  usePaletteOffer(
+    offered
+      ? {
+          scope: workspaceScope(context),
+          actions: [{ id: 'new-terminal', run: open }],
+        }
+      : null,
+  )
+}
+
 /**
  * Offers the actions of the open workspace to the command palette while
  * the screen shows it, as `workspaceActionIds` chooses them. Each action
  * does what its control on the screen does: + for New session, the clock
  * for Session history, a tab of the right column for a Go to row, the
- * Archive button, and Restore on the archived bar. It draws nothing.
+ * Archive button, and Restore on the archived bar. The Terminal tool
+ * offers New terminal through `useNewTerminalOffer`. It draws nothing.
  */
 export function WorkspacePaletteActions(props: {
   context: WorkspaceContext
@@ -31,14 +76,14 @@ export function WorkspacePaletteActions(props: {
   const access = useOrgAccess(context.org)
   const files = useFilesNavigation(context)
   const tool = useToolSelect(context)
-  const rightShown = useStore(usePanelLayout().rightShown)
+  const rightColumn = useRightColumnTabs(context)
   const phone = context.viewport === 'phone'
   const archived = context.sandbox === 'archived'
   const ids = workspaceActionIds({
     access,
     workspace: context.workspace,
     viewer: context.viewer,
-    rightColumn: !phone && rightShown,
+    rightColumn,
     chat: !phone || archived || phoneView(context.view) === 'chat',
     desktopTool: toolOffered('desktop'),
     offersRestore: context.restore !== null,
@@ -76,13 +121,6 @@ export function WorkspacePaletteActions(props: {
         return { id, run: () => context.restore?.() }
     }
   }
-  usePaletteOffer({
-    scope: {
-      kind: 'workspace',
-      workspaceId: context.workspace.id,
-      name: nameLabel(context.workspace.name),
-    },
-    actions: ids.map(action),
-  })
+  usePaletteOffer({ scope: workspaceScope(context), actions: ids.map(action) })
   return null
 }

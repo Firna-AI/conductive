@@ -60,6 +60,7 @@ pub(super) fn build(
             ),
             None => "This is a top-level workspace at depth 0.".into(),
         });
+        lines.push("Nest a new workspace under this one when its work belongs to the task of this workspace: a part of a large task that can run in parallel, follow-up work that the task starts, work in another repository for the same task, or a change that needs its own pull request. A workspace has one branch at a time, so each separate pull request needs its own workspace. Create a top-level workspace for unrelated work. When a member names the place of a new workspace, follow the member.".into());
         if context.depth < context.max_depth {
             lines.push(format!(
                 "Nesting stops at depth {}. To nest a new workspace under this one, pass {} as parentId to create_workspace.",
