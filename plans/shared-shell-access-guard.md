@@ -85,12 +85,12 @@ Contract owners:
 
 Depends on: none
 
-- [ ] Add `worker/app-api/shell-guard.ts` with the guard SQL, the builder,
+- [x] Add `worker/app-api/shell-guard.ts` with the guard SQL, the builder,
       `GuardedStatement`, `guardedBatch`, `guardedRun`, and `shellRead`.
-- [ ] Add its tests: a race test that suspends the org before the batch,
+- [x] Add its tests: a race test that suspends the org before the batch,
       the numbered bindings, and the throws for a bare `?`, a missing
       token, and a write in `shellRead`.
-- [ ] Prove that the race test fails when the builder leaves out the
+- [x] Prove that the race test fails when the builder leaves out the
       guard. Record the proof under `.context/shared-shell-access-guard/`.
 
 ## Milestone 2: Move the writers
