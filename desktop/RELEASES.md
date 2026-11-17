@@ -84,6 +84,7 @@ Installed copies update themselves from these releases.
 `.github/workflows/release.yml` holds the whole release.
 The reusable workflow `desktop-mac-checks.yml` holds the Mac checks, and `desktop-sign.yml` holds the signing steps.
 The Desktop workflow and the release workflow run the same Mac checks.
+The `architectures` input of `desktop-mac-checks.yml` selects the Apple silicon checks, the Intel checks, or both.
 `desktop/scripts/publish.ts` checks the files and publishes the draft.
 It takes the file names from `latest-mac.yml` and from the signed files, so it holds no copy of the package naming rule.
 `desktop/scripts/verify-release-tag.ts` checks the release tag.
@@ -104,10 +105,11 @@ A release happens in these steps:
 2. Merge the release pull request.
    release-please then creates the tag `vX.Y.Z` on the merge commit, and a draft GitHub release.
    This merge commit is the release commit.
-3. The release workflow runs the Mac checks.
+3. The release workflow runs the Apple silicon Mac checks.
    Its `verify-tag` job then checks that `refs/tags/vX.Y.Z` points to the release commit.
    Its signing job then builds both architectures with the updater on, signs and notarizes them, and runs the packaged tests.
-4. The publish job uploads the files to the draft.
+   The Intel Mac checks run at the same time as these jobs, because they take the longest.
+4. When the Intel Mac checks and the signing job pass, the publish job uploads the files to the draft.
    It publishes the draft only after GitHub lists every file with its full size.
 
 The publish job uploads the two ZIP files, their block maps, the two DMG files, and `latest-mac.yml`.

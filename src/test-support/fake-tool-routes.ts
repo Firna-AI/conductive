@@ -61,6 +61,9 @@ export function fakeGitHub(
     githubPaths.mergeResult(FAKE_IDS.org, workspaceId, `merge-${workspaceId}`),
     { state: 'merged' },
   )
+  routes.json('POST', githubPaths.ready(FAKE_IDS.org, workspaceId), {
+    state: 'ready',
+  })
 }
 
 export function fakeToolRoutes(

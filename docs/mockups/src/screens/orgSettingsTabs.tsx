@@ -6,6 +6,7 @@ import { OrgAgentsTab } from '../components/settings/OrgAgents'
 import {
   DeleteOrgSection,
   LeaveOrgSection,
+  OrgColorSection,
   OrgDetailsSection,
   type ReadOnlyCause,
 } from '../components/settings/OrgSections'
@@ -79,10 +80,12 @@ export function TabBody(props: { state: OrgSettingsState }) {
       return (
         <>
           <OrgDetailsSection
+            color={state.color}
             initials={org.initials}
             name={org.name}
             readOnly={readOnly}
           />
+          {readOnly ? null : <OrgColorSection color={state.color} />}
           {readOnly ? null : <DeleteOrgSection name={org.name} />}
           {readOnly === 'suspended' && mayLeave(viewer, settings.members) ? (
             <LeaveOrgSection name={org.name} />

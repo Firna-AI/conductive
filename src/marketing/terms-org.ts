@@ -56,6 +56,8 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         Pushes and pull requests show as that member. A merge from the app
         uses the GitHub token of the member who clicks. GitHub shows that
         member as the merger and checks their rights and the branch rules.
+        Ready for review of a draft pull request also uses the GitHub token
+        of the member who clicks, and GitHub checks their rights.
         Outside an agent turn, the GitHub CLI uses the workspace owner's
         account.
         Each terminal connection uses that same account.`,

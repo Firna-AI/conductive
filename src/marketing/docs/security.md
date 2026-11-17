@@ -38,6 +38,7 @@ A turn that a late answer to a secret request starts keeps the sender of the tur
 | GitHub commands in the shared Terminal | The workspace owner's GitHub account |
 | GitHub CLI outside a turn | The workspace owner's GitHub account |
 | Merge from the pull request bar | The GitHub account of the member who selects Merge |
+| Ready for review from the pull request bar | The GitHub account of the member who selects Ready for review |
 | Continue's repository fetch | The GitHub account of the member who selects Continue |
 | Commit in an agent turn | The turn sender, as author and committer |
 | Commit outside a turn, including Terminal and scripts | The workspace owner by default, as author and committer |
@@ -71,6 +72,7 @@ GitHub access can include repositories outside the Conductive org.
 It reaches repositories that both the GitHub account and the GitHub App can reach.
 
 GitHub checks the clicking member's access and branch rules for a merge.
+GitHub also checks the clicking member's access for Ready for review.
 Every org member can Continue after a merge, but their GitHub account needs repository read access for its fetch.
 
 ## Understand what agents can reach

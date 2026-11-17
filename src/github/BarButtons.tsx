@@ -4,6 +4,7 @@ import {
   Clock,
   GitBranchPlus,
   GitMerge,
+  GitPullRequestArrow,
 } from 'lucide-react'
 import styles from '../../docs/mockups/src/components/workspace/BarActions.module.css'
 import {
@@ -21,7 +22,8 @@ import type { BarControls, BarMessage } from './barView'
 
 /**
  * One button of the bar. An agent action sends its fixed prompt, Merge
- * merges as the member, Continue moves the workspace to a new branch, and
+ * merges as the member, Ready for review marks a draft ready as the member,
+ * Continue moves the workspace to a new branch, and
  * Archive archives the workspace at once. The main action takes the tint of
  * a tinted bar. On a bar without a tint, it takes the outline tone, as
  * Archive does, so the bar shows no primary fill. A button that takes a
@@ -61,6 +63,19 @@ function BarButton(props: {
           touch={touch}
         >
           {action.busy ? barLabels.merging : mergeLabels[action.method]}
+        </ActionButton>
+      )
+    case 'ready':
+      return (
+        <ActionButton
+          busy={action.busy}
+          commandKey={commandKey}
+          icon={GitPullRequestArrow}
+          onPress={press}
+          tint={tint}
+          touch={touch}
+        >
+          {action.busy ? barLabels.markingReady : barLabels.readyForReview}
         </ActionButton>
       )
     case 'continue':

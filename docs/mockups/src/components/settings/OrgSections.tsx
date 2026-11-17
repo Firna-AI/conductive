@@ -2,11 +2,13 @@ import { Input } from '@firna/ui/input'
 import { LogOut, Trash2 } from 'lucide-react'
 import { noop } from '../../noop'
 import { paths } from '../../paths'
+import type { OrgColor } from '../../design/orgColors'
 import { ActionButton } from '../common/actions'
 import { LinkTabs } from '../common/LinkTabs'
 import { ScreenLink } from '../common/ScreenLink'
 import { useControlSizes } from '../common/touch'
 import { DetailList } from './DetailList'
+import { OrgColorField, OrgColorValue } from './OrgColorField'
 import { Section } from './Section'
 import styles from './OrgSections.module.css'
 
@@ -92,14 +94,15 @@ export function OrgNameFields(props: { name: string; initials: string }) {
 }
 
 /**
- * The name of the org and the initials that the rail shows. `readOnly`
- * shows them without fields and Save: for a member who is not an admin,
- * because only admins manage the settings of the org, and for everyone in
- * a suspended org.
+ * The name, the initials, and the colour of the org. `readOnly` shows them
+ * without fields and Save: for a member who is not an admin, because only
+ * admins manage the settings of the org, and for everyone in a suspended
+ * org. An admin changes the colour in its own section below.
  */
 export function OrgDetailsSection(props: {
   name: string
   initials: string
+  color: OrgColor
   readOnly?: ReadOnlyCause
 }) {
   if (props.readOnly) {
@@ -116,6 +119,7 @@ export function OrgDetailsSection(props: {
           rows={[
             { term: 'Name', value: props.name },
             { term: 'Initials', value: props.initials },
+            { term: 'Colour', value: <OrgColorValue value={props.color} /> },
           ]}
         />
       </Section>
@@ -124,6 +128,21 @@ export function OrgDetailsSection(props: {
   return (
     <Section actions={<ActionButton disabled>Save</ActionButton>} title="Org">
       <OrgNameFields initials={props.initials} name={props.name} />
+    </Section>
+  )
+}
+
+/**
+ * The colour of the org, which the rail shows on its tile while the org is
+ * open. A choice saves at once, so the section has no Save.
+ */
+export function OrgColorSection(props: { color: OrgColor }) {
+  return (
+    <Section
+      description="Shown in the rail while this org is open."
+      title="Colour"
+    >
+      <OrgColorField onChange={noop} value={props.color} />
     </Section>
   )
 }

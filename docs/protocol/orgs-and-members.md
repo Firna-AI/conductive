@@ -56,6 +56,22 @@ names a decision of the change that adds the org logins, as
   it gives no link when no account has the app, and it cannot install the
   app on another account.
 - The org rail and General settings show the saved initials.
+- Each org has a colour, which an admin picks on the General tab of its
+  settings (org colour decision 1 A of 17 November 2026). The choice is one
+  of eight presets: Blue, Teal, Green, Yellow, Orange, Red, Pink, and
+  Purple. A choice saves at once.
+- Only the tile of the open org shows the colour, in its initials and its
+  outline (org colour decision 2 A). The tiles of the other orgs stay
+  grey, so the colour also marks the open org.
+- An org without a chosen colour shows Blue (org colour decision 3 A). A
+  new org starts with Blue.
+- Each preset keeps its initials at a contrast of 4.5:1 or more on the
+  tile, in the light and the dark scheme.
+- Reason: a person in several orgs could miss which org was open, because
+  every open org showed the same blue. A colour that each person picks was
+  rejected, because teammates would then see different colours for one
+  org. A colour for the whole app was rejected, because red, amber, and
+  green already mean danger, warning, and success.
 - Use of the product is free until billing starts, as
   [Before billing starts](pricing.md#before-billing-starts) says. Until
   then, the app has no billing, and no limits of its own on workspaces,
@@ -175,8 +191,8 @@ names a decision of the change that adds the org logins, as
 - Only an admin changes the repositories, the install script, the startup
   script, and the env vars (decision 57). Other members see them
   read-only.
-- Only an admin changes the org's name and initials. Other members see
-  them read-only.
+- Only an admin changes the org's name, initials, and colour. Other
+  members see them read-only.
 - Only an admin connects, replaces, or removes an org login, and changes
   its switch "Use for every member" (org login decision 1 B). Other
   members see the Agents tab read-only, as

@@ -54,6 +54,7 @@ export type CommandId =
   | 'resolve-conflicts'
   | 'address-review'
   | 'commit-and-push'
+  | 'mark-ready-for-review'
   | 'merge-pull-request'
   | 'continue-after-merge'
   | 'open-pull-request'
@@ -118,6 +119,7 @@ const commandWords: Partial<Record<CommandId, readonly string[]>> = {
   'resolve-conflicts': ['merge', 'rebase', 'pull request'],
   'address-review': ['comments', 'feedback', 'pull request'],
   'commit-and-push': ['git', 'save', 'publish'],
+  'mark-ready-for-review': ['draft', 'pull request', 'github'],
   'merge-pull-request': ['pull request', 'github', 'squash', 'rebase'],
   'continue-after-merge': ['new branch', 'merged', 'workspace'],
   'open-pull-request': ['pull request', 'github', 'browser'],
@@ -246,6 +248,7 @@ export const shortcutSpecs: readonly GroupSpec[] = [
       agentCommand('resolve-conflicts'),
       agentCommand('address-review'),
       agentCommand('commit-and-push', '⇧⌘Y'),
+      command('mark-ready-for-review', 'Mark PR ready for review'),
       command('merge-pull-request', 'Merge PR', '⇧⌘M'),
       command('continue-after-merge', 'Continue after merge'),
       command('open-pull-request', 'Open PR on GitHub', '⇧⌘G'),

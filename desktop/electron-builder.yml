@@ -18,11 +18,9 @@ mac:
   identity: '-'
   hardenedRuntime: false
   notarize: false
-  target:
-    - target: dmg
-      arch: [arm64, x64]
-    - target: zip
-      arch: [arm64, x64]
+  # The package commands choose the architectures with --arm64 and --x64.
+  # An arch list here would override those flags.
+  target: [dmg, zip]
 dmg:
   writeUpdateInfo: false
 publish:
