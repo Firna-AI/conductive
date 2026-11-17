@@ -190,12 +190,14 @@ Depends on: Milestones 1, 3, and 4
 
 The `ui implementor` makes the app match the approved mockups. It changes no backend code.
 
-- [ ] Use the allowed-name hint and field error in Add secret. Retain typed data after a refusal.
-- [ ] Keep existing invalid names readable and replaceable without validating their old names again.
-- [ ] Apply the approved Save as secret availability in the request card and mobile value sheet. Keep the other lifetimes available.
-- [ ] Extend existing UI tests only for the new field error and request lifetime behavior. Prove each new assertion fails before the fix.
-- [ ] Run each new asynchronous test 10 times and record its cost.
-- [ ] Start the app and inspect Add secret, Replace, and the value request on mobile and desktop. Use synthetic data only.
+- [x] Use the allowed-name hint and field error in Add secret. Retain typed data after a refusal.
+- [x] Keep existing invalid names readable and replaceable without validating their old names again.
+- [x] Apply the approved Save as secret availability in the request card and mobile value sheet. Keep the other lifetimes available.
+- [x] Extend existing UI tests only for the new field error and request lifetime behavior. Prove each new assertion fails before the fix.
+- [x] Run each new asynchronous test 10 times and record its cost.
+- [x] Start the app and inspect Add secret, Replace, and the value request on mobile and desktop. Use synthetic data only.
+
+Evidence: `.context/secret-variable-names/ui-report.md` and its synthetic screenshots.
 
 ## Milestone 6: Verification, review, and pull request
 
@@ -226,6 +228,10 @@ Documentation design calls from 17 November 2026: update both legal effective da
 Backend design calls from 17 November 2026: use one browser-safe predicate and refusal message for creation. Keep raw Worker contracts separate from printable tool results. Prefix CLI metadata with `environmentVariables: `. Append it after the unchanged child stderr bytes, with JSON escaping and a final newline. These calls preserve the approved wire and stream behavior. No new user decision is needed.
 
 Backend evidence: `.context/secret-variable-names/non-ui-report.md`, `backend-preservation-searches.txt`, and `backend-deletion-audit-before.txt`.
+
+Internal documentation design calls from 17 November 2026: keep the variable contract on one linked page. Move only unchanged coherent sections to the Capabilities and late-answer pages, with old anchors retained. Require metadata only for completed runs. Replace the Add hint only for a name-rule error. These calls keep the approved contract concise and preserve existing links and refusal behavior.
+
+Product UI design calls from 17 November 2026: let the Worker refusal drive the Add field error. Read name-rule copy directly from the mockup module, while keeping the existing taken-name message. Reuse the shared value fields for the card and sheet, so one rendered regression covers their common choices. Add two development scenarios for the approved missing-name states. Keep the older-name store seed temporary. These calls reuse existing boundaries and preserve the approved fixture scope.
 
 ## Approval and review record
 

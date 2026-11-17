@@ -188,8 +188,12 @@ option overrides this default, including queued chats that show no spinner.
   of a new turn. A value for this workspace joins the list of the
   workspace, and Save adds a secret of the org. `?secrets=<state>` puts a
   state into the session of `checkout-autocomplete`, from
-  `dev/secret-request-seed.ts`. `waiting`, `value`, and `mixed` wait for an
-  answer above the composer, so use them with `conversation=running`.
+  `dev/secret-request-seed.ts`. `waiting`, `value`, `mixed`,
+  `invalid-name`, and `mixed-invalid-name` wait for an answer above the
+  composer, so use them with `conversation=running`. `invalid-name` asks
+  for a value of Google Places key, a name that a new secret cannot take,
+  so Save as secret is off. `mixed-invalid-name` adds that name to a mixed
+  request.
   `late`, `late-value`, `results`, and `ended` sit in a short turn after
   the recorded one: a late request, a late request for a value, the runs
   with a denied request and a late Allow with its line, and a request that

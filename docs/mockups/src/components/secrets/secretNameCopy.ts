@@ -3,8 +3,8 @@ import { secretsWords } from './secretsCopy'
 /**
  * The words of the rule of new secret names. Add secret and Save as secret
  * take a name of letters, digits, and underscores only. A name that an org
- * already has keeps working, and nothing asks to change it. The mockups
- * read these words.
+ * already has keeps working, and nothing asks to change it. The app and the
+ * mockups take them from here.
  */
 
 /** The characters that a new name can use. */
