@@ -24,6 +24,18 @@ export async function terminalStartFixture() {
   await writeFile(attach, '#!/bin/sh\nexit 0\n')
   await chmod(attach, 0o700)
   const programs = {
+    // The account `user` exists only in the cloud computer, so the fake
+    // drops the owner flags and runs the real install.
+    install: `#!/bin/bash
+args=()
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    -o|-g) shift 2 ;;
+    *) args+=("$1"); shift ;;
+  esac
+done
+exec /usr/bin/install "\${args[@]}"
+`,
     mountpoint: '#!/bin/sh\nexit 0\n',
     mount: '#!/bin/sh\nexit 0\n',
     sleep: `#!/bin/sh
