@@ -8,7 +8,9 @@ a new workspace from its first message. The terms are those of the
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A title image decision number, such as title image decision 1,
 names the dated record of one decision of the change that leaves the
-names of attached images out of titles.
+names of attached images out of titles. A title retry decision number,
+such as title retry decision 1, names the dated record of one decision of
+the change that tries the title request again.
 
 - On this page, a name is the name of a workspace or the title of a
   session.
@@ -73,7 +75,17 @@ names of attached images out of titles.
 - The reply to the message does not wait for the title. The workspace
   then takes the title as its name, by the rules at the start of this
   page.
-- When the request fails, the name of the workspace does not change. The
+- The request tries the model up to three times (title retry decision 1
+  B). Each try waits at most 45 seconds for the answer (title retry
+  decision 1 C). A try fails when the model gives an error, no answer in
+  time, or no title. The next try then starts at once.
+- Reason: Workers AI answers some requests in under a second and others
+  in more than 30 seconds. With one try of 15 seconds, one slow answer left
+  the workspace "Untitled" until the next message. No change, which waits
+  until Workers AI is fast again, was rejected for that reason. A second
+  model was rejected, because it needs a second model choice and does not
+  help when Workers AI itself is slow.
+- When all tries fail, the name of the workspace does not change. The
   app then asks again when it accepts the next message with text in the
   workspace. It asks only while the workspace has no name.
 - A later request also uses the text of the first message. Only when the
