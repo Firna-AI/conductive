@@ -19,15 +19,14 @@ import {
   serveAccess,
   serveContinue,
   serveMerge,
-  serveReady,
   serveWork,
   workReport,
   type FakeAccess,
   type FakeContinueEnd,
   type FakeMergeEnd,
-  type FakeReadyEnd,
   type FakeWork,
 } from './fake-bar'
+import { serveReady, type FakeReadyEnd } from './fake-ready'
 import { FAKE_IDS, FAKE_ORIGIN } from './fixtures/core'
 import { toolFixtures } from './fixtures/tools'
 import { nextEnvelope } from './recorded-repairs'
