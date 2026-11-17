@@ -100,15 +100,15 @@ Depends on: 1
 Each writer gets its statements from the builder. Each existing test
 passes with no change.
 
-- [ ] `worker/app-api/feature-workspaces-data.ts`.
-- [ ] `worker/app-api/workspace-parent-change-data.ts`.
-- [ ] `worker/app-api/feature-sections-data.ts`.
-- [ ] Move the Archive branch of `writeWorkspaceTree` into
+- [x] `worker/app-api/feature-workspaces-data.ts`.
+- [x] `worker/app-api/workspace-parent-change-data.ts`.
+- [x] `worker/app-api/feature-sections-data.ts`.
+- [x] Move the Archive branch of `writeWorkspaceTree` into
       `worker/app-api/archive-data.ts`.
-- [ ] `worker/automations/automation-write-data.ts`.
-- [ ] Stop exporting `activeShellMemberPredicate` from
+- [x] `worker/automations/automation-write-data.ts`.
+- [x] Stop exporting `activeShellMemberPredicate` from
       `worker/app-api/feature-shell-access.ts`.
-- [ ] Update `worker/app-api/README.md` and
+- [x] Update `worker/app-api/README.md` and
       `worker/automations/README.md`.
 
 ## Milestone 3: The lint
