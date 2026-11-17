@@ -36,7 +36,7 @@ as [Tokens and secrets](tokens-and-secrets.md) says.
 - The org login belongs to the org, not to the admin who connected it. It
   stays when that admin leaves the org.
 - The app deletes the org logins with the other data of the org, as
-  [Delete org](orgs-and-members.md#delete-org) says.
+  [Delete org](delete-org.md) says.
 - An org login serves only the members of its org, and only in the
   workspaces of that org. [The default login](#the-default-login) says
   which new sessions take it.
@@ -75,7 +75,8 @@ as [Tokens and secrets](tokens-and-secrets.md) says.
   and the value of the switch. Reason: the value of the switch decides
   which login the new sessions of the member take.
 - Only an admin sees the model list of an org endpoint, with Refresh, as
-  [Own endpoint logins](own-endpoint-logins.md) says.
+  [Own endpoint logins](own-endpoint-logins.md) says. The same holds for
+  its read warning and the `/v1` note of a Codex endpoint.
 - Nobody sees the key or the full address.
 - Replace opens the form under the org login. The org login serves until
   the new one saves.
@@ -135,7 +136,7 @@ as [Tokens and secrets](tokens-and-secrets.md) says.
   because it fails running turns in the middle.
 - A member whom the org login serves needs no personal login (org login
   decision 4). The agent step of Get started is complete for that member,
-  as [Get started](orgs-and-members.md#get-started) says.
+  as [Get started](get-started.md) says.
 - For such a member, the composer, the New workspace form, the automation
   form, and the agent tools show no Connect notice. They refuse no message
   for a missing login.

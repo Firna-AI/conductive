@@ -146,8 +146,10 @@ complete.
 - The workspace also checks the address when it dispatches a turn. A
   refused address fails the turn before an agent starts (gateway decision
   4). On a personal login, the cause names the starter and the agent, and
-  points to the account page. The login then counts as a login that
-  cannot be used, as
+  points to the account page. On the org login, the cause names the org
+  and the agent, and points to the Agents tab of the org settings. Reason:
+  only an admin can fix an org login. The login then counts as a login
+  that cannot be used, as
   [Messages](messages-and-attachments.md#messages) says.
 - When the gateway cannot connect to the endpoint, it answers the request
   with an error that names the endpoint as unreachable.

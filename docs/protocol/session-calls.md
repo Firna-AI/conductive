@@ -209,7 +209,9 @@ at `app/workspace-links/sent-by`.
   Only the session link shows as a session chip, as
   [Session chips](workspace-links.md#session-chips) says.
 - The title request of a new workspace reads only the text before these
-  lines, as [Messages](messages-and-attachments.md#messages) says.
+  lines, as
+  [The title of a new workspace](workspace-and-session-names.md#the-title-of-a-new-workspace)
+  says.
 - Reason: members and agents see which session sent the message. The run
   text of an automation also puts its facts after a `---` line, as
   [The run text](automation-runs.md#the-run-text) says.

@@ -211,3 +211,9 @@ open. Its pull request keeps them after the merge.
   says.
 - The agent step of Get started shows the note and the warning too.
   Reason: an owner who connects an agent there needs them as much.
+- For an org endpoint, the Agents tab of the org settings shows the
+  warning, with Refresh, and the note to an admin. It shows them as the
+  account page shows them to the owner. A member who is not an admin sees
+  neither.
+  Reason: each rule of an own endpoint holds for an org endpoint, and only
+  an admin sees the model list and Refresh of an org endpoint.

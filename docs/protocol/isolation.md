@@ -3,9 +3,12 @@
 This doc holds the requirements and the decisions in force for the isolation
 of orgs and sandboxes. It covers the checks that keep the orgs apart, the
 app's Boat key, what a sandbox holds, what its workspace tools reach, and
-the agent logins and the turn tokens in a sandbox. It belongs to
-[Access and security](access-and-security.md), which covers sign-in, the
-gates of the Worker, the request bodies, and the content security policy.
+the agent logins and the turn tokens in a sandbox. Linked pages cover
+[the share setting](share-setting.md) of a personal login, and
+[the version pins](version-pins.md) with the risks of the turn token. It
+belongs to [Access and security](access-and-security.md), which covers
+sign-in, the gates of the Worker, the request bodies, and the content
+security policy.
 The terms are those of the [architecture doc](../architecture.md#terms). A
 decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. A gateway
@@ -197,33 +200,13 @@ as that doc also says.
   does when the login of its session cannot be used.
 - The org login has no share setting. Each message of a member of the org
   in a session on the org login runs on it.
-- Each personal login has a share setting (decision 116). It says whether
-  the messages of other members can run on that login.
-- The kind of a login sets the default of its share setting. A new Claude
-  subscription login does not let other members use it. A new ChatGPT
-  sign-in does not let them use it either (decisions 171 and 175). A new
-  API key or own endpoint login lets them use it (own endpoint decision 4).
-- Reason: Anthropic's consumer terms and OpenAI's terms forbid making an
-  account available to anyone else. The owner of an API key may let a team
-  use it. Sharing every login by default was rejected for these reasons.
-- Risk: an own endpoint can stand for personal subscriptions, such as a
-  proxy that pools them. Other members can spend those subscriptions until
-  the owner turns sharing off. Their terms can forbid that use.
-- A replaced login keeps its share setting while its kind stays the same. A
-  login whose kind changes gets the default of its new kind. Reason: a key
-  rotation keeps the choice of its owner.
-- The account page shows the share setting of each connected login. Its
-  owner can change the setting there at any time.
-- When the starter does not share a personal login, a message of another
-  member starts a new session on the default login of that member. A Try
-  again of another member does the same.
-  [Messages](messages-and-attachments.md#messages) states the rules of
-  such a new session.
-- The workspace checks the login of the session and the share setting of
-  a personal login when it accepts each message. It checks them again
-  before it gives the credential of the turn to the runner. So a waiting
-  message of another member never runs on a login that its owner stopped
-  sharing.
+- Each personal login has a share setting (decision 116).
+  [The share setting](share-setting.md) states when the messages of other
+  members can run on that login, and its default, its checks, and its
+  risks.
+- The workspace checks the login of the session when it accepts each
+  message. It checks it again before it gives the credential of the turn
+  to the runner.
 - A message of a sender who left the org never reaches the agent, also
   while the login of the session works.
 - The session record shows whether the login of the session can be used,
@@ -237,10 +220,6 @@ as that doc also says.
 - Risk: hooks and MCP commands from those rules run in the sandbox of
   the org. Its members trust that ChatGPT workspace admin with their code
   and the credentials that the sandbox can reach.
-- Risk: while the starter shares a personal login, the other members of a
-  session spend it. Anthropic's rules for hosted products ask each end user
-  to sign in with their own credentials. So a shared Claude subscription
-  stays a risk (decisions 105 and 116).
 - Risk: each member of the org spends the org login in each session on it.
   The account of its key or of its endpoint pays, as
   [Risks](org-logins.md#risks) says (org login decision 1 B).

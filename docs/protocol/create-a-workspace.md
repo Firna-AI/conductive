@@ -314,8 +314,8 @@ record.
   says (decision 182).
 - A create call of an agent can give the workspace a name, as
   [Create and list calls](agent-tools.md#create-and-list-calls) says.
-- [Messages](messages-and-attachments.md#messages) says how a title from
-  the first message then names the workspace.
+- [The title of a new workspace](workspace-and-session-names.md#the-title-of-a-new-workspace)
+  says how a title from the first message then names the workspace.
 
 ## A failed first start
 

@@ -73,6 +73,9 @@ This page lists each protocol doc and what it covers.
     - [Version pins](../protocol/version-pins.md): the runner version that
       a workspace accepts, the version pin, and the risks of the turn
       token in a sandbox.
+    - [The share setting](../protocol/share-setting.md): whether the
+      messages of other members can run on a personal login, its default,
+      its checks, and its risks.
   - [Tokens and secrets](../protocol/tokens-and-secrets.md)
     - [Own endpoint logins](../protocol/own-endpoint-logins.md): the
       endpoint and the key of each agent, the model list of the endpoint,
@@ -116,6 +119,10 @@ This page lists each protocol doc and what it covers.
   - [Org rail order](../protocol/org-rail-order.md): the order of the orgs
     in the rail that each person keeps, how the person changes it, what a
     tile opens, and the workspace list of a hidden sidebar.
+  - [Get started](../protocol/get-started.md): the first run, its steps,
+    the build of the first org, and its finish.
+  - [Delete org](../protocol/delete-org.md): Delete org, the 7 days before
+    the app deletes everything of the org, and Restore.
 - [Pricing](../protocol/pricing.md): the plans and their cloud hours, the
   extra hours, the seller and the tax, the pricing page, and the planned
   billing changes. Use is free until billing starts.
@@ -155,8 +162,12 @@ This page lists each protocol doc and what it covers.
   refreshes, and the first build of a new org.
 - [Agents and sessions](../protocol/agents-and-sessions.md): the agents and
   their logins, the sessions, and the names of workspaces and sessions.
+  - [The tab row](../protocol/tab-row.md): the order of the tabs of the
+    centre column, their moves, the scroll of the row, the place that each
+    tab keeps, and the tab menu.
   - [Workspace and session names](../protocol/workspace-and-session-names.md):
-    the missing and the automatic names of workspaces and sessions.
+    the missing and the automatic names of workspaces and sessions, and
+    the title that a small model gives a new workspace.
 - [Workspace links](../protocol/workspace-links.md): Copy link, and the chips
   that show workspace links in chat.
 - [Chat Markdown](../protocol/chat-markdown.md): the formatting of agent

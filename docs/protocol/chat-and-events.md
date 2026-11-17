@@ -43,7 +43,7 @@ that keeps a turn open for background work, as
 
 ## Messages
 
-[Messages and attachments](messages-and-attachments.md) holds the composer, turns, retries, titles, and attached files.
+[Messages and attachments](messages-and-attachments.md) holds the composer, turns, retries, and attached files.
 
 ### Messages from the bar
 

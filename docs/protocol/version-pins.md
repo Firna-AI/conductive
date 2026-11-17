@@ -4,7 +4,8 @@ This page belongs to [Isolation of orgs and sandboxes](isolation.md). It
 states which runner protocol version a workspace accepts, the version pin
 of a workspace, and the risks of the turn token in a sandbox.
 [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox) states
-the share setting and the other login rules. The terms are those of the
+the other login rules, and [The share setting](share-setting.md) states
+the share setting of a personal login. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A gateway decision number names a decision of the change that adds

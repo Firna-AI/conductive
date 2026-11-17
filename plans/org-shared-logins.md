@@ -594,7 +594,7 @@ Depends on: 1
       login of a session. `worker/README.md` changed. The other READMEs
       name code mechanics, so they change with the code in Milestones 4
       and 6.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
 
 The merge of `origin/main` on 17 November 2026 saved the reason for each
 intentional resolution in
