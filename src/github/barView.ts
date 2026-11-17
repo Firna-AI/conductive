@@ -34,6 +34,9 @@ export type BarOutcome =
   | { kind: 'merge-refused'; reason: MergeRefusal }
   /** A merge that ended without a refusal of GitHub, with the app's words. */
   | { kind: 'merge-failed'; message: string }
+  | { kind: 'marking-ready' }
+  /** Ready for review that GitHub or the Worker refused, with its words. */
+  | { kind: 'ready-failed'; message: string }
   | { kind: 'continuing' }
   /** The Worker refused Continue because a turn runs. */
   | { kind: 'continue-waits' }
@@ -139,12 +142,14 @@ function accessOf(state: CapabilityState): {
 function appActionOf(outcome: BarOutcome | null): BarFacts['appAction'] {
   switch (outcome?.kind) {
     case 'merging':
+    case 'marking-ready':
     case 'continuing':
     case 'continue-failed':
       return outcome.kind
     case 'merge-refused':
       return outcome.reason
     case 'merge-failed':
+    case 'ready-failed':
     case 'continue-waits':
     case undefined:
       return 'none'
@@ -198,6 +203,9 @@ function messageOf(
     return waits
   }
   if (banner.state === 'ready-to-merge' && outcome?.kind === 'merge-failed') {
+    return { text: outcome.message, tone: 'danger', href: url }
+  }
+  if (banner.state === 'draft' && outcome?.kind === 'ready-failed') {
     return { text: outcome.message, tone: 'danger', href: url }
   }
   return null

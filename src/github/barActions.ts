@@ -6,12 +6,13 @@ import {
   continueOutcome,
   mergeOutcome,
   pendingJobWait,
+  readyOutcome,
   streamReaches,
   waitFor,
 } from './barRuns'
 import type { BarOutcome, CapabilityState } from './barView'
 import type { ContinueActions } from './continueActions'
-import type { createGitHubActions } from './githubActions'
+import { GitHubActionError, type createGitHubActions } from './githubActions'
 import type { GitHubSnapshot } from './githubClient'
 import type { GitHubState } from './githubStore'
 
@@ -161,6 +162,27 @@ export class BarActions {
         outcome.kind === 'merge-refused' && outcome.reason === 'merge-no-right'
       // GitHub took the right away, so the access is read again.
       if (this.end(run, outcome) && noRight) this.readCapabilities()
+    }
+  }
+
+  /** Marks the draft that the bar shows ready for review, as the member. */
+  async markReady(snapshot: GitHubSnapshot): Promise<void> {
+    const pullRequest = snapshot.banner.pullRequest
+    if (pullRequest === null) return
+    const run = this.begin({ kind: 'marking-ready' })
+    if (!run) return
+    const { signal } = run
+    try {
+      await this.ports.github.ready({ pullNumber: pullRequest.number }, signal)
+      // Marking ready shows until the bar reads the new state.
+      if (this.end(run, { kind: 'marking-ready' })) this.ports.refreshGitHub()
+    } catch (error) {
+      if (signal.aborted) return
+      const noRight =
+        error instanceof GitHubActionError &&
+        error.code === 'github_ready_forbidden'
+      // GitHub took the right away, so the access is read again.
+      if (this.end(run, readyOutcome(error)) && noRight) this.readCapabilities()
     }
   }
 

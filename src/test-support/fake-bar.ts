@@ -119,6 +119,37 @@ export function serveMerge(server: FakeApiServer, end: FakeMergeEnd): void {
   }
 }
 
+/** How Ready for review of the fake ends. */
+export type FakeReadyEnd = 'ready' | 'no-right' | 'refused'
+
+/** The reply of Ready for review, with the Worker's safe words. */
+export function serveReady(server: FakeApiServer, end: FakeReadyEnd): void {
+  const path = githubPaths.ready(org, id)
+  switch (end) {
+    case 'ready':
+      server.json('POST', path, { state: 'ready' })
+      return
+    case 'no-right':
+      server.json(
+        'POST',
+        path,
+        refusal(
+          'github_ready_forbidden',
+          "Not marked ready: your GitHub access doesn't allow changes to this pull request.",
+        ),
+        403,
+      )
+      return
+    case 'refused':
+      server.json(
+        'POST',
+        path,
+        refusal('github_ready_refused', 'GitHub refused the change.'),
+        409,
+      )
+  }
+}
+
 /** The changes report of the fake sandbox with this local work. */
 export function workReport(work: FakeWork): ChangesResponse {
   const { changes } = toolFixtures()

@@ -46,6 +46,8 @@ export const mergeLabels: Readonly<Record<MergeMethod, string>> = {
 
 export const barLabels = {
   merging: 'Merging',
+  readyForReview: 'Ready for review',
+  markingReady: 'Marking ready',
   continue: 'Continue',
   continuing: 'Continuing',
   archive: 'Archive',

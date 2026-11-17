@@ -19,11 +19,13 @@ import {
   serveAccess,
   serveContinue,
   serveMerge,
+  serveReady,
   serveWork,
   workReport,
   type FakeAccess,
   type FakeContinueEnd,
   type FakeMergeEnd,
+  type FakeReadyEnd,
   type FakeWork,
 } from './fake-bar'
 import { FAKE_IDS, FAKE_ORIGIN } from './fixtures/core'
@@ -35,6 +37,7 @@ export interface BarScenario {
   access: FakeAccess
   method: GitHubMergeMethod | 'none'
   merge: FakeMergeEnd
+  ready: FakeReadyEnd
   work: FakeWork
   continue: FakeContinueEnd
 }
@@ -46,6 +49,7 @@ export const scenarioValues: {
   access: ['write', 'read', 'unknown'],
   method: ['squash', 'merge', 'rebase', 'none'],
   merge: ['merged', 'moved-head', 'no-right', 'refused', 'unavailable'],
+  ready: ['ready', 'no-right', 'refused'],
   work: ['none', 'files', 'restored', 'commits', 'legacy'],
   continue: ['continued', 'question', 'clash', 'stopped', 'turn'],
 }
@@ -65,6 +69,7 @@ export function readScenario(query: URLSearchParams): BarScenario {
     access: pick(access, query.get('access')),
     method: pick(method, query.get('method')),
     merge: pick(merge, query.get('merge')),
+    ready: pick(scenarioValues.ready, query.get('ready')),
     work: pick(work, query.get('work')),
     continue: pick(scenarioValues.continue, query.get('continue')),
   }
@@ -90,7 +95,7 @@ function bodyOf(init: RequestInit | undefined) {
 /**
  * A fetch over the fake server that answers the bar actions of a scenario
  * as the Worker does with its state. A completed merge publishes the merged
- * state, a Continue publishes the workspace on its new branch with a note
+ * state, Ready for review publishes Ready to merge, a Continue publishes the workspace on its new branch with a note
  * in each session, and a message shows the text that it sent. Every other
  * request gets the recorded reply. Development only.
  */
@@ -106,6 +111,7 @@ export function scenarioFetch(
     scenario.method === 'none' ? null : scenario.method,
   )
   serveMerge(server, scenario.merge)
+  serveReady(server, scenario.ready)
   serveWork(server, scenario.work)
   serveContinue(server, scenario.continue)
   let continues = scenario.continue === 'continued'
@@ -119,8 +125,8 @@ export function scenarioFetch(
       state: { banner: event.banner, checks: event.checks },
     })
   }
-  const publishMerge = () => {
-    const merged = toolFixtures('merged')
+  const publish = (state: 'merged' | 'ready-to-merge') => {
+    const merged = toolFixtures(state)
     const event: WorkspaceEvent = {
       type: 'github.updated',
       banner: merged.banner.banner,
@@ -207,7 +213,10 @@ export function scenarioFetch(
       method === 'GET' &&
       pathname === githubPaths.mergeResult(org, id, `merge-${id}`)
     ) {
-      if (scenario.merge === 'merged') publishMerge()
+      if (scenario.merge === 'merged') publish('merged')
+    }
+    if (method === 'POST' && pathname === githubPaths.ready(org, id)) {
+      if (scenario.ready === 'ready') publish('ready-to-merge')
     }
     if (method === 'POST' && pathname === workspacePaths.continue(org, id)) {
       const body = bodyOf(init)

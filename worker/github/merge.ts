@@ -4,11 +4,8 @@ import type {
   GitHubMergeResponse,
 } from '../../src/shared/github'
 import type { AppEnv } from '../env'
-import { freshGitHubUserToken } from '../security/github-tokens'
-import { GitHubReader } from './client'
 import type { GitHubWorkspace } from './contracts'
-import { authorizeMerge } from './merge-access'
-import { readMergeCapabilities } from './merge-capabilities'
+import { memberGitHub } from './member-github'
 import { requestMerge, type AsyncMergeResult } from './merge-client'
 import {
   mergeForbidden,
@@ -28,32 +25,13 @@ export class GitHubMerge {
   }
 
   private async context(workspace: GitHubWorkspace, userId: string) {
-    const authorize = () => authorizeMerge(this.env.DB, workspace, userId)
-    await authorize()
-    const token = await freshGitHubUserToken(
+    const member = await memberGitHub(
       this.env,
-      userId,
       this.dependencies,
-    )
-    const fetch = async (request: Request) => {
-      await authorize()
-      return this.dependencies.fetch(request)
-    }
-    const checked = async <T>(operation: () => Promise<T>): Promise<T> => {
-      try {
-        return await operation()
-      } finally {
-        await authorize()
-      }
-    }
-    const reader = new GitHubReader(
-      { ...this.dependencies, fetch, token: async () => token },
       workspace,
-      token,
+      userId,
     )
-    const capabilities = () =>
-      checked(() => readMergeCapabilities(fetch, token, workspace))
-    const branches = () => checked(() => reader.dependenciesForBranch())
+    const { fetch, token, checked, capabilities, branches } = member
     const request = (
       fullName: string,
       pullNumber: number,
@@ -66,7 +44,7 @@ export class GitHubMerge {
       if (current.headSha !== headSha) throw mergeHeadChanged()
       throw mergeRefused()
     }
-    return { authorize, branches, request, capabilities, diagnose }
+    return { ...member, request, diagnose }
   }
 
   async capabilities(
@@ -98,7 +76,7 @@ export class GitHubMerge {
     )
     await context.authorize()
     const result = reply.result
-    if (result?.state === 'merged') return this.completed(workspace, userId)
+    if (result?.state === 'merged') return this.completed(context)
     if (result?.state !== 'pending') return context.diagnose(input.headSha)
     if (!this.matches(result, input)) throw mergeRefused()
     const mergeId = this.dependencies.randomToken()
@@ -133,7 +111,7 @@ export class GitHubMerge {
     await context.authorize()
     if (reply.status === 404) throw mergeUnavailable()
     const result = reply.result
-    if (result?.state === 'merged') return this.completed(workspace, userId)
+    if (result?.state === 'merged') return this.completed(context)
     if (
       result?.state === 'pending' &&
       this.matches(result, job) &&
@@ -155,16 +133,10 @@ export class GitHubMerge {
     )
   }
 
-  private async completed(
-    workspace: GitHubWorkspace,
-    userId: string,
-  ): Promise<GitHubMergeResponse> {
-    await authorizeMerge(this.env.DB, workspace, userId)
-    await this.dependencies.refresh(workspace, {
-      userId,
-      requireWritable: true,
-    })
-    await authorizeMerge(this.env.DB, workspace, userId)
+  private async completed(context: {
+    refresh: () => Promise<void>
+  }): Promise<GitHubMergeResponse> {
+    await context.refresh()
     return { state: 'merged' }
   }
 }

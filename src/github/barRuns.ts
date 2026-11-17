@@ -86,6 +86,19 @@ export function mergeOutcome(error: unknown): BarOutcome {
 }
 
 /**
+ * The outcome of Ready for review that GitHub or the Worker refused. The
+ * line keeps the Worker's safe words, as no GitHub error text reaches the
+ * browser. Any other failure keeps the app's safe words.
+ */
+export function readyOutcome(error: unknown): BarOutcome {
+  return {
+    kind: 'ready-failed',
+    message:
+      error instanceof GitHubActionError ? error.message : unfinishedAction,
+  }
+}
+
+/**
  * The outcome of a Continue that the Worker refused or stopped. A turn that
  * runs shows the wait. Each other cause keeps the Worker's safe words, so
  * the words of a clash show only for a real clash of the changed files.

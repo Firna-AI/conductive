@@ -1,7 +1,8 @@
 # Member merges
 
 The Worker reads each member's merge access and merges a pull request as
-that member, with the member's own GitHub token.
+that member, with the member's own GitHub token. It marks a draft ready for
+review in the same way.
 [Merge as the member](../../docs/protocol/github-tokens.md#merge-as-the-member)
 and [Merge](../../docs/protocol/github-banner.md#merge) state the
 requirements. This guide gives the routes, the stored jobs, and the checks
@@ -18,6 +19,7 @@ each route under `/api/orgs/:orgId/workspaces/:workspaceId`.
 | `/github/capabilities` | GET or HEAD | 200 with `GitHubCapabilities` |
 | `/github/merge` | POST with `GitHubMergeRequest` | 202 with `{ "state": "pending", "mergeId": "<app ID>" }`, or 200 with `{ "state": "merged" }` |
 | `/github/merge/:mergeId` | GET or HEAD | 200 with a pending or a merged `GitHubMergeResponse` |
+| `/github/ready` | POST with `GitHubReadyRequest` | 200 with `{ "state": "ready" }` |
 
 - [handleGitHubMerge](merge-handler.ts) runs the existing app gate of the
   session and checks the org of the workspace. Another method, a socket
@@ -30,7 +32,8 @@ each route under `/api/orgs/:orgId/workspaces/:workspaceId`.
 - The repository and the pull request come from the workspace record,
   never from the request.
 - A body without a `headSha` text, or with another method than `merge`,
-  `squash`, or `rebase`, returns 400 `invalid_input`.
+  `squash`, or `rebase`, returns 400 `invalid_input`. A ready body without
+  a positive integer `pullNumber` returns the same error.
 
 ## Capabilities
 
@@ -82,6 +85,24 @@ each route under `/api/orgs/:orgId/workspaces/:workspaceId`.
   access it returns `github_merge_forbidden`. With a moved head it returns
   `github_head_changed`. Otherwise it returns `github_merge_refused`.
 
+## Ready for review
+
+- [markReady](ready.ts) reads the capabilities again. Without write access
+  it returns 403 `github_ready_forbidden`.
+- It reads the pull request of the branch. A number other than
+  `pullNumber` returns 409 `github_pull_changed`.
+- It reads the node ID, the state, and the draft flag of that pull request
+  from GraphQL. A pull request that is not open returns 409
+  `github_ready_refused`.
+- A draft gets GitHub's `markPullRequestReadyForReview` mutation with the
+  member's token. A reply with GraphQL errors returns 409
+  `github_ready_refused`. A pull request that is no longer a draft gets no
+  mutation.
+- Then it refreshes the shared state, as after a merge, and returns
+  `{ "state": "ready" }`. The change is synchronous, so it stores no job.
+- [memberGitHub](member-github.ts) gives Merge and Ready for review the
+  same fresh token, access checks, readers, and refresh.
+
 ## Access around GitHub
 
 - [freshGitHubUserToken](../security/github-tokens.ts) gives each route a
@@ -114,10 +135,13 @@ each route under `/api/orgs/:orgId/workspaces/:workspaceId`.
 | 403 | `github_merge_forbidden` | The member has no write access or more |
 | 409 | `github_merge_refused` | GitHub refused the direct merge, asked for a merge queue or a bypass, or the method is not allowed |
 | 404 | `github_merge_unavailable` | The job is missing, belongs to another member or binding, or expired on GitHub |
+| 403 | `github_ready_forbidden` | Ready for review: the member has no write access or more |
+| 409 | `github_pull_changed` | Ready for review: the branch has another pull request than the one that the member saw |
+| 409 | `github_ready_refused` | GitHub refused Ready for review, or the pull request is not open |
 | 502 | `github_unavailable` | A GitHub request failed, timed out, or sent a reply outside its contract |
 
 - Each code carries the app's own message from
-  [merge-errors.ts](merge-errors.ts). No GitHub error text reaches the
+  [merge-errors.ts](merge-errors.ts) or [ready.ts](ready.ts). No GitHub error text reaches the
   browser, and no job stores it.
 - The existing gate errors still apply, such as `org_suspended`,
   `workspace_archived`, and 401 `github_reconnect_required`.
@@ -146,7 +170,7 @@ each route under `/api/orgs/:orgId/workspaces/:workspaceId`.
 Run this from the repository root with Node 24:
 
 ```sh
-npm run test -- worker/github/merge-actions.test.ts worker/github/merge-access.test.ts worker/github/merge-refusals.test.ts src/github/githubActions.test.ts worker/features/github-merge-routes.test.ts
+npm run test -- worker/github/merge-actions.test.ts worker/github/ready-actions.test.ts worker/github/merge-access.test.ts worker/github/merge-refusals.test.ts src/github/githubActions.test.ts worker/features/github-merge-routes.test.ts
 ```
 
 - [merge-actions.test.ts](merge-actions.test.ts) covers the rights, the
@@ -155,6 +179,9 @@ npm run test -- worker/github/merge-actions.test.ts worker/github/merge-access.t
 - [merge-refusals.test.ts](merge-refusals.test.ts) covers missing rights,
   disallowed methods, refusals with HTTP 409, merge queue and bypass
   replies, failures, expired jobs, and merges that GitHub already finished.
+- [ready-actions.test.ts](ready-actions.test.ts) covers Ready for review:
+  the write, the shared publication, a pull request that is no longer a
+  draft, missing rights, another pull request, a refusal, and bad bodies.
 - [merge-access.test.ts](merge-access.test.ts) covers the gates, the fresh
   member tokens, the isolation of jobs, and access races.
 - [github-merge-routes.test.ts](../features/github-merge-routes.test.ts)

@@ -255,6 +255,7 @@ export const barPaths = {
   mergeMovedHead: 'app/banner/merge/moved-head',
   mergeNoRight: 'app/banner/merge/no-right',
   mergeRefused: 'app/banner/merge/refused',
+  markingReady: 'app/banner/blocked/marking-ready',
   localWork: 'app/banner/local-work',
   noCommitsLocalWork: 'app/banner/no-commits/local-work',
   continueQuestion: 'app/banner/continue',
