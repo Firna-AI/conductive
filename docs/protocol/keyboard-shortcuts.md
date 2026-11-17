@@ -84,6 +84,10 @@ app.
   add words. Reason: the Merge button names the merge method, the words
   Ready for review alone name no step, and the bar links the number of the
   pull request.
+- The user chose the name Mark PR ready for review on 17 November 2026.
+  The names Ready for review and Mark ready for review were rejected.
+  Reason: a palette entry needs a verb and the pull request, as Merge PR
+  has.
 - A command holds at most four keys, in an order.
 - A person can change the keys of each command, also the keys of the
   command palette (decision 190).
