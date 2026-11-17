@@ -34,6 +34,29 @@
   white-space: nowrap;
 }
 
+/*
+ * The field of Rename, in place of the name. It keeps the type of the name.
+ * The selector of the bar outranks the field style of the rows.
+ */
+:is(.bar, .mobile) .titleField {
+  flex: 0 1 360px;
+  height: 26px;
+  font-size: var(--ui-text-md);
+  font-weight: var(--ui-weight-strong);
+  letter-spacing: var(--ui-tracking-heading);
+}
+
+/* On a phone the field fills the column of the name. */
+.titles > .titleField {
+  flex: none;
+  width: 100%;
+}
+
+/* A view draws the workspace menu of a right click in the bar. */
+.menuAnchor {
+  position: relative;
+}
+
 /* The repository gives up its room before the name. */
 .meta {
   display: flex;

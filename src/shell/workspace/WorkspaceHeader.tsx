@@ -13,6 +13,7 @@ import { useOrgModel } from '../context'
 import { useMacBar } from '../mac/mac-app'
 import { IconButton } from '../ui/actions'
 import { useGo } from '../ui/AppLink'
+import { WorkspaceNameField } from '../list/WorkspaceNameField'
 import { PersonAvatar } from '../ui/Avatars'
 import ui from '../ui/ui.module.css'
 import { CopyLink } from './CopyLink'
@@ -21,6 +22,7 @@ import type { WorkspaceContext } from './features'
 import { RightColumnToggle } from './WorkspaceColumns'
 import { RunLine } from './RunLine'
 import { useRunAutomation } from './saved-view'
+import { useHeaderMenu } from './useHeaderMenu'
 
 /** The owner of the workspace, without the menu that reassigns it. */
 function Owner(props: { workspace: Workspace; compact: boolean }) {
@@ -47,7 +49,9 @@ function Owner(props: { workspace: Workspace; compact: boolean }) {
  * of the right column. A run workspace links to its automation below it.
  * While the open of the workspace resumes its sandbox, the state shows
  * Starting at once, before the Resume reply. While the software runs, the
- * state opens the menu with Restart.
+ * state opens the menu with Restart. A right click on the bar, but not on
+ * one of its controls, opens the workspace menu of the list, and its Rename
+ * puts the field in place of the name.
  */
 export function WorkspaceHeader(props: {
   context: WorkspaceContext
@@ -60,6 +64,7 @@ export function WorkspaceHeader(props: {
   const go = useGo()
   const bar = useMacBar()
   const automation = useRunAutomation(props.context.savedView)
+  const menu = useHeaderMenu(props.context)
   useEffect(() => model.watch('repositories'), [model])
   const repository =
     repositories?.find((item) => item.id === workspace.repositoryId)
@@ -73,18 +78,28 @@ export function WorkspaceHeader(props: {
   const stateView = (
     <HeaderState context={props.context} key={workspace.id} state={state} />
   )
+  const title = menu.rename ? (
+    <WorkspaceNameField
+      className={styles.titleField}
+      name={workspace.name}
+      page={false}
+      rename={menu.rename}
+    />
+  ) : (
+    <h1 className={styles.title}>{name}</h1>
+  )
   const copyLink = (
     <CopyLink inline={phone} key={workspace.link} workspace={workspace} />
   )
   const header = phone ? (
-    <header className={styles.mobile}>
+    <header className={styles.mobile} onContextMenu={menu.onContextMenu}>
       <IconButton
         icon={ChevronLeft}
         label="All workspaces"
         onPress={() => go(routes.org(org.id))}
       />
       <div className={styles.titles}>
-        <h1 className={styles.title}>{name}</h1>
+        {title}
         <span className={styles.line}>
           {copyLink}
           <span className={styles.branch}>{repository}</span>
@@ -94,8 +109,11 @@ export function WorkspaceHeader(props: {
       {stateView}
     </header>
   ) : (
-    <header className={classes(styles.bar, bar)}>
-      <h1 className={styles.title}>{name}</h1>
+    <header
+      className={classes(styles.bar, bar)}
+      onContextMenu={menu.onContextMenu}
+    >
+      {title}
       {copyLink}
       <span className={styles.metas}>
         <span className={styles.meta}>
@@ -108,11 +126,11 @@ export function WorkspaceHeader(props: {
       <RightColumnToggle />
     </header>
   )
-  if (!automation) return header
   return (
     <>
       {header}
-      <RunLine orgId={org.id} automation={automation} />
+      {automation ? <RunLine orgId={org.id} automation={automation} /> : null}
+      {menu.layer}
     </>
   )
 }

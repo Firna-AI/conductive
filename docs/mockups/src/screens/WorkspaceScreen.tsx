@@ -32,6 +32,7 @@ import { centreOf } from './workspaceCentre'
 import { placeLostUpdate } from './lostUpdates'
 import { changedWorkspaces, chatWorkspacesOf } from './orgWorkspaces'
 import { viewerOf } from './sessionStarter'
+import { headerMenuOf } from './workspaceHeaderMenu'
 import { barOf, branchOf } from './workspaceBar'
 import {
   FilesContent,
@@ -152,7 +153,13 @@ export function WorkspaceScreen(props: {
       canRestart={!readOnly}
       copy={state.copyLink === 'none' ? undefined : state.copyLink}
       name={workspace.name}
+      menu={
+        state.overlay === 'workspace-menu' && viewport === 'desktop'
+          ? headerMenuOf(state, workspace.owner)
+          : undefined
+      }
       ownerOpen={state.overlay === 'reassign'}
+      renaming={state.overlay === 'header-rename'}
       run={open.run}
       rightHidden={rightHidden}
       stateOpen={state.overlay === 'restart'}

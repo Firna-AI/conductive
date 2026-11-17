@@ -4,12 +4,15 @@ import { people } from '../../fixtures/members'
 import { repositories } from '../../fixtures/repositories'
 import type { ActivityStatus, Workspace } from '../../fixtures/workspaces'
 import { paths } from '../../paths'
+import type { MenuEntry } from '../common/Menu'
+import { PointMenu } from '../common/PointMenu'
 import { ScreenLink } from '../common/ScreenLink'
 import { ShortcutTip } from '../common/ShortcutTip'
 import { classes } from '../common/classes'
 import { IconButton } from '../common/actions'
 import { useCornerControls } from '../layout/sidebarPlace'
 import { workspaceLabel } from '../workspaces/label'
+import rowMenu from '../workspaces/RowMenu.module.css'
 import { CopyLinkButton, type CopyResult } from './CopyLinkButton'
 import { HeaderState } from './HeaderState'
 import { OwnerPicker } from './OwnerPicker'
@@ -27,7 +30,9 @@ import styles from './WorkspaceHeader.module.css'
  * header ends with the toggle that hides the right column and shows it
  * again. A run workspace also links to its automation and its pull request.
  * While the software of the cloud computer runs, the state opens a menu with
- * Restart, for every member of an org that is not suspended.
+ * Restart, for every member of an org that is not suspended. A right click
+ * on the bar, outside its controls, opens the workspace menu of the list at
+ * the pointer, and its Rename puts the field in place of the name.
  */
 export function WorkspaceHeader(props: {
   workspace: Workspace
@@ -51,6 +56,13 @@ export function WorkspaceHeader(props: {
   rightHidden?: boolean
   /** The automation of a run workspace and the pull request of its run. */
   run?: RunSource
+  /**
+   * The workspace menu that a right click on the bar opened, on desktop. A
+   * phone shows it as a sheet.
+   */
+  menu?: readonly MenuEntry[]
+  /** Rename of the workspace menu put the field in place of the name. */
+  renaming?: boolean
 }) {
   const { workspace, name } = props
   const corner = useCornerControls()
@@ -64,6 +76,19 @@ export function WorkspaceHeader(props: {
     />
   )
   const label = workspaceLabel(workspace.number)
+  // A view runs no script, so a span stands for the field, which opens
+  // focused, with the name selected.
+  const title = props.renaming ? (
+    <span
+      aria-label="Workspace name"
+      className={classes(rowMenu.field, styles.titleField)}
+      role="textbox"
+    >
+      <span className={rowMenu.selection}>{name}</span>
+    </span>
+  ) : (
+    <h1 className={styles.title}>{name}</h1>
+  )
   const copyLink = (
     <ShortcutTip command="copy-link" label={`Copy link to ${label}`}>
       <CopyLinkButton
@@ -80,7 +105,7 @@ export function WorkspaceHeader(props: {
           <IconButton icon={ChevronLeft} label="All workspaces" />
         </ScreenLink>
         <div className={styles.titles}>
-          <h1 className={styles.title}>{name}</h1>
+          {title}
           <span className={styles.line}>
             {copyLink}
             <span className={styles.branch}>{repository}</span>
@@ -95,8 +120,14 @@ export function WorkspaceHeader(props: {
         />
       </header>
     ) : (
-      <header className={classes(styles.bar, corner && styles.cornerBar)}>
-        <h1 className={styles.title}>{name}</h1>
+      <header
+        className={classes(
+          styles.bar,
+          corner && styles.cornerBar,
+          props.menu && styles.menuAnchor,
+        )}
+      >
+        {title}
         {copyLink}
         <span className={styles.metas}>
           <span className={styles.meta}>
@@ -118,6 +149,7 @@ export function WorkspaceHeader(props: {
               : 'Hide the right column'
           }
         />
+        {props.menu ? <PointMenu entries={props.menu} label={name} /> : null}
       </header>
     )
   if (!props.run) return header

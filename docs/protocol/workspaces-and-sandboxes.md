@@ -172,7 +172,7 @@ for, downloads, and applies an update.
 
 - [Workspace menu](workspace-menu.md) holds the requirements of the menu
   of a workspace row: Move to section, Reassign to, Rename, Copy link, and
-  Archive.
+  Archive. The header of the open workspace opens the same menu.
 
 ## Tools of a workspace
 
