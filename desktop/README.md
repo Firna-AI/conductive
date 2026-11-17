@@ -266,7 +266,7 @@ npm --prefix desktop run test:packaged
 The build copies the [1024px PNG master](../docs/brand/conductive-icon-1024.png) unchanged for the Dock.
 The `package` command makes DMG and ZIP packages for the architecture of the Mac that runs it.
 The packaged tests run only that package.
-The `package:release` command makes the packages for both Mac architectures.
+The `package:release` command makes the packages for both Mac architectures, or for the one that its `--arm64` or `--x64` flag names.
 The `package` command uses an ad-hoc signature.
 PR builds force this same ad-hoc signing mode without certificate credentials.
 The package command verifies the app bundle with `codesign --verify --deep --strict`.

@@ -32,9 +32,21 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-it('passes the shared fixed DMG name to the builder without overriding ZIP names', async () => {
+const builderPath = resolve(
+  import.meta.dirname,
+  '../node_modules/.bin/electron-builder',
+)
+
+async function runRelease(flags: string[]) {
   Object.defineProperty(process, 'platform', { value: 'darwin' })
+  vi.spyOn(process, 'argv', 'get').mockReturnValue([
+    'node',
+    'package.ts',
+    '--release',
+    ...flags,
+  ])
   vi.spyOn(process.stdout, 'write').mockReturnValue(true)
+  vi.mocked(runReleaseCommand).mockClear()
   vi.mocked(withReleaseKeychain).mockImplementation(async (work) => {
     await work(
       { APPLE_API_KEY: '/private/key.p8' },
@@ -46,20 +58,32 @@ it('passes the shared fixed DMG name to the builder without overriding ZIP names
     stdout: '{"id":"submission","status":"Accepted"}',
     stderr: '',
   })
-
+  vi.resetModules()
   await import('./release.ts')
+  const calls = vi.mocked(runReleaseCommand).mock.calls
+  return {
+    builder: calls.find(([program]) => program === builderPath)?.[1],
+    submitted: calls
+      .filter(([, args]) => args[0] === 'notarytool')
+      .map(([, args]) => args[2]),
+  }
+}
 
-  const builder = vi
-    .mocked(runReleaseCommand)
-    .mock.calls.find(
-      ([program]) =>
-        program ===
-        resolve(import.meta.dirname, '../node_modules/.bin/electron-builder'),
-    )
-  expect(builder?.[1]).toEqual(
-    expect.arrayContaining(['--mac', '--arm64', '--x64']),
-  )
-  expect(builder?.[1].filter((arg) => arg.includes('artifactName='))).toEqual([
+it('passes the shared fixed DMG name to the builder without overriding ZIP names', async () => {
+  const { builder } = await runRelease([])
+
+  expect(builder).toEqual(expect.arrayContaining(['--mac', '--arm64', '--x64']))
+  expect(builder?.filter((arg) => arg.includes('artifactName='))).toEqual([
     '-c.dmg.artifactName=Renamed-download-${arch}.${ext}',
+  ])
+})
+
+it('builds and notarizes only the architecture that a flag names', async () => {
+  const { builder, submitted } = await runRelease(['--x64'])
+
+  expect(builder).toContain('--x64')
+  expect(builder).not.toContain('--arm64')
+  expect(submitted).toEqual([
+    resolve(import.meta.dirname, '../dist/release/Renamed-download-x64.dmg'),
   ])
 })

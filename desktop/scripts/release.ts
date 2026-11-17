@@ -15,6 +15,16 @@ const dmgArtifactName = macDmgNames.arm64.replace(
   /arm64\.dmg$/,
   '${arch}.${ext}',
 )
+// The release workflow signs each architecture in its own job, so Apple
+// notarizes the two packages at the same time. Without a flag, one run
+// builds both architectures.
+const requested = (['arm64', 'x64'] as const).filter((architecture) =>
+  process.argv.includes(`--${architecture}`),
+)
+const architectures =
+  requested.length > 0 ? requested : (['arm64', 'x64'] as const)
+// electron-builder puts the x64 app in `mac` and the arm64 app in `mac-arm64`.
+const appFolders = { arm64: 'mac-arm64', x64: 'mac' } as const
 
 await withReleaseKeychain(async (environment, teamId, signal) => {
   await runReleaseCommand(
@@ -28,8 +38,7 @@ await withReleaseKeychain(async (environment, teamId, signal) => {
     resolve(desktop, 'node_modules/.bin/electron-builder'),
     [
       '--mac',
-      '--arm64',
-      '--x64',
+      ...architectures.map((architecture) => `--${architecture}`),
       '--publish',
       'never',
       '-c.forceCodeSigning=true',
@@ -48,10 +57,10 @@ await withReleaseKeychain(async (environment, teamId, signal) => {
   )
   await mkdir(evidence, { recursive: true })
   const signatures = []
-  for (const architecture of ['mac-arm64', 'mac']) {
+  for (const architecture of architectures) {
     signatures.push(
       await verifyReleaseApp(
-        resolve(release, architecture, `${productName}.app`),
+        resolve(release, appFolders[architecture], `${productName}.app`),
         teamId,
         environment,
         signal,
@@ -62,11 +71,11 @@ await withReleaseKeychain(async (environment, teamId, signal) => {
     resolve(evidence, 'desktop-release-signatures.json'),
     JSON.stringify(signatures, null, 2) + '\n',
   )
-  const images = (await readdir(release)).filter((name) =>
-    name.endsWith('.dmg'),
-  )
-  if (images.length !== 2)
-    throw new Error('Expected arm64 and x64 release disk images')
+  const present = new Set(await readdir(release))
+  const images = architectures.map((architecture) => macDmgNames[architecture])
+  const missing = images.filter((name) => !present.has(name))
+  if (missing.length > 0)
+    throw new Error(`Missing release disk images: ${missing.join(', ')}`)
   for (const name of images) {
     const image = resolve(release, name)
     const { stdout: output } = await runReleaseCommand(

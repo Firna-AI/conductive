@@ -6,6 +6,10 @@ on:
       ref:
         required: true
         type: string
+      # The one architecture that this job signs: arm64 or x64.
+      architecture:
+        required: true
+        type: string
       updates:
         type: boolean
         default: false
@@ -26,7 +30,7 @@ permissions:
 
 jobs:
   sign:
-    name: Signed and notarized Mac packages
+    name: Signed and notarized Mac package ${{ inputs.architecture }}
     if: github.ref == 'refs/heads/main'
     runs-on: blacksmith-6vcpu-macos-15
     timeout-minutes: 90
@@ -50,16 +54,20 @@ jobs:
         env:
           CONDUCTIVE_FRAME_SOURCES: https://*.conductive.page https://*.on.boat.dev
           CONDUCTIVE_DESKTOP_UPDATES: ${{ inputs.updates && 'enabled' || 'unpublished' }}
-      - name: Sign and notarize both Mac architectures
-        run: npm --prefix desktop run package:release
+      - name: Sign and notarize the Mac package
+        run: npm --prefix desktop run package:release -- "--$ARCHITECTURE"
         env:
+          ARCHITECTURE: ${{ inputs.architecture }}
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
           CONDUCTIVE_APPLE_TEAM_ID: ${{ vars.CONDUCTIVE_APPLE_TEAM_ID }}
-      - run: npm --prefix desktop run test:packaged
+      # The packaged test runs only the package of the runner's architecture,
+      # and the runner is an Apple silicon Mac.
+      - if: inputs.architecture == 'arm64'
+        run: npm --prefix desktop run test:packaged
       - name: Remove temporary signing credentials
         if: always()
         shell: bash
@@ -72,14 +80,14 @@ jobs:
       - uses: actions/upload-artifact@v6
         if: always()
         with:
-          name: desktop-release-evidence
+          name: desktop-release-evidence-${{ inputs.architecture }}
           path: |
             .context/boat-native-remote-workspaces/desktop-*.json
             desktop/dist/test-results/
           retention-days: 14
       - uses: actions/upload-artifact@v6
         with:
-          name: desktop-signed-packages
+          name: desktop-signed-packages-${{ inputs.architecture }}
           if-no-files-found: error
           path: |
             desktop/dist/release/*.dmg
