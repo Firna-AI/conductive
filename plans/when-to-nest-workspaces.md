@@ -129,15 +129,17 @@ Tell members when to ask for a sub-workspace.
 
 Depends on: every other milestone
 
-- [ ] Run `cargo test --workspace` and the complete gate named in
+- [x] Run `cargo test --workspace` and the complete gate named in
       `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+      Evidence: `.context/when-to-nest-workspaces/gate.log` and
+      `rerun.log`.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
-- [ ] Add this branch and the new create text to the follow-up item
+- [x] Add this branch and the new create text to the follow-up item
       `plans/follow-ups/full-image-build-for-agent-tools.md`.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
