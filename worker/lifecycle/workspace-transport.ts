@@ -88,7 +88,8 @@ export function workspaceLifecycleEndpoint(
     async waitCreationLifecycle() {
       return releasedStartResult(env, await transport.waitCreationLifecycle())
     },
-    waitCreationAdmission: () => transport.waitCreationAdmission(),
+    waitCreationAdmission: (timeoutMs) =>
+      transport.waitCreationAdmission(timeoutMs),
     async readCreationLifecycleResult() {
       const result = await transport.readCreationLifecycleResult()
       return result ? releasedStartResult(env, result) : undefined

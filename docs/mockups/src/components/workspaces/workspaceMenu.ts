@@ -20,6 +20,11 @@ export type RowAccess = {
   otherSection: boolean
   /** Nothing in the org can change, as in a suspended org. */
   readOnly: boolean
+  /**
+   * The list shows the row under another row of its tree. It moves only
+   * with its top-level row, so it has no Move to section.
+   */
+  nested?: boolean
 }
 
 /** One row of the workspace menu: an action, or the line before Archive. */
@@ -49,9 +54,10 @@ function action(
  * row and a row of a read-only org. Members move and rename a workspace
  * that is not archived. Only admins reassign, and only the owner and the
  * admins archive. The archived row of an admin also offers Reassign to. An
- * org with one section offers no Move to section. A read-only org offers
- * only Copy link. The mockups and the app read this one list. It holds no
- * data of a screen, so the app can import it.
+ * org with one section offers no Move to section, and neither does a
+ * nested row, which moves only with its tree. A read-only org offers only
+ * Copy link. The mockups and the app read this one list. It holds no data
+ * of a screen, so the app can import it.
  */
 export function workspaceMenuItems(access: RowAccess): WorkspaceMenuItem[] {
   const reassign = action('reassign', 'Reassign to', UserRoundPen)
@@ -59,7 +65,7 @@ export function workspaceMenuItems(access: RowAccess): WorkspaceMenuItem[] {
   if (access.readOnly) return [copyLink]
   if (access.archived) return access.admin ? [reassign, copyLink] : [copyLink]
   const items: WorkspaceMenuItem[] = []
-  if (access.otherSection) {
+  if (access.otherSection && access.nested !== true) {
     items.push(action('move', 'Move to section', FolderInput))
   }
   if (access.admin) items.push(reassign)

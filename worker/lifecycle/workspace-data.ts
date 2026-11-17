@@ -17,7 +17,7 @@ import type { WorkspaceCapabilities } from '../../src/shared/secrets'
 import { creationPreapprovals } from '../secrets/capabilities-writes'
 
 const columns = `w.id, w.number, w.org_id AS orgId, w.repository_id AS repositoryId,
-  w.section_id AS sectionId, w.owner_user_id AS ownerUserId,
+  w.section_id AS sectionId, w.parent_workspace_id AS parentId, w.owner_user_id AS ownerUserId,
   u.github_login AS githubLogin, u.display_name AS displayName, u.avatar_url AS avatarUrl,
   ${workspaceNameColumn('w')}, w.branch,
   COALESCE(w.base_branch, (SELECT default_branch FROM repositories WHERE id = w.repository_id AND org_id = w.org_id)) AS baseBranch,
@@ -66,6 +66,7 @@ export function workspaceRecord(row: WorkspaceRow): Omit<Workspace, 'link'> {
     orgId: row.orgId,
     repositoryId: row.repositoryId,
     sectionId: row.sectionId,
+    parentId: row.parentId,
     owner: {
       id: row.ownerUserId,
       githubLogin: row.githubLogin,
@@ -97,6 +98,7 @@ export async function insertWorkspace(
     providerAccount: string
     repositoryId: string
     sectionId?: string
+    parentId?: string
     user: User
     senderUserId?: string
     city: string
@@ -135,19 +137,24 @@ export async function insertWorkspace(
   await db.batch([
     db
       .prepare(
-        `INSERT INTO workspaces (id, org_id, repository_id, owner_user_id, section_id,
+        `WITH destination AS (
+         SELECT COALESCE((SELECT section_id FROM workspaces WHERE org_id = ? AND id = ?), ?) AS section_id
+       ) INSERT INTO workspaces (id, org_id, repository_id, owner_user_id, section_id, parent_workspace_id,
        name, branch, branch_placeholder, base_branch, provider_account, mac_access, state, created_at, updated_at, last_activity_at, position)
-       SELECT ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, 'starting', ?, ?, ?,
+       SELECT ?, ?, ?, ?, destination.section_id, ?, ?, ?, 1, ?, ?, ?, 'starting', ?, ?, ?,
          (SELECT COALESCE(MIN(position) - 1, 0) FROM workspaces
-          WHERE org_id = ? AND section_id = ? AND archived_at IS NULL AND state != 'archived')
-       WHERE ${activeOrgIdPredicate('?')}`,
+          WHERE org_id = ? AND section_id = destination.section_id AND archived_at IS NULL AND state != 'archived')
+       FROM destination WHERE ${activeOrgIdPredicate('?')}`,
       )
       .bind(
+        input.orgId,
+        input.parentId ?? null,
+        section.id,
         input.id,
         input.orgId,
         input.repositoryId,
         input.user.id,
-        section.id,
+        input.parentId ?? null,
         input.name ?? '',
         input.branch,
         input.baseBranch ?? null,
@@ -157,7 +164,6 @@ export async function insertWorkspace(
         input.now,
         input.now,
         input.orgId,
-        section.id,
         input.orgId,
       ),
     db

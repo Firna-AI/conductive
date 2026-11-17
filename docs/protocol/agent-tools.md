@@ -8,8 +8,9 @@ the calls of the workspace tools:
 - [Agent tool access](agent-tool-access.md): what each call reaches, which
   calls need an active turn, and the rights of the sender.
 - [Workspace calls](workspace-calls.md): the create call, the workspace
-  list, the calls of one workspace, and the lists that a create call
-  takes.
+  list, and the calls of one workspace.
+- [Repository, section, and model lists](create-call-lists.md): the lists
+  that a create call takes.
 - [Session calls](session-calls.md) and
   [Session management](session-management.md): the calls of sessions and
   messages.
@@ -115,8 +116,8 @@ create call and the workspace list.
 
 ## Repository, section, and model lists
 
-[Repository, section, and model lists](workspace-calls.md#repository-section-and-model-lists)
-states the three lists that a create call takes.
+[Repository, section, and model lists](create-call-lists.md) states the
+three lists that a create call takes.
 
 ## Mac commands
 

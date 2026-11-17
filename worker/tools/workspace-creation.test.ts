@@ -7,6 +7,7 @@ import { outerWorkerBundle } from '../chat/integration/outer-runtime.test-suppor
 import {
   OUTER_ORG,
   OUTER_REPOSITORY,
+  OTHER_WORKSPACE,
 } from '../chat/integration/outer-seed.test-support'
 import { driveWorkspaceStart } from '../chat/integration/workspace-start.test-support'
 import { CLAUDE } from '../chat/harness.test-support'
@@ -41,7 +42,17 @@ it('keeps one titled admission for overlapping creates and a lost reply after re
     firstSessionTitle:
       '\n  Fix_my   first session. An_extraordinarily_long_unbroken_word_that_does_not_fit_the_title_limit\nOther text',
     requestId: 'same-create',
+    parentId: OTHER_WORKSPACE,
+    sectionId: 'chat-section',
   }
+  await active.env.DB.batch([
+    active.env.DB.prepare(
+      "INSERT INTO sections (id, org_id, name, position, is_default, created_at) VALUES ('parent-section', 'chat-org', 'Parent', 1, 0, 1)",
+    ),
+    active.env.DB.prepare(
+      "UPDATE workspaces SET section_id = 'parent-section' WHERE id = ?",
+    ).bind(OTHER_WORKSPACE),
+  ])
   const first = active.post(MACHINE_PATHS.workspaces, input)
   const overlapping = active.post(MACHINE_PATHS.workspaces, input)
   const id = await admittedToolWorkspace(active)
@@ -56,7 +67,19 @@ it('keeps one titled admission for overlapping creates and a lost reply after re
     name: 'First workspace',
     owner: { id: 'owner' },
     choice: CLAUDE,
+    parentId: OTHER_WORKSPACE,
+    sectionId: 'parent-section',
   })
+  expect(accepted.notice).toBe(
+    'The workspace joined the section of its parent.',
+  )
+  expect(
+    await active.env.DB.prepare(
+      'SELECT parent_workspace_id AS parentId FROM workspace_creation_plans WHERE workspace_id = ?',
+    )
+      .bind(id)
+      .first(),
+  ).toEqual({ parentId: OTHER_WORKSPACE })
   const sessionId = string(accepted.sessionId)
   const actor = await creationActor(active, id)
   let state = featureState(await actor.inspectFeatureState())
@@ -91,13 +114,25 @@ it('keeps one titled admission for overlapping creates and a lost reply after re
     active.env.DB.prepare("DELETE FROM agent_logins WHERE user_id = 'member'"),
   ])
   await active.restart()
-  const repeated = await active.post(MACHINE_PATHS.workspaces, input)
+  const repeated = await active.post(MACHINE_PATHS.workspaces, {
+    ...input,
+    parentId: 'unknown-parent',
+    sectionId: 'unknown-section',
+  })
   expect(repeated.status).toBe(201)
   const replayed = record(await repeated.json())
   expect(replayed).toMatchObject({
     sessionId,
     sessionLink: accepted.sessionLink,
-    workspace: { id, number: 3, name: 'Renamed workspace', choice: CLAUDE },
+    workspace: {
+      id,
+      number: 3,
+      name: 'Renamed workspace',
+      choice: CLAUDE,
+      parentId: OTHER_WORKSPACE,
+      sectionId: 'parent-section',
+    },
+    notice: 'The workspace joined the section of its parent.',
   })
   state = featureState(
     await (await creationActor(active, id)).inspectFeatureState(),

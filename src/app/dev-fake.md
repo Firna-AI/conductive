@@ -36,6 +36,22 @@ option overrides this default, including queued chats that show no spinner.
   stay through rename, delete, and restore. Settings changes during the
   first good build start one added build. The fake compares settings
   revisions with builds as the Worker does.
+- `?subWorkspaces=1` gives Acme the sub-workspaces of the mockup page
+  `app/sub-workspaces`, from `fixtures/sub-workspaces.ts` of
+  `src/test-support/`: two trees in Checkout, under Apple Pay button and
+  under Checkout address autocomplete, down to depth 3, with the sibling
+  Rate limits: Load test. They come first in Checkout, the newest first,
+  as the Worker lists new workspaces, and each opens with the recorded
+  chat, as the other rows do. Without the option, no workspace has a
+  parent.
+- The writes of the fake place the trees as the Worker does, with or
+  without the option. A move of a top-level row, by a drag, by keys, or by
+  Move to section, takes its whole tree, and writes the section of each
+  workspace under it, live or archived. A move of a nested row changes
+  nothing, and a rename of it changes only the name. An Archive gives each
+  live workspace that showed under the archived row its section and its
+  place, so the next read shows them where that row was.
+  `dev/workspace-writes.ts` holds these writes.
 - Own endpoint saves return `endpointV1Added` and `modelListReadFailed`, as
   the Worker does. Refresh returns HTTP 200 with `modelListReadFailed`.
   False means the read produced a list. These response flags never enter

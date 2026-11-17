@@ -186,7 +186,7 @@ The chat stays read-only in **Archived**, with no file lists or tools.
 
 The notification after Archive offers **Restore**.
 Every member of an active org can restore the workspace while its computer and Restore window remain available.
-Restore returns it to its section and place in the list, stopped.
+Restore returns the workspace to its place in the list, stopped.
 Select **Resume** if the restored workspace is already open.
 The archived bar and the command palette also offer Restore during that window.
 On a computer, point to its row in **Archived** to find **Restore**.

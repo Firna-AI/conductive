@@ -304,6 +304,13 @@ The partial index `workspaces_running_since` holds running, unarchived rows
 with a non-null time. Its running states match `runningWorkspacePredicate`.
 The [operator Overview](../worker/operator/overview.md) uses this index to read the ten oldest runs.
 
+`202611161700_workspace_parents.sql` adds the nullable parent workspace link
+to `workspaces` and `workspace_creation_plans`. Existing rows keep `NULL`.
+The workspace link references `workspaces(id)`. The index on
+`(org_id, parent_workspace_id)` serves direct sub-workspace reads.
+The creation plan keeps the parent through creation retries and replay.
+[Sub-workspaces](../docs/protocol/sub-workspaces.md) gives the parent rules.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.
@@ -350,6 +357,7 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | Keyboard shortcuts storage | `202611101600`–`202611101659` |
 | Agent workspace calls | `202611111200`–`202611111259` |
 | Parallel image sources | `202611161200`–`202611161259` |
+| Sub-workspaces | `202611161700`–`202611161759` |
 
 `202611131221_attachment_download_tokens.sql` adds one-use attachment download grants.
 Each row holds a token digest, the file and destination identities, its expiry, and its claim time.

@@ -1,0 +1,98 @@
+/*
+ * The guide lines of a tree, as in a file tree, on the rows of
+ * `WorkspaceRow.module.css`. They read the size of the row from its custom
+ * properties: `--row-pad`, `--row-step`, `--row-guide`, and the steps of
+ * the indent of a nested row, `--row-indent`. Column 0 lies under the
+ * middle of the mark of the top-level row, and each next column one step
+ * to the right, under the mark of a row one level deeper. The lines are
+ * 1px neutral lines in the `border2` colour, not an accent. They lie over
+ * the fill of a hover or a selection, take no pointer input, and join
+ * across the 1px gap under a row. `.tree` marks a row that draws lines,
+ * and `--guide-line` is their colour.
+ */
+.tree {
+  --guide-line: var(--ui-border2);
+
+  position: relative;
+}
+
+.corner::before,
+.tree::after {
+  position: absolute;
+  box-sizing: border-box;
+  content: '';
+  pointer-events: none;
+}
+
+/*
+ * └ The corner of a nested row: the line of its parent runs down to the
+ * middle of the row, then right to the left edge of the mark. The middle
+ * of the cells of the mark is 1px above the middle of the row, so the
+ * corner ends on the last pixel of the upper half.
+ */
+.corner::before {
+  top: 0;
+  left: calc(var(--row-guide) + (var(--row-indent) - 1) * var(--row-step));
+  width: calc(var(--row-pad) + var(--row-step) - var(--row-guide));
+  height: 50%;
+  border-bottom: 1px solid var(--guide-line);
+  border-left: 1px solid var(--guide-line);
+}
+
+/*
+ * The lines that run down through the whole row to the next row of the
+ * tree. Each of `.through0` to `.through2` draws the line of one column.
+ * In the column of the parent, the line meets the corner (├) while the
+ * parent has a later nested row. In an outer column, it runs while the
+ * row of that column has a nested row further down (│). `.stub` draws the
+ * line from the bottom of the cells of the mark, 5px under the middle of
+ * the row, down to the line of the rows nested under the row. The box is
+ * 1px taller than the row, so the stub is half the box less 4.5px.
+ */
+.tree::after {
+  top: 0;
+  bottom: -1px;
+  left: var(--row-guide);
+  width: calc(2 * var(--row-step) + 1px);
+  background:
+    linear-gradient(var(--guide-through0, transparent) 0 0) 0 0 / 1px 100%,
+    linear-gradient(var(--guide-through1, transparent) 0 0) var(--row-step) 0 /
+      1px 100%,
+    linear-gradient(var(--guide-through2, transparent) 0 0)
+      calc(2 * var(--row-step)) 0 / 1px 100%,
+    linear-gradient(var(--guide-stub, transparent) 0 0)
+      calc(var(--row-indent, 0) * var(--row-step)) 100% / 1px calc(50% - 4.5px);
+  background-repeat: no-repeat;
+}
+
+.through0 {
+  --guide-through0: var(--guide-line);
+}
+
+.through1 {
+  --guide-through1: var(--guide-line);
+}
+
+.through2 {
+  --guide-through2: var(--guide-line);
+}
+
+.stub {
+  --guide-stub: var(--guide-line);
+}
+
+/*
+ * In forced colours, the browser drops the gradients of the lines but
+ * keeps the borders of the corners. So the lines keep their own colour
+ * there, the system colour of quiet text, and the whole tree still shows.
+ */
+@media (forced-colors: active) {
+  .tree {
+    --guide-line: GrayText;
+  }
+
+  .corner::before,
+  .tree::after {
+    forced-color-adjust: none;
+  }
+}

@@ -44,6 +44,7 @@ export function readWorkspace(value: unknown): Workspace {
     orgId: text(workspace, 'orgId'),
     repositoryId: text(workspace, 'repositoryId'),
     sectionId: text(workspace, 'sectionId'),
+    parentId: maybeText(workspace, 'parentId'),
     owner: nested(workspace, 'owner', readSender),
     name: maybeText(workspace, 'name'),
     branch: text(workspace, 'branch'),

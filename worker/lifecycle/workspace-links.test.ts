@@ -26,6 +26,7 @@ it('presents an old create admission with its saved fields and current number an
         delete snapshot.link
         delete snapshot.restoreUntil
         delete snapshot.github
+        delete snapshot.parentId
         return {
           ...result,
           created: { ...result.created, workspace: snapshot },
@@ -46,5 +47,6 @@ it('presents an old create admission with its saved fields and current number an
     state: 'starting',
     restoreUntil: null,
     github: null,
+    parentId: null,
   })
 })

@@ -130,3 +130,7 @@ mod mac_adapter_tests;
 #[cfg(test)]
 #[path = "_tests_/secrets/mod.rs"]
 mod secrets_tests;
+
+#[cfg(test)]
+#[path = "_tests_/workspace_tests.rs"]
+mod workspace_tests;
