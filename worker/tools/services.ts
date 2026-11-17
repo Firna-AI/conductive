@@ -101,7 +101,7 @@ export type ToolWorkspaceWrite = {
   | ({
       kind: 'move'
       target?: WorkspaceParentTarget
-    } & Partial<AgentMoveWorkspaceRequest>)
+    } & AgentMoveWorkspaceRequest)
   | { kind: 'archive' }
 )
 

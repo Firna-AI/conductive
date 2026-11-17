@@ -194,17 +194,17 @@ Depends on: 2
 
 The MCP tool and the CLI send the target.
 
-- [ ] Make `section_id` optional and add `parent_id` and `top_level` in
+- [x] Make `section_id` optional and add `parent_id` and `top_level` in
       `AgentMoveWorkspaceRequest` of
       `crates/cnd-runner-interface/src/tools/workspaces.rs`. Regenerate
       `src/shared/generated/` with the bindings command.
-- [ ] Update `move_workspace` in `crates/cnd-tools/src/mcp-tools.json`:
+- [x] Update `move_workspace` in `crates/cnd-tools/src/mcp-tools.json`:
       the new fields and a description of the parent change.
-- [ ] Parse the fields in `crates/cnd-tools/src/input/parse.rs`. Add
+- [x] Parse the fields in `crates/cnd-tools/src/input/parse.rs`. Add
       `--parent` and the value-less `--top-level` to
       `crates/cnd-tools/src/cli_parse.rs` and to the CLI help.
-- [ ] Tests for the parse, the CLI flags, and the request body.
-- [ ] Update `tools/calls.md`, `tools/README.md`, and
+- [x] Tests for the parse, the CLI flags, and the request body.
+- [x] Update `tools/calls.md`, `tools/README.md`, and
       `crates/cnd-tools/README.md`.
 
 ## Milestone 4: Agent instructions

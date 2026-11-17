@@ -8,7 +8,7 @@ conductive workspaces create --repository ID --message TEXT
   [--agent claude|codex --model NAME] [--effort LEVEL] [--fast true|false] [--section ID] [--name TEXT]
   [--parent ID] [--first-session-title TEXT] [--request-id ID]
 conductive workspaces rename --name TEXT [--workspace ID]
-conductive workspaces move --section ID [--workspace ID]
+conductive workspaces move [--section ID] [--parent ID | --top-level] [--workspace ID]
 conductive workspaces archive [--workspace ID]
 conductive repositories list
 conductive sections list
@@ -61,7 +61,13 @@ The workspace in a create reply gives parentId. The reply can give a section not
 For workspace list, --parent ID lists only the direct sub-workspaces of that workspace.
 Each workspace list entry gives parentId, or null for a top-level workspace.
 Workspace get also gives parent, depth, and children, including archived children.
-Workspace move can give a notice that names the top-level workspace to move instead.
+Workspace move needs a section, a target, or both. Use only one target.
+For workspace move, --parent ID nests the whole tree under that parent.
+The tree joins its parent's section. Another --section gives a notice.
+--top-level takes the tree out of its parent, to the top of the named or shown section.
+A target equal to the current place changes nothing.
+The Worker refuses loops and moves past depth 3, including archived links, without changes.
+A section-only move of a nested row moves nothing and gives a notice naming the top-level workspace to move.
 Session create uses the turn sender's default model and effort.
 Creates run fast only with --fast true, for a marked model.
 Send keeps the session's choice when omitted. --fast false turns fast mode off.
