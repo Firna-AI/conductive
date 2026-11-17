@@ -26,9 +26,9 @@ const below = 4
  * press of a drag that ends with no move. A read-only row leaves out each
  * item that changes the workspace, so a session tab keeps only Copy link
  * and its transcript copies, and a file or diff tab keeps only Copy path:
- * the temporary tab loses Keep open with its moves and Close tabs to the
- * right. That row binds no drag, so a finger opens the menu with the long
- * press of `useLongPress`, which lifts no tab. A tab with no item, such as
+ * the temporary tab loses Keep open with its moves and the two closes.
+ * That row binds no drag, so a finger opens the menu with the long press
+ * of `useLongPress`, which lifts no tab. A tab with no item, such as
  * a file tab of a read-only row without Copy path, and a tab that shows its
  * rename field open no menu, so the browser shows its own.
  */

@@ -159,6 +159,7 @@ describe('the Files screens in the workspace', () => {
         { name: 'Keep open', off: false },
         { name: 'Move left', off: false },
         { name: 'Move right', off: true },
+        { name: 'Close other tabs', off: false },
         { name: 'Close tabs to the right', off: true },
       ],
       moved: 'seed-[redacted].sql changes moves to place 2 of 3',
