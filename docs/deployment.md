@@ -44,9 +44,12 @@ examples.
     the failures of the programs in the sandboxes become issues too.
   - Issues sends no alert by itself. An automation in the dashboard sends
     an issue to a chat, an incident tool, a webhook, or a coding agent.
-  - Issues shows no cause for an unexpected error that the Worker
-    catches. The reply is then `500 internal_error`, and the Worker logs
-    no error line.
+  - The reply to an unexpected error that the Worker catches is
+    `500 internal_error`. The Worker then logs the `unexpected_error`
+    warning. It holds the error name, a fixed kind for a known Cloudflare
+    text, the Cloudflare flags, the method, the route words, and the code
+    places of the stack. It holds no error message, so that no secret or
+    request body reaches the log.
   - An error of a Durable Object that restarted, such as for a deploy,
     gets `503 server_restarted` instead, as
     [Effects on open pages](automatic-deploys.md#effects-on-open-pages)

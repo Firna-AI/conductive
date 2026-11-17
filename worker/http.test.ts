@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
-import { errorResponse } from './http'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { errorResponse, HttpError } from './http'
 
 async function answer(error: unknown) {
   const response = errorResponse(error)
@@ -16,7 +16,31 @@ const restarted = {
   },
 }
 
+afterEach(() => vi.restoreAllMocks())
+
 describe('errorResponse', () => {
+  it('logs one unexpected_error warning with safe fields only, and none for an HttpError', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    const marker = 'private_request_body'
+    const request = new Request(
+      `https://app.conductive.build/api/orgs/${marker}/workspaces?key=${marker}`,
+    )
+
+    errorResponse(new HttpError(409, 'workspace_archived', marker), request)
+    errorResponse(new TypeError(marker), request)
+
+    expect(warn).toHaveBeenCalledTimes(1)
+    const [record] = warn.mock.calls[0] ?? []
+    expect(record).toMatchObject({
+      kind: 'unexpected_error',
+      message: 'A request failed with an unexpected error.',
+      errorName: 'TypeError',
+      method: 'GET',
+      route: '/api/orgs/*/workspaces',
+    })
+    expect(JSON.stringify(record)).not.toContain(marker)
+  })
+
   it('answers a restart of a Durable Object as a restart of the server', async () => {
     const cases = [
       new Error('Durable Object reset because its code was updated.'),

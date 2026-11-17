@@ -1,4 +1,6 @@
 import type { ApiErrorBody } from '../src/shared/api'
+import { unexpectedErrorFields } from './unexpected-error'
+import { warnWorker } from './warnings'
 
 export class HttpError extends Error {
   readonly status: number
@@ -32,7 +34,17 @@ function objectRestarted(error: unknown): boolean {
   return error instanceof Error && CODE_UPDATED.test(error.message)
 }
 
-export function errorResponse(error: unknown): Response {
+/**
+ * The API error body of an error. An error that is not an `HttpError` also
+ * writes the `unexpected_error` warning, with the route of `request` when
+ * the caller gives it.
+ */
+export function errorResponse(error: unknown, request?: Request): Response {
+  if (!(error instanceof HttpError))
+    warnWorker({
+      kind: 'unexpected_error',
+      ...unexpectedErrorFields(error, request),
+    })
   if (objectRestarted(error)) {
     return Response.json(
       {

@@ -127,6 +127,19 @@ function warningFields(warning: WorkerWarning) {
         resource: warning.resource,
         limit: warning.limit,
       }
+    case 'unexpected_error':
+      return {
+        kind: warning.kind,
+        message: 'A request failed with an unexpected error.',
+        errorName: warning.errorName,
+        knownText: warning.knownText,
+        retryable: warning.retryable,
+        overloaded: warning.overloaded,
+        durableObjectReset: warning.durableObjectReset,
+        method: warning.method,
+        route: warning.route,
+        frames: [...warning.frames],
+      }
     case 'lifecycle_repair_pending':
       return {
         kind: warning.kind,

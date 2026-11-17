@@ -117,7 +117,7 @@ export class DeviceRuntime {
         )
       return privateResponse(response)
     } catch (error) {
-      return privateResponse(errorResponse(deviceError(error)))
+      return privateResponse(errorResponse(deviceError(error), request))
     }
   }
   async alarm(): Promise<void> {
