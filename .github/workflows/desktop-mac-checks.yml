@@ -6,6 +6,10 @@ on:
       ref:
         type: string
         default: ''
+      # A JSON list of the architectures to check, from arm64 and x64.
+      architectures:
+        type: string
+        default: '["arm64", "x64"]'
 
 permissions:
   contents: read
@@ -16,14 +20,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          # Blacksmith runs Apple silicon Macs only, so the Intel job stays on
-          # a GitHub-hosted runner.
-          - arch: arm64
-            runner: blacksmith-6vcpu-macos-15
-          - arch: x64
-            runner: macos-15-intel
-    runs-on: ${{ matrix.runner }}
+        arch: ${{ fromJSON(inputs.architectures) }}
+    # Blacksmith runs Apple silicon Macs only, so the Intel job stays on a
+    # GitHub-hosted runner.
+    runs-on: ${{ matrix.arch == 'arm64' && 'blacksmith-6vcpu-macos-15' || 'macos-15-intel' }}
     steps:
       - uses: actions/checkout@v7
         with:
