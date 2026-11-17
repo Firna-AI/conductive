@@ -150,8 +150,8 @@ export class WorkspaceLifecycle
       () => this.readLifecycleStartLog(),
     )
   }
-  async waitCreationAdmission() {
-    return this.controller.waitCreationAdmission()
+  async waitCreationAdmission(timeoutMs?: number) {
+    return this.controller.waitCreationAdmission(timeoutMs)
   }
   async readCreationLifecycleResult() {
     const result = await this.controller.readCreationLifecycleResult()

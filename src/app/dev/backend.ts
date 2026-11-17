@@ -6,6 +6,7 @@ import { leaveOrgPath } from '../../shared/orgs'
 import type { Section } from '../../shared/sections'
 import { workspacePath, type WorkspaceResponse } from '../../shared/workspaces'
 import type { FakeWorkspaceEvents } from '../../test-support/fake-events'
+import { replaceWorkspace } from '../list-trees'
 import { orgSuspendedCode } from '../suspension'
 import { ID, match, RouteError } from './router'
 import type { DevState, OrgState } from './state'
@@ -123,15 +124,19 @@ export function workspaceDetail(
  * Puts a changed workspace in its place in the list, and sends it to the
  * open tabs. A stream sends its whole history when it opens, and the app
  * applies each `workspace.updated` again. So every change sends one, and
- * the last one of each workspace is its state now.
+ * the last one of each workspace is its state now. An Archive gives the
+ * live workspaces under the archived one its section and its place, as
+ * the Worker does.
  */
 export function changeWorkspace(
   backend: DevBackend,
   org: OrgState,
   workspace: Workspace,
 ): void {
-  org.workspaces = org.workspaces.map((item) =>
-    item.id === workspace.id ? workspace : item,
+  org.workspaces = replaceWorkspace(
+    org.workspaces,
+    workspace.id,
+    () => workspace,
   )
   backend.emit(workspace.id, { type: 'workspace.updated', workspace })
 }

@@ -130,6 +130,9 @@ export function parseWorkspace(value: unknown): Workspace {
     orgId: text(source, 'orgId'),
     repositoryId: text(source, 'repositoryId'),
     sectionId: text(source, 'sectionId'),
+    // A reply from before sub-workspaces has no parent.
+    parentId:
+      source.parentId === undefined ? null : textOrNull(source, 'parentId'),
     owner: sender(nested(source, 'owner')),
     name: textOrNull(source, 'name'),
     branch: text(source, 'branch'),

@@ -15,6 +15,10 @@ Each path is relative to `src/app/`, the folder of this page.
 - `dev/org-routes.ts` creates orgs and starts their first simulated build.
   `dev/build-routes.ts` runs builds and the added build after the first image.
   `dev/settings-routes.ts` saves settings and repository choices.
+- `dev/seed.ts`: the state of the dev fake when the app opens.
+  `dev/acme-seed.ts`: Acme with its recorded records, and its
+  sub-workspaces with `?subWorkspaces=1`. `dev/workspace-writes.ts`:
+  Rename, the move of a tree, Archive, and Restore of one workspace.
 - `dev/waitlist-routes.ts`: the waitlist of the person signed in, and
   `admitOpenSignup`, which gives app access during open sign-up before each
   request. `dev/signup-routes.ts`: the pause and the waitlist switch of
@@ -159,7 +163,14 @@ Each path is relative to `src/app/`, the folder of this page.
   exists. `refresh.ts`: `Refresher`, the shared reads of a part while
   screens show it, and `reread`, a read that starts after a refusal.
 - `section-actions.ts`, `list-changes.ts`, and `sections.ts`: the list
-  writes, their changes, moves, and the Archived group.
+  writes, their changes, moves, and the Archived group. `groupWorkspaces`
+  places the rows of each section with `placeWorkspaces` of
+  `../shared/workspace-tree.ts`, and `moveWorkspace` moves the tree of a
+  top-level row. `list-trees.ts`: `ListRow`, a placed row, `treeOf` and
+  `treeRows`, the trees of a section, and `replaceWorkspace`, which gives
+  the place of an archived workspace to the live rows under it, as the
+  Worker does. `sections.test.ts` and `archive-overlay.test.ts` check the
+  trees of a section, their moves, and an Archive of a parent.
 - `workspace-actions.ts`: `OrgModel.workspaceActions`, the Rename write,
   owner-only confirmation, the Archive and Restore flows of unopened rows,
   and `running`, the Archive or the Restore that runs for each workspace.
@@ -187,7 +198,12 @@ Each path is relative to `src/app/`, the folder of this page.
   time on hover until the last day of Restore.
   `SectionHeader.tsx` draws a section header with its menu and Rename
   section. `useListActions.ts` runs the list changes, with a toast for a
-  failure. `RowMenu.test.tsx`, `RowMenuAccess.test.tsx`,
+  failure. `RowContent.tsx` draws the content of a row and the indent of
+  a nested row. `RowDrop.tsx` draws the drop line and the lifted row of a
+  tree, with the count of its nested rows. `SectionTrees.test.tsx` and
+  `TreeDrag.test.tsx` check the trees of the list, their keys, and their
+  drag, with the helpers of `row-drag-test-kit.ts`.
+  `RowMenu.test.tsx`, `RowMenuAccess.test.tsx`,
   `RowActions.test.tsx`, `RowArchive.test.tsx`, `RowRename.test.tsx`, and
   `RowCopyLink.test.tsx` mount the whole app.
   [Workspace menu](../../docs/protocol/workspace-menu.md) states the menu
@@ -284,8 +300,11 @@ Each path is relative to `src/app/`, the folder of this page.
   control keeps, and stops the click after a hold. A mouse and a pen bind
   nothing. `../chat/components/TranscriptCopy.dom.test.tsx` checks it
   through the tab row of a read-only chat.
-  `../shell/list/useRowDrag.ts`: the drag of a workspace row to a place in
-  a section, on `usePointerDrag`.
+  `../shell/list/useRowDrag.ts`: the drag of a top-level row with its tree
+  to a place in a section, on `usePointerDrag`, and `still`, the handlers
+  of a nested row, whose long press does nothing, on `useLongPress`.
+  `../shell/list/drop-target.ts`: `DropLayout`, the boxes of the sections,
+  the rows, and the trees that a drop measures.
 - `../shell/orgs/useOrgDrag.ts`: the drag of an org in the rail and in the
   org switcher of a phone, on `usePointerDrag`. `../shell/orgs/useOrgMove.ts`:
   the move with the toast of a failed save.

@@ -1,5 +1,6 @@
 import type { Workspace } from '../../shared/generated/Workspace'
-import { useState } from 'react'
+import { useState, type HTMLAttributes } from 'react'
+import { useLongPress } from '../../app/long-press'
 import { usePointerDrag, type PointerDrag } from '../../app/pointer-drag'
 
 import { DropLayout, type DropTarget } from './drop-target'
@@ -14,13 +15,21 @@ function samePlace(a: DropTarget, b: DropTarget): boolean {
   return a.sectionId === b.sectionId && a.index === b.index
 }
 
+/** A long press of a nested row, which does nothing. */
+function holdNothing(): void {}
+
 /**
  * Drag and drop of workspace rows between sections, on the shared pointer
  * drag: a mouse drags after a short move, and a finger lifts the row after a
- * long press. The drop place is in the section under the pointer, before
- * the first other row whose middle is below it. Outside every section, the
- * place stays as it was. A release at the row's own place moves nothing,
- * also after a long press that lets go without a move.
+ * long press. Only a top-level row drags, and its tree moves with it. The
+ * drop place is in the section under the pointer, before the first other
+ * tree whose middle is below it. Outside every section, the place stays as
+ * it was. A release at the row's own place moves nothing, also after a long
+ * press that lets go without a move.
+ *
+ * `still` gives the handlers of a nested row, which nothing lifts: a long
+ * press of a finger does nothing, so it opens no menu and the click after
+ * it opens nothing, and no press starts a native drag of its link.
  */
 export function useRowDrag(
   move: (workspaceId: string, target: DropTarget) => void,
@@ -37,5 +46,10 @@ export function useRowDrag(
       if (!samePlace(place, from)) move(item.id, place)
     },
   })
-  return { drag, bind, layout }
+  const hold = useLongPress<Workspace>(holdNothing)
+  const still = (workspace: Workspace): HTMLAttributes<HTMLElement> => ({
+    ...hold(workspace),
+    onDragStart: (event) => event.preventDefault(),
+  })
+  return { drag, bind, still, layout }
 }

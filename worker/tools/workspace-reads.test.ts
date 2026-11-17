@@ -64,6 +64,10 @@ it('reads archived workspace facts with only its token and excludes another org'
     lastActivityAt: 17,
     archivedAt: 12,
     restoreUntil: 12 + WORKSPACE_RESTORE_MS,
+    parentId: null,
+    parent: null,
+    depth: 0,
+    children: [],
   })
   expect(response.headers.get('Cache-Control')).toBe('no-store')
   await active.env.DB.batch([
@@ -89,4 +93,50 @@ it('reads archived workspace facts with only its token and excludes another org'
   expect(record(record(await current.json()).workspace).id).toBe(
     OUTER_WORKSPACE,
   )
+})
+
+it('reads stored parent depth and ordered children with the shown section for live rows', async () => {
+  const active = (fixture = await agentWriteFixture(bundle))
+  await active.env.DB.batch([
+    active.env.DB.prepare(
+      "INSERT INTO sections (id, org_id, name, position, is_default, created_at) VALUES ('own-section', 'chat-org', 'Own section', 1, 0, 1)",
+    ),
+    active.env.DB.prepare(
+      "UPDATE workspaces SET parent_workspace_id = ?, section_id = 'own-section', state = 'archived', archived_at = 2 WHERE id = ?",
+    ).bind(OUTER_WORKSPACE, OTHER_WORKSPACE),
+    ...[
+      ['child', OTHER_WORKSPACE, 'ready', 5],
+      ['later', 'child', 'ready', 9],
+      ['older', 'child', 'archived', 6],
+    ].map(([id, parentId, state, createdAt]) =>
+      active.env.DB.prepare(
+        `INSERT INTO workspaces
+       (id, org_id, repository_id, owner_user_id, section_id, name, branch, state, created_at, updated_at, parent_workspace_id)
+       VALUES (?, 'chat-org', 'chat-repository', 'owner', 'own-section', ?, ?, ?, ?, ?, ?)`,
+      ).bind(id, id, `owner/${id}`, state, createdAt, createdAt, parentId),
+    ),
+  ])
+  const response = await get(active, 'child')
+  expect(response.status).toBe(200)
+  const detail = record(record(await response.json()).workspace)
+  expect(detail).toMatchObject({
+    parentId: OTHER_WORKSPACE,
+    parent: {
+      id: OTHER_WORKSPACE,
+      parentId: OUTER_WORKSPACE,
+      state: 'archived',
+    },
+    depth: 2,
+    section: { id: 'chat-section', name: 'General' },
+    children: [
+      { id: 'older', parentId: 'child', state: 'archived' },
+      { id: 'later', parentId: 'child', state: 'ready' },
+    ],
+  })
+  const archived = await get(active, OTHER_WORKSPACE)
+  expect(record(record(await archived.json()).workspace)).toMatchObject({
+    section: { id: 'own-section', name: 'Own section' },
+    depth: 1,
+    children: [{ id: 'child' }],
+  })
 })

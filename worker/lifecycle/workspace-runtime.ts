@@ -59,7 +59,7 @@ export interface WorkspaceLifecycleEndpoint {
   ): Promise<boolean>
   waitLifecycleStart(): Promise<WorkspaceStartResult>
   waitCreationLifecycle(): Promise<WorkspaceStartResult>
-  waitCreationAdmission(): Promise<WorkspaceCreationAdmission>
+  waitCreationAdmission(timeoutMs?: number): Promise<WorkspaceCreationAdmission>
   readCreationLifecycleResult(): Promise<WorkspaceStartResult | undefined>
   readLifecycleStartLog(): Promise<MaskedStartLog>
 }

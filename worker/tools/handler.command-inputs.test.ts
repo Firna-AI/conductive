@@ -70,6 +70,7 @@ it('creates and lists workspaces and resources through workspace authentication'
       {
         owner: { id: 'owner', githubLogin: 'owner-login', displayName: null },
         id: 'calling-workspace',
+        parentId: null,
         number: 1,
         link: `${TEST_ORIGIN}${routes.workspace('org-a', 'calling-workspace')}`,
         name: 'Lisbon',
@@ -83,6 +84,7 @@ it('creates and lists workspaces and resources through workspace authentication'
           displayName: null,
         },
         id: 'teammate-workspace',
+        parentId: null,
         number: 2,
         link: `${TEST_ORIGIN}${routes.workspace('org-a', 'teammate-workspace')}`,
         name: null,
@@ -92,6 +94,7 @@ it('creates and lists workspaces and resources through workspace authentication'
       {
         owner: { id: 'owner', githubLogin: 'owner-login', displayName: null },
         id: 'archived-workspace',
+        parentId: null,
         number: 3,
         link: `${TEST_ORIGIN}${routes.workspace('org-a', 'archived-workspace')}`,
         name: 'Rome',
