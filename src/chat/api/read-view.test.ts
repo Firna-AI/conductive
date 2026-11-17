@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { readViewReply } from './read-responses'
+import { readViewReply } from './read-view'
 
 const view = {
   tabs: [
@@ -89,6 +89,19 @@ describe('Preview tabs', () => {
 
   it('reads a view of an older Worker, with no Preview tab', () => {
     expect(readViewReply({ view }).view.tabs).toEqual(view.tabs)
+  })
+
+  it('keeps the shown terminal next to Preview tabs', () => {
+    const previewTabs = [{ port: 3000, place: 0 }]
+    const reply = readViewReply({
+      view: { ...view, previewTabs, terminal: 'workspace' },
+    })
+    expect(reply.view.terminal).toBe('workspace')
+    expect(reply.view.tabs[0]).toEqual({ kind: 'preview', port: 3000 })
+    for (const terminal of ['other', 2, null]) {
+      const read = readViewReply({ view: { ...view, previewTabs, terminal } })
+      expect(read.view).not.toHaveProperty('terminal')
+    }
   })
 
   it('refuses a Preview tab without a port from 1 to 65535', () => {

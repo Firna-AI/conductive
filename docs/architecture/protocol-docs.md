@@ -27,6 +27,9 @@ This page lists each protocol doc and what it covers.
     - [Stop and resume](../protocol/stop-and-resume.md): the stop of an
       idle sandbox, the resume, the starts from the agent tools, and the
       restart near day 14 of a stop.
+    - [Restart the software](../protocol/restart-the-software.md): Restart
+      in the workspace header, what it restarts, and the download of the
+      newest release before it.
   - [Continue](../protocol/continue.md): the next task of a workspace after a
     merge, on a new branch with the same sandbox and sessions.
   - [Workspace menu](../protocol/workspace-menu.md): the menu of a workspace
@@ -35,6 +38,13 @@ This page lists each protocol doc and what it covers.
     to nest, the depth limit, the nested rows of the list, an archived parent, the moves
     of a tree, and the agent context.
   - [Workspace tools](../protocol/workspace-tools.md)
+    - [Terminal](../protocol/terminal.md): the terminals of a workspace
+      and their tabs, and the shell of each terminal.
+      - [Terminal screen](../protocol/terminal-screen.md): the screen of
+        each terminal, its output history, its selection, its size, and its
+        keys.
+      - [Terminal links](../protocol/terminal-links.md): the links in the
+        output of a terminal.
     - [Temporary tabs](../protocol/temporary-tabs.md): the one file or diff
       tab that the next press replaces, what opens and keeps it, and its
       mark in the saved view.

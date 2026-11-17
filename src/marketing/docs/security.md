@@ -34,7 +34,7 @@ A turn that a late answer to a secret request starts keeps the sender of the tur
 | --- | --- |
 | Agent model use | The session starter's agent login, including a chosen endpoint |
 | Git and GitHub CLI in a turn | The turn sender's GitHub account |
-| GitHub commands in the shared Terminal | The workspace owner's GitHub account |
+| GitHub commands in any workspace terminal | The workspace owner's GitHub account |
 | GitHub CLI outside a turn | The workspace owner's GitHub account |
 | Merge from the pull request bar | The GitHub account of the member who selects Merge |
 | Ready for review from the pull request bar | The GitHub account of the member who selects Ready for review |
@@ -57,7 +57,7 @@ That choice also applies to the starter's own messages, which use the starter's 
 The agent can identify the member who sent each message.
 Another member's message during a turn does not change its GitHub account, commit author, or receiving Mac.
 
-Every member using a workspace's Terminal uses the same owner identity for GitHub commands.
+Every member using a workspace terminal uses the same owner identity for GitHub commands.
 GitHub access can include repositories outside the Conductive org.
 It reaches repositories that both the GitHub account and the GitHub App can reach.
 

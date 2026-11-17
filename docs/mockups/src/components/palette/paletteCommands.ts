@@ -84,6 +84,7 @@ const rightColumnActions: readonly Command[] = [
     lead: icon(SquarePlus),
     words: ['shell', 'tab'],
     to: paths.terminal,
+    shortcut: 'new-terminal',
   },
 ]
 

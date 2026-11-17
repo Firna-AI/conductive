@@ -194,11 +194,11 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         app. They stay in your browser.`,
       text`Last workspaces: your browser keeps the address of the last
         workspace page that you opened in each org. The address holds the
-        IDs of the org, the workspace, and the session, the preview, or
-        the port of a preview. It
-        can also hold the name of a tool and the path of an open file. A
-        switch to the org opens that page again. The addresses stay in your
-        browser, also after you sign out, until you clear its saved data.`,
+        IDs of the org, the workspace, and the session, the preview, the
+        port of a preview, or the terminal. It can also hold the name of a
+        tool and the path of an open file. A switch to the org opens that
+        page again. The addresses stay in your browser, also after you sign
+        out, until you clear its saved data.`,
     ),
     paragraph`Where data protection law requires a lawful basis, the
       operator relies on performance of a contract to provide the
