@@ -16,7 +16,7 @@ it('marks support from the running ttyd arguments and keeps older or rolled back
   for (const [pid, expected] of [
     [202, '1\n'],
     [101, '0\n'],
-    [0, '0\n'],
+    [0, undefined],
   ] as const) {
     expect(await fixture.start([pid])).toEqual({
       code: 0,
@@ -51,7 +51,7 @@ it('waits through launcher reads and rereads MainPID before reporting ttyd suppo
   expect(await fixture.sleeps()).toEqual(['0.1', '0.1'])
 })
 
-it('ends the bounded poll with one terminal when the launcher never becomes ttyd', async () => {
+it('leaves no marker when the bounded poll cannot confirm ttyd support', async () => {
   const fixture = await terminalStartFixture()
   for (const pid of [101, 202]) {
     await fixture.process(pid, '/bin/sh', [
@@ -65,10 +65,41 @@ it('ends the bounded poll with one terminal when the launcher never becomes ttyd
     stdout: '',
     stderr: '',
   })
-  expect(await fixture.marker()).toBe('0\n')
+  expect(await fixture.marker()).toBeUndefined()
   expect(await fixture.reads()).toEqual([
     '101',
     ...Array<string>(49).fill('202'),
   ])
   expect(await fixture.sleeps()).toEqual(Array<string>(49).fill('0.1'))
+})
+
+it('removes the old support marker before a failed terminal start', async () => {
+  const fixture = await terminalStartFixture()
+  await fixture.process(202, TERMINAL_EXECUTABLE, [
+    TERMINAL_EXECUTABLE,
+    '--url-arg',
+    TERMINAL_ATTACH_NAME,
+  ])
+  expect((await fixture.start([202])).code).toBe(0)
+  expect(await fixture.marker()).toBe('1\n')
+  expect(
+    (await fixture.start([202], 'start conductive-terminal.service')).code,
+  ).toBe(1)
+  expect(await fixture.marker()).toBeUndefined()
+})
+
+it('leaves no support marker when the ttyd arguments cannot be read', async () => {
+  const fixture = await terminalStartFixture()
+  const process = await fixture.process(202, TERMINAL_EXECUTABLE, [
+    TERMINAL_EXECUTABLE,
+    '--url-arg',
+    TERMINAL_ATTACH_NAME,
+  ])
+  await unlink(process.argumentsFile)
+  expect(await fixture.start([202])).toEqual({
+    code: 0,
+    stdout: '',
+    stderr: '',
+  })
+  expect(await fixture.marker()).toBeUndefined()
 })

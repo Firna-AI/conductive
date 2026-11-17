@@ -12,6 +12,7 @@ import {
   TERMINAL_RUNTIME,
   TERMINAL_RUNTIME_VIEW,
   TERMINAL_RESTORE_MARKER,
+  TERMINAL_SUPPORT_FILE,
 } from './scripts'
 
 export function terminalPackagesCommand(): string {
@@ -30,6 +31,7 @@ export function terminalStartCommand(): string {
 install -d -m 700 -o user -g user ${shellArgument(TERMINAL_RUNTIME)}
 touch ${shellArgument(`${TERMINAL_RUNTIME}/enabled`)}
 systemctl stop ttyd.service 2>/dev/null || true
+rm -f -- ${shellArgument(`${TERMINAL_RUNTIME}/${TERMINAL_SUPPORT_FILE}`)}
 systemctl start conductive-terminal.service
 systemctl is-active --quiet conductive-terminal.service
 ${terminalSupportProbe()}

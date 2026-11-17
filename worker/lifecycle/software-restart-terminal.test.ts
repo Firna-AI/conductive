@@ -1,6 +1,7 @@
 import { afterEach, expect, it, vi } from 'vitest'
 
 import { terminalPaths } from '../../src/shared/terminal'
+import { isRecord } from '../http'
 import { workspaceTarget } from '../previews/access'
 import {
   cacheTerminalPassword,
@@ -23,22 +24,41 @@ afterEach(() => vi.restoreAllMocks())
 function terminalReads(
   fixture: ReturnType<typeof fixtureForTest>,
   marker: string,
-  fail?: 'password' | 'marker',
+  fail?: 'password' | 'marker' | 'missing marker',
 ) {
   const reads: string[] = []
   const fetch = fixture.runtime.dependencies.fetch
   fixture.runtime.dependencies.fetch = async (request) => {
     const url = new URL(request.url)
     const path = url.searchParams.get('path')
+    if (fail === 'missing marker' && url.pathname.endsWith('/commands')) {
+      const response = await fetch(request)
+      const body: unknown = await request.clone().json()
+      if (isRecord(body) && body.command === RESTART_COMMAND)
+        return Response.json({
+          ok: true,
+          type: 'command.finished',
+          exitCode: 0,
+          stdout: '',
+          stderr:
+            'conductive: the terminal service did not restart or its support check failed\n',
+          timedOut: false,
+        })
+      return response
+    }
     if (url.pathname.endsWith('/files') && path) {
       reads.push(path)
       if (
-        (fail === 'marker' && path === markerPath) ||
+        ((fail === 'marker' || fail === 'missing marker') &&
+          path === markerPath) ||
         (fail === 'password' && path.endsWith('/password'))
       )
         return Response.json(
-          { ok: false, code: 'unavailable' },
-          { status: 503 },
+          {
+            ok: false,
+            code: fail === 'missing marker' ? 'not_found' : 'unavailable',
+          },
+          { status: fail === 'missing marker' ? 404 : 503 },
         )
       if (path === markerPath)
         return Response.json({
@@ -176,7 +196,7 @@ it('caches one-terminal support after an older release writes zero, and publishe
   ])
 })
 
-it.each(['password', 'marker'] as const)(
+it.each(['password', 'marker', 'missing marker'] as const)(
   'keeps cached credentials and support and warns when the %s read fails, without failing Restart',
   async (fail) => {
     const { fixture, actor, workspaceId, restart } =

@@ -33,7 +33,7 @@ export async function mutateTerminal(
       throw new HttpError(
         409,
         'terminals_unavailable',
-        'Terminal tabs become available at a later start of the cloud computer after its software update.',
+        'To get terminal tabs after a software update, use Restart or start the cloud computer again.',
       )
     const result = await terminals.create(
       target.orgId,

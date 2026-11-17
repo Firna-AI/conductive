@@ -74,9 +74,10 @@ printf '%s\\n' "$pid"
       await mkdir(`${proc}/${pid}`, { recursive: true })
       await symlink(executable, `${proc}/${pid}/exe`)
       await writeFile(`${proc}/${pid}/cmdline`, `${args.join('\0')}\0`)
+      return { argumentsFile: `${proc}/${pid}/cmdline` }
     },
-    async start(pids: readonly number[]) {
-      return run(terminalStartCommand(), pids)
+    async start(pids: readonly number[], fail?: string) {
+      return run(terminalStartCommand(), pids, fail)
     },
     restart: (pids: readonly number[], fail?: string) =>
       run(RESTART_COMMAND, pids, fail),
@@ -84,7 +85,15 @@ printf '%s\\n' "$pid"
       readFile(
         `${fixture.options.runtimeDirectory}/${TERMINAL_SUPPORT_FILE}`,
         'utf8',
-      ),
+      ).catch((error: unknown) => {
+        if (
+          error instanceof Error &&
+          'code' in error &&
+          error.code === 'ENOENT'
+        )
+          return undefined
+        throw error
+      }),
     reads: () => lines(reads),
     sleeps: () => lines(sleeps),
     commands: () => lines(commands),

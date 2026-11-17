@@ -33,7 +33,7 @@ it('applies the runner under the start lock before restarting ttyd and probing i
   expect(await fixture.sleeps()).toEqual(['0.1'])
 })
 
-it('warns and writes one-terminal support when the terminal restart or probe fails, without failing Restart', async () => {
+it('warns and leaves no support marker when the terminal restart or probe fails, without failing Restart', async () => {
   const fixture = await terminalStartFixture()
   await fixture.process(202, TERMINAL_EXECUTABLE, [
     TERMINAL_EXECUTABLE,
@@ -53,7 +53,7 @@ it('warns and writes one-terminal support when the terminal restart or probe fai
       stderr:
         'conductive: the terminal service did not restart or its support check failed\n',
     })
-    expect(await fixture.marker()).toBe('0\n')
+    expect(await fixture.marker()).toBeUndefined()
   }
 })
 

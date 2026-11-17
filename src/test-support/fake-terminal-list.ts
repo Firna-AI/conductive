@@ -56,7 +56,7 @@ export class FakeTerminalList {
       throw new RouteError(
         409,
         'terminals_unavailable',
-        'Terminal tabs become available at a later start of the cloud computer after its software update.',
+        'To get terminal tabs after a software update, use Restart or start the cloud computer again.',
       )
     if (this.terminals.length === TERMINAL_LIMIT)
       throw new RouteError(

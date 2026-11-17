@@ -243,19 +243,22 @@ retention restart.
 
 First, the lifecycle runs the setup command, `terminalStartCommand()`, as a
 detached command, so that each alarm can check the start time limit. The
-command writes the enable marker and starts the ttyd unit. systemd starts
-the shell server unit first.
+command writes the enable marker and removes the old support marker before
+it starts the ttyd unit. systemd starts the shell server unit first.
 
 The command then writes `/run/conductive-terminal/several`, a nonsecret
 support marker. Its content is `1` and a newline when the installed attach
 program exists and the running ttyd has `--url-arg` and `terminal-attach-v1`
-in its captured arguments. Otherwise its content is `0` and a newline.
+in its captured arguments. Its content is `0` and a newline when the
+release has no attach program, or the confirmed ttyd lacks those arguments.
+An unconfirmed probe leaves the support marker absent.
 The command polls for ttyd before it checks these arguments.
 It reads the unit's main process ID again on each of at most 50 checks,
 with a 0.1-second pause between checks. It waits for `/proc/<pid>/exe`
 to name the configured ttyd executable, because the launcher shell runs first.
 This also handles a changed process ID after a service restart.
-The poll stops at ttyd, or reports one terminal when its checks run out.
+The poll stops at ttyd, or leaves no marker when its checks run out.
+Unreadable ttyd arguments also leave no marker.
 It prints no process arguments. A newly applied release alone does not prove that
 the running ttyd can select a terminal.
 
@@ -289,13 +292,14 @@ not fail the password read. D1 stores the result as `terminal_credentials.severa
 beside the encrypted password. Existing rows default to `0`.
 `terminalSeveral` reads it for the current sandbox and provider account.
 
-Restart shares the start probe and the bounded file reader. It restarts
-only `conductive-terminal.service`. A failed service restart or probe
-prints a warning and writes `0`, without failing Restart. A release with
-no attach program also writes `0`.
+Restart shares the start probe and the bounded file reader. It removes
+the old support marker before it restarts only `conductive-terminal.service`.
+A failed service restart or probe prints a warning and leaves no marker,
+without failing Restart. A release with no attach program writes `0`.
 The workspace object then refreshes the encrypted password and support for
 the sandbox ID and provider account captured before Restart. A failed
-read warns and keeps the cached values. The cache comparison and update
+read, including a missing support marker, warns and keeps the cached values.
+It emits no terminal list event. The cache comparison and update
 run in the workspace queue with the terminal list event. That event lets
 an open app learn new support even if the runner became ready first.
 
