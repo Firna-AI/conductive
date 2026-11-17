@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-14, from `calummoore/riga-m3j3`, review round 1, finding 2.
-- **Location:** `src/markdown/web-links.ts`, `endMarks` and `bareAddressAt`. `src/markdown/web-links.test.ts`, the end rule test. `docs/protocol/chat-links.md`, "Bare addresses and Markdown links". `docs/mockups/design-links.md`, the end rule. `src/chat/agent-text.md`, the end rule.
+- **Location:** `src/markdown/web-links.ts`, `endMarks` and `bareAddressAt`. `src/markdown/web-links.test.ts`, the end rule test. `docs/protocol/chat-links.md`, "Bare addresses and Markdown links". `docs/mockups/design-links.md`, the end rule. `src/chat/text-links.md`, the end rule of `bareAddressAt` under "Web addresses".
 - **Reason:** Only an IPv6 address with no port and no path, or a path that ends in a balanced `[...]`, meets the bug.
 
 - **Terms:**
@@ -24,7 +24,7 @@
 - **Options:**
   - **A.** Find the bracketed host before the end marks are cut, and keep its `]`. Cost: a path that ends in `[...]` still loses its `]`. Effort: Small.
   - **B.** Use a URL linkify library. Cost: a new dependency. `linkify-it` 5.0.0 reads no bracketed IPv6 host, so `http://[::1]:3000` would stop being a link. Effort: Medium.
-  - **C.** Give a `]` at the end the rule of a `)`: it stays only when it closes a `[` inside the address. Remove `]` from `endMarks`, and count `[` and `]` as the loop counts `(` and `)`. Change the end rule sentence in `docs/protocol/chat-links.md`, `docs/mockups/design-links.md`, and `src/chat/agent-text.md` to: "A `)` or a `]` at its end stays in only when it closes a `(` or a `[` inside the address." Add `http://[::1]`, `(https://[::1]).`, and `http://example.com/a[1]` to the end rule test. Cost: a balanced `[...]` at the end of a path stays in the link. Effort: Small.
+  - **C.** Give a `]` at the end the rule of a `)`: it stays only when it closes a `[` inside the address. Remove `]` from `endMarks`, and count `[` and `]` as the loop counts `(` and `)`. Change the end rule sentence in `docs/protocol/chat-links.md`, `docs/mockups/design-links.md`, and `src/chat/text-links.md` to: "A `)` or a `]` at its end stays in only when it closes a `(` or a `[` inside the address." Add `http://[::1]`, `(https://[::1]).`, and `http://example.com/a[1]` to the end rule test. Cost: a balanced `[...]` at the end of a path stays in the link. Effort: Small.
 - **Left out:** A rule that asks for a slash after the host breaks the local address rule. A repair when the link is drawn comes too late, because the reader already moved the `]` into the next text part. A reader that puts back cut characters until the URL parser accepts the address is worse than C on every point.
 - **Wider fix:** C. It keeps each balanced `]`, in the host, the path, the query, or the hash, with no special case for a host.
 - **Previous examples:** None found. On `main` before this change, the old reader also cut a trailing `]`, but a bare address was a link only when it named a workspace.

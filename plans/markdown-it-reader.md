@@ -345,12 +345,25 @@ Depends on: 3
 
 Depends on: 4, 5
 
-- [ ] Check each item and delete the fixed ones: `chat-code-not-read-as-markdown`,
+- [x] Check each item and delete the fixed ones: `chat-code-not-read-as-markdown`,
       `chat-quote-end-hides-heading`, `empty-list-item-takes-later-blocks`,
       `formatting-only-chat-heading`, `heading-line-separator-text`,
       `link-label-scan-quadratic`, `list-lazy-line-read-as-block`,
       `markdown-line-endings`, `preview-quote-keeps-line-after-fence`, and
       `one-markdown-reader-for-chat-and-preview`.
+      Deleted as fixed: `chat-quote-end-hides-heading`,
+      `empty-list-item-takes-later-blocks`, `heading-line-separator-text`,
+      `markdown-line-endings`, `preview-quote-keeps-line-after-fence`,
+      `one-markdown-reader-for-chat-and-preview`, and the unnamed
+      `bold-after-inline-code`. `chat-fence-at-any-indent` merged into
+      `list-lazy-line-read-as-block`. Kept and updated:
+      `chat-code-not-read-as-markdown`, now for sent messages,
+      `link-label-scan-quadratic`, now for sent messages and the message
+      field, `formatting-only-chat-heading`, and
+      `list-lazy-line-read-as-block`, now a defect of `markdown-it`. Added:
+      `table-header-takes-block-line`. Eight more items that named the
+      replaced readers now name the current code. The probes and their
+      output are in `.context/markdown-it-reader/m6/`.
 
 ## Milestone 7: Verification, commit, review, and pull request
 

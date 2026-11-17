@@ -1,23 +1,32 @@
-# Long lines of brackets slow the chat link scan
+# Long lines of brackets slow sent messages
 
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
-- **Added:** 2026-11-16, from `calummoore/riga-m3j3`, while applying the link title answer.
-- **Location:** `src/chat/links/chat-tokens.ts`, `markdownLinkAt`. `src/markdown/web-links.ts`, `webAddressParts`.
+- **Added:** 2026-11-16, from `calummoore/riga-m3j3`, while applying the link title answer. Updated on 2026-11-17 on branch `calummoore/output-summary-f7sm`, after the shared Markdown parser took over the agent messages.
+- **Location:** `src/chat/links/chat-tokens.ts:53`, `markdownLinkAt`, which `tokens` calls at each `[` of a sent message. `src/markdown/web-links.ts:26`, the `markdownLabel` pattern of `webAddressParts`.
 - **Reason:** The same scan is on `main`, so its fix serves every branch.
 
 - **Terms:**
-  - **Label scan:** the search for the `]` that ends the label of a Markdown link, which starts at each `[` of chat text.
-- **Background:** The chat reads links from the text in the browser, on the main thread, at each update of an answer. The message field and the mockups read the same way through `webAddressParts`.
-- **Problem:** The label scan starts again at each `[` and runs to the end of its line. A line of 80,001 `[` took 6,024 ms on the main thread on 16 November 2026. Sandbox code can shape agent text, so it can write such a line.
-- **Impact if no action:** One such answer freezes the tab for seconds at each update.
-- **Root question:** How does the chat read the labels of a line in time that grows with the line, not with its square?
+  - **Label scan:** the search for the `]` that ends the label of a Markdown link. It starts at each `[` of the text.
+  - **Sent message:** a message of a member, or a tool message that an agent sends with the `send_message` workspace tool, as `docs/protocol/session-calls.md` says.
+  - **Message field:** the field where a member writes a message, in `src/chat/components/chip-field/`.
+- **Background:**
+  - Agent messages and the file preview read their links with the shared `markdown-it` parser in `src/markdown/parser.ts`.
+  - A sent message reads its links with `chatParts` of `src/chat/links/chat-parts.ts`, through `tokens`. `UserBubble` in `src/chat/components/TranscriptItem.tsx` runs it at each render of the message. Sandbox code can shape the text of a tool message.
+  - The message field reads its links with `webAddressParts` of `src/markdown/web-links.ts`, in `field-nodes.ts` and `field-text.ts`. The mockups read the same way.
+- **Problem:** The label scan starts again at each `[` and runs to the end of its line. A Node probe of 17 November 2026 timed one line of `[` marks:
+  - A sent message took 1,708 ms at 40,000 marks and 6,827 ms at 80,001 marks. Twice the line took four times as long.
+  - The message field took 1,192 ms at 40,000 marks and 4,060 ms at 80,001 marks.
+  - An agent message took 81 ms at 80,001 marks, and the file preview took 80 ms. Twice the line took twice as long. The old reader of agent messages took 5,172 ms in the same probe.
+- **Impact if no action:** One such sent message freezes the tab of each member who opens its session for seconds, at each render of the message.
+- **Root question:** How does chat text read the labels of a line in time that grows with the line, not with its square?
 - **Options:**
-  - **A.** Stop the label scan after a fixed length, as the file preview limits an address to 2,000 characters. Effort: Small.
+  - **A.** Stop the label scan after a fixed length, as `src/markdown/markdown-destination.ts` stops an address after 2,000 characters. Effort: Small.
   - **B.** Find the end of each label once per line, with one pass that pairs `[` and `]` outside code, and reuse the result for each `[`. Effort: Small.
-  - **C.** Read chat text with the inline parser of the file preview. Cost: a larger change of the chat reader. Effort: Medium.
+  - **C.** Find the Markdown links of a sent message and of the message field with the shared parser, which reads such a line in linear time. Cost: `markdown-it` gives an inline token no place in the source, and a sent message must still show its Markdown as typed. Effort: Medium.
 - **Left out:** Read links in a worker. It moves the cost, and the tab still waits for the links.
 - **Wider fix:** B. Each `[` then costs constant time after one pass.
-- **Previous examples:** The label scan of `chatParts` on `main` has the same cost. The link title answer of 16 November 2026 fixed the same cost for the target reading.
+- **Previous examples:** The reader of agent messages had the same cost until the shared parser replaced it. The link title answer of 16 November 2026 fixed the same cost for the target reading.
+- **Related:** `plans/follow-ups/chat-code-not-read-as-markdown.md` changes how the same tokenizer reads code. One branch can do both.
 - **Recommendation:** B. It keeps every label rule and removes the square cost.
 - **Action:** fix after merge, apply B, because the same scan is on `main`.
