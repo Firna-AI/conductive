@@ -56,8 +56,11 @@ Answered by the user on 17 November 2026: **A**.
 ## Design
 
 - My call, 17 November 2026: an other request is covered when it names at
-  least one secret of the answer, and every secret that it asked for now
-  has a grant or a temporary value for its session. A request that names a
+  least one secret of the answer, and the answer's own grant reaches each
+  such secret in the session of the request. Every other secret that it
+  asked for must have a grant or a temporary value for its session. Reason:
+  a grant from Capabilities in another session must not make the card
+  credit the member who answered (review finding 2). A request that names a
   secret that is still not covered stays open and does not change. Reason:
   Allow on that request then gives the missing grant.
 - My call, 17 November 2026: a settled request records the member who

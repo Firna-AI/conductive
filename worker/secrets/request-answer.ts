@@ -154,8 +154,8 @@ export async function answerSecretRequest(
     await runtime.publish(operation, record)
     return { request: record.request, notices: [] }
   }
-  const covered = await coveredRequests(runtime, record)
-  const withCall = sessionsWithCall(record, covered)
+  const covered = await coveredRequests(runtime, record, answer)
+  const withCall = sessionsWithCall(covered)
   if (withCall.has(record.request.sessionId)) record.lateAnswer = false
   if (record.lateAnswer)
     record.request.notice = await runtime.chat.secretNotice(record)

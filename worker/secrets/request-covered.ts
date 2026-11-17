@@ -2,20 +2,39 @@ import type {
   AnswerSecretRequest,
   SecretRequest,
 } from '../../src/shared/secret-requests'
+import { missingNames } from '../../src/shared/secret-late-answer'
 import type { WorkspaceOperation } from '../chat/workspace-operation'
 import { openSecretRequest, type StoredSecretRequest } from './request-records'
 import { resolveSecretNames } from './run-values'
 import type { SecretRuntime } from './runtime'
 
 /**
- * The other open requests that an Allow covers, oldest first. Each names a
- * secret of the answered request, and each secret that it asked for now has
- * a grant or a temporary value for its own session. The scope of each grant
- * thus sets the reach.
+ * The names of the answer whose grant reaches `sessionId`. The approvals
+ * and the 15-minute values of an answer reach only the session that asked.
+ * Its values for this workspace reach each session of the workspace.
+ */
+function reachedNames(
+  answered: SecretRequest,
+  answer: AnswerSecretRequest,
+  sessionId: string,
+): Set<string> {
+  if (sessionId === answered.sessionId)
+    return new Set(answered.secrets.map((secret) => secret.name))
+  if (answer.kind !== 'values' || answer.lifetime !== 'workspace')
+    return new Set()
+  return new Set(missingNames(answered))
+}
+
+/**
+ * The other open requests that an Allow covers, oldest first. The grant of
+ * the answer reaches each name that a request shares with the answer, and
+ * each secret that the request asked for now has a grant or a temporary
+ * value for its own session.
  */
 export async function coveredRequests(
   runtime: SecretRuntime,
   answered: StoredSecretRequest,
+  answer: AnswerSecretRequest,
 ): Promise<StoredSecretRequest[]> {
   const { workspaceId } = answered.request
   const names = new Set(answered.request.secrets.map((secret) => secret.name))
@@ -26,9 +45,12 @@ export async function coveredRequests(
       if (
         request.id === answered.request.id ||
         request.workspaceId !== workspaceId ||
-        !openSecretRequest(request) ||
-        !request.secrets.some((secret) => names.has(secret.name))
+        !openSecretRequest(request)
       )
+        continue
+      const reached = reachedNames(answered.request, answer, request.sessionId)
+      const shared = request.secrets.filter((secret) => names.has(secret.name))
+      if (!shared.length || !shared.every((secret) => reached.has(secret.name)))
         continue
       const resolved = await resolveSecretNames(
         runtime,
@@ -50,15 +72,15 @@ export async function coveredRequests(
 }
 
 /**
- * The sessions where a waiting call gets the values of this answer. Their
- * agents already have the values, so they need no late notice.
+ * The sessions where the waiting call of a covered request gets the values
+ * of this answer. Their agents already have the values, so they need no
+ * late notice. The caller adds the session of the answered request itself.
  */
 export function sessionsWithCall(
-  answered: StoredSecretRequest,
   covered: readonly StoredSecretRequest[],
 ): Set<string> {
   const sessions = new Set<string>()
-  for (const record of [answered, ...covered])
+  for (const record of covered)
     if (record.request.state === 'waiting')
       sessions.add(record.request.sessionId)
   return sessions

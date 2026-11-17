@@ -110,8 +110,9 @@ decision number names a decision of the change that adds
 
 - An Allow also allows each other open request, waiting or late, that its
   new grants cover. A request is covered when it names a secret of the
-  answer, and each secret that it asks for now has a grant or a temporary
-  value for its session.
+  answer, and the grant of the answer reaches each such secret in the
+  session of the request. Each other secret that it asks for must also
+  have a grant or a temporary value for its session.
 - The scope of each grant sets the reach. An approval for the session and
   a value for 15 minutes reach the session that asked. A value for this
   workspace reaches each session of the workspace.

@@ -1,14 +1,12 @@
 import { afterEach, beforeAll, expect, it } from 'vitest'
-import { chatHistoryPath } from '../../src/shared/events'
 import { outerWorkerBundle } from '../chat/integration/outer-runtime.test-support'
-import {
-  OUTER_ORG,
-  OUTER_WORKSPACE,
-} from '../chat/integration/outer-seed.test-support'
-import { DEVICE_TEST_NOW } from '../devices/clock.test-support'
-import { record } from '../chat/inputs'
-import { array } from '../chat/agent-events'
 import { secretFixture, type SecretFixture } from './requests.test-support'
+import {
+  lateThenWaiting,
+  notices,
+  requestState,
+  workspaceState,
+} from './covered.test-support'
 
 let bundle: string
 let f: SecretFixture | undefined
@@ -21,49 +19,6 @@ afterEach(async () => {
   await f?.dispose()
   f = undefined
 })
-
-/** A request that became late, and a second request that waits. */
-async function lateThenWaiting(active: SecretFixture, first: string[]) {
-  const late = await active.waiting({ names: first, command: 'deploy' })
-  await (
-    await active.secretActor()
-  ).advanceSecretClock(DEVICE_TEST_NOW + 90_000)
-  expect(await (await late.response).json()).toMatchObject({
-    status: 'pending',
-  })
-  const waiting = await active.waiting({
-    names: ['TOKEN'],
-    command: 'deploy again',
-  })
-  return { late, waiting }
-}
-
-async function requestState(active: SecretFixture, id: string) {
-  const found = (await active.listRequests()).requests.find(
-    (request) => request.id === id,
-  )
-  if (!found) throw new Error(`The request ${id} is missing.`)
-  return found
-}
-
-async function notices(active: SecretFixture) {
-  const history = record(
-    await (
-      await active.request(
-        chatHistoryPath(OUTER_ORG, OUTER_WORKSPACE, 'first-session'),
-      )
-    ).json(),
-  )
-  return array(history.events, (item) => record(record(item).event)).filter(
-    (event) => event.type === 'secrets.notice',
-  )
-}
-
-async function workspaceState(active: SecretFixture) {
-  return active.env.DB.prepare('SELECT state FROM workspaces WHERE id = ?')
-    .bind(OUTER_WORKSPACE)
-    .first('state')
-}
 
 it('allows the late request too when a member allows the waiting one', async () => {
   const active = (f = await secretFixture(bundle))
@@ -142,41 +97,21 @@ it('ends only the denied request', async () => {
   expect((await requestState(active, late.request.id)).state).toBe('late')
 })
 
-it('follows the scope of the grant across sessions', async () => {
+it('records no lifetime on a covered request that asked for no value', async () => {
   const active = (f = await secretFixture(bundle))
-  const other = await active.newSession()
-  const sent = await active.send(other.id, 'other-message')
-  if (!sent.session.activeTurnId) throw new Error('The new turn is missing.')
-  const elsewhere = await active.waiting(
-    { names: ['TOKEN'], command: 'deploy elsewhere' },
-    sent.session.activeTurnId,
+  await active.seed('STORED', 'stored-value')
+  const { late, waiting } = await lateThenWaiting(
+    active,
+    ['STORED'],
+    ['STORED', 'MISSING'],
   )
-  const here = await active.waiting({ names: ['TOKEN'], command: 'deploy' })
-  await active.answer(here.request.id, {
+  await active.answer(waiting.request.id, {
     kind: 'values',
     lifetime: '15-minutes',
-    values: { TOKEN: 'session-value' },
+    values: { MISSING: 'missing-value' },
   })
-  expect((await requestState(active, elsewhere.request.id)).state).toBe(
-    'waiting',
-  )
-  const next = await active.waiting(
-    { names: ['NEXT'], command: 'next elsewhere' },
-    sent.session.activeTurnId,
-  )
-  const nextHere = await active.waiting({ names: ['NEXT'], command: 'next' })
-  await active.answer(nextHere.request.id, {
-    kind: 'values',
-    lifetime: 'workspace',
-    values: { NEXT: 'next-value' },
-  })
-  expect(await (await next.response).json()).toMatchObject({
-    status: 'allowed',
-    values: { NEXT: 'next-value' },
-  })
-  expect(await requestState(active, next.request.id)).toMatchObject({
+  expect(await requestState(active, late.request.id)).toMatchObject({
     state: 'allowed',
-    lifetime: 'workspace',
+    lifetime: null,
   })
-  await active.answer(elsewhere.request.id, { kind: 'deny' })
 })
