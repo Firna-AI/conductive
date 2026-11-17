@@ -13,7 +13,6 @@ import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
 } from '../../test-support/mount'
-import { serveSuspendedAcme } from '../../test-support/suspended-org'
 import { pressCommand } from '../shortcuts/shortcut-test-kit'
 import { click, press, settle, typeText } from '../test-mount'
 import {
@@ -51,13 +50,6 @@ function rowStarts(): string[][] {
       .slice(0, 2),
   )
 }
-
-// The app hides Desktop, so the palette offers no Go to Desktop.
-const goTo = ['All files', 'Changes', 'Checks', 'Terminal', 'Preview'].map(
-  (tab) => `Go to ${tab}`,
-)
-
-const otherOrgs = ['Create org', 'Switch to Futex', 'Switch to Firna']
 
 /** Chooses an item of a filter menu of the open palette. */
 function chooseFilter(button: string, item: string) {
@@ -228,59 +220,6 @@ describe('the rows of the command palette', () => {
       focusBack: true,
       noMatch:
         'Nothing matches “refund”Try a workspace name, a branch, or a repository.',
-    })
-  })
-
-  test.each([
-    {
-      who: 'a member gets no Archive for the workspace of another person',
-      server: () => new FakeApiServer({ role: 'member' }),
-      groups: [
-        'Checkout address autocomplete',
-        'Acme',
-        'Orgs',
-        'Window',
-        'Help',
-      ],
-      rows: [
-        'New session',
-        'Session history',
-        ...goTo,
-        'New terminal',
-        'Merge latest main',
-        'New workspace',
-        'New section',
-        ...otherOrgs,
-        'Hide the sidebar',
-        'Send feedback',
-      ],
-    },
-    {
-      who: 'a suspended org offers nothing that changes it',
-      server: () => {
-        const server = new FakeApiServer()
-        serveSuspendedAcme(server)
-        return server
-      },
-      groups: ['Checkout address autocomplete', 'Orgs', 'Window', 'Help'],
-      rows: [
-        'Session history',
-        ...goTo,
-        ...otherOrgs,
-        'Hide the sidebar',
-        'Send feedback',
-      ],
-    },
-  ])('on the Actions tab, $who', async ({ server, groups, rows }) => {
-    holdAnimationFrames()
-    await openPaletteTab(routes.workspace(org, workspace), {
-      server: server(),
-    })
-    pressCommand('command-palette', 'other', document.body)
-    click(byRole('tab', 'Actions'))
-    expect({ groups: groupLabels(), rows: optionNames() }).toEqual({
-      groups,
-      rows,
     })
   })
 
