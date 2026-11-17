@@ -1,9 +1,9 @@
 import { readFile, realpath, readdir, stat } from 'node:fs/promises'
-import { join, relative } from 'node:path'
+import { basename, join, relative } from 'node:path'
 
 import type { Agent } from '../generated/Agent'
 import { orgSkillFolders } from './skill-folders'
-import { skillMetadata } from './skill-metadata'
+import { isClaudeSkillAlias, skillMetadata } from './skill-metadata'
 import type { ProviderOptions } from './types'
 
 async function metadata(path: string, agent: Agent) {
@@ -34,6 +34,7 @@ async function repositoryNames(options: ProviderOptions, agent: Agent) {
     ) {
       const value = await metadata(directory, agent)
       for (const name of value.aliases) result.add(name)
+      if (agent === 'claude') result.add(basename(directory))
       if (!value.name)
         options.warn(
           `The workspace skill ${relative(options.cwd, directory)} has no usable ${agent === 'claude' ? 'Claude' : 'Codex'} name. It will not take precedence.`,
@@ -84,5 +85,20 @@ export async function selectAgentSkills(
       }
     }
   }
-  return selected
+  const claimed = new Set([
+    ...local,
+    ...selected.map((skill) => skill.name),
+    ...shown.keys(),
+  ])
+  let generated = 0
+  return selected.map((skill) => {
+    let alias = skill.name
+    if (agent === 'claude' && !isClaudeSkillAlias(alias)) {
+      do {
+        alias = `conductive-org-skill-${++generated}`
+      } while (claimed.has(alias))
+      claimed.add(alias)
+    }
+    return { ...skill, alias }
+  })
 }

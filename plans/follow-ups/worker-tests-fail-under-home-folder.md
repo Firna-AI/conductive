@@ -19,6 +19,7 @@
   - The helpers replace production prefixes in sequence. A later replacement can rewrite the absolute fixture path that an earlier replacement inserted.
   - All 34 tests in the affected files passed on that main commit from `/tmp`. The exact merged source then passed 165 tests in 52 files there, including the affected files and the chat, Worker, and desktop device suites.
 - **Problem:** These tests pass or fail by the path of the checkout. A Conductive workspace cannot run the complete gate green.
+- **Cause found on 2026-11-17, for `runner-environment.test.ts`:** the saved script fixture maps each sandbox path, such as `/home/user/code`, to a temporary folder with `replaceAll`, one mapping after the other (`worker/lifecycle/saved-script-test-support.ts:47` and `:113`). A temporary folder under `/home/user/code` holds that prefix again, so a later mapping replaces a path that an earlier mapping made, and Git cannot lock its system settings file. Setting `TMPDIR` to a folder inside the repository, as `TMPDIR=$PWD/.context/tmp npm run check`, made the complete gate pass in a Conductive workspace. A fix maps each path once, by its longest sandbox prefix at the start.
 - **Impact if no action:** An agent in a Conductive workspace must rerun the failed files from a copy under `/tmp` to prove that a change is safe, and can mistake the failures for a regression.
 - **Root question:** How do the Worker tests stay independent of where the repository is checked out?
 - **Options:**

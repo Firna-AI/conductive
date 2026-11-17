@@ -1,5 +1,5 @@
 import { readFile, symlink } from 'node:fs/promises'
-import { join } from 'node:path'
+import { basename, join } from 'node:path'
 
 import { afterEach, beforeEach, expect, it, onTestFinished, vi } from 'vitest'
 import { parse } from 'yaml'
@@ -40,6 +40,10 @@ exec: touch exec-marker
 ---
 Inline: !\`touch inline-marker\`
 Doubled: !!\`touch doubled-marker\`
+Arguments: !$ARGUMENTS
+Indexed: !$ARGUMENTS[0]
+Positional: !$0
+Braced: !\${CLAUDE_SKILL_DIR}
 \`\`\`!bash
 touch fence-marker
 \`\`\`
@@ -93,6 +97,10 @@ it.each(['claude', 'codex'] as const)(
     })
     expect(content).toContain('Inline: ! `touch inline-marker`')
     expect(content).toContain('Doubled: !! `touch doubled-marker`')
+    expect(content).toContain('Arguments: ! $ARGUMENTS')
+    expect(content).toContain('Indexed: ! $ARGUMENTS[0]')
+    expect(content).toContain('Positional: ! $0')
+    expect(content).toContain('Braced: ! ${CLAUDE_SKILL_DIR}')
     expect(content).toContain('``` !bash\ntouch fence-marker\n```')
     expect(await readFile(join(path, 'nested', 'SKILL.md'), 'utf8')).toBe(
       content,
@@ -117,6 +125,43 @@ it.each(['claude', 'codex'] as const)(
     await provider.close()
   },
 )
+
+it('gives hostile Claude folders safe discovery aliases without losing their shown names', async () => {
+  const h = await skillProviders('claude')
+  const hostile = 'demo !`touch inline-path-marker` suffix'
+  await h.skill(`skills/${hostile}`, 'review-safe')
+  await h.skill('skills/Alpha9._-safe', 'safe-shown')
+  await h.skill(
+    `.claude/skills/${hostile}`,
+    'workspace-only',
+    'Local',
+    h.options.cwd,
+  )
+  await h.skill(
+    '.claude/skills/conductive-org-skill-1',
+    'workspace-generated',
+    'Local',
+    h.options.cwd,
+  )
+  const provider = await h.open()
+  onTestFinished(() => provider.close())
+  const paths = await h.paths()
+  expect(paths).toHaveLength(2)
+  const aliases = paths.map((path) => basename(path))
+  expect(aliases).toContain('Alpha9._-safe')
+  expect(aliases).not.toContain(hostile)
+  expect(aliases).not.toContain('conductive-org-skill-1')
+  for (const alias of aliases) expect(alias).toMatch(/^[A-Za-z0-9._-]+$/u)
+  const [generated] = paths.filter((path) => basename(path) !== 'Alpha9._-safe')
+  expect(
+    frontmatter(await readFile(join(generated, 'SKILL.md'), 'utf8')),
+  ).toEqual({
+    name: 'review-safe',
+    description: 'Skill',
+  })
+  expect(h.warnings).toEqual([])
+  await provider.close()
+})
 
 it.each(['claude', 'codex'] as const)(
   'keeps %s root-skill support links within the safe view and sanitizes linked metadata',

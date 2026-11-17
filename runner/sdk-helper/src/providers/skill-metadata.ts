@@ -9,6 +9,10 @@ function singleLine(value: unknown): string {
   return value == null ? '' : String(value).trim().replace(/\s+/gu, ' ')
 }
 
+export function isClaudeSkillAlias(value: string): boolean {
+  return /^[A-Za-z0-9._-]+$/u.test(value)
+}
+
 export function skillMetadata(content: string, path: string, agent: Agent) {
   const block = /^---[^\S\n]*\r?\n([\s\S]*?)\r?\n---[^\S\n]*(?:\r?\n|$)/u.exec(
     content,
@@ -36,7 +40,11 @@ export function skillMetadata(content: string, path: string, agent: Agent) {
   }
   return {
     name,
-    aliases: name ? (agent === 'claude' ? [folder, name] : [name]) : [],
+    aliases: name
+      ? agent === 'claude' && isClaudeSkillAlias(folder)
+        ? [folder, name]
+        : [name]
+      : [],
     frontmatter: frontmatter ?? {},
     body: block ? content.slice(block[0].length) : content,
   }
@@ -76,7 +84,8 @@ export function safeSkillContent(content: string, path: string, agent: Agent) {
   if (yamlRecord(metadata) && scalar(metadata['short-description']))
     safe.metadata = { 'short-description': metadata['short-description'] }
   // Insert separators. Removing ! can turn an inert !!` into a live !`.
-  const inert = body.replaceAll('!`', '! `').replaceAll('```!', '``` !')
+  // Argument placeholders can expand to backticks after this filter runs.
+  const inert = body.replace(/!(?=[`$])/gu, '! ').replaceAll('```!', '``` !')
   return `---\n${stringify(safe)}---\n${inert}`
 }
 

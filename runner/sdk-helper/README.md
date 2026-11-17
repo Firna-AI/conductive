@@ -48,14 +48,16 @@ target inside the view. It walks physical directories, so a link to an
 ancestor cannot cause a loop. It sanitizes every `SKILL.md`, including
 nested files and linked instruction files. Close removes the view. The
 runner's startup sweep removes views left by a killed helper.
+View cleanup waits for Claude's discovery links as well as the exported files.
 
 The frontmatter allowlist keeps `name`, `description`, `argument-hint`,
 `arguments`, `disable-model-invocation`, `user-invocable`, `when_to_use`,
 `version`, `license`, `compatibility`, and `metadata.short-description`.
 These fields describe a skill or control its invocation. All execution,
 tool-grant, model-setting, and unknown fields are omitted. Shell markers
-in the body become ordinary inline or fenced code. Scripts and other
-support files remain available for an agent to choose to read or run.
+in the body become ordinary inline or fenced code. This includes markers
+before argument placeholders, which Claude expands after export. Scripts
+and other support files remain available for an agent to choose to read or run.
 
 Codex also reads `agents/openai.yaml`. The view keeps only its descriptive
 `interface` fields (`display_name`, `short_description`, `icon_small`,
@@ -66,9 +68,14 @@ links. Per-process settings disable each nested Codex skill.
 
 One YAML reader follows each pinned agent's parsing and repair rules for
 both workspace and org names. Workspace skills take precedence. Claude
-also reserves its folder alias. Codex uses the folder only as a fallback
-when the parsed name is empty. It requires a description and limits names
-to 64 characters. After shared folder selection, the first org skill in
+keeps an org folder name as its discovery alias only if all its
+characters are ASCII letters, digits, `.`, `_`, or `-`.
+Other org folders get generated aliases that no workspace skill uses.
+Their displayed names stay in the filtered
+frontmatter. Workspace precedence uses these aliases and displayed names.
+Codex uses the folder only as a fallback when the parsed name is empty.
+It requires a description and limits names to 64 characters.
+After shared folder selection, the first org skill in
 path order with a given agent-shown name wins. Unusable names and duplicate
 names produce warnings. Workspace skill files are unchanged.
 [Org skills](../../docs/protocol/org-skills.md#what-loads) gives the loading

@@ -92,13 +92,17 @@ export async function prepareSkillView(
     try {
       const repository = join(directory, 'repository', basename(source))
       await exportSkills(source, repository, agent)
-      return {
-        directory,
-        skills: selected.map((skill) => ({
-          ...skill,
-          path: join(repository, relative(source, skill.path)),
-        })),
+      const skills = selected.map((skill) => ({
+        ...skill,
+        path: join(repository, relative(source, skill.path)),
+      }))
+      if (agent === 'claude') {
+        const links = join(directory, '.claude', 'skills')
+        await mkdir(links, { recursive: true })
+        for (const skill of skills)
+          await symlink(skill.path, join(links, skill.alias), 'dir')
       }
+      return { directory, skills }
     } catch (error) {
       await rm(directory, { recursive: true, force: true })
       throw error
