@@ -461,14 +461,16 @@ Found in M3c (16 November 2026):
       `repositoryId`, read Files and Changes again. The stored tree has
       the unavailable mark until the runner reports the new folder, and
       the stored changes are gone.
-- [ ] A running merge of the old pull request is not refused. The Worker
+- [x] A running merge of the old pull request is not refused. The Worker
       keeps no running state for a merge job. GitHub goes on with the
       merge, and a later poll of that merge answers that it is not
-      available, because the workspace follows the new branch.
-- [ ] A file that a turn attaches while the change runs goes to the old
+      available, because the workspace follows the new branch. Recorded in
+      `plans/follow-ups/merge-during-repository-change.md`.
+- [x] A file that a turn attaches while the change runs goes to the old
       folder. The settle command copies the context folder again after
       publication. A copy that is still running at that moment can miss
-      the second copy.
+      the second copy. Recorded in
+      `plans/follow-ups/attachment-during-repository-change.md`.
 
 ### M3d: Terminal and startup script
 
@@ -533,9 +535,10 @@ Depends on: every other milestone
 
 - [x] Change `TERMS_VERSION` in `src/shared/terms.ts`, as decision 6 B
       says.
-- [ ] Run the targeted tests and `npm run check`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Run the targeted tests and `npm run check`. CI ran the complete
+      gate and the Rust gate on `da3d313b7`, and both passed.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
