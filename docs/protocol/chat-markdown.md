@@ -1,33 +1,79 @@
 # Chat Markdown
 
 This doc holds the requirements and the decisions in force for the
-Markdown of agent messages in the chat, with their headings and lists.
-Its linked page [Chat tables](chat-tables.md) holds the rules of their
-tables. Its linked page [Chat links](chat-links.md) holds the rules of
-the links of chat text. [Chat and events](chat-and-events.md) holds the
-messages, the live text, and the work of a turn. The terms are those of
-the [architecture doc](../architecture.md#terms). The
+Markdown of agent messages in the chat, with their headings, lists,
+quotes, and line breaks. Its linked page [Chat tables](chat-tables.md)
+holds the rules of their tables. Its linked page
+[Chat links](chat-links.md) holds the rules of the links of chat text,
+and of the images of agent messages. [Chat and events](chat-and-events.md)
+holds the messages, the live text, and the work of a turn. The terms are
+those of the [architecture doc](../architecture.md#terms). A decision
+number names a dated record, as
+[Decision numbers](../architecture.md#decision-numbers) says. A Markdown
+parser decision, such as Markdown parser decision 8 D, is a decision of
+the change that reads the Markdown of the chat and of the file preview
+with one parser. Its pull request keeps the record. The
 [mockup catalogue](../mockups/catalogue.md) draws tables in agent messages
 at `app/chat/tables`, and in the open work of a turn at
 `app/chat/work/table`. It draws lists inside list items at
 `app/chat/lists`. It draws headings at `app/chat/headings`, and in the
-open work of a turn at `app/chat/headings/work`. It draws links at
+open work of a turn at `app/chat/headings/work`. It draws quotes, rules,
+marks, line breaks, and images at `app/chat/formatting`, and in the open
+work of a turn at `app/chat/formatting/work`. It draws links at
 `app/chat/links`.
 
 ## Formatting
 
-- An agent message is one message of the agent in a turn. The chat formats
-  the text of each agent message with this Markdown:
+- An agent message is one message of the agent in a turn. The chat reads
+  the Markdown of each agent message by the rules of
+  [CommonMark](https://spec.commonmark.org/), with the tables and the
+  strikethrough of GitHub. The file preview reads a Markdown file by the
+  same rules.
+- The chat and the file preview read Markdown with one parser, the
+  `markdown-it` library (Markdown parser decision 3 C, 16 November 2026).
+  The app builds each element that it shows from the parts that the parser
+  gives, so no HTML from the parser reaches the page.
+- Reason: only a parser that its project tests against CommonMark removes
+  the class of reader bugs. Readers written for this app, with a fix for
+  each bug or with a reference test against `commonmark.js`, were not
+  chosen for that reason. `react-markdown` with `remark` was not chosen
+  either.
+- A link library was rejected, because it adds code that needs a review of
+  its safety. The chat finds web addresses by the rules of
+  [Chat links](chat-links.md).
+- The chat draws each part of the Markdown as the file preview draws it
+  (Markdown parser decision 8 D, 17 November 2026). The parts are:
   - paragraphs, which a blank line ends
   - headings at six levels, as [Headings](#headings) says
   - bulleted lists with `-`, `*`, or `+`, and numbered lists, such as `1.`
     or `1)`, with lists inside their items, as [Lists](#lists) says
-  - code blocks between two lines that start with three backticks
-  - inline code between backticks, and strong text between `**` marks
+  - quotes and rules, as [Quotes and rules](#quotes-and-rules) says
+  - code blocks, between two lines of three or more backticks or tildes,
+    or indented by four spaces
+  - inline code between backticks, strong text between `**` or `__`
+    marks, emphasis between `*` or `_` marks, and strikethrough between
+    `~~` marks
+  - line breaks, as [Line breaks](#line-breaks) says
   - Markdown links and bare web addresses, as
     [Chat links](chat-links.md) says
   - tables, as [Chat tables](chat-tables.md) says
-- The lines of one paragraph show as one paragraph.
+- The chat draws these parts in its own way:
+  - images, as
+    [Bare addresses and Markdown links](chat-links.md#bare-addresses-and-markdown-links)
+    says
+  - the text while the agent writes, as
+    [While the agent writes](#while-the-agent-writes) says
+  - short table rows, as [Short rows](chat-tables.md#short-rows) says
+  - the agent messages in the work of a turn, as
+    [In the work of a turn](#in-the-work-of-a-turn) says
+- Reason: agents often write quotes and emphasis, and the chat then shows
+  them without their `>` and `*` marks. The chat also needs no code that
+  turns parsed parts back into the text that the agent wrote. A smaller
+  set of Markdown, with the other parts as typed, was not chosen for that
+  reason. Emphasis and strikethrough alone, a look for the chat alone, and
+  file chips for the images of workspace files were not chosen either.
+- The lines of one paragraph show as one paragraph, apart from the line
+  breaks that [Line breaks](#line-breaks) gives.
 - A workspace link outside code shows as a chip, as
   [Messages and answers](workspace-links.md#messages-and-answers) says.
 - A `@` mention of a file or a folder of the workspace shows as a file
@@ -37,11 +83,17 @@ open work of a turn at `app/chat/headings/work`. It draws links at
 - A Markdown link or image whose target is a file of the workspace shows
   as a link with its label, which opens the file, as
   [Files in answers](file-mentions.md#files-in-answers) says.
-- Other Markdown shows as the text that the agent wrote, such as a quote,
-  an image with no file target, or emphasis with one `*`.
-- Inline code, strong text, links, workspace chips, and file chips also show in
-  headings, list items, and table cells. A code block shows its text with
-  no formatting.
+- The chat reads marks, entities, and escapes as CommonMark does. A mark
+  without its pair shows as typed, such as one `**`, or the `**` and the
+  `*` of a file pattern such as `tests/**/*.test.ts`. An entity, such as
+  `&amp;`, shows its character. A backslash before a mark shows the mark
+  as typed, such as `\*`.
+- Inline code between two or more backticks can hold a backtick. Strong
+  text, emphasis, and strikethrough can hold inline code, links, and
+  chips.
+- Inline code, strong text, emphasis, strikethrough, line breaks, links,
+  workspace chips, and file chips also show in headings, list items,
+  quotes, and table cells. A code block shows its text with no formatting.
 - Each code block of an agent message has a Copy code button in its top
   corner. The button copies the text of the code block exactly as the
   agent wrote it, with its tabs and blank lines, and without the fence
@@ -54,16 +106,11 @@ open work of a turn at `app/chat/headings/work`. It draws links at
   code button. That line is a button that opens and closes, and a button
   cannot hold another button. A code block under an open line, after a
   table, has the button.
-- HTML in an agent message shows as text, also in a table.
+- HTML in an agent message shows as text, also in a table, apart from a
+  line-break tag, as [Line breaks](#line-breaks) says.
 - Reason: sandbox code is untrusted, as
   [Trust boundaries](../architecture/data-and-trust.md#trust-boundaries) says, and it can
   shape the text of an agent message.
-- The chat keeps this small set of Markdown. The full Markdown of the file
-  preview was rejected for the chat, because it also changes the quotes of
-  every agent message.
-- A Markdown library or a link library was rejected, because it adds a
-  dependency that needs a review of its safety. One parser with a setting
-  for each view was rejected, because it needs more compatibility work.
 
 ## Headings
 
@@ -86,7 +133,8 @@ open work of a turn at `app/chat/headings/work`. It draws links at
 - Reason: a screen reader meets no empty heading, also while the agent
   writes `## ` before the words.
 - Headings have the same size, weight, and colour in agent messages and in
-  the file preview. The [mockups](../mockups/design-chat.md) give the look.
+  the file preview. The [mockups](../mockups/design-markdown.md#the-parts)
+  give the look.
 - Each level has its own size, from the largest at level 1 to the smallest
   at level 6. Levels 1 to 4 are larger than the text around them. Level 5
   has the size of that text, and level 6 is smaller. All levels have the
@@ -111,11 +159,6 @@ open work of a turn at `app/chat/headings/work`. It draws links at
   a header row shows as text until its separator row arrives.
 - Reason: while the agent writes a list directly under a line of text, the
   `-` of the list would show that line as a heading for one update.
-- In the chat, an underline turns only the text of a paragraph into a
-  heading. A quote line, or a line that CommonMark reads as indented code,
-  shows as text and never becomes a heading.
-- Reason: CommonMark and the file preview read `> Note` above `---` as a
-  quote and a rule.
 
 ## Lists
 
@@ -129,8 +172,9 @@ open work of a turn at `app/chat/headings/work`. It draws links at
   to the next stop of four columns.
 - A numbered list counts up from the number of its first item. The number
   of an item has one to nine digits.
-- Lists nest at most 16 levels deep, as in the file preview. Deeper
-  content shows as the text of a paragraph.
+- Lists and quotes nest at most 16 levels deep, as in the file preview.
+  Deeper content shows as the text of a paragraph. No text of the agent
+  message is lost.
 - A task box, such as `[ ]` at the start of an item, shows as text.
 - A code block outside a list keeps its text exactly, with its tabs.
 - Reason: each list keeps the structure that the agent wrote, so the
@@ -140,6 +184,42 @@ open work of a turn at `app/chat/headings/work`. It draws links at
 - Reason: lists cannot differ between agent messages and the file
   preview, as for tables. List rules for the chat alone were rejected for
   that reason.
+
+## Quotes and rules
+
+- A quote shows its blocks with a line at its start. It can hold each
+  block of [Formatting](#formatting), such as paragraphs, lists, code
+  blocks, and tables.
+- A rule, such as `---`, shows as a line across the width of the text.
+- Quotes, rules, emphasis, and strikethrough have the same look in agent
+  messages and in the file preview. The
+  [mockups](../mockups/design-markdown.md#the-parts) give the look.
+- Reason: as for headings and tables, the same Markdown cannot look
+  different in the two views.
+
+## Line breaks
+
+- A line-break tag is `<br>`, `<br/>`, or `<br />`, in any letter case.
+  Outside code, a line-break tag shows as a line break, in a paragraph, a
+  heading, a list item, a quote, and a table cell (Markdown parser
+  decision 1, 16 November 2026). The file preview shows it in the same
+  way.
+- A closing tag, `</br>`, a tag with attributes, and a tag in code show as
+  text, as other HTML does.
+- Reason: a row of a Markdown table cannot hold a line break, so agents
+  write a line-break tag in a cell. The tag as text makes the cell hard to
+  read. A line break in the chat alone was not chosen, because a table of
+  a Markdown file then reads in another way in the file preview. Other
+  HTML tags as elements, such as `<b>` or `<kbd>`, were not chosen.
+- A hard line break of CommonMark, a backslash or two spaces at the end of
+  a line, also shows as a line break.
+- A line break at the start or at the end of a block shows nothing, so a
+  block of only line breaks shows nothing. Two or more line breaks in a
+  row show at most one empty line.
+- Reason: CommonMark drops a hard line break at the end of a block. A long
+  run of line-break tags then adds no tall gap to the chat.
+- A closed message line in the work of a turn shows each line break as a
+  space, as [In the work of a turn](#in-the-work-of-a-turn) says.
 
 ## While the agent writes
 
@@ -172,7 +252,7 @@ open work of a turn at `app/chat/headings/work`. It draws links at
   because it changes the events and the saved history. The browser still
   lays out each table and checks each link.
 
-## Tables and headings in the work of a turn
+## In the work of a turn
 
 - An open work fold shows each agent message as one message line, as
   [The work of a turn](chat-and-events.md#the-work-of-a-turn) says.
@@ -180,9 +260,9 @@ open work of a turn at `app/chat/headings/work`. It draws links at
   in row order, from the header row, with a middle dot, `·`, between two
   cells.
 - An open message line keeps the text before the first table of the agent
-  message. When a list holds that table, the line keeps the text before
-  that list. The table, or the list that holds it, and all that follows
-  show under the line, with their formatting.
+  message. When a list or a quote holds that table, the line keeps the
+  text before that list or quote. The table, or the block that holds it,
+  and all that follows show under the line, with their formatting.
 - An agent message without a table opens to its full text in its line.
 - The line stays in place when it opens or closes.
 - Reason: the steps of the work stay close together, also when a message
@@ -198,3 +278,13 @@ open work of a turn at `app/chat/headings/work`. It draws links at
   heading ends, so the words after it read as new text. The work stays
   quieter than the answer. The line is a button that opens and closes,
   and a screen reader does not list a heading inside a button.
+- Emphasis, strikethrough, links, and chips show in a message line, closed
+  and open.
+- A closed message line shows the text of a quote in the line, in the
+  colour of a quote and without its line. It shows each rule as a middle
+  dot, `·`, and each line break as a space.
+- An open message line shows each quote as a block, each rule as a line,
+  and each line break as a new line. Under the open line, a quote or a
+  rule after the first table shows as in an answer.
+- Reason: the closed line stays one line, as for a table. The colour shows
+  where a quote ends, so the words after it read as new text.

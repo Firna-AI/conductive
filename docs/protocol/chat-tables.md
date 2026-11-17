@@ -9,14 +9,15 @@ of a turn. The terms are those of the
 [architecture doc](../architecture.md#terms). The
 [mockup catalogue](../mockups/catalogue.md) draws tables in agent messages
 at `app/chat/tables`, and in the open work of a turn at
-`app/chat/work/table`.
+`app/chat/work/table`. It draws cells with line breaks at
+`app/chat/tables/line-break`.
 
 ## Tables
 
 - A screen reader reads each table as a table, by its rows and its
   columns.
 - Tables look the same in agent messages and in the file preview. The
-  [mockups](../mockups/design-chat.md) give the look.
+  [mockups](../mockups/design-markdown.md#the-parts) give the look.
 
 ### Table text
 
@@ -45,8 +46,12 @@ at `app/chat/tables`, and in the open work of a turn at
   it.
 - With no colon, the column keeps its text at the start.
 - The header cell of a column takes the alignment of its column too.
-- The text of a cell shows its inline code, its strong text, its links,
-  its workspace chips, and its file chips, as in a paragraph.
+- The text of a cell shows its inline code, its strong text, its
+  emphasis, its strikethrough, its links, its workspace chips, and its
+  file chips, as in a paragraph.
+- A line-break tag in a cell shows as a line break, as
+  [Line breaks](chat-markdown.md#line-breaks) says. So one cell can show
+  more than one line.
 - A row with more cells than the header row shows only the cells under
   the columns. The other cells do not show.
 
@@ -78,7 +83,8 @@ at `app/chat/tables`, and in the open work of a turn at
 ### Tables and the file preview
 
 - Agent messages and the file preview split table rows into cells in the
-  same way. They read column alignment in the same way.
+  same way. They read column alignment and the line breaks of a cell in
+  the same way.
 - Short rows differ. The file preview fills a short row with empty cells,
   up to a budget for each file, as
   [Files and changes](workspace-tools.md#files-and-changes) says.

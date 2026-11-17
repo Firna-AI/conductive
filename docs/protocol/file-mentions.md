@@ -154,8 +154,8 @@ names a decision of the change that added file chips to answers. The
   writes it.
 - A mention starts at the start of the text, or after a space or a line
   break. Where the chat reads Markdown marks, as in an answer, a mention
-  can also start right after a mark, such as in `**@src/app.ts**` (answer
-  chip decision 5). Today `**` is the only mark that the chat reads.
+  can also start right after a `*`, `_`, or `~~`, such as in
+  `**@src/app.ts**` or `_@src/app.ts_` (answer chip decision 5).
 - Reason: agents often write a file name in bold. A start after any
   character was rejected, because `a@b.com` would then start a mention.
 - A mention of a file can end with a line target, such as
@@ -164,8 +164,9 @@ names a decision of the change that added file chips to answers. The
   `:`, `!`, `?`, or `)`, the chat drops that one character and reads the
   mention again. The character then shows as text after the chip. Reason:
   agents end sentences right after a mention, as in "See @src/app.ts."
-- Where `**` marks bold, as in an answer, a mention ends before the next
-  `**`. So bold around a mention stays bold.
+- Where the chat reads Markdown marks, a mention ends before the next `*`
+  or `~~`, and before a `_` that closes a mark. So bold, emphasis, and
+  strikethrough around a mention keep their look.
 - The draft, the sent message, and the text that the agent gets hold the
   same mention of a file or a folder. For an attached file, Send writes
   the mention at the place of its chip, because the path comes only with
@@ -243,7 +244,9 @@ names a decision of the change that added file chips to answers. The
   and one word counts too. A `%` escape in the target, such as `%20`, reads
   as its character. A target in angle brackets can hold a space.
 - A Markdown link whose target names no entry stays the text that the
-  agent wrote. A Markdown image of a web address stays text too.
+  agent wrote. A Markdown image whose target names no entry shows its alt
+  text, as [Chat links](chat-links.md#bare-addresses-and-markdown-links)
+  says.
 - Reason: agents write screenshots as Markdown images, and the label reads
   better as a link than as a chip. The user asked for normal links on
   13 November 2026.

@@ -10,7 +10,9 @@ dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A chat link decision number names a decision of the change that
 makes each web address of chat text a link, as
 [Chat links](chat-links.md) says. A terminal links decision number names
-a decision of the change that makes the addresses in the terminal open.
+a decision of the change that makes the addresses in the terminal open. A
+Markdown parser decision names a decision of the change that reads
+Markdown with one parser, as [Chat Markdown](chat-markdown.md) says.
 The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 `app/files` and `app/tools`.
 
@@ -26,6 +28,18 @@ The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   the temporary tab, as [Temporary tabs](temporary-tabs.md) says.
 - Markdown shows rendered, with a switch to its source. Code shows with line
   numbers and syntax colours.
+- The Markdown preview reads a file with the parser of the chat, by the
+  rules of CommonMark with the tables and the strikethrough of GitHub, as
+  [Formatting](chat-markdown.md#formatting) says (Markdown parser decision
+  3 C, 16 November 2026). Quotes, rules, emphasis, strikethrough,
+  headings, and tables have the same look as in the chat.
+- HTML in a Markdown file shows as text. A line-break tag, `<br>`,
+  `<br/>`, or `<br />` in any letter case, shows as a line break, also in a
+  table cell, as [Line breaks](chat-markdown.md#line-breaks) says
+  (Markdown parser decision 1, 16 November 2026).
+- Reason: a file of the repository is untrusted, so no HTML of a file
+  reaches the page. A table of a file with line-break tags then reads as
+  on GitHub.
 - A file tab can open at a line or a range of lines, such as from a file
   chip of an answer with a line target, as
   [Line targets](file-mentions.md#line-targets) says (answer chip

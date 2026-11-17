@@ -49,7 +49,9 @@ state the requirements.
   button, because a summary is a button. A code block under an open line
   draws through `AgentBlocks`, so it has the button.
 - `AgentText`, `AnswerText`, and `MessageLine` draw React text and
-  elements only. So HTML in a message shows as text.
+  elements only, so no HTML of a message reaches the page.
+  [Formatting](../../docs/protocol/chat-markdown.md#formatting) gives the
+  rule for HTML in a message.
 - A `<summary>` holds only phrasing content and headings, and no
   paragraph, list, or table. So `MessageLine` draws each block as a span,
   which CSS shows as a block while the line is open. A table cannot go into
@@ -122,11 +124,11 @@ text. These parts read and draw them:
 - In a sent message, a Markdown link shows as typed. Its brackets, its
   label, and its link title read again as text and code, with no link, and
   its address reads as a bare address: a chip, a link, or text. The
-  Markdown of an image, `![alt](address)`, shows as typed in the same way,
-  also in an answer, unless its target names a file of the workspace.
-  A file target shows its label as a link that opens the file. Each other
-  Markdown link whose address is no link shows as typed, with its code
-  and bold.
+  Markdown of an image, `![alt](address)`, shows as typed in the same way.
+  In an answer, an image shows as
+  [Chat links](../../docs/protocol/chat-links.md#bare-addresses-and-markdown-links)
+  says. Each other Markdown link whose address is no link shows as typed,
+  with its code and bold.
 - Inline code whose text, without the spaces at its ends, is one address
   that the reader accepts holds that link, as `CodePart.link`. A
   workspace link alone in code is such a link, not a chip. Code in a label
@@ -164,9 +166,10 @@ text. These parts read and draw them:
   is no chip. A Markdown link whose brackets stand outside code is one
   unit, also when its label holds code or bold, so it shows as its chip
   alone. Then bare links count. In an answer, `**` marks bold around text,
-  chips, and links, and a bare link ends before a mark. Bold ends at code,
-  as before. A Markdown link of no workspace is a link or shows as typed,
-  as [Web links](#web-links) says. `links/workspace-links.ts` reads each link with the
+  chips, and links, and a bare link ends before a mark.
+  [Formatting](../../docs/protocol/chat-markdown.md#formatting) gives the
+  marks of an answer. A Markdown link of no workspace is a link or shows
+  as typed, as [Web links](#web-links) says. `links/workspace-links.ts` reads each link with the
   URL parser and `parseRoute`. It builds the chip address with
   `appAddress` of `src/markdown/web-links.ts`. A link is a chip only when
   it has the origin of the links of the list, and the router reads a page of a
@@ -209,8 +212,10 @@ text. These parts read and draw them:
   `FileTextLink` draws a normal link with the label, which opens the file.
   `chat-tokens.ts` reads a target that is not a web address only where
   paths count, as in an answer.
-- Code in the label of a Markdown link stays code. Where `**` marks bold, a
-  mention ends before the mark.
+- Code in the label of a Markdown link stays code. A mention starts and
+  ends as
+  [The text of a mention](../../docs/protocol/file-mentions.md#the-text-of-a-mention)
+  says.
 - A text follows the tree only when it holds `@`, or in an answer a
   backtick or `](`. So a change of the tree draws only the texts that can
   change.
@@ -270,7 +275,7 @@ preview:
   with no text, such as `## ` while the agent writes, is a `heading` block
   with empty text.
 - `Paragraph`, in `components/agent-paragraph.ts`, holds the lines of the
-  open paragraph. The chat shows a quote, a rule, and indented code as
+  open paragraph. It keeps a quote, a rule, and indented code as its
   text, so one paragraph can hold them. CommonMark reads none of them as
   the text of a paragraph. So an underline turns only the text after the
   last of them into a heading, and the lines before that text stay a

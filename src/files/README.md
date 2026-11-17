@@ -240,11 +240,13 @@ of the tab menu, for such a path.
 
 File content, Markdown, paths, and diffs are untrusted. The screens show
 them as React text only, apart from the picture of an image file. The
-Markdown renderer builds React elements from its own parse: HTML in a
-file shows as text, a Markdown image shows its alt text, and only
-absolute `http`, `https`, and `mailto` links become links. A bare address
-in the text stays text. Quotes and lists nest at most 16 levels deep, and
-deeper content shows as text. The parse runs in the worker, off the
+Markdown renderer builds React elements from its own parse, so no HTML of
+a file reaches the page.
+[Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes)
+gives the rule for HTML in a file. A Markdown image shows its alt text,
+and only absolute `http`, `https`, and `mailto` links become links. A
+bare address in the text stays text. Quotes and lists nest at most 16
+levels deep, and deeper content shows as text. The parse runs in the worker, off the
 thread of the page, so a long or crafted file cannot stop the page.
 
 Each link of the preview has the look of the mockups' `TextLink`, and its

@@ -215,17 +215,30 @@ cells, quotes, rules, emphasis, strikethrough, and web images.
 
 Depends on: 1
 
-- [ ] `docs/protocol/chat-markdown.md`: the parts of item 8 D and the chat
+- [x] `docs/protocol/chat-markdown.md`: the parts of item 8 D and the chat
       exceptions, the parser decision in place of the library rejection,
       the line-break rule, and the CommonMark changes of design call 7.
-- [ ] `docs/protocol/chat-links.md` and `file-mentions.md`: web images by
-      item 5 A, and the mention start of design call 11.
-- [ ] `docs/protocol/chat-tables.md` and `workspace-tools.md`: a line
+      The docs cite the items as Markdown parser decisions 1, 3 C, 5 A,
+      and 8 D. My calls, 17 November 2026, by item 8 D: a hard line break
+      of CommonMark and indented code show as in the file preview, and a
+      quote that holds the first table of a message line counts as that
+      table, as the mockups show. The link-library rejection stays.
+- [x] `docs/protocol/chat-links.md` and `file-mentions.md`: web images by
+      item 5 A, and the mention start of design call 11. My calls,
+      17 November 2026: the label test also leaves out the marks of
+      emphasis and strikethrough, so a label in italics cannot hide its
+      address. An image in the label of a link shows its alt text as words
+      of the label. An address in angle brackets that is no link shows as
+      typed, as a Markdown link does.
+- [x] `docs/protocol/chat-tables.md` and `workspace-tools.md`: a line
       break in a cell, and the HTML rule of the file preview.
-- [ ] `src/chat/agent-text.md` and `src/files/README.md`.
-- [ ] Read the Terms page, the Privacy page, and each public guide in
+- [x] `src/chat/agent-text.md` and `src/files/README.md`. Each rule that
+      changes is now a link to its protocol doc. Milestones 4 and 5 update
+      the code names.
+- [x] Read the Terms page, the Privacy page, and each public guide in
       `src/marketing/docs/` in full. Update each sentence that restates a
-      changed fact.
+      changed fact. Only the list of the parts of a reply in
+      `sessions-and-chat.md` changed: it adds quotes.
 - [ ] Ask the user, from the mockups: while the agent writes, an opening
       `**` shows its stars until its pair arrives, as
       `app/chat/formatting/writing` shows. Keep this, or hide or close an
@@ -234,6 +247,20 @@ Depends on: 1
       preview also show as a link with its alt text? Item 5 asked about
       both views, and design call 12 covers only the chat. State the
       answer in `workspace-tools.md`.
+- [ ] Ask the user, from the docs: the file preview draws a task box, such
+      as `- [ ]`, as a box, and `chat-markdown.md` keeps it as text in the
+      chat. Item 8 D lists no task box among the chat exceptions, and the
+      mockups draw none. Draw it in the chat as the file preview does, or
+      keep it as text? `markdown-it` reads no task box, so the preview
+      adapter of Milestone 5 must keep its own.
+- [ ] Ask the user, from the docs: `markdown-it` reads a line of text
+      without a pipe after a table as one more row, as GitHub does.
+      `chat-tables.md` says that such a line ends the table, and both
+      readers end it there today. Follow the parser, or keep the rule?
+- [ ] Ask the user, from the docs: `markdown-it` ends a table at the row
+      whose short rows would fill more than 65,536 empty cells. Such rows
+      then show as text. `chat-tables.md` says that the chat adds no limit
+      for tables. Accept the limit of the parser, or keep no limit?
 
 ## Milestone 3: The parser
 
