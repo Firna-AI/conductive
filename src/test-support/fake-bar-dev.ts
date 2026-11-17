@@ -49,7 +49,7 @@ export const scenarioValues: {
   access: ['write', 'read', 'unknown'],
   method: ['squash', 'merge', 'rebase', 'none'],
   merge: ['merged', 'moved-head', 'no-right', 'refused', 'unavailable'],
-  ready: ['ready', 'no-right', 'refused'],
+  ready: ['ready', 'no-right', 'pull-changed', 'refused'],
   work: ['none', 'files', 'restored', 'commits', 'legacy'],
   continue: ['continued', 'question', 'clash', 'stopped', 'turn'],
 }

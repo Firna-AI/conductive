@@ -81,7 +81,13 @@ describe('Ready for review in the bar', () => {
         href: null,
       },
       // A missing right hides the button at once, as for Merge.
-      noRight: { actions: [], message: { href: null } },
+      noRight: {
+        actions: [],
+        message: {
+          text: "Not marked ready: your GitHub access doesn't allow changes to this pull request.",
+          href: null,
+        },
+      },
     })
     const failed = draftView({
       outcome: {
@@ -171,6 +177,12 @@ describe('the run of Ready for review', () => {
     expect(bar.actions.getSnapshot().outcome).toEqual({
       kind: 'ready-refused',
       reason: 'ready-refused',
+    })
+    serveReady(server, 'pull-changed')
+    await bar.actions.markReady(snapshotOf('draft'))
+    expect(bar.actions.getSnapshot().outcome).toEqual({
+      kind: 'ready-refused',
+      reason: 'ready-pull-changed',
     })
     expect(capabilityReads(server)).toBe(1)
 
