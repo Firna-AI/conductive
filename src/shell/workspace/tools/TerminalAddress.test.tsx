@@ -1,19 +1,34 @@
 // @vitest-environment happy-dom
 
+import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
+import { HeldRequests } from '../../../app/test-kit'
 import { readView } from '../../../chat/api/read-responses'
+import { terminalPaths, type TerminalResponse } from '../../../shared/terminal'
 import { workspaceViewPath } from '../../../shared/workspace-view'
-import { queryByLabel, queryByRole } from '../../../test-support/dom-queries'
+import {
+  byRole,
+  queryByLabel,
+  queryByRole,
+} from '../../../test-support/dom-queries'
 import { FakeApiServer } from '../../../test-support/fake-api'
 import { FAKE_IDS } from '../../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../../test-support/fixtures/workspaces'
 import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
+  press,
 } from '../../../test-support/mount'
+import { openPaletteTab } from '../../palette/palette-test-kit'
+import { settle } from '../../test-mount'
 import { bodiesOf } from '../kept-test-kit'
 import { openTab, socketsOf } from '../wiring-test-kit'
-import { firstTerminal, openTerminals, terminalTabs } from './terminal-tabs-kit'
+import {
+  closeElsewhere,
+  firstTerminal,
+  openTerminals,
+  terminalTabs,
+} from './terminal-tabs-kit'
 import { terminalHref, toolHref } from './tool-address'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
@@ -97,5 +112,45 @@ describe('the shown terminal of the saved view and of the address', () => {
       plus: queryByRole('button', 'New terminal', view),
       sockets: opened.map(({ path }) => path),
     }).toEqual({ row: null, plus: null, sockets: [firstTerminal.socketPath] })
+  })
+})
+
+describe('the reply of an open after a newer change', () => {
+  test('a new terminal that another member closed before the reply of its open does not show, and the address stays', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer()
+    const opens = terminalPaths.terminals(org, id)
+    const held = new HeldRequests(server)
+    // The server opens the terminal and sends its event. Its answer waits.
+    held.holdAnswer('POST', opens)
+    const { events, opened } = socketsOf(server)
+    const here = toolHref(org, id, 'terminal')
+    const { view, navigation } = await openPaletteTab(here, {
+      server,
+      events,
+      fetch: held.fetch,
+    })
+
+    await press(byRole('button', 'New terminal', view))
+    const created = terminalTabs(view)
+    const state = await server.fetch(terminalPaths.connection(org, id))
+    const listed: TerminalResponse = await state.json()
+    const second = listed.terminals?.[1]
+    if (!second) throw new Error('The server opened no terminal.')
+    await closeElsewhere(server, second)
+    await act(async () => held.release('POST', opens))
+    await settle()
+
+    expect({
+      created,
+      tabs: terminalTabs(view),
+      history: navigation.history,
+      sockets: opened.map(({ path }) => path),
+    }).toEqual({
+      created: { names: [names.first, names.second], shown: [names.first] },
+      tabs: { names: [names.first], shown: [names.first] },
+      history: [here],
+      sockets: [firstTerminal.socketPath],
+    })
   })
 })

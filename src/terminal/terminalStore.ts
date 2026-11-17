@@ -1,5 +1,6 @@
 import type { WorkspaceIdentity } from '../app/workspace-store'
-import { loadTerminal } from './terminalApi'
+import type { WorkspaceEvent, WorkspaceEventEnvelope } from '../shared/events'
+import { byNumber, loadTerminal } from './terminalApi'
 import {
   initialReadiness,
   readinessReducer,
@@ -15,6 +16,23 @@ export type TerminalStore = ToolStore<
 >
 
 /**
+ * The action of one event of the workspace. A list of the terminals keeps
+ * the number of its event, so the tool orders it against its read and the
+ * replies of its writes.
+ */
+function fromEnvelope(
+  envelope: WorkspaceEventEnvelope,
+): TerminalReadinessAction | WorkspaceEvent {
+  const { event } = envelope
+  if (event.type !== 'terminals.updated') return event
+  return {
+    type: 'listed',
+    terminals: [...event.terminals].sort(byNumber),
+    eventNumber: envelope.eventNumber,
+  }
+}
+
+/**
  * The readiness of the terminals, their events, and their read. Each read
  * number of the state reads the terminal state once, so Try again, a running
  * sandbox, and a change of the list during a read start a new read.
@@ -23,6 +41,7 @@ const terminalTool: ToolDefinition<TerminalReadiness, TerminalReadinessAction> =
   {
     reducer: readinessReducer,
     initialState: initialReadiness,
+    fromEnvelope,
     read: {
       key: (state) => state.read,
       run: async ({ requests, key, signal }) => ({

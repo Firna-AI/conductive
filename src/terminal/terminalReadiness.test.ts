@@ -38,9 +38,17 @@ const first = entry('workspace', 1)
 const second = entry('2'.repeat(32), 2)
 const third = entry('3'.repeat(32), 3)
 
-/** A ready answer with its list, as the Worker sends it. */
+/** A ready answer with its list, as an older Worker sends it. */
 function listed(terminals: readonly TerminalEntry[]): TerminalResponse {
   return { ...ready, terminals, several: true }
+}
+
+/** A ready answer with its list and the number of the event that holds it. */
+function at(
+  eventNumber: number,
+  terminals: readonly TerminalEntry[],
+): TerminalResponse {
+  return { ...listed(terminals), eventNumber }
 }
 
 function answer(
@@ -57,8 +65,12 @@ function updated(state: WorkspaceState): WorkspaceEvent {
   return { type: 'workspace.updated', workspace: { ...workspace, state } }
 }
 
-function changed(terminals: readonly TerminalEntry[]): WorkspaceEvent {
-  return { type: 'terminals.updated', terminals }
+/** The list of a `terminals.updated` event, with the number of its event. */
+function changed(
+  terminals: readonly TerminalEntry[],
+  eventNumber = 1,
+): TerminalReadinessAction {
+  return { type: 'listed', terminals, eventNumber }
 }
 
 function reduce(...actions: (TerminalReadinessAction | WorkspaceEvent)[]) {
@@ -68,6 +80,21 @@ function reduce(...actions: (TerminalReadinessAction | WorkspaceEvent)[]) {
 /** The terminals of a ready tool, or null when it does not show them. */
 function terminalsOf(state: TerminalReadiness) {
   return state.view.state === 'ready' ? state.view.terminals : null
+}
+
+/**
+ * What a ready tool shows: its list, its shown terminal, and the place of a
+ * shown terminal that closed.
+ */
+function shownOf(state: TerminalReadiness) {
+  if (state.view.state !== 'ready') return null
+  const { terminals, shown, replaced } = state.view
+  return { terminals, shown: shown?.id ?? null, replaced }
+}
+
+/** The view shows a terminal that the route asks for. */
+function show(terminal: TerminalEntry): TerminalReadinessAction {
+  return { type: 'shown', terminalId: terminal.id, requested: terminal.id }
 }
 
 describe('terminal readiness', () => {
@@ -111,14 +138,16 @@ describe('terminal readiness', () => {
     expect(terminalsOf(answered)).toEqual([first, second])
   })
 
-  it('shows an opened terminal and drops a closed one before their events, in the order of the numbers', () => {
+  it('without event numbers, as from an older server, shows an opened terminal and drops a closed one before their events, in the order of the numbers', () => {
     const opened = reduce(answer(1, listed([first, third])), {
       type: 'opened',
       terminal: second,
+      terminals: [first, second, third],
     })
     const closed = readinessReducer(opened, {
       type: 'closed',
       terminalId: first.id,
+      terminals: [second, third],
     })
 
     expect(terminalsOf(opened)).toEqual([first, second, third])
@@ -126,5 +155,73 @@ describe('terminal readiness', () => {
     expect(terminalsOf(readinessReducer(closed, changed([third])))).toEqual([
       third,
     ])
+  })
+  it('keeps the newer list and the shown terminal when the events of two opens come after their replies', () => {
+    const state = reduce(
+      answer(1, at(0, [first])),
+      { type: 'open' },
+      {
+        type: 'opened',
+        terminal: second,
+        terminals: [first, second],
+        eventNumber: 1,
+      },
+      show(second),
+      { type: 'open' },
+      {
+        type: 'opened',
+        terminal: third,
+        terminals: [first, second, third],
+        eventNumber: 2,
+      },
+      show(third),
+      changed([first, second], 1),
+      changed([first, second, third], 2),
+    )
+
+    expect(shownOf(state)).toEqual({
+      terminals: [first, second, third],
+      shown: third.id,
+      replaced: null,
+    })
+  })
+
+  it('keeps a terminal closed when the reply of its open comes after its close by another member', () => {
+    const state = reduce(
+      answer(1, at(0, [first])),
+      { type: 'open' },
+      changed([first, second], 1),
+      changed([first], 2),
+      {
+        type: 'opened',
+        terminal: second,
+        terminals: [first, second],
+        eventNumber: 1,
+      },
+    )
+
+    expect({
+      terminals: terminalsOf(state),
+      opening: state.view.state === 'ready' && state.view.opening,
+    }).toEqual({ terminals: [first], opening: false })
+  })
+
+  it('takes none of the stored lists that a first visit replays after the read, and takes the next change', () => {
+    const read = reduce(answer(1, at(3, [first, third])), show(third))
+    const replayed = [
+      changed([first, second], 1),
+      changed([first, second, third], 2),
+      changed([first, third], 3),
+    ].reduce(readinessReducer, read)
+    const next = readinessReducer(replayed, changed([first], 4))
+
+    expect({ replayed: shownOf(replayed), next: shownOf(next) }).toEqual({
+      replayed: { terminals: [first, third], shown: third.id, replaced: null },
+      next: {
+        terminals: [first],
+        shown: first.id,
+        replaced: { from: third.id, to: first.id },
+      },
+    })
   })
 })

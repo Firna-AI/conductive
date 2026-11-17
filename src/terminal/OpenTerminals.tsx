@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useState, type Ref } from 'react'
+import { useEffect, useState, type Ref } from 'react'
 import { Unplug } from 'lucide-react'
 import type { TerminalEntry } from '../shared/terminal'
 import { CloseTerminalQuestion } from './CloseTerminalQuestion'
 import type { ReadyTerminals, ReadyTerminalsAction } from './readyTerminals'
-import type { ReadyTerminal } from './terminalApi'
 import type { TerminalFocusRequest } from './terminalFocus'
 import type { TerminalLinks } from './terminalLinks'
 import { shownTerminal, type TerminalRoute } from './terminalRoute'
@@ -42,11 +41,6 @@ function TerminalPane(
 ) {
   const { dispatch } = props
   const { id, socketPath } = props.terminal
-  // The screen connects again only when its socket changes.
-  const terminal = useMemo<ReadyTerminal>(
-    () => ({ state: 'ready', socketPath, protocol: 'tty' }),
-    [socketPath],
-  )
   return (
     <div className={styles.pane} hidden={props.hidden}>
       <TerminalScreen
@@ -59,7 +53,7 @@ function TerminalPane(
         onFocusDone={props.onFocusDone}
         onInput={props.onActivity}
         screenRef={props.screenRef}
-        terminal={terminal}
+        socketPath={socketPath}
       />
       {props.ended ? (
         <div className={styles.ended} role="status">

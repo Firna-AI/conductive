@@ -628,12 +628,15 @@ Tags: ui
 
 Depends on: 11
 
-- [ ] Finding 102: add a mounted test for the Reconnect of one terminal.
-- [ ] Finding 103: give the screen and the connector the socket path, with
+- [x] Finding 102: add a mounted test for the Reconnect of one terminal.
+- [x] Finding 103: give the screen and the connector the socket path, with
       no rebuilt state response.
-- [ ] Finding 101, app side: apply each terminal list only when its event
+- [x] Finding 101, app side: apply each terminal list only when its event
       number is newer than the list that shows, from reads, replies, and
       events. Show a new terminal only while it is in the list.
+
+Done on 17 November 2026. Evidence: `.context/terminal-tabs/reports/m12.md`
+and `.context/terminal-tabs/m12/`.
 
 ## Milestone 13: Review fixes in the docs
 

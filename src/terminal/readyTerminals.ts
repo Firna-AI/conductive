@@ -19,6 +19,11 @@ export interface ReadyTerminals {
   state: 'ready'
   /** The terminals, in the order of their numbers. Never empty. */
   terminals: readonly TerminalEntry[]
+  /**
+   * The number of the workspace event that holds the list that shows, or
+   * null while an older server sent none.
+   */
+  revision: number | null
   /** The software of the sandbox opens more terminals: the tabs show. */
   several: boolean
   /** The terminal that showed last, as the view reports it. */
@@ -37,17 +42,28 @@ export interface ReadyTerminals {
   closing: ReadonlySet<string>
 }
 
+/**
+ * The list of a reply of the server, with the number of the event that holds
+ * the same list. An older server sends no number.
+ */
+interface RepliedList {
+  terminals: readonly TerminalEntry[]
+  eventNumber?: number
+}
+
 /** The actions of the tool on its ready terminals. */
 export type ReadyTerminalsAction =
   /** The view shows a terminal for `requested`, the terminal of the route. */
   | { type: 'shown'; terminalId: string; requested: string | null }
   | { type: 'ended'; terminalId: string }
   | { type: 'reconnect'; terminalId: string }
+  /** The list of a `terminals.updated` event, with the number of its event. */
+  | { type: 'listed'; terminals: readonly TerminalEntry[]; eventNumber: number }
   | { type: 'open' }
-  | { type: 'opened'; terminal: TerminalEntry }
+  | ({ type: 'opened'; terminal: TerminalEntry } & RepliedList)
   | { type: 'open-failed' }
   | { type: 'close'; terminalId: string }
-  | { type: 'closed'; terminalId: string }
+  | ({ type: 'closed'; terminalId: string } & RepliedList)
   | { type: 'close-failed'; terminalId: string }
 
 /**
@@ -61,6 +77,7 @@ export function readyTerminals(answer: ReadyTerminal): ReadyTerminals {
     terminals: answer.terminals ?? [
       { id: FIRST_TERMINAL_ID, number: 1, socketPath: answer.socketPath },
     ],
+    revision: answer.eventNumber ?? null,
     several: listed && answer.several === true,
     shown: null,
     replaced: null,
@@ -98,7 +115,7 @@ function removed(set: ReadonlySet<string>, id: string): ReadonlySet<string> {
  * terminal that left the list. When the shown terminal left, the terminal
  * before it takes its place.
  */
-export function withTerminals(
+function withTerminals(
   ready: ReadyTerminals,
   terminals: readonly TerminalEntry[],
 ): ReadyTerminals {
@@ -122,9 +139,26 @@ export function withTerminals(
 }
 
 /**
- * The actions of the tool on its terminals. An open adds the new terminal
- * at once, and a close removes its terminal at once, so the tool shows the
- * result before the event of the change. The event then gives the list.
+ * The tool with a list and the number of the event that holds it. Only a
+ * number newer than the number of the list that shows changes the list, so
+ * a late event or a late reply cannot undo a newer change. After the read
+ * of an older server, which sent no number, each list counts as newer.
+ */
+function withNewerList(
+  ready: ReadyTerminals,
+  terminals: readonly TerminalEntry[],
+  eventNumber: number,
+): ReadyTerminals {
+  if (ready.revision !== null && eventNumber <= ready.revision) return ready
+  return { ...withTerminals(ready, terminals), revision: eventNumber }
+}
+
+/**
+ * The actions of the tool on its terminals. The list of an event, and the
+ * list of the reply of an open or a close, change the tabs when they are
+ * newer than the list that shows. So an open and a close show at once,
+ * before their event. A reply of an older server has no number, so it adds
+ * or removes its terminal in the list that shows.
  */
 export function readyReducer(
   ready: ReadyTerminals,
@@ -159,12 +193,17 @@ export function readyReducer(
       connections.set(terminalId, (connections.get(terminalId) ?? 0) + 1)
       return { ...ready, ended: removed(ready.ended, terminalId), connections }
     }
+    case 'listed':
+      return withNewerList(ready, action.terminals, action.eventNumber)
     case 'open':
       return ready.opening ? ready : { ...ready, opening: true }
     case 'opened': {
+      const next = { ...ready, opening: false }
+      if (action.eventNumber !== undefined) {
+        return withNewerList(next, action.terminals, action.eventNumber)
+      }
       const { terminal } = action
       const known = ready.terminals.some((each) => each.id === terminal.id)
-      const next = { ...ready, opening: false }
       return known
         ? next
         : withTerminals(next, [...ready.terminals, terminal].sort(byNumber))
@@ -176,13 +215,16 @@ export function readyReducer(
       return closing === ready.closing ? ready : { ...ready, closing }
     }
     case 'closed': {
-      const rest = ready.terminals.filter(
-        (each) => each.id !== action.terminalId,
-      )
       const next = {
         ...ready,
         closing: removed(ready.closing, action.terminalId),
       }
+      if (action.eventNumber !== undefined) {
+        return withNewerList(next, action.terminals, action.eventNumber)
+      }
+      const rest = ready.terminals.filter(
+        (each) => each.id !== action.terminalId,
+      )
       // The last terminal never closes, so an empty list waits for the event.
       return rest.length === 0 ? next : withTerminals(next, rest)
     }

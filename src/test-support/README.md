@@ -99,6 +99,8 @@ all its viewers. `server.terminals.sockets` records the opened sockets,
 their `terminalId`, and their decoded `terminal` for output and input checks.
 The opener accepts the legacy socket path and each terminal's socket path.
 No native WebSocket or real network connection is needed.
+`src/shell/workspace/tools/TerminalReconnect.test.tsx` gives it to the
+mounted app as `openSocket`, so the Terminal tool connects through the codec.
 Explicit reply overrides still take precedence over the terminal routes.
 The [production connector tests](../app/terminal-transport.test.ts) check
 framing and connection isolation. Worker route tests check list and event behavior.

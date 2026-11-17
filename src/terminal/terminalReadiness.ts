@@ -5,11 +5,9 @@ import type { TerminalResponse } from '../shared/terminal'
 import {
   readyReducer,
   readyTerminals,
-  withTerminals,
   type ReadyTerminals,
   type ReadyTerminalsAction,
 } from './readyTerminals'
-import { byNumber } from './terminalApi'
 import type { ToolError, ToolResult } from './tool-parts/request'
 
 type TerminalView =
@@ -87,14 +85,14 @@ export function readinessReducer(
       const runs = running.has(action.workspace.state)
       return waiting && runs ? nextRead(state) : state
     }
-    case 'terminals.updated': {
+    case 'listed':
       // The answer of a read that runs can hold the list from before the
-      // change, so the change needs a new read. A ready tool takes the list.
+      // change, so the change needs a new read. A ready tool takes the list
+      // when its event is newer than the list that shows.
       if (state.view.state === 'loading') return nextRead(state)
-      const terminals = [...action.terminals].sort(byNumber)
-      if (terminals.length === 0) return state
-      return onReady(state, (ready) => withTerminals(ready, terminals))
-    }
+      // A workspace always has a terminal, so an empty list changes nothing.
+      if (action.terminals.length === 0) return state
+      return onReady(state, (ready) => readyReducer(ready, action))
     case 'retry':
       return nextRead(state)
     case 'shown':

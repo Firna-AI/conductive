@@ -6,9 +6,15 @@ terminal that shows. [Terminal](../../docs/protocol/terminal.md#terminal-tabs)
 states the requirements.
 
 - The list of terminals comes with the terminal state, and each
-  `terminals.updated` event replaces the whole list. An event during a
-  read starts a new read, because the answer of the running read can hold
-  the list from before the change. The tabs keep the order of the numbers.
+  `terminals.updated` event gives the whole list. An event during a read
+  starts a new read, because the answer of the running read can hold the
+  list from before the change. The tabs keep the order of the numbers.
+- Each list carries the number of the workspace event that holds it: the
+  list of the state, of an event, and of the reply of an open or a close.
+  The tool takes a list only when its number is newer than the number of
+  the list that shows. So a late event, a late reply, or the stored events
+  that a first visit replays cannot undo a newer change. A server that
+  sends no number gives lists that the tool takes as before.
 - The row of tabs is above the screen, with the + at its end. It uses the
   styles of the tab row of the centre column, and of `TerminalTabs` of the
   mockups. Each tab shows its whole name, "Terminal 1" to "Terminal 10",
@@ -39,8 +45,9 @@ states the requirements.
   [Mount the tool](README.md#mount-the-tool) says. The +, a press on a
   tab, and New terminal of the palette move no focus.
 - An open and a close that worked change the tabs at once, before their
-  event. The + and the close button of a terminal turn busy while their
-  write runs.
+  event, while their list is newer. A new terminal shows, and the address
+  follows it, only while the list that shows still holds it. The + and the
+  close button of a terminal turn busy while their write runs.
 - A failed open or close shows the failure toast of the app with the
   message of the server: "The new terminal didn't open." or "Terminal 2
   didn't close.". The terminals stay as they were.

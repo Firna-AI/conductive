@@ -98,11 +98,12 @@ change can move the shared parts to the app's shared components.
 />
 ```
 
-- `connect` opens the decoded transport of a ready terminal, with the
-  `socketPath` of one terminal. The shell gives `createTerminalConnector`
-  of `src/app/terminal-transport.ts` over `openSocket` of the app's event
-  source. It opens `socketPath` on the Worker of the app, also in the Mac
-  app, and decodes the ttyd protocol into the `TerminalTransport` of the
+- `connect` takes the `socketPath` of one terminal, from its entry in the
+  list, and opens its decoded transport. The shell gives
+  `createTerminalConnector` of `src/app/terminal-transport.ts` over
+  `openSocket` of the app's event source, with the fixed `tty`
+  subprotocol. It opens `socketPath` on the Worker of the app, also in the
+  Mac app, and decodes the ttyd protocol into the `TerminalTransport` of the
   [shared contracts](../shared/README.md). Keep the function stable. A
   transport that closes, or a `connect` that throws, shows Disconnected with
   Reconnect. A source without `openSocket`, as in the development fake,
@@ -220,11 +221,13 @@ each link that opens, in place of opening it.
 - `TerminalTabs.tsx`: the row of terminal tabs, the +, and the line at the
   limit. `CloseTerminalQuestion.tsx`: the question before a close.
 - `terminalStore.ts`: `createTerminalStore`, which makes the tool store of
-  one workspace, with its reducer and its read of the terminal state.
+  one workspace, with its reducer, its read of the terminal state, and the
+  event number of each list event.
 - `terminalReadiness.ts`: the states of the tool, its reads, and its events.
-- `readyTerminals.ts`: the list of a ready tool, what it keeps for each
-  terminal, the writes that run, and the place of a shown terminal that
-  closed.
+- `readyTerminals.ts`: the list of a ready tool and the event number of
+  that list, what it keeps for each terminal, the writes that run, and the
+  place of a shown terminal that closed. It takes only a newer list, as
+  [Terminal tabs](terminal-tabs.md) says.
 - `terminalRoute.ts`: `TerminalRoute`, and `shownTerminal`, which picks the
   shown terminal from the route and the list.
 - `useTerminalActions.ts`: the open, also from outside the tool, and the

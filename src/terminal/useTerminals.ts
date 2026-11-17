@@ -51,7 +51,21 @@ export function useTerminals(
   const { view } = snapshot
   const ready = view.state === 'ready' ? view : null
   const opening = ready?.opening ?? false
-  const actions = useTerminalActions(workspace, route, opening, store.dispatch)
+  // A reply reads the state of the store after its own action.
+  const listed = (terminalId: string) => {
+    const now = store.getSnapshot().view
+    return (
+      now.state === 'ready' &&
+      now.terminals.some((terminal) => terminal.id === terminalId)
+    )
+  }
+  const actions = useTerminalActions(
+    workspace,
+    route,
+    opening,
+    store.dispatch,
+    listed,
+  )
   const canOpen =
     ready !== null &&
     ready.several &&

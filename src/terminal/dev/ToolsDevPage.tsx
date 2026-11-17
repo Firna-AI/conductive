@@ -76,7 +76,7 @@ export function ToolsDevPage() {
     [server, hold, params.workspace, params.state],
   )
   const terminalRoute = useDevTerminalRoute(params)
-  const connect = useCallback<ConnectTerminal>(({ socketPath }) => {
+  const connect = useCallback<ConnectTerminal>((socketPath) => {
     const name = socketName(socketPath)
     const terminal = new EchoTerminal((entry) =>
       setTerminalLog((list) => lastOf(list, `${name}: ${entry}`)),

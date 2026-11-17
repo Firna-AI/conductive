@@ -42,6 +42,25 @@ export function parseTerminalList(
 }
 
 /**
+ * The event number of the list of a reply: the number of the workspace event
+ * that holds the same list. Undefined when an older server sent none, and
+ * null for any other value, which makes the reply malformed.
+ */
+function eventNumberOf(value: unknown): number | undefined | null {
+  if (value === undefined) return undefined
+  return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0
+    ? value
+    : null
+}
+
+/** The event number of a reply, as a field, or no field without one. */
+function withEventNumber(eventNumber: number | undefined): {
+  eventNumber?: number
+} {
+  return eventNumber === undefined ? {} : { eventNumber }
+}
+
+/**
  * The list of a ready answer. An older server leaves out `terminals` and
  * `several`, which the tool then reads as one terminal.
  */
@@ -68,7 +87,15 @@ function parseTerminalResponse(body: unknown): TerminalResponse | null {
   if (state !== 'ready' || typeof socketPath !== 'string') return null
   if (protocol !== 'tty') return null
   const list = listOf(body)
-  return list === null ? null : { state, socketPath, protocol, ...list }
+  const eventNumber = eventNumberOf(body.eventNumber)
+  if (list === null || eventNumber === null) return null
+  return {
+    state,
+    socketPath,
+    protocol,
+    ...list,
+    ...withEventNumber(eventNumber),
+  }
 }
 
 /** Reads the terminal state of the workspace. */
@@ -92,13 +119,17 @@ function parseCreated(body: unknown): CreateTerminalResponse | null {
   if (!isRecord(body)) return null
   const terminal = parseEntry(body.terminal)
   const terminals = parseTerminalList(body.terminals)
-  return terminal && terminals ? { terminal, terminals } : null
+  const eventNumber = eventNumberOf(body.eventNumber)
+  if (!terminal || !terminals || eventNumber === null) return null
+  return { terminal, terminals, ...withEventNumber(eventNumber) }
 }
 
 function parseClosed(body: unknown): TerminalListResponse | null {
   if (!isRecord(body)) return null
   const terminals = parseTerminalList(body.terminals)
-  return terminals ? { terminals } : null
+  const eventNumber = eventNumberOf(body.eventNumber)
+  if (!terminals || eventNumber === null) return null
+  return { terminals, ...withEventNumber(eventNumber) }
 }
 
 /** Opens a terminal with the lowest free number. */
