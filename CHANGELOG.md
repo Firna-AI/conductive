@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.24.0](https://github.com/Firna-AI/conductive/compare/v0.23.0...v0.24.0) (2026-11-17)
+
+
+### Features
+
+* **image-builds:** name the repository in the copy build log line ([#432](https://github.com/Firna-AI/conductive/issues/432)) ([6a8a2cd](https://github.com/Firna-AI/conductive/commit/6a8a2cd59422adae8b3d1600ff5726fd4db3ce18))
+* **workspaces:** nest workspaces under a parent workspace ([#425](https://github.com/Firna-AI/conductive/issues/425)) ([eaf5e45](https://github.com/Firna-AI/conductive/commit/eaf5e458f6663a191b11722d20a51a5aedf1c875))
+
+
+### Bug Fixes
+
+* **runner:** ignore Codex subagent threads when tracking the active turn ([#430](https://github.com/Firna-AI/conductive/issues/430)) ([d12f7a2](https://github.com/Firna-AI/conductive/commit/d12f7a25dc768d81d5217d54f4c689c6cec80f74))
+
 ## [0.23.0](https://github.com/Firna-AI/conductive/compare/v0.22.0...v0.23.0) (2026-11-17)
 
 
