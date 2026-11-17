@@ -85,9 +85,16 @@ export async function tokenWorkspace(
     .first<RunnerWorkspaceRecord>()
 }
 
-/** The account-login writer must use this authenticated encryption context. */
-export function agentLoginContext(userId: string, agent: Agent): string {
-  return `agent-login:${userId}:${agent}`
+export type AgentLoginOwner = string | { orgId: string }
+
+/** A string names a personal owner and keeps the stored account context. */
+export function agentLoginContext(
+  owner: AgentLoginOwner,
+  agent: Agent,
+): string {
+  return typeof owner === 'string'
+    ? `agent-login:${owner}:${agent}`
+    : `org-agent-login:${owner.orgId}:${agent}`
 }
 
 /**
@@ -130,13 +137,13 @@ export async function readAgentLogin(
 
 export async function decryptAgentLogin(
   env: AppEnv,
-  userId: string,
+  owner: AgentLoginOwner,
   kind: AgentLoginKind,
   ciphertext: string,
 ): Promise<AgentLogin | null> {
   const plaintext = await decrypt(
     ciphertext,
-    agentLoginContext(userId, kind.agent),
+    agentLoginContext(owner, kind.agent),
     env.BOAT_KEY_ENCRYPTION_KEY,
   )
   if (kind.kind !== 'endpoint')

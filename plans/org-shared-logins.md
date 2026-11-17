@@ -44,7 +44,8 @@ Contract owners:
 - [Session calls](../docs/protocol/session-calls.md), for the agent tools.
 - The [model gateway](../docs/protocol/model-gateway.md).
 - The [mockup catalogue](../docs/mockups/catalogue.md),
-  [Orgs, members, and logins](../docs/mockups/orgs-and-logins.md), and
+  [Orgs, members, and logins](../docs/mockups/orgs-and-logins.md),
+  [Logins](../docs/mockups/logins.md), and
   [Own endpoint logins](../docs/mockups/own-endpoint-logins.md).
 - The legal pages `src/marketing/terms.ts` and `src/marketing/privacy.ts`,
   and the public guides in `src/marketing/docs/`.
@@ -500,20 +501,46 @@ agent's call, made on 17 November 2026.
   of them." It is the line of the account with the pickers of the org
   login. No mockup draws this state, also not on the account.
 
+Milestone 3 added these calls on 17 November 2026. Each is the agent's call.
+
+- The org API uses `GET /api/orgs/:orgId/agent-logins` and the personal
+  route pattern for each agent: `PUT`, `PATCH`, `DELETE`, and
+  `POST .../models/refresh`. The shared org settings module owns the
+  paths. Reason: the new routes follow the account API without changing
+  any existing route. The read gives both agents, including a disconnected
+  entry when a login is absent.
+- The shared encryption and model refresh helpers accept a personal owner
+  string or an org owner `{ orgId }`. The org context is
+  `org-agent-login:<orgId>:<agent>`. Reason: personal ciphertext and
+  existing turn callers keep their current context and behavior.
+- The table has no `failure_cause` column. Reason: neither allowed kind
+  has a writer for it, as the mockup call already found.
+- `created_by` is a nullable user reference with `ON DELETE SET NULL`.
+  Replacement keeps the first creator and `created_at`. Reason: the org
+  owns the login, and removing its creator must keep it.
+- Org login saves, removes, and switch writes use the existing active
+  admin SQL predicate. Org model reads check the active org state, and
+  an admin Refresh checks the admin role in its claim and final write.
+  Reason: a role or suspension can change during endpoint discovery.
+- Save and switch replies read the current public metadata. They include
+  the same optional model list that an admin read gives. The save also
+  carries the transient `/v1` and failed-read flags. Reason: the replies
+  reuse the public metadata reader and return no encrypted fields.
+
 ## Components
 
 - D1: a table `org_agent_logins` keyed by `org_id` and `agent`, with
   `kind` (`api-key` or `endpoint`), `ciphertext`, `endpoint_origin`,
-  `failure_cause`, `created_by`, `created_at`, and `updated_at`. It also
+  `use_for_every_member`, `created_by`, `created_at`, and `updated_at`. It also
   has the model list columns that
   `migrations/202611110407_agent_login_models.sql` adds to personal
-  logins. It cascades on the delete of the org. When decision 7 adds a
-  switch, a save of the switch leaves `updated_at` unchanged, as
+  logins. It cascades on the delete of the org. A save of the switch
+  leaves `updated_at` unchanged, as
   `worker/app-api/account-data.ts:196` does for the share switch.
   Reason: `updated_at` is the login version that running turns check.
 - Org API: routes for admins that save and remove an org login, and a read
-  for members that gives each org login without its secret, with the
-  model list of an endpoint and the time of its last read.
+  for members that gives each org login without its secret. Admins also
+  get the model list of an endpoint and the time of its last read.
 - Model lists: the endpoint model refresh of
   `worker/model-gateway/endpoint-model-refresh.ts` gets an org owner.
 - Session: a `login` field that names a member or the org, next to
@@ -609,9 +636,11 @@ Depends on: 1
       restates a changed fact.
 - [x] Update the rows of `src/marketing/from-conductor/areas/cloud.ts:86`
       and `plans-and-pricing.ts` that the change makes wrong.
-- [ ] Capture the marketing pictures again with `npm run marketing:pictures`.
+- [x] Capture the marketing pictures again with `npm run marketing:pictures`.
       The `org` picture shows the tab row of the org settings, which gains
-      Agents in Milestone 1.
+      Agents in Milestone 1. Only the two phone files of the `org` picture
+      changed because of this branch. The other files changed because of
+      the screens that `main` changed after its last capture.
 - [x] Update the background of `plans/follow-ups/org-control-of-own-endpoints.md`
       and `plans/follow-ups/member-changes-session-choice.md`.
 - [x] Update `worker/README.md`, `worker/chat/access.md`,
@@ -654,21 +683,24 @@ and the screenshots.
 
 Depends on: 2
 
-- [ ] Add the migration for `org_agent_logins`.
-- [ ] Add the save, the remove, and the read of an org login, with the
+- [x] Add the migration for `org_agent_logins`.
+- [x] Add the save, the remove, and the read of an org login, with the
       address rule of `docs/protocol/own-endpoint-logins.md` and the org
       encryption context. Only an admin saves or removes.
-- [ ] Give the endpoint model refresh an org owner.
-- [ ] Make the save and the Refresh of an org endpoint answer whether they
+- [x] Give the endpoint model refresh an org owner.
+- [x] Make the save and the Refresh of an org endpoint answer whether they
       read a model list, and the save answer whether it added `/v1`, as
       for a personal login, from the design calls of Milestone 2b.
-- [ ] Add the switch of decision 7: a column, and an admin route that saves
+- [x] Add the switch of decision 7: a column, and an admin route that saves
       it without a change of `updated_at`.
-- [ ] Keep the switch of decision 7 when an admin replaces the org login,
+- [x] Keep the switch of decision 7 when an admin replaces the org login,
       also with another kind, from the design calls of the mockups.
-- [ ] Tests: an admin save, a member refused, a response with no secret,
+- [x] Tests: an admin save, a member refused, a response with no secret,
       an endpoint that the rule refuses, the delete of the org, and a
       ciphertext of another org that does not decrypt.
+
+Evidence: `.context/org-shared-logins/m3/` holds the check logs and failure
+proofs. The final report is `.context/org-shared-logins/m3-report.md`.
 
 ## Milestone 4: Sessions and turns on the org login
 

@@ -236,6 +236,10 @@ functions of the chat backend that a reader opens first.
 
 `sockets.ts` owns WebSocket upgrades and abstract browser connection setup.
 `queries.ts` decrypts native-provider and own endpoint logins inside the Worker.
+Its `AgentLoginOwner` is a personal user ID string or an org owner
+`{ orgId }`. The context and decrypt helpers accept both. Personal logins
+keep their existing encryption context, and org logins use a separate
+`org-agent-login` context.
 `login-kind.ts` owns the trusted `AgentLogin` union, separate from the native runner login types.
 `login-availability.ts` checks the plain `endpoint_origin` in its one metadata query.
 It selects no ciphertext and decrypts no login.

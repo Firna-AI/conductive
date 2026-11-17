@@ -31,6 +31,11 @@ Its imports carry types only.
 `nameLabel` in `name-label.ts` gives the display label "Untitled" for null.
 
 Each area owns its paths and payloads. Import from that area directly.
+`org-settings.ts` owns org login paths beside the other org settings paths.
+`org-agent-logins.ts` defines org login writes, metadata, and model-read
+responses. A member's metadata omits the optional endpoint model list.
+Only an admin of an active org receives it. No response holds a stored
+secret or a full endpoint address.
 `OrgSettings.envVars` in `org-settings.ts` returns only names and secret marks.
 Its `set` change carries a value and an optional mark. An omitted mark
 keeps the stored mark inside each compare-and-swap attempt. A missing or

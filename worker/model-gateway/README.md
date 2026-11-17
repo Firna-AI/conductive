@@ -207,6 +207,12 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
 - [route.ts](route.ts): `routeModelGateway` selects a route, checks the Claude markers, checks its turn, replaces authentication, and forwards one request.
 - [workspace-access.ts](workspace-access.ts): `gatewayWorkspaceAllowed` checks the workspace and resource predicates in D1 before object access.
 - [paths.ts](paths.ts): gateway base matching and the fixed model method and suffix list.
+- [endpoint-model-refresh.ts](endpoint-model-refresh.ts) and
+  [endpoint-model-data.ts](endpoint-model-data.ts): model discovery for a
+  personal owner string or an org owner `{ orgId }`. Claims keep the
+  ten-minute background limit. Saves compare ciphertext and attempt ID,
+  and leave the login version intact. Org reads also check active org
+  state. An admin Refresh supplies `adminId` for SQL role checks.
 - [codex-upstream.ts](codex-upstream.ts): ChatGPT metadata forwarding and model routing in the Worker.
 - [codex-request-auth.ts](codex-request-auth.ts): binds ChatGPT credential tasks to the active request and turn.
 - [codex-auth.ts](codex-auth.ts): fresh credentials, one 401 renewal, observation of concurrent rotation, and the redaction set for the request.

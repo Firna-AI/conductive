@@ -286,6 +286,16 @@ The partial index `workspaces_running_since` holds running, unarchived rows
 with a non-null time. Its running states match `runningWorkspacePredicate`.
 The [operator Overview](../worker/operator/overview.md) uses this index to read the ten oldest runs.
 
+`202611170110_org_agent_logins.sql` adds `org_agent_logins`, keyed by org
+and agent. It accepts only API keys and own endpoints. The org foreign key
+deletes its logins with the org. The nullable creator reference clears
+when that user is deleted. The encrypted key and address use an org
+context. Only the endpoint origin stays in plain text.
+The table also holds the endpoint model list and its read and attempt
+times. `use_for_every_member` starts off. A switch write keeps the login's
+`updated_at` version. Existing personal logins and their data stay intact.
+[Org logins](../docs/protocol/org-logins.md) states the requirements.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.
