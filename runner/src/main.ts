@@ -6,11 +6,14 @@ import { Runner } from './runner'
 import { connectWebSocket } from './socket'
 import { DiskStorage, EventStore } from './state'
 import { ProcPortScanner } from './proc-ports'
+import { SkillsRepository } from './skills-repository'
 
 const warn = (message: string) => process.stderr.write(`${message}\n`)
 
 async function main(): Promise<void> {
   const config = configuration(process.env)
+  const skills = new SkillsRepository({ ...config, warn })
+  skills.start()
   const store = await EventStore.open(new DiskStorage(config.statePath))
   const ports = new ProcPortScanner({
     ...config,
@@ -32,7 +35,10 @@ async function main(): Promise<void> {
     ...config,
     store,
     connect: (request) => connectWebSocket(request, warn),
-    providers: { claude: createClaudeFactory(), codex: createCodexFactory() },
+    providers: {
+      claude: skills.provider(createClaudeFactory()),
+      codex: skills.provider(createCodexFactory()),
+    },
     warm: warmClaude,
     now: Date.now,
     warn,
@@ -51,7 +57,10 @@ async function main(): Promise<void> {
     process.once(signal, () => {
       stopped = true
       clearTimeout(timer)
-      void runner.close().finally(() => process.exit(0))
+      void runner
+        .close()
+        .finally(() => skills.close())
+        .finally(() => process.exit(0))
     })
   await runner.start().catch(() => {
     warn('The runner will retry its connection.')

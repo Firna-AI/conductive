@@ -26,6 +26,7 @@ export function configuration(
     },
     cwd: resolve(required(env, 'CONDUCTIVE_REPOSITORY')),
     home,
+    skillsRepository: env.CONDUCTIVE_SKILLS_REPOSITORY ?? '',
     defaultBranch: required(env, 'CONDUCTIVE_DEFAULT_BRANCH'),
     ...(workspaceBranch ? { workspaceBranch } : {}),
     repositoryDirectories: Object.fromEntries(

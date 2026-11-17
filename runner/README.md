@@ -173,6 +173,38 @@ background work of its agent, the note at the end of a reply, the time
 limit of 120 minutes, the end reason, and their key code. A workspace gets
 this behaviour only from an org image built with this runner.
 
+## Org skills
+
+[Org skills](../docs/protocol/org-skills.md) gives the requirements.
+`src/main.ts` starts `src/skills-repository.ts` in the background before
+the runner connects. `CONDUCTIVE_SKILLS_REPOSITORY` names the public GitHub
+repository. [Runner configuration](configuration.md) gives its update and
+failure behaviour.
+
+The copy lives under
+`~/.conductive/skills/repositories/<owner>/<name>/commits/<commit>`.
+Each complete checkout has its own folder. The runner changes the
+`~/.conductive/skills/repository` link with one rename after the checkout.
+It keeps old complete checkouts for active turns and for a stop and resume.
+Removing or replacing the repository deletes the old copies before the
+first fetch of the next start.
+
+Each provider start gets the current complete copy. Claude reads a
+temporary folder under `~/.conductive/skill-sessions` through the SDK's
+`additionalDirectories`. That folder holds only `.claude/skills` links.
+The provider removes it after the process exits. Codex gets each selected
+skill folder through `skills/extraRoots/set`, before it starts or resumes
+the thread. Explicit roots include hidden skill folders. Per-process
+`skills.config` entries disable nested skill files that Codex would
+otherwise load. The files stay available as skill references.
+
+`src/shared/skill-folders.ts`, in the parent package, selects the folders.
+The providers omit org skills whose folder or frontmatter name clashes
+with a repository skill. Claude reads repository skills in
+`.claude/skills`. Codex reads them in `.agents/skills` and `.codex/skills`.
+Both providers keep the skill names. Each turn starts a new provider
+process, so the next turn gets the next complete copy.
+
 ## Event limits
 
 [Event limits](event-limits.md) gives the byte and count limits of each

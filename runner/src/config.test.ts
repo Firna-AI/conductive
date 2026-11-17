@@ -17,6 +17,7 @@ it('loads runner settings without a computer server URL', () => {
     CONDUCTIVE_REPOSITORY_API_TOKEN: 'private-token',
     ORG_SECRET: 'private-secret',
     CONDUCTIVE_HOME: '/private-agent-home',
+    CONDUCTIVE_SKILLS_REPOSITORY: 'org/skills',
   }
   expect(() => configuration(env)).not.toThrow()
   expect(configuration(env)).toEqual({
@@ -27,6 +28,7 @@ it('loads runner settings without a computer server URL', () => {
     },
     cwd: '/repo',
     home: '/private-agent-home',
+    skillsRepository: 'org/skills',
     defaultBranch: 'main',
     workspaceBranch: 'alice/task',
     repositoryDirectories: {
@@ -57,5 +59,6 @@ it('warns and starts without a workspace branch for an older runner environment'
     ['The workspace branch is unavailable. Agent instructions will omit it.'],
   ])
   expect(config).not.toHaveProperty('workspaceBranch')
+  expect(config.skillsRepository).toBe('')
   expect(agentInstructions(config).codex).not.toContain('Workspace branch:')
 })

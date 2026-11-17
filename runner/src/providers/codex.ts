@@ -9,6 +9,7 @@ import { codexBinary } from './binaries'
 import { writeCodexCredentials } from './codex-credentials'
 import { codexNotification } from './codex-events'
 import { checkCodexGateway, codexSettings } from './codex-settings'
+import { prepareCodexSkills } from './codex-skills'
 import { openCodexThread } from './codex-thread'
 import { readComputerServer } from './computer-mcp'
 import { prepareProviderHome } from './environment'
@@ -66,6 +67,7 @@ export function createCodexFactory(
     await prepareProviderHome(options.home)
     options.signal?.throwIfAborted()
     const computer = await readComputerServer(options.warn)
+    const skills = await prepareCodexSkills(options)
     options.signal?.throwIfAborted()
     const preparation =
       options.credential.type === 'gateway' &&
@@ -117,6 +119,7 @@ export function createCodexFactory(
       const args = [
         codexBinary(),
         'app-server',
+        ...skills.args,
         ...Object.entries(configs).flatMap(([key, value]) => [
           '-c',
           `${key}=${JSON.stringify(value)}`,
@@ -179,6 +182,14 @@ export function createCodexFactory(
         capabilities: { experimentalApi: true },
       })
       rpc.notify('initialized')
+      if (skills.extraRoots.length)
+        await rpc
+          .request('skills/extraRoots/set', { extraRoots: skills.extraRoots })
+          .catch(() =>
+            options.warn(
+              'The org skills could not be loaded. The turn will continue.',
+            ),
+          )
       if (settings.tokenMode) await checkCodexGateway(rpc, options.endpoint)
       else
         await rpc.request('account/login/start', {

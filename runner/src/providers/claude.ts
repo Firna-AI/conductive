@@ -19,6 +19,7 @@ import { prepareProviderHome, providerEnvironment } from './environment'
 import { failureCause } from './failure'
 import { ProviderLifetime } from './lifetime'
 import { providerMessage } from './message'
+import { prepareClaudeSkills } from './skills'
 import type { ProviderFactory } from './types'
 
 export interface ClaudeQuery extends AsyncIterable<unknown> {
@@ -46,6 +47,7 @@ export function createClaudeFactory(
     await prepareProviderHome(options.home)
     options.signal?.throwIfAborted()
     const computer = await readComputerServer(options.warn)
+    const skills = await prepareClaudeSkills(options, lifetime)
     options.signal?.throwIfAborted()
     const preparation =
       options.credential.type === 'gateway'
@@ -143,6 +145,7 @@ export function createClaudeFactory(
           includePartialMessages: true,
           persistSession: true,
           settingSources: ['project'],
+          ...(skills ? { additionalDirectories: [skills] } : {}),
           mcpServers: {
             conductive: {
               command: WORKSPACE_TOOLS_MCP.command,

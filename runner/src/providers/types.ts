@@ -10,6 +10,7 @@ import type {
 } from '../../../src/shared/runner'
 import type { ProviderLifetime } from './lifetime'
 import type { WorkspaceToolContext } from './workspace-tools'
+import type { SkillFolders } from '../skills-repository'
 
 export type ProviderInput = RunnerTurn | RunnerMessageDuringTurn
 export type ProviderEvent =
@@ -64,6 +65,7 @@ export interface ProviderOptions {
   lifetime?: ProviderLifetime
   /** Work already named by the Stop hook of this turn, across process handoffs. */
   backgroundNoteIds?: Set<string>
+  skillFolders?: SkillFolders
 }
 
 export type ProviderFactory = (
