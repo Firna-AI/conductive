@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore } from 'react'
+import { useEffect, useSyncExternalStore } from 'react'
 import { useToast } from '@firna/ui/toast'
 import { Blocks } from 'lucide-react'
 import {
@@ -6,7 +6,7 @@ import {
   capabilitiesLabel,
 } from '../../../docs/mockups/src/components/capabilities/capabilitiesCopy'
 import { CapabilitiesPanel } from '../../../docs/mockups/src/components/capabilities/CapabilitiesPanel'
-import { WorkspaceCapabilitiesModel } from '../../app/capabilities-model'
+import { keptCapabilities } from '../../app/capabilities-model'
 import { nameInSentence } from '../../app/people'
 import {
   asApiError,
@@ -73,8 +73,10 @@ function useChange() {
 /**
  * The open control of a workspace (secrets decision 8 B): the secrets of
  * the org that it pre-approves, the approvals of its sessions and the values
- * that members gave for it, each with Remove, and Mac access. It reads the secrets and the capabilities each
- * time that it opens, and every member changes them. A change applies to
+ * that members gave for it, each with Remove, and Mac access. The workspace
+ * pre-loads them, as `usePreloadedCapabilities` says, so the control shows
+ * them at once. Each open reads them again behind the shown values, because
+ * every member changes them. A change applies to
  * each session of the workspace from that moment.
  */
 function WorkspaceCapabilitiesPanel(props: {
@@ -87,14 +89,7 @@ function WorkspaceCapabilitiesPanel(props: {
   const { org, viewer } = props
   const orgModel = useOrgModel(org.id)
   const { secrets } = orgModel
-  const [model] = useState(
-    () =>
-      new WorkspaceCapabilitiesModel(
-        orgModel.services.api,
-        org.id,
-        props.workspaceId,
-      ),
-  )
+  const model = keptCapabilities(orgModel, props.workspaceId)
   const list = useStore(secrets.list.store)
   const grants = useStore(model.grants.store)
   const values = useStore(model.values.store)
@@ -176,6 +171,21 @@ function WorkspaceCapabilitiesPanel(props: {
       sheet={props.sheet}
     />
   )
+}
+
+/**
+ * Reads the secrets of the org and the Capabilities of the workspace when
+ * the workspace shows, if they have no answer yet. So the control opens
+ * with them at once, and a return to the workspace reads nothing more. A
+ * failed read shows nothing here: the control reads again when it opens.
+ */
+export function usePreloadedCapabilities(orgId: string, workspaceId: string) {
+  const orgModel = useOrgModel(orgId)
+  useEffect(() => {
+    const { secrets } = orgModel
+    if (secrets.list.store.get().state !== 'ready') void secrets.read()
+    void keptCapabilities(orgModel, workspaceId).preload()
+  }, [orgModel, workspaceId])
 }
 
 /**
