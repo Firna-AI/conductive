@@ -88,6 +88,8 @@ chips.
 - [Chat Markdown](../../docs/protocol/chat-markdown.md) states the
   formatting of agent messages, with their headings and lists.
   [Chat tables](../../docs/protocol/chat-tables.md) states their tables.
+  [Chat message lines](../../docs/protocol/chat-message-lines.md) states
+  their lines in the work of a turn.
   [Chat links](../../docs/protocol/chat-links.md) states the links of sent
   messages and answers, and
   [Workspace links](../../docs/protocol/workspace-links.md) states their
@@ -175,6 +177,8 @@ copy, the chat routes, the Mac commands, and the development page.
   agent messages, with their headings and lists.
 - [Chat tables](../../docs/protocol/chat-tables.md): the tables of agent
   messages.
+- [Chat message lines](../../docs/protocol/chat-message-lines.md): the
+  lines of agent messages in the work of a turn.
 - [Chat links](../../docs/protocol/chat-links.md): the links of sent
   messages and answers.
 - [Agent runner](../../docs/protocol/agent-runner.md): the limits of the

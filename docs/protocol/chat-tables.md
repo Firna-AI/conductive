@@ -4,8 +4,9 @@ This doc holds the requirements and the decisions in force for the tables
 of agent messages in the chat. It belongs to
 [Chat Markdown](chat-markdown.md), which defines an agent message and
 holds the other Markdown of agent messages. Chat Markdown also says how a
-table shows while the agent writes, in the saved history, and in the work
-of a turn. The terms are those of the
+table shows while the agent writes and in the saved history.
+[Chat message lines](chat-message-lines.md) says how a table shows in the
+work of a turn. The terms are those of the
 [architecture doc](../architecture.md#terms). The
 [mockup catalogue](../mockups/catalogue.md) draws tables in agent messages
 at `app/chat/tables`, and in the open work of a turn at

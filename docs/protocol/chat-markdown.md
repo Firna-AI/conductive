@@ -5,7 +5,9 @@ Markdown of agent messages in the chat, with their headings, lists,
 quotes, and line breaks. Its linked page [Chat tables](chat-tables.md)
 holds the rules of their tables. Its linked page
 [Chat links](chat-links.md) holds the rules of the links of chat text,
-and of the images of agent messages. [Chat and events](chat-and-events.md)
+and of the images of agent messages. Its linked page
+[Chat message lines](chat-message-lines.md) holds the rules of the
+message lines of the work of a turn. [Chat and events](chat-and-events.md)
 holds the messages, the live text, and the work of a turn. The terms are
 those of the [architecture doc](../architecture.md#terms). A decision
 number names a dated record, as
@@ -14,13 +16,10 @@ parser decision, such as Markdown parser decision 8 D, is a decision of
 the change that reads the Markdown of the chat and of the file preview
 with one parser. Its pull request keeps the record. The
 [mockup catalogue](../mockups/catalogue.md) draws tables in agent messages
-at `app/chat/tables`, and in the open work of a turn at
-`app/chat/work/table`. It draws lists inside list items at
-`app/chat/lists`. It draws headings at `app/chat/headings`, and in the
-open work of a turn at `app/chat/headings/work`. It draws quotes, rules,
-marks, line breaks, and images at `app/chat/formatting`, and in the open
-work of a turn at `app/chat/formatting/work`. It draws links at
-`app/chat/links`.
+at `app/chat/tables`. It draws lists inside list items at
+`app/chat/lists`, and headings at `app/chat/headings`. It draws quotes,
+rules, marks, line breaks, and images at `app/chat/formatting`, and links
+at `app/chat/links`.
 
 ## Formatting
 
@@ -65,7 +64,7 @@ work of a turn at `app/chat/formatting/work`. It draws links at
     [While the agent writes](#while-the-agent-writes) says
   - short table rows, as [Short rows](chat-tables.md#short-rows) says
   - the agent messages in the work of a turn, as
-    [In the work of a turn](#in-the-work-of-a-turn) says
+    [Chat message lines](chat-message-lines.md) says
 - Reason: agents often write quotes and emphasis, and the chat then shows
   them without their `>` and `*` marks. The chat also needs no code that
   turns parsed parts back into the text that the agent wrote. A smaller
@@ -219,7 +218,7 @@ work of a turn at `app/chat/formatting/work`. It draws links at
 - Reason: CommonMark drops a hard line break at the end of a block. A long
   run of line-break tags then adds no tall gap to the chat.
 - A closed message line in the work of a turn shows each line break as a
-  space, as [In the work of a turn](#in-the-work-of-a-turn) says.
+  space, as [Chat message lines](chat-message-lines.md) says.
 
 ## While the agent writes
 
@@ -254,37 +253,5 @@ work of a turn at `app/chat/formatting/work`. It draws links at
 
 ## In the work of a turn
 
-- An open work fold shows each agent message as one message line, as
-  [The work of a turn](chat-and-events.md#the-work-of-a-turn) says.
-- A closed message line stays one line. It shows each table as its cells
-  in row order, from the header row, with a middle dot, `·`, between two
-  cells.
-- An open message line keeps the text before the first table of the agent
-  message. When a list or a quote holds that table, the line keeps the
-  text before that list or quote. The table, or the block that holds it,
-  and all that follows show under the line, with their formatting.
-- An agent message without a table opens to its full text in its line.
-- The line stays in place when it opens or closes.
-- Reason: the steps of the work stay close together, also when a message
-  holds a table. A table needs the width of the chat to read, so it shows
-  under the line.
-- In a message line, each heading shows as text of the line, in the
-  heading weight. A screen reader reads it as text too.
-- A closed message line shows the text of a heading in the line.
-- An open message line shows each heading on its own line, in the size of
-  the text of the line. Under the open line, a heading after the first
-  table shows as a heading of its level, in the same look.
-- Reason: the closed line stays one line, and the weight shows where a
-  heading ends, so the words after it read as new text. The work stays
-  quieter than the answer. The line is a button that opens and closes,
-  and a screen reader does not list a heading inside a button.
-- Emphasis, strikethrough, links, and chips show in a message line, closed
-  and open.
-- A closed message line shows the text of a quote in the line, in the
-  colour of a quote and without its line. It shows each rule as a middle
-  dot, `·`, and each line break as a space.
-- An open message line shows each quote as a block, each rule as a line,
-  and each line break as a new line. Under the open line, a quote or a
-  rule after the first table shows as in an answer.
-- Reason: the closed line stays one line, as for a table. The colour shows
-  where a quote ends, so the words after it read as new text.
+- [Chat message lines](chat-message-lines.md) says how each agent message
+  shows in the work of a turn.
