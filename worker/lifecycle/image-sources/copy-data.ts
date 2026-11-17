@@ -2,7 +2,7 @@ import { buildLogStatements } from '../build-log-statements'
 import type { SourceJob } from './source-data'
 
 /** Names the repository when the captured list still has it. */
-export function sourceCopyLogLine(fullName: string | undefined): string {
+function sourceCopyLogLine(fullName: string | undefined): string {
   return fullName
     ? `Repository copy complete: ${fullName}\n`
     : 'Repository copy complete.\n'
