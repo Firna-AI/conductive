@@ -109,7 +109,8 @@ Use the engine as the next handler of `ReportCommandHandler`.
 Each session pins its agent, instructions, and branch context.
 New sessions also name their workspace ID, link, parent, depth, and depth limit.
 The instructions give the cases of when to nest a new workspace.
-The Worker supplies these stable tree facts through the service environment.
+The Worker supplies these tree facts through the service environment at runner start.
+The instructions direct agents to `get_workspace` for the current parent and depth after a move.
 At the depth limit, the instructions give the parent ID for a sibling and a short name prefix.
 Missing or malformed tree settings produce one warning and omit all tree guidance.
 Saved sessions keep their exact instructions across runner updates.
@@ -182,6 +183,7 @@ and connection drops. It does not run the Worker.
 - [Agent runner protocol](../../docs/protocol/agent-runner.md)
 - [Agent instructions](../../docs/protocol/agent-instructions.md)
 - [Sub-workspaces](../../docs/protocol/sub-workspaces.md)
+- [Parent changes](../../docs/protocol/parent-changes.md)
 - [Lost workspace updates](../../docs/protocol/lost-workspace-updates.md)
 - [Version pins](../../docs/protocol/version-pins.md)
 - [Sandbox architecture](../../docs/architecture/components.md#sandbox-software)

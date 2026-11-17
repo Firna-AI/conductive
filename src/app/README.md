@@ -109,6 +109,10 @@ the invitations, the kept workspace models, the build log, the read marks,
 the workspace stores, the raw event streams of feature stores, and the
 feedback draft.
 
+For an existing workspace, `OrgModel.putWorkspace` keeps the listed parent,
+section, and order together. A record with a different parent requests a
+fresh list read through `Refresher.reread`, after any current read finishes.
+
 ## Screens
 
 [Screens](screens.md) gives the rules of the screens of the app shell:

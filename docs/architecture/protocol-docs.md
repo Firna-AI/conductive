@@ -37,6 +37,9 @@ This page lists each protocol doc and what it covers.
   - [Sub-workspaces](../protocol/sub-workspaces.md): the parent link, when
     to nest, the depth limit, the nested rows of the list, an archived parent, the moves
     of a tree, and the agent context.
+    - [Parent changes](../protocol/parent-changes.md): the moves that nest
+      a workspace under another parent or take it out of its tree, the
+      place of the moved tree, and the refusals.
   - [Workspace tools](../protocol/workspace-tools.md)
     - [Terminal](../protocol/terminal.md): the terminals of a workspace
       and their tabs, and the shell of each terminal.

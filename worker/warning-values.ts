@@ -74,6 +74,8 @@ const HTTP_CODES = [
   'org_suspended',
   'user_suspended',
   'workspace_archived',
+  'nesting_cycle',
+  'nesting_limit',
   'workspace_start_failed',
   'workspace_start_stopped',
   'image_build_failed',

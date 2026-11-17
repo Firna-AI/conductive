@@ -17,7 +17,7 @@ with `conductive`.
 | `get_workspace` | `workspaces get [--workspace ID]` | Read |
 | `create_workspace` | `workspaces create --repository ID --message TEXT [--agent claude\|codex --model NAME] [--effort LEVEL] [--fast true\|false] [--section ID] [--parent ID] [--name TEXT] [--first-session-title TEXT] [--request-id ID]` | Write |
 | `rename_workspace` | `workspaces rename --name TEXT [--workspace ID]` | Write |
-| `move_workspace` | `workspaces move --section ID [--workspace ID]` | Write |
+| `move_workspace` | `workspaces move [--section ID] [--parent ID \| --top-level] [--workspace ID]` | Write |
 | `archive_workspace` | `workspaces archive [--workspace ID]` | Write |
 | `list_repositories` | `repositories list` | Read |
 | `list_sections` | `sections list` | Read |
@@ -49,6 +49,7 @@ The MCP fields take the values of the CLI options, with these names:
   for `send_message`.
 - `--agent` and `--model` give one `model` field with `agent` and `model`.
 - `--stop-running-turn` gives `stopRunningTurn: true`.
+- `--top-level` gives `topLevel: true` for a workspace move.
 - `--archived` takes the text `true` or `false`. The `archived` field
   takes a boolean.
 - Each other option gives its name in camel case, such as `updatedSince`,
@@ -180,9 +181,20 @@ It also reads an archived workspace.
 `workspaces rename`, `move`, and `archive` reply with the same details.
 A rename uses the name rule, and no automatic name replaces it later.
 A blank result gets HTTP 400 `invalid_input`.
-A move puts the workspace at the top of the section.
-A top-level row moves with each workspace nested under it, including archived workspaces.
-A nested row moves nothing. Its reply gives a `notice` that names the top-level workspace to move instead.
+A section-only move puts a top-level row first in the section, with its whole tree.
+A section-only move of a nested row moves nothing. Its reply gives a `notice` that names the top-level workspace to move instead.
+For a parent change, pass `--parent ID` or MCP `parentId` to nest the whole tree under that parent.
+Pass `--top-level` or MCP `topLevel: true` to take the tree out of its parent.
+A move needs a section, a target, or both. A call with two targets gets `invalid_input`.
+`topLevel: false` gives no target. A null `parentId` gets `invalid_input`.
+A nest joins the parent's shown section. Another named section gives a `notice`.
+A take-out puts the tree first in the named section, or in its shown section when no section is named.
+A target equal to the current place changes nothing.
+The Worker refuses a loop with `nesting_cycle` and a move past depth 3 with `nesting_limit`.
+The depth error names the deepest workspace and the deepest allowed parent depth.
+These checks cover archived links and leave the tree unchanged on refusal.
+An archived parent is allowed. An archived moved workspace gets `workspace_archived`.
+[Parent changes](../docs/protocol/parent-changes.md) states the requirements.
 CLI JSON and MCP text and structured results keep all these reply fields.
 An archive makes the same change as Archive in the app. A member can restore the workspace for 14 days.
 Archiving the calling workspace ends the calling turn, so the caller can miss the reply.

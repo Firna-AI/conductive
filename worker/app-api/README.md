@@ -260,6 +260,9 @@ The machine tools use the configured app origin instead.
   workspace takes 0. So it lists first, as the
   [mockups](../../docs/mockups/src/components/workspaces/sections.ts)
   show. A position can be negative.
+  [`workspace-insert-data.ts`](../lifecycle/workspace-insert-data.ts) checks
+  the parent's depth in the same batch as the insert. It refuses a create
+  whose parent moved to the deepest depth after the tool's first check.
 - The [app](../../src/app/list-changes.ts) and its
   [dev fake](../../src/app/dev/create-routes.ts) also show a new workspace
   first.
@@ -274,10 +277,19 @@ The machine tools use the configured app origin instead.
   archived ancestors and the default section for an unknown section.
   A move writes every descendant's section, including archived descendants.
   `RETURNING` gives the workspace IDs for metadata publication after the batch.
-  A move of a nested row changes no placement or activity time.
+  A section-only move of a nested row changes no placement or activity time.
   A name write still works for a nested row.
   A tool move to the current section also changes nothing, as checked
   inside the batch. `readWorkspaceMove` reads only the tool reply's notice.
+- Agent move targets use `writeWorkspaceParentChange` in
+  [`workspace-parent-change-data.ts`](workspace-parent-change-data.ts).
+  The shared metadata writer waits for a target parent's creation admission.
+  The batch checks the target, depth, pending creates, archive state, and
+  current membership before it writes. It changes the root parent link,
+  each descendant's section, and the top-level places together. A target
+  equal to the current place writes nothing. The shared recursive readers
+  stop at repeated workspace IDs. [Parent changes](../../docs/protocol/parent-changes.md)
+  states the requirements.
 - A section move request holds `position`, the index in the section list.
   Each index counts the rows without the moved row.
 - A section create request can hold `afterSectionId`. The insert and a
@@ -348,10 +360,13 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   it with the sender as the user.
 - [`workspace-metadata.ts`](workspace-metadata.ts):
   `changeWorkspaceMetadata`, the rename and the move of a workspace tree. It
-  checks the member and the archive state, runs `updateShellWorkspace`, and
+  checks the member and the archive state, runs the section or parent write, and
   publishes the metadata of each moved workspace. `feature-workspaces.ts` and the
   [agent workspace tools](../tools/workspaces.md#rename-and-move) both call
   it. A tool move to the current section of a workspace changes nothing.
+- [`workspace-parent-change-data.ts`](workspace-parent-change-data.ts):
+  `writeWorkspaceParentChange`, the guarded parent change and tree placement
+  in one D1 batch, including creates in flight under the moved tree.
 - [`feature-workspaces-data.ts`](feature-workspaces-data.ts):
   `readWorkspaceTree` and `readWorkspaceMove` read the org's tree and its
   shown places for reads and notices. `updateShellWorkspace` prepares the

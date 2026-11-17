@@ -202,13 +202,17 @@ export class OrgModel {
 
   /**
    * Puts a newer record of a workspace in the list, such as from an event,
-   * an open, Archive, or a create. Its place in the list stays.
+   * an open, Archive, or a create. Its listed placement stays. A different
+   * parent requests a list read after any current read finishes.
    */
   putWorkspace(workspace: Workspace): void {
+    const listed = this.confirmedWorkspace(workspace.id)
     this.resources.list.confirm(
       workspaceUpdated(workspace),
       `workspace ${workspace.id}`,
     )
+    if (listed && listed.parentId !== workspace.parentId)
+      void this.parts.list.reread()
   }
 
   /** A workspace as screens show it, as `workspaces` says. */

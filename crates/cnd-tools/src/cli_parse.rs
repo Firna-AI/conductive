@@ -81,7 +81,7 @@ fn options(name: Name) -> Vec<&'static str> {
         }
         Name::GetWorkspace | Name::ArchiveWorkspace | Name::ListPreviews => "workspace",
         Name::RenameWorkspace => "workspace name",
-        Name::MoveWorkspace => "workspace section",
+        Name::MoveWorkspace => "workspace section parent top-level",
         Name::ListSessions => "workspace limit offset",
         Name::ReadSession => "workspace session detail start-line start-offset",
         Name::CreateSession => {
@@ -163,7 +163,7 @@ pub(crate) fn parse(args: &[String]) -> Result<Arguments> {
         if !allowed.contains(&key) {
             return Err(Error::Input(invalid));
         }
-        if key == "stop-running-turn" {
+        if key == "stop-running-turn" || key == "top-level" {
             if inline.is_some() {
                 return Err(Error::Input(invalid));
             }
