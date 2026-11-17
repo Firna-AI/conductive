@@ -90,9 +90,12 @@ The merge of main at `9f1a3928321e9eeb7fd3698175f3f31801c9fa3f` had no conflict 
 
 - [x] Run early checks and focused tests. Run a safe smoke check with controlled construction and transport boundaries. Start no live runner. Stop or restart no service.
 - [x] Run the complete npm gate, Rust format, workspace clippy, workspace tests, and musl release build. Verify generated drift.
-- [ ] Commit with Conventional Commits and push this workspace branch.
-- [ ] Review the complete diff against `origin/main` after push with the `implementation-review` skill. Check each finding independently. Apply the fix rule and re-review fixes.
+- [x] Commit with Conventional Commits and push this workspace branch.
+- [x] Review the complete diff against `origin/main` after push with the `implementation-review` skill. Check each finding independently. Apply the fix rule and re-review fixes.
+- [x] Preserve main's release-only update at `23173c8440ee5b860dfd2025d72b00857beb6289`. Confirm that the reviewed identity diff is unchanged.
 - [ ] Delete this plan after all other required work and review pass. Preserve its dated decisions in the PR description.
 - [ ] Open a separate PR into `main`. Watch every workflow of the final commit to its end. Leave the PR for a member to merge.
 
 Combined gate evidence is `.context/runner-process-start-identity/post-main/gates.json` and its named logs.
+The independent review found no in-scope or outside-scope problem. Its record is `.context/reviews/calummoore/stops-identify-runner-process-starts-nbhf/findings.md`.
+The release merge had no conflict or manual resolution. Its preservation evidence is `.context/runner-process-start-identity/release-main/`. Final PR CI verifies the combined tree.
