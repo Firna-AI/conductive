@@ -26,5 +26,6 @@
 - **Left out:** Letting the agents handle duplicates, because Claude shows a qualified duplicate and Codex lists both copies.
 - **Wider fix:** C. One rule on the agent path removes the second rule.
 - **Previous examples:** Review finding 104 of the same branch.
+- **Related:** `plans/follow-ups/claude-reserved-skill-folder.md` provides the unique Claude aliases that option C needs. The current helper generates aliases only for unsafe folder names. Two safe folders named `review` would otherwise create the same link and fail the whole view. Apply that alias fix before C, or in the same change. `plans/follow-ups/claude-reserved-skill-identities.md` keeps native name handling consistent with workspace precedence.
 - **Recommendation:** C. It fixes the wrong winner and the lost skill with one rule.
 - **Action:** fix after merge, apply C, because the case is rare and the fix does not get harder later.
