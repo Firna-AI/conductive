@@ -1,6 +1,6 @@
 # Own endpoint login mockups
 
-[Logins](orgs-and-logins.md#logins) describes the shared account controls.
+[Logins](logins.md) describes the shared account controls.
 
 - An own endpoint login sends the turns of its agent to a gateway or a
   proxy that the user chose, from decision 1 A of the own endpoint plan.

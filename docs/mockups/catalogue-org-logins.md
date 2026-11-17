@@ -4,7 +4,7 @@ These pages are part of [the mockup catalogue](catalogue.md). They give the
 pages of the org logins: an API key or an own endpoint that an admin
 connects for each agent of an org. They come from decisions 1 B, 3 A, 4,
 5 A, 6 A, and 7 B of the org logins plan, which the user chose and stated
-on 16 November 2026. [Logins](orgs-and-logins.md#logins) gives the design.
+on 16 November 2026. [Logins](logins.md) gives the design.
 
 ## The Agents tab of the org settings
 

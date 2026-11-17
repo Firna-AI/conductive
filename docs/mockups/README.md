@@ -186,7 +186,7 @@ workspace screen draws them, as `app/chat/masked-paths` shows.
 
 ## Logins
 
-[Logins](orgs-and-logins.md#logins) gives the agent logins of the account,
+[Logins](logins.md) gives the agent logins of the account,
 the org logins of the Agents tab of the org settings, the steps of Get
 started, and the notice for an agent that is not connected.
 
