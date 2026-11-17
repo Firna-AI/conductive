@@ -246,8 +246,6 @@ It keeps every other preference and every saved view.
 An unset view now uses the dialog, so only accounts made after this migration get the dialog without a choice.
 [The preference](../docs/protocol/create-a-workspace.md#the-preference) gives the requirement.
 
-`202611160000_org_skills_repository.sql` adds `settings.skills_repository`.
-Existing orgs and new orgs without a choice get empty text.
 `202611161200_parallel_image_sources.sql` rebuilds `image_source_jobs` with the primary key `(build_id, source_index)`, so an image job keeps one row for each repository.
 It copies every column of each older row, including the encrypted token, process, output offsets, source index, and provider account.
 The new `estimate_bytes` column holds the memory estimate of the Git commands of a repository, 256 MiB by default.
@@ -377,3 +375,6 @@ workspaces, automations, and automation runs. The
 [Stats tab of the account](../docs/protocol/account-stats.md) counts the
 records of one person, and these indexes keep each read to that person's
 rows.
+
+`202611170100_org_skills_repository.sql` adds `settings.skills_repository`.
+Existing orgs and new orgs without a choice get empty text.

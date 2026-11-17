@@ -33,8 +33,8 @@ Skills section at `app/org-settings/cloud-computer` and
 - The agent runner of each workspace copies the skills repository into the
   cloud computer of the workspace (skills decision 1 B). It gives the
   skills of the copy to Claude and to Codex.
-- This holds for each workspace of the org, also the workspace of a
-  routine run.
+- This holds for each workspace of the org, also a run workspace of an
+  automation.
 - Reason: running workspaces then stay current within minutes. The change
   needs no new token type, storage, or provider route.
 - These ways were rejected (skills decision 1):
