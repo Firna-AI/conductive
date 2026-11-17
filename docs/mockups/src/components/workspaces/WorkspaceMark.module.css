@@ -1,5 +1,6 @@
 /*
- * The list mark: the GitHub state of the pull request in one colour.
+ * The list mark: the GitHub state of the pull request in one colour, or
+ * blue while the agent needs input.
  * `MarkGrid.module.css` gives the grid and the shape of each cell.
  * `--mark-off` is the opacity of a cell that is not lit, and `--mark-rest`
  * the opacity of a cell of the ring between two passes of the light. The
@@ -52,6 +53,15 @@
   color: var(--ui-muted);
 }
 
+/*
+ * The agent needs input: the accent blue, whatever the GitHub state, so
+ * that a workspace that waits for the user stands out from the colours of
+ * the GitHub states.
+ */
+.input {
+  color: var(--ui-primary);
+}
+
 /* An archived workspace: every cell faint, whatever its GitHub state. */
 .archived {
   --mark-off: 0.16;
@@ -83,7 +93,7 @@
   }
 }
 
-/* The whole grid dims, then lights again. */
+/* The whole blue grid of an agent that needs input dims, then lights again. */
 @keyframes pulse {
   0%,
   100% {
