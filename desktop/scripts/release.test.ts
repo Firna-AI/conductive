@@ -1,15 +1,14 @@
+import { readdir } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { afterEach, expect, it, vi } from 'vitest'
 
 import { runReleaseCommand } from './release-command.ts'
 import { withReleaseKeychain } from './release-keychain.ts'
+import { verifyReleaseApp } from './release-signature.ts'
 
 vi.mock('node:fs/promises', () => ({
   mkdir: vi.fn(),
-  readdir: async () => [
-    'Renamed-download-arm64.dmg',
-    'Renamed-download-x64.dmg',
-  ],
+  readdir: vi.fn(),
   writeFile: vi.fn(),
 }))
 
@@ -37,7 +36,7 @@ const builderPath = resolve(
   '../node_modules/.bin/electron-builder',
 )
 
-async function runRelease(flags: string[]) {
+async function runRelease(flags: string[], images: string[]) {
   Object.defineProperty(process, 'platform', { value: 'darwin' })
   vi.spyOn(process, 'argv', 'get').mockReturnValue([
     'node',
@@ -47,6 +46,9 @@ async function runRelease(flags: string[]) {
   ])
   vi.spyOn(process.stdout, 'write').mockReturnValue(true)
   vi.mocked(runReleaseCommand).mockClear()
+  vi.mocked(verifyReleaseApp).mockClear()
+  // @ts-expect-error The mock lists names only, not directory entries.
+  vi.mocked(readdir).mockResolvedValue(images)
   vi.mocked(withReleaseKeychain).mockImplementation(async (work) => {
     await work(
       { APPLE_API_KEY: '/private/key.p8' },
@@ -66,11 +68,15 @@ async function runRelease(flags: string[]) {
     submitted: calls
       .filter(([, args]) => args[0] === 'notarytool')
       .map(([, args]) => args[2]),
+    verified: vi.mocked(verifyReleaseApp).mock.calls.map(([app]) => app),
   }
 }
 
 it('passes the shared fixed DMG name to the builder without overriding ZIP names', async () => {
-  const { builder } = await runRelease([])
+  const { builder } = await runRelease(
+    [],
+    ['Renamed-download-arm64.dmg', 'Renamed-download-x64.dmg'],
+  )
 
   expect(builder).toEqual(expect.arrayContaining(['--mac', '--arm64', '--x64']))
   expect(builder?.filter((arg) => arg.includes('artifactName='))).toEqual([
@@ -78,12 +84,22 @@ it('passes the shared fixed DMG name to the builder without overriding ZIP names
   ])
 })
 
-it('builds and notarizes only the architecture that a flag names', async () => {
-  const { builder, submitted } = await runRelease(['--x64'])
+it.each([
+  ['x64', 'arm64', 'mac'],
+  ['arm64', 'x64', 'mac-arm64'],
+])(
+  'builds, verifies, and notarizes only the %s package when its flag is set',
+  async (architecture, other, folder) => {
+    const image = `Renamed-download-${architecture}.dmg`
+    const release = resolve(import.meta.dirname, '../dist/release')
+    const { builder, submitted, verified } = await runRelease(
+      [`--${architecture}`],
+      [image],
+    )
 
-  expect(builder).toContain('--x64')
-  expect(builder).not.toContain('--arm64')
-  expect(submitted).toEqual([
-    resolve(import.meta.dirname, '../dist/release/Renamed-download-x64.dmg'),
-  ])
-})
+    expect(builder).toContain(`--${architecture}`)
+    expect(builder).not.toContain(`--${other}`)
+    expect(verified).toEqual([resolve(release, folder, 'Renamed.app')])
+    expect(submitted).toEqual([resolve(release, image)])
+  },
+)

@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest'
 
+import { selectReleaseFiles } from './publish-assets.ts'
 import { mergeUpdateInfo } from './release-update-info.ts'
 
 function singleArchitecture(architecture: string, sha512: string): string {
@@ -30,6 +31,21 @@ path: Conductive-0.24.0-mac-x64.zip
 sha512: XAuh+x64/hash==
 releaseDate: '2026-11-17T12:38:05.977Z'
 `)
+})
+
+it('gives a feed that the publish step accepts with the files of both jobs', () => {
+  const names = ['arm64', 'x64'].flatMap((architecture) => [
+    `Conductive-mac-${architecture}.dmg`,
+    `Conductive-0.24.0-mac-${architecture}.zip`,
+    `Conductive-0.24.0-mac-${architecture}.zip.blockmap`,
+  ])
+
+  expect(
+    selectReleaseFiles(mergeUpdateInfo(x64, arm64), '0.24.0', [
+      ...names,
+      'latest-mac.yml',
+    ]).toSorted(),
+  ).toEqual([...names, 'latest-mac.yml'].toSorted())
 })
 
 it.each([
