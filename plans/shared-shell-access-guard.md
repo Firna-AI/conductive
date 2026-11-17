@@ -123,7 +123,7 @@ Depends on: 2
 
 Depends on: every other milestone
 
-- [ ] Delete `plans/follow-ups/shared-access-guard-for-shell-writers.md`,
+- [x] Delete `plans/follow-ups/shared-access-guard-for-shell-writers.md`,
       because this change applies its answer.
 - [ ] Run the targeted tests, and the complete gate named in `AGENTS.md`.
 - [ ] Commit with Conventional Commits and push the branch.
