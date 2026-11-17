@@ -23,8 +23,8 @@ type DraftState = {
 
 /**
  * The control of a new workspace. Acme offers its secrets, and the
- * creator pre-approved one. Firna, a new org, has none yet. Mac access is
- * off by default (secrets decision 18).
+ * creator pre-approved one. Firna, a new org, has none yet. Mac access
+ * shows as a new workspace starts.
  */
 function panelOf(state: DraftState, sheet: boolean) {
   const firna = state.org === 'new'

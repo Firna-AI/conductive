@@ -164,10 +164,9 @@ function MacAccessSwitch(props: {
 
 /**
  * The parts of the Capabilities control, in their order: the secrets that
- * the workspace pre-approves, with its grants, and Mac access, which is off
- * by default (secrets decision 18 A). Manage secrets opens the Secrets tab
- * of the org settings. Later features, such as MCP servers, add their own
- * parts here.
+ * the workspace pre-approves, with its grants, and Mac access. Manage
+ * secrets opens the Secrets tab of the org settings. Later features, such
+ * as MCP servers, add their own parts here.
  */
 export function capabilityParts(view: CapabilitiesView): CapabilityPart[] {
   const listed = view.secrets.state === 'ready' && view.secrets.value.length > 0

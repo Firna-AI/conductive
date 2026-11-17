@@ -226,20 +226,20 @@ while the change is open. Its pull request keeps them after the merge.
 - Reason: agents can reach a Mac only after a member chooses it for the
   workspace. So text that steers an agent cannot reach a Mac through a
   new workspace or through an automation run.
-- Mac access was turned off one time in each workspace that existed on
-  17 November 2026, also where a member had turned it on (secrets
-  decision 19 B). Reason: the switch was three days old, so few members
-  had chosen it themselves.
+- Mac access was turned off one time in each workspace that existed
+  before this rule, also where a member had turned it on (secrets
+  decision 19 B). Reason: the switch was new, so few members had chosen
+  its value themselves.
 - Keeping Mac access on in the workspaces that existed then was rejected,
   because they kept a default that no member chose.
 - While Mac access is off, the Worker refuses each Mac command request of
   the workspace, as [Mac commands](agent-tools.md#mac-commands) says.
 - While it is on, the Mac app still asks before each command that its user
   did not always allow, as decision 62 says.
-- Mac access on in each new workspace was the rule of secrets decision
-  9 A. Secrets decision 18 A replaced it. Mac access that is on for
-  workspaces that members create, and off only for workspaces that agents
-  and automations create, was rejected. Reason: one rule for every new
+- Mac access that starts on in each new workspace was rejected, because
+  agents could then reach a Mac before a member chooses it. Mac access
+  that is on for workspaces that members create, and off only for
+  workspaces that agents and automations create, was rejected. Reason: one rule for every new
   workspace is simpler, and the risk of a steered agent is the same.
 - Mac access that a new workspace copies from the workspace that creates
   it was rejected, because a workspace that an agent creates could then

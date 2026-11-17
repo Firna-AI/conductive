@@ -1,6 +1,7 @@
-import type {
-  UpdateWorkspaceCapabilitiesRequest,
-  WorkspaceCapabilities,
+import {
+  NEW_WORKSPACE_CAPABILITIES,
+  type UpdateWorkspaceCapabilitiesRequest,
+  type WorkspaceCapabilities,
 } from '../../src/shared/secrets'
 import { HttpError, isRecord } from '../http'
 
@@ -48,7 +49,9 @@ export function readCreationCapabilities(
   const change =
     value === undefined || value === null ? {} : readCapabilitiesChange(value)
   return {
-    preapprovedSecretIds: change.preapprovedSecretIds ?? [],
-    macAccess: change.macAccess ?? false,
+    preapprovedSecretIds:
+      change.preapprovedSecretIds ??
+      NEW_WORKSPACE_CAPABILITIES.preapprovedSecretIds,
+    macAccess: change.macAccess ?? NEW_WORKSPACE_CAPABILITIES.macAccess,
   }
 }

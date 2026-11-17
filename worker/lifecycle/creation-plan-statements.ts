@@ -1,3 +1,4 @@
+import { NEW_WORKSPACE_CAPABILITIES } from '../../src/shared/secrets'
 import { publishedRepositorySource } from './published-image-data'
 import type { WorkspaceStartJob } from './start-types'
 
@@ -41,9 +42,7 @@ export function planStatement(
       creation.name ?? null,
       creation.firstSessionTitle ?? null,
       creation.parentId ?? null,
-      JSON.stringify(
-        creation.capabilities ?? { preapprovedSecretIds: [], macAccess: false },
-      ),
+      JSON.stringify(creation.capabilities ?? NEW_WORKSPACE_CAPABILITIES),
       job.orgId,
       job.providerAccount,
       creation.repositoryId,

@@ -1,4 +1,7 @@
-import { workspaceCapabilitiesPath } from '../../shared/secrets'
+import {
+  NEW_WORKSPACE_CAPABILITIES,
+  workspaceCapabilitiesPath,
+} from '../../shared/secrets'
 import { flag, items, record, text, texts, type JsonObject } from '../api/parse'
 import type { WorkspaceGrants } from '../api/read-secrets'
 import { requireOrg, requireWorkspace, type DevBackend } from './backend'
@@ -33,7 +36,7 @@ function knownIds(store: OrgSecrets, ids: readonly string[]): string[] {
 
 /**
  * The capabilities that a create takes, as the Worker reads them: without
- * a choice, no pre-approval and Mac access on. `keep` stores them for the
+ * a choice, those of `NEW_WORKSPACE_CAPABILITIES`. `keep` stores them for the
  * new workspace, after the create made it.
  */
 export function createdCapabilities(
@@ -48,7 +51,9 @@ export function createdCapabilities(
       store,
       optional(fields, 'preapprovedSecretIds', texts) ?? [],
     ),
-    macAccess: optional(fields, 'macAccess', flag) ?? true,
+    macAccess:
+      optional(fields, 'macAccess', flag) ??
+      NEW_WORKSPACE_CAPABILITIES.macAccess,
     sessionApprovals: [],
   }
   return {

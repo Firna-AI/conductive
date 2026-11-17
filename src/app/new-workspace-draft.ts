@@ -25,7 +25,7 @@ export interface Draft {
   /**
    * The choices of the Capabilities control: the secrets that the new
    * workspace pre-approves, and its Mac access. A send ends them, so each
-   * new workspace starts from `defaultCapabilities`.
+   * new workspace starts from `NEW_WORKSPACE_CAPABILITIES`.
    */
   capabilities: WorkspaceCapabilities
   /** The files, each with its upload. Only ready ones go with the message. */
@@ -45,15 +45,6 @@ export type CreateState =
   | { state: 'sending' }
   /** The create request failed. Try again sends the same message ID. */
   | { state: 'failed'; error: ApiError }
-
-/**
- * The capabilities of a new workspace without a choice: it pre-approves no
- * secret, and its Mac access is off (secrets decision 18 A).
- */
-export const defaultCapabilities: WorkspaceCapabilities = {
-  preapprovedSecretIds: [],
-  macAccess: false,
-}
 
 /**
  * Whether the draft can go: it has text, and each of its files is ready,

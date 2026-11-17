@@ -854,9 +854,9 @@ The options as they were asked:
 ### Secrets decision 19: Mac access of existing workspaces
 
 Cal chose B on 17 November 2026: a migration turns Mac access off one
-time in each existing workspace. Reason: the switch was three days old,
-so few members had turned it on themselves, and Cal expected the
-existing workspaces to be off.
+time in each existing workspace. Reason: the switch reached production
+on the same day, with pull request #379, so few members had turned it on
+themselves, and Cal expected the existing workspaces to be off.
 
 The options as they were asked:
 
