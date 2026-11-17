@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import type { ChangeModelResponse } from '../../shared/sessions'
 import { chatFor, newSessionRecord, opensSession } from './test-kit'
+import { sessionTarget } from './pane-selection'
 
 const opus: AgentChoice = {
   agent: 'claude',
@@ -70,7 +71,7 @@ describe('a model of the other agent in a session with no message', () => {
     await reply()
     const snapshot = chat.controller.getSnapshot()
     expect(snapshot.sessions).toHaveLength(before)
-    expect(snapshot.activeSessionId).toBe(empty)
+    expect(sessionTarget(snapshot)).toBe(empty)
     expect(choiceOf(chat, empty)).toEqual(codex)
     expect(chat.draftOf(empty)?.text).toBe('Check the postcode rules.')
   })
@@ -80,7 +81,7 @@ describe('a model of the other agent in a session with no message', () => {
     await reply()
     const snapshot = chat.controller.getSnapshot()
     expect(choiceOf(chat, empty)).toEqual(opus)
-    expect(snapshot.activeSessionId).toBe('client-1')
+    expect(sessionTarget(snapshot)).toBe('client-1')
     expect(choiceOf(chat, 'client-1')).toEqual(codex)
     expect(chat.draftOf('client-1')?.text).toBe('Check the postcode rules.')
     expect(chat.draftOf(empty)?.text).toBe('')

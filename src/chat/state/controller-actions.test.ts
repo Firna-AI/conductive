@@ -6,6 +6,7 @@ import { retryMessagePath, sessionPaths } from '../../shared/sessions'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { record, text } from '../api/json'
 import { chatFor, opensSession, shown } from './test-kit'
+import { sessionTarget } from './pane-selection'
 
 const org = FAKE_IDS.org
 const ws = FAKE_IDS.workspace
@@ -163,7 +164,7 @@ describe('ChatController actions', () => {
     const [body] = await chat.bodies('PUT', model)
     const created = text(record(body).newSessionId)
     const snapshot = chat.controller.getSnapshot()
-    expect(snapshot.activeSessionId).toBe(created)
+    expect(sessionTarget(snapshot)).toBe(created)
     expect(snapshot.sessionStates[created].draft.text).toBe(
       'Check the postcode rules for the UK',
     )

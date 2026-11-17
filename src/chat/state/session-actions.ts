@@ -3,6 +3,8 @@ import { showNotice, type ChatContext } from './context'
 import { hydrate } from './history'
 import { beginEdit, confirmRecord } from './session-records'
 import { viewShowing } from './sessions'
+import { sessionTarget } from './pane-selection'
+import { moveTab } from './tab-order'
 
 /** The view already shows these tabs, with the same tab open. */
 function sameTabs(current: WorkspaceView | null, next: WorkspaceView): boolean {
@@ -21,18 +23,18 @@ function sameTabs(current: WorkspaceView | null, next: WorkspaceView): boolean {
 export async function selectSession(
   context: ChatContext,
   sessionId: string,
+  focus = true,
 ): Promise<void> {
   context.tabChoices.count += 1
   const snapshot = context.store.get()
   if (!snapshot.sessions.some((item) => item.id === sessionId)) return
-  const view = viewShowing(snapshot.view, sessionId)
-  if (snapshot.activeSessionId === sessionId && sameTabs(snapshot.view, view)) {
+  const view = viewShowing(snapshot.view, sessionId, focus)
+  if (sameTabs(snapshot.view, view)) {
     await hydrate(context, sessionId)
     return
   }
   context.store.update((current) => ({
     ...current,
-    activeSessionId: sessionId,
     view,
     overlay: { kind: 'none' },
   }))
@@ -58,26 +60,55 @@ export function updateView(
   if (current === null) return
   const view = change(current)
   if (view === current) return
+  if (
+    view.focusedPane !== current.focusedPane ||
+    view.panes.some(
+      (pane, index) => pane.activeTab !== current.panes[index]?.activeTab,
+    )
+  )
+    context.tabChoices.count += 1
   context.store.update((latest) => ({ ...latest, view }))
   if (save) context.saveView(view)
 }
 
 /** Shows a session that an action opened, when it is open now. */
-async function showIfOpen(context: ChatContext, sessionId: string) {
+async function showIfOpen(
+  context: ChatContext,
+  sessionId: string,
+  pane?: 0 | 1,
+) {
   const open = context.store
     .get()
     .sessions.some((item) => item.id === sessionId)
-  if (open) await selectSession(context, sessionId)
+  if (!open) return
+  if (pane !== undefined)
+    updateView(
+      context,
+      (view) =>
+        moveTab(view, { kind: 'session', sessionId }, { pane, place: 'end' }),
+      true,
+    )
+  await selectSession(context, sessionId)
 }
 
 /**
  * "+" starts a session on the same branch and cloud computer, with the
  * default model of the user's account.
  */
-export async function newSession(context: ChatContext): Promise<void> {
+export async function newSession(
+  context: ChatContext,
+  pane?: 0 | 1,
+): Promise<void> {
+  if (pane !== undefined)
+    updateView(
+      context,
+      (view) => (view.panes[pane] ? { ...view, focusedPane: pane } : view),
+      true,
+    )
   const snapshot = context.store.get()
+  const destination = snapshot.view?.focusedPane
   const shown = snapshot.sessions.find(
-    (item) => item.id === snapshot.activeSessionId,
+    (item) => item.id === sessionTarget(snapshot),
   )
   const choice =
     snapshot.account?.defaultChoice ??
@@ -87,7 +118,7 @@ export async function newSession(context: ChatContext): Promise<void> {
   try {
     const { session, eventNumber } = await context.api.createSession(choice)
     confirmRecord(context, session, eventNumber)
-    if (context.live()) await showIfOpen(context, session.id)
+    if (context.live()) await showIfOpen(context, session.id, destination)
   } catch (error) {
     showNotice(context, null, "The new session didn't open", error)
   }
@@ -127,6 +158,7 @@ export async function reopenSession(
   context: ChatContext,
   sessionId: string,
 ): Promise<void> {
+  const pane = context.store.get().view?.focusedPane
   context.store.update((snapshot) => ({
     ...snapshot,
     overlay: { kind: 'none' },
@@ -135,7 +167,7 @@ export async function reopenSession(
     const reopened = await context.api.reopenSession(sessionId)
     if (!context.live()) return
     confirmRecord(context, reopened.session, reopened.eventNumber)
-    await showIfOpen(context, sessionId)
+    await showIfOpen(context, sessionId, pane)
   } catch (error) {
     showNotice(context, null, "The session didn't reopen", error)
   }

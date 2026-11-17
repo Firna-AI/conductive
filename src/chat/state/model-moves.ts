@@ -1,11 +1,11 @@
 import type { Session } from '../../shared/generated/Session'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
-import { focusedPane } from '../../shared/workspace-panes'
 import type { ChangeModelRequest } from '../../shared/sessions'
 import { sessionState, type ChatSnapshot } from './chat-snapshot'
 import type { ChatContext } from './context'
 import { moveDraft } from './drafts'
-import { viewShowing } from './sessions'
+import { placeSentSession } from './sent-session-place'
+import { shownSessionId } from './pane-selection'
 
 /**
  * A model change of the other agent, which opens a session under the ID that
@@ -55,6 +55,8 @@ export interface DraftMove {
   to: string
   open: boolean
   freshId: string
+  /** An older model pick still places its session but moves no draft or selection. */
+  draft: boolean
 }
 
 /**
@@ -71,13 +73,15 @@ export function claimMoves(
     const pending = context.moves.get(record.id)
     if (!pending) continue
     context.moves.delete(record.id)
-    if (context.picks.get(pending.from) !== pending.pick) continue
-    pending.moved = sessionState(context.store.get(), pending.from).draft.id
+    const latest = context.picks.get(pending.from) === pending.pick
+    if (latest)
+      pending.moved = sessionState(context.store.get(), pending.from).draft.id
     moves.push({
       from: pending.from,
       to: record.id,
       open: record.closedAt === null,
       freshId: context.newDraftId(),
+      draft: latest,
     })
   }
   return moves
@@ -90,26 +94,27 @@ export function applyMoves(
 ): ChatSnapshot {
   let next = snapshot
   for (const move of moves) {
-    next = moveDraft(next, move)
-    const activeTab = next.view ? focusedPane(next.view).activeTab : null
-    const showsFile = activeTab?.kind === 'file' || activeTab?.kind === 'diff'
-    if (!move.open || next.activeSessionId !== move.from || showsFile) continue
+    if (move.draft) next = moveDraft(next, move)
+    if (!move.open) continue
+    const selected = [
+      shownSessionId(next, 0),
+      shownSessionId(next, 1),
+    ].includes(move.from)
     next = {
       ...next,
-      activeSessionId: move.to,
-      view: viewShowing(next.view, move.to),
-      overlay: { kind: 'none' },
+      view: placeSentSession(next.view, move.from, move.to, move.draft),
+      overlay: move.draft && selected ? { kind: 'none' } : next.overlay,
     }
   }
   return next
 }
 
-/** Saves the view when a move showed its session. */
+/** Saves the source-row placement and selection of each open moved session. */
 export function saveMovedView(
   context: ChatContext,
   moves: readonly DraftMove[],
 ): void {
-  const { view, activeSessionId } = context.store.get()
-  if (!moves.some((move) => move.open && move.to === activeSessionId)) return
+  const { view } = context.store.get()
+  if (!moves.some((move) => move.open)) return
   if (view) context.saveView(view)
 }

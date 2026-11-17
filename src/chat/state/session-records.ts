@@ -2,19 +2,13 @@ import type { Session } from '../../shared/generated/Session'
 import type { SessionsResponse } from '../../shared/sessions'
 import type { ChatSnapshot } from './chat-snapshot'
 import { withTranscript, type ChatContext } from './context'
-import { tabSessions } from './archive-view'
 import { applyMoves, claimMoves, saveMovedView } from './model-moves'
 import type { ChatEnvelope } from '../../shared/transcript/session-events'
 import {
   SessionLog,
   type PlacedRecord,
 } from '../../shared/transcript/session-log'
-import {
-  orderSessions,
-  pickActive,
-  placeSession,
-  sortHistory,
-} from './sessions'
+import { orderSessions, placeSession, sortHistory } from './sessions'
 import { withSessionPlaces } from './session-tab-places'
 
 /**
@@ -152,20 +146,11 @@ export function confirmSessions(
     const history = sortHistory(
       records.filter((item) => item.closedAt !== null),
     )
-    // A local tab of a read-only workspace can show a closed session, as
-    // `showLocally` says. That session stays shown too.
-    const active = current.activeSessionId
-    const tabs = tabSessions(
-      { ...current, view, sessions: open, history },
-      readOnly,
-    )
-    const shown = tabs.some((item) => item.id === active)
     let next: ChatSnapshot = {
       ...current,
       view,
       sessions: open,
       history,
-      activeSessionId: shown ? current.activeSessionId : pickActive(tabs, view),
     }
     for (const { id } of listed) {
       const log = logOf(context, id)

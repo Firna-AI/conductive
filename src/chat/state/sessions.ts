@@ -4,7 +4,6 @@ import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import {
   allTabs,
   emptyPane,
-  focusedPane,
   updatePane,
   withPanes,
   paneWithTabs,
@@ -34,25 +33,11 @@ export function orderSessions(
   )
 }
 
-/** The session that the view shows, or the first open session. */
-export function pickActive(
-  open: readonly Session[],
-  view: WorkspaceView | null,
-): string | null {
-  const active = view ? focusedPane(view).activeTab : null
-  if (
-    isSessionTab(active) &&
-    open.some((item) => item.id === active.sessionId)
-  ) {
-    return active.sessionId
-  }
-  return open[0]?.id ?? null
-}
-
 /** The view with the session's tab, made the active tab. */
 export function viewShowing(
   view: WorkspaceView | null,
   sessionId: string,
+  focus = true,
 ): WorkspaceView {
   const tab: WorkspaceTab = { kind: 'session', sessionId }
   const base: WorkspaceView = view ?? {
@@ -72,14 +57,13 @@ export function viewShowing(
     tabs: existing < 0 ? [...pane.tabs, tab] : pane.tabs,
     activeTab: tab,
   }))
-  return { ...changed, focusedPane: index === 1 ? 1 : 0 }
+  return focus ? { ...changed, focusedPane: index === 1 ? 1 : 0 } : changed
 }
 
 /** The view without the session's tab. The next session takes its place. */
 export function viewWithout(
   view: WorkspaceView,
   sessionId: string,
-  next: string | null,
 ): WorkspaceView {
   return withPanes(
     view,
@@ -92,29 +76,16 @@ export function viewWithout(
       const closedActive =
         isSessionTab(pane.activeTab) && pane.activeTab.sessionId === sessionId
       if (!closedActive) return repaired
-      const useNext =
-        next && tabs.some((tab) => isSessionTab(tab) && tab.sessionId === next)
+      const sessions = pane.tabs.filter(isSessionTab)
+      const at = sessions.findIndex((tab) => tab.sessionId === sessionId)
+      const remaining = sessions.filter((tab) => tab.sessionId !== sessionId)
+      const next = remaining[Math.min(at, remaining.length - 1)] ?? null
       return {
         ...repaired,
-        activeTab: useNext
-          ? { kind: 'session', sessionId: next }
-          : view.panes.length === 1
-            ? null
-            : repaired.activeTab,
+        activeTab: view.panes.length === 1 ? next : repaired.activeTab,
       }
     }),
   )
-}
-
-/** The session that takes the place of a closed tab: the next, else the one before. */
-export function neighbour(
-  open: readonly Session[],
-  sessionId: string,
-): string | null {
-  const index = open.findIndex((item) => item.id === sessionId)
-  const rest = open.filter((item) => item.id !== sessionId)
-  if (rest.length === 0) return null
-  return (rest[Math.min(Math.max(index, 0), rest.length - 1)] ?? rest[0]).id
 }
 
 const lastClosedFirst = (left: Session, right: Session) =>
@@ -149,23 +120,15 @@ export function placeSession(
       view,
       sessions: orderSessions(sessions, view),
       history: others(snapshot.history),
-      activeSessionId: readOnly
-        ? snapshot.activeSessionId
-        : (snapshot.activeSessionId ?? session.id),
     }
   }
-  const active =
-    !readOnly && snapshot.activeSessionId === session.id
-      ? neighbour(snapshot.sessions, session.id)
-      : snapshot.activeSessionId
   return {
     ...snapshot,
     sessions: others(snapshot.sessions),
     history: [...others(snapshot.history), session].sort(lastClosedFirst),
-    activeSessionId: active,
     view:
       !readOnly && snapshot.view
-        ? viewWithout(snapshot.view, session.id, active)
+        ? viewWithout(snapshot.view, session.id)
         : snapshot.view,
     overlay: overlayWithout(snapshot.overlay, session.id),
   }

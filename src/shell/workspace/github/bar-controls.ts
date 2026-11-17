@@ -13,6 +13,7 @@ import type { GitHubSubscription } from '../../../github/useGitHubState'
 import { useOrgModel } from '../../context'
 import type { WorkspaceContext } from '../features'
 import { useKeptFiles } from '../files/workspace-files'
+import { sessionTarget } from '../../../chat/state/pane-selection'
 
 /**
  * The one action store of the bar of the open workspace, over the services
@@ -71,7 +72,7 @@ export function useScreenControls(
   )
   const navigation = useNavigation()
   const showChat = useCallback(() => {
-    const sessionId = chat.getSnapshot().activeSessionId
+    const sessionId = sessionTarget(chat.getSnapshot())
     if (viewport !== 'phone' && sessionId) {
       void chat.select(sessionId)
       return

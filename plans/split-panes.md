@@ -575,13 +575,14 @@ screen still draws one pane.
 
 Depends on: 4
 
-- [ ] Replace `activeSessionId` with the shown tab of each pane and the
+- [x] Replace `activeSessionId` with the shown tab of each pane and the
       focused pane. Move each consumer.
-- [ ] Load the history of each shown session.
-- [ ] Point model changes, linked replies, Close, New session, and the
+- [x] Load the history of each shown session.
+- [x] Point model changes, linked replies, Close, New session, and the
       prompts of the pull request bar at the focused pane.
-- [ ] Add tests for an event of the session that is not focused, and for a
+- [x] Add tests for an event of the session that is not focused, and for a
       dropped connection with two shown sessions.
+- [x] The handoff is in `.context/split-panes/m5/report.md`.
 
 ## Milestone 6: The split column
 

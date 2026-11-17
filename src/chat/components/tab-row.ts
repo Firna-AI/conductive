@@ -114,13 +114,11 @@ export function rowKey(tab: RowTab): string {
  */
 export function shownTab(
   view: WorkspaceView | null,
-  activeSessionId: string | null,
+  sessionId: string | null,
   page: boolean,
 ): WorkspaceTab | null {
   if (!page) {
-    return activeSessionId === null
-      ? null
-      : { kind: 'session', sessionId: activeSessionId }
+    return sessionId === null ? null : { kind: 'session', sessionId: sessionId }
   }
   const active = view ? focusedPane(view).activeTab : null
   return active?.kind === 'session' ? null : active

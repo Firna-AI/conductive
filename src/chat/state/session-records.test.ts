@@ -4,6 +4,7 @@ import { sessionPath, sessionPaths } from '../../shared/sessions'
 import { workspaceViewPath } from '../../shared/workspace-view'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { chatFor, shown } from './test-kit'
+import { sessionTarget } from './pane-selection'
 
 const org = FAKE_IDS.org
 const ws = FAKE_IDS.workspace
@@ -111,7 +112,7 @@ describe('session records', () => {
       eventNumber: next + 1,
     })
     await chat.controller.reopen(closed.id)
-    expect(chat.controller.getSnapshot().activeSessionId).toBe(closed.id)
+    expect(sessionTarget(chat.controller.getSnapshot())).toBe(closed.id)
     const envelope = (eventNumber: number, closedAt: number | null) => ({
       workspaceId: ws,
       eventNumber,
@@ -124,7 +125,7 @@ describe('session records', () => {
     chat.server.events.emit(envelope(next + 1, null))
     chat.server.events.emit(envelope(next, FAKE_TIME + 1))
     const snapshot = chat.controller.getSnapshot()
-    expect(snapshot.activeSessionId).toBe(closed.id)
+    expect(sessionTarget(snapshot)).toBe(closed.id)
     expect(snapshot.sessions.map((session) => session.id)).toContain(closed.id)
   })
 
@@ -164,7 +165,7 @@ describe('session records', () => {
     chat.emit({ type: 'session.updated', session })
     chat.held.splice(0, 1)[0]()
     await reopening
-    expect(chat.controller.getSnapshot().activeSessionId).toBe(id)
+    expect(sessionTarget(chat.controller.getSnapshot())).toBe(id)
     expect((await views()).at(-1)).toMatchObject({
       panes: [{ activeTab: { kind: 'session', sessionId: id } }],
     })

@@ -11,7 +11,6 @@ function overlayAfterClose(overlay: Overlay, closed = first): Overlay {
   const snapshot = {
     ...initialSnapshot,
     sessions: [first, second],
-    activeSessionId: first.id,
     overlay,
   }
   return placeSession(snapshot, { ...closed, closedAt: FAKE_TIME }).overlay

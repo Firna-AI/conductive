@@ -27,6 +27,7 @@ import {
   type MemberChat,
 } from './linked-kit'
 import { chatFor, opensSession, shown } from './test-kit'
+import { sessionTarget } from './pane-selection'
 
 const org = FAKE_IDS.org
 const ws = FAKE_IDS.workspace
@@ -55,7 +56,7 @@ describe('a reply that names a linked session', () => {
     await chat.controller.start()
     chat.controller.setDraft(first, words)
     await chat.controller.send(first)
-    expect(snapshot(chat).activeSessionId).toBe(LINKED)
+    expect(sessionTarget(snapshot(chat))).toBe(LINKED)
     expect(pendingIn(chat, LINKED)).toEqual([words])
     expect(pendingIn(chat, first)).toEqual([])
     expect(chat.draftOf(first)?.text).toBe('')
@@ -69,11 +70,11 @@ describe('a reply that names a linked session', () => {
     const chat = memberChat({ hold: isSend })
     const reply = await sendThatWaits(chat)
     streamLinked(chat, { title: 'Loading state' })
-    expect(snapshot(chat).activeSessionId).toBe(first)
+    expect(sessionTarget(snapshot(chat))).toBe(first)
     await reply()
     const linked = snapshot(chat).sessions.find((item) => item.id === LINKED)
     expect(linked?.title).toBe('Loading state')
-    expect(snapshot(chat).activeSessionId).toBe(LINKED)
+    expect(sessionTarget(snapshot(chat))).toBe(LINKED)
     expect(shown(chat.controller, LINKED)).toEqual([`user: ${words}`])
     expect(pendingIn(chat, LINKED)).toEqual([])
   })
@@ -84,7 +85,7 @@ describe('a reply that names a linked session', () => {
     await chat.controller.select('debounce')
     chat.controller.setDraft(first, 'Also the error state.')
     await reply()
-    expect(snapshot(chat).activeSessionId).toBe('debounce')
+    expect(sessionTarget(snapshot(chat))).toBe('debounce')
     expect(snapshot(chat).sessions.map((item) => item.id)).toContain(LINKED)
     expect(pendingIn(chat, LINKED)).toEqual([words])
     expect(chat.draftOf(first)?.text).toBe('Also the error state.')
@@ -116,7 +117,7 @@ describe('a reply that names a linked session', () => {
       'client-1',
       'client-1',
     ])
-    expect(snapshot(chat).activeSessionId).toBe(LINKED)
+    expect(sessionTarget(snapshot(chat))).toBe(LINKED)
     const linked = snapshot(chat).sessions.filter(
       (item) => item.sourceSessionId === first,
     )
@@ -136,7 +137,7 @@ describe('a reply that names a linked session', () => {
     expect(
       chat.requests('POST', retryMessagePath(org, ws, first, 'ask')),
     ).toHaveLength(1)
-    expect(snapshot(chat).activeSessionId).toBe(LINKED)
+    expect(sessionTarget(snapshot(chat))).toBe(LINKED)
     expect(pendingIn(chat, LINKED)).toEqual([workspaceFixtures().message.text])
   })
 
@@ -156,8 +157,8 @@ describe('a reply that names a linked session', () => {
     sender.controller.setDraft(first, words)
     await sender.controller.send(first)
     streamLinked(sender)
-    expect(snapshot(sender).activeSessionId).toBe(LINKED)
-    expect(snapshot(other).activeSessionId).toBe(first)
+    expect(sessionTarget(snapshot(sender))).toBe(LINKED)
+    expect(sessionTarget(snapshot(other))).toBe(first)
     expect(snapshot(other).sessions.map((item) => item.id)).toContain(LINKED)
     expect(other.draftOf(first)?.text).toBe('Cal types here.')
     expect(shown(other.controller, LINKED)).toEqual([`user: ${words}`])
@@ -219,7 +220,7 @@ describe('the draft when a reply opens a linked session', () => {
     const attaching = attachThatWaits(chat)
     await vi.waitFor(() => expect(chat.held).toHaveLength(2), shortly)
     await reply()
-    expect(snapshot(chat).activeSessionId).toBe(LINKED)
+    expect(sessionTarget(snapshot(chat))).toBe(LINKED)
     expect(chat.draftOf(LINKED)?.id).toBe(draftId)
     expect(chat.draftOf(LINKED)?.text).toBe(
       `Also the error state. ${fileMark('file-1')} `,
@@ -252,14 +253,14 @@ describe('the draft when a reply opens a linked session', () => {
     await vi.waitFor(() => expect(chat.held).toHaveLength(2), shortly)
     chat.held.splice(0, 1)[0]()
     await retrying
-    expect(snapshot(chat).activeSessionId).toBe(first)
+    expect(sessionTarget(snapshot(chat))).toBe(first)
     expect(chat.draftOf(first)?.text).toBe('')
     expect(chat.draftOf(first)?.sending).toBe(true)
     expect(pendingIn(chat, first)).toEqual([words])
     expect(snapshot(chat).sessions.map((item) => item.id)).toContain(LINKED)
     chat.held.splice(0, 1)[0]()
     await sending
-    expect(snapshot(chat).activeSessionId).toBe(LINKED)
+    expect(sessionTarget(snapshot(chat))).toBe(LINKED)
     expect(pendingIn(chat, first)).toEqual([])
     expect(pendingIn(chat, LINKED).at(-1)).toBe(words)
   })
@@ -273,7 +274,7 @@ describe('the draft when a reply opens a linked session', () => {
     await chat.controller.select(first)
     chat.controller.setDraft(first, 'Also the error state.')
     await reply()
-    expect(snapshot(chat).activeSessionId).toBe(first)
+    expect(sessionTarget(snapshot(chat))).toBe(first)
     expect(chat.draftOf(first)?.text).toBe('Also the error state.')
     expect(chat.draftOf(LINKED)?.text).toBe('Notes for the new session.')
   })
@@ -292,7 +293,7 @@ describe('the draft when a reply opens a linked session', () => {
     await chat.controller.select(first)
     chat.controller.setDraft(first, 'A newer message.')
     await reply()
-    expect(snapshot(chat).activeSessionId).toBe(first)
+    expect(sessionTarget(snapshot(chat))).toBe(first)
     expect(chat.draftOf(first)?.text).toBe('A newer message.')
     expect(chat.draftOf(LINKED)?.text ?? '').toBe('')
   })

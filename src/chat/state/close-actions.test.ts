@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { sessionPaths } from '../../shared/sessions'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { chatFor } from './test-kit'
+import { sessionTarget } from './pane-selection'
 
 const org = FAKE_IDS.org
 const ws = FAKE_IDS.workspace
@@ -15,7 +16,7 @@ function tabsOf(chat: ReturnType<typeof chatFor>) {
   const snapshot = chat.controller.getSnapshot()
   return {
     open: snapshot.sessions.map((session) => session.id),
-    shown: snapshot.activeSessionId,
+    shown: sessionTarget(snapshot),
     tabs: (snapshot.view?.panes[0].tabs ?? []).flatMap((tab) =>
       tab.kind === 'session' ? [tab.sessionId] : [],
     ),

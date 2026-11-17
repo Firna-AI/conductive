@@ -3,6 +3,7 @@ import { sendBlock } from './blockers'
 import { showNotice, type ChatContext } from './context'
 import { showTarget } from './linked-replies'
 import { postMessage, sendFailedTitle } from './message-send'
+import { sessionTarget } from './pane-selection'
 
 /**
  * How a prompt ended. `blocked`: the session needs a login that is missing,
@@ -28,7 +29,7 @@ export async function sendPrompt(
   text: string,
 ): Promise<PromptOutcome> {
   const snapshot = context.store.get()
-  const sessionId = snapshot.activeSessionId
+  const sessionId = sessionTarget(snapshot)
   const session = snapshot.sessions.find((item) => item.id === sessionId)
   if (!session) return 'unavailable'
   if (sendBlock(snapshot, session.id)) return 'blocked'

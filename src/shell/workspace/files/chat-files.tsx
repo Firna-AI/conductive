@@ -38,6 +38,7 @@ import {
   withoutTab,
 } from './view-tabs'
 import { useKeptFilesWhile } from './workspace-files'
+import { sessionTarget } from '../../../chat/state/pane-selection'
 
 /** The subscription while the row shows no file tabs: to nothing. */
 function followNothing(): () => void {
@@ -93,7 +94,7 @@ function FileTab(props: {
     const next = isShown(tab)
       ? (rest[Math.min(index, rest.length - 1)] ?? null)
       : null
-    const sessionId = context.savedView.getSnapshot().activeSessionId
+    const sessionId = sessionTarget(context.savedView.getSnapshot())
     const session: WorkspaceTab | null = sessionId
       ? { kind: 'session', sessionId }
       : null

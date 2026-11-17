@@ -13,6 +13,7 @@ import {
 } from '../state/chat-snapshot'
 import type { ChatController } from '../state/controller'
 import { ActionButton } from '../ui/actions'
+import { sessionTarget } from '../state/pane-selection'
 
 /** The state of a session's stored history, from its history load alone. */
 export function historyStatus(
@@ -102,7 +103,7 @@ export function emptyView(props: {
 }): ReactNode {
   const { snapshot, controller } = props
   const { load, workspace } = snapshot
-  const id = snapshot.activeSessionId
+  const id = sessionTarget(snapshot)
   if (load.state === 'failed') {
     return (
       <EmptyState

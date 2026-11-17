@@ -11,6 +11,7 @@ import {
   viewPath,
   ws,
 } from './tab-order-test-kit'
+import { sessionTarget } from './pane-selection'
 
 describe('the browser view of read-only tabs', () => {
   it('keeps a locally closed tab out and a reopened tab shown when session updates arrive after an org suspension', async () => {
@@ -46,7 +47,7 @@ describe('the browser view of read-only tabs', () => {
     })
     expect(chat.controller.getSnapshot().view).toEqual(locallyReopened)
     expect(chat.row()).toEqual([second, file, closed])
-    expect(chat.controller.getSnapshot().activeSessionId).toBe('postcode')
+    expect(sessionTarget(chat.controller.getSnapshot())).toBe('postcode')
     expect(
       chat.controller
         .getSnapshot()
@@ -114,7 +115,7 @@ describe('the browser view of read-only tabs', () => {
     expect(chat.controller.getSnapshot().view?.panes[0].activeTab).toEqual(
       closed,
     )
-    expect(chat.controller.getSnapshot().activeSessionId).toBe('postcode')
+    expect(sessionTarget(chat.controller.getSnapshot())).toBe('postcode')
     expect(chat.writes()).toEqual([])
   })
 })

@@ -11,6 +11,7 @@ import { changeDraft, keepFiles } from './drafts'
 import { hydrate } from './history'
 import { waitingMove, type PendingMove } from './model-moves'
 import { beginEdit, confirmRecord } from './session-records'
+import { historySessionIds } from './pane-selection'
 
 /**
  * A model of the same agent stays in the session. A model of the other
@@ -101,7 +102,7 @@ export async function chooseModel(
       keepFiles(current, request.draft, response.draft),
     )
   }
-  if (context.store.get().activeSessionId === response.session.id) {
+  if (historySessionIds(context.store.get()).includes(response.session.id)) {
     await hydrate(context, response.session.id)
   }
 }

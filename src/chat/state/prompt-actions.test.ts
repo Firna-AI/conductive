@@ -13,6 +13,7 @@ import {
   withSessions,
 } from './linked-kit'
 import { chatFor } from './test-kit'
+import { sessionTarget } from './pane-selection'
 
 const org = FAKE_IDS.org
 const ws = FAKE_IDS.workspace
@@ -123,7 +124,7 @@ describe('a fixed prompt of the member', () => {
       outcome,
       linked: pendingIn(chat, LINKED),
       draft: chat.draftOf(first)?.text,
-      shown: chat.controller.getSnapshot().activeSessionId,
+      shown: sessionTarget(chat.controller.getSnapshot()),
     }).toEqual({
       outcome: 'sent',
       linked: [prompt],

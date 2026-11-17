@@ -9,7 +9,7 @@ of a draft.
 
 ## History loads
 
-- The chat loads the history of each session that becomes the shown session,
+- The chat loads the history of each session that becomes shown in either pane,
   whatever changed the selection: a click, an action, or a record from the
   stream. One load runs at a time for each session, and a failed load waits
   for Try again or for the next selection.
@@ -19,11 +19,12 @@ of a draft.
   with Try again. An empty chat shows the failure in place of the chat.
 - The chat loads the session list, the view, and the workspace first. It
   then shows its records, its start steps, and its composer while the
-  newest history page of the shown session loads. That session shows
+  newest history pages of both shown sessions load. Each session shows
   "Loading the session" until its first page arrives. The newest page
   merges into the session log at once. Then the workspace and the session
-  list load again. The stream starts after that page's
-  `throughEventNumber`, while earlier pages still load. No change between
+  list load again. The stream starts after the oldest newest-page cutoff,
+  while earlier pages still load. A failed newest page uses the older
+  cutoff of those later record reads. No change between
   the reads and the stream gets lost. The view also gives the automation of a run
   workspace, with the pull request of a pull request run. The snapshot keeps
   it as `automation` for the workspace header.
@@ -157,8 +158,10 @@ The actions of the pull request bar send fixed prompts, as
 says. `sendPrompt` of the controller, in
 [`state/prompt-actions.ts`](state/prompt-actions.ts), sends one:
 
-- It goes to the session of the chat: the session that the member saw
-  last, also while a file, a diff, or another tab of a phone shows.
+- It goes to the session target of [Sessions](sessions.md): the focused
+  session, else the other shown session, else the last session of the
+  focused row, else the last session of the other row. With no session
+  tab, nothing sends. A file, a diff, or another tab of a phone can stay shown.
 - It shares `postMessage` of [`state/message-send.ts`](state/message-send.ts)
   with Send, so it follows each rule of a send: the model and the effort
   of the session, its login, and a linked session that the reply names. A

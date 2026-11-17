@@ -18,6 +18,7 @@ import {
   ws,
 } from './tab-order-test-kit'
 import { newSessionRecord } from './test-kit'
+import { sessionTarget } from './pane-selection'
 
 describe('the chat tab order', () => {
   it('moves a session after a file and keeps the saved order on later view writes', async () => {
@@ -32,7 +33,7 @@ describe('the chat tab order', () => {
       first,
     ])
     expect(chat.row()).toEqual([second, file, first])
-    expect(chat.controller.getSnapshot().activeSessionId).toBe(FAKE_IDS.session)
+    expect(sessionTarget(chat.controller.getSnapshot())).toBe(FAKE_IDS.session)
 
     await chat.controller.select('debounce')
     expect(await chat.savedView()).toEqual({
@@ -136,7 +137,7 @@ describe('the chat tab order', () => {
       closed,
     ])
     expect(chat.row()).toEqual([file, first, second, closed])
-    expect(chat.controller.getSnapshot().activeSessionId).toBe('postcode')
+    expect(sessionTarget(chat.controller.getSnapshot())).toBe('postcode')
   })
 
   it('appends streamed and created sessions after a move and closes to the new neighbour', async () => {
@@ -189,7 +190,7 @@ describe('the chat tab order', () => {
       diff,
       created,
     ])
-    expect(chat.controller.getSnapshot().activeSessionId).toBe('third')
+    expect(sessionTarget(chat.controller.getSnapshot())).toBe('third')
 
     await chat.controller.select('debounce')
     const closing = chat.controller.getSnapshot().sessions[0]
@@ -198,7 +199,7 @@ describe('the chat tab order', () => {
       eventNumber: chat.nextEventNumber(),
     })
     await chat.controller.requestClose('debounce')
-    expect(chat.controller.getSnapshot().activeSessionId).toBe(FAKE_IDS.session)
+    expect(sessionTarget(chat.controller.getSnapshot())).toBe(FAKE_IDS.session)
     expect((await chat.savedView()).panes[0].tabs).toEqual([
       first,
       file,

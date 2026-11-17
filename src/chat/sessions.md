@@ -3,6 +3,19 @@
 This guide belongs to [the chat](README.md). It gives the rules of the
 draft moves, the login of each session, and the linked sessions.
 
+- The view holds the shown tab of each pane and the focused pane. The
+  target of a session action or a fixed prompt is the focused pane's
+  session, else the session that the other pane shows. When both panes
+  show files or diffs, the target is the session that the focused pane
+  showed last, else the one the other pane showed last. A remembered
+  session must still have a tab in that pane. With no session tab, nothing
+  sends. `sessionTarget` in `state/pane-selection.ts` gives that target.
+- A session that another member or an agent starts goes to the end of the
+  focused row without changing its shown tab. A new session from a send,
+  Try again, or a model change goes to the sending session's row. It shows
+  there only while that row still shows the sending session. The focused
+  pane stays as it is. [Split panes](../../docs/protocol/split-panes.md#where-a-tab-opens)
+  gives the placement rule.
 - Each draft has an identity. When a model of the other agent moves the draft
   to a new session, its files that still upload and its send in flight
   finish on the draft there.
@@ -45,9 +58,10 @@ draft moves, the login of each session, and the linked sessions.
   [record order rule](loads-and-sends.md#record-order).
   The message waits as pending there until the stream or the history shows
   it, and a second reply with the same message adds nothing.
-- Only the tab that sent moves to the linked session, and only while it
+- Only the pane that sent moves to the linked session, and only while it
   still shows the session of the request. A user who opened another tab
-  during the send keeps that tab.
+  in that pane during the send keeps that tab. A send from the pane that
+  is not focused does not take focus from the other pane.
 - The draft of the request moves with the view, in the same snapshot, with
   its identity, its text, its files, and its uploads. So a user who typed
   more during the send types on in the same box, and the next message goes

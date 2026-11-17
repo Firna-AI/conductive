@@ -5,6 +5,7 @@ import { messageOf, type ChatContext } from './context'
 import { hydrateNewest } from './history'
 import { confirmSessions } from './session-records'
 import { confirmWorkspace } from './workspace-records'
+import { historySessionIds } from './pane-selection'
 
 const orNull = <T>(request: Promise<T>): Promise<T | null> =>
   request.catch(() => null)
@@ -14,12 +15,12 @@ const none = Promise.resolve(null)
 /**
  * Loads the chat of a workspace, then starts its event stream.
  *
- * 1. The session list and the view choose the session to show. The read
+ * 1. The session list and the view choose each pane's shown tab. The read
  *    of the view also names the automation whose run made the workspace. The
  *    workspace loads with them, so the chat shows its records, its start
  *    steps, and its composer while the history loads.
- * 2. The newest history page of the shown session shows at once. Its cutoff
- *    gives the event number that the stream starts after.
+ * 2. Each shown session's newest history page shows at once. The oldest
+ *    cutoff gives the event number that the stream starts after.
  * 3. The workspace and the session list load again after that number, so no
  *    change between the reads and the stream gets lost. Each read carries
  *    the event number of its state, so a record shows only while no newer
@@ -28,13 +29,13 @@ const none = Promise.resolve(null)
  *    after the oldest page or an earlier-page failure. The history status
  *    stays loading until then. Other session actions wait for that full load.
  *
- * When the newest page of the shown session fails, the chat still loads. That
+ * When a shown session's newest page fails, the chat still loads. That
  * session shows its failed history with Try again, and its record shows a
  * running turn with Stop. The stream then starts after the older of the two
  * later reads.
  *
  * Without an open session, the stream starts at the beginning, so its
- * history holds every session. The watch of the shown session, which the
+ * history holds every session. The watch of the shown sessions, which the
  * controller starts, loads the history of each later shown session.
  *
  * The Mac commands load after the stream starts. A request that changes
@@ -87,12 +88,12 @@ export async function loadChat(context: ChatContext): Promise<void> {
     repositoryFolder: viewReply?.repositoryFolder ?? null,
     load: { state: 'ready' },
   }))
-  const active = store.get().activeSessionId
-  let through: number | null = 0
-  if (active) {
-    through = await hydrateNewest(context, active, true)
-    if (!context.live()) return
-  }
+  const cutoffs = await Promise.all(
+    historySessionIds(store.get()).map((id) =>
+      hydrateNewest(context, id, true),
+    ),
+  )
+  if (!context.live()) return
   let detail: OrderedWorkspaceResponse
   let sessions: SessionsResponse
   try {
@@ -104,7 +105,11 @@ export async function loadChat(context: ChatContext): Promise<void> {
   if (!context.live()) return
   confirmWorkspace(context, detail)
   confirmSessions(context, sessions, (snapshot) => snapshot)
-  const after = through ?? Math.min(detail.eventNumber, sessions.eventNumber)
+  const fallback = Math.min(detail.eventNumber, sessions.eventNumber)
+  const after =
+    cutoffs.length === 0
+      ? 0
+      : Math.min(...cutoffs.map((through) => through ?? fallback))
   context.stream.start(after)
   await refreshDevices(context)
 }

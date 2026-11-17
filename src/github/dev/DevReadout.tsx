@@ -3,10 +3,11 @@ import { sessionState, type ChatSnapshot } from '../../chat/state/chat-snapshot'
 import type { ChatController } from '../../chat/state/controller'
 import type { BarActions } from '../barActions'
 import styles from './DevPage.module.css'
+import { sessionTarget } from '../../chat/state/pane-selection'
 
 /** The text of the last message of the member in the session of the chat. */
 function lastSent(snapshot: ChatSnapshot): string | null {
-  const id = snapshot.activeSessionId
+  const id = sessionTarget(snapshot)
   if (id === null) return null
   const state = sessionState(snapshot, id)
   const users = state.transcript.items.flatMap((item) =>

@@ -33,6 +33,7 @@ import {
 } from './SessionStatus'
 import { sourceInsert } from './SourceLine'
 import { TranscriptView } from './TranscriptView'
+import { sessionTarget } from '../state/pane-selection'
 
 function problemOf(state: WorkspaceState | undefined): SandboxProblem | null {
   return state === 'stopped' || state === 'error' || state === 'archived'
@@ -134,7 +135,7 @@ export function SessionChat(props: SessionChatProps) {
   const { snapshot, controller, now } = props
   const { workspace } = snapshot
   const readOnly = (props.readOnly ?? false) || workspace?.state === 'archived'
-  const id = snapshot.activeSessionId
+  const id = useMemo(() => sessionTarget(snapshot), [snapshot])
   const session =
     tabSessions(snapshot, readOnly).find((item) => item.id === id) ?? null
   const state = sessionState(snapshot, id ?? '')

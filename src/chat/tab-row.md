@@ -24,6 +24,9 @@ It does not draw two panes yet, and its tab menu has no pane item yet.
 - The load gives each open session a place and removes the places of
   sessions that are not open. When an open session first arrives, the
   state adds its missing place at the end of the focused row. It drops no other place.
+  A send, Try again, or model change that opens a session puts that tab in
+  the sending session's row instead. It shows there only while that pane
+  still shows the sending session, and the focused pane stays.
   At the first load, missing places go at the end, in the order of creation.
   These changes send no write of their own. The next view save carries
   them. A read-only workspace initializes these places once, then keeps
@@ -32,7 +35,8 @@ It does not draw two panes yet, and its tab menu has no pane item yet.
 - In a read-only workspace, Close takes the next session from the row
   order, else the session before it. It removes the session place from the
   browser view and updates its active tab when that tab closed. Reopen adds
-  the session at the end. A session selection sets the active tab of the
+  the session at the end of the focused row. New session uses that row too.
+  The row's + names its pane and focuses it. A session selection sets the active tab of the
   browser view, also when a file shows. These actions send no write. If the
   view did not load, the row shows the open sessions. The first local tab
   action makes a browser view with all these sessions, so the other tabs stay.
@@ -42,10 +46,11 @@ It does not draw two panes yet, and its tab menu has no pane item yet.
   or diff tab, through its `show`. Close tab closes the shown session tab
   as its Close does, and the host closes a shown file or diff tab. Reopen
   closed session runs the first row of the session history. Copy concise
-  transcript and Copy full transcript copy the shown session tab as the
-  items of its tab menu do, with the same toast, also in a read-only
-  workspace. A key that would do nothing, such as Next tab with one tab or
-  a copy key while a file shows, goes on to the page.
+  transcript and Copy full transcript copy the session of the focused
+  pane, else the session that the other pane shows, as the items of its
+  tab menu do. They use the same toast, also in a read-only workspace.
+  A key that would do nothing, such as Next tab with one tab or a copy key
+  when no pane shows a session, goes on to the page.
 - `moveTab(tab, place)` puts a tab before or after its neighbour in the
   row. It saves through the shared view writer, then sorts the open
   sessions for Close. A new or reopened session opens at the end. A

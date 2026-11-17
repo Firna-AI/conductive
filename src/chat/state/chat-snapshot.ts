@@ -21,6 +21,7 @@ import {
   type Transcript,
 } from '../../shared/transcript/transcript'
 import { startedTurn } from '../../shared/transcript/turn-records'
+import { rememberPaneSessions } from './pane-selection'
 
 /**
  * The message that a user writes in a session. Its identity stays when the
@@ -126,7 +127,8 @@ export interface ChatSnapshot {
    * Null until the view reads, and when the reply gives no folder.
    */
   repositoryFolder: string | null
-  activeSessionId: string | null
+  /** The last session of each pane, while its shown tab is a file or a diff. */
+  lastSessionIds: readonly [string | null, string | null]
   sessionStates: Readonly<Record<string, SessionState>>
   overlay: Overlay
   notice: ChatNotice | null
@@ -173,7 +175,7 @@ export const initialSnapshot: ChatSnapshot = {
   view: null,
   automation: null,
   repositoryFolder: null,
-  activeSessionId: null,
+  lastSessionIds: [null, null],
   sessionStates: {},
   overlay: { kind: 'none' },
   notice: null,
@@ -262,7 +264,7 @@ export class ChatStore {
   update(change: (snapshot: ChatSnapshot) => ChatSnapshot): void {
     const next = change(this.snapshot)
     if (next === this.snapshot) return
-    this.snapshot = next
+    this.snapshot = rememberPaneSessions(this.snapshot, next)
     for (const listener of this.listeners) listener()
   }
 

@@ -6,7 +6,8 @@ import type { ChatSnapshot } from './chat-snapshot'
 import type { ChatContext } from './context'
 import { hydrate } from './history'
 import { withSessionPlaces } from './session-tab-places'
-import { neighbour, pickActive, viewShowing, viewWithout } from './sessions'
+import { viewShowing, viewWithout } from './sessions'
+import { sessionTarget } from './pane-selection'
 
 /**
  * A read-only workspace keeps its chat as it is, and the backend refuses
@@ -37,6 +38,7 @@ export function tabSessions(
 
 /** A failed view load keeps each open session when a local action starts a view. */
 function localView(snapshot: ChatSnapshot): WorkspaceView {
+  const sessionId = sessionTarget(snapshot)
   return (
     snapshot.view ?? {
       panes: [
@@ -45,9 +47,7 @@ function localView(snapshot: ChatSnapshot): WorkspaceView {
             kind: 'session',
             sessionId: id,
           })),
-          activeTab: snapshot.activeSessionId
-            ? { kind: 'session', sessionId: snapshot.activeSessionId }
-            : null,
+          activeTab: sessionId ? { kind: 'session', sessionId } : null,
           temporaryTab: null,
         },
       ],
@@ -106,7 +106,6 @@ export async function showLocally(
   context.store.update((current) => ({
     ...current,
     view: viewShowing(localView(current), sessionId),
-    activeSessionId: sessionId,
     overlay: { kind: 'none' },
   }))
   await hydrate(context, sessionId)
@@ -120,14 +119,9 @@ export function closeLocally(context: ChatContext, sessionId: string): void {
   context.store.update((snapshot) => {
     const shown = tabSessions(snapshot, true)
     if (!shown.some((item) => item.id === sessionId)) return snapshot
-    const active =
-      snapshot.activeSessionId === sessionId
-        ? neighbour(shown, sessionId)
-        : snapshot.activeSessionId
     return {
       ...snapshot,
-      view: viewWithout(localView(snapshot), sessionId, active),
-      activeSessionId: active,
+      view: viewWithout(localView(snapshot), sessionId),
     }
   })
 }
@@ -140,15 +134,10 @@ export function closeLocally(context: ChatContext, sessionId: string): void {
  * showed from the history gives way to an open one.
  */
 export function afterRestore(snapshot: ChatSnapshot): ChatSnapshot {
-  const open = snapshot.sessions.some(
-    (item) => item.id === snapshot.activeSessionId,
-  )
   return {
     ...snapshot,
     overlay: { kind: 'none' },
-    activeSessionId: open
-      ? snapshot.activeSessionId
-      : pickActive(snapshot.sessions, snapshot.view),
+    view: withSessionPlaces(snapshot.view, snapshot.sessions),
   }
 }
 

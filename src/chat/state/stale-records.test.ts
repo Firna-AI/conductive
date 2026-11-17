@@ -4,6 +4,7 @@ import { sessionPath, sessionPaths } from '../../shared/sessions'
 import { workspacePaths } from '../../shared/workspaces'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { chatFor } from './test-kit'
+import { sessionTarget } from './pane-selection'
 
 const org = FAKE_IDS.org
 const ws = FAKE_IDS.workspace
@@ -83,7 +84,7 @@ describe('records that arrive out of order', () => {
     })
     await chat.controller.requestClose(id)
     await chat.controller.reopen(id)
-    const shown = () => chat.controller.getSnapshot().activeSessionId
+    const shown = () => sessionTarget(chat.controller.getSnapshot())
     expect(shown()).toBe(id)
     chat.emit({ type: 'session.updated', session: closed })
     expect(shown()).toBe(id)

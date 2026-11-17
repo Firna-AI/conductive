@@ -10,6 +10,7 @@ import { sessionPaths } from '../../shared/sessions'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { record } from '../api/json'
 import { chatFor, opensSession } from './test-kit'
+import { sessionTarget } from './pane-selection'
 
 const session = FAKE_IDS.session
 const messages = sessionPaths.messages(
@@ -94,7 +95,7 @@ describe('refused folders of a chat draft', () => {
     const owner = chat.draftOf(session)?.id
     chat.controller.attachFiles('debounce', [], unreadable('Other directory'))
     await chat.controller.chooseModel(session, codex)
-    const moved = chat.controller.getSnapshot().activeSessionId ?? ''
+    const moved = sessionTarget(chat.controller.getSnapshot()) ?? ''
     expect(chat.draftOf(moved)).toMatchObject({
       id: owner,
       refusedFolders: ['Moving directory'],

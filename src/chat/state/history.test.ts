@@ -8,6 +8,7 @@ import { FAKE_IDS, FAKE_TIME, fakeUser } from '../../test-support/fixtures/core'
 import { senderSnapshot } from '../../test-support/fixtures/workspaces'
 import { recordedChatEvents } from '../../test-support/recorded-chat'
 import { chatFor, shown } from './test-kit'
+import { sessionTarget } from './pane-selection'
 
 const org = FAKE_IDS.org
 const ws = FAKE_IDS.workspace
@@ -96,7 +97,7 @@ describe('session history', () => {
       type: 'session.updated',
       session: { ...first, closedAt: FAKE_TIME + 1 },
     })
-    expect(chat.controller.getSnapshot().activeSessionId).toBe('debounce')
+    expect(sessionTarget(chat.controller.getSnapshot())).toBe('debounce')
     expect(chat.histories('debounce')).toBe(1)
     const history = chat.server.requests
       .map((request) => new URL(request.url))
@@ -118,12 +119,12 @@ describe('session history', () => {
       history: [record('proxy-timeouts', FAKE_TIME)],
     })
     await chat.controller.start()
-    expect(chat.controller.getSnapshot().activeSessionId).toBeNull()
+    expect(sessionTarget(chat.controller.getSnapshot())).toBeNull()
     chat.emit({
       type: 'session.updated',
       session: record('proxy-timeouts', null),
     })
-    expect(chat.controller.getSnapshot().activeSessionId).toBe('proxy-timeouts')
+    expect(sessionTarget(chat.controller.getSnapshot())).toBe('proxy-timeouts')
     expect(chat.histories('proxy-timeouts')).toBe(1)
     await vi.waitFor(
       () =>

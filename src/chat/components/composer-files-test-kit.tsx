@@ -13,6 +13,7 @@ import { holdAnimationFrames, mount, press } from '../../test-support/mount'
 import composerStyles from '../../../docs/mockups/src/components/chat/Composer.module.css'
 import { readyChat } from '../state/draft-files.test-support'
 import { chatFor } from '../state/test-kit'
+import { sessionTarget } from '../state/pane-selection'
 import { WorkspaceChatView } from '../WorkspaceChat'
 
 // Mounts the composer of a chat with the controller of the app, for the
@@ -69,7 +70,7 @@ export async function mountComposer(
   const field = asMessageField(byRole('textbox', 'Message', container))
   const box = field.closest<HTMLElement>(`.${composerStyles.composer}`)
   if (!box) throw new Error('The field is not in a message box.')
-  const sessionId = chat.controller.getSnapshot().activeSessionId ?? ''
+  const sessionId = sessionTarget(chat.controller.getSnapshot()) ?? ''
   /** The draft of the session, as the store of the chat keeps it. */
   const draft = () => {
     const found = chat.draftOf(sessionId)

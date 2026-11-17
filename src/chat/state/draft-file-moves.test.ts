@@ -10,6 +10,7 @@ import {
   refusedPart,
 } from '../../app/draft-files.test-support'
 import { chatFor, opensSession } from './test-kit'
+import { sessionTarget } from './pane-selection'
 
 const session = FAKE_IDS.session
 const codex = {
@@ -53,7 +54,7 @@ describe('marked files when a draft moves or ends', () => {
     expect(notifications.length).toBeGreaterThan(0)
     for (const ids of notifications) expect(ids).toEqual(['file-1', 'file-2'])
     expect(source.files()).toMatchObject([{ id: 'file-1' }, { id: 'file-2' }])
-    const moved = chat.controller.getSnapshot().activeSessionId ?? ''
+    const moved = sessionTarget(chat.controller.getSnapshot()) ?? ''
     chat.controller.setDraft(
       moved,
       `${fileMark('file-2')} ${fileMark('file-1')}`,
@@ -119,7 +120,7 @@ describe('marked files when a draft moves or ends', () => {
         },
       },
     ])
-    const moved = chat.controller.getSnapshot().activeSessionId ?? ''
+    const moved = sessionTarget(chat.controller.getSnapshot()) ?? ''
     expect(chat.draftOf(moved)).toMatchObject({
       text: `${literal} ${fileMark('file-1')} `,
       files: [{ id: 'file-1' }],

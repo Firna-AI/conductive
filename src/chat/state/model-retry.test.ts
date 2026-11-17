@@ -4,6 +4,7 @@ import { sessionPaths } from '../../shared/sessions'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { record, text } from '../api/json'
 import { chatFor, newSessionRecord, opensSession } from './test-kit'
+import { sessionTarget } from './pane-selection'
 
 const org = FAKE_IDS.org
 const ws = FAKE_IDS.workspace
@@ -46,7 +47,7 @@ describe('a model change of the other agent after a failed request', () => {
       type: 'session.updated',
       session: newSessionRecord(created, codex),
     })
-    expect(chat.controller.getSnapshot().activeSessionId).toBe(created)
+    expect(sessionTarget(chat.controller.getSnapshot())).toBe(created)
     expect(chat.draftOf(created)?.text).toBe(
       'Check the postcode rules for the UK',
     )
@@ -72,7 +73,7 @@ describe('a model change of the other agent after a failed request', () => {
     const [first, second] = await chat.bodies('PUT', model)
     expect(second).toEqual(first)
     const created = text(record(first).newSessionId)
-    expect(chat.controller.getSnapshot().activeSessionId).toBe(created)
+    expect(sessionTarget(chat.controller.getSnapshot())).toBe(created)
     expect(chat.draftOf(created)?.text).toBe(
       'Check the postcode rules for the UK',
     )
@@ -111,6 +112,6 @@ describe('a model change of the other agent after a failed request', () => {
     const [first, second] = await chat.bodies('PUT', model)
     const ids = [first, second].map((body) => text(record(body).newSessionId))
     expect(ids[1]).not.toBe(ids[0])
-    expect(chat.controller.getSnapshot().activeSessionId).toBe(ids[1])
+    expect(sessionTarget(chat.controller.getSnapshot())).toBe(ids[1])
   })
 })

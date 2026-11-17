@@ -5,10 +5,12 @@ import { hydrate } from './history'
 import { selectSession } from './session-actions'
 import { beginEdit } from './session-records'
 import { withSessionTabAt } from './session-tab-places'
+import { historySessionIds, shownSessionId } from './pane-selection'
 
 /** Where the tab of a session stood before its close, to put it back. */
 function placeBefore(context: ChatContext, sessionId: string) {
-  const { view, activeSessionId } = context.store.get()
+  const snapshot = context.store.get()
+  const { view } = snapshot
   const key = tabKey({ kind: 'session', sessionId })
   const pane =
     view?.panes.findIndex((pane) =>
@@ -19,7 +21,8 @@ function placeBefore(context: ChatContext, sessionId: string) {
     paneCount: view?.panes.length ?? 1,
     index:
       view?.panes[pane]?.tabs.findIndex((tab) => tabKey(tab) === key) ?? -1,
-    shown: activeSessionId === sessionId,
+    shown: shownSessionId(snapshot, pane) === sessionId,
+    focused: view?.focusedPane === pane,
   }
 }
 
@@ -38,16 +41,19 @@ async function closeSession(
   const before = placeBefore(context, sessionId)
   const edit = beginEdit(context, sessionId, { closedAt: Date.now() })
   const after = {
-    shown: context.store.get().activeSessionId,
+    shown: historySessionIds(context.store.get()),
     choices: context.tabChoices.count,
   }
   try {
     const closed = await context.api.closeSession(sessionId, stopRunningTurn)
     edit.confirm(closed.session, closed.eventNumber)
     if (!context.live()) return
-    const { view, activeSessionId } = context.store.get()
+    const snapshot = context.store.get()
+    const { view } = snapshot
     if (view) context.saveView(view)
-    if (activeSessionId) await hydrate(context, activeSessionId)
+    await Promise.all(
+      historySessionIds(snapshot).map((id) => hydrate(context, id)),
+    )
   } catch (error) {
     if (!context.live()) return
     if (before.index >= 0) {
@@ -67,13 +73,16 @@ async function closeSession(
     edit.fail()
     const untouched =
       context.tabChoices.count === after.choices &&
-      context.store.get().activeSessionId === after.shown
+      JSON.stringify(historySessionIds(context.store.get())) ===
+        JSON.stringify(after.shown)
     // The selection changes the store at once, before its history loads.
     const showing =
-      before.shown && untouched ? selectSession(context, sessionId) : null
+      before.shown && untouched
+        ? selectSession(context, sessionId, before.focused)
+        : null
     // The notice of a session shows only with its tab, so a tab that stays
     // hidden gets a notice of the chat.
-    const shown = context.store.get().activeSessionId === sessionId
+    const shown = historySessionIds(context.store.get()).includes(sessionId)
     showNotice(
       context,
       shown ? sessionId : null,

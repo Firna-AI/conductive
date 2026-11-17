@@ -40,6 +40,7 @@ import { browserCopy, type CopyServices } from './transcript-copy'
 import { systemClock, useNow, type Clock } from './ui/clock'
 import { useChatController, type ChatConnection } from './useChatController'
 import styles from './WorkspaceChat.module.css'
+import { sessionTarget, shownSessionId } from './state/pane-selection'
 
 /** How the chat shows, and what it tells the app. */
 export interface ChatViewProps {
@@ -134,7 +135,7 @@ function ChatBody(
   const overlay = permittedOverlay(snapshot.overlay, readOnly)
   const mobile = props.viewport === 'mobile'
   const content = props.content ?? null
-  const active = snapshot.activeSessionId
+  const active = sessionTarget(snapshot)
   const running = active ? sessionState(snapshot, active).transcript.turn : null
   const ticking =
     running !== null ||
@@ -176,7 +177,10 @@ function ChatBody(
     (sessionId) => isRunning(snapshot, sessionId),
     props.renderTab,
   )
-  useTabKeys({ tabs, controller, history, copy })
+  const sessionId =
+    shownSessionId(snapshot) ??
+    shownSessionId(snapshot, snapshot.view?.focusedPane === 0 ? 1 : 0)
+  useTabKeys({ tabs, controller, history, copy, sessionId })
   const drops = useChatDropArea()
   const body = (
     <ChatDropAreaProvider value={drops.slot}>

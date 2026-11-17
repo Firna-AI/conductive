@@ -1,7 +1,7 @@
 # Chat
 
 The chat of a workspace: the session tabs with the session history, and the
-chat of the open session with its composer. It shows messages, folded runs
+chat and composer of each shown session. It shows messages, folded runs
 of tool calls, the folded work of each ended turn above its answer, the
 running turn, steer, Stop, failures with Try again, the start steps of the
 sandbox, the Mac commands of each turn, and the bar that takes the
@@ -66,6 +66,11 @@ chips.
   owns its tab order, shown tab, and temporary tab. The screen draws only
   the focused pane. The Worker keeps older app copies compatible through
   the flat fields in its replies and the fit of old saves onto stored panes.
+- The state loads each shown session, including the pane that is not
+  focused. One controller and one workspace stream feed both session logs.
+  The view owns selection. Each pane also remembers its last session while
+  it shows a file or a diff. [Sessions](sessions.md) gives the target rule
+  for session actions and prompts.
 - A read-only workspace keeps its tab order and selection in the browser
   copy of the saved view. The row, Close, Reopen, and session selection use
   that copy, as [the tab row](tab-row.md) says. Session records stay separate

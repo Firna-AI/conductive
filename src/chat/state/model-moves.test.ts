@@ -8,6 +8,7 @@ import { sessionPaths } from '../../shared/sessions'
 import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { chatFor, newSessionRecord, opensSession } from './test-kit'
+import { sessionTarget } from './pane-selection'
 
 const org = FAKE_IDS.org
 const ws = FAKE_IDS.workspace
@@ -138,7 +139,7 @@ describe('a model change that opens a session', () => {
     await reply()
     const snapshot = chat.controller.getSnapshot()
     expect(snapshot.view).toEqual(withCreatedPlace(selectedView))
-    expect(snapshot.activeSessionId).toBe(id)
+    expect(sessionTarget(snapshot)).toBe(id)
     expect(chat.draftOf(created)?.text).toBe(keptText)
     expect(chat.draftOf(id)?.text).toBe('')
     expect(chat.histories(created)).toBe(0)
@@ -162,11 +163,11 @@ describe('a model change that opens a session', () => {
       } else {
         await reply()
       }
-      expect(chat.controller.getSnapshot().activeSessionId).toBe('debounce')
+      expect(sessionTarget(chat.controller.getSnapshot())).toBe('debounce')
       if (first === 'stream') await reply()
       else showRecord()
       const snapshot = chat.controller.getSnapshot()
-      expect(snapshot.activeSessionId).toBe('debounce')
+      expect(sessionTarget(snapshot)).toBe('debounce')
       expect(snapshot.view).toEqual(withCreatedPlace(selectedView))
       expect(chat.draftOf('debounce')?.text).toBe('Finish the lookup tests.')
       expect(chat.draftOf(created)).toMatchObject({
@@ -197,7 +198,7 @@ describe('a model change that opens a session', () => {
     expect(chat.draftOf(id)?.text).toBe('')
     expect(files(chat, id)).toEqual([])
     expect(firstShown).toEqual([initialText])
-    expect(chat.controller.getSnapshot().activeSessionId).toBe(created)
+    expect(sessionTarget(chat.controller.getSnapshot())).toBe(created)
     expect(await chat.bodies('PUT', sessionPaths.model(org, ws, id))).toEqual([
       {
         choice: codex,
@@ -223,7 +224,7 @@ describe('a model change that opens a session', () => {
     })
     expect(chat.draftOf(id)?.text).toBe('Next, the shipping form.')
     expect(chat.draftOf(created)?.text).toBe(keptText)
-    expect(chat.controller.getSnapshot().activeSessionId).toBe(id)
+    expect(sessionTarget(chat.controller.getSnapshot())).toBe(id)
   })
 
   it('keeps the moved draft in the closed session when it closes before the reply', async () => {

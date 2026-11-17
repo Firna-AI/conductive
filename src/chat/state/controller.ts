@@ -23,7 +23,7 @@ import {
   createChatContext,
   type ChatControllerOptions,
 } from './controller-context'
-import { hydrate, watchShownSession } from './history'
+import { hydrate, watchShownSessions } from './history'
 import { followSources, withSources } from './sources'
 import { loadChat } from './load'
 import { endDraftFiles } from './drafts'
@@ -51,7 +51,7 @@ import {
 
 /**
  * The chat of one workspace. It loads the sessions and the history of the
- * shown session, reads the workspace stream, and runs the user's actions
+ * shown sessions, reads the workspace stream, and runs the user's actions
  * against the API. React reads it through `subscribe` and `getSnapshot`.
  * Each `start` begins a fresh run, and `stop` makes late responses of the
  * run change nothing. An app that keeps the chat while it shows another page
@@ -99,7 +99,7 @@ export class ChatController {
 
   /**
    * Loads the chat, then opens its stream. From now on, each session that
-   * becomes the shown session loads its history.
+   * becomes shown in either pane loads its history.
    */
   readonly start = (): Promise<void> => {
     this.stop()
@@ -110,7 +110,7 @@ export class ChatController {
     // The values of the app replace the reset ones at once, then follow it.
     this.store.update(() => (sources ? withSources(fresh, sources) : fresh))
     this.unfollow = sources ? followSources(this.store, sources) : null
-    this.unwatch = watchShownSession(this.context)
+    this.unwatch = watchShownSessions(this.context)
     this.unlist = this.workspaceList.watch()
     return loadChat(this.context)
   }
@@ -202,7 +202,8 @@ export class ChatController {
       (id) => void this.select(id),
       this.reopen,
     )
-  readonly newSession = () => this.write(() => newSession(this.context))
+  readonly newSession = (pane?: 0 | 1) =>
+    this.write(() => newSession(this.context, pane))
   readonly startRename = (sessionId: string) =>
     this.overlay({ kind: 'rename', sessionId })
   readonly rename = (sessionId: string, title: string) =>

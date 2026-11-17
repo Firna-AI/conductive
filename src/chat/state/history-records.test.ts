@@ -8,6 +8,7 @@ import {
 } from '../../shared/workspace-view'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { chatFor, newSessionRecord } from './test-kit'
+import { sessionTarget } from './pane-selection'
 
 const org = FAKE_IDS.org
 const ws = FAKE_IDS.workspace
@@ -90,13 +91,13 @@ describe('session records from stored history', () => {
       'autocomplete',
       'debounce',
     ])
-    expect(duringHistory.activeSessionId).toBe('autocomplete')
+    expect(sessionTarget(duringHistory)).toBe('autocomplete')
     expect(snapshot.sessions.map((session) => session.id)).toEqual([
       'autocomplete',
       'debounce',
     ])
     expect(snapshot.view).toEqual(view)
-    expect(snapshot.activeSessionId).toBe('autocomplete')
+    expect(sessionTarget(snapshot)).toBe('autocomplete')
   })
 
   it('keeps both first-load lists complete when history publishes the shown record first', async () => {
@@ -126,7 +127,7 @@ describe('session records from stored history', () => {
     const snapshot = chat.controller.getSnapshot()
     expect(snapshot.sessions).toEqual([newest, second])
     expect(snapshot.history).toEqual([closed])
-    expect(snapshot.activeSessionId).toBe(first.id)
+    expect(sessionTarget(snapshot)).toBe(first.id)
     expect(snapshot.load).toEqual({ state: 'ready' })
   })
 
@@ -177,7 +178,7 @@ describe('session records from stored history', () => {
       )
       chat.server.events.emit(envelope)
       expect(title()).toBe('New history title')
-      expect(chat.controller.getSnapshot().activeSessionId).toBe(id)
+      expect(sessionTarget(chat.controller.getSnapshot())).toBe(id)
     },
   )
 })

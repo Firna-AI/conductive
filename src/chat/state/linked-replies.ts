@@ -5,6 +5,8 @@ import { hydrate } from './history'
 import { applyMoves, saveMovedView, type DraftMove } from './model-moves'
 import { selectSession } from './session-actions'
 import { confirmRecord } from './session-records'
+import { placeSentSession } from './sent-session-place'
+import { shownSessionId } from './pane-selection'
 
 /**
  * Puts the message of a Send or Try again reply in the session that the reply
@@ -69,7 +71,17 @@ export async function showTarget(
   if (!context.live() || target === null || target === from) return
   const snapshot = context.store.get()
   const open = snapshot.sessions.some((item) => item.id === target)
-  if (!open || snapshot.activeSessionId !== from) return
+  if (!open) return
+  const view = placeSentSession(snapshot.view, from, target, false)
+  if (view !== snapshot.view) {
+    context.store.update((current) => ({ ...current, view }))
+    if (view) context.saveView(view)
+  }
+  const pane =
+    view?.panes.findIndex((item) =>
+      item.tabs.some((tab) => tab.kind === 'session' && tab.sessionId === from),
+    ) ?? -1
+  if (pane < 0 || shownSessionId(snapshot, pane) !== from) return
   const source = sessionState(snapshot, from).draft
   const movable =
     draftId !== null &&
@@ -77,11 +89,17 @@ export async function showTarget(
     !source.sending &&
     !holdsWork(sessionState(snapshot, target).draft)
   if (!movable) {
-    if (!holdsWork(source)) await selectSession(context, target)
+    if (!holdsWork(source)) await selectSession(context, target, false)
     return
   }
   const moves: DraftMove[] = [
-    { from, to: target, open: true, freshId: context.newDraftId() },
+    {
+      from,
+      to: target,
+      open: true,
+      freshId: context.newDraftId(),
+      draft: true,
+    },
   ]
   context.store.update((current) => applyMoves(current, moves))
   saveMovedView(context, moves)

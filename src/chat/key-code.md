@@ -10,6 +10,11 @@ is relative to `src/chat/`, the folder of this guide.
   through `useWorkspaceStore`.
 - `state/controller.ts`: `ChatController`, the public boundary of the chat
   state and its actions, with `show` and `hide` for a kept chat.
+- `state/pane-selection.ts`: `shownSessionId` reads each pane's shown
+  session. `sessionTarget` gives the target of session actions and prompts.
+  `lastSessionIds` in the snapshot keeps each row's last session while a
+  file shows. `state/sent-session-place.ts` places a send's new session
+  in its source row and keeps focus on the same pane.
 - `state/controller-context.ts`: the context of one controller run. It
   holds the local IDs of drafts and files, the upload generations, the
   devices, and the event stream. Each draft ID holds the run.
@@ -164,7 +169,7 @@ is relative to `src/chat/`, the folder of this guide.
 - `state/session-records.ts`: the order of session records by event number,
   and the pending edits of a session. It publishes accepted records from
   replies, complete current lists, and event merges. `confirmSessions`
-  establishes the current records before the shown session starts its history.
+  establishes the current records before each shown session starts its history.
 - `state/workspace-records.ts`: the order of the workspace record and its
   start steps and saved error by event number.
 - `state/session-login.ts`: whose login a message uses, from the session

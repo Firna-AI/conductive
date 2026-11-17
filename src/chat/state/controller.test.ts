@@ -5,6 +5,7 @@ import { workspaceViewPath } from '../../shared/workspace-view'
 import { FAKE_IDS, FAKE_TIME, fakeUser } from '../../test-support/fixtures/core'
 import { senderSnapshot } from '../../test-support/fixtures/workspaces'
 import { chatFor, shown } from './test-kit'
+import { sessionTarget } from './pane-selection'
 
 const org = FAKE_IDS.org
 const ws = FAKE_IDS.workspace
@@ -70,7 +71,7 @@ describe('ChatController', () => {
     })
     await chat.controller.reopen(closed.id)
     const snapshot = chat.controller.getSnapshot()
-    expect(snapshot.activeSessionId).toBe(closed.id)
+    expect(sessionTarget(snapshot)).toBe(closed.id)
     expect(snapshot.sessions.map((session) => session.id)).toEqual([
       'autocomplete',
       'debounce',
@@ -192,7 +193,7 @@ describe('ChatController', () => {
         },
       },
     ])
-    expect(chat.controller.getSnapshot().activeSessionId).toBe('third')
+    expect(sessionTarget(chat.controller.getSnapshot())).toBe('third')
     const views = await chat.bodies('PUT', workspaceViewPath(org, ws))
     expect(views.at(-1)).toEqual({
       fileList: 'changes',
@@ -235,7 +236,7 @@ describe('ChatController', () => {
     const snapshot = chat.controller.getSnapshot()
     expect(snapshot.sessions.map((session) => session.id)).toEqual(['debounce'])
     expect(snapshot.history[0].id).toBe('autocomplete')
-    expect(snapshot.activeSessionId).toBe('debounce')
+    expect(sessionTarget(snapshot)).toBe('debounce')
   })
 
   it('closes the idle sessions of one close at once, and asks once for the running ones', async () => {

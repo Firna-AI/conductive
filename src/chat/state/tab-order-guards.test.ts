@@ -15,6 +15,7 @@ import {
   ws,
 } from './tab-order-test-kit'
 import { newSessionRecord } from './test-kit'
+import { sessionTarget } from './pane-selection'
 
 describe('the chat tab order guards', () => {
   it('keeps saved tab places when a session opens during the load', async () => {
@@ -155,7 +156,7 @@ describe('the chat tab order guards', () => {
     expect(chat.row()).toEqual([closed, second, first])
     await chat.controller.requestClose('debounce')
     expect(chat.row()).toEqual([closed, first])
-    expect(chat.controller.getSnapshot().activeSessionId).toBe('autocomplete')
+    expect(sessionTarget(chat.controller.getSnapshot())).toBe('autocomplete')
     expect(chat.controller.getSnapshot().view?.panes[0].activeTab).toEqual(
       first,
     )
@@ -165,7 +166,7 @@ describe('the chat tab order guards', () => {
     )
     await chat.controller.requestClose('postcode')
     expect(chat.row()).toEqual([])
-    expect(chat.controller.getSnapshot().activeSessionId).toBeNull()
+    expect(sessionTarget(chat.controller.getSnapshot())).toBeNull()
     expect(chat.controller.getSnapshot().view?.panes[0].activeTab).toBeNull()
     expect(chat.writes()).toEqual([])
     expect((await chat.savedView()).panes[0].tabs).toEqual(saved)

@@ -4,6 +4,7 @@ import { workspaceViewPath } from '../../shared/workspace-view'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { historySessions, tabSessions } from './archive-view'
 import { chatFor, shown } from './test-kit'
+import { sessionTarget } from './pane-selection'
 
 /** An open session, whose stored `closedAt` is still null at the archive. */
 const open = FAKE_IDS.session
@@ -29,7 +30,7 @@ describe('the session history of an archived workspace', () => {
 
     await chat.controller.reopen(closed)
     expect(writes()).toEqual([])
-    expect(snapshot().activeSessionId).toBe(closed)
+    expect(sessionTarget(snapshot())).toBe(closed)
     expect(tabs()).toEqual([open, 'debounce', closed])
     expect(chat.histories(closed)).toBe(1)
     expect(shown(chat.controller, closed)).toContain(
@@ -39,7 +40,7 @@ describe('the session history of an archived workspace', () => {
     await chat.controller.requestClose(closed)
     await chat.controller.requestClose(open)
     expect(tabs()).toEqual(['debounce'])
-    expect(snapshot().activeSessionId).toBe('debounce')
+    expect(sessionTarget(snapshot())).toBe('debounce')
     expect(history()).toContain(closed)
     expect(history()).toContain(open)
 
@@ -47,7 +48,7 @@ describe('the session history of an archived workspace', () => {
     await chat.controller.select('debounce')
     await chat.controller.reopen(closed)
     expect(tabs()).toEqual(['debounce', open, closed])
-    expect(snapshot().activeSessionId).toBe(closed)
+    expect(sessionTarget(snapshot())).toBe(closed)
     expect(chat.histories(closed)).toBe(1)
     expect(writes()).toEqual([])
     expect(snapshot().sessions).toEqual(before.sessions)
@@ -64,7 +65,7 @@ describe('the session history of an archived workspace', () => {
     const snapshot = () => chat.controller.getSnapshot()
     const shownTabs = () => ({
       tabs: tabSessions(snapshot()).map((session) => session.id),
-      active: snapshot().activeSessionId,
+      active: sessionTarget(snapshot()),
       views: chat.requests(
         'GET',
         workspaceViewPath(FAKE_IDS.org, FAKE_IDS.workspace),

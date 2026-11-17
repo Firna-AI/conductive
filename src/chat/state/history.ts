@@ -3,6 +3,7 @@ import type { ChatContext, HistoryLoad } from './context'
 import type { StreamEnvelope } from '../api/read-workspace'
 import { chatEventsOf } from '../../shared/transcript/session-events'
 import { mergeSession } from './session-records'
+import { historySessionIds } from './pane-selection'
 
 /** A history page whose cursor does not move the read backwards. */
 class NoProgress extends Error {}
@@ -143,18 +144,19 @@ export function hydrate(
 }
 
 /**
- * Loads the history of each session that becomes the shown session,
+ * Loads the history of each session that becomes shown in either pane,
  * whatever changed the selection: an action, a record from the stream, or
  * the first load. It acts only on a change of the shown session, so a
  * failed load waits for the user, or for the next change, and never loops.
- * The returned function stops the watch.
+ * A file-only view keeps the target session ready for prompts and the phone
+ * Chat tab. The returned function stops the watch.
  */
-export function watchShownSession(context: ChatContext): () => void {
-  let shown: string | null = null
+export function watchShownSessions(context: ChatContext): () => void {
+  let shown = new Set<string>()
   return context.store.subscribe(() => {
-    const sessionId = context.store.get().activeSessionId
-    if (sessionId === shown) return
-    shown = sessionId
-    if (sessionId && context.live()) void hydrate(context, sessionId)
+    const next = new Set(historySessionIds(context.store.get()))
+    const added = [...next].filter((id) => !shown.has(id))
+    shown = next
+    for (const id of added) if (context.live()) void hydrate(context, id)
   })
 }

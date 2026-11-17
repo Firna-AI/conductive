@@ -23,6 +23,8 @@ export function withSessionPlace(
   return updatePane(view, view.focusedPane, (pane) => ({
     ...pane,
     tabs: [...pane.tabs, { kind: 'session', sessionId }],
+    activeTab:
+      pane.tabs.length === 0 ? { kind: 'session', sessionId } : pane.activeTab,
   }))
 }
 
@@ -81,5 +83,15 @@ export function withSessionPlaces(
   for (const session of [...open].sort((a, b) => a.createdAt - b.createdAt)) {
     next = withSessionPlace(next, session.id) ?? next
   }
-  return next
+  return withPanes(
+    next,
+    next.panes.map((pane) =>
+      pane.activeTab === null
+        ? {
+            ...pane,
+            activeTab: pane.tabs.find((tab) => tab.kind === 'session') ?? null,
+          }
+        : pane,
+    ),
+  )
 }

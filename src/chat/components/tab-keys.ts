@@ -20,17 +20,19 @@ function showTab(tab: RowTab, controller: ChatController): () => void {
  * tab as its Close does, and the host gives the key to a shown file tab.
  * Reopen closed session runs the first row of the session history, which
  * lists the session that closed last first. Copy concise transcript and
- * Copy full transcript copy the shown session as the items of its tab menu
- * do, with the same toast. While a file tab shows, they do not run.
+ * Copy full transcript use the session target, as its tab menu does, with
+ * the same toast. They do not run when no pane shows a session.
  */
 export function useTabKeys(props: {
   tabs: readonly RowTab[]
   controller: ChatController
   history: readonly MenuEntry[]
+  /** The shown session that the session keys use, including the other pane. */
+  sessionId: string | null
   /** Copies the transcript of a session, as the items of its tab menu do. */
   copy: (sessionId: string, detail: TranscriptDetail) => void
 }): void {
-  const { tabs, controller, copy } = props
+  const { tabs, controller, copy, sessionId } = props
   const shown = tabs.find((tab) => tab.selected)
   const step = (direction: -1 | 1) => {
     const next = shown && stepShortcutItem(tabs, shown, direction)
@@ -50,7 +52,7 @@ export function useTabKeys(props: {
     last?.kind === 'item' ? last.onSelect : null,
   )
   const copyOf = (detail: TranscriptDetail) =>
-    shown?.kind === 'session' ? () => copy(shown.id, detail) : null
+    sessionId ? () => copy(sessionId, detail) : null
   useShortcutOffer('copy-concise-transcript', copyOf('concise'))
   useShortcutOffer('copy-full-transcript', copyOf('full'))
 }

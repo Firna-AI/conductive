@@ -8,6 +8,7 @@ import { sessionPaths } from '../../shared/sessions'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { record, text } from '../api/json'
 import { chatFor, opensSession } from './test-kit'
+import { sessionTarget } from './pane-selection'
 
 const org = FAKE_IDS.org
 const ws = FAKE_IDS.workspace
@@ -55,7 +56,7 @@ describe('a draft that moves to another session', () => {
     await vi.waitFor(() => expect(chat.held).toHaveLength(1), shortly)
     await chat.controller.chooseModel(id, codex)
     const created = await opened(chat)
-    expect(chat.controller.getSnapshot().activeSessionId).toBe(created)
+    expect(sessionTarget(chat.controller.getSnapshot())).toBe(created)
     await chat.controller.send(created)
     const messages = sessionPaths.messages(org, ws, created)
     expect(chat.requests('POST', messages)).toHaveLength(0)
