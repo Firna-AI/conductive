@@ -6,7 +6,6 @@ import { EmptyState } from '../../../docs/mockups/src/components/common/EmptySta
 import { SuspendedOrgNotice } from '../../../docs/mockups/src/components/orgs/SuspendedOrgNotice'
 import body from '../../../docs/mockups/src/components/workspace/WorkspaceBody.module.css'
 import page from '../../../docs/mockups/src/screens/WorkspaceScreen.module.css'
-import { usePassedDeadlines } from '../../app/deadlines'
 import { mayArchive, mayRestore } from '../../app/permissions'
 import { useStore } from '../../app/store'
 import {
@@ -20,6 +19,7 @@ import { useApp, useOrgAccess } from '../context'
 import { ActionButton } from '../ui/actions'
 import { useAction } from '../ui/useAction'
 import { useViewport } from '../ui/viewport'
+import { useArchiveEnds } from './archive-ends'
 import { ChatArea } from './ChatArea'
 import { ContinueDialog } from './ContinueDialog'
 import { sandboxState, useFeatures, type WorkspaceContext } from './features'
@@ -98,10 +98,9 @@ export function WorkspaceScreen(props: {
     },
     detail,
   )
-  // Restore ends at its last day while the page shows, with no other event.
-  const passed = usePassedDeadlines([
-    detail.state === 'ready' ? detail.value.workspace.restoreUntil : null,
-  ])
+  const { restoreEnded, removed } = useArchiveEnds(
+    detail.state === 'ready' ? detail.value.workspace : null,
+  )
   if (detail.state === 'loading') {
     return (
       <div className={workspaceStyles.center}>
@@ -138,7 +137,6 @@ export function WorkspaceScreen(props: {
   const { workspace, start, error } = detail.value
   const sandbox = sandboxState(workspace)
   const { suspended } = access
-  const restoreEnded = passed(workspace.restoreUntil)
   // A failed first start keeps the workspace, its chat, and its queue for
   // every member, with its saved cause and Try again. The open resumes a
   // stopped sandbox, so its bar waits until the open ends.
@@ -149,6 +147,7 @@ export function WorkspaceScreen(props: {
     savedError: error?.message ?? null,
     firstStart: failedFirstStart(workspace, start),
     restore: archivedRestore(workspace, suspended, restoreEnded),
+    removed,
     opened,
   })
   const context: WorkspaceContext = {

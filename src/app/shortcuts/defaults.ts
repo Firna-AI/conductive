@@ -75,6 +75,7 @@ const defaults: Readonly<Record<PlainId, Defaults>> = {
   },
   'fix-checks': { mac: ['Alt+Meta+X'], other: ['Alt+Shift+X'] },
   'resolve-conflicts': { mac: [], other: [] },
+  'merge-latest': { mac: [], other: [] },
   'address-review': { mac: [], other: [] },
   'commit-and-push': { mac: ['Shift+Meta+Y'], other: ['Ctrl+Shift+Y'] },
   'mark-ready-for-review': { mac: [], other: [] },

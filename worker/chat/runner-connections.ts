@@ -92,6 +92,7 @@ export class RunnerConnections {
         generation: 1,
         workspace,
         streamId: null,
+        processStartId: null,
         protocolVersion: null,
         loginKinds: undefined,
         ready: false,
@@ -125,6 +126,7 @@ export class RunnerConnections {
       id: record.id,
       workspace: record.workspace,
       streamId: record.streamId,
+      processStartId: record.processStartId,
       protocolVersion,
       loginKinds: record.loginKinds,
       ready: record.ready,
@@ -229,6 +231,7 @@ export class RunnerConnections {
     const record = this.record
     if (this.current !== active || !record) return
     record.streamId = active.streamId
+    record.processStartId = active.processStartId
     record.protocolVersion = active.protocolVersion
     record.loginKinds = active.loginKinds
     record.ready = active.ready

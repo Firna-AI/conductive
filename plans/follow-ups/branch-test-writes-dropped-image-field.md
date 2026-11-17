@@ -31,6 +31,6 @@
   - A bridge in `settings` for older code, such as kept columns or a view, because the move drops the six fields with no bridge, as "When a deploy fails" in `docs/automatic-deploys.md` says.
 - **Wider fix:** None. The `Complete gate` runs every test, so it catches each stale use at the merge.
 - **Previous examples:** None found.
-- **Related:** `plans/follow-ups/compatible-schema-rollout.md` designs migrations that keep older code working after the launch. Both items come from the same migration.
+- **Related:** [Keep the previous Worker working](../../migrations/README.md#keep-the-previous-worker-working) gives the rule for migrations that keep older code working after the launch.
 - **Recommendation:** A. It moves the write in the merge that first meets `org_images`, where the gate proves the fix.
 - **Action:** fix after merge, apply A, because the stale write lives on other open branches, and this change must not edit them.

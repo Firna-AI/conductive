@@ -2,7 +2,11 @@ import { describe, expect, test } from 'vitest'
 import { sectionPath } from '../shared/sections'
 import { workspacePath, workspacesPath } from '../shared/workspaces'
 import { FakeApiServer } from '../test-support/fake-api'
-import { coreFixtures, FAKE_IDS } from '../test-support/fixtures/core'
+import {
+  coreFixtures,
+  FAKE_IDS,
+  FAKE_TIME,
+} from '../test-support/fixtures/core'
 import { workspaceFixtures } from '../test-support/fixtures/workspaces'
 import { OrgModel } from './org-model'
 import {
@@ -31,6 +35,7 @@ function rows(model: OrgModel) {
   const groups = groupWorkspaces(
     valueOf(model.sections.get()) ?? [],
     valueOf(model.workspaces.get()) ?? [],
+    FAKE_TIME,
   )
   return Object.fromEntries(
     groups.sections.map((group) => [
@@ -45,6 +50,7 @@ function order(model: OrgModel) {
   return groupWorkspaces(
     valueOf(model.sections.get()) ?? [],
     valueOf(model.workspaces.get()) ?? [],
+    FAKE_TIME,
   ).sections.map((group) => group.section.id)
 }
 

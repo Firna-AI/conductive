@@ -227,6 +227,7 @@ export const firstBuildLog: readonly TerminalLine[] = [
  */
 export const failedFirstBuildLog: readonly TerminalLine[] = [
   ...firstBuildLog,
+  muted('Saving the cloud computer image'),
   muted(failedBuild.error),
 ]
 

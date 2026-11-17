@@ -1,14 +1,14 @@
 Conductive workspace tools
 
 conductive workspaces list [--owner MEMBER_ID] [--parent ID] [--state STATE] [--repository ID]
-  [--query TEXT] [--updated-since MILLISECONDS] [--archived true|false]
+  [--query TEXT] [--updated-since MILLISECONDS] [--archived true|false] [--removed true|false]
   [--limit NUMBER] [--offset NUMBER]
 conductive workspaces get [--workspace ID]
 conductive workspaces create --repository ID --message TEXT
   [--agent claude|codex --model NAME] [--effort LEVEL] [--fast true|false] [--section ID] [--name TEXT]
   [--parent ID] [--first-session-title TEXT] [--request-id ID]
 conductive workspaces rename --name TEXT [--workspace ID]
-conductive workspaces move --section ID [--workspace ID]
+conductive workspaces move [--section ID] [--parent ID | --top-level] [--workspace ID]
 conductive workspaces archive [--workspace ID]
 conductive repositories list
 conductive sections list
@@ -42,6 +42,7 @@ Reads need only the workspace token. Writes need an active calling turn.
 Writes act for the member whose message started that turn.
 Only a workspace owner or an org admin can archive that workspace.
 Archiving the calling workspace ends this turn. A member can restore it for 14 days.
+Then the workspace leaves the list. Get can still read it by ID.
 Stopping or closing the calling session can end this turn.
 Close refuses a running turn unless --stop-running-turn is given.
 Stop with no running turn succeeds and reports idle.
@@ -65,7 +66,13 @@ The workspace in a create reply gives parentId. The reply can give a section not
 For workspace list, --parent ID lists only the direct sub-workspaces of that workspace.
 Each workspace list entry gives parentId, or null for a top-level workspace.
 Workspace get also gives parent, depth, and children, including archived children.
-Workspace move can give a notice that names the top-level workspace to move instead.
+Workspace move needs a section, a target, or both. Use only one target.
+For workspace move, --parent ID nests the whole tree under that parent.
+The tree joins its parent's section. Another --section gives a notice.
+--top-level takes the tree out of its parent, to the top of the named or shown section.
+A target equal to the current place changes nothing.
+The Worker refuses loops and moves past depth 3, including archived links, without changes.
+A section-only move of a nested row moves nothing and gives a notice naming the top-level workspace to move.
 Session create uses the turn sender's default model and effort.
 Creates run fast only with --fast true, for a marked model.
 Send keeps the session's choice when omitted. --fast false turns fast mode off.
@@ -75,7 +82,9 @@ Keep --request-id to retry a create or send. Omission generates an ID.
 --name, --title, and --first-session-title: Use plain words separated by spaces.
 Avoid underscores unless the user tells you to add them.
 
-List returns every entry unless filters or paging are given. Limit is 1 to 100.
+Workspace lists leave out removed workspaces by default. Use --removed true to list only them.
+--removed false keeps that default. Each workspace filter must match.
+Lists support a limit of 1 to 100.
 A limited list gives hasMore. Use offset to read the next page.
 --updated-since is a signed epoch timestamp in milliseconds.
 --owner takes a stable member ID. Each workspace row gives its owner's ID, login, and display name.

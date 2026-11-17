@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.25.0](https://github.com/Firna-AI/conductive/compare/v0.24.0...v0.25.0) (2026-11-17)
+
+
+### Features
+
+* **agents:** tell agents when to nest a workspace ([#440](https://github.com/Firna-AI/conductive/issues/440)) ([4f09002](https://github.com/Firna-AI/conductive/commit/4f09002875bbb964e4179eac57360953a62de280))
+* **capabilities:** pre-load the Capabilities of a workspace ([#433](https://github.com/Firna-AI/conductive/issues/433)) ([b82d8a0](https://github.com/Firna-AI/conductive/commit/b82d8a06f8adee9be630282e1178587aa470eccb))
+* **capabilities:** start Mac access off in each workspace ([#435](https://github.com/Firna-AI/conductive/issues/435)) ([3638161](https://github.com/Firna-AI/conductive/commit/36381614a8b018add1a55399f5f0cfbb348dbfcc))
+* **chat:** add runner connection and turn-end diagnostics ([#439](https://github.com/Firna-AI/conductive/issues/439)) ([273582d](https://github.com/Firna-AI/conductive/commit/273582d8a46fe4fc8ea108fa379324da1ac922d6))
+* **github:** mark a draft pull request ready for review from the bar ([#437](https://github.com/Firna-AI/conductive/issues/437)) ([eed5a2f](https://github.com/Firna-AI/conductive/commit/eed5a2fd181753e7450a2028ef434ba408cd186e))
+* **org-logins:** let admins share an org API key or endpoint ([#427](https://github.com/Firna-AI/conductive/issues/427)) ([9f1a392](https://github.com/Firna-AI/conductive/commit/9f1a3928321e9eeb7fd3698175f3f31801c9fa3f))
+* **orgs:** let an admin pick a preset colour for each org ([#438](https://github.com/Firna-AI/conductive/issues/438)) ([94924b6](https://github.com/Firna-AI/conductive/commit/94924b6d59c57d5a230eb2350e84f2869c653c19))
+* **terminal:** add shared terminal tabs to the Terminal tool ([#441](https://github.com/Firna-AI/conductive/issues/441)) ([6c93671](https://github.com/Firna-AI/conductive/commit/6c93671fd1bb7466dd63fa375a173f867f61f952))
+
 ## [0.24.0](https://github.com/Firna-AI/conductive/compare/v0.23.0...v0.24.0) (2026-11-17)
 
 

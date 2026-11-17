@@ -2,6 +2,7 @@ import type { Viewport } from '@mokly/mokly'
 import { acmeRail } from '../components/layout/OrgRail'
 import type { RowFocus } from '../components/workspaces/rowControls'
 import {
+  archivedRows,
   workspaceSections,
   type ListDrag,
   type SidebarSection,
@@ -16,7 +17,7 @@ import {
   subWorkspaceList,
 } from '../fixtures/subWorkspaces'
 import type { Workspace } from '../fixtures/workspaces'
-import { archivedRows, sheetOf, type MenuListView } from './workspaceMenuView'
+import { sheetOf, type MenuListView } from './workspaceMenuView'
 
 /**
  * The states of the list of Acme with its sub-workspaces, as values of the
@@ -172,7 +173,7 @@ function listOf(
   }))
   return {
     sections: withTrees(sections, parentOf),
-    archived: [archived, ...archivedRows],
+    archived: [archived, ...archivedRows()],
   }
 }
 

@@ -1,4 +1,6 @@
+import { D1_ERROR_REASONS } from './d1-errors'
 import {
+  RUNNER_MESSAGE_STAGES,
   SIMPLE_WARNINGS,
   type RunnerWarningFields,
   type WorkerWarning,
@@ -108,6 +110,17 @@ function warningFields(warning: WorkerWarning) {
         workspaceId: warning.workspaceId.text,
         error: errorFields(warning.error),
       }
+    case 'automation_report_failed':
+      return {
+        kind: warning.kind,
+        message:
+          warning.retry === 'alarm'
+            ? 'An automation run report failed again. The workspace alarm retries it.'
+            : 'An automation run report failed after a chat change. The workspace alarm retries it.',
+        workspaceId: warning.workspaceId.text,
+        retry: warning.retry === 'alarm' ? 'alarm' : 'scheduled',
+        error: errorFields(warning.error),
+      }
     case 'git_credential_failed':
       return {
         kind: warning.kind,
@@ -137,6 +150,9 @@ function warningFields(warning: WorkerWarning) {
         kind: warning.kind,
         message: 'The runner of a workspace closes after a failed message.',
         workspaceId: warning.workspaceId.text,
+        stage:
+          RUNNER_MESSAGE_STAGES.find((stage) => stage === warning.stage) ??
+          'unknown',
         error: errorFields(warning.error),
       }
     case 'runner_protocol_version_mismatch':
@@ -183,6 +199,7 @@ function runnerFields(warning: RunnerWarningFields) {
     workspaceId: warning.workspaceId.text,
     connectionId: warning.connectionId?.text ?? null,
     streamId: warning.streamId?.text ?? null,
+    processStartId: warning.processStartId?.text ?? null,
     protocolVersion: warningProtocolVersion(warning.protocolVersion),
   }
 }
@@ -204,6 +221,12 @@ function errorFields(error: ErrorSummary): ErrorSummary {
         state: error.state,
         exitCode: error.exitCode,
         timedOut: error.timedOut,
+      }
+    case 'd1':
+      return {
+        kind: error.kind,
+        reason:
+          D1_ERROR_REASONS.find((reason) => reason === error.reason) ?? 'other',
       }
     default:
       return { kind: error.kind }

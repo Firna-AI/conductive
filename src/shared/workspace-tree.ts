@@ -38,8 +38,12 @@ export function placeWorkspaces<T extends TreeWorkspace>(
     }
     if (workspace.state === 'archived') continue
     let ancestor = byId.get(workspace.parentId ?? '')
-    while (ancestor?.state === 'archived')
+    const seen = new Set([workspace.id])
+    while (ancestor?.state === 'archived' && !seen.has(ancestor.id)) {
+      seen.add(ancestor.id)
       ancestor = byId.get(ancestor.parentId ?? '')
+    }
+    if (ancestor && seen.has(ancestor.id)) ancestor = undefined
     if (!ancestor) roots.push(workspace)
   }
   for (const siblings of children.values()) {
@@ -48,7 +52,10 @@ export function placeWorkspaces<T extends TreeWorkspace>(
     )
   }
   const rows: WorkspacePlacement<T>[] = []
+  const visited = new Set<string>()
   function visit(workspace: T, parent: WorkspacePlacement<T> | null) {
+    if (visited.has(workspace.id)) return
+    visited.add(workspace.id)
     let shown = parent
     if (workspace.state !== 'archived') {
       shown = {

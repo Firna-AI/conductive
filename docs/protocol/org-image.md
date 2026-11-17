@@ -38,6 +38,11 @@ decision number names a dated record, as
   keeps the last good image (decision 9).
 - While a build runs, its log streams on the Cloud computer tab. New
   workspaces keep starting from the last good image.
+- The log names each step that a build or a refresh runs, as the step
+  starts: the repository copies, the cloud computer software, the install
+  script, and the save of the image. It also says when the image is
+  saved. Reason: the log covers every action of the build, not only the
+  output of commands.
 - A failed build shows the end of its log and Try again. The Settings link
   of the sidebar then shows a mark.
 - After a failed build, the app starts no new build by itself

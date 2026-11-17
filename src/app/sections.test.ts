@@ -1,5 +1,5 @@
-import type { Workspace } from '../shared/generated/Workspace'
 import { describe, expect, test } from 'vitest'
+import type { Workspace } from '../shared/generated/Workspace'
 import { coreFixtures, FAKE_TIME } from '../test-support/fixtures/core'
 import { withSubWorkspaces } from '../test-support/fixtures/sub-workspaces'
 import { workspaceFixtures } from '../test-support/fixtures/workspaces'
@@ -44,11 +44,11 @@ describe('groupWorkspaces', () => {
       state: 'archived' as const,
       archivedAt: FAKE_TIME,
     }
-    const groups = groupWorkspaces(sections, [
-      archived,
-      ...workspaces.slice(1, 3),
-      lost,
-    ])
+    const groups = groupWorkspaces(
+      sections,
+      [archived, ...workspaces.slice(1, 3), lost],
+      FAKE_TIME,
+    )
     expect(names(groups)).toEqual([
       ['General', [workspaces[1].id, workspaces[2].id, lost.id]],
       ['Checkout', []],
@@ -59,10 +59,39 @@ describe('groupWorkspaces', () => {
     ])
   })
 
+  test('the Archived group leaves out each workspace whose 14 days ended by the time of the list, from their exact end, also without a kept cloud computer', () => {
+    const days14 = 14 * 86_400_000
+    const archived = (
+      id: string,
+      archivedAt: number,
+      restoreUntil: number | null,
+    ): Workspace => ({
+      ...workspaces[0],
+      id,
+      state: 'archived',
+      archivedAt,
+      restoreUntil,
+    })
+    const groups = groupWorkspaces(
+      sections,
+      [
+        archived('ends-now', FAKE_TIME - days14, FAKE_TIME),
+        archived('ends-next', FAKE_TIME - days14 + 1, FAKE_TIME + 1),
+        archived('no-computer', FAKE_TIME - days14 + 2, null),
+        archived('no-computer-ended', FAKE_TIME - days14 - 1, null),
+      ],
+      FAKE_TIME,
+    )
+    expect(groups.archived.map((workspace) => workspace.id)).toEqual([
+      'no-computer',
+      'ends-next',
+    ])
+  })
+
   test('a section shows each top-level row with its sub-workspaces under it, oldest first, and a row whose parent is archived under the nearest live row above it', () => {
-    const tree = shapes(groupWorkspaces(sections, trees)).checkout
+    const tree = shapes(groupWorkspaces(sections, trees, FAKE_TIME)).checkout
     const archivedParent = shapes(
-      groupWorkspaces(sections, archive(trees, 'places-client')),
+      groupWorkspaces(sections, archive(trees, 'places-client'), FAKE_TIME),
     ).checkout
     expect({ tree, archivedParent }).toEqual({
       tree: [
@@ -117,7 +146,7 @@ describe('moveWorkspace', () => {
     const sectionOf = (workspaceId: string) =>
       toGeneral.find((workspace) => workspace.id === workspaceId)?.sectionId
     expect({
-      general: shapes(groupWorkspaces(sections, toGeneral)).general,
+      general: shapes(groupWorkspaces(sections, toGeneral, FAKE_TIME)).general,
       tree: [
         'address-search-api',
         'places-client',
@@ -125,7 +154,8 @@ describe('moveWorkspace', () => {
         'rate-limit-load-test',
         'suggestion-list',
       ].map(sectionOf),
-      checkout: shapes(groupWorkspaces(sections, inCheckout)).checkout,
+      checkout: shapes(groupWorkspaces(sections, inCheckout, FAKE_TIME))
+        .checkout,
       nested: moveWorkspace(list, sections, 'address-search-api', 'general', 0),
     }).toEqual({
       general: [
@@ -158,7 +188,7 @@ describe('moveWorkspace', () => {
 
 describe('stepTarget', () => {
   test('a step past a section goes to the next open section', () => {
-    const groups = groupWorkspaces(sections, workspaces).sections
+    const groups = groupWorkspaces(sections, workspaces, FAKE_TIME).sections
     const [general, checkout] = groups
     const lastOfGeneral = general.rows.at(-1)?.workspace
     const firstOfCheckout = checkout.rows[0]?.workspace
@@ -179,7 +209,7 @@ describe('stepTarget', () => {
 
   test('a step of a top-level row passes the whole tree next to it, a step into a section counts only its top-level rows, and a nested row has no step', () => {
     const open = sections.map((section) => ({ ...section, collapsed: false }))
-    const groups = groupWorkspaces(open, trees).sections
+    const groups = groupWorkspaces(open, trees, FAKE_TIME).sections
     expect({
       up: stepTarget(groups, 'checkout-autocomplete', -1),
       down: stepTarget(groups, 'apple-pay', 1),

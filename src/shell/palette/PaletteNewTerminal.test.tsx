@@ -43,6 +43,8 @@ const terminalAddress = toolHref(org, id, 'terminal')
 const goTo = ['All files', 'Changes', 'Checks', 'Terminal', 'Preview'].map(
   (tab) => `Go to ${tab}`,
 )
+// The fake GitHub state targets main, and the member may push.
+const mergeLatest = 'Merge latest main'
 
 /** The rows of the open workspace on the Actions tab of the palette. */
 function workspaceRows(): string[] {
@@ -151,6 +153,7 @@ describe('New terminal in the command palette', () => {
         'Session history',
         ...goTo,
         'New terminal',
+        mergeLatest,
         'Archive workspace',
       ],
     },
@@ -163,28 +166,51 @@ describe('New terminal in the command palette', () => {
         return server
       },
       hide: false,
-      rows: ['New session', 'Session history', ...goTo, 'Archive workspace'],
+      rows: [
+        'New session',
+        'Session history',
+        ...goTo,
+        mergeLatest,
+        'Archive workspace',
+      ],
     },
     {
       where: 'with a stopped cloud computer',
       offers: 'no New terminal',
       server: async () => new FakeApiServer({ workspaceState: 'stopped' }),
       hide: false,
-      rows: ['New session', 'Session history', ...goTo, 'Archive workspace'],
+      rows: [
+        'New session',
+        'Session history',
+        ...goTo,
+        mergeLatest,
+        'Archive workspace',
+      ],
     },
     {
       where: 'with software for one shell',
       offers: 'no New terminal',
       server: async () => new FakeApiServer({ terminalSeveral: false }),
       hide: false,
-      rows: ['New session', 'Session history', ...goTo, 'Archive workspace'],
+      rows: [
+        'New session',
+        'Session history',
+        ...goTo,
+        mergeLatest,
+        'Archive workspace',
+      ],
     },
     {
       where: 'with the right column hidden',
       offers: 'no Go to rows and no New terminal',
       server: async () => new FakeApiServer(),
       hide: true,
-      rows: ['New session', 'Session history', 'Archive workspace'],
+      rows: [
+        'New session',
+        'Session history',
+        mergeLatest,
+        'Archive workspace',
+      ],
     },
   ])(
     'on the Actions tab $where, the workspace offers $offers',

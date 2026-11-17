@@ -108,6 +108,7 @@ impl Fixture {
         );
         let link = Arc::new(SavedRunnerLink::new(
             "workspace".into(),
+            "abcdef01-2345-4678-89ab-cdef01234567".into(),
             ConnectionRequest {
                 url: "wss://machines.test/v1/runner".into(),
                 workspace_token: "workspace-token".into(),

@@ -3,6 +3,7 @@ import type { RunnerEvent } from '../../../src/shared/generated/RunnerEvent'
 import type { RunnerEventEnvelope } from '../../../src/shared/generated/RunnerEventEnvelope'
 import type { RunnerToWorkspace } from '../../../src/shared/generated/RunnerToWorkspace'
 import type { RunnerProtocolVersion } from '../../../src/shared/generated/RunnerProtocolVersion'
+import type { RunnerHello } from '../../../src/shared/generated/RunnerHello'
 import { MACHINE_PATHS } from '../../../src/shared/agent-tools'
 import { SocketInbox } from '../adapter-sockets.test-support'
 import {
@@ -41,6 +42,7 @@ export class OuterFakeRunner {
       streamId?: string
       eventNumber?: number
       protocolVersion?: RunnerProtocolVersion
+      processStartId?: RunnerHello['processStartId']
     } = {},
   ) {
     this.streamId = options.streamId ?? 'outer-runner-stream'
@@ -70,6 +72,9 @@ export class OuterFakeRunner {
       protocolVersion: options.protocolVersion ?? 2,
       workspaceId,
       streamId: this.streamId,
+      ...(options.processStartId === undefined
+        ? {}
+        : { processStartId: options.processStartId }),
     })
   }
 
