@@ -30,7 +30,7 @@ export const termsDocument: LegalDocument = {
   at ${appDomain}, and in the Mac app. You accept their current version
   each time that you continue with GitHub to sign in. ${productName} keeps
   the latest version that you accepted, and the time when you first
-  accepted it. Effective date: 13 November 2026.`,
+  accepted it. Effective date: 17 November 2026.`,
   sections: [
     {
       title: `Who runs ${productName}`,
@@ -63,20 +63,28 @@ export const termsDocument: LegalDocument = {
             ${productName}. The app can reach each repository where you
             install its GitHub App and have access. It reads your repository
             rights and merge method from GitHub. It shows Merge only when
-            your GitHub rights let you merge.`,
+            your GitHub rights let you merge. It shows Ready for review on a
+            draft pull request only when you have write access or more.`,
           text`${productName} runs the cloud computers of every org in its
             own account with its cloud computer provider. You need no
             account or key of your own for them.`,
-          text`The agents run on the agent login that you connect.
-            Each session uses the login of the member who started it.
-            For a Claude subscription, ChatGPT plan, or provider API key, model use bills to that
-            member's connected account under the terms of Anthropic or OpenAI.
-            For an own endpoint login, model use bills where the endpoint's
-            owner runs it. You are responsible for the endpoint that you
-            connect and for following its terms.
-            The runs of an automation start their sessions on the login of the
-            member who owns the automation.
-            ${productName} keeps agent logins outside cloud computers.
+          text`Each session keeps one agent login: its starter's personal
+            login or the org login. Your usable personal login comes first
+            for a new session. If you have none, the session uses the org
+            login when available. An admin can turn on Use for every member
+            to give the org login priority for new sessions. If the org
+            login cannot be used, your usable personal login serves instead.
+            Older sessions keep their login.`,
+          text`A member whom the org login serves needs no personal login.
+            Each automation run follows the same login rule as a new session
+            of its owner.`,
+          text`For a Claude subscription or ChatGPT plan, model use bills to
+            its connected account under the terms of Anthropic or OpenAI.
+            For a provider API key, the account of that key pays.
+            For an own endpoint login, the account of the endpoint pays
+            under its terms. You are responsible for the endpoint that you
+            connect and for following its terms.`,
+          text`${productName} keeps agent logins outside cloud computers.
             Each turn gets a temporary credential for model requests.
             The agents send their model requests and receive their answers
             through ${productName} on Cloudflare. These requests
@@ -135,6 +143,9 @@ export const termsDocument: LegalDocument = {
       blocks: [
         paragraph`In the Mac app, an agent can ask to run a command on
           your Mac. The command runs only after you allow it.`,
+        paragraph`Each workspace has a Mac access switch, which starts off.
+          Any member of the org can turn it on or off again. While it is
+          off, the agents of that workspace cannot ask for a command.`,
         paragraph`You decide which commands run. You can allow a command
           once. You can always allow the exact same command text on that
           Mac. You can allow every command of one workspace on that Mac
@@ -234,7 +245,8 @@ export const termsDocument: LegalDocument = {
           cloud computers of the org at once. It deletes the org after 7
           days, unless an admin restores it.`,
         paragraph`You can stop using ${productName} at any time. You can
-          remove connected agent logins on your account page. To request
+          remove personal agent logins on your account page. An admin can
+          remove org logins on the Agents tab of the org settings. To request
           account deletion, write to ${mailLink(legalAddress)}. Stopping
           use or removing a login does not delete an org or its chat
           history. The Privacy notice explains data retention.`,

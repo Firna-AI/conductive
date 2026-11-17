@@ -106,7 +106,7 @@ Rules for the bar:
 
 The bar shows one main action for each state (decision 220). The agent
 does each step that changes code, on a fixed prompt. The app merges,
-continues, and archives.
+marks a draft ready for review, continues, and archives.
 
 | Bar state | Main action | Done by |
 | --- | --- | --- |
@@ -117,15 +117,17 @@ continues, and archives.
 | An open pull request with changed files that are not committed, in any state | Commit and push | The agent |
 | An open pull request with only commits that no remote branch holds, in any state | Push | The agent |
 | Ready to merge, for a member who may merge | Merge, named by its method | The app |
+| Draft, for a member with write access | Ready for review | The app |
 | Merged | Continue and Archive | The app |
 | No commits and no local work | None: "No commits yet" | None |
-| Checks running, draft, blocked, and closed | None | None |
+| Checks running, blocked, and closed | None | None |
 
 - The bar counts the local work of the current branch: its changed files,
   also untracked files, and its commits that no remote branch holds.
 - Local work comes first (decision 228). While an open pull request has
-  local work, Commit and push or Push takes the place of Merge and of the
-  fixes. A merged or a closed pull request is not open.
+  local work, Commit and push or Push takes the place of Merge, of Ready
+  for review, and of the fixes. A merged or a closed pull request is not
+  open.
 - Reason: no merge leaves work behind in the sandbox.
 - The button names the step that the agent does. When a file is not
   committed, the button is Commit and push, and its prompt asks the agent
@@ -230,6 +232,36 @@ continues, and archives.
 - Merge queues, stacked pull requests, auto-merge, and a bypass of the
   rules of the branch are not part of the bar. A direct merge into a branch
   that needs a merge queue gets the refusal of GitHub.
+
+## Ready for review
+
+- A draft offers Ready for review. The user chose this on 17 November
+  2026.
+- Reason: a member must not leave the app to mark a draft ready.
+- The app marks the pull request ready for review at once, with the
+  member's own GitHub token, as for Merge. No agent turn runs. The user
+  chose this on 17 November 2026.
+- Reason: the step changes no code. So it must not wait for a running
+  sandbox and a turn, or use the model quota of a session.
+- A fixed prompt that asks the agent to run `gh pr ready` was rejected for
+  the same reason. A sandbox from an older org image can also lack the
+  GitHub CLI.
+- A member sees Ready for review only when GitHub gives that member write
+  access or more to the repository, as for Merge. When the Worker cannot
+  read the access, the bar shows no Ready for review.
+- The request names the number of the pull request that the bar shows.
+  When the branch has another pull request now, the app changes nothing,
+  and a message under the bar says so.
+- A pull request that is no longer a draft needs no change. The app then
+  only reads the GitHub state again.
+- While the change runs, the bar shows Marking ready. Then every open tab
+  gets the new GitHub state.
+- When GitHub refuses the change, a message under the bar says that GitHub
+  refused it, with Open on GitHub. No GitHub error text reaches the
+  browser. A missing right uses the app's own words, and the bar then
+  hides Ready for review.
+- The command Mark PR ready for review has no default key, as
+  [the default keys](keyboard-shortcuts-keys.md#the-default-keys) say.
 
 ## After the merge
 

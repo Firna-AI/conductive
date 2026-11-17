@@ -3,6 +3,7 @@ import { requireActiveOrg } from '../data/user-access'
 import type { User } from '../../src/shared/api'
 import type { WorkspaceStartJob } from './start-types'
 import { HttpError } from '../http'
+import { readCreationCapabilities } from '../secrets/capabilities-input'
 import { leaseStatement, planStatement } from './creation-plan-statements'
 import { readRepositories } from './settings-data'
 import { capturedRepositoryLocations } from './repository-locations'
@@ -98,9 +99,11 @@ export async function claimCreation(
 }
 
 interface PlanRow {
+  capabilitiesJson: string | null
   repositoryId: string
   ownerUserId: string
   sectionId: string | null
+  parentId: string | null
   sessionId: string
   turnId: string
   city: string
@@ -135,12 +138,12 @@ export async function recordedCreationJob(
   const reading = db
     .prepare(
       `SELECT p.repository_id AS repositoryId, p.owner_user_id AS ownerUserId,
-    p.section_id AS sectionId, p.session_id AS sessionId, p.turn_id AS turnId, p.city, p.name, p.first_session_title AS firstSessionTitle, p.branch,
+    p.section_id AS sectionId, p.parent_workspace_id AS parentId, p.session_id AS sessionId, p.turn_id AS turnId, p.city, p.name, p.first_session_title AS firstSessionTitle, p.branch,
     p.start_attempt AS attempt, p.startup_script AS startupScript, p.environment_ciphertext AS environmentCiphertext,
     p.image_name AS imageName, p.provider_account AS providerAccount,
     p.default_branch AS defaultBranch, p.base_branch AS baseBranch, p.start_sha AS startSha, p.agent, p.model, p.effort, p.fast,
     p.repositories_json AS repositoriesJson, p.repository_locations_json AS repositoryLocationsJson, p.message_text AS messageText,
-    p.attachment_ids_json AS attachmentIds, a.created_at AS createdAt
+    p.attachment_ids_json AS attachmentIds, a.created_at AS createdAt, p.capabilities_json AS capabilitiesJson
     FROM workspace_creation_plans p JOIN workspace_creation_attempts a ON a.workspace_id = p.workspace_id
     WHERE p.workspace_id = ? AND a.org_id = ? AND a.sender_user_id = ? AND a.first_message_id = ?`,
     )
@@ -188,10 +191,16 @@ export async function recordedCreationJob(
     stdoutOffset: 0,
     stderrOffset: 0,
     creation: {
+      capabilities: readCreationCapabilities(
+        plan.capabilitiesJson === null
+          ? undefined
+          : JSON.parse(plan.capabilitiesJson),
+      ),
       user: availableUser(owner),
       sender: availableUser(sender),
       repositoryId: plan.repositoryId,
       sectionId: plan.sectionId ?? undefined,
+      parentId: plan.parentId ?? undefined,
       sessionId: plan.sessionId,
       firstSessionTitle: plan.firstSessionTitle ?? undefined,
       city: plan.city,

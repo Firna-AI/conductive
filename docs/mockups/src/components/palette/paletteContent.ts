@@ -11,6 +11,7 @@ import {
 import {
   appActions,
   helpActions,
+  windowActions,
   orgActions,
   workspaceActions,
   type Command,
@@ -74,6 +75,11 @@ export type PaletteContext = {
   archivable: boolean
   restorable?: boolean
   rightColumn?: boolean
+  /**
+   * The page under the palette can show the sidebar, so the Window group
+   * offers Hide the sidebar. A phone has no sidebar, so it leaves it out.
+   */
+  sidebar?: boolean
   mac?: boolean
   /**
    * The person's changes to the shortcuts (decision 190). On desktop, each
@@ -130,11 +136,17 @@ function openActions(context: PaletteContext): Command[] {
 }
 
 /**
- * The actions in their order: those of the open workspace, of the org, and
- * of the orgs, then Send feedback, which comes last.
+ * The actions in their order: those of the open workspace, of the org, of
+ * the orgs, and of the window, then Send feedback, which comes last.
  */
 function actionsOf(context: PaletteContext): Command[] {
-  return [...openActions(context), ...orgActions, ...appActions, ...helpActions]
+  return [
+    ...openActions(context),
+    ...orgActions,
+    ...appActions,
+    ...(context.sidebar ? windowActions : []),
+    ...helpActions,
+  ]
 }
 
 /** The settings, each with the page that holds it, for a mixed list. */
@@ -224,6 +236,9 @@ function groupsOf(
         ...own,
         { label: orgs.acme.name, rows: commandRows(orgActions) },
         { label: 'Orgs', rows: commandRows(appActions) },
+        ...(context.sidebar
+          ? [{ label: 'Window', rows: commandRows(windowActions) }]
+          : []),
         { label: helpGroupLabel, rows: commandRows(helpActions) },
       ]
     }

@@ -1,0 +1,3 @@
+{
+  "order": ["picker", "no-agent", "login", "not-shared", "org-login"]
+}

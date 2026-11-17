@@ -3,8 +3,9 @@
 This doc holds the requirements and the decisions in force for the agent
 runner, our program in each sandbox. It covers the connection of the
 runner, its events and their limits, its turns, the background work of
-Claude turns, its report of the listening ports, and the repair of lost
-workspace updates. It belongs to
+Claude turns, its report of the listening ports, the repair of lost
+workspace updates, and the warnings of the Worker about the runner. It
+belongs to
 [Chat and events](chat-and-events.md), which covers the agents, the
 sessions, what the chat shows, and the events. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
@@ -94,8 +95,8 @@ the change that keeps a turn open for background work.
 - The Durable Object forwards each message, each message during a turn,
   each interrupt, and each change of the model, the effort, or the fast
   mode to the runner.
-- Each turn also brings a turn token for the agent login of the starter of
-  its session, as [The turn token](model-gateway.md#the-turn-token) says.
+- Each turn also brings a turn token for the login of its session, as
+  [The turn token](model-gateway.md#the-turn-token) says.
   No command carries the agent login itself, as
   [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
   says.
@@ -149,91 +150,18 @@ the change that keeps a turn open for background work.
 
 ## Background work
 
-- Live work is each task of the
-  [background work](../architecture.md#terms) that runs or waits to start,
-  and each wake-up. A task that the agent program does not count as
-  activity is not live work.
-- A Claude turn stays open after a reply of the agent while live work
-  remains (background work decision 1). Such a time is a wait.
-- When a task ends or a wake-up fires, the agent program notifies the
-  agent. The agent then works again in the same turn.
-- The turn ends when the agent is idle and no live work remains. The agent
-  is idle when no reply runs and no message of the turn waits for an answer.
-- That end has the state `finished`. Its duration and its files cover the
-  whole turn, with each wait.
-- Each end of a Claude turn closes the agent program. The close ends its
-  tasks, and each wake-up that it keeps only in memory.
-- A waiting turn is a running turn for every other rule. Examples are Stop,
-  a shutdown, a message, a model change, the turn token, the idle stop, and
-  Continue. So Stop during a wait ends the turn as stopped.
-- A Codex turn does not wait, because Codex gives its agent no notification
-  when background work ends.
-- Reason: the tool text of Claude promises that notification. The wait
-  keeps the promise up to the limit, also in an automation run.
-- A rule that the agent waits in the foreground for each result was
-  rejected, because the tool text still promises the notification.
-- Background work turned off was rejected, because agents then lose it also
-  inside a turn.
-- A new turn that background work starts by itself was rejected, because
-  sandbox code could then spend the login of the sender.
+[Background work](background-work.md#background-work) states when a Claude
+turn stays open for background work, and when it ends.
 
 ### The note
 
-- At the end of a reply, the agent gets one note when live work holds a
-  task or a wake-up that no earlier note of the turn named.
-- The note names each such task and wake-up, so each one at most once in a
-  turn. Reason: a second note for the same work can loop the agent.
-- The note is guidance, not an error, so the reply goes on. It says that
-  the turn stays open while the work runs, for up to 30 days. It says that
-  a notification comes when each task ends or each wake-up fires.
-- The note asks the agent to stop each task that it does not need, such as
-  a dev server. It asks the agent to delete each wake-up that it does not
-  need. Then it asks the agent to end its reply.
-- The note follows the naming rules of the
-  [agent instructions](agent-instructions.md#what-the-instructions-hold).
-  So it never names Boat, and it never uses "Claude Code" as a name.
-  Reason: the agent can repeat the note in the chat.
-- The chat never shows the note. Reason: the note is for the agent.
-- A wake-up that repeats is live work too. Reason: one rule for all
-  background work keeps the promise of each tool.
-- A wait with no note was rejected, because a forgotten dev server would
-  then hold each turn until the limit.
+[The note](background-work.md#the-note) states the note that the agent
+gets about its live work.
 
 ### The time limit
 
-- A turn waits for at most 30 days. The user chose this limit on
-  13 November 2026, in place of the 120 minutes of background work
-  decision 2. Reason: background work, such as a long job or a scheduled
-  wake-up, can need more than 2 hours.
-- No limit was rejected, because a forgotten task would then hold its
-  sandbox without end.
-- The count starts at the first wait. Agent work after a notification
-  counts.
-- A message of a member that joins the turn during a wait starts the count
-  again, from that message. A message during a reply does not change the
-  count.
-- Reason: the limit bounds the waiting that a turn holds with no new
-  message of a member.
-- When the limit passes during a reply, the limit applies at the end of
-  that reply. Reason: a cut tool call can leave half-done work, such as a
-  push without its merge.
-- When the limit applies, the runner closes the agent program (background
-  work decision 3). The runner then sends `turn.completed` with the state
-  `finished`, its duration, its files, and `endReason`.
-- This end at the limit holds also when no live work remains at the end of
-  that reply.
-- `endReason` is an optional field of `turn.completed`. Its one value is
-  `background_work_limit`, which marks an end at the limit.
-- A stopped end at the limit was rejected, because it shows no duration
-  and no files.
-- Risk: a wait keeps each right of a running turn, such as its turn token,
-  for up to 30 days more, as
-  [Turn tokens in a sandbox](version-pins.md#turn-tokens-in-a-sandbox)
-  says.
-- Risk: a wait is a running turn, so the
-  [idle stop](workspace-life.md#stop-and-resume) does not stop its
-  sandbox. A task that the agent does not stop, such as a dev server, can
-  keep the sandbox running for up to 30 days.
+[The time limit](background-work.md#the-time-limit) states the limit of
+the wait of a turn, and its end at the limit.
 
 ## Listening ports
 
@@ -245,3 +173,9 @@ its labels, its limits, and its full reports.
 The [lost-update requirements](lost-workspace-updates.md) give the reports
 that belong to no session, the repair request after a refused update, and
 the notice of a failed repair.
+
+## Runner warnings
+
+The [runner warning requirements](runner-warnings.md) give the warnings of
+the Worker for each runner connection, for its end, and for each turn end
+with no Stop request.

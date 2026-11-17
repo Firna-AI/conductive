@@ -33,6 +33,8 @@ function commandOf(action: BarAction): ShortcutCommandId {
       return agentActionCommand(action.action)
     case 'merge':
       return 'merge-pull-request'
+    case 'ready':
+      return 'mark-ready-for-review'
     case 'continue':
       return 'continue-after-merge'
     case 'archive':
@@ -50,6 +52,7 @@ function takesClick(action: BarAction): boolean {
     case 'agent':
       return true
     case 'merge':
+    case 'ready':
       return !action.busy
     case 'continue':
       return !action.busy && !action.waiting
@@ -65,6 +68,8 @@ function idleLabel(action: BarAction): string {
       return agentActionLabels[action.action]
     case 'merge':
       return mergeLabels[action.method]
+    case 'ready':
+      return barLabels.readyForReview
     case 'continue':
       return barLabels.continue
     case 'archive':

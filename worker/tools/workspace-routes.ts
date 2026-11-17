@@ -6,6 +6,7 @@ import { TOOL_TURN_HEADER } from '../../src/shared/agent-tools'
 import { HttpError } from '../http'
 import { identifier, invalidInput } from '../chat/inputs'
 import { readJsonObject } from '../http/json-body'
+import { readWorkspaceMove } from '../app-api/feature-workspaces-data'
 import { requireCallingToolTurn } from './calling-turn'
 import type { AgentToolServices } from './services'
 import type { CallingWorkspace } from './store'
@@ -85,7 +86,15 @@ export async function writeWorkspaceFromTool(
     workspaceId,
     senderUserId: sender.id,
   })
+  const move =
+    input.kind === 'move'
+      ? await readWorkspaceMove(db, caller.orgId, workspaceId)
+      : undefined
   return Response.json({
     workspace: await toolWorkspaceDetail(db, caller.orgId, workspaceId, origin),
+    ...(move?.nested &&
+      move.root && {
+        notice: `Move W-${move.root.number} to move this workspace.`,
+      }),
   })
 }

@@ -7,6 +7,7 @@ export interface WorkspaceRow {
   orgId: string
   repositoryId: string
   sectionId: string
+  parentId: string | null
   ownerUserId: string
   githubLogin: string
   displayName: string | null

@@ -8,6 +8,7 @@ import { readGitHubSummary } from '../../shared/github-read'
 import type {
   CreateWorkspaceResponse,
   OrderedWorkspaceResponse,
+  RestartWorkspaceResponse,
   WorkspaceResponse,
 } from '../../shared/workspaces'
 import {
@@ -43,6 +44,7 @@ export function readWorkspace(value: unknown): Workspace {
     orgId: text(workspace, 'orgId'),
     repositoryId: text(workspace, 'repositoryId'),
     sectionId: text(workspace, 'sectionId'),
+    parentId: maybeText(workspace, 'parentId'),
     owner: nested(workspace, 'owner', readSender),
     name: maybeText(workspace, 'name'),
     branch: text(workspace, 'branch'),
@@ -144,4 +146,12 @@ export function readCreated(value: unknown): CreateWorkspaceResponse {
 
 export function readWorkspaces(value: unknown): Workspace[] {
   return items(record(value, 'workspaces'), 'workspaces', readWorkspace)
+}
+
+/** The reply of Restart: whether the newest software came before it. */
+export function readRestartWorkspaceResponse(
+  value: unknown,
+): RestartWorkspaceResponse {
+  const body = record(value, 'restart reply')
+  return { updateCheck: choice(body, 'updateCheck', ['ok', 'failed']) }
 }

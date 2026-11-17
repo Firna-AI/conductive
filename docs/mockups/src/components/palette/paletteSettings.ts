@@ -2,6 +2,7 @@ import {
   Bot,
   FolderGit2,
   Keyboard,
+  KeyRound,
   Laptop,
   LogIn,
   Server,
@@ -33,6 +34,18 @@ export const orgSettings: readonly Command[] = [
     lead: icon(Server),
     words: ['install', 'startup script', 'env', 'build', 'sandbox'],
     to: paths.cloudComputer,
+  },
+  {
+    label: 'Agents',
+    lead: icon(Bot),
+    words: ['claude', 'codex', 'org login', 'api key', 'endpoint'],
+    to: paths.orgAgents,
+  },
+  {
+    label: 'Secrets',
+    lead: icon(KeyRound),
+    words: ['reveal', 'approve', 'token', 'password'],
+    to: paths.secrets,
   },
   {
     label: 'Members',

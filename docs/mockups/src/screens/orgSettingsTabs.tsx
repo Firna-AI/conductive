@@ -1,8 +1,12 @@
 import { MembersTab } from '../components/members/MembersTab'
+import { SecretsTab } from '../components/secrets/SecretsTab'
+import type { SecretsAccess } from '../components/secrets/secretRights'
 import { ComputerTab } from '../components/settings/ComputerTab'
+import { OrgAgentsTab } from '../components/settings/OrgAgents'
 import {
   DeleteOrgSection,
   LeaveOrgSection,
+  OrgColorSection,
   OrgDetailsSection,
   type ReadOnlyCause,
 } from '../components/settings/OrgSections'
@@ -17,6 +21,7 @@ import {
   type Membership,
   type PersonKey,
 } from '../fixtures/members'
+import { orgAgentsFor } from './orgAgentsState'
 import type { OrgSettingsState } from './OrgSettingsScreen'
 import { settingsOrg } from './settingsOrgs'
 import { settingsRepositoryNotice } from './settingsRepositoryNotice'
@@ -44,6 +49,16 @@ function readOnlyCause(state: OrgSettingsState): ReadOnlyCause | undefined {
 }
 
 /**
+ * Who reads the Secrets tab. A member who is not an admin still adds
+ * secrets, so only a suspended org shows the tab read-only.
+ */
+function secretsAccess(state: OrgSettingsState): SecretsAccess {
+  const person = settingsViewer(state)
+  if (state.org === 'suspended') return { kind: 'suspended', person }
+  return { kind: state.viewer, person }
+}
+
+/**
  * The sentence after the description of the repositories. The notice of a
  * suspended org says why nothing changes, so the tab adds nothing.
  */
@@ -65,10 +80,12 @@ export function TabBody(props: { state: OrgSettingsState }) {
       return (
         <>
           <OrgDetailsSection
+            color={state.color}
             initials={org.initials}
             name={org.name}
             readOnly={readOnly}
           />
+          {readOnly ? null : <OrgColorSection color={state.color} />}
           {readOnly ? null : <DeleteOrgSection name={org.name} />}
           {readOnly === 'suspended' && mayLeave(viewer, settings.members) ? (
             <LeaveOrgSection name={org.name} />
@@ -101,6 +118,18 @@ export function TabBody(props: { state: OrgSettingsState }) {
           readOnly={readOnly}
           repositoryNotice={settingsRepositoryNotice(state, settings)}
           script={state.script}
+        />
+      )
+    case 'agents':
+      return <OrgAgentsTab {...orgAgentsFor(state, org.name, readOnly)} />
+    case 'secrets':
+      return (
+        <SecretsTab
+          access={secretsAccess(state)}
+          computerTo={settings.links.computer}
+          org={org.name}
+          secrets={settings.secrets}
+          view={state.secrets}
         />
       )
     case 'members':

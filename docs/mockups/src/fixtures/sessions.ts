@@ -1,8 +1,9 @@
 /**
  * The agent sessions of a workspace. Each session is a chat with its own
  * model, on the same branch and the same cloud computer. A session runs on
- * the agent login of its starter, the member who started it, whoever sends
- * a message.
+ * its login, whoever sends a message: the agent login of its starter, the
+ * member who started it, or the org login (decision 1 B of the org logins
+ * plan).
  */
 
 import { sessionTitleFrom } from '../../../../src/shared/session-title'
@@ -65,6 +66,17 @@ export const workspaceSessions: readonly StartedSession[] = [
  * yet, so its tab shows Untitled.
  */
 export const newSession: Session = { key: 'new', title: null }
+
+/**
+ * A session that Cal started with + and has sent no message in yet. Its
+ * first message takes the default login of Cal, so the record names that
+ * login to each member before then. Its tab shows Untitled.
+ */
+export const startedSession: StartedSession = {
+  key: 'started',
+  title: null,
+  starter: 'cal',
+}
 
 /**
  * More open sessions of the workspace, oldest first, for a row with more

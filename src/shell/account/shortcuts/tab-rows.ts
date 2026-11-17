@@ -150,7 +150,7 @@ export function fixedKeyLabel(
 
 /**
  * The label of a command, also of a command that this host does not show,
- * such as Hide or show the sidebar in a browser.
+ * such as Back in a browser.
  */
 export function commandLabel(id: ShortcutCommandId): string {
   return (

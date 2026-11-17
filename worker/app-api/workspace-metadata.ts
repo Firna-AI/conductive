@@ -4,7 +4,7 @@ import { readWorkspace } from '../lifecycle/workspace-data'
 import { requireShellWriter } from './feature-shell-access'
 import {
   shellSectionExists,
-  updateShellWorkspace,
+  writeShellWorkspace,
 } from './feature-workspaces-data'
 import { requireWritableWorkspace, workspaceBinding } from './workspace-state'
 
@@ -26,22 +26,25 @@ export async function changeWorkspaceMetadata(
     !(await shellSectionExists(env.DB, orgId, input.sectionId))
   )
     throw sectionNotFound()
-  if (keepCurrentSection && input.sectionId === current.sectionId) return
-  const binding = workspaceBinding(env).getByName(workspaceId)
-  if (
-    !(await updateShellWorkspace(env.DB, {
-      ...input,
-      orgId,
-      userId,
-      workspaceId,
-      now: dependencies.now(),
-    }))
-  ) {
+  const binding = workspaceBinding(env)
+  const result = await writeShellWorkspace(env.DB, {
+    ...input,
+    orgId,
+    userId,
+    workspaceId,
+    keepCurrentSection,
+    now: dependencies.now(),
+  })
+  if (!result.updated) {
     await requireShellWriter(env.DB, orgId, userId)
     requireWritableWorkspace(await readWorkspace(env.DB, orgId, workspaceId))
     throw sectionNotFound()
   }
-  await binding.publishWorkspaceMetadata(orgId, workspaceId)
+  await Promise.all(
+    result.workspaceIds.map((id) =>
+      binding.getByName(id).publishWorkspaceMetadata(orgId, id),
+    ),
+  )
 }
 
 function sectionNotFound(): HttpError {

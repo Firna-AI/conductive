@@ -11,6 +11,7 @@ import {
   ListChecks,
   MessageSquareHeart,
   MessageSquarePlus,
+  PanelLeft,
   Plus,
   SquarePlus,
   SquareTerminal,
@@ -83,6 +84,7 @@ const rightColumnActions: readonly Command[] = [
     lead: icon(SquarePlus),
     words: ['shell', 'tab'],
     to: paths.terminal,
+    shortcut: 'new-terminal',
   },
 ]
 
@@ -189,6 +191,20 @@ export const appActions: readonly Command[] = [
           },
         ],
   ),
+]
+
+/**
+ * The row of the sidebar toggle, in the Window group, in every host where
+ * the sidebar can show (list popover decision 5 A). The sidebar of the
+ * views shows, so the row hides it.
+ */
+export const windowActions: readonly Command[] = [
+  {
+    label: 'Hide the sidebar',
+    lead: icon(PanelLeft),
+    words: ['toggle'],
+    shortcut: 'toggle-sidebar',
+  },
 ]
 
 /**

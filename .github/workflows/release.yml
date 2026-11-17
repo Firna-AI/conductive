@@ -36,15 +36,25 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
           token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
-  mac:
+  # The fast Apple silicon checks gate signing. The slower Intel checks run
+  # at the same time as signing, and they gate publishing.
+  mac-arm64:
     if: ${{ !cancelled() && github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || needs.release-please.outputs.release_created == 'true') }}
     needs: release-please
     uses: ./.github/workflows/desktop-mac-checks.yml
     with:
       ref: ${{ needs.release-please.outputs.sha || github.sha }}
+      architectures: '["arm64"]'
+  mac-x64:
+    if: ${{ !cancelled() && github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || needs.release-please.outputs.release_created == 'true') }}
+    needs: release-please
+    uses: ./.github/workflows/desktop-mac-checks.yml
+    with:
+      ref: ${{ needs.release-please.outputs.sha || github.sha }}
+      architectures: '["x64"]'
   verify-tag:
     if: needs.release-please.outputs.release_created == 'true'
-    needs: [release-please, mac]
+    needs: [release-please, mac-arm64]
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -61,8 +71,8 @@ jobs:
           RELEASE_TAG: ${{ needs.release-please.outputs.tag_name }}
           RELEASE_COMMIT: ${{ needs.release-please.outputs.sha }}
   sign:
-    if: ${{ !cancelled() && needs.mac.result == 'success' && (github.event_name == 'workflow_dispatch' || needs.verify-tag.result == 'success') && github.ref == 'refs/heads/main' }}
-    needs: [release-please, mac, verify-tag]
+    if: ${{ !cancelled() && needs.mac-arm64.result == 'success' && (github.event_name == 'workflow_dispatch' || needs.verify-tag.result == 'success') && github.ref == 'refs/heads/main' }}
+    needs: [release-please, mac-arm64, verify-tag]
     uses: ./.github/workflows/desktop-sign.yml
     with:
       ref: ${{ needs.release-please.outputs.sha || github.sha }}
@@ -74,8 +84,9 @@ jobs:
       APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
       APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
   publish:
+    # The implicit success() check also requires the Intel checks to pass.
     if: needs.release-please.outputs.release_created == 'true'
-    needs: [release-please, sign]
+    needs: [release-please, mac-x64, sign]
     runs-on: ubuntu-24.04
     permissions:
       contents: write

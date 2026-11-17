@@ -80,6 +80,7 @@ function manyOnMac(history: readonly ChatItem[]): readonly ChatItem[] {
  * The chats of a command on the Mac of the sender (decision 62), after the
  * finished turn of `history`: it waits for approval, for the checkout test
  * or for the whole suite, it was denied, it ran, or the Mac is not there.
+ * Or the workspace refused it, because Mac access is off.
  */
 export function macConversations(history: readonly ChatItem[]) {
   return {
@@ -98,5 +99,14 @@ export function macConversations(history: readonly ChatItem[]) {
       },
     ]),
     'mac-unavailable': onMac(history, 'unavailable', [withoutSafari]),
+    'mac-access-off': onMac(history, 'mac-access-off', [
+      {
+        kind: 'agent',
+        id: 'mac-access-off',
+        blocks: [
+          'Mac access is off for this workspace, so I did not run it in Safari. The checkout tests pass in WebKit on the cloud computer, which is close to Safari.',
+        ],
+      },
+    ]),
   } as const satisfies Record<string, readonly ChatItem[]>
 }

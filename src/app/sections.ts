@@ -1,9 +1,15 @@
 import type { Workspace } from '../shared/generated/Workspace'
 import type { Section } from '../shared/sections'
+import { placeWorkspaces } from '../shared/workspace-tree'
+import { topLevelRows, workspacesUnder, type ListRow } from './list-trees'
 
 export interface SectionGroup {
   section: Section
-  workspaces: readonly Workspace[]
+  /**
+   * The rows of the section in tree order: each top-level row, then the
+   * rows nested under it, oldest first, each followed by its own.
+   */
+  rows: readonly ListRow[]
 }
 
 export interface WorkspaceGroups {
@@ -24,34 +30,23 @@ export function ordered(sections: readonly Section[]): Section[] {
   return [...sections].sort((a, b) => a.position - b.position)
 }
 
-/** The section that shows a workspace. An unknown section falls back to General. */
-function sectionOf(
-  workspace: Workspace,
-  sections: readonly Section[],
-  fallback: Section | undefined,
-): string | undefined {
-  return sections.some((section) => section.id === workspace.sectionId)
-    ? workspace.sectionId
-    : fallback?.id
-}
-
 /**
- * The sections of the list, each with its workspaces in the order of the
- * workspace list. Archived workspaces leave their sections for the
- * Archived group.
+ * The sections of the list, each with its rows as `placeWorkspaces`, the
+ * shared rule of the app and the Worker, places them: each top-level row
+ * in the order of the workspace list, and each live sub-workspace under
+ * the row of its parent, or of the nearest live workspace above it while
+ * its parent is archived. An unknown section falls back to General.
+ * Archived workspaces leave their sections for the flat Archived group.
  */
 export function groupWorkspaces(
   sections: readonly Section[],
   workspaces: readonly Workspace[],
 ): WorkspaceGroups {
-  const fallback = defaultSection(sections)
-  const live = workspaces.filter((workspace) => workspace.state !== 'archived')
+  const rows = placeWorkspaces(workspaces, sections)
   return {
     sections: ordered(sections).map((section) => ({
       section,
-      workspaces: live.filter(
-        (workspace) => sectionOf(workspace, sections, fallback) === section.id,
-      ),
+      rows: rows.filter((row) => row.sectionId === section.id),
     })),
     archived: workspaces
       .filter((workspace) => workspace.state === 'archived')
@@ -60,9 +55,13 @@ export function groupWorkspaces(
 }
 
 /**
- * The list after a drag puts a workspace at `index` of a section. The index
- * counts the workspaces of that section without the moved one. Every other
- * workspace keeps its place.
+ * The list after a move puts the tree of a top-level row at `index` of a
+ * section, as a drop does. The index counts the top-level rows of that
+ * section without the moved one. Each workspace under the row, live or
+ * archived, takes the section too, as the Worker writes it. Every other
+ * workspace keeps its place. A nested row moves only with its tree, so a
+ * move of it changes nothing, and neither does a move of an archived
+ * workspace.
  */
 export function moveWorkspace(
   workspaces: readonly Workspace[],
@@ -71,24 +70,28 @@ export function moveWorkspace(
   sectionId: string,
   index: number,
 ): Workspace[] {
-  const moved = workspaces.find((workspace) => workspace.id === workspaceId)
-  if (!moved) return [...workspaces]
-  const fallback = defaultSection(sections)
-  const rest = workspaces.filter((workspace) => workspace.id !== workspaceId)
-  const target = rest.filter(
-    (workspace) =>
-      workspace.state !== 'archived' &&
-      sectionOf(workspace, sections, fallback) === sectionId,
+  const rows = placeWorkspaces(workspaces, sections)
+  const moved = rows.find((row) => row.workspace.id === workspaceId)
+  if (!moved || moved.parentId !== null) return [...workspaces]
+  const tree = workspacesUnder(workspaces, workspaceId)
+  const rest = workspaces.flatMap((workspace) => {
+    if (workspace.id === workspaceId) return []
+    return [tree.has(workspace.id) ? { ...workspace, sectionId } : workspace]
+  })
+  const target = topLevelRows(rows).filter(
+    (row) => row.sectionId === sectionId && row.workspace.id !== workspaceId,
   )
-  const placed = { ...moved, sectionId }
+  const placed = { ...moved.workspace, sectionId }
+  const placeOf = (row: ListRow) =>
+    rest.findIndex((workspace) => workspace.id === row.workspace.id)
   const before = target[Math.max(0, index)]
   if (before) {
-    const at = rest.indexOf(before)
+    const at = placeOf(before)
     return [...rest.slice(0, at), placed, ...rest.slice(at)]
   }
   const last = target.at(-1)
   if (!last) return [placed, ...rest]
-  const at = rest.indexOf(last) + 1
+  const at = placeOf(last) + 1
   return [...rest.slice(0, at), placed, ...rest.slice(at)]
 }
 
@@ -131,8 +134,11 @@ export function withoutSection(
 }
 
 /**
- * The place one step up or down from a workspace, for the keys that move a
- * row. A step past the end of a section goes to the next open section.
+ * The place one step up or down from a top-level row, for the keys that
+ * move a row: past the tree above or below it. The index counts the
+ * top-level rows of the section without the moved one. A step past the end
+ * of a section goes to the next open section. A nested row moves only with
+ * its tree, so it has no step.
  */
 export function stepTarget(
   groups: readonly SectionGroup[],
@@ -140,13 +146,15 @@ export function stepTarget(
   step: 1 | -1,
 ): { sectionId: string; index: number } | null {
   const at = groups.findIndex((group) =>
-    group.workspaces.some((workspace) => workspace.id === workspaceId),
+    group.rows.some((row) => row.workspace.id === workspaceId),
   )
   const group = groups[at]
   if (!group) return null
-  const index = group.workspaces.findIndex((item) => item.id === workspaceId)
+  const places = topLevelRows(group.rows)
+  const index = places.findIndex((row) => row.workspace.id === workspaceId)
+  if (index < 0) return null
   const next = index + step
-  if (next >= 0 && next < group.workspaces.length) {
+  if (next >= 0 && next < places.length) {
     return { sectionId: group.section.id, index: next }
   }
   const open = (candidate: SectionGroup | undefined) =>
@@ -160,7 +168,7 @@ export function stepTarget(
     if (!open(neighbour)) continue
     return {
       sectionId: neighbour.section.id,
-      index: step === 1 ? 0 : neighbour.workspaces.length,
+      index: step === 1 ? 0 : topLevelRows(neighbour.rows).length,
     }
   }
   return null

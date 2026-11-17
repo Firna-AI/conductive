@@ -15,7 +15,7 @@ import {
   useChatDropArea,
 } from './components/chat-drop-area'
 import { ChatOverlays, historyEntries } from './components/ChatOverlays'
-import type { ComposerFocus } from './components/Composer'
+import type { ComposerFocus } from './components/composer-requests'
 import { SessionChat, type ChatHost } from './components/SessionChat'
 import { CodeCopyProvider, useCodeCopyAction } from './components/code-copy'
 import { useSessionLinkCopy } from './components/session-link-copy'
@@ -55,8 +55,8 @@ export interface ChatViewProps {
    */
   copy?: CopyServices
   /**
-   * Names and draws a file or diff tab of the saved view at its place in the
-   * tab row, as `RenderTab` says. Without it, the row shows only the session
+   * Names and draws a file, diff, or Preview tab of the saved view at its
+   * place in the tab row, as `RenderTab` says. Without it, the row shows only the session
    * tabs, as on a phone.
    */
   renderTab?: RenderTab
@@ -66,6 +66,12 @@ export interface ChatViewProps {
    * tab shows as the current one.
    */
   content?: ReactNode
+  /**
+   * Parts that the app keeps mounted under the chat or the `content`, such
+   * as the pages of the Preview tabs, which stay loaded while another tab
+   * shows. The app hides each part that does not show.
+   */
+  kept?: ReactNode
   /** The workspace record, its state, and the title from its first message. */
   onWorkspaceChange?: (workspace: Workspace) => void
   /** The open tabs, as the chat saves them through the view route. */
@@ -216,6 +222,7 @@ function ChatBody(
           />
         </CodeCopyProvider>
       )}
+      {props.kept}
       <ChatOverlays
         history={history}
         mobile={mobile}

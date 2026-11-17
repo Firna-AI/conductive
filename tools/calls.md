@@ -1,7 +1,7 @@
 # Workspace tool calls
 
 This page belongs to the [workspace CLI and MCP server](README.md). It
-gives the 24 calls of both tools, their options, and their replies.
+gives the 26 calls of both tools, their options, and their replies.
 [Agent tools](../docs/protocol/agent-tools.md#workspace-tools) and the
 pages that it links state the requirements.
 
@@ -13,9 +13,9 @@ with `conductive`.
 
 | MCP tool | CLI command and options | Kind |
 | --- | --- | --- |
-| `list_workspaces` | `workspaces list [--owner MEMBER_ID] [--state STATE] [--repository ID] [--query TEXT] [--updated-since MILLISECONDS] [--archived true\|false] [--limit NUMBER] [--offset NUMBER]` | Read |
+| `list_workspaces` | `workspaces list [--owner MEMBER_ID] [--parent ID] [--state STATE] [--repository ID] [--query TEXT] [--updated-since MILLISECONDS] [--archived true\|false] [--limit NUMBER] [--offset NUMBER]` | Read |
 | `get_workspace` | `workspaces get [--workspace ID]` | Read |
-| `create_workspace` | `workspaces create --repository ID --message TEXT [--agent claude\|codex --model NAME] [--effort LEVEL] [--fast true\|false] [--section ID] [--name TEXT] [--first-session-title TEXT] [--request-id ID]` | Write |
+| `create_workspace` | `workspaces create --repository ID --message TEXT [--agent claude\|codex --model NAME] [--effort LEVEL] [--fast true\|false] [--section ID] [--parent ID] [--name TEXT] [--first-session-title TEXT] [--request-id ID]` | Write |
 | `rename_workspace` | `workspaces rename --name TEXT [--workspace ID]` | Write |
 | `move_workspace` | `workspaces move --section ID [--workspace ID]` | Write |
 | `archive_workspace` | `workspaces archive [--workspace ID]` | Write |
@@ -37,12 +37,14 @@ with `conductive`.
 | `open_preview` | `previews open --port NUMBER [--workspace ID]` | Write |
 | `close_preview` | `previews close --preview ID [--workspace ID]` | Write |
 | `run_mac_command` | `mac run --command TEXT --folder PATH --reason TEXT [--timeout-seconds SECONDS] [--longer-timeout-reason TEXT] [--request-id ID]` | Mac command |
+| `list_secrets` | `secrets list` | Read |
+| `run_with_secrets` | `secrets run --secret NAME [--secret NAME…] [--reason TEXT] -- <command>` | Write |
 
 The MCP fields take the values of the CLI options, with these names:
 
 - An option that takes an ID gives a field that ends with `Id`:
   `workspaceId`, `sessionId`, `messageId`, `sectionId`, `previewId`,
-  `repositoryId`, and `ownerId`.
+  `repositoryId`, `ownerId`, and `parentId`.
 - `--message` gives `firstMessage` for the two create calls, and `text`
   for `send_message`.
 - `--agent` and `--model` give one `model` field with `agent` and `model`.
@@ -53,9 +55,44 @@ The MCP fields take the values of the CLI options, with these names:
   `firstSessionTitle`, `requestId`, `startLine`, and `timeoutSeconds`.
 - `--message-file` has no MCP field, as [Message files](#message-files)
   says.
+- Repeated `--secret NAME` options give the `names` array.
+  The command after `--` gives `command`. `--reason` gives `reason`.
 
 [Mac commands](README.md#mac-commands) gives the rules of
 `run_mac_command`.
+[Secrets](#secrets) gives the two secret calls.
+
+## Secrets
+
+`secrets list` calls `GET /v1/tools/secrets`. Its reply is
+`{ secrets: [{ name, description, available }] }`. It never holds values.
+With a running turn, availability includes the calling session's approvals.
+Without one, it includes only org and workspace grants.
+
+`secrets run` calls `POST /v1/tools/secrets/run` with the turn header and
+`{ names, command, reason? }`. The CLI preserves the arguments after `--`.
+It sends a shell-quoted description of those arguments as `command`.
+MCP takes `names`, `command`, and optional `reason` directly.
+Names need not exist yet. A missing name asks a member for a temporary value.
+
+Only an allowed reply starts a command. Returned values go only into that
+child's environment under their secret names. Each stream replaces exact
+copies with `[redacted]`, also across output reads.
+Keep each value out of output, files, and answers.
+
+The CLI keeps stdin and streams the filtered output. Its exit status is
+the child's status. A signal gives 128 plus the signal number.
+MCP runs `command` with `/bin/sh -c` and closed stdin. Its reply is
+`{ status: "completed", stdout, stderr, exitCode }` after filtering.
+The MCP result sets `isError` when `exitCode` is not 0.
+
+The Worker can return `pending`, `denied`, or `not-answered`, with
+`requestId` and `message`. No command then starts. The CLI prints the
+message on stderr and exits 1. MCP returns those fields with `isError: true`.
+The request waits up to 90 seconds. After a late-answer notice, call run again.
+HTTP refusals keep their code and message. Malformed replies give safe text.
+The tools send no command output, exit status, or duration to the Worker.
+[Secret requests](../docs/protocol/secret-requests.md) states the requirements.
 
 ## Reach, turns, and rights
 
@@ -84,6 +121,13 @@ Create inherits the calling workspace's org and owner.
 An omitted model or effort uses the owner's default.
 Create uses fast mode only with `--fast true`, for a marked model.
 An omitted section uses the org's default section.
+`--parent ID` makes a sub-workspace. Agents usually pass their own workspace ID from their instructions.
+Nest work that belongs to the calling workspace's task: a part of a large task that can run in parallel, follow-up work that the task starts, work in another repository for the same task, or a change that needs its own pull request. Each separate pull request needs its own workspace. Omit `--parent` for unrelated work. When a member names the place, follow the member. See [When to nest](../docs/protocol/sub-workspaces.md#when-to-nest).
+The sub-workspace joins its parent's section. A supplied `--section` has no effect with `--parent`.
+Nesting stops at depth 3. A create under a workspace at depth 3 fails with `nesting_limit`.
+The error gives the `parentId` for a sibling. Pass that ID with `--parent`.
+Start the sibling's name with a one-word group prefix, such as "Limits: ".
+The create reply can give a `notice` about the section, as [Sub-workspaces](../docs/protocol/sub-workspaces.md) says.
 The first message runs as the sender of the calling turn.
 `--name` gives an optional workspace name, and `--first-session-title` an optional title of the first session.
 Their help says: "Use plain words separated by spaces. Avoid underscores unless the user tells you to add them."
@@ -94,6 +138,7 @@ A blank result counts as no name, and the app shows "Untitled".
 The name does not change the branch.
 The create answer holds the stored name, the first session ID, and its absolute `sessionLink`.
 Create gives the complete workspace record, with its number and canonical web link.
+That record gives `parentId`, or `null` for a top-level workspace.
 That record also gives `github`, the GitHub summary of the workspace, or null.
 A repeat with the same `--request-id` returns the first workspace, session, and message.
 An omitted ID makes a new ID for that call only.
@@ -101,11 +146,14 @@ So keep and pass the same ID to retry without a second workspace.
 
 `workspaces list` without options returns every workspace in the org, including archived workspaces.
 Each list item gives its number, canonical web link, name, branch, and state.
+It also gives `parentId`, or `null` for a top-level workspace.
 Its owner gives the member ID, GitHub login, and display name, with no avatar.
 The filters combine, and each filter is optional:
 
 - `--owner` takes an exact member ID, never a login. An unknown ID gives
   an empty list.
+- `--parent` takes a workspace ID and selects only its direct sub-workspaces.
+  An unknown ID gives an empty list.
 - `--state` takes one workspace state: `working`, `input`, `unread`,
   `ready`, `starting`, `stopped`, `error`, or `archived`.
 - `--repository` takes a repository ID.
@@ -126,11 +174,16 @@ For another member, take the ID from the owner fields of a listed workspace.
 Do not infer an owner from the workspace token or the active turn.
 
 `workspaces get` gives the list fields with the repository, base branch, section, creation and newest activity times, and archive and restore times.
+It also gives `parent`, a list entry or `null`, and `depth`, counting each stored parent link.
+Its `children` gives the direct sub-workspaces, oldest first, including archived ones.
 It also reads an archived workspace.
 `workspaces rename`, `move`, and `archive` reply with the same details.
 A rename uses the name rule, and no automatic name replaces it later.
 A blank result gets HTTP 400 `invalid_input`.
 A move puts the workspace at the top of the section.
+A top-level row moves with each workspace nested under it, including archived workspaces.
+A nested row moves nothing. Its reply gives a `notice` that names the top-level workspace to move instead.
+CLI JSON and MCP text and structured results keep all these reply fields.
 An archive makes the same change as Archive in the app. A member can restore the workspace for 14 days.
 Archiving the calling workspace ends the calling turn, so the caller can miss the reply.
 

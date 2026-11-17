@@ -65,6 +65,7 @@ export async function expectAccountIsolation(
     await expectAccountState(harness, first, firstState, {
       githubLogin: 'octocat',
       orgId: org.id,
+      orgName: org.name,
       githubComplete: true,
     })
     await expectAccountState(harness, other, otherState, {

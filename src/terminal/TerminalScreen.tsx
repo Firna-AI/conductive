@@ -11,11 +11,11 @@ import {
 } from '../shared/terminal-bridge'
 import { ToolButton } from './tool-parts/ToolButtons'
 import { useTouch } from './tool-parts/ToolRoot'
-import type { ReadyTerminal } from './terminalApi'
 import type { ExtraKey } from './terminalKeys'
 import type { TerminalLinks } from './terminalLinks'
 import { linkKey } from './terminalLinks'
 import { fittedFontSize } from './sharedSize'
+import { focusUnmoved, type TerminalFocusRequest } from './terminalFocus'
 import { TerminalSession } from './terminalSession'
 import { cssTokens, terminalFont, terminalTheme } from './terminalTheme'
 import { watchLinks } from './xtermLinks'
@@ -23,10 +23,10 @@ import { XtermScreen } from './xtermScreen'
 import styles from './TerminalScreen.module.css'
 
 /**
- * Opens the decoded transport of a ready terminal, such as the ttyd socket at
- * its `socketPath`. Keep the function stable across renders.
+ * Opens the decoded transport of one terminal at its socket path, such as
+ * the ttyd socket of the terminal. Keep the function stable across renders.
  */
-export type ConnectTerminal = (terminal: ReadyTerminal) => TerminalTransport
+export type ConnectTerminal = (socketPath: string) => TerminalTransport
 
 type RowKey = ExtraKey | 'control'
 
@@ -59,7 +59,8 @@ function fitVisible(host: HTMLElement, fit: FitAddon): void {
  * space after it.
  */
 export function TerminalScreen(props: {
-  terminal: ReadyTerminal
+  /** The socket path of the terminal. A new path opens a new connection. */
+  socketPath: string
   connect: ConnectTerminal
   /** The connection ended, so the screen takes no more input. */
   ended: boolean
@@ -69,6 +70,10 @@ export function TerminalScreen(props: {
   screenRef?: Ref<HTMLDivElement>
   /** Opens the links of the output. Without it, no link opens. */
   links?: TerminalLinks
+  /** Moves the keyboard focus to the screen once the screen exists. */
+  focusRequest?: TerminalFocusRequest | null
+  /** The screen took the focus request, or dropped it after a focus move. */
+  onFocusDone?: () => void
 }) {
   const hostRef = useRef<HTMLDivElement>(null)
   const xtermRef = useRef<Terminal | null>(null)
@@ -76,20 +81,29 @@ export function TerminalScreen(props: {
   const [control, setControl] = useState(false)
   const touch = useTouch()
   const { scheme } = useSharedUiTheme()
-  const { terminal, connect, ended, screenRef } = props
+  const { socketPath, connect, ended, screenRef } = props
   const onClosed = useEffectEvent(() => props.onClosed())
   const onInput = useEffectEvent(() => props.onInput?.())
   const currentLinks = useEffectEvent(() => props.links)
   const currentTheme = useEffectEvent((host: Element) =>
     terminalTheme(cssTokens(host), scheme),
   )
+  // A request waits for the screen. StrictMode makes a second screen at
+  // once, and the request then still holds, so that screen takes it too.
+  const takeFocus = useEffectEvent(() => {
+    const request = props.focusRequest
+    const xterm = xtermRef.current
+    if (!request || !xterm) return
+    if (focusUnmoved(request)) xterm.focus()
+    props.onFocusDone?.()
+  })
 
   useEffect(() => {
     const host = hostRef.current
     if (!host) return undefined
     let transport: TerminalTransport
     try {
-      transport = connect(terminal)
+      transport = connect(socketPath)
     } catch {
       // A transport that can't open shows as ended, with Reconnect.
       onClosed()
@@ -154,6 +168,7 @@ export function TerminalScreen(props: {
     observer.observe(host)
     xtermRef.current = xterm
     sessionRef.current = session
+    takeFocus()
     return () => {
       observer.disconnect()
       outputLinks?.dispose()
@@ -163,7 +178,7 @@ export function TerminalScreen(props: {
       xtermRef.current = null
       sessionRef.current = null
     }
-  }, [terminal, connect])
+  }, [socketPath, connect])
 
   useEffect(() => {
     const host = hostRef.current
@@ -179,6 +194,8 @@ export function TerminalScreen(props: {
     const xterm = xtermRef.current
     if (xterm) xterm.options.disableStdin = ended
   }, [ended])
+
+  useEffect(() => takeFocus(), [props.focusRequest])
 
   const press = (key: RowKey) => {
     const session = sessionRef.current

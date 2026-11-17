@@ -5,6 +5,7 @@ import type { UserMessage } from '../../shared/generated/UserMessage'
 import type { WorkspaceStart } from '../../shared/generated/WorkspaceStart'
 import { TabPlaces } from '../../app/tab-places'
 import type { ChatPlace } from '../components/chat-place'
+import type { MentionTarget } from '../mentions/MentionsContext'
 import type { DraftFile } from '../../app/draft-files'
 
 import type { WorkspaceView } from '../../shared/workspace-view'
@@ -13,9 +14,13 @@ import type {
   AccountSummary,
   MemberSummary,
   OrgSummary,
-  RunAutomation,
 } from '../api/read-responses'
+import type { RunAutomation } from '../api/read-view'
 import { initialDevices, type DeviceSnapshot } from '../device/device-snapshot'
+import {
+  initialSecrets,
+  type SecretsSnapshot,
+} from '../secrets/secret-snapshot'
 import {
   emptyTranscript,
   type Transcript,
@@ -88,6 +93,16 @@ export interface ChatNotice {
   message: string
 }
 
+/**
+ * A chip that Add to chat asks the message field of a session for, as
+ * `addToChat` says. The field of that session takes it once, when it shows.
+ * Each request is a new object.
+ */
+export interface MentionRequest {
+  sessionId: string
+  target: MentionTarget
+}
+
 type LoadState =
   | { state: 'loading' }
   | { state: 'ready' }
@@ -135,9 +150,13 @@ export interface ChatSnapshot {
   sessionStates: Readonly<Record<string, SessionState>>
   overlay: Overlay
   notice: ChatNotice | null
+  /** The chip that waits for the message field of its session, if any. */
+  mentionRequest: MentionRequest | null
   resuming: boolean
   /** The Mac commands of the workspace, as `device/device-snapshot.ts` says. */
   devices: DeviceSnapshot
+  /** The secret requests, runs, and late answers, as `SecretsSnapshot` says. */
+  secrets: SecretsSnapshot
 }
 
 /** A draft with nothing in it, and no work in flight. */
@@ -183,8 +202,10 @@ export const initialSnapshot: ChatSnapshot = {
   sessionStates: {},
   overlay: { kind: 'none' },
   notice: null,
+  mentionRequest: null,
   resuming: false,
   devices: initialDevices,
+  secrets: initialSecrets,
 }
 
 /**

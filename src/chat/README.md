@@ -18,7 +18,10 @@ tab menu of a session copies its link, and its transcript as Markdown,
 also in a read-only workspace, as
 [Session transcripts](../../docs/protocol/session-transcripts.md) and
 [Session links](../../docs/protocol/agents-and-sessions.md#session-links)
-say.
+say. The tab menu of a file or diff tab copies its path, with the
+`copyPath` that the host gives with the tab, as
+[The tab row](../../docs/protocol/agents-and-sessions.md#the-tab-row)
+says.
 
 ## Use it in the app
 
@@ -47,6 +50,17 @@ stops its own controller:
 [Chat integration](integration.md) gives the rules of each prop and
 callback of `WorkspaceChat`, its theme and its layers, the parts that
 the Mac app shows outside the chat, and `useChatController`.
+
+Add to chat in the menu of a row of the Files panel puts the chip of a
+file or a folder into the message field of the session that the member
+saw last, as
+[Add to chat](../../docs/protocol/file-mentions.md#add-to-chat) says. The
+shell asks the kept `ChatController` for it with `addToChat`. The
+controller shows that session, or starts a new one when no session tab is
+open, as [Add to chat](loads-and-sends.md#add-to-chat) says. Its message
+field then puts the chip in as a pick from the list of `@` does, with
+`FieldHandle.insertMention`, as [The message field](message-field.md)
+says.
 
 ### A chat that the app keeps
 
@@ -88,8 +102,8 @@ chips.
   opens a new tab.
 - [Loads, records, and sends](loads-and-sends.md) gives the rules of
   the history loads, the read-only chats, the order of the records, the
-  sends, the fixed prompts of the pull request bar, and Stop with the line
-  of each stop.
+  sends, the fixed prompts of the pull request bar, Stop with the line of
+  each stop, and Add to chat of the Files panel.
 - [The message field](message-field.md) gives the rules of the message
   field of each composer. They cover its chips, the chips of attached
   files, the copy, the paste, and the drag. They also cover the drop of
@@ -99,9 +113,12 @@ chips.
   files and folders, and the marks that hold the files. They also cover
   undo, the uploads, the send, and the end of the files.
 - [Sessions, logins, and drafts](sessions.md) give the rules of the draft
-  moves, the login of each session, and the linked sessions.
+  moves, the login of each session, a personal login or the org login, the
+  default login of a new session, and the linked sessions.
 - [The Mac commands](device/README.md) hold the rules of the requests,
   their answers, and the settings of the Mac.
+- [The secret requests](secrets/README.md) hold the rules of the requests
+  for secrets, their answers, the runs, and the line of a late answer.
 - Reusable code imports no fixture data and no fake. Fixtures, replays, and
   stateful fakes live in `dev/` and in test files only.
 - The parts reuse the mockup CSS modules and the mockup parts that are pure,

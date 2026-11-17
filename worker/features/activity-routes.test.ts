@@ -9,7 +9,6 @@ import { OUTER_ORG } from '../chat/integration/outer-seed.test-support'
 import {
   activityFixture,
   hostedActivityPort,
-  openActivityPreview,
   openActivityTerminal,
   TerminalActivityUpstream,
   type ActivityFixture,
@@ -32,7 +31,7 @@ afterEach(async () => {
   await fixture?.dispose()
 })
 
-it('forwards terminal and preview input and runner state during a failed provider update, then retries the latest minute', async () => {
+it('forwards browser input and runner state during a failed provider update, then retries the latest minute', async () => {
   const started = barrier<void>()
   const release = barrier<void>()
   releases.push(() => release.resolve())
@@ -66,9 +65,9 @@ it('forwards terminal and preview input and runner state during a failed provide
       return (await hostedActivityPort(request)) ?? fallback(request)
     },
   }))
-  const forward = await openActivityPreview(active)
-  const response = await forward()
-  expect(await response.text()).toBe('forwarded input')
+  // A preview request is no input (decision 293), so the input of the
+  // browser starts the update.
+  await active.actor().recordInputBatch(OUTER_WORKSPACE, [active.now])
   await started.promise
   expect(deadlines).toEqual([{ ttlSeconds: 1860 }])
   const browser = await openActivityTerminal(active)
@@ -82,8 +81,9 @@ it('forwards terminal and preview input and runner state during a failed provide
   await active.actor().runnerLifecycleDisconnected()
   await active.actor().reportRunnerLifecycle({ type: 'runner.ready' })
   await active.actor().advanceActivity(20_000)
-  for (let input = 0; input < 4; input++)
-    expect(await (await forward()).text()).toBe('forwarded input')
+  await active
+    .actor()
+    .recordInputBatch(OUTER_WORKSPACE, Array(4).fill(active.now + 20_000))
   browser.send('0pwd\r')
   expect(await terminal.next()).toBe('0pwd\r')
   await active.actor().waitForLocalActivity()
@@ -145,8 +145,7 @@ it.each(['start', 'generation'] as const)(
         return (await hostedActivityPort(request)) ?? fallback(request)
       },
     }))
-    const forward = await openActivityPreview(active)
-    expect(await (await forward()).text()).toBe('forwarded input')
+    await active.actor().recordInputBatch(OUTER_WORKSPACE, [active.now])
     await started.promise
     await active.actor().advanceActivity(500)
     if (change === 'generation') {
@@ -205,8 +204,7 @@ it('ignores a delayed provider error after the workspace stops', async () => {
       return (await hostedActivityPort(request)) ?? fallback(request)
     },
   }))
-  const forward = await openActivityPreview(active)
-  expect(await (await forward()).text()).toBe('forwarded input')
+  await active.actor().recordInputBatch(OUTER_WORKSPACE, [active.now])
   await started.promise
   await active.actor().lifecycleStopped()
   expect(await active.actor().readLifecycle()).toMatchObject({

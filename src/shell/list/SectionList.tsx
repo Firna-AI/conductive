@@ -1,9 +1,9 @@
 import type { Workspace } from '../../shared/generated/Workspace'
 import { Fragment, useState, type KeyboardEvent } from 'react'
-import { createPortal } from 'react-dom'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/components/workspaces/SectionList.module.css'
 import type { ArchiveAction } from '../../app/archive-model'
+import { topLevelRows, treeOf, treeRows } from '../../app/list-trees'
 import { stepTarget, type SectionGroup } from '../../app/sections'
 import { workspaceRowMove } from '../../app/shortcuts/navigation'
 
@@ -13,61 +13,35 @@ import { ArchivedGroup, useArchivedOpen } from './ArchivedGroup'
 import type { DropTarget } from './drop-target'
 import { useListKeys } from './list-keys'
 import type { RowMenus } from './row-menu'
+import { carriedText, DropLine, LiftedRow } from './RowDrop'
 import { LiftedSection, SectionDropLine } from './SectionDrag'
 import { SectionHeader, type SectionActions } from './SectionHeader'
-import { useRowDrag, type RowDragState } from './useRowDrag'
+import { useRowDrag } from './useRowDrag'
 import { useSectionDrag } from './useSectionDrag'
 import { useRowFocus } from './useRowFocus'
 import { WorkspaceRow, type RowVariant } from './WorkspaceRow'
-import list from './list.module.css'
 
-/** The line where a dragged workspace lands. It marks a place, not an edge. */
-function DropLine(props: { name: string; section: string }) {
-  return (
-    <li className={styles.drop}>
-      <span aria-hidden className={styles.line}>
-        <span className={styles.lineEnd} />
-      </span>
-      <span className={ui.hidden} role="status">
-        Moving {props.name} to {props.section}
-      </span>
-    </li>
-  )
-}
-
-/** The lifted row under the pointer. It takes no pointer input. */
-function LiftedRow(props: {
-  drag: RowDragState
-  variant: RowVariant
-  now: number
-}) {
-  const { drag } = props
-  return createPortal(
-    <div
-      className={list.lifted}
-      style={{
-        left: drag.x - drag.offsetX,
-        top: drag.y - drag.offsetY,
-        width: drag.box.width,
-      }}
-    >
-      <WorkspaceRow
-        drag="lifted"
-        now={props.now}
-        selected={false}
-        variant={props.variant}
-        workspace={drag.item}
-      />
-    </div>,
-    document.body,
-  )
+/** The nested rows that move with a top-level row: its tree without it. */
+function carriedBy(
+  groups: readonly SectionGroup[],
+  workspaceId: string | undefined,
+): Set<string> {
+  if (workspaceId === undefined) return new Set()
+  const tree = groups
+    .map((group) => treeOf(group.rows, workspaceId))
+    .find((rows) => rows.length > 0)
+  return new Set(tree?.slice(1).map((row) => row.workspace.id))
 }
 
 /**
  * The sections of the org, each a group of workspaces that the people of
- * the org made, then the Archived group. A workspace moves to another
- * section by drag and drop, by a long press on a phone, or by Alt with Up
- * or Down and no other modifier. A key with more modifiers, such as ⌥⌘↑,
+ * the org made, then the Archived group. A sub-workspace shows nested
+ * under the row of its parent, indented by each row that the list shows
+ * above it in its tree. A top-level row moves its whole tree to another
+ * place by drag and drop, by a long press on a phone, or by Alt with Up or
+ * Down and no other modifier. The tree stays faint in its place, and the
+ * line falls only between two trees. A nested row moves only with its
+ * tree, so none of these moves it. A key with more modifiers, such as ⌥⌘↑,
  * stays free for its shortcut. A section moves to another place by a drag
  * of its name, or by the move items of its menu. `menus` gives each row its menu,
  * `archiveAction` its Archive shortcut, and `restoreAction` the Restore
@@ -101,16 +75,18 @@ export function SectionList(props: {
   useListKeys({
     shown: [
       ...props.groups.flatMap((group) =>
-        group.section.collapsed ? [] : group.workspaces,
+        group.section.collapsed ? [] : group.rows.map((row) => row.workspace),
       ),
       ...(archived ? props.archived : []),
     ],
     selectedId: props.selectedId,
     offered: props.offersKeys ?? false,
   })
-  const { drag, bind, layout } = useRowDrag(props.move)
+  const { drag, bind, still, layout } = useRowDrag(props.move)
+  /** The nested rows of the dragged tree, which stay faint with it. */
+  const carried = carriedBy(props.groups, drag?.item.id)
   /** A move by keys keeps the focus on its row. */
-  const rows = useRowFocus()
+  const rowFocus = useRowFocus()
   /** What a move by keys or by a menu says to a screen reader. */
   const [announcement, setAnnouncement] = useState('')
   const actions: SectionActions = {
@@ -146,8 +122,9 @@ export function SectionList(props: {
     const section = props.groups.find(
       (group) => group.section.id === target.sectionId,
     )
+    const tree = carriedBy(props.groups, workspace.id).size
     setAnnouncement(
-      `${nameLabel(workspace.name)} moves to ${section?.section.name ?? 'another section'}, place ${target.index + 1}.`,
+      `${nameLabel(workspace.name)}${carriedText(tree)} ${tree > 0 ? 'move' : 'moves'} to ${section?.section.name ?? 'another section'}, place ${target.index + 1}.`,
     )
     props.move(workspace.id, target)
   }
@@ -157,11 +134,20 @@ export function SectionList(props: {
         {announcement}
       </span>
       {props.groups.map((group, position) => {
-        const { section, workspaces } = group
+        const { section, rows } = group
         const target = drag?.place.sectionId === section.id ? drag.place : null
-        const rest = workspaces.filter((item) => item.id !== drag?.item.id)
+        // A drop lands before a top-level row, counted without the dragged
+        // tree, or after the last tree.
+        const places = topLevelRows(rows).filter(
+          (row) => row.workspace.id !== drag?.item.id,
+        )
+        const before = target ? places[target.index] : undefined
         const line = drag ? (
-          <DropLine name={nameLabel(drag.item.name)} section={section.name} />
+          <DropLine
+            carried={carried.size}
+            name={nameLabel(drag.item.name)}
+            section={section.name}
+          />
         ) : null
         return (
           <Fragment key={section.id}>
@@ -179,7 +165,7 @@ export function SectionList(props: {
                 bind={
                   props.readOnly ? undefined : sections.bind(section, position)
                 }
-                count={workspaces.length}
+                count={rows.length}
                 place={{ index: position, total: props.groups.length }}
                 readOnly={props.readOnly}
                 section={section}
@@ -187,51 +173,61 @@ export function SectionList(props: {
               />
               {section.collapsed ? null : (
                 <ul className={styles.rows}>
-                  {workspaces.map((workspace, index) => (
-                    <Fragment key={workspace.id}>
-                      {target && rest[target.index]?.id === workspace.id
-                        ? line
-                        : null}
-                      <li>
-                        <WorkspaceRow
-                          bind={
-                            props.readOnly
-                              ? undefined
-                              : bind(workspace, {
-                                  sectionId: section.id,
-                                  index,
-                                })
-                          }
-                          drag={
-                            drag?.item.id === workspace.id
-                              ? 'placeholder'
-                              : undefined
-                          }
-                          focusRow={() => rows.focusLink(workspace.id)}
-                          linkRef={rows.linkRef(workspace.id)}
-                          menu={props.menus?.(workspace)}
-                          now={props.now}
-                          onArchive={props.archiveAction?.(workspace)}
-                          acting={
-                            (props.running?.(workspace.id) ?? null) !== null
-                          }
-                          onKeyDown={
-                            props.readOnly
-                              ? undefined
-                              : (event) => onKeyDown(workspace, event)
-                          }
-                          onBlur={rows.blur}
-                          onFocus={(event) => rows.focus(workspace.id, event)}
-                          rowRef={layout.row(workspace.id, section.id)}
-                          selected={workspace.id === props.selectedId}
-                          variant={props.variant}
-                          workspace={workspace}
-                        />
-                      </li>
-                    </Fragment>
-                  ))}
-                  {target && target.index >= rest.length ? line : null}
-                  {workspaces.length === 0 && !target ? (
+                  {treeRows(rows).map(({ row, treeId, place, lines }) => {
+                    const { workspace } = row
+                    const moving =
+                      drag?.item.id === workspace.id ||
+                      carried.has(workspace.id)
+                    // Only a top-level row drags. A nested row stays still.
+                    const surface = props.readOnly
+                      ? undefined
+                      : row.parentId === null
+                        ? bind(workspace, {
+                            sectionId: section.id,
+                            index: place,
+                          })
+                        : still(workspace)
+                    return (
+                      <Fragment key={workspace.id}>
+                        {before?.workspace.id === workspace.id ? line : null}
+                        <li>
+                          <WorkspaceRow
+                            bind={surface}
+                            depth={row.depth}
+                            drag={moving ? 'placeholder' : undefined}
+                            focusRow={() => rowFocus.focusLink(workspace.id)}
+                            linkRef={rowFocus.linkRef(workspace.id)}
+                            lines={lines}
+                            menu={props.menus?.(workspace)}
+                            now={props.now}
+                            onArchive={props.archiveAction?.(workspace)}
+                            acting={
+                              (props.running?.(workspace.id) ?? null) !== null
+                            }
+                            onKeyDown={
+                              props.readOnly
+                                ? undefined
+                                : (event) => onKeyDown(workspace, event)
+                            }
+                            onBlur={rowFocus.blur}
+                            onFocus={(event) =>
+                              rowFocus.focus(workspace.id, event)
+                            }
+                            rowRef={layout.row(
+                              workspace.id,
+                              section.id,
+                              treeId,
+                            )}
+                            selected={workspace.id === props.selectedId}
+                            variant={props.variant}
+                            workspace={workspace}
+                          />
+                        </li>
+                      </Fragment>
+                    )
+                  })}
+                  {target && before === undefined ? line : null}
+                  {rows.length === 0 && !target ? (
                     <li className={styles.empty}>
                       New workspaces appear here.
                     </li>
@@ -257,10 +253,15 @@ export function SectionList(props: {
         />
       ) : null}
       {drag ? (
-        <LiftedRow drag={drag} now={props.now} variant={props.variant} />
+        <LiftedRow
+          carried={carried.size}
+          drag={drag}
+          now={props.now}
+          variant={props.variant}
+        />
       ) : null}
       {sections.drag && lifted ? (
-        <LiftedSection count={lifted.workspaces.length} drag={sections.drag} />
+        <LiftedSection count={lifted.rows.length} drag={sections.drag} />
       ) : null}
     </div>
   )

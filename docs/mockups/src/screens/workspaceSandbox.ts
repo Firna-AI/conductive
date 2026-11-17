@@ -1,8 +1,9 @@
-import { isPendingCommand } from '../components/chat/PendingCommand'
-import type {
-  ArchiveRestore,
-  SandboxNoticeState,
-  SandboxPanelState,
+import { waitsForAnswer } from '../components/chat/requests'
+import {
+  replacesList,
+  type ArchiveRestore,
+  type SandboxNoticeState,
+  type SandboxPanelState,
 } from '../components/workspace/sandboxNoticeState'
 import { orgSuspendedReason } from '../components/orgs/suspension'
 import { conversations, type ConversationKey } from '../fixtures/conversations'
@@ -32,7 +33,10 @@ export function activityOf(state: WorkspaceState): ActivityStatus {
   // A refused start leaves the sandbox stopped.
   if (state.sandbox === 'refused') return 'stopped'
   if (state.sandbox !== 'ready') return state.sandbox
-  if (conversations[state.conversation].some(isPendingCommand)) return 'input'
+  // After Restart the workspace starts until the agents are back.
+  if (state.overlay === 'restarting') return 'starting'
+  if (state.overlay === 'restart-update-failed') return 'starting'
+  if (conversations[state.conversation].some(waitsForAnswer)) return 'input'
   const works = isRunning(state) || otherSessionWorks.has(state.conversation)
   return works ? 'working' : 'ready'
 }
@@ -126,4 +130,17 @@ export function panelState(
 ): SandboxPanelState | undefined {
   if (state.sandbox === 'starting') return { problem: 'starting' }
   return sandboxNotice(state)
+}
+
+/**
+ * All files and Changes show their rows, and not the state of the sandbox
+ * in their place. A stopped sandbox, one whose later start failed, and one
+ * that starts with saved lists keep them. A refused start, also in a
+ * suspended org, a failed first start, and the first start of a new
+ * workspace take their place, and an archived workspace has no lists.
+ */
+export function listsShow(state: WorkspaceState): boolean {
+  const panel = panelState(state)
+  if (!panel) return true
+  return panel.problem !== 'archived' && !replacesList(panel, !isNew(state))
 }

@@ -3,7 +3,8 @@ import { useMemo, type ReactNode } from 'react'
 import type { Agent } from '../../shared/generated/Agent'
 import { modelLabel } from '../../shared/agents'
 
-import { PendingCommands } from '../device/PendingCommands'
+import { pendingCommandItems } from '../device/PendingCommands'
+import { sessionSecrets } from '../secrets/session-secrets'
 import { DeviceLoadNotice, sessionCommands } from '../device/session-commands'
 import { tabSessions } from '../state/archive-view'
 import { sendBlock } from '../state/blockers'
@@ -17,12 +18,15 @@ import { failedFirstStart } from '../../app/first-start'
 import {
   composerModels,
   loginLabelOf,
+  loginReader,
   sessionLoginOf,
 } from '../state/session-login'
 import { ChatPane } from './ChatPane'
 import { placeMemory } from './chat-place'
 import { ActionNotice, BlockNotice, LinkedSessionNotice } from './ChatNotices'
-import { Composer, type ComposerFocus } from './Composer'
+import { Composer } from './Composer'
+import type { ComposerTool } from './ComposerTools'
+import type { ComposerFocus } from './composer-requests'
 import { SandboxBar, StartingCard, type SandboxProblem } from './SandboxState'
 import {
   EarlierLoading,
@@ -33,6 +37,7 @@ import {
 } from './SessionStatus'
 import { sourceInsert } from './SourceLine'
 import { TranscriptView } from './TranscriptView'
+import { WaitingRequests } from './WaitingRequests'
 
 function problemOf(state: WorkspaceState | undefined): SandboxProblem | null {
   return state === 'stopped' || state === 'error' || state === 'archived'
@@ -45,6 +50,7 @@ function problemOf(state: WorkspaceState | undefined): SandboxProblem | null {
  * workspace: the start steps at the end of the history while the sandbox
  * starts, and the bar under the chat while the sandbox is down. Null leaves
  * the place empty. Without a host, the chat draws both from its own record.
+ * The app also gives the tools of the composer, such as Capabilities.
  */
 export interface ChatHost {
   starting: ReactNode | null
@@ -54,6 +60,8 @@ export interface ChatHost {
    * members can still queue messages. Otherwise the bar takes its place.
    */
   keepsComposer: boolean
+  /** The tools of the composer, as `ComposerTool` says. */
+  tools?: readonly ComposerTool[]
 }
 
 export interface SessionChatProps {
@@ -123,12 +131,12 @@ function useDraftFiles(controller: ChatController, draftId: string) {
  * takes the composer's place while the sandbox does not run. After a failed
  * first start, the bar sits above the composer, which stays. The status of
  * the stored history comes from its load alone, so content never hides a
- * failed load. The composer names the login of another member that a
- * message spends. A linked session starts with a link to the session that
- * it started from. The shown record comes from the tabs, so a closed
- * session that an archived workspace shows keeps its link too. A read-only
- * workspace, archived or of a suspended org, shows no composer and no
- * control that writes.
+ * failed load. The composer names the login of another member, or the org
+ * login, that a message spends. A linked session starts with a link to the
+ * session that it started from. The shown record comes from the tabs, so a
+ * closed session that an archived workspace shows keeps its link too. A
+ * read-only workspace, archived or of a suspended org, shows no composer
+ * and no control that writes.
  */
 export function SessionChat(props: SessionChatProps) {
   const { snapshot, controller, now } = props
@@ -143,7 +151,7 @@ export function SessionChat(props: SessionChatProps) {
   // of a failed first start keeps the composer under it.
   const down = (sandboxBar !== null && !keepsComposer) || readOnly
   const block = sendBlock(snapshot, id)
-  const { notice } = snapshot
+  const { notice, mentionRequest: mention } = snapshot
   const shownNotice =
     notice && (notice.sessionId === null || notice.sessionId === id)
       ? notice
@@ -162,7 +170,15 @@ export function SessionChat(props: SessionChatProps) {
   const content = showsContent(state, starting !== null)
   const viewerId = snapshot.account?.user.id ?? null
   const commands = sessionCommands(snapshot, id, state)
-  const login = session ? sessionLoginOf(session, viewerId) : null
+  const secrets = sessionSecrets(snapshot, id, state, {
+    choices: !readOnly,
+    onAnswer: (requestId, answer) =>
+      void controller.answerSecret(requestId, answer),
+  })
+  const reader = loginReader(snapshot)
+  const login = session ? sessionLoginOf(session, reader) : null
+  const linked =
+    login?.kind === 'linked' || (login?.kind === 'missing' && login.linked)
   const openSession = (sessionId: string) => {
     const open = snapshot.sessions.some((item) => item.id === sessionId)
     void (open ? controller.select(sessionId) : controller.reopen(sessionId))
@@ -192,21 +208,25 @@ export function SessionChat(props: SessionChatProps) {
       {!down && session && !block && login?.kind === 'linked' ? (
         <LinkedSessionNotice
           agent={session.choice.agent}
+          owner={login.owner}
           reason={login.reason}
-          starter={login.starter}
         />
       ) : null}
       {snapshot.devices.load === 'failed' ? (
         <DeviceLoadNotice onRetry={() => void controller.loadDevices()} />
       ) : null}
-      <PendingCommands
-        devices={snapshot.devices}
-        onAnswer={(requestId, action) =>
-          void controller.answerCommand(requestId, action)
-        }
-        readOnly={readOnly}
-        readers={{ viewerId, orgName: snapshot.org?.name ?? null }}
-        requests={commands.waiting}
+      <WaitingRequests
+        items={[
+          ...pendingCommandItems({
+            devices: snapshot.devices,
+            onAnswer: (requestId, action) =>
+              void controller.answerCommand(requestId, action),
+            readOnly,
+            readers: { viewerId, orgName: snapshot.org?.name ?? null },
+            requests: commands.waiting,
+          }),
+          ...secrets.waiting,
+        ]}
       />
       {sandboxBar}
       {!down && session && snapshot.load.state === 'ready' ? (
@@ -217,10 +237,11 @@ export function SessionChat(props: SessionChatProps) {
           files={files}
           focus={props.composerFocus}
           login={loginLabelOf(login)}
+          mention={mention?.sessionId === session.id ? mention : null}
           models={composerModels(
             login,
+            reader,
             snapshot.models,
-            snapshot.account?.agentLogins ?? [],
             session.choice,
           )}
           onAttach={(picked, refusals) =>
@@ -230,13 +251,15 @@ export function SessionChat(props: SessionChatProps) {
           onChooseModel={(choice) =>
             void controller.chooseModel(session.id, choice)
           }
+          onMentionTaken={controller.takeMention}
           onSend={() => void controller.send(session.id)}
           onStop={() => void controller.interrupt(session.id)}
           running={state.transcript.turn !== null}
           sending={state.draft.sending}
           sessionAgent={hasMessages(state) ? session.choice.agent : undefined}
-          startsSession={login?.kind === 'linked'}
+          startsSession={linked}
           stopping={state.stopping}
+          tools={props.host?.tools}
         />
       ) : null}
     </>
@@ -256,7 +279,11 @@ export function SessionChat(props: SessionChatProps) {
     >
       {content && status === 'loading' ? <EarlierLoading /> : null}
       <TranscriptView
-        inserts={source ? [source, ...commands.inserts] : commands.inserts}
+        inserts={[
+          ...(source ? [source] : []),
+          ...commands.inserts,
+          ...secrets.inserts,
+        ]}
         now={now}
         onOpenDiff={props.onOpenDiff}
         onRetry={(messageId) => id && void controller.retry(id, messageId)}

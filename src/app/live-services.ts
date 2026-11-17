@@ -2,7 +2,8 @@ import { copyText } from './clipboard'
 import { appDomain } from '../../docs/mockups/src/brand'
 import { createApiClient } from './api/client'
 import { xhrFileTransport } from './api/xhr-files'
-import { browserDelay, socketEventSource } from './events'
+import { socketEventSource } from './event-socket'
+import { browserDelay } from './events'
 import { APP_VERSION } from './version'
 import {
   windowFocus,

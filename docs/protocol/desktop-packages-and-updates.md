@@ -6,7 +6,9 @@ It includes the download names and addresses of the public GitHub releases.
 ## Packages
 
 - The electron-builder tool packages a DMG and a ZIP for each processor
-  type, arm64 and x64 (decision 62).
+  type, arm64 and x64 (decision 62). Each release packages both types.
+- A development or pull request build packages only the processor type of
+  the Mac that builds it. Reason: its packaged tests run only that package.
 - Each package carries the app icon of the [brand files](../brand/README.md).
 - Development and pull request packages have an ad-hoc signature and no
   notarization. They need no Apple signing credentials.
@@ -37,9 +39,15 @@ It includes the download names and addresses of the public GitHub releases.
 - A version from a pushed tag or from a hand edit was rejected. Reason: one
   merge then sets the version, writes the changelog, and starts the
   release.
-- After the merge, the release workflow runs the Mac checks. It then signs
-  and notarizes both architectures, runs the packaged tests, and uploads
-  the files to the draft.
+- After the merge, the release workflow runs the Mac checks on Apple
+  silicon. It then signs and notarizes both architectures and runs the
+  packaged tests. The Mac checks on Intel run at the same time as the
+  signing. The workflow uploads the files to the draft only after both
+  checks and the signing pass.
+- Reason: the Intel checks take several times longer than the other jobs.
+  Signing does not need their result, but publishing does. Intel checks
+  before the signing were rejected, because the signing then waited for
+  them and each release took longer.
 - Before it signs, the release workflow checks that the tag `vX.Y.Z` points
   to the merge commit of the release pull request. A branch with the same
   name does not count. The release stops before signing when the check

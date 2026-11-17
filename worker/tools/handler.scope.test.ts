@@ -46,6 +46,7 @@ it('lists every workspace of the authenticated org, including other owners and a
       {
         owner: { id: 'owner', githubLogin: 'owner-login', displayName: null },
         id: 'calling-workspace',
+        parentId: null,
         number: 1,
         link: `${TEST_ORIGIN}${routes.workspace('org-a', 'calling-workspace')}`,
         name: 'Lisbon',
@@ -59,6 +60,7 @@ it('lists every workspace of the authenticated org, including other owners and a
           displayName: null,
         },
         id: 'teammate-workspace',
+        parentId: null,
         number: 2,
         link: `${TEST_ORIGIN}${routes.workspace('org-a', 'teammate-workspace')}`,
         name: null,
@@ -68,6 +70,7 @@ it('lists every workspace of the authenticated org, including other owners and a
       {
         owner: { id: 'owner', githubLogin: 'owner-login', displayName: null },
         id: 'archived-workspace',
+        parentId: null,
         number: 3,
         link: `${TEST_ORIGIN}${routes.workspace('org-a', 'archived-workspace')}`,
         name: 'Rome',

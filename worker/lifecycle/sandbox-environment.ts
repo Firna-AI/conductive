@@ -4,8 +4,12 @@ import {
   commitAuthor,
 } from '../../src/shared/commit-author'
 import { TOOL_ENV } from '../../src/shared/agent-tools'
+import { MAX_WORKSPACE_DEPTH } from '../../src/shared/workspace-tree'
 import { readUser } from '../data/users'
+import { workspaceLink } from '../data/workspace-link'
 import type { AppEnv } from '../env'
+import { HttpError } from '../http'
+import { workspaceParent } from '../tools/workspace-parent-data'
 import { environmentValues, type OrgEnvironment } from './org-environment'
 import {
   repositoryEnvironment,
@@ -25,6 +29,14 @@ const TURN_VARIABLES: ReadonlySet<string> = new Set([
   ...COMMIT_AUTHOR_VARIABLES,
 ])
 
+const CONTEXT_VARIABLES: ReadonlySet<string> = new Set([
+  'CONDUCTIVE_WORKSPACE_LINK',
+  'CONDUCTIVE_WORKSPACE_DEPTH',
+  'CONDUCTIVE_WORKSPACE_MAX_DEPTH',
+  'CONDUCTIVE_PARENT_WORKSPACE_ID',
+  'CONDUCTIVE_PARENT_WORKSPACE_LINK',
+])
+
 export async function sandboxEnvironment(
   env: AppEnv,
   input: {
@@ -37,15 +49,37 @@ export async function sandboxEnvironment(
 ): Promise<Record<string, string>> {
   const { workspace, environment, locations } = input
   const token = await readWorkspaceToken(env, workspace.id)
+  const tree = await workspaceParent(env.DB, workspace.orgId, workspace.id)
+  if (!tree)
+    throw new HttpError(
+      404,
+      'workspace_not_found',
+      'The workspace is not available.',
+    )
   return {
     ...Object.fromEntries(
       Object.entries(environmentValues(environment)).filter(
-        ([name]) => !TURN_VARIABLES.has(name),
+        ([name]) => !TURN_VARIABLES.has(name) && !CONTEXT_VARIABLES.has(name),
       ),
     ),
     ...repositoryEnvironment(locations),
     WORKSPACE_TOKEN: token,
     CONDUCTIVE_WORKSPACE_ID: workspace.id,
+    CONDUCTIVE_WORKSPACE_LINK: workspaceLink(
+      env.APP_ORIGIN,
+      workspace.orgId,
+      workspace.id,
+    ),
+    CONDUCTIVE_WORKSPACE_DEPTH: String(tree.depth),
+    CONDUCTIVE_WORKSPACE_MAX_DEPTH: String(MAX_WORKSPACE_DEPTH),
+    ...(tree.parentId !== null && {
+      CONDUCTIVE_PARENT_WORKSPACE_ID: tree.parentId,
+      CONDUCTIVE_PARENT_WORKSPACE_LINK: workspaceLink(
+        env.APP_ORIGIN,
+        workspace.orgId,
+        tree.parentId,
+      ),
+    }),
     CONDUCTIVE_MACHINE_ORIGIN: env.MACHINE_ORIGIN ?? '',
     CONDUCTIVE_DEFAULT_BRANCH: input.defaultBranch,
     CONDUCTIVE_WORKSPACE_BRANCH: workspace.branch,

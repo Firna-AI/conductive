@@ -2,8 +2,10 @@ import type { Workspace } from '../shared/generated/Workspace'
 import type { WorkspaceState } from '../shared/generated/WorkspaceState'
 import type { BuildsResponse } from '../shared/org-settings'
 import type { AutomationRun } from '../shared/automations'
+import type { OrgAgentLoginStatus } from '../shared/org-agent-logins'
 
 import type { ListedAutomation } from './api/read-automations'
+import { modelListWait } from './endpoint-models'
 import type { ListData } from './list-changes'
 import type { RefreshWait } from './refresh'
 
@@ -66,3 +68,15 @@ export const buildsWait: RefreshWait<BuildsResponse> = (builds) =>
 
 /** Repositories and members read at entry and focus only. */
 export const onEntry: RefreshWait<unknown> = () => null
+
+/**
+ * The org logins read at entry and focus, and once a minute while an org
+ * endpoint is connected, so a model list that the Worker read in the
+ * background shows, as `modelListWait` says.
+ */
+export const orgLoginsWait: RefreshWait<readonly OrgAgentLoginStatus[]> = (
+  logins,
+) =>
+  logins?.some((login) => login.connected && login.kind === 'endpoint')
+    ? modelListWait
+    : null

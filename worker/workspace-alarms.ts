@@ -32,7 +32,7 @@ export async function runWorkspaceAlarms(
     (source) =>
       !source.startsWith('lifecycle') &&
       (!options.securityHandled ||
-        !['browser', 'runner', 'devices'].includes(source)),
+        !['browser', 'runner', 'devices', 'secrets'].includes(source)),
   )
   const { due } = run
   try {

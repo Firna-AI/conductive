@@ -5,6 +5,7 @@ import type { WorkspaceStart } from './generated/WorkspaceStart'
 import { orgPath } from './api'
 
 import type { SendMessageRequest } from './messages'
+import type { WorkspaceCapabilities } from './secrets'
 
 export const WORKSPACE_RESTORE_MS = 14 * 24 * 60 * 60 * 1_000
 
@@ -34,6 +35,7 @@ export const workspacePaths = {
   continueResult: (orgId: string, id: string, continueId: string) =>
     `${workspacePath(orgId, id)}/continue/${encodeURIComponent(continueId)}`,
   restore: (orgId: string, id: string) => `${workspacePath(orgId, id)}/restore`,
+  restart: (orgId: string, id: string) => `${workspacePath(orgId, id)}/restart`,
 } as const
 
 export interface WorkspaceResponse {
@@ -51,6 +53,7 @@ export interface WorkspacesResponse {
 export interface CreateWorkspaceRequest {
   repositoryId: string
   sectionId?: string
+  capabilities?: WorkspaceCapabilities
   firstMessage: SendMessageRequest
 }
 export interface CreateWorkspaceResponse extends WorkspaceResponse {
@@ -76,3 +79,12 @@ export type ContinueWorkspaceResponse =
       localWork: LocalWork
     }
   | { state: 'continued'; workspace: Workspace; eventNumber: number }
+
+/**
+ * The reply of Restart: whether the cloud computer downloaded the newest
+ * software before the restart. When the check failed, the restart used the
+ * installed software.
+ */
+export interface RestartWorkspaceResponse {
+  updateCheck: 'ok' | 'failed'
+}

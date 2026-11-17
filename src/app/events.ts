@@ -1,4 +1,3 @@
-import { workspaceEventsPath } from '../shared/events'
 import {
   readStreamMessage,
   type StreamEnvelope,
@@ -48,6 +47,18 @@ export function reconnectWait(failures: number): number {
 }
 
 /**
+ * A subscriber of the ordered stream. `replayed` marks an event of a page
+ * of the stored history, not a new event.
+ */
+type StreamListener = (envelope: StreamEnvelope, replayed: boolean) => void
+
+/**
+ * Called after the final page of each replay, so the state is complete
+ * through `through`. The live events that waited for it follow.
+ */
+type ReplayEnded = (through: number) => void
+
+/**
  * The ordered events of one open workspace. Every subscriber gets each
  * event once, in the order of its number. A resent event is dropped. A gap
  * or a dropped connection opens the stream again after the last number
@@ -71,7 +82,10 @@ export class WorkspaceStream {
    * again after a reconnect. A start after a stop counts nothing.
    */
   readonly reconnects = new Store(0)
-  private readonly listeners = new Set<(envelope: StreamEnvelope) => void>()
+  private readonly listeners = new Set<{
+    listener: StreamListener
+    replayEnded?: ReplayEnded
+  }>()
   private closeSource: (() => void) | null = null
   private cancelRetry: (() => void) | null = null
   private failures = 0
@@ -117,9 +131,14 @@ export class WorkspaceStream {
     this.closeSource = null
   }
 
-  subscribe(listener: (envelope: StreamEnvelope) => void): () => void {
-    this.listeners.add(listener)
-    return () => this.listeners.delete(listener)
+  /**
+   * Gives each event of the workspace once, in order, from the replays and
+   * live. `replayEnded` tells a part where each replay ends.
+   */
+  subscribe(listener: StreamListener, replayEnded?: ReplayEnded): () => void {
+    const entry = { listener, replayEnded }
+    this.listeners.add(entry)
+    return () => this.listeners.delete(entry)
   }
 
   private connect(): void {
@@ -187,7 +206,7 @@ export class WorkspaceStream {
       if (envelope.eventNumber <= this.progress) continue
       if (envelope.eventNumber > through) continue
       this.progress = envelope.eventNumber
-      this.deliver(envelope)
+      this.deliver(envelope, true)
     }
     const next = message.nextAfterEventNumber
     if (next !== null) {
@@ -198,6 +217,7 @@ export class WorkspaceStream {
     this.replay = null
     this.progress = Math.max(this.progress, through)
     if (this.progress > this.last.get()) this.last.set(this.progress)
+    for (const entry of [...this.listeners]) entry.replayEnded?.(this.progress)
     if (this.reopened) {
       this.reopened = false
       this.reconnects.set(this.reconnects.get() + 1)
@@ -219,57 +239,13 @@ export class WorkspaceStream {
     if (envelope.eventNumber <= this.last.get()) return null
     this.progress = envelope.eventNumber
     this.last.set(envelope.eventNumber)
-    this.deliver(envelope)
+    this.deliver(envelope, false)
     return null
   }
 
   /** The number counts in any case. Only this workspace's events reach the screens. */
-  private deliver(envelope: StreamEnvelope): void {
+  private deliver(envelope: StreamEnvelope, replayed: boolean): void {
     if (envelope.workspaceId !== this.target.workspaceId) return
-    for (const listener of [...this.listeners]) listener(envelope)
-  }
-}
-
-/** The socket address of a path of the Worker at `origin`. */
-function socketUrl(path: string, origin: string): URL {
-  const url = new URL(path, origin)
-  url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
-  return url
-}
-
-/**
- * The sockets of the Worker at `origin`: the event socket of a workspace,
- * and its terminal. The Mac app gives the origin of its Worker, so both
- * reach the same Worker as its API.
- */
-export function socketEventSource(origin: string): WorkspaceEventSource {
-  return {
-    openSocket: (path, protocol) =>
-      new WebSocket(socketUrl(path, origin), protocol),
-    open(target, handlers) {
-      const path = workspaceEventsPath(
-        target.orgId,
-        target.workspaceId,
-        target.afterEventNumber,
-      )
-      const socket = new WebSocket(socketUrl(path, origin))
-      const onMessage = (event: MessageEvent) => {
-        if (typeof event.data !== 'string') return
-        let value: unknown
-        try {
-          value = JSON.parse(event.data)
-        } catch {
-          return
-        }
-        handlers.message(value)
-      }
-      socket.addEventListener('message', onMessage)
-      socket.addEventListener('close', handlers.closed)
-      return () => {
-        socket.removeEventListener('message', onMessage)
-        socket.removeEventListener('close', handlers.closed)
-        socket.close()
-      }
-    },
+    for (const entry of [...this.listeners]) entry.listener(envelope, replayed)
   }
 }

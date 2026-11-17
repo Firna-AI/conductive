@@ -4,18 +4,25 @@ import tabs from '../../../../docs/mockups/src/components/common/LinkTabs.module
 import { PanelBar } from '../../../../docs/mockups/src/components/workspace/PanelBar'
 import panel from '../../../../docs/mockups/src/components/workspace/ToolsPanel.module.css'
 import { useServices } from '../../../app/services'
+import { useStore } from '../../../app/store'
 import { createTerminalConnector } from '../../../app/terminal-transport'
 import { DesktopTool } from '../../../desktop/DesktopTool'
 import { PreviewTool } from '../../../previews/PreviewTool'
+import { useKeptPreviews } from '../previews/kept-previews'
+import { PanelPreviews } from '../previews/PanelPreviews'
 import type { ConnectTerminal } from '../../../terminal/TerminalScreen'
-import { TerminalTool } from '../../../terminal/TerminalTool'
-import type { ToolWorkspace } from '../../../terminal/tool-parts/workspace'
+import {
+  workspaceKey,
+  type ToolWorkspace,
+} from '../../../terminal/tool-parts/workspace'
 import type { ShortcutCommandId } from '../../../shared/shortcut-commands'
 import { useOrgServices } from '../../context'
 import { useShortcutTerminal } from '../../shortcuts/shortcut-context'
 import { shortcutTip, useShortcutHint } from '../../shortcuts/shortcut-hints'
 import type { WorkspaceContext } from '../features'
+import { TerminalPart } from './TerminalPart'
 import { useTerminalLinks } from './terminal-links'
+import { useTerminalRoute } from './terminal-route'
 import { offeredToolTabs, type ToolKey } from './tool-address'
 import { useToolNavigation, type ToolNavigation } from './tool-navigation'
 import styles from './tools.module.css'
@@ -118,12 +125,18 @@ function useShownOnce(shown: boolean): boolean {
  * panel with their tabs on desktop, and the page of one tool on a phone.
  * Each tool reads the routes through the fetch of the org, and the events
  * of the workspace in order. The terminal and Preview each stay mounted
- * after their first show, so the connection of the terminal and the page
- * in the preview frame stay while another tool shows. The app hides
- * Desktop and keeps its mount for its return: it mounts at each show, so
- * it reads a new desktop address. A `placeholder`, such as the state of a
- * sandbox that does not run, takes the place of the tools: the tabs stay on
- * desktop, and no tool mounts.
+ * after their first show, so the connections of the terminals and the page
+ * in the preview frame of a phone stay while another tool shows. On
+ * desktop, Preview is the list of ports: the pages show in the Preview tabs
+ * of the centre row. Both read the kept previews of the screen. On desktop
+ * the terminals of the workspace load while the sandbox runs, also before
+ * the Terminal tool shows, so that the palette can offer New terminal, as
+ * `TerminalPart` says. The address and the saved view name the shown
+ * terminal, as `useTerminalRoute` says. The app hides Desktop and keeps its
+ * mount for its return: it mounts at each show, so it reads a new desktop
+ * address. A `placeholder`, such as the state of a sandbox that does not
+ * run, takes the place of the tools: the tabs stay on desktop, and no tool
+ * mounts.
  */
 export function ToolsPart(props: {
   context: WorkspaceContext
@@ -133,6 +146,7 @@ export function ToolsPart(props: {
   const services = useOrgServices(context.org.id)
   const { now } = useServices()
   const navigation = useToolNavigation(context)
+  const terminalRoute = useTerminalRoute(context)
   const connect = useTerminalConnect()
   const { org, workspace, toolEvents } = context
   const links = useTerminalLinks(org.id, workspace.id)
@@ -146,33 +160,48 @@ export function ToolsPart(props: {
     [org.id, workspace.id, services, toolEvents],
   )
   const touch = context.viewport === 'phone'
+  const previews = useKeptPreviews(context)
   // The screen of the terminal keeps the keys that a program in it can
   // read. Its buttons, such as Reconnect, keep none.
   const terminal = useShortcutTerminal()
   const { tool } = navigation
   const terminalShown = useShownOnce(tool === 'terminal')
   const previewShown = useShownOnce(tool === 'preview')
+  // A choice of Terminal on desktop moves the focus to the terminal, also
+  // when the terminal connects later. A hidden terminal does not take it.
+  const focusRequest = useStore(context.terminalFocus.request)
+  // A phone offers no New terminal, so its terminals load at the first show.
   const body = props.placeholder ?? (
     <>
-      {terminalShown ? (
-        <div className={styles.tool} hidden={tool !== 'terminal'}>
-          <TerminalTool
-            connect={connect}
-            links={links}
-            screenRef={terminal}
-            touch={touch}
-            workspace={toolWorkspace}
-          />
-        </div>
+      {terminalShown || !touch ? (
+        <TerminalPart
+          connect={connect}
+          context={context}
+          focusRequest={tool === 'terminal' ? focusRequest : null}
+          key={workspaceKey(toolWorkspace)}
+          links={links}
+          navigation={navigation}
+          onFocusDone={context.terminalFocus.done}
+          route={terminalRoute}
+          screenRef={terminal}
+          shown={terminalShown}
+          touch={touch}
+          workspace={toolWorkspace}
+        />
       ) : null}
       {previewShown ? (
         <div className={styles.tool} hidden={tool !== 'preview'}>
-          <PreviewTool
-            now={now}
-            route={navigation.preview}
-            touch={touch}
-            workspace={toolWorkspace}
-          />
+          {touch ? (
+            <PreviewTool
+              now={now}
+              route={navigation.preview}
+              store={previews}
+              touch
+              workspace={toolWorkspace}
+            />
+          ) : (
+            <PanelPreviews context={context} />
+          )}
         </div>
       ) : null}
       {tool === 'desktop' ? (

@@ -1,5 +1,7 @@
 import type { GetStartedResponse } from '../../src/shared/onboarding'
 import type { AppDependencies, AppEnv } from '../env'
+import { resolveDefaultLogin } from '../chat/default-login'
+import { readDefaultAgentLogins } from './default-agent-logins'
 import { getStartedGitHubComplete } from './get-started-github'
 
 export async function getStartedData(
@@ -15,19 +17,22 @@ export async function getStartedData(
     )
     .bind(userId)
     .first<{ id: string }>()
-  const setup = await db
-    .prepare(
-      `SELECT EXISTS(SELECT 1 FROM agent_logins WHERE user_id = ? AND failure_cause IS NULL) AS login`,
-    )
-    .bind(userId)
-    .first<{ login: number }>()
+  const defaults = await readDefaultAgentLogins(env, userId)
+  const personal = await Promise.all(
+    (['claude', 'codex'] as const).map((agent) =>
+      resolveDefaultLogin(env, { orgId: null }, userId, agent),
+    ),
+  )
+  const loginComplete =
+    defaults.some((entry) => entry.login !== null) ||
+    personal.some((login) => login !== null)
   const github = await getStartedGitHubComplete(env, userId, dependencies)
   return {
     orgId: org?.id ?? null,
     steps: [
       { step: 'github-app', complete: github },
       { step: 'org', complete: org !== null },
-      { step: 'agent-login', complete: setup?.login === 1 },
+      { step: 'agent-login', complete: loginComplete },
     ],
   }
 }
