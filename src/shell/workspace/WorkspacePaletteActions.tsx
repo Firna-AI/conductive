@@ -15,6 +15,7 @@ import type { WorkspaceContext } from './features'
 import { useFilesNavigation } from './files/files-navigation'
 import { toolOffered, type ToolKey } from './tools/tool-address'
 import { useToolSelect } from './tools/tool-navigation'
+import { useScreenBar } from './github/WorkspaceGitHub'
 import { phoneView } from './WorkspaceColumns'
 import { nameLabel } from '../../shared/name-label'
 
@@ -66,7 +67,9 @@ export function useNewTerminalOffer(
  * does what its control on the screen does: + for New session, the clock
  * for Session history, a tab of the right column for a Go to row, the
  * Archive button, and Restore on the archived bar. The Terminal tool
- * offers New terminal through `useNewTerminalOffer`. It draws nothing.
+ * offers New terminal through `useNewTerminalOffer`. Merge latest has no
+ * control: it sends its prompt as the agent actions of the bar do. It
+ * draws nothing.
  */
 export function WorkspacePaletteActions(props: {
   context: WorkspaceContext
@@ -79,6 +82,7 @@ export function WorkspacePaletteActions(props: {
   const rightColumn = useRightColumnTabs(context)
   const phone = context.viewport === 'phone'
   const archived = context.sandbox === 'archived'
+  const mergeLatest = useScreenBar()?.mergeLatest ?? null
   const ids = workspaceActionIds({
     access,
     workspace: context.workspace,
@@ -87,6 +91,7 @@ export function WorkspacePaletteActions(props: {
     chat: !phone || archived || phoneView(context.view) === 'chat',
     desktopTool: toolOffered('desktop'),
     offersRestore: context.restore !== null,
+    mergeLatest: mergeLatest !== null,
   })
   const list = (id: WorkspaceActionId, kind: FileListKind): OfferedAction => {
     const target: FilesTarget = { kind: 'list', list: kind }
@@ -115,6 +120,8 @@ export function WorkspacePaletteActions(props: {
         return toolTab(id, 'preview')
       case 'go-to-desktop':
         return toolTab(id, 'desktop')
+      case 'merge-latest':
+        return { id, label: mergeLatest?.label, run: () => mergeLatest?.run() }
       case 'archive-workspace':
         return { id, run: () => context.archive?.() }
       case 'restore-workspace':
