@@ -10,14 +10,13 @@ import type { WorkspaceAccessTarget } from '../previews/workspace-store'
 import { ProviderError } from '../sandbox/errors'
 import { TerminalConnections, type TerminalRegistration } from './connections'
 import { terminalFrames } from './protocol'
-import { TerminalSocketLease, terminalNotFound } from './socket-lease'
 import type { WorkspaceTerminals } from './workspace'
 
 export async function openTerminalSocket(
   env: AppEnv,
   dependencies: ToolDependencies,
   connections: TerminalConnections,
-  terminals: WorkspaceTerminals | undefined,
+  terminals: WorkspaceTerminals,
   input: {
     request: Request
     target: WorkspaceAccessTarget
@@ -35,15 +34,11 @@ export async function openTerminalSocket(
       'terminal_starting',
       'The terminal is starting. Try again.',
     )
-  if (
-    !terminals &&
-    terminalId !== undefined &&
-    terminalId !== FIRST_TERMINAL_ID
+  const lease = await terminals.openSocket(
+    target.orgId,
+    target.workspaceId,
+    terminalId,
   )
-    throw terminalNotFound()
-  const lease = terminals
-    ? await terminals.openSocket(target.orgId, target.workspaceId, terminalId)
-    : new TerminalSocketLease(FIRST_TERMINAL_ID)
   let registration: TerminalRegistration | null = null
   let upstream: Response | null = null
   let close: (() => void) | null = null

@@ -8,6 +8,7 @@ import { createPreviewHandler } from '../previews/handler'
 import { launchPreview } from '../previews/launch-test-support'
 import { createToolsHarness, type ToolsHarness } from '../previews/test-support'
 import { createTerminalHandler } from './handler'
+import { WorkspaceTerminals } from './workspace'
 import { startWorkspaceTerminal } from './service'
 
 let harness: ToolsHarness
@@ -34,7 +35,11 @@ it('keeps the terminal, port preview, and desktop available while a workspace ne
   )
     .bind(seed.workspaceId)
     .run()
-  const terminal = createTerminalHandler(harness.env, harness.dependencies)
+  const terminal = createTerminalHandler(
+    harness.env,
+    harness.dependencies,
+    new WorkspaceTerminals(harness.native.actor(seed.workspaceId).api.chat),
+  )
   const status = await terminal.fetch(
     seed.request(terminalPaths.connection(seed.orgId, seed.workspaceId)),
   )
@@ -55,6 +60,7 @@ it('keeps the terminal, port preview, and desktop available while a workspace ne
     socketPath: terminalPaths.socket(seed.orgId, seed.workspaceId),
     terminals,
     several: false,
+    eventNumber: 0,
   })
   const preview = createPreviewHandler(harness.env, harness.dependencies)
   const opened = await preview.fetch(
@@ -104,6 +110,7 @@ it('keeps the terminal, port preview, and desktop available while a workspace ne
     socketPath: null,
     terminals,
     several: false,
+    eventNumber: 0,
   })
   const requests = [
     {

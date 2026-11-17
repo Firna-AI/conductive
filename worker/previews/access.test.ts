@@ -5,6 +5,7 @@ import { previewPath, previewsPath } from '../../src/shared/previews'
 import { terminalPaths } from '../../src/shared/terminal'
 import { createDesktopHandler } from '../desktop/handler'
 import { createTerminalHandler } from '../terminal/handler'
+import { WorkspaceTerminals } from '../terminal/workspace'
 import { startWorkspaceTerminal } from '../terminal/service'
 import { TEST_ORIGIN } from '../test-support/harness'
 import { createPreviewHandler } from './handler'
@@ -25,7 +26,11 @@ afterAll(async () => {
 it('gates each tool route and terminal upgrade with sign-in and Origin before upstream calls', async () => {
   const seed = await harness.seed()
   const preview = createPreviewHandler(harness.env, harness.dependencies)
-  const terminal = createTerminalHandler(harness.env, harness.dependencies)
+  const terminal = createTerminalHandler(
+    harness.env,
+    harness.dependencies,
+    new WorkspaceTerminals(harness.native.actor(seed.workspaceId).api.chat),
+  )
   const desktop = createDesktopHandler(harness.env, harness.dependencies)
   const routes = [
     {
@@ -104,7 +109,11 @@ it('checks current membership and workspace ownership before each tool upstream 
       method: 'GET',
     },
     {
-      handler: createTerminalHandler(harness.env, harness.dependencies),
+      handler: createTerminalHandler(
+        harness.env,
+        harness.dependencies,
+        new WorkspaceTerminals(harness.native.actor(seed.workspaceId).api.chat),
+      ),
       path: terminalPaths.socket(other.id, seed.workspaceId),
       method: 'GET',
     },

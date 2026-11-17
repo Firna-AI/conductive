@@ -63,15 +63,3 @@ export class FakeTerminalSocket extends EventTarget implements TerminalSocket {
     this.dispatchEvent(new Event('close'))
   }
 }
-
-/** Fetch has no native upgrade response in browsers or Node. The adapter stays in memory. */
-export function fakeTerminalUpgrade(socket: FakeTerminalSocket): Response {
-  const response = new Response(null, {
-    headers: { 'Sec-WebSocket-Protocol': 'tty' },
-  })
-  Object.defineProperties(response, {
-    status: { value: 101 },
-    webSocket: { value: socket },
-  })
-  return response
-}

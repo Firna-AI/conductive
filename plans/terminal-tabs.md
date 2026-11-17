@@ -612,15 +612,15 @@ leaves the old terminal service running, so tabs come at a later start
 
 Depends on: 9
 
-- [ ] Finding 1: require the terminal owner in the handler, the socket,
+- [x] Finding 1: require the terminal owner in the handler, the socket,
       and the mutations. Move the tests that call the handler without an
       owner to the real owner. Delete the helpers that only that path used.
-- [ ] Finding 2: remove the tests of the fake terminal API. Move each
+- [x] Finding 2: remove the tests of the fake terminal API. Move each
       production check of its connector case to the transport tests first.
-- [ ] Finding 101, server side: give the terminal state read and the
+- [x] Finding 101, server side: give the terminal state read and the
       create and close replies the event number of the list that they hold.
       Do the same in the fake API.
-- [ ] Finding 201: correct the `terminals_unavailable` message.
+- [x] Finding 201: correct the `terminals_unavailable` message.
 
 ## Milestone 12: Review fixes in the app
 

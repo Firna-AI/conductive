@@ -116,6 +116,7 @@ it('serves terminal and fresh desktop URLs and launches a preview through its se
       },
     ],
     several: false,
+    eventNumber: 0,
   })
   const first = await active.request(desktopPath(OUTER_ORG, OUTER_WORKSPACE))
   expect(first.status).toBe(200)

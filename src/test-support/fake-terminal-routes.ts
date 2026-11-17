@@ -5,7 +5,7 @@ import {
   FakeTerminalList,
   type FakeTerminalWorkspace,
 } from './fake-terminal-list'
-import { FakeTerminalSocket, fakeTerminalUpgrade } from './fake-terminal-socket'
+import { FakeTerminalSocket } from './fake-terminal-socket'
 import { FAKE_ORIGIN } from './fixtures/core'
 
 export class FakeTerminalRoutes {
@@ -55,21 +55,6 @@ export class FakeTerminalRoutes {
       const close = tail.match(/^\/terminals\/([^/]+)$/)
       if (request.method === 'DELETE' && close)
         return Response.json(list.close(this.decodeId(close[1])))
-      if (request.method === 'GET' && this.socketId(tail) !== null) {
-        const protocols = (request.headers.get('Sec-WebSocket-Protocol') ?? '')
-          .split(',')
-          .map((value) => value.trim())
-        if (
-          request.headers.get('Upgrade')?.toLowerCase() !== 'websocket' ||
-          !protocols.includes('tty')
-        )
-          throw new RouteError(
-            400,
-            'terminal_protocol',
-            'Open the terminal again.',
-          )
-        return fakeTerminalUpgrade(this.open(request.url, 'tty'))
-      }
       return null
     } catch (error) {
       if (!(error instanceof RouteError)) throw error

@@ -10,6 +10,8 @@ import { record } from '../chat/inputs'
 import {
   addTerminal,
   setupTerminalListTests,
+  terminalEntry,
+  terminalListPath,
   terminalPath,
   terminalStatePath,
 } from './terminal-list.test-support'
@@ -24,7 +26,13 @@ it('sends terminal changes to every tab in the common stream and replays them on
       type: 'history',
       history: { events: [], throughEventNumber: 0 },
     })
-  const second = await addTerminal(active)
+  const response = await active.request(terminalListPath, {
+    method: 'POST',
+    body: '{}',
+  })
+  expect(response.status).toBe(201)
+  const created = record(await response.json())
+  const second = terminalEntry(created.terminal)
   const first = {
     id: 'workspace',
     number: 1,
@@ -34,6 +42,11 @@ it('sends terminal changes to every tab in the common stream and replays them on
       'workspace',
     ),
   }
+  expect(created).toEqual({
+    terminal: second,
+    terminals: [first, second],
+    eventNumber: 1,
+  })
   for (const tab of tabs)
     expect(await tab.inbox.next()).toMatchObject({
       type: 'event',
@@ -55,12 +68,16 @@ it('sends terminal changes to every tab in the common stream and replays them on
       type: 'event',
       envelope: { eventNumber: 2, event: { type: 'workspace.updated' } },
     })
+  expect(await (await active.request(terminalStatePath)).json()).toMatchObject({
+    terminals: [first, second],
+    eventNumber: 2,
+  })
   const closed = await active.request(terminalPath(second.id), {
     method: 'DELETE',
     body: '{}',
   })
   expect(closed.status).toBe(200)
-  expect(await closed.json()).toEqual({ terminals: [first] })
+  expect(await closed.json()).toEqual({ terminals: [first], eventNumber: 3 })
   for (const tab of tabs)
     expect(await tab.inbox.next()).toMatchObject({
       type: 'event',
@@ -77,9 +94,9 @@ it('sends terminal changes to every tab in the common stream and replays them on
       })
     ).status,
   ).toBe(404)
-  expect(
-    record(await (await active.request(terminalStatePath)).json()).terminals,
-  ).toEqual([first])
+  const state = record(await (await active.request(terminalStatePath)).json())
+  expect(state.terminals).toEqual([first])
+  expect(state.eventNumber).toBe(3)
   const reconnected = await suite.tab(active, 1)
   expect(reconnected.history).toMatchObject({
     type: 'history',

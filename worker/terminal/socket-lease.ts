@@ -15,7 +15,7 @@ export class TerminalSocketLease {
   private close: (() => void) | null = null
   private readonly release: () => void
 
-  constructor(terminalId: string, release: () => void = () => {}) {
+  constructor(terminalId: string, release: () => void) {
     this.terminalId = terminalId
     this.release = release
   }

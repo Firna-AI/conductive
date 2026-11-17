@@ -25,7 +25,7 @@ export const terminalListPath = terminalPaths.terminals(
 export const terminalPath = (id: string) =>
   terminalPaths.terminal(OUTER_ORG, OUTER_WORKSPACE, id)
 
-function terminalEntry(value: unknown) {
+export function terminalEntry(value: unknown) {
   const entry = record(value)
   return {
     id: string(entry.id),

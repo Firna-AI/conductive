@@ -81,9 +81,10 @@ The app's stateful dev routes supply their own org list.
 The app's dev route table must register it before a move can change that list.
 
 The terminal fake keeps a separate list for each recorded workspace.
-Its state includes `terminals` and `several`.
+Its state includes `terminals`, `several`, and the current workspace `eventNumber`.
 Create and close change that list and emit a full-list `terminals.updated`
 event through `server.events`.
+Each write reply includes the number of its own event.
 It uses the lowest free number and the shared limit of 10 terminals.
 It refuses the last close, and unknown, invalid, or closed socket IDs.
 The legacy socket selects the first listed terminal after each change.
@@ -96,10 +97,11 @@ sockets. Each terminal has one decoded `FakeTerminal` shell shared by its
 viewers. A socket disconnect leaves that shell, and a terminal close ends
 all its viewers. `server.terminals.sockets` records the opened sockets,
 their `terminalId`, and their decoded `terminal` for output and input checks.
-Both socket routes also accept fetch upgrades with the `tty` subprotocol.
-Their fake response has status 101 and an in-memory `webSocket` property.
+The opener accepts the legacy socket path and each terminal's socket path.
 No native WebSocket or real network connection is needed.
 Explicit reply overrides still take precedence over the terminal routes.
+The [production connector tests](../app/terminal-transport.test.ts) check
+framing and connection isolation. Worker route tests check list and event behavior.
 
 Other writes return recorded replies without changing backend state.
 The account fixture includes empty shortcut changes for both keyboards.
@@ -253,7 +255,7 @@ Replies, timers, and `waitFor` go on.
 - `dev-org-order-route.ts` exports `devOrgOrderRoute` for the app's stateful dev route table.
 - `fake-events.ts` supplies history and live event messages.
 - `fake-terminal.ts` supplies decoded terminal output and records input and resize calls.
-- `fake-terminal-routes.ts` serves terminal state, create, close, and socket routes, and exposes the in-memory socket opener.
+- `fake-terminal-routes.ts` serves terminal state, create, and close routes, and exposes the in-memory socket opener.
 - `fake-terminal-list.ts` keeps each workspace's terminal list, support state, shells, and list events.
 - `fake-terminal-socket.ts` adapts a decoded fake shell to the app's browser socket interface and ttyd framing.
 - `recorded-chat.ts` supplies partial text, tools, queued messages, steer, stop, failure, omission counts, and refusal markers.

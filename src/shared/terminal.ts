@@ -40,6 +40,8 @@ export interface TerminalEntry {
 
 export interface TerminalListResponse {
   terminals: readonly TerminalEntry[]
+  /** Older response readers can omit this. The Worker always sends it. */
+  eventNumber?: number
 }
 
 export interface CreateTerminalResponse extends TerminalListResponse {
@@ -51,6 +53,7 @@ export type TerminalResponse = {
   /** Older response readers can omit these fields. The Worker always sends them. */
   terminals?: readonly TerminalEntry[]
   several?: boolean
+  eventNumber?: number
 } & (
   | { state: 'ready'; socketPath: string; protocol: 'tty' }
   | { state: 'starting' | 'stopped'; socketPath: null }

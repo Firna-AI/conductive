@@ -40,23 +40,6 @@ function storedTerminals(value: unknown): StoredTerminal[] {
   return entries.sort((left, right) => left.number - right.number)
 }
 
-export function initialTerminals(
-  orgId: string,
-  workspaceId: string,
-): TerminalEntry[] {
-  return [
-    {
-      id: FIRST_TERMINAL_ID,
-      number: 1,
-      socketPath: terminalPaths.terminalSocket(
-        orgId,
-        workspaceId,
-        FIRST_TERMINAL_ID,
-      ),
-    },
-  ]
-}
-
 /** The caller commits the records and emitted event in one chat transaction. */
 export class TerminalList {
   private readonly data: Pick<ChatData, 'get' | 'put'>

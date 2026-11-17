@@ -33,6 +33,8 @@ export class FakeTerminalList {
     const list = {
       terminals: structuredClone(this.terminals),
       several: this.several,
+      eventNumber: this.events.history(Number.MAX_SAFE_INTEGER)
+        .throughEventNumber,
     }
     if (['ready', 'working', 'unread', 'input'].includes(state))
       return {
@@ -54,7 +56,7 @@ export class FakeTerminalList {
       throw new RouteError(
         409,
         'terminals_unavailable',
-        'This workspace needs a software update to open more terminals. Try again after its next start.',
+        'Terminal tabs become available at a later start of the cloud computer after its software update.',
       )
     if (this.terminals.length === TERMINAL_LIMIT)
       throw new RouteError(
@@ -74,8 +76,8 @@ export class FakeTerminalList {
     )
     this.terminals.push(terminal)
     this.terminals.sort((left, right) => left.number - right.number)
-    this.changed()
-    return { terminal, terminals: this.terminals }
+    const eventNumber = this.changed()
+    return { terminal, terminals: this.terminals, eventNumber }
   }
 
   close(id: string) {
@@ -89,8 +91,8 @@ export class FakeTerminalList {
     this.shells.get(id)?.close()
     this.shells.delete(id)
     this.terminals = this.terminals.filter((terminal) => terminal.id !== id)
-    this.changed()
-    return { terminals: this.terminals }
+    const eventNumber = this.changed()
+    return { terminals: this.terminals, eventNumber }
   }
 
   connect(id?: string) {
@@ -127,12 +129,14 @@ export class FakeTerminalList {
   }
 
   private changed() {
+    const eventNumber =
+      this.events.history(Number.MAX_SAFE_INTEGER).throughEventNumber + 1
     this.events.emit({
       workspaceId: this.workspace.id,
-      eventNumber:
-        this.events.history(Number.MAX_SAFE_INTEGER).throughEventNumber + 1,
+      eventNumber,
       occurredAt: FAKE_TIME,
       event: { type: 'terminals.updated', terminals: this.terminals },
     })
+    return eventNumber
   }
 }

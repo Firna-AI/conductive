@@ -12,19 +12,21 @@ Its feature handler keeps one terminal connection owner.
 The browser uses the [shared terminal contract](../../src/shared/terminal.ts).
 
 Call `createTerminalHandler(env, dependencies, terminals).fetch(request)` for
-the shared terminal paths. Supply the object's `WorkspaceTerminals` owner.
+the shared terminal paths. The object's `WorkspaceTerminals` owner is required.
 The handler runs the app gate on each request and
 each upgrade. Its default socket runtime uses Cloudflare WebSocket pairs.
 Tests can inject `dependencies.sockets` at that boundary.
 A create, close, or socket open for a workspace whose owner is suspended gets 403
 `user_suspended`. The status read still answers.
 
-`GET terminal` includes the list and the cached `several` support value.
+`GET terminal` includes the list, the cached `several` support value, and `eventNumber`.
+The list and current workspace event number are read together in the workspace queue.
 It keeps the legacy state, protocol, and socket path fields.
 The new shared response fields are optional for existing response readers.
 The Worker always sends them.
 `POST terminal/terminals` creates an entry without starting a shell.
 `DELETE terminal/terminals/<terminalId>` ends its shell and removes the entry.
+Each write reply includes the event number of its committed `terminals.updated` event.
 Both writes need a running workspace and a trusted app or desktop origin.
 They use the same JSON request gate as the other tools.
 
@@ -440,7 +442,7 @@ Terminal status reads remain available.
 - [socket.ts](socket.ts) opens the selected terminal with trusted ttyd arguments and keeps the sandbox connection checks.
 - [socket-lease.ts](socket-lease.ts) cancels a pending or open terminal socket when its close starts.
 - [mutations.ts](mutations.ts) applies running and support checks to terminal writes.
-- [workspace.ts](workspace.ts) owns list operations, closing marks, and socket leases beside the chat queue.
+- [workspace.ts](workspace.ts) owns list snapshots with event numbers, closing marks, and socket leases beside the chat queue.
 - [list-store.ts](list-store.ts) stores the list and emits its events through [chat/store.ts](../chat/store.ts).
 - [connections.ts](connections.ts) owns terminal registration, expiry, and scheduled access checks.
 - [The shared connection reader](../security/connection-access.ts) reads each session, membership, and sandbox identity in one batch.

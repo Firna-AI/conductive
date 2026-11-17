@@ -13,7 +13,7 @@ import type { WorkspaceTerminals } from './workspace'
 export async function mutateTerminal(
   env: AppEnv,
   dependencies: ToolDependencies,
-  terminals: WorkspaceTerminals | undefined,
+  terminals: WorkspaceTerminals,
   target: WorkspaceAccessTarget,
   userId: string,
   route: Extract<TerminalRoute, { kind: 'create' | 'close' }>,
@@ -21,7 +21,6 @@ export async function mutateTerminal(
   requireRunning(target)
   const authorize = () => verifyTarget(env, target, userId)
   await authorize()
-  if (!terminals) throw new ProviderError('unavailable', 503)
   if (route.kind === 'create') {
     if (
       !(await terminalSeveral(
@@ -34,7 +33,7 @@ export async function mutateTerminal(
       throw new HttpError(
         409,
         'terminals_unavailable',
-        'This workspace needs a software update to open more terminals. Try again after its next start.',
+        'Terminal tabs become available at a later start of the cloud computer after its software update.',
       )
     const result = await terminals.create(
       target.orgId,

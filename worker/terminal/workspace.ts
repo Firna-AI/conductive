@@ -21,9 +21,10 @@ export class WorkspaceTerminals {
   }
 
   list(orgId: string, workspaceId: string) {
-    return this.chat.readWorkspace(workspaceId, (view) =>
-      view.terminals.list(orgId, workspaceId),
-    )
+    return this.chat.readWorkspace(workspaceId, async (view) => ({
+      terminals: await view.terminals.list(orgId, workspaceId),
+      eventNumber: view.eventNumber,
+    }))
   }
 
   openSocket(orgId: string, workspaceId: string, terminalId?: string) {
@@ -54,9 +55,10 @@ export class WorkspaceTerminals {
       workspaceId,
       authorize,
       (operation) =>
-        operation.change((transaction) =>
-          transaction.terminals.create(orgId, workspaceId, id),
-        ),
+        operation.change(async (transaction) => ({
+          ...(await transaction.terminals.create(orgId, workspaceId, id)),
+          eventNumber: transaction.eventNumber,
+        })),
     )
   }
 
@@ -100,9 +102,14 @@ export class WorkspaceTerminals {
         workspaceId,
         authorize,
         (operation) =>
-          operation.change((transaction) =>
-            transaction.terminals.remove(orgId, workspaceId, terminalId),
-          ),
+          operation.change(async (transaction) => ({
+            ...(await transaction.terminals.remove(
+              orgId,
+              workspaceId,
+              terminalId,
+            )),
+            eventNumber: transaction.eventNumber,
+          })),
       )
     } finally {
       if (marked) this.closing.delete(terminalId)

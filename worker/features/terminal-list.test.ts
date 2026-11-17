@@ -33,6 +33,7 @@ it('adds independent terminals without starting shells and keeps legacy terminal
     socketPath: terminalPaths.socket(OUTER_ORG, OUTER_WORKSPACE),
     terminals: [first],
     several: true,
+    eventNumber: 0,
   })
   const second = await addTerminal(active)
   const third = await addTerminal(active)

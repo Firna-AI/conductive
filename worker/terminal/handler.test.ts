@@ -5,6 +5,7 @@ import { createToolsHarness, type ToolsHarness } from '../previews/test-support'
 import { decrypt } from '../security/crypto'
 import { TEST_TIME } from '../test-support/harness'
 import { createTerminalHandler } from './handler'
+import { WorkspaceTerminals } from './workspace'
 import { startWorkspaceTerminal, terminalStartCommand } from './service'
 
 let harness: ToolsHarness
@@ -75,7 +76,11 @@ it('returns ready, starting, and stopped terminal states without exposing a pass
     harness.dependencies,
   )
   const startRequests = harness.requests.length
-  const handler = createTerminalHandler(harness.env, harness.dependencies)
+  const handler = createTerminalHandler(
+    harness.env,
+    harness.dependencies,
+    new WorkspaceTerminals(harness.native.actor(seed.workspaceId).api.chat),
+  )
   const path = terminalPaths.connection(seed.orgId, seed.workspaceId)
   const ready = await handler.fetch(seed.request(path))
   const terminals = [
@@ -96,6 +101,7 @@ it('returns ready, starting, and stopped terminal states without exposing a pass
     socketPath: terminalPaths.socket(seed.orgId, seed.workspaceId),
     terminals,
     several: false,
+    eventNumber: 0,
   })
   for (const state of ['starting', 'stopped']) {
     await harness.env.DB.prepare('UPDATE workspaces SET state = ? WHERE id = ?')
@@ -107,6 +113,7 @@ it('returns ready, starting, and stopped terminal states without exposing a pass
       socketPath: null,
       terminals,
       several: false,
+      eventNumber: 0,
     })
   }
   expect(harness.requests).toHaveLength(startRequests)
@@ -120,7 +127,11 @@ it('authenticates the ttyd handshake and forwards automatic replies without repo
     seed.workspaceId,
     harness.dependencies,
   )
-  const handler = createTerminalHandler(harness.env, harness.dependencies)
+  const handler = createTerminalHandler(
+    harness.env,
+    harness.dependencies,
+    new WorkspaceTerminals(harness.native.actor(seed.workspaceId).api.chat),
+  )
   const request = seed.request(
     terminalPaths.socket(seed.orgId, seed.workspaceId),
     {
@@ -196,7 +207,11 @@ it('authenticates the ttyd handshake and forwards automatic replies without repo
 
 it('rejects a ttyd socket without the tty protocol before contacting the sandbox', async () => {
   const seed = await harness.seed()
-  const handler = createTerminalHandler(harness.env, harness.dependencies)
+  const handler = createTerminalHandler(
+    harness.env,
+    harness.dependencies,
+    new WorkspaceTerminals(harness.native.actor(seed.workspaceId).api.chat),
+  )
   for (const path of [
     terminalPaths.socket(seed.orgId, seed.workspaceId),
     terminalPaths.terminalSocket(seed.orgId, seed.workspaceId, 'workspace'),

@@ -4,7 +4,6 @@ import { HttpError, privateResponse } from '../http'
 import { toolError } from '../previews/access'
 import type { ToolDependencies } from '../previews/types'
 import { terminalPassword, terminalSeveral } from './credentials'
-import { initialTerminals } from './list-store'
 import { mutateTerminal } from './mutations'
 import { terminalRequest } from './request'
 import { openTerminalSocket } from './socket'
@@ -14,7 +13,7 @@ import { TerminalConnections } from './connections'
 export function createTerminalHandler(
   env: AppEnv,
   dependencies: ToolDependencies,
-  terminals?: WorkspaceTerminals,
+  terminals: WorkspaceTerminals,
 ) {
   const connections = new TerminalConnections(env, dependencies)
   return {
@@ -59,9 +58,7 @@ export function createTerminalHandler(
           target.providerAccount,
         )
         if (route.kind === 'state') {
-          const list = terminals
-            ? await terminals.list(target.orgId, target.workspaceId)
-            : initialTerminals(target.orgId, target.workspaceId)
+          const list = await terminals.list(target.orgId, target.workspaceId)
           const several = await terminalSeveral(
             env,
             target.workspaceId,
@@ -81,13 +78,13 @@ export function createTerminalHandler(
                   target.workspaceId,
                 ),
                 protocol: 'tty',
-                terminals: list,
+                ...list,
                 several,
               }
             : {
                 state: stopped ? 'stopped' : 'starting',
                 socketPath: null,
-                terminals: list,
+                ...list,
                 several,
               }
           return privateResponse(Response.json(response))
