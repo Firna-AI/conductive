@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-11-16, during the merge of main into pull request #366.
-- **Location:** `worker/operator/org-activity-race.test.ts:22,94`, `worker/features/workspace-links.test.ts:27`, `worker/app-api/feature-repository-builds.test.ts:112`, `worker/operator/org-native.test.ts:81`, `worker/operator/ownership-stop-race.test.ts:68`, `worker/model-gateway/codex-concurrent.test.ts`, `worker/lifecycle/restore-watch.test.ts`, and `worker/tools/workspace-creation.test.ts`.
+- **Location:** `worker/operator/org-activity-race.test.ts:22,94`, `worker/features/workspace-links.test.ts:27`, `worker/app-api/feature-repository-builds.test.ts:112`, `worker/operator/org-native.test.ts:81`, `worker/operator/ownership-stop-race.test.ts:68`, `worker/model-gateway/codex-concurrent.test.ts`, `worker/lifecycle/restore-watch.test.ts`, `worker/tools/workspace-creation.test.ts`, `worker/chat/attachment-missing.test.ts`, `worker/chat/integration/failed-first-start-retry.test.ts`, `worker/chat/integration/workspace-resume-response.test.ts`, `worker/features/allocated-creation-restore.test.ts`, `worker/lifecycle/repository-capture.test.ts`, `worker/lifecycle/terminal-lifecycle.test.ts`, `worker/lifecycle/workspace-run-recovery.test.ts`.
 - **Reason:** These files match main, and every failed test passed in a focused rerun without a source change.
 
 - **Background:**
@@ -30,6 +30,17 @@
     - `worker/lifecycle/restore-watch.test.ts`: `writes the restore marker when hydrated is absent after create and resume`.
     - `worker/tools/workspace-creation.test.ts`: `keeps one titled admission for overlapping creates and a lost reply after restart or changed defaults`.
   - The branch changes no Worker code. A focused rerun of the four files at the same path, with `TMPDIR` on the repository filesystem, passed all 28 tests. Resource contention during the full run is still the suspected source.
+  - On 17 November 2026, the secrets-variable branch at `11ac3d90a61a4783a6442470e999b9bfbaf19a62` ran `npm run check` from `/tmp/conductive-secrets-names-gate-f60a52b`, with Node 24.22.1. All static checks passed. The unfiltered suite passed 4,050 tests and failed nine tests in eight files, with no skips, across 1,250 files in 1,487.05 seconds. Each failure was `Error: Test timed out in 15000ms.`:
+    - `worker/features/allocated-creation-restore.test.ts`: `opens a restored allocated create at ready without losing its sandbox, message, or allocation pin`.
+    - `worker/chat/attachment-missing.test.ts`: `reports provider metadata outages as copy failures instead of missing files`.
+    - `worker/operator/org-activity-race.test.ts`: `refuses held HTTP activity after org suspension without changing its deadline, activity or stop alarm`.
+    - `worker/chat/integration/failed-first-start-retry.test.ts`: `retries the same failed workspace with a fresh token and dispatches every stored message once in order`.
+    - `worker/chat/integration/workspace-resume-response.test.ts`: `answers resume and retry with durable starting state while chat and startup failure stay on the event path`.
+    - `worker/lifecycle/repository-capture.test.ts`: `captures the published image folder map and environment for a created workspace`.
+    - `worker/lifecycle/terminal-lifecycle.test.ts`: `starts and caches the terminal after startup at create and resume while retention starts no terminal`.
+    - `worker/lifecycle/workspace-run-recovery.test.ts`: `runs idle lifecycle work from a due run lease`.
+    - `worker/lifecycle/workspace-run-recovery.test.ts`: `runs idle lifecycle work from a future lease and due state retry`.
+  - All eight files were outside the secrets-variable diff and matched the tested main commit `273582d8a`. One focused rerun of those same files at the same path and commit passed all 15 tests in 21.49 seconds. The command was `npm run test --` followed by the eight file paths and `--reporter=verbose`. No source, assertion, timeout or gate configuration changed. Resource contention during the full run remains the suspected source. The blocked awaits and exact cause remain unknown.
 - **Task:** Find the source of these timeouts. Compare focused and full runs at the same path, then compare paths with the same test set. Make the tests deterministic with readiness signals, event order, or isolated state. Keep each assertion. Add no retry, sleep, skip, or longer timeout.
 - **Impact if no action:** A complete check can fail while a focused run passes. This can hide a real regression or delay another branch.
 - **Needs:** Node 24 and a Conductive workspace that can run the full suite.

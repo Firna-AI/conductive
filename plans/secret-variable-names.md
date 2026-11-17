@@ -205,14 +205,14 @@ Depends on: every earlier milestone
 
 The orchestrator checks the combined result and owns the gate, review, and pull request.
 
-- [ ] Read every delegated diff and confirm each completed TODO. Save prompts and reports under `.context/secret-variable-names/`.
-- [ ] Run targeted tests for the changed behavior. Record commands, counts, expected failures, repetitions, and added test times.
-- [ ] Run early `npm run format:check` and `npm run lint` before long checks.
-- [ ] Smoke-test the CLI and MCP against a local fake Worker. Verify a nested program receives the alias without outputting a value.
+- [x] Read every delegated diff and confirm each completed TODO. Save prompts and reports under `.context/secret-variable-names/`.
+- [x] Run targeted tests for the changed behavior. Record commands, counts, expected failures, repetitions, and added test times.
+- [x] Run early `npm run format:check` and `npm run lint` before long checks.
+- [x] Smoke-test the CLI and MCP against a local fake Worker. Verify a nested program receives the alias without outputting a value.
 - [ ] Run `npm --prefix desktop ci` and `npm ci --prefix runner`. Run `npm run check` with Node 24.
-- [ ] Run `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, and `cargo test --workspace`.
-- [ ] Run `cargo build --release --target x86_64-unknown-linux-musl -p cnd-cli`. Install the target and `musl-tools` if needed.
-- [ ] Run the binding generator and verify that generated files have no uncommitted drift.
+- [x] Run `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, and `cargo test --workspace`.
+- [x] Run `cargo build --release --target x86_64-unknown-linux-musl -p cnd-cli`. Install the target and `musl-tools` if needed.
+- [x] Run the binding generator and verify that generated files have no uncommitted drift.
 - [ ] Audit deletions, commit with Conventional Commits, and push this workspace branch.
 - [ ] Run a fresh post-push review against `origin/main`. Check each finding with a fresh second pass. Apply the finish-work fix rule.
 - [ ] Complete the permitted fix rounds, verify their changes, and record any follow-up items.
@@ -239,3 +239,5 @@ Product UI design calls from 17 November 2026: let the Worker refusal drive the 
 - 17 November 2026: the second-pass options check kept recommendation A and added D, E, and F.
 - 17 November 2026: Cal approved the detailed plan and variable-name decision 1A with “1 = A”.
 - The initial plan-only change runs Markdown validation and a read-only review. The npm and Rust gates wait for implementation.
+
+Final integration evidence: `.context/secret-variable-names/org-login-merge.md`. The merge keeps main’s org-login facts and the approved secrets-variable facts.
