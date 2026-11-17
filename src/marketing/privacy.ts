@@ -24,7 +24,7 @@ export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
   description: `The privacy notice of ${productName}.`,
   lead: text`This notice says which personal data ${productName} uses, why
-  it uses it, and who gets it. Effective date: 16 November 2026.`,
+  it uses it, and who gets it. Effective date: 17 November 2026.`,
   sections: [
     {
       title: 'Who is responsible',
@@ -150,10 +150,11 @@ export const privacyDocument: LegalDocument = {
             time, and every member sees the last reveal of the current
             value. A member who is not an admin never gets a secret value back.`,
           text`An agent can ask to run one command with a secret in the
-            Secrets settings. The command gets the value, and the agent gets
-            only the name of the secret. ${productName} hides each exact copy
-            of the value in the output of the command and in the chat. It
-            does not hide a changed or encoded value.`,
+            Secrets settings. The command gets the value. The agent gets
+            the secret's name and environment variable name, without the
+            value. ${productName} hides each exact copy of the value in the
+            output of the command and in the chat. It does not hide a changed
+            or encoded value.`,
           text`An env var is secret until an admin clears its mark. Before
             ${productName} puts agent output in the chat history or on a
             screen, it hides each exact copy of a secret value in it. It also

@@ -1,5 +1,6 @@
 import { Plus } from 'lucide-react'
 import {
+  olderSecret,
   replacedSecrets,
   replicaUrl,
   type OrgSecret,
@@ -16,20 +17,28 @@ import styles from './SecretsTab.module.css'
 
 /**
  * What the tab shows: the list, the value that an admin just revealed, the
- * Add secret form, or the field of a new value in the row of a secret.
+ * Add secret form, that form after it refused a name, the field of a new
+ * value in the row of a secret, or that field in the row of a secret with
+ * an older name.
  */
-export type SecretsView = 'list' | 'revealed' | 'add' | 'replace'
+export type SecretsView =
+  'list' | 'revealed' | 'add' | 'add-refused' | 'replace' | 'replace-older'
 
-/** How a row shows its secret in a view of the tab. */
+/**
+ * How a row shows its secret in a view of the tab. Jonas added the secret
+ * with an older name, so only an admin opens its Replace form.
+ */
 function rowMode(
   secret: OrgSecret,
   view: SecretsView,
   access: SecretsAccess,
 ): RowMode {
   if (view === 'revealed' && secret.name === replicaUrl.name) return 'revealed'
-  const replaced = replacedSecrets[access.kind === 'admin' ? 'admin' : 'member']
+  const admin = access.kind === 'admin'
+  const replaced = replacedSecrets[admin ? 'admin' : 'member']
   if (view === 'replace' && secret.name === replaced) return 'replacing'
-  return 'hidden'
+  const older = view === 'replace-older' && secret.name === olderSecret.name
+  return older && admin ? 'replacing' : 'hidden'
 }
 
 /** The screens that the actions of the rows lead to, for each reader. */
@@ -67,12 +76,13 @@ export function SecretsTab(props: {
   const { access } = props
   const adds = mayAddSecret(access)
   const view = adds ? props.view : 'list'
+  const adding = view === 'add' || view === 'add-refused'
   const addTo =
     access.kind === 'admin' ? paths.secretsAdd : paths.secretsMemberAdd
   return (
     <Section
       actions={
-        adds && view !== 'add' ? (
+        adds && !adding ? (
           <ScreenLink asChild to={addTo}>
             <ActionButton icon={Plus}>{secretsWords.add}</ActionButton>
           </ScreenLink>
@@ -110,8 +120,12 @@ export function SecretsTab(props: {
         </ScreenLink>
         {envVarsNote.after}
       </SectionText>
-      {view === 'add' ? (
-        <AddSecretForm mark={access.kind === 'admin'} org={props.org} />
+      {adding ? (
+        <AddSecretForm
+          mark={access.kind === 'admin'}
+          org={props.org}
+          refused={view === 'add-refused'}
+        />
       ) : null}
     </Section>
   )

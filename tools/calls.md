@@ -64,8 +64,11 @@ The MCP fields take the values of the CLI options, with these names:
 
 ## Secrets
 
-`secrets list` calls `GET /v1/tools/secrets`. Its reply is
-`{ secrets: [{ name, description, available }] }`. It never holds values.
+`secrets list` calls `GET /v1/tools/secrets`. The Worker's reply is
+`{ secrets: [{ name, description, available }] }`. The tools add the
+variable name of each secret, so their reply is
+`{ secrets: [{ name, description, available, environmentVariable }] }`.
+It never holds values.
 With a running turn, availability includes the calling session's approvals.
 Without one, it includes only org and workspace grants.
 
@@ -74,16 +77,24 @@ Without one, it includes only org and workspace grants.
 It sends a shell-quoted description of those arguments as `command`.
 MCP takes `names`, `command`, and optional `reason` directly.
 Names need not exist yet. A missing name asks a member for a temporary value.
+Before that call, the tools refuse two names that need one environment key.
+The refusal is a local failure that names both secrets and the variable.
 
 Only an allowed reply starts a command. Returned values go only into that
-child's environment under their secret names. Each stream replaces exact
-copies with `[redacted]`, also across output reads.
+child's environment, under each variable name and each exact name that the
+environment can hold. [Secret variables](../docs/protocol/secret-variables.md)
+gives the rule. Each stream replaces exact copies with `[redacted]`, also
+across output reads.
 Keep each value out of output, files, and answers.
 
 The CLI keeps stdin and streams the filtered output. Its exit status is
 the child's status. A signal gives 128 plus the signal number.
+After the child ends, the CLI writes one stderr line with the JSON map of
+secret names to variable names.
 MCP runs `command` with `/bin/sh -c` and closed stdin. Its reply is
-`{ status: "completed", stdout, stderr, exitCode }` after filtering.
+`{ status: "completed", stdout, stderr, exitCode, environmentVariables }`
+after filtering. `environmentVariables` maps each secret name to its
+variable name.
 The MCP result sets `isError` when `exitCode` is not 0.
 
 The Worker can return `pending`, `denied`, or `not-answered`, with

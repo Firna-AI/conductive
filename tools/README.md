@@ -122,32 +122,45 @@ The Worker rejects stale turn context.
 ## Secrets
 
 `secrets list` and `list_secrets` return each org secret's name, description,
-and availability. They never return values. A running turn adds session
-approvals to availability. Without one, only org and workspace grants count.
+availability, and `environmentVariable`. They never return values. A running
+turn adds session approvals to availability. Without one, only org and
+workspace grants count. The tools derive each variable name from the secret
+name. The Worker's list reply has no variable names.
 
-`secrets run` and `run_with_secrets` need an active turn. They send the names,
-command text, and optional reason to the Worker. A missing grant makes a
-request that waits up to 90 seconds. A pending result starts no command.
-After a notice of a late answer, the agent calls run again.
+`secrets run` and `run_with_secrets` need an active turn. They first refuse
+two requested names that need one environment key. That refusal is a local
+failure before any Worker call. It names both secrets and the shared
+variable, and never a value. Otherwise the tools send the names, command
+text, and optional reason to the Worker. A missing grant makes a request
+that waits up to 90 seconds. A pending result starts no command. After a
+notice of a late answer, the agent calls run again.
 
-An allowed result puts values only in the child environment, under their
-secret names. The tools never put returned values in arguments, files,
-logs, or replies. Both output streams hide exact copies with `[redacted]`,
-including copies split between reads. Keep each value out of output,
-files, and answers. The filter hides only exact copies.
+An allowed result puts values only in the child environment. Each value
+gets its variable name, and its exact secret name unless that name is
+empty or holds `=` or NUL. These entries replace inherited variables of the
+same name in the child only. The Worker keeps the values under the exact
+requested names, so older tools still accept its reply. The tools never put
+returned values in arguments, files, logs, or replies. Both output streams
+hide exact copies with `[redacted]`, including copies split between reads.
+Keep each value out of output, files, and answers. The filter hides only
+exact copies.
 
 The CLI executes the arguments after `--` directly. It keeps stdin and
 streams filtered stdout and stderr. It returns the child's exit status.
+After the child ends, it writes one stderr line with the JSON map of
+secret names to variable names. Stdout holds only the child's output.
 For shell syntax, pass `sh -c 'command'` after `--`.
 MCP runs its `command` text through `/bin/sh -c`, with closed stdin.
-It returns filtered `stdout`, `stderr`, and `exitCode` with `status: "completed"`.
+It returns filtered `stdout`, `stderr`, `exitCode`, and the
+`environmentVariables` map with `status: "completed"`.
 A nonzero exit code sets `isError: true`. A Unix signal gives 128 plus its number.
 
 `pending`, `denied`, and `not-answered` keep the Worker's message and start
 no command. The CLI prints that message on stderr and exits 1.
 MCP preserves the status, `requestId`, and message, with `isError: true`.
 No command output or exit status goes back to the Worker.
-See [Secret requests](../docs/protocol/secret-requests.md).
+See [Secret variables](../docs/protocol/secret-variables.md) and
+[Secret requests](../docs/protocol/secret-requests.md).
 
 ## Mac commands
 

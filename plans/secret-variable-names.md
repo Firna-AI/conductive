@@ -1,6 +1,6 @@
 # Secret variable names
 
-Status: Active. On branch `calummoore/secrets-valid-variable-names-j7hr`, no pull request exists yet. This is the initial plan-only change. Implementation waits for Cal to approve this plan and settle variable-name decision 1. The final pull request into `main` deletes this plan.
+Status: Active. On branch `calummoore/secrets-valid-variable-names-j7hr`, no pull request exists yet. Cal approved this plan and variable-name decision 1A on 17 November 2026. Implementation is in progress. The final pull request into `main` deletes this plan.
 
 Conductive lets an agent run one command with approved org secrets. MCP starts the command through `/bin/sh -c`. The tool currently uses each exact secret name as an environment key. A shell drops keys such as `Cloudflare (read-only)`. The command can then succeed without receiving the secret.
 
@@ -19,7 +19,7 @@ Contract owners:
 
 ## Design
 
-The calls below are orchestrator design calls from 17 November 2026. They apply Cal's A + B decision and the production compatibility requirement. Variable-name decision 1 still needs Cal's answer. The design describes the recommended option A. Options B, C, and F change the ownership and namespace work.
+The calls below are orchestrator design calls from 17 November 2026. They apply Cal's A + B decision and the production compatibility requirement. Cal chose variable-name decision 1A on that date. The design describes the approved option A. Options B, C, and F would change the ownership and namespace work.
 
 ### Names and variables
 
@@ -68,8 +68,8 @@ The calls below are orchestrator design calls from 17 November 2026. They apply 
 - Put the check at their shared creation boundary. It must not apply to reads, grants, reveals, description changes, or value replacement.
 - The current product has no secret rename operation. Do not add one. A later rename feature must apply B to its new name.
 - Existing invalid names remain visible and usable. Keep their names read-only in Replace.
-- Add secret explains the allowed characters. Its name field shows an invalid-name error and keeps the typed value after a refusal.
-- A request with an invalid missing name still offers 15 minutes and This workspace. It explains why Save as secret is unavailable.
+- Add secret explains the allowed characters. Its name error replaces its hint and keeps each typed field after a refusal.
+- A request with an invalid missing name still offers 15 minutes and This workspace. Save as secret stays visible and disabled. A line under the choices explains the name rule.
 - If one missing name is invalid, do not offer Save as secret for the combined answer. Keep the other lifetime choices.
 - The Worker enforces B for older browser clients too. The app's development API mirrors the same rule.
 - Mockups cover the Add secret error and the request lifetime choice on mobile and desktop before product UI work.
@@ -98,7 +98,7 @@ The calls below are orchestrator design calls from 17 November 2026. They apply 
 - **Wider fix:** A. Build the child environment through an ownership check. A duplicate key can never silently replace another secret.
 - **Previous examples:** The reported shell defect uses `Cloudflare (read-only)`. The options check also proved that a synthetic `A=B` key can replace `A` in a shell. No earlier alias-collision case was found.
 - **Recommendation:** A. It keeps names predictable and refuses ambiguous execution. C best preserves permanent distinct aliases, but it adds a schema and new name reservations.
-- **Action:** ask the user, because A adds a new rejection for conflicting runs. The choices also trade a refused run against changing aliases or stored alias allocation.
+- **Action:** apply A. Cal approved the plan and chose 1A on 17 November 2026. Refuse collisions before contacting the Worker.
 
 Shared assumptions: Cal's A + B decision requires a valid alias for every existing name and metadata in list and run replies. `CLAUDE.md` requires compatibility with deployed tools and Workers. The current protocol requires original-name environment entries. Those entries stay where they can represent the exact name. The design removes malformed `=` entries and the NUL spawn failure while still supplying aliases. It keeps the current inherited-environment overlay. The readable rule is a design call, not a requirement from Cal's example. D changes that rule. E lets the caller override it. B, C, and F change alias allocation or creation.
 
@@ -120,12 +120,14 @@ Depends on: none
 
 The `ui implementor` updates the existing catalogue before product code changes.
 
-- [ ] Draw the allowed-name hint and invalid-name error in Add secret on mobile and desktop.
-- [ ] Show an existing invalid name in the list and Replace without requiring a rename.
-- [ ] Draw the request lifetime choices when a missing name cannot become an org secret. Cover the mobile value sheet and mixed requests.
-- [ ] Reuse `@firna/ui` and the existing secrets components and copy. Keep values out of mockup output.
-- [ ] Run `npm run mockups:check`. Open the changed catalogue pages and inspect both viewports.
-- [ ] Update the design and TODOs of this plan for each problem that the mockups show.
+- [x] Draw the allowed-name hint and invalid-name error in Add secret on mobile and desktop.
+- [x] Show an existing invalid name in the list and Replace without requiring a rename.
+- [x] Draw the request lifetime choices when a missing name cannot become an org secret. Cover the mobile value sheet and mixed requests.
+- [x] Reuse `@firna/ui` and the existing secrets components and copy. Keep values out of mockup output.
+- [x] Run `npm run mockups:check`. Open the changed catalogue pages and inspect both viewports.
+- [x] Update the design and TODOs of this plan for each problem that the mockups show.
+
+Evidence: `.context/secret-variable-names/mockups-report.md` and its screenshots.
 
 ## Milestone 2: Documentation and protocol
 
@@ -133,16 +135,18 @@ Depends on: Milestone 1
 
 The `docs implementor` updates internal docs. The `external docs implementor` updates public and legal text after those requirements are settled.
 
-- [ ] Update `docs/protocol/secrets.md` with aliases, original entries, approved mapping, collision outcome, new-name validation, and existing-name compatibility.
-- [ ] Update `docs/protocol/secret-requests.md` with list/run metadata and Save as secret validation. Keep temporary grants unchanged.
-- [ ] Keep touched protocol pages near 250 lines. Use linked pages when needed and preserve live links and anchors.
-- [ ] Update `tools/README.md`, `crates/cnd-tools/README.md`, and the shared interface README where public behavior or entry points change.
-- [ ] Read both complete legal pages and their imported sections. Read every public guide in full. Update every sentence that restates a changed fact.
-- [ ] Update the eight affected legal and guide sentences from the read-only audit. Add the new-name rule and existing-name compatibility to the public secret guide.
-- [ ] Update related live mockup descriptions that say agents see only a secret's name.
-- [ ] Check every relative link in each changed Markdown file.
+- [x] Update `docs/protocol/secrets.md` with aliases, original entries, approved mapping, collision outcome, new-name validation, and existing-name compatibility.
+- [x] Update `docs/protocol/secret-requests.md` with list/run metadata and Save as secret validation. Keep temporary grants unchanged.
+- [x] Keep touched protocol pages near 250 lines. Use linked pages when needed and preserve live links and anchors.
+- [x] Update `tools/README.md`, `crates/cnd-tools/README.md`, where public behavior or entry points change. The new shared interface entry points are added in Milestone 3.
+- [x] Read both complete legal pages and their imported sections. Read every public guide in full. Update every sentence that restates a changed fact.
+- [x] Update the eight affected legal and guide sentences from the read-only audit. Add the new-name rule and existing-name compatibility to the public secret guide.
+- [x] Update related live mockup descriptions that say agents see only a secret's name.
+- [x] Check every relative link in each changed Markdown file.
 
 Audit evidence will be kept in `.context/secret-variable-names/public-docs-audit.md`.
+
+Evidence: `.context/secret-variable-names/internal-docs-report.md` and `external-docs-report.md`.
 
 ## Milestone 3: Tool contracts and new-name validation
 
@@ -150,6 +154,7 @@ Depends on: Milestone 2
 
 The `non-ui implementor` owns the shared tool contracts and Worker changes. This milestone keeps the product working with the current executable.
 
+- [ ] Update the shared interface, tools, and Worker READMEs with the new type and validation entry points.
 - [ ] Move touched secret tool boundary types to `crates/cnd-runner-interface/`. Preserve their existing wire fields and status variants.
 - [ ] Generate and commit TypeScript bindings. Import each generated type directly. Remove only the replaced handwritten declarations.
 - [ ] Keep new printable alias metadata separate from the Worker value-bearing response.
@@ -214,8 +219,13 @@ The orchestrator checks the combined result and owns the gate, review, and pull 
 
 The shared skill scripts live in `/home/user/code/skills/skills/` in this workspace. Use those scripts when the skill's short `scripts/` path is absent here.
 
+Mockup design calls from 17 November 2026: keep the invalid-name fixture scoped to its Replace variant. Reuse variants of the existing value page. Use disabled lifetime controls with one explanatory line. Reuse the name copy in the app during Milestone 5. These calls apply the approved validation behavior. No new requirement or user decision is needed.
+
+Documentation design calls from 17 November 2026: update both legal effective dates and the Terms revision identifier through their existing consent mechanism. Keep the complete mapping contract in the internal docs. Give public readers the variable lookup action, one example, and the separate-command recovery for conflicts.
+
 ## Approval and review record
 
-- 17 November 2026: Cal's decision 5 A + B is the approved approach. The detailed plan has not been approved.
-- 17 November 2026: the second-pass options check kept recommendation A and added D, E, and F. Variable-name decision 1 remains open.
+- 17 November 2026: Cal's decision 5 A + B is the approved approach.
+- 17 November 2026: the second-pass options check kept recommendation A and added D, E, and F.
+- 17 November 2026: Cal approved the detailed plan and variable-name decision 1A with “1 = A”.
 - The initial plan-only change runs Markdown validation and a read-only review. The npm and Rust gates wait for implementation.

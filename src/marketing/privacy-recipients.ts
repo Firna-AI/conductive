@@ -60,10 +60,11 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         files, code, and command results of turns on the session's login.
         This includes the messages of other members who use that login.
         Each Mac command request and its result also go to the agent and
-        to that provider or endpoint. So do the names and descriptions of
-        the secrets that the agent lists, and the output of each command
-        that it runs with a secret. That output hides each exact copy of a
-        secret value, but not a changed or encoded value.
+        to that provider or endpoint. They also get each listed secret's
+        name, description, and environment variable name. They get the
+        output of each command that the agent runs with a secret.
+        That output hides each exact copy of a secret value, but not a
+        changed or encoded value.
         With each message, they also get
         the GitHub login, the display name, and the ${productName} user ID of
         its sender. They get the
@@ -125,9 +126,9 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         tool rights. Messages follow the same session login rules.`,
       text`A workspace token is a credential for the workspace tools.
         Any program with that token can read workspace, session, and
-        message details, list sessions and previews, list the names and
-        descriptions of secrets, and read chats across its org without a
-        running turn.
+        message details, list sessions and previews, and read chats across
+        its org. It can also list each secret's name, description, and
+        environment variable name. These reads need no running turn.
         A copied token keeps this access after the person who copied it
         leaves the org. This access lasts while the token remains valid
         and the org remains active.`,

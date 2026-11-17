@@ -77,7 +77,7 @@ The workspace tools can list workspaces and usable repositories, sections, and m
 They can also list sessions and previews.
 They can read details of a workspace, session, or message, and read transcripts across the org.
 This includes workspaces that members created themselves.
-They can also list the names and descriptions of the org's secrets, without values.
+They can also list each org secret's name, description, and environment variable name, without its value.
 Agents can read archived workspaces and closed sessions, but cannot send messages to them.
 The tools reach only the org of the calling workspace.
 
@@ -222,8 +222,9 @@ Values show as dots.
 An admin can reveal one value at a time, also of a secret that another member added.
 Every member sees who revealed a value last, and when.
 
-An agent gets a secret's value only for one command.
-The command gets the value, and the agent sees only the name.
+An agent can ask to run one command with a secret.
+The command gets the value.
+The agent gets the secret's name and environment variable name, without the value.
 Each session needs a member's approval, unless the secret is for **All agents** or pre-approved in the workspace's **Capabilities**.
 Any member who sees the session can allow the request.
 The approval lasts for that session.

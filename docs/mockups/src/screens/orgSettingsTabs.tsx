@@ -19,6 +19,7 @@ import {
   type Membership,
   type PersonKey,
 } from '../fixtures/members'
+import { olderSecret, type OrgSecret } from '../fixtures/secrets'
 import type { OrgSettingsState } from './OrgSettingsScreen'
 import { settingsOrg } from './settingsOrgs'
 import { settingsRepositoryNotice } from './settingsRepositoryNotice'
@@ -53,6 +54,19 @@ function secretsAccess(state: OrgSettingsState): SecretsAccess {
   const person = settingsViewer(state)
   if (state.org === 'suspended') return { kind: 'suspended', person }
   return { kind: state.viewer, person }
+}
+
+/**
+ * The secrets of the Secrets tab. The Replace state for an older name also
+ * lists Cloudflare (read-only), a secret of Acme, first, as the list sorts
+ * by name.
+ */
+function tabSecrets(
+  state: OrgSettingsState,
+  secrets: readonly OrgSecret[],
+): readonly OrgSecret[] {
+  if (state.secrets !== 'replace-older' || state.org === 'new') return secrets
+  return [olderSecret, ...secrets]
 }
 
 /**
@@ -121,7 +135,7 @@ export function TabBody(props: { state: OrgSettingsState }) {
           access={secretsAccess(state)}
           computerTo={settings.links.computer}
           org={org.name}
-          secrets={settings.secrets}
+          secrets={tabSecrets(state, settings.secrets)}
           view={state.secrets}
         />
       )

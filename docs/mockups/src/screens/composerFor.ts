@@ -62,6 +62,8 @@ const runningConversations = new Set([
   'secret-temporary-saved',
   'secret-waiting-mixed',
   'secret-waiting-mixed-value',
+  'secret-invalid-name',
+  'secret-mixed-invalid-name',
   'secret-late-allowed',
   'secret-late-given',
 ])
