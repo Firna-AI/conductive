@@ -72,7 +72,7 @@ export interface StoredTurn {
   /** Fast was requested but absent from the runner's started choice. */
   olderRunner?: true
   closeAfterStop: boolean
-  stopRequest?: TurnStopRequester
+  stopRequest?: TurnStopRequester | null
   /** Internal waiting work. Older records have no successor. */
   nextTurnId?: string | null
   gateway?: TurnTokenState
