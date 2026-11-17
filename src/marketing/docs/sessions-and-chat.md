@@ -141,6 +141,7 @@ Its workspace tools reach every workspace of the same org.
 Agents can also rename, stop, and close sessions there.
 Closing a running session through the tools can stop its turn.
 Use a separate workspace when the delegated task needs separate files and a branch.
+The agent usually makes that workspace a [sub-workspace of the current one](/docs/workspaces#let-an-agent-manage-workspaces).
 
 Messages from agent tools end with a `---` line and **Sent by:** with a link to the sending session.
 This also applies to the first message when an agent creates a workspace or session.

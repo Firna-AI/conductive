@@ -98,16 +98,16 @@ Depends on: 1
 
 Give the cases to agents.
 
-- [ ] Add the cases to `crates/cnd-runner/src/engine/instructions.rs`,
+- [x] Add the cases to `crates/cnd-runner/src/engine/instructions.rs`,
       before the depth line.
-- [ ] Update the exact texts in
+- [x] Update the exact texts in
       `crates/cnd-runner/src/engine/_tests_/instructions_tests.rs`.
-- [ ] Add the cases to the `create_workspace` description in
+- [x] Add the cases to the `create_workspace` description in
       `crates/cnd-tools/src/mcp-tools.json`.
-- [ ] Add the cases to the create help in `crates/cnd-tools/src/help.txt`.
-- [ ] Update `tools/calls.md`, the runner README, and the workspace tools
+- [x] Add the cases to the create help in `crates/cnd-tools/src/help.txt`.
+- [x] Update `tools/calls.md`, the runner README, and the workspace tools
       README.
-- [ ] Run `cargo fmt --all -- --check`,
+- [x] Run `cargo fmt --all -- --check`,
       `cargo clippy --workspace --all-targets -- -D warnings`, and
       `cargo test -p cnd-runner -p cnd-tools`.
 
@@ -117,13 +117,13 @@ Depends on: 1
 
 Tell members when to ask for a sub-workspace.
 
-- [ ] Replace the sentence "Ask an agent to create a sub-workspace for a
+- [x] Replace the sentence "Ask an agent to create a sub-workspace for a
       task that needs its own files and branch." in
       `src/marketing/docs/workspaces.md` with the cases, under the rules
       of [Website docs](../docs/protocol/website-docs.md).
-- [ ] Update each other guide sentence that Milestone 1 noted: the
+- [x] Update each other guide sentence that Milestone 1 noted: the
       delegation sentence in `src/marketing/docs/sessions-and-chat.md`.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
 
 ## Milestone 4: Verification, commit, review, and pull request
 

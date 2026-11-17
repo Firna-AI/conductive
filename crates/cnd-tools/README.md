@@ -20,7 +20,7 @@ same result as text and structured content, with the matching `isError`.
 Workspace create and list accept `--parent ID`, or `parentId` through MCP.
 Create nests a workspace under that parent and uses the parent's section.
 List selects only the direct sub-workspaces of that parent.
-The create help describes the depth limit and sibling advice.
+The create text gives the cases of when to nest, the depth limit, and sibling advice.
 Both adapters preserve `parentId` in workspace records and list entries.
 Workspace details also keep `parent`, `depth`, and `children`.
 Create and move replies keep their optional `notice`.
