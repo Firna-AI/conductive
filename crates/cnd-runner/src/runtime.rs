@@ -27,7 +27,7 @@ pub enum RunExit {
 #[cfg_attr(test, unimock::unimock(api = CommandHandlerMock))]
 #[async_trait]
 pub trait CommandHandler: Send + Sync {
-    /// Start warm-up and offline report schedules before the first connection attempt.
+    /// Remove stale credentials and start offline report schedules before the first connection attempt.
     async fn start(&self) -> Result<()> {
         Ok(())
     }

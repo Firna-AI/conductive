@@ -98,7 +98,7 @@ Compose `GitRepository` with `GitRunner` and `RepositoryIo` boundaries. Give
 Compose `PortReporter` with a `PortScanner`. Give `ReportCommandHandler`
 these reporters, the loaded store, and the next agent command handler.
 Optionally supply `ReportWatchService` with a `WatchDriver`.
-The startup hook prepares context storage before the next handler warms agents.
+The startup hook prepares context storage before the next handler removes stale agent credentials.
 The connection handler reserves its initial scan before returning its future.
 Its startup hook starts watches before the first connection attempt.
 Compose `AgentEngine` with `EngineDependencies` and the loaded state.
@@ -164,7 +164,7 @@ and connection drops. It does not run the Worker.
 - [service.rs](src/filter/service.rs): `CredentialFilter` filters chat, report labels, and helper warnings.
 - [driver.rs](src/helper/driver.rs): `HelperConnection` correlates requests while agent events stream.
 - [process.rs](src/helper/process.rs): `NodeHelpers` owns private pipes and process-group cleanup.
-- [startup.rs](src/helper/startup.rs): `RunnerStartup` clears stale credentials, warms the SDK, and confirms a welcome.
+- [startup.rs](src/helper/startup.rs): `RunnerStartup` clears stale agent credentials before the first connection and confirms a welcome.
 - [runner_command.rs](../cnd-cli/src/runner_command.rs): the CLI composes the full runner and signal handling.
 - [limits.rs](src/limits.rs): `bound_event` applies serialized chat excerpts.
 - [commands.rs](src/json/commands.rs): `workspace_message` repairs and validates command JSON.

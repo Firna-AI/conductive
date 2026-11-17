@@ -184,7 +184,6 @@ async fn run_once(
     ));
     let startup = Arc::new(RunnerStartup {
         home: configuration.home.clone(),
-        helpers: helpers.clone(),
         executable,
     });
     let engine = Arc::new(AgentEngine::new(

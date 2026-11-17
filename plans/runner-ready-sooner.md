@@ -145,12 +145,14 @@ Depends on: none
 
 No requirement changes, as design call 8 says. This milestone confirms it.
 
-- [ ] Read `docs/protocol/agent-runner.md`,
+- [x] Read `docs/protocol/agent-runner.md`,
       `docs/protocol/workspace-tools.md#files-and-changes`, and
       `docs/protocol/sandbox-software.md`. Confirm that no sentence states
       a warm-up of the agent programs, the order of the connection and the
       first scan, or the order of the reads in a scan. If one does, stop
-      and add a decision to this plan.
+      and add a decision to this plan. Result, 17 November 2026: no
+      sentence does. `workspace-tools.md` says only that the runner scans
+      once after the end of a restore, which this change keeps.
 
 ## Milestone 2: Remove the warm-up
 
@@ -161,22 +163,36 @@ Code: `crates/cnd-runner/src/helper/startup.rs`,
 `crates/cnd-runner/src/helper/driver.rs`, the helper request type in
 `crates/cnd-runner-interface/`, and `runner/sdk-helper/src/`.
 
-- [ ] Remove the warm-up from `RunnerStartup::prepare`. Keep the credential
+- [x] Remove the warm-up from `RunnerStartup::prepare`. Keep the credential
       removal.
-- [ ] Check that the release parts list pins the helper of each release.
+- [x] Check that the release parts list pins the helper of each release.
       Record the result in this plan. Then remove the warm request as
       design call 2 says, and regenerate the shared types with the command
-      in `CLAUDE.md`.
-- [ ] Remove the tests of the warm-up under the removal rule of the
-      `testing` skill.
-- [ ] Tests:
-  - [ ] The runner connects with no helper request before the connection.
-  - [ ] A first turn starts and runs as before.
-- [ ] Update the doc comments that name the warm-up: `runtime.rs:30`,
+      in `CLAUDE.md`. Result, 17 November 2026: release packaging embeds
+      the helper's URL and SHA-256 digest. The updater links that part
+      beside the version's executable. The runner resolves that executable
+      before it selects the default helper. However,
+      `crates/cnd-cli/src/runner_command.rs:73-76` accepts any
+      `CONDUCTIVE_SDK_HELPER` path, including for a release build. A runner
+      can therefore select another release's helper. Keep `Warm`, the
+      helper handler, and the generated request types. Remove only the
+      runner's warm request. The shared export command regenerates both
+      generated directories and leaves them unchanged. Evidence:
+      `.context/runner-ready-sooner/milestone-2/release-pinning.md`.
+- [x] Remove the tests of the warm-up under the removal rule of the
+      `testing` skill. No test covers only the removed warm-up. Keep all
+      credential-cleanup assertions and rename that test. Delete the
+      unused `warm` branch of the fake helper.
+- [x] Tests:
+  - [x] The runner connects with no helper request before the connection.
+  - [x] A first turn starts and runs as before.
+- [x] Update the doc comments that name the warm-up: `runtime.rs:30`,
       `repository/service.rs:39`, `helper/boundary.rs:53` and `:65`, and
       `engine/dependencies.rs:40`.
-- [ ] Update the runner crate README lines 101 and 159, and
+- [x] Update the runner crate README lines 101 and 159, and
       `runner/behavior.md:167-168`.
+
+Verification evidence: `.context/runner-ready-sooner/milestone-2/`.
 
 ## Milestone 3: A cheaper first scan
 

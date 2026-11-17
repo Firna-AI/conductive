@@ -107,13 +107,6 @@ impl HelperConnection {
         }
         receiver.await.or(Err(Error::HelperExited))?
     }
-
-    /// Warm-up request exits without creating any agent.
-    pub async fn warm(&self) -> Result<()> {
-        self.request(|request_id| HelperRequest::Warm { request_id })
-            .await?;
-        self.port.exited().await
-    }
 }
 
 #[async_trait]
