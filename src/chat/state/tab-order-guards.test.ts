@@ -77,7 +77,7 @@ describe('the chat tab order guards', () => {
     })
     const loading = chat.controller.start()
     const unloaded = chat.controller.getSnapshot()
-    chat.controller.moveTab(first, { after: second })
+    chat.controller.moveTab(first, { pane: 0, place: { after: second } })
     expect(chat.controller.getSnapshot()).toBe(unloaded)
     chat.held.splice(0, 1)[0]()
     await loading
@@ -87,13 +87,13 @@ describe('the chat tab order guards', () => {
       path: 'missing',
       mode: 'source',
     }
-    chat.controller.moveTab(closed, { before: first })
-    chat.controller.moveTab(first, { after: closed })
-    chat.controller.moveTab(absent, { before: first })
-    chat.controller.moveTab(first, { before: absent })
-    chat.controller.moveTab(first, { before: first })
-    chat.controller.moveTab(first, { before: second })
-    chat.controller.moveTab(second, { after: first })
+    chat.controller.moveTab(closed, { pane: 0, place: { before: first } })
+    chat.controller.moveTab(first, { pane: 0, place: { after: closed } })
+    chat.controller.moveTab(absent, { pane: 0, place: { before: first } })
+    chat.controller.moveTab(first, { pane: 0, place: { before: absent } })
+    chat.controller.moveTab(first, { pane: 0, place: { before: first } })
+    chat.controller.moveTab(first, { pane: 0, place: { before: second } })
+    chat.controller.moveTab(second, { pane: 0, place: { after: first } })
     expect(chat.controller.getSnapshot()).toBe(before)
     expect(chat.writes()).toEqual([])
   })
@@ -115,7 +115,7 @@ describe('the chat tab order guards', () => {
     expect(chat.row()).toEqual([file, diff, second, closed])
     expect(chat.row(false)).toEqual([second, closed])
     const before = chat.controller.getSnapshot()
-    chat.controller.moveTab(closed, { before: second })
+    chat.controller.moveTab(closed, { pane: 0, place: { before: second } })
     expect(chat.controller.getSnapshot()).toBe(before)
     expect(chat.writes()).toEqual([])
     expect((await chat.savedView()).panes[0].tabs).toEqual([

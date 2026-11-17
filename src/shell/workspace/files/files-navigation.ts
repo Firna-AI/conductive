@@ -60,21 +60,27 @@ export function useAddressList(
 }
 
 /**
- * A file or diff page that shows keeps its tab open and active in the saved
- * view, also when its address came from a link or the browser history. A
- * file or a diff with no tab opens in the temporary tab, as a press opens
- * it. After a press, the view shows the tab already, so this saves nothing.
+ * A file or diff page of the address keeps its tab open and active in the
+ * saved view, also when its address came from a link or the browser
+ * history. A file or a diff with no tab opens in the temporary tab, as a
+ * press opens it. After a press, the view shows the tab already, so this
+ * saves nothing. A page that the address does not name, `enabled` false,
+ * such as the shown tab of the other pane of a split, changes nothing.
  */
-export function useOpenTab(saved: SavedView, tab: FilesTab): void {
+export function useOpenTab(
+  saved: SavedView,
+  tab: FilesTab,
+  enabled: boolean,
+): void {
   const known = useViewKnown(saved)
   const { path } = tab
   const mode = tab.kind === 'file' ? tab.mode : null
   useEffect(() => {
-    if (!known) return
+    if (!known || !enabled) return
     const shown: FilesTab =
       mode === null ? { kind: 'diff', path } : { kind: 'file', path, mode }
     saved.updateView((view) => withActiveTab(view, shown))
-  }, [saved, known, path, mode])
+  }, [saved, known, enabled, path, mode])
 }
 
 /**

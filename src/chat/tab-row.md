@@ -7,8 +7,9 @@ Close tabs to the right, and the scroll of the row, and the reader's place
 that each tab keeps.
 [The tab row](../../docs/protocol/tab-row.md) states the requirements.
 [Split panes](../../docs/protocol/split-panes.md) states the requirements
-of two panes, each with its own row. The chat draws the focused pane and its row.
-It does not draw two panes yet, and its tab menu has no pane item yet.
+of two panes, each with its own row. The chat draws each pane with its own
+row, as [the panes](panes.md) says. Its tab menu has no pane item yet, and
+no drag moves a tab to the other pane of a desktop column yet.
 
 - Each saved pane keeps its own order of session, file, and diff tabs.
   A tab belongs to one pane only. A host with no file or diff tabs leaves
@@ -40,28 +41,39 @@ It does not draw two panes yet, and its tab menu has no pane item yet.
   browser view, also when a file shows. These actions send no write. If the
   view did not load, the row shows the open sessions. The first local tab
   action makes a browser view with all these sessions, so the other tabs stay.
-- The keys of the row follow the row order, as `useTabKeys` in
-  `components/tab-keys.ts` gives them. Previous tab and Next tab show the
+- The keys of the row follow the row order of the focused pane, or the one
+  row of a phone, as `useTabKeys` in `components/tab-keys.ts` gives them.
+  Previous tab and Next tab show the
   tab before or after the shown tab, with a wrap at each end, also a file
   or diff tab, through its `show`. Close tab closes the shown session tab
-  as its Close does, and the host closes a shown file or diff tab. Reopen
+  as its Close does, and the host closes a shown file or diff tab of the
+  focused pane. Reopen
   closed session runs the first row of the session history. Copy concise
   transcript and Copy full transcript copy the session of the focused
   pane, else the session that the other pane shows, as the items of its
   tab menu do. They use the same toast, also in a read-only workspace.
   A key that would do nothing, such as Next tab with one tab or a copy key
   when no pane shows a session, goes on to the page.
-- `moveTab(tab, place)` puts a tab before or after its neighbour in the
-  row. It saves through the shared view writer, then sorts the open
-  sessions for Close. A new or reopened session opens at the end. A
-  read-only workspace moves no tab.
-- The controller also accepts a pane target and a place, or a new pane on
-  either side. Each move calls the pure `moveTab(view, tab, target)` in
+- `moveTab(tab, target)` of the controller puts a tab before or after its
+  neighbour in the row of a pane, at the end of that row, or in a new pane
+  on either side. Each row names the pane of the neighbour of the new
+  place, so a move inside a row stays in its pane. It saves through the
+  shared view writer, then sorts the open sessions for Close. A new or
+  reopened session opens at the end. A read-only workspace moves no tab.
+- Each move calls the pure `moveTab(view, tab, target)` in
   `state/tab-order.ts`. A pane move shows the tab there and focuses that
   pane. The source keeps its shown tab unless that tab moved. It then
   shows the next tab, else the previous tab. An empty source pane closes.
-  A split of the only tab changes nothing. No screen control exposes these
-  pane moves yet.
+  A split of the only tab changes nothing. A move whose tab or neighbour is
+  in no row of the view moves nothing. On a desktop, no screen control
+  moves a tab to the other pane yet.
+- The one row of a phone holds the session tabs of both panes, the left
+  pane first, with a short neutral line between the two parts. A drop
+  there moves the tab into the pane of the tab next to its drop place.
+  Move left on the first tab of the right part, and Move right on the last
+  tab of the left part, move the tab across the line, to the near end of
+  the other pane. The status then names the pane, such as "app.ts moves to
+  the right pane, place 1 of 3", and the focus goes back to the tab.
 - A move that changes the place of the temporary tab keeps it, as
   [The tab row](../../docs/protocol/tab-row.md#the-tab-menu)
   says: the pure `moveTab` of `state/tab-order.ts` drops the mark with the
@@ -101,7 +113,9 @@ It does not draw two panes yet, and its tab menu has no pane item yet.
   Move right, a line, then Close tabs to the right. The host tells the row
   which tab is temporary: only that tab gets a `keep` from `renderTab`. A
   move or a close that the place of the tab rules out is off: it keeps its
-  place at half opacity, and the arrow keys skip it. Escape or a press
+  place at half opacity, and the arrow keys skip it. Close tabs to the
+  right is off on the last tab of each part of the one row of a phone.
+  Escape or a press
   outside closes the menu.
 - Each item that changes the workspace carries a mark: Rename session,
   Keep open, the moves, and Close tabs to the right. A read-only chat
@@ -125,7 +139,8 @@ It does not draw two panes yet, and its tab menu has no pane item yet.
   fill of its own unless it is the shown tab. A tab with its rename field
   opens no tab menu, so the browser shows its own.
 - Close tabs to the right runs `closeTabsRight` of
-  `components/close-right.ts` on the tabs after the tab in the row order.
+  `components/close-right.ts` on the tabs after the tab in the row order,
+  in the pane of the tab.
   When one of them is the shown tab, the tab of the menu shows first, as a
   click on it does, so no close picks another tab to show. The file and
   diff tabs then leave the view in one change, through `withoutTabs` of

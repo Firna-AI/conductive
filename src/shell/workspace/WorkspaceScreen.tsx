@@ -5,7 +5,6 @@ import { CircleAlert } from 'lucide-react'
 import { EmptyState } from '../../../docs/mockups/src/components/common/EmptyState'
 import { SuspendedOrgNotice } from '../../../docs/mockups/src/components/orgs/SuspendedOrgNotice'
 import body from '../../../docs/mockups/src/components/workspace/WorkspaceBody.module.css'
-import page from '../../../docs/mockups/src/screens/WorkspaceScreen.module.css'
 import { usePassedDeadlines } from '../../app/deadlines'
 import { mayArchive, mayRestore } from '../../app/permissions'
 import { useStore } from '../../app/store'
@@ -32,10 +31,11 @@ import { archivedRestore, contentState, sandboxView } from './sandbox-view'
 import { SandboxPanel } from './SandboxNotice'
 import { MissingWorkspace, useRememberWorkspace } from './remember-workspace'
 import { OpenSessionAddress } from './session-address'
+import { PhoneWorkspace } from './PhoneWorkspace'
 import { shownWorkspaces } from './tab-memory'
 import { ToolsPart } from './tools/ToolsPart'
 import { useArchiveActions } from './useArchiveActions'
-import { PhoneTabBar, phoneView, RightColumn } from './WorkspaceColumns'
+import { RightColumn } from './WorkspaceColumns'
 import { WorkspaceHeader } from './WorkspaceHeader'
 import { WorkspaceMacBar } from './WorkspaceMacBar'
 import { WorkspacePaletteActions } from './WorkspacePaletteActions'
@@ -220,11 +220,14 @@ export function WorkspaceScreen(props: {
       start={sandboxParts.refusal ? null : start}
     />
   )
-  const header = (
-    <WorkspaceHeader
-      context={context}
-      ownerControl={features.owner?.(context)}
-    />
+  const top = (
+    <>
+      <WorkspaceHeader
+        context={context}
+        ownerControl={features.owner?.(context)}
+      />
+      <HeaderNoticeBars notices={notices} />
+    </>
   )
   // Continue, palette actions, file tab resume, and the session address.
   const dialog = (
@@ -240,38 +243,15 @@ export function WorkspaceScreen(props: {
     </>
   )
   if (phone) {
-    const view = phoneView(props.view)
-    const archived = sandbox === 'archived'
-    const content = {
-      chat: chatArea,
-      files,
-      tool: tools,
-    }
-    const screen = (
-      <WorkspaceLinks context={context}>
-        <div className={page.mobileBody}>
-          {header}
-          <HeaderNoticeBars notices={notices} />
-          {features.pullRequest?.(context)}
-          <div className={page.mobileBody}>
-            {archived || view === 'chat'
-              ? content.chat
-              : view === 'files'
-                ? content.files
-                : content.tool}
-          </div>
-          {archived ? null : <PhoneTabBar context={context} />}
-          {dialog}
-        </div>
-      </WorkspaceLinks>
-    )
-    // An archived workspace on a phone shows only its chat: no pull request
-    // row and no Checks, so it reads no GitHub state and no files.
-    if (archived) return screen
     return (
-      <KeptFilesConnection context={context}>
-        <WorkspaceGitHub context={context}>{screen}</WorkspaceGitHub>
-      </KeptFilesConnection>
+      <PhoneWorkspace
+        chat={chatArea}
+        context={context}
+        dialog={dialog}
+        files={files}
+        tool={tools}
+        top={top}
+      />
     )
   }
   // The bar of the Mac app tops the main area, above the whole workspace.
@@ -282,11 +262,11 @@ export function WorkspaceScreen(props: {
           <WorkspaceMacBar context={context} />
           <div className={body.body}>
             <div className={body.chat}>
-              {header}
-              <HeaderNoticeBars notices={notices} />
+              {top}
               {chatArea}
             </div>
             <RightColumn
+              context={context}
               files={files}
               pullRequest={features.pullRequest?.(context)}
               tools={sandbox === 'archived' ? undefined : tools}

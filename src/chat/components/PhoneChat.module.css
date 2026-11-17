@@ -1,0 +1,14 @@
+/*
+ * The chat of a phone fills the column that the app gives it. It sets no
+ * position, so a sheet covers the whole phone screen, as in the mockups.
+ * A phone raises every local touch target to 40 px.
+ */
+.phone {
+  --ui-touch-min: 40px;
+
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}

@@ -5,6 +5,7 @@ import {
 } from '../../docs/mockups/src/components/layout/ResizeHandle'
 import { ColumnSplit } from './column-split'
 import { panelDrag, type PanelDrag, type PanelMove } from './panel-drag'
+import { PaneSplit } from './pane-split'
 import type { KeyValueStorage } from './services'
 import { Store } from './store'
 
@@ -44,11 +45,11 @@ function readWidth(storage: KeyValueStorage | null, panel: Panel) {
 /**
  * The layout of the panels that the user chooses: the widths of the
  * sidebar and the right column, the split of the right column between the
- * file lists and the tools, and whether the right column shows. The
- * browser keeps the widths and the split, as it keeps the last workspaces
- * of `last-workspaces.ts`. When the browser refuses its storage, they last
- * until the page closes. Whether the right column shows always lasts until
- * the page closes.
+ * file lists and the tools, the split of the two panes of the centre
+ * column, and whether the right column shows. The browser keeps the widths
+ * and the splits, as it keeps the last workspaces of `last-workspaces.ts`.
+ * When the browser refuses its storage, they last until the page closes.
+ * Whether the right column shows always lasts until the page closes.
  */
 export class PanelLayout {
   readonly widths: Store<PanelState>
@@ -59,11 +60,14 @@ export class PanelLayout {
   readonly rightShown = new Store(true)
   /** The split of the right column between the file lists and the tools. */
   readonly split: ColumnSplit
+  /** The share of the left pane of the centre column, for every workspace. */
+  readonly paneSplit: PaneSplit
   private readonly storage: KeyValueStorage | null
 
   constructor(storage: KeyValueStorage | null) {
     this.storage = storage
     this.split = new ColumnSplit(storage)
+    this.paneSplit = new PaneSplit(storage)
     this.widths = new Store<PanelState>({
       sidebar: readWidth(storage, 'sidebar'),
       right: readWidth(storage, 'right'),

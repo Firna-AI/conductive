@@ -2,7 +2,6 @@ import type { Session } from '../../shared/generated/Session'
 import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import {
   allTabs,
-  focusedPane,
   paneWithTabs,
   tabKey,
   withPanes,
@@ -12,11 +11,17 @@ export type TabPlace = { before: WorkspaceTab } | { after: WorkspaceTab }
 export type TabTarget =
   { pane: 0 | 1; place: TabPlace | 'end' } | { newPane: 'left' | 'right' }
 
-/** The focused row's visible tabs, then sessions without a place in either pane. */
+/**
+ * The tabs that the row of `pane` shows: the tabs of its open sessions, and
+ * its file and diff tabs when `files` holds. The row of the focused pane,
+ * which is the only row without a view, then takes each open session that
+ * has no place in either pane.
+ */
 export function rowTabs(
   view: WorkspaceView | null,
   sessions: readonly Session[],
   files: boolean,
+  pane: 0 | 1,
 ): WorkspaceTab[] {
   const open = new Set(sessions.map((session) => session.id))
   const placed = new Set(allTabs(view).map(tabKey))
@@ -28,9 +33,10 @@ export function rowTabs(
     seen.add(key)
     tabs.push(tab)
   }
-  for (const tab of view ? focusedPane(view).tabs : []) {
+  for (const tab of view?.panes[pane]?.tabs ?? []) {
     if (tab.kind === 'session' ? open.has(tab.sessionId) : files) append(tab)
   }
+  if (pane !== (view?.focusedPane ?? 0)) return tabs
   for (const { id } of sessions) {
     const tab: WorkspaceTab = { kind: 'session', sessionId: id }
     if (!placed.has(tabKey(tab))) append(tab)

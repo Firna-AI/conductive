@@ -103,7 +103,7 @@ export async function mountLongTurn() {
     return (
       <WorkspaceChat
         client={client}
-        content={page}
+        pages={[page]}
         orgId={FAKE_IDS.org}
         subscribe={subscribe}
         viewport="desktop"

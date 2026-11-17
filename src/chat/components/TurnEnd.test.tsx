@@ -3,6 +3,7 @@
 import { expect, it, vi } from 'vitest'
 import type { ChangedFile } from '../../shared/generated/ChangedFile'
 import { TouchScreen } from '../../../docs/mockups/src/components/common/touch'
+import turnEnd from '../../../docs/mockups/src/components/chat/TurnEnd.module.css'
 import { accessibleName, byRole } from '../../test-support/dom-queries'
 import { mount, MOUNTED_TEST_TIMEOUT, press } from '../../test-support/mount'
 import { TurnEnd } from './TurnEnd'
@@ -130,4 +131,26 @@ it('shows no line counts on a file without line changes', async () => {
     names: chipNames(view.container),
     stats: view.container.querySelectorAll('[role="img"]').length,
   }).toEqual({ names: ['logo.png', 'old.ts−4'], stats: 1 })
+})
+
+it('puts the name of a chip in the part that a narrow chat cuts, and keeps the counts out of it', async () => {
+  const label = 'src/address-autocomplete-suggestions.ts'
+  const view = await mount(
+    <TurnEnd
+      durationMs={1_000}
+      files={[{ path: label, change: 'modified', added: 3, removed: 1 }]}
+      filesUnavailable={false}
+      omittedFiles={0}
+      onOpenDiff={() => {}}
+    />,
+  )
+  const chip = byRole('button', `Open the changes of ${label}`, view.container)
+  const name = chip.querySelector(`.${turnEnd.name}`)
+  expect({
+    name: name?.textContent,
+    chip: chip.textContent,
+  }).toEqual({
+    name: 'address-autocomplete-suggestions.ts',
+    chip: 'address-autocomplete-suggestions.ts+3−1',
+  })
 })

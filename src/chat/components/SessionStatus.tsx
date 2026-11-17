@@ -13,7 +13,6 @@ import {
 } from '../state/chat-snapshot'
 import type { ChatController } from '../state/controller'
 import { ActionButton } from '../ui/actions'
-import { sessionTarget } from '../state/pane-selection'
 
 /** The state of a session's stored history, from its history load alone. */
 export function historyStatus(
@@ -89,21 +88,23 @@ function Waiting(props: { text: string }) {
 }
 
 /**
- * What takes the place of the transcript: the load of the chat, no open
- * session, the history of a session with nothing to show yet, or a new
- * session. A chat with content shows its history status beside it. The
- * start steps count as content while `starting` holds. A read-only chat
- * names only the session history, because it starts no session.
+ * What takes the place of the transcript of the session `sessionId`: the
+ * load of the chat, no open session, the history of a session with nothing
+ * to show yet, or a new session. A chat with content shows its history
+ * status beside it. The start steps count as content while `starting`
+ * holds. A read-only chat names only the session history, because it starts
+ * no session.
  */
 export function emptyView(props: {
   snapshot: ChatSnapshot
   controller: ChatController
+  sessionId: string | null
   starting: boolean
   readOnly?: boolean
 }): ReactNode {
   const { snapshot, controller } = props
   const { load, workspace } = snapshot
-  const id = sessionTarget(snapshot)
+  const id = props.sessionId
   if (load.state === 'failed') {
     return (
       <EmptyState

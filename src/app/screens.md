@@ -98,6 +98,13 @@ the Help row of the command palette opens.
   shortcut model: Left and Right, alone or with Shift for a larger step,
   and Home and End alone. A key with other modifiers, such as ⌥⌘←, goes to
   its shortcut.
+- The divider between the two panes of the centre column moves the share
+  of the left pane, with the same keys and the pointer. A move starts from
+  the share that shows, and it stops where a pane would get narrower than
+  320 px. A centre column narrower than 641 px keeps it at half, as
+  [The width of split panes](../../docs/protocol/split-pane-width.md)
+  says. While two panes show, the right column gives way to them, down to
+  280 px, and it still leaves the centre at least 360 px.
 - On desktop, the toggle at the end of the workspace header hides the
   right column and shows it again, and so does the key of Hide or show the
   right column. The choice holds for every workspace of the tab until the

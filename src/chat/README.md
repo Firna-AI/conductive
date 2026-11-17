@@ -63,9 +63,14 @@ chips.
   the temporary tab to another place keeps it, and so does Keep open in its tab menu, through the `keep` that the
   host gives that tab.
 - The saved view holds one or two panes and the focused pane. Each pane
-  owns its tab order, shown tab, and temporary tab. The screen draws only
-  the focused pane. The Worker keeps older app copies compatible through
-  the flat fields in its replies and the fit of old saves onto stored panes.
+  owns its tab order, shown tab, and temporary tab. The Worker keeps older
+  app copies compatible through the flat fields in its replies and the fit
+  of old saves onto stored panes.
+- [The panes](panes.md) gives how the chat draws one or two panes: the
+  row, the chat or page, the message field, and the drop area of each
+  pane, the mark and the setter of the focused pane, the divider and its
+  share, the bar below both panes, the one row of a phone, and the panes
+  of a read-only workspace.
 - The state loads each shown session, including the pane that is not
   focused. One controller and one workspace stream feed both session logs.
   The view owns selection. Each pane also remembers its last session while
@@ -170,8 +175,9 @@ copy, the chat routes, the Mac commands, and the development page.
 - [Chat and events](../../docs/protocol/chat-and-events.md)
 - [The tab row](../../docs/protocol/tab-row.md): the order, the drag, the
   scroll, and the tab menu of the tabs of the centre column.
-  [Split panes](../../docs/protocol/split-panes.md) states the requirements
-  of two panes, which the chat does not draw yet.
+  [Split panes](../../docs/protocol/split-panes.md) and
+  [The width of split panes](../../docs/protocol/split-pane-width.md) state
+  the requirements of two panes.
 - [Chat Markdown](../../docs/protocol/chat-markdown.md): the formatting of
   agent messages, with their headings and lists.
 - [Chat tables](../../docs/protocol/chat-tables.md): the tables of agent

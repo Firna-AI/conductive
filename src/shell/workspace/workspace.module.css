@@ -25,11 +25,6 @@
   white-space: nowrap;
 }
 
-/* The right column leaves the chat at least 360 px. */
-.right {
-  max-width: calc(100% - 360px);
-}
-
 .center {
   display: flex;
   flex: 1;

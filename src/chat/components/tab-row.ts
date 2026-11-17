@@ -9,7 +9,7 @@ import { nameLabel } from '../../shared/name-label'
 
 import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import { rowTabs } from '../state/tab-order'
-import { focusedPane, tabKey } from '../../shared/workspace-panes'
+import { tabKey } from '../../shared/workspace-panes'
 
 /** A file or diff tab of the saved view. The host of the chat draws it. */
 type HostTab = Exclude<WorkspaceTab, { kind: 'session' }>
@@ -41,6 +41,9 @@ export type TabCloseProps = HTMLAttributes<HTMLElement>
  * place, with the props of its list item, of its link, and of the wrapper of
  * its Close button, or the copy that a drag lifts above the page. The copy
  * shows the icon and the whole title of the tab, with no link and no Close.
+ * `selected` says that the tab shows in its pane, and `focused` that its
+ * row belongs to the focused pane, or to the only pane, so the shown tab
+ * there takes the key of Close tab.
  */
 export type TabDraw =
   | {
@@ -48,6 +51,8 @@ export type TabDraw =
       item: TabItemProps
       link: TabLinkProps
       close: TabCloseProps
+      selected: boolean
+      focused: boolean
     }
   | { kind: 'lifted' }
 
@@ -80,8 +85,10 @@ export interface SessionTab {
   /** The title of the session, or null while it has none. */
   name: Session['title']
   running: boolean
-  /** The tab shows as the current one. */
+  /** The tab shows as the current one of its row. */
   selected: boolean
+  /** The pane whose row holds the tab. */
+  pane: 0 | 1
 }
 
 /** A file or diff tab, which the host names and draws. */
@@ -90,6 +97,8 @@ interface HostRowTab extends RenderedTab {
   tab: HostTab
   /** The host shows the tab as the current one, in place of the chat. */
   selected: boolean
+  /** The pane whose row holds the tab. */
+  pane: 0 | 1
 }
 
 /** A tab of the row: a session tab, or a file or diff tab of the host. */
@@ -108,27 +117,10 @@ export function rowKey(tab: RowTab): string {
 }
 
 /**
- * The tab that shows as the current one, if any: the tab of the open session
- * of the chat, or, while the host shows a `page` in place of the chat, the
- * file or diff tab that the view makes active.
- */
-export function shownTab(
-  view: WorkspaceView | null,
-  sessionId: string | null,
-  page: boolean,
-): WorkspaceTab | null {
-  if (!page) {
-    return sessionId === null ? null : { kind: 'session', sessionId: sessionId }
-  }
-  const active = view ? focusedPane(view).activeTab : null
-  return active?.kind === 'session' ? null : active
-}
-
-/**
- * The tabs of the row in the saved order. `shown` is the tab that shows as
- * the current one, if any, as `shownTab` gives it. `renderTab` names and
- * draws the file and diff tabs of the host. Without it, the row holds only
- * the session tabs. `isRunning` reads the current turn of each session.
+ * The tabs of the row of `pane` in the saved order. `shown` is the tab that
+ * shows as the current one of the row, if any. `renderTab` names and draws
+ * the file and diff tabs of the host. Without it, the row holds only the
+ * session tabs. `isRunning` reads the current turn of each session.
  */
 export function rowOf(
   view: WorkspaceView | null,
@@ -136,11 +128,12 @@ export function rowOf(
   shown: WorkspaceTab | null,
   isRunning: (sessionId: string) => boolean,
   renderTab: RenderTab | undefined,
+  pane: 0 | 1,
 ): RowTab[] {
   const records = new Map(sessions.map((item) => [item.id, item]))
   const current = shown === null ? null : tabKey(shown)
   const host = renderTab !== undefined
-  return rowTabs(view, sessions, host).flatMap((tab): RowTab[] => {
+  return rowTabs(view, sessions, host, pane).flatMap((tab): RowTab[] => {
     const selected = tabKey(tab) === current
     if (tab.kind === 'session') {
       const session = records.get(tab.sessionId)
@@ -155,10 +148,13 @@ export function rowOf(
           name,
           selected,
           running: isRunning(session.id),
+          pane,
         },
       ]
     }
     // Without a host, `rowTabs` gives no file or diff tab.
-    return renderTab ? [{ kind: 'host', tab, selected, ...renderTab(tab) }] : []
+    return renderTab
+      ? [{ kind: 'host', tab, selected, pane, ...renderTab(tab) }]
+      : []
   })
 }

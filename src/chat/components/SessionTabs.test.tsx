@@ -31,6 +31,7 @@ function tabBar(
     { kind: 'session', sessionId: untitled.id },
     () => startedTurn(untitled) !== null,
     undefined,
+    0,
   )
   return renderToStaticMarkup(
     <SessionTabs

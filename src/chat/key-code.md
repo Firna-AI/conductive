@@ -5,7 +5,16 @@ types, and the functions of the chat that a reader opens first. Each path
 is relative to `src/chat/`, the folder of this guide.
 
 - `WorkspaceChat.tsx`: `WorkspaceChat`, which owns its controller, and
-  `WorkspaceChatView`, which draws a kept one, with their callbacks.
+  `WorkspaceChatView`, which draws a kept one. `components/chat-view-props.ts`:
+  `ChatViewProps`, their props and callbacks. `components/ChatBody.tsx`:
+  the body of both, which plans the panes and draws them.
+- `components/pane-plan.ts`: the panes that the column shows, the row and
+  the page or the session of each, the pane whose chat leads, and the one
+  row of a phone. `components/ChatPanes.tsx`: one or two panes on desktop,
+  with the divider and the bar below both. `components/PhoneChat.tsx`: the
+  one row and the one chat of a phone. `components/pane-focus.ts`: the
+  handlers that make a pane the focused pane. `components/column-parts.ts`:
+  the props that the rows and the chats of the column share.
 - `useChatController.ts`: the controller of one workspace and its snapshot,
   through `useWorkspaceStore`.
 - `state/controller.ts`: `ChatController`, the public boundary of the chat
@@ -18,8 +27,8 @@ is relative to `src/chat/`, the folder of this guide.
 - `state/controller-context.ts`: the context of one controller run. It
   holds the local IDs of drafts and files, the upload generations, the
   devices, and the event stream. Each draft ID holds the run.
-- `state/tab-order.ts`: the focused row and the pure move inside a row,
-  between panes, or into a new pane. A move keeps a temporary tab whose
+- `state/tab-order.ts`: the row of each pane and the pure move inside a
+  row, between panes, or into a new pane. A move keeps a temporary tab whose
   place changes. `state/session-tab-places.ts` reconciles session places
   across panes and restores the place of a failed close.
 - `api/read-view.ts`: the saved-view reader. It reads panes and older flat
@@ -27,7 +36,7 @@ is relative to `src/chat/`, the folder of this guide.
 - `components/SessionTabs.tsx`: the tab row, with the session tabs of
   `components/SessionTab.tsx` and the tabs of `renderTab`.
   `components/tab-row.ts`: `RenderTab`, `TabDraw`, and `rowOf`, the tabs of
-  the row in the saved order with their titles. `components/tab-keys.ts`:
+  the row of a pane in the saved order with their titles. `components/tab-keys.ts`:
   `useTabKeys`, the keys of the row, and the copy keys of the shown
   session.
 - `components/useTabDrag.ts`: the drag of the tab row: the drop place, the
@@ -50,8 +59,10 @@ is relative to `src/chat/`, the folder of this guide.
   tab in the row, and the scroll that brings tabs into view.
   `components/tab-nodes.ts`: the elements of the tabs, which the drag, the
   scroll, and the menu share.
-- `components/SessionChat.tsx`: the chat of the open session, and
-  `ChatHost`, the start steps and the sandbox bar that the app can draw.
+- `components/SessionChat.tsx`: the chat of the session of a pane.
+  `components/sandbox-parts.tsx`: `ChatHost`, the start steps and the
+  sandbox bar that the app can draw, and `sandboxParts`, which picks the
+  host's or the chat's own.
 - `components/Composer.tsx`: the message box and its controls, with the
   steering prompt that [Messages](../../docs/protocol/messages-and-attachments.md#messages)
   states. It gives its field the `files` of the draft, and it holds the

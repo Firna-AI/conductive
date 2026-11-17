@@ -8,7 +8,8 @@ in the centre, and the parts that the shell gives.
 `ChatArea` draws the chat in the centre: `WorkspaceChatView` with the kept
 `ChatController`, as
 [A chat that the app keeps](../../chat/README.md#a-chat-that-the-app-keeps)
-says.
+says, in one or two [panes](../../chat/panes.md), with the `PaneSplit` of
+the panel layout.
 
 - The shell draws the start steps, with the time of each step, and the
   sandbox bar, with Resume. It draws them from its own record of the
@@ -27,20 +28,23 @@ says.
   when it shows, as
   [Chat integration](../../chat/integration.md) says. A phone gets no
   request, so no keyboard opens on its own.
-- On desktop, the chat shows the file and diff tabs of the saved view
-  among the session tabs, in the one order of the tab row. A file or diff
+- On desktop, the chat shows the file and diff tabs of each pane among
+  its session tabs, in the order of the row of that pane. A file or diff
   tab moves by drag and with its tab menu, as a session tab does, as
   [the chat](../../chat/README.md#rules-for-this-code) says. The file or
-  diff tab of the address shows in place of the chat of the session, and
-  the tabs stay. No session tab is the current one then, and the row keeps
-  the tab of the address in view. The temporary tab of the saved view shows
-  its title in italics, and a screen reader hears "temporary" after its
-  name.
+  diff tab of the address shows in place of the chat of the pane that
+  holds its tab, else of the focused pane. The tabs stay, and the row
+  keeps that tab in view as its current tab. The other pane of a split
+  shows its own shown file or diff, else its chat. One pane shows the chat
+  while the address names no file or diff. The temporary tab of each pane
+  shows its title in italics, and a screen reader hears "temporary" after
+  its name.
 - A click on a session tab, a new session, or a reopened session makes
-  that session the active tab of the view. The address then goes back to
-  the chat.
+  that session the active tab of its pane, and that pane the focused pane.
+  When the address named a file, the address then goes back to the chat.
 - Close on a file tab takes it out of the view. When it shows, the next
-  file tab shows, else the one before, else the chat. Close on the
+  file tab of its pane shows, else the one before, else the chat of that
+  pane, and the address follows when it names the tab. Close on the
   temporary tab also clears its mark.
 - A file of a finished turn opens its diff tab. A phone shows it in the
   Files tab.

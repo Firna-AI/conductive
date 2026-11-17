@@ -23,7 +23,9 @@ function fileName(path: string): string {
  * each secret value, and it opens the diff of its real path. It shows the
  * lines that the file adds and removes only when one count is above zero,
  * so a file without line changes, such as a binary file, has no "+0". The Worker
- * leaves the label out when it equals the real path.
+ * leaves the label out when it equals the real path. A chat narrower than
+ * the chip, such as a narrow pane, cuts the name with an ellipsis, and the
+ * counts stay.
  */
 function FileChip(props: {
   file: ChangedFile
@@ -34,7 +36,7 @@ function FileChip(props: {
   const content = (
     <>
       <FileText className={styles.icon} size={12} />
-      {fileName(label)}
+      <span className={styles.name}>{fileName(label)}</span>
       {file.added > 0 || file.removed > 0 ? (
         <DiffStat added={file.added} removed={file.removed} />
       ) : null}

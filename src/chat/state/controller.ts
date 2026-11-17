@@ -38,10 +38,11 @@ import { chooseModel } from './model-actions'
 import { draftFileSource } from './draft-file-source'
 import { sendPrompt, type PromptOutcome } from './prompt-actions'
 import { moveTab } from './tab-actions'
-import type { TabPlace, TabTarget } from './tab-order'
+import type { TabTarget } from './tab-order'
 import { ownWorkspaceList, type WorkspaceList } from './workspace-list'
 import { confirmClose, requestClose } from './close-actions'
 import {
+  focusPane,
   newSession,
   renameSession,
   reopenSession,
@@ -265,9 +266,15 @@ export class ChatController {
    */
   readonly updateView = (change: (view: WorkspaceView) => WorkspaceView) =>
     updateView(this.context, change, !this.readOnly())
-  readonly moveTab = (tab: WorkspaceTab, place: TabPlace | TabTarget): void => {
-    if (!this.readOnly()) moveTab(this.context, tab, place)
+  readonly moveTab = (tab: WorkspaceTab, target: TabTarget): void => {
+    if (!this.readOnly()) moveTab(this.context, tab, target)
   }
+  /**
+   * Makes a pane the focused pane, as a click, a key, the keyboard focus, or
+   * a drop in that pane does. A read-only workspace keeps it in the browser.
+   */
+  readonly focusPane = (pane: 0 | 1): void =>
+    focusPane(this.context, pane, !this.readOnly())
   /**
    * Copies the transcript of a session, as `copyTranscript` says. Call it
    * during the press, so that its clipboard write starts at once. It only

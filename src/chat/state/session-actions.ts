@@ -71,6 +71,29 @@ export function updateView(
   if (save) context.saveView(view)
 }
 
+/**
+ * The view with the focus on `pane`. A pane that does not exist, and the
+ * pane that has the focus, keep the same view, so nothing saves.
+ */
+function focusedOn(view: WorkspaceView, pane: 0 | 1): WorkspaceView {
+  return view.panes[pane] && view.focusedPane !== pane
+    ? { ...view, focusedPane: pane }
+    : view
+}
+
+/**
+ * Makes `pane` the focused pane, as a click, a key, or the keyboard focus in
+ * that pane does. With `save`, it saves the view. Without it, as in a
+ * read-only workspace, the focus changes in the browser only.
+ */
+export function focusPane(
+  context: ChatContext,
+  pane: 0 | 1,
+  save: boolean,
+): void {
+  updateView(context, (view) => focusedOn(view, pane), save)
+}
+
 /** Shows a session that an action opened, when it is open now. */
 async function showIfOpen(
   context: ChatContext,
@@ -99,12 +122,7 @@ export async function newSession(
   context: ChatContext,
   pane?: 0 | 1,
 ): Promise<void> {
-  if (pane !== undefined)
-    updateView(
-      context,
-      (view) => (view.panes[pane] ? { ...view, focusedPane: pane } : view),
-      true,
-    )
+  if (pane !== undefined) focusPane(context, pane, true)
   const snapshot = context.store.get()
   const destination = snapshot.view?.focusedPane
   const shown = snapshot.sessions.find(

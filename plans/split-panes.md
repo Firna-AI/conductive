@@ -455,6 +455,28 @@ mockups drew decisions 4 B, 5 B, and 6 G.
   `docs/protocol/split-pane-width.md`, so that `split-panes.md` stays near
   250 lines.
 
+### Calls from the split column milestone
+
+These are design calls of the agent, made on 17 November 2026, when
+Milestone 6 drew the panes.
+
+- Until Milestone 8, the file of the address shows in the pane that holds
+  its tab, else in the focused pane. Reason: it keeps the one-pane screen.
+- The history button and the divider do not change the focused pane.
+- Any key in a pane makes it the focused pane, because the message field
+  handles its own input events.
+- The leading chat takes the session keys, the focus request of the app,
+  and the notices that name no session, so each shows once. The leading
+  chat is the chat of the focused pane, else the chat of the other pane.
+- Each chat of a split shows the start steps of the cloud computer.
+- The shared bar of the cloud computer shows only while a pane shows a
+  chat. A file page shows the state of the cloud computer itself.
+- On a phone, the tab of the shown chat is the current tab, also when no
+  pane shows a session. Reason: it keeps today's phone.
+- The divider steps 8 px, or 32 px with Shift, as the other dividers do.
+  It works also in a read-only workspace, because the share is a setting
+  of the browser.
+
 ### The chat state
 
 - The chat state replaces `activeSessionId` with the shown tab of each pane
@@ -590,17 +612,18 @@ Tags: ui
 
 Depends on: 5
 
-- [ ] Draw one or two panes from the saved view, each with its row, its
+- [x] Draw one or two panes from the saved view, each with its row, its
       content, its message field, and its file drop area.
-- [ ] Add the divider, with the share kept in the browser.
-- [ ] Mark the focused pane, and set it on a click, on typing, and on a
+- [x] Add the divider, with the share kept in the browser.
+- [x] Mark the focused pane, and set it on a click, on typing, and on a
       drop.
-- [ ] Show one row and one pane on a phone, and share a narrow desktop
+- [x] Show one row and one pane on a phone, and share a narrow desktop
       window as decision 6 says.
-- [ ] Wrap the file name of a turn chip in `src/chat/components/TurnEnd.tsx`
+- [x] Wrap the file name of a turn chip in `src/chat/components/TurnEnd.tsx`
       in the `name` part of its shared styles, as the mockup does, so that
       a narrow pane cuts the name and does not scroll sideways.
-- [ ] Delete the old single-row paths that Milestone 4 left.
+- [x] Delete the old single-row paths that Milestone 4 left.
+- [x] The handoff, screenshots, and logs are in `.context/split-panes/m6/`.
 
 ## Milestone 7: The drag between panes
 
@@ -629,6 +652,10 @@ Depends on: 7
       one.
 - [ ] Make the address, Back and Forward, and the session address follow
       the focused pane.
+- [ ] After each change of the focus or of the panes, replace the address
+      with the shown file of the focused pane. So a pane that is left alone
+      after the other pane closes keeps showing its file. Milestone 6 found
+      that this pane showed its chat or "No open session" instead.
 - [ ] Update the guide sentences that the split makes wrong or incomplete:
       `src/marketing/docs/files-and-changes.md` lines 37, 39, 80, and 82,
       `src/marketing/docs/sessions-and-chat.md` lines 109, 245, 248, and

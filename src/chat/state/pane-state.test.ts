@@ -36,8 +36,10 @@ const sessions = [
 ]
 
 it('draws the focused row without appending sessions from the other pane', () => {
-  expect(rowTabs(view, sessions, true)).toEqual([second])
-  expect(rowTabs({ ...view, focusedPane: 0 }, sessions, false)).toEqual([first])
+  expect(rowTabs(view, sessions, true, 1)).toEqual([second])
+  expect(rowTabs({ ...view, focusedPane: 0 }, sessions, false, 0)).toEqual([
+    first,
+  ])
 })
 
 it('appends new sessions to the focused pane while keeping each existing place and temporary mark', () => {

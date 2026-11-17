@@ -46,6 +46,8 @@ export function ModelPicker(props: {
   models: readonly AgentModel[]
   sessionAgent?: Agent
   disabled?: boolean
+  /** The picker offers its keys, as `keys` of the composer says. By default it does. */
+  keys?: boolean
   onChoose: (choice: AgentChoice) => void
 }) {
   const control = useControlSizes()
@@ -74,17 +76,15 @@ export function ModelPicker(props: {
     choice.effort,
     1,
   )
-  useShortcutOffer('model-picker', props.disabled ? null : () => setOpen(true))
+  const off = props.disabled === true || props.keys === false
+  useShortcutOffer('model-picker', off ? null : () => setOpen(true))
   useShortcutOffer(
     'next-effort',
-    props.disabled || nextEffort === undefined || nextEffort === choice.effort
+    off || nextEffort === undefined || nextEffort === choice.effort
       ? null
       : () => choose({ ...choice, effort: nextEffort }),
   )
-  useShortcutOffer(
-    'fast-mode',
-    props.disabled || model?.fast !== true ? null : toggleFast,
-  )
+  useShortcutOffer('fast-mode', off || model?.fast !== true ? null : toggleFast)
   const hint = useShortcutHint('model-picker')
   const fastHint = useShortcutHint('fast-mode')
   const keyRef = useAriaShortcut(hint)

@@ -1,9 +1,4 @@
-import {
-  useContext,
-  useMemo,
-  useSyncExternalStore,
-  type ReactNode,
-} from 'react'
+import { useContext, useMemo, useSyncExternalStore } from 'react'
 import type { FileEntry } from '../../../shared/generated/FileEntry'
 import { useNavigation } from '../../../app/navigation'
 import { routes } from '../../../app/router'
@@ -13,10 +8,11 @@ import { tabLabel } from '../../../files/model/file-labels'
 import type { WorkspaceFiles } from '../../../files/model/files-store'
 import { scrollTabKey } from '../../../files/ui/kept-scroll'
 import { useFollowTabs } from '../../../app/tab-places'
-import type {
-  FilesNavigation,
-  FilesTab,
-  FilesTarget,
+import {
+  isFilesTab,
+  type FilesNavigation,
+  type FilesTab,
+  type FilesTarget,
 } from '../../../files/navigation'
 import type { LineRange } from '../../../shared/line-target'
 import { PanelContext } from '../../layout/panels'
@@ -38,7 +34,7 @@ import {
   withoutTab,
 } from './view-tabs'
 import { useKeptFilesWhile } from './workspace-files'
-import { sessionTarget } from '../../../chat/state/pane-selection'
+import { paneSessionId } from '../../../chat/state/pane-selection'
 
 /** The subscription while the row shows no file tabs: to nothing. */
 function followNothing(): () => void {
@@ -69,55 +65,62 @@ function useTabLabels(
 /**
  * A file or diff tab of the saved view, at the place in the tab row that
  * the chat gives it, with the label of its path, and in italics when the
- * view marks it as the temporary tab. Close of the shown tab shows the next
- * file tab, else the one before, else the chat with its session. A close of
- * the temporary tab clears the mark. While the tab shows, the key of Close
- * tab closes it, as its Close does.
+ * view marks it as the temporary tab. It shows as the current tab of its
+ * row while its pane shows it. Close of a shown tab shows the next file tab
+ * of its pane, else the one before, else the chat of the last session of
+ * that pane. When the address names the tab, the address follows. A close
+ * of the temporary tab clears the mark. While the tab shows in the focused
+ * pane, the key of Close tab closes it, as its Close does.
  */
 function FileTab(props: {
   context: WorkspaceContext
   navigation: FilesNavigation
+  /** The tab of the address, while its page shows. */
   shown: FilesTab | null
   tab: FilesTab
   label: string | null
   temporary: boolean
   draw: Extract<TabDraw, { kind: 'row' }>
 }) {
-  const { context, navigation, shown, tab } = props
+  const { context, navigation, shown, tab, draw } = props
   const go = useNavigation()
-  const tabs = filesTabsOf(useSavedView(context.savedView))
-  const isShown = (open: FilesTab) =>
-    shown !== null && sameFilesTab(shown, open)
+  const addressed = shown !== null && sameFilesTab(shown, tab)
   const close = () => {
+    const snapshot = context.savedView.getSnapshot()
+    const owner = (snapshot.view?.panes ?? []).findIndex((pane) =>
+      pane.tabs.some((open) => isFilesTab(open) && sameFilesTab(open, tab)),
+    )
+    const tabs = filesTabsOf(snapshot.view, owner)
     const index = tabs.findIndex((open) => sameFilesTab(open, tab))
     const rest = tabs.filter((open) => !sameFilesTab(open, tab))
-    const next = isShown(tab)
-      ? (rest[Math.min(index, rest.length - 1)] ?? null)
-      : null
-    const sessionId = sessionTarget(context.savedView.getSnapshot())
+    const next =
+      draw.selected || addressed
+        ? (rest[Math.min(index, rest.length - 1)] ?? null)
+        : null
+    const sessionId = paneSessionId(snapshot, owner === 1 ? 1 : 0)
     const session: WorkspaceTab | null = sessionId
       ? { kind: 'session', sessionId }
       : null
     context.savedView.updateView((view) =>
       withoutTab(view, tab, next ?? session),
     )
-    if (!isShown(tab)) return
+    if (!addressed) return
     go.push(
       next
         ? navigation.href(next)
         : routes.workspace(context.org.id, context.workspace.id),
     )
   }
-  useShortcutOffer('close-tab', isShown(tab) ? close : null)
+  useShortcutOffer('close-tab', draw.selected && draw.focused ? close : null)
   return (
     <FileTabItem
       label={props.label}
-      close={props.draw.close}
-      item={props.draw.item}
-      link={props.draw.link}
+      close={draw.close}
+      item={draw.item}
+      link={draw.link}
       navigation={navigation}
       onClose={close}
-      selected={isShown(tab)}
+      selected={draw.selected}
       tab={tab}
       temporary={props.temporary}
     />
@@ -175,14 +178,16 @@ function useMentions(
 
 /**
  * The file parts of the kept chat: on desktop, the file and diff tabs at
- * their places in the tab row, with the copy that a drag lifts, and the
+ * their places in the tab rows, with the copy that a drag lifts, and the
  * diff that a file of a finished turn opens. Each tab takes the label of
  * its path from the kept files, for its title and its drawing, so each name
- * of the tab hides each secret value. The temporary tab of the saved view
- * draws its title in italics, also on the lifted copy, and its title for
- * the row stays the name alone. Keep open of its tab menu keeps it, as a
- * double-click on it does. When the chat makes a session active while
- * `content` shows a file, the address goes back to the chat. The chat reads
+ * of the tab hides each secret value. The temporary tab of each pane draws
+ * its title in italics, also on the lifted copy, and its title for the row
+ * stays the name alone. Keep open of its tab menu keeps it, as a
+ * double-click on it does. `pages` says that the chat shows the pages of
+ * files on desktop. When the chat then makes a session the shown tab of the
+ * focused pane while the address names a file, the address goes back to
+ * the chat. The chat reads
  * the kept files for the list of `@` and the file chips, also on a phone
  * before a visit to Files: `KeptFilesConnection` of the screen keeps them
  * connected. A file or diff tab that leaves the saved view, such as one
@@ -191,11 +196,11 @@ function useMentions(
  */
 export function useChatFiles(
   context: WorkspaceContext,
-  content: ReactNode,
+  pages: boolean,
 ): ChatFiles {
   const navigation = useFilesNavigation(context)
   const view = useSavedView(context.savedView)
-  const shown = content === null ? null : tabOf(filesPlace(context.view))
+  const shown = pages ? tabOf(filesPlace(context.view)) : null
   useLeaveForSession(context, shown !== null)
   const archived = context.sandbox === 'archived'
   const tabs = !archived && context.viewport !== 'phone'

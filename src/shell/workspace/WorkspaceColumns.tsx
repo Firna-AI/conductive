@@ -1,4 +1,4 @@
-import { useRef, type ReactNode } from 'react'
+import { useRef, useSyncExternalStore, type ReactNode } from 'react'
 import {
   Files,
   Globe,
@@ -14,6 +14,7 @@ import tabs from '../../../docs/mockups/src/components/workspace/MobileTabBar.mo
 import column from '../../../docs/mockups/src/components/workspace/RightColumn.module.css'
 import { splitStyles } from '../../../docs/mockups/src/components/workspace/RightColumn'
 import { routes } from '../../app/router'
+import { showsTwoPanes } from '../../chat/components/pane-plan'
 import { useStore } from '../../app/store'
 import { ResizeHandle } from '../layout/ResizeHandle'
 import { SplitHandle } from '../layout/SplitHandle'
@@ -21,9 +22,8 @@ import { usePanelLayout } from '../layout/panels'
 import { useShortcutOffer } from '../shortcuts/shortcut-context'
 import { IconButton } from '../ui/actions'
 import { AppLink } from '../ui/AppLink'
-import type { WorkspaceContext } from './features'
+import { useFeatures, type WorkspaceContext } from './features'
 import { shownTool, toolOffered } from './tools/tool-address'
-import workspace from './workspace.module.css'
 
 /**
  * The toggle at the end of the workspace header on desktop. It hides the
@@ -44,17 +44,36 @@ export function RightColumnToggle() {
 }
 
 /**
+ * Whether the chat of the workspace fills the centre with two panes, which
+ * the right column gives way to. A part of the host that takes the place of
+ * the chat shows no panes.
+ */
+function useTwoPanes(context: WorkspaceContext): boolean {
+  const features = useFeatures()
+  const { savedView, readOnly, sandbox } = context
+  const read = () =>
+    showsTwoPanes(savedView.getSnapshot(), readOnly, sandbox !== 'archived')
+  const two = useSyncExternalStore(savedView.subscribe, read, read)
+  const host =
+    features.tabs || features.transcript || features.composer || features.center
+  return two && !host
+}
+
+/**
  * The column beside the chat: the pull request bar, the file lists, and the
  * tools panel below them. A handle on its inner edge resizes it. A second
  * handle on the top edge of the tools panel moves the split between the
  * file lists and the tools. Without `tools`, the files part fills the
- * column, as for an archived workspace.
+ * column, as for an archived workspace. The column leaves the chat at least
+ * 360 px. While two panes show, it gives way to them, down to 280 px, so
+ * that each pane keeps 320 px (split panes decision 6 G).
  *
  * A column that the user hid stays mounted. So the file lists keep the
  * connection that the file tabs of the centre use, and the terminal keeps
  * its session.
  */
 export function RightColumn(props: {
+  context: WorkspaceContext
   pullRequest: ReactNode
   files: ReactNode
   tools?: ReactNode
@@ -63,6 +82,7 @@ export function RightColumn(props: {
   const width = useStore(panels.widths).right
   const shown = useStore(panels.rightShown)
   const share = useStore(panels.split.share)
+  const twoPanes = useTwoPanes(props.context)
   const aside = useRef<HTMLElement>(null)
   const files = useRef<HTMLDivElement>(null)
   const tools = useRef<HTMLDivElement>(null)
@@ -70,7 +90,7 @@ export function RightColumn(props: {
   return (
     <aside
       aria-label="Files and tools"
-      className={classes(column.column, workspace.right)}
+      className={classes(column.column, twoPanes && column.split)}
       hidden={!shown}
       ref={aside}
       style={width === null ? undefined : { width }}

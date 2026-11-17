@@ -38,9 +38,16 @@ function equalTabs(left: WorkspaceTab | null, right: WorkspaceTab): boolean {
   }
 }
 
-/** The file and diff tabs of a view, in the order of the tab row. */
-export function filesTabsOf(view: WorkspaceView | null): FilesTab[] {
-  return allTabs(view).filter(isFilesTab)
+/**
+ * The file and diff tabs of a view, in the order of the tab rows, the left
+ * pane first, or only those of the pane at `pane`.
+ */
+export function filesTabsOf(
+  view: WorkspaceView | null,
+  pane?: number,
+): FilesTab[] {
+  const tabs = pane === undefined ? allTabs(view) : view?.panes[pane]?.tabs
+  return (tabs ?? []).filter(isFilesTab)
 }
 
 /**

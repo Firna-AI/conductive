@@ -23,6 +23,18 @@ function lastSessionId(snapshot: ChatSnapshot, pane: number): string | null {
   return tabs.find((tab) => tab.kind === 'session')?.sessionId ?? null
 }
 
+/**
+ * The session whose chat a pane shows while it shows no file: its shown
+ * session, else the last session of its row. With one pane, this is the
+ * session target.
+ */
+export function paneSessionId(
+  snapshot: ChatSnapshot,
+  pane: 0 | 1,
+): string | null {
+  return shownSessionId(snapshot, pane) ?? lastSessionId(snapshot, pane)
+}
+
 /** The session for session actions and prompts, including a file-only view. */
 export function sessionTarget(snapshot: ChatSnapshot): string | null {
   if (!snapshot.view) return snapshot.sessions[0]?.id ?? null

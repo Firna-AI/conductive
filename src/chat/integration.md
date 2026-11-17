@@ -67,8 +67,10 @@ mount the chat.
   its place, as a double-click on the tab does, for Keep open of its tab
   menu. The host gives `keep` only to the temporary tab of the saved view,
   and null to each kept tab, whose menu then has no Keep open. The chat
-  calls it and saves nothing of its own. The host gives the key of Close
-  tab to its shown tab itself, as the shell does in `FileTab`.
+  calls it and saves nothing of its own. The row draw also says whether
+  the tab shows in its pane, `selected`, and whether its row belongs to
+  the focused pane, or to the only pane, `focused`. The host gives the key
+  of Close tab to a tab that is both, as the shell does in `FileTab`.
   Without `renderTab`, the row shows only the session tabs, as on a phone.
   `components/tab-row.ts` holds these types.
 - `onOpenDiff` gets the real path of a changed file of a finished turn. The
@@ -103,9 +105,19 @@ mount the chat.
   [The chat of the workspace](../shell/workspace/screen-parts.md#the-chat-of-the-workspace)
   says. Without it, as on the development page, each link opens a new
   tab.
-- `content` takes a page that the app shows in place of the chat of the
-  open session, such as an open file. The session tabs and the overlays
-  stay, and no session tab is the current one.
+- `pages` takes the page that each pane shows in place of the chat of a
+  session, such as an open file, by the index of the pane in the saved
+  view. A missing or null page shows the chat of the session of that pane.
+  The tabs and the overlays stay, and the row of the pane marks its shown
+  file or diff tab, and no session tab. A phone shows no page. The shell
+  gives the page of the address in the pane that holds its tab, and the
+  shown file of the other pane of a split, as
+  [The chat of the workspace](../shell/workspace/screen-parts.md#the-chat-of-the-workspace)
+  says.
+- `paneSplit` takes the share of the left pane of a split, which the
+  divider between the panes moves. The app gives the `PaneSplit` of its
+  panel layout, so the browser keeps the share. Without it, the chat keeps
+  a share of its own while it shows.
 - The controller's `updateView(change)` changes the saved view with a
   change of the app, such as an open file tab or the list of the Files
   panel. It saves through the same writer as the session tabs, so a later
@@ -114,16 +126,19 @@ mount the chat.
   archived or shown read-only by the app, it changes the view in the
   browser only, and sends no write.
 - `host` takes the start steps and the sandbox bar that the app draws, as
-  `ChatHost` in `components/SessionChat.tsx` says. The chat places them.
-  `keepsComposer` keeps the composer under the bar, as after a failed first
-  start. Without a host, the chat draws both from its own record of the
-  workspace, with the message that the workspace saved for a failed start.
+  `ChatHost` in `components/sandbox-parts.tsx` says. The chat places them:
+  the start steps at the end of each chat, and the bar under the chat, or
+  once below both panes of a split. `keepsComposer` keeps the composer
+  under the bar, as after a failed first start. Without a host, the chat
+  draws both from its own record of the workspace, with the message that
+  the workspace saved for a failed start.
 - `readOnly` says that the workspace takes no write, such as while its org
   is suspended. The app gives `WorkspaceContext.readOnly`. The chat then
   shows its history, as an archived workspace does, and the host's bar
   takes the place of the composer.
 - `composerFocus` asks the message field of the composer to take the focus
-  once, as `ComposerFocus` in `components/Composer.tsx` says. The app gives
+  once, as `ComposerFocus` in `components/Composer.tsx` says. With two
+  panes, the composer of the pane that the session keys use takes it. The app gives
   it after a click on the workspace in the sidebar, from
   `AppModel.composerFocus`. The request waits until the composer shows,
   such as after the first load of the chat. The field then takes the focus
@@ -142,9 +157,12 @@ mount the chat.
   `ThemeRoot`, else through its own, at the bottom right of the window.
 - Render the chat inside the Firna theme provider and the Graphite token CSS
   of `docs/mockups/src/theme.ts`, as `dev/main.tsx` does.
-- The chat sets no CSS position, except on the message box of a composer,
-  so the list of `@` lies just above the box. A dialog or a sheet covers
-  the nearest positioned frame: the app frame. The lifted tab of a drag,
+- The column of the chat sets no CSS position, so a dialog or a sheet
+  covers the nearest positioned frame: the app frame. Each pane of the
+  desktop column is positioned, for the divider and the page of the pane,
+  and the chat draws its dialogs outside the panes. The message box of a
+  composer is positioned too, so the list of `@` lies just above the box.
+  The lifted tab of a drag,
   and the tab menu on desktop, draw on `document.body` with a fixed
   position, because the row clips what it holds.
 - The menus, the dialogs, and the sheets of the chat note themselves in
@@ -153,7 +171,10 @@ mount the chat.
   a dialog or a sheet is open. Outside the app, nothing notes them.
 - The tab row and the composer offer their commands to the keys of the
   app through the [shortcut layer](../shell/shortcuts/README.md) of the
-  shell, and their controls show the keys in their tooltips. Outside the
+  shell, and their controls show the keys in their tooltips. With two
+  panes, the row of the focused pane offers the keys of the tabs, and the
+  composer of the pane that the session keys use offers the keys of the
+  session. Outside the
   app, nothing offers them, and the controls show no key.
 - The Mac app shows two more parts of Mac commands outside the chat:
   `ThisMacSection` and `AllowAllBar`. [The Mac commands](device/README.md)

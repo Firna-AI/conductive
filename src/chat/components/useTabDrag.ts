@@ -1,7 +1,7 @@
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import tabDrag from '../../../docs/mockups/src/components/workspace/TabDrag.module.css'
 import { usePointerDrag } from '../../app/pointer-drag'
-import type { TabPlace } from '../state/tab-order'
+import type { TabTarget } from '../state/tab-order'
 import type { TabNodes } from './tab-nodes'
 import { rowKey, viewTabOf, type RowTab, type TabItemProps } from './tab-row'
 import local from './tabs.module.css'
@@ -29,21 +29,21 @@ const hang = 0.7
 
 /**
  * The move of the tab with `key` to the place `index` among the other tabs:
- * before the tab at that place, or after the last tab. Its own place moves
- * nothing.
+ * before the tab at that place, or after the last tab, in the pane of that
+ * tab. Its own place moves nothing.
  */
 function moveTo(
   tabs: readonly RowTab[],
   key: string,
   index: number,
-): TabPlace | null {
+): TabTarget | null {
   const own = tabs.findIndex((tab) => rowKey(tab) === key)
   const others = tabs.filter((tab) => rowKey(tab) !== key)
   if (own < 0 || index === own) return null
   const next = others[index]
-  if (next) return { before: viewTabOf(next) }
+  if (next) return { pane: next.pane, place: { before: viewTabOf(next) } }
   const last = others.at(-1)
-  return last ? { after: viewTabOf(last) } : null
+  return last ? { pane: last.pane, place: { after: viewTabOf(last) } } : null
 }
 
 /**
@@ -61,7 +61,7 @@ export function useTabDrag(props: {
   nodes: TabNodes
   enabled: boolean
   renaming: string | null
-  onMove: (tab: RowTab, place: TabPlace) => void
+  onMove: (tab: RowTab, target: TabTarget) => void
   onHold: (key: string, at: { x: number; y: number }) => void
 }): TabRowDrag {
   const { tabs, nodes, onMove } = props

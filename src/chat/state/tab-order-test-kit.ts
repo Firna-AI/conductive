@@ -91,7 +91,13 @@ export function tabChat(
     row: (files = true) => {
       const snapshot = chat.controller.getSnapshot()
       const readOnly = isArchived(snapshot) || (options.readOnly?.() ?? false)
-      return rowTabs(snapshot.view, tabSessions(snapshot, readOnly), files)
+      const pane = snapshot.view?.focusedPane ?? 0
+      return rowTabs(
+        snapshot.view,
+        tabSessions(snapshot, readOnly),
+        files,
+        pane,
+      )
     },
     setSessions: (
       sessions: readonly Session[],

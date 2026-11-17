@@ -151,6 +151,23 @@ status says, and no tab menu opens.
 wheel turns.
 `components/SessionTabs.test.tsx` renders the tab of a session with no
 title and its rename field.
+`components/SplitPanes.dom.test.tsx` mounts a saved split. Each pane has
+its row, its chat, and its message field, which sends to the session of
+its pane, and only the right row has the session history. A drop of files
+on a pane goes to the message field of that pane. The focused
+row takes the mark, and a press, a key, or the keyboard focus in the other
+pane moves the focus, but a press on the session history does not. The
+composer of the focused pane takes the session keys, else the composer of
+the other pane. A stopped sandbox shows one bar below both panes. An
+archived split shows its sessions with no + and binds no drag, and a pane
+that holds only files does not show there.
+`components/SplitPhone.dom.test.tsx` shows the one row of a phone with the
+session tabs of both panes and a line between them, the chat of the
+focused pane, else of the other pane, and its one +, which opens in the
+focused pane. `components/PaneDivider.dom.test.tsx` moves the divider with
+the keys and the pointer, stops at 320 px a pane, keeps half of a narrow
+column, and keeps the share for the next load. `components/split-test-kit.tsx`
+mounts these chats.
 `components/chip-field/ChipTextField.test.tsx` pastes workspace links,
 steps over a chip, removes it with Backspace and Delete, restores a draft,
 copies, follows the list, and checks a field that takes no change. It

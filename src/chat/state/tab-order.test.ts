@@ -25,7 +25,8 @@ describe('the chat tab order', () => {
     const chat = tabChat([first, second, file])
     await chat.controller.start()
     chat.controller.moveTab(first, {
-      after: { kind: 'file', path: 'src/app.ts', mode: 'preview' },
+      pane: 0,
+      place: { after: { kind: 'file', path: 'src/app.ts', mode: 'preview' } },
     })
     expect((await chat.savedView()).panes[0].tabs).toEqual([
       second,
@@ -50,10 +51,10 @@ describe('the chat tab order', () => {
     const mark: TemporaryTab = { kind: 'file', path: 'src/app.ts' }
     const chat = tabChat([first, file, second], { temporaryTab: mark })
     await chat.controller.start()
-    chat.controller.moveTab(first, { after: file })
+    chat.controller.moveTab(first, { pane: 0, place: { after: file } })
     await chat.savedView()
-    chat.controller.moveTab(file, { before: first })
-    chat.controller.moveTab(file, { after: first })
+    chat.controller.moveTab(file, { pane: 0, place: { before: first } })
+    chat.controller.moveTab(file, { pane: 0, place: { after: first } })
     await chat.savedView()
 
     const view: WorkspaceView = {
@@ -81,7 +82,7 @@ describe('the chat tab order', () => {
     const chat = tabChat([file, first, diff, second])
     await chat.controller.start()
     expect(chat.row(false)).toEqual([first, second])
-    chat.controller.moveTab(second, { before: first })
+    chat.controller.moveTab(second, { pane: 0, place: { before: first } })
     expect((await chat.savedView()).panes[0].tabs).toEqual([
       file,
       second,
@@ -143,7 +144,7 @@ describe('the chat tab order', () => {
   it('appends streamed and created sessions after a move and closes to the new neighbour', async () => {
     const chat = tabChat([first, second, file])
     await chat.controller.start()
-    chat.controller.moveTab(second, { before: first })
+    chat.controller.moveTab(second, { pane: 0, place: { before: first } })
     expect((await chat.savedView()).panes[0].tabs).toEqual([
       second,
       first,
@@ -215,7 +216,7 @@ describe('the chat tab order', () => {
     await chat.controller.start()
     readOnly = true
     const before = chat.controller.getSnapshot()
-    chat.controller.moveTab(first, { after: file })
+    chat.controller.moveTab(first, { pane: 0, place: { after: file } })
     expect(chat.controller.getSnapshot()).toBe(before)
     expect(chat.writes()).toEqual([])
     expect((await chat.savedView()).panes[0].tabs).toEqual([

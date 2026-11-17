@@ -1,5 +1,4 @@
-import type { WorkspaceState } from '../../shared/generated/WorkspaceState'
-import { useMemo, type ReactNode } from 'react'
+import { useMemo } from 'react'
 import type { Agent } from '../../shared/generated/Agent'
 import { modelLabel } from '../../shared/agents'
 
@@ -13,7 +12,6 @@ import {
   type ChatSnapshot,
 } from '../state/chat-snapshot'
 import type { ChatController } from '../state/controller'
-import { failedFirstStart } from '../../app/first-start'
 import {
   composerModels,
   loginLabelOf,
@@ -23,7 +21,7 @@ import { ChatPane } from './ChatPane'
 import { placeMemory } from './chat-place'
 import { ActionNotice, BlockNotice, LinkedSessionNotice } from './ChatNotices'
 import { Composer, type ComposerFocus } from './Composer'
-import { SandboxBar, StartingCard, type SandboxProblem } from './SandboxState'
+import { sandboxParts, type ChatHost } from './sandbox-parts'
 import {
   EarlierLoading,
   emptyView,
@@ -34,28 +32,6 @@ import {
 import { sourceInsert } from './SourceLine'
 import { TranscriptView } from './TranscriptView'
 import { sessionTarget } from '../state/pane-selection'
-
-function problemOf(state: WorkspaceState | undefined): SandboxProblem | null {
-  return state === 'stopped' || state === 'error' || state === 'archived'
-    ? state
-    : null
-}
-
-/**
- * The parts of the chat that the app draws from its own record of the
- * workspace: the start steps at the end of the history while the sandbox
- * starts, and the bar under the chat while the sandbox is down. Null leaves
- * the place empty. Without a host, the chat draws both from its own record.
- */
-export interface ChatHost {
-  starting: ReactNode | null
-  sandboxBar: ReactNode | null
-  /**
-   * The composer stays under the bar, as after a failed first start, so that
-   * members can still queue messages. Otherwise the bar takes its place.
-   */
-  keepsComposer: boolean
-}
 
 export interface SessionChatProps {
   snapshot: ChatSnapshot
@@ -72,40 +48,23 @@ export interface SessionChatProps {
   readOnly?: boolean
   /** The composer takes the focus when it shows, as `ComposerFocus` says. */
   composerFocus?: ComposerFocus | null
-}
-
-/**
- * The start steps and the sandbox bar: the host's, or the chat's own. A
- * read-only chat without a host shows only the bar of an archived
- * workspace, because it offers no Resume. The chat's own bar shows the
- * message that the workspace saved for a failed start, and after a failed
- * first start the composer stays under it.
- */
-function sandboxParts(props: SessionChatProps): ChatHost {
-  if (props.host) return props.host
-  const { snapshot, controller, now } = props
-  const { workspace } = snapshot
-  const problem = problemOf(workspace?.state)
-  const readOnly = props.readOnly ?? false
-  const firstStart = failedFirstStart(workspace, snapshot.start)
-  return {
-    starting:
-      workspace?.state === 'starting' && !readOnly ? (
-        <StartingCard now={now} start={snapshot.start} />
-      ) : null,
-    sandboxBar:
-      problem && workspace && (problem === 'archived' || !readOnly) ? (
-        <SandboxBar
-          archivedAt={workspace.archivedAt}
-          busy={snapshot.resuming}
-          firstStart={firstStart}
-          message={snapshot.savedError}
-          onResume={() => void controller.resume()}
-          problem={problem}
-        />
-      ) : null,
-    keepsComposer: firstStart && !readOnly,
-  }
+  /**
+   * The session that the chat shows, or null for none, as `paneSessionId`
+   * gives it for a pane. Without it, the chat shows the session target, as
+   * the chat of a phone does.
+   */
+  sessionId?: string | null
+  /**
+   * The chat leads the column: its composer takes the session keys, and it
+   * shows the notices that name no session. With two panes, only the chat
+   * of the pane that the session keys use leads. By default it leads.
+   */
+  lead?: boolean
+  /**
+   * The column draws the bar of the sandbox once, below both panes, so the
+   * chat leaves it out. The bar still takes the place of the composer.
+   */
+  barBelow?: boolean
 }
 
 /**
@@ -119,10 +78,11 @@ function useDraftFiles(controller: ChatController, draftId: string) {
 }
 
 /**
- * The chat of the open session: its history, with the start steps while the
- * sandbox starts, and under it the notices and the composer, or the bar that
- * takes the composer's place while the sandbox does not run. After a failed
- * first start, the bar sits above the composer, which stays. The status of
+ * The chat of the session of a pane: its history, with the start steps while
+ * the sandbox starts, and under it the notices and the composer, or the bar
+ * that takes the composer's place while the sandbox does not run. After a
+ * failed first start, the bar sits above the composer, which stays. With two
+ * panes, the column draws the bar once, below both panes. The status of
  * the stored history comes from its load alone, so content never hides a
  * failed load. The composer names the login of another member that a
  * message spends. A linked session starts with a link to the session that
@@ -135,7 +95,12 @@ export function SessionChat(props: SessionChatProps) {
   const { snapshot, controller, now } = props
   const { workspace } = snapshot
   const readOnly = (props.readOnly ?? false) || workspace?.state === 'archived'
-  const id = useMemo(() => sessionTarget(snapshot), [snapshot])
+  const { sessionId } = props
+  const id = useMemo(
+    () => (sessionId === undefined ? sessionTarget(snapshot) : sessionId),
+    [snapshot, sessionId],
+  )
+  const lead = props.lead ?? true
   const session =
     tabSessions(snapshot, readOnly).find((item) => item.id === id) ?? null
   const state = sessionState(snapshot, id ?? '')
@@ -147,7 +112,7 @@ export function SessionChat(props: SessionChatProps) {
   const block = sendBlock(snapshot, id)
   const { notice } = snapshot
   const shownNotice =
-    notice && (notice.sessionId === null || notice.sessionId === id)
+    notice && (notice.sessionId === null ? lead : notice.sessionId === id)
       ? notice
       : null
   // Only this chat's own sends wait as pending messages, so each new one
@@ -198,7 +163,7 @@ export function SessionChat(props: SessionChatProps) {
           starter={login.starter}
         />
       ) : null}
-      {snapshot.devices.load === 'failed' ? (
+      {lead && snapshot.devices.load === 'failed' ? (
         <DeviceLoadNotice onRetry={() => void controller.loadDevices()} />
       ) : null}
       <PendingCommands
@@ -210,7 +175,7 @@ export function SessionChat(props: SessionChatProps) {
         readers={{ viewerId, orgName: snapshot.org?.name ?? null }}
         requests={commands.waiting}
       />
-      {sandboxBar}
+      {props.barBelow ? null : sandboxBar}
       {!down && session && snapshot.load.state === 'ready' ? (
         <Composer
           blocked={block !== null}
@@ -218,6 +183,7 @@ export function SessionChat(props: SessionChatProps) {
           draft={state.draft}
           files={files}
           focus={props.composerFocus}
+          keys={lead}
           login={loginLabelOf(login)}
           models={composerModels(
             login,
@@ -248,6 +214,7 @@ export function SessionChat(props: SessionChatProps) {
       empty={emptyView({
         snapshot,
         controller,
+        sessionId: id,
         starting: starting !== null,
         readOnly,
       })}

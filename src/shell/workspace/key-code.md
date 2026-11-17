@@ -20,8 +20,12 @@ this guide.
   the kept parts. Its snapshot is the detail of the model. `connect` shows
   the parts, and its result hides them.
 - `ChatArea.tsx`: the chat of the centre, with the start steps and the
-  sandbox bar of the shell, the open file tabs, and the file page in place
-  of the chat of the session, or the shell's own column for the chat slots.
+  sandbox bar of the shell, the open file tabs, the file page of each pane
+  in place of its chat, and the share of the divider of the panel layout,
+  or the shell's own column for the chat slots.
+- `WorkspaceColumns.tsx`: the right column, which gives way to two panes
+  of the centre, the tab bar of a phone, and the shell's own chat column.
+  `PhoneWorkspace.tsx`: the screen on a phone, one view at a time.
 - `link-opening.tsx`: `WorkspaceLinks`, which gives each part of the
   screen the link opener of its untrusted text: the pages of the app, and
   the port previews of the workspace. `TextLinks.test.tsx` mounts the
@@ -30,8 +34,11 @@ this guide.
   that an archived workspace keeps a local address as text, and presses a
   link of the app in a Markdown file on a phone.
 - `files/files-features.tsx`: the Files part, which reads the kept files
-  that the screen connects, and the file or diff page of the centre. The
-  page gives its tab to `KeptScroll`, so each file and diff tab keeps its
+  that the screen connects. `files/files-pages.tsx`: the file or diff page
+  of each pane of the centre, and of the Files tab of a phone, as
+  `filesPages` gives them: the page of the address in the pane that holds
+  its tab, and the shown file of the other pane of a split. Each page
+  gives its tab to `KeptScroll`, so each file and diff tab keeps its
   scroll offset, as
   [Kept scroll offsets](../../files/README.md#kept-scroll-offsets) says.
 - `files/tab-open-resume.tsx`: `ResumeOnTabOpen`, which resumes a stopped
@@ -43,9 +50,10 @@ this guide.
   screen draws it beside `ResumeOnTabOpen`. `SessionAddress.test.tsx` and
   `SessionChips.test.tsx` mount the whole app for the address and the chips.
 - `files/chat-files.tsx`: the file tabs of the kept chat, named by the
-  labels of the kept files, at their places in the tab row with the props
+  labels of the kept files, at their places in the tab rows with the props
   that the row gives each tab, the diff links, and the way back to the chat
-  when a session becomes active.
+  when a session becomes active. A tab shows as the current one while its
+  pane shows it, and its Close shows the next tab of its pane.
 - `files/files-navigation.ts`: the navigation of the Files screens, and
   the changes of the saved view that the address and the pages make.
 - `files/files-address.ts` and `files/view-tabs.ts`: the addresses of the
@@ -78,6 +86,10 @@ this guide.
   scrolls a file tab and a diff tab, shows the chat, and checks that each
   tab gives its offset back. A tab that the user closes opens at the top
   again.
+- `files/SplitFiles.test.tsx`: mounts the whole app over the fake API with
+  a saved split. The right pane shows its own file page beside the chat,
+  the right column gives way, and a close of its shown file tab shows the
+  next tab of that pane while the address stays.
 - `app-features.tsx`: the shell's own files, pull request, and owner
   parts, which `useFeatures` puts under the parts of the host. The screen
   draws its own tools panel when the host gives no `tools` part.

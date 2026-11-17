@@ -181,6 +181,7 @@ describe('session parts', () => {
             name: 'Address autocomplete',
             running: false,
             selected: true,
+            pane: 0,
           },
         ]}
       />,

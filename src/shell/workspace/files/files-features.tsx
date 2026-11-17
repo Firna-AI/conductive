@@ -1,21 +1,11 @@
-import { useMemo, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import {
   replacesList,
-  replacesShownFile,
   type SandboxPanelState,
 } from '../../../../docs/mockups/src/components/workspace/sandboxNoticeState'
 import { useServices } from '../../../app/services'
-import type { WorkspaceFiles } from '../../../files/model/files-store'
-import type {
-  FileListKind,
-  FilesLayout,
-  FilesNavigation,
-  FilesTab,
-} from '../../../files/navigation'
-import { DiffPage } from '../../../files/page/DiffPage'
-import { FilePage } from '../../../files/page/FilePage'
+import type { FileListKind } from '../../../files/navigation'
 import { FilesPanel } from '../../../files/panel/FilesPanel'
-import { KeptScroll, scrollTabKey } from '../../../files/ui/kept-scroll'
 import type { CommandKey } from '../../../files/ui/LinkTabs'
 import { ChecksActions } from '../../../github/BarButtons'
 import { ChecksList } from '../../../github/ChecksList'
@@ -26,66 +16,10 @@ import { useGitHubFeed, useScreenBar } from '../github/WorkspaceGitHub'
 import { SandboxPanel } from '../SandboxNotice'
 import { contentState } from '../sandbox-view'
 import { useSavedView } from '../saved-view'
-import { useAddressLines } from './address-lines'
 import { filesPlace, tabOf } from './files-address'
-import {
-  useAddressList,
-  useFilesNavigation,
-  useOpenTab,
-} from './files-navigation'
-import { useFileTargets, useKeptFiles } from './workspace-files'
-
-/**
- * The state of a sandbox that does not run, in place of the content of a
- * file or diff page. The page hides the bar of the chat, so the state shows
- * the action of the bar, Resume or Try again, and the words of a refusal.
- * While the open resumes the sandbox, it shows the wait of a start.
- */
-function pagePlaceholder(context: WorkspaceContext): ReactNode {
-  const state = contentState(context.panel, context.resumingAtOpen)
-  if (!state) return undefined
-  return (
-    <SandboxPanel
-      phone
-      resume={context.resume}
-      state={state}
-      workspace={context.workspace}
-    />
-  )
-}
-
-/**
- * A file tab or a diff tab as a page, which keeps its tab in the saved view.
- * While the sandbox does not run, the page reads nothing. A sandbox that is
- * stopped or starts, and one whose later start failed, keep the file that
- * the page shows, as they keep the lists. Otherwise the state of the sandbox
- * takes the place of the content, which is the wait while it starts.
- */
-function TabPage(props: {
-  context: WorkspaceContext
-  files: WorkspaceFiles
-  tab: FilesTab
-  navigation: FilesNavigation
-  layout: FilesLayout
-}) {
-  const { tab, context } = props
-  useOpenTab(context.savedView, tab)
-  const lines = useAddressLines()
-  const targets = useFileTargets(context.org.id)
-  const common = {
-    files: props.files,
-    layout: props.layout,
-    navigation: props.navigation,
-    placeholder: pagePlaceholder(context),
-    keepShown: context.panel !== null && !replacesShownFile(context.panel),
-    targets,
-  }
-  return tab.kind === 'file' ? (
-    <FilePage {...common} key={tab.path} lines={lines} tab={tab} />
-  ) : (
-    <DiffPage {...common} key={tab.path} tab={tab} />
-  )
-}
+import { useAddressList, useFilesNavigation } from './files-navigation'
+import { TabPage } from './files-pages'
+import { useKeptFiles } from './workspace-files'
 
 /** The state of the sandbox as a panel of the files. */
 function sandboxPanel(
@@ -163,6 +97,7 @@ function FilesPart(props: { context: WorkspaceContext }) {
   if (layout === 'phone' && tab) {
     return (
       <TabPage
+        address
         context={context}
         files={files}
         layout={layout}
@@ -199,46 +134,7 @@ function FilesPart(props: { context: WorkspaceContext }) {
   )
 }
 
-/**
- * The file or diff tab of the address, in the centre of a desktop. Each tab
- * keeps its scroll offset in the kept files of the workspace.
- */
-function FilesCenter(props: { context: WorkspaceContext; tab: FilesTab }) {
-  const { context, tab } = props
-  const files = useKeptFiles(context)
-  const navigation = useFilesNavigation(context)
-  const tabKey = scrollTabKey(tab)
-  const kept = useMemo(
-    () => ({ places: files.scrollPlaces, tab: tabKey }),
-    [files, tabKey],
-  )
-  return (
-    <KeptScroll.Provider value={kept}>
-      <TabPage
-        context={context}
-        files={files}
-        layout="desktop"
-        navigation={navigation}
-        tab={tab}
-      />
-    </KeptScroll.Provider>
-  )
-}
-
 /** The Files screens as a part of the workspace: the lists, and their pages on a phone. */
 export const filesFeatures: WorkspaceFeatures = {
   files: (context) => <FilesPart context={context} />,
-}
-
-/**
- * The file or diff tab of the address, which the kept chat shows in place
- * of the chat of its session on desktop, or null. A phone shows it in the
- * Files tab, and an archived workspace keeps its chat only.
- */
-export function filesCenter(context: WorkspaceContext): ReactNode {
-  if (context.viewport === 'phone' || context.sandbox === 'archived') {
-    return null
-  }
-  const tab = tabOf(filesPlace(context.view))
-  return tab ? <FilesCenter context={context} tab={tab} /> : null
 }

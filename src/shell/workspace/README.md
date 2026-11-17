@@ -2,7 +2,9 @@
 
 The workspace screen shows one open workspace: its header, the start
 steps, the states of its cloud computer, and its chat. On desktop the chat
-column sits beside the right column. A phone shows one view at a time,
+column, with one or two panes, sits beside the right column. While two
+panes show, the right column gives way to them, down to 280 px, and it
+still leaves the centre at least 360 px. A phone shows one view at a time,
 with a tab bar. The chat fills the centre by default, as
 [The chat of the workspace](#the-chat-of-the-workspace) says.
 The shell gives its own parts: the Files screens, the tools, the pull
@@ -156,9 +158,10 @@ functions of the workspace screen that a reader opens first.
 - [Web app: data and composition](../../app/README.md): the models, the
   event stream, and the features.
 - [The chat](../../chat/README.md): the chat that fills the centre.
-- [Split panes](../../../docs/protocol/split-panes.md): the requirements
-  of two panes in the centre column. The screen draws one pane, and it
-  does not draw two panes yet.
+- [Split panes](../../../docs/protocol/split-panes.md) and
+  [The width of split panes](../../../docs/protocol/split-pane-width.md):
+  the requirements of the one or two panes of the centre column, which the
+  chat draws, as [the panes](../../chat/panes.md) of the chat says.
 - [The Files screens](../../files/README.md) and
   [the browser fakes](../../test-support/README.md).
 - [The web app in the architecture](../../../docs/architecture/components.md#web-app).

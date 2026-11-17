@@ -83,6 +83,12 @@ export interface ComposerProps {
   onChooseModel: (choice: AgentChoice) => void
   /** The field takes the focus when it shows, as `ComposerFocus` says. */
   focus?: ComposerFocus | null
+  /**
+   * The composer offers the session keys, such as Focus the message field.
+   * With two panes, only the composer of the session that these keys use
+   * offers them. By default it does.
+   */
+  keys?: boolean
 }
 
 /**
@@ -103,19 +109,20 @@ function useRequestedFocus(
 }
 
 /**
- * The keys of the composer while it shows: Focus the message field, Attach
- * files as the paperclip does, and Stop the agent as Stop does while a turn
- * runs. The model picker offers its own keys.
+ * The keys of the composer while it shows and `keys` holds: Focus the
+ * message field, Attach files as the paperclip does, and Stop the agent as
+ * Stop does while a turn runs. The model picker offers its own keys.
  */
 function useComposerKeys(props: {
   field: RefObject<FieldHandle | null>
   files: RefObject<HTMLInputElement | null>
   stop: (() => void) | null
+  keys: boolean
 }) {
-  const { field, files } = props
-  useShortcutOffer('focus-message', () => field.current?.focus())
-  useShortcutOffer('attach-files', () => files.current?.click())
-  useShortcutOffer('stop-agent', props.stop)
+  const { field, files, keys } = props
+  useShortcutOffer('focus-message', keys ? () => field.current?.focus() : null)
+  useShortcutOffer('attach-files', keys ? () => files.current?.click() : null)
+  useShortcutOffer('stop-agent', keys ? props.stop : null)
 }
 
 /**
@@ -148,10 +155,12 @@ export function Composer(props: ComposerProps) {
   const field = useRef<FieldHandle>(null)
   const [mentionHost, setMentionHost] = useState<HTMLDivElement | null>(null)
   const { draft } = props
+  const keys = props.keys ?? true
   useComposerKeys({
     field,
     files: picker,
     stop: props.running && !props.stopping ? props.onStop : null,
+    keys,
   })
   const empty = draft.text.trim() === '' && draft.files.length === 0
   const off = empty || props.blocked || props.sending || filesWait(draft.files)
@@ -219,6 +228,7 @@ export function Composer(props: ComposerProps) {
               />
               <ModelPicker
                 choice={props.choice}
+                keys={keys}
                 models={props.models}
                 onChoose={props.onChooseModel}
                 sessionAgent={props.sessionAgent}

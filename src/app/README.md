@@ -133,10 +133,11 @@ the Help row of the palette opens.
   read-only for screens, and writes go through the actions and models.
 - A secret goes out once, through `SecretForm`, and the field is empty after
   the save. No answer brings a stored secret back.
-- The browser keeps only the panel sizes (`panels.ts` and
-  `column-split.ts`) and the last workspaces (`last-workspaces.ts`). The
-  panel sizes are the widths of the sidebar and the right column, and the
-  split of the right column. The last workspaces hold the address of the
+- The browser keeps only the panel sizes (`panels.ts`, `column-split.ts`,
+  and `pane-split.ts`) and the last workspaces (`last-workspaces.ts`). The
+  panel sizes are the widths of the sidebar and the right column, the
+  split of the right column, and the share of the left pane of a split
+  centre column. The last workspaces hold the address of the
   last workspace page that the person opened in each org, under a key of
   the person. A browser that refuses its storage keeps them until the page
   closes.

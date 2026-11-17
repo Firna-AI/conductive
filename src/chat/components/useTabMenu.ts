@@ -110,7 +110,8 @@ function groupsOf(
         key: 'close-right',
         label: 'Close tabs to the right',
         icon: X,
-        disabled: index === tabs.length - 1,
+        // The one row of a phone ends the left pane at its line.
+        disabled: tabs[index + 1]?.pane !== tab.pane,
         onSelect: act(() => actions.onCloseRight(tab)),
       },
       changes: true,
