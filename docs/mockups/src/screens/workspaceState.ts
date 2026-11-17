@@ -19,6 +19,11 @@ import {
   feedbackStateProperties,
 } from './feedbackState'
 import {
+  layoutStateDefaults,
+  layoutStateKeys,
+  layoutStateProperties,
+} from './layoutState'
+import {
   rowMenuStateDefaults,
   rowMenuStateKeys,
   rowMenuStateProperties,
@@ -49,9 +54,7 @@ export const workspaceStateSchema = {
     'temporary',
     'composer',
     'modelChoice',
-    'resize',
-    'rightColumn',
-    'sidebar',
+    ...layoutStateKeys,
     'overlay',
     'archive',
     'viewer',
@@ -146,21 +149,7 @@ export const workspaceStateSchema = {
      * that offers no fast mode.
      */
     modelChoice: { enum: ['workspace', 'fast', 'no-fast'] },
-    /**
-     * The user drags the handle of the right column to widen it, or the
-     * handle between the file lists and the tools to raise the split.
-     */
-    resize: { enum: ['none', 'right', 'split'] },
-    /**
-     * The right column of the desktop: shown, or hidden with the toggle at
-     * the end of the header. A phone has no right column.
-     */
-    rightColumn: { enum: ['shown', 'hidden'] },
-    /**
-     * The sidebar of the desktop: shown, hidden with its toggle, or hidden
-     * with the workspace list open as a popover of the tile of the org.
-     */
-    sidebar: { enum: ['shown', 'hidden', 'popover'] },
+    ...layoutStateProperties,
     /**
      * What lies open over the workspace: the session history, the question
      * before a running session closes, the owner of the workspace, the tab
@@ -273,9 +262,7 @@ export const readyWorkspace: WorkspaceState = {
   temporary: 'none',
   composer: 'empty',
   modelChoice: 'workspace',
-  resize: 'none',
-  rightColumn: 'shown',
-  sidebar: 'shown',
+  ...layoutStateDefaults,
   overlay: 'none',
   archive: 'kept',
   viewer: 'admin',
