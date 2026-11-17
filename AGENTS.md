@@ -219,4 +219,7 @@ Apple silicon Mac jobs on Blacksmith.
 - Avoid breaking changes. A change that breaks stored data, the Worker
   API, or the runner messages needs a migration or a compatible path.
   Older copies of the Mac app and older runners in the sandboxes must keep
-  working. Name each breaking change in the pull request description.
+  working. The previous Worker must keep working on the schema of each new
+  migration, as
+  [Keep the previous Worker working](migrations/README.md#keep-the-previous-worker-working)
+  says. Name each breaking change in the pull request description.
