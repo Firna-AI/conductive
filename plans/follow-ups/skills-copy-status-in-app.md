@@ -1,6 +1,6 @@
 # Skills copy warnings reach only the runner log
 
-- **Severity:** Low. **Effort:** Large. **Confidence:** High. **Harder later:** No.
+- **Severity:** Low. **Likelihood:** Common. **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-17, from branch `calummoore/oslo-3u7a`, a design call of the org skills repository plan.
 - **Location:** `crates/cnd-runner/src/skills/service.rs`, `docs/protocol/org-skills.md`.
@@ -8,7 +8,7 @@
 
 ### 1. Skills copy warnings reach only the runner log
 
-- **Severity:** Low. **Effort:** Large.
+- **Severity:** Low. **Likelihood:** Common. **Effort:** Large.
 - **Source:** Design.
 - **Category:** Product bug.
 - **Location:** `crates/cnd-runner/src/skills/service.rs`.
@@ -25,5 +25,6 @@
 - **Left out:** A check at Save, because it cannot see a fault of one workspace.
 - **Wider fix:** C.
 - **Previous examples:** Options D and F of decision 7 of the org skills repository plan, which the user did not choose.
+- **Related:** `plans/follow-ups/skills-startup-cleanup-hides-restored-copy.md` changes the same runner warning paths. Its fix does not depend on this status choice. A cleanup warning must not make a later status report mark a usable published copy as failed.
 - **Recommendation:** B. It shows the common fault with one result for the org.
 - **Action:** ask the user, because it adds a new report and a new state.
