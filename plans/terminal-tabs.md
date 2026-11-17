@@ -652,11 +652,11 @@ Depends on: 9
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] After the deploy and a software update, open a workspace. Open
-      three terminals and run a different command in each. Reload, and
+- [ ] After the deploy, a software update, and a later start of the cloud
+      computer, open a workspace. Open three terminals and run a different command in each. Reload, and
       check that each terminal kept its command. Close one, and reach the
       limit.
-- [ ] Open a workspace whose software has not updated. Check that it shows one
-      terminal and no + button.
+- [ ] Open a workspace whose terminal service has not started on the new
+      software. Check that it shows one terminal and no + button.
 - [ ] After the next Mac app release, repeat the first check in the Mac
       app.
