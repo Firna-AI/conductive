@@ -256,9 +256,11 @@ export class Workspace extends AgentSessionWorkspace {
 
   softwareRestart(workspaceId: string, step: RestartStep) {
     return featureResult(() =>
-      this.run(() =>
-        changeRestart(this.integration, workspaceId, step, this.now()),
-      ),
+      typeof step === 'string'
+        ? this.run(() =>
+            changeRestart(this.integration, workspaceId, step, this.now()),
+          )
+        : this.features.refreshTerminal(step.terminal),
     )
   }
 

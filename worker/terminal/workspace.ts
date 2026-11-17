@@ -4,7 +4,7 @@ import { TerminalSocketLease, terminalNotFound } from './socket-lease'
 
 type TerminalChat = Pick<
   WorkspaceChat,
-  'readWorkspace' | 'authorizedWorkspaceOperation'
+  'readWorkspace' | 'changeWorkspace' | 'authorizedWorkspaceOperation'
 >
 
 export class WorkspaceTerminals {
@@ -25,6 +25,18 @@ export class WorkspaceTerminals {
       terminals: await view.terminals.list(orgId, workspaceId),
       eventNumber: view.eventNumber,
     }))
+  }
+
+  refreshSupport(
+    orgId: string,
+    workspaceId: string,
+    several: boolean,
+    refresh: () => Promise<boolean>,
+  ) {
+    return this.chat.changeWorkspace(workspaceId, async (transaction) => {
+      if (await refresh())
+        await transaction.terminals.supportChanged(orgId, workspaceId, several)
+    })
   }
 
   openSocket(orgId: string, workspaceId: string, terminalId?: string) {

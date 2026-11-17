@@ -92,6 +92,18 @@ export class TerminalList {
     return { terminals }
   }
 
+  async supportChanged(
+    orgId: string,
+    workspaceId: string,
+    several: boolean,
+  ): Promise<void> {
+    await this.emit({
+      type: 'terminals.updated',
+      terminals: await this.list(orgId, workspaceId),
+      several,
+    })
+  }
+
   private async save(terminals: readonly TerminalEntry[]): Promise<void> {
     await this.data.put(
       TERMINALS_KEY,

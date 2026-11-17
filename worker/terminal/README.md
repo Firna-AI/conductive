@@ -35,6 +35,8 @@ An absent record reads as Terminal 1 with ID `workspace`.
 Its writes and full-list `terminals.updated` events share the chat transaction.
 The common workspace stream publishes only after that transaction commits.
 Replayed creates with the same ID and repeated removals add no second event.
+After Restart changes cached support, the same event path commits one
+full-list event with `several`. An unchanged support value emits no event.
 `WorkspaceTerminals` keeps closing marks in memory while provider calls wait.
 It prevents concurrent closes from removing the last available terminal.
 A failed close clears its mark and keeps its entry.
@@ -76,7 +78,9 @@ It starts nothing and puts no password in the image.
 Release updates bring terminal script and unit changes to existing workspaces.
 The program downloads them in the background. The runner applies them at a
 later start, or in place when its workspace is idle. The running terminal
-services keep their old units and scripts until their next start. But each
+services keep their old units and scripts until their next start. Restart
+of the workspace software restarts ttyd after the runner applies the release.
+It keeps the shell server running. But each
 new terminal connection runs the bridge from `/opt/conductive/current` at
 once, under the old ttyd command line. So the bridge keeps its command-line
 arguments compatible across releases. A workspace without the program
@@ -278,12 +282,22 @@ update checks that the workspace still owns the same sandbox.
 It also checks the provider account. A read returns the password only for
 that sandbox ID and account.
 
-The same read also gets the support marker with a two-byte limit.
+The same start read also gets the support marker with a two-byte limit.
 Only the exact content `1` and a newline means several terminals.
 A missing file, odd content, or read failure means one terminal and does
 not fail the password read. D1 stores the result as `terminal_credentials.several`
 beside the encrypted password. Existing rows default to `0`.
 `terminalSeveral` reads it for the current sandbox and provider account.
+
+Restart shares the start probe and the bounded file reader. It restarts
+only `conductive-terminal.service`. A failed service restart or probe
+prints a warning and writes `0`, without failing Restart. A release with
+no attach program also writes `0`.
+The workspace object then refreshes the encrypted password and support for
+the sandbox ID and provider account captured before Restart. A failed
+read warns and keeps the cached values. The cache comparison and update
+run in the workspace queue with the terminal list event. That event lets
+an open app learn new support even if the runner became ready first.
 
 The app supplies no extra terminal secret at start. The workspace token
 keeps its existing scope and does not authenticate terminal access.
@@ -447,6 +461,9 @@ Terminal status reads remain available.
 - [connections.ts](connections.ts) owns terminal registration, expiry, and scheduled access checks.
 - [The shared connection reader](../security/connection-access.ts) reads each session, membership, and sandbox identity in one batch.
 - [service.ts](service.ts) exports `terminalPackagesCommand`, which installs the apt packages without replacing release files. It also exports the setup command `terminalStartCommand`, the password and support read `startWorkspaceTerminal`, and the marker writer `markTerminalRestoreEnded`.
+- [support.ts](support.ts) shares the bounded support probe between start and Restart, and builds the terminal-only restart command.
+- [service-files.ts](service-files.ts) reads and validates the bounded password and support files.
+- [refresh.ts](refresh.ts) refreshes the cache after Restart and publishes changed support through the list owner.
 - [close.ts](close.ts) exports `closeWorkspaceTerminal`, which ends one terminal's session.
 - [The shared terminal contract](../../src/shared/terminal.ts) owns `TERMINAL_PORT`, `FIRST_TERMINAL_ID`, `TERMINAL_LIMIT`, `TERMINAL_ID_PATTERN`, and `isTerminalId`.
 - [scripts.ts](scripts.ts) builds the password program, attach program, launcher, and shell server with `credentialScript`, `attachScript`, `launcherScript`, and `sessionServerScript`. It also owns the terminal paths and attach program name, and builds the prompt hook with `terminalPromptCommand`.

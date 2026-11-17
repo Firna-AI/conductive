@@ -1,6 +1,7 @@
 import { chmod, mkdir, readFile, symlink, writeFile } from 'node:fs/promises'
 
 import { installationFixture } from './install.test-support'
+import { RESTART_COMMAND } from '../lifecycle/software-restart'
 import { shellArgument } from './privileged'
 import {
   TERMINAL_ATTACH_PROGRAM,
@@ -18,6 +19,8 @@ export async function terminalStartFixture() {
   const schedule = `${fixture.root}/pids`
   const reads = `${fixture.root}/pid-reads`
   const sleeps = `${fixture.root}/sleeps`
+  const commands = `${fixture.root}/commands`
+  const failure = `${fixture.root}/failure`
   await writeFile(attach, '#!/bin/sh\nexit 0\n')
   await chmod(attach, 0o700)
   const programs = {
@@ -26,7 +29,14 @@ export async function terminalStartFixture() {
     sleep: `#!/bin/sh
 printf '%s\\n' "$*" >> ${shellArgument(sleeps)}
 `,
+    flock: `#!/bin/sh
+printf 'flock %s\\n' "$*" >> ${shellArgument(commands)}
+shift
+exec "$@"
+`,
     systemctl: `#!/bin/sh
+printf '%s\\n' "$*" >> ${shellArgument(commands)}
+[ "$*" != "$(cat ${shellArgument(failure)})" ] || exit 1
 [ "$1" = show ] || exit 0
 count=$(wc -l < ${shellArgument(reads)})
 pid=$(sed -n "$((count + 1))p" ${shellArgument(schedule)})
@@ -39,13 +49,25 @@ printf '%s\\n' "$pid"
     await writeFile(`${fixture.root}/bin/${name}`, program)
     await chmod(`${fixture.root}/bin/${name}`, 0o700)
   }
-  const command = terminalStartCommand()
-    .replaceAll(TERMINAL_RUNTIME_VIEW, `${fixture.root}/runtime-view`)
-    .replaceAll(TERMINAL_RUNTIME, fixture.options.runtimeDirectory)
-    .replaceAll(TERMINAL_ATTACH_PROGRAM, attach)
-    .replaceAll('/proc/', `${proc}/`)
+  const mapped = (command: string) =>
+    command
+      .replaceAll(TERMINAL_RUNTIME_VIEW, `${fixture.root}/runtime-view`)
+      .replaceAll(TERMINAL_RUNTIME, fixture.options.runtimeDirectory)
+      .replaceAll(TERMINAL_ATTACH_PROGRAM, attach)
+      .replaceAll('/proc/', `${proc}/`)
   const lines = async (path: string) =>
     (await readFile(path, 'utf8')).trim().split('\n').filter(Boolean)
+  const run = async (command: string, pids: readonly number[], fail = '') => {
+    await writeFile(schedule, `${pids.join('\n')}\n`)
+    await writeFile(reads, '')
+    await writeFile(sleeps, '')
+    await writeFile(commands, '')
+    await writeFile(failure, fail)
+    return runScript(mapped(command), false, {
+      ...process.env,
+      PATH: `${fixture.root}/bin:${process.env.PATH}`,
+    })
+  }
   return {
     attach,
     async process(pid: number, executable: string, args: readonly string[]) {
@@ -54,14 +76,10 @@ printf '%s\\n' "$pid"
       await writeFile(`${proc}/${pid}/cmdline`, `${args.join('\0')}\0`)
     },
     async start(pids: readonly number[]) {
-      await writeFile(schedule, `${pids.join('\n')}\n`)
-      await writeFile(reads, '')
-      await writeFile(sleeps, '')
-      return runScript(command, false, {
-        ...process.env,
-        PATH: `${fixture.root}/bin:${process.env.PATH}`,
-      })
+      return run(terminalStartCommand(), pids)
     },
+    restart: (pids: readonly number[], fail?: string) =>
+      run(RESTART_COMMAND, pids, fail),
     marker: () =>
       readFile(
         `${fixture.options.runtimeDirectory}/${TERMINAL_SUPPORT_FILE}`,
@@ -69,5 +87,6 @@ printf '%s\\n' "$pid"
       ),
     reads: () => lines(reads),
     sleeps: () => lines(sleeps),
+    commands: () => lines(commands),
   }
 }

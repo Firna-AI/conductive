@@ -776,14 +776,16 @@ Depends on: 14
 
 Depends on: 14
 
-- [ ] After the runner restart applies the newest download, Restart
+- [x] After the runner restart applies the newest download, Restart
       restarts the terminal service, with no restart of the shell server.
       A failed terminal restart warns and does not fail the Restart.
-- [ ] Run the support check again and write the marker. Read it and save
+- [x] Run the support check again and write the marker. Read it and save
       it in the Worker, with the password, as at a start.
-- [ ] Test the command, the new marker, a failed terminal restart, and an
+- [x] Test the command, the new marker, a failed terminal restart, and an
       older release with no attach program.
-- [ ] Update `worker/terminal/README.md` and `worker/lifecycle/README.md`.
+- [x] Update `worker/terminal/README.md` and `worker/lifecycle/README.md`.
+
+Evidence: `.context/terminal-tabs/reports/m15.md`.
 
 ## Milestone 16: Address and focus of terminal tabs
 
