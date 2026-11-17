@@ -6,7 +6,7 @@ import paletteStyles from '../../../docs/mockups/src/components/palette/CommandP
 import { routes } from '../../app/router'
 import { requestLines } from '../../app/test-kit'
 import { workspacePaths } from '../../shared/workspaces'
-import { accessibleName, byLabel, byRole } from '../../test-support/dom-queries'
+import { accessibleName, byRole } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import {
@@ -94,10 +94,10 @@ describe('the rows of the command palette', () => {
     })
   })
 
-  test('a row closes the palette before it runs, so Archive and Restore act at once with no question, and the field of a new section takes the focus', async () => {
+  test('a row closes the palette before it runs, so Archive and Restore act at once with no question, and the name field of the New section dialog takes the focus', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer()
-    const { view, navigation } = await openPaletteTab(
+    const { navigation } = await openPaletteTab(
       routes.workspace(org, workspace),
       { server },
     )
@@ -125,21 +125,22 @@ describe('the rows of the command palette', () => {
     typeText(searchField(), 'new section')
     press(searchField(), 'Enter')
     await settle()
-    const field = byLabel(
-      'Name of the new section',
-      byLabel('Workspaces', view),
+    const dialog = document.querySelector<HTMLElement>(
+      '[role="dialog"][aria-label="New section"]',
     )
+    const field = byRole('textbox', 'Name', dialog ?? document)
     expect({
       archive,
       restore,
       section: {
         open: palette() !== null,
+        dialog: dialog !== null,
         focus: field.contains(document.activeElement),
       },
     }).toEqual({
       archive: { open: false, dialog: false, writes: lifecycle.slice(0, 1) },
       restore: { open: false, dialog: false, writes: lifecycle },
-      section: { open: false, focus: true },
+      section: { open: false, dialog: true, focus: true },
     })
   })
 
@@ -215,7 +216,7 @@ describe('the rows of the command palette', () => {
         names: [
           'Fix flaky cart testacme/storefront3m, Checks running, Working',
           'Apple Pay buttonacme/storefront5m, Checks failed, Ready',
-          'Upgrade to Next.js 16acme/storefront7m, Ready',
+          'Upgrade to Next.js 16acme/storefront7m, Merge conflict, Ready',
           'Checkout address autocompleteacme/storefrontnow, Archived',
         ],
       },
@@ -234,7 +235,13 @@ describe('the rows of the command palette', () => {
     {
       who: 'a member gets no Archive for the workspace of another person',
       server: () => new FakeApiServer({ role: 'member' }),
-      groups: ['Checkout address autocomplete', 'Acme', 'Orgs', 'Help'],
+      groups: [
+        'Checkout address autocomplete',
+        'Acme',
+        'Orgs',
+        'Window',
+        'Help',
+      ],
       rows: [
         'New session',
         'Session history',
@@ -242,6 +249,7 @@ describe('the rows of the command palette', () => {
         'New workspace',
         'New section',
         ...otherOrgs,
+        'Hide the sidebar',
         'Send feedback',
       ],
     },
@@ -252,8 +260,14 @@ describe('the rows of the command palette', () => {
         serveSuspendedAcme(server)
         return server
       },
-      groups: ['Checkout address autocomplete', 'Orgs', 'Help'],
-      rows: ['Session history', ...goTo, ...otherOrgs, 'Send feedback'],
+      groups: ['Checkout address autocomplete', 'Orgs', 'Window', 'Help'],
+      rows: [
+        'Session history',
+        ...goTo,
+        ...otherOrgs,
+        'Hide the sidebar',
+        'Send feedback',
+      ],
     },
   ])('on the Actions tab, $who', async ({ server, groups, rows }) => {
     holdAnimationFrames()

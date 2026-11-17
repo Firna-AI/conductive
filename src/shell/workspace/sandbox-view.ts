@@ -1,11 +1,13 @@
-import type {
-  ArchiveRestore,
-  SandboxNoticeState,
-  SandboxPanelState,
+import type { Workspace } from '../../shared/generated/Workspace'
+import {
+  replacesComposer,
+  type ArchiveRestore,
+  type SandboxNoticeState,
+  type SandboxPanelState,
 } from '../../../docs/mockups/src/components/workspace/sandboxNoticeState'
 import type { ApiError } from '../../app/api/client'
-import type { Workspace } from '../../shared/workspaces'
-import type { SandboxState } from './features'
+
+import type { SandboxState, WorkspaceContext } from './features'
 import { orgRefusal, refusedStart } from './SandboxNotice'
 
 /** What the screen shows of the sandbox of an open workspace. */
@@ -43,6 +45,21 @@ export function contentState(
   resumingAtOpen: boolean,
 ): SandboxPanelState | null {
   return resumingAtOpen ? { problem: 'starting' } : panel
+}
+
+/**
+ * Whether the bar of the sandbox takes the place of the composer now, as a
+ * part reads it from its context. The bar of `sandboxView` is the notice of
+ * the panel, unless the open of the workspace resumes the sandbox, and the
+ * wait of a start is no bar. After a failed first start the composer stays
+ * under the bar, as `replacesComposer` says.
+ */
+export function barReplacesComposer(
+  context: Pick<WorkspaceContext, 'panel' | 'resumingAtOpen'>,
+): boolean {
+  const { panel } = context
+  if (context.resumingAtOpen || panel === null) return false
+  return panel.problem !== 'starting' && replacesComposer(panel)
 }
 
 /**

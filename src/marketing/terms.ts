@@ -87,29 +87,20 @@ export const termsDocument: LegalDocument = {
             For an own endpoint login, model use bills where the endpoint's
             owner runs it. You are responsible for the endpoint that you
             connect and for following its terms.
-            The runs of a routine start their sessions on the login of the
-            member who owns the routine.
-            A newer cloud computer starts from an org image that requires
-            ${productName} to keep agent logins outside the cloud computer.
-            ${productName} enforces this requirement for computers that start
-            from that image. Its agents send their model requests and receive
-            their answers through ${productName} on Cloudflare. These requests
+            The runs of an automation start their sessions on the login of the
+            member who owns the automation.
+            ${productName} keeps agent logins outside cloud computers.
+            Each turn gets a temporary credential for model requests.
+            The agents send their model requests and receive their answers
+            through ${productName} on Cloudflare. These requests
             can hold your messages, files, code, and command results.
             ${productName} adds the login and sends each request to
             Anthropic, OpenAI, or the chosen endpoint. An own endpoint gets
             the messages, files, and command results of each turn on its
             login, whoever sent the message. Its address and key never reach
-            a cloud computer. A turn on an own endpoint needs agent software
-            that supports temporary credentials. An older cloud computer
-            starts from an earlier org image. ${productName}
-            still permits older software there that receives supported agent
-            logins themselves. A ChatGPT sign-in is never sent there.
-            With that older software, the agents send their model requests to
-            Anthropic or OpenAI from the cloud computer. Installing newer
-            software in that cloud computer does not remove this risk. A new
-            image build gives the protection to each cloud computer that starts
-            from it. In both kinds of cloud computer, agent settings in the
-            repository can send the model requests of the agents to another
+            a cloud computer. ${productName} starts turns only with
+            supported agent software. Agent settings in the repository can
+            send the model requests of the agents to another
             address instead.`,
           text`Keep your keys and logins safe. Connect only accounts that you
             have permission to use. If a key or login is exposed, revoke it
@@ -169,6 +160,10 @@ export const termsDocument: LegalDocument = {
           it does on your Mac and to your data.`,
         paragraph`You can remove an always-allowed command, or stop the
           permission of a workspace, in the Mac app at any time.`,
+        paragraph`While the 15 minutes run, the workspace bar shows the
+          time left, Extend, Keep until I stop, and Stop. Extend resets
+          the time left to 15 minutes from now. Keep until I stop changes
+          the permission to last until you stop it. Stop ends it.`,
       ],
     },
     {
@@ -180,11 +175,11 @@ export const termsDocument: LegalDocument = {
           notice.`,
         paragraph`A suspension of an account ends its sign-in. It stops the
           cloud computers of the workspaces that the account owns, closes
-          their previews, and blocks new starts. Its routines start no
+          their previews, and blocks new starts. Its automations start no
           runs.`,
         paragraph`A suspension of an org stops each cloud computer of the org,
           closes its previews and terminals, and blocks each start, build,
-          and routine run. Its members keep their accounts and their other
+          and automation run. Its members keep their accounts and their other
           orgs. They can still open the org and read its chat history.
           Nothing in the org can change, except that a member can leave it.
           An admin can leave only while another admin whose account is not
@@ -216,12 +211,17 @@ export const termsDocument: LegalDocument = {
         paragraph`Your repositories, files, and agent sessions live in the
           cloud computers that ${productName} runs for your org.
           ${productName} keeps the chat history of each workspace, so that
-          you can read it while the cloud computer is stopped. It also keeps
-          the files that you attach to messages. It copies each file to the
-          cloud computer when the agent starts work on its message. When it
-          passes on the model requests of a newer cloud computer, it keeps no
-          copy of a request or of its answer. It writes no body or header
-          value of them to its logs.`,
+          you can read it while the cloud computer is stopped.`,
+        paragraph`The cloud computer downloads a new attachment when the
+          agent starts work on its message.
+          A large text that you paste becomes an attached file.
+          ${productName} keeps each attached file until the cloud
+          computer of its workspace has it and its first start succeeds.
+          It then deletes its own copy. The file stays in the cloud computer.
+          ${productName} deletes an unsent file 7 days after you upload it.`,
+        paragraph`When ${productName} passes on the model requests of a cloud
+          computer, it keeps no copy of a request or of its answer.
+          It writes no body or header value of them to its logs.`,
         paragraph`Continue starts a new branch from the latest default branch
           of the repository. It keeps the cloud computer and its sessions.
           Changed files move to the new branch. Commits that are not pushed

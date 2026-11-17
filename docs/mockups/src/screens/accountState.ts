@@ -27,14 +27,17 @@ export const accountSchema = {
     'shortcutSearch',
     'shortcuts',
     'host',
+    'modelMenu',
     'deletedOrgs',
+    'stats',
   ],
   properties: {
     /**
-     * The tab: General, with the sign-in and the connections, Preferences,
-     * or Keyboard shortcuts. Each tab has its own address.
+     * The tab: General, with the sign-in and GitHub, Agents, with the
+     * logins of Claude and Codex, Preferences, Keyboard shortcuts, or Stats,
+     * with the person's own counts. Each tab has its own address.
      */
-    tab: { enum: ['general', 'preferences', 'shortcuts'] },
+    tab: { enum: ['general', 'agents', 'preferences', 'shortcuts', 'stats'] },
     /** GitHub and the agents are connected, or not yet, as at the first run. */
     connections: { enum: ['connected', 'not-connected'] },
     /** The kind of the Codex login while Codex is connected. */
@@ -87,11 +90,25 @@ export const accountSchema = {
      * with an empty address, with a typed address that the shared rule
      * changes before the save, or with an address that the rule refused, or
      * the logins after the connect. `unlisted` has those logins when the
-     * model list of the proxy lacks a Claude model of the app. Except for
-     * `none`, every connected login runs on Cal's proxy.
+     * model list of the proxy lacks a Claude model of the app. `v1-added`
+     * has them after a Codex save that added /v1 to the typed address, with
+     * the note. `read-failed` has them after the last read of each model
+     * list failed, and `read-failed-unlisted` also keeps a Claude list that
+     * lacks a Claude model of the app. Except for `none`, every connected
+     * login runs on Cal's proxy.
      */
     ownEndpoint: {
-      enum: ['none', 'form', 'typed', 'refused', 'connected', 'unlisted'],
+      enum: [
+        'none',
+        'form',
+        'typed',
+        'refused',
+        'connected',
+        'unlisted',
+        'v1-added',
+        'read-failed',
+        'read-failed-unlisted',
+      ],
     },
     /**
      * The change of a shortcut on Keyboard shortcuts, in progress or last:
@@ -122,15 +139,34 @@ export const accountSchema = {
      */
     host: { enum: browserHosts },
     /**
+     * The Model and effort picker of Preferences: closed, or open with
+     * fast mode on.
+     */
+    modelMenu: { enum: ['closed', 'open-fast'] },
+    /**
      * The orgs that the user deleted and can still restore: none, so the
      * General tab has no Deleted orgs section, Acme Labs with Restore, Acme
      * Labs after the operator suspended it, or a Restore that failed.
      */
     deletedOrgs: { enum: deletedOrgStates },
+    /**
+     * The numbers of the Stats tab: shown, loading when the tab opens, failed
+     * to load, or shown for a new account with no workspace and no automation.
+     */
+    stats: { enum: ['ready', 'loading', 'failed', 'empty'] },
   },
 } as const
 
 export type AccountState = SchemaProps<typeof accountSchema>
+
+/**
+ * A state of the account with any of its tabs. Only the Mac app has the
+ * This Mac tab, so the Mac app's pages choose it, and the schema of the
+ * browser's pages does not offer it.
+ */
+export type AccountView = Omit<AccountState, 'tab'> & {
+  tab: AccountState['tab'] | 'this-mac'
+}
 
 /** The General tab of a connected account, in Chrome on a Mac. */
 export const accountGeneral: AccountState = {
@@ -150,11 +186,25 @@ export const accountGeneral: AccountState = {
   shortcutSearch: 'none',
   shortcuts: 'default',
   host: 'chrome-mac',
+  modelMenu: 'closed',
   deletedOrgs: 'none',
+  stats: 'ready',
+}
+
+/** The Agents tab of a connected account, in Chrome on a Mac. */
+export const accountAgents: AccountState = {
+  ...accountGeneral,
+  tab: 'agents',
 }
 
 /** The Keyboard shortcuts tab in a normal Chrome tab on a Mac. */
 export const accountShortcuts: AccountState = {
   ...accountGeneral,
   tab: 'shortcuts',
+}
+
+/** The Stats tab of a connected account, in Chrome on a Mac. */
+export const accountStatsTab: AccountState = {
+  ...accountGeneral,
+  tab: 'stats',
 }

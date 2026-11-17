@@ -11,6 +11,21 @@ import { INSTALLATION_TOKEN, SOURCE_BRANCH } from './native-github-test-support'
 const privateKey = generateKeyPairSync('rsa', { modulusLength: 2048 })
   .privateKey.export({ type: 'pkcs1', format: 'pem' })
   .toString()
+
+/**
+ * The commands that the local builder ran, with the fixture home hidden.
+ * The fixture home can itself start with /home/user, in a checkout of a
+ * cloud computer, so only a path of the image that no map reached counts.
+ */
+function unmappedCommands(fixture: {
+  home: string
+  provider: { mappedCommands: readonly string[] }
+}): string {
+  return fixture.provider.mappedCommands
+    .join('\n')
+    .replaceAll(fixture.home, '<fixture home>')
+}
+
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -118,6 +133,12 @@ it('clones default history and tags natively and refreshes captured clean folder
     expect(fixture.provider.commands).toHaveLength(6)
     expect(fixture.access.requests.map((request) => request.method)).toEqual([
       'POST',
+      'GET',
+      'DELETE',
+      'POST',
+      'DELETE',
+      'POST',
+      'GET',
       'DELETE',
       'POST',
       'DELETE',
@@ -129,17 +150,19 @@ it('clones default history and tags natively and refreshes captured clean folder
       ),
     ).toEqual([
       'mint',
+      'revoke',
+      'mint',
       'claim',
       'revoke',
       'finalize',
+      'mint',
+      'revoke',
       'mint',
       'claim',
       'revoke',
       'finalize',
     ])
-    expect(fixture.provider.mappedCommands.join('\n')).not.toContain(
-      '/home/user',
-    )
+    expect(unmappedCommands(fixture)).not.toContain('/home/user')
     for (const secret of [
       INSTALLATION_TOKEN,
       privateKey,
@@ -163,9 +186,12 @@ it('clones default history and tags natively and refreshes captured clean folder
         stderr,
       })),
     ).toEqual(
-      Array.from({ length: 6 }, () => ({
+      Array.from({ length: 6 }, (_, index) => ({
         exitCode: 0,
-        stdout: '',
+        stdout:
+          index % 3 === 0
+            ? expect.stringMatching(/^MemAvailable:\s+\d+ kB\n$/u)
+            : '',
         stderr: '',
       })),
     )
@@ -186,10 +212,11 @@ it('clones an empty repository as a clean unborn default branch and revokes its 
     expect((await fixture.git('remote', 'get-url', 'origin')).toString()).toBe(
       'https://github.com/example/source-repository.git\n',
     )
-    expect(fixture.provider.mappedCommands.join('\n')).not.toContain(
-      '/home/user',
-    )
+    expect(unmappedCommands(fixture)).not.toContain('/home/user')
     expect(fixture.access.requests.map((request) => request.method)).toEqual([
+      'POST',
+      'GET',
+      'DELETE',
       'POST',
       'DELETE',
     ])

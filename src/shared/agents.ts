@@ -1,18 +1,7 @@
-export type Agent = 'claude' | 'codex'
-export type Effort = 'none' | 'low' | 'medium' | 'high' | 'xhigh' | 'max'
+import type { AgentModel } from './generated/AgentModel'
+import type { AgentChoice } from './generated/AgentChoice'
 
-export interface AgentChoice {
-  agent: Agent
-  model: string
-  effort: Effort
-}
-
-export interface AgentModel {
-  agent: Agent
-  model: string
-  label: string
-  efforts: readonly Effort[]
-}
+import type { Effort } from './generated/Effort'
 
 export const MODELS_PATH = '/api/models'
 export interface ModelsResponse {
@@ -27,6 +16,7 @@ export const effortLabels: Readonly<Record<Effort, string>> = {
   high: 'High',
   xhigh: 'Extra high',
   max: 'Max',
+  ultra: 'Ultra',
 }
 
 export function findModel(

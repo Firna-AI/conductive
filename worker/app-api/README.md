@@ -10,7 +10,7 @@ Each handler returns `null` for a path that it does not own. The
 
 | Handler | Routes |
 | --- | --- |
-| `bootRoute` in [`boot.ts`](boot.ts) | `GET /api/account`, `GET /api/models`, `GET /api/get-started`, `PUT /api/account/default-model`, `PUT /api/account/new-workspace-view`, `PUT /api/account/shortcuts`, and `PUT`, `PATCH`, and `DELETE` of `/api/account/agent-logins/:agent` |
+| `bootRoute` in [`boot.ts`](boot.ts) | `GET /api/account`, `GET /api/account/stats`, `GET /api/models`, `GET /api/get-started`, `PUT /api/account/default-model`, `PUT /api/account/new-workspace-view`, `PUT /api/account/shortcuts`, and `PUT`, `PATCH`, and `DELETE` of `/api/account/agent-logins/:agent` |
 | `endpointModelsRoute` in [`endpoint-models.ts`](endpoint-models.ts) | `POST /api/account/agent-logins/:agent/models/refresh` |
 | `codexDeviceRoute` in [`codex-device.ts`](codex-device.ts) | `POST /api/account/agent-logins/codex/device` starts a ChatGPT sign-in. `POST` of its `/:handle` polls and exchanges it |
 | `shellRoute` in [`shell.ts`](shell.ts) | `GET` of the sections, the repositories, the members, and the workspace list of an org. `GET` and `PUT` of the view of a workspace, and `PUT` of its read mark |
@@ -28,27 +28,41 @@ The [Continue route](continue.ts) starts a Continue job and reads its result in 
 `membersRoute` alone serves the org list and one org.
 It also serves Leave, org recovery, roles, invitations, and workspace ownership.
 Leave keeps the existing last-active-admin rule and native owner-change maintenance.
-The [routine routes](../routines/README.md) serve routine records after the same app gate.
-Section deletion moves routines to General in its workspace-move batch.
-Repository deselection turns matching routines off in its repository-write batch.
+The [automation routes](../automations/README.md) serve automation records after the same app gate.
+Section deletion moves automations to General in its workspace-move batch.
+Repository deselection turns matching automations off in its repository-write batch.
 Run now and run history use the same app gate.
-Workspace view replies include `routine`, the run's routine ID and name, or null.
-A join from the run record supplies the routine without a new lifecycle field.
-Deleting the routine removes that link and keeps its normal run workspaces.
+Workspace view replies include `automation`, the run's automation ID and name, or null.
+A join from the run record supplies the automation without a new lifecycle field.
+Deleting the automation removes that link and keeps its normal run workspaces.
 Workspace view replies also include the resolved `baseBranch`.
 View writes cannot change this branch.
 
 ## Rules
 
-- The model list and the default choice come from `CONDUCTIVE_MODELS` and
-  `CONDUCTIVE_DEFAULT_CHOICE`, as
-  [Deployment inputs](../../docs/deployment.md#models) says. A missing or
-  invalid value gives a 503 on its own route only.
+- [Model configuration dependencies](../../docs/deployment/models.md#configuration-failures)
+  states which operations need `CONDUCTIVE_MODELS` and
+  `CONDUCTIVE_DEFAULT_CHOICE`, and their failures.
+- Each model of the list can carry the `fast` mark.
+  `PUT /api/account/default-model` saves fast mode with the model and the
+  effort. It stores fast mode as off for a model without the mark, and a
+  saved default without fast mode reads as off.
+  [Fast mode](../../docs/protocol/fast-mode.md#the-models-with-fast-mode)
+  states the rules.
 - An account reply reads `user_preferences`, `user_shortcuts`, and the records of the agent
   logins. It also gives the page of the GitHub App from `GITHUB_APP_SLUG`,
   so a screen links to that page without a GitHub read. A login write
   encrypts the secret with `agentLoginContext(userId, agent)` and
   `BOAT_KEY_ENCRYPTION_KEY`. No reply holds a stored secret.
+- `GET /api/account/stats` returns `AccountStats` from the
+  [account contract](../../src/shared/account.ts) for the signed-in user
+  only. [`account-stats.ts`](account-stats.ts) reads every count from D1 in
+  one batch, with the windows and the state SQL of the operator Overview
+  from [`workspace-counts.ts`](../operator/workspace-counts.ts). It leaves
+  out deleted orgs and skipped automation runs. A run counts for the
+  `owner_user_id` of its row. The route keeps no history and calls no
+  sandbox provider.
+  [Account stats](../../docs/protocol/account-stats.md) states the rules.
 - An own endpoint save uses `readEndpointAddress` from
   [`endpoint-address.ts`](../../src/shared/endpoint-address.ts). It encrypts
   one JSON value with the normalized endpoint and the whitespace-free key,
@@ -57,8 +71,14 @@ View writes cannot change this branch.
   secret-save time. They never give the full address.
   `accountLogins` requires the app model getter for account reads and share replies.
   Both replies keep the saved `modelList`, including its missing app IDs and read time.
-  Save reads the endpoint model list without making a failed read fail the save.
-  Each replacement drops the old model list and its attempt time.
+  Save reads the endpoint model list before encryption and storage.
+  A Codex save can select a `/v1` base through the bounded reads in
+  [Own endpoints](../model-gateway/own-endpoints.md).
+  A failed read never fails the save.
+  One statement replaces the login and its old model list with the new list, if any, and attempt time.
+  Endpoint save replies include boolean `endpointV1Added` and `modelListReadFailed`.
+  The first says that the second read selected a `/v1` base.
+  The second says that the save read no list. Native login replies omit both.
   [`account-models.ts`](account-models.ts) adds the optional `modelList` to
   an own endpoint login in the signed-in user's account reply.
   Its `missing` array holds app model IDs absent from the last successful list.
@@ -68,8 +88,11 @@ View writes cannot change this branch.
   The browser uses that case to keep every model available.
   An unavailable model configuration leaves discovery metadata out of the account reply.
   The model-list route keeps its existing configuration error.
-  Refresh reads only the signed-in user's login and answers 204, also after a failed read.
-  A removed or native login makes Refresh do nothing.
+  Refresh reads only the signed-in user's login and answers HTTP 200 with
+  `RefreshAgentLoginModelsResponse`: `{ modelListReadFailed: boolean }`.
+  The flag is false when Refresh read a list, and true otherwise.
+  A removed or native login makes Refresh do nothing and sets the flag to true.
+  Refresh never changes the stored address.
   Read the account again after Refresh to obtain the last successful result.
   The builder accepts public HTTPS addresses with host names.
   It refuses every IPv4 and IPv6 address, credentials, and non-public names.
@@ -77,8 +100,8 @@ View writes cannot change this branch.
   The save also passes `env.PREVIEW_DOMAIN` to refuse that deployment's preview domain and its subdomains.
   It preserves the query and drops the fragment and trailing slash.
   For Claude, it also drops a final `/v1`.
-  A valid own endpoint can run through the model gateway on protocol 2.
-  An invalid saved address or a protocol 1 runner makes it unavailable in chat.
+  A valid own endpoint runs through the model gateway.
+  An invalid saved address makes it unavailable in chat.
 - `PUT /api/account/shortcuts` takes `SaveShortcutsRequest` and returns
   `SaveShortcutsResponse` from the shared shortcut contracts. The shared
   reader checks the whole request before any write. A contract error
@@ -170,8 +193,8 @@ View writes cannot change this branch.
 - A workspace path decodes its workspace ID once.
 - An archived workspace keeps its view readable. A view write, a read mark,
   and a lifecycle action other than Restore get `409 workspace_archived`.
-- `chatLifecycleRoute` gives the lifecycle handler the runner archive as a
-  getter, so only a build or a refresh reads it. It gives the first message
+- The lifecycle handler reads validated release metadata only for a build or
+  refresh. `chatLifecycleRoute` gives the first message
   of a create to `acceptLifecycleFirstMessage` of the workspace object.
 
 Org suspension keeps shell reads available.
@@ -209,6 +232,11 @@ The machine tools use the configured app origin instead.
   the index is 0.
 - A section move request holds `position`, the index in the section list.
   Each index counts the rows without the moved row.
+- A section create request can hold `afterSectionId`. The insert and a
+  move in the same batch then put the new section directly below that
+  section of the org. The move finds the place from the current rows.
+  Without `afterSectionId`, or when that section is gone, the new section
+  goes last.
 - A move ranks the current rows of its target from an `AS MATERIALIZED`
   snapshot, then puts the moved row at the index. That keyword makes
   SQLite compute the snapshot once, before the update changes a row.

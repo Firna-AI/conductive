@@ -53,6 +53,11 @@ knows:
   report of an older runner can lack either count. A missing count stays
   absent, never zero. Without the raw count, listed files show uncommitted
   work. A reported unpushed count still applies.
+- `localWorkOf` also gives the kind of the local work: `changes` when a
+  file is not committed, `commits` when only unpushed commits are left, or
+  `none`. On an open pull request, `changes` shows Commit and push and
+  `commits` shows Push. Both buttons run the command `commit-and-push`,
+  through `agentActionCommand` of the mockup copy.
 - Fix checks shows only while the checks name a check that blocks the
   merge: failed, timed out, cancelled, or one that needs an action. Its
   prompt lists them.

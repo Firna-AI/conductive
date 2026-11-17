@@ -17,17 +17,20 @@ import {
   mergeRegister,
   PASTE_COMMAND,
   PASTE_TAG,
+  type LexicalEditor,
   type LexicalNode,
   type PasteCommandType,
   type RangeSelection,
 } from 'lexical'
 import { draftParts } from '../../../app/draft-marks'
-import { heldFile } from './attached-files'
+import { heldFile, type FieldFiles } from './attached-files'
 import { $dropNodes } from './drop-move'
 import { $selectedCopyText, $selectedFieldText } from './field-content'
 import { $fieldNodes, $pastedNodes, type FieldSources } from './field-nodes'
 import type { FieldOwner } from './field-plugins'
+import { $insertFiles } from './insert-files'
 import { useFieldSources } from './mention-plugins'
+import { isLargePaste, pastedFile } from './pasted-text'
 import { $caretAtPoint } from './point-caret'
 import { useLatest } from './use-latest'
 
@@ -56,9 +59,37 @@ function holdsFiles(field: string, sources: FieldSources): boolean {
   )
 }
 
+/**
+ * Attaches files to the draft of the field, as a pick does, and gives their
+ * IDs at once. See `ChipTextFieldProps.onAttach`.
+ */
+export type FieldAttach = (files: readonly File[]) => readonly string[]
+
 /** The plain text of a paste or a drop. */
 function plainOf(data: DataTransfer): string {
   return data.getData('text/plain') || data.getData('text/uri-list')
+}
+
+/**
+ * Puts the chips of the files of a paste in place of the selected text, as
+ * one step of undo. A file that the draft does not hold gets no chip, and
+ * when no file is left, the text stays as it was.
+ */
+function insertPasted(
+  editor: LexicalEditor,
+  files: FieldFiles,
+  ids: readonly string[],
+): void {
+  const held = ids.filter((id) => heldFile(files, id) !== undefined)
+  if (held.length === 0) return
+  editor.update(
+    () => {
+      const selection = $getSelection()
+      if ($isRangeSelection(selection)) selection.removeText()
+      $insertFiles(editor, held, undefined)
+    },
+    { tag: [PASTE_TAG, HISTORY_PUSH_TAG] },
+  )
 }
 
 /**
@@ -79,13 +110,27 @@ function plainOf(data: DataTransfer): string {
  * drag of text alone moves as the editor moves it. A drop of files is the
  * drop of the message box, so the field leaves it alone.
  *
+ * A field that also takes `attach` turns a large paste into an attached
+ * file, as `isLargePaste` says: a plain text file with the exact text of the
+ * paste. Its chip replaces the selected text, as one step of undo, as a pick
+ * puts a chip at the caret. A paste of the kept copy stays a paste of text.
+ * When the attach refuses the file, such as one over the size limit, the
+ * paste changes nothing, and the notice of the composer names the file.
+ *
  * A field without attached files, such as that of Feedback, keeps no copy,
  * and its drag stays the drag of the editor and the browser.
  */
-export function ClipboardPlugin(props: { owner: FieldOwner }) {
+export function ClipboardPlugin(props: {
+  owner: FieldOwner
+  attach?: FieldAttach
+}) {
   const [editor] = useLexicalComposerContext()
   const sources = useFieldSources()
-  const latest = useLatest({ owner: props.owner, sources })
+  const latest = useLatest({
+    owner: props.owner,
+    attach: props.attach,
+    sources,
+  })
   useEffect(() => {
     let kept: KeptCopy | null = null
     // A drag of this field runs, from its start to its drop or its end.
@@ -113,6 +158,17 @@ export function ClipboardPlugin(props: { owner: FieldOwner }) {
         ? $pastedNodes(plain, sources)
         : $fieldNodes(field, sources)
     }
+    // Attaches a large paste as a file, in place of its text. Gives whether
+    // it took the paste.
+    const attachPaste = (text: string): boolean => {
+      const { attach, sources } = latest.current
+      const { files } = sources
+      if (attach === undefined || files === null) return false
+      if (!editor.isEditable() || !isLargePaste(text)) return false
+      const ids = attach([pastedFile(text, files.files())])
+      insertPasted(editor, files, ids)
+      return true
+    }
     const copy = (
       event: ClipboardEvent | KeyboardEvent | null,
       cut: boolean,
@@ -136,6 +192,7 @@ export function ClipboardPlugin(props: { owner: FieldOwner }) {
       const text = plainOf(event.clipboardData)
       event.preventDefault()
       if (text === '') return true
+      if (keptField(text) === null && attachPaste(text)) return true
       editor.update(
         () => {
           const selection = $getSelection()

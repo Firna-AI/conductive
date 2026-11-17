@@ -1,4 +1,8 @@
-import { appActions, gitHubAccesses } from '../components/workspace/barModel'
+import {
+  appActions,
+  gitHubAccesses,
+  localWorkKinds,
+} from '../components/workspace/barModel'
 
 /**
  * The parts of the workspace state that choose the actions of the pull
@@ -6,11 +10,11 @@ import { appActions, gitHubAccesses } from '../components/workspace/barModel'
  */
 export const barStateProperties = {
   /**
-   * Local work in the sandbox: changed files that are not committed, or
-   * commits that no remote branch holds. Commit and push then takes the
-   * place of Merge and of the fixes, and Continue asks first.
+   * Local work in the sandbox: none, only commits that no remote branch
+   * holds, or changed files that are not committed. Push or Commit and push
+   * then takes the place of Merge and of the fixes, and Continue asks first.
    */
-  localWork: { enum: ['none', 'changes'] },
+  localWork: { enum: localWorkKinds },
   /**
    * The GitHub access of the viewer to the repository: write or more, read
    * only, or unknown when the Worker could not read it. Merge needs write,

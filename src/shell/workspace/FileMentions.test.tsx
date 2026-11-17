@@ -1,8 +1,8 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test, vi } from 'vitest'
+import type { UserMessage } from '../../shared/generated/UserMessage'
 import { memoryNavigation, NavigationContext } from '../../app/navigation'
-import type { UserMessage } from '../../shared/messages'
 import {
   accessibleName,
   byRole,
@@ -41,7 +41,7 @@ const message: UserMessage = {
   sender: senderSnapshot(fakeUser),
   text: `Move @${FAKE_FILE_PATH} into @src/lib/ now.`,
   attachments: [],
-  choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' },
+  choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high', fast: false },
   createdAt: FAKE_TIME,
   state: 'sent',
 }

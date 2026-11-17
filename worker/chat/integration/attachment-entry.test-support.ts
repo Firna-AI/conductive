@@ -11,31 +11,29 @@ const app = createApp({
 export default {
   fetch(request: Request, env: AppEnv, context: ExecutionContext) {
     const fault = new URL(request.url).searchParams.get('fixtureBody')
+    if (fault === 'large-length') {
+      const headers = new Headers(request.headers)
+      headers.set('Content-Length', '67108865')
+      request = new Request(request, { headers })
+    }
     if (
       fault === 'short' ||
+      fault === 'long' ||
       fault === 'interrupted' ||
-      fault === 'after-bytes' ||
-      fault === 'overflow'
+      fault === 'after-bytes'
     ) {
       let first = true
-      let chunks = 0
       const body = new ReadableStream<Uint8Array>({
         pull(controller) {
-          if (fault === 'overflow') {
-            if (chunks < 100) {
-              chunks++
-              controller.enqueue(new Uint8Array(1_000_000))
-            } else if (chunks === 100) {
-              chunks++
-              controller.enqueue(new Uint8Array([1]))
-            } else controller.close()
-            return
-          }
           if (first) {
             first = false
             controller.enqueue(
               new Uint8Array(
-                fault === 'after-bytes' ? [1, 2, 3, 4, 5, 6] : [1, 2, 3],
+                fault === 'long'
+                  ? [1, 2, 3, 4, 5, 6, 7]
+                  : fault === 'after-bytes'
+                    ? [1, 2, 3, 4, 5, 6]
+                    : [1, 2, 3],
               ),
             )
             return
@@ -48,6 +46,13 @@ export default {
       const init = { body, duplex: 'half' }
       request = new Request(request, init)
     }
+    if (new URL(request.url).pathname === '/__test/scheduled')
+      return app
+        .scheduled(
+          { cron: '*/15 * * * *', scheduledTime: Date.now(), noRetry() {} },
+          env,
+        )
+        .then(() => new Response(null))
     return app.fetch(request, env, context)
   },
 }

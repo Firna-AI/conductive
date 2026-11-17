@@ -1,4 +1,5 @@
 import { savedImageName } from './image-names'
+import { buildSource } from './build-software'
 import type {
   Sandbox,
   SandboxProvider,
@@ -151,12 +152,7 @@ export function buildSandboxIntent(
       purposeId: job.buildId,
     },
     input: {
-      snapshotName:
-        (job.previousProviderAccount === job.providerAccount
-          ? job.previousImageName
-          : null) ??
-        job.softwareImageName ??
-        undefined,
+      snapshotName: buildSource(job)?.name,
       name: `image-${job.buildId}`,
       env: repositoryEnvironment(
         capturedRepositoryLocations(

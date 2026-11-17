@@ -8,6 +8,7 @@ pages, Approve for a person who waits, the codes, the pause of sign-ups,
 and the waitlist switch. The Mac app shows the same pages, because it
 shows the web app.
 [Operator section](../../../docs/protocol/operator-section.md),
+[Operator section: the Overview](../../../docs/protocol/operator-overview.md),
 [Operator actions](../../../docs/protocol/operator-actions.md),
 [Waitlist](../../../docs/protocol/waitlist.md), and
 [Sign-ups](../../../docs/protocol/sign-ups.md) give the requirements. The
@@ -108,6 +109,8 @@ with the search of its invite code.
   first, because the suspension ends the session.
 - Copy and Copy join link put a code, or its join link on the app host
   from `AppServices.appOrigin`, on the clipboard, and a toast says so.
+  Copy beside a cloud computer ID of Long runs does the same with the ID.
+  A copy that fails names the value in its toast.
 - The question stays open while the write runs. Cancel is off, and
   Escape and a press outside do nothing, on desktop and in the sheet of a
   phone. A failed write shows its error in the question, and the question
@@ -117,14 +120,49 @@ with the search of its invite code.
 - A suspension of the operator's own account ends every session of the
   operator, so the app then shows the sign-in.
 
+## Last active
+
+- The Users tab gives the last active time of each user in a Last active
+  column on a desktop. A time of today shows its time of day, such as
+  14:32, and another time its day, as Joined does. The phone keeps User
+  and Workspaces.
+- The page of a user gives the same time in Details, as a day with its
+  year and a time of day.
+- A user with no recorded action shows Unknown in both places.
+  [Orgs and Users](../../../docs/protocol/operator-section.md#orgs-and-users)
+  says which actions count.
+
+## Long runs
+
+- Long runs on the Overview lists the `longRuns` of the reply in their
+  order: the workspaces whose cloud computers have run the longest since
+  their last start, up to 10.
+  [Long runs](../../../docs/protocol/operator-overview.md#long-runs)
+  gives the rules.
+- Each run length is `readAt - runningSince`, and each last activity is
+  the words of `formatWhen` at `readAt`. So the rows agree with "Updated
+  at" in the header, and a render does not move with the clock. Refresh
+  reads them again.
+- A run without a cloud computer ID shows a dash and no Copy. A run without
+  a saved last activity says Unknown, as an unknown account age does on
+  the Waitlist tab.
+- The org opens the org page, also for a deleted org, and the login opens
+  the user page. On a phone, a row keeps the org and the run length with
+  the state mark. For a suspended owner, it adds the login and the mark
+  under the org.
+- While the numbers load, the box keeps its place with 10 placeholder
+  rows.
+
 ## Parts shared with the mockups
 
 The section reuses the parts of the mockups that import no fixture:
-`WorkspaceStates`, `DailyChart`, `InlineText`, the words of
-`operatorCopy.ts`, `accessCopy.ts`, and `codeCopy.ts`, and the CSS modules
-of `docs/mockups/src/components/operator/` and of `CheckOption`. So the
-app and the mockups keep the same words, dates, and look. On a phone, the
-five tabs use the `flow` mode of `LinkTabs`, as the mockups do.
+`WorkspaceStates`, `DailyChart`, `InlineText`, `StatusGlyph`, the words of
+`operatorCopy.ts`, `accessCopy.ts`, `codeCopy.ts`, and `longRunsCopy.ts`
+with its run length format, the state words of `status.ts`, the workspace
+label of `label.ts`, and the CSS modules of
+`docs/mockups/src/components/operator/` and of `CheckOption`. So the app
+and the mockups keep the same words, dates, and look. On a phone, the five
+tabs use the `flow` mode of `LinkTabs`, as the mockups do.
 
 Each text of an org in `operatorCopy.ts` takes its deletion, with the day
 when everything of it is deleted. So the questions and the notices of a
@@ -167,7 +205,10 @@ year than the last day has its year there.
   `WaitlistSwitch.test.tsx` checks the question and the turn-off,
   the notice and Turn on the waitlist, the order of the two notices, and a
   switch that did not load. `UserAccess.test.tsx` checks the source of an
-  open sign-up with its operator.
+  open sign-up with its operator. `LongRuns.test.tsx` checks the rows of
+  Long runs on desktop and on a phone, their links, Copy, the empty box,
+  and the run length format. `OverviewTab.test.tsx` checks its
+  placeholder rows.
 
 ### Key Code
 
@@ -180,6 +221,10 @@ year than the last day has its year there.
   Overview, its tiles with the count of the people who wait, largest orgs,
   and placeholders. Its charts are `DailyChart` of
   `docs/mockups/src/components/operator/`.
+- `LongRuns.tsx`: Long runs, with its columns, which the placeholders
+  share.
+- `useCopyToast.ts`: Copy of a value, such as a code or a cloud computer
+  ID, with its toast.
 - `OrgsTab.tsx`, `UsersTab.tsx`, `DirectoryList.tsx`, and
   `SearchField.tsx`: the searches and their rows.
 - `WaitlistTab.tsx` and `ApproveDialog.tsx`: the Waitlist tab, Approve,
@@ -202,7 +247,9 @@ year than the last day has its year there.
   to a GitHub profile, and the formats of counts, days, and the age of a
   GitHub account.
 - `../../app/operator-read.ts`: `OperatorRead`, the read of the Overview
-  and of a page, and the refusal of a person who is not an operator.
+  and of a page, and the refusal of a person who is not an operator. It
+  is the `PageRead` of `../../app/page-read.ts`, which the Stats tab of
+  the account also uses.
 - `../../app/operator-directory.ts`: `OperatorDirectory`, a search, its
   pages, Show more, a new read after a write, and `write`, a write that
   changes one row, such as Approve or Disable. It also gives the count
@@ -215,12 +262,14 @@ year than the last day has its year there.
   Resume sign-ups. `../../app/operator-switch.ts`: `OperatorSwitch`, the
   waitlist switch with Turn off and Turn on the waitlist.
   `../../app/operator-access.ts`: Approve, New code, and Disable.
-- `../../app/api/read-operator.ts`, `read-operator-pages.ts`, and
-  `read-operator-waitlist.ts`: the readers of the replies.
+- `../../app/api/read-operator.ts`, `read-operator-pages.ts`,
+  `read-operator-runs.ts`, and `read-operator-waitlist.ts`: the readers of
+  the replies.
 
 ### Related Docs
 
 - [Operator section](../../../docs/protocol/operator-section.md)
+- [Operator section: the Overview](../../../docs/protocol/operator-overview.md)
 - [Operator actions](../../../docs/protocol/operator-actions.md)
 - [Waitlist](../../../docs/protocol/waitlist.md)
 - [Invite and referral codes](../../../docs/protocol/waitlist-codes.md)

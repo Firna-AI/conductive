@@ -22,6 +22,7 @@ import {
   text,
   type JsonObject,
 } from './parse'
+import { readLongRun } from './read-operator-runs'
 import {
   readAccessCode,
   readApprovalEmail,
@@ -35,7 +36,7 @@ const ORG_MATCHES = [
 ] as const satisfies readonly OperatorOrgMatch[]
 
 /** A total, and the new ones of the last 7 days. */
-function readWeekly(value: unknown, name: string) {
+export function readWeekly(value: unknown, name: string) {
   const weekly = record(value, name)
   return { total: count(weekly, 'total'), lastWeek: count(weekly, 'lastWeek') }
 }
@@ -59,7 +60,8 @@ export function readWorkspaceStates(value: unknown): OperatorWorkspaceStates {
   }
 }
 
-function readDays(object: JsonObject, key: string) {
+/** The counts of the 30 UTC days of a list of days. */
+export function readDays(object: JsonObject, key: string) {
   return items(object, key, (value) => {
     const day = record(value, 'day')
     return { date: text(day, 'date'), count: count(day, 'count') }
@@ -92,6 +94,7 @@ export function readOperatorOverview(value: unknown): OperatorOverview {
         running: count(org, 'running'),
       }
     }),
+    longRuns: items(overview, 'longRuns', readLongRun),
   }
 }
 
@@ -129,6 +132,7 @@ function readUserSummary(value: unknown): OperatorUserSummary {
     login: text(user, 'login'),
     name: maybeText(user, 'name'),
     joinedAt: count(user, 'joinedAt'),
+    lastActiveAt: maybeCount(user, 'lastActiveAt'),
     orgs: count(user, 'orgs'),
     workspaces: count(user, 'workspaces'),
     status: choice(user, 'status', ['active', 'suspended']),

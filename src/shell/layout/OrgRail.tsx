@@ -1,4 +1,4 @@
-import { Fragment, type ReactNode, type Ref } from 'react'
+import { Fragment, useCallback, type ReactNode, type Ref } from 'react'
 import { Gauge, Plus } from 'lucide-react'
 import { LogoTile } from '../../../docs/mockups/src/components/brand/Logo'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
@@ -14,6 +14,7 @@ import type { OrgSummary } from '../../shared/orgs'
 import { useApp } from '../context'
 import list from '../list/list.module.css'
 import { LiftedOrg, OrgDropLine } from '../orgs/OrgDragParts'
+import { useOrgEntry } from '../orgs/useOrgEntry'
 import {
   useShortcutOffers,
   type CommandOffer,
@@ -27,6 +28,7 @@ import { AppLink, useOpenPage } from '../ui/AppLink'
 import { OrgTile, PersonAvatar } from '../ui/Avatars'
 import ui from '../ui/ui.module.css'
 import layout from './layout.module.css'
+import { useListPopover, type ListPopoverTile } from './ListPopover'
 import { useRailOrder } from './useRailOrder'
 
 /**
@@ -53,11 +55,15 @@ function RailLink({
   linkRef?: Ref<HTMLAnchorElement>
   hint?: ShortcutHint
   tip?: boolean
+  /** The list popover of the tile of the current org. */
+  popover?: ListPopoverTile
   children: ReactNode
 }) {
   return (
     <AppLink
+      aria-controls={props.popover?.controls}
       aria-current={props.current ? 'page' : undefined}
+      aria-expanded={props.popover?.expanded}
       aria-keyshortcuts={props.hint?.aria}
       aria-label={props.label}
       className={classes(
@@ -65,6 +71,7 @@ function RailLink({
         props.current && styles.current,
         props.className,
       )}
+      onClick={props.popover?.onClick}
       ref={linkRef}
       title={props.tip ? shortcutTip(props.label, props.hint) : undefined}
       to={props.to}
@@ -74,7 +81,7 @@ function RailLink({
   )
 }
 
-/** The name of an item of the rail, which shows on hover and on focus. */
+/** The name of an item of the rail, which shows on hover and on keyboard focus. */
 function RailHint(props: { name: string; hint?: ShortcutHint }) {
   return (
     <span aria-hidden className={classes(styles.hint, layout.railHint)}>
@@ -95,18 +102,22 @@ function RailHint(props: { name: string; hint?: ShortcutHint }) {
  */
 function useOrgKeys(orgs: readonly OrgSummary[]): void {
   const open = useOpenPage()
+  const entry = useOrgEntry()
   useShortcutOffers(
     orgs.flatMap((org, place): CommandOffer[] => {
       const command = orgCommand(place)
       if (command === null) return []
-      return [{ command, run: () => open(routes.org(org.id)) }]
+      return [{ command, run: () => open(entry(org.id)) }]
     }),
   )
 }
 
 /**
  * An org of the rail, with the name of the org and the key that opens it
- * in its drawn hint. A screen reader hears the key on the link.
+ * in its drawn hint. A screen reader hears the key on the link. The link
+ * opens the last workspace of the org, as `useOrgEntry` says. While the
+ * sidebar shows no list, the tile of the current org opens its list
+ * popover instead, and its name hides while the popover is open.
  */
 function OrderedOrg(props: {
   org: OrgSummary
@@ -114,9 +125,20 @@ function OrderedOrg(props: {
   current: boolean
   label: string
   order: ReturnType<typeof useRailOrder>
+  popover?: ListPopoverTile
 }) {
-  const { org, index, current, order } = props
+  const { org, index, current, order, popover } = props
   const hint = useShortcutHint(orgCommand(index) ?? undefined)
+  const entry = useOrgEntry()
+  const orderRef = order.linkRef(org.id)
+  const tileRef = popover?.tileRef
+  const linkRef = useCallback(
+    (node: HTMLAnchorElement | null) => {
+      orderRef(node)
+      tileRef?.(node)
+    },
+    [orderRef, tileRef],
+  )
   return (
     <li
       {...order.tile(org, index)}
@@ -130,12 +152,15 @@ function OrderedOrg(props: {
         current={current}
         hint={hint}
         label={props.label}
-        linkRef={order.linkRef(org.id)}
-        to={routes.org(org.id)}
+        linkRef={linkRef}
+        popover={popover}
+        to={entry(org.id)}
       >
         <OrgTile current={current} org={org} size={26} />
       </RailLink>
-      {order.drag.dragged ? null : <RailHint name={org.name} hint={hint} />}
+      {order.drag.dragged || popover?.expanded ? null : (
+        <RailHint name={org.name} hint={hint} />
+      )}
     </li>
   )
 }
@@ -162,6 +187,8 @@ function OperatorItem(props: { current: boolean; hint: boolean }) {
  * suspended. An operator also gets Operator above the account. Nobody else
  * sees it.
  * While the rail shows, the keys of Switch to org 1 to 9 open its orgs.
+ * While the sidebar shows no list, the tile of the current org opens the
+ * list popover, as `useListPopover` says.
  */
 export function OrgRail(props: {
   orgs: readonly OrgSummary[]
@@ -171,6 +198,10 @@ export function OrgRail(props: {
   firstRun: boolean
   /** The person signed in runs the app for everyone. */
   operator: boolean
+  /** The sidebar of the frame, which the list popover shows. */
+  sidebar?: ReactNode
+  /** The page is the list page of the current org. */
+  listPage?: boolean
 }) {
   const currentOrg =
     props.current !== null && typeof props.current === 'object'
@@ -182,6 +213,10 @@ export function OrgRail(props: {
   useOrgKeys(props.orgs)
   const order = useRailOrder(props.orgs)
   const { drag } = order
+  const listPopover = useListPopover({
+    sidebar: currentOrg === null ? undefined : props.sidebar,
+    listPage: props.listPage ?? false,
+  })
   const labelOf = (org: OrgSummary) =>
     isSuspended(org, refused) ? `${org.name}, suspended` : org.name
   return (
@@ -204,6 +239,7 @@ export function OrgRail(props: {
                 current={current}
                 label={labelOf(org)}
                 order={order}
+                popover={current ? listPopover.tile : undefined}
               />
             </Fragment>
           )
@@ -248,6 +284,7 @@ export function OrgRail(props: {
         </LiftedOrg>
       ) : null}
       {order.menu}
+      {listPopover.popover}
     </nav>
   )
 }

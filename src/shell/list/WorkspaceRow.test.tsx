@@ -1,6 +1,7 @@
+import type { WorkspaceState } from '../../shared/generated/WorkspaceState'
 import { describe, expect, test } from 'vitest'
 import styles from '../../../docs/mockups/src/components/workspaces/WorkspaceRow.module.css'
-import type { WorkspaceState } from '../../shared/workspaces'
+
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_TIME } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
@@ -25,7 +26,7 @@ describe('WorkspaceRow', () => {
         workspace={{ ...workspace, name: null, updatedAt: FAKE_TIME }}
       />,
     )
-    expect(textOf(html)).toBe('Untitled now , Checks passed, Ready')
+    expect(textOf(html)).toBe('Untitled now , Ready to merge, Ready')
   })
 
   test('shows the name of an unread row in bold, and the name of a ready row with the same GitHub state in the normal weight', async () => {

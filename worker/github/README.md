@@ -8,7 +8,7 @@ It also keeps a copy of the GitHub summary of each workspace in D1, as [The summ
 The production Worker mounts the browser reads, the member merge routes, and the signed webhook route.
 The workspace object owns one state adapter and its durable retry requests.
 Verified default-branch pushes also notify image refresh.
-Verified pull request events also store [routine runs](../routines/README.md).
+Verified pull request events also store [automation runs](../automations/README.md).
 The run callback and banner refresh have separate error boundaries.
 The production composition starts stored runs through `waitUntil` after webhook handling.
 Without a request execution context, the minute scan recovers the queued runs.
@@ -229,10 +229,10 @@ This includes a workspace in `input` while its agent waits for the user.
 
 ## The summary copy
 
-[The GitHub state](../../docs/protocol/github-banner.md#the-github-state) states the four summary values and their order.
-`githubSummary` in the [shared contracts](../../src/shared/github.ts) gives the value from a banner and its checks.
-`pullBanner` uses it for `checks-failed` and `checks-running` after its draft, conflict, and review checks.
-So the bar and the copy count the checks with one rule.
+[The GitHub state](../../docs/protocol/github-banner.md#the-github-state) states that the summary is the bar state.
+`githubSummary` in the [shared contracts](../../src/shared/github.ts) gives the value from a banner: its state, or null without a pull request and for a closed pull request.
+`pullBanner` uses `checksSummary` for `checks-failed` and `checks-running` after its draft, conflict, and review checks.
+So the bar and the copy cannot disagree.
 After a commit, an unchanged read, or a receipt replay, `WorkspaceGitHubState` reads the committed `github:state` again.
 It checks access once more and calls the copy callback with that snapshot, before the next refresh starts.
 So a replay of an older receipt copies the current state, not the snapshot of its receipt.
@@ -252,14 +252,14 @@ The retry of a committed delivery replays its receipt and copies again, without 
 ### Key Code
 
 - [Production composition](../features/github.ts) owns the state adapter and retry alarm, and the reads that Continue asks for.
-- [composition.ts](composition.ts) mounts verified webhooks, image refresh, and background routine starts.
+- [composition.ts](composition.ts) mounts verified webhooks, image refresh, and background automation starts.
 - [contracts.ts](contracts.ts) defines the server-side integration ports.
 - [webhook.ts](webhook.ts) verifies deliveries, stores pull request runs, and starts workspace refreshes.
 - [webhook-routing.ts](webhook-routing.ts) reads pull request facts, GitHub account IDs, and available author and sender logins after signature verification.
 - [app-handler.ts](app-handler.ts) serves protected banner and checks reads.
 - [workspace-state.ts](workspace-state.ts) serializes refreshes, commits changed snapshots, replays delivery receipts, and runs the summary copy.
 - [summary-data.ts](summary-data.ts) writes a changed GitHub summary to the workspace record.
-- [Shared summary](../../src/shared/github.ts) gives `githubSummary`, which the bar and the copy share.
+- [Shared summary](../../src/shared/github.ts) gives `checksSummary`, which the bar uses, and `githubSummary`, which the copy uses.
 - [chat-store.ts](chat-store.ts) adapts the state port to `WorkspaceChat`, with an access check inside the queue before each commit or replay.
 - [delivery-receipt.ts](delivery-receipt.ts) defines the receipt and builds the `github.updated` event from a snapshot, for a commit and a replay.
 - [refresh.ts](refresh.ts) checks dependencies and schedules bounded fresh reads.

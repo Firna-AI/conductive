@@ -22,22 +22,29 @@ export interface ToolNavigation {
   tool: ToolKey
   /** The address of a tool, for its tab. */
   href: (tool: ToolKey) => string
-  /** Shows a tool after a plain click on its tab. */
+  /**
+   * Shows a tool after a plain click on its tab, or Go to of the palette
+   * or its key. On desktop, Terminal also takes the keyboard focus.
+   */
   select: (tool: ToolKey) => void
-  /** The route of the Preview tool: its preview, and the address of each. */
+  /**
+   * The route of the Preview tool: the preview or the port of the address,
+   * and the address of each preview.
+   */
   preview: PreviewRoute
 }
 
 /**
  * The address of each tool, and the select of its tab: it saves the tool
  * in the view. On a phone it opens the page of the tool. On desktop it
- * moves the address only from the address of a tool.
+ * moves the address only from the address of a tool, and a choice of
+ * Terminal asks for the keyboard focus of the terminal.
  */
 export function useToolSelect(
   context: WorkspaceContext,
 ): Pick<ToolNavigation, 'href' | 'select'> {
   const navigation = useNavigation()
-  const { org, workspace, viewport, savedView } = context
+  const { org, workspace, viewport, savedView, terminalFocus } = context
   const placeTool = toolPlace(context.view)?.tool ?? null
   const phone = viewport === 'phone'
   const href = useCallback(
@@ -46,11 +53,15 @@ export function useToolSelect(
   )
   const select = useCallback(
     (tool: ToolKey) => {
+      // On desktop a choice of Terminal moves the focus to it. A phone
+      // keyboard would cover the page, so a phone moves no focus.
+      if (tool === 'terminal' && !phone) terminalFocus.ask()
+      else terminalFocus.clear()
       saveView(savedView, withTool(tool))
       if (phone) navigation.push(href(tool))
       else if (placeTool) navigation.replace(href(tool))
     },
-    [savedView, phone, navigation, href, placeTool],
+    [savedView, terminalFocus, phone, navigation, href, placeTool],
   )
   return { href, select }
 }
@@ -63,7 +74,9 @@ export function useToolSelect(
  * click saves the tool. On a phone each tool is a page with its own
  * address. On desktop the tools belong to the right column, so the address
  * keeps the tab of the centre: only a tool address follows the new tool,
- * and a preview tab changes the address only from a preview address.
+ * and a preview tab changes the address only from a preview address. The
+ * Preview tool gets the port of an address, and replaces that address
+ * once it shows the port.
  */
 export function useToolNavigation(context: WorkspaceContext): ToolNavigation {
   const navigation = useNavigation()
@@ -71,6 +84,7 @@ export function useToolNavigation(context: WorkspaceContext): ToolNavigation {
   const place = toolPlace(context.view)
   const placeTool = place?.tool ?? null
   const placePreview = place?.previewId ?? null
+  const placePort = place?.port ?? null
   const saved = useSavedView(savedView)
   const known = useViewKnown(savedView)
   const [chosenPreview, setChosenPreview] = useState<string | null>(null)
@@ -83,13 +97,22 @@ export function useToolNavigation(context: WorkspaceContext): ToolNavigation {
   }, [savedView, known, placeTool])
   const { href, select } = useToolSelect(context)
   const preview = useMemo<PreviewRoute>(() => {
-    const previewHref = (id: string) =>
-      toolHref(org.id, workspace.id, 'preview', id)
+    const previewHref = (id: string | null) =>
+      id === null
+        ? toolHref(org.id, workspace.id, 'preview')
+        : toolHref(org.id, workspace.id, 'preview', id)
+    // On desktop, only a preview address follows the preview.
+    const addressed = phone || placeTool === 'preview'
     return {
       previewId: placeTool === 'preview' ? placePreview : chosenPreview,
+      port: placePort,
       href: previewHref,
       navigate: (id) => {
-        if (phone || placeTool === 'preview') navigation.push(previewHref(id))
+        if (addressed) navigation.push(previewHref(id))
+        else setChosenPreview(id)
+      },
+      replace: (id) => {
+        if (addressed) navigation.replace(previewHref(id))
         else setChosenPreview(id)
       },
     }
@@ -98,6 +121,7 @@ export function useToolNavigation(context: WorkspaceContext): ToolNavigation {
     workspace.id,
     placeTool,
     placePreview,
+    placePort,
     chosenPreview,
     phone,
     navigation,

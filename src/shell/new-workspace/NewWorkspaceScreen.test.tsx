@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest'
 import { pickWorkspaceFiles } from '../../app/draft-files.test-support'
 import { HeldRequests } from '../../app/test-kit'
 import type { OrgRole } from '../../shared/api'
-import { attachmentUploadPath } from '../../shared/messages'
+import { attachmentUploadStartPath } from '../../shared/messages'
 import { orgSettingsPaths } from '../../shared/org-settings'
 import { workspacesPath } from '../../shared/workspaces'
 import { FakeApiServer } from '../../test-support/fake-api'
@@ -183,22 +183,27 @@ describe('NewWorkspaceScreen', () => {
     held.hold('POST', createPath)
     const sending = draft.send({
       repositoryId: 'storefront',
-      choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' },
+      choice: {
+        agent: 'claude',
+        model: 'Opus 5.5',
+        effort: 'high',
+        fast: false,
+      },
     })
     const whileSending = buttons('Attach files')
     held.release('POST', createPath)
     await sending
-    const uploadPath = attachmentUploadPath(FAKE_IDS.org, {
+    const startPath = attachmentUploadStartPath(FAKE_IDS.org, {
       type: 'new-workspace',
       messageId: draft.draft.get().messageId,
     })
-    held.hold('POST', uploadPath)
+    held.hold('POST', startPath)
     // The pick puts the chip of the file into the text, as the field does.
     const uploading = pickWorkspaceFiles(draft, [
       new File(['Cart notes'], 'notes.txt', { type: 'text/plain' }),
     ])
     const whileUploading = buttons('Send', 'Try again')
-    held.release('POST', uploadPath)
+    held.release('POST', startPath)
     await uploading
     const uploaded = buttons('Send', 'Try again')
     await app.account.removeLogin('claude')
@@ -250,7 +255,12 @@ describe('NewWorkspaceScreen', () => {
       draft.setText('Fix the flaky cart test.')
       await draft.send({
         repositoryId: 'storefront',
-        choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' },
+        choice: {
+          agent: 'claude',
+          model: 'Opus 5.5',
+          effort: 'high',
+          fast: false,
+        },
       })
       const text = textOf(
         renderScreen(

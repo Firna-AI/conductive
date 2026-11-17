@@ -79,7 +79,8 @@ The workspace can show **Untitled** before it receives an automatic name.
 The name comes from the first message.
 
 The branch name uses a GitHub login, a city, and a short suffix.
-It stays the same when the workspace receives a name.
+When the workspace receives its name before the cloud computer creates the branch, the city changes to the name.
+After that, the branch name stays the same, also when you rename the workspace.
 To see the checked-out branch, run this command in **Terminal**:
 
 ```bash
@@ -91,18 +92,17 @@ Renaming it can stop the pull request bar from following the work.
 Use **Continue** after a merge to start a new branch that the bar follows.
 
 Open another workspace while an agent works.
-The list mark shows the pull request's GitHub state:
+The list mark shows the state of the pull request bar, in the colour of the bar:
 
 | Colour | Meaning |
 | --- | --- |
 | Red | Checks failed. |
-| Amber | Checks are running. |
-| Green | Checks passed. |
+| Green | Ready to merge. |
 | Purple | The pull request merged. |
-| Dim grey | No pull request, no checks, or closed without a merge. |
+| Amber | A merge conflict, requested changes, or a block. |
+| Grey | Checks are running, or the pull request is a draft. |
+| Dim grey | No pull request, or closed without a merge. |
 
-Failed checks take priority over checks that still run.
-A merge takes priority over all checks.
 Archived workspaces keep a faint grey mark.
 
 A light runs around the mark while the agent works or the checks run.
@@ -145,12 +145,15 @@ Use a section's menu to create a workspace in that section.
 The **New workspace** action at the top of the list uses **General**.
 In the **New workspace** dialog, you can select another section.
 
-The section menu also offers **Rename section**, **New section**, and **Delete section**.
+The section menu also offers **Rename section**, **Move section up**, **Move section down**, **New section**, and **Delete section**.
+**New section** asks for a name in a dialog, and adds the new section directly below this one.
 Deleting a section moves its workspaces to **General**.
 The default section stays available.
 
 Drag a workspace to move it between sections.
-On a phone, use a long press to lift its row.
+Drag the header of a section to move the section to another place in the list.
+On a phone, use a long press to lift a row or a header.
+Every member of the org sees the same order of sections.
 
 ## Let an agent manage workspaces
 
@@ -182,7 +185,8 @@ A normal stop keeps its files, sessions, and chat history.
 Open a stopped workspace to start its computer again.
 If it stops while the workspace is open, select **Resume**, or open a file or a change.
 The history remains readable while the computer starts.
-An open file or change waits for the computer, then opens.
+A file or change that you open then waits for the computer, then opens.
+One that already shows stays.
 
 A message from an agent tool also starts a stopped workspace's computer.
 This includes the first message of a session that an agent creates.
@@ -193,6 +197,23 @@ Creating a session without a message starts no computer.
 
 **Stop** in chat interrupts an agent turn.
 It is separate from the computer's automatic stop.
+
+## Restart the software
+
+Select the state in the workspace header, such as **Ready**, then **Restart**.
+Restart restarts Conductive's agent software and the port previews in the running computer.
+Use it when an agent or a preview stops responding, or to apply a software update now.
+Any member can restart a workspace while it is ready, working, needs input, or has unread output.
+
+Restart first downloads the newest software, for up to 60 seconds.
+If that download fails, a message says so, and the restart uses the installed software.
+The header shows **Starting** until the agents are back.
+
+Restart stops each running agent turn, so it asks first while an agent works.
+The shells and commands in your terminals keep running.
+An open terminal tab disconnects until the agents are back. Then select **Reconnect**.
+Files, sessions, and chat history stay.
+If the restart fails, the workspace shows an error with **Try again**.
 
 ## Recover from a failed start
 
@@ -223,8 +244,12 @@ On a phone, open **Checks** from the pull request row to find **Continue**.
 The computer starts first if it is stopped.
 The new branch starts from the repository's latest default branch.
 That default branch becomes the workspace's base branch for its new task.
+The new branch name uses the workspace name, a version such as `v2`, and a new short suffix.
+A workspace without a name uses a city in place of the name.
 
-Continue keeps the same cloud computer, files, installed software, running servers, sessions, and workspace name.
+Continue keeps the same cloud computer, files, running servers, sessions, and workspace name.
+It also keeps the software installed by the org's install script.
+Conductive's own software still updates itself.
 Changed files move to the new branch.
 Commits that are not pushed stay on their local branches.
 The question counts those commits across all local branches, including earlier tasks.

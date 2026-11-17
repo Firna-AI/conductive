@@ -1,5 +1,7 @@
+import type { AgentModel } from '../../shared/generated/AgentModel'
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import type { AgentLoginStatus, EndpointModelList } from '../../shared/account'
-import type { AgentChoice, AgentModel } from '../../shared/agents'
+
 import type { Org, User } from '../../shared/api'
 import type { SendMessageResponse } from '../../shared/messages'
 import type {
@@ -10,6 +12,7 @@ import type {
   SessionTranscriptResponse,
 } from '../../shared/sessions'
 import type {
+  TemporaryTab,
   WorkspaceTab,
   WorkspaceView,
   WorkspaceViewResponse,
@@ -17,6 +20,7 @@ import type {
 import {
   count,
   flag,
+  isRecord,
   list,
   nullable,
   oneOf,
@@ -109,6 +113,7 @@ export function readModels(value: unknown): readonly AgentModel[] {
       agent: readAgent(source.agent),
       model: text(source.model),
       label: text(source.label),
+      ...(typeof source.fast === 'boolean' && { fast: source.fast }),
       efforts: list(readEffort)(source.efforts),
     }
   })(record(value, 'models').models)
@@ -174,49 +179,88 @@ function readTab(value: unknown): WorkspaceTab {
   }
 }
 
+function readTemporaryTab(
+  value: unknown,
+  tabs: readonly WorkspaceTab[],
+): TemporaryTab | null {
+  if (
+    !isRecord(value) ||
+    (value.kind !== 'file' && value.kind !== 'diff') ||
+    typeof value.path !== 'string' ||
+    !value.path
+  )
+    return null
+  return tabs.some(
+    (tab) =>
+      tab.kind !== 'session' &&
+      tab.kind === value.kind &&
+      tab.path === value.path,
+  )
+    ? { kind: value.kind, path: value.path }
+    : null
+}
+
 export function readView(value: unknown): WorkspaceView {
   const view = record(record(value, 'view response').view, 'view')
+  const tabs = list(readTab)(view.tabs)
   return {
-    tabs: list(readTab)(view.tabs),
+    tabs,
     activeTab: nullable(readTab)(view.activeTab),
+    temporaryTab: readTemporaryTab(view.temporaryTab, tabs),
     fileList: oneOf({ all: true, changes: true, checks: true })(view.fileList),
     tool: oneOf({ terminal: true, preview: true, desktop: true })(view.tool),
   }
 }
 
 /**
- * The routine whose run made the workspace, with the pull request of a
+ * The automation whose run made the workspace, with the pull request of a
  * pull request run, or null for a run of a schedule or of Run now.
  */
-export type RunRoutine = Required<NonNullable<WorkspaceViewResponse['routine']>>
+export type RunAutomation = Required<
+  NonNullable<WorkspaceViewResponse['automation']>
+>
 
-/** The saved view, and the routine of a run workspace. */
+/** The saved view, and the automation of a run workspace. */
 export interface ViewReply {
   view: WorkspaceView
   /** Null for a workspace that a person created. */
-  routine: RunRoutine | null
+  automation: RunAutomation | null
+  /**
+   * The absolute folder of the workspace repository, or null when the
+   * reply gives none or gives a folder that is not absolute.
+   */
+  repositoryFolder: string | null
 }
 
-function readPullRequest(value: unknown): RunRoutine['pullRequest'] {
+function readPullRequest(value: unknown): RunAutomation['pullRequest'] {
   const pullRequest = record(value, 'pull request')
   return { number: count(pullRequest.number), url: text(pullRequest.url) }
 }
 
-function readRunRoutine(value: unknown): RunRoutine {
-  const routine = record(value, 'routine')
-  const pullRequest = optional(nullable(readPullRequest))(routine.pullRequest)
+function readRunAutomation(value: unknown): RunAutomation {
+  const automation = record(value, 'automation')
+  const pullRequest = optional(nullable(readPullRequest))(
+    automation.pullRequest,
+  )
   return {
-    id: text(routine.id),
-    name: text(routine.name),
+    id: text(automation.id),
+    name: text(automation.name),
     pullRequest: pullRequest ?? null,
   }
 }
 
+/** A folder of the cloud computer: an absolute path without a last `/`. */
+function readFolder(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  return /^\/[^\r\n]*[^/\r\n]$/u.test(value) ? value : null
+}
+
 export function readViewReply(value: unknown): ViewReply {
-  const routine = record(value, 'view response').routine
+  const reply = record(value, 'view response')
   return {
     view: readView(value),
-    routine: optional(nullable(readRunRoutine))(routine) ?? null,
+    automation: optional(nullable(readRunAutomation))(reply.automation) ?? null,
+    repositoryFolder: readFolder(reply.repositoryFolder),
   }
 }
 

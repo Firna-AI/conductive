@@ -28,8 +28,8 @@ Model use on an own endpoint bills where its owner runs it.
 ## Connect Claude
 
 1. Open **Account**.
-2. Open **General**.
-3. Find Claude under **Agents**.
+2. Open **Agents**.
+3. Find Claude.
 4. Select **Connect**.
 5. Choose **Subscription token** or **API key**.
 6. Paste the token or key into its field.
@@ -52,8 +52,8 @@ Conductive keeps the stored login hidden in Account.
 ## Connect Codex
 
 1. Open **Account**.
-2. Open **General**.
-3. Find Codex under **Agents**.
+2. Open **Agents**.
+3. Find Codex.
 4. Select **Connect**.
 
 ### Use a ChatGPT plan
@@ -104,8 +104,8 @@ The endpoint must support the API and key format of that agent:
 | Codex | OpenAI Responses API | Bearer token | `https://gateway.example.com/v1` |
 
 1. Open **Account**.
-2. Open **General**.
-3. Find the agent under **Agents**.
+2. Open **Agents**.
+3. Find the agent.
 4. Select **Connect**.
 5. Choose **Own endpoint**.
 6. Enter the address in **Endpoint**.
@@ -119,10 +119,12 @@ An IP address alone does not work as the host.
 A host name that points to your public IP address works when the server has a certificate for that name.
 For example, the free name `<IP address>.sslip.io` points to that IP address.
 
-The hint shows where requests go through Conductive.
-If Conductive changes the address format, the hint also shows the address that saves.
-For Claude, Conductive adds routes such as `/v1/messages` to the endpoint.
-For Codex, it adds `/responses` to the endpoint.
+The hint shows the request address from the address you type.
+For Claude, Conductive drops a final `/v1` before saving the address.
+The hint also shows the saved Claude address when its format changes.
+Conductive adds routes such as `/v1/messages` for Claude.
+For Codex, it adds `/responses` to the saved address.
+The saved Codex address can differ from the hint after Conductive checks the model list.
 
 After you connect, the account page shows **Connected** and **Own endpoint**, with the host below the agent.
 It includes the port when the port is not the default.
@@ -133,13 +135,37 @@ The endpoint gets the messages, files, and command results of each turn on the l
 Its owner is responsible for the endpoint and its terms.
 Claude asks for a one-hour prompt cache on every turn with an own endpoint login.
 Check the endpoint's support and charges for that cache.
+A turn with **Fast** on also asks the endpoint for fast output.
+If the endpoint refuses it, the turn fails with the endpoint's cause.
+Turn **Fast** off in that session to continue.
 
 ### Keep the model list current
 
 Conductive reads the endpoint's model list with its key when you save the login.
+For Codex, it first reads `<address>/models` at the address you type.
+If that read fails, it also tries `<address>/v1/models` unless the address already ends with `/v1`.
+It makes no second read if the endpoint gives no HTTP response.
+If only the second read works, Conductive saves the address with `/v1` added.
+
+The account page then shows this note under the Codex row:
+
+> Conductive added /v1 to the address, because the endpoint lists its models there.
+
+The note stays until you reload the page.
+A new save or **Remove** also clears it.
+
 When that list omits an app model, the account page names the missing models, their IDs, and the last successful read.
 Select **Refresh** there to read the list again.
 Conductive also reads the list in the background when a turn on the login starts, at most once in 10 minutes.
+Refresh and background reads keep the saved address.
+
+For Claude and Codex, a failed model list read during a save or **Refresh** shows this warning under the agent's row:
+
+> Conductive couldn't read the model list of this endpoint. Check the address and the key.
+
+Select **Refresh** beside the warning to try again.
+A successful **Refresh**, a new save, **Remove**, or a page reload clears the warning.
+A failed background read shows no warning.
 
 Your model pickers hide app models that the last successful list does not name.
 A failed read keeps the last successful list.
@@ -202,6 +228,10 @@ The row shows the cause, such as **ChatGPT access expired.**
 Select **Sign in again**.
 Then complete the [ChatGPT sign-in steps](/docs/agent-logins#use-a-chatgpt-plan) again.
 
+If the error says the agent software cannot use ChatGPT sign-in, ask an admin to run **Build computer**.
+After it succeeds, create a new workspace.
+You can also connect an OpenAI API key.
+
 Check the error from the provider.
 Make sure you connected the account you want to use.
 Note your choice for **Let other members use this login** before removing the login.
@@ -218,33 +248,24 @@ If a share-setting change fails, the switch returns to its saved value.
 ## Understand access to credentials
 
 Conductive stores agent logins encrypted.
+It keeps these logins outside cloud computers.
 
-A newer cloud computer starts from a shared setup that requires Conductive to keep agent logins outside the computer.
-Its model requests and answers pass through Conductive on Cloudflare.
+Model requests and answers pass through Conductive on Cloudflare.
 Conductive adds the session starter's login before sending each request to Anthropic, OpenAI, or the chosen endpoint.
-Each turn there gets a temporary credential called a turn token.
+Each turn gets a temporary credential called a turn token.
 Code and members with terminal access can read or copy that credential.
 
 They can use it only through Conductive on the session starter's login while the turn runs.
 A copied token also works from outside the computer during that turn.
 A copied token cannot start a new model request after the turn ends.
 Your ChatGPT sign-in never enters a cloud computer.
-An older cloud computer cannot run Codex with ChatGPT.
-The share switch does not hide credentials available on the computer.
 
-An own endpoint's address and key never reach a cloud computer, including an older computer.
-Its turn needs agent software that supports temporary credentials.
-If the software cannot use them, the turn cannot start.
+An own endpoint's address and key never reach a cloud computer.
+Each turn needs supported agent software.
+If Conductive reports unsupported agent software, ask an admin to run **Build computer**.
+After it succeeds, create a new workspace.
 
-For subscription tokens and provider API keys, an older cloud computer still permits software to receive the session starter's agent login itself.
-Code and members with terminal access can read or copy that login during a turn.
-A copied login can remain usable after the turn ends.
-Installing newer software on that computer does not remove this risk.
-A new build gives the protection to new cloud computers created from its setup.
-Ask an admin to run **Build computer**.
-After it succeeds, create a new workspace to get the newer protection.
-
-The share switch does not hide either kind of credential from code or members with terminal access.
+The share switch does not hide turn tokens from code or members with terminal access.
 Work in an org with people you trust with your agent and GitHub logins.
 
 - [Understand sessions and chat](/docs/sessions-and-chat)

@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { BannerState } from '../shared/github'
-import { toolFixtures } from '../test-support/fixtures/tools'
-import { barViewOf, localWorkOf, type BarInput, type BarView } from './barView'
+import { barViewOf, type BarInput, type BarView } from './barView'
 import { snapshotOf } from './testing'
 
 const writer: BarInput['capabilities'] = {
@@ -16,7 +15,7 @@ function view(
   return barViewOf({
     snapshot: snapshotOf(state),
     capabilities: writer,
-    localWork: 'no',
+    localWork: 'none',
     outcome: null,
     turnRuns: false,
     readOnly: false,
@@ -45,21 +44,25 @@ function buttons(bar: BarView): string[] {
 describe('the actions of the bar', () => {
   it('puts local work first, then each fix, then Merge, for a member with write access', () => {
     const cases: [string, BannerState, BarInput['localWork']][] = [
-      ['commits on GitHub', 'none', 'no'],
-      ['no commits, no work', 'no-commits', 'no'],
-      ['no commits, local work', 'no-commits', 'yes'],
-      ['failed checks', 'checks-failed', 'no'],
-      ['failed checks, local work', 'checks-failed', 'yes'],
-      ['conflict', 'conflict', 'no'],
-      ['changes requested', 'changes-requested', 'no'],
-      ['ready', 'ready-to-merge', 'no'],
-      ['ready, local work', 'ready-to-merge', 'yes'],
+      ['commits on GitHub', 'none', 'none'],
+      ['no commits, no work', 'no-commits', 'none'],
+      ['no commits, local work', 'no-commits', 'changes'],
+      ['failed checks', 'checks-failed', 'none'],
+      ['failed checks, local work', 'checks-failed', 'changes'],
+      ['conflict', 'conflict', 'none'],
+      ['changes requested', 'changes-requested', 'none'],
+      ['ready', 'ready-to-merge', 'none'],
+      ['ready, local work', 'ready-to-merge', 'changes'],
+      ['ready, only commits', 'ready-to-merge', 'commits'],
+      ['failed checks, only commits', 'checks-failed', 'commits'],
+      ['no commits, only commits', 'no-commits', 'commits'],
+      ['closed, only commits', 'closed', 'commits'],
       ['ready, report unknown', 'ready-to-merge', 'unknown'],
-      ['running, local work', 'checks-running', 'yes'],
-      ['draft', 'draft', 'no'],
-      ['blocked', 'blocked', 'no'],
-      ['closed, local work', 'closed', 'yes'],
-      ['merged, local work', 'merged', 'yes'],
+      ['running, local work', 'checks-running', 'changes'],
+      ['draft', 'draft', 'none'],
+      ['blocked', 'blocked', 'none'],
+      ['closed, local work', 'closed', 'changes'],
+      ['merged, local work', 'merged', 'changes'],
     ]
     expect(
       cases.map(([name, state, localWork]) => [
@@ -76,6 +79,10 @@ describe('the actions of the bar', () => {
       ['changes requested', ['address-review']],
       ['ready', ['merge:squash']],
       ['ready, local work', ['commit-and-push']],
+      ['ready, only commits', ['push']],
+      ['failed checks, only commits', ['push']],
+      ['no commits, only commits', ['create-pull-request']],
+      ['closed, only commits', []],
       ['ready, report unknown', []],
       ['running, local work', ['commit-and-push']],
       ['draft', []],
@@ -227,7 +234,7 @@ describe('the actions of the bar', () => {
             },
           },
           capabilities: writer,
-          localWork: 'no',
+          localWork: 'none',
           outcome: null,
           turnRuns: false,
           readOnly: false,
@@ -264,30 +271,5 @@ describe('the tint of the main action', () => {
       ['merged', 'merged'],
       ['none', null],
     ])
-  })
-})
-
-describe('the local work of a changes report', () => {
-  it('counts each file that is not committed, also one that the net list leaves out, and each unpushed commit, and reads only the files of a report with no counts', () => {
-    const { changes } = toolFixtures()
-    const clean = changes.files.map((file) => ({ ...file, uncommitted: false }))
-    const { baseBranch, summary } = changes
-    // An edit back to the base content leaves the net list empty. Git status
-    // still holds the file, so the raw count of the runner does too.
-    const restored = {
-      baseBranch,
-      files: [],
-      summary: { files: 0, added: 0, removed: 0 },
-    }
-    expect([
-      localWorkOf(null),
-      localWorkOf({ ...changes, files: clean, unpushedCommits: 0 }),
-      localWorkOf({ ...changes, files: clean, unpushedCommits: 2 }),
-      localWorkOf({ ...changes, unpushedCommits: 0 }),
-      localWorkOf({ baseBranch, summary, files: clean }),
-      localWorkOf({ ...restored, uncommittedFileCount: 1, unpushedCommits: 0 }),
-      localWorkOf({ ...restored, uncommittedFileCount: 0, unpushedCommits: 0 }),
-      localWorkOf({ ...restored, uncommittedFileCount: 0, unpushedCommits: 2 }),
-    ]).toEqual(['unknown', 'no', 'yes', 'yes', 'no', 'yes', 'no', 'yes'])
   })
 })

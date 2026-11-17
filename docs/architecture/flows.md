@@ -19,12 +19,10 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 
 1. A tab sends a message to the Worker. The Durable Object forwards it to
    the agent runner, with the turn token of its turn and the current
-   branches of the workspace. A runner of protocol version 1 gets the agent
-   login of the starter of the session in place of the token. A turn on an
-   own endpoint login goes only to a runner of version 2 or later. The
-   Worker first copies the files of the message from the attachment storage
-   into the sandbox. An action of the pull request bar sends its fixed
-   prompt in the same way.
+   branches of the workspace. The sandbox first downloads each new file of
+   the message from the attachment storage, through a route of the
+   Worker. An action of the pull request bar sends its fixed prompt in the
+   same way.
 2. The runner gives the message to the agent through the SDK. It numbers
    each agent event and sends it to the Durable Object.
 3. The agent sends each model request to the model gateway of the Worker,
@@ -37,8 +35,7 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
    on their way to OpenAI. A settings file in the repository can send the requests of Claude
    to another address, as
    [How the agents reach the gateway](../protocol/model-gateway.md#how-the-agents-reach-the-gateway)
-   says. With a runner of version 1, the agent sends its model requests
-   to the provider itself.
+   says.
 4. The Durable Object stores each event, confirms it to the runner, and
    pushes it to every open tab of the workspace.
 
@@ -59,8 +56,8 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
   routes each event to the workspace whose current branch it names.
 - A push to the default branch of a chosen repository can also start a
   refresh of the org image.
-- A pull request event can also start the runs of routines, as
-  [Routine runs](#routine-runs) says.
+- A pull request event can also start the runs of automations, as
+  [Automation runs](#automation-runs) says.
 
 ## Merge
 
@@ -86,7 +83,7 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 4. The Durable Object pushes the new state and the note of Continue to
    every open tab. Each later message carries the new branch to the agent.
 
-## Routine runs
+## Automation runs
 
 1. A trigger fires: the minute Cron Trigger finds a due schedule, a pull
    request webhook matches a trigger, or the owner uses Run now.
@@ -99,7 +96,7 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 4. The Durable Object of the workspace reports how the first turn ended,
    so that a failed first turn shows as a failed run.
 
-[Routines](../protocol/routines.md) and its linked pages state the rules.
+[Automations](../protocol/automations.md) and its linked pages state the rules.
 
 ## Stops
 

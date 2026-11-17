@@ -18,6 +18,8 @@ sign-in gate.
 The composer lists the files of the Files development page after `@`, and
 a press on a file chip notes what the app opens. The page has no file tab,
 so a press on the chip of a sent attached file also only notes its path.
+The page has no workspace screen, so each link of chat text opens a new
+tab, also a local address and a link of the app.
 As in the app, the chat takes a drop of files anywhere on its column for
 its message box, and a drop of files elsewhere on the page does nothing.
 
@@ -48,6 +50,7 @@ The address chooses the state. The first value of each option is the default:
 | `change` | `done`, `done-not-saved`, `failed` (what the page's Mac does with a change of its settings) |
 | `page` | `chat`, `this-mac` (the This Mac section of the account) |
 | `files` | `listed`, `unread` (each end of a turn of the chat says that the cloud computer could not read its changed files) |
+| `speed` | `none` (no fast mode), `fast` (each end of a turn of the chat ends a fast turn at fast speed, which shows nothing new), `limit` (each end says "Standard speed · Fast limit reached"), `older` (each end says "Standard speed · Older cloud computer software"), `other` (each end gives a cause that the app does not name, so it says "Standard speed" alone) |
 | `answer` | `text`, `tables` (each scripted turn answers with three tables: the resources of the machine, bundle sizes with a short row, and a wide table of test runs), `headings` (each scripted turn writes its plan under a heading, and answers with a review under headings at levels 2 to 4) |
 
 ## What the page does
@@ -75,7 +78,8 @@ header while it runs. Keep until I stop in the bar of the 15 minutes turns
 them into a grant until Stop. The Mac refuses a change of an older pairing, as
 the Worker does.
 
-Uploads keep their bytes in memory. While the sandbox runs, an accepted
+Uploads go in parts through `dev-uploads.ts`, with the store and the checks
+of the app's fake, and keep their bytes in memory. While the sandbox runs, an accepted
 message gets copies of its files at their returned paths, before the page
 shows it as sent. A queued message gets them when the sandbox becomes
 ready, such as after Resume, before the agent gets it. The page uses the
@@ -113,7 +117,8 @@ workspace and its first session take the title.
 Each other session takes the first line of its first message with own words
 as its title. The rule is `sessionTitleFrom` in
 `src/shared/session-title.ts`, which the Worker uses too. That rule first
-puts the original name of each attached file in place of its mention.
+leaves out each mention of an attached image. It puts the original name of
+each other attached file in place of its mention.
 
 ## Key code
 

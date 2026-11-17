@@ -15,6 +15,7 @@ import type { AgentAction } from './barCopy'
 export const agentIcons: Readonly<Record<AgentAction, LucideIcon>> = {
   'create-pull-request': GitPullRequestCreateArrow,
   'commit-and-push': Upload,
+  push: Upload,
   'fix-checks': Wrench,
   'resolve-conflicts': GitCompareArrows,
   'address-review': MessageSquareCode,

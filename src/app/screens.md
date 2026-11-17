@@ -38,6 +38,12 @@ the Help row of the command palette opens.
   carries the current revision of the Terms, as
   [Terms consent](../../worker/security/README.md#terms-consent) says.
   `../shell/auth/SignInScreen.test.tsx` checks that address.
+- The sign-in screen also takes the place of every screen when the API
+  refuses any request with `sign_in_required` while the app is open. The
+  client of `AppModel` reports each such refusal, as `watchSession` in
+  `boot.ts` says, also the replies of its fetch. Every org client and
+  feature client sends through it. A refusal with another code, such as
+  `github_reconnect_required`, keeps the screen.
 - The address `/` shows the invitations of the user first, in the frame of
   the app: each org with its invited email and Accept invitation, then
   Continue to workspaces. Without invitations, or after Continue to
@@ -132,7 +138,7 @@ the Help row of the command palette opens.
   changes, a draft that the user did not change takes the new value, and
   an edited draft stays. A draft that equals the one that went out for a
   save takes the value of the answer. A failed save keeps the draft.
-- A form with several fields, such as the routine page, applies these
+- A form with several fields, such as the automation page, applies these
   rules to each field on its own (`eachField`). A field that the user did
   not change takes the field of the newer saved value, and an edited field
   keeps its edit. So a save sends only the fields that the user changed,
@@ -286,8 +292,8 @@ the requirements. The mockups `app/sign-in/waitlist`, `app/sign-in/join`,
   the code no more.
 - For a person with app access, a join link uses no code, and `/` opens as
   usual.
-- The Account page ends with the invite code of the user, after the model
-  of new workspaces: the invite link with Copy, the code, and the invites
+- The General tab of the Account page ends with the invite code of the
+  user: the invite link with Copy, the code, and the invites
   left. It has the states of the pause, of every invite used, and of a code
   that an operator turned off. During [open sign-up](../../docs/protocol/sign-ups.md#open-sign-up),
   it shows the open sign-up notice while invites remain. The pause wins.

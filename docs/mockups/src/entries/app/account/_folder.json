@@ -1,7 +1,9 @@
 {
   "order": [
+    "agents",
     "preferences",
     "shortcuts",
+    "stats",
     "setup",
     "connect-claude",
     "connect-codex",

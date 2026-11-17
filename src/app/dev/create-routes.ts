@@ -1,8 +1,9 @@
-import type { MessageSender, SendMessageRequest } from '../../shared/messages'
+import type { Workspace } from '../../shared/generated/Workspace'
+import type { MessageSender } from '../../shared/generated/MessageSender'
+import type { SendMessageRequest } from '../../shared/messages'
 import {
   workspacesPath,
   type CreateWorkspaceResponse,
-  type Workspace,
 } from '../../shared/workspaces'
 import { maybeText, nested, record, text, texts } from '../api/parse'
 import { readChoice } from '../api/read-core'
@@ -60,7 +61,7 @@ export interface WorkspaceRequest {
   first: SendMessageRequest
   /**
    * A first start that fails keeps its workspace in the error state, as
-   * the Worker keeps the workspace of a routine run.
+   * the Worker keeps the workspace of an automation run.
    */
   keepFailedStart?: boolean
 }

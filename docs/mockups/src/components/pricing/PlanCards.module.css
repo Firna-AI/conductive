@@ -24,8 +24,8 @@
 }
 
 /*
- * A plan is a quiet box with a full outline, as the legend of the
- * comparison page is. No edge has its own colour, and no plan is marked.
+ * A plan is a quiet box with a full outline. No edge has its own colour,
+ * and no plan is marked.
  */
 .card {
   display: flex;

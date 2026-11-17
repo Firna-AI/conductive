@@ -1,13 +1,15 @@
-import type { Attachment, UserMessage } from '../../shared/messages'
+import type { Workspace } from '../../shared/generated/Workspace'
+import type { WorkspaceState } from '../../shared/generated/WorkspaceState'
+import type { Attachment } from '../../shared/generated/Attachment'
+import type { UserMessage } from '../../shared/generated/UserMessage'
+import type { StartStep } from '../../shared/generated/StartStep'
+import type { WorkspaceStart } from '../../shared/generated/WorkspaceStart'
 import { readGitHubSummary } from '../../shared/github-read'
 import type {
   CreateWorkspaceResponse,
   OrderedWorkspaceResponse,
-  StartStep,
-  Workspace,
+  RestartWorkspaceResponse,
   WorkspaceResponse,
-  WorkspaceStart,
-  WorkspaceState,
 } from '../../shared/workspaces'
 import {
   choice,
@@ -143,4 +145,12 @@ export function readCreated(value: unknown): CreateWorkspaceResponse {
 
 export function readWorkspaces(value: unknown): Workspace[] {
   return items(record(value, 'workspaces'), 'workspaces', readWorkspace)
+}
+
+/** The reply of Restart: whether the newest software came before it. */
+export function readRestartWorkspaceResponse(
+  value: unknown,
+): RestartWorkspaceResponse {
+  const body = record(value, 'restart reply')
+  return { updateCheck: choice(body, 'updateCheck', ['ok', 'failed']) }
 }

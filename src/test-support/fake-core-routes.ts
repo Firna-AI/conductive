@@ -21,19 +21,19 @@ import {
 } from '../shared/org-settings'
 import { deleteOrgPath, leaveOrgPath, restoreOrgPath } from '../shared/orgs'
 import {
-  routinePath,
-  routinePaths,
-  routinesPath,
-  type RoutineRunResponse,
-} from '../shared/routines'
+  automationPath,
+  automationPaths,
+  automationsPath,
+  type AutomationRunResponse,
+} from '../shared/automations'
 import { sectionPath, sectionsPath } from '../shared/sections'
 import type { SaveShortcutsResponse } from '../shared/shortcuts'
 import { WAITLIST_PATHS } from '../shared/waitlist'
 import type { FakeRouteWriter } from './fake-api-routes'
 import { fakeOrgOrderRoutes } from './fake-org-order-routes'
 import { coreFixtures, FAKE_IDS, FAKE_TIME } from './fixtures/core'
-import { listRuns, runsPage } from './fixtures/routine-runs'
-import { routineFixtures } from './fixtures/routines'
+import { listRuns, runsPage } from './fixtures/automation-runs'
+import { automationFixtures } from './fixtures/automations'
 import { accessState } from './fixtures/waitlist'
 
 export function fakeCoreRoutes(routes: FakeRouteWriter, role: OrgRole) {
@@ -124,31 +124,38 @@ export function fakeCoreRoutes(routes: FakeRouteWriter, role: OrgRole) {
   for (const invite of data.members.invites) {
     routes.empty('DELETE', invitePath(id, invite.id))
   }
-  const routines = routineFixtures(id)
-  routes.json('GET', routinesPath(id), routines.list)
-  routes.json('POST', routinesPath(id), { routine: routines.created }, 201)
-  // The routine that a create answers has a page too, as after the create.
-  for (const routine of [...routines.routines, routines.created]) {
-    routes.json('GET', routinePath(id, routine.id), { routine })
-    routes.json('PATCH', routinePath(id, routine.id), { routine })
-    routes.empty('DELETE', routinePath(id, routine.id))
+  const automations = automationFixtures(id)
+  routes.json('GET', automationsPath(id), automations.list)
+  routes.json(
+    'POST',
+    automationsPath(id),
+    { automation: automations.created },
+    201,
+  )
+  // The automation that a create answers has a page too, as after the create.
+  for (const automation of [...automations.automations, automations.created]) {
+    routes.json('GET', automationPath(id, automation.id), { automation })
+    routes.json('PATCH', automationPath(id, automation.id), { automation })
+    routes.empty('DELETE', automationPath(id, automation.id))
     // Each page of the runs, newest first, and the run that Run now starts.
-    const runs = routines.runs.filter((run) => run.routineId === routine.id)
+    const runs = automations.runs.filter(
+      (run) => run.automationId === automation.id,
+    )
     let before: string | null = null
     do {
       const page = runsPage(runs, before)
       routes.json(
         'GET',
-        routinePaths.runs(id, routine.id, before ?? undefined),
+        automationPaths.runs(id, automation.id, before ?? undefined),
         page,
       )
       before = page.nextCursor
     } while (before)
-    const [started] = listRuns(routine, 'run-now')
+    const [started] = listRuns(automation, 'run-now')
     routes.json(
       'POST',
-      routinePaths.runNow(id, routine.id),
-      { run: started } satisfies RoutineRunResponse,
+      automationPaths.runNow(id, automation.id),
+      { run: started } satisfies AutomationRunResponse,
       201,
     )
   }

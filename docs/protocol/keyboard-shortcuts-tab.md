@@ -11,8 +11,8 @@ app.
 
 ## Where the tab shows
 
-- The Account page has a third tab, Keyboard shortcuts, after General and
-  Preferences. Its address is `/account/shortcuts`.
+- The Account page has a fourth tab, Keyboard shortcuts, after General,
+  Agents, and Preferences. Its address is `/account/shortcuts`.
 - The tab shows in every host and in every layout. Reason: the phone
   layout also serves a narrow desktop window, which has a keyboard. A tab
   that hides on a phone was rejected for that reason.
@@ -43,8 +43,7 @@ app.
 - Navigation says "The orgs count from the top of the rail." Workspace says
   "The workspaces count from the top of the list."
 - A browser leaves out the rows and the group that only the Mac app has:
-  Hide or show the sidebar, Back, Forward, Paste and match style, and the
-  Mac app group.
+  Back, Forward, Paste and match style, and the Mac app group.
 - Each key of a row is a button that records a new key in its place.
 - A row without a key shows Add shortcut. A row with one, two, or three
   keys shows + after its keys, because a command holds at most four keys.

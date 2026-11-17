@@ -9,17 +9,22 @@
   user-select: none;
 }
 
+/*
+ * The name of a section, where a drag of the section starts. A long press
+ * must not select text, and a finger still scrolls the list.
+ */
+.headerDrag {
+  touch-action: pan-y;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
 /* The row under the pointer while it moves to another section. */
 .lifted {
   position: fixed;
   z-index: 60;
   pointer-events: none;
   transform: rotate(-1.5deg);
-}
-
-/* The field of a new section, under the other sections. */
-.newSection {
-  padding: 0 2px 0 4px;
 }
 
 .choose {

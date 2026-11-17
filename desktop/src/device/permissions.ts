@@ -199,6 +199,34 @@ export function createPermissionStore(dependencies: PermissionDependencies) {
       return { status: 'done' }
     },
     stopWorkspace,
+    extendWorkspace(workspaceId: string): DeviceSettingsOutcome {
+      const now = clock.now()
+      const current = windows.get(workspaceId)
+      if (current?.expiresAt === null)
+        return {
+          status: 'failed',
+          message: 'This workspace already allows all commands until you stop.',
+        }
+      if (!current || current.expiresAt <= now)
+        return {
+          status: 'failed',
+          message:
+            'The 15 minutes already ended. Approve a request again to allow all commands.',
+        }
+      const window = { ...current, expiresAt: now + WINDOW_MS }
+      try {
+        save(commands, new Map([...windows, [workspaceId, window]]))
+      } catch {
+        dependencies.warn()
+        return {
+          status: 'failed',
+          message: 'The Mac could not extend the 15 minutes. Try again.',
+        }
+      }
+      cancelTimer(workspaceId)
+      schedule(window)
+      return { status: 'done' }
+    },
     /** Ends every grant until Stop, such as after a sign-out. */
     endUntilStop(): void {
       windows = new Map(

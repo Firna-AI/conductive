@@ -3,12 +3,16 @@
 This page belongs to [the design](design.md), which gives the style, the
 layouts, the design tokens, and the shared parts. This page gives workspace,
 session, and file chips with the list of `@`, and attached files with their
-drops. It gives the picture of an image file, the Markdown tables and
+drops. [Links in text](design-links.md) gives the other links of the chat. It gives the picture of an image file, the Markdown tables and
 headings of a reply and of a file preview, the work fold of a turn, and the
 line of a stopped turn. It also gives the data that the chat does not
-have, the files that the cloud computer could not read, and the end of a turn at the time limit of
-background work.
+have, the files that the cloud computer could not read, the end of a turn at the time limit of
+background work, and the end of a fast turn that ran at standard speed.
 
+- A session tab shows a muted spinner in place of its chat icon while its
+  agent works. The spinner keeps the icon's size and stays visible on
+  background tabs and while the user drags a tab. An idle tab shows the
+  chat icon.
 - `DraftFileChip` in `src/components/chat/` draws each attached file of a
   draft as a chip at its place in the text of the message box. It is one
   unit of the text, as a file chip is, with the size of a file chip, from
@@ -29,12 +33,12 @@ background work.
     at the place of each file, and its other text is escaped, as
     [`draft-marks.ts`](../../src/app/draft-marks.ts) of the app says. The
     mockups and the app share that module. Send waits for each upload.
-- A file over 100 MB never becomes a chip: a notice over the composer names
+- A file over 1 GB never becomes a chip: a notice over the composer names
   it, gives the limit, and offers "Attach a smaller file", as
   `app/attachments/too-large` shows. A dropped folder becomes one zip
   chip, such as `checkout-screens.zip`, at its place among the files of
-  the drop, as `app/attachments/drop/folder` shows. A zip over 100 MB gets
-  the notice of a file over 100 MB. A folder that the browser cannot read
+  the drop, as `app/attachments/drop/folder` shows. A zip over 1 GB gets
+  the notice of a file over 1 GB. A folder that the browser cannot read
   is not attached: its notice names it, says that it could not be read and
   to attach the files in it, and offers "Attach files", as
   `app/attachments/drop/unreadable-folder` shows.
@@ -52,16 +56,24 @@ background work.
 - `SentFileChip` draws each attached file of a sent message as a chip at
   the place of its mention: the icon of its kind, its name, and its size in
   a muted colour. A sent message holds `@` and the copy path of each file,
-  and the chip finds its file by that path. A press opens the file tab of
-  the copy, as `app/attachments/open` shows. The chip of a message that
+  and the chip finds its file by that path. A press opens the copy in the
+  temporary tab, as `app/attachments/open` shows. The chip of a message that
   waits for the cloud computer opens nothing. `SentFiles` lists the files
   that the text does not show under the message, at the right, with
   `AttachmentChips.module.css` and `AttachmentStates.module.css`.
+- A later try of a sent message uses the copies of its files in the cloud
+  computer, because the app deletes its stored copy of each file once the
+  cloud computer has it. When a copy is no longer there, the turn fails
+  with the notice of a failed turn: "This turn stopped", the cause, and
+  Try again. The cause names each file that is gone, and asks to attach it
+  again in a new message, as `app/attachments/missing` shows. Only the
+  newest failed turn of a session offers Try again. The `older` mark of an
+  `error` item in `conversations.ts` draws an older failed turn without it.
 - Both chips of an attached file take no fixtures, so the app can use them.
   The New workspace page and dialog use the same chips before the
   workspace exists, as `app/new-workspace/files` and
   `app/new-workspace/dialog/files` show. In the dialog, the notice of a
-  file over 100 MB sits with its other notices, under the message.
+  file over 1 GB sits with its other notices, under the message.
 - `ImageView` in `src/components/files/` draws the picture of a PNG, JPEG,
   GIF, or WebP file in its tab, from decision 265 B. The picture keeps its
   proportions, in the middle of the tab, at its own size or smaller, so
@@ -217,6 +229,24 @@ background work.
     such as "Changed files unavailable".
   - The words name what stopped, not the number of the limit, because the
     member cannot change it.
+- A fast turn that ran at standard speed still ends as finished, with its
+  duration and its files, from fast mode decision 257. A note beside the
+  duration names the speed and the cause, such as "Standard speed · Fast
+  limit reached", and the files go under the note.
+  - `StandardSpeedNote` in `src/components/chat/` draws the note: muted
+    text with a gauge icon. One line has the height of a chip. A narrow
+    chat wraps the note, and the icon stays on its first line. It takes no
+    fixtures, so the app can use it too.
+  - `speedCopy.ts` beside it holds the words of each cause: "Fast limit
+    reached" for the fast limit of Claude, and "Older cloud computer
+    software" for a cloud computer whose software ignores fast mode.
+  - The words name no time until a limit resets, because the note stays in
+    the chat after the reset.
+  - A stopped turn ends its line with the same words after a dot, before
+    the notes of its files, such as "You stopped the agent · Standard speed
+    · Fast limit reached".
+  - A fast turn that ran at fast speed, and a turn without fast mode, show
+    no note.
 
 ## Workspace, session, and file chips
 
@@ -232,9 +262,9 @@ background work.
   - `MessageText` shows the chips in sent messages and in answers, as
     links to the screens of the workspaces. In an answer, `**` marks bold
     text, and a chip inside it is bold too. A Markdown link to a
-    workspace shows as the chip alone, and a link in code stays code. A
-    link to another org, or to a workspace that the list does not hold,
-    stays plain text, and a long link breaks to fit the line.
+    workspace shows as the chip alone. A link in code is no chip. A link
+    to another org, or to a workspace that the list does not hold, is a
+    link, as [Links in text](design-links.md) says.
   - The chat finds each workspace in the list of the org, with the
     archived ones and with the states of the list, through
     `ChatWorkspaces`. A phone finds the same workspaces with no list on
@@ -287,8 +317,25 @@ background work.
   `src/files/code/file-kind.ts` of the app says, so one list of languages
   sets both. The user chose this on 10 November 2026. A sent message shows
   each file chip as a link to the tab of the
-  file, and an answer shows none. It takes no fixtures, so the app can use
-  it too.
+  file. It takes no fixtures, so the app can use it too.
+  - An answer shows a file chip for each `@` mention of an entry of the
+    tree, and for each inline code whose whole text is the path of an
+    entry, from answer chip decisions 1 and 2 of 13 November 2026. The
+    path can be relative, or absolute under the repository folder.
+    `answerPaths.ts` beside it reads the path and its line target. A code
+    block, a path in another repository, and code of one word without a
+    `/` or a `.` stay code. Bold ends at a chip from code, as it ends at
+    code.
+  - A line target, such as `:19-22`, adds `:19-22` to the name and to the
+    title of the chip. A press opens the file tab at the lines, which
+    `CodeView` in `src/components/files/` marks with the soft amber fill
+    and scrolls so that the first line sits in the middle of the view.
+  - `MentionChip` beside it draws the chip of a mention part, with its
+    line target and the page that a press opens.
+- `CodeBlock` in `src/components/chat/` draws a code block of an answer
+  with the look of a code block of a Markdown file. On a phone a Copy code
+  button shows in its top corner. With a mouse the button shows only while
+  the pointer is on the block, so a desktop view draws none.
 - `FileMentionList` in `src/components/chat/` draws the list of `@` above
   the message box: the icon, the name, and the folder of each entry that
   matches the query, with the first row highlighted. One line takes the

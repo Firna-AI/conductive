@@ -1,5 +1,5 @@
+import type { Workspace } from '../shared/generated/Workspace'
 import type { Section } from '../shared/sections'
-import type { Workspace } from '../shared/workspaces'
 
 export interface SectionGroup {
   section: Section
@@ -19,7 +19,8 @@ export function defaultSection(
   return sections.find((section) => section.isDefault) ?? sections[0]
 }
 
-function ordered(sections: readonly Section[]): Section[] {
+/** The sections in the order of the list. */
+export function ordered(sections: readonly Section[]): Section[] {
   return [...sections].sort((a, b) => a.position - b.position)
 }
 
@@ -89,6 +90,26 @@ export function moveWorkspace(
   if (!last) return [placed, ...rest]
   const at = rest.indexOf(last) + 1
   return [...rest.slice(0, at), placed, ...rest.slice(at)]
+}
+
+/**
+ * The sections after a move puts one at `index` of the list. The index
+ * counts the sections without the moved one. Each section then takes its
+ * place as its position, as the server numbers them.
+ */
+export function reorderSections(
+  sections: readonly Section[],
+  sectionId: string,
+  index: number,
+): Section[] {
+  const list = ordered(sections)
+  const moved = list.find((section) => section.id === sectionId)
+  if (!moved) return list
+  const rest = list.filter((section) => section !== moved)
+  const at = Math.min(Math.max(0, index), rest.length)
+  return [...rest.slice(0, at), moved, ...rest.slice(at)].map(
+    (section, position) => ({ ...section, position }),
+  )
 }
 
 /** Deleting a section moves its workspaces to General, so nothing is lost. */

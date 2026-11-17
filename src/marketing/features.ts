@@ -12,7 +12,7 @@ import type { FeatureIconName } from './icon-shapes.ts'
 
 /** The headline and the lines that sum up the product. */
 export const productSummary = {
-  heroTitle: 'Give every coding task its own cloud computer.',
+  heroTitle: 'Ship code faster.',
   /**
    * The sentence under the headline of the home page. It is also the
    * description of the home page, which a search result can show.

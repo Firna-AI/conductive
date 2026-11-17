@@ -14,4 +14,15 @@ export const setup = defineScreen({
   render: (props, context) => (
     <AccountScreen state={props} viewport={context.viewport} />
   ),
+  variants: [
+    {
+      slug: 'agents',
+      title: 'No agent connected yet',
+      description:
+        'The Agents tab during the first run: neither Claude nor Codex is connected, so each agent shows Connect.',
+      rationale:
+        'The agents have their own tab, so the first run shows them there, not on General.',
+      props: { tab: 'agents' },
+    },
+  ],
 })

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { AgentChoice } from '../../shared/agents'
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import { sessionPath, sessionPaths } from '../../shared/sessions'
 import { workspacePaths } from '../../shared/workspaces'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
@@ -8,7 +8,12 @@ import { chatFor } from './test-kit'
 const org = FAKE_IDS.org
 const ws = FAKE_IDS.workspace
 const id = FAKE_IDS.session
-const opus: AgentChoice = { agent: 'claude', model: 'Opus 5.5', effort: 'high' }
+const opus: AgentChoice = {
+  agent: 'claude',
+  model: 'Opus 5.5',
+  effort: 'high',
+  fast: false,
+}
 const shortly = { timeout: 10_000 }
 const failure = {
   error: { code: 'internal_error', message: 'The request failed. Try again.' },

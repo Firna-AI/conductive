@@ -1,11 +1,7 @@
-import type {
-  RunnerCommandV1,
-  RunnerCommandV2,
-  RunnerMessageDuringTurnV2,
-  RunnerTurnCredential,
-  RunnerTurnV2,
-} from '../../src/shared/runner'
-import { isRunnerV1Login } from '../../src/shared/runner'
+import type { RunnerCommand } from '../../src/shared/generated/RunnerCommand'
+import type { RunnerMessageDuringTurn } from '../../src/shared/generated/RunnerMessageDuringTurn'
+import type { RunnerTurnCredential } from '../../src/shared/generated/RunnerTurnCredential'
+import type { RunnerTurn } from '../../src/shared/generated/RunnerTurn'
 import { chatGptSignInCopy } from '../../docs/mockups/src/components/settings/chatGptSignInCopy'
 import type { WorkspaceTurnTokens } from '../model-gateway/workspace'
 import type { AgentLogin } from './login-kind'
@@ -18,28 +14,21 @@ export function compatibilityFailure(login: AgentLogin): string {
   return 'This cloud computer cannot use this agent login. Ask an admin to build the org image again. Then start a new workspace.'
 }
 
-export function legacyRunnerCommand(command: ResolvedCommand): RunnerCommandV1 {
-  if (command.type !== 'turn' && command.type !== 'message') return command
-  if (command.login.kind === 'endpoint' || !isRunnerV1Login(command.login))
-    throw new Error('The runner cannot use this login kind.')
-  return { ...command, login: command.login }
-}
-
 /** The caller holds the chat queue and has committed the turn's running state. */
 export async function gatewayRunnerCommand(
   command: ResolvedCommand,
   workspaceId: string,
   forRunningTurn: WorkspaceTurnTokens['forRunningTurn'],
-): Promise<RunnerCommandV2 | null> {
+): Promise<RunnerCommand | null> {
   if (command.type !== 'turn' && command.type !== 'message') return command
   const { login, ...fields } = command
   if (fields.type === 'message') {
-    const message: RunnerMessageDuringTurnV2 = fields
+    const message: RunnerMessageDuringTurn = fields
     return message
   }
   const token = await forRunningTurn(workspaceId, fields.turnId, login)
   if (!token) return null
-  const turn: RunnerTurnV2 = {
+  const turn: RunnerTurn = {
     ...fields,
     credential: nativeCredential(login, token),
   }

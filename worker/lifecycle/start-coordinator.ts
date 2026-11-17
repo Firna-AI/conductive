@@ -6,6 +6,7 @@ import type {
   WorkspaceCreationAdmission,
 } from './start-types'
 import type { AppDependencies, AppEnv } from '../env'
+import { HttpError } from '../http'
 import { advanceStartRecords } from './start-records'
 import { publishCreationResult } from './creation-publication'
 import { warnWorker } from '../warnings'
@@ -111,6 +112,20 @@ export class WorkspaceStartCoordinator {
       this.dependencies.now,
       apply,
     )
+  }
+
+  async runnerUnsupported(reason: string): Promise<void> {
+    const job = await this.storage.job()
+    if (!job || job.phase !== 'runner' || job.cancelled || job.failure) return
+    const now = this.dependencies.now()
+    await this.storage.update(
+      failedStartJob(
+        job,
+        new HttpError(409, 'runner_protocol_unsupported', reason),
+        now,
+      ),
+    )
+    await this.storage.schedule(now)
   }
 
   advance(turn?: QueueTurn): Promise<boolean> {

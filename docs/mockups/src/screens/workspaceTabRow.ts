@@ -45,11 +45,16 @@ export function withCodeMoved(tabs: readonly WorkspaceTab[]): WorkspaceTab[] {
   return tabs.filter((tab) => tab !== code).toSpliced(1, 0, code)
 }
 
+/** The key of the temporary tab of the row, if the row shows one. */
+function temporaryKey(tabs: readonly WorkspaceTab[]): string | undefined {
+  return tabs.find((tab) => tab.temporary)?.key
+}
+
 /**
  * The drag of each viewport, with the line between the two sessions. On
- * desktop the code file lands there. A phone shows only the sessions, so a
- * long press lifts the second session, and the line marks its place until
- * the finger moves.
+ * desktop the temporary tab lands there, or else the code file. A phone
+ * shows only the sessions, so a long press lifts the second session, and
+ * the line marks its place until the finger moves.
  */
 function dragOf(
   tabs: readonly WorkspaceTab[],
@@ -57,8 +62,27 @@ function dragOf(
 ): TabDrag | undefined {
   const index = tabs.findIndex((tab) => tab.key === secondSession.key)
   if (index < 0) return undefined
-  const tab = viewport === 'mobile' ? secondSession.key : codeTabKey
+  const tab =
+    viewport === 'mobile'
+      ? secondSession.key
+      : (temporaryKey(tabs) ?? codeTabKey)
   return { tab, index }
+}
+
+/**
+ * The tab whose menu is open: the shown file or diff tab, such as the
+ * temporary tab, or else the first session. A phone row and the row of an
+ * archived workspace show no file tabs, so they open no menu for a shown
+ * file.
+ */
+function menuTabOf(
+  state: WorkspaceState,
+  tabs: readonly WorkspaceTab[],
+): string | undefined {
+  if (state.overlay !== 'tab-menu') return undefined
+  const shown = tabs.find((tab) => tab.selected)
+  if (shown === undefined) return undefined
+  return shown.kind === 'session' ? firstSession.key : shown.key
 }
 
 /**
@@ -67,7 +91,7 @@ function dragOf(
  */
 export type TabRow = {
   drag?: TabDrag
-  /** The tab whose menu is open: the first session. */
+  /** The tab whose menu is open: the first session, or the shown file tab. */
   menuTab?: string
   /** The tab that shows the rename field: the first session too. */
   renaming?: string
@@ -79,9 +103,9 @@ export type TabRow = {
  * The tab row of the state, for the tabs that the viewport shows. A
  * read-only workspace moves no tab and renames no session. Its tab menu
  * leaves out the items that change the workspace, so a session tab opens
- * only its copy items. On a phone, the tab with the rename field and the
- * shown tab do not fit beside each other, so the row is full and keeps the
- * field in view.
+ * only its copy items, and a file or diff tab only Copy path. On a phone,
+ * the tab with the rename field and the shown tab do not fit beside each
+ * other, so the row is full and keeps the field in view.
  */
 export function tabRowOf(
   state: WorkspaceState,
@@ -89,7 +113,7 @@ export function tabRowOf(
   viewport: Viewport,
   readOnly: boolean,
 ): TabRow {
-  const menuTab = state.overlay === 'tab-menu' ? firstSession.key : undefined
+  const menuTab = menuTabOf(state, tabs)
   if (readOnly) return { menuTab, full: state.tabRow === 'full' }
   const renaming = state.tabRow === 'rename' ? firstSession.key : undefined
   return {

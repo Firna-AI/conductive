@@ -19,7 +19,7 @@ The file flow adds no renderer bridge.
 
 The desktop entry supplies the configured Worker origin to the app's API and event services.
 API calls use `credentials: include`, so Chromium sends the HttpOnly desktop session cookie.
-File uploads go to the same origin as one raw `XMLHttpRequest` with credentials, so they send the same cookie and report their progress.
+File uploads go to the same origin in parts. Each part is one raw `XMLHttpRequest` `PUT` with credentials and no other header than `Content-Type`, so it sends the same cookie and reports its progress.
 Workspace sockets use the same Worker origin.
 The renderer keeps its normal `fetch` function and has no OS bridge.
 
@@ -95,7 +95,14 @@ The connection sends that hostname as display metadata for command requests.
 Remove and Stop revoke permissions in memory even when saving fails.
 The revocation stays in force for the rest of the app run, including reconnects.
 A failed save can restore the old permission after a full app restart.
+Extend sets a running 15-minute grant's end to the Mac's current time plus 15 minutes.
+It leaves a grant until Stop unchanged.
+It keeps the workspace name and never starts a grant that ended or does not exist.
+The Mac saves the new end before replacing the grant and its timer.
+A failed save keeps the old end and timer and reports failed.
+Extend reports done only after a successful save.
 Settings replies report whether the change was saved.
+Each reply includes the current effective settings.
 A settings reply that is too large fails its own operation and keeps commands connected.
 
 Always allow has a budget of 900,000 UTF-8 bytes for the JSON-encoded list of always-allowed commands.
@@ -162,6 +169,8 @@ It then follows the width of the rail and the sidebar.
 The sidebar does not show after the toggle hides it, in a window narrower than 900px, or on a page without one.
 Then the bar keeps its own width at the top left of the window.
 The top bar of the main area starts after the bar.
+While the sidebar is hidden, the tile of the current org opens the workspace list as a popover below the bar.
+The sidebar shows no second toggle beside the Settings cog in the Mac app.
 
 The app disables the toggle in a window narrower than 900px and on a page without a sidebar.
 Other pages without the org rail, such as sign-in, show the bar in a 34px strip.

@@ -58,6 +58,8 @@ printf '%s\\0' "$PWD" "$CONDUCTIVE_LAUNCH_TEST" "$@"
     entropyCommand: [entropy, '-An', '-v', '-N32', '-tx1', entropyInput],
     terminalCommand: [terminal],
     multiplexerCommand: [multiplexer],
+    // No bridge exists here, so the launcher runs the plain tmux client.
+    bridgeCommand: [`${root}/node`, `${root}/bridge.ts`],
   }
   return {
     root,
@@ -80,7 +82,12 @@ printf '%s\\0' "$PWD" "$CONDUCTIVE_LAUNCH_TEST" "$@"
  */
 export function runInteractiveBash(
   lines: readonly string[],
-  options: { folder: string; home: string; promptCommand: string },
+  options: {
+    folder: string
+    home: string
+    promptCommand: string
+    historyFile?: string
+  },
 ) {
   return new Promise<{ code: number | null; stdout: string; stderr: string }>(
     (done, reject) => {
@@ -89,7 +96,7 @@ export function runInteractiveBash(
         env: {
           ...process.env,
           HOME: options.home,
-          HISTFILE: '',
+          HISTFILE: options.historyFile ?? '',
           PS1: '',
           PROMPT_COMMAND: options.promptCommand,
         },

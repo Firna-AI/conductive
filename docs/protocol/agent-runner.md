@@ -20,30 +20,19 @@ the change that keeps a turn open for background work.
 - The runner opens one outbound WebSocket to the Durable Object of its
   workspace, at `/v1/runner` on `api.conductive.build`, the hostname for
   machines. It proves itself with the workspace token.
-- The runner connection carries a protocol version. The Durable Object
-  serves each version that a live org image or sandbox can hold, within
-  the version pin of its workspace.
-- Each build of the org image installs the newest runner. Reason: a stopped
-  sandbox can resume weeks later with an old runner.
+- The runner connection carries a protocol version.
+  [Runner versions](version-pins.md#runner-versions) states which version
+  a workspace accepts, and what a refused runner and its turns get.
+  [The version pin](version-pins.md#the-version-pin) states the lowest
+  version that each workspace accepts.
+- Each build of the org image installs the newest runner. Each sandbox then
+  updates its runner itself, at a later start or when its workspace is
+  idle, as [Updates](sandbox-software.md#updates) says. Reason: a fix of
+  the runner then reaches each sandbox with no new workspace.
+- A sandbox runs its older runner until its update applies. A stopped
+  sandbox can also resume weeks later with an old runner.
 - A connection to the runner through a Boat port address was rejected,
   because it ties the runner to Boat.
-- Each build of the org image records the runner protocol version that it
-  installs. A refresh keeps the version of the image that it refreshes,
-  because a refresh keeps the installed runner.
-- Each cloud computer of a workspace takes the runner version of the org
-  image that it starts from as the version pin of the workspace, before it
-  can connect. So a Try again that starts a new cloud computer from a newer
-  image takes the version of that image. A stop and a resume keep the pin.
-  A workspace or an org image without a recorded version counts as version
-  1 (gateway decisions 2 and 5).
-- The workspace refuses a runner connection whose protocol version is below
-  its pin. It closes that connection before the `welcome` and before any
-  command.
-- Reason: a runner of version 1 gets the agent login itself with each turn.
-  Any process with the workspace token can open a runner connection and
-  claim version 1.
-- A pin by the first connection was rejected, because a program that the
-  org image or the startup script starts can connect first.
 - The runner numbers each event, and keeps it until the Durable Object
   confirms it.
 - A dropped connection loses no event. A resent event shows once.
@@ -77,6 +66,10 @@ the change that keeps a turn open for background work.
   then mean an unknown list. Without the mark, the same values mean that
   the turn changed no files.
 - The mark never changes the state of the end, `finished` or `stopped`.
+- A `turn.completed` event of a turn with fast mode on carries its speed
+  when known, with the cause of a standard speed, as
+  [The speed of a turn](fast-mode.md#the-speed-of-a-turn) says. The speed
+  never changes the state of the end either.
 - A permanent refusal has one of three reasons: too large, invalid, or turn not active.
   The workspace stores one small refusal marker before it confirms that runner event.
 - The marker names the runner stream, runner event number, event type, and reason.
@@ -99,17 +92,21 @@ the change that keeps a turn open for background work.
 - A storage or network failure closes the connection without a confirmation.
   It remains retryable. It never becomes a permanent refusal.
 - The Durable Object forwards each message, each message during a turn,
-  each interrupt, and each change of the model or the effort to the runner.
-- Each turn also brings a credential of the starter of its session. A
-  runner of protocol version 1 gets the agent login itself, as
+  each interrupt, and each change of the model, the effort, or the fast
+  mode to the runner.
+- Each turn also brings a turn token for the agent login of the starter of
+  its session, as [The turn token](model-gateway.md#the-turn-token) says.
+  No command carries the agent login itself, as
   [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
-  says. A runner of version 2 or later gets a turn token in its place, as
-  [The turn token](model-gateway.md#the-turn-token) says.
+  says.
 - A turn on a Claude own endpoint login also asks the runner for a prompt
   cache of 1 hour, as
   [How the agents reach the gateway](model-gateway.md#how-the-agents-reach-the-gateway)
   says. A runner that does not support this request ignores it. Claude
   then asks for the default cache of about 5 minutes.
+- Each turn also asks the runner for the fast mode of its choice. A runner
+  that does not support fast mode ignores it, and the turn runs at standard
+  speed, as [Fast mode](fast-mode.md#the-requests-of-the-agents) says.
 - Each turn that the runner accepts gets exactly one end: `turn.completed`
   or `turn.failed`. This holds also when Stop, a shutdown, or a crash of
   the runner comes before the agent starts.
@@ -117,10 +114,11 @@ the change that keeps a turn open for background work.
   restart, until the workspace confirms the end of the turn. The workspace
   sends no turn or message command for a turn after it stores the end of
   that turn.
-- After a failed file copy ends a running turn, the workspace can still
-  send Stop for that turn, to cancel the agent. That turn still shows as
-  failed. Reason: the failure in [Attachments](messages-and-attachments.md#attachments) ends the turn
-  at once, with no new wait for the agent.
+- After a failed file transfer or file check ends a running turn, the
+  workspace can still send Stop for that turn, to cancel the agent. That
+  turn still shows as failed. Reason: the failure in
+  [The transfer](attachment-transfers.md#the-transfer) ends the turn at
+  once, with no new wait for the agent.
 - At a shutdown, the runner sends a stopped end for each accepted turn that
   has no end. After a restart, it does the same for each turn that it
   accepted before the restart. It starts no agent for such a turn.
@@ -171,7 +169,7 @@ the change that keeps a turn open for background work.
 - A Codex turn does not wait, because Codex gives its agent no notification
   when background work ends.
 - Reason: the tool text of Claude promises that notification. The wait
-  keeps the promise up to the limit, also in a routine run.
+  keeps the promise up to the limit, also in an automation run.
 - A rule that the agent waits in the foreground for each result was
   rejected, because the tool text still promises the notification.
 - Background work turned off was rejected, because agents then lose it also
@@ -186,7 +184,7 @@ the change that keeps a turn open for background work.
 - The note names each such task and wake-up, so each one at most once in a
   turn. Reason: a second note for the same work can loop the agent.
 - The note is guidance, not an error, so the reply goes on. It says that
-  the turn stays open while the work runs, for up to 2 hours. It says that
+  the turn stays open while the work runs, for up to 30 days. It says that
   a notification comes when each task ends or each wake-up fires.
 - The note asks the agent to stop each task that it does not need, such as
   a dev server. It asks the agent to delete each wake-up that it does not
@@ -203,8 +201,10 @@ the change that keeps a turn open for background work.
 
 ### The time limit
 
-- A turn waits for at most 120 minutes (background work decision 2). Reason:
-  Claude lets a background command run for up to 2 hours.
+- A turn waits for at most 30 days. The user chose this limit on
+  13 November 2026, in place of the 120 minutes of background work
+  decision 2. Reason: background work, such as a long job or a scheduled
+  wake-up, can need more than 2 hours.
 - No limit was rejected, because a forgotten task would then hold its
   sandbox without end.
 - The count starts at the first wait. Agent work after a notification
@@ -227,9 +227,13 @@ the change that keeps a turn open for background work.
 - A stopped end at the limit was rejected, because it shows no duration
   and no files.
 - Risk: a wait keeps each right of a running turn, such as its turn token,
-  for up to 2 hours more, as
-  [Version pins](version-pins.md#a-sandbox-with-a-version-pin-of-2-or-later)
+  for up to 30 days more, as
+  [Turn tokens in a sandbox](version-pins.md#turn-tokens-in-a-sandbox)
   says.
+- Risk: a wait is a running turn, so the
+  [idle stop](workspace-life.md#stop-and-resume) does not stop its
+  sandbox. A task that the agent does not stop, such as a dev server, can
+  keep the sandbox running for up to 30 days.
 
 ## Listening ports
 

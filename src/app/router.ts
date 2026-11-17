@@ -1,4 +1,4 @@
-import type { Agent } from '../shared/agents'
+import type { Agent } from '../shared/generated/Agent'
 import { sessionAddressPath } from '../shared/session-link'
 import { INVITE_CODE_ERROR_PARAMETER } from '../shared/waitlist'
 
@@ -11,9 +11,20 @@ export const SETTINGS_TABS = [
 
 export type SettingsTab = (typeof SETTINGS_TABS)[number]
 
-/** The tabs of a saved routine on a phone: its form, and its runs. */
-export type RoutineTab = 'routine' | 'runs'
-export const ACCOUNT_TABS = ['general', 'preferences', 'shortcuts'] as const
+/** The tabs of a saved automation on a phone: its form, and its runs. */
+export type AutomationTab = 'automation' | 'runs'
+/**
+ * The tabs of the account. Only the Mac app shows This Mac, so a browser
+ * shows General at its address.
+ */
+export const ACCOUNT_TABS = [
+  'general',
+  'agents',
+  'preferences',
+  'shortcuts',
+  'stats',
+  'this-mac',
+] as const
 
 export type AccountTab = (typeof ACCOUNT_TABS)[number]
 
@@ -40,7 +51,7 @@ export type OperatorView =
 export type Route =
   | { screen: 'home' }
   | { screen: 'get-started' }
-  /** `connect` opens the Connect form of that agent on General. */
+  /** `connect` opens the Connect form of that agent on the Agents tab. */
   | { screen: 'account'; tab: AccountTab; connect: Agent | null }
   | { screen: 'create-org'; first: boolean }
   | { screen: 'org'; orgId: string }
@@ -57,14 +68,14 @@ export type Route =
       session?: string
     }
   | { screen: 'settings'; orgId: string; tab: SettingsTab }
-  | { screen: 'routines'; orgId: string }
-  | { screen: 'new-routine'; orgId: string }
-  /** A phone shows the form of a saved routine and its runs in two tabs. */
+  | { screen: 'automations'; orgId: string }
+  | { screen: 'new-automation'; orgId: string }
+  /** A phone shows the form of a saved automation and its runs in two tabs. */
   | {
-      screen: 'routine'
+      screen: 'automation'
       orgId: string
-      routineId: string
-      tab: RoutineTab
+      automationId: string
+      tab: AutomationTab
     }
   /** The operator section. The shell shows it only to an operator. */
   | { screen: 'operator'; view: OperatorView }
@@ -88,9 +99,9 @@ function operatorList(list: OperatorList, search: string): string {
 export const routes = {
   home: () => '/',
   getStarted: () => '/get-started',
-  /** General, with the Connect form of `connect` open. */
+  /** General, or the Agents tab with the Connect form of `connect` open. */
   account: (connect?: Agent) =>
-    connect ? `/account?connect=${connect}` : '/account',
+    connect ? `/account/agents?connect=${connect}` : '/account',
   accountTab: (tab: AccountTab) =>
     tab === 'general' ? '/account' : `/account/${tab}`,
   createOrg: (first = false) => (first ? '/orgs/new?first=1' : '/orgs/new'),
@@ -109,12 +120,16 @@ export const routes = {
     tab === 'general'
       ? `/orgs/${encode(orgId)}/settings`
       : `/orgs/${encode(orgId)}/settings/${tab}`,
-  routines: (orgId: string) => `/orgs/${encode(orgId)}/routines`,
-  newRoutine: (orgId: string) => `/orgs/${encode(orgId)}/routines/new`,
-  routine: (orgId: string, routineId: string, tab: RoutineTab = 'routine') =>
-    tab === 'routine'
-      ? `/orgs/${encode(orgId)}/routines/${encode(routineId)}`
-      : `/orgs/${encode(orgId)}/routines/${encode(routineId)}/runs`,
+  automations: (orgId: string) => `/orgs/${encode(orgId)}/automations`,
+  newAutomation: (orgId: string) => `/orgs/${encode(orgId)}/automations/new`,
+  automation: (
+    orgId: string,
+    automationId: string,
+    tab: AutomationTab = 'automation',
+  ) =>
+    tab === 'automation'
+      ? `/orgs/${encode(orgId)}/automations/${encode(automationId)}`
+      : `/orgs/${encode(orgId)}/automations/${encode(automationId)}/runs`,
   operator: () => '/operator',
   operatorOrgs: (search = '') => operatorList('orgs', search),
   operatorUsers: (search = '') => operatorList('users', search),
@@ -206,12 +221,12 @@ export function parseRoute(pathname: string, search: string): Route {
   if (first === 'account' && area === undefined) {
     // The segment after `account` names the tab.
     const tab = tabOf(ACCOUNT_TABS, orgId)
+    const connect = agentParam(query.get('connect'))
     if (tab) {
-      return {
-        screen: 'account',
-        tab,
-        connect: agentParam(query.get('connect')),
-      }
+      // An older link put `?connect=` on General, which no longer holds the
+      // agents, so it opens the Agents tab.
+      const shown = tab === 'general' && connect ? 'agents' : tab
+      return { screen: 'account', tab: shown, connect }
     }
   }
   if (first !== 'orgs' || orgId === undefined) return { screen: 'not-found' }
@@ -234,16 +249,21 @@ export function parseRoute(pathname: string, search: string): Route {
     const tab = tabOf(SETTINGS_TABS, id)
     if (tab) return { screen: 'settings', orgId, tab }
   }
-  if (area === 'routines') {
-    if (id === undefined) return { screen: 'routines', orgId }
+  if (area === 'automations') {
+    if (id === undefined) return { screen: 'automations', orgId }
     if (id === 'new' && rest.length === 0) {
-      return { screen: 'new-routine', orgId }
+      return { screen: 'new-automation', orgId }
     }
     if (id !== 'new' && rest.length === 0) {
-      return { screen: 'routine', orgId, routineId: id, tab: 'routine' }
+      return {
+        screen: 'automation',
+        orgId,
+        automationId: id,
+        tab: 'automation',
+      }
     }
     if (id !== 'new' && rest.length === 1 && rest[0] === 'runs') {
-      return { screen: 'routine', orgId, routineId: id, tab: 'runs' }
+      return { screen: 'automation', orgId, automationId: id, tab: 'runs' }
     }
   }
   return { screen: 'not-found' }

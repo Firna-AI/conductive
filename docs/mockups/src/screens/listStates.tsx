@@ -6,7 +6,7 @@ import { acmeRail, type RailState } from '../components/layout/OrgRail'
 import type { ListDrag, ListMenu } from '../components/workspaces/sections'
 import { orgList, orgListWithLabs, orgs, type Org } from '../fixtures/orgs'
 import { anotherOrg, newOrg } from '../fixtures/repositories'
-import { menuSection } from '../fixtures/sections'
+import { menuSection, sectionDrag } from '../fixtures/sections'
 import { workspaceDrag } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import type { NewOrg } from './listParts'
@@ -21,7 +21,8 @@ export function listMenu(menu: Open): ListMenu | undefined {
 }
 
 export function listDrag(menu: Open): ListDrag | undefined {
-  return menu === 'drag' ? workspaceDrag : undefined
+  if (menu === 'drag') return workspaceDrag
+  return menu === 'drag-section' ? sectionDrag : undefined
 }
 
 /**
@@ -33,7 +34,7 @@ export function listPalette(view: PaletteView, viewport: Viewport): ReactNode {
   if (view === 'closed') return null
   return (
     <CommandPalette
-      context={{ archivable: false }}
+      context={{ archivable: false, sidebar: viewport !== 'mobile' }}
       view={view}
       viewport={viewport}
     />

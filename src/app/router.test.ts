@@ -19,7 +19,7 @@ describe('routes', () => {
       [routes.home(), { screen: 'home' }],
       [
         routes.account('codex'),
-        { screen: 'account', tab: 'general', connect: 'codex' },
+        { screen: 'account', tab: 'agents', connect: 'codex' },
       ],
       ...ACCOUNT_TABS.map((tab): [string, Route] => [
         routes.accountTab(tab),
@@ -43,23 +43,26 @@ describe('routes', () => {
         routes.settings('acme', tab),
         { screen: 'settings', orgId: 'acme', tab },
       ]),
-      [routes.routines('acme'), { screen: 'routines', orgId: 'acme' }],
-      [routes.newRoutine('acme'), { screen: 'new-routine', orgId: 'acme' }],
+      [routes.automations('acme'), { screen: 'automations', orgId: 'acme' }],
       [
-        routes.routine('acme', 'review prs'),
+        routes.newAutomation('acme'),
+        { screen: 'new-automation', orgId: 'acme' },
+      ],
+      [
+        routes.automation('acme', 'review prs'),
         {
-          screen: 'routine',
+          screen: 'automation',
           orgId: 'acme',
-          routineId: 'review prs',
-          tab: 'routine',
+          automationId: 'review prs',
+          tab: 'automation',
         },
       ],
       [
-        routes.routine('acme', 'review prs', 'runs'),
+        routes.automation('acme', 'review prs', 'runs'),
         {
-          screen: 'routine',
+          screen: 'automation',
           orgId: 'acme',
-          routineId: 'review prs',
+          automationId: 'review prs',
           tab: 'runs',
         },
       ],
@@ -70,9 +73,16 @@ describe('routes', () => {
     expect(parse('/orgs/acme/settings/billing')).toEqual({
       screen: 'not-found',
     })
-    expect(parse('/orgs/acme/routines/review-prs/runs/older')).toEqual({
+    expect(parse('/orgs/acme/automations/review-prs/runs/older')).toEqual({
       screen: 'not-found',
     })
+  })
+
+  test('an older connect link on General opens the Agents tab with its form', () => {
+    expect([parse('/account?connect=claude'), parse('/account')]).toEqual([
+      { screen: 'account', tab: 'agents', connect: 'claude' },
+      { screen: 'account', tab: 'general', connect: null },
+    ])
   })
 
   test('a session address names its workspace and session, and a longer path stays a page of the workspace', () => {

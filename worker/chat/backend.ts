@@ -1,15 +1,15 @@
+import type { UserMessage } from '../../src/shared/generated/UserMessage'
+import type { RunnerFileCommand } from '../../src/shared/generated/RunnerFileCommand'
 import {
   type WorkspaceEvent,
   type WorkspaceEventEnvelope,
 } from './workspace-events'
-import type { UserMessage } from '../../src/shared/messages'
 import type {
   ToolSessionAccess,
   ToolSessionWrite,
   ToolSessionManagement,
 } from '../tools/services'
 import type { FirstWorkspaceMessage } from '../lifecycle/workspace-runtime'
-import type { RunnerFileCommand } from '../../src/shared/runner-files'
 import type { AppEnv } from '../env'
 import { WorkspaceTurnTokens } from '../model-gateway/workspace'
 import { chatDependencies } from './dependencies'
@@ -115,12 +115,7 @@ export class WorkspaceChat {
     this.binding = new ChatWorkspaceBinding(
       overrides.matchesObject ?? (() => true),
     )
-    this.dependencies = chatDependencies(
-      env,
-      () => this.binding.id,
-      overrides,
-      () => this.runner?.connections.current?.protocolVersion ?? null,
-    )
+    this.dependencies = chatDependencies(env, () => this.binding.id, overrides)
     this.store = createWorkspaceChatStore(
       storage,
       env,

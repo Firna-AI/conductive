@@ -65,7 +65,6 @@ The gateway HTTP fixture also configures `FakeModelUpstream` for an own endpoint
 It keeps the same request capture and response factories on that origin.
 `FakeModelUpstream` accepts an optional `GET` method for endpoint discovery tests.
 Its default stays `POST` for model requests.
-`native-chat-resolvers.ts` passes the connected runner version into login metadata checks.
 Each fake records requests without cloning or teeing their bodies.
 Its default reply reads the upload once and records its text in `bodies`.
 Set `response` to supply a fresh response after that read.
@@ -128,36 +127,22 @@ The harness reset clears factories.
 The runner boundary uses plain TypeScript types.
 Tests need no Cloudflare Durable Object or real WebSocket.
 
-[runnerHarness](../../runner/test-support/harness.ts) connects a `Runner` to `FakeDurableObjectEndpoint`.
 [connectFilesRunner](../files/test-support/runner.ts) connects `FakeRunner` to a backend handler.
+`FakeRunnerConnection` adapts the handler to the connector. Its constructor
+receives runner messages. Its `reply` method sends workspace messages.
 
-The runner implementation injects `endpoint.connect` as its `RunnerConnector`.
-A backend test uses `FakeRunner` with its own connector.
-`FakeRunnerConnection` adapts that backend's message handler into the connector.
-Its constructor receives runner messages. Its `reply` method sends workspace messages.
-
-`runner.commands` records turn, steer, interrupt, model, file read, and diff commands.
-`runner.emit` sends numbered events. `runner.reply` sends a file or diff result.
-`runner.pendingEvents` shows the unconfirmed outbox.
-Close a connection explicitly to test a drop. Reconnect the same runner to keep its outbox.
-Set `endpoint.confirmEvents = false` to retain unconfirmed events.
-`runner.sendEnvelope` can inject duplicates and gaps.
-The endpoint stores each event once and confirms only contiguous event numbers.
-It requests a resend when a number is missing.
-It joins valid runner file parts before it emits a complete browser file event.
-It preserves the current-branch commit count and the raw status count, and the absence of each in older reports.
-Pending parts stay on the endpoint across reconnects.
-Set `refuseEvent` to return `too_large`, `invalid`, or `turn_not_active`.
-The endpoint stores one workspace refusal marker and confirms that event number.
-An accepted event remains in `runnerEvents`. A refused event has only its marker.
-These fakes do not implement production byte checks, event validation, or turn state.
-File read and diff results go to `endpoint.fileResponses`, outside chat history.
+`runner.commands` records turns, messages, interrupts, model changes, file
+reads, and diffs. `runner.emit` sends numbered events. `runner.reply` sends
+file replies. Reconnect the same fake runner to keep its outbox.
+`runner.sendEnvelope` injects duplicates and gaps. Tests of the production
+workspace object check validation, ordering, storage, replay, and masking.
+Rust tests own the runner's transport, saved state, and report assembly.
 
 Use [recorded file events and replies](../../src/test-support/recorded-files.ts)
 for the runner's file reports.
 `recordedRunnerFileEvents` has four complete reports, with full reports as part 1 of 1.
 It keeps the current file tests' order and ends the tree at revision 2.
-`recordedMultipartRunnerFileEvents` has eight events for the fake endpoint and future part joining.
+`recordedMultipartRunnerFileEvents` has eight events for multipart assembly checks.
 It includes two-part trees and changes and consecutive tree deltas at revisions 2 and 3.
 Both samples include file creation, a rename, a removal, and dirty branch work.
 Read replies also cover file content, a diff, and a size error.
@@ -199,13 +184,13 @@ A callback counts as complete only after the `waitUntil` work that it starts end
 - [app-access.ts](app-access.ts) grants fixture access for users created directly in D1.
 - `native-global-setup.ts` builds and provides the current native bundle, the split migrations, the migrated template, and the bundle folder before tests and watch reruns.
 - `native-chat-record-controls.ts` reads history and file projections inside the native object and calls its real chat writer.
-- `native-attachment-controls.ts` runs streaming attachment storage and reads real R2 byte samples inside the runtime.
+- `attachment-upload.ts` prepares attachment fixtures through the production multipart start and complete operations with Node-compatible R2 part writes.
 - `migrations.ts` splits the migrations and applies them for a harness without the template.
 - [migrated-storage.ts](migrated-storage.ts) builds the migrated template database and copies it into the storage folder of a new runtime.
 - [test-bundles.ts](test-bundles.ts) builds every test Worker bundle with one Vite configuration and saves it for the run. Its `buildWorkerLibrary` also builds the native bundle.
 - `fake-boat.ts` supplies provider replies, fresh streaming response factories, and added organizations with their own keys.
 - `fake-github.ts` supplies sign-in replies and an empty installation list for an account without the GitHub App.
-- Its `accounts` map supplies GitHub user lookups for routine author filters, with 404 for an unknown login.
+- Its `accounts` map supplies GitHub user lookups for automation author filters, with 404 for an unknown login.
 - `fake-anthropic.ts` supplies the Messages and token-count upstream.
 - `fake-openai.ts` supplies the Responses upstream.
 - `fake-model-upstream.ts` records model requests and supplies fresh response factories.
@@ -215,6 +200,7 @@ A callback counts as complete only after the `waitUntil` work that it starts end
 - `fake-runner-files.ts` joins valid file report parts for the endpoint.
 - `runner-connection.ts` supplies the in-memory socket.
 - `process-environment.ts` builds an isolated environment for a Node child process in a test.
+- [attachment-command.ts](attachment-command.ts) fakes detached attachment commands and their status replies. It reads the generated destination and bearer token, calls an injected download route, and records exact copied bytes.
 - `attachments.ts`: `fakeAttachments(ids)`, the attachment metadata of the lifecycle fixtures. Each file gets the `path` of the shared builder in `src/shared/attachment-paths.ts`, as an upload reply and an admitted message give it.
 
 See [the browser fakes](../../src/test-support/README.md),

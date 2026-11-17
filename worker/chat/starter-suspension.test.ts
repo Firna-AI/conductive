@@ -8,6 +8,7 @@ import {
 } from '../test-support/harness'
 import { CLAUDE, createChatFixture, WORKSPACE_ID } from './harness.test-support'
 import { captureLoginQueries } from './login-queries.test-support'
+import { expectGatewayLogin } from './runner-credential.test-support'
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -69,8 +70,12 @@ it('keeps suspended starter metadata and history readable and sends an active me
     type: 'turn',
     sessionId: linked.session.id,
     message: { sender: { id: fixture.owner.id } },
-    login: { secret: `secret-${fixture.owner.id}-claude` },
   })
+  await expectGatewayLogin(
+    fixture,
+    runner.commands[0],
+    `secret-${fixture.owner.id}-claude`,
+  )
   expect(JSON.stringify(tab.messages)).not.toContain('secret-')
   await tab.close()
   runner.disconnect()
@@ -119,7 +124,11 @@ it('refuses a queued suspended sender while the active starter and owner retain 
   expect(runner.commands).toHaveLength(1)
   expect(runner.commands[0]).toMatchObject({
     message: { sender: { id: fixture.owner.id } },
-    login: { secret: `secret-${fixture.owner.id}-claude` },
   })
+  await expectGatewayLogin(
+    fixture,
+    runner.commands[0],
+    `secret-${fixture.owner.id}-claude`,
+  )
   runner.disconnect()
 })

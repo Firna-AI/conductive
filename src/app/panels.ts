@@ -44,11 +44,12 @@ function readWidth(storage: KeyValueStorage | null, panel: Panel) {
 /**
  * The layout of the panels that the user chooses: the widths of the
  * sidebar and the right column, the split of the right column between the
- * file lists and the tools, and whether the right column shows. The
- * browser keeps the widths and the split, as the only state that does not
- * come from the Worker. When the browser refuses its storage, they last
- * until the page closes. Whether the right column shows always lasts until
- * the page closes.
+ * file lists and the tools, and whether the sidebar and the right column
+ * show. The
+ * browser keeps the widths and the split, as it keeps the last workspaces
+ * of `last-workspaces.ts`. When the browser refuses its storage, they last
+ * until the page closes. Whether the sidebar and the right column show
+ * always lasts until the page closes.
  */
 export class PanelLayout {
   readonly widths: Store<PanelState>
@@ -57,6 +58,11 @@ export class PanelLayout {
    * hides it and shows it again, for every workspace of the tab.
    */
   readonly rightShown = new Store(true)
+  /**
+   * The sidebar of the org shows. Its toggle hides it and shows it again,
+   * in the browser and in the Mac app.
+   */
+  readonly sidebarShown = new Store(true)
   /** The split of the right column between the file lists and the tools. */
   readonly split: ColumnSplit
   private readonly storage: KeyValueStorage | null
@@ -73,6 +79,11 @@ export class PanelLayout {
   /** The width now: the user's, or the default of the panel. */
   width(panel: Panel): number {
     return this.widths.get()[panel] ?? panelRanges[panel].value
+  }
+
+  /** Hides the sidebar, or shows it again. */
+  toggleSidebar = (): void => {
+    this.sidebarShown.change((shown) => !shown)
   }
 
   /** Hides the right column, or shows it again. */

@@ -2,8 +2,8 @@
 
 The marketing site is the public site at the root of the product domain,
 `conductive.build`. It has the home page, the public docs, the Terms page,
-and the Privacy page. It also has the Conductor comparison page,
-[the pricing page](pricing-page.md), and a page for an unknown address.
+and the Privacy page. It also has [the pricing page](pricing-page.md) and
+a page for an unknown address.
 Visitors need no sign-in. The pages run no
 script and set no cookie. Every sign-in link leads to the app, on the
 `app.` host.
@@ -46,11 +46,9 @@ The marketing mockups are the visual spec:
 [`LegalScreen.tsx`](../../docs/mockups/src/screens/LegalScreen.tsx),
 [`NotFoundScreen.tsx`](../../docs/mockups/src/screens/NotFoundScreen.tsx),
 [`DocsScreen.tsx`](../../docs/mockups/src/screens/DocsScreen.tsx),
-[`FromConductorScreen.tsx`](../../docs/mockups/src/screens/FromConductorScreen.tsx),
 [`PricingScreen.tsx`](../../docs/mockups/src/screens/PricingScreen.tsx),
 and the parts in
-[`components/marketing/`](../../docs/mockups/src/components/marketing/),
-[`components/parity/`](../../docs/mockups/src/components/parity/), and
+[`components/marketing/`](../../docs/mockups/src/components/marketing/) and
 [`components/pricing/`](../../docs/mockups/src/components/pricing/).
 The [brand folder](../../docs/brand/README.md) gives the logo files. The
 site uses the lockups and favicons from that folder unchanged. The header
@@ -173,19 +171,6 @@ change, update each guide sentence that restates the fact. A search for
 the old words is not enough, because a guide can restate a fact in other
 words. This rule is separate from the rule for the legal pages above, and
 both apply.
-
-## The comparison page
-
-The page at `/from-conductor` shows people who move from Conductor the
-status in Conductive of each Conductor feature, local and cloud.
-[Conductor comparison](../../docs/protocol/conductor-comparison.md)
-states its requirements. The link above the home headline and the "From
-Conductor" link in the Product column of the footer lead to it. Its last
-call to action has the sentence and the two actions of the home page.
-
-[The comparison page](comparison.md) gives the one source of its rows, the
-steps to change a row and keep it true, and its key code.
-[AGENTS.md](../../AGENTS.md) says when a change must update a row.
 
 ## Development
 

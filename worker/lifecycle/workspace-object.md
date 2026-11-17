@@ -130,6 +130,9 @@ create and resume. The workspace object runs that start:
 
 - A create or a resume queues its start with `queueLifecycleStart`. The
   workspace object runs the start, so a closed browser does not cancel it.
+- The queue sets the start alarm to the current time, so the first step
+  runs at once. A create answers only after its first step, the
+  `records` phase, so a later alarm would delay each create.
 - A create waits only for its admission, with `waitCreationAdmission`.
   Admission makes the workspace, its token, and the first message durable.
   The sandbox can still be starting. `waitCreationLifecycle` waits for the
@@ -183,12 +186,23 @@ create and resume. The workspace object runs that start:
 - When the runner disconnects during these final checks, the start job
   stays in its runner phase. The start then completes after a later
   readiness report.
+- When the chat backend refuses a runner below the supported protocol
+  version, a start in its runner phase fails at once through the existing
+  failure path of a start, with the cause of the refused turns, as
+  [Runner versions](../../docs/protocol/version-pins.md#runner-versions)
+  says. A refusal of a higher version leaves the start waiting.
 - While a start job exists, the start keeps its own due time, and the
   lifecycle state keeps none. After the start ends, the alarm run sets the
   lifecycle due time from the saved state.
 - The progress phases of a start are `records`, `machine`, `ready`,
   `fetch`, `branch`, `startup`, `terminal`, `terminal-password`, and
-  `runner`, up to the success of the start. They make most of their D1 and
+  `runner`, up to the success of the start. Each command phase after
+  `fetch` first calls `settleWorkspaceBranch` in
+  [`workspace-branch.ts`](workspace-branch.ts). While the branch is a
+  placeholder, one D1 statement ends the placeholder and reads the branch
+  for the command. Later phases and resumes write nothing there. Before
+  that, a name write renames a placeholder branch with `namedBranchSql`.
+  They make most of their D1 and
   Boat calls outside the chat queue. The start guard in
   [`start-guard.ts`](start-guard.ts) runs each group of these calls with
   `outside`, as [History and event order](../chat/history.md) says. So

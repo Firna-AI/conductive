@@ -2,14 +2,17 @@
 
 This page belongs to [GitHub banner](github-banner.md).
 
-- The GitHub state of a workspace is one value for the pull request of its
-  branch: checks failed, checks running, checks passed, or merged.
-- The merge wins over the checks. A failure wins over a check that runs.
-  Checks passed means that each check counts as passed.
-- A merge conflict, changes requested, a draft, and a block do not change
-  the GitHub state. Reason: the user named only the checks and the merge.
-- No GitHub state applies while the branch has no pull request, or while
-  its open pull request has no check.
+- The GitHub state of a workspace is the state of the pull request bar of
+  its branch, as [Banner states](github-banner.md#banner-states) lists
+  them: checks running, checks failed, ready to merge, merged, merge
+  conflict, changes requested, draft, or blocked.
+- Reason: the list mark and the bar of one workspace must never disagree.
+  Cal chose this on 13 November 2026.
+- A GitHub state of its own, with only the checks and the merge, was
+  rejected. With it, a merge conflict, changes requested, a draft, or a
+  block left the mark in the colour of the checks, such as green beside a
+  bar with a merge conflict.
+- No GitHub state applies while the branch has no pull request.
 - A pull request closed without a merge has no GitHub state either. A red
   list mark for it, as GitHub draws a closed pull request, was rejected,
   because red means a failed check in the list. The state of its checks

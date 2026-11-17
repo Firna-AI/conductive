@@ -11,7 +11,6 @@ The [agent runner](README.md) reads these variables when the service starts.
 | `CONDUCTIVE_REPOSITORY_<FOLDER>_DIR` | No       | The folder of each repository of the image, with one variable each.   |
 | `CONDUCTIVE_DEFAULT_BRANCH`          | Yes      | The workspace base branch, as a name that Git resolves in that folder.       |
 | `CONDUCTIVE_WORKSPACE_BRANCH`        | No       | The workspace branch that the app tracks, from the Worker's record.   |
-| `CONDUCTIVE_SKILLS_REPOSITORY`       | No       | The public GitHub repository of the org's skills, as `owner/name`.    |
 | `CONDUCTIVE_HOME`                    | No       | The home folder of the agents. The default is the home of the user.   |
 | `CONDUCTIVE_STATE_PATH`              | No       | The state file. The default is `.conductive/runner-state.json` there. |
 
@@ -49,24 +48,6 @@ The [agent runner](README.md) reads these variables when the service starts.
   error:
   `The workspace branch is unavailable. Agent instructions will omit it.`
   The agent instructions then name no workspace branch.
-- `CONDUCTIVE_SKILLS_REPOSITORY` names the skills repository of the org,
-  as [Org skills](../docs/protocol/org-skills.md) says. The Worker gives it
-  at create and at each resume. So a changed setting reaches the runner at
-  its next start.
-- At its start, the runner copies that repository from GitHub, or fetches
-  the new commits of its last copy. Then it checks for new commits every
-  5 minutes. No turn waits for a copy or a check. Git runs with no
-  credential helper and no prompt, as
-  [The skills repository](../docs/protocol/github-tokens.md#the-skills-repository)
-  says.
-- A failed copy or check keeps the last good copy, and the runner writes a
-  warning to standard error. When the variable is missing or empty, the
-  runner deletes its copy at the start. When the variable names another
-  repository, the runner deletes the old copy before it copies the new
-  one.
-- The runner gives the skill folders of the copy to Claude and to Codex.
-  [What loads](../docs/protocol/org-skills.md#what-loads) gives the
-  folders that load.
 - The agent instructions name the folder of `CONDUCTIVE_REPOSITORY`, each
   folder variable with its folder in name order, and the two branches. A
   saved session keeps its saved text. So a changed value reaches only new
@@ -74,9 +55,6 @@ The [agent runner](README.md) reads these variables when the service starts.
 - The home folder also holds `.conductive/claude` and `.conductive/codex`,
   where the agents keep their sessions. Boat keeps the disk across a stop
   and a resume, so the sessions stay.
-- The home folder also holds `.conductive/skills`, the copy of the skills
-  repository, outside every repository folder. The copy stays across a stop
-  and a resume too.
 - The state file belongs to one workspace. Keep it out of the org image.
 - After a failed or dropped connection, the runner connects again in 1 second.
 

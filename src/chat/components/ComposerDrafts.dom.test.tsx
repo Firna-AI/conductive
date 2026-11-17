@@ -60,7 +60,12 @@ async function mountComposer() {
     return (
       <Composer
         blocked={false}
-        choice={{ agent: 'claude', model: 'Opus 5.5', effort: 'high' }}
+        choice={{
+          agent: 'claude',
+          model: 'Opus 5.5',
+          effort: 'high',
+          fast: false,
+        }}
         draft={shown.draft}
         files={noFiles}
         models={[]}

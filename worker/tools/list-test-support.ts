@@ -1,4 +1,4 @@
-import type { AgentModel } from '../../src/shared/agents'
+import type { AgentModel } from '../../src/shared/generated/AgentModel'
 import { SOFTWARE } from '../lifecycle/backend-test-support'
 import { seedPublishedImage } from '../lifecycle/published-image-test-support'
 import type { SelectedRepository } from '../lifecycle/settings-data'
@@ -10,8 +10,15 @@ export const TOOL_MODELS: readonly AgentModel[] = [
     model: 'model-z',
     label: 'Model Z',
     efforts: ['high', 'low'],
+    fast: false,
   },
-  { agent: 'claude', model: 'model-a', label: 'Model A', efforts: ['max'] },
+  {
+    agent: 'claude',
+    model: 'model-a',
+    label: 'Model A',
+    efforts: ['max'],
+    fast: false,
+  },
 ]
 
 export async function publishToolImage(

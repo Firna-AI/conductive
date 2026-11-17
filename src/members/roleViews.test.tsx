@@ -1,3 +1,4 @@
+import type { Workspace } from '../shared/generated/Workspace'
 import { routes } from '../app/router'
 import { FAKE_ORIGIN } from '../test-support/fixtures/core'
 import type { ReactElement } from 'react'
@@ -5,7 +6,7 @@ import { describe, expect, it } from 'vitest'
 import type { User } from '../shared/api'
 import type { OrgInvite, OrgMember } from '../shared/members'
 import type { OrgSummary } from '../shared/orgs'
-import type { Workspace } from '../shared/workspaces'
+
 import { FakeApiServer } from '../test-support/fake-api'
 import { createMembersApi } from './api/client'
 import { DeletedOrgPage } from './DeletedOrgPage'
@@ -57,7 +58,7 @@ const workspace: Workspace = {
   owner: cal,
   name: 'Checkout address autocomplete',
   branch: 'calummoore/checkout',
-  choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high' },
+  choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high', fast: false },
   state: 'ready',
   createdAt: 0,
   updatedAt: 0,

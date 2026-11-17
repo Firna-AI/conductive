@@ -4,18 +4,21 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from 'react'
+import type { FileEntry } from '../../../shared/generated/FileEntry'
 import { useNavigation } from '../../../app/navigation'
 import { routes } from '../../../app/router'
 import type { RenderTab, TabDraw } from '../../../chat/components/tab-row'
 import type { ChatMentions } from '../../../chat/mentions/MentionsContext'
-import { tabLabel } from '../../../files/model/file-labels'
+import { tabHidesSecret, tabLabel } from '../../../files/model/file-labels'
 import type { WorkspaceFiles } from '../../../files/model/files-store'
+import { scrollTabKey } from '../../../files/ui/kept-scroll'
+import { useFollowTabs } from '../../../app/tab-places'
 import type {
   FilesNavigation,
   FilesTab,
   FilesTarget,
 } from '../../../files/navigation'
-import type { FileEntry } from '../../../shared/files'
+import type { LineRange } from '../../../shared/line-target'
 import { PanelContext } from '../../layout/panels'
 import {
   FileTabItem,
@@ -26,9 +29,15 @@ import type { WorkspaceTab } from '../../../shared/workspace-view'
 import { useShortcutOffer } from '../../shortcuts/shortcut-context'
 import type { WorkspaceContext } from '../features'
 import { useSavedView } from '../saved-view'
+import { useCopyPath } from './copy-path'
 import { filesPlace, tabOf } from './files-address'
 import { useFilesNavigation, useLeaveForSession } from './files-navigation'
-import { filesTabsOf, sameFilesTab, withoutTab } from './view-tabs'
+import {
+  filesTabsOf,
+  isTemporaryTab,
+  sameFilesTab,
+  withoutTab,
+} from './view-tabs'
 import { useKeptFilesWhile } from './workspace-files'
 
 /** The subscription while the row shows no file tabs: to nothing. */
@@ -59,10 +68,11 @@ function useTabLabels(
 
 /**
  * A file or diff tab of the saved view, at the place in the tab row that
- * the chat gives it, with the label of its path. Close of the shown tab
- * shows the next file tab, else the one before, else the chat with its
- * session. While the tab shows, the key of Close tab closes it, as its
- * Close does.
+ * the chat gives it, with the label of its path, and in italics when the
+ * view marks it as the temporary tab. Close of the shown tab shows the next
+ * file tab, else the one before, else the chat with its session. A close of
+ * the temporary tab clears the mark. While the tab shows, the key of Close
+ * tab closes it, as its Close does.
  */
 function FileTab(props: {
   context: WorkspaceContext
@@ -70,6 +80,7 @@ function FileTab(props: {
   shown: FilesTab | null
   tab: FilesTab
   label: string | null
+  temporary: boolean
   draw: Extract<TabDraw, { kind: 'row' }>
 }) {
   const { context, navigation, shown, tab } = props
@@ -108,6 +119,7 @@ function FileTab(props: {
       onClose={close}
       selected={isShown(tab)}
       tab={tab}
+      temporary={props.temporary}
     />
   )
 }
@@ -119,11 +131,15 @@ export interface ChatFiles {
   mentions?: ChatMentions
 }
 
-/** The page of a chip: the file, or All files for a folder. */
-function chipTarget(entry: FileEntry): FilesTarget {
+/**
+ * The page of a chip: the file, or All files for a folder. A file with
+ * lines opens as text, also a Markdown file, because only the text has
+ * line numbers.
+ */
+function chipTarget(entry: FileEntry, lines?: LineRange): FilesTarget {
   return entry.kind === 'directory'
     ? { kind: 'list', list: 'all' }
-    : { kind: 'file', path: entry.path, mode: 'preview' }
+    : { kind: 'file', path: entry.path, mode: lines ? 'source' : 'preview' }
 }
 
 /**
@@ -142,14 +158,17 @@ function useMentions(
     if (!files) return undefined
     return {
       files,
-      openFile: (path) =>
-        navigation.navigate({ kind: 'file', path, mode: 'preview' }),
+      openFile: (path, lines) =>
+        navigation.navigate(
+          { kind: 'file', path, mode: lines ? 'source' : 'preview' },
+          lines,
+        ),
       showFolder: (path) => {
         files.revealFolder(path)
         if (!phone) panels?.rightShown.set(true)
         navigation.navigate({ kind: 'list', list: 'all' })
       },
-      href: (entry) => navigation.href(chipTarget(entry)),
+      href: (entry, lines) => navigation.href(chipTarget(entry, lines), lines),
     }
   }, [files, navigation, panels, phone])
 }
@@ -159,32 +178,47 @@ function useMentions(
  * their places in the tab row, with the copy that a drag lifts, and the
  * diff that a file of a finished turn opens. Each tab takes the label of
  * its path from the kept files, for its title and its drawing, so each name
- * of the tab hides each secret value. When the chat makes a session active
- * while `content` shows a file, the address goes back to the chat. The
- * chat reads the kept files for the list of `@` and the file chips, also
- * on a phone before a visit to Files: `KeptFilesConnection` of the screen
- * keeps them connected. An archived workspace has no files.
+ * of the tab hides each secret value. The temporary tab of the saved view
+ * draws its title in italics, also on the lifted copy, and its title for
+ * the row stays the name alone. Keep open of its tab menu keeps it, as a
+ * double-click on it does. Copy path of the tab menu of each tab copies the
+ * real path of its file, also in a read-only workspace, unless the label of
+ * the tab hides a secret value or is not known yet. When the chat makes a
+ * session active while `content` shows a file, the address goes back to the
+ * chat. The chat reads the kept files for the list of `@` and the file
+ * chips, also on a phone before a visit to Files: `KeptFilesConnection` of
+ * the screen keeps them connected. A file or diff tab that leaves the saved
+ * view, such as one that the user closed, forgets its kept scroll offset.
+ * An archived workspace has no files.
  */
 export function useChatFiles(
   context: WorkspaceContext,
   content: ReactNode,
 ): ChatFiles {
   const navigation = useFilesNavigation(context)
+  const view = useSavedView(context.savedView)
   const shown = content === null ? null : tabOf(filesPlace(context.view))
   useLeaveForSession(context, shown !== null)
   const archived = context.sandbox === 'archived'
   const tabs = !archived && context.viewport !== 'phone'
   const labelOf = useTabLabels(context, tabs)
   const files = useKeptFilesWhile(context, !archived)
+  useFollowTabs(
+    files?.scrollPlaces ?? null,
+    view ? filesTabsOf(view).map(scrollTabKey) : null,
+  )
   const mentions = useMentions(context, files, navigation)
+  const copyPath = useCopyPath(context.org.id)
   if (archived) return {}
   const renderTab: RenderTab = (tab) => {
     const label = labelOf(tab)
+    const temporary = isTemporaryTab(view, tab)
+    const hides = tabHidesSecret(tab.path, label)
     return {
       title: fileTabName(tab, label),
       draw: (draw) =>
         draw.kind === 'lifted' ? (
-          <LiftedFileTab label={label} tab={tab} />
+          <LiftedFileTab label={label} tab={tab} temporary={temporary} />
         ) : (
           <FileTab
             context={context}
@@ -193,9 +227,12 @@ export function useChatFiles(
             navigation={navigation}
             shown={shown}
             tab={tab}
+            temporary={temporary}
           />
         ),
       show: () => navigation.navigate(tab),
+      keep: temporary ? () => navigation.keep(tab) : null,
+      copyPath: hides ? null : () => copyPath(tab.path),
     }
   }
   return {

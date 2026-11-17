@@ -41,7 +41,7 @@ it('offers Create PR for a branch with commits or local work, and no link to Git
     renderBar(branchFeed('none')),
     renderBar(branchFeed('none'), noWrite),
     renderBar(branchFeed('no-commits')),
-    renderBar(branchFeed('no-commits'), { localWork: 'yes' }),
+    renderBar(branchFeed('no-commits'), { localWork: 'changes' }),
   ]
 
   expect(

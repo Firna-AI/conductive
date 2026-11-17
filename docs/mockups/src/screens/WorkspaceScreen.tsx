@@ -27,7 +27,7 @@ import { bannerSummary } from '../fixtures/pullRequests'
 import type { ShortcutChanges } from '../fixtures/shortcutChanges'
 import { suspendedOwner } from '../fixtures/startRefusals'
 import { paths } from '../paths'
-import { composerFor } from './composerFor'
+import { composerFor, isRunning } from './composerFor'
 import { composerNotice } from './composerNotice'
 import { placeLostUpdate } from './lostUpdates'
 import { changedWorkspaces, chatWorkspacesOf } from './orgWorkspaces'
@@ -35,14 +35,14 @@ import { viewerOf } from './sessionStarter'
 import { barOf, branchOf } from './workspaceBar'
 import {
   FilesContent,
-  filesPlaceholder,
+  filePlaceholder,
   openFile,
   startingLogFor,
   ToolContent,
   workspaceSidebar,
 } from './workspaceParts'
 import {
-  transcriptToast,
+  copyToast,
   workspaceOverlay,
   workspacePalette,
   workspaceToast,
@@ -151,18 +151,20 @@ export function WorkspaceScreen(props: {
     <WorkspaceHeader
       back={suspended ? paths.suspendedOrg : undefined}
       canReassign={admin && !readOnly}
+      canRestart={!readOnly}
       copy={state.copyLink === 'none' ? undefined : state.copyLink}
       name={workspace.name}
       ownerOpen={state.overlay === 'reassign'}
       run={open.run}
       rightHidden={rightHidden}
+      stateOpen={state.overlay === 'restart'}
       status={status}
       viewport={viewport}
       workspace={workspace}
     />
   )
   // A phone and an archived workspace show only the session tabs.
-  const tabs = tabsFor(state, workspace).filter(
+  const tabs = tabsFor(state, workspace, isRunning(state)).filter(
     (tab) => tab.kind === 'session' || (!archived && viewport === 'desktop'),
   )
   const row = tabRowOf(state, tabs, viewport, readOnly)
@@ -174,7 +176,7 @@ export function WorkspaceScreen(props: {
           menuTab: row.menuTab,
           readOnly,
         })}
-      {transcriptToast(state, viewport)}
+      {copyToast(state, viewport)}
     </ChatWorkspaces>
   )
   const tabRow = (
@@ -208,6 +210,7 @@ export function WorkspaceScreen(props: {
     archivable,
     restorable,
     rightColumn: !rightHidden,
+    sidebar: true,
     mac: mac !== undefined,
     shortcuts: props.shortcuts,
   })
@@ -256,6 +259,7 @@ export function WorkspaceScreen(props: {
         suspended: suspended ? suspendedOrg : undefined,
         person: admin ? undefined : people[memberViewer],
       }}
+      sidebarView={state.sidebar}
       sidebar={workspaceSidebar({
         // The toast of an Archive shows at once, so the row shows that Archive.
         workspace:
@@ -273,7 +277,7 @@ export function WorkspaceScreen(props: {
       <WorkspaceBody
         center={
           file ? (
-            <FilePage placeholder={filesPlaceholder(state, true)} view={file} />
+            <FilePage placeholder={filePlaceholder(state, true)} view={file} />
           ) : (
             chat
           )

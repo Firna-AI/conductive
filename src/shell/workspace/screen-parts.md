@@ -22,9 +22,9 @@ says.
 - Connect, on the notice of a missing agent login, opens the Connect form
   of the account.
 - A plain click on a workspace row of the sidebar puts a request in
-  `AppModel.composerFocus`. `ChatArea` gives the request of its workspace
-  to the chat as `composerFocus`, so the message field takes the focus
-  when it shows, as
+  `AppModel.composerFocus`, and so does Add to chat of the Files panel on
+  desktop. `ChatArea` gives the request of its workspace to the chat as
+  `composerFocus`, so the message field takes the focus when it shows, as
   [Chat integration](../../chat/integration.md) says. A phone gets no
   request, so no keyboard opens on its own.
 - On desktop, the chat shows the file and diff tabs of the saved view
@@ -33,12 +33,15 @@ says.
   [the chat](../../chat/README.md#rules-for-this-code) says. The file or
   diff tab of the address shows in place of the chat of the session, and
   the tabs stay. No session tab is the current one then, and the row keeps
-  the tab of the address in view.
+  the tab of the address in view. The temporary tab of the saved view shows
+  its title in italics, and a screen reader hears "temporary" after its
+  name.
 - A click on a session tab, a new session, or a reopened session makes
   that session the active tab of the view. The address then goes back to
   the chat.
 - Close on a file tab takes it out of the view. When it shows, the next
-  file tab shows, else the one before, else the chat.
+  file tab shows, else the one before, else the chat. Close on the
+  temporary tab also clears its mark.
 - A file of a finished turn opens its diff tab. A phone shows it in the
   Files tab.
 - The chat gets the kept files of the workspace as `mentions`, for the
@@ -50,6 +53,19 @@ says.
   shows the right column on desktop, or the Files tab on a phone.
 - An archived workspace shows no file tabs and no file page, and its chat
   gets no files.
+- The screen gives each of its parts one link opener, `WorkspaceLinks` of
+  `link-opening.tsx`, through `LinkOpeningProvider` of
+  `../ui/text-links.tsx`. So the links of chat text open as
+  [Chat links](../../../docs/protocol/chat-links.md) says, and the links
+  of the file preview, also in the Files tab of a phone, as
+  [Files and changes](../../../docs/protocol/workspace-tools.md#files-and-changes)
+  says. A link of the app opens its page in the same window, as an
+  `AppLink` does, so a press on a link to the address that shows replaces
+  that address. A local address of chat text opens the address of the
+  Preview tool with its port, from `previewPortHref`. On desktop the right
+  column then shows, as for a folder chip, and a phone shows the Preview
+  tab. A read-only workspace gives no port previews, so a local address of
+  chat text stays text there. A local address of a file opens a new tab.
 - A `center` part of the host takes the place of the whole chat, also of
   its tabs.
 - When the features give the `tabs`, `transcript`, or `composer` slot, the
@@ -80,19 +96,64 @@ Each folder of a path is a part of the address. Another address under
 - The kept chat loads and saves the workspace view. The shell reads the
   tabs and the list from the chat, and changes them only through the
   chat's `updateView`, so the view has one writer. A read-only workspace
-  changes its view in the browser only, and saves nothing.
+  changes its view in the browser only, and saves nothing. Its temporary
+  tab follows the same rules in that copy, also a keep.
 - While the chat has not read the view, as during its load or after a
   failed load, the shell saves nothing, so the saved tabs stay. The file
   page still reads its file.
 - A click on a file or a diff saves its tab as the open and active tab,
   then moves the address. A page that shows from an address, such as a
   link or the browser history, saves its tab too.
+- A file or a diff with no tab opens in the temporary tab, as
+  [Temporary tabs](../../../docs/protocol/temporary-tabs.md) says. It takes
+  the place of the tab that the mark of the saved view names. Without that
+  tab, it opens at the end of the row. The mark then names it. A file or a
+  diff that has a tab shows that tab, and the mark stays. After a click,
+  the address finds the tab open, so it saves nothing more.
+- A double-click on a file row of All files or Changes, or on the
+  temporary tab, clears the mark. The tab then stays in its place as a kept
+  tab. The second click of the double-click opens nothing again, and the
+  double-click selects no text. A switch between the preview and the
+  source keeps the mark, because the mark names no mode. While the chat has
+  not read the view, a double-click keeps nothing, as no click saves then.
+- Keep open in the tab menu of the temporary tab clears the mark in the
+  same way: the shell gives only that tab a `keep` for the chat. A move of
+  the temporary tab to another place in the row clears the mark too, in
+  the chat's save of the new order.
+- The row menu of each row of All files and Changes holds Add to chat,
+  a line, and Copy path, as
+  [File row menu](../../../docs/protocol/file-row-menu.md) says. The shell
+  gives them to the Files panel as its `rowMenu`, and gives each file and
+  diff tab a `copyPath` for Copy path of its tab menu. Both Copy path
+  items copy the real path with the clipboard of the org, so the Mac app
+  copies too, and a toast says the result. A copy sends no request and
+  starts no sandbox, so it also works from the lists that a stopped
+  sandbox keeps. A tab whose label hides a secret value, or is not known
+  yet, gets no `copyPath`.
+- Add to chat gives the file or the folder of its row to `addToChat` of
+  the kept chat, which puts its chip into the message field of the
+  session that the member saw last, or of a new session, as
+  [Add to chat](../../chat/loads-and-sends.md#add-to-chat) says. On
+  desktop, the chat leaves a file or diff tab for that session, as for a
+  click on a session tab, and the field takes the focus through the focus
+  request of the app. The row menu gives the focus back to the row before
+  the item runs, so that request names the row. A phone switches to the
+  chat, with no focus request.
+- Add to chat shows only on a row whose entry the list of `@` offers, so a
+  deleted file of Changes has none. It shows only after the chat loads,
+  and not while a bar of the sandbox takes the place of the composer, as
+  `barReplacesComposer` of `sandbox-view.ts` says. So the lists that a
+  stopped sandbox keeps offer Copy path only. The items follow each
+  change of these states, also in a menu that is open.
 - A click on a list saves the list. On desktop the list belongs to the
   right column, so the address keeps the tab of the centre. On a phone a
   list is a page with its own address. An address that names a list saves
   that list.
 - On a phone, a file or a diff shows as a page of the Files tab, with a
-  link back to All files or Changes.
+  link back to All files or Changes. A press there opens the temporary tab
+  of the saved view too, though the row of a phone shows no file tabs.
+- The links of the file preview open through the one link opener of the
+  screen, as [The chat of the workspace](#the-chat-of-the-workspace) says.
 - The lists show while the sandbox is stopped or failed, from the copy
   that the workspace keeps. While the sandbox starts, and while the app
   refuses its start, the sandbox panel shows in place of All files and
@@ -152,10 +213,18 @@ tools.
 | ------- | ---------- |
 | `terminal` | The Terminal tool |
 | `preview`, `preview/<previewId>` | The Preview tool, with that preview |
+| `preview/port/<port>` | The Preview tool, which shows or opens the preview of that port |
 | `desktop` | The Terminal tool, because Desktop is hidden |
 
 - An address that names a tool shows it and saves it as `tool` of the
   view. Without one, the saved view names the tool.
+- `previewPortHref` gives the address of a port. Its port is a whole
+  number from 1 to 65535, with no leading zero. Another value shows the
+  Preview tool with no preview and no port.
+- The Preview tool shows or opens the preview of the port of the address,
+  as [the previews](../../previews/README.md#behaviour) say. Then the
+  address of that preview takes the place of the address of the port, with
+  no new history entry. After a failed open, `preview` takes its place.
 - The `desktop` address and a saved `desktop` tool show Terminal. Neither
   mounts Desktop or saves Terminal in place of the saved tool. The view
   keeps `desktop` as a valid tool.
@@ -164,6 +233,17 @@ tools.
   and the address keeps the tab of the centre. Only a tool address follows
   the new tool. A preview tab changes the address only from a preview
   address, and otherwise picks the preview in the panel.
+- On desktop, a choice of Terminal moves the keyboard focus to the
+  terminal, as
+  [Terminal](../../../docs/protocol/workspace-tools.md#terminal) says. The
+  `select` of `useToolSelect` runs for a click on its tab and for Go to
+  Terminal of the palette or its key. It asks `terminalFocus` of the
+  workspace context, a `TerminalFocus` that each workspace screen keeps.
+  The request holds the element with the focus at the choice. A choice of
+  another tool drops it. The tools part passes it to the `focusRequest` of
+  `TerminalTool`, only while Terminal shows, and clears it once the
+  terminal took it. A phone asks for no focus, because its keyboard would
+  cover the page.
 - On a phone each tool that the app offers is a page of the tab bar, with
   its own address.
 - The terminal and Preview each mount at their first show, then stay
@@ -180,6 +260,11 @@ tools.
   as Ctrl+K on Windows and Linux, as
   [Where a key goes](../../../docs/protocol/keyboard-shortcuts.md#where-a-key-goes)
   says. The buttons of the tool, such as Reconnect, keep no key.
+- The tools part gives the terminal its links, from `useTerminalLinks` of
+  `tools/terminal-links.ts`. A local address goes to `previewPortHref` of
+  its port, an app page to its address in the app, and every other link to
+  `openInNewTab`. The router decides which addresses of the app origin are
+  pages.
 - The tabs of the tools panel name the keys of Go to Terminal and Go to
   Preview in their tooltips, as the palette's Go to rows run them.
 - Each tool reads its routes with the `fetch` of the org's `ApiClient`,
@@ -191,7 +276,9 @@ The workspace screen keeps one GitHub store, through `useGitHubState` of
 [the GitHub screens](../../github/README.md), for the pull request bar or
 row and the Checks tab of the Files part. It reads with the `fetch` of
 the org, waits with the timer of the app, and takes the GitHub events of
-the ordered stream of the workspace.
+the ordered stream of the workspace. Of the old GitHub states that a replay
+of the stream holds, it takes only the newest, so the bar does not flicker
+through them while the workspace loads.
 
 - The screen keeps one action state for the bar on desktop and the top of
   the Checks tab on a phone, as

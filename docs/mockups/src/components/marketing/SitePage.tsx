@@ -11,7 +11,6 @@ const links: SiteLinks = {
   home: paths.marketing,
   pricing: paths.pricing,
   docs: paths.docs,
-  fromConductor: paths.fromConductor,
   signIn: paths.signIn,
 }
 

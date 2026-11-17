@@ -1,7 +1,7 @@
-import type { Agent } from '../../src/shared/agents'
+import type { Session } from '../../src/shared/generated/Session'
+import type { Agent } from '../../src/shared/generated/Agent'
 import { readEndpointAddress } from '../../src/shared/endpoint-address'
-import type { RunnerProtocolVersion } from '../../src/shared/runner'
-import type { Session } from '../../src/shared/sessions'
+
 import { workspaceTokenResourcePredicate } from '../data/workspace-token-access'
 import type { AppEnv } from '../env'
 import { agentLoginKind } from './login-kind'
@@ -21,7 +21,6 @@ export async function readLoginMetadata(
   env: AppEnv,
   workspaceId: string,
   targets: readonly SessionLoginTarget[],
-  protocolVersion?: RunnerProtocolVersion | null,
 ): Promise<ReadonlyMap<string, SessionLoginMetadata>> {
   const rows = await env.DB.prepare(
     `WITH requested AS (
@@ -52,7 +51,7 @@ export async function readLoginMetadata(
   const result = new Map<string, SessionLoginMetadata>()
   for (const row of rows.results) {
     const kind = agentLoginKind(row.agent, row.kind)
-    if (!kind || (kind.kind === 'endpoint' && protocolVersion === 1)) continue
+    if (!kind) continue
     if (
       kind.kind === 'endpoint' &&
       !readEndpointAddress(row.endpointOrigin, row.agent, {

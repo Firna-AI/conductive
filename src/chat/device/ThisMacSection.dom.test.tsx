@@ -61,10 +61,12 @@ describe('ThisMacSection', () => {
         byLabel('Always allowed commands').querySelectorAll('code'),
         (code) => code.textContent,
       )
-    expect(commands()).toEqual(['git status', 'npm run lint', 'sw_vers'])
+    expect(commands()).toEqual(settings.alwaysAllowedCommands)
     expect(queryByText('14:32 left')).not.toBeNull()
 
-    const kept = ['git status', 'sw_vers']
+    const kept = settings.alwaysAllowedCommands.filter(
+      (command) => command !== 'npm run lint',
+    )
     server.json(
       'POST',
       DEVICE_SETTINGS_PATH,

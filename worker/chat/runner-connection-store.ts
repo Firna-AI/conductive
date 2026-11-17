@@ -1,8 +1,5 @@
-import {
-  RUNNER_SUPPORTED_LOGIN_KINDS,
-  type RunnerLoginKind,
-  type RunnerProtocolVersion,
-} from '../../src/shared/runner'
+import type { RunnerLoginKind } from '../../src/shared/generated/RunnerLoginKind'
+import { RUNNER_SUPPORTED_LOGIN_KINDS } from '../../src/shared/runner'
 import { isRecord } from '../http'
 import type { ChatData, ChatStorage, RunnerWorkspaceRecord } from './types'
 
@@ -14,7 +11,7 @@ export interface StoredRunnerConnection {
   generation: number
   workspace: RunnerWorkspaceRecord
   streamId: string | null
-  protocolVersion: RunnerProtocolVersion | null
+  protocolVersion: number | null
   loginKinds?: readonly RunnerLoginKind[]
   ready: boolean
   checkAt: number
@@ -57,8 +54,9 @@ function readConnection(value: unknown): StoredRunnerConnection {
     !(
       value.protocolVersion === undefined ||
       value.protocolVersion === null ||
-      value.protocolVersion === 1 ||
-      value.protocolVersion === 2
+      (typeof value.protocolVersion === 'number' &&
+        Number.isSafeInteger(value.protocolVersion) &&
+        value.protocolVersion > 0)
     ) ||
     typeof value.ready !== 'boolean' ||
     typeof value.checkAt !== 'number' ||
@@ -75,12 +73,7 @@ function readConnection(value: unknown): StoredRunnerConnection {
       archivedAt: value.workspace.archivedAt,
     },
     streamId: value.streamId,
-    protocolVersion:
-      value.protocolVersion === undefined
-        ? value.streamId === null
-          ? null
-          : 1
-        : value.protocolVersion,
+    protocolVersion: value.protocolVersion ?? null,
     ...(value.loginKinds === undefined
       ? {}
       : { loginKinds: readLoginKinds(value.loginKinds) }),

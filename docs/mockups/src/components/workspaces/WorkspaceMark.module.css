@@ -12,20 +12,31 @@
   --mark-head: currentColor;
 }
 
-.checksFailed {
+/* Each GitHub state takes the tone of the pull request bar. */
+.danger {
   color: var(--ui-rose);
 }
 
-.checksRunning {
+.warning {
   color: var(--ui-amber);
 }
 
-.checksPassed {
+.success {
   color: var(--ui-success);
 }
 
 .merged {
   color: var(--ui-list-merged);
+}
+
+/*
+ * Running checks and a draft: grey cells, lit brighter than a mark without
+ * a GitHub state. A grey light is too dim to see, so the light of running
+ * checks runs in the colour of the text.
+ */
+.neutral {
+  --mark-head: var(--ui-ink);
+  color: var(--ui-muted);
 }
 
 /*

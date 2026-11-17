@@ -1,10 +1,9 @@
+import type { WorkspaceToRunner } from '../../src/shared/generated/WorkspaceToRunner'
 import type { WorkspaceEventEnvelope } from './workspace-events'
-import type { WorkspaceToRunner } from '../../src/shared/runner'
 import type { ChatTransaction } from './store'
 import type { NativeChatCallbacks } from '../test-support/native-chat-resolvers'
 import { nativeChatStore } from './native-store.test-support'
 import { seedRunnerWorkspace } from './runner-seed.test-support'
-
 import { choice, context } from './runner-fixtures.test-support'
 
 export async function createRunnerLimitsFixture(
@@ -44,7 +43,7 @@ export async function createRunnerLimitsFixture(
     })
     await actor.api.peers.receiveRunner(peer, {
       type: 'hello',
-      protocolVersion: 1,
+      protocolVersion: 2,
       workspaceId: 'workspace',
       streamId,
     })

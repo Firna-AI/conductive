@@ -1,6 +1,6 @@
 import { defineScreen } from '@mokly/mokly'
 import { AccountScreen } from '../../../../screens/AccountScreen'
-import { accountGeneral, accountSchema } from '../../../../screens/accountState'
+import { accountAgents, accountSchema } from '../../../../screens/accountState'
 
 export const connectCodex = defineScreen({
   title: 'Connect Codex',
@@ -10,7 +10,7 @@ export const connectCodex = defineScreen({
     'Codex connects with an OpenAI API key or with a device code sign-in to the ChatGPT plan of the user, as the user chose in decision 175 on 10 November 2026. API key comes first and starts selected, because it needs no step before it, and the sign-in needs a setting of ChatGPT first. Moved here from a saved state of the Account page, with the same path, so that page shows only its canonical screen. The steps of the sign-in are a child page, so this page shows only its canonical screen too.',
   relatedDocs: [],
   propSchema: accountSchema,
-  props: { ...accountGeneral, form: 'codex' },
+  props: { ...accountAgents, form: 'codex' },
   render: (props, context) => (
     <AccountScreen state={props} viewport={context.viewport} />
   ),

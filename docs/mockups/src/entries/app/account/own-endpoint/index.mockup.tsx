@@ -1,7 +1,7 @@
 import { defineScreen } from '@mokly/mokly'
 import { productName } from '../../../../brand'
 import { AccountScreen } from '../../../../screens/AccountScreen'
-import { accountGeneral, accountSchema } from '../../../../screens/accountState'
+import { accountAgents, accountSchema } from '../../../../screens/accountState'
 
 export const ownEndpoint = defineScreen({
   title: 'Own endpoint',
@@ -10,7 +10,7 @@ export const ownEndpoint = defineScreen({
     'Decision 1 A of the own endpoint plan, which Cal chose on 8 November 2026: each agent gets an own endpoint login, with an address and a key that the app stores encrypted. The gateway of the app, not the cloud computer, sends each model request of a turn to the endpoint with the key (gateway decision 10 B), so the hint says that the requests go through the app. One shared rule checks the address and builds the exact address of each request (decision 9 E), and the hint names that address: the base address with /v1/messages added. The form names the models that the app offers. After the save, the app reads the model list of the endpoint and hides from the pickers of the owner each model of the app that the list does not name (decision 10 G), as app/account/endpoint-models shows. The key hint promises no test.',
   relatedDocs: [],
   propSchema: accountSchema,
-  props: { ...accountGeneral, form: 'claude', ownEndpoint: 'form' },
+  props: { ...accountAgents, form: 'claude', ownEndpoint: 'form' },
   render: (props, context) => (
     <AccountScreen state={props} viewport={context.viewport} />
   ),
@@ -28,7 +28,7 @@ export const ownEndpoint = defineScreen({
       title: 'Codex on an own endpoint',
       description: `Claude runs on Cal's proxy, and Connect opened the form of Codex on its own endpoint kind. The form says that the endpoint must serve the OpenAI Responses API and the Codex models that the picker offers: GPT-6.1 Sol and GPT-6 Astra. The example address ends with /v1, and the hint says "Requests go through ${productName} to https://gateway.example.com/v1/responses".`,
       rationale:
-        'Codex sends its requests to the address with /responses added, and it refuses the Chat Completions API. So the endpoint must serve the Responses API, and the address ends with /v1, as the design calls of the own endpoint plan say. The shared rule keeps the /v1 of a Codex address.',
+        'Codex sends its requests to the address with /responses added, and it refuses the Chat Completions API. So the endpoint must serve the Responses API, and the address ends with /v1, as the design calls of the own endpoint plan say. The shared rule keeps the /v1 of a Codex address. When the typed address gives no model list and the same address with /v1 gives one, the save stores the address with /v1, and a note under the Codex row says so, as app/account/endpoint-models/v1-added shows. That is Codex base decision 1 C, which Cal chose on 13 November 2026.',
       props: { form: 'codex' },
     },
     {

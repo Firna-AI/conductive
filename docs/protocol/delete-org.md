@@ -52,9 +52,9 @@ number names a dated record, as
 - Restore brings the org back as it was. Its workspaces start again when
   they open. A workspace whose owner is suspended does not start, as
   [Operator actions](operator-actions.md#starts-stops-and-builds) says.
-- The routines of a deleted org start no runs. After a Restore, each runs
+- The automations of a deleted org start no runs. After a Restore, each runs
   once for the schedule times that it missed, as
-  [Suspensions and deleted orgs](routines.md#suspensions-and-deleted-orgs)
+  [Suspensions and deleted orgs](automations.md#suspensions-and-deleted-orgs)
   says.
 - An unfinished create continues when its workspace opens after Restore.
   It then gets a new start limit of 20 minutes, the limit of each start in

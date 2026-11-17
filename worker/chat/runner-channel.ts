@@ -1,7 +1,7 @@
+import type { RunnerFileCommand } from '../../src/shared/generated/RunnerFileCommand'
 import { warnWorker } from '../warnings'
 import { errorSummary, WarningId } from '../warning-values'
 import type { WorkspaceEventEnvelope } from './workspace-events'
-import type { RunnerFileCommand } from '../../src/shared/runner-files'
 import { HttpError } from '../http'
 import { RunnerConnections } from './runner-connections'
 import type { NativeBrowserConnections } from './browser-connections'
@@ -105,14 +105,14 @@ export class RunnerChannel {
       )
       if (!welcome) return
       active.streamId = message.streamId
-      active.protocolVersion = message.protocolVersion
+      active.protocolVersion = welcome.protocolVersion
       active.loginKinds = message.loginKinds
       active.ready = welcome.ready
       await this.connections.persist(active)
       if (active.ready) this.connections.attachFiles(active)
       await active.peer.send({
         type: 'welcome',
-        protocolVersion: message.protocolVersion,
+        protocolVersion: welcome.protocolVersion,
         streamId: message.streamId,
         confirmedThrough: welcome.cursor,
       })

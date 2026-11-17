@@ -2,11 +2,16 @@
 
 This doc holds the requirements and the decisions in force for the agents
 and the sessions of a workspace. It covers the agents and their logins,
-the names of the agents in the product, the sessions and their links, and
-the names of workspaces and sessions. It belongs to
+their efforts, the names of the agents in the product, the sessions and
+their links, and the names of workspaces and sessions. It belongs to
 [Chat and events](chat-and-events.md). The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
+says. A title image decision number names a decision of the change that
+leaves the names of attached images out of titles, as
+[Messages and attachments](messages-and-attachments.md) says. A file row
+menu decision number names a decision of the change that adds the menu of
+the rows of All files and Changes, as [File row menu](file-row-menu.md)
 says.
 
 ## Agents
@@ -34,9 +39,9 @@ says.
     [Messages](messages-and-attachments.md#messages) says
   - through a call of the agent tools in a turn that the member sent, as
     [The sender](session-calls.md#the-sender) says
-- A routine run starts the first session of its workspace in the name of
-  the routine owner, as
-  [A run acts as its owner](routine-runs.md#a-run-acts-as-its-owner) says.
+- An automation run starts the first session of its workspace in the name of
+  the automation owner, as
+  [A run acts as its owner](automation-runs.md#a-run-acts-as-its-owner) says.
 - The session record names its starter in `startedBy`. A session without a
   known starter has no login that can be used.
 - While the starter shares the login, the messages of the other members
@@ -47,7 +52,7 @@ says.
 - The login of the workspace owner for all sessions was rejected. Reason:
   each member who starts a session spends their own login.
 - [Access and security](isolation.md#agent-logins-in-a-sandbox)
-  states how a login reaches the sandbox, its share setting, and its risk.
+  states how a turn uses a login, its share setting, and its risk.
 - A session keeps its memory across a stop and a resume of the sandbox.
 - A Codex session keeps its conversation when its starter changes between
   an OpenAI API key and a ChatGPT sign-in.
@@ -60,6 +65,22 @@ says.
 - A refused resume for another cause, or a refused fork, fails the turn
   with that cause.
 
+## Efforts
+
+- Each message runs at one effort of its model. The model list of the
+  deployment gives the efforts of each model, from the lowest:
+  None, Low, Medium, High, Extra high, Max, and Ultra.
+- Codex runs each effort at the reasoning level of the same name. Codex
+  Ultra is its maximum reasoning with automatic task delegation.
+- Claude runs Ultra at the Max level, with Ultracode on. Ultracode is the
+  mode of Claude that hands substantive work to multi-agent workflows.
+  Every other effort turns Ultracode off. Claude runs None with thinking
+  off.
+- The model list offers an effort only on models that support it. Reason:
+  on a model without a level, Claude runs a lower level without a sign.
+  It also ignores Ultracode on a model without it, and then runs Ultra as
+  Max.
+
 ## Names in the product
 
 - User-facing text calls the agents "agents powered by Claude and Codex".
@@ -67,7 +88,9 @@ says.
   its features. Reason: Anthropic forbids that use for a product that builds
   on its Agent SDK.
 - The model picker names the model and the effort, such as "Opus 5.5 Max".
-  It does not show the words Claude or Codex.
+  While [fast mode](fast-mode.md) is on, it adds Fast, such as "Opus 5.5
+  Max Fast". A screen reader hears Fast too. The picker does not show the
+  words Claude or Codex.
 - The app marks each agent with a small mark of its own. It shows no brand
   logo of an agent.
 
@@ -78,7 +101,7 @@ says.
 - "+" starts a new session on the same branch and in the same sandbox.
 - The tab of a session shows the title of the session.
 - A new session has no title, and its tab shows "Untitled".
-  [Workspace and session names](#workspace-and-session-names) says when
+  [Workspace and session names](workspace-and-session-names.md) says when
   the app gives it a title.
 - A `create_session` call of the agent tools can give a new session a
   title, as [Start a session](session-calls.md#start-a-session) says.
@@ -92,9 +115,15 @@ says.
   no title. A message whose text holds only the mentions of its own
   attached files counts as a message with no text.
 - In a title from a message, each mention of one of its attached files
-  becomes the name of the file (decision 262 D). Reason: a path makes a
+  that is not an image becomes the name of the file (decision 262 D). Reason: a path makes a
   poor title. A title with the copy path of each file was rejected for
   that reason.
+- In a title from a message, each mention of an attached image goes out,
+  with no name (title image decision 2 A). The workspace title follows the
+  same rule, as [Messages](messages-and-attachments.md#messages) says.
+  Reason: image names such as "Screenshot 2026-11-16 at 10.23.45.png" do
+  not name the task. Different rules for the two titles were rejected,
+  because an image name is just as poor in a session title.
 - In a title from a message, each run of spaces becomes one space. The app
   removes one final full stop, but it keeps an ellipsis.
 - A title from a message holds at most 60 characters. The limit counts
@@ -114,6 +143,15 @@ says.
   the session history (decision 31).
 - Closing the tab of a session whose turn runs asks first. After the
   confirm, the app stops the turn and moves the session to the history.
+- A close shows at once. The tab moves to the session history before the
+  server confirms the close. When the close fails, the tab returns to its
+  place in the row, and a notice says that the session did not close. The
+  user asked for this on 16 November 2026.
+- One close of several tabs, such as Close tabs to the right, asks one
+  question for all the running sessions among them. The question names
+  each of these sessions. The other sessions close at once. Cancel keeps
+  each running session open. The user asked for Close tabs to the right on
+  16 November 2026.
 - Reason: no agent runs where the user cannot see it, and no history gets
   lost. A close that only hides a running session was rejected for the
   first reason. A close that deletes the history was rejected for the
@@ -132,7 +170,11 @@ says.
 - Each member has their own order in each workspace. The order stays after
   a reload. The other devices of that member load the same order.
 - A new tab of any kind opens at the end of the row. This holds also for a
-  session that the history reopens.
+  session that the history reopens, and for a new
+  [temporary tab](temporary-tabs.md).
+- A press that replaces the file or the diff of the temporary tab leaves
+  the tab in its place. This holds also when later tabs stand after it. A
+  keep does not move the tab either.
 - The user can drag any tab to any place in the row.
 - A row that keeps the sessions and the files in two groups was rejected,
   because a file could then never go before a session.
@@ -157,26 +199,69 @@ says.
 - A menu of the hidden tabs was rejected, because the shown tab and the
   drop places could still hide. A row that wraps onto more lines was
   rejected, because the chat would move down when a tab opens.
+- Each tab of the row keeps the reader's place while another tab or another
+  workspace shows. A session tab keeps the row that the user read, as
+  [The scroll of the chat](chat-and-events.md#the-scroll-of-the-chat)
+  says. A file or diff tab keeps its scroll offset, one for each of its
+  views, such as the code and the preview of a Markdown file. A reload
+  forgets the places. The user chose this on 13 November 2026.
+- A tab that closes forgets its place, also when another member closes its
+  session. When it opens again, a session tab shows the bottom, and a file
+  or diff tab shows the top. The user chose this on 13 November 2026.
 - A right click on a tab opens its tab menu (decision 188).
 - On a focused tab, Shift and F10, or the Menu key, also opens the tab
   menu. This holds on every system.
 - On a phone, a long press that ends without a move opens the tab menu as
   a sheet.
-- The tab menu of a session tab holds three groups, with a line between
+- The tab menu of a session tab holds four groups, with a line between
   them: Rename session, then Copy link, Copy concise transcript, and Copy
-  full transcript, then Move left and Move right. The tab menu of a file or
-  diff tab holds Move left and Move right.
+  full transcript, then Move left and Move right, then Close tabs to the
+  right. The tab menu of a kept file or diff tab holds three groups, with
+  a line between them: Copy path, then Move left and Move right, then
+  Close tabs to the right.
 - Copy link copies the link of the session of its tab, as
   [Session links](#session-links) says. The user added it on 12 November
   2026.
-- Reason: the tab menu groups its items by kind (decision 188).
+- The tab menu of the temporary tab holds four groups, with a line between
+  them: Keep open (decision 286 B), then Copy path, then Move left and
+  Move right, then Close tabs to the right.
+- Reason: the tab menu groups its items by kind (decision 188). Copy path
+  comes after Keep open and before the moves, as the copy items of a
+  session tab come after Rename session and before the moves.
 - [Session transcripts](session-transcripts.md) states what each copy item
   copies (decisions 213 and 215).
+- [Copy path](file-row-menu.md#copy-path) states what the Copy path item
+  copies, and the tabs that leave it out (file row menu decision 3 B).
+- Reason: a member can copy the path of the open file from its tab, with
+  no need to find its row. Copy path only on the rows, a Copy path button
+  in the header of the file, and a Copy path command in the command palette
+  were not chosen.
 - Move left and Move right move the tab one place in the row. On the first
   tab, Move left is off. On the last tab, Move right is off.
+- Close tabs to the right closes each tab after the tab in the row, of
+  each kind, as the same item of a browser does. On the last tab, it is
+  off. The user asked for it on 16 November 2026.
+- When the shown tab is among the closed tabs, the tab of the menu shows
+  first, as in a browser. Each session tab closes as its Close does, so
+  its session moves to the history for every member.
+- On a phone, the row shows only the session tabs, so Close tabs to the
+  right closes only the session tabs after the tab. Each file tab stays.
 - After a move from the tab menu, a screen reader user hears the name of
   the tab and its new place, such as "Address autocomplete moves to place
   2 of 4". The focus then goes back to the tab.
+- Keep open keeps the temporary tab, and the tab stays in its place. The
+  focus then goes back to the tab. A screen reader user hears that the tab
+  stays open, such as "README.md stays open".
+- [Keep a tab](temporary-tabs.md#keep-a-tab) says why the menu holds Keep
+  open.
+- A move of the temporary tab to another place keeps it (decision
+  287 B). A move of another tab leaves it temporary. This holds for a drag, Move left, and Move right. A drag that
+  Escape cancels, or that ends in the same place, leaves the tab temporary.
+- Reason: a move shows that the user wants the file at that place. A
+  temporary tab that stays temporary after a move was rejected. The next
+  press would then replace the file at that place.
+- A drag that keeps the tab while Move left and Move right do not was
+  rejected. Two ways to make one move would then act differently.
 - Rename session opens a field for the title in that tab. The shown tab
   does not change.
 - In the app, the tab menu is the one way to rename a session. A Rename
@@ -191,12 +276,19 @@ says.
 - The tab menu of a read-only workspace leaves out each item that changes
   the workspace, and keeps each item that changes nothing (decision 214).
   So the tab menu of a session tab there holds only Copy link, Copy
-  concise transcript, and Copy full transcript. A file or diff tab there
-  opens no tab menu.
+  concise transcript, and Copy full transcript. It leaves out Close tabs to
+  the right. The tab menu of a file or diff tab there holds only Copy path
+  (file row menu decision 3 B).
+- A file or diff tab there without Copy path, such as a tab whose label
+  hides a secret value, has no item. So it opens no tab menu, and the
+  browser shows its own.
 - Reason: a read-only workspace accepts no change, but a member can still
   copy there, as
   [Read-only workspaces](session-transcripts.md#read-only-workspaces)
   says. The rule also covers each item that the menu gets later.
+- So a read-only workspace also leaves out Keep open. The tab menu of the
+  temporary tab there holds only Copy path, and only a double-click keeps
+  a tab (decision 286 B).
 - The tab menu opens there in the same ways as in other workspaces. A long
   press on a phone opens it, but lifts no tab.
 - An item that the place of a tab rules out, such as Move left on the
@@ -217,11 +309,20 @@ says.
 - A session link opens its workspace and shows that session. The address
   then becomes the link of the workspace. Reason: the session tabs keep
   their behaviour, and the address does not follow the shown tab.
-- A link to a closed or an unknown session opens the page of its
-  workspace, as a workspace link does. When that workspace already shows,
-  its shown tab stays. The link reopens no session.
-- Reason: the members share the sessions of a workspace, so a reopen would
-  show the tab again to every member.
+- A link to a closed session reopens that session and shows it, as an
+  entry of the session history does. In a read-only workspace, the link
+  shows the stored chat of the session as a tab in this browser only, and
+  reopens nothing. The user chose this on 13 November 2026.
+- Reason: a press on a session chip must show its session, and agents
+  close the sessions that they start when the work ends. A link that
+  opens only the workspace of a closed session was rejected, because the
+  press then shows nothing. A reopen only for a press on a chip was
+  rejected, so that each session link works the same way.
+- A reopen shows the tab again to every member, because the members share
+  the sessions of a workspace.
+- A link to an unknown session opens the page of its workspace, as a
+  workspace link does. When that workspace already shows, its shown tab
+  stays.
 - A session link in chat text shows as a session chip, as
   [Session chips](workspace-links.md#session-chips) says.
 - The agent tools give the link of each session that they name, as
@@ -240,35 +341,5 @@ says.
 
 ## Workspace and session names
 
-- In this section, a name is the name of a workspace or the title of a
-  session.
-- A new workspace has no name (decision 182). Each new session has no name
-  either (decision 185).
-- The app shows "Untitled" in place of a missing name.
-- In the workspace record, a missing name is null in `name`. In the session
-  record, a missing name is null in `title`.
-- An automatic name is a name that the app gives on its own. These names
-  are automatic:
-  - the title of a workspace, as [Messages](messages-and-attachments.md#messages) says
-  - a workspace name that the agent runner reports, as
-    [Lost workspace updates](agent-runner.md#lost-workspace-updates) says
-  - the title that a session takes, as [Sessions](#sessions) says
-- The app gives an automatic name only to a workspace or a session that has
-  no name (decision 182). So no automatic name replaces a name that a
-  member or the app gave.
-- A member names a workspace with Rename in the
-  [menu of its row](workspace-menu.md#rename), or with a double click on
-  its row in the sidebar.
-- The app gives no automatic name in an archived workspace, or in a
-  workspace of a deleted org.
-- Reason: a missing name shows that no one named the workspace or the
-  session yet. A text comparison with "New session" or the city name of
-  the branch was rejected. A member can type the same text and then lose
-  that name.
-- Reason: an archived workspace shows its chat read-only (decision 16).
-
-### The title of a new workspace
-
-- [Messages](messages-and-attachments.md#messages) holds how a small model
-  of Workers AI names a new workspace from its first message
-  (decision 184).
+[Workspace and session names](workspace-and-session-names.md) holds these
+requirements, with the title of a new workspace.

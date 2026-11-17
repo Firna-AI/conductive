@@ -1,5 +1,6 @@
+import type { Workspace } from '../../shared/generated/Workspace'
 import type { User } from '../../shared/api'
-import type { Workspace } from '../../shared/workspaces'
+
 import { mayArchive, type OrgAccess } from '../permissions'
 import type { OfferedActionId } from './commands'
 
@@ -24,7 +25,7 @@ type OfferScope =
     }
   /** The actions of the workspace list of an org. */
   | { readonly kind: 'org'; readonly orgId: string }
-  /** The actions of the window of the Mac app. */
+  /** The actions of the window, such as the sidebar toggle, in every host. */
   | { readonly kind: 'window' }
 
 /**

@@ -2,7 +2,8 @@
 
 This doc holds the requirements and the decisions in force for the life of a
 workspace. It covers the create, the start steps, the time limits, the
-states, the stop and resume, the archive, the restore, and Continue of a workspace.
+states, the stop and resume, the restart of the software, the archive, the
+restore, and Continue of a workspace.
 It belongs to [Workspaces and sandboxes](workspaces-and-sandboxes.md),
 which covers the provider, the org image, and the startup script. The
 terms are those of the
@@ -34,8 +35,20 @@ keeps them after the merge.
   [The branch of a pull request run](base-branches.md#the-branch-of-a-pull-request-run)
   gives its steps.
 - A resume shows that the files come back as the user left them.
-- The chat history shows at once while a sandbox starts. The files and the
-  tools wait until the sandbox is ready.
+- The chat history shows at once while a sandbox starts. The tools wait
+  until the sandbox is ready.
+- All files and Changes show the lists that the workspace saved while a
+  sandbox starts. A list without a saved copy, such as at the first start
+  of a new workspace, shows that it waits for the sandbox in its place.
+- A file or diff tab keeps the file that it shows while the sandbox
+  starts. A tab without content shows that it waits for the sandbox, as
+  [Files and changes](workspace-tools.md#files-and-changes) says.
+- Reason: the files of a stopped sandbox do not change, so the saved lists
+  are the latest ones. Cal asked for them during each resume on
+  13 November 2026. A wait in place of the saved lists was rejected,
+  because the lists can still be read. A notice that the lists are a saved
+  copy was rejected, because the copy is the latest one and the header
+  already shows Starting.
 
 ## Time limits of builds and starts
 
@@ -108,7 +121,8 @@ keeps them after the merge.
   reply of that Resume.
 - Meanwhile the tools, and a file or diff tab without content, show that
   they wait for the sandbox, with no Resume, also on a phone. The file
-  lists keep their saved copy.
+  lists keep their saved copy, as during the start that follows, which
+  [Start steps](#start-steps) describes.
 - Reason: the open already resumes the sandbox, so a bar that offers
   Resume for a moment is noise, and so is a Stopped state. Cal asked for
   these on 12 November 2026. Cal chose to keep the saved lists. A wait in
@@ -170,6 +184,56 @@ keeps them after the merge.
   after an Archive loses unpushed work. A copy of the disk in the app's own
   storage was rejected, because the app would then hold a copy of each
   user's code.
+
+## Restart the software
+
+- The state in the workspace header opens a menu with Restart, while the
+  workspace is ready, working, needs input, or finished with unread output.
+  On a phone the menu opens as a sheet. Cal asked for it on 16 November
+  2026.
+- The other states, and a read-only workspace, show the state as plain
+  text. Reason: Starting already restarts, and the stopped and the error
+  states keep their Resume and Try again bars.
+- Restart restarts the agent runner and the preview relay in the running
+  sandbox (Cal's decision 1 A of 16 November 2026). It does not stop or
+  resume the sandbox, so it uses no start of the provider.
+- The shells of the terminals and the commands in them keep running.
+  Each process that an agent started under the runner ends. Each running
+  turn ends, as after any restart of the runner.
+- An open terminal tab disconnects while the workspace shows Starting,
+  and it offers Reconnect. Reconnect works again when the runner is ready.
+  Previews and the activity of the workspace also pause in that time. Cal
+  chose this on 16 November 2026, as option A of review item 2 of the
+  Restart change.
+- Terminal access during a restart was rejected for now, because it needs
+  a stored restart flag and a migration. A tab that reconnects by itself
+  was rejected for the same choice.
+- A stop and resume, a one-step restart of the whole sandbox, and a
+  restart of a dev server of the project were rejected. Reason: Restart
+  fixes a stuck runner or relay in seconds and keeps the shells of the
+  terminals.
+- Before the restart, the sandbox downloads the newest release of the
+  [sandbox software](sandbox-software.md#updates), with a limit of 60
+  seconds (Cal's decision 2 B of 16 November 2026). The restart of the
+  runner then applies it.
+- When that download fails, a toast says "Couldn't check for updates." and
+  the restart goes on with the installed release. Reason: a member who
+  presses Restart usually wants the newest fix, and a failed download must
+  not block the restart.
+- Every member of an org that is not suspended can restart a workspace
+  whose owner is not suspended. Reason: a restart deletes no work, as for
+  a resume.
+- While an agent works, Restart first asks "Stop the agent and restart?".
+  Cancel changes nothing.
+- The header and the row show Starting from the press until the runner is
+  ready again.
+- When the restart fails, or the runner is not ready 3 minutes after the
+  press, the workspace shows the error state with "The software didn't
+  restart. Try again." Try again resumes the workspace, as after each
+  failed start.
+- The Worker refuses a restart of a workspace in another state with HTTP
+  409 and the error code `workspace_not_running`. The app shows the
+  refusal in a toast.
 
 ## Archive
 

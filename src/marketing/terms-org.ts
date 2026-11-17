@@ -4,15 +4,14 @@ import { list, text, type LegalDocument } from './legal-text'
 /**
  * The section of the terms on working in an org: the members, the logins of
  * the sessions, the GitHub tokens, and what a member or a program can read
- * in a cloud computer. It uses the newer and older cloud computers that the
- * Your accounts section of `terms.ts` defines. The facts come from the
- * architecture and the protocol docs.
+ * in a cloud computer. The facts come from the architecture and the
+ * protocol docs.
  */
 export const termsOrgSection: LegalDocument['sections'][number] = {
   title: 'Working in an org',
   blocks: [
     list(
-      text`Every member of an org sees all of its workspaces and routines.
+      text`Every member of an org sees all of its workspaces and automations.
         In an active org, members can send messages in workspaces that are
         not archived.
         After a pull request merges, every member can use Continue to start
@@ -63,20 +62,19 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         ${productName} stores and renews that sign-in. OpenAI sends hosted
         apps to its sign-in waitlist and can block this use. OpenAI's terms
         forbid making your account available to anyone else. The real
-        ChatGPT sign-in never enters a cloud computer. A computer that cannot
-        use it fails the turn. Ask an admin to rebuild the org image, then
-        start a new workspace. You can also connect an OpenAI API key.`,
+        ChatGPT sign-in never enters a cloud computer. If the agent software
+        cannot use that sign-in, ${productName} refuses the turn. Ask an
+        admin to run Build computer. After it succeeds, create a new
+        workspace. You can also connect an OpenAI API key.`,
       text`While a turn runs, its GitHub token is in the cloud computer of
         the workspace. A member with a terminal in that cloud computer can
         read it. During Continue, the fetch uses the GitHub token of the
         member who clicks. A member with a terminal can also read that token
         while the fetch runs. A member with a terminal can also get the
         workspace owner's GitHub token without a running turn.`,
-      text`In a newer cloud computer, each turn gets a credential in place
-        of the agent login. A turn on an own endpoint gets this kind of
-        credential in any cloud computer. A member with a terminal or a
-        program in that cloud computer can read the credential of a turn
-        that runs there.
+      text`Each turn gets a temporary credential for model requests in
+        place of the agent login. A member with a terminal or a program in
+        the workspace's cloud computer can read it while that turn runs.
         Through ${productName}, that credential can use the agent login of
         the member who started the session. It works while the turn runs,
         also from outside the cloud computer. A program that keeps running,
@@ -87,29 +85,23 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         content and the credential of the turn, to another address. A commit,
         the agent, or other code can change those settings. After Stop, a
         credential can start no new request. A request that still runs
-        ends within 30 seconds after the turn ends. If the member who
+        ends at the first check of its turn that answers after the turn
+        ends. ${productName} checks every 15 seconds. While no check
+        answers, the request can run to the end of its answer. If the member who
         started the session removes or changes the login, or loses access
         to the org, the turn ends at its next model request.`,
-      text`For a subscription token or an API key, an older cloud computer
-        can hold the agent login itself while a turn runs. A member with a
-        terminal or a program in that cloud computer can read it. A program
-        that a tool of the agent starts, such as a dev server, can keep the agent login
-        after the turn ends. A member with a terminal can read it there
-        too. Agent settings in the repository can make the agent send that
-        login to another address. A commit, the agent, or other code can
-        change those settings.`,
       text`The setting of your login does not change these risks. Work in
         an org only with people whom you trust with your logins.`,
-      text`A routine runs an agent without a person, on a schedule or when
+      text`An automation runs an agent without a person, on a schedule or when
         a pull request opens, gets new commits, or merges. Each run starts
-        a new workspace as the member who owns the routine. The run uses
+        a new workspace as the member who owns the automation. The run uses
         the agent login and the GitHub token of that member, so its pushes
         and pull requests show as that member.`,
-      text`Only the owner of a routine changes it or turns it on. An admin
+      text`Only the owner of an automation changes it or turns it on. An admin
         can turn it off or delete it. When the owner leaves the org, the
-        routine moves to the member who gets their workspaces. It stays
+        automation moves to the member who gets their workspaces. It stays
         off until that member turns it on, with their own logins.`,
-      text`The run of a routine for a pull request reads that pull request,
+      text`The run of an automation for a pull request reads that pull request,
         also the comments, reviews, and descriptions of other GitHub
         accounts. Such text can steer the agent while the run uses the
         owner's agent login and GitHub token, and the env vars of the org.

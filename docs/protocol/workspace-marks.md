@@ -6,10 +6,19 @@ This page belongs to [Workspace life](workspace-life.md).
   list, in the rows of the command palette, and in the chips. It means the
   same in each place.
 - Its colour gives the [GitHub state](github-banner.md#the-github-state)
-  of the workspace (list mark decision 1). It is red when the checks
-  failed, amber while they run, green when they passed, and purple after
-  the merge.
-- Without a GitHub state, the mark is dim grey.
+  of the workspace (list mark decision 1), in the colour that the pull
+  request bar gives the same state. It is red when the checks failed,
+  green when the pull request is ready to merge, and purple after the
+  merge. It is amber for a merge conflict, changes requested, and a block.
+  It is grey while the checks run and for a draft.
+- Reason: the mark and the bar of one workspace must never disagree. Cal
+  chose the colours of the bar on 13 November 2026.
+- Amber for running checks in the list was rejected. Amber would then mean
+  both a wait and a state that needs someone on GitHub, and the bar shows
+  running checks in grey.
+- Without a GitHub state, the mark is dim grey. A grey mark with a GitHub
+  state is brighter, so a draft does not read as a branch without a pull
+  request.
 - A mark shape for each state was rejected for the list. Reason: the list
   and the pull request bar can then disagree, and the user wants the
   checks at a glance.
@@ -31,7 +40,7 @@ This page belongs to [Workspace life](workspace-life.md).
   checks run, every cell stays lit, so the mark does not read as an agent
   that works.
 - Bold text alone marks unread output. A green mark for unread output was
-  rejected, because green means passed checks.
+  rejected, because green means a pull request that is ready to merge.
 - An archived workspace shows a fainter grey mark, whatever its GitHub
   state. Reason: a chip of an archived workspace must show the archive, as
   [Chips](workspace-links.md#chips) says.

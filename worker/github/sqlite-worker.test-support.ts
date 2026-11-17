@@ -164,7 +164,7 @@ export class Workspace extends DurableObject<AppEnv> {
             saveWorkspaceGitHubSummary(
               this.env.DB,
               GITHUB_WORKSPACE,
-              githubSummary(committed.banner, committed.checks.checks),
+              githubSummary(committed.banner),
             ),
         )
         await this.interleaved

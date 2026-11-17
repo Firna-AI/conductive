@@ -5,6 +5,7 @@ import { createHarness, type TestHarness } from '../test-support/harness'
 import { CLAUDE, createChatFixture, WORKSPACE_ID } from './harness.test-support'
 import { liveSessions, sessionRecord } from './retry.test-support'
 import { messageCommands, startTurn } from './turn-lifecycle.test-support'
+import { expectGatewayLogin } from './runner-credential.test-support'
 describe('empty linked sessions', () => {
   let harness: TestHarness
   beforeAll(async () => {
@@ -56,10 +57,14 @@ describe('empty linked sessions', () => {
       {
         type: 'turn',
         sessionId: reply.session.id,
-        login: { secret: `secret-${fixture.member.id}-claude` },
         message: { sender: { id: fixture.member.id } },
       },
     ])
+    await expectGatewayLogin(
+      fixture,
+      messageCommands(runner, 'linked')[0],
+      `secret-${fixture.member.id}-claude`,
+    )
     const sourceRecord = await sessionRecord(fixture, source.id)
     expect(sourceRecord).toMatchObject({
       startedBy: { id: fixture.owner.id },

@@ -1,15 +1,15 @@
+import type { Session } from '../../shared/generated/Session'
+import type { Workspace } from '../../shared/generated/Workspace'
+import type { MessageSender } from '../../shared/generated/MessageSender'
+import type { UserMessage } from '../../shared/generated/UserMessage'
+import type { WorkspaceStart } from '../../shared/generated/WorkspaceStart'
 import { handleTranscript } from './dev-transcript'
 import { createApiClient } from '../../app/api/client'
 import type { AgentLoginStatus } from '../../shared/account'
 import { chatHistoryPath, type WorkspaceEvent } from '../../shared/events'
-import type { Session } from '../../shared/sessions'
+
 import { sessionsPath } from '../../shared/sessions'
-import type { MessageSender, UserMessage } from '../../shared/messages'
-import {
-  workspacePath,
-  type Workspace,
-  type WorkspaceStart,
-} from '../../shared/workspaces'
+import { workspacePath } from '../../shared/workspaces'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { fetchFiles } from '../../test-support/fake-files'
 import {
@@ -32,11 +32,12 @@ import {
   writeReaderLogins,
 } from './dev-logins'
 import { DevMac, handleMacWrite, writeMacReplies } from './dev-mac'
-import { lossEvents, withUnreadFiles } from './dev-loss'
+import { lossEvents } from './dev-loss'
 import type { DevOptions } from './dev-options'
 import { handleWrite } from './dev-routes'
 import { takeState } from './dev-sandbox'
 import { followTitle, setActiveTurn } from './dev-sessions'
+import { changesTurnEnds, withTurnEnds } from './dev-speed'
 import { DevStream } from './dev-stream'
 
 const NEW_WORKSPACE = 'saved-carts'
@@ -134,14 +135,13 @@ export class DevBackend {
       scenario === 'loss'
         ? lossEvents(workspaceId, shown, viewer.id)
         : recordedChatEvents(scenario, workspaceId, shown)
-    const unread = options.files === 'unread'
-    const recorded = unread ? withUnreadFiles(events) : events
+    const recorded = withTurnEnds(events, options)
     const live = options.replay === 'live'
     const files = recordedFileEvents(
       workspaceId,
       live ? 1 : recorded.length + 1,
     )
-    if (live || loss || unread) {
+    if (live || loss || changesTurnEnds(options)) {
       const path = chatHistoryPath(org, workspaceId, shown)
       server.json('GET', path, {
         events: live ? [] : recorded,
@@ -200,7 +200,7 @@ export class DevBackend {
 
   /**
    * The JSON client of the page, over its fake API, as the app gives one.
-   * Its uploads send raw files through the same fetch.
+   * Its uploads send the raw parts of files through the same fetch.
    */
   readonly client = createApiClient(this.fetch, fetchFiles(this.fetch))
 

@@ -1,3 +1,4 @@
+import type { AgentModel } from '../../shared/generated/AgentModel'
 // @vitest-environment happy-dom
 
 import { describe, expect, test, vi } from 'vitest'
@@ -10,7 +11,7 @@ import {
   type AccountResponse,
   type AgentLoginStatus,
 } from '../../shared/account'
-import { MODELS_PATH, type AgentModel } from '../../shared/agents'
+import { MODELS_PATH } from '../../shared/agents'
 import { ENDPOINT_ADDRESS_ERROR } from '../../shared/endpoint-address'
 import { byRole } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
@@ -23,7 +24,7 @@ import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
 } from '../../test-support/mount'
-import { bodiesOf } from '../routines/routine-test-kit'
+import { bodiesOf } from '../automations/automation-test-kit'
 import { click, mountScreen, settle, typeText } from '../test-mount'
 import { startedApp, textOf } from '../test-render'
 import { fieldNamed } from '../workspace/kept-test-kit'
@@ -80,7 +81,7 @@ async function mountGeneral(server: FakeApiServer, connect: 'claude' | null) {
   const app = await startedApp(server, { fetch: held.fetch })
   const view = mountScreen(
     app,
-    <AccountScreen connect={connect} tab="general" user={fakeUser} />,
+    <AccountScreen connect={connect} tab="agents" user={fakeUser} />,
   )
   await settle()
   return { view, held, claude: () => listItems(view.innerHTML, 'Agents')[0] }
@@ -236,7 +237,7 @@ describe('an own endpoint login on the account', () => {
     const before = textOf(claude())
     const refresh = () =>
       byRole('button', 'Refresh the model list of Claude', view)
-    server.empty('POST', refreshPath)
+    server.json('POST', refreshPath, { modelListReadFailed: false })
     server.json('GET', ACCOUNT_PATHS.account, accountWith(endpointLogin([])))
     held.holdAnswer('GET', ACCOUNT_PATHS.account)
     click(refresh())

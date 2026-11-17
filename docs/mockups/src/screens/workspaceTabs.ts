@@ -14,9 +14,10 @@ import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import type { WorkspaceState } from './workspaceState'
 import { codeTabKey, moreTabs, withCodeMoved } from './workspaceTabRow'
+import { withTemporaryTab } from './workspaceTemporaryTab'
 
 /**
- * A workspace that the create flow or a routine run made has one session,
+ * A workspace that the create flow or an automation run made has one session,
  * and no edits of its own.
  */
 export function isNew(state: WorkspaceState): boolean {
@@ -98,14 +99,17 @@ function pictureTab(state: WorkspaceState): WorkspaceTab | undefined {
  * starter keeps the login for their own messages, the first session leads
  * to that view. After the second session sent its messages, the second
  * session can show, and each session tab leads to its chat of that time.
+ * The file or the diff that the state opens can be the temporary tab, as
+ * `withTemporaryTab` draws it.
  */
 export function tabsFor(
   state: WorkspaceState,
   workspace: Workspace,
+  running = false,
 ): WorkspaceTab[] {
   if (isNew(state)) {
     const title = workspaceName(state, workspace)
-    return [{ key: 'session', kind: 'session', title, selected: true }]
+    return [{ key: 'session', kind: 'session', title, selected: true, running }]
   }
   const [first, second] = workspaceSessions
   const linked =
@@ -133,8 +137,8 @@ export function tabsFor(
       key: codeTabKey,
       kind: 'code',
       title: 'useAddressAutocomplete.ts',
-      to: paths.code,
-      selected: state.tab === 'code',
+      to: state.tab === 'code-lines' ? paths.codeAtLine : paths.code,
+      selected: state.tab === 'code' || state.tab === 'code-lines',
     },
   ]
   if (state.tabRow === 'full') tabs.push(...moreTabs)
@@ -156,6 +160,7 @@ export function tabsFor(
       title: masked ? splitPath(maskedDiffPath).name : 'AddressForm.tsx',
       to: masked ? paths.maskedPaths : paths.diff,
       selected: true,
+      hidesPath: masked,
     })
   }
   const picture = pictureTab(state)
@@ -167,6 +172,7 @@ export function tabsFor(
       title: 'File',
       to: paths.maskedPathsUnnamed,
       selected: true,
+      hidesPath: true,
     })
   }
   if (state.tab === 'new-session') {
@@ -189,5 +195,20 @@ export function tabsFor(
       selected: true,
     })
   }
-  return state.tabRow === 'moved' ? withCodeMoved(tabs) : tabs
+  const background = state.conversation === 'session-links'
+  const active =
+    (background ? tabs[0] : undefined) ??
+    tabs.find(
+      (tab) =>
+        tab.kind === 'session' && tab.selected && tab.key !== newSession.key,
+    ) ??
+    tabs[0]
+  const states = tabs.map((tab) => ({
+    ...tab,
+    running: tab === active && (running || background),
+  }))
+  return withTemporaryTab(
+    state,
+    state.tabRow === 'moved' ? withCodeMoved(states) : states,
+  )
 }

@@ -85,15 +85,30 @@ the folder and each folder that holds it, and All files scrolls the row of
 the folder into view, as
 [File mentions](../../docs/protocol/file-mentions.md) says.
 
-The workspace view on the Worker holds the open tabs, the active tab, and
-the list. The kept chat loads it and saves it, and the shell changes it
+The workspace view on the Worker holds the open tabs, the active tab, the
+mark of the temporary tab, and the list. The kept chat loads it and saves it, and the shell changes it
 through the chat, so the view has one writer. The shell passes the view to
 the screens, with a `FilesNavigation`:
 
-- `href(target)` gives the address of a list, a file tab, or a diff tab.
-- `navigate(target)` handles a plain click. The shell saves the change in
-  the view, then moves the address. A click with a modifier key opens the
+- `href(target, lines)` gives the address of a list, a file tab, or a diff
+  tab. A file tab with `lines` names them in the query, as `?line=42-50`.
+- `navigate(target, lines)` handles a plain click. The shell saves the
+  change in the view, then moves the address. A file or a diff with no tab
+  opens in the temporary tab, as
+  [Temporary tabs](../../docs/protocol/temporary-tabs.md) says. The view
+  keeps the tab without the lines. A click with a modifier key opens the
   address in a new browser tab.
+- `keep(tab)` handles a double-click on a file row or on a tab. The shell
+  makes the tab of that file or diff a kept tab when it is the temporary
+  tab, and moves no address. Keep open in the tab menu calls it too.
+
+The shell reads the lines of the address with `useAddressLines`, which
+also counts each visit of an address with lines, and gives them to
+`FilePage`. So a second press on the same chip shows the lines again.
+`CodeView` then scrolls the first line to the middle of its view and
+marks each line of the range, as
+[Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes)
+says. A file chip of an answer with a line target opens such an address.
 
 The screens:
 
@@ -101,14 +116,37 @@ The screens:
   for the right column on desktop and the Files tab on a phone. The
   `checks` prop takes the Checks list of the GitHub banner screens. The
   `placeholder` prop replaces All files and Changes, for example with a
-  sandbox state. Under the lists, the panel shows one notice for each
-  failed repair, in the order of the tabs, with its age. A saved tree that
+  sandbox state. The `waiting` prop replaces only a list without a saved
+  copy, when its read fails with `file_unavailable`, or an unknown tree
+  under the unavailable mark. A read that runs still shows its load, and
+  any other failed read shows Try again. The workspace screen gives it the
+  wait of a sandbox that starts, so a resume shows the saved lists and the
+  first start of a new workspace shows the wait. Under the lists, the
+  panel shows one notice for each failed repair, in the order of the tabs, with its age. A saved tree that
   the cloud computer could not read shows the notice of All files, with no
   age. The notices show under each of the three tabs, and they have no
   Dismiss. The `now` prop
   gives the clock of the ages. Pass a stable function. The default is
   `Date.now`. The `listKeys` prop gives the key of the command that opens
   each list, as a tooltip and a name for `aria-keyshortcuts` of its tab.
+- The `rowMenu` prop of `FilesPanel` gives the items of the row menu of
+  each row of All files and Changes, in groups that a line parts, from the
+  real path, the kind, and the change of the row. The shell gives Add to
+  chat and Copy path, so the Files code holds no item and imports nothing
+  from the chat. Without the prop, no row has a menu. `useRowMenu` of the
+  lists opens the menu as
+  [File row menu](../../docs/protocol/file-row-menu.md) says, through
+  `PointMenu`, `Sheet`, `MenuList`, and `opensMenu` of the app shell and
+  `useLongPress` of the web app: a right click at the pointer, Shift and
+  F10 or the Menu key below the focused row, and a long press of a finger
+  in a sheet on a phone, else at the press. The row of the open menu keeps
+  the fill of a hover, and the focus goes back to it as the menu closes. A
+  press on an item gives the focus back to the row before the item runs,
+  so an item that moves the focus, such as Add to chat, finds it on the
+  row. A row whose label hides a secret value gets no item, so it opens no
+  menu, as [Labels of paths](labels.md) says. The menu shows only labels:
+  the name of the row titles it, and an item reads the real path only at
+  its press.
 - `FilePage` shows one file tab. Markdown starts rendered, and its view
   switch navigates to the same tab with the other mode. The page knows an
   image file by the name of its real path, as
@@ -125,29 +163,17 @@ The screens:
   lines from Changes. With `keepShown`, a page that already shows its file
   keeps it, with Copy, and the placeholder shows only in place of a page
   with nothing to show. When the placeholder goes, the page reads at once.
-- `FileTabItem` is the closable tab of a file or a diff, as a list item
-  for the tab row of the centre column on desktop. `onClose` asks the shell
-  to close the tab. It takes the tab styles of the mockups' `WorkspaceTabs`,
-  as the session tabs do. `item` takes more props of its list item, and
-  `close` props of the wrapper of its Close button, such as the handlers,
-  the classes, and the ref of the drag and of the tab menu of the row.
-  `link` takes the ref of its link, which the row uses to give the tab the
-  focus back after a move from the tab menu. `FilesLink` takes that `ref`.
-  They are plain element props, so the Files code imports nothing from the
-  chat.
-  `LiftedFileTab` is the copy of the tab that a drag lifts above the page:
-  its icon and its whole file name, with no link and no Close.
-  `fileTabName(tab, label)` is the name of the tab, as a screen reader
-  reads it: the file name of the label, or "File", with "changes" after
-  the name of a diff. The tab row names the tab by it in its tab menu and
-  its status.
+- `FileTabItem` is the closable tab of a file or a diff, and
+  `LiftedFileTab` is the copy that a drag lifts.
+  [File tabs](file-tabs.md) gives their props, their names, the temporary
+  tab, and the double-click of the links and the rows.
 
 [The Markdown preview](markdown-preview.md#the-worker) gives the worker
 that parses the Markdown of a preview, and what the preview shows while
 it waits for the worker or when the worker fails.
 
 Each screen takes `layout`: `desktop`, or `phone` with touch targets of at
-least 44 px. On a phone, a file page and a diff page link back to All
+least 40 px. On a phone, a file page and a diff page link back to All
 files or Changes.
 
 Copy and Download take `targets`. Copy is off for a picture and for each
@@ -168,10 +194,47 @@ the app's `ApiClient`, so the Mac app reads the file from its own Worker.
 The shell supplies the design tokens as `--ui-*` CSS variables and the
 `@firna/ui` theme provider, as `docs/mockups/src/theme.ts` builds them.
 
+The links of the Markdown preview open through the link opener of the app
+shell, `useTextLinks` of `../shell/ui/text-links.tsx`, which the chat uses
+too. The preview asks it to open a local address as a web link. The
+workspace screen gives the opener the pages of the app, on desktop and on
+a phone, as
+[The chat of the workspace](../shell/workspace/screen-parts.md#the-chat-of-the-workspace)
+says. Outside that screen, as on the development page, each link opens a
+new tab.
+
+### Kept scroll offsets
+
+Each file and diff tab of the centre keeps its scroll offset, down and
+sideways, while another tab or workspace shows, as
+[The tab row](../../docs/protocol/agents-and-sessions.md#the-tab-row) says.
+`WorkspaceFiles.scrollPlaces` holds the offsets, by tab and view, for as
+long as the app keeps the store. The desktop tab page gives the shown tab
+through the `KeptScroll` context of `ui/kept-scroll.ts`. `CodeView`,
+`DiffView`, and the Markdown preview take their scroll box from
+`useKeptScroll`, with the view `code`, `diff`, or `preview`. A view outside
+the context, such as a file page on a phone, keeps nothing. Content that
+grows after the mount gets the offset again at each change of size, until
+the box reaches it or the reader scrolls. When a tab leaves the saved view,
+such as at a close, it forgets its offsets, so it opens at the top again.
+A view can give `useKeptScroll` an aim, a place that the address names,
+such as the lines of a file chip. The aim wins over the kept offset, and
+only a new key of the aim scrolls again, so a change of the file keeps the
+place of the reader. The hook is the one owner of the scroll of its box.
+The offsets live in a `TabPlaces` store of the web app, in
+`src/app/tab-places.ts`, and the chat files of the workspace screen give it
+each list of the file and diff tabs through `useFollowTabs`.
+`ui/kept-scroll.dom.test.tsx`
+tests the hook, and `TabScroll.test.tsx` of the
+[workspace files](../shell/workspace/files/) tests the tabs of the
+workspace screen.
+
 ## Labels of paths
 
 [Labels of paths](labels.md) gives the label that each screen shows in
-place of a real path, because a path can hold a secret value.
+place of a real path, because a path can hold a secret value. It also
+gives the check that leaves out the items of the row menu, and Copy path
+of the tab menu, for such a path.
 
 ## Safety
 
@@ -179,11 +242,28 @@ File content, Markdown, paths, and diffs are untrusted. The screens show
 them as React text only, apart from the picture of an image file. The
 Markdown renderer builds React elements from its own parse: HTML in a
 file shows as text, a Markdown image shows its alt text, and only
-absolute `http`, `https`, and `mailto` links become links. A link opens
-in a new tab with `noopener noreferrer`. Quotes and lists nest at most 16
-levels deep, and deeper content shows as text. The parse runs in the
-worker, off the thread of the page, so a long or crafted file cannot stop
-the page.
+absolute `http`, `https`, and `mailto` links become links. A bare address
+in the text stays text. Quotes and lists nest at most 16 levels deep, and
+deeper content shows as text. The parse runs in the worker, off the
+thread of the page, so a long or crafted file cannot stop the page.
+
+Each link of the preview has the look of the mockups' `TextLink`, and its
+title gives its whole address. The link opener of the app shell opens
+it, as
+[Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes)
+says:
+
+- A link to a page of the app opens that page in the same window. A click
+  with a modifier key keeps the action of the browser.
+- Every other link opens a new tab with `noopener noreferrer`, so the
+  other site gets no address of the app.
+- Unlike chat text, the preview keeps each link that its parse accepts. A
+  `mailto` address, an address with a user name or a password, and an
+  address of the app that names no page open a new tab.
+
+A local address of a file, such as `http://localhost:3000`, opens a new
+tab too. It does not open the preview of its port, as a local address of
+chat text does.
 
 [The Markdown preview](markdown-preview.md#safety-limits) gives the
 limits of emphasis, of long runs of text, and of tables.
@@ -251,7 +331,8 @@ screen tests keep their static markup checks in Node.
 - `navigation.ts`: `FilesTarget`, `FilesNavigation`, and the tab types of
   the workspace view.
 - `model/file-labels.ts`: `pathLabel`, `pageLabel`, and `tabLabel`, the
-  label that a screen shows for a real path.
+  label that a screen shows for a real path, and `hidesSecret` and
+  `tabHidesSecret`, the shared check of a label that hides a secret value.
 - `panel/FilesPanel.tsx`, `page/FilePage.tsx`, `page/DiffPage.tsx`, and
   `tabs/FileTabItem.tsx`: the screens.
 - `page/file-view.ts`: `fileView`, what a file page shows of one read:
@@ -263,6 +344,9 @@ screen tests keep their static markup checks in Node.
   the label of its path. `page/decode-picture.ts` gives `decodePicture`,
   which loads a picture apart from the page to learn its size, or finds
   that the browser cannot draw it.
+- `panel/useRowMenu.tsx`: `useRowMenu`, the row menu of a list, and its
+  drawing at a point or in a sheet. `panel/row-menu.ts` gives the types of
+  the `rowMenu` prop and the groups of its entries.
 - `panel/UnavailableLists.tsx`: the notices of the failed repairs under
   the lists, with the mockups' `LostUpdateRow` and their ages, and the
   notice of a saved tree that the cloud computer could not read.
@@ -293,6 +377,9 @@ screen tests keep their static markup checks in Node.
   its `.table` class. Its headings take their look from the shared
   `MarkdownHeadings.module.css` of the mockups, which chat answers use
   too, and its own CSS sets only their margins.
+- `markdown/inline-render.tsx`: `inlineNodes`, the inline content of a
+  block as React elements. It draws each link with the mockups' `TextLink`
+  through the link opener of the app shell.
 - `code/`: the syntax colours and the code view. `code/file-kind.ts` gives
   `fileKind`, the kind of a file by its name: Markdown, code, or another
   file. A file is code when the code view gives it syntax colours.

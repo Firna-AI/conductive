@@ -24,6 +24,20 @@ export function warnWorker(warning: WorkerWarning): void {
 
 function warningFields(warning: WorkerWarning) {
   switch (warning.kind) {
+    case 'model_gateway_check_failed':
+      return {
+        kind: warning.kind,
+        message: 'A periodic model turn check failed.',
+        workspaceId: warning.workspaceId.text,
+        errorKind: warning.errorKind,
+      }
+    case 'model_gateway_answer_ended':
+      return {
+        kind: warning.kind,
+        message: 'The gateway ended a model answer.',
+        workspaceId: warning.workspaceId.text,
+        code: warning.code,
+      }
     case 'workspace_archive_failed':
       return {
         kind: warning.kind,
@@ -103,7 +117,7 @@ function warningFields(warning: WorkerWarning) {
       return {
         kind: warning.kind,
         message:
-          'The runner closes because its protocol version does not meet the workspace version pin.',
+          'The runner closes because its protocol version is not supported or does not meet the workspace version pin.',
         workspaceId: warning.workspaceId.text,
       }
     case 'lifecycle_repair_limited':

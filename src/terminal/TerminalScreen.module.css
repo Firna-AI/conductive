@@ -16,12 +16,42 @@
 .host {
   width: 100%;
   height: 100%;
+  /* A shared size that does not fit even at the smallest font scrolls. */
+  overflow: auto;
+  scrollbar-color: var(--ui-border) transparent;
+}
+
+/* The edge of a shared size that is smaller than the panel, as the
+   mockup draws it. */
+.host[data-shared='smaller'] :global(.xterm-screen) {
+  box-shadow: 1px 1px 0 var(--ui-border);
 }
 
 /* A plain drag selects also while a program has the mouse, so the screen
    keeps the text cursor that xterm.js turns into an arrow then. */
 .host :global(.xterm.enable-mouse-events:not(.xterm-cursor-pointer)) {
   cursor: text;
+}
+
+/* The hint below a link under the mouse pointer, as the mockup draws it. */
+.linkHint {
+  position: absolute;
+  z-index: 10;
+  padding: 2px 6px;
+  border: 1px solid var(--ui-border);
+  border-radius: 4px;
+  background: var(--ui-bar);
+  color: var(--ui-ink);
+  font-family: var(--ui-font-sans);
+  font-size: var(--ui-text-xs);
+  line-height: 1.5;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px var(--ui-shadow);
+  pointer-events: none;
+}
+
+.linkHint[hidden] {
+  display: none;
 }
 
 .keys {

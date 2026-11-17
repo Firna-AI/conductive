@@ -14,8 +14,8 @@ pages:
   copy. Try again." in the danger colour.
 - `app/workspace-links/messages` has a pasted link as a chip in the
   message box. Its `sent` variant has the sent message while the agent
-  works, and its `other-org` variant has a link of another org as plain
-  text.
+  works, and its `other-org` variant has a link of another org, which is
+  a link of the app and no chip.
 - `app/workspace-links/session-chips` has the second session of `W-395`,
   Debounce the address lookups to 250 ms, after its agent sent two
   messages. Its answer names the first session and the session of Saved
@@ -64,7 +64,9 @@ Desktop:
   tab, on hover, and while the focus is in the tab, and a hidden one keeps
   its place. The bar has no Close of its own. Two named tabs do not fit
   beside the actions of the frame, so the end of the tab row fades, as the
-  centre tab row does. Its variants:
+  centre tab row does. A press on the local address of port 3000 in an
+  answer opens this preview, as the flow `user-flows/open-a-local-server`
+  shows. Its variants:
   - `detected` has the port form with no preview open. Each server that
     the runner detects is a button with its port, its name, and its
     folder. A folder that does not fit keeps its end, after "…". The
@@ -82,6 +84,14 @@ Desktop:
   says "The latest list of servers is unavailable", with the time since
   the failure, and no Dismiss. A newer full report clears it. The page
   stands beside `app/tools/preview`, which already shows five screens.
+- `app/tools/preview-opening` has the page that shows while a preview
+  opens: in the frame of the Preview tool, in a new tab from Open, and in
+  the default browser from the Mac app. The logo tile sits above a turning
+  ring and "Opening preview", on the background of the app. The page
+  fades in after 150 ms, so a fast open shows no flash. The server sends
+  it as one small file, from `worker/previews/opening-page.ts`. Its
+  `failed` variant has "Preview not available" and asks the user to open
+  the preview again from the workspace.
 - `app/tools/desktop` has the hidden Desktop. It moved into its own
   folder and kept its path, so that `app/tools` shows only its canonical
   screen.
@@ -98,11 +108,19 @@ pages:
 - `app/file-mentions/chips` has a file chip and a folder chip in the
   message box. Its `pointer` variant has the pointer over the icon of the
   file chip, where a × takes the place of the icon. Its `sent` variant has
-  the sent message with both chips. Its `workspace-chip` and
-  `attached-file` variants show the same × on a pasted workspace link and
-  on an attached file in the text.
+  the sent message with both chips, and the answer with its own file
+  chips. Its `workspace-chip` and `attached-file` variants show the same
+  × on a pasted workspace link and on an attached file in the text.
+- `app/file-mentions/answers` has an answer of the agent with file chips,
+  from answer chip decisions 1 and 2 of 13 November 2026. A `@` mention,
+  an absolute path under the repository folder in code, and a relative
+  path with the line target `:19-22` in code show as chips. A path in
+  another repository and a code block stay code. A press on the chip with
+  the line target opens `app/files/code/at-line`.
 
 On a phone each chip of the composer keeps its icon and ends with a ×.
 The flow `user-flows/mention-a-file` goes from the query to the sent
 message, and ends with a press on the file chip, which opens
-`app/files/code`.
+`app/files/code`. The flow `user-flows/open-a-file-from-an-answer` goes
+from the answer of `app/file-mentions/answers` to the file tab at the
+lines, `app/files/code/at-line`.

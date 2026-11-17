@@ -87,7 +87,7 @@ while the change is open. Its pull request keeps them after the merge.
 - Reason: a hidden path or branch name names nothing real, and two hidden
   paths can become equal. File IDs in place of real paths were rejected,
   because they change the file API.
-- The runner hides the workspace token and the agent logins in the text
+- The runner hides the workspace token and the turn token in the text
   that screens show, before it saves or sends an event.
 - A start log hides each exact copy of a secret value and of the workspace
   token before a browser gets it.
@@ -178,7 +178,7 @@ while the change is open. Its pull request keeps them after the merge.
   user started. The one exception is that the Worker reads the model list
   of an own endpoint with its key, at the times that
   [Own endpoint logins](own-endpoint-logins.md) gives.
-  Only an older runner gets the login itself, as
+  The login itself never reaches a sandbox, as
   [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
   says. The GitHub token of a turn still belongs to its sender, as
   [GitHub tokens](#github-tokens) says.

@@ -2,6 +2,7 @@ import { useMemo, useSyncExternalStore, type ReactNode } from 'react'
 import { CircleAlert, CircleSlash, FileDiff, Files } from 'lucide-react'
 import type { WorkspaceTab } from '../../shared/workspace-view'
 import { allFilesUnavailable } from '../../../docs/mockups/src/components/chat/lostCopy'
+import type { FilesError } from '../api/files-errors'
 import type { FilesSnapshot, WorkspaceFiles } from '../model/files-store'
 import { treeRows } from '../model/tree-rows'
 import {
@@ -19,6 +20,7 @@ import { PanelBar } from '../ui/PanelBar'
 import { ChangeList } from './ChangeList'
 import { FileTree } from './FileTree'
 import styles from './FilesPanel.module.css'
+import type { RowMenuItems } from './row-menu'
 import { UnavailableLists } from './UnavailableLists'
 
 /** The live snapshot of the files of a workspace. */
@@ -41,11 +43,22 @@ function ReadFailed(props: { title: string; onRetry: () => void }) {
   )
 }
 
+/**
+ * Whether a list read failed because the workspace has no saved copy of the
+ * list. The Worker then answers `file_unavailable`.
+ */
+function notSaved(error: FilesError | null): boolean {
+  return error?.kind === 'failed' && error.code === 'file_unavailable'
+}
+
 interface ListProps {
   files: WorkspaceFiles
   snapshot: FilesSnapshot
   open: FilesTab | null
   navigation: FilesNavigation
+  /** Shows in place of a list without a saved copy, as `FilesPanel` says. */
+  waiting?: ReactNode
+  rowMenu?: RowMenuItems
 }
 
 function AllFiles(props: ListProps) {
@@ -56,6 +69,15 @@ function AllFiles(props: ListProps) {
     () => (tree ? treeRows(tree, folders, openPath) : []),
     [tree, folders, openPath],
   )
+  // The wait shows only when the workspace has no saved tree: the read says
+  // so, or the tree under the mark has no entries, which is an unknown tree.
+  // A read that runs shows its load, and any other failed read its Try again.
+  if (
+    props.waiting &&
+    ((!tree && notSaved(snapshot.treeError)) ||
+      (rows.length === 0 && snapshot.treeUnavailable))
+  )
+    return props.waiting
   // With no saved tree to show, the mark wins over a read that still waits
   // or failed, and over an empty list, which would say that the branch has
   // no files. A saved tree stays visible under its notice.
@@ -91,6 +113,7 @@ function AllFiles(props: ListProps) {
         openMode={open?.kind === 'file' ? open.mode : 'preview'}
         openPath={openPath}
         revealed={snapshot.revealed}
+        rowMenu={props.rowMenu}
         rows={rows}
       />
     </div>
@@ -100,6 +123,8 @@ function AllFiles(props: ListProps) {
 function Changes(props: ListProps) {
   const { files, snapshot, open } = props
   const { changes } = snapshot
+  if (!changes && props.waiting && notSaved(snapshot.changesError))
+    return props.waiting
   if (!changes) {
     if (!snapshot.changesError) return <Loading label="Loading changes" />
     return (
@@ -123,6 +148,7 @@ function Changes(props: ListProps) {
       changes={changes}
       navigation={props.navigation}
       openPath={open?.kind === 'diff' ? open.path : null}
+      rowMenu={props.rowMenu}
     />
   )
 }
@@ -143,6 +169,13 @@ export function FilesPanel(props: {
   /** Shows in place of All files and Changes, such as a sandbox state. */
   placeholder?: ReactNode
   /**
+   * Shows in place of a list that has no saved copy, which its read names,
+   * such as the wait of a sandbox that starts for the first time. A list
+   * with a saved copy shows it. A read that runs shows its load, and any
+   * other failed read shows Try again.
+   */
+  waiting?: ReactNode
+  /**
    * The time now, for the age of a notice under the lists. Give a stable
    * function. The default is the clock of the browser.
    */
@@ -152,6 +185,12 @@ export function FilesPanel(props: {
    * tab shows and its link names to a screen reader.
    */
   listKeys?: Partial<Record<FileListKind, CommandKey>>
+  /**
+   * The items of the menu of each row of All files and Changes, from the
+   * real path and the kind of the row, such as Copy path. A row whose label
+   * hides a secret value gets none. Without it, no row has a menu.
+   */
+  rowMenu?: RowMenuItems
 }) {
   const { files, list, navigation, listKeys } = props
   const snapshot = useFilesSnapshot(files)
@@ -178,7 +217,14 @@ export function FilesPanel(props: {
       commandKey: listKeys?.checks,
     },
   ]
-  const listProps = { files, snapshot, open, navigation }
+  const listProps = {
+    files,
+    snapshot,
+    open,
+    navigation,
+    waiting: props.waiting,
+    rowMenu: props.rowMenu,
+  }
   let body: ReactNode = props.placeholder
   if (list === 'checks') body = props.checks
   else if (!body) {

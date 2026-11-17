@@ -17,8 +17,8 @@ import { privacyUsesSection } from './privacy-uses'
  * guidance that the README names. The facts come from the architecture
  * and the protocol docs. Both legal pages share the operator details and
  * contact address. The section on what the product uses, and why, is in
- * `privacy-uses.ts`. Its Keys and logins item defines the newer and older
- * cloud computers described in `privacy-recipients.ts`.
+ * `privacy-uses.ts`. The recipients of that data are in
+ * `privacy-recipients.ts`.
  */
 export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
@@ -113,20 +113,24 @@ export const privacyDocument: LegalDocument = {
           secret value that a script or an agent wrote there. ${productName}
           then deletes the cloud computer, unless a member restores the
           workspace before then.`,
-        paragraph`${productName} keeps each file that you send with a message
-          until it deletes the workspace of the message. It deletes an unsent
-          file 7 days after you upload it.`,
+        paragraph`${productName} keeps each attached file until the cloud
+          computer of its workspace has it and its first start succeeds.
+          It then deletes its own copy. The file stays in the cloud computer.
+          The message keeps the file's name, type, size, and path.
+          ${productName} deletes an unsent file 7 days after you upload it.
+          A large text that you paste into a message becomes such a file,
+          and it uploads before you send it.`,
         paragraph`An account that waits for app access stays until you ask
           for its deletion, as every other account does.`,
-        paragraph`Account records, the latest Terms acceptance, and
-          suspension records do not automatically expire when you stop
-          using ${productName}. Workspace chat history and Mac command records
+        paragraph`Account records, the latest Terms acceptance, the time of
+          your last activity, and suspension records do not automatically
+          expire when you stop using ${productName}. Workspace chat history and Mac command records
           stay while their org exists, including while a cloud computer is
           stopped. When ${productName} passes on model requests and their
           answers, it keeps no copy of them.`,
         paragraph`A connected agent login stays until you remove or replace
-          it. Panel sizes stay in your browser until you clear its saved
-          data. The providers above can keep their own records under their
+          it. Panel sizes and the last workspace of each org stay in your
+          browser until you clear its saved data. The providers above can keep their own records under their
           terms and privacy notices.`,
         paragraph`The team keeps each feedback email in its inbox while it
           helps to improve ${productName}. It deletes the email when it no

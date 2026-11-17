@@ -3,17 +3,21 @@ import type { RepairKind } from './lifecycle/repair-data'
 import type { WorkspaceStartJob } from './lifecycle/start-types'
 import type { WorkspaceArchiveState } from './lifecycle/archive-types'
 import type { ErrorSummary, WarningCode, WarningId } from './warning-values'
+import type { GatewayCheckErrorKind } from './model-gateway/check-error'
+import type { GatewayRefusal } from './model-gateway/errors'
 
 export const SIMPLE_WARNINGS = {
   workspace_alarm_failed:
     'Workspace alarm work failed. Its durable deadline will retry.',
-  routine_schedule_failed:
-    'A routine schedule could not run. The next scan will try again.',
-  routine_queued_start_failed:
-    'A queued routine run could not start. The next scan will try again.',
-  routine_background_start_failed:
+  automation_schedule_failed:
+    'An automation schedule could not run. The next scan will try again.',
+  automation_queued_start_failed:
+    'A queued automation run could not start. The next scan will try again.',
+  automation_background_start_failed:
     'A pull request run could not start in the background.',
   marketing_site_unavailable: 'The built marketing site is not available.',
+  turn_speed_invalid:
+    'A turn end had a speed that the Worker does not know. It counts as standard speed.',
   github_app_slug_invalid:
     'GITHUB_APP_SLUG is not a GitHub App slug. The install link uses the default slug.',
   github_installation_status_failed:
@@ -36,15 +40,28 @@ export const SIMPLE_WARNINGS = {
   attachment_upload_cleanup_retry: 'An attachment upload cleanup will retry.',
   activity_timestamp_failed: 'Workspace activity timestamp could not be saved.',
   activity_update_failed: 'Workspace activity update failed.',
+  user_activity_failed: 'The last active time of a user could not be saved.',
   workspace_title_unconfigured:
     'The workspace title request was skipped: Workers AI is not configured.',
   shortcut_keys_skipped:
     'Some stored shortcut keys are no longer valid and were skipped.',
   shortcut_change_skipped: 'An unreadable stored shortcut change was skipped.',
+  model_gateway_check_late:
+    'A model turn check took longer than its interval. The answer keeps streaming.',
 } as const
 
 /** Each kind permits only its fixed text and the safe values that it needs. */
 export type WorkerWarning =
+  | {
+      kind: 'model_gateway_check_failed'
+      workspaceId: WarningId
+      errorKind: GatewayCheckErrorKind
+    }
+  | {
+      kind: 'model_gateway_answer_ended'
+      workspaceId: WarningId
+      code: GatewayRefusal | GatewayCheckErrorKind | 'lease_expired'
+    }
   | {
       kind: 'workspace_archive_failed'
       workspaceId: WarningId

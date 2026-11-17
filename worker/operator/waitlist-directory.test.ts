@@ -116,10 +116,13 @@ it('finds waiting people by login, name and numeric ID with literal search symbo
   const page = await client.request(operatorUserPath(11))
   expect(page.status).toBe(200)
   const user: OperatorUserDetail = await page.json()
-  expect(user).toMatchObject({
+  const { email, ...rest } = user
+  expect(rest).toMatchObject({
     appAccess: { state: 'waiting', waitingSince: TEST_TIME },
     hasVerifiedEmail: true,
     githubCreatedAt: 1_400_000_000_000,
   })
-  expect(JSON.stringify(user)).not.toContain('@')
+  // Only the email field of the user page holds an email address.
+  expect(email).toBe('member@example.com')
+  expect(JSON.stringify(rest)).not.toContain('@')
 })

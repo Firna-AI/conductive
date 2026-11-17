@@ -1,7 +1,7 @@
 import { defineScreen } from '@mokly/mokly'
 import { AccountScreen } from '../../../../../screens/AccountScreen'
 import {
-  accountGeneral,
+  accountAgents,
   accountSchema,
 } from '../../../../../screens/accountState'
 
@@ -13,7 +13,7 @@ export const connectCodexChatGpt = defineScreen({
     'The user chose option A of decision 175 on 10 November 2026: a device code sign-in that the app runs, in place of the access token of decision 170. It works with each ChatGPT plan, also Plus and Pro, once the setting is on, so the words name the setting before the start. The user chose on 11 November 2026 to link to the setting, so the user finds it in one step, and confirmed its address. chatGptSignInCopy.ts holds the address in one place. The switch names the plan, because Codex then runs on it. The app keeps the sign-in encrypted and renews it, so the user signs in once. The sign-in has no secret field, so the form has no hint that the app tests the login.',
   relatedDocs: [],
   propSchema: accountSchema,
-  props: { ...accountGeneral, form: 'codex-token' },
+  props: { ...accountAgents, form: 'codex-token' },
   render: (props, context) => (
     <AccountScreen state={props} viewport={context.viewport} />
   ),

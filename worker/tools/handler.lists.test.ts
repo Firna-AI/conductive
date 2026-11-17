@@ -1,7 +1,6 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
-import { MACHINE_PATHS } from '../../src/shared/agent-tools'
-import { TOOL_TURN_HEADER } from '../../tools/context'
+import { MACHINE_PATHS, TOOL_TURN_HEADER } from '../../src/shared/agent-tools'
 import { HttpError } from '../http'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { publishToolImage, TOOL_MODELS } from './list-test-support'
@@ -161,6 +160,7 @@ it('lists configured models in order with owner, app, or unavailable defaults', 
     agent: 'claude',
     model: 'app-model',
     effort: 'max',
+    fast: false,
   } as const
   fixture.services.ownerDefaultChoice.mockResolvedValue(appChoice)
   response = await list(MACHINE_PATHS.models)

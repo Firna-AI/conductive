@@ -154,7 +154,7 @@ describe('session parts', () => {
       sourceSessionId: null,
       loginAvailable: true,
       loginShared: true,
-      choice: { agent, model: 'Model', effort: 'high' as const },
+      choice: { agent, model: 'Model', effort: 'high' as const, fast: false },
     }))
     const html = renderToStaticMarkup(
       <SessionTabs
@@ -163,6 +163,7 @@ describe('session parts', () => {
         mobile={false}
         onCancelRename={() => {}}
         onClose={() => {}}
+        onCloseTabs={() => {}}
         onCopy={() => {}}
         onMove={() => {}}
         onNew={() => {}}
@@ -178,6 +179,7 @@ describe('session parts', () => {
             id: 'a',
             title: 'Address autocomplete',
             name: 'Address autocomplete',
+            running: false,
             selected: true,
           },
         ]}
@@ -193,7 +195,12 @@ describe('session parts', () => {
       renderToStaticMarkup(
         <Composer
           blocked={false}
-          choice={{ agent: 'claude', model: 'Opus 5.5', effort: 'high' }}
+          choice={{
+            agent: 'claude',
+            model: 'Opus 5.5',
+            effort: 'high',
+            fast: false,
+          }}
           draft={{
             ...blankDraft('draft'),
             text: `See the screenshot. ${files.map(({ id }) => fileMark(id)).join(' ')}`,
@@ -218,10 +225,10 @@ describe('session parts', () => {
     const file = new File(['png'], 'overlap.png', { type: 'image/png' })
     const off = /aria-label="Send" aria-disabled="true"/
     const error = new ApiError(502, 'upload_failed', 'The upload failed.')
-    expect(composer([uploadingFile('file-1', file)])).toMatch(off)
-    expect(composer([{ state: 'failed', id: 'file-1', file, error }])).toMatch(
-      off,
-    )
+    expect(composer([uploadingFile('file-1', file, null)])).toMatch(off)
+    expect(
+      composer([{ state: 'failed', id: 'file-1', file, error, upload: null }]),
+    ).toMatch(off)
     expect(composer([])).not.toMatch(off)
   })
 })

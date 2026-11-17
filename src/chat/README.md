@@ -18,7 +18,10 @@ tab menu of a session copies its link, and its transcript as Markdown,
 also in a read-only workspace, as
 [Session transcripts](../../docs/protocol/session-transcripts.md) and
 [Session links](../../docs/protocol/agents-and-sessions.md#session-links)
-say.
+say. The tab menu of a file or diff tab copies its path, with the
+`copyPath` that the host gives with the tab, as
+[The tab row](../../docs/protocol/agents-and-sessions.md#the-tab-row)
+says.
 
 ## Use it in the app
 
@@ -48,6 +51,17 @@ stops its own controller:
 callback of `WorkspaceChat`, its theme and its layers, the parts that
 the Mac app shows outside the chat, and `useChatController`.
 
+Add to chat in the menu of a row of the Files panel puts the chip of a
+file or a folder into the message field of the session that the member
+saw last, as
+[Add to chat](../../docs/protocol/file-mentions.md#add-to-chat) says. The
+shell asks the kept `ChatController` for it with `addToChat`. The
+controller shows that session, or starts a new one when no session tab is
+open, as [Add to chat](loads-and-sends.md#add-to-chat) says. Its message
+field then puts the chip in as a pick from the list of `@` does, with
+`FieldHandle.insertMention`, as [The message field](message-field.md)
+says.
+
 ### A chat that the app keeps
 
 [A chat that the app keeps](integration.md#a-chat-that-the-app-keeps)
@@ -58,11 +72,15 @@ chips.
 ## Rules for this code
 
 - [The tab row](tab-row.md) gives the rules of the one order of the
-  tabs, the drag, the tab menu, and the scroll of the row.
+  tabs, the mark of the temporary tab, the drag, the tab menu, and the
+  scroll of the row, and the reader's place that each tab keeps. A move of
+  the temporary tab to another place keeps it, and so does Keep open in its tab menu, through the `keep` that the
+  host gives that tab.
 - [Transcript rules](transcript.md) give the rules of the stream cursor,
   the session logs, the transcript items and their counts, the changed
   files that the cloud computer could not read, the end reason of a
-  finished turn, the lost lines, the turns, the open run of tool calls of
+  finished turn, the standard speed of a fast turn, the lost lines, the
+  turns, the open run of tool calls of
   a running turn, the work fold of each ended turn, and Try again.
 - [The work of a turn](../../docs/protocol/chat-and-events.md#the-work-of-a-turn)
   says what folds when a turn ends. It also says that the line of each fold
@@ -70,15 +88,22 @@ chips.
 - [Chat Markdown](../../docs/protocol/chat-markdown.md) states the
   formatting of agent messages, with their headings and lists.
   [Chat tables](../../docs/protocol/chat-tables.md) states their tables.
-  [Workspace links](../../docs/protocol/workspace-links.md) states the
-  chips of sent messages and answers. [Agent text](agent-text.md) gives the
-  rules of the code that formats them: the chips, and the heading, list,
-  and table parts that the chat shares with the file preview and the
-  mockups.
+  [Chat links](../../docs/protocol/chat-links.md) states the links of sent
+  messages and answers, and
+  [Workspace links](../../docs/protocol/workspace-links.md) states their
+  chips. [File mentions](../../docs/protocol/file-mentions.md#files-in-answers)
+  states the file chips of answers. [Agent text](agent-text.md) gives the rules of the code that
+  formats them: the links, the chips, and the heading, list, and table
+  parts that the chat shares with the file preview and the mockups.
+- The links of chat text open through the link opener of the app shell, in
+  `../shell/ui/text-links.tsx`. The workspace screen gives it the pages of
+  the app and the port previews of the workspace, as
+  [Chat integration](integration.md) says. Outside that screen, each link
+  opens a new tab.
 - [Loads, records, and sends](loads-and-sends.md) gives the rules of
   the history loads, the read-only chats, the order of the records, the
-  sends, the fixed prompts of the pull request bar, and Stop with the line
-  of each stop.
+  sends, the fixed prompts of the pull request bar, Stop with the line of
+  each stop, and Add to chat of the Files panel.
 - [The message field](message-field.md) gives the rules of the message
   field of each composer. They cover its chips, the chips of attached
   files, the copy, the paste, and the drag. They also cover the drop of
@@ -123,7 +148,7 @@ on `FakeApiServer` and the recorded events, and render the chat with
 [`draft-files.test-support.ts`](../app/draft-files.test-support.ts) of the
 app attach files and write their marks as the field does, with uploads
 that wait for the test. The
-[workspace screen](../shell/workspace/README.md#key-code) tests the kept
+[workspace screen](../shell/workspace/key-code.md) tests the kept
 chat in the whole app.
 [Chat tests](tests.md) says what each test file checks.
 
@@ -148,6 +173,8 @@ copy, the chat routes, the Mac commands, and the development page.
   agent messages, with their headings and lists.
 - [Chat tables](../../docs/protocol/chat-tables.md): the tables of agent
   messages.
+- [Chat links](../../docs/protocol/chat-links.md): the links of sent
+  messages and answers.
 - [Agent runner](../../docs/protocol/agent-runner.md): the limits of the
   runner events, their refusal markers, and the late events of a turn.
 - [Workspaces and sandboxes](../../docs/protocol/workspaces-and-sandboxes.md):

@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { Plus, Repeat, Search } from 'lucide-react'
+import { Plus, Repeat, Search, Settings } from 'lucide-react'
 import { paths } from '../../paths'
 import { ScreenLink } from '../common/ScreenLink'
 import a11y from '../common/a11y.module.css'
@@ -9,9 +9,10 @@ import { useMacApp } from '../mac/MacApp'
 import styles from './SidebarLinks.module.css'
 
 /**
- * The link to the settings of the org. A dot says that something there needs
- * the user, such as a failed build of the cloud computer. `to` is the page of
- * the settings, such as those of a suspended org.
+ * The cog that links to the settings of the org. Its tooltip and its hidden
+ * text say Settings. A dot says that something there needs the user, such
+ * as a failed build of the cloud computer. `to` is the page of the
+ * settings, such as those of a suspended org.
  */
 export function SettingsLink(props: {
   current?: boolean
@@ -22,13 +23,14 @@ export function SettingsLink(props: {
     <ScreenLink
       aria-current={props.current ? 'page' : undefined}
       className={classes(styles.settings, props.current && styles.current)}
+      title="Settings"
       to={props.to ?? paths.orgSettings}
     >
+      <Settings aria-hidden size={15} />
       {props.alert ? <span aria-hidden className={styles.alert} /> : null}
-      Settings
-      {props.alert ? (
-        <span className={a11y.hidden}>, a build failed</span>
-      ) : null}
+      <span className={a11y.hidden}>
+        Settings{props.alert ? ', a build failed' : null}
+      </span>
     </ScreenLink>
   )
 }
@@ -79,10 +81,10 @@ export function NewWorkspaceLink(props: {
 }
 
 /**
- * The row below New workspace that opens the routines of the org. `to` is
- * the page of the routines, such as those of a suspended org.
+ * The row below New workspace that opens the automations of the org. `to` is
+ * the page of the automations, such as those of a suspended org.
  */
-export function RoutinesLink(props: {
+export function AutomationsLink(props: {
   current?: boolean
   variant: LinkVariant
   to?: string
@@ -91,8 +93,8 @@ export function RoutinesLink(props: {
     <OrgPageLink
       current={props.current}
       icon={Repeat}
-      label="Routines"
-      to={props.to ?? paths.routines}
+      label="Automations"
+      to={props.to ?? paths.automations}
       variant={props.variant}
     />
   )

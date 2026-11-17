@@ -1,7 +1,9 @@
-import type { AgentChoice } from '../../shared/agents'
+import type { Session } from '../../shared/generated/Session'
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
+import type { UserMessage } from '../../shared/generated/UserMessage'
 import { chatHistoryPath } from '../../shared/events'
-import type { SendMessageResponse, UserMessage } from '../../shared/messages'
-import { sessionsPath, type Session } from '../../shared/sessions'
+import type { SendMessageResponse } from '../../shared/messages'
+import { sessionsPath } from '../../shared/sessions'
 import type { FakeApiServer } from '../../test-support/fake-api'
 import {
   FAKE_IDS,
@@ -26,6 +28,7 @@ const opus: AgentChoice = {
   agent: 'claude',
   model: 'Opus 5.5',
   effort: 'high',
+  fast: false,
 }
 
 /** The ID of the linked session that the fake opens. */

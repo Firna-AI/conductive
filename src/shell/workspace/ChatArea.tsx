@@ -1,4 +1,5 @@
 import { useCallback, useMemo, type ReactNode } from 'react'
+import type { WorkspaceStart } from '../../shared/generated/WorkspaceStart'
 import {
   replacesComposer,
   type SandboxNoticeState,
@@ -6,11 +7,10 @@ import {
 import { routes } from '../../app/router'
 import { useServices } from '../../app/services'
 import { useStore } from '../../app/store'
-import type { ComposerFocus } from '../../chat/components/Composer'
+import type { ComposerFocus } from '../../chat/components/composer-requests'
 import type { ChatHost } from '../../chat/components/SessionChat'
 import type { ChatController } from '../../chat/state/controller'
 import { WorkspaceChatView } from '../../chat/WorkspaceChat'
-import type { WorkspaceStart } from '../../shared/workspaces'
 import { useApp } from '../context'
 import { useGo } from '../ui/AppLink'
 import type { Action } from '../ui/useAction'

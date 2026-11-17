@@ -1,5 +1,5 @@
+import type { RunnerEvent } from '../../src/shared/generated/RunnerEvent'
 import { sessionsPath, sessionPaths } from '../../src/shared/sessions'
-import type { RunnerEvent } from '../../src/shared/runner'
 import { record } from '../chat/inputs'
 import { FIRST_MESSAGE } from './durable-test-support'
 import type { realRuntimeFixture } from './real-runtime-test-support'
@@ -13,7 +13,7 @@ export async function connectRuntimeChat(
   let eventNumber = 0
   runner.send({
     type: 'hello',
-    protocolVersion: 1,
+    protocolVersion: 2,
     workspaceId,
     streamId: 'runtime-state-stream',
   })
