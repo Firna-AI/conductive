@@ -8,11 +8,7 @@ import type { AppEnv } from '../env'
 import { endpointModelList } from './account-models'
 import { configuredModels } from './models'
 
-export async function memberLoginOrgs(
-  db: D1Database,
-  userId: string,
-  orgId?: string,
-) {
+async function memberLoginOrgs(db: D1Database, userId: string, orgId?: string) {
   const { results } = await db
     .prepare(
       `SELECT o.id, o.name FROM orgs o JOIN org_members m ON m.org_id = o.id

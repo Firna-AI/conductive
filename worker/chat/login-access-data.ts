@@ -18,7 +18,7 @@ export interface SessionLoginTarget {
   userId?: string
 }
 
-export interface LoginCandidate {
+interface LoginCandidate {
   login: SessionLogin
   allowed: boolean
   available: boolean

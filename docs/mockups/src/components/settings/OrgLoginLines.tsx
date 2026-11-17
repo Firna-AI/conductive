@@ -8,7 +8,7 @@ import styles from './OrgLoginLines.module.css'
 export type OrgLoginUse = Readonly<Partial<Record<AgentKey, readonly string[]>>>
 
 /** The words of an org login that serves the person. The app takes them here. */
-export const orgLoginCopy = {
+const orgLoginCopy = {
   /** The line under the row of the agent, such as for Acme. */
   line: (org: string) => `Your new sessions in ${org} use ${org}'s login.`,
 } as const

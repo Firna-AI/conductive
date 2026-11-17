@@ -20,7 +20,7 @@ import type { ChatSnapshot } from './chat-snapshot'
  * owner of a login that is not the reader's own, such as "Cal" or "Acme",
  * or is null when the chat does not know it.
  */
-export type MessageLogin =
+type MessageLogin =
   { owner: 'own' } | { owner: 'member' | 'org'; name: string | null }
 
 const own: MessageLogin = { owner: 'own' }

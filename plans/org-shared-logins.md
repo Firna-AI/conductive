@@ -916,8 +916,9 @@ the check logs, and the failure proofs of the tests.
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests and `npm run check`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Run the targeted tests and `npm run check`. The log is in
+      `.context/org-shared-logins/m7-check-3.log`.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
