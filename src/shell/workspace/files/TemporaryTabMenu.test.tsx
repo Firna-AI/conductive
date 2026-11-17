@@ -25,7 +25,7 @@ import {
   press,
 } from '../../../test-support/mount'
 import { settle } from '../../test-mount'
-import { bodiesOf } from '../kept-test-kit'
+import { savedViewsOf } from '../kept-test-kit'
 import { linkTo, openTab, tabNames } from '../wiring-test-kit'
 import { filesHref } from './files-address'
 
@@ -73,13 +73,14 @@ describe('the tab menu of the temporary tab in the workspace', () => {
       temporaryMenu,
       ...kept,
       keptMenu: menuItems('AddressForm.tsx'),
-      saved: await bodiesOf(server, 'PUT', viewPath, from),
+      saved: await savedViewsOf(server, from),
     }).toEqual({
       temporaryMenu: [
         { name: 'Keep open', off: false },
         { name: 'Copy path', off: false },
         { name: 'Move left', off: false },
         { name: 'Move right', off: false },
+        { name: 'Close other tabs', off: false },
         { name: 'Close tabs to the right', off: false },
       ],
       names: [autocomplete, 'AddressForm.tsx', debounce],
@@ -89,6 +90,7 @@ describe('the tab menu of the temporary tab in the workspace', () => {
         { name: 'Copy path', off: false },
         { name: 'Move left', off: false },
         { name: 'Move right', off: false },
+        { name: 'Close other tabs', off: false },
         { name: 'Close tabs to the right', off: false },
       ],
       saved: [{ ...saved, temporaryTab: null }],

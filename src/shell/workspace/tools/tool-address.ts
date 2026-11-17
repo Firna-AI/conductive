@@ -85,6 +85,25 @@ export function toolPlace(view: readonly string[]): ToolPlace | null {
   }
 }
 
+/**
+ * The tool that the address names for the tools panel, or null. On desktop
+ * an address of a preview or of a port names a Preview tab of the centre,
+ * not a tool: the panel keeps its saved tool, and a click on a tool tab
+ * keeps the address of that Preview tab. On a phone each such address is
+ * the Preview page.
+ */
+export function panelToolPlace(
+  view: readonly string[],
+  desktop: boolean,
+): ToolPlace | null {
+  const place = toolPlace(view)
+  const centre =
+    desktop &&
+    place?.tool === 'preview' &&
+    (place.port !== null || place.previewId !== null)
+  return centre ? null : place
+}
+
 /** The address of a tool, or of one preview of the Preview tool. */
 export function toolHref(
   orgId: string,

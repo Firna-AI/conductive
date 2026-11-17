@@ -6,8 +6,24 @@ export interface WorkspaceOperation {
   publish(envelope: WorkspaceEventEnvelope): void
 }
 
+/** Binds each feature operation before it enters the shared workspace queue. */
+export function workspaceOperationRunner(
+  store: ChatStore,
+  publish: (events: readonly WorkspaceEventEnvelope[]) => void,
+  bind: (workspaceId: string) => void,
+) {
+  return <T>(
+    workspaceId: string,
+    authorize: () => Promise<void>,
+    work: (operation: WorkspaceOperation) => Promise<T>,
+  ): Promise<T> => {
+    bind(workspaceId)
+    return runWorkspaceOperation(store, workspaceId, authorize, publish, work)
+  }
+}
+
 /** The supplied operations already run in the queue. They must not enter it again. */
-export function runWorkspaceOperation<T>(
+function runWorkspaceOperation<T>(
   store: ChatStore,
   workspaceId: string,
   authorize: () => Promise<void>,

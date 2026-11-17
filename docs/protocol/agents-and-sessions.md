@@ -147,11 +147,11 @@ says.
   server confirms the close. When the close fails, the tab returns to its
   place in the row, and a notice says that the session did not close. The
   user asked for this on 16 November 2026.
-- One close of several tabs, such as Close tabs to the right, asks one
-  question for all the running sessions among them. The question names
-  each of these sessions. The other sessions close at once. Cancel keeps
-  each running session open. The user asked for Close tabs to the right on
-  16 November 2026.
+- One close of several tabs, such as Close other tabs or Close tabs to the
+  right, asks one question for all the running sessions among them. The
+  question names each of these sessions. The other sessions close at once.
+  Cancel keeps each running session open. The user asked for Close tabs to
+  the right on 16 November 2026, and for Close other tabs on the same day.
 - Reason: no agent runs where the user cannot see it, and no history gets
   lost. A close that only hides a running session was rejected for the
   first reason. A close that deletes the history was rejected for the
@@ -165,8 +165,11 @@ says.
 
 ### The tab row
 
-- The tab row of the centre column shows the session tabs and the file and
-  diff tabs in one order (decision 186).
+- The tab row of the centre column shows the session tabs, the file and
+  diff tabs, and the Preview tabs in one order (decision 186). A Preview
+  tab shows the page of one port, as
+  [Port previews](port-previews.md#preview-tabs-and-the-end-of-a-preview)
+  says (decision 291).
 - Each member has their own order in each workspace. The order stays after
   a reload. The other devices of that member load the same order.
 - A new tab of any kind opens at the end of the row. This holds also for a
@@ -183,7 +186,7 @@ says.
 - On a phone, the row shows only the session tabs. A long press lifts a
   tab there.
 - A move on a phone changes only the place of the moved session tab. Each
-  file tab keeps its place.
+  file tab and each Preview tab keeps its place.
 - When the tabs do not fit at their minimum width, the row scrolls
   sideways (decision 187).
 - The row scrolls a tab into view when the tab opens, when it becomes the
@@ -215,16 +218,18 @@ says.
   a sheet.
 - The tab menu of a session tab holds four groups, with a line between
   them: Rename session, then Copy link, Copy concise transcript, and Copy
-  full transcript, then Move left and Move right, then Close tabs to the
-  right. The tab menu of a kept file or diff tab holds three groups, with
-  a line between them: Copy path, then Move left and Move right, then
-  Close tabs to the right.
+  full transcript, then Move left and Move right, then Close other tabs and
+  Close tabs to the right. The tab menu of a kept file or diff tab holds
+  three groups, with a line between them: Copy path, then Move left and
+  Move right, then Close other tabs and Close tabs to the right.
+  The tab menu of a Preview tab holds Move left and Move right, then Close
+  other tabs and Close tabs to the right.
 - Copy link copies the link of the session of its tab, as
   [Session links](#session-links) says. The user added it on 12 November
   2026.
 - The tab menu of the temporary tab holds four groups, with a line between
   them: Keep open (decision 286 B), then Copy path, then Move left and
-  Move right, then Close tabs to the right.
+  Move right, then Close other tabs and Close tabs to the right.
 - Reason: the tab menu groups its items by kind (decision 188). Copy path
   comes after Keep open and before the moves, as the copy items of a
   session tab come after Rename session and before the moves.
@@ -238,14 +243,18 @@ says.
   were not chosen.
 - Move left and Move right move the tab one place in the row. On the first
   tab, Move left is off. On the last tab, Move right is off.
+- Close other tabs closes each tab of the row but the tab, of each kind,
+  as the same item of a browser does. When the row holds only the tab, it
+  is off. The user asked for it on 16 November 2026.
 - Close tabs to the right closes each tab after the tab in the row, of
   each kind, as the same item of a browser does. On the last tab, it is
   off. The user asked for it on 16 November 2026.
 - When the shown tab is among the closed tabs, the tab of the menu shows
   first, as in a browser. Each session tab closes as its Close does, so
   its session moves to the history for every member.
-- On a phone, the row shows only the session tabs, so Close tabs to the
-  right closes only the session tabs after the tab. Each file tab stays.
+- On a phone, the row shows only the session tabs, so Close other tabs
+  and Close tabs to the right close only session tabs. Each file tab and
+  each Preview tab stays.
 - After a move from the tab menu, a screen reader user hears the name of
   the tab and its new place, such as "Address autocomplete moves to place
   2 of 4". The focus then goes back to the tab.
@@ -282,6 +291,7 @@ says.
 - A file or diff tab there without Copy path, such as a tab whose label
   hides a secret value, has no item. So it opens no tab menu, and the
   browser shows its own.
+- A Preview tab there opens no tab menu.
 - Reason: a read-only workspace accepts no change, but a member can still
   copy there, as
   [Read-only workspaces](session-transcripts.md#read-only-workspaces)

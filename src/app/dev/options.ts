@@ -6,6 +6,7 @@ import type { RecordedChatScenario } from '../../test-support/recorded-chat'
 import { WORKSPACE_STATES } from '../api/read-workspaces'
 import { getStartedOrder } from '../get-started'
 import type { DevUploadMode } from './attachment-routes'
+import { SECRET_SCENARIOS, type SecretScenario } from './secret-request-seed'
 
 const ROLES = ['admin', 'member'] as const satisfies readonly OrgRole[]
 
@@ -168,6 +169,8 @@ export interface DevOptions {
   inviteCode: DevInviteCode
   /** The state of the skills repository of Acme, or `null` for its list. */
   skills: DevSkills | null
+  /** The state of the secret requests of `checkout-autocomplete`, or null. */
+  secrets: SecretScenario | null
 }
 
 /** The value of `key` when it is one of `values`. */
@@ -220,6 +223,7 @@ export function readDevOptions(search: string): DevOptions {
     waitlistOff: params.get('waitlist') === 'off',
     inviteCode: pick(params, 'inviteCode', INVITE_CODES) ?? 'left',
     skills: pick(params, 'skills', SKILLS) ?? null,
+    secrets: pick(params, 'secrets', SECRET_SCENARIOS) ?? null,
   }
 }
 

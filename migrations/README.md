@@ -23,7 +23,8 @@ So a build whose create reply was lost finds that sandbox again. When the user w
 
 Chat history, sessions, runner event cursors, start steps, and banner state
 belong to workspace Durable Object storage. They have no D1 tables.
-Stored secrets use ciphertext columns. The browser reads only metadata.
+Stored secrets use ciphertext columns. The browser reads metadata, except
+when an org admin reveals one secret value through the recorded Reveal action.
 The git credential helper uses the GitHub user token of the turn's sender, as
 [GitHub tokens](../docs/protocol/github-tokens.md) says.
 The older comment on `github_connections` in `202611060100_contracts.sql`
@@ -245,6 +246,23 @@ The [members backend](../worker/members/README.md) owns the reads and moves.
 It keeps every other preference and every saved view.
 An unset view now uses the dialog, so only accounts made after this migration get the dialog without a choice.
 [The preference](../docs/protocol/create-a-workspace.md#the-preference) gives the requirement.
+
+`202611141345_agent_secrets.sql` adds encrypted org secrets, workspace
+pre-approvals, and session approvals. A name is unique in its org.
+Composite foreign keys keep each grant within its org and delete its rows
+with its secret or workspace. Creator and approver IDs are opaque
+attribution IDs, so account removal keeps the records.
+The migration adds `workspaces.mac_access`, on for each existing and new
+row, and `workspace_creation_plans.capabilities_json` for create recovery.
+The [secrets backend](../worker/secrets/README.md) owns these records.
+
+`202611161353_secret_reveals.sql` adds retained reveal records with the
+secret ID and name, value version, admin ID, and time. An org foreign key
+removes its records at org purge. Secret and admin IDs have no foreign
+key, so their deletion keeps the records. No record holds a secret value.
+The migration gives each existing secret value version 1. Replacement
+increments that version, so metadata shows only a reveal of the current
+value. An index serves the last reveal of each value version.
 
 `202611161200_parallel_image_sources.sql` rebuilds `image_source_jobs` with the primary key `(build_id, source_index)`, so an image job keeps one row for each repository.
 It copies every column of each older row, including the encrypted token, process, output offsets, source index, and provider account.

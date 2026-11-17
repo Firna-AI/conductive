@@ -107,7 +107,7 @@ export function failSend(draft: Draft, failed: FailedSend): Draft {
 }
 
 /** A stopped chat ends its files and removes their marks in the same snapshot. */
-export function endDraftFiles(draft: Draft): Draft {
+function endDraftFiles(draft: Draft): Draft {
   return {
     ...draft,
     text: withoutFileMarks(
@@ -120,6 +120,19 @@ export function endDraftFiles(draft: Draft): Draft {
     refusedFolders: [],
     sendId: null,
     sending: false,
+  }
+}
+
+/** The snapshot of a stopped chat, whose drafts end their files. */
+export function withEndedDraftFiles(snapshot: ChatSnapshot): ChatSnapshot {
+  return {
+    ...snapshot,
+    sessionStates: Object.fromEntries(
+      Object.entries(snapshot.sessionStates).map(([id, state]) => [
+        id,
+        { ...state, draft: endDraftFiles(state.draft) },
+      ]),
+    ),
   }
 }
 

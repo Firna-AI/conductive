@@ -2,6 +2,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { testNavigation } from '../../files/files-test-kit'
 import { sessionPaths } from '../../shared/sessions'
+import type { WorkspaceTab } from '../../shared/workspace-view'
 import { byRole, queryByText } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
@@ -25,39 +26,48 @@ import { menuItems, rightClick } from './tab-row-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
-const closePath = sessionPaths.close(
-  FAKE_IDS.org,
-  FAKE_IDS.workspace,
-  'debounce',
-)
+/** The ID of the session at `index` of the fixtures. */
+const sessionId = (index: number) =>
+  workspaceFixtures().sessions.sessions[index].id
 
-/** The fake API answers the close of the second session with its record. */
-function answerClose(server: FakeApiServer) {
-  const record = workspaceFixtures().sessions.sessions[1]
-  server.json('POST', closePath, {
+/** The path of the close of the session at `index` of the fixtures. */
+const closePath = (index: number) =>
+  sessionPaths.close(FAKE_IDS.org, FAKE_IDS.workspace, sessionId(index))
+
+/** The fake API answers the close of the session at `index` with its record. */
+function answerClose(server: FakeApiServer, index = 1) {
+  const record = workspaceFixtures().sessions.sessions[index]
+  server.json('POST', closePath(index), {
     session: { ...record, closedAt: FAKE_TIME },
     eventNumber: server.events.history().throughEventNumber + 1,
   })
 }
 
-/** The bodies of the session closes that the fake API got. */
-function closes(server: FakeApiServer): Promise<unknown[]> {
+/** The bodies of the closes of the session at `index` that the fake API got. */
+function closes(server: FakeApiServer, index = 1): Promise<unknown[]> {
   return Promise.all(
     server.requests
       .filter(
         (request) =>
           request.method === 'POST' &&
-          new URL(request.url).pathname === closePath,
+          new URL(request.url).pathname === closePath(index),
       )
       .map((request) => request.clone().json()),
   )
 }
 
-/** Mounts the row with a session tab, the temporary file tab, and a session tab. */
-async function mountRow(server: FakeApiServer) {
+/**
+ * Mounts the row with the two session tabs and the temporary file tab, in
+ * the order of `tabs`: by default a session tab, the file tab, and a
+ * session tab.
+ */
+async function mountRow(
+  server: FakeApiServer,
+  tabs: readonly WorkspaceTab[] = [first, file, second],
+) {
   await mountChat({
     server,
-    tabs: [first, file, second],
+    tabs: [...tabs],
     temporaryTab: temporaryFile,
     viewport: 'desktop',
     renderTab: fileTabs(testNavigation(), temporaryFile),
@@ -66,11 +76,11 @@ async function mountRow(server: FakeApiServer) {
     () => queryByText('app-[redacted].ts'),
     'the file tab',
   )
-  layOut(
-    byRole('button', 'Address autocomplete'),
-    fileTab,
-    byRole('button', debounce),
-  )
+  const node = (tab: WorkspaceTab) =>
+    tab === file
+      ? fileTab
+      : byRole('button', tab === first ? 'Address autocomplete' : debounce)
+  layOut(...tabs.map(node))
   return fileTab
 }
 
@@ -134,5 +144,46 @@ describe('Close tabs to the right', () => {
     expect(menuItems(debounce).slice(-1)).toEqual([
       { name: 'Close tabs to the right', off: true },
     ])
+  })
+})
+
+describe('Close other tabs', () => {
+  it('closes the tabs on both sides, of each kind, shows the tab of the menu first, and is then off', async () => {
+    const server = new FakeApiServer()
+    answerClose(server, 0)
+    await mountRow(server, [first, second, file])
+
+    rightClick(byRole('button', debounce), { clientX: 150, clientY: 12 })
+    const items = menuItems(debounce).slice(-2)
+    await press(byRole('menuitem', 'Close other tabs'))
+    await waitFor(
+      () => !queryByText('Address autocomplete'),
+      'the closed session',
+    )
+    await settle()
+    rightClick(byRole('button', debounce), { clientX: 20, clientY: 12 })
+
+    const orders = await savedOrders(server)
+    expect({
+      items,
+      closes: [await closes(server, 0), await closes(server)],
+      lastSave: orders.at(-1),
+      row: rowTitles(),
+      shown: shownTab(),
+      after: menuItems(debounce).slice(-2),
+    }).toEqual({
+      items: [
+        { name: 'Close other tabs', off: false },
+        { name: 'Close tabs to the right', off: false },
+      ],
+      closes: [[{ stopRunningTurn: false }], []],
+      lastSave: [second],
+      row: [debounce],
+      shown: debounce,
+      after: [
+        { name: 'Close other tabs', off: true },
+        { name: 'Close tabs to the right', off: true },
+      ],
+    })
   })
 })

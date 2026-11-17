@@ -1,5 +1,6 @@
 import type { User } from '../../src/shared/api'
 import type { SendMessageRequest } from '../../src/shared/messages'
+import type { WorkspaceCapabilities } from '../../src/shared/secrets'
 import type { MaskedStartLog } from './masked-start-log'
 import type { SavedProvisionedWorkspace } from './workspace-response'
 import type { RepositoryLocation } from './repository-locations'
@@ -77,6 +78,7 @@ export type WorkspaceStartJob =
     })
 
 interface WorkspaceCreation {
+  capabilities?: WorkspaceCapabilities
   user: User
   sender: User
   repositoryId: string

@@ -100,7 +100,12 @@ async fn serve_raw(lines: Vec<String>, fail_reply: bool) -> Result<(u8, Vec<Stri
         Some("turn".into()),
     )
     .internal()?;
-    let client = Arc::new(Client::new(config, mock.clone(), mock.clone()));
+    let client = Arc::new(Client::new(
+        config,
+        mock.clone(),
+        mock.clone(),
+        mock.clone(),
+    ));
     let server = Server::new(client);
     let status = server.serve(mock.clone(), mock.clone()).await?;
     let replies = output
@@ -157,7 +162,7 @@ async fn separates_protocol_errors_from_tool_errors_and_ignores_notifications() 
     let tools = by_id(json!("discovery"))?["result"]["tools"]
         .as_array()
         .ok_or(Error::Input(InputError::Object))?;
-    assert_eq!(tools.len(), 24);
+    assert_eq!(tools.len(), 26);
     for name in ["create_workspace", "create_session", "send_message"] {
         let tool = tools
             .iter()

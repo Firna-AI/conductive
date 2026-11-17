@@ -1,14 +1,12 @@
 # Delete org
 
-This doc holds the requirements and the decisions in force for the delete
-of an org, the 7 days before the app deletes everything of the org, and
-Restore. It belongs to [Orgs and members](orgs-and-members.md), which
-covers orgs, their sections, their members, and the first run. The terms
-are those of the [architecture doc](../architecture.md#terms). A decision
-number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says.
-
-## Delete and restore
+This doc holds the requirements and the decisions in force for Delete org:
+the hide of a deleted org, its restore within 7 days, and the end of its
+data. It belongs to [Orgs and members](orgs-and-members.md), which covers
+orgs, sections, roles, and the first run. The terms are those of the
+[architecture doc](../architecture.md#terms). A decision number names a
+dated record, as [Decision numbers](../architecture.md#decision-numbers)
+says.
 
 - Delete org asks for the name of the org.
 - It stops every sandbox of the org and hides the org at once

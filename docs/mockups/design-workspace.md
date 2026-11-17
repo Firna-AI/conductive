@@ -25,11 +25,11 @@ computer.
   shown tab in view, and fades each end that clips tabs. A right click on a
   tab opens its menu at the pointer: Rename session, a line, Copy link,
   Copy concise transcript, and Copy full transcript, a line, Move left and
-  Move right, a line, then Close tabs to the right, from decisions 188 and
-  215. Copy link copies the link of the session. A kept file or diff tab
-  has Copy path, a line, the moves, a line, and the close, from decision
-  3 B of the file row menu change. Copy path copies the path of the file,
-  as in the menu of its row. A tab whose label can hide a secret value
+  Move right, a line, then Close other tabs and Close tabs to the right,
+  from decisions 188 and 215. Copy link copies the link of the session. A
+  kept file or diff tab has Copy path, a line, the moves, a line, and the
+  two closes, from decision 3 B of the file row menu change. Copy path
+  copies the path of the file, as in the menu of its row. A tab whose label can hide a secret value
   leaves it out. In a read-only workspace, the menu of a session tab holds
   only the three copy items, and the menu of a file or diff tab only Copy
   path. A copy keeps the shown tab, and a toast gives its result, as

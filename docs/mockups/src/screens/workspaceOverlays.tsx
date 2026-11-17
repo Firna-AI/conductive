@@ -28,6 +28,8 @@ import { workspaceSessions } from '../fixtures/sessions'
 import { closedTerminal, cloudComputerSilent } from '../fixtures/terminals'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
+import { valueSheet } from './requestSheets'
+import { capabilitiesSheet } from './workspaceCapabilities'
 import { openFile } from './workspaceParts'
 import { rowMenuOf } from './workspaceRowMenu'
 import type { WorkspaceState } from './workspaceState'
@@ -155,9 +157,9 @@ function rowMenuSheet(state: WorkspaceState, viewport: Viewport): ReactNode {
  * What lies open over a workspace. Desktop draws the menus beside their
  * buttons, the tab menu below its tab, and the menu of a row of the Files
  * panel at the pointer, so only the dialog lies over the app. A phone draws
- * each one as a sheet. `row` holds the tabs that the viewport shows, the
- * tab whose menu is open, if any, and whether the workspace is read-only,
- * which leaves items out of that menu.
+ * each one as a sheet, and the open Capabilities control too. `row` holds
+ * the tabs that the viewport shows, the tab whose menu is open, if any, and
+ * whether the workspace is read-only, which leaves items out of that menu.
  */
 export function workspaceOverlay(
   state: WorkspaceState,
@@ -168,7 +170,10 @@ export function workspaceOverlay(
   const mobile = viewport === 'mobile'
   switch (state.overlay) {
     case 'none':
-      return mobile ? rowMenuSheet(state, viewport) : null
+      return (
+        capabilitiesSheet(state, viewport) ??
+        (mobile ? rowMenuSheet(state, viewport) : null)
+      )
     case 'restarting':
       return null
     case 'restart':
@@ -225,6 +230,8 @@ export function workspaceOverlay(
           viewport={viewport}
         />
       )
+    case 'value-sheet':
+      return valueSheet(state, viewport)
   }
 }
 

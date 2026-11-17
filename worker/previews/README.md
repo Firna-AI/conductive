@@ -235,11 +235,11 @@ Completed HTTP connections release their registry entries.
 A preview socket uses `bridgeSocket` with an outbound socket to the sandbox.
 An open preview socket or HTTP stream keeps its workspace object active, as [Work that keeps the object active](../README.md#work-that-keeps-the-object-active) says.
 
-Set `dependencies.onActivity` to report each input to the input owner of the
-workspace, as [Input activity](../lifecycle/README.md#input-activity) says.
-That call returns at once. The proxy writes no D1 activity time. Each preview
-HTTP request and WebSocket handshake counts. Socket frames and idle
-connections do not count.
+The proxy reports no activity of the workspace. No preview request, socket
+handshake, socket frame, or idle connection keeps a sandbox running
+(decision 293), as
+[Stop and resume](../../docs/protocol/workspace-life.md#stop-and-resume)
+says.
 
 The header allowlists live in `headers.ts`. The cookie allowlist filters
 request and response cookies. It accepts valid app cookie names. It excludes

@@ -25,13 +25,14 @@ workspace and its number, such as `W-395`, the repository, and
 the owner of the workspace, and ends with the toggle of the
 right column. The toggle hides the right column, so the centre column
 takes its width, and shows it again. Then come a tab for each agent
-session and each open file or diff, in the order that the user gives them
-by drag, + for a new session, and a clock that opens the session history.
+session, each open file or diff, and a Preview tab for each previewed
+port, in the order that the user gives them by drag, + for a new
+session, and a clock that opens the session history.
 The file or diff of the last press shows in the temporary tab, with its
 title in italics, until the next press replaces it.
 The right column has the pull request bar on top, the All files, Changes,
 and Checks lists below it, and the Terminal and Preview tabs at the bottom.
-It shows no file content. A phone shows an org switcher at the top of the list,
+It shows no file content, and on desktop no page of a preview. A phone shows an org switcher at the top of the list,
 then New workspace, Automations, and Search. It shows the
 workspace with its number under its name, a compact pull request row, the
 sessions as tabs above the chat, and four tabs at the bottom.
@@ -183,8 +184,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
   org and the section of the new workspace, in plain text, at the top
   right. The message and its files fill the middle, and the notices of the
   New workspace page follow them. The model picker sits at the bottom left,
-  and the attach button and Create, with the hint of the Enter key, at the
-  bottom right. A phone always opens the page, so the dialog has no phone
+  and the Capabilities icon, the attach button, and Create, with the hint
+  of the Enter key, at the bottom right. A phone always opens the page, so the dialog has no phone
   layout.
 - The account has five tabs, General, Agents, Preferences, Keyboard
   shortcuts, and Stats, as links, as the org settings have. The Mac app
@@ -339,6 +340,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   Markdown tables and headings of a reply and of a file preview, and the
   fold of the work of a turn. It also gives the data that the chat does
   not have, and the files that the cloud computer could not read.
+- [Secrets and Capabilities](design-secrets.md) gives the Secrets tab of
+  the org settings, the Capabilities icon beside every message box with
+  its control, and the requests and results of the secrets in the chat.
 - The app frame is a size container (`app-frame`), so the layout follows the
   width of the frame, not of the window. In the app the two are the same. A
   screen is as high as `--ui-screen-height`, which is the visible part of
@@ -349,8 +353,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
   the Waitlist tab, the codes, and the approval email. It also gives
   Suspend, Lift, and Approve, the daily chart, the notice of a pause, and
   the waitlist switch.
-- On a phone the org settings put their four tabs in three columns, so every
-  tab shows. The session tabs all shrink, and the current one keeps the start
+- On a phone the org settings put their five tabs in three columns, on two
+  lines, so every tab shows. The session tabs all shrink, and the current one keeps the start
   of its title beside its close button. When the session tabs still do not
   fit, their row scrolls sideways. A phone tab stays 40 px high to touch,
   but its fill is 32 px high, with 4 px of the row above and below it.

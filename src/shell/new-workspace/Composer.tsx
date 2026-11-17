@@ -16,6 +16,8 @@ import {
 import { ChipTextField } from '../../chat/components/chip-field/ChipTextField'
 import type { FieldHandle } from '../../chat/components/chip-field/focus-plugins'
 import { useComposerDrop } from '../../chat/components/composer-drop'
+import { ComposerStart } from '../../chat/components/ComposerMenu'
+import type { ComposerTool } from '../../chat/components/ComposerTools'
 import { useSendKey } from '../../chat/components/send-key'
 
 import { IconButton } from '../ui/actions'
@@ -24,8 +26,9 @@ import ui from '../ui/ui.module.css'
 
 /**
  * The composer of a new workspace: the text, with a chip for each attached
- * file at its place, then the attach button, the model and effort picker,
- * and Send. The files of a pick go into the text at the caret, or at the end
+ * file at its place, then the attach button, the icon of each tool, such as
+ * Capabilities, the model and effort picker, and Send. A phone holds Attach
+ * files and the tools in the menu of one + button. The files of a pick go into the text at the caret, or at the end
  * when the text has no caret. The whole box takes a drop of files, as
  * `useComposerDrop` says. They upload before the workspace exists, with
  * the chips and the notices of the workspace chat. Send is off until the
@@ -42,6 +45,8 @@ export function Composer(props: {
   /** Whether the message can go now. */
   ready: boolean
   send: () => void
+  /** The tools of the form, such as Capabilities. */
+  tools: readonly ComposerTool[]
 }) {
   const control = useControlSizes()
   const draft = useStore(props.model.draft)
@@ -81,11 +86,18 @@ export function Composer(props: {
             value={draft.text}
           />
           <div className={styles.bar}>
-            <IconButton
+            <ComposerStart
+              attach={pick}
+              attachButton={
+                <IconButton
+                  disabled={sending}
+                  icon={Paperclip}
+                  label="Attach files"
+                  onPress={pick}
+                />
+              }
               disabled={sending}
-              icon={Paperclip}
-              label="Attach files"
-              onPress={pick}
+              tools={props.tools}
             />
             <input
               className={ui.hidden}

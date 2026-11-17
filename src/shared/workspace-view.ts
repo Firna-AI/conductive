@@ -1,3 +1,4 @@
+import type { WorkspaceViewWire } from './workspace-view-wire'
 import { workspacePath } from './workspaces'
 
 export function workspaceViewPath(orgId: string, workspaceId: string): string {
@@ -8,6 +9,18 @@ export type WorkspaceTab =
   | { kind: 'session'; sessionId: string }
   | { kind: 'file'; path: string; mode: 'preview' | 'source' }
   | { kind: 'diff'; path: string }
+  /** The Preview tab of one port of the sandbox. A port has at most one. */
+  | { kind: 'preview'; port: number }
+
+/** Whether a value is a port that a Preview tab can name: 1 to 65535. */
+export function isTabPort(value: unknown): value is number {
+  return (
+    typeof value === 'number' &&
+    Number.isInteger(value) &&
+    value >= 1 &&
+    value <= 65535
+  )
+}
 
 export type TemporaryTab = { kind: 'file' | 'diff'; path: string }
 
@@ -24,7 +37,8 @@ export interface WorkspaceView {
   tool: 'terminal' | 'preview' | 'desktop'
 }
 export interface WorkspaceViewResponse {
-  view: WorkspaceView
+  /** The view in the shape of the route, as `WorkspaceViewWire` says. */
+  view: WorkspaceViewWire
   baseBranch?: string
   /**
    * The folder of the workspace repository in the cloud computer, such as
@@ -38,4 +52,4 @@ export interface WorkspaceViewResponse {
     pullRequest?: { number: number; url: string } | null
   } | null
 }
-export type UpdateWorkspaceViewRequest = WorkspaceView
+export type UpdateWorkspaceViewRequest = WorkspaceViewWire
