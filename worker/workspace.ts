@@ -29,6 +29,7 @@ import type { ContinueWorkspaceRequest } from '../src/shared/workspaces'
 import { resumeCreationCheckpoint } from './members/creation-checkpoint'
 import type { ConnectionScheduler } from './security/connection-access'
 import { WorkspaceAlarmRunner } from './features/workspace-alarm'
+import { retryAutomationReport } from './chat/automation-run'
 
 export class Workspace extends AgentSessionWorkspace {
   private readonly features: WorkspaceFeatures
@@ -109,6 +110,8 @@ export class Workspace extends AgentSessionWorkspace {
       continuation: this.continuation,
       features: this.features,
       lifecycle: () => this.alarmLifecycle(),
+      automationReport: () =>
+        retryAutomationReport(env.DB, this.chat.store, now),
     })
   }
 

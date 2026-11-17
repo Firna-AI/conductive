@@ -1,3 +1,4 @@
+import { d1ErrorReason, type D1ErrorReason } from './d1-errors'
 import { HttpError } from './http'
 import { ProviderError } from './sandbox/errors'
 import { CommandFailed } from './warnings'
@@ -133,6 +134,7 @@ export type ErrorSummary =
       exitCode: number | null
       timedOut: boolean
     }
+  | { kind: 'd1'; reason: D1ErrorReason }
   | { kind: 'error' | 'unknown' }
 
 /** Keep fixed error kinds, allowlisted codes and states, and numeric outcomes. */
@@ -154,5 +156,7 @@ export function errorSummary(error: unknown): ErrorSummary {
       exitCode: error.exitCode,
       timedOut: error.timedOut,
     }
+  const reason = d1ErrorReason(error)
+  if (reason) return { kind: 'd1', reason }
   return { kind: error instanceof Error ? 'error' : 'unknown' }
 }
