@@ -12,6 +12,7 @@ import {
 } from '../components/settings/OrgSections'
 import {
   OrgRepositoryList,
+  RepositoryEditToggle,
   RepositoryList,
 } from '../components/settings/RepositoryList'
 import { Section } from '../components/settings/Section'
@@ -108,16 +109,18 @@ export function TabBody(props: { state: OrgSettingsState }) {
       )
     case 'repositories': {
       const note = repositoryNotes[readOnly ?? 'editable']
+      const editing = !readOnly && state.repositoryView === 'edit'
       return (
         <Section
+          action={readOnly ? null : <RepositoryEditToggle editing={editing} />}
           description={`The cloud computer of ${org.name} holds these repositories, and its workspaces start in them.${note}`}
           title="Repositories"
         >
           {settingsRepositoryNotice(state, settings)}
-          {readOnly ? (
-            <OrgRepositoryList repositories={settings.repositories} />
-          ) : (
+          {editing ? (
             <RepositoryList repositories={settings.repositories} search="" />
+          ) : (
+            <OrgRepositoryList repositories={settings.repositories} />
           )}
         </Section>
       )
