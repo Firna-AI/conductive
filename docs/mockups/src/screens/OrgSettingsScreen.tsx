@@ -30,6 +30,7 @@ export const orgSettingsSchema = {
     'build',
     'script',
     'repositoryChange',
+    'repositoryView',
     'envForm',
     'secrets',
     'dialog',
@@ -70,6 +71,12 @@ export const orgSettingsSchema = {
      * cover the time before its first good build.
      */
     repositoryChange: { enum: repositoryChanges },
+    /**
+     * The Repositories tab of an admin: the chosen repositories with Edit,
+     * or, after Edit, every repository that the GitHub App reaches, with
+     * search, Add, Remove, and Done.
+     */
+    repositoryView: { enum: ['list', 'edit'] },
     /**
      * The open form of the environment variables, which the cloud computer
      * tab of an admin shows: none, Add variable, or the new value of
@@ -139,6 +146,7 @@ export const acmeSettings: OrgSettingsState = {
   build: 'ready',
   script: 'built',
   repositoryChange: 'none',
+  repositoryView: 'list',
   envForm: 'none',
   secrets: 'list',
   dialog: 'none',

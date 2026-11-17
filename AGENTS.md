@@ -129,7 +129,7 @@ deployment at `conductive.build`. It does not wait for CI, as
 [Automatic deploys](docs/automatic-deploys.md) says.
 
 The Linux jobs run on the GitHub-hosted `ubuntu-24.04` runner. The Apple
-silicon Mac jobs, the Mac app checks and the signing job, run on the
+silicon Mac jobs, the Mac app checks and the signing jobs, run on the
 [Blacksmith](https://docs.blacksmith.sh/blacksmith-runners/overview) runner
 `blacksmith-6vcpu-macos-15`. The Intel Mac check uses the GitHub-hosted
 `macos-15-intel` runner, because Blacksmith has no Intel Macs. Keep the

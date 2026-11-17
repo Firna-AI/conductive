@@ -42,9 +42,14 @@ After the first successful build, use these steps to change its repositories:
 
 1. Open the org's **Settings**.
 2. Select **Repositories**.
-3. Add or remove the repositories you want in its setup.
+3. Select **Edit**.
+4. Add or remove the repositories you want in its setup.
+5. Select **Done**.
 
-The repository list has **Manage access** for the GitHub App's access on GitHub.
+The tab lists the repositories in the setup.
+**Edit** lists every repository that the GitHub App can reach.
+Each add or remove saves at once.
+The full list has **Manage access** for the GitHub App's access on GitHub.
 Your account and the app must both be able to reach a repository to select it.
 
 Adding a repository starts a build automatically.
