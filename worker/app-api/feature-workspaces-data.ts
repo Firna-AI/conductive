@@ -33,8 +33,11 @@ export async function readWorkspaceMove(
   const { rows } = await readWorkspaceTree(db, orgId)
   const placement = rows.find(({ workspace }) => workspace.id === workspaceId)
   let root = placement
-  while (root?.parentId)
+  const seen = new Set<string>()
+  while (root?.parentId && !seen.has(root.workspace.id)) {
+    seen.add(root.workspace.id)
     root = rows.find(({ workspace }) => workspace.id === root?.parentId)
+  }
   return {
     root: root?.workspace,
     nested: placement !== undefined && placement.parentId !== null,
@@ -50,7 +53,7 @@ export const workspaceTreeSql = `WITH RECURSIVE tree_rows AS MATERIALIZED (
   FROM workspaces w WHERE org_id = ?1
 ), ancestors(id, ancestor_id) AS (
   SELECT id, parent_workspace_id FROM tree_rows WHERE parent_workspace_id IS NOT NULL
-  UNION ALL
+  UNION
   SELECT a.id, p.parent_workspace_id FROM ancestors a
   JOIN tree_rows p ON p.id = a.ancestor_id WHERE p.parent_workspace_id IS NOT NULL
 ), top_level AS MATERIALIZED (
@@ -60,11 +63,11 @@ export const workspaceTreeSql = `WITH RECURSIVE tree_rows AS MATERIALIZED (
   )
 ), subtree(id) AS (
   SELECT id FROM tree_rows WHERE id = ?2
-  UNION ALL
+  UNION
   SELECT w.id FROM tree_rows w JOIN subtree t ON w.parent_workspace_id = t.id
 ), promotion_path(id, live) AS (
   SELECT id, live FROM tree_rows WHERE parent_workspace_id = ?2
-  UNION ALL
+  UNION
   SELECT w.id, w.live FROM tree_rows w
   JOIN promotion_path p ON w.parent_workspace_id = p.id WHERE NOT p.live
 ), promoted AS MATERIALIZED (

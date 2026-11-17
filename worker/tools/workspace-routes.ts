@@ -11,6 +11,7 @@ import { requireCallingToolTurn } from './calling-turn'
 import type { AgentToolServices } from './services'
 import type { CallingWorkspace } from './store'
 import { toolWorkspaceDetail } from './workspace-data'
+import { workspaceMoveInput } from './workspace-move-input'
 
 const WORKSPACE_ROUTE = new RegExp(
   `^${MACHINE_PATHS.workspaces}/([^/]+)(?:/(rename|move|archive))?$`,
@@ -78,7 +79,7 @@ export async function writeWorkspaceFromTool(
           name: sessionTitleFrom(identifier(body.name)) ?? invalidInput(),
         }
       : match[2] === 'move'
-        ? { kind: 'move' as const, sectionId: identifier(body.sectionId) }
+        ? workspaceMoveInput(body)
         : { kind: 'archive' as const }
   await services.writeWorkspace({
     ...input,
@@ -87,11 +88,23 @@ export async function writeWorkspaceFromTool(
     senderUserId: sender.id,
   })
   const move =
-    input.kind === 'move'
+    input.kind === 'move' && input.target === undefined
       ? await readWorkspaceMove(db, caller.orgId, workspaceId)
       : undefined
+  const workspace = await toolWorkspaceDetail(
+    db,
+    caller.orgId,
+    workspaceId,
+    origin,
+  )
   return Response.json({
-    workspace: await toolWorkspaceDetail(db, caller.orgId, workspaceId, origin),
+    workspace,
+    ...(input.kind === 'move' &&
+      input.target?.kind === 'parent' &&
+      input.sectionId !== undefined &&
+      input.sectionId !== workspace.section.id && {
+        notice: 'The workspace joined the section of its parent.',
+      }),
     ...(move?.nested &&
       move.root && {
         notice: `Move W-${move.root.number} to move this workspace.`,

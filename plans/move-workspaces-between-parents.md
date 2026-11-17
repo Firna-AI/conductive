@@ -166,26 +166,26 @@ Depends on: 1
 The Worker route accepts the target, checks it, and writes the new parent
 in one D1 batch.
 
-- [ ] Accept `parentId` and `topLevel` in the move route of
+- [x] Accept `parentId` and `topLevel` in the move route of
       `worker/tools/workspace-routes.ts`, through `ToolWorkspaceWrite` and
       `worker/tools/workspace-write-composition.ts`.
-- [ ] Add the parent write in a new file beside
+- [x] Add the parent write in a new file beside
       `worker/app-api/feature-workspaces-data.ts`, which is near the
       300-line limit. Reuse `workspaceTreeSql` for the moved tree and the
       section write.
-- [ ] Check in the same batch: the loop, the depth of the target and of
+- [x] Check in the same batch: the loop, the depth of the target and of
       the moved tree with the creates in flight, and the archived moved
       workspace. Map each failure to its error.
-- [ ] Check the depth of the parent again in the insert of a create.
-- [ ] Make each tree reader stop at a workspace that it saw before:
+- [x] Check the depth of the parent again in the insert of a create.
+- [x] Make each tree reader stop at a workspace that it saw before:
       `placeWorkspaces`, `readWorkspaceMove`, `workspaceParent`,
       `toolWorkspaceDetail`, and the recursive SQL.
-- [ ] Add `nesting_cycle` to the error codes and to
+- [x] Add `nesting_cycle` to the error codes and to
       `worker/warning-values.ts` when it needs the code.
-- [ ] Tests: a nest, a take-out, the moved tree and its sections, the
+- [x] Tests: a nest, a take-out, the moved tree and its sections, the
       places, a no-op target, each refusal, an archived target, a create in
       flight, the publish of each changed workspace, and a bad row.
-- [ ] Update `worker/tools/README.md`, `worker/tools/workspaces.md`, and
+- [x] Update `worker/tools/README.md`, `worker/tools/workspaces.md`, and
       `worker/app-api/README.md`.
 
 ## Milestone 3: Tool input and description

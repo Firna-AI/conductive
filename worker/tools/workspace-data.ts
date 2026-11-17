@@ -157,12 +157,15 @@ export async function toolWorkspaceDetail(
   const byId = new Map(results.map((workspace) => [workspace.id, workspace]))
   const parent = row.parentId === null ? null : byId.get(row.parentId)
   let depth = 0
+  const seen = new Set([row.id])
   for (
     let ancestor = parent;
-    ancestor;
+    ancestor && !seen.has(ancestor.id);
     ancestor = ancestor.parentId === null ? null : byId.get(ancestor.parentId)
-  )
+  ) {
+    seen.add(ancestor.id)
     depth += 1
+  }
   return {
     ...summary(row, origin, orgId),
     parent: parent ? summary(parent, origin, orgId) : null,

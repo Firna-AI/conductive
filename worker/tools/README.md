@@ -7,6 +7,7 @@ The [workspace name migration](../../migrations/202611081300_workspace_creation_
 The [first session title migration](../../migrations/202611111230_workspace_first_session_title.sql) keeps a requested first session title in the same way.
 The [parent migration](../../migrations/202611161700_workspace_parents.sql) keeps the parent link in the workspace and its creation plan.
 [Sub-workspaces](../../docs/protocol/sub-workspaces.md) gives the nesting rules.
+[Parent changes](../../docs/protocol/parent-changes.md) gives the move targets and refusals.
 [Workspace calls](workspaces.md) gives the get, rename, move, and archive routes, the list options, and the replay of a create.
 [Session management calls](sessions.md) gives the session get, rename, close, and stop routes, the message get, and the session list paging.
 [Section and preview calls](sections-and-previews.md) gives the section create and delete routes, and the preview list, open, and close routes.
@@ -232,6 +233,7 @@ The real-object route tests live in [worker/features](../features/).
 - [lists.ts](lists.ts) reads the four lists and resolves the listed default choice.
 - [store.ts](store.ts) reads the token's workspace, members, owner defaults, sections, and repository admission in D1.
 - [workspace-routes.ts](workspace-routes.ts) matches the workspace routes and runs their reads and writes.
+- [workspace-move-input.ts](workspace-move-input.ts) reads a move's optional section and parent target.
 - [workspace-input.ts](workspace-input.ts) reads the options of the workspace list.
 - [workspace-data.ts](workspace-data.ts) queries the workspace list and the details of one workspace.
 - [workspace-parent-data.ts](workspace-parent-data.ts) reads a parent's stored depth within its org.
