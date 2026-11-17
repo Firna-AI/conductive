@@ -160,7 +160,7 @@ A committed file can remain in **Changes** while the branch differs from its bas
 
 On an open pull request, files not committed give **Commit and push** priority in the bar.
 Commits not pushed, with no files left to commit, give **Push** priority instead.
-It replaces Merge and the fix actions until that work is pushed.
+It replaces Merge, **Ready for review**, and the fix actions until that work is pushed.
 Some uncommitted work can exist without a visible diff in this list.
 Use `git status` in **Terminal** to inspect it.
 
