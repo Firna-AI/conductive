@@ -14,6 +14,7 @@ import { codexBinary } from './binaries'
 import { writeCodexCredentials } from './codex-credentials'
 import { codexNotification } from './codex-events'
 import { checkCodexGateway, codexSettings } from './codex-settings'
+import { prepareCodexSkills } from './codex-skills'
 import { openCodexThread } from './codex-thread'
 import { readComputerServer } from './computer-mcp'
 import { prepareProviderHome } from './environment'
@@ -104,6 +105,7 @@ export function createCodexFactory(
       await lifetime.close()
       throw error
     }
+    const skills = await prepareCodexSkills(options)
     const configs = {
       ...settings.config,
       'mcp_servers.conductive.command': WORKSPACE_TOOLS_MCP.command,
@@ -125,9 +127,11 @@ export function createCodexFactory(
     let closed = false
     let rpc: JsonRpc
     try {
+      options.signal?.throwIfAborted()
       const args = [
         codexBinary(),
         'app-server',
+        ...skills.args,
         ...Object.entries(configs).flatMap(([key, value]) => [
           '-c',
           `${key}=${JSON.stringify(value)}`,
@@ -199,6 +203,14 @@ export function createCodexFactory(
               ? options.credential.token
               : options.credential.login.secret,
         })
+      if (skills.extraRoots.length)
+        await rpc
+          .request('skills/extraRoots/set', { extraRoots: skills.extraRoots })
+          .catch(() => {
+            options.warn(
+              'The org skills could not be loaded. The turn will continue.',
+            )
+          })
       const threadId = await openCodexThread(
         rpc,
         options,

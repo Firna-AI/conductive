@@ -19,6 +19,10 @@ export type HelperOptions = {
    */
   home: string
   /**
+   * Immutable current skills copy, absent before a successful copy or restore.
+   */
+  skillsDirectory?: string | null
+  /**
    * Conductive session identity.
    */
   sessionId: string

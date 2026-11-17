@@ -42,6 +42,20 @@ background work of its agent, the note at the end of a reply, the time
 limit of 30 days, the end reason, and their key code. A workspace gets
 this behavior when its software update applies.
 
+## Org skills
+
+The Rust runner copies the public GitHub repository named by
+`CONDUCTIVE_SKILLS_REPOSITORY` in the background at start and every five
+minutes. It keeps complete commit folders under `~/.conductive/skills/`.
+Its Git process has no inherited credentials or credential helper.
+A failed copy warns and stops no start or turn.
+
+Each helper start gets the current complete folder through `skillsDirectory`.
+The helper uses the shared folder rule, omits workspace name clashes, and
+gives Claude skill links in an additional directory and Codex extra skill
+roots. Existing turns keep their folders. The next turn gets updates.
+[Org skills](../docs/protocol/org-skills.md) states the requirements.
+
 ## Event limits
 
 [Event limits](event-limits.md) gives the byte and count limits of each

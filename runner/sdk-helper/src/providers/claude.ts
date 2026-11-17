@@ -19,6 +19,7 @@ import {
 import { ClaudeInputWindow } from './claude-input-window'
 import { spawnClaudeProcess } from './claude-process'
 import { writeClaudeProfile } from './claude-profile'
+import { prepareClaudeSkills } from './claude-skills'
 import { readComputerServer } from './computer-mcp'
 import { prepareProviderHome, providerEnvironment } from './environment'
 import { failureCause } from './failure'
@@ -68,6 +69,7 @@ export function createClaudeFactory(
       ),
     )
     const credentials = await preparation
+    const skillsDirectory = await prepareClaudeSkills(options, lifetime)
     const env = providerEnvironment(
       options.home,
       options.tools,
@@ -166,6 +168,9 @@ export function createClaudeFactory(
           includePartialMessages: true,
           persistSession: true,
           settingSources: ['project'],
+          ...(skillsDirectory
+            ? { additionalDirectories: [skillsDirectory] }
+            : {}),
           mcpServers: {
             conductive: {
               command: WORKSPACE_TOOLS_MCP.command,

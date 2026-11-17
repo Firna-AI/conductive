@@ -111,6 +111,14 @@ against a change in how the agent program reads its credential and its
 model address. It runs Codex through the Codex SDK or the Codex App Server
 (decision 36).
 
+The Rust runner owns the public org skills copy and its five-minute
+background checks. It publishes complete commit folders outside the
+workspace repository. It sends the current folder to each SDK helper
+start. The helper uses the shared folder rule and prepares each agent's
+skills. Claude gets links in an additional directory. Codex gets extra
+skill roots. [Org skills](../protocol/org-skills.md) states what loads and
+when a session gets an update.
+
 The runner finds the listening ports in the sandbox itself, with no Boat
 call (decision 220).
 

@@ -11,6 +11,7 @@ The [agent runner](README.md) reads these variables when the service starts.
 | `CONDUCTIVE_REPOSITORY_<FOLDER>_DIR` | No       | The folder of each repository of the image, with one variable each.   |
 | `CONDUCTIVE_DEFAULT_BRANCH`          | Yes      | The workspace base branch, as a name that Git resolves in that folder.       |
 | `CONDUCTIVE_WORKSPACE_BRANCH`        | No       | The workspace branch that the app tracks, from the Worker's record.   |
+| `CONDUCTIVE_SKILLS_REPOSITORY`       | No       | One public GitHub skills repository as `owner/name`, or empty.         |
 | `CONDUCTIVE_HOME`                    | No       | The home folder of the agents. The default is the home of the user.   |
 | `CONDUCTIVE_STATE_PATH`              | No       | The state file. The default is `.conductive/runner-state.json` there. |
 
@@ -56,6 +57,13 @@ The [agent runner](README.md) reads these variables when the service starts.
   where the agents keep their sessions. Boat keeps the disk across a stop
   and a resume, so the sessions stay.
 - The state file belongs to one workspace. Keep it out of the org image.
+- `CONDUCTIVE_SKILLS_REPOSITORY` selects the public copy under
+  `.conductive/skills/` in that home. The Worker sets it at each start,
+  including a resume. An empty value removes the copy. A changed name
+  removes the previous repository before the new copy starts. Invalid
+  names warn and load no org skills. The runner never uses a GitHub token
+  for this copy. [Org skills](../docs/protocol/org-skills.md#the-copy)
+  gives its background timing and failure behavior.
 - After a failed or dropped connection, the runner connects again in 1 second.
 
 When a required variable is missing or the state file cannot be read,

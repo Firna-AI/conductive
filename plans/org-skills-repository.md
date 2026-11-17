@@ -590,21 +590,21 @@ owns the copy, and the SDK helper owns the folder rule and the agent
 setup. Reason: the helper can import the shared folder function from
 `src/shared/`, so the rule stays in one place.
 
-- [ ] Read `CONDUCTIVE_SKILLS_REPOSITORY` in `crates/cnd-runner/src/config.rs`.
+- [x] Read `CONDUCTIVE_SKILLS_REPOSITORY` in `crates/cnd-runner/src/config.rs`.
       Check the name with the same rules as `isSkillsRepository`.
-- [ ] Copy the repository at the runner start in the background, and check
+- [x] Copy the repository at the runner start in the background, and check
       it every 5 minutes. Use Git with a clean environment, no credential
       helper, no prompt, and a time limit. Swap to a new commit only after a
       complete fetch. Delete the copy of a removed or replaced repository.
       Warn on each failure, and fail no start and no turn.
-- [ ] Give the helper the folder of the current copy in its options, in
+- [x] Give the helper the folder of the current copy in its options, in
       `crates/cnd-runner-interface/src/sdk_helper_options.rs`, and
       regenerate the helper types.
-- [ ] Port the selection and the agent setup of Milestone 5 to
+- [x] Port the selection and the agent setup of Milestone 5 to
       `runner/sdk-helper/`: the shared folder function, the Claude links in
       an extra folder, the Codex extra roots, and the name clash rule.
-- [ ] Tests in Rust and in the helper, as in Milestone 5.
-- [ ] Update `runner/README.md`, `runner/configuration.md`,
+- [x] Tests in Rust and in the helper, as in Milestone 5.
+- [x] Update `runner/README.md`, `runner/configuration.md`,
       `crates/cnd-runner/README.md`, and
       `docs/architecture/sandbox-software.md`.
 
@@ -614,7 +614,7 @@ Depends on: every other milestone
 
 - [ ] Run `npm --prefix desktop ci` and `npm ci --prefix runner`, then the
       targeted tests and `npm run check`.
-- [ ] Change the "planned" wording of the Cloud computer guide, the
+- [x] Change the "planned" wording of the Cloud computer guide, the
       Terms, and the Privacy page to the shipped feature. `main` deleted
       the comparison page in #380, so its three rows are gone.
 - [ ] Commit with Conventional Commits and push the branch.

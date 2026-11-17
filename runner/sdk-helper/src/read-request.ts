@@ -43,6 +43,9 @@ function options(value: unknown): HelperOptions {
   return {
     cwd: string(input.cwd),
     home: string(input.home),
+    ...(input.skillsDirectory === undefined
+      ? {}
+      : { skillsDirectory: nullable(input.skillsDirectory) }),
     sessionId: string(input.sessionId),
     endpoint: string(input.endpoint),
     credential: credential(input.credential),

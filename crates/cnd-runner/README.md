@@ -17,6 +17,7 @@ The `conductive runner` command composes this crate. The installed service runs 
 - Watch recursive repository changes and repair watches after a restore.
 - Prepare ignored context storage, including linked Git worktrees.
 - Run independent sessions through private Node SDK helper processes.
+- Copy the public org skills repository in the background and retain complete snapshots for agent starts.
 - Filter credentials before saving chat output and preparing report labels.
 - Cancel pending turns, helper requests, and repository reads on Stop or shutdown.
 
@@ -64,6 +65,14 @@ The repository runs Git child processes with literal paths and cancellation.
 Comparisons preserve the real index and object store. Reads check the opened
 descriptor, reject escaped paths and Git metadata, and preserve binary bytes.
 Diffs use Git representations, including filters, link text, and submodules.
+
+The skills schedule runs its first copy without blocking startup and checks
+every five minutes. It retains the last complete copy across failed fetches
+and resumes. A removed or replaced selection deletes the old repository.
+Git runs with a clean environment, no credential helper, and a thirty-second
+time limit. Complete commit folders remain immutable while turns use them.
+Each helper start captures the current folder. The helper owns skill folder
+selection and the agent setup. Failures warn and stop no start or turn.
 
 File reports keep separate tree and changes histories. Filtering runs on each
 complete report before splitting. Multipart reports keep whole entries and
@@ -157,6 +166,9 @@ and connection drops. It does not run the Worker.
 - [driver.rs](src/helper/driver.rs): `HelperConnection` correlates requests while agent events stream.
 - [process.rs](src/helper/process.rs): `NodeHelpers` owns private pipes and process-group cleanup.
 - [startup.rs](src/helper/startup.rs): `RunnerStartup` clears stale credentials, warms the SDK, and confirms a welcome.
+- [service.rs](src/skills/service.rs): `SkillsCopy` owns the background copy schedule and current complete folder.
+- [disk.rs](src/skills/disk.rs): `DiskSkills` owns selection cleanup and atomic publication of Git snapshots.
+- [git.rs](src/skills/git.rs): `CleanGit` owns credential-free Git children and their time limit.
 - [runner_command.rs](../cnd-cli/src/runner_command.rs): the CLI composes the full runner and signal handling.
 - [limits.rs](src/limits.rs): `bound_event` applies serialized chat excerpts.
 - [commands.rs](src/json/commands.rs): `workspace_message` repairs and validates command JSON.
@@ -172,6 +184,7 @@ and connection drops. It does not run the Worker.
 ### Related Docs
 
 - [Agent runner protocol](../../docs/protocol/agent-runner.md)
+- [Org skills](../../docs/protocol/org-skills.md)
 - [Lost workspace updates](../../docs/protocol/lost-workspace-updates.md)
 - [Version pins](../../docs/protocol/version-pins.md)
 - [Sandbox architecture](../../docs/architecture/components.md#sandbox-software)

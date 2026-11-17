@@ -56,6 +56,10 @@ pub struct HelperOptions {
     pub cwd: String,
     /// Private agent home.
     pub home: String,
+    /// Immutable current skills copy, absent before a successful copy or restore.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional = nullable)]
+    pub skills_directory: Option<String>,
     /// Conductive session identity.
     pub session_id: String,
     /// Model gateway or native measurement endpoint.

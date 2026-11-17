@@ -66,6 +66,10 @@ impl Session {
             ..
         } = &turn.first;
         let options = HelperOptions {
+            skills_directory: self
+                .skills
+                .current()
+                .map(|path| path.to_string_lossy().into_owned()),
             cwd: self
                 .dependencies
                 .configuration

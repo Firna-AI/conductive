@@ -21,6 +21,7 @@ use super::builders::configuration;
 use super::helpers::{Helpers, Process};
 use super::memory::{Memory, NoConnection, Start, TestClock};
 use super::repository::{Factory, Repositories};
+use super::skills::Skills;
 
 pub(super) type TestResult = std::result::Result<(), Box<dyn std::error::Error>>;
 
@@ -32,6 +33,7 @@ pub(super) struct Fixture {
     pub repositories: Arc<Repositories>,
     pub clock: Arc<TestClock>,
     pub startup: Arc<Start>,
+    pub skills: Arc<Skills>,
 }
 impl Fixture {
     pub(super) async fn new() -> std::result::Result<Self, Box<dyn std::error::Error>> {
@@ -76,20 +78,24 @@ impl Fixture {
         ));
         let repositories = Arc::new(Repositories::default());
         let startup = Arc::new(Start::default());
-        let engine = Arc::new(AgentEngine::new(
-            EngineDependencies {
-                configuration,
-                store: store.clone(),
-                emitter,
-                credentials: filter.clone(),
-                helpers: factory.unwrap_or_else(|| helpers.clone()),
-                repositories: Arc::new(Factory(repositories.clone())),
-                clock: clock.clone(),
-                startup: startup.clone(),
-                background_limit: Duration::from_secs(30 * 24 * 60 * 60),
-            },
-            store.snapshot().await,
-        ));
+        let skills = Arc::new(Skills::default());
+        let engine = Arc::new(
+            AgentEngine::new(
+                EngineDependencies {
+                    configuration,
+                    store: store.clone(),
+                    emitter,
+                    credentials: filter.clone(),
+                    helpers: factory.unwrap_or_else(|| helpers.clone()),
+                    repositories: Arc::new(Factory(repositories.clone())),
+                    clock: clock.clone(),
+                    startup: startup.clone(),
+                    background_limit: Duration::from_secs(30 * 24 * 60 * 60),
+                },
+                store.snapshot().await,
+            )
+            .with_skills(skills.clone()),
+        );
         Ok(Self {
             engine,
             store,
@@ -98,6 +104,7 @@ impl Fixture {
             repositories,
             clock,
             startup,
+            skills,
         })
     }
     pub(super) async fn command(&self, command: RunnerCommand) -> TestResult {

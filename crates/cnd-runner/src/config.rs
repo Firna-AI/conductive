@@ -29,6 +29,8 @@ pub struct Configuration {
     pub default_branch: String,
     /// Branch tracked by the workspace, when supplied by its service.
     pub workspace_branch: Option<String>,
+    /// Public GitHub skills repository, validated before use in paths or URLs.
+    pub skills_repository: Option<String>,
     /// Image repository variables in name order.
     pub repository_directories: BTreeMap<String, PathBuf>,
     /// State file path, with the Node runner's default.
@@ -63,6 +65,20 @@ impl Configuration {
             home,
             default_branch: required(env, "CONDUCTIVE_DEFAULT_BRANCH")?,
             workspace_branch,
+            skills_repository: env
+                .get("CONDUCTIVE_SKILLS_REPOSITORY")
+                .filter(|value| !value.is_empty())
+                .filter(|value| {
+                    if is_skills_repository(value) {
+                        true
+                    } else {
+                        tracing::warn!(
+                            "The skills repository name is invalid. No org skills will load."
+                        );
+                        false
+                    }
+                })
+                .cloned(),
             repository_directories: env
                 .iter()
                 .filter(|(name, value)| repository_variable(name) && !value.is_empty())
@@ -70,6 +86,24 @@ impl Configuration {
                 .collect(),
         })
     }
+}
+
+pub(crate) fn is_skills_repository(value: &str) -> bool {
+    let Some((owner, name)) = value.split_once('/') else {
+        return false;
+    };
+    !owner.is_empty()
+        && owner.len() <= 39
+        && owner
+            .split('-')
+            .all(|part| !part.is_empty() && part.bytes().all(|c| c.is_ascii_alphanumeric()))
+        && !name.is_empty()
+        && name.len() <= 100
+        && name
+            .bytes()
+            .all(|c| c.is_ascii_alphanumeric() || b"_.-".contains(&c))
+        && name != "."
+        && !name.contains("..")
 }
 
 fn required(env: &BTreeMap<String, String>, name: &'static str) -> Result<String> {
