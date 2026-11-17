@@ -203,21 +203,23 @@ the temporary index gets fresh file times and sizes. Its results stay the
 same. Code: `crates/cnd-runner/src/repository/snapshot.rs`,
 `crates/cnd-runner/src/repository/index.rs`, and their callers.
 
-- [ ] Read the content identities with at most 16 reads at the same time.
+- [x] Read the content identities with at most 16 reads at the same time.
       Keep the result maps in path order.
-- [ ] Move the content reads before `index_changes` in `capture`.
-- [ ] Run `git update-index -q --refresh` on the temporary index after its
+- [x] Move the content reads before `index_changes` in `capture`.
+- [x] Run `git update-index -q --refresh` on the temporary index after its
       rebuild.
-- [ ] Check cancellation before each read, as today.
-- [ ] Tests:
-  - [ ] A real Git repository with tracked, changed, staged, untracked,
+- [x] Check cancellation before each read, as today.
+- [x] Tests:
+  - [x] A real Git repository with tracked, changed, staged, untracked,
         ignored context, symlink, and submodule entries gives the same
         snapshot as before the change.
-  - [ ] A file changed with the same size and time as its index entry still
+  - [x] A file changed with the same size and time as its index entry still
         shows as changed.
-  - [ ] A held read boundary shows 16 reads at the same time and never 17.
-- [ ] Update the runner crate README and `runner/file-reports.md` where
+  - [x] A held read boundary shows 16 reads at the same time and never 17.
+- [x] Update the runner crate README and `runner/file-reports.md` where
       they describe the scan.
+
+Verification evidence: `.context/runner-ready-sooner/milestone-3/`.
 
 ## Milestone 4: Start time logs
 

@@ -52,6 +52,30 @@ branch.
   the move and its recovery in
   [Continue](../worker/lifecycle/continue.md#the-move).
 
+## Repository scans
+
+The scan collects tracked paths, untracked paths, and paths from the base
+commit. Ignored context files join the tree and its readable content
+identities. They do not join the Git changes or checkpoint identities.
+Symlinks keep their Git link text and their readable target identities.
+Submodule directories keep their separate Git checkpoint identities.
+
+The private index rebuild discards stat data from the real index. The runner
+then runs `git update-index -q --unmerged --refresh` on the private index.
+The refresh skips unmerged entries without failing the scan. It checks file
+contents and records fresh times and sizes for unchanged files.
+A restored file with changed content still shows as changed when its size
+and modification time match the real index. Later comparisons and checkpoint
+updates can use the fresh stat data to skip unchanged files. The real index
+and object store stay unchanged.
+
+Each snapshot reads SHA-256 content identities with at most 16 concurrent
+reads before its Git comparisons. This warms the disk cache for those
+comparisons. Each read checks cancellation before it starts. A started read
+runs to its end. The result maps stay in path order when reads finish in a
+different order. `runner.ready` still waits for the first scan. A failed first
+scan still sends `files.unavailable` before `runner.ready`.
+
 ## The counts of a changes report
 
 - `unpushedCommits` counts the commits of the current branch that no
@@ -87,6 +111,10 @@ branch.
 
 - [base_tests.rs](../crates/cnd-runner/tests/repository/base_tests.rs) checks merge bases, fetched refs, branch settings, and count-only changes.
 - [checkpoint_tests.rs](../crates/cnd-runner/tests/repository/checkpoint_tests.rs) checks readable content, Git representations, and turn baselines.
+- [snapshot_tests.rs](../crates/cnd-runner/tests/repository/snapshot_tests.rs) checks complete snapshots across mixed Git states.
+- [stat_tests.rs](../crates/cnd-runner/tests/repository/stat_tests.rs) checks changed content with restored file sizes and times.
+- [index_states_tests.rs](../crates/cnd-runner/tests/repository/index_states_tests.rs) checks conflicts and other supported index states.
+- [scan_reads_tests.rs](../crates/cnd-runner/tests/repository/scan_reads_tests.rs) holds reads to check concurrency, comparison order, and cancellation.
 - [content_tests.rs](../crates/cnd-runner/tests/repository/content_tests.rs),
   [paths_tests.rs](../crates/cnd-runner/tests/repository/paths_tests.rs), and
   [limits_tests.rs](../crates/cnd-runner/tests/repository/limits_tests.rs) check bytes, namespace safety, limits, and cancellation.
