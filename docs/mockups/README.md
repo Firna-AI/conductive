@@ -145,7 +145,8 @@ a dropped folder that the browser cannot read. The app shares these words.
   attached files, drops, and the chip of Add to chat.
   `src/screens/rowMenuState.ts` holds the open menu of a row of All files
   or Changes, which `src/screens/workspaceRowMenu.ts` draws, and the toast
-  after Copy path.
+  after Copy path. `src/screens/layoutState.ts` holds the layout of the
+  desktop columns: a drag of a handle, the right column, and the sidebar.
 - A flow (`defineUseCase`) lists the paths of existing screens. Each screen
   that a flow uses names the flow in `useCasePaths`.
 - Screens link to each other with `ScreenLink` from
