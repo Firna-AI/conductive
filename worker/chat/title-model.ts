@@ -16,6 +16,10 @@ export function titleModelBinding(env: AppEnv): TitleModelCall | undefined {
     : undefined
 }
 
+/** Workers AI answers some title requests late, so each request tries again. */
+export const TITLE_ATTEMPTS = 3
+export const TITLE_ATTEMPT_TIMEOUT_MS = 45_000
+
 export async function requestWorkspaceTitle(
   model: string | undefined,
   run: TitleModelCall | undefined,
@@ -26,22 +30,43 @@ export async function requestWorkspaceTitle(
     warnWorker({ kind: 'workspace_title_unconfigured' })
     return null
   }
+  const input: AiTextGenerationInput = {
+    messages: [
+      { role: 'system', content: TITLE_SYSTEM_PROMPT },
+      { role: 'user', content: titlePrompt(text.slice(0, 4000)) },
+    ],
+    max_tokens: 32,
+    stream: false,
+  }
+  let failure: unknown
+  for (let attempt = 0; attempt < TITLE_ATTEMPTS; attempt += 1) {
+    try {
+      return await requestTitleOnce(model, run, input)
+    } catch (error) {
+      failure = error
+    }
+  }
+  warnWorker({
+    kind: 'workspace_title_request_failed',
+    error: errorSummary(failure),
+  })
+  return null
+}
+
+/** One model call that gives a clean title, or throws. */
+async function requestTitleOnce(
+  model: string,
+  run: TitleModelCall,
+  input: AiTextGenerationInput,
+): Promise<string> {
   const controller = new AbortController()
   let timer: ReturnType<typeof setTimeout> | undefined
   try {
-    const input: AiTextGenerationInput = {
-      messages: [
-        { role: 'system', content: TITLE_SYSTEM_PROMPT },
-        { role: 'user', content: titlePrompt(text.slice(0, 4000)) },
-      ],
-      max_tokens: 32,
-      stream: false,
-    }
     const deadline = new Promise<never>((_resolve, reject) => {
       timer = setTimeout(() => {
         controller.abort()
         reject(new Error('The title request timed out.'))
-      }, 15000)
+      }, TITLE_ATTEMPT_TIMEOUT_MS)
     })
     const result = await Promise.race([
       run(model, input, { signal: controller.signal }),
@@ -51,12 +76,6 @@ export async function requestWorkspaceTitle(
     const title = typeof answer === 'string' ? cleanTitle(answer) : ''
     if (!title) throw new Error('The title answer is empty.')
     return title
-  } catch (error) {
-    warnWorker({
-      kind: 'workspace_title_request_failed',
-      error: errorSummary(error),
-    })
-    return null
   } finally {
     clearTimeout(timer)
   }
