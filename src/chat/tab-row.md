@@ -8,8 +8,9 @@ that each tab keeps.
 [The tab row](../../docs/protocol/tab-row.md) states the requirements.
 [Split panes](../../docs/protocol/split-panes.md) states the requirements
 of two panes, each with its own row. The chat draws each pane with its own
-row, as [the panes](panes.md) says. Its tab menu has no pane item yet, and
-no drag moves a tab to the other pane of a desktop column yet.
+row, as [the panes](panes.md) says. That guide also gives the moves between
+the panes of a desktop: the drop on the content of a pane, the drop in the
+other row, and the pane item of the tab menu.
 
 - Each saved pane keeps its own order of session, file, and diff tabs.
   A tab belongs to one pane only. A host with no file or diff tabs leaves
@@ -65,15 +66,23 @@ no drag moves a tab to the other pane of a desktop column yet.
   pane. The source keeps its shown tab unless that tab moved. It then
   shows the next tab, else the previous tab. An empty source pane closes.
   A split of the only tab changes nothing. A move whose tab or neighbour is
-  in no row of the view moves nothing. On a desktop, no screen control
-  moves a tab to the other pane yet.
+  in no row of the view moves nothing. On a desktop, a drag onto the other
+  pane and the pane item of the tab menu move a tab to the other pane, as
+  [the panes](panes.md#moves-between-panes) says.
 - The one row of a phone holds the session tabs of both panes, the left
   pane first, with a short neutral line between the two parts. A drop
-  there moves the tab into the pane of the tab next to its drop place.
-  Move left on the first tab of the right part, and Move right on the last
-  tab of the left part, move the tab across the line, to the near end of
-  the other pane. The status then names the pane, such as "app.ts moves to
-  the right pane, place 1 of 3", and the focus goes back to the tab.
+  there moves the tab into the pane of its drop place. The place between
+  the two parts has a side of the line: a pointer left of the middle of
+  the line puts the tab at the end of the left part, and a pointer right of
+  it puts the tab at the start of the right part. So the drop line of the
+  end of the left part shows before the line between the parts. Move left
+  on the first tab of the right part, and Move right on the last tab of the
+  left part, move the tab across the line, to the near end of the other
+  pane. After a drop or a move across the line, the status names the pane,
+  such as "app.ts moves to the right pane, place 1 of 3". After a move of
+  the tab menu, the focus goes back to the tab. A drop on the chat under
+  the row moves nothing, so a drag moves no tab to another pane there, and
+  the pane item of the tab menu is off.
 - A move that changes the place of the temporary tab keeps it, as
   [The tab row](../../docs/protocol/tab-row.md#the-tab-menu)
   says: the pure `moveTab` of `state/tab-order.ts` drops the mark with the
@@ -83,17 +92,28 @@ no drag moves a tab to the other pane of a desktop column yet.
   keeps the mark too, also when it changes the index of the temporary tab.
 - The tab row draws the tabs in the row order and moves them by drag and
   drop, on the shared `usePointerDrag` of [the web app](../app/README.md).
+  One drag serves the whole column, as `useTabDrag` in
+  `components/useTabDrag.ts` says: the rows of both panes and the content
+  of each pane on desktop, or the one row of a phone. The column gives each
+  row its part of the drag and the elements of the tabs, `TabNodes`, which
+  the rows share because a tab stands in one row only.
   A mouse drags a tab after a move of more than 4 px. A finger lifts a tab
-  after a long press of 450 ms. The drop place is before the first other
-  tab whose middle is right of the pointer, else after the last tab. A line
+  after a long press of 450 ms. Away from the content of the panes, the
+  drop place is in the row of the pane whose content is nearest beside the
+  pointer, else in the row of the tab: before the first other tab whose
+  middle is right of the pointer, else after the last tab. A line
   that takes no space marks it, so no tab moves during the drag. The tab
   stays at its place as a faint copy, and a lifted copy hangs below the row
   under the pointer. The copy shows the whole title, which the row cuts at
   168 px, and a title wider than the window goes on to more lines. The
-  status of the row tells a screen reader the title and the place, such as
-  "Moving Debounce lookups to place 2 of 3". The release calls `moveTab`,
-  and a drop at the tab's own place moves nothing. Escape ends a drag with
-  no move. So neither keeps the temporary tab.
+  status of the row of the tab tells a screen reader the title and the
+  place, such as "Moving Debounce lookups to place 2 of 3", with the words
+  of `moveStatus` of the mockups. A place in the other pane names that
+  pane, such as "Moving app.ts to the right pane, place 2 of 3". A release
+  in the row of the tab calls `moveTab` through that row, and a drop at the
+  tab's own place moves nothing. Escape ends a drag with no move. So
+  neither keeps the temporary tab. Only the row that holds the drop place
+  scrolls near its ends.
 - A drag does not change the shown tab: the click at its end selects
   nothing, also the click that a finger sends after it lets go. A press on
   Close starts no drag. A read-only chat binds no drag, and neither does a
@@ -106,17 +126,23 @@ no drag moves a tab to the other pane of a desktop column yet.
   browser opens no menu of its own. On a phone, a long press that ends with
   no move opens it as a sheet. A session tab has Rename session, a line,
   Copy link, Copy concise transcript, and Copy full transcript, a line,
-  then Move left and Move right, a line, then Close tabs to the right, with
-  the icons of the mockups. The temporary tab has Keep open, with the
-  bookmark icon of the mockups, a line, Move left and Move right, a line,
-  then Close tabs to the right. A kept file or diff tab has Move left and
-  Move right, a line, then Close tabs to the right. The host tells the row
-  which tab is temporary: only that tab gets a `keep` from `renderTab`. A
-  move or a close that the place of the tab rules out is off: it keeps its
-  place at half opacity, and the arrow keys skip it. Close tabs to the
-  right is off on the last tab of each part of the one row of a phone.
-  Escape or a press
-  outside closes the menu.
+  then Move left, Move right, and the pane item, a line, then Close tabs to
+  the right, with the icons of the mockups. The temporary tab has Keep
+  open, with the bookmark icon of the mockups, a line, Move left, Move
+  right, and the pane item, a line, then Close tabs to the right. A kept
+  file or diff tab has Move left, Move right, and the pane item, a line,
+  then Close tabs to the right. `components/tab-menu-items.ts` gives these
+  groups. The host tells the row which tab is temporary: only that tab gets
+  a `keep` from `renderTab`. A move or a close that the place of the tab
+  rules out is off: it keeps its place at half opacity, and the arrow keys
+  skip it. Close tabs to the right is off on the last tab of each part of
+  the one row of a phone. Escape or a press outside closes the menu.
+- The pane item (split panes decision 4 B) reads Move to the other pane
+  when the saved view holds two panes, and Open in a new pane with one
+  pane, with the two-column icon of the mockups, in the words of
+  `paneItems` of the mockups. The column gives each row its `PaneItem`, as
+  [the panes](panes.md#moves-between-panes) says. The item is off when the
+  row holds only this tab and the view holds one pane, and off on a phone.
 - Each item that changes the workspace carries a mark: Rename session,
   Keep open, the moves, and Close tabs to the right. A read-only chat
   leaves out the marked items, and a group with no item left loses its

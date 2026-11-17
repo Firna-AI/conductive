@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { onTestFinished } from 'vitest'
+import tabDrag from '../../../docs/mockups/src/components/workspace/TabDrag.module.css'
 import styles from '../../../docs/mockups/src/components/workspace/WorkspaceTabs.module.css'
 import { PaneSplit } from '../../app/pane-split'
 import { MemoryStorage } from '../../app/test-kit'
@@ -15,6 +16,7 @@ import { asMessageField } from '../../test-support/message-field'
 import { holdAnimationFrames, mount } from '../../test-support/mount'
 import { paneChat, setSplitView, splitView } from '../state/pane-test-kit'
 import { WorkspaceChatView } from '../WorkspaceChat'
+import type { RenderTab } from './tab-row'
 
 // Mounts the chat of a workspace whose saved view holds two panes, as the
 // app keeps it, for the tests of the split column.
@@ -42,11 +44,16 @@ export function markOf(row: HTMLElement): 'focused' | 'unfocused' | null {
   return null
 }
 
-/** The names of the tabs of a row, with the current one in brackets. */
+/**
+ * The names of the tabs of a row, with the current one in brackets, the
+ * line between the two parts of a phone row as "|", and the drop line of a
+ * drag as "^".
+ */
 export function tabsOf(row: HTMLElement): string[] {
   return Array.from(row.querySelectorAll('li'), (item) => {
+    if (item.classList.contains(tabDrag.drop)) return '^'
     if (item.getAttribute('aria-hidden') === 'true') return '|'
-    const name = item.querySelector('button')?.textContent ?? ''
+    const name = item.querySelector('a, button')?.textContent ?? ''
     return item.querySelector('[aria-current="page"]') ? `[${name}]` : name
   })
 }
@@ -63,6 +70,10 @@ export async function mountSplit(
     storage?: MemoryStorage
     /** The page of the host in each pane, as a file page of the app. */
     pages?: readonly ReactNode[]
+    /** Names and draws the file and diff tabs, as the app does. */
+    renderTab?: RenderTab
+    /** Changes the replies of the fake API before the chat loads. */
+    setup?: (chat: ReturnType<typeof paneChat>) => void
   } = {},
 ) {
   holdAnimationFrames()
@@ -70,11 +81,14 @@ export async function mountSplit(
     view = splitView,
     viewport = 'desktop',
     pages,
+    renderTab,
+    setup,
     storage = new MemoryStorage(),
     ...chatOptions
   } = options
   const chat = paneChat(chatOptions)
   setSplitView(chat, view)
+  setup?.(chat)
   await chat.controller.start()
   onTestFinished(chat.controller.stop)
   const offers = new ShortcutOffers()
@@ -92,6 +106,7 @@ export async function mountSplit(
         controller={chat.controller}
         pages={pages}
         paneSplit={split}
+        renderTab={renderTab}
         viewport={viewport}
       />
     </ShortcutContext>,

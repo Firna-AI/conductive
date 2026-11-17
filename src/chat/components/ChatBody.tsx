@@ -70,6 +70,7 @@ export function ChatBody(
         renderTab: props.renderTab,
       })
   const focused = snapshot.view?.focusedPane ?? 0
+  const splitView = snapshot.view?.panes.length === 2
   // The sessions whose chats show, for the clock of their running turns.
   const chats = phone
     ? [phone.sessionId]
@@ -166,6 +167,7 @@ export function ChatBody(
       onNew={() => void controller.newSession()}
       row={row}
       sessionId={phone.sessionId}
+      splitView={splitView}
       tabs={phone.tabs}
     >
       {overlays}
@@ -184,6 +186,7 @@ export function ChatBody(
       plans={plans}
       row={row}
       split={props.paneSplit ?? ownSplit}
+      splitView={splitView}
     >
       {overlays}
     </ChatPanes>

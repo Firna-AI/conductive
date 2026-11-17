@@ -2,10 +2,32 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import type { FakeApiOptions, FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_TIME } from '../../test-support/fixtures/core'
 import { chatFor } from '../state/test-kit'
+import type { PaneItem } from './pane-moves'
 import { SessionChat } from './SessionChat'
+import { TabNodes } from './tab-nodes'
+import type { TabRowDrag } from './useTabDrag'
 
 /** The clock of the render tests: 2m 41s after the recorded turn began. */
 export const now = FAKE_TIME + 161_000
+
+/**
+ * The props of the column that a tab row takes, for a picture of a row of
+ * one pane while no drag runs: a drag that binds nothing, and the pane item.
+ */
+export function stillRow(): { drag: TabRowDrag; paneItem: PaneItem } {
+  return {
+    drag: {
+      nodes: new TabNodes(),
+      item: () => ({}),
+      line: null,
+      status: '',
+      lifted: null,
+      edge: null,
+      dragging: false,
+    },
+    paneItem: { split: false, move: null },
+  }
+}
 
 /** The text of rendered markup, with each tag as a space. */
 export function textOf(html: string): string {

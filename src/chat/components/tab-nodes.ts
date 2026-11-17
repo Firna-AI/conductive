@@ -1,7 +1,7 @@
 import type { RefCallback } from 'react'
 
 /** One ref callback for each key, which keeps the element of that key. */
-class Refs {
+export class ElementRefs {
   private readonly nodes = new Map<string, HTMLElement>()
   private readonly refs = new Map<string, RefCallback<HTMLElement>>()
 
@@ -22,14 +22,15 @@ class Refs {
 }
 
 /**
- * The elements of the tabs of one row, by the key of each tab: the list
+ * The elements of the tabs of a column, by the key of each tab: the list
  * item, which a drag measures and the row scrolls into view, and the link
  * of the tab, a link or a button, which takes the focus back after a move
- * from the tab menu.
+ * from the tab menu. A tab stands in one row only, so the rows of a column
+ * can share one `TabNodes`, and each row reads the keys of its own tabs.
  */
 export class TabNodes {
-  private readonly items = new Refs()
-  private readonly links = new Refs()
+  private readonly items = new ElementRefs()
+  private readonly links = new ElementRefs()
 
   /** The ref of the list item of the tab with this key. */
   itemRef(key: string): RefCallback<HTMLElement> {

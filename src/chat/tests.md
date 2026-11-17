@@ -159,12 +159,30 @@ row takes the mark, and a press, a key, or the keyboard focus in the other
 pane moves the focus, but a press on the session history does not. The
 composer of the focused pane takes the session keys, else the composer of
 the other pane. A stopped sandbox shows one bar below both panes. An
-archived split shows its sessions with no + and binds no drag, and a pane
-that holds only files does not show there.
+archived split shows its sessions with no + and binds no drag, its tab
+menu has no pane item, and a pane that holds only files does not show
+there.
 `components/SplitPhone.dom.test.tsx` shows the one row of a phone with the
 session tabs of both panes and a line between them, the chat of the
 focused pane, else of the other pane, and its one +, which opens in the
-focused pane. `components/PaneDivider.dom.test.tsx` moves the divider with
+focused pane. A drop left of the middle of the line puts a tab of the
+right part at the end of the left part, with the line before the border,
+and the status names the pane. A drop on the chat moves nothing.
+`components/PaneDrag.dom.test.tsx` drags tabs with a mouse over the
+column that `components/pane-drag-test-kit.ts` lays out. Over the one
+pane, each half shows its mark and says its new pane, and a drop on the
+left half opens a left pane. The only tab shows no mark on a half, its
+drop moves nothing, and its pane item is off. With two panes, a drop on
+the other pane moves the tab to the end of that row, shows it, focuses
+that pane, and keeps a temporary tab that moved. The pane of the tab shows
+no mark and takes no drop, and Escape ends a drag over the other pane
+with no move. A drop in the other row puts the tab at its drop line, and
+the pane that it left empty closes. The status of the column says each
+move. `components/PaneMenu.dom.test.tsx` presses Move to the other pane
+from the keys and Open in a new pane from a right click: each move shows
+the tab in its new pane, gives it the focus, and says the move, and a
+later move in the row ends those words. On a phone, the item is off.
+`components/PaneDivider.dom.test.tsx` moves the divider with
 the keys and the pointer, stops at 320 px a pane, keeps half of a narrow
 column, and keeps the share for the next load. `components/split-test-kit.tsx`
 mounts these chats.

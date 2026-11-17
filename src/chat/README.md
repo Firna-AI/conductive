@@ -58,19 +58,21 @@ chips.
 ## Rules for this code
 
 - [The tab row](tab-row.md) gives the rules of each pane's tab order,
-  its temporary tab, the drag, the tab menu, and the
-  scroll of the row, and the reader's place that each tab keeps. A move of
-  the temporary tab to another place keeps it, and so does Keep open in its tab menu, through the `keep` that the
-  host gives that tab.
+  its temporary tab, the drag of the column, the tab menu with its pane
+  item, and the scroll of the row, and the reader's place that each tab
+  keeps. A move of the temporary tab to another place keeps it, and so
+  does Keep open in its tab menu, through the `keep` that the host gives
+  that tab.
 - The saved view holds one or two panes and the focused pane. Each pane
   owns its tab order, shown tab, and temporary tab. The Worker keeps older
   app copies compatible through the flat fields in its replies and the fit
   of old saves onto stored panes.
 - [The panes](panes.md) gives how the chat draws one or two panes: the
   row, the chat or page, the message field, and the drop area of each
-  pane, the mark and the setter of the focused pane, the divider and its
-  share, the bar below both panes, the one row of a phone, and the panes
-  of a read-only workspace.
+  pane, the mark and the setter of the focused pane, the moves of a tab
+  between the panes by a drag or by the pane item of the tab menu, the
+  divider and its share, the bar below both panes, the one row of a phone,
+  and the panes of a read-only workspace.
 - The state loads each shown session, including the pane that is not
   focused. One controller and one workspace stream feed both session logs.
   The view owns selection. Each pane also remembers its last session while

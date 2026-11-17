@@ -30,6 +30,7 @@ import {
   type Side,
 } from './split-test-kit'
 import { debounce, pointer } from './tab-drag-test-kit'
+import { menuItems, rightClick } from './tab-row-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -159,23 +160,26 @@ describe('the split column', () => {
     }).toEqual({ resume: 1, inPanes: [false, false], fields: 0 })
   })
 
-  it('shows the saved split of an archived workspace with no + and binds no drag', async () => {
+  it('shows the saved split of an archived workspace with no + and binds no drag, and its tab menu leaves out the pane item', async () => {
     await mountSplit({ workspaceState: 'archived' })
     const tab = byRole('button', debounce, rowOn('right'))
     pointer(tab, 'pointerdown', { ...mouse, clientX: 10 })
     pointer(window, 'pointermove', { ...mouse, clientX: 90 })
     const status = rowOn('right').querySelector('[role="status"]')
     pointer(window, 'pointerup', { ...mouse, clientX: 90, buttons: 0 })
+    rightClick(tab)
     expect({
       left: tabsOf(rowOn('left')),
       right: tabsOf(rowOn('right')),
       plus: controlsNamed('New session'),
       drag: status?.textContent,
+      menu: menuItems(debounce).map((item) => item.name),
     }).toEqual({
       left: ['[Address autocomplete]'],
       right: [`[${debounce}]`],
       plus: [false, false],
       drag: '',
+      menu: ['Copy link', 'Copy concise transcript', 'Copy full transcript'],
     })
   })
 

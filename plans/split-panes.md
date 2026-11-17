@@ -477,6 +477,22 @@ Milestone 6 drew the panes.
   It works also in a read-only workspace, because the share is a setting
   of the browser.
 
+### Calls from the drag milestone
+
+These are design calls of the agent, made on 17 November 2026, when
+Milestone 7 built the drag between panes.
+
+- One drag serves the whole column, so it reaches both rows and both pane
+  contents with one press at a time.
+- The words of a move to another pane come from a status of the column,
+  not of the row. Reason: a move can add or remove a row, and a status
+  that arrives with a new row may not be heard.
+- A move to a new pane says the place, as "app.ts moves to the right pane,
+  place 1 of 1".
+- A drop that changes nothing shows no drop line either.
+- A drop on the chat of a phone does nothing, also with one pane.
+- Away from the pane contents, a drop goes to the nearest row.
+
 ### The chat state
 
 - The chat state replaces `activeSessionId` with the shown tab of each pane
@@ -631,13 +647,14 @@ Tags: ui
 
 Depends on: 6
 
-- [ ] Add the drop marks over the content and the drop into the other row,
+- [x] Add the drop marks over the content and the drop into the other row,
       on the shared `usePointerDrag`.
-- [ ] Open, move, and close panes on a drop. Keep Escape and the status of
+- [x] Open, move, and close panes on a drop. Keep Escape and the status of
       the row for a screen reader.
-- [ ] Add the control of decision 4 that the user chooses, unless the user
+- [x] Add the control of decision 4 that the user chooses, unless the user
       chooses A.
-- [ ] Add DOM tests for each drop place.
+- [x] Add DOM tests for each drop place.
+- [x] The handoff, screenshots, and logs are in `.context/split-panes/m7/`.
 
 ## Milestone 8: Presses, keys, and addresses
 

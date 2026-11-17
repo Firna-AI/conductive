@@ -19,7 +19,7 @@ import { blankDraft } from '../state/chat-snapshot'
 import { loginGone, withSessions } from '../state/linked-kit'
 import { historyEntries } from './ChatOverlays'
 import { Composer } from './Composer'
-import { renderChat, textOf } from './render-kit'
+import { renderChat, stillRow, textOf } from './render-kit'
 import { SessionTabs } from './SessionTabs'
 
 describe('SessionChat', () => {
@@ -158,6 +158,7 @@ describe('session parts', () => {
     }))
     const html = renderToStaticMarkup(
       <SessionTabs
+        {...stillRow()}
         historyEntries={historyEntries(history, FAKE_TIME, () => {})}
         historyOpen
         mobile={false}

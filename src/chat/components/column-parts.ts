@@ -4,7 +4,7 @@ import type { SessionTabsProps } from './SessionTabs'
 /** The props that every tab row of the column shares. */
 export type RowProps = Omit<
   SessionTabsProps,
-  'tabs' | 'label' | 'focus' | 'history' | 'onNew'
+  'tabs' | 'label' | 'focus' | 'history' | 'onNew' | 'drag' | 'paneItem'
 >
 
 /** The props that every session chat of the column shares. */

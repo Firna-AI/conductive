@@ -1,6 +1,8 @@
 import { useLayoutEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
+import paneDrop from '../../../docs/mockups/src/components/workspace/PaneDrop.module.css'
+import type { PaneSide } from '../../../docs/mockups/src/components/workspace/paneCopy'
 import tabDrag from '../../../docs/mockups/src/components/workspace/TabDrag.module.css'
 import { LiftedSessionTab } from './SessionTab'
 import type { RowTab } from './tab-row'
@@ -20,6 +22,35 @@ export function DropLine() {
         <span className={tabDrag.lineEnd} />
       </span>
     </li>
+  )
+}
+
+/**
+ * Where a drop on the content of a pane puts a dragged tab: a new pane on a
+ * side of the one pane, or the end of the row of the other pane, `pane`.
+ */
+export type PaneMark = PaneSide | 'pane'
+
+/**
+ * The drop mark over the content of a pane, as the mockup part `PaneDrop`
+ * draws it: an outline in the accent colour over a light tint, on the half
+ * of the one pane where a drop opens a new pane, or over the whole other
+ * pane of a split. The content stays readable under it, and it takes no
+ * pointer input. The status of the row of the tab tells a screen reader the
+ * place.
+ */
+export function PaneDropMark(props: { mark: PaneMark }) {
+  const { mark } = props
+  return (
+    <div aria-hidden className={paneDrop.layer}>
+      <div
+        className={classes(
+          paneDrop.mark,
+          mark === 'left' && paneDrop.left,
+          mark === 'right' && paneDrop.right,
+        )}
+      />
+    </div>
   )
 }
 

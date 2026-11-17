@@ -39,13 +39,23 @@ is relative to `src/chat/`, the folder of this guide.
   the row of a pane in the saved order with their titles. `components/tab-keys.ts`:
   `useTabKeys`, the keys of the row, and the copy keys of the shown
   session.
-- `components/useTabDrag.ts`: the drag of the tab row: the drop place, the
-  move, and the status. `components/TabDragParts.tsx`: the drop line and
-  the lifted tab.
-- `components/useTabMenu.ts` and `components/TabMenu.tsx`: the tab menu,
-  its items with the mark of each item that changes the workspace, the
-  items of a read-only row, the long press that opens that row's menu, and
-  its drawing at a point or in a sheet.
+- `components/useTabDrag.ts`: the drag of the tabs of a column, which
+  `ChatPanes` and `PhoneChat` own: the part of each row, the drop mark of
+  each pane, and the drop. `components/tab-drop-locate.ts`: `locateDrop`,
+  the drop place under the pointer. `components/tab-drop.ts`: the drop
+  places, and the move, the drop line, and the words of each.
+  `components/TabDragParts.tsx`: the drop line, the drop mark over the
+  content of a pane, and the lifted tab.
+- `components/usePaneMoves.ts`: the moves of a desktop to another pane, by
+  a drop or by the pane item, with the status of the column and the focus
+  after the pane item. `components/pane-moves.ts`: the side of a pane, the
+  `PaneItem` of the tab menu and its move, and the words after a move.
+  `components/PaneView.tsx`: one pane of the desktop column.
+- `components/useTabMenu.ts`, `components/tab-menu-items.ts`, and
+  `components/TabMenu.tsx`: the tab menu, its items with the mark of each
+  item that changes the workspace, the pane item, the items of a read-only
+  row, the long press that opens that row's menu, and its drawing at a
+  point or in a sheet.
   `components/useTabMoves.ts`: the moves of the row and Keep open, the
   focus after a move or a keep from the menu, and the words of the status.
 - `components/TranscriptCopy.tsx`: `useTranscriptCopy`, the copy of a
@@ -57,8 +67,8 @@ is relative to `src/chat/`, the folder of this guide.
 - `components/row-scroll.ts`: the scroll of a full row, its fades, and the
   scroll of a drag near an end. `components/row-reveal.ts`: the place of a
   tab in the row, and the scroll that brings tabs into view.
-  `components/tab-nodes.ts`: the elements of the tabs, which the drag, the
-  scroll, and the menu share.
+  `components/tab-nodes.ts`: the elements of the tabs of a column, which
+  the drag, the scroll, and the menu of each row share.
 - `components/SessionChat.tsx`: the chat of the session of a pane.
   `components/sandbox-parts.tsx`: `ChatHost`, the start steps and the
   sandbox bar that the app can draw, and `sandboxParts`, which picks the

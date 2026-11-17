@@ -12,3 +12,15 @@
   min-width: 0;
   min-height: 0;
 }
+
+/*
+ * The chat under the row. It fills the rest of the phone, as the chat does
+ * alone, and a drag of a tab measures it, because a drop there moves no tab.
+ */
+.content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}

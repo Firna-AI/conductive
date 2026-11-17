@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import { startedTurn } from '../../shared/transcript/turn-records'
 import { newSessionRecord } from '../state/test-kit'
-import { textOf } from './render-kit'
+import { stillRow, textOf } from './render-kit'
 import { SessionTabs } from './SessionTabs'
 import { rowOf } from './tab-row'
 
@@ -35,6 +35,7 @@ function tabBar(
   )
   return renderToStaticMarkup(
     <SessionTabs
+      {...stillRow()}
       historyEntries={[]}
       historyOpen={false}
       mobile={false}
