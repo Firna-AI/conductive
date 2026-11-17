@@ -16,7 +16,7 @@ export const ORG_COLORS = [
 export type OrgColor = (typeof ORG_COLORS)[number]
 
 /** The colour of an org that has none, and of a key that a client does not know. */
-export const DEFAULT_ORG_COLOR: OrgColor = 'blue'
+const DEFAULT_ORG_COLOR: OrgColor = 'blue'
 
 export function isOrgColor(value: unknown): value is OrgColor {
   return (

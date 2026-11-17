@@ -2,7 +2,7 @@ import { isOrgColor, type OrgColor } from '../../src/shared/org-colors'
 import { HttpError, requiredString } from '../http'
 
 /** The fields of an org that a PATCH saves. An absent field keeps its value. */
-export interface OrgUpdate {
+interface OrgUpdate {
   name?: string
   initials?: string
   color?: OrgColor

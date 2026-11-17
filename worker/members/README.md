@@ -185,8 +185,8 @@ The capability expires when its callback ends or its lease expires.
 [Invitations](invitations.md) gives the email of an invitation, the match
 of verified emails at each sign-in, and the explicit acceptance.
 
-Call `workspaceCreator` when the lifecycle creates a workspace.
-Store its ID in `owner_user_id` in the creation transaction.
+The lifecycle stores the ID of the member who creates a workspace in
+`owner_user_id`, in the creation transaction.
 Reassignment changes the owner and update time only.
 Each session keeps the agent login of its starter.
 

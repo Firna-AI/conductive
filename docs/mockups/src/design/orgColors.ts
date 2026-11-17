@@ -1,11 +1,7 @@
 import type { SharedUiTheme } from '@firna/ui/theme'
-import {
-  ORG_COLORS,
-  orgColorOf,
-  type OrgColor,
-} from '../../../../src/shared/org-colors'
+import { ORG_COLORS, type OrgColor } from '../../../../src/shared/org-colors'
 
-export { ORG_COLORS, orgColorOf, type OrgColor }
+export { ORG_COLORS, type OrgColor }
 
 /** The two colours of an org tile: its initials and its outline. */
 type TileTint = { ink: string; border: string }
