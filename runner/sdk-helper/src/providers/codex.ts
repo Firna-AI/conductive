@@ -67,6 +67,23 @@ function input(command: ProviderInput, branches?: RunnerBranches | null) {
   ]
 }
 
+/**
+ * Codex runs each subagent in its own thread, and the App Server sends the
+ * notifications of every thread. Only the conversation thread belongs to
+ * this session. So a subagent's turn never replaces the active turn, ends
+ * the session's turn, or adds an answer to the chat.
+ */
+function otherThread(params: unknown, threadId: string | null): boolean {
+  return (
+    threadId !== null &&
+    typeof params === 'object' &&
+    params !== null &&
+    'threadId' in params &&
+    typeof params.threadId === 'string' &&
+    params.threadId !== threadId
+  )
+}
+
 export function createCodexFactory(
   start: StartProcess = startProcess,
   credentials = writeCodexCredentials,
@@ -118,6 +135,7 @@ export function createCodexFactory(
           }
         : {}),
     }
+    let threadId: string | null = null
     let activeTurn: string | null = null
     let userIds: string[] = []
     let choice = options.choice
@@ -143,6 +161,7 @@ export function createCodexFactory(
           lifetime,
         }),
         (method, params) => {
+          if (otherThread(params, threadId)) return
           if (method === 'turn/started')
             activeTurn = string(object(object(params).turn).id)
           codexNotification(method, params, userIds, options.event)
@@ -199,12 +218,9 @@ export function createCodexFactory(
               ? options.credential.token
               : options.credential.login.secret,
         })
-      const threadId = await openCodexThread(
-        rpc,
-        options,
-        settings.modelProvider,
-      )
-      options.event({ type: 'conversation', id: threadId })
+      const thread = await openCodexThread(rpc, options, settings.modelProvider)
+      threadId = thread
+      options.event({ type: 'conversation', id: thread })
       return {
         send: async (command) => {
           if (activeTurn) {
@@ -212,7 +228,7 @@ export function createCodexFactory(
             userIds.push(command.message.id)
             try {
               await rpc.request('turn/steer', {
-                threadId,
+                threadId: thread,
                 expectedTurnId: activeTurn,
                 clientUserMessageId: command.message.id,
                 input: input(command, options.instructionBranches),
@@ -228,7 +244,7 @@ export function createCodexFactory(
               options.event({ type: 'speed', speed: { state: 'fast' } })
             const result = object(
               await rpc.request('turn/start', {
-                threadId,
+                threadId: thread,
                 input: input(command, options.instructionBranches),
                 clientUserMessageId: command.message.id,
                 model: choice.model,
@@ -251,7 +267,7 @@ export function createCodexFactory(
         interrupt: async () => {
           if (activeTurn)
             await rpc.request('turn/interrupt', {
-              threadId,
+              threadId: thread,
               turnId: activeTurn,
             })
         },
