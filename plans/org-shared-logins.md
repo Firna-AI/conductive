@@ -463,6 +463,18 @@ is the agent's call.
   login, which points to the account page, and only an admin can fix an
   org login.
 
+The merge of `main` on 17 November 2026 added these calls. Each is the
+agent's call.
+
+- The Agents tab shows main's read warning of the model list and the `/v1`
+  note of a Codex endpoint to an admin, as the account page shows them to
+  the owner. A member sees neither. Reason: `docs/protocol/org-logins.md`
+  says that each rule of an own endpoint also applies to an org endpoint,
+  and only an admin sees the model list and Refresh.
+- `main` now says that the project is in production. So each later
+  milestone avoids a breaking change: a stored session without a login
+  keeps working, and the routes of the app keep their shapes.
+
 ## Components
 
 - D1: a table `org_agent_logins` keyed by `org_id` and `agent`, with
@@ -589,6 +601,27 @@ intentional resolution in
 `.context/org-shared-logins/merge-justifications.md`. The pull request
 description copies them, as the `git-merge` skill says.
 
+## Milestone 2b: Mockups for the org endpoint notes
+
+Tags: mockup
+
+Depends on: 2
+
+The merge of `main` on 17 November 2026 brought two notes of an own
+endpoint to the account page and Get started: the warning "Conductive
+couldn't read the model list of this endpoint." with Refresh, and the note
+under a Codex endpoint after a save that added `/v1`. The Agents tab of
+Milestone 1 draws neither. This milestone fills that mockup gap.
+
+- [ ] Agents tab: an admin sees the read warning with Refresh, and the
+      `/v1` note, as the account page shows them, with main's
+      `EndpointDetails` part. A member sees neither.
+- [ ] Update `docs/mockups/catalogue-org-logins.md` and
+      `docs/mockups/own-endpoint-logins.md`.
+- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [ ] Update the design and the TODOs of this plan for each problem that
+      the mockups show.
+
 ## Milestone 3: Org logins in the data and the org API
 
 Depends on: 2
@@ -638,7 +671,7 @@ Depends on: 3
 
 Tags: ui
 
-Depends on: 1, 3
+Depends on: 1, 2b, 3
 
 - [ ] Add the Agents tab to the org settings under `src/shell/settings/`,
       with the parts of the account form, as the mockups show.
