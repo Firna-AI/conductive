@@ -78,6 +78,7 @@ pub(super) fn build(
             ));
         }
         lines.push("Use get_workspace to find the parent and the sub-workspaces of a workspace. Use list_workspaces with parentId to list direct sub-workspaces.".into());
+        lines.push("A move with move_workspace can change the parent and depth, so use get_workspace to read their current values.".into());
     }
     lines.push("When computer tools are available, use them for browser work on the desktop of this cloud computer. No person uses this desktop, so you may bring a window to the front and use foreground input without asking. Other sessions of this workspace share the same desktop. A member opens a port preview in the app by its port number.".into());
     lines.push("The workspace tools reach every workspace in this org. Use create_workspace, list_workspaces, get_workspace, rename_workspace, move_workspace, and archive_workspace for workspaces. Use create_session, list_sessions, get_session, rename_session, close_session, stop_session, send_message, read_session, and get_message for sessions and messages. Use list_repositories, list_models, list_sections, create_section, and delete_section for org choices. Use list_previews, open_preview, and close_preview for private port previews. Session, workspace, and preview calls default to the calling workspace.".into());

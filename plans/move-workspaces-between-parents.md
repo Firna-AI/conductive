@@ -214,11 +214,11 @@ Depends on: 1
 New agent instructions say that a move can change the parent and the
 depth.
 
-- [ ] Add the sentence of parent-move decision 2 to
+- [x] Add the sentence of parent-move decision 2 to
       `crates/cnd-runner/src/engine/instructions.rs`. Name `move_workspace`
       for a parent change.
-- [ ] Update the instruction tests and any snapshot of the text.
-- [ ] Check the overlap with workspace W-279, "when nested workspaces
+- [x] Update the instruction tests and any snapshot of the text.
+- [x] Check the overlap with workspace W-279, "when nested workspaces
       used", which may change the same instruction text.
 
 ## Milestone 5: Verification, commit, review, and pull request

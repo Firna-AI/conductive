@@ -75,6 +75,7 @@ fn gives_exact_top_level_context_to_both_agents() -> Result<()> {
                 "This is a top-level workspace at depth 0.",
                 "Nesting stops at depth 3. To nest a new workspace under this one, pass \"workspace\" as parentId to create_workspace.",
                 "Use get_workspace to find the parent and the sub-workspaces of a workspace. Use list_workspaces with parentId to list direct sub-workspaces.",
+                "A move with move_workspace can change the parent and depth, so use get_workspace to read their current values.",
             ]
         );
     }
@@ -91,6 +92,7 @@ fn gives_exact_depth_one_context() -> Result<()> {
             "This workspace is nested at depth 1 under its parent. Parent workspace ID: \"parent\". Parent workspace link: \"https://app.test/orgs/org/workspaces/parent\".",
             "Nesting stops at depth 3. To nest a new workspace under this one, pass \"workspace\" as parentId to create_workspace.",
             "Use get_workspace to find the parent and the sub-workspaces of a workspace. Use list_workspaces with parentId to list direct sub-workspaces.",
+            "A move with move_workspace can change the parent and depth, so use get_workspace to read their current values.",
         ]
     );
     Ok(())
@@ -107,6 +109,7 @@ fn gives_exact_sibling_advice_at_the_deepest_depth() -> Result<()> {
             "Nesting stops at depth 3.",
             "This workspace cannot hold sub-workspaces. Create a sibling instead. Pass \"parent\" as parentId to create_workspace. Start its name with a one-word group prefix, such as \"Limits: \".",
             "Use get_workspace to find the parent and the sub-workspaces of a workspace. Use list_workspaces with parentId to list direct sub-workspaces.",
+            "A move with move_workspace can change the parent and depth, so use get_workspace to read their current values.",
         ]
     );
     Ok(())
