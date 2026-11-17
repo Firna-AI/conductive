@@ -475,6 +475,31 @@ agent's call.
   milestone avoids a breaking change: a stored session without a login
   keeps working, and the routes of the app keep their shapes.
 
+The mockups of Milestone 2b showed the problems below. Each call is the
+agent's call, made on 17 November 2026.
+
+- The Agents tab draws the lines under an own endpoint with
+  `EndpointDetails` of the account. That part now takes the owner of the
+  login. For a member, and for each person in a suspended org, it shows
+  only the kind and the host. Reason: one part then puts the host, the
+  note, the warning, and the model list in the same order for both
+  owners, and the tab copies no markup.
+- The save and the Refresh of an org endpoint answer whether they read a
+  model list, and the save answers whether it added `/v1`, as for a
+  personal login. The page of the admin keeps the note and the warning
+  until it reloads, as the account page does. Reason: the app stores no
+  mark of a failed read, so only these answers can show the note and the
+  warning.
+- Connect of the Codex form on Own endpoint now leads to Codex on the
+  gateway with the `/v1` note, as
+  `app/org-settings/agents/endpoint-models/v1-added` shows. Before, it led
+  to Codex on an API key.
+- When the last list of an org endpoint names no model of the app for an
+  agent, the line on the Agents tab says "The model pickers on this login
+  show Opus 5.5, Sonnet 5.5, and Fable 5.1, but this endpoint lists none
+  of them." It is the line of the account with the pickers of the org
+  login. No mockup draws this state, also not on the account.
+
 ## Components
 
 - D1: a table `org_agent_logins` keyed by `org_id` and `agent`, with
@@ -613,14 +638,17 @@ couldn't read the model list of this endpoint." with Refresh, and the note
 under a Codex endpoint after a save that added `/v1`. The Agents tab of
 Milestone 1 draws neither. This milestone fills that mockup gap.
 
-- [ ] Agents tab: an admin sees the read warning with Refresh, and the
+- [x] Agents tab: an admin sees the read warning with Refresh, and the
       `/v1` note, as the account page shows them, with main's
       `EndpointDetails` part. A member sees neither.
-- [ ] Update `docs/mockups/catalogue-org-logins.md` and
+- [x] Update `docs/mockups/catalogue-org-logins.md` and
       `docs/mockups/own-endpoint-logins.md`.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+
+Evidence: `.context/org-shared-logins/m2b/` holds the logs of the checks
+and the screenshots.
 
 ## Milestone 3: Org logins in the data and the org API
 
@@ -631,6 +659,9 @@ Depends on: 2
       address rule of `docs/protocol/own-endpoint-logins.md` and the org
       encryption context. Only an admin saves or removes.
 - [ ] Give the endpoint model refresh an org owner.
+- [ ] Make the save and the Refresh of an org endpoint answer whether they
+      read a model list, and the save answer whether it added `/v1`, as
+      for a personal login, from the design calls of Milestone 2b.
 - [ ] Add the switch of decision 7: a column, and an admin route that saves
       it without a change of `updated_at`.
 - [ ] Keep the switch of decision 7 when an admin replaces the org login,
@@ -683,6 +714,13 @@ Depends on: 1, 2b, 3
 - [ ] Take the words of the tab from `orgAgentsCopy` in
       `docs/mockups/src/components/settings/OrgAgents.tsx`. Replace opens
       the form under the login, as `app/org-settings/agents/form/replace`
+      shows.
+- [ ] Show the note and the warning of the model list reads to an admin,
+      as `app/org-settings/agents/endpoint-models` and its variants show.
+      Give `EndpointDetails` and `EndpointModels` of `src/shell/account/`
+      the org owner, and do not copy them. Keep the answers of the save and
+      of Refresh in the page until it reloads, as the account does. A
+      member sees neither, as `app/org-settings/agents/member/endpoints`
       shows.
 - [ ] Check the tab in a browser against the mockups.
 

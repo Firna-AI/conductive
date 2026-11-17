@@ -170,6 +170,7 @@ export const paths = {
   orgAgentsForm: 'app/org-settings/agents/form',
   orgAgentsReplace: 'app/org-settings/agents/form/replace',
   orgAgentsConnected: 'app/org-settings/agents/connected',
+  orgAgentsV1Added: 'app/org-settings/agents/endpoint-models/v1-added',
   members: 'app/org-settings/members',
   removeMember: 'app/org-settings/members/remove',
   deleteOrg: 'app/org-settings/delete',

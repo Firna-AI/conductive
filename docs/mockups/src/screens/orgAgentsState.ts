@@ -3,7 +3,13 @@ import type { OpenAgentForm } from '../components/settings/AgentList'
 import type { OrgAgentsTab } from '../components/settings/OrgAgents'
 import type { ReadOnlyCause } from '../components/settings/OrgSections'
 import { shareNotSavedCause, type AgentLogins } from '../fixtures/logins'
-import { acmeOrgLogins, unlistedOrgLogins } from '../fixtures/orgLogins'
+import {
+  acmeOrgLogins,
+  addedV1OrgLogins,
+  keptListOrgLogins,
+  readFailedOrgLogins,
+  unlistedOrgLogins,
+} from '../fixtures/orgLogins'
 import { paths } from '../paths'
 import type { OrgSettingsState } from './OrgSettingsScreen'
 
@@ -19,11 +25,25 @@ export const orgAgentsProperties = {
    */
   orgLogins: { enum: ['claude', 'both'] },
   /**
-   * The last read of the model list of the gateway of Acme: it names every
-   * model of the app, or it lacks Fable 5.1, which each picker on the org
-   * login then hides (decision 3 A).
+   * The reads of the model lists of the gateway of Acme. `listed`: the last
+   * list names every model of the app. `unlisted`: it lacks Fable 5.1,
+   * which each picker on the org login then hides (decision 3 A).
+   * `v1-added`: Cal also connected Codex on the gateway, and the save added
+   * `/v1` to the address, because only that address lists the models.
+   * `read-failed`: the read of a Refresh of Cal failed, and
+   * `read-failed-unlisted` also keeps a last list that lacks Fable 5.1. The
+   * note and the warning show only in the page of the admin who saved or
+   * pressed Refresh.
    */
-  orgModels: { enum: ['listed', 'unlisted'] },
+  orgModels: {
+    enum: [
+      'listed',
+      'unlisted',
+      'v1-added',
+      'read-failed',
+      'read-failed-unlisted',
+    ],
+  },
   /**
    * The open form of the Agents tab: none, the Connect form of Codex on API
    * key, on own endpoint, with an address that the shared rule refused, or
@@ -55,18 +75,32 @@ export const orgAgentsDefaults = {
   everyMember: 'off',
 } as const
 
-/** The org logins of a state. */
-function loginsOf(state: OrgSettingsState): AgentLogins {
-  const claude =
-    state.orgModels === 'unlisted' ? unlistedOrgLogins : acmeOrgLogins
-  return state.orgLogins === 'both'
-    ? { ...claude, codex: { kind: 'api-key' } }
-    : claude
+/** The org logins of each state of the reads of the model lists. */
+const gatewayLogins: Readonly<
+  Record<OrgSettingsState['orgModels'], AgentLogins>
+> = {
+  listed: acmeOrgLogins,
+  unlisted: unlistedOrgLogins,
+  'v1-added': addedV1OrgLogins,
+  'read-failed': readFailedOrgLogins,
+  'read-failed-unlisted': keptListOrgLogins,
 }
 
 /**
- * The open form of a state. Connect of Codex leads to both logins
- * connected, and Replace leads back to the tab.
+ * The org logins of a state. After the Connect of Codex with an API key,
+ * Codex has that key, unless the state has Codex on the gateway.
+ */
+function loginsOf(state: OrgSettingsState): AgentLogins {
+  const logins = gatewayLogins[state.orgModels]
+  return state.orgLogins === 'both'
+    ? { codex: { kind: 'api-key' }, ...logins }
+    : logins
+}
+
+/**
+ * The open form of a state. Connect of Codex with an API key leads to both
+ * logins connected, and Connect of Codex on an own endpoint leads to Codex
+ * on the gateway. Replace leads back to the tab.
  */
 function formOf(state: OrgSettingsState): OpenAgentForm | undefined {
   const codex = {
@@ -74,15 +108,16 @@ function formOf(state: OrgSettingsState): OpenAgentForm | undefined {
     connectTo: paths.orgAgentsConnected,
     cancel: true,
   } as const
+  const codexEndpoint = { ...codex, connectTo: paths.orgAgentsV1Added }
   switch (state.agentForm) {
     case 'none':
       return undefined
     case 'api-key':
       return { ...codex, kind: 'api-key' }
     case 'endpoint':
-      return { ...codex, endpoint: 'empty' }
+      return { ...codexEndpoint, endpoint: 'empty' }
     case 'refused':
-      return { ...codex, endpoint: 'refused' }
+      return { ...codexEndpoint, endpoint: 'refused' }
     case 'not-saved':
       return { ...codex, kind: 'api-key', failed: shareNotSavedCause }
     case 'replace':

@@ -44,6 +44,34 @@ export const unlistedOrgLogins: AgentLogins = {
 }
 
 /**
+ * The logins after Cal connected Codex with the address of the Claude
+ * login, `https://llm.acme.example.com`. The gateway lists its models only
+ * under `/v1`, so the save stored that address with `/v1` added.
+ */
+export const addedV1OrgLogins: AgentLogins = {
+  claude: { kind: 'endpoint', host: gatewayHost },
+  codex: { kind: 'endpoint', host: gatewayHost, addedV1: true },
+}
+
+/** The logins after the gateway refused the key at a Refresh of Cal. */
+export const readFailedOrgLogins: AgentLogins = {
+  claude: { kind: 'endpoint', host: gatewayHost, readFailed: true },
+}
+
+/**
+ * The same failed read, when the last list that the app read lacks Fable
+ * 5.1. A failed read keeps that list and its time.
+ */
+export const keptListOrgLogins: AgentLogins = {
+  claude: {
+    kind: 'endpoint',
+    host: gatewayHost,
+    models: gatewayModelCheck,
+    readFailed: true,
+  },
+}
+
+/**
  * For each agent that the org login of Acme serves, the name of the org:
  * Claude, from Acme. The account and Get started name these logins under
  * the agents.

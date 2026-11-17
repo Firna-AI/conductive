@@ -22,16 +22,28 @@ the page shows only its canonical screen:
   that Replace opens under the Claude login, which keeps its row, its
   host, Remove, and its switch.
 - `app/org-settings/agents/connected` has both agents connected, after
-  Connect of Codex, each with its own switch off.
+  Connect of Codex with an API key, each with its own switch off.
 - `app/org-settings/agents/endpoint-models` has the model list of the
   gateway, which lacks Fable 5.1, with the model ID, the time of the last
-  read, and Refresh.
+  read, and Refresh. Its other states show the note and the warning of the
+  model list reads, as on the account. They come from a design call of
+  17 November 2026 in the org logins plan:
+  - `v1-added` has Codex on the gateway too, after Connect of the Codex
+    form on Own endpoint. A note under the Codex row says that the save
+    added `/v1` to the address.
+  - `read-failed` has the warning under the Claude row after a Refresh
+    whose model list read failed, with Refresh.
+  - `read-failed-unlisted` has the same warning above the models that the
+    last list leaves out, with one Refresh beside the warning.
 - `app/org-settings/agents/every-member` has the switch on, with its hint.
   Its `not-saved` variant has a change that the app did not save, with its
   cause beside the switch.
 - `app/org-settings/agents/member` has the tab of Priya, a member who is
   not an admin: the logins read-only, with the value of the switch as its
   hint, and no model list. Its `every-member` variant has the switch on.
+  Its `endpoints` variant has both agents on the gateway, after the save
+  of Codex that added `/v1`. Priya sees each host, and no note, warning,
+  model list, or Refresh.
 
 `app/orgs/suspended/settings/agents` has the same tab in a suspended org,
 read-only also for an admin, as

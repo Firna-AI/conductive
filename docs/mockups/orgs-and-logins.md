@@ -168,15 +168,17 @@ plan limits.
   account of the org, as `app/org-settings/agents/form` shows. It has no
   share switch. A connected org login shows its kind, the host of an own
   endpoint, the models that the model list of the endpoint lacks, Replace,
-  and Remove. Replace opens the form under the login, which serves until
+  and Remove. After a save or a Refresh, an own endpoint also shows the
+  note and the warning of the model list reads to the admin, as on the
+  account, as the variants of `app/org-settings/agents/endpoint-models`
+  show. Replace opens the form under the login, which serves until
   the new one saves, as `app/org-settings/agents/form/replace` shows. A
   failed save keeps the key in its field and names the cause over the
   buttons, as `app/org-settings/agents/form/not-saved` shows.
   `OrgAgents.tsx` in `src/components/settings/` draws the tab, with
-  `AgentConnectForm`, `EndpointFields`, `LoginEndpoint`, and
-  `EndpointModels` of the account. `EndpointRefresh` of
-  `EndpointDetails.tsx` gives the model list its Refresh, as on the
-  account.
+  `AgentConnectForm`, `EndpointFields`, and `EndpointDetails` of the
+  account. `EndpointDetails` draws the host, the note, the warning, and
+  the model list of an own endpoint, with one Refresh, as on the account.
 - Under each org login, the switch "Use for every member" of decision 7 B
   starts off. While it is off, the org login serves each member with no
   usable login of their own (decisions 4 and 6 A). While it is on, each new
@@ -189,7 +191,9 @@ plan limits.
 - A member sees the Agents tab read-only: the agent, the kind, the host of
   an own endpoint, and the value of the switch as its hint, as
   `app/org-settings/agents/member` shows. Nobody sees the key or the full
-  address, and only an admin sees the model list with Refresh.
+  address. Only an admin sees the model list, the note and the warning of
+  its reads, and Refresh, as `app/org-settings/agents/member/endpoints`
+  shows.
 - ChatGPT plan has no field. Its words say that Codex then runs on the
   plan, and that device code sign-in must be on first in the ChatGPT
   security settings, as `app/account/connect-codex/chatgpt` shows. They

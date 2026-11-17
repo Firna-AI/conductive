@@ -15,6 +15,9 @@ const pickerNames = {
   org: 'the model pickers on this login',
 } as const
 
+/** Who owns an own endpoint login: a member, or the org. */
+export type LoginOwner = keyof typeof pickerNames
+
 /** Says which models the pickers hide, and why. */
 function hiddenText(labels: string, count: number, pickers: string): string {
   return count === 1
@@ -35,7 +38,7 @@ function hiddenText(labels: string, count: number, pickers: string): string {
  */
 export function EndpointModels(props: {
   check: ModelListCheck
-  owner?: keyof typeof pickerNames
+  owner?: LoginOwner
   refresh?: ReactNode
 }) {
   const { unlisted, checked } = props.check

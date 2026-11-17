@@ -69,7 +69,10 @@
     holds the words of both and of Refresh, with the product name from
     `brand.ts`. Neither imports a fixture, so the app can import them.
     `EndpointDetails.tsx` puts the lines under an own endpoint login in
-    order, and gives the row its one Refresh.
+    order, and gives the row its one Refresh. The Agents tab of the org
+    settings uses it too. There its `owner` is the org, so the model line
+    names the pickers on the login, and its `readOnly` shows a member only
+    the kind and the host.
   - In a session on the own endpoint of another member, the bar of the
     composer names the login as for every login, such as "Cal's login".
     It names no host, because the members of an org trust each other with
@@ -84,5 +87,11 @@
   The connected org login shows the host of its endpoint, as a personal
   one does. Only an admin sees the models that its list lacks, with
   Refresh, and the line names the pickers on that login, as
-  `app/org-settings/agents/endpoint-models` shows. A member sees the kind
-  and the host, and never the key or the full address.
+  `app/org-settings/agents/endpoint-models` shows. A design call of
+  17 November 2026 in that plan also shows the admin the note after a
+  Codex save that added `/v1`, and the warning after a model list read
+  that failed, as the account shows them. The `v1-added`, `read-failed`,
+  and `read-failed-unlisted` variants of that page show them. A member
+  sees the kind and the host, and never the key, the full address, the
+  model list, the note, or the warning, as
+  `app/org-settings/agents/member/endpoints` shows.

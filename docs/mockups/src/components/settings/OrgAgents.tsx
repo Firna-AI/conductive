@@ -12,9 +12,7 @@ import { classes } from '../common/classes'
 import { ScreenLink } from '../common/ScreenLink'
 import { AgentConnectForm } from './AgentConnectForm'
 import { connected, type OpenAgentForm } from './AgentList'
-import { EndpointRefresh } from './EndpointDetails'
-import { EndpointModels } from './EndpointModels'
-import { LoginEndpoint } from './LoginEndpoint'
+import { EndpointDetails } from './EndpointDetails'
 import type { ReadOnlyCause } from './OrgSections'
 import { Section } from './Section'
 import { SettingSwitch } from './SettingSwitch'
@@ -116,18 +114,21 @@ function EveryMemberSetting(props: {
  * The Agents tab of the org settings, from decision 1 B of the org logins
  * plan, which the user chose on 16 November 2026: a copy of the Agents tab
  * of the account with fewer options. Claude and Codex each show Connect,
- * or the org login with its kind, the host of an own endpoint, the models
- * that the model list of the endpoint lacks, Replace, and Remove. The form
- * offers only an API key and an own endpoint, and it has no share switch.
- * Replace opens the form under the login, which serves until the new one
- * saves. Under each org login, the switch "Use for every member" of
- * decision 7 B makes each new session in the org take the org login, also
- * for a member with a login of their own. It starts off. No screen shows
- * the key or the full address.
+ * or the org login with its kind, Replace, and Remove. Under the row of an
+ * own endpoint, `EndpointDetails` of the account draws the host, the note
+ * after a Codex save that added `/v1`, the warning after a model list read
+ * that failed, and the models that the last list lacks, with one Refresh,
+ * from a design call of 17 November 2026. The form offers only an API key
+ * and an own endpoint, and it has no share switch. Replace opens the form
+ * under the login, which serves until the new one saves. Under each org
+ * login, the switch "Use for every member" of decision 7 B makes each new
+ * session in the org take the org login, also for a member with a login of
+ * their own. It starts off. No screen shows the key or the full address.
  *
- * `readOnly` shows the tab without actions, switches, and model list: to a
- * member who is not an admin, from decision 57, with the value of each
- * switch in words, and to everyone in a suspended org.
+ * `readOnly` shows the tab without actions, switches, the model list, the
+ * note, and the warning: to a member who is not an admin, from decision
+ * 57, with the value of each switch in words, and to everyone in a
+ * suspended org.
  */
 export function OrgAgentsTab(props: {
   org: string
@@ -185,16 +186,11 @@ export function OrgAgentsTab(props: {
                 )}
               </div>
               {login?.kind === 'endpoint' ? (
-                <LoginEndpoint
-                  host={login.host}
-                  kind={loginLabels[key].endpoint}
-                />
-              ) : null}
-              {!readOnly && login?.kind === 'endpoint' && login.models ? (
-                <EndpointModels
-                  check={login.models}
+                <EndpointDetails
+                  agent={key}
+                  login={login}
                   owner="org"
-                  refresh={<EndpointRefresh agent={key} />}
+                  readOnly={readOnly}
                 />
               ) : null}
               {form && !readOnly ? (

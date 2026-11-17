@@ -8,7 +8,7 @@ import {
 export const orgAgentsConnected = defineScreen({
   title: 'Both agents connected',
   description:
-    'Connect of Codex leads here. Claude runs on the gateway of Acme, and Codex on an API key of Acme. Each row says Connected, with Replace and Remove, and each login has its own switch "Use for every member", off. The Codex row says API key, and Claude names its host under its row.',
+    'Connect of the Codex form on API key leads here. Claude runs on the gateway of Acme, and Codex on an API key of Acme. Each row says Connected, with Replace and Remove, and each login has its own switch "Use for every member", off. The Codex row says API key, and Claude names its host under its row.',
   rationale:
     'One org login for each agent, as one personal login for each agent, from the design calls of the org logins plan of 16 November 2026. A new switch starts off, from decision 7 B, so the members of Acme with a Codex login of their own keep using it until an admin turns the switch on.',
   relatedDocs: [],
