@@ -7,12 +7,9 @@ Never change a migration that has merged or has been applied to a shared databas
 ## Keep the previous Worker working
 
 Each migration keeps the previous Worker working on the new schema. The
-previous Worker is the version that was live before the deploy. The deploy
-applies the migrations before it uploads the new Worker. Old Durable Objects
-then keep the previous Worker for minutes after the upload, as
+previous Worker is the version that was live before the deploy.
 [Migrations and the previous Worker](../docs/automatic-deploys.md#migrations-and-the-previous-worker)
-says. A failed upload or a rollback also leaves the previous Worker on the
-new schema.
+says when and for how long it runs on the new schema.
 
 - Do not rename or drop a table, a column, an index, or a trigger that the
   previous Worker uses.
@@ -25,23 +22,88 @@ new schema.
 
 A rename or a drop takes two pull requests:
 
-1. The first pull request adds the new name and copies the rows. It keeps
-   the old name working for the previous Worker until the second pull
-   request. Each Worker must see the rows that the other one writes. For
-   example, the migration adds a view with the old name, and triggers that
-   pass the writes of the view to the new table. This pull request also
-   adds a follow-up item of the kind Post-merge task under
+1. The first pull request keeps the old name working for the previous
+   Worker. It also adds a follow-up item of the kind Post-merge task under
    `plans/follow-ups/`. The item names the old name and each part of the
-   compatibility code, and asks for their removal.
+   compatibility path, and asks for their removal.
+   - For a rename, the migration adds the new name and copies the rows.
+     The old table or column stays a real table or column. Each Worker
+     must see the rows that the other one writes. For example, triggers
+     copy each write from one name to the other, or the new Worker reads
+     and writes both names.
+   - Do not replace the old table with a view. D1 counts no changed rows
+     for a write through the triggers of a view. An upsert on a view fails
+     with `cannot UPSERT a view`.
+   - For a drop, the first pull request removes the last use of the old
+     name from the Worker. It keeps each write that the schema requires or
+     that the previous Worker reads.
 2. The second pull request does that follow-up item. It removes the
-   compatibility code and drops the old name with a new migration. It
-   merges only after the deploy of the first pull request is live. Two
-   merges close together can deploy in one run, because GitHub keeps only
-   the newest waiting deploy.
+   compatibility path and drops the old name with a new migration. It
+   merges only after the deploy of the first pull request has been live
+   for at least one hour. The next deploy can apply its migrations about
+   5 minutes after the first upload, while old Durable Objects still run
+   the Worker from before the first pull request. Two merges close together
+   can also deploy in one run, because GitHub keeps only the newest
+   waiting deploy.
 
 When a migration cannot keep the previous Worker working, ask the user
 before it merges. Then name it in the pull request description and in
 [When a deploy fails](../docs/automatic-deploys.md#when-a-deploy-fails).
+
+## Reserved ranges
+
+Each milestone owns the complete inclusive range below.
+Use a free minute in that range for each new migration.
+These reservations keep concurrent branches from choosing the same prefix.
+UI and wiring milestones normally need no migration. Their ranges stay reserved.
+
+| Milestone | Inclusive prefix range |
+| --- | --- |
+| 4a Contracts | `202611060100`–`202611060159` |
+| 5 Lifecycle | `202611070000`–`202611070059` |
+| 6 App shell | `202611070100`–`202611070159` |
+| 7r Runner | `202611070200`–`202611070259` |
+| 7 Chat backend | `202611070300`–`202611070359` |
+| 8 Chat UI | `202611070400`–`202611070459` |
+| 8i Chat wiring | `202611070500`–`202611070559` |
+| 16a First deployment | `202611070600`–`202611070659` |
+| 9 Files backend | `202611070700`–`202611070759` |
+| 10 Files UI | `202611070800`–`202611070859` |
+| 11 Tools backend | `202611070900`–`202611070959` |
+| 12 Tools UI | `202611071000`–`202611071059` |
+| 13 GitHub backend | `202611071100`–`202611071159` |
+| 14 GitHub UI | `202611071200`–`202611071259` |
+| 15 Agent tools | `202611071300`–`202611071359` |
+| 15a Members backend | `202611071400`–`202611071459` |
+| 15c Members UI | `202611071500`–`202611071559` |
+| 15i Feature wiring | `202611071600`–`202611071659` |
+| 15d Marketing | `202611071700`–`202611071759` |
+| 15e Mac app | `202611072000`–`202611072059` |
+| 15m Marketing and mockup fixes | `202611072200`–`202611072259` |
+| 15o Org suspension | `202611080000`–`202611080059` |
+| Agent tool lists and names | `202611081300`–`202611081359` |
+| Workspace link chips | `202611091200`–`202611091259` |
+| Chat attachment metadata | `202611081800`–`202611081859` |
+| Preferences and New workspace dialog | `202611082300`–`202611082359` |
+| Codex logins | `202611100000`–`202611100059` |
+| Computer ledger account merge | `202611100900`–`202611100959` |
+| Software image for first builds | `202611101200`–`202611101259` |
+| 16 Deployment | `202611071800`–`202611071859` |
+| 17 Verification | `202611071900`–`202611071959` |
+| Automations: records and routes | `202611101300`–`202611101359` |
+| Automations: runs and Run now | `202611101400`–`202611101459` |
+| Automations: pull request runs | `202611101500`–`202611101559` |
+| Keyboard shortcuts storage | `202611101600`–`202611101659` |
+| Agent workspace calls | `202611111200`–`202611111259` |
+| Parallel image sources | `202611161200`–`202611161259` |
+| Sub-workspaces | `202611161700`–`202611161759` |
+
+## Key code
+
+- [The test harness](../worker/test-support/harness.ts) applies every SQL
+  migration in filename order to a fresh local D1 database.
+- [Shared contracts](../src/shared/) define the browser and runner payloads.
+- Run `npm run db:migrate` to apply the migrations to local development storage.
 
 ## The migrations
 
@@ -367,57 +429,10 @@ existing workspace, also in a workspace where a member turned it on. The
 `DEFAULT 1` of `workspaces.mac_access` stays, because SQLite changes a
 column default only with a rebuild of the table. Each insert sets the
 column itself, and an absent choice now gives 0. A workspace that the
-previous Worker creates between this migration and the Worker upload
-starts with Mac access on. A member turns it off in its Capabilities.
+previous Worker creates on the new schema starts with Mac access on, as
+[Migrations and the previous Worker](../docs/automatic-deploys.md#migrations-and-the-previous-worker)
+says. A member turns it off in its Capabilities.
 [Mac access](../docs/protocol/secrets.md#mac-access) gives the rule.
-
-## Reserved ranges
-
-Each milestone owns the complete inclusive range below.
-Use a free minute in that range for each new migration.
-These reservations keep concurrent branches from choosing the same prefix.
-UI and wiring milestones normally need no migration. Their ranges stay reserved.
-
-| Milestone | Inclusive prefix range |
-| --- | --- |
-| 4a Contracts | `202611060100`–`202611060159` |
-| 5 Lifecycle | `202611070000`–`202611070059` |
-| 6 App shell | `202611070100`–`202611070159` |
-| 7r Runner | `202611070200`–`202611070259` |
-| 7 Chat backend | `202611070300`–`202611070359` |
-| 8 Chat UI | `202611070400`–`202611070459` |
-| 8i Chat wiring | `202611070500`–`202611070559` |
-| 16a First deployment | `202611070600`–`202611070659` |
-| 9 Files backend | `202611070700`–`202611070759` |
-| 10 Files UI | `202611070800`–`202611070859` |
-| 11 Tools backend | `202611070900`–`202611070959` |
-| 12 Tools UI | `202611071000`–`202611071059` |
-| 13 GitHub backend | `202611071100`–`202611071159` |
-| 14 GitHub UI | `202611071200`–`202611071259` |
-| 15 Agent tools | `202611071300`–`202611071359` |
-| 15a Members backend | `202611071400`–`202611071459` |
-| 15c Members UI | `202611071500`–`202611071559` |
-| 15i Feature wiring | `202611071600`–`202611071659` |
-| 15d Marketing | `202611071700`–`202611071759` |
-| 15e Mac app | `202611072000`–`202611072059` |
-| 15m Marketing and mockup fixes | `202611072200`–`202611072259` |
-| 15o Org suspension | `202611080000`–`202611080059` |
-| Agent tool lists and names | `202611081300`–`202611081359` |
-| Workspace link chips | `202611091200`–`202611091259` |
-| Chat attachment metadata | `202611081800`–`202611081859` |
-| Preferences and New workspace dialog | `202611082300`–`202611082359` |
-| Codex logins | `202611100000`–`202611100059` |
-| Computer ledger account merge | `202611100900`–`202611100959` |
-| Software image for first builds | `202611101200`–`202611101259` |
-| 16 Deployment | `202611071800`–`202611071859` |
-| 17 Verification | `202611071900`–`202611071959` |
-| Automations: records and routes | `202611101300`–`202611101359` |
-| Automations: runs and Run now | `202611101400`–`202611101459` |
-| Automations: pull request runs | `202611101500`–`202611101559` |
-| Keyboard shortcuts storage | `202611101600`–`202611101659` |
-| Agent workspace calls | `202611111200`–`202611111259` |
-| Parallel image sources | `202611161200`–`202611161259` |
-| Sub-workspaces | `202611161700`–`202611161759` |
 
 `202611131221_attachment_download_tokens.sql` adds one-use attachment download grants.
 Each row holds a token digest, the file and destination identities, its expiry, and its claim time.
@@ -427,13 +442,6 @@ Deleting an attachment also removes its grants.
 Existing rows keep null in both columns.
 The partial index serves the cleanup of transferred bytes.
 The attachment record stays after its R2 object is deleted.
-
-## Key code
-
-- [The test harness](../worker/test-support/harness.ts) applies every SQL
-  migration in filename order to a fresh local D1 database.
-- [Shared contracts](../src/shared/) define the browser and runner payloads.
-- Run `npm run db:migrate` to apply the migrations to local development storage.
 
 `202611121610_fast_choices.sql` adds fast mode to workspace runtime records,
 creation plans, account defaults, and automations. Each column starts at 0.

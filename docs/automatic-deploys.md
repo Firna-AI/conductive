@@ -175,7 +175,9 @@ on the new schema for some time in each deploy:
   minutes. In that time, the previous Worker and the new Worker run
   together.
 - A failed upload leaves the previous Worker on the new schema until the
-  next deploy. A rollback puts an older Worker on the new schema.
+  next deploy.
+- A rollback puts an older Worker on the new schema. A rollback to the
+  previous Worker works until the old name of a rename or a drop is gone.
 
 So each migration keeps the previous Worker working. A rename or a drop
 takes two pull requests.
@@ -224,7 +226,7 @@ A failed run does not roll back.
   A Worker version from before it reads the old tables, so every
   automation request, schedule scan, and run report of that version fails.
   That version looks up the automation run of the workspace after each
-  chat write, so each chat write of that version also fails after its
+  chat write. So each chat write of that version also fails after its
   commit.
   Recover in the same way: deploy a fix forward, or restore D1 with Time
   Travel together with a Worker rollback.
