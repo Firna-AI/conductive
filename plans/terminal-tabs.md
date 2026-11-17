@@ -167,7 +167,8 @@ that rule.
 - **Recommendation:** D. It follows the rule that the user chose for the
   Terminal tab and Go to Terminal.
 - **Chosen:** D, by the user on 17 November 2026. It replaces the
-  follow-up item `plans/follow-ups/terminal-focus-after-open.md`.
+  follow-up item `plans/follow-ups/terminal-focus-after-open.md`, which
+  Milestone 14 deleted.
 
 ### 6. When a running workspace gets terminal tabs
 
@@ -193,7 +194,8 @@ that rule.
 - **Recommendation:** B. Restart is the control that a member already
   presses to apply new software, and it keeps every shell.
 - **Chosen:** B, by the user on 17 November 2026. It replaces the
-  follow-up item `plans/follow-ups/terminal-tabs-wait-for-start.md`.
+  follow-up item `plans/follow-ups/terminal-tabs-wait-for-start.md`, which
+  Milestone 14 deleted.
 
 ## Design
 
@@ -334,6 +336,8 @@ All design calls are of 10 November 2026, by the agent.
   cloud computer, after the automatic software update. Corrected on
   16 November 2026 by review finding 201: an install while the workspace
   is idle leaves the old terminal service running until the next start.
+  Changed on 17 November 2026 by decision 6 B: a Restart of the software
+  also brings terminal tabs.
 - The terminal state keeps `socketPath` of the first terminal. Reason:
   the Mac app bundles the web app, so an older Mac app build keeps one
   working terminal until it updates.
@@ -361,6 +365,15 @@ All design calls are of 10 November 2026, by the agent.
   shortcuts tab, after Go to Preview. Reason: the palette offers it after
   the Go to rows, which are commands of that group. This call is of 16
   November 2026.
+
+- A failed restart of only the terminal service during a Restart warns,
+  and the Restart still succeeds. Reason: the always-on rule prefers to
+  warn and continue when the input is recoverable, and a failed download
+  already lets a Restart go on. This call is of 17 November 2026.
+- When a Restart changes whether the terminal service opens several
+  shells, the Worker commits one `terminals.updated` event that also holds
+  the new `several`, so each open tab shows or hides the tab row with no
+  read race against the runner. This call is of 17 November 2026.
 
 ### Related follow-up items
 
@@ -656,8 +669,8 @@ Depends on: every other milestone
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds. It says that an
-      existing workspace gets terminal tabs at a start of its cloud
-      computer after the automatic software update.
+      existing workspace gets terminal tabs after the automatic software
+      update, at a Restart or a later start of its cloud computer.
 
 Evidence: the gate log `.context/terminal-tabs/gate2.log`, and the review
 reports in `.context/reviews/calummoore/terminal-tabs-implementation-l5ml/`.
@@ -722,21 +735,41 @@ Depends on: 9
 
 Depends on: 13
 
-- [ ] Decision 4 A: in `docs/protocol/terminal.md`, an address that names
+- [x] Decision 4 A: in `docs/protocol/terminal.md`, an address that names
       a terminal that is not in the list shows the saved terminal, or the
       first, and the address moves to it.
-- [ ] Decision 5 D: on desktop, New terminal in the palette, the +, and a
+- [x] Decision 5 D: on desktop, New terminal in the palette, the +, and a
       click on a terminal tab move the focus to the shown terminal, as the
       Terminal tab and Go to Terminal do.
-- [ ] Decision 6 B: Restart also restarts the terminal service, keeps every
+- [x] Decision 6 B: Restart also restarts the terminal service, keeps every
       shell, and checks again whether it opens several shells. Update
       "Older software" in `docs/protocol/terminal.md`,
       "Restart the software" in `docs/protocol/workspace-life.md`, and
       each other protocol doc that restates the Restart or the update rule.
-- [ ] Read both legal pages in full. Update each sentence that restates a
+- [x] Read both legal pages in full. Update each sentence that restates a
       changed fact.
-- [ ] Delete the follow-up items that decisions 5 and 6 answer.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Delete the follow-up items that decisions 5 and 6 answer.
+- [x] Check each relative link of each changed Markdown file.
+
+Done on 17 November 2026. "Restart the software" moved to
+`docs/protocol/restart-the-software.md`, and the screen of the terminal to
+`docs/protocol/terminal-screen.md`, because the docs that held them passed
+the length target. Each old section keeps its heading and a link, so its
+anchor still works. The history sentence of the screen now says that the
+full history comes when the terminal service of a newer release starts, so
+`plans/follow-ups/terminal-history-update-wording.md` went too. No
+sentence of the legal pages restates a changed fact. Evidence: the link
+check in `.context/terminal-tabs/m14-link-check.log`.
+
+## Milestone 14a: Mockup text of decision 6
+
+Tags: mockup
+
+Depends on: 14
+
+- [x] Say on `app/tools/older-software` that a Restart or a later start
+      brings terminal tabs, with no change to the drawing.
+- [x] Run `npm run mockups:check`.
 
 ## Milestone 15: Restart starts the new terminal service
 
@@ -779,8 +812,8 @@ Depends on: 14
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] After the deploy, a software update, and a later start of the cloud
-      computer, open a workspace. Open three terminals and run a different command in each. Reload, and
+- [ ] After the deploy, a software update, and a Restart or a later start
+      of the cloud computer, open a workspace. Open three terminals and run a different command in each. Reload, and
       check that each terminal kept its command. Close one, and reach the
       limit.
 - [ ] Open a workspace whose terminal service has not started on the new

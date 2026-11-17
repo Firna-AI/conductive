@@ -20,13 +20,19 @@ This page lists each protocol doc and what it covers.
     restore, and Continue.
     - [Workspace list marks](../protocol/workspace-marks.md): GitHub colours,
       agent motion, unread output, and reduced motion.
+    - [Restart the software](../protocol/restart-the-software.md): Restart
+      in the workspace header, what it restarts, and the download of the
+      newest release before it.
   - [Continue](../protocol/continue.md): the next task of a workspace after a
     merge, on a new branch with the same sandbox and sessions.
   - [Workspace menu](../protocol/workspace-menu.md): the menu of a workspace
     row, which moves, reassigns, renames, and archives the workspace.
   - [Workspace tools](../protocol/workspace-tools.md)
     - [Terminal](../protocol/terminal.md): the terminals of a workspace
-      and their tabs, the shell of each terminal, and its screen.
+      and their tabs, and the shell of each terminal.
+      - [Terminal screen](../protocol/terminal-screen.md): the screen of
+        each terminal, its output history, its selection, its size, and its
+        keys.
       - [Terminal links](../protocol/terminal-links.md): the links in the
         output of a terminal.
     - [Temporary tabs](../protocol/temporary-tabs.md): the one file or diff

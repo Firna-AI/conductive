@@ -2,8 +2,9 @@
 
 This doc holds the requirements and the decisions in force for the Terminal
 tool of a workspace. It covers the terminals of a workspace and their tabs,
-the shell of each terminal, and its screen. [Terminal links](terminal-links.md)
-gives the links in its output. It belongs to
+and the shell of each terminal. [Terminal screen](terminal-screen.md) gives
+the screen of each terminal, and [Terminal links](terminal-links.md) gives
+the links in its output. It belongs to
 [Tools of a workspace](workspace-tools.md#terminal).
 [Terminal](terminal-previews-and-desktop.md#terminal) in the security docs
 states how the terminals stay safe. The terms are those of the
@@ -108,17 +109,42 @@ terminals at `app/tools` and its child pages.
 - The address of the Terminal tool can name a terminal. The tool then
   shows that terminal. An address of the Terminal tool without a terminal
   shows the saved terminal, or the first.
+- An address that names a terminal that is not in the list, such as a link
+  to a closed terminal, shows the saved terminal, or the first, as an
+  address without a terminal does. The address then names the shown
+  terminal (terminal tabs decision 4 A).
+- Reason: one rule then covers each address that names no known terminal,
+  and the member gets the terminal that they used last. Always the first
+  terminal was rejected, because the member then loses the terminal that
+  they used last. The first terminal with a notice that the named terminal
+  closed was rejected, because it needs a new state of the screen, and the
+  member cannot bring the closed terminal back.
 
 ## Older software
 
 - A workspace whose terminal service opens only one shell shows one
   terminal, with no row of tabs. The server refuses a new terminal there.
-  This lasts until the sandbox starts the terminal service of a newer
-  release. An automatic software update brings that release, and the
-  terminal service runs it from its next start, as
-  [Installs at idle](sandbox-software.md#installs-at-idle) says.
 - Reason: a + there would open a copy of the first shell. A row with one
   tab, no close button, and no + gives the user nothing.
+- This lasts until the terminal service of a newer release starts, at a
+  later start of the sandbox or at a [Restart](restart-the-software.md)
+  (terminal tabs decision 6 B). An automatic software update brings that
+  release. An install while the workspace is idle does not restart the
+  terminal service, as
+  [Installs at idle](sandbox-software.md#installs-at-idle) says.
+- After a Restart, the Terminal tool shows the row of terminal tabs with no
+  reload when the new terminal service opens several shells.
+- Reason: Restart is the control that a member presses to apply new
+  software, and it keeps every shell. Terminal tabs only at a later start
+  were rejected, because a member of a workspace that stays on then waits
+  for a stop and a resume.
+- An automatic restart of the terminal service while no terminal is
+  connected was rejected. It needs a new privileged command, a block of
+  new connections, and a notice to the other tabs. A terminal ID inside
+  the data stream of each connection, so that an older terminal service
+  opens several shells, was rejected too. It adds a second path for the
+  terminal ID, which needs its own security review, and a sandbox with
+  even older terminal software still waits.
 - Terminal 1 is the shell that such software opens. So an update of the
   software ends no running shell.
 - A Mac app build from before terminal tabs keeps one working terminal,
@@ -135,14 +161,24 @@ terminals at `app/tools` and its child pages.
 - On desktop, a click on the Terminal tab of the tools panel moves the
   keyboard focus to the shown terminal. So does Go to Terminal, from its
   row of the command palette or its key, ⌘J on a Mac or Ctrl+J elsewhere.
-  A terminal that still connects takes the focus when it shows, unless the
-  user moved the focus in the meantime. A choice of another tool drops
-  that wait. The user asked for the tab on 16 November 2026, and chose the
-  same for Go to Terminal on the same day.
+  The user asked for the tab on 16 November 2026, and chose the same for
+  Go to Terminal on the same day.
+- On desktop, New terminal of the command palette, the + of the terminal
+  tabs, and a click on a terminal tab also move the focus to the terminal
+  that they show (terminal tabs decision 5 D). A keyboard user who moves
+  along the tabs keeps the focus on the row.
+- A terminal that still opens or connects takes the focus when it shows,
+  unless the user moved the focus in the meantime. A choice of another
+  tool drops that wait.
+- On a phone, none of these controls moves the focus. Reason: the keyboard
+  of the phone would then cover the page.
 - Reason: a click on the tab says that the user wants to type in the
-  shell, so a second click in the terminal is a wasted step. A terminal
-  that takes the focus after the user chose another field was rejected,
-  because the user's keys then go to the shell.
+  shell, so a second click in the terminal is a wasted step. A member who
+  opens or picks a terminal also types in it next. A focus that stays in
+  place was rejected, because typed text and Enter then often go to the
+  message box, and so to the agent. A terminal that takes the focus after
+  the user chose another field was rejected, because the user's keys then
+  go to the shell.
 - The shell of each terminal keeps running when its connection drops. Each
   new connection of the terminal attaches to that shell, with its running
   commands and its current screen (decision 118).
@@ -190,58 +226,9 @@ terminals at `app/tools` and its child pages.
 
 ## The screen
 
-- Every byte of output reaches the screen and its output history, also
-  when a program writes faster than the screen redraws. The user chose
-  this on 13 November 2026.
-- Reason: the user copies long output, such as a build log. A terminal
-  that keeps only the lines that end on the screen was rejected, because a
-  test showed that it lost most lines of fast output. A copy of the
-  history through the clipboard writes of tmux, a separate history view,
-  and a join of screens during a drag were also rejected. The first lets a
-  sandbox process write the user's clipboard, and the others leave the
-  drag in the terminal broken or fragile.
-- A new connection first shows the output history of the shell, up to
-  2,000 lines, then its current screen. The screen keeps up to 2,000 lines
-  of history. The user chose 2,000 lines on 13 November 2026.
-- Reason: a reload shows the same history as a live screen. 5,000 and
-  10,000 lines were rejected, because each connection then sends more
-  data, which is slow on a phone.
-- A plain drag selects text on the screen and in its output history, and
-  the user can copy it, such as with Cmd+C on a Mac. A drag past the top
-  or the bottom edge scrolls the history. This also holds while a program
-  in the shell, such as vim, uses the mouse (decision 246).
-- The wheel scrolls the output history. While a program in the shell uses
-  the mouse, the wheel, the right button, and the middle button reach the
-  program. A held Cmd on a Mac, or Ctrl on Windows and Linux, gives a
-  click or a drag to the program, except a click on a link, as
-  [Links](#links) says.
-- Reason: the user expects to select and copy as in the rest of the page.
-  A copy through the clipboard writes of the program was rejected, because
-  any process in the sandbox could then write the user's clipboard.
-- All viewers of a shell share one size, at most 500 columns and 200 rows.
-  A new connection sets it, and so does the viewer where the user last
-  typed, pasted, or resized. Each other viewer shows the shell at that
-  size: with smaller text when the size is larger than its panel, and with
-  empty space when it is smaller.
-- Reason: the output of a program fits one size, so one size keeps the
-  line breaks right for every viewer. The limit stops a program in the
-  shell from setting a size that no browser can hold.
-- Each key reaches the program in the shell. The terminal has no key
-  commands and no status line of its own, so Ctrl-b reaches the shell. The
-  user accepted this on 13 November 2026.
-- Reason: terminal tabs open more shells, so the shell needs no window
-  keys of its own.
-- A paste reaches a program as a paste, also after a reconnect, so a
-  program that marks pastes, such as vim or Bash, does not run the pasted
-  text as keys.
-- A workspace with older terminal software shows only its visible screen
-  in the history until an automatic software update applies, as
-  [Software updates](sandbox-software.md#updates) says.
-- When the connection ends, the user can still select and copy the text
-  that stays on the screen (decision 245).
-- Reason: the screen keeps its output so that the user can still use it,
-  such as an error message.
-- On a phone, a row of keys adds the keys that a phone keyboard lacks.
+[Terminal screen](terminal-screen.md) gives the rules of the screen of
+each terminal: its output history, the selection and the mouse, its
+size, its keys, and the paste.
 
 ## Links
 
