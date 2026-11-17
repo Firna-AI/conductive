@@ -225,7 +225,7 @@ depth.
 
 Depends on: every other milestone
 
-- [ ] Add the follow-up item of parent-move decision 4 under
+- [x] Add the follow-up item of parent-move decision 4 under
       `plans/follow-ups/`: the app design to change a parent.
 - [ ] Run the targeted tests, the Rust checks, and the complete gate named
       in `AGENTS.md`.
