@@ -1,3 +1,4 @@
+import { d1ErrorReason, type D1ErrorReason } from './d1-errors'
 import { HttpError } from './http'
 import { ProviderError } from './sandbox/errors'
 import { CommandFailed } from './warnings'
@@ -44,6 +45,13 @@ export class WarningStreamId {
   }
 }
 
+/** A diagnostic value cannot reject a hello or prevent saved connection restore. */
+export function warningProcessStartId(value: unknown): string | null {
+  if (value === undefined || value === null) return null
+  return WarningStreamId.checked(typeof value === 'string' ? value : 'unknown')
+    .text
+}
+
 export function warningProtocolVersion(value: number | null): number | null {
   return value !== null && Number.isSafeInteger(value) && value > 0
     ? value
@@ -74,6 +82,8 @@ const HTTP_CODES = [
   'org_suspended',
   'user_suspended',
   'workspace_archived',
+  'nesting_cycle',
+  'nesting_limit',
   'workspace_start_failed',
   'workspace_start_stopped',
   'image_build_failed',
@@ -124,6 +134,7 @@ export type ErrorSummary =
       exitCode: number | null
       timedOut: boolean
     }
+  | { kind: 'd1'; reason: D1ErrorReason }
   | { kind: 'error' | 'unknown' }
 
 /** Keep fixed error kinds, allowlisted codes and states, and numeric outcomes. */
@@ -145,5 +156,7 @@ export function errorSummary(error: unknown): ErrorSummary {
       exitCode: error.exitCode,
       timedOut: error.timedOut,
     }
+  const reason = d1ErrorReason(error)
+  if (reason) return { kind: 'd1', reason }
   return { kind: error instanceof Error ? 'error' : 'unknown' }
 }

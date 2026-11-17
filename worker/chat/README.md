@@ -204,7 +204,11 @@ A finished first turn resets the automation's consecutive failure count.
 A failed first turn adds one failure and stays failed after an in-workspace retry.
 Later turns do not change that run outcome.
 Chat commits the turn before it reports the outcome.
-Each later chat change checks for an unreported outcome, including runner redelivery after a failed D1 write.
+Each later chat change checks for an unreported outcome.
+A failed report does not fail the chat change, so a D1 failure cannot stop the chat or close the runner.
+It logs `automation_report_failed` and stores the `automation-report` due time of the workspace alarm, 30 seconds later.
+The alarm retries the report until it succeeds, as [the object alarm scheduler](../lifecycle/alarm-scheduler.md) says.
+A chat without that alarm, as in some tests, gives the error to the caller, which sends the change again.
 
 ## Report repairs
 

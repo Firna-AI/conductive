@@ -108,6 +108,7 @@ export function toolFailure(error: unknown): unknown {
     : error
 }
 
-export function toolError(error: unknown): Response {
-  return privateResponse(errorResponse(toolFailure(error)))
+/** A caller passes `request` only when its path holds no path of the user's app. */
+export function toolError(error: unknown, request?: Request): Response {
+  return privateResponse(errorResponse(toolFailure(error), request))
 }

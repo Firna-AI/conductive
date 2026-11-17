@@ -11,6 +11,7 @@ import { runWorkspaceKeys } from '../fixtures/runWorkspaces'
 import { startErrorKeys } from '../fixtures/starting'
 import { terminalStates } from '../fixtures/terminals'
 import { openableWorkspaces } from '../fixtures/workspaces'
+import { archiveStateProperties } from './archiveState'
 import { barStateDefaults, barStateKeys, barStateProperties } from './barState'
 import { tabStates, temporaryTabStates } from './chatStates'
 import {
@@ -180,14 +181,7 @@ export const workspaceStateSchema = {
         'header-rename',
       ],
     },
-    /**
-     * The cloud computer of an archived workspace: kept, until the app
-     * deletes it 14 days after the Archive, kept past the last day of
-     * Restore while its delete tries again, or deleted. Until that last day,
-     * every member of an org that is not suspended may restore the
-     * workspace.
-     */
-    archive: { enum: ['kept', 'ended', 'deleted'] },
+    ...archiveStateProperties,
     /** The person signed in: an admin of the org, or a member who is not. */
     viewer: { enum: ['admin', 'member'] },
     /**

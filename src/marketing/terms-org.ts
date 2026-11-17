@@ -12,13 +12,19 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
   blocks: [
     list(
       text`Every member of an org sees all of its workspaces and automations.
+        A removed workspace opens by direct link or chat link, with
+        read-only chat.
         In an active org, members can send messages in workspaces that are
         not archived.
         After a pull request merges, every member can use Continue to start
         the next task in that workspace.`,
       text`The workspace tools let agents read workspace, session, and
-        message details, list sessions and previews, list the names and
-        descriptions of the org's secrets, and read chats across the org.
+        message details, list sessions and previews, and read chats across
+        the org. They also list each org secret's name, description, and
+        environment variable name.
+        Agents can read removed workspaces and their sessions by ID.
+        Workspace lists leave out removed workspaces unless the agent asks
+        for them.
         A workspace token is a credential for those tools. Any program
         with it can make these reads without a running turn.
         A copied token keeps that access after the person who copied
@@ -87,8 +93,9 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         while the fetch runs. A member with a terminal can also get the
         workspace owner's GitHub token without a running turn.`,
       text`An agent can ask to run one command with a secret of the org.
-        The command gets the value, and the agent gets only its name. Any
-        member who sees the session can allow the secret for that session.
+        The command gets the value. The agent gets the secret's name and
+        environment variable name, without the value. Any member who sees
+        the session can allow the secret for that session.
         A secret that an admin marked for all agents, or that a member
         pre-approved for the workspace, needs no approval.`,
       text`When a member allows a request after the agent stopped waiting,

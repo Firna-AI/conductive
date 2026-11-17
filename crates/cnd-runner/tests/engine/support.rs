@@ -63,6 +63,7 @@ impl Fixture {
         let configuration = configuration()?;
         let link = Arc::new(SavedRunnerLink::new(
             "workspace".into(),
+            "abcdef01-2345-4678-89ab-cdef01234567".into(),
             configuration.request.clone(),
             Arc::new(NoConnection),
             clock.clone(),

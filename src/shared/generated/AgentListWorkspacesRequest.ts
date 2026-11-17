@@ -35,6 +35,10 @@ export type AgentListWorkspacesRequest = {
    */
   archived?: boolean
   /**
+   * Only removed workspaces when true. False or omission leaves them out.
+   */
+  removed?: boolean
+  /**
    * limit.
    */
   limit?: number

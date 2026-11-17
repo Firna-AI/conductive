@@ -9,25 +9,49 @@ import { WORKSPACE_ID } from './harness.test-support'
 import { record, string } from './inputs'
 import { chatKey } from './storage-keys'
 import {
+  savedRunnerState,
+  seedRunnerState,
+} from './runner-connection-state.test-support'
+import {
   disposeRunners,
   runnerControls,
   runnerState,
 } from './runner-native.test-support'
 
 it.each([
-  { protocolVersion: 1, obsolete: true },
-  { protocolVersion: undefined, obsolete: true },
-  { protocolVersion: null, obsolete: true },
-  { protocolVersion: 3, obsolete: false },
+  {
+    protocolVersion: 1,
+    obsolete: true,
+    processStartId: 'abcdef01-2345-4678-89ab-cdef01234567',
+    expected: 'abcdef01-2345-4678-89ab-cdef01234567',
+  },
+  {
+    protocolVersion: undefined,
+    obsolete: true,
+    processStartId: undefined,
+    expected: null,
+  },
+  {
+    protocolVersion: null,
+    obsolete: true,
+    processStartId: { token: 'private-runner-token' },
+    expected: 'unknown',
+  },
+  { protocolVersion: 3, obsolete: false, processStartId: null, expected: null },
 ])(
   'retires a saved established runner with version $protocolVersion before dispatch and keeps the Durable Object usable',
-  async ({ protocolVersion, obsolete }) => {
+  async ({ protocolVersion, obsolete, processStartId, expected }) => {
     const { runtime, headers } = await createAdapterRuntime(
       'worker/chat/runner-entry.test-support.ts',
     )
     const controls = runnerControls(runtime, headers)
     await controls.request('capture-warnings')
-    const runner = await controls.connect('native-runner', 0, 2)
+    const runner = await controls.connect(
+      'native-runner',
+      0,
+      2,
+      'abcdef01-2345-4678-89ab-cdef01234567',
+    )
     const sockets = [runner.socket]
     try {
       runner.emit({ type: 'runner.ready' })
@@ -54,21 +78,13 @@ it.each([
       })
       await controls.send(sessionId, 'waiting')
       const before = await controls.request('settled')
-      const state = runnerState(before.state)
-      const index = record(state.get('native:runner:current'))
-      const chunks = Array.from({ length: Number(index.parts) }, (_, i) =>
-        string(state.get(`native:runner:state:${i}`)),
-      )
-      const stored = record(JSON.parse(chunks.join('')))
+      const stored = savedRunnerState(before.state)
       const connection = record(stored.connection)
       if (protocolVersion === undefined) delete connection.protocolVersion
       else connection.protocolVersion = protocolVersion
-      await controls.request('seed', {
-        values: {
-          'native:runner:current': { parts: 1 },
-          'native:runner:state:0': JSON.stringify(stored),
-        },
-      })
+      if (processStartId === undefined) delete connection.processStartId
+      else connection.processStartId = processStartId
+      await controls.request('seed', seedRunnerState(stored))
       const sent = [...runner.received]
       await runtime.unsafeEvictDurableObject(
         'chat-adapter-tests',
@@ -101,12 +117,14 @@ it.each([
           message: 'The runner of a workspace connected.',
           ...connectionFields,
           protocolVersion: 2,
+          processStartId: 'abcdef01-2345-4678-89ab-cdef01234567',
         },
         {
           kind: 'runner_disconnected',
           message: 'The runner of a workspace disconnected.',
           ...connectionFields,
           protocolVersion: protocolVersion ?? null,
+          processStartId: expected,
         },
       ])
       const response = await runtime.dispatchFetch(
@@ -133,6 +151,7 @@ it.each([
                 state: 'failed',
                 connectionId: null,
                 streamId: null,
+                processStartId: null,
                 protocolVersion: null,
               },
             ]

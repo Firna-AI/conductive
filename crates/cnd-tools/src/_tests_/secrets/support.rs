@@ -15,7 +15,6 @@ pub(super) enum Adapter {
     Mcp,
     CliOutput,
     CliError,
-    CliSilent,
 }
 
 pub(super) struct Observed {
@@ -111,7 +110,6 @@ pub(super) async fn run(
         Adapter::Mcp => Unimock::new((request_id, line, output)),
         Adapter::CliOutput => Unimock::new((request_id, output)),
         Adapter::CliError => Unimock::new((request_id, error)),
-        Adapter::CliSilent => Unimock::new(request_id),
     });
     let configuration = Configuration::new(
         Some("https://machine.test".into()),

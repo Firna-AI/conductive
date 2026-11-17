@@ -104,7 +104,7 @@ describe('the trees of the workspace list', () => {
   test('a nested row indents by each row above it in its tree, in the sidebar and on the page, the guide lines join the rows of a tree as a file tree does, and a collapsed section counts its nested rows', async () => {
     const app = await startedApp(new FakeApiServer())
     const { sections } = coreFixtures().sectionList
-    const groups = groupWorkspaces(sections, trees).sections
+    const groups = groupWorkspaces(sections, trees, FAKE_TIME).sections
     const mount = (variant: RowVariant, collapsed = false) =>
       mountScreen(
         app,

@@ -69,6 +69,7 @@ export const windowsKeys: Readonly<Record<CommandId, readonly Shortcut[]>> = {
   'create-pull-request': ['Ctrl+Shift+P', 'Alt+Shift+P'],
   'fix-checks': ['Alt+Shift+X'],
   'resolve-conflicts': [],
+  'merge-latest': [],
   'address-review': [],
   'commit-and-push': ['Ctrl+Shift+Y'],
   'mark-ready-for-review': [],

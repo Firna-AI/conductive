@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Section } from '../../../docs/mockups/src/components/settings/Section'
 import { mayChangeSettings } from '../../app/permissions'
 import { useStore, valueOf } from '../../app/store'
@@ -9,13 +9,19 @@ import { useOrgAccess, useOrgModel } from '../context'
 import { useAction } from '../ui/useAction'
 import { Loaded } from './LoadState'
 import { useMembersApi, useMembersViewport } from './members-api'
-import { RepositoryPicker } from './RepositoryPicker'
+import {
+  ChosenRepositories,
+  RepositoryEditToggle,
+  RepositoryPicker,
+} from './RepositoryPicker'
 import { AdminRepositoryNotice } from './RepositoryChangeNotice'
 
 /**
  * The repositories that the cloud computer of the org holds (decision 10),
- * which an admin adds and removes. An add starts a build, and a removal
- * waits for the next build. The repository notice above the list shows the
+ * which an admin adds and removes. The tab lists the chosen repositories,
+ * and Edit opens every repository that the GitHub App reaches, with Add
+ * and Remove, until Done. An add starts a build, and a removal waits for
+ * the next build. The repository notice above the list shows the
  * changes that the cloud computer does not hold yet, with Try again or
  * Build computer.
  */
@@ -27,9 +33,16 @@ function AdminRepositories(props: {
   const model = useOrgModel(org.id)
   const repositories = useStore(model.repositories)
   const build = useAction(() => model.startBuild(), 'The build did not start')
+  const [editing, setEditing] = useState(false)
   useEffect(() => model.watch('repositories'), [model])
   return (
     <Section
+      action={
+        <RepositoryEditToggle
+          editing={editing}
+          toggle={() => setEditing(!editing)}
+        />
+      }
       description={`The cloud computer of ${org.name} holds these repositories, and its workspaces start in them. Adding a repository starts a build.`}
       title="Repositories"
     >
@@ -39,7 +52,13 @@ function AdminRepositories(props: {
         retry={() => model.reload('repositories')}
         value={repositories}
       >
-        {(list) => <RepositoryPicker model={model} repositories={list} />}
+        {(list) =>
+          editing ? (
+            <RepositoryPicker model={model} repositories={list} />
+          ) : (
+            <ChosenRepositories repositories={list} />
+          )
+        }
       </Loaded>
     </Section>
   )
@@ -59,7 +78,10 @@ export function RepositoriesTab(props: { org: OrgSummary }) {
   const builds = valueOf(useStore(model.builds))
   useEffect(() => model.watch('builds'), [model])
   if (mayChangeSettings(access)) {
-    return <AdminRepositories builds={builds} org={props.org} />
+    // The key closes Edit when the screen moves to another org.
+    return (
+      <AdminRepositories builds={builds} key={props.org.id} org={props.org} />
+    )
   }
   return (
     <MemberRepositoriesTab

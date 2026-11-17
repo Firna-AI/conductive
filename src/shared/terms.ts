@@ -2,7 +2,7 @@ import { API_PATHS } from './api'
 import { INVITE_CODE_PARAMETER } from './waitlist'
 
 export const TERMS_VERSION =
-  '2026-11-17-org-agent-logins-secrets-and-mac-access'
+  '2026-11-17-removed-workspaces-org-agent-logins-secret-variables-and-mac-access'
 export const TERMS_VERSION_PARAMETER = 'terms_version'
 
 export function acceptedTermsSignInPath(inviteCode?: string): string {

@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import { FAKE_TIME } from '../../test-support/fixtures/core'
 import { ready } from '../store'
-import type { PaletteQuery } from './palette-source'
+import type { PaletteQuery, PaletteSource } from './palette-source'
 import { paletteResults } from './palette-results'
 import {
   extra,
@@ -13,7 +13,7 @@ import {
 } from './results-test-kit'
 
 describe('the Workspaces tab of the palette', () => {
-  test('the Workspaces tab shows each section in the order of the list, also a collapsed one, and its filters choose the repository and the archived workspaces, also for a search by number', () => {
+  test('the Workspaces tab shows each section in the order of the list, also a collapsed one, and its filters choose the repository and the archived workspaces, also for a search by number, without a removed workspace', () => {
     const banner = extra({
       id: 'banner',
       name: 'Black Friday banner',
@@ -36,9 +36,19 @@ describe('the Workspaces tab of the palette', () => {
       number: 403,
       repositoryId: 'admin-dashboard',
     })
+    // Its 14 days ended at the time of the list, so it shows in no tab, and
+    // its repository, which the org does not use, is no choice.
+    const removed = extra({
+      id: 'app-icons',
+      name: 'App icons',
+      number: 371,
+      repositoryId: 'mobile-app',
+      state: 'archived',
+      archivedAt: FAKE_TIME - 14 * 86_400_000,
+    })
     const list = ready({
       sections,
-      workspaces: [...workspaces, banner, redesign, admin],
+      workspaces: [...workspaces, banner, redesign, admin, removed],
     })
     const tab = (filters: Partial<PaletteQuery>) =>
       paletteResults(query({ tab: 'workspaces', ...filters }), source({ list }))
@@ -48,6 +58,7 @@ describe('the Workspaces tab of the palette', () => {
       archived: shown(tab({ archived: true })),
       storefrontNumber: shown(tab({ repositoryId: 'storefront', text: '39' })),
       archivedNumber: shown(tab({ archived: true, text: '39' })),
+      removed: shown(tab({ archived: true, text: 'W-37' })),
       choices: tab({}).repositories.map((choice) => choice.name),
     }).toEqual({
       all: [
@@ -93,6 +104,7 @@ describe('the Workspaces tab of the palette', () => {
         ['Infra', ['W-396 Upgrade to Next.js 16']],
       ],
       archivedNumber: [['Archived', ['W-393 Checkout page redesign']]],
+      removed: [],
       choices: [
         'acme/storefront',
         'acme/billing-service',
@@ -102,9 +114,11 @@ describe('the Workspaces tab of the palette', () => {
     })
   })
 
-  test('a Workspaces tab without a workspace names where they show, and a query without a match says so', () => {
-    const empty = (filters: Partial<PaletteQuery>) =>
-      paletteResults(query(filters), source()).empty
+  test('a Workspaces tab without a workspace names where they show, for 14 days with the Archived filter, and a query without a match says so', () => {
+    const empty = (
+      filters: Partial<PaletteQuery>,
+      overrides: Partial<PaletteSource> = {},
+    ) => paletteResults(query(filters), source(overrides)).empty
     expect([
       empty({
         tab: 'workspaces',
@@ -112,14 +126,19 @@ describe('the Workspaces tab of the palette', () => {
         repositoryId: 'marketing-site',
       }),
       empty({ tab: 'workspaces', archived: true }),
+      empty({ tab: 'workspaces', archived: true }, { org: null }),
       empty({ tab: 'workspaces', repositoryId: 'admin-dashboard' }),
       empty({ tab: 'actions', text: ' refund ' }),
     ]).toEqual([
       {
         kind: 'line',
-        text: 'Archived workspaces of acme/marketing-site show here',
+        text: 'Archived workspaces of acme/marketing-site show here for 14 days',
       },
-      { kind: 'line', text: 'Archived workspaces of Acme show here' },
+      {
+        kind: 'line',
+        text: 'Archived workspaces of Acme show here for 14 days',
+      },
+      { kind: 'line', text: 'Archived workspaces show here for 14 days' },
       { kind: 'line', text: 'Workspaces of acme/admin-dashboard show here' },
       { kind: 'no-match', query: 'refund' },
     ])

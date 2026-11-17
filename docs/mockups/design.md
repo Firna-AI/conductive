@@ -18,7 +18,8 @@ mark in the colour of its GitHub state, the name, and the time. A
 sub-workspace shows indented under the row of its parent, and a top-level
 row moves to another section by drag and drop, with the rows under it. Archive covers the time on
 hover only, without moving the row content, and Restore does so in the
-Archived group. Selection and
+Archived group, which holds the archived workspaces of the last 14 days.
+Selection and
 keyboard focus alone keep the time visible. A right click on a row opens
 the menu of the workspace. The centre column has a slim header that names
 the
@@ -219,7 +220,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
   across the bottom of a phone. An action that a user can undo, such as
   Archive, asks no question and offers the undo in its toast.
   `ArchivedToast` in `src/components/workspace/` gives the toast after
-  Archive, over the workspace and over the list.
+  Archive, over the workspace and over the list. Its second line gives the
+  day when the workspace leaves the list.
 - [The pull request bar](design-bar.md) gives its one main action in each
   state, the line under the bar, the actions on top of the Checks tab of a
   phone, and the question and the note of Continue.
@@ -229,10 +231,11 @@ sessions as tabs above the chat, and four tabs at the bottom.
   of `ConfirmDialog`. The repository picker sits at the top left, and the
   org and the section of the new workspace, in plain text, at the top
   right. The message and its files fill the middle, and the notices of the
-  New workspace page follow them. The model picker sits at the bottom left,
-  and the Capabilities icon, the attach button, and Create, with the hint
-  of the Enter key, at the bottom right. A phone always opens the page, so the dialog has no phone
-  layout.
+  New workspace page follow them. The attach button, the Capabilities icon,
+  and the model picker sit at the bottom left. The org login label follows
+  the model picker when the first message uses it. Create, with the hint of
+  the Enter key, sits at the bottom right. A phone always opens the page,
+  so the dialog has no phone layout.
 - The account has five tabs, General, Agents, Preferences, Keyboard
   shortcuts, and Stats, as links, as the org settings have. The Mac app
   adds This Mac as its sixth tab. On a phone, a tab that
@@ -243,7 +246,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   failed save shows its error under the control.
 - Stats uses the parts of the operator Overview: a box of tiles, the
   workspaces by state, and the daily charts. Its tiles are Workspaces with
-  the new ones of 7 days, Running now, Automations, and Orgs.
+  the new ones of 7 days, Running now, Automations, and Orgs. Its list of
+  states has Removed after Archived, as the Overview has, for the
+  workspaces that left the list. The Workspaces tile still counts them.
 - `ShortcutsSections` in `src/components/settings/` draws the Keyboard
   shortcuts tab, in the Mac app and in each browser. It shows the keys of
   a host: the Mac app, a normal tab of Chrome or Firefox, or the installed

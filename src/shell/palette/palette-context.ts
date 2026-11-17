@@ -14,7 +14,11 @@ export function usePalette(): PaletteController {
 
 /** The rows that an offer makes, without what their runs do. */
 function offerShape(offer: PaletteOffer): string {
-  const rows = offer.actions.map((action) => [action.id, action.href ?? null])
+  const rows = offer.actions.map((action) => [
+    action.id,
+    action.href ?? null,
+    action.label ?? null,
+  ])
   return JSON.stringify({ scope: offer.scope, rows })
 }
 
@@ -38,6 +42,7 @@ export function usePaletteOffer(offer: PaletteOffer | null): void {
       actions: current.actions.map((action) => ({
         id: action.id,
         href: action.href,
+        label: action.label,
         run: () =>
           latest.current?.actions.find((item) => item.id === action.id)?.run(),
       })),

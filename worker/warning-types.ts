@@ -11,6 +11,7 @@ import type {
 } from './warning-values'
 import type { GatewayCheckErrorKind } from './model-gateway/check-error'
 import type { GatewayRefusal } from './model-gateway/errors'
+import type { UnexpectedErrorFields } from './unexpected-error'
 
 export const SIMPLE_WARNINGS = {
   workspace_alarm_failed:
@@ -58,10 +59,22 @@ export const SIMPLE_WARNINGS = {
     'A model turn check took longer than its interval. The answer keeps streaming.',
 } as const
 
+/** Where the handling of one runner message failed. */
+export const RUNNER_MESSAGE_STAGES = [
+  'parse',
+  'hello',
+  'file_result',
+  'event',
+  'after_commit',
+] as const
+
+export type RunnerMessageStage = (typeof RUNNER_MESSAGE_STAGES)[number]
+
 export interface RunnerWarningFields {
   workspaceId: WarningId
   connectionId: WarningId | null
   streamId: WarningStreamId | null
+  processStartId: WarningStreamId | null
   protocolVersion: number | null
 }
 
@@ -111,8 +124,20 @@ export type WorkerWarning =
       cancelled: boolean
     }
   | {
-      kind: 'workspace_first_message_failed' | 'runner_message_failed'
+      kind: 'workspace_first_message_failed'
       workspaceId: WarningId
+      error: ErrorSummary
+    }
+  | {
+      kind: 'runner_message_failed'
+      workspaceId: WarningId
+      stage: RunnerMessageStage
+      error: ErrorSummary
+    }
+  | {
+      kind: 'automation_report_failed'
+      workspaceId: WarningId
+      retry: 'scheduled' | 'alarm'
       error: ErrorSummary
     }
   | {
@@ -138,6 +163,7 @@ export type WorkerWarning =
       resource: RepairKind
       limit: number
     }
+  | ({ kind: 'unexpected_error' } & UnexpectedErrorFields)
   | {
       kind: 'lifecycle_repair_pending'
       workspaces: number

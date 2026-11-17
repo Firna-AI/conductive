@@ -73,9 +73,15 @@ jobs:
   sign:
     if: ${{ !cancelled() && needs.mac-arm64.result == 'success' && (github.event_name == 'workflow_dispatch' || needs.verify-tag.result == 'success') && github.ref == 'refs/heads/main' }}
     needs: [release-please, mac-arm64, verify-tag]
+    # Each architecture signs in its own job, so Apple notarizes the two
+    # packages at the same time.
+    strategy:
+      matrix:
+        architecture: [arm64, x64]
     uses: ./.github/workflows/desktop-sign.yml
     with:
       ref: ${{ needs.release-please.outputs.sha || github.sha }}
+      architecture: ${{ matrix.architecture }}
       updates: ${{ needs.release-please.outputs.release_created == 'true' }}
     secrets:
       CSC_LINK: ${{ secrets.CSC_LINK }}
@@ -100,8 +106,14 @@ jobs:
           node-version-file: .nvmrc
       - uses: actions/download-artifact@v6
         with:
-          name: desktop-signed-packages
-          path: desktop/dist/release
+          name: desktop-signed-packages-x64
+          path: desktop/dist/signed/x64
+      - uses: actions/download-artifact@v6
+        with:
+          name: desktop-signed-packages-arm64
+          path: desktop/dist/signed/arm64
+      - name: Join the signed files of both architectures
+        run: node desktop/scripts/merge-release.ts
       - name: Verify and publish signed files
         run: node desktop/scripts/publish.ts
         env:

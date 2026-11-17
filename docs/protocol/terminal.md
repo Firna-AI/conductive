@@ -188,6 +188,25 @@ terminals at `app/tools` and its child pages.
   command, such as a dev server.
 - When the user ends the shell of a terminal, such as with `exit`, the
   next connection of that terminal opens a new shell in the same tab.
+- When the connection of a terminal drops with no close of the server,
+  such as at a deploy of the Worker or a network failure, that terminal
+  connects again once by itself. It shows Disconnected with Reconnect only
+  when that try fails: the new connection ends without output, or within
+  one minute of its first output. A connection that stays open for one
+  minute after its first output works, so a later drop gets its own try.
+  Cal chose this on 17 November 2026, as option B of item 4 of the
+  investigation of a failed session close.
+- A close of the server, such as at the end of the shell, at the close of
+  the terminal, at a stop, at a Restart, or at a loss of access, still
+  shows Disconnected at once.
+- The screen keeps the output of an ended connection until a new
+  connection of the same terminal shows its own output. This holds for the
+  automatic try and for Reconnect, so a try that fails keeps the output to
+  copy, as [the screen rules](terminal-screen.md) say for an ended
+  connection (decision 245).
+- Reason: a deploy restarts the Durable Object of each workspace, which
+  drops each open terminal. More tries with a wait between them were
+  rejected for now, because one try covers a deploy.
 - A stop of the sandbox ends the shell of each terminal and its commands,
   as [Stop and resume](workspace-life.md#stop-and-resume) says. The list
   of terminals stays. The first connection of each terminal after the

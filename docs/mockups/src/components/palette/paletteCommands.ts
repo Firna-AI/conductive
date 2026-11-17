@@ -6,6 +6,7 @@ import {
   FileDiff,
   Files,
   FolderPlus,
+  GitMerge,
   Globe,
   History,
   ListChecks,
@@ -20,6 +21,10 @@ import { orgList, type Org } from '../../fixtures/orgs'
 import { orgCommand, type CommandId } from '../../fixtures/shortcutCommands'
 import { checksPaths, paths } from '../../paths'
 import { sendFeedbackLabel, sendFeedbackWords } from '../feedback/feedbackCopy'
+import {
+  mergeLatestLabel,
+  mergeLatestWords,
+} from '../workspace/mergeLatestCopy'
 import { orgLinks } from '../orgs/orgLinks'
 
 /** What leads a command row: an icon, the tile of an org, or GitHub. */
@@ -109,11 +114,23 @@ const sessionHistory: Command = {
 }
 
 /**
+ * Merge latest, which asks the agent to merge the latest target branch of
+ * the workspace, here `main` (merge latest decisions 1 A and 2 A). It has
+ * no screen of its own: the row sends its prompt to the chat.
+ */
+const mergeLatest: Command = {
+  label: mergeLatestLabel('main'),
+  lead: icon(GitMerge),
+  words: mergeLatestWords,
+  shortcut: 'merge-latest',
+}
+
+/**
  * The actions of the open workspace: a new session, the session history,
- * each tab of the right column, a new terminal, and Archive. New terminal
- * shows where the Go to rows show, while the Terminal tool offers its +
- * button. An archived workspace keeps its session history and offers
- * Restore, a command without a default key.
+ * each tab of the right column, a new terminal, Merge latest, and Archive.
+ * New terminal shows where the Go to rows show, while the Terminal tool
+ * offers its + button. An archived workspace keeps its session history and
+ * offers Restore, a command without a default key.
  */
 export function workspaceActions(open: OpenActions): Command[] {
   if (open.archived) {
@@ -136,6 +153,7 @@ export function workspaceActions(open: OpenActions): Command[] {
     },
     sessionHistory,
     ...(open.rightColumn ? rightColumnActions : []),
+    mergeLatest,
   ]
   if (!open.archivable) return actions
   return [

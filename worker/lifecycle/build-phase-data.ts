@@ -1,10 +1,13 @@
 import type { BuildPhase } from './build-data'
+import { buildLogStatements } from './build-log-statements'
 import { clearImageRetryStatement } from './image-retry-data'
 
+/** An optional log line commits with the phase change, so a retry never repeats it. */
 export async function completeBuildPhase(
   db: D1Database,
   buildId: string,
   phase: BuildPhase,
+  log?: { text: string; now: number },
 ): Promise<void> {
   await db.batch([
     db
@@ -13,5 +16,6 @@ export async function completeBuildPhase(
       )
       .bind(phase, buildId),
     clearImageRetryStatement(db, buildId),
+    ...(log ? buildLogStatements(db, buildId, log.text, log.now) : []),
   ])
 }

@@ -274,7 +274,7 @@ export function WorkspaceScreen(props: {
         suspended,
         viewer: membership,
         changed: changedWorkspaces(state),
-        restoreOpen: state.archive === 'kept',
+        archive: state.archive,
         shortcuts: props.shortcuts,
       })}
     >

@@ -1,6 +1,7 @@
 import { useMemo, useSyncExternalStore } from 'react'
 import type { Delay } from './events'
 import { useServices } from './services'
+import { listEndOf, type ArchiveTime } from './workspace-removal'
 
 /**
  * The deadlines of a screen on the clock of the app, such as the last day
@@ -72,4 +73,18 @@ export function usePassedDeadlines(
     clock.latestPassed,
   )
   return (deadline) => deadline !== null && deadline <= latest
+}
+
+/**
+ * The time on the clock of the app, for a screen that shows the workspace
+ * list or a count of it. The screen renders again when a workspace of
+ * `workspaces` leaves the list, at the end of its Restore. So the
+ * workspace leaves at that time, with no reload and no other event. The
+ * delete of its cloud computer can come late, so the list does not wait
+ * for it.
+ */
+export function useListTime(workspaces: readonly ArchiveTime[]): number {
+  const { now } = useServices()
+  usePassedDeadlines(workspaces.map(listEndOf))
+  return now()
 }

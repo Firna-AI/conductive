@@ -129,7 +129,7 @@ deployment at `conductive.build`. It does not wait for CI, as
 [Automatic deploys](docs/automatic-deploys.md) says.
 
 The Linux jobs run on the GitHub-hosted `ubuntu-24.04` runner. The Apple
-silicon Mac jobs, the Mac app checks and the signing job, run on the
+silicon Mac jobs, the Mac app checks and the signing jobs, run on the
 [Blacksmith](https://docs.blacksmith.sh/blacksmith-runners/overview) runner
 `blacksmith-6vcpu-macos-15`. The Intel Mac check uses the GitHub-hosted
 `macos-15-intel` runner, because Blacksmith has no Intel Macs. Keep the
@@ -219,4 +219,7 @@ Apple silicon Mac jobs on Blacksmith.
 - Avoid breaking changes. A change that breaks stored data, the Worker
   API, or the runner messages needs a migration or a compatible path.
   Older copies of the Mac app and older runners in the sandboxes must keep
-  working. Name each breaking change in the pull request description.
+  working. The previous Worker must keep working on the schema of each new
+  migration, as
+  [Keep the previous Worker working](migrations/README.md#keep-the-previous-worker-working)
+  says. Name each breaking change in the pull request description.

@@ -72,8 +72,9 @@ describe('the Reconnect of one terminal', () => {
     const shownBoth = opened.map(({ path }) => path)
     const before = panes(view)
 
-    // The connection of the shown terminal ends, as a dropped network does.
-    act(() => opened[1].socket.close())
+    // The server closes the connection of the shown terminal, as at the end
+    // of its shell.
+    act(() => opened[1].socket.close(1011))
     await settle()
     const ended = panes(view).map(({ shown, disconnected }) => ({
       shown,
@@ -95,8 +96,8 @@ describe('the Reconnect of one terminal', () => {
       paths: opened.map(({ path }) => path),
       states: opened.map(({ socket }) => socket.readyState),
       disconnected: after.map(({ disconnected }) => disconnected),
-      newScreen:
-        after[1].screen !== null && after[1].screen !== before[1].screen,
+      sameScreen:
+        after[1].screen !== null && after[1].screen === before[1].screen,
       keptScreen:
         after[0].screen !== null && after[0].screen === before[0].screen,
     }).toEqual({
@@ -105,7 +106,9 @@ describe('the Reconnect of one terminal', () => {
       // Open, closed by the drop, open.
       states: [1, 3, 1],
       disconnected: [false, false],
-      newScreen: true,
+      // The new socket writes on the same screen, so the old output stays
+      // until the new connection shows its own.
+      sameScreen: true,
       keptScreen: true,
     })
 
@@ -124,6 +127,41 @@ describe('the Reconnect of one terminal', () => {
       names: ['Terminal 1', 'Terminal 2', 'Terminal 3'],
       paths: 3,
       states: [1, 3, 1],
+    })
+  })
+
+  test('connects again once by itself after a lost connection, and shows Disconnected when that try drops at once', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer()
+    const { events, opened } = liveSockets(server)
+    const { view } = await openTab(server, routes.workspace(org, id), {
+      events,
+    })
+    await settle()
+    const before = panes(view)
+
+    // A deploy drops the connection with no close frame.
+    act(() => opened[0].socket.close(1006))
+    await settle()
+    const afterDrop = {
+      sockets: opened.length,
+      disconnected: panes(view).map(({ disconnected }) => disconnected),
+      sameScreen: panes(view)[0].screen === before[0].screen,
+    }
+
+    // The automatic try drops too, within a minute of its first output.
+    act(() => opened[1].socket.close(1006))
+    await settle()
+
+    expect({
+      afterDrop,
+      afterFailedTry: {
+        sockets: opened.length,
+        disconnected: panes(view).map(({ disconnected }) => disconnected),
+      },
+    }).toEqual({
+      afterDrop: { sockets: 2, disconnected: [false], sameScreen: true },
+      afterFailedTry: { sockets: 2, disconnected: [true] },
     })
   })
 })

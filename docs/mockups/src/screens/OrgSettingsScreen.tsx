@@ -30,6 +30,7 @@ export const orgSettingsSchema = {
     'build',
     'script',
     'repositoryChange',
+    'repositoryView',
     'envForm',
     'secrets',
     'dialog',
@@ -71,6 +72,12 @@ export const orgSettingsSchema = {
      */
     repositoryChange: { enum: repositoryChanges },
     /**
+     * The Repositories tab of an admin: the chosen repositories with Edit,
+     * or, after Edit, every repository that the GitHub App reaches, with
+     * search, Add, Remove, and Done.
+     */
+    repositoryView: { enum: ['list', 'edit'] },
+    /**
      * The open form of the environment variables, which the cloud computer
      * tab of an admin shows: none, Add variable, or the new value of
      * DATABASE_URL.
@@ -78,10 +85,21 @@ export const orgSettingsSchema = {
     envForm: { enum: ['none', 'add', 'change'] },
     /**
      * The Secrets tab: the list, the value of PROD_DATABASE_URL that an
-     * admin just revealed, the Add secret form, or the field of a new
-     * value in the row of a secret.
+     * admin just revealed, the Add secret form, that form after it refused
+     * a name with spaces, or the field of a new value in the row of a
+     * secret. `replace-older` lists Cloudflare (read-only), a secret with
+     * an older name, and opens that field in its row.
      */
-    secrets: { enum: ['list', 'revealed', 'add', 'replace'] },
+    secrets: {
+      enum: [
+        'list',
+        'revealed',
+        'add',
+        'add-refused',
+        'replace',
+        'replace-older',
+      ],
+    },
     /**
      * A dialog over the page: Delete org, the removal of a member, the
      * leave of a suspended org, or the question before Delete of a secret.
@@ -128,6 +146,7 @@ export const acmeSettings: OrgSettingsState = {
   build: 'ready',
   script: 'built',
   repositoryChange: 'none',
+  repositoryView: 'list',
   envForm: 'none',
   secrets: 'list',
   dialog: 'none',

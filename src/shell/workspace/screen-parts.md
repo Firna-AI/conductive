@@ -49,6 +49,20 @@ says.
 - A click on a session tab, a new session, or a reopened session makes
   that session the active tab of the view. The address then goes back to
   the chat.
+- `RestoreShownTab` of `restore-tab.tsx` shows the active tab of the
+  saved view again when the screen opens at the address of the workspace
+  alone, as a click on its row in the list does. When that tab is a file,
+  diff, or Preview tab, its address replaces the address of the workspace.
+  It decides once, when the chat first knows the view, so a later move to
+  the address of the workspace, such as a click on a session tab, shows
+  the chat. Such a later move, such as a move back in the browser
+  history, also saves the shown session as the active tab. An address that names a
+  view or a session, a move of the address before the view is known, a
+  phone, and an archived workspace keep the address, as
+  [The tab row](../../../docs/protocol/tab-row.md#the-shown-tab-at-a-return)
+  says. The screen keeps the arrival address in a `TabRestore` for its
+  whole show, so a switch between the phone and the desktop layout
+  restores nothing again.
 - Close on a file tab takes it out of the view. When it shows, the next
   file tab shows, else the one before, else the chat. Close on the
   temporary tab also clears its mark.
@@ -191,7 +205,9 @@ Each folder of a path is a part of the address. Another address under
   Resume.
 - A switch between the preview and the source keeps the tab, so it starts
   nothing. The address of the screen at its first show starts nothing
-  there either, because the open of the workspace resumes the sandbox.
+  there either, because the open of the workspace resumes the sandbox. The
+  address of a restored tab counts as that first address, through
+  `replaceWithoutVisit` of `tab-visits.ts`, so it starts nothing too.
 - A Restore moves no address, so it starts nothing, also while the address
   names a file or diff tab. The next visit that opens a tab resumes the
   sandbox.
@@ -229,6 +245,12 @@ through them while the workspace loads.
 - A GitHub state of another branch than the workspace's, such as the merged
   state just after Continue, shows as loading. The store then reads the
   state of the branch once.
+- The list mark of the workspace shows the GitHub state of this store
+  while the screen shows it, in the list, the palette, and the chips. So
+  the mark changes with the bar, and does not wait for the next read of
+  the list. `LiveGitHubStates` in `src/app/live-github.ts` puts the state
+  over the summary of each list read, because the Worker copies a new
+  state to the list only after its event.
 - On desktop, the bar tops the right column, with its main action and the
   line of a refusal or a stop under it. The number of a pull request links
   to it on GitHub. After a merge, its Archive archives

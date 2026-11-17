@@ -44,10 +44,14 @@ it.each(['first request', 'retry'] as const)(
       run,
     )
     if (phase === 'retry') {
-      run.mockResolvedValueOnce({ response: '' })
+      // The first request tries the model three times.
+      run
+        .mockResolvedValueOnce({ response: '' })
+        .mockResolvedValueOnce({ response: '' })
+        .mockResolvedValueOnce({ response: '' })
       await acceptFirst()
       await drain()
-      expect(run).toHaveBeenCalledTimes(1)
+      expect(run).toHaveBeenCalledTimes(3)
     }
     await fixture.env.DB.prepare('UPDATE workspaces SET name = ? WHERE id = ?')
       .bind('Client name', WORKSPACE_ID)
@@ -55,7 +59,7 @@ it.each(['first request', 'retry'] as const)(
     if (phase === 'first request') await acceptFirst()
     else await fixture.send(first.sessionId, 'after-client-name')
     await drain()
-    expect(run).toHaveBeenCalledTimes(phase === 'first request' ? 0 : 1)
+    expect(run).toHaveBeenCalledTimes(phase === 'first request' ? 0 : 3)
     expect((await sessionRecord(fixture, first.sessionId)).title).toBeNull()
     expect(
       await fixture.env.DB.prepare('SELECT name FROM workspaces WHERE id = ?')
