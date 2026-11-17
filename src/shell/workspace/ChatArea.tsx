@@ -12,7 +12,10 @@ import type { ChatHost } from '../../chat/components/SessionChat'
 import type { ChatController } from '../../chat/state/controller'
 import type { RenderTab } from '../../chat/components/tab-row'
 import { WorkspaceChatView } from '../../chat/WorkspaceChat'
-import { workspaceCapabilities } from '../capabilities/WorkspaceCapabilities'
+import {
+  usePreloadedCapabilities,
+  workspaceCapabilities,
+} from '../capabilities/WorkspaceCapabilities'
 import { useApp } from '../context'
 import { useGo } from '../ui/AppLink'
 import type { Action } from '../ui/useAction'
@@ -52,7 +55,8 @@ function useComposerFocus(
  * the open files and Preview tabs: their tabs at their places in the tab
  * row, and `content`, a file or diff tab in place of the chat of the
  * session. A Preview tab that the address shows takes that place too, and
- * the pages of the Preview tabs stay loaded under it.
+ * the pages of the Preview tabs stay loaded under it. It pre-loads the
+ * Capabilities of the workspace, so their control opens at once.
  */
 function KeptChat(props: {
   context: WorkspaceContext
@@ -73,6 +77,7 @@ function KeptChat(props: {
     : undefined
   const phone = context.viewport === 'phone'
   const focus = useComposerFocus(context.workspace.id, phone)
+  usePreloadedCapabilities(context.org.id, context.workspace.id)
   return (
     <WorkspaceChatView
       clock={clock}
