@@ -1,12 +1,12 @@
 import type { Viewport } from '@mokly/mokly'
-import { FolderGit2, GitCommitHorizontal, GitPullRequest } from 'lucide-react'
+import { FolderGit2 } from 'lucide-react'
 import { repositories, type RepositoryKey } from '../../fixtures/repositories'
 import { repositoryWork } from '../../fixtures/repositoryMove'
 import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
-import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
+import { ConfirmDialog } from '../common/ConfirmDialog'
 import { ScreenLink } from '../common/ScreenLink'
-import { LocalWorkList, WorkRow } from './LocalWorkList'
+import { RepositoryChangeText } from './RepositoryChangeText'
 import { repositoryQuestion } from './repositoryMoveCopy'
 
 /**
@@ -22,8 +22,6 @@ export function RepositoryChangeDialog(props: {
   to: RepositoryKey
   viewport: Viewport
 }) {
-  const from = repositories[props.from].name
-  const to = repositories[props.to].name
   const { left, carried } = repositoryWork
   return (
     <ConfirmDialog
@@ -42,29 +40,15 @@ export function RepositoryChangeDialog(props: {
       title={repositoryQuestion.title}
       viewport={props.viewport}
     >
-      <DialogText>{repositoryQuestion.intro(to)}</DialogText>
-      <DialogText>{repositoryQuestion.left(from)}</DialogText>
-      <LocalWorkList
-        commits={left.commits}
-        files={left.files}
-        label={repositoryQuestion.left(from)}
-      >
-        <WorkRow
-          detail={repositoryQuestion.open}
-          icon={GitPullRequest}
-          name={repositoryQuestion.pullRequest(repositoryWork.pullRequest)}
-        />
-        <WorkRow
-          detail={repositoryQuestion.onGitHub}
-          icon={GitCommitHorizontal}
-          name={repositoryQuestion.pushed(repositoryWork.pushedCommits)}
-        />
-      </LocalWorkList>
-      <DialogText>{repositoryQuestion.carried(to)}</DialogText>
-      <LocalWorkList
-        commits={carried.commits}
-        files={carried.files}
-        label={repositoryQuestion.carried(to)}
+      <RepositoryChangeText
+        from={repositories[props.from].name}
+        to={repositories[props.to].name}
+        work={{
+          left,
+          pullRequest: repositoryWork.pullRequest,
+          pushedCommits: repositoryWork.pushedCommits,
+          carriedFiles: carried.files,
+        }}
       />
     </ConfirmDialog>
   )

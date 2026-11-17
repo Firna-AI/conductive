@@ -21,24 +21,21 @@ import { ActionButton } from '../ui/actions'
 import { useAction } from '../ui/useAction'
 import { useViewport } from '../ui/viewport'
 import { ChatArea } from './ChatArea'
-import { ContinueDialog } from './ContinueDialog'
 import { sandboxState, useFeatures, type WorkspaceContext } from './features'
 import { KeptFilesConnection } from './files/kept-files'
-import { ResumeOnTabOpen } from './files/tab-open-resume'
 import { WorkspaceGitHub } from './github/WorkspaceGitHub'
 import { HeaderNoticeBars } from './HeaderNoticeBars'
 import { WorkspaceLinks } from './link-opening'
 import { archivedRestore, contentState, sandboxView } from './sandbox-view'
 import { SandboxPanel } from './SandboxNotice'
+import { ScreenParts } from './ScreenParts'
 import { MissingWorkspace, useRememberWorkspace } from './remember-workspace'
-import { OpenSessionAddress } from './session-address'
 import { shownWorkspaces } from './tab-memory'
 import { ToolsPart } from './tools/ToolsPart'
 import { useArchiveActions } from './useArchiveActions'
 import { PhoneTabBar, phoneView, RightColumn } from './WorkspaceColumns'
 import { WorkspaceHeader } from './WorkspaceHeader'
 import { WorkspaceMacBar } from './WorkspaceMacBar'
-import { WorkspacePaletteActions } from './WorkspacePaletteActions'
 import type { WorkspaceView } from './workspace-view'
 import workspaceStyles from './workspace.module.css'
 
@@ -226,18 +223,8 @@ export function WorkspaceScreen(props: {
       ownerControl={features.owner?.(context)}
     />
   )
-  // Continue, palette actions, file tab resume, and the session address.
   const dialog = (
-    <>
-      <ContinueDialog />
-      <WorkspacePaletteActions chat={chat} context={context} />
-      <ResumeOnTabOpen context={context} />
-      <OpenSessionAddress
-        chat={chat}
-        context={context}
-        session={props.session}
-      />
-    </>
+    <ScreenParts chat={chat} context={context} session={props.session} />
   )
   if (phone) {
     const view = phoneView(props.view)

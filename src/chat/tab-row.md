@@ -17,6 +17,11 @@ the requirements.
   [Temporary tabs](../../docs/protocol/temporary-tabs.md) says. A move
   that changes its place keeps it too, as `moveTab` says below. Each change
   of the session tabs keeps the mark as it is.
+- A record of the workspace with another repository, from the stream or a
+  read, closes each file and diff tab and the mark, because their paths
+  belong to the old folder. A file or diff that showed gives its place to
+  the session of the chat. `withRecord` of `state/workspace-records.ts`
+  makes the change, and `saveMovedTabs` saves the view.
 - The load gives each open session a place and removes the places of
   sessions that are not open. When an open session first arrives, the
   state adds its missing place at the end. It drops no other place.

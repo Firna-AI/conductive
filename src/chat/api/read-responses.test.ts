@@ -21,6 +21,7 @@ it('reads a temporary file or diff tab without a display mode', () => {
       view: { ...view, temporaryTab },
       automation: null,
       repositoryFolder: null,
+      heldRepositoryIds: null,
     })
   }
 })
@@ -65,6 +66,24 @@ describe('readViewReply', () => {
     ['a number', 7],
   ])('gives no folder for %s', (_, repositoryFolder) => {
     expect(readViewReply({ view, repositoryFolder }).repositoryFolder).toBe(
+      null,
+    )
+  })
+
+  it('keeps the repositories that the cloud computer holds', () => {
+    const heldRepositoryIds = ['storefront', 'billing-service']
+    expect(
+      readViewReply({ view, heldRepositoryIds }).heldRepositoryIds,
+    ).toEqual(heldRepositoryIds)
+  })
+
+  it.each([
+    ['no list', undefined],
+    ['a null list', null],
+    ['a list with a number', ['storefront', 7]],
+    ['a text', 'storefront'],
+  ])('gives no repositories for %s', (_, heldRepositoryIds) => {
+    expect(readViewReply({ view, heldRepositoryIds }).heldRepositoryIds).toBe(
       null,
     )
   })

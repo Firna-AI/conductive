@@ -451,11 +451,11 @@ Findings (16 November 2026):
 
 Found in M3c (16 November 2026):
 
-- [ ] Milestone 4: read `workspace.repository-changed` in
+- [x] Milestone 4: read `workspace.repository-changed` in
       `src/chat/api/read-chat.ts`, and draw it. The transcript fold keeps
       no item for it yet. Older apps skip it, because `readEnvelope` keeps
       the number of an event that it cannot read.
-- [ ] Milestone 4: after a `workspace.updated` with another
+- [x] Milestone 4: after a `workspace.updated` with another
       `repositoryId`, read Files and Changes again. The stored tree has
       the unavailable mark until the runner reports the new folder, and
       the stored changes are gone.
@@ -487,18 +487,36 @@ Tags: ui
 
 Depends on: 1, 3
 
-- [ ] Make the repository in `src/shell/workspace/WorkspaceHeader.tsx` a
+- [x] Make the repository in `src/shell/workspace/WorkspaceHeader.tsx` a
       button with the menu of the mockup.
-- [ ] Show the question when work exists. Show the progress and the
+- [x] Show the question when work exists. Show the progress and the
       failure toast.
-- [ ] Draw the note of the change in the chat.
-- [ ] Close the file tabs of the old repository.
-- [ ] Add tests for the menu, the question, and the failure.
-- [ ] Update `src/shell/workspace/README.md`.
-- [ ] Check each guide sentence about the repository change against the
+- [x] Draw the note of the change in the chat.
+- [x] Close the file tabs of the old repository.
+- [x] Add tests for the menu, the question, and the failure.
+- [x] Update `src/shell/workspace/README.md`.
+- [x] Check each guide sentence about the repository change against the
       built screens, as the Claims rule of `src/marketing/docs-authoring.md`
       says. The guides got these sentences in Milestone 2.
-- [ ] Check the header in a browser on desktop and on a phone.
+- [x] Check the header in a browser on desktop and on a phone.
+      Evidence: `.context/repository-change/shots/app-*.png`.
+
+Found in M4 (17 November 2026):
+
+- The app reuses `RepositoryButton` and `RepositoryChangeText`, which
+  moved out of `RepositoryPicker.tsx` and `RepositoryChangeDialog.tsx`,
+  because those files import Mokly, which throws in the app. The mockup
+  output stays the same.
+- The workspace guide now says that the header shows the repository as
+  text when no other repository can show.
+- [ ] The Worker keeps the saved view of each member at publication. Only
+      a member whose tab follows the stream closes the file tabs of the old
+      repository. Another member's saved file tabs stay until that member
+      closes them. Decide whether publication should drop the file and diff
+      tabs of every saved view.
+- [ ] The chat reads `repositoryFolder` only with the view, so after a
+      change the file chips of the chat still use the old folder until the
+      chat loads again.
 
 ## Milestone 5: Verification, commit, review, and pull request
 

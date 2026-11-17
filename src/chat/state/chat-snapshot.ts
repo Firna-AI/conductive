@@ -131,6 +131,12 @@ export interface ChatSnapshot {
    * Null until the view reads, and when the reply gives no folder.
    */
   repositoryFolder: string | null
+  /**
+   * The repositories that the cloud computer holds, by ID, from the read of
+   * the view, for the repository menu. Null until the view reads, and when
+   * the workspace has no record of its folders.
+   */
+  heldRepositoryIds: readonly string[] | null
   activeSessionId: string | null
   sessionStates: Readonly<Record<string, SessionState>>
   overlay: Overlay
@@ -179,6 +185,7 @@ export const initialSnapshot: ChatSnapshot = {
   view: null,
   automation: null,
   repositoryFolder: null,
+  heldRepositoryIds: null,
   activeSessionId: null,
   sessionStates: {},
   overlay: { kind: 'none' },

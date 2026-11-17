@@ -7,7 +7,7 @@ import {
   type ChatEnvelope,
 } from '../../shared/transcript/session-events'
 import { mergeSession } from './session-records'
-import { withWorkspaceChange } from './workspace-records'
+import { saveMovedTabs, withWorkspaceChange } from './workspace-records'
 
 /**
  * Applies workspace stream events in order: chat events to the log of their
@@ -44,6 +44,7 @@ export function applyEnvelopes(
     context,
     changes.flatMap((change) => change.record?.session ?? []),
   )
+  const before = context.store.get()
   context.store.update((snapshot) => {
     let next = snapshot
     for (const { eventNumber, event } of envelopes) {
@@ -59,4 +60,5 @@ export function applyEnvelopes(
     return applyMoves(next, moves)
   })
   saveMovedView(context, moves)
+  saveMovedTabs(context, before)
 }

@@ -280,6 +280,7 @@ It gets a new branch in the folder of the new repository.
 6. Select **Change repository** to keep going, or **Cancel** to keep the current repository.
 
 The menu lists only the org's repositories that the workspace's cloud computer holds.
+When no other repository can show, the header shows the repository as text, with no menu.
 A repository that the org added after the workspace started does not show.
 Create a new workspace to use it.
 

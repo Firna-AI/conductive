@@ -1,21 +1,68 @@
 import type { Workspace } from '../../shared/generated/Workspace'
 import type { WorkspaceStart } from '../../shared/generated/WorkspaceStart'
+import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import type { OrderedWorkspaceResponse } from '../../shared/workspaces'
 import { afterRestore, isArchived } from './archive-view'
 import type { ChatSnapshot } from './chat-snapshot'
 import type { ChatContext } from './context'
 
 /**
+ * The view without its file and diff tabs, after a repository change: their
+ * paths belong to the folder of the old repository. A file or diff that
+ * showed gives its place to the session of the chat.
+ */
+function withoutFileTabs(snapshot: ChatSnapshot): WorkspaceView | null {
+  const { view, activeSessionId } = snapshot
+  if (!view) return view
+  const tabs = view.tabs.filter((tab) => tab.kind === 'session')
+  const active = view.activeTab
+  const showsFile = active !== null && active.kind !== 'session'
+  if (tabs.length === view.tabs.length && !showsFile && !view.temporaryTab)
+    return view
+  const session: WorkspaceTab | null = activeSessionId
+    ? { kind: 'session', sessionId: activeSessionId }
+    : null
+  return {
+    ...view,
+    tabs,
+    activeTab: showsFile ? session : active,
+    temporaryTab: null,
+  }
+}
+
+/**
  * The snapshot with a newer workspace record. A record that leaves the
- * archived state ends the read-only tabs, as `afterRestore` says.
+ * archived state ends the read-only tabs, as `afterRestore` says. A record
+ * of another repository closes the file and diff tabs.
  */
 function withRecord(
   snapshot: ChatSnapshot,
   workspace: Workspace,
 ): ChatSnapshot {
   const restored = isArchived(snapshot) && workspace.state !== 'archived'
-  const next = { ...snapshot, workspace }
+  const moved =
+    snapshot.workspace !== null &&
+    snapshot.workspace.repositoryId !== workspace.repositoryId
+  const view = moved ? withoutFileTabs(snapshot) : snapshot.view
+  const next = { ...snapshot, workspace, view }
   return restored ? afterRestore(next) : next
+}
+
+/**
+ * Saves the view when a record of another repository closed its file and
+ * diff tabs, so each later tab of the member opens without them.
+ */
+export function saveMovedTabs(
+  context: ChatContext,
+  before: ChatSnapshot,
+): void {
+  const after = context.store.get()
+  const moved =
+    before.workspace !== null &&
+    after.workspace !== null &&
+    before.workspace.repositoryId !== after.workspace.repositoryId
+  if (moved && after.view && after.view !== before.view)
+    context.saveView(after.view)
 }
 
 /**
@@ -34,11 +81,13 @@ export function confirmWorkspace(
   const newer = reply.eventNumber >= context.workspaceOrder.through
   if (!newer) return false
   context.workspaceOrder.through = reply.eventNumber
+  const before = context.store.get()
   context.store.update((snapshot) => ({
     ...withRecord(snapshot, reply.workspace),
     start: reply.start,
     savedError: reply.error?.message ?? null,
   }))
+  saveMovedTabs(context, before)
   return true
 }
 

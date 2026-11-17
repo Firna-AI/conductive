@@ -13,6 +13,8 @@ login, a linked session, and the client ID of a second try in the same and
 in another session. `components/ContinuedNote.test.tsx` folds the note of
 Continue once at its place, also after a repeat and in a new tab, in the
 history of a closed session, and draws "You" or the name of the member.
+`components/RepositoryChangedNote.test.tsx` checks the note of a repository
+change in the same way, with its read from the stream and its copy.
 `components/TryAgain.dom.test.tsx` mounts the chat and presses Try again.
 It checks the plain message of a refused retry in a tab that missed newer events.
 `state/linked-replies.test.tsx` drives replies of Send and Try again that
