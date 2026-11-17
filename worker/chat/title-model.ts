@@ -17,8 +17,8 @@ export function titleModelBinding(env: AppEnv): TitleModelCall | undefined {
 }
 
 /** Workers AI answers some title requests late, so each request tries again. */
-export const TITLE_ATTEMPTS = 3
-export const TITLE_ATTEMPT_TIMEOUT_MS = 45_000
+const TITLE_ATTEMPTS = 3
+const TITLE_ATTEMPT_TIMEOUT_MS = 45_000
 
 export async function requestWorkspaceTitle(
   model: string | undefined,

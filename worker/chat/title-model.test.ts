@@ -1,12 +1,7 @@
 import { afterEach, expect, it, vi } from 'vitest'
 
 import { TITLE_SYSTEM_PROMPT } from './title-text'
-import {
-  requestWorkspaceTitle,
-  TITLE_ATTEMPT_TIMEOUT_MS,
-  TITLE_ATTEMPTS,
-  type TitleModelCall,
-} from './title-model'
+import { requestWorkspaceTitle, type TitleModelCall } from './title-model'
 
 afterEach(() => {
   vi.restoreAllMocks()
@@ -83,7 +78,7 @@ it.each([
     expect(
       await requestWorkspaceTitle('operator-model', run, 'Fix the chat'),
     ).toBeNull()
-    expect(run).toHaveBeenCalledTimes(TITLE_ATTEMPTS)
+    expect(run).toHaveBeenCalledTimes(3)
     expect(warning).toHaveBeenCalledTimes(1)
     expect(JSON.stringify(warning.mock.calls)).not.toContain('private message')
   },
@@ -140,8 +135,9 @@ it('aborts a late attempt at 45 seconds and takes the next answer', async () => 
     .mockImplementationOnce(() => new Promise(() => undefined))
     .mockResolvedValueOnce({ response: 'Fix the chat' })
   const request = requestWorkspaceTitle('operator-model', run, 'Fix the chat')
-  await vi.advanceTimersByTimeAsync(TITLE_ATTEMPT_TIMEOUT_MS - 1)
+  await vi.advanceTimersByTimeAsync(44_999)
   expect(run).toHaveBeenCalledTimes(1)
+  expect(run.mock.calls[0][2].signal.aborted).toBe(false)
   await vi.advanceTimersByTimeAsync(1)
   expect(await request).toBe('Fix the chat')
   expect(run.mock.calls[0][2].signal.aborted).toBe(true)
@@ -162,13 +158,15 @@ it('aborts each late attempt and keeps the city name', async () => {
     finished = true
     return result
   })
-  await vi.advanceTimersByTimeAsync(
-    TITLE_ATTEMPT_TIMEOUT_MS * TITLE_ATTEMPTS - 1,
-  )
-  expect(finished).toBe(false)
-  await vi.advanceTimersByTimeAsync(1)
+  for (const [attempt, at] of [44_999, 89_999, 134_999].entries()) {
+    await vi.advanceTimersByTimeAsync(at - Date.now())
+    expect(run).toHaveBeenCalledTimes(attempt + 1)
+    expect(run.mock.calls[attempt][2].signal.aborted).toBe(false)
+    expect(finished).toBe(false)
+    await vi.advanceTimersByTimeAsync(1)
+    expect(run.mock.calls[attempt][2].signal.aborted).toBe(true)
+  }
   expect(await request).toBeNull()
-  expect(run).toHaveBeenCalledTimes(TITLE_ATTEMPTS)
-  expect(run.mock.calls.every((call) => call[2].signal.aborted)).toBe(true)
+  expect(run).toHaveBeenCalledTimes(3)
   expect(warning).toHaveBeenCalledTimes(1)
 })
