@@ -6,13 +6,13 @@ import { lineLabel, type LineRange } from '../../shared/line-target'
 import { accessibleName } from '../../test-support/dom-queries'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { mount, press } from '../../test-support/mount'
+import { AgentText } from '../components/AgentText'
+import { LinksProvider } from '../links/LinksContext'
+import { Copying, copyAll } from '../links/mention-copy-test-kit'
 import {
   MentionsProvider,
   type ChatMentions,
 } from '../mentions/MentionsContext'
-import { AnswerText } from './LinkedText'
-import { Copying, copyAll } from './mention-copy-test-kit'
-import { LinksProvider } from './LinksContext'
 
 const root = '/home/user/code/checkout'
 
@@ -39,9 +39,7 @@ async function mountAnswer(text: string, folder: string | null = root) {
     <LinksProvider value={{ links: { orgId: FAKE_IDS.org, workspaces: [] } }}>
       <MentionsProvider root={folder} value={value}>
         <Copying>
-          <p>
-            <AnswerText text={text} />
-          </p>
+          <AgentText text={text} />
         </Copying>
       </MentionsProvider>
     </LinksProvider>,

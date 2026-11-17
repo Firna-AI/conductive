@@ -1,8 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import type { FileEntry } from '../../shared/generated/FileEntry'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
-import { chatParts, type ChatPart, type EntryLookup } from './chat-parts'
-import { webLinkOf } from './links-test-kit'
+import { partsOf, readingOf, shapes } from './answer-test-kit'
 
 const links = { orgId: FAKE_IDS.org, workspaces: [] }
 
@@ -10,50 +9,14 @@ const entries: FileEntry[] = [
   { path: 'src/app.ts', name: 'app.ts', kind: 'file', change: null },
   { path: 'shots/after.png', name: 'after.png', kind: 'file', change: null },
   { path: 'src/my app.ts', name: 'my app.ts', kind: 'file', change: null },
+  { path: 'src/my_file.ts', name: 'my_file.ts', kind: 'file', change: null },
 ]
-
-const find: EntryLookup = (path, folder) =>
-  entries.find(
-    (entry) => entry.path === path && (entry.kind === 'directory') === folder,
-  )
 
 const root = '/home/user/code/checkout'
 
-function shapes(parts: readonly ChatPart[]) {
-  return parts.map((part) =>
-    part.kind === 'file-link'
-      ? {
-          link: part.entry.path,
-          label: part.label.map((item) => item.text).join(''),
-          ...(part.lines ? { lines: part.lines } : {}),
-        }
-      : part.kind === 'file'
-        ? {
-            file: part.entry.path,
-            source: part.source,
-            ...(part.lines ? { lines: part.lines } : {}),
-            ...(part.strong ? { strong: true } : {}),
-          }
-        : part.kind === 'text'
-          ? { text: part.text, ...(part.strong ? { strong: true } : {}) }
-          : part.kind === 'code'
-            ? { code: part.text }
-            : part.kind === 'link'
-              ? { web: part.words.map((word) => word.text).join('') }
-              : { [part.kind]: part.source },
-  )
-}
-
 /** The parts of an answer, as the chat reads it with a tree. */
 function answer(text: string) {
-  return shapes(
-    chatParts(text, links, {
-      strong: true,
-      web: webLinkOf,
-      mentions: find,
-      code: { root },
-    }),
-  )
+  return shapes(partsOf(text, readingOf(links, entries, root)))
 }
 
 describe('file chips in an answer', () => {
@@ -89,12 +52,16 @@ describe('file chips in an answer', () => {
     ])
   })
 
-  test('bold around a mention stays bold, and code ends bold', () => {
+  test('bold around a mention or a path in code stays bold', () => {
     expect(answer('**Read @src/app.ts** and **`src/app.ts`**')).toEqual([
-      { text: 'Read ', strong: true },
-      { file: 'src/app.ts', source: '@src/app.ts', strong: true },
+      {
+        strong: [
+          { text: 'Read ' },
+          { file: 'src/app.ts', source: '@src/app.ts' },
+        ],
+      },
       { text: ' and ' },
-      { file: 'src/app.ts', source: 'src/app.ts' },
+      { strong: [{ file: 'src/app.ts', source: 'src/app.ts' }] },
     ])
   })
 
@@ -113,31 +80,19 @@ describe('file chips in an answer', () => {
   })
 
   test('without a tree, the paths stay code and the mentions stay text', () => {
-    expect(
-      shapes(
-        chatParts('`src/app.ts` @src/app.ts', links, {
-          strong: true,
-          web: webLinkOf,
-          code: { root },
-        }),
+    expect({
+      paths: shapes(partsOf('`src/app.ts` @src/app.ts', readingOf(links))),
+      inCode: shapes(
+        partsOf('Read `@src/app.ts` and @src/app.ts', readingOf(links)),
       ),
-    ).toEqual([{ code: 'src/app.ts' }, { text: ' @src/app.ts' }])
-  })
-
-  test('a message of a member keeps its code as code', () => {
-    expect(
-      shapes(
-        chatParts('`src/app.ts` and @src/app.ts', links, {
-          strong: false,
-          web: webLinkOf,
-          mentions: find,
-        }),
-      ),
-    ).toEqual([
-      { code: 'src/app.ts' },
-      { text: ' and ' },
-      { file: 'src/app.ts', source: '@src/app.ts' },
-    ])
+    }).toEqual({
+      paths: [{ code: 'src/app.ts' }, { text: ' @src/app.ts' }],
+      inCode: [
+        { text: 'Read ' },
+        { code: '@src/app.ts' },
+        { text: ' and @src/app.ts' },
+      ],
+    })
   })
 
   test('a Markdown link or image to a file of the tree is a link with its label', () => {
@@ -156,18 +111,16 @@ describe('file chips in an answer', () => {
     ])
   })
 
-  test('an image with no label shows the name of the file, and other targets stay text', () => {
+  test('an image with no label shows the name of the file, a web image shows its alt text as a link, and other targets stay text', () => {
     expect(
       answer(
         `![](shots/after.png) ![x](https://a.test/x.png) [gone](src/gone.ts) [s](src/gone%20file.ts)`,
       ),
     ).toEqual([
       { link: 'shots/after.png', label: 'after.png' },
-      {
-        text: ' ![x](',
-      },
-      { web: 'https://a.test/x.png' },
-      { text: ') [gone](src/gone.ts) [s](src/gone%20file.ts)' },
+      { text: ' ' },
+      { web: 'x' },
+      { text: ' [gone](src/gone.ts) [s](src/gone%20file.ts)' },
     ])
   })
 
@@ -186,9 +139,47 @@ describe('file chips in an answer', () => {
     expect(
       answer('- **@src/app.ts**: added the hook, mail a@src/app.ts'),
     ).toEqual([
-      { text: '- ' },
-      { file: 'src/app.ts', source: '@src/app.ts', strong: true },
+      { strong: [{ file: 'src/app.ts', source: '@src/app.ts' }] },
       { text: ': added the hook, mail a@src/app.ts' },
     ])
+  })
+
+  test('a mention can start right after each mark, and it ends before the mark that closes it', () => {
+    expect({
+      marks: answer(
+        '*@src/app.ts* _@src/my_file.ts_ ~~@src/app.ts~~ **bold**@src/app.ts',
+      ),
+      opens: answer('Read *@src/app.ts and 3 * 4.'),
+      closes: answer('See @src/app.ts* and @src/app.ts~~.'),
+      inWord: answer('mail a@src/app.ts or `x`@src/app.ts'),
+    }).toEqual({
+      marks: [
+        { emphasis: [{ file: 'src/app.ts', source: '@src/app.ts' }] },
+        { text: ' ' },
+        { emphasis: [{ file: 'src/my_file.ts', source: '@src/my_file.ts' }] },
+        { text: ' ' },
+        { strike: [{ file: 'src/app.ts', source: '@src/app.ts' }] },
+        { text: ' ' },
+        { strong: [{ text: 'bold' }] },
+        { file: 'src/app.ts', source: '@src/app.ts' },
+      ],
+      opens: [
+        { text: 'Read *' },
+        { file: 'src/app.ts', source: '@src/app.ts' },
+        { text: ' and 3 * 4.' },
+      ],
+      closes: [
+        { text: 'See ' },
+        { file: 'src/app.ts', source: '@src/app.ts' },
+        { text: '* and ' },
+        { file: 'src/app.ts', source: '@src/app.ts' },
+        { text: '~~.' },
+      ],
+      inWord: [
+        { text: 'mail a@src/app.ts or ' },
+        { code: 'x' },
+        { text: '@src/app.ts' },
+      ],
+    })
   })
 })

@@ -51,7 +51,7 @@ The address chooses the state. The first value of each option is the default:
 | `page` | `chat`, `this-mac` (the This Mac section of the account) |
 | `files` | `listed`, `unread` (each end of a turn of the chat says that the cloud computer could not read its changed files) |
 | `speed` | `none` (no fast mode), `fast` (each end of a turn of the chat ends a fast turn at fast speed, which shows nothing new), `limit` (each end says "Standard speed · Fast limit reached"), `older` (each end says "Standard speed · Older cloud computer software"), `other` (each end gives a cause that the app does not name, so it says "Standard speed" alone) |
-| `answer` | `text`, `tables` (each scripted turn answers with three tables: the resources of the machine, bundle sizes with a short row, and a wide table of test runs), `headings` (each scripted turn writes its plan under a heading, and answers with a review under headings at levels 2 to 4) |
+| `answer` | `text`, `tables` (each scripted turn answers with three tables: the resources of the machine, bundle sizes with a short row, and a wide table of test runs), `headings` (each scripted turn writes its plan under a heading, and answers with a review under headings at levels 2 to 4), `prose` (each scripted turn answers with quotes, a rule, emphasis, strikethrough, line breaks, and a bold label whose pair comes in the next part, and its plan holds a quote, a rule, strikethrough, and a line break), `long` (each scripted turn answers with about 100 KiB of Markdown in one part, then ten short parts) |
 
 ## What the page does
 
@@ -99,7 +99,11 @@ Each turn of the page's scripted agent writes its answer in parts, about
 two parts. So each header row shows as text until its separator row comes,
 and the table then grows one row at a time. With `answer=headings`, each
 part is one line too. The plan of each turn then starts with a heading,
-so its message line in the folded work shows the heading.
+so its message line in the folded work shows the heading. With
+`answer=prose`, each part is one line or one blank line too, and the plan
+shows its quote, rule, and line break in the folded work. With
+`answer=long`, each short part after the first is a live update of an
+answer of about 100 KiB.
 
 The names follow the backend. A new workspace and each new session have no
 name, and show "Untitled". The page fills a name only while it is empty,

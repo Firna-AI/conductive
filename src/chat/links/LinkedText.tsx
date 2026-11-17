@@ -18,7 +18,6 @@ import {
   findMentioned,
   useChatMentions,
   useMentionTree,
-  useRepositoryFolder,
 } from '../mentions/MentionsContext'
 import {
   chatParts,
@@ -28,7 +27,6 @@ import {
   type FilePart,
 } from './chat-parts'
 import { fileOpener, fileTitle } from './file-opener'
-import { FileTextLink } from './FileTextLink'
 import { chipOf, useChatLinks } from './LinksContext'
 import { sessionChipOf, useLinkedSession } from './session-links'
 import { CodeText, WebLinkText } from './WebLinkText'
@@ -40,7 +38,7 @@ import { sessionTarget, type LinkTarget } from './workspace-links'
  * A plain click opens it in the same window, as the other links of the app
  * do. A click with a modifier key stays with the browser, such as a new tab.
  */
-function LinkChip(props: { target: LinkTarget }) {
+export function LinkChip(props: { target: LinkTarget }) {
   const { open } = useChatLinks()
   const session = useLinkedSession(props.target)
   const { to, workspace } = props.target
@@ -90,7 +88,7 @@ export function SessionLinkText(props: {
  * and title end with them, as in `app.ts:42`. A click with a modifier key
  * stays with the browser.
  */
-function FileLink(props: { part: FilePart }) {
+export function FileLink(props: { part: FilePart }) {
   const mentions = useChatMentions()
   const { entry, lines } = props.part
   const folder = entry.kind === 'directory'
@@ -149,116 +147,59 @@ function Part(props: { part: ChatPart; opens: boolean }) {
   if (part.kind === 'code') return <CodeText part={part} />
   if (part.kind === 'link') return <WebLinkText part={part} />
   if (part.kind === 'file') return <FileLink part={part} />
-  if (part.kind === 'file-link') return <FileTextLink part={part} />
   if (part.kind === 'attachment') {
     return <AttachmentLink opens={props.opens} part={part} />
   }
   return <LinkChip target={part.target} />
 }
 
-/** A run of bold text, chips, and links, or one part without bold. */
-type Run =
-  { kind: 'strong'; parts: ChatPart[] } | { kind: 'part'; part: ChatPart }
-
-/** The parts in runs, so that one `<strong>` holds each run of bold parts. */
-function runsOf(parts: readonly ChatPart[]): Run[] {
-  const runs: Run[] = []
-  for (const part of parts) {
-    const last = runs.at(-1)
-    if (part.kind === 'code' || !part.strong) runs.push({ kind: 'part', part })
-    else if (last?.kind === 'strong') last.parts.push(part)
-    else runs.push({ kind: 'strong', parts: [part] })
-  }
-  return runs
-}
-
-/** The lookup of the entries of the tree, while the chat has a tree. */
-function useEntryLookup(read: boolean): EntryLookup | undefined {
+/**
+ * The lookup of the entries of the tree, while the chat has a tree. With
+ * `read` false, the text follows no change of the tree, and finds nothing.
+ */
+export function useEntryLookup(read: boolean): EntryLookup | undefined {
   const tree = useMentionTree(read)
   if (!tree) return undefined
   return (path, folder) => findMentioned(tree, path, folder)
 }
 
-/**
- * Whether a text can hold a chip or a link of a file, so that it follows
- * the tree. A mention needs `@`, a path in code needs a backtick, and a
- * Markdown link needs `](`. So a change of the tree draws only the texts
- * that can change.
- */
-function namesFiles(text: string, reading: TextReading): boolean {
-  if (!reading.mentions) return false
-  if (text.includes('@')) return true
-  return reading.paths === true && (text.includes('`') || text.includes(']('))
-}
-
-/** How the chat reads a text: as an answer, or as a message of a member. */
+/** How the chat reads the text of a sent message. */
 export interface TextReading {
-  /** `**` marks bold, as in an answer. */
-  strong?: boolean
   /** Each mention of an entry of the file tree is a file chip. */
   mentions?: boolean
-  /**
-   * Inline code that is the path of an entry of the tree is a file chip,
-   * as in an answer. It needs `mentions`.
-   */
-  paths?: boolean
   /** The files of a sent message. The mention of each is its chip. */
   attachments?: readonly Attachment[]
 }
 
 /**
- * The parts of a text, as `chatParts` reads it with the workspaces of the
- * chat, and with the web links of the screen that shows it. With
- * `mentions`, it follows the tree of the chat for the chips of the files.
+ * The parts of a sent message, as `chatParts` reads it with the workspaces
+ * of the chat, and with the web links of the screen that shows it. With
+ * `mentions`, a text with a `@` follows the tree of the chat for the chips
+ * of the files, so a change of the tree draws only the texts that can
+ * change.
  */
 export function useChatParts(text: string, reading: TextReading): ChatPart[] {
   const { links } = useChatLinks()
-  const lookup = useEntryLookup(namesFiles(text, reading))
-  const root = useRepositoryFolder()
+  const lookup = useEntryLookup(reading.mentions === true && text.includes('@'))
   const { linkOf } = useTextLinks()
   return chatParts(text, links, {
-    strong: reading.strong ?? false,
     web: linkOf,
     mentions: lookup,
-    code: reading.paths ? { root } : undefined,
     attachments: reading.attachments,
   })
 }
 
 /**
- * Draws the parts of a text: text, code, chips, and links. One `<strong>`
- * holds each run of bold text, chips, and links. `opens` says whether the
- * chip of an attached file opens its copy: only after its message went out
- * to the agent.
+ * Draws the parts of a sent message: text, code, chips, and links. `opens`
+ * says whether the chip of an attached file opens its copy: only after its
+ * message went out to the agent.
  */
 export function ChatText(props: {
   parts: readonly ChatPart[]
   opens?: boolean
 }) {
   const opens = props.opens ?? false
-  return (
-    <>
-      {runsOf(props.parts).map((run, index) =>
-        run.kind === 'part' ? (
-          <Part key={index} opens={opens} part={run.part} />
-        ) : (
-          <strong key={index}>
-            {run.parts.map((part, inner) => (
-              <Part key={inner} opens={opens} part={part} />
-            ))}
-          </strong>
-        ),
-      )}
-    </>
-  )
-}
-
-const answerReading: TextReading = { strong: true, mentions: true, paths: true }
-
-/**
- * Text of an answer: bold, workspace chips, and a file chip for each
- * mention of an entry of the tree and for each path of one in inline code.
- */
-export function AnswerText(props: { text: string }) {
-  return <ChatText parts={useChatParts(props.text, answerReading)} />
+  return props.parts.map((part, index) => (
+    <Part key={index} opens={opens} part={part} />
+  ))
 }

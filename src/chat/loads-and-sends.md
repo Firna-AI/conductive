@@ -103,7 +103,7 @@ The session history stays open. The tab keeps its old name, and the sandbox bar 
   line with the mockups' `StopLine`, and `SessionLinkText` of
   `links/LinkedText.tsx` draws the chip.
 - That chip finds its session and opens its page as the chip of a session
-  link in a message does, as [Workspace chips](agent-text.md#workspace-chips)
+  link in a message does, as [Workspace chips](text-links.md#workspace-chips)
   says. This holds also for a session of another workspace, and for a
   closed or unknown session. A workspace that the list of the org does not
   hold leaves the session link as text, with the origin of the link of the

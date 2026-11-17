@@ -39,6 +39,35 @@ markdownParser.inline.ruler.before('text', 'break_tag', (state, silent) => {
   return true
 })
 
+// Each link keeps the source text after its label in its meta, so a view can
+// show a link that it does not open as typed. The tokens stay as they are.
+const inlineRules = markdownParser.inline.ruler
+const readLink = inlineRules.__rules__[inlineRules.__find__('link')].fn
+inlineRules.at('link', (state, silent) => {
+  const start = state.pos
+  const first = state.tokens.length
+  if (!readLink(state, silent)) return false
+  if (silent) return true
+  const labelEnd = state.md.helpers.parseLinkLabel(state, start, true)
+  const open = state.tokens
+    .slice(first)
+    .find((token) => token.type === 'link_open')
+  if (open && labelEnd >= 0) {
+    open.meta = { ...open.meta, tail: state.src.slice(labelEnd, state.pos) }
+  }
+  return true
+})
+
+/**
+ * The source text of a link after its label, from its `]`, such as
+ * `](src/a.ts "A")` or `][ref]`. A view that opens no such link shows it as
+ * `[`, its label, and this text. Null for an address in angle brackets.
+ */
+export function linkTail(token: Token): string | null {
+  const tail = token.meta?.tail
+  return typeof tail === 'string' ? tail : null
+}
+
 const tokenizeBlocks = markdownParser.block.tokenize.bind(markdownParser.block)
 markdownParser.block.tokenize = (state, startLine, endLine) => {
   // The block parser skips the remaining lines here without a leaf token.

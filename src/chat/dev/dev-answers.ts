@@ -1,4 +1,5 @@
 import type { DevOptions } from './dev-options'
+import { longAnswer, proseAnswer, prosePlan } from './dev-prose-answers'
 
 /** The browser projects of the end-to-end tests in the wide table. */
 const browsers = [
@@ -82,7 +83,8 @@ const plan = ['I will read ', 'the files that this touches first.']
  * What each scripted turn writes, in the parts that the agent writes it.
  * The page sends each part as its own update, and the whole answer last.
  * With the headings answer, the plan starts with a heading, so its message
- * line in the folded work holds a heading.
+ * line in the folded work holds a heading. With the prose answer, the plan
+ * holds a quote, a rule, strikethrough, and a line break.
  */
 export const devScripts: Readonly<Record<DevOptions['answer'], DevScript>> = {
   text: {
@@ -98,4 +100,6 @@ export const devScripts: Readonly<Record<DevOptions['answer'], DevScript>> = {
     ],
     answer: headings,
   },
+  prose: { plan: prosePlan, answer: proseAnswer },
+  long: { plan, answer: longAnswer },
 }

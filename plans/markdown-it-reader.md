@@ -283,17 +283,24 @@ Tags: ui
 
 Depends on: 3
 
-- [ ] Add the chat adapter with design calls 3, 4, 5, 7, 8, 10, 11, 12,
-      and 13.
-- [ ] Move `AgentText`, `MessageLine`, `LinkedText`, and `FileTextLink` to
+- [x] Add the chat adapter with design calls 3, 4, 5, 7, 8, 10, 11, 12,
+      and 13. It is `src/chat/markdown/`. My call, 17 November 2026: the
+      parser keeps the source text after the label of each link, so a
+      link that opens nothing shows as typed.
+- [x] Move `AgentText`, `MessageLine`, `LinkedText`, and `FileTextLink` to
       it. Delete `textBlocks`, `Paragraph`, and the answer reading of
       `chatParts`.
-- [ ] Draw quotes, rules, emphasis, and strikethrough with the shared style
+- [x] Draw quotes, rules, emphasis, and strikethrough with the shared style
       module.
-- [ ] Move each test of the old reader to the adapter, with every
-      assertion. List each changed expectation in the pull request.
+- [x] Move each test of the old reader to the adapter, with every
+      assertion. List each changed expectation in the pull request. The
+      assertion that a line without a pipe ends a table waits for the
+      answer to the table question of Milestone 2.
 - [ ] Check live updates in the app with a 100 KiB answer. Stop and ask
-      if one update takes more than 50 ms.
+      if one update takes more than 50 ms. Measured on 17 November 2026
+      in headless Chrome, production build: the median update takes
+      70 ms with the parser, and 66 ms with the old reader. The parse
+      takes about 15 ms. The data is in `.context/markdown-it-reader/m4/`.
 - [ ] Ask the user, from the mockups: bold text has the strong weight and
       the ink colour in the file preview, and the weight of the browser in
       the chat. Does bold text join the shared style module, and with

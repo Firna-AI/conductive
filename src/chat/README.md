@@ -94,9 +94,12 @@ chips.
   messages and answers, and
   [Workspace links](../../docs/protocol/workspace-links.md) states their
   chips. [File mentions](../../docs/protocol/file-mentions.md#files-in-answers)
-  states the file chips of answers. [Agent text](agent-text.md) gives the rules of the code that
-  formats them: the links, the chips, and the heading, list, and table
-  parts that the chat shares with the file preview and the mockups.
+  states the file chips of answers. [Agent text](agent-text.md) gives the
+  rules of the code that formats them: the chat adapter on the shared
+  Markdown parser, and the heading, list, and table parts that the chat
+  shares with the file preview and the mockups. Its linked guides
+  [Message lines](message-lines.md) and [Text links](text-links.md) give
+  the message lines of the work of a turn, and the links and chips.
 - The links of chat text open through the link opener of the app shell, in
   `../shell/ui/text-links.tsx`. The workspace screen gives it the pages of
   the app and the port previews of the workspace, as

@@ -86,13 +86,13 @@ is relative to `src/chat/`, the folder of this guide.
 - `links/`: `workspace-links.ts`, the link syntax, the reader of the
   links of a message field, and `linkTarget`, with the session of a
   session link. Its `sessionTarget` gives the same target for a session
-  that the chat names by its IDs. `chat-parts.ts` is the one reading of
-  sent messages and answers, over the tokens of `chat-tokens.ts`. In it,
+  that the chat names by its IDs. `chat-parts.ts` is the reading of
+  sent messages, over the tokens of `chat-tokens.ts`. In it,
   each mention of a file of the message is an
   `AttachmentPart`, also when the tree holds that path, and also without a
   tree. Its `filesWithoutChip` gives the files of a message that no part
   shows as a chip. `link-parts.ts` gives the `LinkPart` of a web link with
-  its words, and the `CodePart` of code that holds one address alone.
+  its address, and the `CodePart` of code that holds one address alone.
   `LinksContext.tsx` gives the workspaces that chips find
   the open of a chip, and the origin of the chat's workspace link.
   `LinkedText.tsx` holds `useChatParts` and
@@ -108,7 +108,7 @@ is relative to `src/chat/`, the folder of this guide.
   states the rules of that chip. The chip opens the file tab of its copy
   through `openFile` and `href` of `ChatMentions`. It opens nothing when
   `ChatText` gets no `opens`, or in a chat without `ChatMentions`.
-  `AnswerText` reads and draws the text of an answer in one step.
+  `LinkChip` and `FileLink` draw the chips that answers share.
   `mention-copy.ts` makes
   the browser's own copy of chat text give the text of each chip that has
   a `data-mention` mark: each file chip and each `SentFileChip`. Each such
@@ -220,13 +220,19 @@ is relative to `src/chat/`, the folder of this guide.
 - `components/WorkFold.tsx` and `components/MessageLine.tsx`: the work fold
   of an ended turn with its steps, and the message line that grows to the
   full text. A message line with a table opens the table under the line.
-- `components/agent-text.ts`: `textBlocks`, the paragraphs, headings,
-  lists, code blocks, and tables of an agent message, with `TextTable`.
-  `components/agent-paragraph.ts`: `Paragraph`, the lines of a paragraph,
-  with the text that an underline turns into a heading.
-  `components/AgentText.tsx`: `AgentText`, which draws them, with the
-  heading style that the file preview shares, and `AgentBlocks`, which the
-  message line shares. Their text draws through `AnswerText` of `links/`.
+- `markdown/agent-blocks.ts`: `agentBlocks`, the chat adapter of the
+  shared Markdown parser. It gives the paragraphs, headings, lists, code
+  blocks, quotes, rules, and tables of an agent message, with `TextTable`
+  of `markdown/agent-tables.ts`. `markdown/agent-inline.ts` gives the
+  inline tree of each block, with the line breaks of
+  `markdown/agent-breaks.ts`. `markdown/answer-parts.ts`: `answerParts`,
+  the chips and the links of an inline tree, with the mentions of
+  `markdown/answer-text.ts`. `markdown/AnswerText.tsx`: `AnswerText`,
+  which draws them, and `markdown/FileTextLink.tsx`, a link to a file.
+  `components/AgentText.tsx`: `AgentText`, which draws the blocks, with the
+  heading and prose styles that the file preview shares, and
+  `AgentBlocks`, which the message line shares.
+  `components/LineBlocks.tsx`: the blocks of a message line, as spans.
 - `components/ToolGroup.tsx`: a run of tool calls, with `FoldLine` and
   `CallLine`, which the work fold shares.
 - `components/reading-place.ts`: the keeper of the reader's place, which

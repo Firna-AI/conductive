@@ -51,11 +51,23 @@ with a table keeps a name. An open table-first line has no hidden link
 that the keyboard can reach. The chip stays active in its table.
 `components/open-fold-test-kit.tsx` holds the mount and layout helpers.
 `components/AgentText.dom.test.tsx` renders `AgentText`. It checks where a
-table starts and ends, the alignment, the content of a cell, HTML as text,
-code blocks, the cells of each row, and the span of at most 1,000 columns.
-It also checks workspace chips in cells and links that stay code inside
-a code span. It checks the heading element of each level, with code, bold,
-and a chip in a heading, and that an empty heading draws nothing.
+table starts, the lines after a list item without its indent, the
+alignment, the content of a cell, HTML as text, code blocks, the cells of
+each row, and the span of at most 1,000 columns. It also checks workspace
+chips in cells and links that stay code inside a code span. It checks the
+heading element of each level, with code, bold, and a chip in a heading,
+and that an empty heading draws nothing.
+`components/AgentProse.dom.test.tsx` renders quotes, rules, emphasis,
+strikethrough, and line breaks in an answer, with the shared prose style.
+It checks them in a closed and an open message line, and a quote that
+holds the first table of a message, which opens under the line.
+`markdown/agent-blocks.test.ts` reads the blocks of agent messages: lists
+by the rules of CommonMark, headings, underlines, quotes, rules, the own
+cells of a table row in a quote, and the depth limit of lists and quotes
+with no lost text. `markdown/agent-inline.test.ts` reads marks, entities,
+escapes, code, and each form of a line break, with the line breaks that a
+block draws. `markdown/agent-text-test-kit.ts` writes blocks and inline
+text in a short form.
 `components/MessageLine.dom.test.tsx` renders a message line. A heading in
 a closed line is a span in the line, and the summary holds no heading
 element. A line whose table follows only empty headings keeps a name.
@@ -232,7 +244,7 @@ them. For a title, it leaves out the mentions of attached images.
 `links/chat-parts-mentions.test.ts` reads mentions in a sent message. A
 mention of a file of the message is its chip, also when the tree holds
 that path, and also without a tree. A folder mention of that path stays
-text, and a mention in code stays code.
+text, and a mention or a path in code stays code.
 `links/MessageFileChips.dom.test.tsx` opens a file and a folder from its
 chip, copies messages with file chips in the copy state, and moves a
 selection edge inside a chip to its edge.
@@ -252,17 +264,22 @@ real copy in Chrome was a manual check. `components/AttachmentChips.test.tsx` re
 files over the size limit, with one name or the count and the limit. It
 also renders the files under a sent message, with their sizes and no
 Remove.
-`links/AnswerText.dom.test.tsx` mounts answers with file chips.
+`markdown/AnswerText.dom.test.tsx` mounts answers with file chips.
+`markdown/answer-files.test.ts` reads the file chips and the file links of
+an answer, with and without a tree, and the mentions right after a mark.
+`markdown/answer-links.test.ts` reads the web links of an answer: a bare
+address in bold, a label with its formatting, a label that reads as an
+address, a link that shows as typed, web images, and code that holds one
+address alone. `markdown/answer-test-kit.ts` reads the first text of a
+message and writes its parts in a short form.
 `links/workspace-links.test.ts` reads links with and without a tab path,
 Markdown links, a code label in a sent message, code, `..`, other origins
 and orgs, which are links and no chips, unknown workspaces, and
 punctuation. `links/LinkedText.test.tsx`
 mounts an answer with chips: in bold, in a list, with a bold or a code
 label, and a link in inline code and in a code block.
-`links/chat-parts-links.test.ts` reads the web links of an answer and of a
-sent message: a bare address in bold, a label with its code and bold, a
-label that reads as an address, a Markdown link that shows as typed, the
-Markdown of an image, and code that holds one address alone.
+`links/chat-parts-links.test.ts` reads the web links of a sent message,
+whose Markdown links show as typed around their addresses.
 `links/WebLinkText.dom.test.tsx` mounts an answer in a screen that opens
 links. It checks the words, the title, and the target of each kind of
 link, a plain press and a press with a modifier key on each, a workspace
