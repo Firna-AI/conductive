@@ -11,7 +11,7 @@ first.
   queued browser requests.
 - `workspace-binding.ts`: `ChatWorkspaceBinding`, which binds chat to one workspace and checks the object identity.
 - [../model-gateway/workspace.ts](../model-gateway/workspace.ts): `WorkspaceTurnTokens`, available through `WorkspaceChat.turnTokens`.
-  It derives a running turn's token and checks the starter's current login.
+  It derives a running turn's token and checks its session's fixed login.
   A check with no Codex claim reads outside the chat queue first. Every refusal and every write comes from a check in the queue.
   Runner delivery gets the token of each `turn` command from `forRunningTurn`.
 - `dependencies.ts`: the default seams of `WorkspaceChat`, which a feature
@@ -65,8 +65,8 @@ first.
 - `session-management.ts`: `renameSession`, which the browser route and the
   tools share, and `stopManagedSession`, a tool stop with its idle reply.
 - `stop-request.ts`: `recordStopRequest`, which keeps the first requester in
-  `StoredTurn.stopRequest`, reads it from history for an older turn, and
-  emits `turn.stop-requested`.
+  `StoredTurn.stopRequest`, reads it from history only for an older record
+  without that field, and emits `turn.stop-requested`.
 - `tool-session-management.ts`: `manageToolSession`, the tool rename, close,
   and stop in one transaction, with the calling session as the stop source.
   `WorkspaceChat.manageToolSession` runs it in the queue.
@@ -205,9 +205,16 @@ first.
 - `login-access.ts`, `login-availability.ts`, and `login-kind.ts`:
   `readLogin` and the access checks, the metadata query
   `readLoginMetadata`, and the valid login kinds.
+- `login-access-data.ts`: `readLoginAccess`, the common access query for
+  personal and org owners, senders, and optional runner tokens.
+- `default-login.ts`: `defaultLogin`, the sole ordering rule, and
+  `resolveDefaultLogin`, its member lookup for a workspace or org.
+- `login-owner.ts`: `publicLoginOwner`, the shared owner projection for
+  empty-session metadata and automation replies, with no credential or endpoint.
 - `session-login.ts` and `session-storage.ts`: the two login paths of
-  `SessionLogins`, and the defaults of older session records.
+  `SessionLogins`, credential-aware default resolution, and older session defaults.
 - `session-record.ts`: `sessionFor`, the read of one session record.
 - `types.ts`: `ChatDependencies`, `ChatCallbackPublisher`, `ChatStorage`,
   `PreparedCommand`, `ResolvedCommand`, and the peer types.
-  `StoredTurn.stopRequest` is optional, because older records lack it.
+  `StoredTurn.stopRequest` is optional, because older records lack it. A
+  new record holds `null` until the first Stop request.

@@ -71,3 +71,8 @@ the helper filter as a backup for untrusted sources.
 
 Implementation is pending. This record stays until the chosen behavior
 is implemented and checked. It does not depend on a plan or review report.
+
+Related: `plans/follow-ups/skills-software-update-docs.md` corrects the
+image-only software prerequisite. Correct that wording before copying
+the trust design into the protocol or guide. Automatic software updates
+and the start-or-resume timing of a changed trust choice are separate.

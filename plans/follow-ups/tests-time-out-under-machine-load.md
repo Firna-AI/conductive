@@ -192,6 +192,25 @@
   No further local image-test attempt ran after these three failures.
   Native runtime or storage delays are suspected; the blocked await and
   the cause remain unknown.
+- On 17 November 2026, the next main merge into `calummoore/oslo-3u7a`
+  integrated `989adcb9319497507f9f6ab007ffdd3c094b1762`.
+  The complete gate passed every static check and all 121 helper tests.
+  The root suite ran all 1,280 files. It passed 4,170 tests and failed
+  seven, with no skipped tests. Each failed with
+  `Error: Test timed out in 15000ms.`:
+  - `worker/lifecycle/added-repository-build.test.ts`, "starts one added build for a repository added during a successful build".
+  - `worker/lifecycle/added-repository-build.test.ts`, "starts one added build for a repository added during a successful refresh".
+  - `worker/devices/lifecycle.test.ts`, "relays all four approval choices only from the paired desktop session".
+  - `worker/secrets/late.test.ts`, "turns an unfinished request late at turn end and starts its notice for the original sender".
+  - `worker/lifecycle/published-image-creation.test.ts`, "creates from captured image repositories while current settings and selection change".
+  - `worker/lifecycle/terminal-lifecycle.test.ts`, "starts and caches the terminal after startup at create and resume while retention starts no terminal".
+  - `worker/lifecycle/account-routing.test.ts`, "replays a lost allocation and resumes its disk through the stored secondary account".
+  All six files match that main commit. A single rerun of the six full
+  files with `--maxWorkers=1` passed all 25 tests in 75.86 seconds.
+  It skipped none. No competing check ran beside either run.
+  No test, assertion, timeout, fixture, or gate configuration changed.
+  The full run took 1,964.52 seconds. Native runtime or storage contention
+  is suspected, but the blocked awaits and the cause remain unknown.
 - **Problem:** These tests depend on wall-clock time limits, so a busy machine can fail them with no defect in the code.
 - **Impact if no action:** A slow CI runner or a busy developer machine can fail the gate now and then, and a person must rerun it.
 - **Root question:** How do these tests stay correct on a slow or busy machine?

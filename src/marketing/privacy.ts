@@ -137,9 +137,12 @@ export const privacyDocument: LegalDocument = {
           exists, also after the secret is deleted. Each record keeps the
           secret ID and name, the admin, and the time. The records go when
           ${productName} deletes the org.`,
-        paragraph`A connected agent login stays until you remove or replace
-          it. Panel sizes and the last workspace of each org stay in your
-          browser until you clear its saved data. The providers above can keep their own records under their
+        paragraph`A personal agent login stays until you remove or replace
+          it. An org login stays until an admin removes or replaces it, or
+          the org is deleted. It stays when the admin who connected it
+          leaves. Panel sizes and the last workspace of each org stay in
+          your browser until you clear its saved data. The providers above
+          can keep their own records under their
           terms and privacy notices.`,
         paragraph`The team keeps each feedback email in its inbox while it
           helps to improve ${productName}. It deletes the email when it no
@@ -156,9 +159,9 @@ export const privacyDocument: LegalDocument = {
       blocks: [
         list(
           text`${productName} stores each env var value, the value of each
-            secret in the Secrets settings, and each agent login encrypted.
-            An own endpoint login includes its address and key. Only its
-            host, with any non-default port, stays in plain text.`,
+            secret in the Secrets settings, and each personal or org agent
+            login encrypted. An own endpoint login includes its address and
+            key. Only its host, with any non-default port, stays in plain text.`,
           text`It does not send the key of its cloud computer provider to
             your browser or into a cloud computer.`,
           text`The settings never return a stored env var value or agent login

@@ -18,6 +18,7 @@ import { failedFirstStart } from '../../app/first-start'
 import {
   composerModels,
   loginLabelOf,
+  loginReader,
   sessionLoginOf,
 } from '../state/session-login'
 import { ChatPane } from './ChatPane'
@@ -130,12 +131,12 @@ function useDraftFiles(controller: ChatController, draftId: string) {
  * takes the composer's place while the sandbox does not run. After a failed
  * first start, the bar sits above the composer, which stays. The status of
  * the stored history comes from its load alone, so content never hides a
- * failed load. The composer names the login of another member that a
- * message spends. A linked session starts with a link to the session that
- * it started from. The shown record comes from the tabs, so a closed
- * session that an archived workspace shows keeps its link too. A read-only
- * workspace, archived or of a suspended org, shows no composer and no
- * control that writes.
+ * failed load. The composer names the login of another member, or the org
+ * login, that a message spends. A linked session starts with a link to the
+ * session that it started from. The shown record comes from the tabs, so a
+ * closed session that an archived workspace shows keeps its link too. A
+ * read-only workspace, archived or of a suspended org, shows no composer
+ * and no control that writes.
  */
 export function SessionChat(props: SessionChatProps) {
   const { snapshot, controller, now } = props
@@ -174,7 +175,10 @@ export function SessionChat(props: SessionChatProps) {
     onAnswer: (requestId, answer) =>
       void controller.answerSecret(requestId, answer),
   })
-  const login = session ? sessionLoginOf(session, viewerId) : null
+  const reader = loginReader(snapshot)
+  const login = session ? sessionLoginOf(session, reader) : null
+  const linked =
+    login?.kind === 'linked' || (login?.kind === 'missing' && login.linked)
   const openSession = (sessionId: string) => {
     const open = snapshot.sessions.some((item) => item.id === sessionId)
     void (open ? controller.select(sessionId) : controller.reopen(sessionId))
@@ -204,8 +208,8 @@ export function SessionChat(props: SessionChatProps) {
       {!down && session && !block && login?.kind === 'linked' ? (
         <LinkedSessionNotice
           agent={session.choice.agent}
+          owner={login.owner}
           reason={login.reason}
-          starter={login.starter}
         />
       ) : null}
       {snapshot.devices.load === 'failed' ? (
@@ -236,8 +240,8 @@ export function SessionChat(props: SessionChatProps) {
           mention={mention?.sessionId === session.id ? mention : null}
           models={composerModels(
             login,
+            reader,
             snapshot.models,
-            snapshot.account?.agentLogins ?? [],
             session.choice,
           )}
           onAttach={(picked, refusals) =>
@@ -253,7 +257,7 @@ export function SessionChat(props: SessionChatProps) {
           running={state.transcript.turn !== null}
           sending={state.draft.sending}
           sessionAgent={hasMessages(state) ? session.choice.agent : undefined}
-          startsSession={login?.kind === 'linked'}
+          startsSession={linked}
           stopping={state.stopping}
           tools={props.host?.tools}
         />

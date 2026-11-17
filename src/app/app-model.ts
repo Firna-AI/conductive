@@ -6,7 +6,6 @@ import type { OrgColor } from '../shared/org-colors'
 import {
   leaveOrgPath,
   type CreateOrgRequest,
-  type MoveOrgRequest,
   type OrgSummary,
   type RenameOrgRequest,
 } from '../shared/orgs'
@@ -22,7 +21,7 @@ import { InvitationsModel } from './invitations-model'
 import { LastWorkspaces } from './last-workspaces'
 import { OrgList } from './org-list'
 import { OrgModel } from './org-model'
-import { patchOrg, postOrg } from './org-writes'
+import { patchOrg, postOrg, putOrgOrder } from './org-writes'
 import { suspendedOrg } from './permissions'
 import type { AppServices } from './services'
 import { setupSteps } from './setup-steps'
@@ -205,10 +204,15 @@ export class AppModel {
   org(orgId: string): OrgModel {
     let model = this.orgModels.get(orgId)
     if (!model) {
-      model = new OrgModel(this.services, orgId, {
-        suspended: suspendedOrg(orgId, this.orgs, this.refusedOrgs),
-        note: () => this.noteSuspended(orgId),
-      })
+      model = new OrgModel(
+        this.services,
+        orgId,
+        {
+          suspended: suspendedOrg(orgId, this.orgs, this.refusedOrgs),
+          note: () => this.noteSuspended(orgId),
+        },
+        (agent) => this.account.orgLoginChanged(agent),
+      )
       this.orgModels.set(orgId, model)
     }
     return model
@@ -259,9 +263,8 @@ export class AppModel {
    * shows at once. A failure takes back only this move, and throws.
    */
   moveOrg(orgId: string, index: number): Promise<void> {
-    const request: MoveOrgRequest = { orgId, index }
     return this.orgList.move(orgId, index, () =>
-      this.services.api.send('PUT', API_PATHS.orgOrder, request, ignore),
+      putOrgOrder(this.services.api, orgId, index),
     )
   }
 

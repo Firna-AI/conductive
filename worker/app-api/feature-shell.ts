@@ -17,6 +17,7 @@ import { featureSkills } from './feature-skills'
 import { shellChildId } from './feature-shell-access'
 import { featureWorkspaceWrite } from './feature-workspaces'
 import { workspaceChildId } from './workspace-path'
+import { orgAgentLoginsRoute } from './org-agent-logins'
 
 export async function featureShellRoute(
   request: Request,
@@ -48,6 +49,13 @@ export async function featureShellRoute(
   const orgId = context.org.id
   if (path === orgSettingsPaths.skills(orgId) && request.method === 'GET')
     return featureSkills(env, context, dependencies)
+  const agentLogins = await orgAgentLoginsRoute(
+    request,
+    env,
+    context,
+    dependencies,
+  )
+  if (agentLogins) return agentLogins
   if (
     path === orgSettingsPaths.settings(orgId) &&
     ['GET', 'PATCH'].includes(request.method)

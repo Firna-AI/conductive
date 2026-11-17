@@ -192,8 +192,8 @@ the report requests.
 
 ## Session logins
 
-[Session logins](session-logins.md) gives the starter of each session, the
-two login paths of `SessionLogins`, and the linked sessions.
+[Session logins](session-logins.md) gives the starter, the fixed personal or
+org login, the default resolver, the metadata and credential paths, and linked sessions.
 
 ## Test fixtures
 

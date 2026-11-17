@@ -400,7 +400,7 @@ sessions as tabs above the chat, and four tabs at the bottom.
   the Waitlist tab, the codes, and the approval email. It also gives
   Suspend, Lift, and Approve, the daily chart, the notice of a pause, and
   the waitlist switch.
-- On a phone the org settings put their five tabs in three columns, on two
+- On a phone the org settings put their six tabs in three columns, on two
   lines, so every tab shows. The session tabs all shrink, and the current one keeps the start
   of its title beside its close button. When the session tabs still do not
   fit, their row scrolls sideways. A phone tab stays 40 px high to touch,

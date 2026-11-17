@@ -2,7 +2,7 @@ import type { AgentModel } from '../../src/shared/generated/AgentModel'
 import type { Agent } from '../../src/shared/generated/Agent'
 import type { EndpointModelList } from '../../src/shared/account'
 
-/** Only the signed-in account projects discovered IDs into app IDs. */
+/** Maps saved endpoint IDs to model availability for settings and pickers. */
 export function endpointModelList(
   agent: Agent,
   savedIds: string | null,

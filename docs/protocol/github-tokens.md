@@ -26,7 +26,8 @@ a decision of the change that adds the
 - In an agent turn, Git and `gh` use the token of the person who sent that
   turn. Pushes and pull requests show as that person, as decision 50 requires.
 - Outside an agent turn, `gh` uses the workspace owner's GitHub account.
-  The terminal is shared, so this account is the same for each connection.
+  The members share the terminals, so this account is the same in each
+  terminal and for each connection.
 - A supplied turn ID must name a current turn. An unknown or ended turn
   never falls back to the workspace owner.
 - A trusted Continue job is the one other case. Its fetch gets the token
@@ -72,7 +73,7 @@ a decision of the change that adds the
   each agent turn name the workspace owner. An update of the sandbox
   software gives such a sandbox a newer runner at a later start, as
   [Updates](sandbox-software.md#updates) says.
-- Outside an agent turn, such as in the shared terminal or in the startup
+- Outside an agent turn, such as in the shared terminals or in the startup
   script, the author is the workspace owner.
 - The author of the first commit that the app pushes to an empty
   repository is the sender of the turn that creates the workspace.

@@ -188,7 +188,9 @@ of verified emails at each sign-in, and the explicit acceptance.
 The lifecycle stores the ID of the member who creates a workspace in
 `owner_user_id`, in the creation transaction.
 Reassignment changes the owner and update time only.
-Each session keeps the agent login of its starter.
+Each session keeps its fixed personal or org agent login.
+An org session serves current members after its starter leaves.
+A personal session still needs its login owner to remain a member.
 
 `activeAdminMemberPredicate(alias)` in [`active-admin.ts`](../data/active-admin.ts) is the one SQL rule of an active admin: the admin role, and a user whose account is not suspended.
 It accepts only the trusted aliases `m`, `access_member`, `org_members`, `remaining`, and `candidate`.

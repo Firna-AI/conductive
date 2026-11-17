@@ -1,4 +1,5 @@
 import type { Timestamp } from './generated/Timestamp'
+import type { Agent } from './generated/Agent'
 import { orgPath } from './api'
 import type { BaseImage } from './base-image'
 import type { SkillFolderClash } from './skill-folders'
@@ -7,9 +8,21 @@ export const orgSettingsPaths = {
   repositories: (orgId: string) => `${orgPath(orgId)}/repositories`,
   settings: (orgId: string) => `${orgPath(orgId)}/settings`,
   skills: (orgId: string) => `${orgPath(orgId)}/settings/skills`,
+  agentLogins: (orgId: string) => `${orgPath(orgId)}/agent-logins`,
   builds: (orgId: string) => `${orgPath(orgId)}/builds`,
   refresh: (orgId: string) => `${orgPath(orgId)}/image/refresh`,
 } as const
+
+export function orgAgentLoginPath(orgId: string, agent: Agent): string {
+  return `${orgSettingsPaths.agentLogins(orgId)}/${agent}`
+}
+
+export function refreshOrgAgentLoginModelsPath(
+  orgId: string,
+  agent: Agent,
+): string {
+  return `${orgAgentLoginPath(orgId, agent)}/models/refresh`
+}
 
 export function repositoryPath(orgId: string, repositoryId: string): string {
   return `${orgSettingsPaths.repositories(orgId)}/${encodeURIComponent(repositoryId)}`

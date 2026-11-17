@@ -54,7 +54,7 @@ Each path is relative to `src/marketing/` unless the link names another folder.
 - `links.ts`: the source repository address, the Mac app download
   addresses, `docsPath` for the docs, site paths, the section that the
   header marks, and `pageHrefs` for links from another origin.
-- `terms.ts`, `terms-org.ts`, `privacy.ts`, `privacy-uses.ts`,
+- `terms.ts`, `terms-service.ts`, `terms-org.ts`, `privacy.ts`, `privacy-uses.ts`,
   `privacy-recipients.ts`, and `legal-text.ts`: legal pages, the "Working
   in an org" section of the Terms, the "What Conductive uses, and why" and
   "Who gets your data" sections of the Privacy page, and the shared text
