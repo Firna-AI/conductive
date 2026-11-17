@@ -213,9 +213,9 @@ The orchestrator checks the combined result and owns the gate, review, and pull 
 - [x] Run `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, and `cargo test --workspace`.
 - [x] Run `cargo build --release --target x86_64-unknown-linux-musl -p cnd-cli`. Install the target and `musl-tools` if needed.
 - [x] Run the binding generator and verify that generated files have no uncommitted drift.
-- [ ] Audit deletions, commit with Conventional Commits, and push this workspace branch.
-- [ ] Run a fresh post-push review against `origin/main`. Check each finding with a fresh second pass. Apply the finish-work fix rule.
-- [ ] Complete the permitted fix rounds, verify their changes, and record any follow-up items.
+- [x] Audit deletions, commit with Conventional Commits, and push this workspace branch.
+- [x] Run a fresh post-push review against `origin/main`. Check each finding with a fresh second pass. Apply the finish-work fix rule.
+- [x] Complete the permitted fix rounds, verify their changes, and record any follow-up items.
 - [ ] Delete this plan after the other required TODOs pass. Commit and push the deletion.
 - [ ] Open a pull request into `main` only after the gate passes. Give the dated decisions, design calls, plan permalink, compatibility limits, and test evidence. Watch every CI run of the last commit before the final report. Do not merge the pull request.
 
