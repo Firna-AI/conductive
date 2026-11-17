@@ -65,8 +65,8 @@ first.
 - `session-management.ts`: `renameSession`, which the browser route and the
   tools share, and `stopManagedSession`, a tool stop with its idle reply.
 - `stop-request.ts`: `recordStopRequest`, which keeps the first requester in
-  `StoredTurn.stopRequest`, reads it from history for an older turn, and
-  emits `turn.stop-requested`.
+  `StoredTurn.stopRequest`, reads it from history only for an older record
+  without that field, and emits `turn.stop-requested`.
 - `tool-session-management.ts`: `manageToolSession`, the tool rename, close,
   and stop in one transaction, with the calling session as the stop source.
   `WorkspaceChat.manageToolSession` runs it in the queue.
@@ -210,4 +210,5 @@ first.
 - `session-record.ts`: `sessionFor`, the read of one session record.
 - `types.ts`: `ChatDependencies`, `ChatCallbackPublisher`, `ChatStorage`,
   `PreparedCommand`, `ResolvedCommand`, and the peer types.
-  `StoredTurn.stopRequest` is optional, because older records lack it.
+  `StoredTurn.stopRequest` is optional, because older records lack it. A
+  new record holds `null` until the first Stop request.

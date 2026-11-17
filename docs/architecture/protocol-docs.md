@@ -76,11 +76,16 @@ This page lists each protocol doc and what it covers.
     its events and their limits, its turns, the background work of Claude
     turns with its note and its time limit, its port reports, and the repair
     of lost workspace updates.
+    - [Background work of Claude turns](../protocol/background-work.md):
+      the wait of a Claude turn for background work, its note, and its time
+      limit.
     - [Listening ports](../protocol/listening-ports.md): the scanner's
       eligibility, labels, limits, and full reports.
     - [Lost workspace updates](../protocol/lost-workspace-updates.md): the
       reports that belong to no session, the repair request after a refused
       update, and the notice of a failed repair.
+    - [Runner warnings](../protocol/runner-warnings.md): the warnings of the
+      Worker for runner connections and for turn ends with no Stop request.
   - [Session transcripts](../protocol/session-transcripts.md): copying a
     session as concise or full Markdown, and the text of a copy.
     - [Transcript routes](../protocol/transcript-routes.md): the route of
@@ -214,6 +219,9 @@ This page lists each protocol doc and what it covers.
 - [Agent instructions](../protocol/agent-instructions.md): the text that each
   agent session gets, and the sender line and the branch line of each
   message.
+  - [Agent instructions: the sender line](../protocol/agent-instructions-sender-line.md):
+    the sender line of each message, and the access of a turn, which does
+    not depend on that line.
   - [Base prompts](../protocol/base-prompts.md): the base prompt of Claude
     agents and the base instructions of Codex agents.
   - [Agent instructions: how each agent gets them](../protocol/agent-instructions-delivery.md):

@@ -25,6 +25,7 @@ import { TurnEndReports, type TurnEndReport } from './turn-end-reports'
 import { ChatQueue, type QueueTurn } from './queue-turn'
 import { readChatMetadata, type ChatMetadata } from './store-metadata'
 import { SecretRequestRecords } from '../secrets/request-records'
+import type { RunnerDiagnosticIdentity } from './runner-diagnostics'
 
 export class ChatTransaction extends ChatRecords {
   readonly workspaceId: string
@@ -213,10 +214,11 @@ export class ChatStore {
     turnEnded: ConstructorParameters<typeof TurnEndReports>[0] = async () =>
       undefined,
     changed: (workspaceId: string) => Promise<void> = async () => undefined,
+    runner: () => RunnerDiagnosticIdentity | null = () => null,
   ) {
     this.storage = storage
     this.now = now
-    this.turnEnds = new TurnEndReports(turnEnded)
+    this.turnEnds = new TurnEndReports(turnEnded, runner)
     this.changed = changed
   }
 
