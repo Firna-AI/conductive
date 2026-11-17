@@ -45,9 +45,9 @@ This page belongs to [Workspace life](workspace-life.md).
   the checks. An archived mark stays still.
 - With reduced motion, the ring stays lit while the agent works. The middle
   column stays lit in blue while the agent needs input. The other cells
-  stay dim, so the state of the agent stays visible without motion. While only the
-  checks run, every cell stays lit, so the mark does not read as an agent
-  that works.
+  stay dim, so the state of the agent stays visible without motion. While
+  only the checks run, every cell stays lit, so the mark does not read as
+  an agent that works.
 - Bold text alone marks unread output. A green mark for unread output was
   rejected, because green means a pull request that is ready to merge.
 - An archived workspace shows a fainter grey mark, whatever its GitHub

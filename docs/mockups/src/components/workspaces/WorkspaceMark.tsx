@@ -104,7 +104,8 @@ function cellOf(
  * is dim grey.
  * A light runs around the ring while the agent works or the checks run.
  * While the agent needs input, the mark turns blue and pulses, whatever the
- * GitHub state. Every other mark is still. It imports no fixture value, so the app uses it too.
+ * GitHub state. Every other mark is still. It imports no fixture value, so
+ * the app uses it too.
  */
 export function WorkspaceMark(props: {
   github: GitHubSummary | null
