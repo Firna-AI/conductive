@@ -9,7 +9,7 @@ export interface WorkspaceParent {
   depth: number
 }
 
-export const parentAncestrySql = `WITH RECURSIVE ancestors AS (
+const parentAncestrySql = `WITH RECURSIVE ancestors AS (
   SELECT id, number, parent_workspace_id AS parentId, 0 AS depth, json_array(id) AS path
   FROM workspaces WHERE org_id = ?1 AND id = ?2
   UNION ALL
