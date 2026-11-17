@@ -94,16 +94,18 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         request. A skipped
         run keeps the GitHub login of the account outside the org whose
         event it skipped. They run the automations and show their runs.`,
-      text`Keys and logins: the env var values of each org, the values of
-        its secrets, and your agent logins. An own endpoint login holds the
-        endpoint address and its key. ${productName} stores these values
-        encrypted. It
-        uses your login only for the turns of the sessions that you start,
-        also the sessions that the runs of your automations start. The one
+      text`Keys and logins: the env var values and agent logins of each
+        org, the values of its secrets, and your personal agent logins. An
+        own endpoint login holds the endpoint address and its key.
+        ${productName} stores these values encrypted. It
+        uses a login only for the turns of sessions on it, including
+        automation runs. The one
         exception is that ${productName} reads an own endpoint's model list
         with its key, at the times in Endpoint models below.
-        The messages of other members in those sessions use it only when
-        you let other members use that login. ${productName} keeps agent
+        A personal login serves the sessions that its owner starts on it.
+        Other members use a personal login in those sessions only when its
+        owner allows it. Each member can send messages on a session's org
+        login. ${productName} keeps agent
         logins outside cloud computers. Each turn gets only a temporary
         credential for model requests through ${productName} while that
         turn runs. ${productName} renews your saved ChatGPT sign-in itself.
@@ -118,14 +120,17 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         workspace is archived. They let an agent use a secret in a command
         only after a member allows it.`,
       text`Endpoint models: ${productName} reads the endpoint's model list
-        with its key when you save the login or press Refresh on your account
-        page. When you save a Codex endpoint whose address gives no model
-        list, it can read the list a second time, at that address with /v1
-        added. When only that read gives a list, it saves the address with
-        /v1 added. It also reads the list in the background when a turn on
-        that login starts, at most once in 10 minutes. It stores the model
+        with its key when you or an admin save the login or select Refresh. For a
+        personal login, you use Refresh on your account page. For an org
+        login, an admin uses Refresh on the Agents tab of the org settings.
+        When you or an admin save a Codex endpoint whose address gives no
+        model list, it can read the list a second time, at that address with
+        /v1 added. When only that read gives a list, it saves the address
+        with /v1 added. It also reads the list in the background when a turn
+        on that login starts, at most once in 10 minutes. It stores the model
         IDs from the last list it could read to set the models in your
-        pickers.`,
+        pickers. For an org endpoint, that list sets the pickers of every
+        member on the org login.`,
       text`Own endpoints: ${productName} sends each model request of a turn
         on an own endpoint login to that endpoint, with its key. The endpoint
         gets the messages, the files, and the command results of each turn

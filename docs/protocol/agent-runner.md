@@ -98,8 +98,8 @@ the change that keeps a turn open for background work.
 - The Durable Object forwards each message, each message during a turn,
   each interrupt, and each change of the model, the effort, or the fast
   mode to the runner.
-- Each turn also brings a turn token for the agent login of the starter of
-  its session, as [The turn token](model-gateway.md#the-turn-token) says.
+- Each turn also brings a turn token for the login of its session, as
+  [The turn token](model-gateway.md#the-turn-token) says.
   No command carries the agent login itself, as
   [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
   says.

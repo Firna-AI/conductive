@@ -65,8 +65,9 @@ Each path is relative to `src/app/`, the folder of this page.
 - `org-list.ts`: `OrgList`, the orgs of the person in their own order, as
   `AppModel.orgs` gives them: the list that the server confirmed, then the
   moves that wait for their answer.
-- `org-writes.ts`: the requests of `AppModel.createOrg` and
-  `AppModel.renameOrg`, each of which reads the org record from its answer.
+- `org-writes.ts`: the requests of `AppModel.createOrg`,
+  `AppModel.renameOrg`, and `AppModel.setOrgColor`, which read the org record.
+  `putOrgOrder` saves the user's org order for `AppModel.moveOrg`.
 - `waitlist-model.ts`: `WaitlistModel`, the screen of a person who waits:
   the use of a code from the field or a join link, the invitations with
   Accept, and the read of the app access at each return to the page.
@@ -87,14 +88,21 @@ Each path is relative to `src/app/`, the folder of this page.
   `api/read-invitations.ts`: their readers.
 - `get-started.ts`: the order and the states of the steps of Get started.
   `setup-steps.ts`: `setupSteps`, the steps that the screens show, and
-  `setupOrg`, the org of Get started and of the address `/`.
+  `setupOrg`, the org of Get started and of the address `/`. The agent
+  step is complete with an own login or an org login that serves.
 - [getStartedCopy.ts](../../docs/mockups/src/screens/getStartedCopy.ts): the
   setup text that the app and mockups share.
 - `org-model.ts`: the sections, workspaces, repositories, builds, members,
-  automations, and computer settings of one org, with `watch`. `org-waits.ts`
-  gives the wait of each part, such as `workspacesWait`.
+  automations, computer settings, and org logins of one org, with `watch`.
+  `org-waits.ts` gives the wait of each part, such as `workspacesWait`.
   `OrgModel.startBuild` sends Build computer and Try again for each screen
   that offers them.
+- `org-agent-logins.ts`: `OrgAgentLogins`, the org logins of one org with
+  the save, the switch, Remove, and Refresh of an admin. Each save, switch
+  change, remove, and Refresh calls `changed`, which reads the default
+  logins of the account again, as [Login data](login-data.md#rules) says.
+  `api/read-org-logins.ts` reads them. `../shell/settings/AgentsTab.tsx`,
+  `OrgLoginList.tsx`, and `EveryMemberSetting.tsx` draw the Agents tab.
 - `secrets-model.ts`: `SecretsModel`, the secrets of one org with their
   create, Replace, delete, mark for all agents, and reveal.
   `api/read-secrets.ts` reads them and the capabilities of a workspace,
@@ -114,11 +122,14 @@ Each path is relative to `src/app/`, the folder of this page.
   workspace show until the org has a good image. `changedScriptNotice`
   gives the words of the notice of a changed install script, which the
   Cloud computer tab of an admin and of a member show.
+- `current-build.ts`: `currentBuild`, the build that new workspaces start
+  from: the current image build of the org, else its newest good build.
 - `api/read-automations.ts`: the readers of the automations, each with its newest run, and of one automation. `api/read-automation-runs.ts`: the readers of the runs.
 - `automation-model.ts`: `AutomationModel`, one automation with its reads, its
   saves, and its runs, and `automationModel`, the model that the org keeps for
   each automation. Its `client` sends the other requests of the automation page,
   and an `automation_not_found` from any of them reads the automation again.
+  Its `runLogin` is the login of the runs that the last answer names.
   `automation-actions.ts`: create, update, Turn off, Delete, and Run now,
   which also update the Automations list.
 - `automation-runs.ts`: `AutomationRuns`, the Runs list of one automation: the
@@ -157,6 +168,20 @@ Each path is relative to `src/app/`, the folder of this page.
   ChatGPT sign-in of Codex. `../shell/account/codex-sign-in.ts`:
   `CodexSignIn`, the steps, the polls, and the timer of that sign-in.
   `api/read-core.ts`: `loginUsable`, whether turns can run on a login.
+  After a save, a remove, a share change, or a connected sign-in,
+  `readDefaults` reads the logins of the agent again for the default
+  logins of the account, and `orgLoginChanged` does so after a change of
+  an org login.
+  `account-login-reads.ts`: `AccountLoginReads`, the one owner of the
+  reads of the logins. Each of its reads is a read of the whole account.
+  It also reads the account once when an org joins the orgs of the
+  person.
+  `login-owner.ts`: `loginOwnerName`, the name of the owner of a login,
+  the org or a member, for the label of the composer and the line under
+  the prompt of an automation.
+  `default-logins.ts`: `newSessionLogin`, the login of a new session of
+  the person in an org, from the default logins that the server names,
+  and the readers of those default logins for the screens.
 - `panels.ts`: `PanelLayout`, the widths of the panels, whether the right
   column shows, and `next`, the one rule of their steps.
 - `resource.ts`: `Resource`, a server value with its confirmed changes and
@@ -367,7 +392,8 @@ Each path is relative to `src/app/`, the folder of this page.
 - `../shell/automations/AutomationScreen.tsx`: the automation page and the page of
   a new automation. `AutomationEditor.tsx` is the form of the owner, and
   `AutomationReader.tsx` the read-only view of every other member, with Turn
-  off and Delete for an admin. `useAutomationSave.ts` is Save, with the login
+  off and Delete for an admin. Its line under the prompt names the login of
+  the runs that the answer names, with `loginOwnerName`. `useAutomationSave.ts` is Save, with the login
   that a save refused. `AutomationFrame.tsx` puts the Runs list beside the
   form on desktop, and on the Runs tab of a phone. It alone shows the
   notice of a suspended org, in every view of the page. `AutomationNote.tsx`
