@@ -92,3 +92,31 @@ agent login forms, and model lists in the web app.
   Sign in again and the `?connect=` address open its form with its kind.
   The composers and Get started count such a login as missing, so their
   Connect notice leads to that form.
+
+## The Agents tab of the org settings
+
+- The Agents tab of the org settings, at `/orgs/:orgId/settings/agents`,
+  follows Cloud computer. It shows the org login of each agent, as
+  [The Agents tab](../../docs/protocol/org-logins.md#the-agents-tab)
+  says. It reads the logins while it shows, and again at each return to
+  the page. Its words come from `orgAgentsCopy.ts` of the mockups.
+- An admin uses the parts of the account. `AgentConnectForm` with `org`
+  offers only API key and Own endpoint, and its words ask for a key of
+  the account of the org. Replace opens that form under the login, on the
+  kind of the login, and its main button says Replace. Remove asks no
+  question first.
+- `EndpointDetails` with `org` shows the note and the warning of the
+  saves and of Refresh of an org endpoint in this page, which
+  `OrgAgentLogins` keeps as the account keeps its own. Its line of the
+  models names the model pickers on the login. The answer of a save
+  holds the model list, so only Refresh reads the logins again.
+- The switch "Use for every member" saves at once. While it saves, it
+  shows the new value and takes no other change. A failed save shows its
+  cause under the hint until the next change, and the switch shows the
+  saved value.
+- A member who is not an admin, and each person in a suspended org, get
+  the tab with no action, form, switch, note, warning, or model list. Each
+  org login shows its kind, the host of an own endpoint, and the hint of
+  the value of its switch. An agent without an org login says Not
+  connected. Only a member gets the sentence that only an admin can change
+  the logins, because the notice of a suspended org says why.

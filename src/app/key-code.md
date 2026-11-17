@@ -87,10 +87,14 @@ Each path is relative to `src/app/`, the folder of this page.
 - [getStartedCopy.ts](../../docs/mockups/src/screens/getStartedCopy.ts): the
   setup text that the app and mockups share.
 - `org-model.ts`: the sections, workspaces, repositories, builds, members,
-  automations, and computer settings of one org, with `watch`. `org-waits.ts`
-  gives the wait of each part, such as `workspacesWait`.
+  automations, computer settings, and org logins of one org, with `watch`.
+  `org-waits.ts` gives the wait of each part, such as `workspacesWait`.
   `OrgModel.startBuild` sends Build computer and Try again for each screen
   that offers them.
+- `org-agent-logins.ts`: `OrgAgentLogins`, the org logins of one org with
+  the save, the switch, Remove, and Refresh of an admin.
+  `api/read-org-logins.ts` reads them. `../shell/settings/AgentsTab.tsx`,
+  `OrgLoginList.tsx`, and `EveryMemberSetting.tsx` draw the Agents tab.
 - `first-build.ts`: `firstBuildOf` and `useFirstBuild`, the state of the
   first build of an org from its builds, which Get started and New
   workspace show until the org has a good image. `changedScriptNotice`

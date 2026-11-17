@@ -195,6 +195,13 @@ of the data that the screens read and write.
 - The settings of the cloud computer are one value of the org in
   `OrgModel`. Every opening of the Cloud computer tab shares them, so a
   save from a closed tab shows in the reopened tab.
+- The org logins are one value of the org in `OrgModel.agentLogins`. A
+  save, a change of the switch "Use for every member", and a Remove show
+  in the order of the writes, and a read that started before a write
+  answered never takes it back, as `Resource` says. A change of the switch
+  shows at once, and a failed save takes it back. The note and the warning
+  of the saves and of Refresh of an org endpoint stay only in the memory of
+  the page, so a reload removes them.
 - The Cloud computer tab follows the builds while it shows. The builds,
   not the settings, say which saved changes the org image lacks, in
   `BuildsResponse.changes`. They read again while a build runs and at

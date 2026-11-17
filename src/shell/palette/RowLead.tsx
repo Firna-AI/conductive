@@ -62,6 +62,7 @@ const orgSettingIcons: Readonly<Record<SettingsTab, LucideIcon>> = {
   general: Settings2,
   repositories: FolderGit2,
   'cloud-computer': Server,
+  agents: Bot,
   members: Users,
 }
 

@@ -26,6 +26,7 @@ import { listWithArchives } from './archive-overlay'
 import { Creations } from './creations'
 import { workspaceUpdated, type ListData } from './list-changes'
 import { NewWorkspaceModel } from './new-workspace-model'
+import { OrgAgentLogins } from './org-agent-logins'
 import { buildsWait, listWait, onEntry, automationsWait } from './org-waits'
 import { Refresher, type Refreshing } from './refresh'
 import { Resource } from './resource'
@@ -39,15 +40,16 @@ import {
 } from './suspension'
 
 export type OrgPart =
-  'list' | 'repositories' | 'builds' | 'members' | 'automations'
+  'list' | 'repositories' | 'builds' | 'members' | 'automations' | 'agentLogins'
 
 /**
  * The data of one org: its list of sections and workspaces, its
  * repositories, the builds and settings of its cloud computer, its
- * members, and its automations. A part reads while a screen shows it, as
- * `watch` says. The Cloud computer tab reads the settings itself. Each
- * request of the org that the API refuses with `org_suspended` goes to
- * `suspension`, so a page with an old org list learns of the suspension.
+ * members, its automations, and its org logins. A part reads while a
+ * screen shows it, as `watch` says. The Cloud computer tab reads the
+ * settings itself. Each request of the org that the API refuses with
+ * `org_suspended` goes to `suspension`, so a page with an old org list
+ * learns of the suspension.
  */
 export class OrgModel {
   readonly orgId: string
@@ -81,6 +83,8 @@ export class OrgModel {
   readonly builds: Readable<Loadable<BuildsResponse>>
   readonly members: Readable<Loadable<MembersResponse>>
   readonly automations: Readable<Loadable<readonly ListedAutomation[]>>
+  /** The org logins of the agents, which the Agents tab shows. */
+  readonly agentLogins: OrgAgentLogins
   /** The create requests of this tab, which a sign-out ends. */
   readonly creations = new Creations()
   /** The GitHub access of the signed-in member, by repository ID. */
@@ -137,12 +141,18 @@ export class OrgModel {
     this.builds = builds.store
     this.members = members.store
     this.automations = automations.store
+    this.agentLogins = new OrgAgentLogins(api, orgId)
     this.parts = {
       list: new Refresher(list, listWait, this.services),
       repositories: new Refresher(repositories, onEntry, this.services),
       builds: new Refresher(builds, buildsWait, this.services),
       members: new Refresher(members, onEntry, this.services),
       automations: new Refresher(automations, automationsWait, this.services),
+      agentLogins: new Refresher(
+        this.agentLogins.resource,
+        onEntry,
+        this.services,
+      ),
     }
   }
 

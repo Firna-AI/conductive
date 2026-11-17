@@ -41,7 +41,8 @@ other pages.
   buttons, as `app/org-settings/agents/form/not-saved` shows.
   `OrgAgents.tsx` in `src/components/settings/` draws the tab, with
   `AgentConnectForm`, `EndpointFields`, and `EndpointDetails` of the
-  account. `EndpointDetails` draws the host, the note, the warning, and
+  account. `orgAgentsCopy.ts` beside it holds the words of the tab, which
+  the app shares. `EndpointDetails` draws the host, the note, the warning, and
   the model list of an own endpoint, with one Refresh, as on the account.
 - Under each org login, the switch "Use for every member" of decision 7 B
   starts off. While it is off, the org login serves each member with no

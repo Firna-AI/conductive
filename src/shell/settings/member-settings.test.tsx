@@ -37,6 +37,7 @@ import {
 import { serveSuspendedAcme } from '../../test-support/suspended-org'
 import { mountScreen } from '../test-mount'
 import { startedApp, textOf } from '../test-render'
+import { gatewayLogin, noLogin, serveOrgLogins, words } from './agents-test-kit'
 import { OrgSettingsScreen } from './OrgSettingsScreen'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
@@ -70,15 +71,27 @@ function line(eventNumber: number, text: string): BuildLogEvent {
 }
 
 describe('the org settings of a member who is not an admin', () => {
-  test('a member sees General, Repositories, and Cloud computer without edit controls, and each Secret mark as a word', async () => {
+  test('a member sees General, Repositories, Cloud computer, and Agents without edit controls, each Secret mark as a word, and the value of the switch of an org login as its hint', async () => {
     holdAnimationFrames()
-    const { settings } = await signedIn(new FakeApiServer({ role: 'member' }))
+    const server = new FakeApiServer({ role: 'member' })
+    // The read holds a model list, which the Worker gives only to an admin,
+    // so the test shows that the tab keeps it from a member.
+    serveOrgLogins(server, [
+      gatewayLogin('claude', ['Fable 5.1'], true),
+      noLogin('codex'),
+    ])
+    const { settings } = await signedIn(server)
     const general = settings('general')
     const repositories = settings('repositories')
     const computer = settings('cloud-computer')
+    const agents = settings('agents')
     await waitFor(
       () => queryByRole('list', 'Repositories', repositories),
       'the repositories of Acme',
+    )
+    await waitFor(
+      () => queryByRole('list', 'Agents', agents),
+      'the org logins of Acme',
     )
     await waitFor(
       () => textOf(computer.innerHTML).includes('Startup script'),
@@ -88,6 +101,7 @@ describe('the org settings of a member who is not an admin', () => {
       general: general.innerHTML,
       repositories: repositories.innerHTML,
       'cloud computer': computer.innerHTML,
+      agents: agents.innerHTML,
     }
     for (const [page, html] of Object.entries(pages)) {
       expect(html, page).not.toMatch(/<button|<input|<textarea|role="switch"/)
@@ -97,10 +111,14 @@ describe('the org settings of a member who is not an admin', () => {
       'General',
       'Repositories',
       'Cloud computer',
+      'Agents',
       'Members',
     ])
     expect(textOf(pages.general)).toContain(
       'Org Only an admin can change it. Name Acme Initials AC',
+    )
+    expect(textOf(pages.agents)).toContain(
+      `Agents ${words.description} ${words.memberNote} Claude Connected Own endpoint at llm.acme.example.com Every new session uses it, also for members with a login of their own. Codex Not connected`,
     )
     const listed = textOf(pages.repositories)
     expect(listed).toContain(

@@ -158,6 +158,18 @@ The development fake keeps each org's workspace number counter.
 A create gets the next number and a web link on the fake API origin.
 Workspace readers keep the number and link that the Worker supplies.
 
+The development fake serves the org logins through `dev/org-login-routes.ts`,
+in a private route closure, as the Worker does. Each member reads them, and
+only an admin of an active org gets the model list of an own endpoint. Only
+an admin saves, changes the switch "Use for every member", removes, or
+refreshes. The saves and Refresh use the fake hosts of the account above,
+so a save of `https://no-models.example.test` shows the warning, and a Codex
+save of `https://v1-only.example.test` shows the `/v1` note.
+`?orgLogin=endpoint` gives Acme an org login of Claude on its gateway, whose
+last model list names every Claude model. `?orgLogin=unlisted` gives a list
+without the last Claude model. With `?shareSave=fail`, each change of the
+switch fails. A reload starts again from the options.
+
 The development fake saves shortcut batches through `dev/shortcut-routes.ts`.
 It checks the whole batch with the shared reader before it changes state.
 It keeps each keyboard separate, preserves empty key lists, and removes

@@ -48,6 +48,9 @@ const PATHS = ['plain', 'masked'] as const
 /** Endpoint model lists and hosts for save and Refresh previews. */
 const MODEL_LISTS = ['unlisted', 'none', 'v1-only', 'read-failed'] as const
 
+/** The org login seeds of Acme. */
+const ORG_LOGINS = ['endpoint', 'unlisted'] as const
+
 /** The states of the invite code of the user, besides the pause. */
 const INVITE_CODES = ['left', 'used-up', 'disabled'] as const
 
@@ -78,6 +81,9 @@ type DevInviteCode = (typeof INVITE_CODES)[number]
  *   host that lists only under /v1, or the host that never lists models.
  *   With `read-failed`, the Claude login keeps a list from a day before
  *   that does not name the last Claude model of the app.
+ * - `orgLogin=endpoint|unlisted`: Acme has an org login of Claude on its
+ *   gateway, whose last model list names every Claude model of the app,
+ *   or lacks the last one.
  * - `deleted=1`: Acme is deleted, as its admins see it.
  * - `suspended=1`: the operator suspended Acme. Each write of Acme gets
  *   `org_suspended`, except a leave, as the Worker does.
@@ -92,8 +98,9 @@ type DevInviteCode = (typeof INVITE_CODES)[number]
  *   keeps uploading, or the first part of the page fails at each of its
  *   sends, so its chip fails once, after the waits of its retries of about
  *   7 seconds, and Try again works.
- * - `shareSave=fail`: each change of the share setting of an agent login
- *   fails, so the account shows that the change was not saved.
+ * - `shareSave=fail`: each change of the share setting of an agent login,
+ *   and of the switch "Use for every member" of an org login, fails, so
+ *   the page shows that the change was not saved.
  * - `runs=failed|skipped`: the Runs list of Review pull requests holds a
  *   failed run of each cause, or the skipped runs of accounts outside Acme.
  * - `run=pull-request|schedule`: `checkout-autocomplete` is the workspace
@@ -127,6 +134,8 @@ export interface DevOptions {
   endpointLogins: boolean
   /** The seeded endpoint model list or the fake endpoint host. */
   modelList: (typeof MODEL_LISTS)[number] | null
+  /** The seeded org login of Acme, or `null` for none. */
+  orgLogin: (typeof ORG_LOGINS)[number] | null
   deleted: boolean
   suspended: boolean
   operator: boolean
@@ -183,6 +192,7 @@ export function readDevOptions(search: string): DevOptions {
     noAgentLogin: params.get('login') === 'none',
     endpointLogins: params.get('login') === 'endpoint',
     modelList: pick(params, 'modelList', MODEL_LISTS) ?? null,
+    orgLogin: pick(params, 'orgLogin', ORG_LOGINS) ?? null,
     deleted: params.get('deleted') === '1',
     suspended: params.get('suspended') === '1',
     operator,

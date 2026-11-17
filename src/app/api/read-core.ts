@@ -7,6 +7,7 @@ import {
   NEW_WORKSPACE_VIEWS,
   type AccountResponse,
   type AgentLoginStatus,
+  type EndpointModelList,
   type GitHubInstallation,
   type GitHubInstallationsResponse,
   type GitHubRepositoriesResponse,
@@ -126,6 +127,15 @@ export function readModel(value: unknown): AgentModel {
   }
 }
 
+/** The last model list of an own endpoint login that the Worker read. */
+export function readEndpointModelList(value: unknown): EndpointModelList {
+  const list = record(value, 'endpoint model list')
+  return {
+    missing: texts(list, 'missing'),
+    checkedAt: count(list, 'checkedAt'),
+  }
+}
+
 export function readLogin(value: unknown): AgentLoginStatus {
   const login = record(value, 'agent login')
   const agent = choice(login, 'agent', AGENTS)
@@ -140,15 +150,7 @@ export function readLogin(value: unknown): AgentLoginStatus {
       host: text(login, 'host'),
       ...(login.modelList === undefined
         ? {}
-        : {
-            modelList: nested(login, 'modelList', (value) => {
-              const list = record(value, 'endpoint model list')
-              return {
-                missing: texts(list, 'missing'),
-                checkedAt: count(list, 'checkedAt'),
-              }
-            }),
-          }),
+        : { modelList: nested(login, 'modelList', readEndpointModelList) }),
       noReuse,
       updatedAt,
     }
