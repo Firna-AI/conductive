@@ -18,7 +18,7 @@ beforeAll(async () => {
 beforeEach(async () => harness.reset())
 afterAll(async () => harness.dispose())
 
-it('encrypts the endpoint and key and gives the host to members and models only to admins', async () => {
+it('encrypts the endpoint and key and gives members the host and selected model availability', async () => {
   const api = await orgLoginFixture(harness)
   const response = await api.save({
     agent: 'claude',
@@ -42,7 +42,19 @@ it('encrypts the endpoint and key and gives the host to members and models only 
     modelList: { missing: ['other-claude'], checkedAt: TEST_TIME },
   })
   const adminRead = await (await api.read()).text()
+  const defaultLogins = [
+    {
+      orgId: api.org.id,
+      orgName: api.org.name,
+      agent: 'claude',
+      login: { type: 'org', orgId: api.org.id },
+      modelList: { missing: ['other-claude'], checkedAt: TEST_TIME },
+      orgModelList: { missing: ['other-claude'], checkedAt: TEST_TIME },
+    },
+    { orgId: api.org.id, orgName: api.org.name, agent: 'codex', login: null },
+  ]
   expect(JSON.parse(adminRead)).toEqual({
+    defaultLogins,
     agentLogins: [
       {
         ...metadata,
@@ -53,6 +65,7 @@ it('encrypts the endpoint and key and gives the host to members and models only 
   })
   const memberRead = await (await api.read(api.member)).text()
   expect(JSON.parse(memberRead)).toEqual({
+    defaultLogins,
     agentLogins: [metadata, { agent: 'codex', connected: false }],
   })
   for (const body of [adminRead, memberRead]) {

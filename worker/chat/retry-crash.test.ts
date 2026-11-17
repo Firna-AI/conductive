@@ -55,6 +55,7 @@ async function runningFixture() {
   })
   const failedSession = {
     ...session,
+    login: { type: 'personal', userId: fixture.owner.id },
     title: 'Check this code',
     retryMessageId: 'original',
   }
@@ -176,6 +177,7 @@ it('keeps the full accepted retry after a crash immediately after its commit', a
   await fixture.restart()
   const retrySession = {
     ...session,
+    login: { type: 'personal', userId: fixture.owner.id },
     title: 'Check this code',
     activeTurnId: 'retry-turn',
   }

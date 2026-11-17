@@ -9,6 +9,7 @@ import type { RequestContext } from '../security/gate'
 import { sendMessage } from './inputs'
 import { acceptMessage, existingMessage } from './messages'
 import type { ChatOperation } from './operation'
+import { SessionLogins } from './session-login'
 import { sessionFor } from './session-record'
 import { createSession, sameAgent } from './sessions'
 import type { ChatDependencies } from './types'
@@ -37,23 +38,26 @@ export async function send(
       'session_closed',
       'Reopen the session to send a message.',
     )
-  const { session: observed, login } = await operation.logins.observe(
-    sessionId,
-    undefined,
-    user.id,
-  )
+  const {
+    session: observed,
+    login,
+    owner,
+  } = await operation.logins.observe(sessionId, undefined, user.id)
   let linked = false
+  let targetLogin = owner
   if (!login) {
-    const ownLogin =
-      source.startedBy?.id === user.id
-        ? null
-        : await operation.logins.forMember(user.id, input.choice.agent)
-    if (!ownLogin || ownLogin.agent !== input.choice.agent)
+    const defaultLogin = await SessionLogins.resolve(
+      dependencies,
+      user.id,
+      input.choice.agent,
+    )
+    if (!defaultLogin)
       throw new HttpError(
         409,
         'agent_login_required',
         'Connect your agent login to send a message.',
       )
+    targetLogin = defaultLogin.owner
     linked = true
   }
   return operation.change(async (transaction) => {
@@ -66,6 +70,7 @@ export async function send(
           user,
           dependencies,
           observed.id,
+          targetLogin ?? undefined,
         )
       : source
     const attachments = await dependencies.resolveAttachments(
@@ -75,6 +80,10 @@ export async function send(
       input.id,
       await transaction.usedAttachments(input.attachmentIds, user.id),
     )
+    if (!target.login && targetLogin) {
+      target.login = targetLogin
+      await transaction.saveSession(target)
+    }
     const response = await acceptMessage(
       transaction,
       target.id,

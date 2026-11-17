@@ -6,7 +6,7 @@ import {
   type TestHarness,
 } from '../test-support/harness'
 import { CLAUDE, createChatFixture, WORKSPACE_ID } from './harness.test-support'
-import { readAgentLogin } from './queries'
+import { readSessionLogin } from './queries'
 describe('committed session login observations', () => {
   let harness: TestHarness
   beforeAll(async () => {
@@ -20,13 +20,13 @@ describe('committed session login observations', () => {
   })
   it('publishes and keeps unavailable login state when the starter Send is refused', async () => {
     const fixture = await createChatFixture(harness, {
-      resolveLogin: async (userId, agent) => {
-        if (userId === null) return null
-        const login = await readAgentLogin(harness.env, userId, agent)
+      resolveLogin: async (owner, agent) => {
+        if (owner?.type !== 'personal') return null
+        const login = await readSessionLogin(harness.env, owner, agent)
         await harness.env.DB.prepare(
           'DELETE FROM agent_logins WHERE user_id = ?',
         )
-          .bind(userId)
+          .bind(owner.userId)
           .run()
         return login
       },

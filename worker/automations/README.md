@@ -54,9 +54,13 @@ View writes cannot change these saved run facts.
 It checks the current owner membership, the owner and org suspension, and org deletion inside SQL.
 Scheduled and pull request runs also need an active automation.
 `startAutomationRun` checks access again before a new create and skips a queued run that cannot start.
-It checks the owner's agent login and fresh GitHub access before the create.
-The first session uses the owner's own login, independent of its share setting.
+It checks the owner's default agent login and fresh GitHub access before the create.
+The shared resolver chooses the usable personal or org login.
+The org's preference switch controls their order.
+The first session fixes that login at its first accepted message.
+The personal share setting does not restrict the owner's own run.
 The runner gets only a turn token for that login through the model gateway.
+GitHub access and Mac commands still act as the owner.
 It calls the existing workspace create and first-message admission paths.
 It does not wait for cloud computer startup.
 A repeat with a creation attempt uses its original sender and bypasses the automation access and login checks.

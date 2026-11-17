@@ -55,6 +55,13 @@ View writes cannot change this branch.
   so a screen links to that page without a GitHub read. A login write
   encrypts the secret with `agentLoginContext(userId, agent)` and
   `BOAT_KEY_ENCRYPTION_KEY`. No reply holds a stored secret.
+- Account and org-login reads include additive `defaultLogins` entries for
+  each current org and agent. [`default-agent-logins.ts`](default-agent-logins.ts)
+  uses the common login access query and default order from `worker/chat/`.
+  Each entry names the selected personal or org owner, or null when neither serves.
+  An endpoint entry includes the model availability used by member pickers.
+  Its separate `orgModelList` serves fixed org sessions even when the default is personal.
+  Suspended orgs give no usable default or model list. Deleted orgs are absent.
 - `GET /api/account/stats` returns `AccountStats` from the
   [account contract](../../src/shared/account.ts) for the signed-in user
   only. [`account-stats.ts`](account-stats.ts) reads every count from D1 in
@@ -75,7 +82,8 @@ View writes cannot change this branch.
   Replace keeps the switch across kinds. A switch write changes no login
   version. [`org-agent-login-read.ts`](org-agent-login-read.ts) returns
   metadata for both agents, with a disconnected entry for an absent login.
-  Only an admin of an active org receives model details. No reply holds
+  Only an admin of an active org receives `agentLogins.modelList`.
+  The selected default's model availability also serves member pickers. No reply holds
   ciphertext, a key, or a full address. Save and Refresh report model read
   failures. Endpoint saves also report whether they added `/v1`.
   [Org logins](../../docs/protocol/org-logins.md) states the requirements.
@@ -158,6 +166,8 @@ View writes cannot change this branch.
   A connected Codex login can carry `unusableCause` after a refused renewal.
   Reconnect clears the failure and its refresh claim.
 - Get started has only the steps `github-app`, `org`, and `agent-login`.
+  The agent step completes with a usable personal login or an org login.
+  `get-started-data.ts` uses the same default resolver as message admission.
 - Create org requires at least one repository. `createShellOrg` starts its
   first image build after it saves the org, its admin, and its repositories.
   A failed build start writes one fixed warning through `warnWorker`.

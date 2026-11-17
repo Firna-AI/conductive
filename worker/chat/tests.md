@@ -134,6 +134,12 @@ npm run typecheck
   refused Send, and that a repeated message ID observes nothing.
   `linked-retry.test.ts` also restarts after a crash at the acceptance of a
   linked Retry. It checks each stored record, and a stale Retry gets 409.
+- `org-logins.test.ts` covers first-message selection, current-member access
+  after the starter leaves, preference changes, personal fallback, and linked retries after removal.
+  It also checks unusable personal logins and the refused org endpoint cause.
+  `org-login-legacy.test.ts` checks stored sessions with and without messages,
+  and an empty session that changes its agent before admission.
+  `org-login.test-support.ts` saves org logins through the real API.
 - `login-reuse.test.ts` tests a starter who does not share the login.
   Another member gets an empty linked session, and the first session keeps
   `loginAvailable: true` with `loginShared: false`. A queued message of
@@ -148,6 +154,8 @@ npm run typecheck
 - `turn-dispatch.test.ts` checks that a runner disconnect during the
   registration of a turn undoes that registration before any send.
 - [Gateway tests](../model-gateway/README.md) cover stable turn tokens, login changes, Stop, late events, and retry through chat.
+  `../model-gateway/org-logins.test.ts` checks org replacement, switch stability,
+  starter departure, retry with the new key, and current-sender suspension.
   [runtime.test.ts](../model-gateway/runtime.test.ts) evicts the production SQLite object after a saved gateway Stop.
   It checks the retained interrupt, one failure with its cause after duplicate runner ends, late changed files, and the Retry message.
   `integration/gateway-entry.test-support.ts` adds test-only token issuance and a fetch wrapper for the production workspace RPC.

@@ -527,6 +527,62 @@ Milestone 3 added these calls on 17 November 2026. Each is the agent's call.
   carries the transient `/v1` and failed-read flags. Reason: the replies
   reuse the public metadata reader and return no encrypted fields.
 
+The session milestone added these calls on 17 November 2026. Each is the
+agent's call.
+
+- `Session.login` uses a tagged owner: `personal` with `userId`, or `org`
+  with `orgId`. The Rust field is optional and omits an absent value.
+  Reason: empty sessions and older clients keep their current wire shapes.
+  The Rust value is boxed to keep the tool reply enums small. Its JSON is
+  unchanged by the box.
+- `ChatRecords.session` checks the durable newest-turn record before it
+  normalizes a session without a login. Reason: a finished older session
+  can have messages without an active turn or retry message. It must keep
+  its starter's personal login. An empty session remains unset.
+- `readLoginAccess` reads public access and metadata in one query for a
+  batch of session targets. Credential reads use that same access helper.
+  Reason: sessions, the gateway, account reads, Get started, and automation
+  runs must share the membership and suspension rules without metadata
+  reads decrypting a secret.
+- The default resolver accepts an excluded candidate when its credential
+  cannot be used. Admission can then try the other login with the same
+  ordering rule. Reason: a refused full endpoint or obsolete personal
+  token must not prevent a usable org login from serving the member.
+- Account and org-login reads add `defaultLogins` without changing existing
+  fields. Each entry names the org, agent, and selected owner. An endpoint
+  entry also carries the existing missing-model projection and read time.
+  Rust exports these dependent types with `SessionLogin`. Reason: the
+  forms and member pickers need the server's selected login and its model
+  availability, without a secret or a second ordering rule.
+- Each default entry also carries `orgModelList` while a usable org
+  endpoint has a model list. Reason: an older session can keep the org
+  login after its member's default returns to a personal login. Its
+  picker still needs the org's availability under decision 3.
+- An empty session shows metadata for its starter's current default, but
+  saves no owner before its first accepted message. Reason: a preference
+  change before that message must apply, while existing personal sharing
+  and creator rules stay in force.
+
+Milestone 5 added these calls on 17 November 2026. Each is the agent's call.
+
+- The words of the Agents tab moved from `OrgAgents.tsx` to
+  `orgAgentsCopy.ts` beside it, which imports nothing. The mockups and the
+  app import them from there. Reason: `OrgAgents.tsx` imports `ScreenLink`
+  and fixtures, which the app never imports, as `src/app/README.md` says.
+  `endpointReadCopy.ts` holds its words in the same way.
+- `OrgModel` holds the org logins as its part `agentLogins`. The tab reads
+  them each time that it opens and at each return to the page, as the
+  Repositories and Members tabs read their data. Reason: one model of the
+  org keeps the note and the warning until a reload, and `Resource` shows
+  the writes in their order.
+- A Connect form that is open when its agent gets an org login, such as
+  from a save of another admin, becomes a Replace form. Reason: its save
+  then replaces that login.
+- A failed read of the tab says "The agent logins did not load", with Try
+  again, as the other tabs do. A failed Remove shows the toast "Claude
+  wasn't removed.", as the account does. Reason: the mockups draw neither
+  state.
+
 ## Components
 
 - D1: a table `org_agent_logins` keyed by `org_id` and `agent`, with
@@ -706,33 +762,36 @@ proofs. The final report is `.context/org-shared-logins/m3-report.md`.
 
 Depends on: 3
 
-- [ ] Add `login` to the session, and its default in `normalizeSession`.
-- [ ] Add the default login resolver of decisions 6 and 7, and the access
+- [x] Add `login` to the session, and its default in `normalizeSession`.
+- [x] Add the default login resolver of decisions 6 and 7, and the access
       helper. With the switch on, a usable org login comes first. Without a
       usable org login, the own login serves.
-- [ ] Move the first message, the send, the linked session, and
+- [x] Move the first message, the send, the linked session, and
       `worker/chat/tool-session-write.ts` to the resolver.
-- [ ] Move `worker/model-gateway/workspace.ts`,
+- [x] Move `worker/model-gateway/workspace.ts`,
       `worker/model-gateway/login.ts`, `worker/chat/delivery-state.ts`,
       `worker/chat/model-changes.ts`, and `readLoginMetadata` to the login
       of the session.
-- [ ] Move `worker/app-api/get-started-data.ts` to decision 4.
-- [ ] Name the default login for each org and agent in the account
+- [x] Move `worker/app-api/get-started-data.ts` to decision 4.
+- [x] Name the default login for each org and agent in the account
       response, from the resolver, as option F of decision 6 says. The new
       workspace form, the automation form, Get started, and the account page
       of Milestone 6 show it.
-- [ ] Move `worker/automations/run-starter.ts` to decision 5.
-- [ ] Update the READMEs that name the login functions of the Worker:
+- [x] Move `worker/automations/run-starter.ts` to decision 5.
+- [x] Update the READMEs that name the login functions of the Worker:
       `worker/chat/access.md`, `worker/chat/README.md`, `key-code.md`,
       `tests.md`, `integration/README.md`, `integration/session-logins.md`,
       `integration/logins-and-attachments.md`,
       `worker/model-gateway/README.md`, `worker/automations/README.md`,
       `worker/members/README.md`, and
       `worker/operator/suspension-access.md`.
-- [ ] Tests: a first message on the org login, a message of another member
+- [x] Tests: a first message on the org login, a message of another member
       in that session, an org login replaced during a turn, removed before
       a waiting message, decision 6 order, the switch of decision 7 on and
       off, decision 5, and an older stored session.
+
+Evidence: `.context/org-shared-logins/m4/` holds the check logs and failure
+proofs. The final report is `.context/org-shared-logins/m4-report.md`.
 
 ## Milestone 5: The Agents tab of the org settings
 
@@ -740,25 +799,28 @@ Tags: ui
 
 Depends on: 1, 2b, 3
 
-- [ ] Add the Agents tab to the org settings under `src/shell/settings/`,
+- [x] Add the Agents tab to the org settings under `src/shell/settings/`,
       with the parts of the account form, as the mockups show.
-- [ ] Show the read-only tab to a member.
-- [ ] Add the Agents tab to the routes in `src/app/router.ts`, to the tab
+- [x] Show the read-only tab to a member.
+- [x] Add the Agents tab to the routes in `src/app/router.ts`, to the tab
       list in `src/shell/settings/OrgSettingsScreen.tsx`, and to the rows of
       `src/app/palette/commands.ts`, as `app/command-palette/settings`
       shows.
-- [ ] Take the words of the tab from `orgAgentsCopy` in
+- [x] Take the words of the tab from `orgAgentsCopy` in
       `docs/mockups/src/components/settings/OrgAgents.tsx`. Replace opens
       the form under the login, as `app/org-settings/agents/form/replace`
       shows.
-- [ ] Show the note and the warning of the model list reads to an admin,
+- [x] Show the note and the warning of the model list reads to an admin,
       as `app/org-settings/agents/endpoint-models` and its variants show.
       Give `EndpointDetails` and `EndpointModels` of `src/shell/account/`
       the org owner, and do not copy them. Keep the answers of the save and
       of Refresh in the page until it reloads, as the account does. A
       member sees neither, as `app/org-settings/agents/member/endpoints`
       shows.
-- [ ] Check the tab in a browser against the mockups.
+- [x] Check the tab in a browser against the mockups.
+
+Evidence: `.context/org-shared-logins/m5/` holds the screenshots of the
+browser check, the check logs, and the failure proofs of the tests.
 
 ## Milestone 6: Account page, composer, Get started, and forms
 

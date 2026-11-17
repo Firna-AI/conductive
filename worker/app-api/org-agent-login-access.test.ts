@@ -142,6 +142,12 @@ it('omits model details from suspended org reads and refuses its login writes', 
     .bind(TEST_TIME, api.org.id)
     .run()
   expect(await (await api.read()).json()).toEqual({
+    defaultLogins: ['claude', 'codex'].map((agent) => ({
+      orgId: api.org.id,
+      orgName: api.org.name,
+      agent,
+      login: null,
+    })),
     agentLogins: [
       {
         agent: 'claude',

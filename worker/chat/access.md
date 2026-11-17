@@ -91,40 +91,39 @@ The Durable Object runs the gates itself.
 - The runner's declared login kinds and the shared rule
   `runnerSupportsLogin` also govern delivery. A runner without a declared
   list gets no ChatGPT sign-in command.
-- `SessionLogins` reads the login of each runner command. Its credential
-  path uses `readLogin` in `login-access.ts`, which calls `resolveLogin`. It
-  reads the agent login of a starter or of a linked-session member, for one
-  agent. `resolveLogin` first checks the workspace, that user, the sender,
-  and the runner token in one D1 read. The workspace must pass the token
-  rule above, without the token. That user and the sender must be members
-  who are not suspended. The same read checks the share setting of the
-  login, `agent_logins.no_reuse`, before it reads a secret. An override
-  replaces only the login read. A refusal to share keeps the starter's own
-  login available, so `SessionLogins.observe` stores
-  `loginAvailable: true` and `loginShared: false`. Send uses the existing
-  empty linked session, and queued member commands cannot receive the
-  starter's login, or a turn token for it, while the starter does not share
-  it.
-- Two other paths read a login without `SessionLogins`. `admitFirstMessage`
-  in `first-message.ts` calls `resolveLogin` to require a stored login of
-  the sender. The [model gateway](../model-gateway/README.md) reads the
-  starter's login with `gatewayLogin` at each model request of a turn. It
-  checks the access of the starter again first.
-- The `SessionLogins` metadata path uses `readLoginMetadata`.
-  It reads only each starter's membership, suspension, stored login kind,
-  login failure state, and share setting.
-  One D1 query returns a map of `SessionLoginMetadata` by session ID.
-  A valid login gives `loginAvailable: true`, and `loginShared` is true
-  when `no_reuse` is 0. A missing or invalid login gives false for both.
-  The workspace must also pass the token rule above. So a suspended starter
-  or a refused workspace shows an unavailable login. The result sets only
-  `loginAvailable` and `loginShared`, so the session list, the history, and
-  the event subscription stay readable. It reads no ciphertext.
+- `readLoginAccess` in `login-access-data.ts` owns the access and public
+  metadata query. It checks the workspace, the sender, and an optional
+  runner token together. A personal login also needs its owner to remain
+  a member who is not suspended. An org login must belong to the workspace's
+  active org. Its starter need not remain a member.
+- `defaultLogin` in `default-login.ts` owns the default order. A usable
+  personal login comes first. A usable org login comes first while its
+  `use_for_every_member` switch is on. Either serves while the other cannot.
+  `resolveDefaultLogin` uses the common access query for one member.
+- `SessionLogins.resolve` checks that default's credential before a first
+  message, tool session, or linked session accepts it. If a credential is
+  unusable, the resolver tries the other candidate. Empty sessions keep
+  their login unset until their first accepted message.
+- `SessionLogins.observe` checks the fixed `Session.login` before each
+  message and runner command. `readLogin` in `login-access.ts` checks access
+  before its credential reader. An override replaces only that reader.
+  Personal sharing still uses `agent_logins.no_reuse`. A sharing refusal
+  keeps `loginAvailable: true` and sets `loginShared: false`.
+  An org session always has `loginShared: true`.
+- The [model gateway](../model-gateway/README.md) uses the same access helper
+  before it reads the session login at each request. It checks the current
+  sender, and checks owner membership only for a personal login.
+- `readLoginMetadata` uses one common access query for all requested
+  sessions. It checks membership, suspension, login kind, failure state,
+  endpoint origin, and personal sharing without reading ciphertext.
+  It returns `loginAvailable` and `loginShared` by session ID. A missing
+  login is unavailable. An org session remains shared after removal.
+  These observations leave history and event subscriptions readable.
 - A revoked or replaced runner token closes that connection without a
   login or a turn token, and the command stays queued. A sender who left
   the org gets neither. [Session logins](integration/README.md#session-logins)
-  says when the workspace checks the starter's login. The storage never
-  holds a login or a turn token. A turn keeps only a random nonce and the
+  says when the workspace checks the session login. The storage never
+  holds a credential or a turn token. A turn keeps only a random nonce and the
   login version. So a resend derives the same turn token, also
   after a restart of the workspace object.
 

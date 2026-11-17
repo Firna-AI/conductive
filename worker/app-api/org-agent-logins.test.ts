@@ -53,6 +53,12 @@ it('lets an admin save one encrypted API key per agent and members read only met
     ).toEqual({ agent, kind: 'api-key', secret: 'keyone' })
   }
   expect(await (await api.read(api.member)).json()).toEqual({
+    defaultLogins: ['claude', 'codex'].map((agent) => ({
+      orgId: api.org.id,
+      orgName: api.org.name,
+      agent,
+      login: { type: 'org', orgId: api.org.id },
+    })),
     agentLogins: ['claude', 'codex'].map((agent) => ({
       agent,
       connected: true,
@@ -152,6 +158,12 @@ it('changes only the switch, keeps it on replacement across kinds, and resets it
   )
   expect(removed.status).toBe(204)
   expect(await (await api.read()).json()).toEqual({
+    defaultLogins: ['claude', 'codex'].map((agent) => ({
+      orgId: api.org.id,
+      orgName: api.org.name,
+      agent,
+      login: null,
+    })),
     agentLogins: [
       { agent: 'claude', connected: false },
       { agent: 'codex', connected: false },

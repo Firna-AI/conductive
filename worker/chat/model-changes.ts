@@ -26,6 +26,7 @@ export async function changeModel(
   const otherAgent = next.agent !== session.choice.agent
   if (!otherAgent || !(await transaction.newestTurn(session.id))) {
     session.choice = next
+    if (otherAgent) delete session.login
     if (otherAgent && session.startedBy)
       Object.assign(
         session,

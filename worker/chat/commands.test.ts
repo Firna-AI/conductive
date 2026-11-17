@@ -192,6 +192,7 @@ describe('workspace chat commands', () => {
     expect(closed.history).toEqual([
       {
         ...session,
+        login: { type: 'personal', userId: fixture.owner.id },
         title: 'Check this code',
         activeTurnId: null,
         closedAt: 1_800_000_000_000,

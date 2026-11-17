@@ -19,6 +19,7 @@ import {
   updateOrgAgentLogin,
 } from './org-agent-login-data'
 import { readOrgAgentLogins } from './org-agent-login-read'
+import { readDefaultAgentLogins } from './default-agent-logins'
 import { saveOrgLogin } from './org-agent-login-save'
 
 export async function orgAgentLoginsRoute(
@@ -37,6 +38,7 @@ export async function orgAgentLoginsRoute(
   ) {
     const org = await requireOrgMember(env.DB, orgId, userId)
     return Response.json({
+      defaultLogins: await readDefaultAgentLogins(env, userId, orgId),
       agentLogins: await readOrgAgentLogins(
         env.DB,
         orgId,

@@ -1,3 +1,4 @@
+import type { DefaultAgentLogin } from './generated/DefaultAgentLogin'
 import type {
   EndpointModelList,
   RefreshAgentLoginModelsResponse,
@@ -33,6 +34,7 @@ export type OrgAgentLoginStatus =
 
 export interface OrgAgentLoginsResponse {
   agentLogins: readonly OrgAgentLoginStatus[]
+  defaultLogins?: readonly DefaultAgentLogin[]
 }
 
 export type SaveOrgAgentLoginResponse = OrgAgentLoginStatus &

@@ -31,7 +31,7 @@ which serves these routes. The path helpers live in
 | `GET` sessions | `sessionsPath` | Lists the open sessions and the session history |
 | `POST` sessions | `sessionsPath` | Creates a session. The requester becomes its starter |
 | `PATCH` session | `sessionPath` | Renames a session |
-| `POST` messages | `sessionPaths.messages` | Accepts a message. During a running turn, the message joins that turn. When the starter's login cannot be used, or the starter does not share it with the sender, a new linked session takes it, as [Session logins](integration/README.md#session-logins) says |
+| `POST` messages | `sessionPaths.messages` | Accepts a message. During a running turn, the message joins that turn. When the session login cannot serve the sender, a linked session takes the sender's default login, as [Session logins](integration/README.md#session-logins) says |
 | `POST` retry | `retryMessagePath` | Sends the message that `Session.retryMessageId` names again, also to a new linked session. Each other message gets `409 retry_not_available`, as [Retries](#retries) says |
 | `POST` interrupt | `sessionPaths.interrupt` | Stops a turn |
 | `PUT` model | `sessionPaths.model` | Changes the model. A model of the other agent creates a session that the requester starts. A session with no turn yet keeps it and changes its agent |
@@ -73,7 +73,8 @@ says how the lifecycle and chat work together.
 
 A cross-agent model change uses the client's `newSessionId`, unless the
 session has no turn yet. Such a session changes its agent in place, checks
-the login of its starter for the new agent again, and ignores the field. A
+the default login for the new agent again, and ignores the field. It fixes
+its login only at the first accepted message. A
 repeated request gets the same session. An unrelated occupied ID is refused. A
 same-agent change ignores this field.
 
@@ -241,12 +242,16 @@ Its `AgentLoginOwner` is a personal user ID string or an org owner
 keep their existing encryption context, and org logins use a separate
 `org-agent-login` context.
 `login-kind.ts` owns the trusted `AgentLogin` union, separate from the native runner login types.
-`login-availability.ts` checks the plain `endpoint_origin` in its one metadata query.
+`login-access-data.ts` owns the access and metadata query for both login owners.
+`default-login.ts` owns the default order for sessions, account reads, tools, and automation runs.
+`login-availability.ts` checks the plain `endpoint_origin` through that query.
 It selects no ciphertext and decrypts no login.
 The shared builder refuses every IPv4 and IPv6 address, the product domain, and the configured `PREVIEW_DOMAIN`.
 Dispatch still decrypts and checks the full saved address before it sends a turn.
 `session-login.ts` treats a refused endpoint as an unusable login for linked-session admission and dispatch.
-Its failed-turn cause requires a public HTTPS endpoint with a host name, names the starter and agent, and points to the account page.
+Its failed-turn cause requires a public HTTPS endpoint with a host name and names the owner and agent.
+A personal endpoint cause points to the account page.
+An org endpoint cause points to the Agents tab of the org settings.
 Runner delivery maps a valid endpoint to an API-key turn-token credential.
 `runner-gateway-command.ts` adds `promptCacheTtl: '1h'` only for a Claude own endpoint turn.
 No endpoint address or key enters a runner command or chat record.
