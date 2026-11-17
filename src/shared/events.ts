@@ -5,6 +5,7 @@ import type { ChatEvent } from './chat-events'
 import type { FileEvent } from './files'
 import type { GitHubBanner, GitHubChecksResponse } from './github'
 import type { PortsUpdated } from './ports'
+import type { SecretWorkspaceEvent } from './secret-requests'
 import type { TerminalEntry } from './terminal'
 import { workspacePath, type WorkspaceResponse } from './workspaces'
 
@@ -32,6 +33,7 @@ export function chatHistoryPath(
 
 export type WorkspaceEvent =
   | ChatEvent
+  | SecretWorkspaceEvent
   | FileEvent
   | PortsUpdated
   | {

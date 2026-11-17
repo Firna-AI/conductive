@@ -123,6 +123,11 @@ export const orgSettings: readonly (CommandText & { tab: SettingsTab })[] = [
     label: 'Cloud computer',
     words: ['install', 'startup script', 'env', 'build', 'sandbox'],
   },
+  {
+    tab: 'secrets',
+    label: 'Secrets',
+    words: ['reveal', 'approve', 'token', 'password'],
+  },
   { tab: 'members', label: 'Members', words: ['invite', 'admin', 'role'] },
 ]
 

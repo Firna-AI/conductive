@@ -7,6 +7,7 @@ use cnd_tools::cli::{self, Program, ToolProgram};
 use cnd_tools::environment::Environment;
 use cnd_tools::error::Result;
 use cnd_tools::ports::{Runtime, Streams};
+use cnd_tools::process::NativeProcess;
 use cnd_tools::runtime::{NativeHttp, NativeRuntime, NativeStreams};
 
 pub(crate) fn selected(args: &[String]) -> bool {
@@ -23,6 +24,7 @@ pub(crate) fn selected(args: &[String]) -> bool {
                     | "models"
                     | "previews"
                     | "mac"
+                    | "secrets"
             )
         })
 }
@@ -50,6 +52,7 @@ async fn run(args: Vec<String>) -> Result<u8> {
         Arc::new(NativeHttp::new()?),
         runtime,
         streams,
+        Arc::new(NativeProcess),
     ));
     if args == ["mcp"] {
         program.mcp().await

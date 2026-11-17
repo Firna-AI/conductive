@@ -24,6 +24,7 @@ import type { ChatData, ChatStorage, PendingCommand, StoredTurn } from './types'
 import { TurnEndReports, type TurnEndReport } from './turn-end-reports'
 import { ChatQueue, type QueueTurn } from './queue-turn'
 import { readChatMetadata, type ChatMetadata } from './store-metadata'
+import { SecretRequestRecords } from '../secrets/request-records'
 
 export class ChatTransaction extends ChatRecords {
   readonly workspaceId: string
@@ -36,6 +37,7 @@ export class ChatTransaction extends ChatRecords {
   readonly previews: PreviewRevocations
   readonly terminals: TerminalList
   readonly output: RunnerOutputState
+  readonly secrets: SecretRequestRecords
   private readonly summary: WorkspaceSummaryProjection
   private readonly pages = new HistoryPages(this.data)
   private through: number
@@ -43,6 +45,7 @@ export class ChatTransaction extends ChatRecords {
 
   constructor(data: ChatData, metadata: ChatMetadata, now: number) {
     super(data)
+    this.secrets = new SecretRequestRecords(data)
     this.output = new RunnerOutputState(data)
     this.files = chatFilesStorage(data)
     this.github = {

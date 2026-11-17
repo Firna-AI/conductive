@@ -13,6 +13,8 @@ import { workspaceRestoreUntil } from '../../src/shared/workspaces'
 import { HttpError } from '../http'
 import { leasedImage, type LeasedImage } from './image-leases'
 import type { RepositoryLocation } from './repository-locations'
+import type { WorkspaceCapabilities } from '../../src/shared/secrets'
+import { creationPreapprovals } from '../secrets/capabilities-writes'
 
 const columns = `w.id, w.number, w.org_id AS orgId, w.repository_id AS repositoryId,
   w.section_id AS sectionId, w.owner_user_id AS ownerUserId,
@@ -106,6 +108,7 @@ export async function insertWorkspace(
     message: SendMessageRequest
     now: number
     repositoryLocations?: readonly RepositoryLocation[]
+    capabilities?: WorkspaceCapabilities
   },
 ): Promise<LeasedImage> {
   if (!input.sectionId) {
@@ -133,8 +136,8 @@ export async function insertWorkspace(
     db
       .prepare(
         `INSERT INTO workspaces (id, org_id, repository_id, owner_user_id, section_id,
-       name, branch, branch_placeholder, base_branch, provider_account, state, created_at, updated_at, last_activity_at, position)
-       SELECT ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, 'starting', ?, ?, ?,
+       name, branch, branch_placeholder, base_branch, provider_account, mac_access, state, created_at, updated_at, last_activity_at, position)
+       SELECT ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, 'starting', ?, ?, ?,
          (SELECT COALESCE(MIN(position) - 1, 0) FROM workspaces
           WHERE org_id = ? AND section_id = ? AND archived_at IS NULL AND state != 'archived')
        WHERE ${activeOrgIdPredicate('?')}`,
@@ -149,6 +152,7 @@ export async function insertWorkspace(
         input.branch,
         input.baseBranch ?? null,
         input.providerAccount,
+        Number(input.capabilities?.macAccess ?? true),
         input.now,
         input.now,
         input.now,
@@ -177,6 +181,13 @@ export async function insertWorkspace(
           : null,
         input.id,
       ),
+    creationPreapprovals(db, {
+      orgId: input.orgId,
+      workspaceId: input.id,
+      secretIds: input.capabilities?.preapprovedSecretIds ?? [],
+      userId: input.senderUserId ?? input.user.id,
+      now: input.now,
+    }),
   ])
   await requireActiveOrg(db, input.orgId)
   return leasedImage(db, input.orgId, input.id)
@@ -263,15 +274,4 @@ export async function revokeWorkspacePreviews(
     )
     .bind(now, workspaceId)
     .run()
-}
-
-export function workspaceExists(
-  db: D1Database,
-  orgId: string,
-  workspaceId: string,
-): Promise<{ id: string } | null> {
-  return db
-    .prepare('SELECT id FROM workspaces WHERE org_id = ? AND id = ?')
-    .bind(orgId, workspaceId)
-    .first<{ id: string }>()
 }

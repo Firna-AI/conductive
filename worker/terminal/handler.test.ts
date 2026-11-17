@@ -193,12 +193,10 @@ it('authenticates the ttyd handshake and forwards automatic replies without repo
   const reply = upstream.nextMessage()
   browser.emit('0\u001b[1;1R')
   expect(await reply).toBe('0\u001b[1;1R')
-  await harness.activity()
   expect(await harness.status()).toEqual({ activity: TEST_TIME })
   const input = upstream.nextMessage()
   browser.emit(Uint8Array.of(48, 108, 115, 13).buffer)
   expect(await input).toEqual(Uint8Array.of(48, 108, 115, 13).buffer)
-  await harness.activity()
   expect(await harness.status()).toEqual({ activity: TEST_TIME })
   browser.close(1000, 'closed')
   await upstream.end

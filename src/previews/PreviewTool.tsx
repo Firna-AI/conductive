@@ -1,6 +1,9 @@
 import { useCallback } from 'react'
 import { CircleAlert } from 'lucide-react'
-import { useWorkspaceStore } from '../app/workspace-store'
+import {
+  useWorkspaceStore,
+  type WorkspaceIdentity,
+} from '../app/workspace-store'
 import { ToolButton } from '../terminal/tool-parts/ToolButtons'
 import { ToolRoot } from '../terminal/tool-parts/ToolRoot'
 import { ToolMessage, ToolWaiting } from '../terminal/tool-parts/ToolStates'
@@ -51,6 +54,17 @@ export interface PreviewToolProps {
    * Give a stable function. The default is the clock of the browser.
    */
   now?: () => number
+  /**
+   * A store that the app keeps and connects for the workspace, which other
+   * parts read too. The tool then reads it and connects nothing. Without
+   * it, the tool makes its own store and connects it while it shows.
+   */
+  store?: PreviewsStore
+}
+
+/** The connect of a store that the app connects itself. */
+function connectNothing(): () => void {
+  return () => undefined
 }
 
 /**
@@ -66,13 +80,18 @@ export function PreviewTool(props: PreviewToolProps) {
 function PreviewToolBody(props: PreviewToolProps) {
   const { workspace, route } = props
   const { fetch, subscribe } = workspace
-  const connect = useCallback(
+  const kept = props.store
+  const connectOwn = useCallback(
     (store: PreviewsStore) => store.connect({ fetch, subscribe }),
     [fetch, subscribe],
   )
+  const create = useCallback(
+    (identity: WorkspaceIdentity) => kept ?? createPreviewsStore(identity),
+    [kept],
+  )
   const { store, snapshot: state } = useWorkspaceStore(workspace, {
-    create: createPreviewsStore,
-    connect,
+    create,
+    connect: kept ? connectNothing : connectOwn,
   })
   const { dispatch } = store
   const { visible, selected, open, follow, add, close } = usePreviewActions(

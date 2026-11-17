@@ -13,6 +13,13 @@ says.
 - The shell draws the start steps, with the time of each step, and the
   sandbox bar, with Resume. It draws them from its own record of the
   workspace, and gives them to the chat as `host`. The chat places them.
+- The shell also gives the composer the Capabilities tool of the
+  workspace, from `../capabilities/WorkspaceCapabilities.tsx` (secrets
+  decision 8 B). Its control reads the secrets of the org and the
+  capabilities of the workspace each time that it opens. Every member
+  changes the pre-approved secrets and Mac access there, and removes each
+  approval of a session, which names its session by the title that the
+  chat holds, and each value that a member gave for the workspace. The control shows only where the composer shows.
 - An open reads the workspace, shows it, and starts the stream. Only then
   does a stopped or failed workspace resume. A Resume answers when the
   server queued the start, with the state `starting`. The stored chat
@@ -27,15 +34,16 @@ says.
   `composerFocus`, so the message field takes the focus when it shows, as
   [Chat integration](../../chat/integration.md) says. A phone gets no
   request, so no keyboard opens on its own.
-- On desktop, the chat shows the file and diff tabs of the saved view
-  among the session tabs, in the one order of the tab row. A file or diff
-  tab moves by drag and with its tab menu, as a session tab does, as
-  [the chat](../../chat/README.md#rules-for-this-code) says. The file or
-  diff tab of the address shows in place of the chat of the session, and
-  the tabs stay. No session tab is the current one then, and the row keeps
-  the tab of the address in view. The temporary tab of the saved view shows
-  its title in italics, and a screen reader hears "temporary" after its
-  name.
+- On desktop, the chat shows the file, diff, and Preview tabs of the
+  saved view among the session tabs, in the one order of the tab row.
+  [Preview tabs](tools-part.md#preview-tabs) gives the Preview tabs. A
+  file or diff tab moves by drag and with its tab menu, as a session tab
+  does, as [the chat](../../chat/README.md#rules-for-this-code) says. The
+  file or diff tab of the address shows in place of the chat of the
+  session, and the tabs stay. No session tab is the current one then, and
+  the row keeps the tab of the address in view. The temporary tab of the
+  saved view shows its title in italics, and a screen reader hears
+  "temporary" after its name.
 - A click on a session tab, a new session, or a reopened session makes
   that session the active tab of the view. The address then goes back to
   the chat.
@@ -88,7 +96,7 @@ Each folder of a path is a part of the address. Another address under
 `files` shows the list of the saved view.
 
 - The workspace screen connects the kept files of the workspace once,
-  through `KeptFilesConnection`, on desktop and on each tab of a phone. So
+  through `KeptConnections`, on desktop and on each tab of a phone. So
   the pull request bar knows the local work, also while a phone shows the
   chat. The Files part, the file page of the centre, the labels of the file
   tabs, the list of `@` and the file chips, and the bar only read the same
@@ -195,8 +203,8 @@ Each folder of a path is a part of the address. Another address under
 ## The tools part
 
 [The tools part](tools-part.md) gives the Terminal and Preview tools of
-the shell, the hidden Desktop tool, their addresses, and New terminal of
-the command palette.
+the shell, the hidden Desktop tool, their addresses, the Preview tabs of
+the centre row, and New terminal of the command palette.
 
 ## The GitHub part
 

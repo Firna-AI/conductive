@@ -1,9 +1,6 @@
 import type { Workspace } from './activity-entry.test-support'
-import {
-  previewsPath,
-  PREVIEW_RELAY_MARK_HEADER,
-} from '../../src/shared/previews'
-import { number, record, string } from '../chat/inputs'
+import { PREVIEW_RELAY_MARK_HEADER } from '../../src/shared/previews'
+import { number, record } from '../chat/inputs'
 import {
   OUTER_ORG,
   OUTER_WORKSPACE,
@@ -115,37 +112,6 @@ export async function activityFixture(
 }
 
 export type ActivityFixture = Awaited<ReturnType<typeof activityFixture>>
-
-export async function openActivityPreview(fixture: ActivityFixture) {
-  const opened = await fixture.request(
-    previewsPath(OUTER_ORG, OUTER_WORKSPACE),
-    {
-      method: 'POST',
-      body: JSON.stringify({ port: 3000 }),
-    },
-  )
-  if (opened.status !== 201) throw new Error('Preview did not open')
-  const preview = record(record(await opened.json()).preview)
-  const launch = await fixture.request(new URL(string(preview.url)).pathname, {
-    headers: { Accept: 'application/json' },
-  })
-  const address = new URL(string(record(await launch.json()).url))
-  const fragment = new URLSearchParams(address.hash.slice(1))
-  address.hash = ''
-  address.searchParams.set('hostname', fragment.get('hostname') ?? '')
-  const authorized = await fixture.runtime.dispatchFetch(address.href, {
-    method: 'POST',
-    headers: {
-      Origin: address.origin,
-      Authorization: `Bearer ${fragment.get('grant')}`,
-    },
-  })
-  const cookie = authorized.headers.get('Set-Cookie')?.split(';')[0]
-  if (!cookie) throw new Error('Missing preview credential')
-  const target = string(record(await authorized.json()).url)
-  return () =>
-    fixture.runtime.dispatchFetch(target, { headers: { Cookie: cookie } })
-}
 
 export async function hostedActivityPort(
   request: Request,

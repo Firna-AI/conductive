@@ -83,8 +83,8 @@ and the stop cleanup of a failed resume.
   The terminal setup and the password read then run again.
   Its finished fetch and branch steps stay complete.
   The branch step uses the branch when it already exists.
-- Browser input and preview requests reset the idle time, as
-  [Input activity](#input-activity) says. Browser input includes the keys
+- Browser input resets the idle time, as
+  [Input activity](#input-activity) says. Preview requests do not. Browser input includes the keys
   and the taps in the terminal.
 - The build log is a stream of server-sent events. It continues after the
   `Last-Event-ID` header or the `after` value, and it ends with a `build`
@@ -138,9 +138,8 @@ of a running sandbox. The commands hold no user input.
 
 [Stop and resume](../../docs/protocol/workspace-life.md#stop-and-resume)
 says which input counts as activity. One `InputActivityOwner` in each
-workspace object receives the input times of the browser `activity` route
-and of previews. The preview handler reports each request through
-`ToolDependencies.onActivity(workspaceId, at)`. That call returns at once.
+workspace object receives the input times of the browser `activity` route.
+The preview proxy reports no input (decision 293).
 
 - The input listener of the app page hears the keys, the taps, and the
   scrolls in the terminal too, as the

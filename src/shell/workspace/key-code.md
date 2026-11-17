@@ -139,8 +139,10 @@ this guide.
   another branch as loading. `github/bar-keys.tsx`: `BarKeys`, the keys of
   the bar, beside the bar of the right column and beside the actions at
   the top of the Checks tab of a phone.
-- `files/kept-files.tsx`: `KeptFilesConnection`, the one connection of the
-  kept files for the whole screen.
+- `kept-connections.tsx`: `KeptConnections`, the one connection of the
+  kept files and of the kept previews for the whole screen.
+- `previews/kept-previews.ts`: the kept previews store of the open
+  workspace, its snapshot, and its connection while the sandbox runs.
 - `ContinueDialog.tsx`: the question of Continue with the local work, which
   `LocalWorkList` of the mockups lists.
 - `github/BarMerge.test.tsx`, `github/BarAgent.test.tsx`,
@@ -160,7 +162,8 @@ this guide.
   of a phone, an archived phone, and the key of Open PR on GitHub.
 - `tools/TerminalTabs.test.tsx`, `tools/TerminalAddress.test.tsx`,
   `tools/TerminalReconnect.test.tsx`, `tools/TerminalTabsFocus.test.tsx`,
-  and `tools/TerminalRestart.test.tsx` mount the whole app over the fake
+  `tools/TerminalRestart.test.tsx`, and
+  `tools/TerminalPreviewTabs.test.tsx` mount the whole app over the fake
   API, with the helpers of `tools/terminal-tabs-kit.ts`. They check the +
   and the limit, a switch, the connections of the shown terminals, a close
   and its question, the focus after a close, a close by another member,
@@ -169,7 +172,9 @@ this guide.
   of an open after a newer close, older software, and the Reconnect of one
   terminal over the fake sockets of the server. They also check the focus
   after a tab, the +, and New terminal, on desktop and on a phone, and the
-  row of tabs after a Restart. `wiring-test-kit.tsx` holds their helpers.
+  row of tabs after a Restart. On desktop, the saved terminal, a press on
+  a terminal tab, and New terminal of the palette keep the address of a
+  Preview tab of the centre. `wiring-test-kit.tsx` holds their helpers.
 - `../palette/PaletteNewTerminal.test.tsx` mounts the whole app over the
   fake API for New terminal of the palette. It runs the row while Preview
   shows and while the Terminal tool shows. It checks the place of the row,

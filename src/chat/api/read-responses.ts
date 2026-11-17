@@ -4,7 +4,6 @@ import type { AgentLoginStatus, EndpointModelList } from '../../shared/account'
 
 import type { Org, User } from '../../shared/api'
 import type { SendMessageResponse } from '../../shared/messages'
-import { isTerminalId } from '../../shared/terminal'
 import type {
   ChangeModelResponse,
   InterruptResponse,
@@ -12,16 +11,9 @@ import type {
   SessionsResponse,
   SessionTranscriptResponse,
 } from '../../shared/sessions'
-import type {
-  TemporaryTab,
-  WorkspaceTab,
-  WorkspaceView,
-  WorkspaceViewResponse,
-} from '../../shared/workspace-view'
 import {
   count,
   flag,
-  isRecord,
   list,
   nullable,
   oneOf,
@@ -162,112 +154,6 @@ export function readMembers(value: unknown): readonly MemberSummary[] {
 export function readOrg(value: unknown): OrgSummary {
   const org = record(record(value, 'org response').org, 'org')
   return { name: text(org.name) }
-}
-
-function readTab(value: unknown): WorkspaceTab {
-  const source = record(value, 'tab')
-  switch (source.kind) {
-    case 'session':
-      return { kind: 'session', sessionId: text(source.sessionId) }
-    case 'diff':
-      return { kind: 'diff', path: text(source.path) }
-    default:
-      return {
-        kind: oneOf({ file: true })(source.kind),
-        path: text(source.path),
-        mode: oneOf({ preview: true, source: true })(source.mode),
-      }
-  }
-}
-
-function readTemporaryTab(
-  value: unknown,
-  tabs: readonly WorkspaceTab[],
-): TemporaryTab | null {
-  if (
-    !isRecord(value) ||
-    (value.kind !== 'file' && value.kind !== 'diff') ||
-    typeof value.path !== 'string' ||
-    !value.path
-  )
-    return null
-  return tabs.some(
-    (tab) =>
-      tab.kind !== 'session' &&
-      tab.kind === value.kind &&
-      tab.path === value.path,
-  )
-    ? { kind: value.kind, path: value.path }
-    : null
-}
-
-/**
- * The saved view. Its shown terminal is optional, and a value that names no
- * terminal leaves it out, as the Worker does.
- */
-export function readView(value: unknown): WorkspaceView {
-  const view = record(record(value, 'view response').view, 'view')
-  const tabs = list(readTab)(view.tabs)
-  return {
-    tabs,
-    activeTab: nullable(readTab)(view.activeTab),
-    temporaryTab: readTemporaryTab(view.temporaryTab, tabs),
-    fileList: oneOf({ all: true, changes: true, checks: true })(view.fileList),
-    tool: oneOf({ terminal: true, preview: true, desktop: true })(view.tool),
-    ...(isTerminalId(view.terminal) ? { terminal: view.terminal } : {}),
-  }
-}
-
-/**
- * The automation whose run made the workspace, with the pull request of a
- * pull request run, or null for a run of a schedule or of Run now.
- */
-export type RunAutomation = Required<
-  NonNullable<WorkspaceViewResponse['automation']>
->
-
-/** The saved view, and the automation of a run workspace. */
-export interface ViewReply {
-  view: WorkspaceView
-  /** Null for a workspace that a person created. */
-  automation: RunAutomation | null
-  /**
-   * The absolute folder of the workspace repository, or null when the
-   * reply gives none or gives a folder that is not absolute.
-   */
-  repositoryFolder: string | null
-}
-
-function readPullRequest(value: unknown): RunAutomation['pullRequest'] {
-  const pullRequest = record(value, 'pull request')
-  return { number: count(pullRequest.number), url: text(pullRequest.url) }
-}
-
-function readRunAutomation(value: unknown): RunAutomation {
-  const automation = record(value, 'automation')
-  const pullRequest = optional(nullable(readPullRequest))(
-    automation.pullRequest,
-  )
-  return {
-    id: text(automation.id),
-    name: text(automation.name),
-    pullRequest: pullRequest ?? null,
-  }
-}
-
-/** A folder of the cloud computer: an absolute path without a last `/`. */
-function readFolder(value: unknown): string | null {
-  if (typeof value !== 'string') return null
-  return /^\/[^\r\n]*[^/\r\n]$/u.test(value) ? value : null
-}
-
-export function readViewReply(value: unknown): ViewReply {
-  const reply = record(value, 'view response')
-  return {
-    view: readView(value),
-    automation: optional(nullable(readRunAutomation))(reply.automation) ?? null,
-    repositoryFolder: readFolder(reply.repositoryFolder),
-  }
 }
 
 /** The Markdown of a session, for its pending clipboard write. */

@@ -36,6 +36,15 @@ Its `set` change carries a value and an optional mark. An omitted mark
 keeps the stored mark inside each compare-and-swap attempt. A missing or
 deleted name starts secret. An explicit mark changes it with the value.
 Its `classify` change carries only a name and a mark, so it keeps the value.
+
+`secrets.ts` owns the org secret settings paths and metadata contracts.
+Create and replace requests carry values. Their replies never do.
+It also owns workspace capability reads and patches, with pre-approved
+secret IDs, Mac access, and session approval metadata and removals.
+`CreateWorkspaceRequest.capabilities` in `workspaces.ts` carries the
+capabilities of a new workspace. An absent choice gives no pre-approval
+and Mac access on.
+
 `api.ts` keeps the existing sign-in and org paths and common records.
 `API_PATHS.orgOrder` names `PUT /api/org-order`, outside the paths of one org.
 `MoveOrgRequest` in `orgs.ts` carries `orgId` and the zero-based `index` among the other visible orgs.
@@ -261,7 +270,18 @@ The git credential payload is not defined yet.
   without a display mode, or is null. The Worker and browser readers use
   null for an absent or invalid mark, or one that names no open tab.
   [The saved view](../../docs/protocol/temporary-tabs.md#the-saved-view)
-  gives the requirements.
+  gives the requirements. A Preview tab names a port from 1 to 65535,
+  which `isTabPort` checks for the Worker and the browser readers. A port
+  has at most one tab, as
+  [Port previews](../../docs/protocol/port-previews.md#preview-tabs-and-the-end-of-a-preview)
+  says.
+- [The shape of the view route](workspace-view-wire.ts) keeps `tabs` and
+  `activeTab` free of Preview tabs, so an older copy of the app, such as an
+  older Mac app, still reads the view. `previewTabs` gives the port and the
+  place of each Preview tab, and `activePreview` the port of the active one.
+  A save without `previewTabs` comes from an older copy, and the Worker
+  keeps the stored Preview tabs. `viewToWire` and `viewFromWire` convert
+  between the route and the whole view.
 - [Shortcut commands](shortcut-commands.ts) define the stable command IDs.
   The app and Worker share this list, including Copy link, pull request
   actions, and both transcript copies. Account reads and saves accept

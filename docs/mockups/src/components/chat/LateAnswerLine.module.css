@@ -1,0 +1,6 @@
+/* The name of a secret in the line, in the font of an environment variable. */
+.name {
+  color: var(--ui-ink2);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-xs);
+}

@@ -2,7 +2,7 @@
 
 import { describe, expect, test, vi } from 'vitest'
 import { routes } from '../../../app/router'
-import { readView } from '../../../chat/api/read-responses'
+import { readView } from '../../../chat/api/read-view'
 import { terminalPaths, type TerminalResponse } from '../../../shared/terminal'
 import { workspaceViewPath } from '../../../shared/workspace-view'
 import {

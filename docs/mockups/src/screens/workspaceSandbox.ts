@@ -1,4 +1,4 @@
-import { isPendingCommand } from '../components/chat/PendingCommand'
+import { waitsForAnswer } from '../components/chat/requests'
 import {
   replacesList,
   type ArchiveRestore,
@@ -36,7 +36,7 @@ export function activityOf(state: WorkspaceState): ActivityStatus {
   // After Restart the workspace starts until the agents are back.
   if (state.overlay === 'restarting') return 'starting'
   if (state.overlay === 'restart-update-failed') return 'starting'
-  if (conversations[state.conversation].some(isPendingCommand)) return 'input'
+  if (conversations[state.conversation].some(waitsForAnswer)) return 'input'
   const works = isRunning(state) || otherSessionWorks.has(state.conversation)
   return works ? 'working' : 'ready'
 }

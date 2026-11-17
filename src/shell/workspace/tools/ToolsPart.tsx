@@ -8,6 +8,8 @@ import { useStore } from '../../../app/store'
 import { createTerminalConnector } from '../../../app/terminal-transport'
 import { DesktopTool } from '../../../desktop/DesktopTool'
 import { PreviewTool } from '../../../previews/PreviewTool'
+import { useKeptPreviews } from '../previews/kept-previews'
+import { PanelPreviews } from '../previews/PanelPreviews'
 import type { ConnectTerminal } from '../../../terminal/TerminalScreen'
 import {
   workspaceKey,
@@ -124,9 +126,11 @@ function useShownOnce(shown: boolean): boolean {
  * Each tool reads the routes through the fetch of the org, and the events
  * of the workspace in order. The terminal and Preview each stay mounted
  * after their first show, so the connections of the terminals and the page
- * in the preview frame stay while another tool shows. On desktop the
- * terminals of the workspace load while the sandbox runs, also before the
- * Terminal tool shows, so that the palette can offer New terminal, as
+ * in the preview frame of a phone stay while another tool shows. On
+ * desktop, Preview is the list of ports: the pages show in the Preview tabs
+ * of the centre row. Both read the kept previews of the screen. On desktop
+ * the terminals of the workspace load while the sandbox runs, also before
+ * the Terminal tool shows, so that the palette can offer New terminal, as
  * `TerminalPart` says. The address and the saved view name the shown
  * terminal, as `useTerminalRoute` says. The app hides Desktop and keeps its
  * mount for its return: it mounts at each show, so it reads a new desktop
@@ -156,6 +160,7 @@ export function ToolsPart(props: {
     [org.id, workspace.id, services, toolEvents],
   )
   const touch = context.viewport === 'phone'
+  const previews = useKeptPreviews(context)
   // The screen of the terminal keeps the keys that a program in it can
   // read. Its buttons, such as Reconnect, keep none.
   const terminal = useShortcutTerminal()
@@ -186,12 +191,17 @@ export function ToolsPart(props: {
       ) : null}
       {previewShown ? (
         <div className={styles.tool} hidden={tool !== 'preview'}>
-          <PreviewTool
-            now={now}
-            route={navigation.preview}
-            touch={touch}
-            workspace={toolWorkspace}
-          />
+          {touch ? (
+            <PreviewTool
+              now={now}
+              route={navigation.preview}
+              store={previews}
+              touch
+              workspace={toolWorkspace}
+            />
+          ) : (
+            <PanelPreviews context={context} />
+          )}
         </div>
       ) : null}
       {tool === 'desktop' ? (

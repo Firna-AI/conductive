@@ -6,6 +6,7 @@ import type { RecordedChatScenario } from '../../test-support/recorded-chat'
 import { WORKSPACE_STATES } from '../api/read-workspaces'
 import { getStartedOrder } from '../get-started'
 import type { DevUploadMode } from './attachment-routes'
+import { SECRET_SCENARIOS, type SecretScenario } from './secret-request-seed'
 
 const ROLES = ['admin', 'member'] as const satisfies readonly OrgRole[]
 
@@ -147,6 +148,8 @@ export interface DevOptions {
   paused: boolean
   waitlistOff: boolean
   inviteCode: DevInviteCode
+  /** The state of the secret requests of `checkout-autocomplete`, or null. */
+  secrets: SecretScenario | null
 }
 
 /** The value of `key` when it is one of `values`. */
@@ -198,6 +201,7 @@ export function readDevOptions(search: string): DevOptions {
     paused: params.get('paused') === '1',
     waitlistOff: params.get('waitlist') === 'off',
     inviteCode: pick(params, 'inviteCode', INVITE_CODES) ?? 'left',
+    secrets: pick(params, 'secrets', SECRET_SCENARIOS) ?? null,
   }
 }
 
