@@ -58,7 +58,7 @@ The browser create takes optional workspace capabilities.
 `creation-plan-statements.ts` saves these choices, and `creation-claims.ts`
 reads them for each retry. `workspace-data.ts` writes Mac access and the
 pre-approvals with the workspace records in one D1 batch.
-An omitted choice gives no pre-approval and keeps Mac access on.
+An omitted choice gives no pre-approval and leaves Mac access off.
 The [secrets backend](../secrets/README.md) owns the capability data.
 
 ### Input activity

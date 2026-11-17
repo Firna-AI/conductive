@@ -48,11 +48,11 @@ export type CreateState =
 
 /**
  * The capabilities of a new workspace without a choice: it pre-approves no
- * secret, and its Mac access is on (secrets decision 9 A).
+ * secret, and its Mac access is off (secrets decision 18 A).
  */
 export const defaultCapabilities: WorkspaceCapabilities = {
   preapprovedSecretIds: [],
-  macAccess: true,
+  macAccess: false,
 }
 
 /**

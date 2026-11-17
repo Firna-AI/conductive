@@ -42,7 +42,7 @@ export function planStatement(
       creation.firstSessionTitle ?? null,
       creation.parentId ?? null,
       JSON.stringify(
-        creation.capabilities ?? { preapprovedSecretIds: [], macAccess: true },
+        creation.capabilities ?? { preapprovedSecretIds: [], macAccess: false },
       ),
       job.orgId,
       job.providerAccount,

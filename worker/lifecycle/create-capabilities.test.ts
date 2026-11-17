@@ -52,7 +52,7 @@ it('recovers the saved capabilities after a create handoff fails before workspac
   })
 })
 
-it('gives an internal workspace create no pre-approval and Mac access on without capabilities', async () => {
+it('gives an internal workspace create no pre-approval and Mac access off without capabilities', async () => {
   const fixture = fixtureForTest()
   const { runtime, org, user, repositoryId } = fixture
   const created = await fixture.run(() =>
@@ -69,7 +69,7 @@ it('gives an internal workspace create no pre-approval and Mac access on without
     ),
   ).toEqual({
     preapprovedSecretIds: [],
-    macAccess: true,
+    macAccess: false,
     sessionApprovals: [],
   })
 })

@@ -159,7 +159,7 @@ export async function insertWorkspace(
         input.branch,
         input.baseBranch ?? null,
         input.providerAccount,
-        Number(input.capabilities?.macAccess ?? true),
+        Number(input.capabilities?.macAccess ?? false),
         input.now,
         input.now,
         input.now,

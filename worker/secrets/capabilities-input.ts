@@ -49,6 +49,6 @@ export function readCreationCapabilities(
     value === undefined || value === null ? {} : readCapabilitiesChange(value)
   return {
     preapprovedSecretIds: change.preapprovedSecretIds ?? [],
-    macAccess: change.macAccess ?? true,
+    macAccess: change.macAccess ?? false,
   }
 }

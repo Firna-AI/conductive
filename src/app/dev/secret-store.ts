@@ -35,10 +35,10 @@ export interface OrgSecrets {
   idle: Map<string, WorkspaceState>
 }
 
-/** The capabilities of a workspace without a choice (secrets decision 9 A). */
+/** The capabilities of a workspace without a choice (secrets decision 18 A). */
 export const noGrants: WorkspaceGrants = {
   preapprovedSecretIds: [],
-  macAccess: true,
+  macAccess: false,
   sessionApprovals: [],
 }
 

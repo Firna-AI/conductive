@@ -24,7 +24,7 @@ type DraftState = {
 /**
  * The control of a new workspace. Acme offers its secrets, and the
  * creator pre-approved one. Firna, a new org, has none yet. Mac access is
- * on by default (secrets decision 9).
+ * off by default (secrets decision 18).
  */
 function panelOf(state: DraftState, sheet: boolean) {
   const firna = state.org === 'new'
@@ -32,7 +32,7 @@ function panelOf(state: DraftState, sheet: boolean) {
     org: firna ? orgs.firna.name : orgs.acme.name,
     secrets: firna ? [] : acmeSecrets,
     preApproved: firna ? [] : preApproved,
-    macAccess: true,
+    macAccess: false,
     secretsTo: firna ? paths.secretsEmpty : paths.secrets,
     viewer: state.viewer === 'admin' ? you : memberViewer,
   })

@@ -48,8 +48,8 @@ decision number names a decision of the change that adds
   [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
   says (decision 116).
 - A run workspace starts with no pre-approved secret, as
-  [Grants](secrets.md#grants) says. Its Mac access is on, as
-  [Mac access](secrets.md#mac-access) says (secrets decision 9 A).
+  [Grants](secrets.md#grants) says. Its Mac access is off, as
+  [Mac access](secrets.md#mac-access) says (secrets decision 18 A).
 - A secret request of a run waits for a member, as each request does
   (secrets decision 5 C). [Turns that no person started](secrets.md#turns-that-no-person-started)
   gives the reason and the risk.

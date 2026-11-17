@@ -311,6 +311,15 @@ The workspace link references `workspaces(id)`. The index on
 The creation plan keeps the parent through creation retries and replay.
 [Sub-workspaces](../docs/protocol/sub-workspaces.md) gives the parent rules.
 
+`202611171200_mac_access_off.sql` turns Mac access off one time in each
+existing workspace, also in a workspace where a member turned it on. The
+`DEFAULT 1` of `workspaces.mac_access` stays, because SQLite changes a
+column default only with a rebuild of the table. Each insert sets the
+column itself, and an absent choice now gives 0. A workspace that the
+previous Worker creates between this migration and the Worker upload
+starts with Mac access on. A member turns it off in its Capabilities.
+[Mac access](../docs/protocol/secrets.md#mac-access) gives the rule.
+
 ## Reserved ranges
 
 Each milestone owns the complete inclusive range below.
