@@ -11,8 +11,8 @@ merge in a new D1 table at the time that it sees the merge. The counts
 start on the day that the change ships. No scan recovers older merges.
 
 The change does not count pull requests from outside Conductive. It does
-not record the GitHub author or the member who clicked Merge. It does not
-add merges to the operator section.
+not add merges to the operator section. Open decisions 3 and 5 say which
+roles of a person count and how the tab shows them.
 
 Contract owners:
 
@@ -116,17 +116,39 @@ from the change that added the tab (#405).
 - **Outcome:** The user chose A on 2026-11-17. The counts start on the
   release day. The protocol doc says so.
 
-### Merge stats decision 3. Who gets the credit for a merge (open)
+### Merge stats decision 3. Which roles of a person count (open)
 
-- **Root question:** Which person does a merged pull request count for?
+- **Root question:** Which roles of a person in a merged pull request does
+  the tab count? The user proposed on 2026-11-17 a split by "merged",
+  "contributed", and "who owned it". It replaces the earlier question of
+  the owner or the opener.
 - **Options:**
-  - **A.** The owner of the workspace when the app records the merge, as
-    for automation runs. Effort: Small.
-  - **B.** The member whose GitHub account opened the pull request, found
-    through `users.github_id`, with the owner as the fallback. In a turn,
-    the agent opens the pull request as the member who sent the turn.
-    The refresh query must also read the author. Effort: Medium.
-- **Recommendation:** A. It matches the workspace counts of the same tab.
+  - **A.** The owner only. Effort: Small.
+  - **B.** The owner, the opener, and the merger that GitHub names. No new
+    GitHub request. Effort: Medium.
+  - **C.** The owner, the merger, and the commit authors. One more GitHub
+    read for each merge. Effort: Large.
+  - **D.** The owner, the merger, and the contributors: the opener and each
+    member who sent a message on the branch before the merge. The
+    workspace object finds the senders once, when it records the merge.
+    Effort: Large.
+- **Left out:** A row for each turn in D1: it breaks account stats
+  decision 2 beyond merges. Resolving the people at read time: it stores
+  GitHub IDs of non-members.
+- **Recommendation:** D. Work in Conductive happens in agent turns, so only
+  D credits each member who took part.
+
+### Merge stats decision 5. How the tab shows the roles (open)
+
+- **Options:**
+  - **A.** One tile with the merges where the person had any role. Effort:
+    Small.
+  - **B.** A, plus one line under the tile with the count of each role.
+    Effort: Small.
+  - **C.** One tile for each role. Effort: Small.
+  - **D.** B, plus a role switch on the chart. Effort: Medium.
+- **Recommendation:** B. A person who works alone has every role, so
+  separate tiles show one number three times.
 
 ### Merge stats decision 4. Older merges that the app sees after the release (open)
 
@@ -153,9 +175,9 @@ with its reason.
   the repository ID and the number, so a repeated insert changes nothing.
   An index on the owner and the merge time serves the read. My call:
   a pull request merges once, and the Stats read stays an index range.
-- **The owner.** Open decision 3. The plan assumes its option A: a merge
-  counts for the owner of the workspace at the time that the app records
-  it. One pull request counts once, also when two workspaces share its
+- **The roles.** Open decisions 3 and 5. A role names a member at the
+  time that the app records the merge. A merge counts once in the total
+  of a person, whatever the roles. One pull request counts once, also when two workspaces share its
   branch. My call: the key is the repository and the number.
 - **The time.** A merge counts on the UTC day of its GitHub merge time,
   not the record time. My call: a late record, for example after a failed
