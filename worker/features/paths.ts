@@ -1,7 +1,7 @@
 import { HttpError } from '../http'
 
 const featurePath =
-  /^\/api\/orgs\/[^/]+\/workspaces\/([^/]+)\/(?:files\/(?:tree|content|download)|changes(?:\/diff)?|terminal(?:\/socket)?|previews(?:\/[^/]+)?|desktop|github(?:\/(?:checks|stored|capabilities|merge(?:\/[^/]+)?))?)$/
+  /^\/api\/orgs\/[^/]+\/workspaces\/([^/]+)\/(?:files\/(?:tree|content|download)|changes(?:\/diff)?|terminal(?:\/socket)?|previews(?:\/[^/]+)?|desktop|github(?:\/(?:checks|stored|capabilities|ready|merge(?:\/[^/]+)?))?)$/
 
 export function isFeatureWorkspacePath(path: string): boolean {
   return featurePath.test(path)

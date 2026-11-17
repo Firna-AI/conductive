@@ -105,6 +105,7 @@ export function DevControls(props: {
       {answer('access', 'Access')}
       {answer('method', 'Method')}
       {answer('merge', 'Merge')}
+      {answer('ready', 'Ready for review')}
       {answer('work', 'Local work')}
       {answer('continue', 'Continue')}
       <Choice
