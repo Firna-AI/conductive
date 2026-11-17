@@ -509,20 +509,27 @@ Found in M4 (17 November 2026):
   output stays the same.
 - The workspace guide now says that the header shows the repository as
   text when no other repository can show.
-- [ ] The Worker keeps the saved view of each member at publication. Only
+- [x] The Worker keeps the saved view of each member at publication. Only
       a member whose tab follows the stream closes the file tabs of the old
       repository. Another member's saved file tabs stay until that member
-      closes them. Decide whether publication should drop the file and diff
-      tabs of every saved view.
-- [ ] The chat reads `repositoryFolder` only with the view, so after a
+      closes them. Fixed: the publish batch of `storeChangedRepository`
+      drops the file and diff tabs and the temporary-tab mark of every saved
+      view of the workspace, as the protocol says, with the guard of the
+      workspace write, so a repeat changes nothing.
+- [x] The chat reads `repositoryFolder` only with the view, so after a
       change the file chips of the chat still use the old folder until the
-      chat loads again.
+      chat loads again. Fixed: a record of another repository clears the
+      folder, and `afterRepositoryMove` reads the view again for the new
+      folder.
+- [x] On a phone, a long repository name ran under the owner avatar, and
+      its chevron did not show. Fixed: `RepositoryButton` shrinks inside
+      its room, so the name ends with an ellipsis before the chevron.
 
 ## Milestone 5: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
-- [ ] Change `TERMS_VERSION` in `src/shared/terms.ts`, as decision 6 B
+- [x] Change `TERMS_VERSION` in `src/shared/terms.ts`, as decision 6 B
       says.
 - [ ] Run the targeted tests and `npm run check`.
 - [ ] Commit with Conventional Commits and push the branch.

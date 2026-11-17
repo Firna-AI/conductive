@@ -11,7 +11,7 @@ export interface ChosenRepository {
   installationId: number
 }
 
-export function repositoryUnavailable(): HttpError {
+function repositoryUnavailable(): HttpError {
   return new HttpError(
     404,
     'repository_unavailable',

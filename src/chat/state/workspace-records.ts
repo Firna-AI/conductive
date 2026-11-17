@@ -33,7 +33,9 @@ function withoutFileTabs(snapshot: ChatSnapshot): WorkspaceView | null {
 /**
  * The snapshot with a newer workspace record. A record that leaves the
  * archived state ends the read-only tabs, as `afterRestore` says. A record
- * of another repository closes the file and diff tabs.
+ * of another repository closes the file and diff tabs, and clears the
+ * folder of the old repository until `afterRepositoryMove` reads the new
+ * one.
  */
 function withRecord(
   snapshot: ChatSnapshot,
@@ -43,26 +45,59 @@ function withRecord(
   const moved =
     snapshot.workspace !== null &&
     snapshot.workspace.repositoryId !== workspace.repositoryId
-  const view = moved ? withoutFileTabs(snapshot) : snapshot.view
-  const next = { ...snapshot, workspace, view }
+  const next = moved
+    ? {
+        ...snapshot,
+        workspace,
+        view: withoutFileTabs(snapshot),
+        repositoryFolder: null,
+      }
+    : { ...snapshot, workspace }
   return restored ? afterRestore(next) : next
 }
 
 /**
- * Saves the view when a record of another repository closed its file and
- * diff tabs, so each later tab of the member opens without them.
+ * Reads the folder of the new repository after a repository change, so the
+ * file chips of the chat use it. Only the read of the view gives the
+ * folder. The chat drops a reply that comes after a later change, because
+ * that change reads again. After a failed read, the chat has no folder
+ * until the next change or load.
  */
-export function saveMovedTabs(
+async function reloadRepositoryFolder(
+  context: ChatContext,
+  repositoryId: string,
+): Promise<void> {
+  const reply = await context.api.view().catch(() => null)
+  if (!context.live() || reply === null) return
+  context.store.update((snapshot) =>
+    snapshot.workspace?.repositoryId === repositoryId
+      ? {
+          ...snapshot,
+          repositoryFolder: reply.repositoryFolder,
+          heldRepositoryIds: reply.heldRepositoryIds,
+        }
+      : snapshot,
+  )
+}
+
+/**
+ * After a record of another repository: saves the view whose file and diff
+ * tabs closed, so each later tab of the member opens without them, and
+ * reads the folder of the new repository.
+ */
+export function afterRepositoryMove(
   context: ChatContext,
   before: ChatSnapshot,
 ): void {
   const after = context.store.get()
-  const moved =
-    before.workspace !== null &&
-    after.workspace !== null &&
-    before.workspace.repositoryId !== after.workspace.repositoryId
-  if (moved && after.view && after.view !== before.view)
-    context.saveView(after.view)
+  if (
+    before.workspace === null ||
+    after.workspace === null ||
+    before.workspace.repositoryId === after.workspace.repositoryId
+  )
+    return
+  if (after.view && after.view !== before.view) context.saveView(after.view)
+  void reloadRepositoryFolder(context, after.workspace.repositoryId)
 }
 
 /**
@@ -87,7 +122,7 @@ export function confirmWorkspace(
     start: reply.start,
     savedError: reply.error?.message ?? null,
   }))
-  saveMovedTabs(context, before)
+  afterRepositoryMove(context, before)
   return true
 }
 

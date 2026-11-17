@@ -21,7 +21,10 @@ the requirements.
   read, closes each file and diff tab and the mark, because their paths
   belong to the old folder. A file or diff that showed gives its place to
   the session of the chat. `withRecord` of `state/workspace-records.ts`
-  makes the change, and `saveMovedTabs` saves the view.
+  makes the change, and `afterRepositoryMove` saves the view. At the
+  change, the Worker also closes these tabs in the saved view of every
+  member, so a member whose tab did not follow the stream sees them closed
+  too.
 - The load gives each open session a place and removes the places of
   sessions that are not open. When an open session first arrives, the
   state adds its missing place at the end. It drops no other place.

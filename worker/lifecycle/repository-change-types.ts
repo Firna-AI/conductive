@@ -33,10 +33,10 @@ type StoredReply =
     }
 
 /** The GitHub facts of the old branch for the question. */
-export type OldBranchWork = BranchWork
+type OldBranchWork = BranchWork
 
 /** The new repository of a change, and its folder in the sandbox. */
-export interface RepositoryChangeTarget {
+interface RepositoryChangeTarget {
   repositoryId: string
   fullName: string
   directory: string

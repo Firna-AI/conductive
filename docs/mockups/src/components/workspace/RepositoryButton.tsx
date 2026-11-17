@@ -7,10 +7,16 @@ import { useControlSizes } from '../common/touch'
 import { repositoryMenu, repositoryProgress } from './repositoryMoveCopy'
 import styles from './RepositoryPicker.module.css'
 
+/**
+ * The button shrinks inside the room that the line gives it, so a long name
+ * ends with an ellipsis and the chevron still shows.
+ */
+const shrinks = { flexShrink: 1, minWidth: 0 }
+
 /** A phone keeps the button in the line under the name, as Copy link. */
 const inLine = {
   touchArea: { top: 16, bottom: 9 },
-  style: { paddingHorizontal: 4 },
+  style: { ...shrinks, paddingHorizontal: 4 },
 }
 
 /**
@@ -61,7 +67,7 @@ export function RepositoryButton(props: {
       style={
         props.inline
           ? inLine.style
-          : { height: control.height, paddingHorizontal: 6 }
+          : { ...shrinks, height: control.height, paddingHorizontal: 6 }
       }
       tone="plain"
     />

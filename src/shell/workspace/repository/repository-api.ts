@@ -40,7 +40,7 @@ function readRepository(value: unknown): { id: string; fullName: string } {
 }
 
 /** Checks a reply of the repository change routes against the contract. */
-export function readChangeRepositoryResponse(
+function readChangeRepositoryResponse(
   value: unknown,
 ): ChangeRepositoryResponse {
   const reply = record(value, 'repository change reply')

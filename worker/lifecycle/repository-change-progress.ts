@@ -15,7 +15,7 @@ import {
 } from './repository-change-work'
 
 /** A runner that has not said hello within this time ends the change. */
-export const RUNNER_WAIT_MS = 3 * 60 * 1_000
+const RUNNER_WAIT_MS = 3 * 60 * 1_000
 
 export interface RepositoryChangeProgress {
   scope: string | null

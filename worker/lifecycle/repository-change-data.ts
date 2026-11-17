@@ -68,9 +68,53 @@ export async function authorizeRepositoryChange(
 }
 
 /**
- * One guarded write of the new repository, branch, and base branch. The
- * match on the old repository and branch makes a repeated write change
- * nothing, so the task number grows once for each change. The installation
+ * The guard of the publish write, on the `workspaces` table: the row still
+ * names the old repository, branch, sandbox, and provider account, in an
+ * active org, a workspace that is not archived, and a chosen new repository.
+ */
+const OLD_WORKSPACE = `workspaces.id = ? AND workspaces.org_id = ? AND workspaces.repository_id = ?
+      AND workspaces.sandbox_id = ? AND workspaces.provider_account = ? AND workspaces.branch = ?
+      AND workspaces.archived_at IS NULL AND workspaces.state != 'archived'
+      AND EXISTS (SELECT 1 FROM orgs o WHERE o.id = workspaces.org_id AND ${activeOrgPredicate('o')})
+      AND EXISTS (SELECT 1 FROM repositories r WHERE r.id = ? AND r.org_id = workspaces.org_id AND r.selected = 1)`
+
+function oldWorkspaceBindings(job: RepositoryChangeJob) {
+  const { binding, target } = job
+  return [
+    binding.id,
+    binding.orgId,
+    job.repositoryId,
+    job.sandboxId,
+    job.providerAccount,
+    binding.branch,
+    target.repositoryId,
+  ]
+}
+
+/**
+ * Drops the file and diff tabs and the temporary-tab mark from the saved
+ * view of each member, because their paths belong to the old folder. The
+ * session tabs stay. An active file or diff tab leaves no active tab, so
+ * the chat shows the first open session. A view that is not valid JSON
+ * stays as it is.
+ */
+const DROP_FILE_TABS = `UPDATE workspace_views SET view_json = json_set(view_json,
+      '$.tabs', json((SELECT json_group_array(json(tab.value))
+        FROM json_each(workspace_views.view_json, '$.tabs') tab
+        WHERE json_extract(tab.value, '$.kind') = 'session')),
+      '$.activeTab', json(CASE WHEN json_extract(view_json, '$.activeTab.kind') = 'session'
+        THEN json_extract(view_json, '$.activeTab') ELSE 'null' END),
+      '$.temporaryTab', json('null')),
+    updated_at = MAX(updated_at, ?)
+    WHERE workspace_id = ? AND json_valid(view_json) AND json_type(view_json, '$.tabs') = 'array'
+    AND EXISTS (SELECT 1 FROM workspaces WHERE ${OLD_WORKSPACE})`
+
+/**
+ * One guarded batch: it closes the file and diff tabs of every saved view,
+ * then writes the new repository, branch, and base branch. Both statements
+ * match on the old repository and branch, so a repeated write changes
+ * nothing: the task number grows once for each change, and a tab of the new
+ * repository that a member opened after the change stays. The installation
  * follows the repository, because D1 keeps it on the repository row.
  */
 export async function storeChangedRepository(
@@ -79,28 +123,23 @@ export async function storeChangedRepository(
 ) {
   const { DB: db } = options.env
   const { binding, target } = job
+  const now = options.dependencies.now()
   await db.batch([
+    db
+      .prepare(DROP_FILE_TABS)
+      .bind(now, binding.id, ...oldWorkspaceBindings(job)),
     db
       .prepare(
         `UPDATE workspaces SET repository_id = ?, branch = ?, base_branch = ?, github_summary = NULL,
         task_number = task_number + 1, updated_at = MAX(updated_at, ?)
-      WHERE id = ? AND org_id = ? AND repository_id = ? AND sandbox_id = ? AND provider_account = ? AND branch = ?
-      AND archived_at IS NULL AND state != 'archived'
-      AND EXISTS (SELECT 1 FROM orgs o WHERE o.id = workspaces.org_id AND ${activeOrgPredicate('o')})
-      AND EXISTS (SELECT 1 FROM repositories r WHERE r.id = ? AND r.org_id = workspaces.org_id AND r.selected = 1)`,
+      WHERE ${OLD_WORKSPACE}`,
       )
       .bind(
         target.repositoryId,
         job.branch,
         job.baseBranch,
-        options.dependencies.now(),
-        binding.id,
-        binding.orgId,
-        job.repositoryId,
-        job.sandboxId,
-        job.providerAccount,
-        binding.branch,
-        target.repositoryId,
+        now,
+        ...oldWorkspaceBindings(job),
       ),
     db
       .prepare(

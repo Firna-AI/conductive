@@ -31,10 +31,10 @@ const org = FAKE_IDS.org
 const id = FAKE_IDS.workspace
 
 /** The repository change job of the fake workspace. */
-export const CHANGE_ID = `repository-change-${id}`
+const CHANGE_ID = `repository-change-${id}`
 
 /** The repository that the member picks, as the mockups pick it. */
-export const MOVED_REPOSITORY = {
+const MOVED_REPOSITORY = {
   id: 'billing-service',
   fullName: 'acme/billing-service',
 } as const
@@ -58,7 +58,7 @@ export function serveHeld(
 }
 
 /** The question of the change, with the work of the mockups. */
-export const repositoryQuestionReply = {
+const repositoryQuestionReply = {
   state: 'confirmation-required',
   repository: MOVED_REPOSITORY,
   branch: workspaceFixtures().detail.workspace.branch,

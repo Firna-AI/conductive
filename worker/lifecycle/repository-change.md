@@ -160,6 +160,13 @@ runs after a good move. It never runs Git again.
   the same sandbox and provider account, in an active org, a workspace
   that is not archived, and a chosen new repository. The installation
   follows the repository row.
+- The same batch first closes the file and diff tabs and the temporary-tab
+  mark in the saved view of every member, in `workspace_views`, because
+  their paths belong to the old folder. The session tabs stay. An active
+  file or diff tab leaves no active tab, so the chat shows the first open
+  session. Its guard is the guard of the workspace write, so a repeat
+  closes no tab of the new repository that a member opened after the
+  change. A saved view that is not valid JSON stays as it is.
 - One chat transaction commits `workspace.updated`, one
   `workspace.repository-changed` note for each stored session, the saved
   reply, and the marker. It also marks the stored file tree of the old
@@ -190,6 +197,10 @@ repository and branch, and its error message is the reason of the toast.
   another member, the notes, the question with both lists, a clash, a
   failed copy, a failed fetch, a publication that lost its reply, and a
   move that lost its exit result.
+- [`repository-change-views.test.ts`](repository-change-views.test.ts):
+  the saved views of every member lose their file and diff tabs, a repeat
+  of a publication that lost its reply keeps a later tab, and a view that
+  is not valid JSON stays.
 - [`repository-change-access.test.ts`](repository-change-access.test.ts):
   the admission refusals, a runner that cannot move, and a runner that
   does not say hello.

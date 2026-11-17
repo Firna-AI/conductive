@@ -13,6 +13,10 @@ login, a linked session, and the client ID of a second try in the same and
 in another session. `components/ContinuedNote.test.tsx` folds the note of
 Continue once at its place, also after a repeat and in a new tab, in the
 history of a closed session, and draws "You" or the name of the member.
+`state/repository-folder.test.ts` checks that a record of another
+repository reads the view again for the folder of the new repository, that
+a record of the same repository does not, and that a failed read or a late
+reply leaves no wrong folder.
 `components/RepositoryChangedNote.test.tsx` checks the note of a repository
 change in the same way, with its read from the stream and its copy.
 `components/TryAgain.dom.test.tsx` mounts the chat and presses Try again.

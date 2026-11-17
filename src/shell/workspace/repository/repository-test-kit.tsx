@@ -15,7 +15,7 @@ import { openTab } from '../wiring-test-kit'
 // The helpers of the tests of the repository change in the header.
 
 export const { org, workspace: id } = FAKE_IDS
-export const startPath = workspacePaths.repository(org, id)
+const startPath = workspacePaths.repository(org, id)
 
 /** Each request body that started a repository change. */
 export function changeBodies(server: FakeApiServer): Promise<unknown[]> {
