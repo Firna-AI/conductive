@@ -7,7 +7,7 @@
 - **Reason:** The footer change does not change the existing section picker.
 
 - **Terms:**
-  - **Section picker:** The menu at the top right of the New workspace dialog that selects its organization and section.
+  - **Section picker:** The menu at the top right of the New workspace dialog that displays the organization and selects a section within it.
 - **Background:** The New workspace dialog creates a workspace from a task message. Its header contains a repository picker and a section picker.
 - **Problem:** The design guide calls the organization and section plain text. The app renders the Section menu at this position.
 - **Impact if no action:** A contributor can follow an incorrect description of the header.
