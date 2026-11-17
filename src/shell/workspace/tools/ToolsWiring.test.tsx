@@ -3,7 +3,7 @@
 import { describe, expect, test, vi } from 'vitest'
 import { requestLines } from '../../../app/test-kit'
 import { routes } from '../../../app/router'
-import { readView } from '../../../chat/api/read-responses'
+import { readView } from '../../../chat/api/read-view'
 import { desktopPath } from '../../../shared/desktop'
 import { previewsPath } from '../../../shared/previews'
 import { terminalPaths } from '../../../shared/terminal'

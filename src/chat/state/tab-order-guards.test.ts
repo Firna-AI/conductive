@@ -60,7 +60,7 @@ describe('the chat tab order guards', () => {
     chat.held.splice(0, 1)[0]()
     await loading
     const created: WorkspaceTab = { kind: 'session', sessionId: 'third' }
-    expect((await chat.savedView()).tabs).toEqual([
+    expect((await chat.savedView()).panes[0].tabs).toEqual([
       second,
       file,
       first,
@@ -117,7 +117,12 @@ describe('the chat tab order guards', () => {
     chat.controller.moveTab(closed, { before: second })
     expect(chat.controller.getSnapshot()).toBe(before)
     expect(chat.writes()).toEqual([])
-    expect((await chat.savedView()).tabs).toEqual(saved)
+    expect((await chat.savedView()).panes[0].tabs).toEqual([
+      first,
+      file,
+      diff,
+      stale,
+    ])
   })
 
   it('uses the browser view for archived tabs, reopens at the end, and closes to the row neighbour without writes', async () => {
@@ -133,10 +138,14 @@ describe('the chat tab order guards', () => {
     expect(chat.row()).toEqual([second, closed, first])
 
     await chat.controller.requestClose('autocomplete')
-    expect(chat.controller.getSnapshot().view?.tabs).toEqual([second, closed])
+    expect(chat.controller.getSnapshot().view?.panes[0].tabs).toEqual([
+      second,
+      closed,
+    ])
     chat.controller.updateView((view) => ({
       ...view,
-      tabs: [closed, second],
+      panes: [{ ...view.panes[0], tabs: [closed, second] }],
+      focusedPane: 0,
     }))
     expect(chat.row()).toEqual([closed, second])
     await chat.controller.reopen('autocomplete')
@@ -147,14 +156,18 @@ describe('the chat tab order guards', () => {
     await chat.controller.requestClose('debounce')
     expect(chat.row()).toEqual([closed, first])
     expect(chat.controller.getSnapshot().activeSessionId).toBe('autocomplete')
-    expect(chat.controller.getSnapshot().view?.activeTab).toEqual(first)
+    expect(chat.controller.getSnapshot().view?.panes[0].activeTab).toEqual(
+      first,
+    )
     await chat.controller.requestClose('autocomplete')
-    expect(chat.controller.getSnapshot().view?.activeTab).toEqual(closed)
+    expect(chat.controller.getSnapshot().view?.panes[0].activeTab).toEqual(
+      closed,
+    )
     await chat.controller.requestClose('postcode')
     expect(chat.row()).toEqual([])
     expect(chat.controller.getSnapshot().activeSessionId).toBeNull()
-    expect(chat.controller.getSnapshot().view?.activeTab).toBeNull()
+    expect(chat.controller.getSnapshot().view?.panes[0].activeTab).toBeNull()
     expect(chat.writes()).toEqual([])
-    expect((await chat.savedView()).tabs).toEqual(saved)
+    expect((await chat.savedView()).panes[0].tabs).toEqual(saved)
   })
 })

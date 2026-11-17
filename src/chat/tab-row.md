@@ -1,29 +1,29 @@
 # The tab row
 
-This guide belongs to [the chat](README.md). It gives the rules of the one
-order of the session, file, and diff tabs, the mark of the temporary tab
+This guide belongs to [the chat](README.md). It gives the rules of each
+pane's order of session, file, and diff tabs, the mark of its temporary tab
 and the moves that keep it, the drag, the tab menu with Keep open and
 Close tabs to the right, and the scroll of the row, and the reader's place
 that each tab keeps.
 [The tab row](../../docs/protocol/tab-row.md) states the requirements.
 [Split panes](../../docs/protocol/split-panes.md) states the requirements
-of two panes, each with its own row. The chat draws one row and one pane.
+of two panes, each with its own row. The chat draws the focused pane and its row.
 It does not draw two panes yet, and its tab menu has no pane item yet.
 
-- The state keeps one saved order for session, file, and diff tabs. The row
-  order includes each tab once. A host with no file or diff tabs leaves
+- Each saved pane keeps its own order of session, file, and diff tabs.
+  A tab belongs to one pane only. A host with no file or diff tabs leaves
   their saved places in the view. In a read-only workspace, the row uses
   the session places in the browser copy of the saved view. That copy owns
   both the order and the selection. The stored session records stay in the
   open sessions and the history, even when their browser tabs change.
-- The saved view also marks the temporary tab, which the host opens,
+- Each pane also marks its temporary tab, which the host opens,
   keeps, and closes, as
   [Temporary tabs](../../docs/protocol/temporary-tabs.md) says. A move
   that changes its place keeps it too, as `moveTab` says below. Each change
   of the session tabs keeps the mark as it is.
 - The load gives each open session a place and removes the places of
   sessions that are not open. When an open session first arrives, the
-  state adds its missing place at the end. It drops no other place.
+  state adds its missing place at the end of the focused row. It drops no other place.
   At the first load, missing places go at the end, in the order of creation.
   These changes send no write of their own. The next view save carries
   them. A read-only workspace initializes these places once, then keeps
@@ -50,6 +50,13 @@ It does not draw two panes yet, and its tab menu has no pane item yet.
   row. It saves through the shared view writer, then sorts the open
   sessions for Close. A new or reopened session opens at the end. A
   read-only workspace moves no tab.
+- The controller also accepts a pane target and a place, or a new pane on
+  either side. Each move calls the pure `moveTab(view, tab, target)` in
+  `state/tab-order.ts`. A pane move shows the tab there and focuses that
+  pane. The source keeps its shown tab unless that tab moved. It then
+  shows the next tab, else the previous tab. An empty source pane closes.
+  A split of the only tab changes nothing. No screen control exposes these
+  pane moves yet.
 - A move that changes the place of the temporary tab keeps it, as
   [The tab row](../../docs/protocol/tab-row.md#the-tab-menu)
   says: the pure `moveTab` of `state/tab-order.ts` drops the mark with the

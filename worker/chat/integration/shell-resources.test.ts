@@ -90,6 +90,14 @@ it('serves real shell lists and keeps workspace views private to each member', a
   expect((await fixture.request(membersPath(OUTER_ORG))).status).toBe(200)
   const path = workspaceViewPath(OUTER_ORG, OUTER_WORKSPACE)
   const view = {
+    panes: [
+      {
+        tabs: [{ kind: 'session', sessionId: 'first-session' }],
+        activeTab: { kind: 'session', sessionId: 'first-session' },
+        temporaryTab: null,
+      },
+    ],
+    focusedPane: 0,
     tabs: [{ kind: 'session', sessionId: 'first-session' }],
     activeTab: { kind: 'session', sessionId: 'first-session' },
     fileList: 'changes',
@@ -123,6 +131,8 @@ it('serves real shell lists and keeps workspace views private to each member', a
     ).json(),
   ).toEqual({
     view: {
+      panes: [{ tabs: [], activeTab: null, temporaryTab: null }],
+      focusedPane: 0,
       tabs: [],
       activeTab: null,
       temporaryTab: null,

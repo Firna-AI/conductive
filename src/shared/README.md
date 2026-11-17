@@ -256,10 +256,12 @@ The git credential payload is not defined yet.
 
 ### Key Code
 
-- [Workspace views](workspace-view.ts) define the saved view and its
-  `temporaryTab` field. The field names one file or diff by kind and path,
-  without a display mode, or is null. The Worker and browser readers use
-  null for an absent or invalid mark, or one that names no open tab.
+- [Workspace views](workspace-view.ts) define one or two panes and their
+  focus. Each pane holds its tabs, shown tab, and `temporaryTab` mark.
+  The mark names one file or diff by kind and path, without a display mode,
+  or is null. [The pane reader](workspace-pane-input.ts) reads both wire
+  shapes and clears invalid marks. [Pane helpers](workspace-panes.ts)
+  keep tab identity, selection, and focus when tabs or panes close.
   [The saved view](../../docs/protocol/temporary-tabs.md#the-saved-view)
   gives the requirements.
 - [Shortcut commands](shortcut-commands.ts) define the stable command IDs.

@@ -67,8 +67,13 @@ describe('the browser view of read-only tabs', () => {
     expect(chat.row()).toEqual([second, first])
 
     await chat.controller.select('debounce')
-    expect(chat.controller.getSnapshot().view?.tabs).toEqual([second, first])
-    expect(chat.controller.getSnapshot().view?.activeTab).toEqual(second)
+    expect(chat.controller.getSnapshot().view?.panes[0].tabs).toEqual([
+      second,
+      first,
+    ])
+    expect(chat.controller.getSnapshot().view?.panes[0].activeTab).toEqual(
+      second,
+    )
     await chat.controller.requestClose(FAKE_IDS.session)
     expect(chat.row()).toEqual([second])
     await chat.controller.reopen(FAKE_IDS.session)
@@ -101,12 +106,14 @@ describe('the browser view of read-only tabs', () => {
     await loading
 
     expect(chat.row()).toEqual([second, file, closed])
-    expect(chat.controller.getSnapshot().view?.tabs).toEqual([
+    expect(chat.controller.getSnapshot().view?.panes[0].tabs).toEqual([
       second,
       file,
       closed,
     ])
-    expect(chat.controller.getSnapshot().view?.activeTab).toEqual(closed)
+    expect(chat.controller.getSnapshot().view?.panes[0].activeTab).toEqual(
+      closed,
+    )
     expect(chat.controller.getSnapshot().activeSessionId).toBe('postcode')
     expect(chat.writes()).toEqual([])
   })

@@ -1,10 +1,11 @@
 import type { Session } from '../../shared/generated/Session'
 import type { WorkspaceView } from '../../shared/workspace-view'
 
+import { allTabs } from '../../shared/workspace-panes'
 import type { ChatSnapshot } from './chat-snapshot'
 import type { ChatContext } from './context'
 import { hydrate } from './history'
-import { withSessionPlaces } from './tab-order'
+import { withSessionPlaces } from './session-tab-places'
 import { neighbour, pickActive, viewShowing, viewWithout } from './sessions'
 
 /**
@@ -29,7 +30,7 @@ export function tabSessions(
   const known = new Map(
     [...snapshot.sessions, ...snapshot.history].map((item) => [item.id, item]),
   )
-  return snapshot.view.tabs.flatMap((tab) =>
+  return allTabs(snapshot.view).flatMap((tab) =>
     tab.kind === 'session' ? (known.get(tab.sessionId) ?? []) : [],
   )
 }
@@ -38,14 +39,19 @@ export function tabSessions(
 function localView(snapshot: ChatSnapshot): WorkspaceView {
   return (
     snapshot.view ?? {
-      tabs: snapshot.sessions.map(({ id }) => ({
-        kind: 'session',
-        sessionId: id,
-      })),
-      activeTab: snapshot.activeSessionId
-        ? { kind: 'session', sessionId: snapshot.activeSessionId }
-        : null,
-      temporaryTab: null,
+      panes: [
+        {
+          tabs: snapshot.sessions.map(({ id }) => ({
+            kind: 'session',
+            sessionId: id,
+          })),
+          activeTab: snapshot.activeSessionId
+            ? { kind: 'session', sessionId: snapshot.activeSessionId }
+            : null,
+          temporaryTab: null,
+        },
+      ],
+      focusedPane: 0,
       fileList: 'all',
       tool: 'terminal',
     }

@@ -73,6 +73,8 @@ it.each(cases)(
       .bind('feature/review', id)
       .run()
     const view = {
+      panes: [{ tabs: [], activeTab: null, temporaryTab: null }],
+      focusedPane: 0,
       tabs: [],
       activeTab: null,
       temporaryTab: null,

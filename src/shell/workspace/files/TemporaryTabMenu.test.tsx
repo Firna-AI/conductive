@@ -32,7 +32,7 @@ import { filesHref } from './files-address'
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
 const { org, workspace: id } = FAKE_IDS
-const [first, second] = workspaceFixtures().view.view.tabs
+const [first, second] = workspaceFixtures().view.view.panes[0].tabs
 const [autocomplete, debounce] = workspaceFixtures().sessions.sessions.map(
   (session) => nameLabel(session.title),
 )
@@ -44,11 +44,16 @@ describe('the tab menu of the temporary tab in the workspace', () => {
     const server = new FakeApiServer()
     const viewPath = workspaceViewPath(org, id)
     const saved: WorkspaceView = {
-      tabs: [first, form, second],
-      activeTab: first,
-      temporaryTab: { kind: 'file', path: FAKE_FILE_PATH },
       fileList: 'all',
       tool: 'terminal',
+      panes: [
+        {
+          tabs: [first, form, second],
+          activeTab: first,
+          temporaryTab: { kind: 'file', path: FAKE_FILE_PATH },
+        },
+      ],
+      focusedPane: 0,
     }
     server.json('GET', viewPath, { view: saved })
     const { view } = await openTab(server, routes.workspace(org, id))
@@ -89,7 +94,7 @@ describe('the tab menu of the temporary tab in the workspace', () => {
         { name: 'Move right', off: false },
         { name: 'Close tabs to the right', off: false },
       ],
-      saved: [{ ...saved, temporaryTab: null }],
+      saved: [{ ...saved, panes: [{ ...saved.panes[0], temporaryTab: null }] }],
     })
   })
 })

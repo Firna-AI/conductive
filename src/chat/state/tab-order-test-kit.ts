@@ -10,7 +10,7 @@ import {
 } from '../../shared/workspace-view'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { createChatApi } from '../api/client'
-import { readView } from '../api/read-responses'
+import { readView } from '../api/read-view'
 import { isArchived, tabSessions } from './archive-view'
 import { rowTabs } from './tab-order'
 import { chatFor } from './test-kit'
@@ -71,11 +71,10 @@ export function tabChat(
     },
   })
   const view: WorkspaceView = {
-    tabs,
-    activeTab: first,
     fileList: 'changes',
-    temporaryTab,
     tool: 'terminal',
+    panes: [{ tabs, activeTab: first, temporaryTab }],
+    focusedPane: 0,
   }
   chat.server.json('GET', viewPath, { view })
   const api = createChatApi(createApiClient(chat.server.fetch), {

@@ -53,7 +53,16 @@ describe('the scroll offset of the file and diff tabs of the workspace', () => {
     const server = new FakeApiServer()
     const { view: saved } = workspaceFixtures().view
     server.json('GET', workspaceViewPath(org, id), {
-      view: { ...saved, tabs: [...saved.tabs, fileTab, diffTab] },
+      view: {
+        ...saved,
+        panes: [
+          {
+            ...saved.panes[0],
+            tabs: [...saved.panes[0].tabs, fileTab, diffTab],
+          },
+        ],
+        focusedPane: 0,
+      },
     })
     const file = filesHref(org, id, fileTab)
     const diff = filesHref(org, id, diffTab)
@@ -84,7 +93,16 @@ describe('the scroll offset of the file and diff tabs of the workspace', () => {
     const server = new FakeApiServer()
     const { view: saved } = workspaceFixtures().view
     server.json('GET', workspaceViewPath(org, id), {
-      view: { ...saved, tabs: [...saved.tabs, fileTab, diffTab] },
+      view: {
+        ...saved,
+        panes: [
+          {
+            ...saved.panes[0],
+            tabs: [...saved.panes[0].tabs, fileTab, diffTab],
+          },
+        ],
+        focusedPane: 0,
+      },
     })
     const file = filesHref(org, id, fileTab)
     const { view, navigation } = await openTab(server, file)

@@ -4,10 +4,17 @@ import {
   type FilesTab,
 } from '../../../files/navigation'
 import type {
-  TemporaryTab,
   WorkspaceTab,
   WorkspaceView,
 } from '../../../shared/workspace-view'
+
+import {
+  allTabs,
+  focusedPane,
+  paneWithTabs,
+  updatePane,
+  withPanes,
+} from '../../../shared/workspace-panes'
 
 /** The same file or diff, in any mode. One tab holds one file or one diff. */
 export function sameFilesTab(left: FilesTab, right: FilesTab): boolean {
@@ -33,7 +40,7 @@ function equalTabs(left: WorkspaceTab | null, right: WorkspaceTab): boolean {
 
 /** The file and diff tabs of a view, in the order of the tab row. */
 export function filesTabsOf(view: WorkspaceView | null): FilesTab[] {
-  return (view?.tabs ?? []).filter(isFilesTab)
+  return allTabs(view).filter(isFilesTab)
 }
 
 /**
@@ -45,13 +52,12 @@ export function isTemporaryTab(
   view: WorkspaceView | null,
   tab: FilesTab,
 ): boolean {
-  const mark = view?.temporaryTab ?? null
-  return mark !== null && mark.kind === tab.kind && mark.path === tab.path
-}
-
-/** The mark of the temporary tab that holds this file or diff. It names no mode. */
-function markOf(tab: FilesTab): TemporaryTab {
-  return { kind: tab.kind, path: tab.path }
+  return (
+    view?.panes.some((pane) => {
+      const mark = pane.temporaryTab
+      return mark !== null && mark.kind === tab.kind && mark.path === tab.path
+    }) ?? false
+  )
 }
 
 /** The tabs with `tab` in the place of the tab at `index`. */
@@ -76,20 +82,41 @@ export function withActiveTab(
   view: WorkspaceView,
   tab: FilesTab,
 ): WorkspaceView {
-  const index = view.tabs.findIndex(
+  const owner = view.panes.findIndex((pane) =>
+    pane.tabs.some((open) => isFilesTab(open) && sameFilesTab(open, tab)),
+  )
+  const target = owner < 0 ? view.focusedPane : owner
+  const pane = view.panes[target] ?? focusedPane(view)
+  const index = pane.tabs.findIndex(
     (open) => isFilesTab(open) && sameFilesTab(open, tab),
   )
-  if (index >= 0) {
-    const present = equalTabs(view.tabs[index], tab)
-    if (present && equalTabs(view.activeTab, tab)) return view
-    return { ...view, tabs: replaced(view.tabs, index, tab), activeTab: tab }
-  }
-  const temporary = view.tabs.findIndex(
-    (open) => isFilesTab(open) && isTemporaryTab(view, open),
+  if (
+    index >= 0 &&
+    equalTabs(pane.tabs[index], tab) &&
+    equalTabs(pane.activeTab, tab) &&
+    view.focusedPane === target
   )
-  const tabs =
-    temporary < 0 ? [...view.tabs, tab] : replaced(view.tabs, temporary, tab)
-  return { ...view, tabs, activeTab: tab, temporaryTab: markOf(tab) }
+    return view
+  const changed = updatePane(view, target, (pane) => {
+    if (index >= 0)
+      return { ...pane, tabs: replaced(pane.tabs, index, tab), activeTab: tab }
+    const temporary = pane.tabs.findIndex(
+      (open) =>
+        pane.temporaryTab !== null &&
+        open.kind === pane.temporaryTab.kind &&
+        open.path === pane.temporaryTab.path,
+    )
+    return {
+      ...pane,
+      tabs:
+        temporary < 0
+          ? [...pane.tabs, tab]
+          : replaced(pane.tabs, temporary, tab),
+      activeTab: tab,
+      temporaryTab: { kind: tab.kind, path: tab.path },
+    }
+  })
+  return { ...changed, focusedPane: target === 1 ? 1 : 0 }
 }
 
 /**
@@ -99,7 +126,12 @@ export function withActiveTab(
  * object, so nothing saves.
  */
 export function withKeptTab(view: WorkspaceView, tab: FilesTab): WorkspaceView {
-  return isTemporaryTab(view, tab) ? { ...view, temporaryTab: null } : view
+  const index = view.panes.findIndex(
+    (pane) =>
+      pane.temporaryTab?.kind === tab.kind &&
+      pane.temporaryTab.path === tab.path,
+  )
+  return updatePane(view, index, (pane) => ({ ...pane, temporaryTab: null }))
 }
 
 /** The view with this list in the Files panel. */
@@ -120,16 +152,26 @@ export function withoutTab(
   tab: FilesTab,
   next: WorkspaceTab | null,
 ): WorkspaceView {
-  const tabs = view.tabs.filter(
-    (open) => !(isFilesTab(open) && sameFilesTab(open, tab)),
+  const owner = view.panes.findIndex((pane) =>
+    pane.tabs.some((open) => isFilesTab(open) && sameFilesTab(open, tab)),
   )
-  if (tabs.length === view.tabs.length) return view
-  const active = view.activeTab
-  const closedActive = isFilesTab(active) && sameFilesTab(active, tab)
-  return {
-    ...view,
-    tabs,
-    activeTab: closedActive ? next : active,
-    temporaryTab: isTemporaryTab(view, tab) ? null : view.temporaryTab,
-  }
+  if (owner < 0) return view
+  return withPanes(
+    view,
+    view.panes.map((pane, index) => {
+      if (index !== owner) return pane
+      const tabs = pane.tabs.filter(
+        (open) => !(isFilesTab(open) && sameFilesTab(open, tab)),
+      )
+      const repaired = paneWithTabs(pane, tabs)
+      const closedActive =
+        isFilesTab(pane.activeTab) && sameFilesTab(pane.activeTab, tab)
+      const localNext =
+        next && tabs.some((open) => equalTabs(open, next)) ? next : null
+      return {
+        ...repaired,
+        activeTab: closedActive ? localNext : pane.activeTab,
+      }
+    }),
+  )
 }

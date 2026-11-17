@@ -3,9 +3,9 @@ import type { UserMessage } from '../../shared/generated/UserMessage'
 import { followUpDraft } from '../../../docs/mockups/src/fixtures/conversations'
 import { ACCOUNT_PATHS, type AgentLoginStatus } from '../../shared/account'
 import type { SessionsResponse } from '../../shared/sessions'
+import { viewShowing } from '../state/sessions'
 import {
   workspaceViewPath,
-  type WorkspaceTab,
   type WorkspaceView,
 } from '../../shared/workspace-view'
 import type { FakeApiServer } from '../../test-support/fake-api'
@@ -128,13 +128,10 @@ export function seedLinked(
   })
   backend.recordedTurns.set(linked.id, turnId)
   setActiveTurn(backend, linked.id, turnId, now)
-  const tab: WorkspaceTab = { kind: 'session', sessionId: linked.id }
   const { orgId, workspaceId } = backend.target
   backend.server.json('GET', workspaceViewPath(orgId, workspaceId), {
     view: {
-      tabs: [...(view?.tabs ?? []), tab],
-      activeTab: tab,
-      temporaryTab: view?.temporaryTab ?? null,
+      ...viewShowing(view, linked.id),
       fileList: view?.fileList ?? 'changes',
       tool: view?.tool ?? 'terminal',
     },

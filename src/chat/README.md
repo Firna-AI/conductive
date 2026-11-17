@@ -57,11 +57,15 @@ chips.
 
 ## Rules for this code
 
-- [The tab row](tab-row.md) gives the rules of the one order of the
-  tabs, the mark of the temporary tab, the drag, the tab menu, and the
+- [The tab row](tab-row.md) gives the rules of each pane's tab order,
+  its temporary tab, the drag, the tab menu, and the
   scroll of the row, and the reader's place that each tab keeps. A move of
   the temporary tab to another place keeps it, and so does Keep open in its tab menu, through the `keep` that the
   host gives that tab.
+- The saved view holds one or two panes and the focused pane. Each pane
+  owns its tab order, shown tab, and temporary tab. The screen draws only
+  the focused pane. The Worker keeps older app copies compatible through
+  the flat fields in its replies and the fit of old saves onto stored panes.
 - A read-only workspace keeps its tab order and selection in the browser
   copy of the saved view. The row, Close, Reopen, and session selection use
   that copy, as [the tab row](tab-row.md) says. Session records stay separate

@@ -166,6 +166,19 @@ View writes cannot change this branch.
 - A repository without a GitHub installation is not in the list.
 - Each member has a view of their own. A read mark only moves forward, and
   it stops at the last event number of the workspace.
+- A workspace view holds one or two panes and their focus. Each pane owns
+  its tab order, shown tab, and temporary mark. Old stored views read as one
+  pane. Invalid panes fall back to one pane with all readable tabs.
+- A save with `panes` replaces the pane view. A save without `panes`
+  replaces one stored pane, including its order, selection, and temporary
+  mark. With two stored panes, it keeps pane ownership and applies the
+  incoming order inside each row. Each pane keeps its selection and
+  temporary mark unless their tab closed. Focus stays. New tabs append to
+  the focused pane as kept tabs. Empty panes close. Replies also give the
+  old flat fields, with the left pane first and the selection and mark of
+  the focused pane.
+  [The saved view](../../docs/protocol/split-panes.md#the-saved-view)
+  states the compatibility rules.
 - The list and the lifecycle replies give each reader one state.
   Archived, starting, stopped, error, and input come from the workspace
   record. Otherwise, the chat summary of the workspace object and the
@@ -256,6 +269,10 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 - [`shell.ts`](shell.ts) and [`shell-data.ts`](shell-data.ts): the lists of
   an org and the read marks.
 - [`workspace-view.ts`](workspace-view.ts): the saved view of each member.
+- [`workspace-view-compatibility.ts`](workspace-view-compatibility.ts):
+  the fit of old saves onto stored panes and the flat fields of replies.
+- [`workspace-view-save.ts`](workspace-view-save.ts): saves the view with
+  bounded retries when an old save meets a concurrent write.
 - [`workspace-state.ts`](workspace-state.ts): the state of a workspace for
   its reader, and the refusal of archived writes.
 - [`workspace-path.ts`](workspace-path.ts): the workspace ID of a path.

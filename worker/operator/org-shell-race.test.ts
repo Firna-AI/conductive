@@ -30,11 +30,10 @@ it.each(['view', 'read mark'] as const)(
         ? saveWorkspaceView(intercepted, {
             ...input,
             view: {
-              tabs: [],
-              activeTab: null,
-              temporaryTab: null,
               fileList: 'all',
               tool: 'terminal',
+              panes: [{ tabs: [], activeTab: null, temporaryTab: null }],
+              focusedPane: 0,
             },
           })
         : saveWorkspaceReadMark(intercepted, {

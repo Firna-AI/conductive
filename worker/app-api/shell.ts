@@ -22,11 +22,9 @@ import {
   workspaceBinding,
   workspaceForViewer,
 } from './workspace-state'
-import {
-  savedWorkspaceView,
-  saveWorkspaceView,
-  workspaceViewInput,
-} from './workspace-view'
+import { savedWorkspaceView, workspaceViewInput } from './workspace-view'
+import { workspaceViewReply } from './workspace-view-compatibility'
+import { saveCompatibleWorkspaceView } from './workspace-view-save'
 
 export async function shellRoute(
   request: Request,
@@ -73,23 +71,28 @@ export async function shellRoute(
   const workspace = await readWorkspace(env.DB, orgId, workspaceId)
   if (path === viewPath && request.method === 'GET')
     return Response.json({
-      view: await savedWorkspaceView(env.DB, workspaceId, userId),
+      view: workspaceViewReply(
+        await savedWorkspaceView(env.DB, workspaceId, userId),
+      ),
       automation: await workspaceAutomation(env.DB, orgId, workspaceId),
       baseBranch: workspace.baseBranch,
       repositoryFolder: await workspaceRepositoryFolder(env.DB, workspace),
     })
   if (path === viewPath && request.method === 'PUT') {
     requireWritableWorkspace(workspace)
-    const view = workspaceViewInput(context.body)
-    await saveWorkspaceView(env.DB, {
-      workspaceId,
-      orgId,
-      userId,
-      view,
-      now: dependencies.now(),
-    })
+    const view = await saveCompatibleWorkspaceView(
+      env.DB,
+      {
+        workspaceId,
+        orgId,
+        userId,
+        view: workspaceViewInput(context.body),
+        now: dependencies.now(),
+      },
+      !Object.hasOwn(context.body ?? {}, 'panes'),
+    )
     return Response.json({
-      view,
+      view: workspaceViewReply(view),
       automation: await workspaceAutomation(env.DB, orgId, workspaceId),
       baseBranch: workspace.baseBranch,
     })

@@ -1,5 +1,6 @@
 import type { Session } from '../../shared/generated/Session'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
+import { focusedPane } from '../../shared/workspace-panes'
 import type { ChangeModelRequest } from '../../shared/sessions'
 import { sessionState, type ChatSnapshot } from './chat-snapshot'
 import type { ChatContext } from './context'
@@ -90,7 +91,7 @@ export function applyMoves(
   let next = snapshot
   for (const move of moves) {
     next = moveDraft(next, move)
-    const activeTab = next.view?.activeTab
+    const activeTab = next.view ? focusedPane(next.view).activeTab : null
     const showsFile = activeTab?.kind === 'file' || activeTab?.kind === 'diff'
     if (!move.open || next.activeSessionId !== move.from || showsFile) continue
     next = {

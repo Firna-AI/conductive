@@ -1,17 +1,24 @@
+import { tabKey } from '../../shared/workspace-panes'
 import { isRunning } from './chat-snapshot'
 import { showNotice, type ChatContext } from './context'
 import { hydrate } from './history'
 import { selectSession } from './session-actions'
 import { beginEdit } from './session-records'
-import { withSessionTabAt } from './tab-order'
+import { withSessionTabAt } from './session-tab-places'
 
 /** Where the tab of a session stood before its close, to put it back. */
 function placeBefore(context: ChatContext, sessionId: string) {
   const { view, activeSessionId } = context.store.get()
+  const key = tabKey({ kind: 'session', sessionId })
+  const pane =
+    view?.panes.findIndex((pane) =>
+      pane.tabs.some((tab) => tabKey(tab) === key),
+    ) ?? -1
   return {
-    index: (view?.tabs ?? []).findIndex(
-      (tab) => tab.kind === 'session' && tab.sessionId === sessionId,
-    ),
+    pane: pane === 1 ? (1 as const) : (0 as const),
+    paneCount: view?.panes.length ?? 1,
+    index:
+      view?.panes[pane]?.tabs.findIndex((tab) => tabKey(tab) === key) ?? -1,
     shown: activeSessionId === sessionId,
   }
 }
@@ -48,7 +55,13 @@ async function closeSession(
         ...snapshot,
         view:
           snapshot.view &&
-          withSessionTabAt(snapshot.view, sessionId, before.index),
+          withSessionTabAt(
+            snapshot.view,
+            sessionId,
+            before.index,
+            before.pane,
+            before.paneCount,
+          ),
       }))
     }
     edit.fail()

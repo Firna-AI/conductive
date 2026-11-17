@@ -210,14 +210,19 @@ export function workspaceFixtures(
   }
   const view: WorkspaceViewResponse = {
     view: {
-      tabs: sessions.sessions.map((session) => ({
-        kind: 'session',
-        sessionId: session.id,
-      })),
-      activeTab: { kind: 'session', sessionId: FAKE_IDS.session },
       fileList: 'changes',
-      temporaryTab: null,
       tool: 'terminal',
+      panes: [
+        {
+          tabs: sessions.sessions.map((session) => ({
+            kind: 'session',
+            sessionId: session.id,
+          })),
+          activeTab: { kind: 'session', sessionId: FAKE_IDS.session },
+          temporaryTab: null,
+        },
+      ],
+      focusedPane: 0,
     },
     repositoryFolder: `/home/user/code/${openRepository()}`,
   }

@@ -26,17 +26,22 @@ describe('the chat tab order', () => {
     chat.controller.moveTab(first, {
       after: { kind: 'file', path: 'src/app.ts', mode: 'preview' },
     })
-    expect((await chat.savedView()).tabs).toEqual([second, file, first])
+    expect((await chat.savedView()).panes[0].tabs).toEqual([
+      second,
+      file,
+      first,
+    ])
     expect(chat.row()).toEqual([second, file, first])
     expect(chat.controller.getSnapshot().activeSessionId).toBe(FAKE_IDS.session)
 
     await chat.controller.select('debounce')
     expect(await chat.savedView()).toEqual({
-      tabs: [second, file, first],
-      activeTab: second,
-      temporaryTab: null,
       fileList: 'changes',
       tool: 'terminal',
+      panes: [
+        { tabs: [second, file, first], activeTab: second, temporaryTab: null },
+      ],
+      focusedPane: 0,
     })
   })
 
@@ -51,16 +56,23 @@ describe('the chat tab order', () => {
     await chat.savedView()
 
     const view: WorkspaceView = {
-      tabs: [file, first, second],
-      activeTab: first,
-      temporaryTab: mark,
       fileList: 'changes',
       tool: 'terminal',
+      panes: [
+        { tabs: [file, first, second], activeTab: first, temporaryTab: mark },
+      ],
+      focusedPane: 0,
     }
     const saved = chat.writes().map((request) => request.clone().json())
     expect(await Promise.all(saved)).toEqual([
       view,
-      { ...view, tabs: [first, file, second], temporaryTab: null },
+      {
+        ...view,
+        panes: [
+          { ...view.panes[0], tabs: [first, file, second], temporaryTab: null },
+        ],
+        focusedPane: 0,
+      },
     ])
   })
 
@@ -69,7 +81,12 @@ describe('the chat tab order', () => {
     await chat.controller.start()
     expect(chat.row(false)).toEqual([first, second])
     chat.controller.moveTab(second, { before: first })
-    expect((await chat.savedView()).tabs).toEqual([file, second, first, diff])
+    expect((await chat.savedView()).panes[0].tabs).toEqual([
+      file,
+      second,
+      first,
+      diff,
+    ])
     expect(chat.row(false)).toEqual([second, first])
   })
 
@@ -80,10 +97,16 @@ describe('the chat tab order', () => {
     expect(chat.writes()).toEqual([])
     chat.controller.updateView((view) => ({
       ...view,
-      tabs: [...view.tabs, file],
-      activeTab: file,
+      panes: [
+        {
+          ...view.panes[0],
+          tabs: [...view.panes[0].tabs, file],
+          activeTab: file,
+        },
+      ],
+      focusedPane: 0,
     }))
-    expect((await chat.savedView()).tabs).toEqual([first, file])
+    expect((await chat.savedView()).panes[0].tabs).toEqual([first, file])
     expect(chat.row()).toEqual([first, file])
   })
 
@@ -106,7 +129,12 @@ describe('the chat tab order', () => {
       eventNumber: chat.nextEventNumber(),
     })
     await chat.controller.reopen('postcode')
-    expect((await chat.savedView()).tabs).toEqual([file, first, second, closed])
+    expect((await chat.savedView()).panes[0].tabs).toEqual([
+      file,
+      first,
+      second,
+      closed,
+    ])
     expect(chat.row()).toEqual([file, first, second, closed])
     expect(chat.controller.getSnapshot().activeSessionId).toBe('postcode')
   })
@@ -115,7 +143,11 @@ describe('the chat tab order', () => {
     const chat = tabChat([first, second, file])
     await chat.controller.start()
     chat.controller.moveTab(second, { before: first })
-    expect((await chat.savedView()).tabs).toEqual([second, first, file])
+    expect((await chat.savedView()).panes[0].tabs).toEqual([
+      second,
+      first,
+      file,
+    ])
     expect(
       chat.controller.getSnapshot().sessions.map((session) => session.id),
     ).toEqual(['debounce', FAKE_IDS.session])
@@ -127,9 +159,10 @@ describe('the chat tab order', () => {
     })
     chat.controller.updateView((view) => ({
       ...view,
-      tabs: [...view.tabs, diff],
+      panes: [{ ...view.panes[0], tabs: [...view.panes[0].tabs, diff] }],
+      focusedPane: 0,
     }))
-    expect((await chat.savedView()).tabs).toEqual([
+    expect((await chat.savedView()).panes[0].tabs).toEqual([
       second,
       first,
       file,
@@ -148,7 +181,7 @@ describe('the chat tab order', () => {
       201,
     )
     await chat.controller.newSession()
-    expect((await chat.savedView()).tabs).toEqual([
+    expect((await chat.savedView()).panes[0].tabs).toEqual([
       second,
       first,
       file,
@@ -166,7 +199,7 @@ describe('the chat tab order', () => {
     })
     await chat.controller.requestClose('debounce')
     expect(chat.controller.getSnapshot().activeSessionId).toBe(FAKE_IDS.session)
-    expect((await chat.savedView()).tabs).toEqual([
+    expect((await chat.savedView()).panes[0].tabs).toEqual([
       first,
       file,
       streamed,
@@ -184,6 +217,10 @@ describe('the chat tab order', () => {
     chat.controller.moveTab(first, { after: file })
     expect(chat.controller.getSnapshot()).toBe(before)
     expect(chat.writes()).toEqual([])
-    expect((await chat.savedView()).tabs).toEqual([first, second, file])
+    expect((await chat.savedView()).panes[0].tabs).toEqual([
+      first,
+      second,
+      file,
+    ])
   })
 })

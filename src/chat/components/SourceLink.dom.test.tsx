@@ -61,12 +61,16 @@ function linkedServer() {
     sessions: [...sessions.sessions, ...linked],
   })
   const tabs: WorkspaceTab[] = [
-    ...view.view.tabs,
+    ...view.view.panes[0].tabs,
     ...linked.map(({ id }) => ({ kind: 'session' as const, sessionId: id })),
   ]
   const activeTab: WorkspaceTab = { kind: 'session', sessionId: LINKED }
   server.json('GET', workspaceViewPath(org, ws), {
-    view: { ...view.view, tabs, activeTab },
+    view: {
+      ...view.view,
+      panes: [{ ...view.view.panes[0], tabs, activeTab }],
+      focusedPane: 0,
+    },
   })
   for (const session of linked) {
     const words = `Continue the work of ${session.sourceSessionId}.`

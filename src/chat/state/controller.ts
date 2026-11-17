@@ -38,7 +38,7 @@ import { chooseModel } from './model-actions'
 import { draftFileSource } from './draft-file-source'
 import { sendPrompt, type PromptOutcome } from './prompt-actions'
 import { moveTab } from './tab-actions'
-import type { TabPlace } from './tab-order'
+import type { TabPlace, TabTarget } from './tab-order'
 import { ownWorkspaceList, type WorkspaceList } from './workspace-list'
 import { confirmClose, requestClose } from './close-actions'
 import {
@@ -264,7 +264,7 @@ export class ChatController {
    */
   readonly updateView = (change: (view: WorkspaceView) => WorkspaceView) =>
     updateView(this.context, change, !this.readOnly())
-  readonly moveTab = (tab: WorkspaceTab, place: TabPlace): void => {
+  readonly moveTab = (tab: WorkspaceTab, place: TabPlace | TabTarget): void => {
     if (!this.readOnly()) moveTab(this.context, tab, place)
   }
   /**

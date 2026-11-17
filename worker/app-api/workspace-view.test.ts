@@ -63,13 +63,50 @@ async function storeRawView(value: unknown) {
     .run()
 }
 
+it('replaces one stored pane with an old saves order, shown tab, and temporary tab', async () => {
+  await storeRawView({
+    panes: [{ ...view, temporaryTab: tabs[0] }],
+    focusedPane: 0,
+    fileList: view.fileList,
+    tool: view.tool,
+  })
+  const oldSave = {
+    ...view,
+    tabs: [tabs[1], tabs[0]],
+    activeTab: tabs[1],
+    temporaryTab: tabs[1],
+  }
+  const saved = await requestView('PUT', oldSave)
+  expect(saved.status).toBe(200)
+  const expected = {
+    ...oldSave,
+    panes: [
+      {
+        tabs: [tabs[1], tabs[0]],
+        activeTab: tabs[1],
+        temporaryTab: tabs[1],
+      },
+    ],
+    focusedPane: 0,
+  }
+  expect(await saved.json()).toMatchObject({ view: expected })
+  const loaded = await requestView()
+  expect(loaded.status).toBe(200)
+  expect(await loaded.json()).toMatchObject({ view: expected })
+})
+
 it.each([
   { kind: 'file', path: 'README.md' },
   { kind: 'diff', path: 'src/app.ts' },
 ])(
   'keeps the temporary $kind tab through a save and a load',
   async (temporaryTab) => {
-    const saved = await requestView('PUT', { ...view, temporaryTab })
+    const saved = await requestView('PUT', {
+      fileList: view.fileList,
+      tool: view.tool,
+      panes: [{ ...view, temporaryTab }],
+      focusedPane: 0,
+    })
     expect(saved.status).toBe(200)
     expect(await saved.json()).toMatchObject({
       view: { ...view, temporaryTab },
@@ -86,7 +123,12 @@ it('returns no temporary tab for a new view and for older saved views', async ()
   expect(await (await requestView()).json()).toMatchObject({
     view: { tabs: [], activeTab: null, temporaryTab: null },
   })
-  const saved = await requestView('PUT', view)
+  const saved = await requestView('PUT', {
+    fileList: view.fileList,
+    tool: view.tool,
+    panes: [{ ...view, temporaryTab: null }],
+    focusedPane: 0,
+  })
   expect(saved.status).toBe(200)
   expect(await saved.json()).toMatchObject({
     view: { ...view, temporaryTab: null },
@@ -109,7 +151,12 @@ it('accepts invalid temporary marks and loads them as null', async () => {
     { kind: 'diff' },
   ]
   for (const temporaryTab of marks) {
-    const saved = await requestView('PUT', { ...view, temporaryTab })
+    const saved = await requestView('PUT', {
+      fileList: view.fileList,
+      tool: view.tool,
+      panes: [{ ...view, temporaryTab }],
+      focusedPane: 0,
+    })
     expect(saved.status, JSON.stringify(temporaryTab)).toBe(200)
     expect(await saved.json()).toMatchObject({
       view: { ...view, temporaryTab: null },
@@ -126,7 +173,12 @@ it('loads a mark with no matching open kind and path as null', async () => {
     { kind: 'file', path: 'closed.ts' },
     { kind: 'diff', path: 'README.md' },
   ]) {
-    const saved = await requestView('PUT', { ...view, temporaryTab })
+    const saved = await requestView('PUT', {
+      fileList: view.fileList,
+      tool: view.tool,
+      panes: [{ ...view, temporaryTab }],
+      focusedPane: 0,
+    })
     expect(saved.status).toBe(200)
     expect(await saved.json()).toMatchObject({
       view: { ...view, temporaryTab: null },

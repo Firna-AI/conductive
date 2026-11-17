@@ -1,6 +1,5 @@
 // @vitest-environment happy-dom
 
-import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 import { routes } from '../../../app/router'
 import type { FilesTab } from '../../../files/navigation'
@@ -20,14 +19,19 @@ import {
 } from '../../../test-support/mount'
 import { serveSuspendedAcme } from '../../../test-support/suspended-org'
 import { click, settle } from '../../test-mount'
-import { bodiesOf } from '../kept-test-kit'
 import { linkTo, openTab, tabNames } from '../wiring-test-kit'
 import { filesHref } from './files-address'
+import {
+  doubleClick,
+  markOf,
+  rowLink,
+  savedViews,
+} from './temporary-tabs.test-support'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
 const { org, workspace: id } = FAKE_IDS
-const [first, second] = workspaceFixtures().view.view.tabs
+const [first, second] = workspaceFixtures().view.view.panes[0].tabs
 const [autocomplete, debounce] = workspaceFixtures().sessions.sessions.map(
   (session) => nameLabel(session.title),
 )
@@ -44,62 +48,21 @@ const page: FilesTab = {
   mode: 'preview',
 }
 
-/** The views that the tab saved, from the request with index `from` on. */
-function savedViews(server: FakeApiServer, from: number): Promise<unknown[]> {
-  return bodiesOf(server, 'PUT', workspaceViewPath(org, id), from)
-}
-
-/** The temporary mark of a saved view, or "none" for a body without one. */
-function markOf(body: unknown): unknown {
-  return typeof body === 'object' && body !== null && 'temporaryTab' in body
-    ? body.temporaryTab
-    : 'none'
-}
-
-/** The link of All files or Changes, in the right column, to `tab`. */
-function rowLink(view: HTMLElement, list: string, tab: FilesTab) {
-  const panel = byLabel('Files and tools', view)
-  return linkTo(byLabel(list, panel), filesHref(org, id, tab))
-}
-
-/**
- * A double-click of the mouse, as a browser sends it: a press and a click
- * with the count 1, a press and a click with the count 2, then the
- * double-click. The page settles after the first click, as it does between
- * two clicks. The result says, for each press, whether the page stopped
- * the action of the browser, which selects a word at the second press.
- */
-async function doubleClick(target: HTMLElement): Promise<boolean[]> {
-  const send = (type: string, detail: number) => {
-    const init = { bubbles: true, cancelable: true, button: 0, detail }
-    const event = new MouseEvent(type, init)
-    act(() => {
-      target.dispatchEvent(event)
-    })
-    return event.defaultPrevented
-  }
-  const stopped: boolean[] = []
-  for (const detail of [1, 2]) {
-    stopped.push(send('mousedown', detail))
-    send('mouseup', detail)
-    send('click', detail)
-    if (detail === 1) await settle()
-  }
-  send('dblclick', 2)
-  await settle()
-  return stopped
-}
-
 describe('the temporary tab in the workspace', () => {
   test('load the saved temporary tab, replace it in its place at a press, keep it through a switch of mode, and clear the mark when it closes', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer()
     const saved: WorkspaceView = {
-      tabs: [first, form, second],
-      activeTab: first,
-      temporaryTab: { kind: 'file', path: FAKE_FILE_PATH },
       fileList: 'all',
       tool: 'terminal',
+      panes: [
+        {
+          tabs: [first, form, second],
+          activeTab: first,
+          temporaryTab: { kind: 'file', path: FAKE_FILE_PATH },
+        },
+      ],
+      focusedPane: 0,
     }
     server.json('GET', workspaceViewPath(org, id), { view: saved })
     const { view, navigation } = await openTab(
@@ -137,21 +100,39 @@ describe('the temporary tab in the workspace', () => {
       saved: [
         {
           ...saved,
-          tabs: [first, readme, second],
-          activeTab: readme,
-          temporaryTab: mark,
+          panes: [
+            {
+              ...saved.panes[0],
+              tabs: [first, readme, second],
+              activeTab: readme,
+              temporaryTab: mark,
+            },
+          ],
+          focusedPane: 0,
         },
         {
           ...saved,
-          tabs: [first, source, second],
-          activeTab: source,
-          temporaryTab: mark,
+          panes: [
+            {
+              ...saved.panes[0],
+              tabs: [first, source, second],
+              activeTab: source,
+              temporaryTab: mark,
+            },
+          ],
+          focusedPane: 0,
         },
         {
           ...saved,
-          tabs: [first, second],
-          activeTab: first,
-          temporaryTab: null,
+          panes: [
+            {
+              ...saved.panes[0],
+              tabs: [first, second],
+              activeTab: first,
+              temporaryTab: null,
+            },
+          ],
+          focusedPane: 0,
         },
       ],
     })
@@ -239,18 +220,28 @@ describe('the temporary tab in the workspace', () => {
       history: [formHref],
       saved: [
         {
-          tabs: [first, second, form],
-          activeTab: form,
-          temporaryTab: { kind: 'file', path: FAKE_FILE_PATH },
           fileList: 'changes',
           tool: 'terminal',
+          panes: [
+            {
+              tabs: [first, second, form],
+              activeTab: form,
+              temporaryTab: { kind: 'file', path: FAKE_FILE_PATH },
+            },
+          ],
+          focusedPane: 0,
         },
         {
-          tabs: [first, second, form],
-          activeTab: form,
-          temporaryTab: null,
           fileList: 'changes',
           tool: 'terminal',
+          panes: [
+            {
+              tabs: [first, second, form],
+              activeTab: form,
+              temporaryTab: null,
+            },
+          ],
+          focusedPane: 0,
         },
       ],
     })

@@ -1,8 +1,9 @@
 import type {
-  TemporaryTab,
   WorkspaceTab,
   WorkspaceView,
 } from '../../src/shared/workspace-view'
+import { readWorkspacePanes } from '../../src/shared/workspace-pane-input'
+import { emptyPane } from '../../src/shared/workspace-panes'
 import { identifier, record } from '../chat/inputs'
 import { HttpError } from '../http'
 import { activeOrgIdPredicate } from '../data/org-access'
@@ -26,29 +27,10 @@ function viewTab(value: unknown): WorkspaceTab {
   return invalidView()
 }
 
-function temporaryTab(
-  value: unknown,
-  tabs: readonly WorkspaceTab[],
-): TemporaryTab | null {
-  try {
-    const tab = record(value)
-    if (tab.kind !== 'file' && tab.kind !== 'diff') return null
-    const path = identifier(tab.path)
-    return tabs.some(
-      (open) =>
-        open.kind !== 'session' && open.kind === tab.kind && open.path === path,
-    )
-      ? { kind: tab.kind, path }
-      : null
-  } catch {
-    return null
-  }
-}
-
 export function workspaceViewInput(value: unknown): WorkspaceView {
   const view = record(value)
   if (
-    !Array.isArray(view.tabs) ||
+    (!Object.hasOwn(view, 'panes') && !Array.isArray(view.tabs)) ||
     (view.fileList !== 'all' &&
       view.fileList !== 'changes' &&
       view.fileList !== 'checks') ||
@@ -57,21 +39,18 @@ export function workspaceViewInput(value: unknown): WorkspaceView {
       view.tool !== 'desktop')
   )
     return invalidView()
-  const tabs = view.tabs.map(viewTab)
   return {
-    tabs,
-    activeTab: view.activeTab === null ? null : viewTab(view.activeTab),
-    temporaryTab: temporaryTab(view.temporaryTab, tabs),
+    ...readWorkspacePanes(view, viewTab),
     fileList: view.fileList,
     tool: view.tool,
   }
 }
 
-export async function savedWorkspaceView(
+export async function storedWorkspaceView(
   db: D1Database,
   workspaceId: string,
   userId: string,
-): Promise<WorkspaceView> {
+): Promise<{ view: WorkspaceView; encoded: string | null }> {
   const row = await db
     .prepare(
       'SELECT view_json AS viewJson FROM workspace_views WHERE workspace_id = ? AND user_id = ?',
@@ -80,14 +59,24 @@ export async function savedWorkspaceView(
     .first<{ viewJson: string }>()
   if (!row)
     return {
-      tabs: [],
-      activeTab: null,
-      temporaryTab: null,
-      fileList: 'all',
-      tool: 'terminal',
+      view: {
+        panes: [emptyPane()],
+        focusedPane: 0,
+        fileList: 'all',
+        tool: 'terminal',
+      },
+      encoded: null,
     }
   const value: unknown = JSON.parse(row.viewJson)
-  return workspaceViewInput(value)
+  return { view: workspaceViewInput(value), encoded: row.viewJson }
+}
+
+export async function savedWorkspaceView(
+  db: D1Database,
+  workspaceId: string,
+  userId: string,
+): Promise<WorkspaceView> {
+  return (await storedWorkspaceView(db, workspaceId, userId)).view
 }
 
 export async function saveWorkspaceView(
@@ -98,12 +87,15 @@ export async function saveWorkspaceView(
     userId: string
     view: WorkspaceView
     now: number
+    expectedView?: string | null
   },
-): Promise<void> {
-  await db
+): Promise<boolean> {
+  const result = await db
     .prepare(
       `INSERT INTO workspace_views (workspace_id, org_id, user_id, view_json, updated_at)
      SELECT ?, ?, ?, ?, ? WHERE ${activeOrgIdPredicate('?')}
+     AND (? = 0 OR (SELECT view_json FROM workspace_views
+       WHERE workspace_id = ? AND user_id = ?) IS ?)
      ON CONFLICT(workspace_id, user_id) DO UPDATE SET
      view_json = excluded.view_json, updated_at = excluded.updated_at`,
     )
@@ -114,7 +106,12 @@ export async function saveWorkspaceView(
       JSON.stringify(input.view),
       input.now,
       input.orgId,
+      input.expectedView === undefined ? 0 : 1,
+      input.workspaceId,
+      input.userId,
+      input.expectedView ?? null,
     )
     .run()
   await requireActiveOrg(db, input.orgId)
+  return result.meta.changes > 0
 }

@@ -15,7 +15,7 @@ import {
   placeSession,
   sortHistory,
 } from './sessions'
-import { withSessionPlaces } from './tab-order'
+import { withSessionPlaces } from './session-tab-places'
 
 /**
  * The order of the session records that a reply and the stream both write. Each

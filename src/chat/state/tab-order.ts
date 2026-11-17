@@ -1,31 +1,25 @@
 import type { Session } from '../../shared/generated/Session'
-
-import type {
-  TemporaryTab,
-  WorkspaceTab,
-  WorkspaceView,
-} from '../../shared/workspace-view'
+import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
+import {
+  allTabs,
+  focusedPane,
+  paneWithTabs,
+  tabKey,
+  withPanes,
+} from '../../shared/workspace-panes'
 
 export type TabPlace = { before: WorkspaceTab } | { after: WorkspaceTab }
+export type TabTarget =
+  { pane: 0 | 1; place: TabPlace | 'end' } | { newPane: 'left' | 'right' }
 
-/**
- * The key of a tab, or of the mark of the temporary tab. One file or diff
- * keeps its identity when its display mode changes, so the mark, which
- * names no mode, has the key of its tab.
- */
-export function tabKey(tab: WorkspaceTab | TemporaryTab): string {
-  return tab.kind === 'session'
-    ? `session:${tab.sessionId}`
-    : `${tab.kind}:${tab.path}`
-}
-
-/** The visible saved tabs, then the sessions that have no saved place. */
+/** The focused row's visible tabs, then sessions without a place in either pane. */
 export function rowTabs(
   view: WorkspaceView | null,
   sessions: readonly Session[],
   files: boolean,
 ): WorkspaceTab[] {
   const open = new Set(sessions.map((session) => session.id))
+  const placed = new Set(allTabs(view).map(tabKey))
   const seen = new Set<string>()
   const tabs: WorkspaceTab[] = []
   const append = (tab: WorkspaceTab) => {
@@ -34,117 +28,79 @@ export function rowTabs(
     seen.add(key)
     tabs.push(tab)
   }
-  for (const tab of view?.tabs ?? []) {
+  for (const tab of view ? focusedPane(view).tabs : []) {
     if (tab.kind === 'session' ? open.has(tab.sessionId) : files) append(tab)
   }
-  for (const { id } of sessions) append({ kind: 'session', sessionId: id })
+  for (const { id } of sessions) {
+    const tab: WorkspaceTab = { kind: 'session', sessionId: id }
+    if (!placed.has(tabKey(tab))) append(tab)
+  }
   return tabs
 }
 
-/** Adds one arriving session's missing place without removing any other place. */
-export function withSessionPlace(
-  view: WorkspaceView | null,
-  sessionId: string,
-): WorkspaceView | null {
-  if (
-    view === null ||
-    view.tabs.some(
-      (tab) => tab.kind === 'session' && tab.sessionId === sessionId,
-    )
-  )
-    return view
-  return { ...view, tabs: [...view.tabs, { kind: 'session', sessionId }] }
-}
-
-/**
- * Puts the tab of a session back at an index of the saved order, such as
- * after a failed close. A view that holds the tab already stays the same.
- */
-export function withSessionTabAt(
-  view: WorkspaceView,
-  sessionId: string,
-  index: number,
-): WorkspaceView {
-  if (
-    view.tabs.some(
-      (tab) => tab.kind === 'session' && tab.sessionId === sessionId,
-    )
-  )
-    return view
-  const tabs = [...view.tabs]
-  tabs.splice(Math.min(index, tabs.length), 0, { kind: 'session', sessionId })
-  return { ...view, tabs }
-}
-
-/** Keeps one place per open session, and appends missing places in creation order. */
-export function withSessionPlaces(
-  view: WorkspaceView | null,
-  open: readonly Session[],
-): WorkspaceView | null {
-  if (view === null) return null
-  const ids = new Set(open.map((session) => session.id))
-  const placed = new Set<string>()
-  const tabs = view.tabs.filter((tab) => {
-    if (tab.kind !== 'session') return true
-    if (!ids.has(tab.sessionId) || placed.has(tab.sessionId)) return false
-    placed.add(tab.sessionId)
-    return true
-  })
-  for (const session of [...open].sort((a, b) => a.createdAt - b.createdAt)) {
-    if (placed.has(session.id)) continue
-    tabs.push({ kind: 'session', sessionId: session.id })
-    placed.add(session.id)
-  }
-  return sameOrder(tabs, view.tabs) ? view : { ...view, tabs }
-}
-
-function sameOrder(
-  left: readonly WorkspaceTab[],
-  right: readonly WorkspaceTab[],
-): boolean {
-  return (
-    left.length === right.length && left.every((tab, i) => tab === right[i])
-  )
-}
-
-/**
- * Moves one tab beside a visible neighbour, and keeps the other tabs in
- * place. A move that changes the place of the temporary tab keeps it: the
- * view drops its mark with the new order. The drop of a drag, Move left,
- * and Move right all move through here. A move that changes no place gives
- * the same view object, so the mark stays and nothing saves.
- */
+/** One transition for every row move, pane move, and split. */
 export function moveTab(
   view: WorkspaceView,
-  row: readonly WorkspaceTab[],
   tab: WorkspaceTab,
-  place: TabPlace,
+  target: TabTarget,
 ): WorkspaceView {
   const key = tabKey(tab)
-  const neighbour = tabKey('before' in place ? place.before : place.after)
-  const visible = new Set(row.map(tabKey))
-  if (key === neighbour || !visible.has(key) || !visible.has(neighbour)) {
-    return view
+  const from = view.panes.findIndex((pane) =>
+    pane.tabs.some((item) => tabKey(item) === key),
+  )
+  const source = view.panes[from]
+  const moving = source?.tabs.find((item) => tabKey(item) === key)
+  if (!source || !moving) return view
+  const remaining = source.tabs.filter((item) => tabKey(item) !== key)
+  if ('newPane' in target) {
+    if (view.panes.length !== 1 || remaining.length === 0) return view
+    const opened = { tabs: [moving], activeTab: moving, temporaryTab: null }
+    const old = paneWithTabs(source, remaining)
+    return {
+      ...view,
+      panes: target.newPane === 'left' ? [opened, old] : [old, opened],
+      focusedPane: target.newPane === 'left' ? 0 : 1,
+    }
   }
-  const moving = view.tabs.find((item) => tabKey(item) === key)
-  if (!moving) return view
-  const tabs = view.tabs.filter((item) => tabKey(item) !== key)
-  const at = tabs.findIndex((item) => tabKey(item) === neighbour)
-  if (at < 0) return view
-  tabs.splice(at + ('after' in place ? 1 : 0), 0, moving)
-  if (sameOrder(tabs, view.tabs)) return view
-  const mark = view.temporaryTab
-  const kept = mark !== null && tabKey(mark) === key
-  return { ...view, tabs, temporaryTab: kept ? null : mark }
+  const destination = view.panes[target.pane]
+  if (!destination) return view
+  const samePane = from === target.pane
+  const tabs = samePane ? remaining : [...destination.tabs]
+  let at = tabs.length
+  if (target.place !== 'end') {
+    const neighbour = tabKey(
+      'before' in target.place ? target.place.before : target.place.after,
+    )
+    if (key === neighbour) return view
+    at = tabs.findIndex((item) => tabKey(item) === neighbour)
+    if (at < 0) return view
+    if ('after' in target.place) at += 1
+  }
+  tabs.splice(at, 0, moving)
+  if (samePane && tabs.every((item, index) => item === source.tabs[index]))
+    return view
+  const kept = source.temporaryTab && tabKey(source.temporaryTab) === key
+  if (samePane) {
+    return withPanes(
+      view,
+      view.panes.map((pane, index) =>
+        index === from
+          ? { ...pane, tabs, temporaryTab: kept ? null : pane.temporaryTab }
+          : pane,
+      ),
+    )
+  }
+  return withPanes(
+    view,
+    view.panes.map((pane, index) => {
+      if (index === from) return paneWithTabs(source, remaining)
+      return { ...pane, tabs, activeTab: moving }
+    }),
+    target.pane,
+  )
 }
 
-/**
- * The view without the given file and diff tabs, as Close tabs to the right
- * of the tab menu closes them. A session tab closes through the server
- * instead, so this keeps each session tab. A closed temporary tab loses its
- * mark. A closed active tab leaves no active tab, so close it after the
- * row shows another tab. A change that closes nothing gives the same view.
- */
+/** Closes file and diff tabs together. Session records close through the server. */
 export function withoutTabs(
   view: WorkspaceView,
   closed: readonly WorkspaceTab[],
@@ -152,14 +108,15 @@ export function withoutTabs(
   const keys = new Set(
     closed.filter((tab) => tab.kind !== 'session').map(tabKey),
   )
-  const tabs = view.tabs.filter((tab) => !keys.has(tabKey(tab)))
-  if (tabs.length === view.tabs.length) return view
-  const { activeTab, temporaryTab } = view
-  return {
-    ...view,
-    tabs,
-    activeTab: activeTab && keys.has(tabKey(activeTab)) ? null : activeTab,
-    temporaryTab:
-      temporaryTab && keys.has(tabKey(temporaryTab)) ? null : temporaryTab,
-  }
+  let changed = false
+  const panes = view.panes.map((pane) => {
+    const tabs = pane.tabs.filter((tab) => !keys.has(tabKey(tab)))
+    if (tabs.length === pane.tabs.length) return pane
+    changed = true
+    const next = paneWithTabs(pane, tabs)
+    return pane.activeTab && keys.has(tabKey(pane.activeTab))
+      ? { ...next, activeTab: null }
+      : next
+  })
+  return changed ? withPanes(view, panes) : view
 }

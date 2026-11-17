@@ -18,7 +18,12 @@ it('reads a temporary file or diff tab without a display mode', () => {
     { kind: 'diff', path: 'src/app.ts' },
   ]) {
     expect(readViewReply({ view: { ...view, temporaryTab } })).toEqual({
-      view: { ...view, temporaryTab },
+      view: {
+        panes: [{ tabs: view.tabs, activeTab: view.activeTab, temporaryTab }],
+        focusedPane: 0,
+        fileList: view.fileList,
+        tool: view.tool,
+      },
       automation: null,
       repositoryFolder: null,
     })
@@ -26,7 +31,12 @@ it('reads a temporary file or diff tab without a display mode', () => {
 })
 
 it('reads missing, invalid, and closed temporary marks as null', () => {
-  expect(readViewReply({ view }).view).toEqual({ ...view, temporaryTab: null })
+  expect(readViewReply({ view }).view).toEqual({
+    panes: [{ tabs: view.tabs, activeTab: view.activeTab, temporaryTab: null }],
+    focusedPane: 0,
+    fileList: view.fileList,
+    tool: view.tool,
+  })
   for (const temporaryTab of [
     null,
     'README.md',
@@ -40,8 +50,12 @@ it('reads missing, invalid, and closed temporary marks as null', () => {
     { kind: 'diff', path: 'README.md' },
   ]) {
     expect(readViewReply({ view: { ...view, temporaryTab } }).view).toEqual({
-      ...view,
-      temporaryTab: null,
+      panes: [
+        { tabs: view.tabs, activeTab: view.activeTab, temporaryTab: null },
+      ],
+      focusedPane: 0,
+      fileList: view.fileList,
+      tool: view.tool,
     })
   }
 })
@@ -67,5 +81,35 @@ describe('readViewReply', () => {
     expect(readViewReply({ view, repositoryFolder }).repositoryFolder).toBe(
       null,
     )
+  })
+})
+
+it('reads panes and their own marks instead of the compatibility row of a reply', () => {
+  const file = { kind: 'file', path: 'left.ts', mode: 'source' }
+  const diff = { kind: 'diff', path: 'right.ts' }
+  const panes = [
+    {
+      tabs: [file],
+      activeTab: file,
+      temporaryTab: { kind: 'file', path: 'left.ts' },
+    },
+    { tabs: [diff], activeTab: diff, temporaryTab: diff },
+  ]
+  expect(
+    readViewReply({
+      view: {
+        ...view,
+        panes,
+        focusedPane: 1,
+        tabs: [file, diff],
+        activeTab: diff,
+        temporaryTab: diff,
+      },
+    }).view,
+  ).toEqual({
+    panes,
+    focusedPane: 1,
+    fileList: 'all',
+    tool: 'terminal',
   })
 })

@@ -8,8 +8,8 @@ import { viewShowing } from './sessions'
 function sameTabs(current: WorkspaceView | null, next: WorkspaceView): boolean {
   return (
     current !== null &&
-    current.tabs.length === next.tabs.length &&
-    JSON.stringify(current.activeTab) === JSON.stringify(next.activeTab)
+    current.focusedPane === next.focusedPane &&
+    JSON.stringify(current.panes) === JSON.stringify(next.panes)
   )
 }
 

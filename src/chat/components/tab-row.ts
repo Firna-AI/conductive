@@ -8,7 +8,8 @@ import type {
 import { nameLabel } from '../../shared/name-label'
 
 import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
-import { rowTabs, tabKey } from '../state/tab-order'
+import { rowTabs } from '../state/tab-order'
+import { focusedPane, tabKey } from '../../shared/workspace-panes'
 
 /** A file or diff tab of the saved view. The host of the chat draws it. */
 type HostTab = Exclude<WorkspaceTab, { kind: 'session' }>
@@ -121,7 +122,7 @@ export function shownTab(
       ? null
       : { kind: 'session', sessionId: activeSessionId }
   }
-  const active = view?.activeTab ?? null
+  const active = view ? focusedPane(view).activeTab : null
   return active?.kind === 'session' ? null : active
 }
 

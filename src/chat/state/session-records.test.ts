@@ -147,8 +147,13 @@ describe('session records', () => {
     await closing
     const views = () => chat.bodies('PUT', workspaceViewPath(org, ws))
     expect((await views()).at(-1)).toMatchObject({
-      tabs: [{ kind: 'session', sessionId: 'debounce' }],
-      activeTab: { kind: 'session', sessionId: 'debounce' },
+      panes: [
+        {
+          tabs: [{ kind: 'session', sessionId: 'debounce' }],
+          activeTab: { kind: 'session', sessionId: 'debounce' },
+        },
+      ],
+      focusedPane: 0,
     })
     expect(shown(chat.controller, 'debounce')).toHaveLength(4)
     chat.server.json('POST', sessionPaths.reopen(org, ws, id), {
@@ -161,7 +166,7 @@ describe('session records', () => {
     await reopening
     expect(chat.controller.getSnapshot().activeSessionId).toBe(id)
     expect((await views()).at(-1)).toMatchObject({
-      activeTab: { kind: 'session', sessionId: id },
+      panes: [{ activeTab: { kind: 'session', sessionId: id } }],
     })
   })
 })

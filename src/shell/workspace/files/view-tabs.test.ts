@@ -26,7 +26,12 @@ function viewOf(
   activeTab: WorkspaceTab | null,
   temporaryTab: TemporaryTab | null,
 ): WorkspaceView {
-  return { tabs, activeTab, temporaryTab, fileList: 'all', tool: 'terminal' }
+  return {
+    fileList: 'all',
+    tool: 'terminal',
+    panes: [{ tabs, activeTab, temporaryTab }],
+    focusedPane: 0,
+  }
 }
 
 describe('the temporary tab of the saved view', () => {
@@ -117,5 +122,56 @@ describe('the temporary tab of the saved view', () => {
       temporary: viewOf([first, form], form, null),
       other: viewOf([first, readme], readme, mark),
     })
+  })
+})
+
+test('keeps each panes own temporary mark when files open, show, stay open, and close', () => {
+  const left = {
+    tabs: [readme],
+    activeTab: readme,
+    temporaryTab: { kind: 'file', path: 'README.md' } as const,
+  }
+  const right = {
+    tabs: [form],
+    activeTab: form,
+    temporaryTab: { kind: 'file', path: form.path } as const,
+  }
+  const view: WorkspaceView = {
+    panes: [left, right],
+    focusedPane: 1,
+    fileList: 'all',
+    tool: 'terminal',
+  }
+  expect(withActiveTab(view, hookDiff)).toEqual({
+    ...view,
+    panes: [
+      left,
+      {
+        tabs: [hookDiff],
+        activeTab: hookDiff,
+        temporaryTab: { kind: 'diff', path: hookDiff.path },
+      },
+    ],
+  })
+  expect(withActiveTab(view, readmeSource)).toEqual({
+    ...view,
+    panes: [
+      {
+        ...left,
+        tabs: [readmeSource],
+        activeTab: readmeSource,
+      },
+      right,
+    ],
+    focusedPane: 0,
+  })
+  expect(withKeptTab(view, readme)).toEqual({
+    ...view,
+    panes: [{ ...left, temporaryTab: null }, right],
+  })
+  expect(withoutTab(view, form, readme)).toEqual({
+    ...view,
+    panes: [left],
+    focusedPane: 0,
   })
 })

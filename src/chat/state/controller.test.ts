@@ -195,14 +195,19 @@ describe('ChatController', () => {
     expect(chat.controller.getSnapshot().activeSessionId).toBe('third')
     const views = await chat.bodies('PUT', workspaceViewPath(org, ws))
     expect(views.at(-1)).toEqual({
-      tabs: [
-        { kind: 'session', sessionId: 'autocomplete' },
-        { kind: 'session', sessionId: 'third' },
-      ],
-      activeTab: { kind: 'session', sessionId: 'third' },
-      temporaryTab: null,
       fileList: 'changes',
       tool: 'terminal',
+      panes: [
+        {
+          tabs: [
+            { kind: 'session', sessionId: 'autocomplete' },
+            { kind: 'session', sessionId: 'third' },
+          ],
+          activeTab: { kind: 'session', sessionId: 'third' },
+          temporaryTab: null,
+        },
+      ],
+      focusedPane: 0,
     })
   })
 

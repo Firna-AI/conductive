@@ -108,11 +108,16 @@ describe('the Files screens in the workspace', () => {
     // leaves it temporary.
     const saved = await savedViews(server, from)
     expect(saved.at(-1)).toEqual({
-      tabs: [...fixtures.view.view.tabs, fileTab],
-      activeTab: { kind: 'session', sessionId: FAKE_IDS.session },
-      temporaryTab: { kind: 'file', path: FAKE_FILE_PATH },
       fileList: 'all',
       tool: 'terminal',
+      panes: [
+        {
+          tabs: [...fixtures.view.view.panes[0].tabs, fileTab],
+          activeTab: { kind: 'session', sessionId: FAKE_IDS.session },
+          temporaryTab: { kind: 'file', path: FAKE_FILE_PATH },
+        },
+      ],
+      focusedPane: 0,
     })
   })
 
@@ -205,9 +210,15 @@ describe('the Files screens in the workspace', () => {
     expect(await savedViews(server, from)).toEqual([
       {
         ...workspaceFixtures().view.view,
-        tabs: [...workspaceFixtures().view.view.tabs, diffTab],
-        activeTab: diffTab,
-        temporaryTab: { kind: 'diff', path: FAKE_FILE_PATH },
+        panes: [
+          {
+            ...workspaceFixtures().view.view.panes[0],
+            tabs: [...workspaceFixtures().view.view.panes[0].tabs, diffTab],
+            activeTab: diffTab,
+            temporaryTab: { kind: 'diff', path: FAKE_FILE_PATH },
+          },
+        ],
+        focusedPane: 0,
       },
     ])
   })

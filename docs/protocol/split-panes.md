@@ -183,9 +183,13 @@ into one row (split panes decision 6 G).
 - The Worker fits the tabs of such a save onto the stored panes. Each tab
   stays in its pane. A new tab goes to the focused pane. A tab that the
   save leaves out leaves its pane. Each pane keeps its own temporary tab.
-- Such a save changes only which tabs are open. Each pane keeps its shown
-  tab and its temporary tab, and the focused pane stays. A new tab of such
-  a save stays kept, also when the save marks it temporary.
+- When the stored view has one pane, such a save replaces it, as before
+  split panes: its order, its shown tab, and its temporary tab. Reason: a
+  member who never splits keeps every change of an older copy.
+- When the stored view has two panes, such a save changes which tabs are
+  open and their order inside each pane. Each pane keeps its shown tab and
+  its temporary tab, and the focused pane stays. A new tab of such a save
+  stays kept, also when the save marks it temporary.
 - Each reply of the saved view also holds the view as one row: all tabs in
   one order, the left pane first, with the shown tab and the temporary tab
   of the focused pane. An older copy reads that row, and shows it as one

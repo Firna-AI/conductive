@@ -8,6 +8,7 @@ import {
   type FilesTab,
   type FilesTarget,
 } from '../../../files/navigation'
+import { focusedPane } from '../../../shared/workspace-panes'
 import type { LineRange } from '../../../shared/line-target'
 import type { WorkspaceTab } from '../../../shared/workspace-view'
 import type { SavedView, WorkspaceContext } from '../features'
@@ -86,7 +87,8 @@ export function useLeaveForSession(
   showsTab: boolean,
 ): void {
   const navigation = useNavigation()
-  const active = useSavedView(context.savedView)?.activeTab ?? null
+  const saved = useSavedView(context.savedView)
+  const active = saved ? focusedPane(saved).activeTab : null
   const before = useRef<WorkspaceTab | null>(active)
   const { org, workspace } = context
   useEffect(() => {

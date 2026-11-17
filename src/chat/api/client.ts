@@ -30,6 +30,7 @@ import {
   workspacePaths,
   workspacesPath,
 } from '../../shared/workspaces'
+import { readView } from './read-view'
 import {
   readAccount,
   readChangeModel,
@@ -41,7 +42,6 @@ import {
   readSessionResponse,
   readSessions,
   readTranscript,
-  readView,
   readViewReply,
 } from './read-responses'
 import { readNewestStoredEvents, readWorkspaceResponse } from './read-workspace'

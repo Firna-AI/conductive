@@ -30,14 +30,19 @@ describe('session records from stored history', () => {
         request.method === 'GET' && request.url.endsWith(nextPage),
     })
     const view: WorkspaceView = {
-      tabs: [
-        { kind: 'session', sessionId: first.id },
-        { kind: 'session', sessionId: id },
-      ],
-      activeTab: { kind: 'session', sessionId: first.id },
       fileList: 'changes',
-      temporaryTab: null,
       tool: 'terminal',
+      panes: [
+        {
+          tabs: [
+            { kind: 'session', sessionId: first.id },
+            { kind: 'session', sessionId: id },
+          ],
+          activeTab: { kind: 'session', sessionId: first.id },
+          temporaryTab: null,
+        },
+      ],
+      focusedPane: 0,
     }
     chat.server.json('GET', workspaceViewPath(org, ws), { view })
     chat.server.json('GET', sessionsPath(org, ws), {

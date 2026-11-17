@@ -13,9 +13,12 @@ is relative to `src/chat/`, the folder of this guide.
 - `state/controller-context.ts`: the context of one controller run. It
   holds the local IDs of drafts and files, the upload generations, the
   devices, and the event stream. Each draft ID holds the run.
-- `state/tab-order.ts`: the pure row order, the places of the open
-  sessions, and the move before or after a neighbour, which keeps a
-  temporary tab whose place it changes.
+- `state/tab-order.ts`: the focused row and the pure move inside a row,
+  between panes, or into a new pane. A move keeps a temporary tab whose
+  place changes. `state/session-tab-places.ts` reconciles session places
+  across panes and restores the place of a failed close.
+- `api/read-view.ts`: the saved-view reader. It reads panes and older flat
+  replies through the shared pane reader.
 - `components/SessionTabs.tsx`: the tab row, with the session tabs of
   `components/SessionTab.tsx` and the tabs of `renderTab`.
   `components/tab-row.ts`: `RenderTab`, `TabDraw`, and `rowOf`, the tabs of

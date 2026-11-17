@@ -16,7 +16,7 @@ function tabsOf(chat: ReturnType<typeof chatFor>) {
   return {
     open: snapshot.sessions.map((session) => session.id),
     shown: snapshot.activeSessionId,
-    tabs: (snapshot.view?.tabs ?? []).flatMap((tab) =>
+    tabs: (snapshot.view?.panes[0].tabs ?? []).flatMap((tab) =>
       tab.kind === 'session' ? [tab.sessionId] : [],
     ),
     closed: snapshot.history.map((session) => session.id),

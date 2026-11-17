@@ -415,11 +415,16 @@ protocol docs took decisions 4 to 8.
 - "Move to the other pane" puts the tab at the end of the other row.
   Reason: a drop on the content of the other pane does the same, so the
   keyboard and the drag give one result.
-- A save from an older copy changes only which tabs are open. Each pane
-  keeps its shown tab and its temporary tab, and the focus stays. A new tab
+- A save from an older copy onto a stored split of two panes changes only
+  which tabs are open and their order inside each pane. Each pane keeps
+  its shown tab and its temporary tab, and the focus stays. A new tab
   stays kept, also when the save marks it temporary. Reason: an older copy
   cannot see the panes, so it must not change them. A pane can then never
   get two temporary tabs, which decision 5 B forbids.
+- A save from an older copy onto a stored view of one pane replaces it, as
+  before split panes. Reason: a member who never splits must keep the
+  order and the shown tab that an older copy saves. The orchestrator found
+  this on 17 November 2026, when it checked Milestone 4.
 - A change to a model of the other agent counts as a send under decision
   7 B, because the app opens that session when the member picks the model.
 - The paddings of a phone apply only while two panes show, as decision 6 G
@@ -546,24 +551,25 @@ Depends on: 3
 The shared type, the Worker check, and the chat state hold panes. The
 screen still draws one pane.
 
-- [ ] Change `WorkspaceView` in `src/shared/workspace-view.ts` to hold the
+- [x] Change `WorkspaceView` in `src/shared/workspace-view.ts` to hold the
       panes and the focused pane.
-- [ ] Read the old shape and a wrong pane list in
+- [x] Read the old shape and a wrong pane list in
       `worker/app-api/workspace-view.ts`, with Worker tests.
-- [ ] Keep the stored panes when a save has no pane field, as finding 8
+- [x] Keep the stored panes when a save has no pane field, as finding 8
       option B says. The user chose B on 16 November 2026. Fit the tab
       list of the old save onto the stored panes: each tab stays in its
       pane, a new tab goes to the focused pane, a closed tab leaves its
       pane, and each pane keeps its own temporary tab (decision 5 B). Add
       Worker tests for a save from an old copy of the app.
-- [ ] Keep the old fields in each reply of the saved view: all tabs in one
+- [x] Keep the old fields in each reply of the saved view: all tabs in one
       order with the left pane first, and the shown tab and the temporary
       tab of the focused pane. An older copy of the app then reads the view
       as one row. Add a Worker test that reads a split view in the old
       shape.
-- [ ] Move the tab order of `src/chat/state/tab-order.ts` to the panes.
+- [x] Move the tab order of `src/chat/state/tab-order.ts` to the panes.
       Moves inside a row and between rows go through one pure function.
-- [ ] Run the targeted tests and `npm run typecheck`.
+- [x] Run the targeted tests and `npm run typecheck`. The handoffs are in
+      `.context/split-panes/m4/`.
 
 ## Milestone 5: Two shown tabs in the chat state
 

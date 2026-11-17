@@ -31,7 +31,13 @@ const keptText = `Check the postcode rules. ${fileMark('file-1')}  `
 const withCreatedPlace = (view: WorkspaceView | null) =>
   view && {
     ...view,
-    tabs: [...view.tabs, { kind: 'session', sessionId: created }],
+    panes: [
+      {
+        ...view.panes[0],
+        tabs: [...view.panes[0].tabs, { kind: 'session', sessionId: created }],
+      },
+    ],
+    focusedPane: 0,
   }
 const shortly = { timeout: 10_000 }
 const isModel = (request: Request) =>
@@ -119,8 +125,14 @@ describe('a model change that opens a session', () => {
     }
     chat.controller.updateView((view) => ({
       ...view,
-      tabs: [...view.tabs, file],
-      activeTab: file,
+      panes: [
+        {
+          ...view.panes[0],
+          tabs: [...view.panes[0].tabs, file],
+          activeTab: file,
+        },
+      ],
+      focusedPane: 0,
     }))
     const selectedView = chat.controller.getSnapshot().view
     await reply()
