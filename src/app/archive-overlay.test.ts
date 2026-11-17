@@ -7,6 +7,7 @@ import {
 import { FakeApiServer } from '../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME } from '../test-support/fixtures/core'
 import { OrgModel } from './org-model'
+import { groupWorkspaces } from './sections'
 import { valueOf } from './store'
 import {
   flushMicrotasks,
@@ -36,6 +37,18 @@ function shown(model: OrgModel, workspace: WorkspaceModel) {
     detail: detail?.workspace.state,
     start: detail?.start ?? null,
   }
+}
+
+/** The rows of Checkout as the list shows them, each with its depth. */
+function checkoutRows(model: OrgModel): string[] {
+  const groups = groupWorkspaces(
+    valueOf(model.sections.get()) ?? [],
+    valueOf(model.workspaces.get()) ?? [],
+  )
+  const checkout = groups.sections.find(
+    (group) => group.section.id === 'checkout',
+  )
+  return checkout?.rows.map((row) => `${row.workspace.id} ${row.depth}`) ?? []
 }
 
 describe('An Archive shows as done while its write runs', () => {
@@ -138,6 +151,42 @@ describe('An Archive shows as done while its write runs', () => {
       loading: 'loading',
       read: 'archived',
       writes: [`POST ${archivePath}`],
+    })
+  })
+
+  test('an Archive of a parent shows its sub-workspaces in its place while it runs, after its reply, and after an event of the archived record', async () => {
+    // The sub-workspaces are new, so the list has them at the top of
+    // Checkout, before the rows of their parents.
+    const server = new FakeApiServer({ subWorkspaces: true })
+    const { held, org: model } = setup(server)
+    await model.reload('list')
+    held.hold('POST', archivePath)
+    const archiving = model.workspaceActions.archive(id).archive()
+    await flushMicrotasks()
+    const during = checkoutRows(model)
+    held.release('POST', archivePath)
+    const reply = await archiving
+    const after = checkoutRows(model)
+    // Another tab learns of the Archive from an event of the record.
+    const other = new OrgModel(testServices(server), org)
+    await other.reload('list')
+    if (reply) other.putWorkspace(reply)
+    const inPlace = [
+      'fix-cart-flake 0',
+      'webhook-retries 0',
+      'apple-pay 0',
+      'merchant-validation 1',
+      'wallet-button-tests 1',
+      'address-search-api 0',
+      'places-client 1',
+      'rate-limits 2',
+      'rate-limit-load-test 2',
+      'suggestion-list 0',
+    ]
+    expect({ during, after, event: checkoutRows(other) }).toEqual({
+      during: inPlace,
+      after: inPlace,
+      event: inPlace,
     })
   })
 })

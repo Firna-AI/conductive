@@ -100,6 +100,19 @@ Adding a repository starts a build automatically.
 
 - [Manage the shared cloud computer setup](/docs/cloud-computer)
 
+## Choose the org colour
+
+The org list shows the open org in its colour.
+Give each org its own colour to tell your orgs apart at a glance.
+Only an admin can change the colour.
+
+1. Open the org's **Settings**.
+2. Open **General**.
+3. Select a colour under **Colour**.
+
+The colour saves at once.
+An org that has no chosen colour shows blue.
+
 ## Invite a member
 
 Only an admin can invite members.
@@ -147,6 +160,7 @@ An org has two roles: **Admin** and **Member**.
 | Send messages | Under the session's login rules | Under the session's login rules |
 | Continue after a merge | All workspaces in the org | All workspaces in the org |
 | Merge from the pull request bar | With GitHub write access or more | With GitHub write access or more |
+| Mark a draft ready for review from the pull request bar | With GitHub write access or more | With GitHub write access or more |
 | Manage members and org settings, except secrets | Yes | Read-only |
 | Add a secret | Yes | Yes |
 | Replace or delete a secret | Any secret | Their own secrets |
@@ -167,6 +181,7 @@ Archived chats stay read-only until Restore.
 Continue uses the GitHub account of the member who selects it to fetch the latest default branch.
 That account needs read access to the repository.
 Merge uses the clicking member's GitHub account, and GitHub checks its branch rules.
+**Ready for review** also uses the clicking member's GitHub account.
 An org role does not add GitHub access.
 
 - [Continue after a merge](/docs/workspaces#continue-after-a-merge)

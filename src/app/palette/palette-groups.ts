@@ -24,7 +24,10 @@ import type { PaletteBase, PaletteQuery, PaletteSource } from './palette-source'
 
 const recentLimit = 5
 
-/** The workspaces of the org: by section in the order of the list, and archived. */
+/**
+ * The workspaces of the org: by section in the order of the list, flat,
+ * with each sub-workspace in the section that shows it, and archived.
+ */
 interface OrgWorkspaces {
   sections: readonly { label: string; workspaces: readonly Workspace[] }[]
   archived: readonly Workspace[]
@@ -41,7 +44,7 @@ function orgWorkspaces(source: PaletteSource): OrgWorkspaces {
   return {
     sections: groups.sections.map((group) => ({
       label: group.section.name,
-      workspaces: group.workspaces,
+      workspaces: group.rows.map((row) => row.workspace),
     })),
     archived: groups.archived,
   }

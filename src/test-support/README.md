@@ -73,6 +73,16 @@ and the end of each finished turn. `fixtures/masked-paths.ts` holds them.
 history, as for a new workspace whose runner has not reported its lists.
 Override the tree and changes routes too, such as with a 503 reply.
 
+`subWorkspaces: true` adds the sub-workspaces of the mockup page
+`app/sub-workspaces` to the list of Acme: two trees in Checkout, under
+Apple Pay button and under Checkout address autocomplete, down to depth 3.
+They come first in Checkout, the newest first, as the Worker lists new
+workspaces, and each has the recorded replies of the other workspaces.
+`fixtures/sub-workspaces.ts` holds them, and `withSubWorkspaces` gives the
+same list to a test or to the dev fake. `workspaceRecord` of
+`fixtures/workspaces.ts` turns a workspace of the mockups into the record
+of the API.
+
 Writes return recorded replies, except org moves and terminal list writes.
 `fake-org-order-routes.ts` serves `PUT /api/org-order` and saves its order for later org list reads.
 It validates the shared move request and returns 204, or the Worker's validation and visibility errors.

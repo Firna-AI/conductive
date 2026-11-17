@@ -71,6 +71,7 @@ export const windowsKeys: Readonly<Record<CommandId, readonly Shortcut[]>> = {
   'resolve-conflicts': [],
   'address-review': [],
   'commit-and-push': ['Ctrl+Shift+Y'],
+  'mark-ready-for-review': [],
   'merge-pull-request': ['Ctrl+Shift+M'],
   'continue-after-merge': [],
   'open-pull-request': ['Ctrl+Shift+G'],

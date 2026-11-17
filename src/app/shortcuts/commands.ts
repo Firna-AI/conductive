@@ -163,6 +163,13 @@ export const shortcutCommands: readonly ShortcutCommand[] = [
     agentActionLabels['commit-and-push'],
     ['git', 'save', 'publish'],
   ),
+  command(
+    'mark-ready-for-review',
+    'Workspace',
+    'workspace',
+    'Mark PR ready for review',
+    ['draft', 'pull request', 'github'],
+  ),
   command('merge-pull-request', 'Workspace', 'workspace', 'Merge PR', [
     'pull request',
     'github',

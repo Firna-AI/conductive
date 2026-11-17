@@ -1,0 +1,33 @@
+# A Restore after a reorder moves on reload
+
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-16, from the first implementation review of the branch `calummoore/perth-5m3h`, which adds sub-workspaces. The reviewer reproduced it on that branch and on `origin/main`.
+- **Location:** `worker/lifecycle/archive-data.ts` (`restoreArchiveRecord` keeps the stored `position`), `worker/app-api/feature-workspaces-data.ts` (a move renumbers the places of the live rows of a section), `src/app/sections.ts` (the app's local order of the list).
+- **Reason:** The problem is older than the branch that found it, and it touches the order of every workspace, not only of sub-workspaces.
+
+- **Terms:**
+  - **Place:** the stored `workspaces.position` of a workspace in its section. The list sorts the rows of a section by it, then by creation time and ID.
+  - **Restore:** the action that brings an archived workspace back to its section, for 14 days after its Archive.
+  - **Reorder:** a move of a workspace inside its section or to another section, by drag and drop, by keys, by Move to section, or by `move_workspace`.
+- **Background:**
+  - `docs/protocol/workspace-life.md`, section Restore, says that Restore puts the workspace back in its section, at its place in the list.
+  - The Restore write in `restoreArchiveRecord` changes the archive fields and the state, and keeps `position`.
+  - A move ranks the live rows of the target section again and writes new places for them, from 0 up. Archived rows keep their old places.
+  - So after an Archive and a later reorder, the stored place of the archived workspace can equal the new place of another row, or point to another spot among the renumbered rows.
+  - The app shows a Restore at once from its local list. After a reload, the Worker's list sorts by the stored places, so the restored row can show at another spot.
+  - The first review of the branch `calummoore/perth-5m3h` reproduced the change of order after a reload with the production functions, on that branch and on `origin/main`.
+- **Problem:** After an Archive, a reorder, and a Restore, the place of the restored row can change when the page reloads.
+- **Impact if no action:** A member sees a restored workspace jump to another place after a reload. No data is lost.
+- **Root question:** Where does a restored workspace go when the rows of its section changed places while it was archived?
+- **Options:**
+  - **A.** Keep the stored place, and make the app's local Restore sort by the same stored places, so that the app and a reload agree. Effort: Small.
+  - **B.** At a Restore, rank the live rows of the section again with the restored workspace at its old index among them, in the same write, as a move does. Effort: Medium.
+  - **C.** At a Restore, put the workspace at the top of its section, as a new workspace goes, and change the protocol sentence. Effort: Small.
+  - **D.** Give moves the in-place rule that the Archive of sub-workspaces uses since review finding 3 of `calummoore/perth-5m3h`: a move takes the place of the top-level row at its drop index and adds 1 to each later row of the target section, live or archived, with no renumbering. No write then renumbers, so each archived row keeps its Restore place. This changes the stored places that moves write, which `worker/app-api/feature-workspaces-data.test.ts` asserts. Effort: Medium.
+- **Left out:** Keeping the places of archived rows up to date at each move, because each move would then rewrite every archived row of the section.
+- **Wider fix:** D. No write renumbers places, so a Restore never meets renumbered rows, for moves and for Archives.
+- **Previous examples:** Commit `c04b9cf09e54`, "fix(shell): keep workspace and section order atomic", moved the ranking of places into one transaction.
+- **Related:** Review finding 3 of `calummoore/perth-5m3h` gave the Archive the in-place rule of D, and its check named D as the wider fix of this item.
+- **Recommendation:** D. It keeps "at its place in the list" true after any reorder, with one place rule for moves and Archives.
+- **Action:** fix after merge, apply D, because the problem is older than the branch that found it and affects every workspace.

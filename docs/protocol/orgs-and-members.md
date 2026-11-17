@@ -1,13 +1,13 @@
 # Orgs and members
 
 This doc holds the requirements and the decisions in force for orgs, their
-sections, and their members. It also covers the first run. Linked pages
-cover [the order of the org rail](org-rail-order.md) and
-[the end of an org](delete-org.md).
-The terms are those of the [architecture doc](../architecture.md#terms). A
-decision number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says. A secrets
-decision number names a decision of the change that adds
+sections, and their members. Linked pages cover
+[the order of the org rail](org-rail-order.md), the first run in
+[Get started](get-started.md), and the end of an org in
+[Delete org](delete-org.md). The terms are those of the
+[architecture doc](../architecture.md#terms). A decision number names a
+dated record, as [Decision numbers](../architecture.md#decision-numbers)
+says. A secrets decision number names a decision of the change that adds
 [secrets](secrets.md), as that doc says.
 
 ## Orgs
@@ -50,6 +50,22 @@ decision number names a decision of the change that adds
   it gives no link when no account has the app, and it cannot install the
   app on another account.
 - The org rail and General settings show the saved initials.
+- Each org has a colour, which an admin picks on the General tab of its
+  settings (org colour decision 1 A of 17 November 2026). The choice is one
+  of eight presets: Blue, Teal, Green, Yellow, Orange, Red, Pink, and
+  Purple. A choice saves at once.
+- Only the tile of the open org shows the colour, in its initials and its
+  outline (org colour decision 2 A). The tiles of the other orgs stay
+  grey, so the colour also marks the open org.
+- An org without a chosen colour shows Blue (org colour decision 3 A). A
+  new org starts with Blue.
+- Each preset keeps its initials at a contrast of 4.5:1 or more on the
+  tile, in the light and the dark scheme.
+- Reason: a person in several orgs could miss which org was open, because
+  every open org showed the same blue. A colour that each person picks was
+  rejected, because teammates would then see different colours for one
+  org. A colour for the whole app was rejected, because red, amber, and
+  green already mean danger, warning, and success.
 - Use of the product is free until billing starts, as
   [Before billing starts](pricing.md#before-billing-starts) says. Until
   then, the app has no billing, and no limits of its own on workspaces,
@@ -71,54 +87,16 @@ decision number names a decision of the change that adds
 
 ## Get started
 
-- Get started is the only first run.
-- Get started opens only after app access. A person who waits sees the
-  [waitlist screen](waitlist.md#the-waitlist-screen) instead. Reason: the
-  steps of Get started need app access.
-- It has three steps, in this order (decisions 33 and 80):
-  1. Install the GitHub App.
-  2. Create the first org.
-  3. Connect Claude or Codex.
-- Get started asks for no Boat account and no Boat key.
-- [Chat and events](messages-and-attachments.md#messages) states the notice for a
-  missing agent login.
-- The second step, the org step, shows the cloud computer of the org once
-  the org exists (decision 150 of PR #92). Create org starts its first build, as
-  [The first build](org-image.md#the-first-build) says.
-- While the org has no good image, the org step shows the state of the
-  newest build of the org:
-  - While a build runs, the step says that the cloud computer is being
-    prepared, with the time since the build began.
-  - After a failed build, the step shows the failure with the message
-    that the app saved for the build. An admin gets Try again and a link
-    to the log of the build on the Cloud computer tab.
-  - With no build, such as after a first build that could not start, the
-    step says that the org has no build yet. An admin gets Build computer.
-- Once the org has a good image, the step says that the cloud computer is
-  ready. A later build does not change that, also when it fails
-  (decision 9).
-- A member who is not an admin sees each state with no action. Reason:
-  only an admin builds (decision 57).
-- The person can connect an agent while the build runs.
-- While the person has a deleted org, Get started lists it before the
-  steps, with Restore, as [Delete org](delete-org.md) says.
-- When every step is done, Get started shows its finish: a line about the
-  org, and an Open button for the org, such as "Open Acme".
-- The Open button stays on in every state of the build (decision 150 of PR #92).
-  New workspace also shows the state of the build, as
-  [Create a workspace](workspaces-and-sandboxes.md#create-a-workspace)
-  says.
-- The finish says that the org is ready for a new workspace only once the
-  org has a good image. Before that, it says that the cloud computer of the
-  org is still being prepared, did not build, or needs a build.
-- Reason: the person sees the build where it starts. The person never
-  waits in Get started for the build, which can run for up to 60 minutes.
-  A fourth step for the build was rejected for that reason.
+- [Get started](get-started.md) holds the requirements of the first run:
+  its steps, the state of the first build in its org step, and its finish.
 
 ## Sections
 
 - Sections are groupings of workspaces that the people of the org define.
   A section is not tied to a repository.
+- A section can hold trees of workspaces. Each sub-workspace shows nested
+  under the row of its parent, as [The list](sub-workspaces.md#the-list)
+  says.
 - Each section collapses, and has a menu with New workspace, Rename section,
   Move section up, Move section down, New section, and Delete section, in
   that order. The first section has no Move section up, and the last
@@ -150,6 +128,9 @@ decision number names a decision of the change that adds
   [Fixed keys](keyboard-shortcuts-fixed-keys.md#fixed-keys) gives the keys.
 - Move to section in the
   [menu of a workspace row](workspace-menu.md#move-to-section) moves it too.
+- Each of these moves of a row also moves each workspace nested under it.
+  A nested row has none of these moves, as
+  [Moves](sub-workspaces.md#moves) says.
 - Deleting a section moves its workspaces to General, also the archived
   ones. Reason: no workspace gets lost, and a Restore always has a section
   to go back to.
@@ -203,8 +184,8 @@ decision number names a decision of the change that adds
 - Only an admin changes the repositories, the install script, the startup
   script, and the env vars (decision 57). Other members see them
   read-only.
-- Only an admin changes the org's name and initials. Other members see
-  them read-only.
+- Only an admin changes the org's name, initials, and colour. Other
+  members see them read-only.
 - Changes by every member were rejected, because a changed script reaches
   every new sandbox of the org and runs during other members' turns.
 - Every member adds [secrets](secrets.md) and uses each secret of the org.

@@ -106,8 +106,14 @@ Supply `CredentialFilter` to reports and `FilteredEmitter` around the saving
 emitter. Supply `NodeHelpers`, `GitTurnRepositories`, and `RunnerStartup`.
 Use the engine as the next handler of `ReportCommandHandler`.
 
-Each session pins its agent, instructions, and branch context. Helper
-handoffs retain the first turn's token, author, tool context, conversation,
+Each session pins its agent, instructions, and branch context.
+New sessions also name their workspace ID, link, parent, depth, and depth limit.
+The Worker supplies these stable tree facts through the service environment.
+At the depth limit, the instructions give the parent ID for a sibling and a short name prefix.
+Missing or malformed tree settings produce one warning and omit all tree guidance.
+Saved sessions keep their exact instructions across runner updates.
+
+Helper handoffs retain the first turn's token, author, tool context, conversation,
 and background deadline. Result lists resolve only their named inputs.
 An empty ordinary result resolves all sent inputs. A wake-up resolves none.
 Claude background work can keep a turn open for thirty days from its first
@@ -144,6 +150,7 @@ and connection drops. It does not run the Worker.
 ### Key Code
 
 - [config.rs](src/config.rs): `Configuration::parse` reads supplied service settings.
+- [instructions.rs](src/engine/instructions.rs): `build` adds validated workspace tree facts and nesting guidance to new session instructions.
 - [store.rs](src/state/store.rs): `EventStore` defines serialized state operations.
 - [records.rs](src/state/records.rs): `RunnerState` reads the existing JSON format.
 - [disk.rs](src/disk.rs): `AtomicDisk` replaces the private state file atomically.
@@ -172,6 +179,8 @@ and connection drops. It does not run the Worker.
 ### Related Docs
 
 - [Agent runner protocol](../../docs/protocol/agent-runner.md)
+- [Agent instructions](../../docs/protocol/agent-instructions.md)
+- [Sub-workspaces](../../docs/protocol/sub-workspaces.md)
 - [Lost workspace updates](../../docs/protocol/lost-workspace-updates.md)
 - [Version pins](../../docs/protocol/version-pins.md)
 - [Sandbox architecture](../../docs/architecture/components.md#sandbox-software)

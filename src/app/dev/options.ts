@@ -66,6 +66,9 @@ type DevInviteCode = (typeof INVITE_CODES)[number]
  *   shows the GitHub state of that bar.
  * - `paths=masked`: two files whose real paths hold a fake secret value,
  *   with their labels, in the file lists and at the end of each turn.
+ * - `subWorkspaces=1`: Acme also has the sub-workspaces of the mockups,
+ *   nested under Apple Pay button and Checkout address autocomplete, down
+ *   to depth 3, so the list shows two trees in Checkout.
  * - `firstRun=github-app|org|agent-login`: Get started is not done from
  *   that step on. With `github-app` or `org`, the user has no org until
  *   Create org runs. In each first run, no agent login is connected.
@@ -180,6 +183,7 @@ export function readDevOptions(search: string): DevOptions {
       conversation: pick(params, 'conversation', CONVERSATIONS),
       banner: pick(params, 'banner', BANNERS),
       paths: pick(params, 'paths', PATHS),
+      subWorkspaces: params.get('subWorkspaces') === '1',
     },
     // A person who waits has a new account, unless the options say otherwise.
     firstRun: firstRun ?? (waiting === null ? null : 'github-app'),

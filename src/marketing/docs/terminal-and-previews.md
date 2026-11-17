@@ -164,7 +164,7 @@ An explicit `GH_TOKEN` or `GITHUB_TOKEN` value can replace the supplied CLI logi
 The token can reach repositories that both that person and the GitHub App can access.
 This can include repositories outside the Conductive org.
 
-**Merge** and **Continue** in the pull request bar use the GitHub account of the member who selects them.
+**Merge**, **Ready for review**, and **Continue** in the pull request bar use the GitHub account of the member who selects them.
 All workspace terminals use the workspace owner's account.
 
 - [Use pull request actions](/docs/pull-requests)

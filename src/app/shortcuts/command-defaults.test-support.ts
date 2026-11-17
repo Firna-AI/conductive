@@ -57,8 +57,17 @@ export const workspaceCommandDefaults = [
     defaults: { mac: ['Shift+Meta+Y'], other: ['Ctrl+Shift+Y'] },
   },
   {
-    id: 'merge-pull-request',
+    id: 'mark-ready-for-review',
     previous: 'commit-and-push',
+    group: 'Workspace',
+    scope: 'workspace',
+    label: 'Mark PR ready for review',
+    words: ['draft', 'pull request', 'github'],
+    defaults: { mac: [], other: [] },
+  },
+  {
+    id: 'merge-pull-request',
+    previous: 'mark-ready-for-review',
     group: 'Workspace',
     scope: 'workspace',
     label: 'Merge PR',

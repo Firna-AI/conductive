@@ -150,19 +150,51 @@ The section menu also offers **Rename section**, **Move section up**, **Move sec
 Deleting a section moves its workspaces to **General**.
 The default section stays available.
 
-Drag a workspace to move it between sections.
+A sub-workspace is a workspace nested under another workspace, its parent.
+A tree contains a top-level workspace and all sub-workspaces nested under it.
+Sub-workspaces follow their parent when it moves between sections.
+Each tree stays open in the list.
+Collapsing a section hides all workspaces in it.
+
+Drag a top-level workspace to move its whole tree between sections.
 Drag the header of a section to move the section to another place in the list.
-On a phone, use a long press to lift a row or a header.
+On a phone, use a long press to lift a top-level row or a section header.
+With a keyboard, focus a top-level row and press **Alt+Up** or **Alt+Down**.
+On a Mac, use **Option** in place of **Alt**.
 Every member of the org sees the same order of sections.
+
+You can also select **Move to section** in the top-level row's menu.
+This moves the whole tree to the top of the section you choose.
+A nested row moves only with its top-level workspace.
+Its menu has no **Move to section**.
 
 ## Let an agent manage workspaces
 
 Ask an agent to create, inspect, or rename a workspace.
-It can also move the workspace to the top of a section.
-It can find workspaces by owner, state, repository, name, recent activity, and archive state.
+It can also move a top-level workspace and its whole tree to the top of a section.
+If it tries to move a nested workspace, nothing moves.
+The reply names the top-level workspace to move instead.
+It can find workspaces by owner, state, repository, name, parent, recent activity, and archive state.
 Ask for your workspaces, or give another member's name or GitHub login.
+
 Workspace and session lists can return a smaller page of results.
 When an agent creates a workspace, it can set the workspace name and its first session's title.
+
+Ask an agent to create a sub-workspace for a task that needs its own files and branch.
+The agent can name a parent workspace in the same org when it creates the workspace.
+Without a parent, the new workspace shows at the top level.
+If the agent also names another section, the sub-workspace still follows its parent.
+
+Each sub-workspace has its own cloud computer, branch, sessions, and pull request.
+It also has its own Archive and Restore.
+The agent knows its workspace's parent and nesting level.
+It can find a workspace's parent and its direct sub-workspaces.
+
+Sub-workspaces can nest three levels below a top-level workspace.
+Archived parents still count toward this limit.
+A deeper request fails with advice to create a sibling of the deepest workspace.
+A sibling shares the same parent.
+The advice asks for a one-word name prefix that shows the group, such as `Limits: `.
 
 Agents can also create and delete sections.
 Deleting a section moves its workspaces to **General**.
@@ -172,6 +204,8 @@ Each change uses the rights of the member whose message started the agent's turn
 Only a workspace owner or org admin can archive it through an agent.
 An agent can archive the workspace where it runs, which ends its turn.
 The same Archive and Restore rules below apply.
+
+Older cloud computers get sub-workspace tools when an automatic software update applies at a later start.
 
 - [Understand what agents can reach](/docs/security#understand-what-agents-can-reach)
 - [Get the current workspace tools](/docs/cloud-computer#apply-setup-changes)
@@ -294,6 +328,11 @@ Archive does not check for uncommitted files or unpushed commits.
 It asks no confirmation question.
 Archive stops the computer and its agent work at once.
 
+Sub-workspaces that are not archived keep working when you archive their parent.
+They take the archived row's place in the list.
+They show under the nearest workspace above them that is not archived.
+If none remains above them, they show at the top level.
+
 Conductive keeps the computer and its files for 14 days after Archive.
 The chat stays read-only in **Archived**.
 File lists, Terminal, previews, and other workspace tools stay unavailable while it is archived.
@@ -319,7 +358,11 @@ Then select **Restore** in the workspace bar.
 The archived bar gives the Archive date and the last day of Restore.
 
 Restore brings back the workspace with its files and agent sessions.
-It returns to its section and its place in the list.
+A top-level workspace returns to its section and its place in the list.
+A restored sub-workspace shows under the nearest workspace above it that is not archived.
+It shows at the top level when none remains above it.
+Restoring a parent puts its sub-workspaces that are not archived back under it.
+
 The workspace comes back stopped.
 Restore does not start its computer.
 

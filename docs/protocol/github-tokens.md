@@ -222,6 +222,11 @@ repositories of an image job in parallel.
   in a suspended org, and in an archived workspace.
 - No GitHub error text reaches the browser. The Worker gives each refusal
   of GitHub as an error code of the app.
+- The Worker also marks a draft ready for review with the GitHub token of
+  the member who clicks Ready for review, as
+  [Ready for review](github-banner.md#ready-for-review) says. The same
+  access rule, refusals, and error codes of the app apply. The user chose
+  this on 17 November 2026.
 
 ## Continue
 

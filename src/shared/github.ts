@@ -14,6 +14,8 @@ export const githubPaths = {
     `${workspacePath(orgId, id)}/github/merge`,
   mergeResult: (orgId: string, id: string, mergeId: string) =>
     `${workspacePath(orgId, id)}/github/merge/${encodeURIComponent(mergeId)}`,
+  ready: (orgId: string, id: string) =>
+    `${workspacePath(orgId, id)}/github/ready`,
 } as const
 
 export interface PullRequest {
@@ -33,6 +35,13 @@ export interface GitHubMergeRequest {
 }
 export type GitHubMergeResponse =
   { state: 'pending'; mergeId: string } | { state: 'merged' }
+/** Ready for review of the draft pull request that the bar shows. */
+export interface GitHubReadyRequest {
+  pullNumber: number
+}
+export interface GitHubReadyResponse {
+  state: 'ready'
+}
 export type BannerState =
   | 'none'
   | 'no-commits'
