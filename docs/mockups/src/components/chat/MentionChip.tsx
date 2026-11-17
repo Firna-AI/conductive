@@ -8,7 +8,7 @@ import { lineLabel } from './answerPaths'
 import { entryName } from './entryPaths'
 import { FileChip } from './FileChip'
 import type { MentionPart } from './fileMentions'
-import type { FileLinkPart } from './workspaceLinks'
+import type { FileLinkPart } from './answerNodes'
 
 /** The icon of an entry, as the All files of the mockups draws it. */
 export function iconOf(entry: MentionEntry) {

@@ -36,8 +36,23 @@
 .doc p,
 .doc ol,
 .doc ul,
+.doc blockquote,
 .table {
   margin: 0 0 10px;
+}
+
+/*
+ * The look of quotes and rules comes from MarkdownProse.module.css. A rule
+ * has 16px above and below it.
+ */
+.doc hr {
+  margin: 16px 0;
+}
+
+/* Bold text has the ink colour and the strong weight, as in the app. */
+.doc strong {
+  color: var(--ui-ink);
+  font-weight: var(--ui-weight-strong);
 }
 
 .doc ol,

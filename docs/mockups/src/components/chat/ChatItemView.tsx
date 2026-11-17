@@ -7,6 +7,7 @@ import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
 import { classes } from '../common/classes'
 import headingStyles from '../common/MarkdownHeadings.module.css'
+import prose from '../common/MarkdownProse.module.css'
 import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
 import { AgentBlocks } from './AgentBlocks'
@@ -85,7 +86,9 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
     }
     case 'agent':
       return (
-        <div className={classes(styles.agent, headingStyles.headings)}>
+        <div
+          className={classes(styles.agent, headingStyles.headings, prose.prose)}
+        >
           <AgentBlocks blocks={item.blocks} />
         </div>
       )

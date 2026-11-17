@@ -59,7 +59,10 @@ lines of the target have a soft amber fill, and the first of them sits in
 the middle of the view, on desktop and on a phone.
 `app/files/markdown` has README.md and `app/files/diff` has the diff of
 AddressForm.tsx, each in the temporary tab that a press opened, beside the
-kept tab of the code file of `app/files/code`.
+kept tab of the code file of `app/files/code`. README.md has a note in a
+quote, a table cell on two lines, a variable with a line through it, text
+in italics, and a rule, in the look of a reply of the chat, as
+[the Markdown of replies](design-markdown.md) gives.
 `app/files/image` has a picture of the branch in the temporary tab, from
 decision 265 B. Its `cannot-draw` variant has an image whose bytes the
 browser cannot draw, with "Download this file to open it".

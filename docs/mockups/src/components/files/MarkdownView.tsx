@@ -1,13 +1,14 @@
 import type { MarkdownBlock } from '../../fixtures/fileContents'
 import { classes } from '../common/classes'
-import { InlineText } from '../common/InlineText'
 import headingStyles from '../common/MarkdownHeadings.module.css'
+import prose from '../common/MarkdownProse.module.css'
 import { MarkdownTable } from '../common/MarkdownTable'
+import { PreviewText } from './PreviewText'
 import styles from './MarkdownView.module.css'
 
-/** A cell of a table, with its inline code. */
+/** A cell of a table, with its inline code, its marks, and its breaks. */
 function fileCell(text: string) {
-  return <InlineText text={text} />
+  return <PreviewText text={text} />
 }
 
 function Block(props: { block: MarkdownBlock }) {
@@ -22,14 +23,14 @@ function Block(props: { block: MarkdownBlock }) {
       const Heading = block.kind
       return (
         <Heading>
-          <InlineText text={block.text} />
+          <PreviewText text={block.text} />
         </Heading>
       )
     }
     case 'p':
       return (
         <p>
-          <InlineText text={block.text} />
+          <PreviewText text={block.text} />
         </p>
       )
     case 'ol':
@@ -39,7 +40,7 @@ function Block(props: { block: MarkdownBlock }) {
         <List>
           {block.items.map((item) => (
             <li key={item}>
-              <InlineText text={item} />
+              <PreviewText text={item} />
             </li>
           ))}
         </List>
@@ -57,14 +58,31 @@ function Block(props: { block: MarkdownBlock }) {
           rows={block.rows}
         />
       )
+    case 'quote':
+      return (
+        <blockquote>
+          {block.blocks.map((inner, index) => (
+            <Block block={inner} key={index} />
+          ))}
+        </blockquote>
+      )
+    case 'rule':
+      return <hr />
   }
 }
 
-/** A Markdown file, rendered as formatted text. */
+/**
+ * A Markdown file, rendered as formatted text. The headings take the look
+ * of MarkdownHeadings.module.css, and the quotes, the rules, the emphasis,
+ * and the strikethrough the look of MarkdownProse.module.css, which the
+ * replies of the chat share.
+ */
 export function MarkdownView(props: { blocks: readonly MarkdownBlock[] }) {
   return (
     <div className={styles.scroll} data-mokly-scroll="file-preview">
-      <article className={classes(styles.doc, headingStyles.headings)}>
+      <article
+        className={classes(styles.doc, headingStyles.headings, prose.prose)}
+      >
         {props.blocks.map((block, index) => (
           <Block block={block} key={index} />
         ))}

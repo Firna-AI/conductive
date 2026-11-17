@@ -21,6 +21,7 @@ import { backgroundConversations } from './backgroundConversations'
 import { barConversations, type ContinuedItem } from './barConversations'
 import { chatLinkConversations } from './chatLinkConversations'
 import type { ChangedFile } from './files'
+import { formattingConversations } from './formattingConversations'
 import {
   headingConversations,
   type MessageHeading,
@@ -33,6 +34,7 @@ import { macConversations } from './macConversations'
 import type { PersonKey } from './members'
 import { linkedSession } from './sessions'
 import { newWorkspaceConversations } from './newWorkspaceConversations'
+import type { MessageQuote, MessageRule } from './proseBlocks'
 import { secretConversations } from './secretConversations'
 import type { LateAnswerItem, SecretRunItem } from './secretRequests'
 import { secretValueConversations } from './secretValueConversations'
@@ -58,10 +60,16 @@ type MessageCodeBlock = { kind: 'code'; text: string }
 
 /**
  * A block of a message of the agent: a paragraph, a heading, a table, a
- * list, or a code block.
+ * list, a code block, a quote, or a rule.
  */
 export type AgentBlock =
-  string | MessageHeading | MessageTable | MessageList | MessageCodeBlock
+  | string
+  | MessageHeading
+  | MessageTable
+  | MessageList
+  | MessageCodeBlock
+  | MessageQuote
+  | MessageRule
 
 export type ChatItem =
   | {
@@ -240,5 +248,6 @@ export const conversations: Readonly<
   ...barConversations({ history, cutOff: cutOffTurn }),
   ...listConversations,
   ...headingConversations,
+  ...formattingConversations,
   ...chatLinkConversations(history),
 }

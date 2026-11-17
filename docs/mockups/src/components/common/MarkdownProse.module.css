@@ -1,0 +1,37 @@
+/*
+ * The quotes, the rules, the emphasis, and the strikethrough of Markdown,
+ * in the look that the replies of the chat and the file preview share. A
+ * view adds `.prose` to the element around its blocks, and sets the space
+ * above and below its quotes and rules. A summary holds no quote or rule
+ * element, so a message line in the work of a turn gives its spans
+ * `.quote` and `.rule` in their place.
+ *
+ * A quote has a 2px line in the strong border colour at its left, 12px
+ * from its text, and its text is muted. The line is no accent: the quote
+ * has no fill and no other border. A rule is a 1px line in the border
+ * colour across the width of the text. Emphasis is italic, and
+ * strikethrough draws a line through its text.
+ */
+.prose blockquote,
+.quote {
+  margin-inline: 0;
+  padding-left: 12px;
+  border-left: 2px solid var(--ui-border2);
+  color: var(--ui-muted);
+}
+
+.prose hr,
+.rule {
+  height: 0;
+  margin-inline: 0;
+  border: 0;
+  border-top: 1px solid var(--ui-border);
+}
+
+.prose em {
+  font-style: italic;
+}
+
+.prose del {
+  text-decoration: line-through;
+}

@@ -179,19 +179,37 @@ Depends on: none
 The chat and the file preview change their look for line breaks in table
 cells, quotes, rules, emphasis, strikethrough, and web images.
 
-- [ ] Add a shared style module for quotes, rules, emphasis, and
+- [x] Add a shared style module for quotes, rules, emphasis, and
       strikethrough, beside `MarkdownHeadings.module.css`. Use it in the
       chat mockups and in `docs/mockups/src/components/files/MarkdownView.tsx`.
-- [ ] Add chat states for each new part: in an answer, and in a closed and
-      an open message line of the work fold.
-- [ ] Add a state with a line break in a table cell to `app/chat/tables`
-      and to the Markdown file of the file preview mockup.
-- [ ] Add a web image that shows as a link with its alt text.
-- [ ] Make `docs/mockups/src/components/chat/strongText.ts` read bold as
+      It is `MarkdownProse.module.css`, under its `prose` class, with
+      `.quote` and `.rule` for the spans of a message line.
+- [x] Add chat states for each new part: in an answer, and in a closed and
+      an open message line of the work fold. `app/chat/formatting` has the
+      answer. Its variants have the work fold (`work`), live text
+      (`writing`), marks without a pair (`as-typed`), and pictures
+      (`pictures`). My call, 17 November 2026: a closed line keeps the
+      muted colour of a quote, without its line, so the words after it
+      read as new text, as the weight of a heading does.
+- [x] Add a state with a line break in a table cell to `app/chat/tables`
+      and to the Markdown file of the file preview mockup. The new page is
+      `app/chat/tables/line-break`. That page held five screens, so its
+      four saved states moved into their own folders with their paths.
+      README.md of `app/files/markdown` has a cell on two lines.
+- [x] Add a web image that shows as a link with its alt text, at
+      `app/chat/formatting/pictures`.
+- [x] Make `docs/mockups/src/components/chat/strongText.ts` read bold as
       CommonMark does, so that an unpaired `**` shows as typed.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
-      the mockups show.
+      `common/markdownMarks.ts` replaces it, and reads `**`, `*`, `_`, and
+      `~~` as `markdown-it` does.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages. The logs,
+      the page comparison, and the screenshots are in
+      `.context/markdown-it-reader/m1/`.
+- [x] Update the design and the TODOs of this plan for each problem that
+      the mockups show. The mockups now give the look of the Markdown of
+      replies in `docs/mockups/design-markdown.md`, not in
+      `design-chat.md`. Four questions for the user are TODOs of
+      Milestones 2 and 4.
 
 ## Milestone 2: Documentation and protocol
 
@@ -208,6 +226,14 @@ Depends on: 1
 - [ ] Read the Terms page, the Privacy page, and each public guide in
       `src/marketing/docs/` in full. Update each sentence that restates a
       changed fact.
+- [ ] Ask the user, from the mockups: while the agent writes, an opening
+      `**` shows its stars until its pair arrives, as
+      `app/chat/formatting/writing` shows. Keep this, or hide or close an
+      open mark of live text? State the answer in `chat-markdown.md`.
+- [ ] Ask the user, from the mockups: does a web picture in the file
+      preview also show as a link with its alt text? Item 5 asked about
+      both views, and design call 12 covers only the chat. State the
+      answer in `workspace-tools.md`.
 
 ## Milestone 3: The parser
 
@@ -235,6 +261,14 @@ Depends on: 3
       assertion. List each changed expectation in the pull request.
 - [ ] Check live updates in the app with a 100 KiB answer. Stop and ask
       if one update takes more than 50 ms.
+- [ ] Ask the user, from the mockups: bold text has the strong weight and
+      the ink colour in the file preview, and the weight of the browser in
+      the chat. Does bold text join the shared style module, and with
+      which look?
+- [ ] Ask the user, from the mockups: with line breaks, a cell of one line
+      sits in the middle of a higher row, in both views, as
+      `app/chat/tables/line-break` shows. Align each cell to the top of
+      its row?
 
 ## Milestone 5: The file preview on the parser
 

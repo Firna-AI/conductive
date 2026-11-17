@@ -2,12 +2,13 @@ import type { AgentBlock } from '../../fixtures/conversations'
 import type { MessageHeading } from '../../fixtures/headingConversations'
 import type { MessageList } from '../../fixtures/listConversations'
 import { MarkdownTable } from '../common/MarkdownTable'
+import { answerNodes } from './answerNodes'
+import { AnswerNodes, AnswerText } from './AnswerText'
 import { CodeBlock } from './CodeBlock'
-import { MessageText } from './MessageText'
 
 /** A cell of a table in a message, with the text of a paragraph. */
 function messageCell(text: string) {
-  return <MessageText answer text={text} />
+  return <AnswerText text={text} />
 }
 
 /**
@@ -21,7 +22,7 @@ function HeadingView(props: { heading: MessageHeading }) {
   const Heading = `h${level}` as const
   return (
     <Heading>
-      <MessageText answer text={text} />
+      <AnswerText text={text} />
     </Heading>
   )
 }
@@ -37,12 +38,12 @@ function ListView(props: { list: MessageList }) {
       {item.list ? (
         <>
           <p>
-            <MessageText answer text={item.text} />
+            <AnswerText text={item.text} />
           </p>
           <ListView list={item.list} />
         </>
       ) : (
-        <MessageText answer text={item.text} />
+        <AnswerText text={item.text} />
       )}
     </li>
   ))
@@ -51,18 +52,23 @@ function ListView(props: { list: MessageList }) {
 
 /**
  * The blocks of a message of the agent, in order: its paragraphs, its
- * headings, its tables, its lists, and its code blocks. Their text keeps its
- * inline code and its bold, and each link to a workspace of the org is a
- * chip. Each mention, and each inline code whose whole text is a path of
- * the tree, is a file chip. A code block stays code. The element around
- * them sets the type and the space between them.
+ * headings, its tables, its lists, its code blocks, its quotes, and its
+ * rules. Their text keeps its inline code, its bold text, its emphasis,
+ * its strikethrough, and its line breaks, and each link to a workspace of
+ * the org is a chip. Each mention, and each inline code whose whole text
+ * is a path of the tree, is a file chip. A code block stays code. A
+ * paragraph of only line breaks draws nothing. A quote holds its own
+ * blocks. The element around them sets the type and the space between
+ * them, and its `prose` class gives quotes and rules their look.
  */
 export function AgentBlocks(props: { blocks: readonly AgentBlock[] }) {
   return props.blocks.map((block, index) => {
     if (typeof block === 'string') {
+      const nodes = answerNodes(block)
+      if (nodes.length === 0) return null
       return (
         <p key={index}>
-          <MessageText answer text={block} />
+          <AnswerNodes nodes={nodes} />
         </p>
       )
     }
@@ -72,6 +78,14 @@ export function AgentBlocks(props: { blocks: readonly AgentBlock[] }) {
     if (block.kind === 'list') return <ListView key={index} list={block} />
     if (block.kind === 'code')
       return <CodeBlock key={index} text={block.text} />
+    if (block.kind === 'quote') {
+      return (
+        <blockquote key={index}>
+          <AgentBlocks blocks={block.blocks} />
+        </blockquote>
+      )
+    }
+    if (block.kind === 'rule') return <hr key={index} />
     return (
       <MarkdownTable
         align={block.align}

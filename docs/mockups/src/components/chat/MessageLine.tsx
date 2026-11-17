@@ -7,22 +7,32 @@ import type {
 } from '../../fixtures/conversations'
 import type { MessageHeading } from '../../fixtures/headingConversations'
 import type { MessageList } from '../../fixtures/listConversations'
+import type { MessageQuote } from '../../fixtures/proseBlocks'
 import { classes } from '../common/classes'
+import prose from '../common/MarkdownProse.module.css'
 import markdown from '../files/MarkdownView.module.css'
 import { AgentBlocks } from './AgentBlocks'
-import { MessageText } from './MessageText'
+import { answerNodes } from './answerNodes'
+import { AnswerNodes, AnswerText } from './AnswerText'
+import line from './MessageLine.module.css'
 import styles from './ToolGroup.module.css'
 
 type AgentItem = Extract<ChatItem, { kind: 'agent' }>
 
+/** Whether a block is a table, or a quote that holds one. */
+function holdsTable(block: AgentBlock): boolean {
+  if (typeof block === 'string') return false
+  if (block.kind === 'table') return true
+  return block.kind === 'quote' && block.blocks.some(holdsTable)
+}
+
 /**
  * The blocks before the first table of a message, and the blocks from that
- * table on. A message without a table has no rest.
+ * table on. A quote that holds a table counts as the table. A message
+ * without a table has no rest.
  */
 function splitAtTable(blocks: readonly AgentBlock[]) {
-  const table = blocks.findIndex(
-    (block) => typeof block !== 'string' && block.kind === 'table',
-  )
+  const table = blocks.findIndex(holdsTable)
   const end = table < 0 ? blocks.length : table
   return { lead: blocks.slice(0, end), rest: blocks.slice(end) }
 }
@@ -33,7 +43,7 @@ function TableText(props: { table: MessageTable }) {
   return cells.map((cell, index) => (
     <Fragment key={index}>
       {index > 0 ? ' · ' : null}
-      <MessageText answer text={cell} />
+      <AnswerText line text={cell} />
     </Fragment>
   ))
 }
@@ -54,7 +64,7 @@ function LineList(props: { list: MessageList }) {
               <span className={styles.number}>{index + 1}.</span>{' '}
             </>
           ) : null}
-          <MessageText answer text={item.text} />{' '}
+          <AnswerText line text={item.text} />{' '}
           {item.list ? <LineList list={item.list} /> : null}
         </span>
       ))}
@@ -74,28 +84,59 @@ function LineHeading(props: { heading: MessageHeading }) {
   if (text.trim() === '') return null
   return (
     <span className={styles.heading}>
-      <MessageText answer text={text} />{' '}
+      <AnswerText line text={text} />{' '}
     </span>
   )
 }
 
 /**
+ * A quote of a message line, as a span with the look of a quote, because a
+ * `<summary>` holds no quote element. The closed line shows its blocks as
+ * text of the line, and the open line shows it as a block (design call 13).
+ */
+function LineQuote(props: { quote: MessageQuote; open: boolean }) {
+  return (
+    <>
+      <span className={classes(line.quote, prose.quote)}>
+        {props.quote.blocks.map((block, index) => (
+          <LineBlock block={block} key={index} open={props.open} />
+        ))}
+      </span>{' '}
+    </>
+  )
+}
+
+/**
  * A block of a message line: a paragraph, a heading, a list, a table as
- * text, or a code block. A code block takes the look of an answer's code
- * block only while the line is open, so the closed line shows its text in
- * the line.
+ * text, a code block, a quote, or a rule. A code block takes the look of an
+ * answer's code block only while the line is open, so the closed line shows
+ * its text in the line. A rule is a span with the look of a rule: the
+ * closed line shows it as a middle dot, and the open line as a line. A
+ * paragraph of only line breaks draws nothing.
  */
 function LineBlock(props: { block: AgentBlock; open: boolean }) {
   const { block } = props
   if (typeof block === 'string') {
+    const nodes = answerNodes(block)
+    if (nodes.length === 0) return null
     return (
       <span className={styles.paragraph}>
-        <MessageText answer text={block} />{' '}
+        <AnswerNodes line nodes={nodes} />{' '}
       </span>
     )
   }
   if (block.kind === 'heading') return <LineHeading heading={block} />
   if (block.kind === 'list') return <LineList list={block} />
+  if (block.kind === 'quote') {
+    return <LineQuote open={props.open} quote={block} />
+  }
+  if (block.kind === 'rule') {
+    return (
+      <>
+        <span className={classes(line.rule, prose.rule)} />{' '}
+      </>
+    )
+  }
   if (block.kind === 'code') {
     return (
       <>
@@ -117,8 +158,8 @@ function LineBlock(props: { block: AgentBlock; open: boolean }) {
 /**
  * A message of the agent in an open fold: an icon and the first words of
  * the message on one line, cut with an ellipsis. A click opens the line to
- * the full text, with its paragraphs, headings, lists, and tables. A list
- * shows the lists that the agent indents under its items.
+ * the full text, with its paragraphs, headings, lists, quotes, rules, and
+ * tables. A list shows the lists that the agent indents under its items.
  *
  * A `<summary>` holds no table, so a table never goes into the line. The
  * closed line shows the first table, and all that follows it, as text. When
@@ -129,7 +170,10 @@ export function MessageLine(props: { message: AgentItem; open: boolean }) {
   const { lead, rest } = splitAtTable(props.message.blocks)
   const table = rest.length > 0
   return (
-    <details className={styles.message} open={props.open}>
+    <details
+      className={classes(styles.message, line.message, prose.prose)}
+      open={props.open}
+    >
       <summary className={styles.messageLine}>
         <MessageSquareText aria-hidden className={styles.icon} size={13} />
         <span className={styles.messageText}>
