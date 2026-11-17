@@ -717,6 +717,10 @@ Depends on: 3
       `worker/chat/model-changes.ts`, and `readLoginMetadata` to the login
       of the session.
 - [ ] Move `worker/app-api/get-started-data.ts` to decision 4.
+- [ ] Name the default login for each org and agent in the account
+      response, from the resolver, as option F of decision 6 says. The new
+      workspace form, the automation form, Get started, and the account page
+      of Milestone 6 show it.
 - [ ] Move `worker/automations/run-starter.ts` to decision 5.
 - [ ] Update the READMEs that name the login functions of the Worker:
       `worker/chat/access.md`, `worker/chat/README.md`, `key-code.md`,
