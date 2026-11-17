@@ -24,7 +24,7 @@ export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
   description: `The privacy notice of ${productName}.`,
   lead: text`This notice says which personal data ${productName} uses, why
-  it uses it, and who gets it. Effective date: 12 November 2026.`,
+  it uses it, and who gets it. Effective date: 17 November 2026.`,
   sections: [
     {
       title: 'Who is responsible',
@@ -104,9 +104,12 @@ export const privacyDocument: LegalDocument = {
           stay while their org exists, including while a cloud computer is
           stopped. When ${productName} passes on model requests and their
           answers, it keeps no copy of them.`,
-        paragraph`A connected agent login stays until you remove or replace
-          it. Panel sizes and the last workspace of each org stay in your
-          browser until you clear its saved data. The providers above can keep their own records under their
+        paragraph`A personal agent login stays until you remove or replace
+          it. An org login stays until an admin removes or replaces it, or
+          the org is deleted. It stays when the admin who connected it
+          leaves. Panel sizes and the last workspace of each org stay in
+          your browser until you clear its saved data. The providers above
+          can keep their own records under their
           terms and privacy notices.`,
         paragraph`The team keeps each feedback email in its inbox while it
           helps to improve ${productName}. It deletes the email when it no
@@ -122,8 +125,9 @@ export const privacyDocument: LegalDocument = {
       title: 'Security',
       blocks: [
         list(
-          text`${productName} stores each env var value and agent login
-            encrypted. An own endpoint login includes its address and key.
+          text`${productName} stores each env var value and each personal
+            or org agent login encrypted. An own endpoint login includes
+            its address and key.
             Only its host, with any non-default port, stays in plain text.`,
           text`It does not send the key of its cloud computer provider to
             your browser or into a cloud computer.`,

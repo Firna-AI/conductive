@@ -32,12 +32,17 @@ They can read code, change files, and run commands on the cloud computer.
 The message box lets you choose a model and its effort.
 Some models also offer **Fast** for faster output.
 
-Connect your own agent login before you start.
+Use a personal or org agent login to start.
 Claude accepts a subscription token or an Anthropic API key.
 Codex accepts an OpenAI API key or a sign-in to your ChatGPT plan.
 Either agent can use an own endpoint: a gateway or proxy that you choose, with its address and key.
-Each session uses the agent login of the member who starts it.
-A subscription token or provider API key bills model use to that member's connected account.
+
+An admin can connect an API key or own endpoint for the org in **Settings**, under **Agents**.
+You need no personal login when the org login serves you.
+Your usable personal login comes first unless an admin turns on **Use for every member**.
+Each session keeps its personal or org login.
+
+A subscription token or provider API key bills model use to its connected account.
 An own endpoint bills model use where its owner runs it.
 That endpoint gets the messages, files, and command results of each turn on its login.
 
@@ -49,7 +54,7 @@ Agents can create and manage workspaces and sessions across the org.
 They can read results, manage sections, and open private previews.
 Messages and stops from agent tools link to the sending session.
 
-- [Connect and share agent logins](/docs/agent-logins)
+- [Use personal and org agent logins](/docs/agent-logins)
 - [Use sessions and chat](/docs/sessions-and-chat)
 - [Understand what agents can reach](/docs/security#understand-what-agents-can-reach)
 
@@ -91,7 +96,7 @@ Restore leaves the computer stopped.
 
 Every member of an org can see its workspaces and chats.
 In an active org, every member can send messages in workspaces that are not archived.
-An admin manages the members, repositories, scripts, and environment variables.
+An admin manages the members, repositories, scripts, environment variables, and org agent logins.
 
 Members with terminal access can read credentials available on a workspace's cloud computer.
 Work in an org with people you trust with your agent and GitHub logins.
@@ -131,11 +136,12 @@ To start with a new org:
 1. Select **Sign in** in the site header.
 2. If your account waits, get access through approval, an invite code, or an org invitation.
 3. Follow **Get started** to install the GitHub App and create your org.
-4. Connect at least one agent login while Conductive prepares the org's cloud computer.
+4. Connect a personal or org agent login while Conductive prepares the org's cloud computer.
 5. After the first build succeeds, send a message in **New workspace**.
 
 During open sign-up, sign-in gives access at once.
 If you join an existing org, use its repositories and shared setup.
+You can use its org agent login without connecting a personal login.
 
 The first message creates your workspace and its first session.
 Conductive then starts the workspace's own cloud computer.

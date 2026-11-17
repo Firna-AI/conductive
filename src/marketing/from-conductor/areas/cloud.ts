@@ -13,7 +13,7 @@ export const cloudFeatures: readonly ParityFeature[] = [
     area: 'cloud',
     name: 'Cloud onboarding',
     status: 'available',
-    note: 'After app access is granted, Get started connects GitHub, creates your org and its first computer build, and adds an agent login.',
+    note: 'After app access, Get started prepares GitHub, your org, its first computer build, and access to an agent login.',
   },
   {
     id: 'cloud-computer',
@@ -83,7 +83,7 @@ export const cloudFeatures: readonly ParityFeature[] = [
     area: 'cloud',
     name: 'Cloud agent credentials',
     status: 'available',
-    note: 'Members connect and share agent logins. Using a shared agent setup on the cloud computer, including environment variables, is planned.',
+    note: 'Members connect personal logins today. Org API keys and endpoints are planned, with admin control for new sessions.',
   },
   {
     id: 'workspace-details',

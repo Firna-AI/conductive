@@ -65,14 +65,18 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         workspace owner when that branch is created. The agents send them
         through ${productName}, which adds the agent login.
         Agent settings in the repository can send them to another address
-        instead. Each session uses the
-        login of the member who started it. Each run of a routine sends
-        its prompt on the login of the member who owns the routine.
-        Your messages in another
-        member's session use that member's login only when that member
-        lets other members use it. When that member does not share the
-        login, your message starts a new session on your own login. The
-        terms of that provider or endpoint apply.`,
+        instead. Each session keeps a personal login or the org login.
+        A new session uses its starter's usable personal login, or else
+        the org login. An admin can give the org login priority for new
+        sessions with Use for every member. Older sessions keep their
+        login. Routine runs follow the same rule for their owner.
+        An org endpoint gets the data of each turn on it, including routine
+        runs. Each member can send messages on a session's org login.
+        Your messages on another member's personal login use it only while
+        that member shares it. Otherwise, your message starts a new session
+        under the rule above. A message does the same if the session's
+        login cannot be used. The app refuses the message when no usable
+        login serves its sender. The terms of that provider or endpoint apply.`,
       text`The members of your orgs see the workspaces of the org,
         their chats, and each Mac command request and result. They also see
         the routines of the org, with their prompts and their runs.
@@ -85,8 +89,8 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         turn.`,
       text`A member with a terminal or a program in a cloud computer can
         read the temporary credential of a turn that runs there. Through
-        ${productName}, that credential can use the login of the member who
-        started the session. It works while the turn runs, also from
+        ${productName}, that credential can use the session's personal or
+        org login. It works while the turn runs, also from
         outside the cloud computer. A program that keeps running, such as a
         dev server or a program that the startup script starts, can also
         get the credentials of later turns. This includes the turns of
@@ -94,15 +98,15 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         can make the agent send its model requests, with their content and
         the credential of the turn, to another address. A commit, the agent,
         or other code can change those settings. The setting that lets other
-        members use a login does not change this. After Stop, a credential
-        can start no new request. A request that still runs ends within 30
-        seconds after the turn ends. If the member who started the session
-        removes or changes the login, or loses access to the org, the turn
-        ends at its next model request.`,
+        members use a personal login does not change this. After Stop, a
+        credential can start no new request. A request that still runs ends within 30
+        seconds after the turn ends. If the login is removed or changed,
+        the turn ends at its next model request. A turn on a personal login
+        also ends there if its owner loses org access.`,
       text`The run of your routine for a pull request reads the comments,
         reviews, and descriptions of other GitHub accounts. Such text can
-        steer the agent while the run uses your agent login and GitHub
-        token, and the env vars of the org. Such text can also steer the
+        steer the agent while the run uses its session's agent login, your
+        GitHub token, and the org's env vars. Such text can also steer the
         agent to read and change work across the org, with your workspace
         tool rights. Messages follow the same session login rules.`,
       text`A workspace token is a credential for the workspace tools.
@@ -126,8 +130,11 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         An agent can send chat text that it reads to Anthropic, OpenAI,
         or the chosen endpoint as part of its work.`,
       text`The members of your orgs also see who started each session,
-        whose login it uses, and whether it can use that login. They also
-        see whether its starter lets other members use that login.`,
+        whose login it uses, and whether it can use that login. For a
+        personal login, they also see whether its starter shares it.
+        Members can read the kind of each org login, its endpoint host, and
+        its Use for every member setting in the org settings. They see no
+        saved key or full endpoint address.`,
       text`If the operator suspends your account, the members of your orgs
         learn that it is suspended. A workspace that you own then says
         that its owner is suspended, until an operator lifts the

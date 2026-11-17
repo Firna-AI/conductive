@@ -558,15 +558,15 @@ Depends on: 1
       login of the sender.
 - [x] `docs/protocol/model-gateway.md` and
       `docs/protocol/model-gateway-requests.md`: the login of the session.
-- [ ] Read `src/marketing/terms.ts`, `src/marketing/terms-org.ts`, and
+- [x] Read `src/marketing/terms.ts`, `src/marketing/terms-org.ts`, and
       `src/marketing/privacy.ts` with its parts in full. Update each
       sentence that restates a changed fact, such as "Each session uses the
       login of the member who started it".
-- [ ] Read each guide in `src/marketing/docs/` in full, at least
+- [x] Read each guide in `src/marketing/docs/` in full, at least
       `agent-logins.md`, `get-started.md`, `sessions-and-chat.md`,
       `security.md`, and `overview.md`. Update each sentence that
       restates a changed fact.
-- [ ] Update the rows of `src/marketing/from-conductor/areas/cloud.ts:86`
+- [x] Update the rows of `src/marketing/from-conductor/areas/cloud.ts:86`
       and `plans-and-pricing.ts` that the change makes wrong.
 - [ ] Capture the marketing pictures again with `npm run marketing:pictures`.
       The `org` picture shows the tab row of the org settings, which gains

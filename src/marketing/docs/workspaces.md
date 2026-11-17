@@ -13,7 +13,8 @@ Use separate workspaces for tasks that need separate files and branches.
 
 You need access to Conductive and membership of an org.
 The org needs a successful cloud computer build that includes your repository.
-You also need a login for the agent you choose.
+You also need a usable personal or org login for the agent you choose.
+You need no personal login when the org login serves you.
 Your GitHub account needs read access to the repository for the new workspace's start.
 
 If you joined an org, its admin manages the repositories and shared setup.

@@ -27,7 +27,7 @@ export const securityPrivacyAndAdminFeatures: readonly ParityFeature[] = [
     area: 'security-privacy-and-admin',
     name: 'Enterprise data privacy',
     status: 'considering',
-    note: 'Only automatic workspace names use an AI model outside your agent login. A switch that turns them off is under consideration.',
+    note: 'Only automatic workspace names use an AI model outside the session’s agent login. A switch that turns them off is under consideration.',
   },
   {
     id: 'managed-settings',
