@@ -16,6 +16,7 @@ import {
   FAKE_TIME,
 } from '../../test-support/fixtures/core'
 import { renderScreen, startedApp, textOf } from '../test-render'
+import { gatewayLogin, noLogin, serveOrgLogins } from './agents-test-kit'
 import { ComputerSettings } from './ComputerTab'
 import { OrgSettingsScreen } from './OrgSettingsScreen'
 
@@ -93,7 +94,7 @@ async function computerText(
 }
 
 describe('OrgSettingsScreen', () => {
-  test('an admin gets the tabs General, Repositories, Cloud computer, Secrets, and Members, fields for the name and the initials, and the colour swatches', async () => {
+  test('an admin gets the tabs General, Repositories, Cloud computer, Agents, Secrets, and Members, fields for the name and the initials, and the colour swatches', async () => {
     const { app, org, user } = await signedIn(new FakeApiServer())
     const html = renderScreen(
       app,
@@ -103,6 +104,7 @@ describe('OrgSettingsScreen', () => {
       'General',
       'Repositories',
       'Cloud computer',
+      'Agents',
       'Secrets',
       'Members',
     ])
@@ -116,9 +118,11 @@ describe('OrgSettingsScreen', () => {
   test('a suspended org shows its notice above each tab, and no edit control, also for its only admin', async () => {
     const server = new FakeApiServer()
     serveSuspendedAcme(server)
+    serveOrgLogins(server, [gatewayLogin('claude'), noLogin('codex')])
     const { app, org, user, model } = await signedIn(server)
     await model.reload('repositories')
     await model.reload('builds')
+    await model.reload('agentLogins')
     const computer = new ComputerModel(model, new ManualDelay().delay)
     await computer.load()
     const screen = (tab: SettingsTab) =>
@@ -129,6 +133,7 @@ describe('OrgSettingsScreen', () => {
       general: screen('general'),
       repositories: screen('repositories'),
       'cloud computer': screen('cloud-computer'),
+      agents: screen('agents'),
       members: screen('members'),
     }
     for (const [tab, html] of Object.entries(tabs)) {
@@ -138,9 +143,10 @@ describe('OrgSettingsScreen', () => {
       general: tabs.general,
       repositories: tabs.repositories,
       'cloud computer': tabs['cloud computer'],
+      agents: tabs.agents,
     }
     for (const [page, html] of Object.entries(pages)) {
-      expect(html, page).not.toMatch(/<button|<input|<textarea/)
+      expect(html, page).not.toMatch(/<button|<input|<textarea|role="switch"/)
       expect(textOf(html), page).not.toMatch(
         /Save|Build computer|Delete org|Leave org|Only an admin/,
       )

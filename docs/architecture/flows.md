@@ -27,9 +27,9 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
    each agent event and sends it to the Durable Object.
 3. The agent sends each model request to the model gateway of the Worker,
    with the turn token. The gateway checks the token with the Durable
-   Object, adds the agent login of the starter, and streams the answer of
+   Object, adds the login of the session, and streams the answer of
    Anthropic or OpenAI back. For an own endpoint login, the gateway sends
-   the request with the key to the endpoint of the starter instead, as
+   the request with the key to the endpoint of that login instead, as
    [Own endpoints](../protocol/model-gateway-requests.md#own-endpoints)
    says. The requests of a ChatGPT sign-in pass through the egress container
    on their way to OpenAI. A settings file in the repository can send the requests of Claude
@@ -110,8 +110,9 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 1. A trigger fires: the minute Cron Trigger finds a due schedule, a pull
    request webhook matches a trigger, or the owner uses Run now.
 2. The Worker stores the run in D1, once for each schedule time, delivery,
-   or Run now request. It checks the owner, the org, and the owner's
-   logins. A failed check creates no workspace.
+   or Run now request. It checks the owner, the org, the default login of
+   the owner, and the GitHub access of the owner. A failed check creates
+   no workspace.
 3. The Worker creates a workspace as the owner, with the run text as its
    first message. The workspace starts as in
    [Create a workspace](#create-a-workspace).

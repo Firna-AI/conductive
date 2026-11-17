@@ -223,8 +223,10 @@ Later screens add the frame and connection sources that they need.
 ## Agent logins in a sandbox
 
 - [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
-  states how a turn uses a login, its share setting, and its risk. It
-  also states the turn tokens and their risks.
+  states how a turn uses a login, and its risk. It also states the turn
+  tokens and their risks.
+- [The share setting](share-setting.md) states the share setting of a
+  personal login.
 
 ## GitHub tokens
 

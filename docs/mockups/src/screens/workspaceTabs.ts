@@ -5,6 +5,7 @@ import { historyEntries } from '../components/workspace/WorkspaceTabs'
 import {
   linkedSession,
   newSession,
+  startedSession,
   workspaceSessions,
 } from '../fixtures/sessions'
 import { screenshotCopy } from '../fixtures/attachments'
@@ -37,6 +38,15 @@ function sessionLinkStates(state: WorkspaceState): boolean {
     state.conversation === 'sent-by' ||
     state.composer === 'session-link'
   )
+}
+
+/**
+ * Whether the open session has no message yet: a new session of the viewer,
+ * or an empty session that another member started. Its chat shows the
+ * empty state of a new session.
+ */
+export function noMessages(state: WorkspaceState): boolean {
+  return state.tab === 'new-session' || state.tab === 'started-session'
 }
 
 /** The history of the workspace, with a note while a new workspace has none. */
@@ -118,8 +128,9 @@ function previewTabs(state: WorkspaceState): WorkspaceTab[] {
  * name as the header, Untitled before the title comes. While the login of
  * the starter of the first session is not available, that first session
  * leads to its view for the member, beside the linked session. While the
- * starter keeps the login for their own messages, the first session leads
- * to that view. After the second session sent its messages, the second
+ * starter keeps the login for their own messages, or after an admin removed
+ * the org login of the session, the first session leads to that view.
+ * After the second session sent its messages, the second
  * session can show, and each session tab leads to its chat of that time.
  * The file or the diff that the state opens can be the temporary tab, as
  * `withTemporaryTab` draws it. The Preview tabs show after the code file.
@@ -139,6 +150,9 @@ export function tabsFor(
   const sent = sessionLinkStates(state)
   let firstPath: string = linked ? paths.noStarterLogin : paths.app
   if (state.composer === 'not-shared') firstPath = paths.loginNotShared
+  if (state.composer === 'no-starter-login' && state.login === 'org') {
+    firstPath = paths.orgLoginRemoved
+  }
   if (sent) firstPath = paths.sentBy
   const tabs: WorkspaceTab[] = [
     {
@@ -215,6 +229,16 @@ export function tabsFor(
       kind: 'session',
       title: nameLabel(title),
       to: paths.linkedSession,
+      selected: true,
+    })
+  }
+  if (state.tab === 'started-session') {
+    const { key, title } = startedSession
+    tabs.push({
+      key,
+      kind: 'session',
+      title: nameLabel(title),
+      to: paths.orgLoginStartedSession,
       selected: true,
     })
   }

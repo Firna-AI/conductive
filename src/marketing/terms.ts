@@ -68,16 +68,23 @@ export const termsDocument: LegalDocument = {
           text`${productName} runs the cloud computers of every org in its
             own account with its cloud computer provider. You need no
             account or key of your own for them.`,
-          text`The agents run on the agent login that you connect.
-            Each session uses the login of the member who started it.
-            For a Claude subscription, ChatGPT plan, or provider API key, model use bills to that
-            member's connected account under the terms of Anthropic or OpenAI.
-            For an own endpoint login, model use bills where the endpoint's
-            owner runs it. You are responsible for the endpoint that you
-            connect and for following its terms.
-            The runs of an automation start their sessions on the login of the
-            member who owns the automation.
-            ${productName} keeps agent logins outside cloud computers.
+          text`Each session keeps one agent login: its starter's personal
+            login or the org login. Your usable personal login comes first
+            for a new session. If you have none, the session uses the org
+            login when available. An admin can turn on Use for every member
+            to give the org login priority for new sessions. If the org
+            login cannot be used, your usable personal login serves instead.
+            Older sessions keep their login.`,
+          text`A member whom the org login serves needs no personal login.
+            Each automation run follows the same login rule as a new session
+            of its owner.`,
+          text`For a Claude subscription or ChatGPT plan, model use bills to
+            its connected account under the terms of Anthropic or OpenAI.
+            For a provider API key, the account of that key pays.
+            For an own endpoint login, the account of the endpoint pays
+            under its terms. You are responsible for the endpoint that you
+            connect and for following its terms.`,
+          text`${productName} keeps agent logins outside cloud computers.
             Each turn gets a temporary credential for model requests.
             The agents send their model requests and receive their answers
             through ${productName} on Cloudflare. These requests
@@ -238,7 +245,8 @@ export const termsDocument: LegalDocument = {
           cloud computers of the org at once. It deletes the org after 7
           days, unless an admin restores it.`,
         paragraph`You can stop using ${productName} at any time. You can
-          remove connected agent logins on your account page. To request
+          remove personal agent logins on your account page. An admin can
+          remove org logins on the Agents tab of the org settings. To request
           account deletion, write to ${mailLink(legalAddress)}. Stopping
           use or removing a login does not delete an org or its chat
           history. The Privacy notice explains data retention.`,
