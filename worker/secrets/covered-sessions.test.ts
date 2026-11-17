@@ -134,3 +134,76 @@ it('leaves a request of another session that a grant of Capabilities covers', as
   )
   await active.answer(elsewhere.request.id, { kind: 'deny' })
 })
+
+/** A request of `turnId` that the clock makes late at `at`. */
+async function lateRequest(active: SecretFixture, turnId: string, at: number) {
+  const pending = await active.waiting(
+    { names: ['TOKEN'], command: `deploy at ${at}` },
+    turnId,
+  )
+  await (await active.secretActor()).advanceSecretClock(at)
+  expect(await (await pending.response).json()).toMatchObject({
+    status: 'pending',
+  })
+  return pending
+}
+
+/** Answers a new request of the first session with a workspace value. */
+async function answerWithWorkspaceValue(active: SecretFixture) {
+  const here = await active.waiting({ names: ['TOKEN'], command: 'deploy' })
+  await active.answer(here.request.id, {
+    kind: 'values',
+    lifetime: 'workspace',
+    values: { TOKEN: 'workspace-value' },
+  })
+  expect(await (await here.response).json()).toMatchObject({
+    status: 'allowed',
+  })
+}
+
+it('sends one notice to another session with two late requests', async () => {
+  const active = (f = await secretFixture(bundle))
+  const other = await otherTurn(active)
+  const older = await lateRequest(
+    active,
+    other.turnId,
+    DEVICE_TEST_NOW + 90_000,
+  )
+  const newer = await lateRequest(
+    active,
+    other.turnId,
+    DEVICE_TEST_NOW + 180_000,
+  )
+  await answerWithWorkspaceValue(active)
+  expect(await requestState(active, older.request.id)).toMatchObject({
+    state: 'allowed',
+    notice: { state: 'sent' },
+  })
+  expect(await requestState(active, newer.request.id)).toMatchObject({
+    state: 'allowed',
+    notice: null,
+  })
+  expect(await notices(active, other.sessionId)).toEqual([
+    expect.objectContaining({ requestId: older.request.id }),
+  ])
+})
+
+it('sends no notice to another session where a waiting call gets the values', async () => {
+  const active = (f = await secretFixture(bundle))
+  const other = await otherTurn(active)
+  const late = await lateRequest(active, other.turnId, DEVICE_TEST_NOW + 90_000)
+  const waiting = await active.waiting(
+    { names: ['TOKEN'], command: 'deploy again' },
+    other.turnId,
+  )
+  await answerWithWorkspaceValue(active)
+  expect(await (await waiting.response).json()).toMatchObject({
+    status: 'allowed',
+    values: { TOKEN: 'workspace-value' },
+  })
+  expect(await requestState(active, late.request.id)).toMatchObject({
+    state: 'allowed',
+    notice: null,
+  })
+  expect(await notices(active, other.sessionId)).toEqual([])
+})

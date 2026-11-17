@@ -1,5 +1,10 @@
 import { afterEach, beforeAll, expect, it } from 'vitest'
 import { outerWorkerBundle } from '../chat/integration/outer-runtime.test-support'
+import { workspaceCapabilitiesPath } from '../../src/shared/secrets'
+import {
+  OUTER_ORG,
+  OUTER_WORKSPACE,
+} from '../chat/integration/outer-seed.test-support'
 import { secretFixture, type SecretFixture } from './requests.test-support'
 import {
   lateThenWaiting,
@@ -114,4 +119,17 @@ it('records no lifetime on a covered request that asked for no value', async () 
     state: 'allowed',
     lifetime: null,
   })
+})
+
+it('keeps a request open when a grant of Capabilities covers its other secret', async () => {
+  const active = (f = await secretFixture(bundle))
+  await active.seed('TOKEN', 'covered-value')
+  const other = await active.seed('OTHER', 'other-value')
+  const { late, waiting } = await lateThenWaiting(active, ['TOKEN', 'OTHER'])
+  await active.request(workspaceCapabilitiesPath(OUTER_ORG, OUTER_WORKSPACE), {
+    method: 'PATCH',
+    body: JSON.stringify({ preapprovedSecretIds: [other.id] }),
+  })
+  await active.answer(waiting.request.id, { kind: 'allow' })
+  expect((await requestState(active, late.request.id)).state).toBe('late')
 })

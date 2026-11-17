@@ -109,17 +109,17 @@ decision number names a decision of the change that adds
 ## Covered requests
 
 - An Allow also allows each other open request, waiting or late, that its
-  new grants cover. A request is covered when it names a secret of the
-  answer, and the grant of the answer reaches each such secret in the
-  session of the request. Each other secret that it asks for must also
-  have a grant or a temporary value for its session.
+  new grants cover. A request is covered when the grant of the answer
+  reaches each secret that it asks for, in the session of the request.
 - The scope of each grant sets the reach. An approval for the session and
   a value for 15 minutes reach the session that asked. A value for this
   workspace reaches each session of the workspace.
 - A covered request names the member who answered. A waiting call of a
   covered request gets its values at once.
-- A request that names a secret that is still not covered stays open, and
-  does not change.
+- A request that asks for a secret that the answer does not give stays
+  open, and does not change. This holds also when another grant, such as
+  one of Capabilities, now covers that secret. Reason: the request then
+  names only grants that the member gave.
 - Reason: an agent often asks again after its request becomes late. The
   member then answers once, and no call waits for an answer that it
   already has.

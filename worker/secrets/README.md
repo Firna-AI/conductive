@@ -79,11 +79,11 @@ An answer is one of these JSON objects:
 - `{ "kind": "values", "lifetime": "15-minutes" | "workspace" | "save", "values": { "NAME": "value" } }`.
 
 An allow also allows each other open request that its grants cover, in
-the same chat operation. A request is covered when it names a secret of
-the answer, and the answer's own grant reaches each such name in the
-request's session. Each other name that it asked for must have a grant or
-a temporary value for its own session. Approvals and 15-minute values
-reach only the answered session. Workspace values reach every session. The covered request records the same member
+the same chat operation. A request is covered when the answer's own
+grant reaches each name that it asked for, in the request's session.
+Approvals and 15-minute values reach only the answered session. Workspace
+values reach every session. A grant from elsewhere, such as Capabilities,
+never makes a request covered. The covered request records the same member
 and time. Its lifetime is the answer's lifetime when it asked for a value,
 and null otherwise. A waiting call of a covered request gets its values.
 One answer sends at most one late notice for each session, and none to a

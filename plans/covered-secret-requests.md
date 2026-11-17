@@ -55,12 +55,12 @@ Answered by the user on 17 November 2026: **A**.
 
 ## Design
 
-- My call, 17 November 2026: an other request is covered when it names at
-  least one secret of the answer, and the answer's own grant reaches each
-  such secret in the session of the request. Every other secret that it
-  asked for must have a grant or a temporary value for its session. Reason:
-  a grant from Capabilities in another session must not make the card
-  credit the member who answered (review finding 2). A request that names a
+- My call, 17 November 2026: an other request is covered when the
+  answer's own grant reaches each secret that it asked for, in the session
+  of the request. A grant from elsewhere, such as Capabilities, never makes
+  a request covered. Reason: decision 1 A says the new grants all cover
+  it, and the card and the late line must credit only grants that the
+  member gave (review findings 2 and 4). A request that names a
   secret that is still not covered stays open and does not change. Reason:
   Allow on that request then gives the missing grant.
 - My call, 17 November 2026: a settled request records the member who
@@ -103,7 +103,7 @@ Depends on: every other milestone
 
 - [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review

@@ -27,9 +27,8 @@ function reachedNames(
 
 /**
  * The other open requests that an Allow covers, oldest first. The grant of
- * the answer reaches each name that a request shares with the answer, and
- * each secret that the request asked for now has a grant or a temporary
- * value for its own session.
+ * the answer reaches each secret that the request asked for, in the session
+ * of the request. The resolve then checks that each grant still holds.
  */
 export async function coveredRequests(
   runtime: SecretRuntime,
@@ -37,7 +36,6 @@ export async function coveredRequests(
   answer: AnswerSecretRequest,
 ): Promise<StoredSecretRequest[]> {
   const { workspaceId } = answered.request
-  const names = new Set(answered.request.secrets.map((secret) => secret.name))
   return runtime.chat.store.read(workspaceId, async (view) => {
     const covered: StoredSecretRequest[] = []
     for (const other of await view.secrets.requests()) {
@@ -49,9 +47,7 @@ export async function coveredRequests(
       )
         continue
       const reached = reachedNames(answered.request, answer, request.sessionId)
-      const shared = request.secrets.filter((secret) => names.has(secret.name))
-      if (!shared.length || !shared.every((secret) => reached.has(secret.name)))
-        continue
+      if (!request.secrets.every((secret) => reached.has(secret.name))) continue
       const resolved = await resolveSecretNames(
         runtime,
         view,
