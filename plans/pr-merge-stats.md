@@ -16,21 +16,14 @@ roles of a person count and how the tab shows them.
 
 Contract owners:
 
-- [Account stats](../docs/protocol/account-stats.md).
-- [The GitHub banner](../docs/protocol/github-banner.md), for the merges
-  that the app sees.
-- [Data and trust](../docs/architecture/data-and-trust.md), for the new
-  stored record.
-- The [GitHub README](../worker/github/README.md), the
-  [App API README](../worker/app-api/README.md), and the
-  [migrations README](../migrations/README.md).
+- [Account stats](../docs/protocol/account-stats.md), [the GitHub banner](../docs/protocol/github-banner.md), and [data and trust](../docs/architecture/data-and-trust.md).
+- The [GitHub README](../worker/github/README.md), the [App API README](../worker/app-api/README.md), and the [migrations README](../migrations/README.md).
 
 ## Decisions
 
-The user chose both answers on 2026-11-17, in the session of this
-workspace. The brainstorm of the same day gave the options. A decision
-here is a "merge stats decision". Account stats decisions 1 and 2 came
-from the change that added the tab (#405).
+The user answered decisions 1 and 2 on 2026-11-17, after a brainstorm of
+the same day. Decisions 3, 4, and 5 are open. A decision here is a "merge
+stats decision". Account stats decisions 1 and 2 came from #405.
 
 ### Merge stats decision 1. How to count the merges of a person
 
@@ -61,17 +54,10 @@ from the change that added the tab (#405).
   - **C.** Search GitHub with the person's token at each read. It gives the
     full history, but it counts work outside Conductive, waits seconds for
     GitHub, and meets the search rate limit. Effort: Large.
-- **Left out:**
-  - Read each workspace object at each read: it breaks the no-wake rule,
-    whose reason stays.
-  - Count only the Merge button of the app: it misses merges on GitHub.
-  - Record each merge of the connected repositories by GitHub account: it
-    counts work outside Conductive and stores facts about non-users.
-  - A general activity record for all stats: it is wider than the goal.
-  - A link to GitHub, or no change: they fail the goal.
-- **Wider fix:** None. This is a feature, not a class of defect.
+- **Left out:** A read of each workspace object at each read, a count of
+  the Merge button only, a record by GitHub account, a general activity
+  record, a link to GitHub, and no change. The brainstorm gave each reason.
 - **Previous examples:** The Stats tab came from #405 (`570ce506b`).
-- **Related:** Decision 2 applies only to B.
 - **Recommendation:** B. Only B gives the per-day shape of the other counts
   from a cheap read.
 - **Options check (2026-11-17):** It kept B. It added **D.** Keep the
@@ -102,9 +88,6 @@ from the change that added the tab (#405).
     now. Effort: Medium.
 - **Left out:** Recovery from the task numbers: they hold no merge times
   and start on 16 November.
-- **Wider fix:** None.
-- **Previous examples:** None found.
-- **Related:** Decision 1, option B.
 - **Recommendation:** B, to keep the reason of account stats decision 2.
 - **Options check (2026-11-17):** It added three options. **C.** Keep each
   older merge that a refresh sees after the release. Effort: Small. **D.**
