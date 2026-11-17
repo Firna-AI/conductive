@@ -30,7 +30,7 @@ export const termsDocument: LegalDocument = {
   at ${appDomain}, and in the Mac app. You accept their current version
   each time that you continue with GitHub to sign in. ${productName} keeps
   the latest version that you accepted, and the time when you first
-  accepted it. Effective date: 16 November 2026.`,
+  accepted it. Effective date: 17 November 2026.`,
   sections: [
     {
       title: `Who runs ${productName}`,
@@ -53,8 +53,9 @@ export const termsDocument: LegalDocument = {
           after another, with one branch at a time.`,
         paragraph`An org admin can choose one public GitHub repository of
           agent skills for every workspace of the org. Agents powered by
-          Claude and Codex can use its skill folders. Other members can
-          read this setting. The cloud computer copies the repository at
+          Claude and Codex use its skill folders. Only an org admin changes
+          this setting. Other members read it without changing it.
+          The cloud computer copies the repository at
           start and checks for new commits every 5 minutes. A changed
           repository applies at the next start or resume of each workspace.`,
         paragraph`This setting loads only skill folders. It loads no hooks,

@@ -24,7 +24,7 @@ export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
   description: `The privacy notice of ${productName}.`,
   lead: text`This notice says which personal data ${productName} uses, why
-  it uses it, and who gets it. Effective date: 16 November 2026.`,
+  it uses it, and who gets it. Effective date: 17 November 2026.`,
   sections: [
     {
       title: 'Who is responsible',
@@ -45,9 +45,10 @@ export const privacyDocument: LegalDocument = {
     {
       title: 'Org skills repositories',
       blocks: [
-        paragraph`${productName} keeps the public GitHub repository that an
-          org admin chooses as the source of agent skills. Other members
-          can read this setting. The saved choice stays until an admin
+        paragraph`${productName} keeps the skills repository setting that an
+          org admin saves. It keeps text even when it does not name a public
+          GitHub repository. Other members can read this setting.
+          The saved choice stays until an admin
           clears or replaces it, or ${productName} deletes the org.`,
         paragraph`When an admin saves the repository, and each time the
           Skills section loads, ${productName} reads its repository details
