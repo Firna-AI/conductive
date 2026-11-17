@@ -158,8 +158,9 @@ The development fake keeps each org's workspace number counter.
 A create gets the next number and a web link on the fake API origin.
 Workspace readers keep the number and link that the Worker supplies.
 
-The development fake serves the org logins through `dev/org-login-routes.ts`,
-in a private route closure, as the Worker does. Each member reads them, and
+The development fake keeps the org logins in its state, `orgLogins` of
+`DevState`, and serves them through `dev/org-login-routes.ts`, as the
+Worker does. Each member reads them, and
 only an admin of an active org gets the model list of an own endpoint. Only
 an admin saves, changes the switch "Use for every member", removes, or
 refreshes. The saves and Refresh use the fake hosts of the account above,
@@ -167,8 +168,19 @@ so a save of `https://no-models.example.test` shows the warning, and a Codex
 save of `https://v1-only.example.test` shows the `/v1` note.
 `?orgLogin=endpoint` gives Acme an org login of Claude on its gateway, whose
 last model list names every Claude model. `?orgLogin=unlisted` gives a list
-without the last Claude model. With `?shareSave=fail`, each change of the
+without the last Claude model. `?orgLogin=every-member` gives the login of
+`endpoint` with its switch on. With `?shareSave=fail`, each change of the
 switch fails. A reload starts again from the options.
+
+Each read of the account names the default login of each org and agent,
+from the own logins and the org logins of the state, as the resolver of
+the Worker does. `dev/default-logins.ts` works out the order, because the
+fake stands in for the Worker. So `?login=none&orgLogin=endpoint` gives a
+person whose new Claude sessions in Acme take the org login.
+`?sessionLogin=org` makes each session of `checkout-autocomplete` run on the
+org login of Acme, as after a first message on it. `?sessionLogin=removed`
+says in each record that an admin removed that login later.
+`dev/session-login-routes.ts` changes the recorded sessions in this way.
 
 The development fake saves shortcut batches through `dev/shortcut-routes.ts`.
 It checks the whole batch with the shared reader before it changes state.

@@ -5,8 +5,16 @@ import { ACCOUNT_PATHS, type AccountResponse } from '../../shared/account'
 import type { OrgRole } from '../../shared/api'
 import { byRole } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
-import { coreFixtures, FAKE_TIME } from '../../test-support/fixtures/core'
+import {
+  coreFixtures,
+  FAKE_IDS,
+  FAKE_TIME,
+} from '../../test-support/fixtures/core'
 import { MOUNTED_TEST_TIMEOUT, press } from '../../test-support/mount'
+import {
+  accountWithDefaults,
+  orgListWithout,
+} from '../../app/default-logins.test-support'
 import { loginPrivate, withSessions } from '../state/linked-kit'
 import { first, mountChat, second } from './tab-drag-test-kit'
 
@@ -16,30 +24,32 @@ vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 const labels = coreFixtures().models.models.map((model) => model.label)
 
 /**
- * The fake API, where the reader of `role` runs Claude on an own endpoint.
- * Its last model list did not name Opus 5.5, the model of the sessions,
- * or Sonnet 5.5.
+ * The logins of a reader who runs Claude on an own endpoint. Its last model
+ * list did not name Opus 5.5, the model of the sessions, or Sonnet 5.5.
  */
+const endpointLogins: AccountResponse['agentLogins'] = [
+  {
+    agent: 'claude',
+    connected: true,
+    kind: 'endpoint',
+    host: 'proxy.example.com',
+    modelList: {
+      missing: ['Opus 5.5', 'Sonnet 5.5'],
+      checkedAt: FAKE_TIME,
+    },
+    noReuse: false,
+    updatedAt: FAKE_TIME,
+  },
+  { agent: 'codex', connected: false },
+]
+
+/** The fake API, where the reader of `role` has the `endpointLogins`. */
 function serverWith(role: OrgRole): FakeApiServer {
   const server = new FakeApiServer({ role })
   const account = coreFixtures(role).account
   server.json('GET', ACCOUNT_PATHS.account, {
     ...account,
-    agentLogins: [
-      {
-        agent: 'claude',
-        connected: true,
-        kind: 'endpoint',
-        host: 'proxy.example.com',
-        modelList: {
-          missing: ['Opus 5.5', 'Sonnet 5.5'],
-          checkedAt: FAKE_TIME,
-        },
-        noReuse: false,
-        updatedAt: FAKE_TIME,
-      },
-      { agent: 'codex', connected: false },
-    ],
+    agentLogins: endpointLogins,
   } satisfies AccountResponse)
   return server
 }
@@ -66,6 +76,28 @@ describe('the models of the composer of a session', () => {
 
   it("are every model of the app in a session on another member's login", async () => {
     expect(await offeredModels(serverWith('member'))).toEqual(labels)
+  })
+
+  it('follow the last list of the org endpoint in a session on the org login, for a member whose own endpoint lists other models', async () => {
+    const server = serverWith('member')
+    server.json('GET', ACCOUNT_PATHS.account, {
+      ...accountWithDefaults(
+        'member',
+        { claude: 'own', codex: null },
+        { orgModelList: orgListWithout('Fable 5.1') },
+      ),
+      agentLogins: endpointLogins,
+    } satisfies AccountResponse)
+    withSessions(server, (session) => ({
+      ...session,
+      login: { type: 'org', orgId: FAKE_IDS.org },
+    }))
+    expect(await offeredModels(server)).toEqual([
+      'Opus 5.5',
+      'Sonnet 5.5',
+      'GPT-6.1 Sol',
+      'GPT-6 Astra',
+    ])
   })
 
   it("follow the reader's own list when a message starts a linked session on the reader's own login", async () => {

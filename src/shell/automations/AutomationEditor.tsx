@@ -9,6 +9,7 @@ import {
   sameDraft,
   type AutomationDraft,
 } from '../../app/automation-draft'
+import { newSessionLogin } from '../../app/default-logins'
 import type { AutomationTab } from '../../app/router'
 import { useStore, valueOf } from '../../app/store'
 import type { User } from '../../shared/api'
@@ -16,7 +17,7 @@ import type { Repository } from '../../shared/org-settings'
 import type { OrgSummary } from '../../shared/orgs'
 import type { Automation } from '../../shared/automations'
 import type { Section } from '../../shared/sections'
-import { useOfferedModels, useOrgModel } from '../context'
+import { useApp, useOfferedModels, useOrgModel } from '../context'
 import { ActionButton } from '../ui/actions'
 import { eachField, useSavedDraft } from '../ui/useSavedDraft'
 import { useViewport } from '../ui/viewport'
@@ -68,8 +69,13 @@ export function AutomationEditor(
   )
   const form = useSavedDraft(saved, followEachField)
   const { draft } = form
-  // The runs use the owner's login, so the picker follows the owner's lists.
-  const models = useOfferedModels(draft.choice)
+  const account = useStore(useApp().account.account)
+  // A run takes the default login of its owner, the person here, so the
+  // picker follows the list of that login (org login decisions 5 A and 3 A).
+  const models = useOfferedModels(draft.choice, org.id)
+  const runsOnOrg =
+    account !== null &&
+    newSessionLogin(account, org.id, draft.choice.agent) === 'org'
   const { save, refused, refusal } = useAutomationSave({
     org,
     automation,
@@ -176,6 +182,7 @@ export function AutomationEditor(
         changeChoice={(choice) => change({ ...draft, choice })}
         changePrompt={(prompt) => change({ ...draft, prompt })}
         choice={draft.choice}
+        login={runsOnOrg ? `${org.name}'s` : undefined}
         models={models}
         prompt={draft.prompt}
       />

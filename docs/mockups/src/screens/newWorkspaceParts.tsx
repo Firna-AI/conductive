@@ -134,7 +134,7 @@ export function formLoginLabel(
   state: NewWorkspaceFormState,
 ): SessionLogin | undefined {
   if (state.login !== 'org') return undefined
-  return { starter: orgWithLogin.name }
+  return { owner: orgWithLogin.name }
 }
 
 /**

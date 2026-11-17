@@ -1,7 +1,9 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test, vi } from 'vitest'
+import { accountWithDefaults } from '../../app/default-logins.test-support'
 import { routes } from '../../app/router'
+import { ACCOUNT_PATHS } from '../../shared/account'
 import {
   automationPath,
   automationsPath,
@@ -95,6 +97,23 @@ describe('the automation page', () => {
       unchanged: true,
       changed: false,
     })
+  })
+
+  test("a new automation of a member whose default login is the org login names that login and the member's GitHub access under the prompt", async () => {
+    const server = new FakeApiServer({ role: 'member' })
+    server.json(
+      'GET',
+      ACCOUNT_PATHS.account,
+      accountWithDefaults('member', { claude: 'org', codex: null }),
+    )
+    const { view } = await openApp(server, routes.newAutomation(org))
+    await waitFor(
+      () => queryByRole('textbox', 'Prompt', view),
+      'the prompt of the new automation',
+    )
+    expect(page(view)).toContain(
+      "Runs use Acme's Claude login and your GitHub access.",
+    )
   })
 
   test('a member reads the automation without fields and without actions', async () => {

@@ -8,11 +8,10 @@ import styles from './SessionLogin.module.css'
  */
 export type SessionLogin = {
   /**
-   * The name of the owner of the login: the starter, such as "Cal", or the
-   * org, such as "Acme". The field keeps the name `starter`, because the
-   * app imports this type.
+   * The name of the owner of the login: the member, such as "Cal", or the
+   * org, such as "Acme".
    */
-  starter: string
+  owner: string
 }
 
 /**
@@ -27,7 +26,7 @@ export function SessionLoginLabel(props: SessionLogin) {
   return (
     <span className={styles.label}>
       <Plug aria-hidden className={styles.icon} size={12} />
-      <span className={styles.text}>{`${props.starter}'s login`}</span>
+      <span className={styles.text}>{`${props.owner}'s login`}</span>
     </span>
   )
 }

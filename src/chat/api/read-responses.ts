@@ -1,6 +1,7 @@
 import type { AgentModel } from '../../shared/generated/AgentModel'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import type { AgentLoginStatus, EndpointModelList } from '../../shared/account'
+import type { DefaultLoginEntry } from '../../app/default-logins'
 
 import type { Org, User } from '../../shared/api'
 import type { SendMessageResponse } from '../../shared/messages'
@@ -34,6 +35,7 @@ import {
   readDraft,
   readEffort,
   readSession,
+  readSessionLogin,
   readUserMessage,
 } from './read-chat'
 
@@ -51,6 +53,11 @@ export interface AccountSummary {
   user: Pick<User, 'id'>
   defaultChoice: AgentChoice
   agentLogins: readonly AgentLogin[]
+  /**
+   * The login that a new session of the reader takes, for each org and
+   * agent, as the server names it. An older reply names none.
+   */
+  defaultLogins?: readonly DefaultLoginEntry[]
 }
 
 /** A member of the org, with what the chat needs to name them. */
@@ -127,11 +134,26 @@ function readModelList(value: unknown): EndpointModelList {
   }
 }
 
+/** The default login of the reader for one org and one agent. */
+function readDefaultLogin(value: unknown): DefaultLoginEntry {
+  const source = record(value, 'default login')
+  const orgModelList = optional(nullable(readModelList))(source.orgModelList)
+  return {
+    orgId: text(source.orgId),
+    orgName: text(source.orgName),
+    agent: readAgent(source.agent),
+    login: optional(nullable(readSessionLogin))(source.login) ?? null,
+    ...(orgModelList ? { orgModelList } : {}),
+  }
+}
+
 export function readAccount(value: unknown): AccountSummary {
   const source = record(value, 'account')
+  const defaultLogins = optional(list(readDefaultLogin))(source.defaultLogins)
   return {
     user: { id: text(record(source.user, 'user').id) },
     defaultChoice: readChoice(source.defaultChoice),
+    ...(defaultLogins ? { defaultLogins } : {}),
     agentLogins: list((item): AgentLogin => {
       const login = record(item, 'agent login')
       const modelList = optional(readModelList)(login.modelList)

@@ -10,13 +10,23 @@ import { effortLabels, modelLabel } from '../../shared/agents'
 import { agentNames } from '../account/labels'
 import { ModelPicker } from '../ui/ModelPicker'
 
-/** Whose agent login and GitHub access the runs use, under the prompt. */
-function Logins(props: { whose: string; choice: AgentChoice }) {
+/**
+ * Whose agent login and GitHub access the runs use, under the prompt, such
+ * as "Runs use your Claude login and GitHub access." `login` names the
+ * owner of the agent login when it is not `whose`, the owner of the GitHub
+ * access: the line then names both, such as "Runs use Acme's Claude login
+ * and your GitHub access." for the org login.
+ */
+function Logins(props: { whose: string; login?: string; choice: AgentChoice }) {
+  const agent = agentNames[props.choice.agent]
+  const login = props.login ?? props.whose
   return (
     <p className={styles.logins}>
       <Plug aria-hidden className={styles.icon} size={12} />
       <span>
-        {`Runs use ${props.whose} ${agentNames[props.choice.agent]} login and GitHub access.`}
+        {login === props.whose
+          ? `Runs use ${props.whose} ${agent} login and GitHub access.`
+          : `Runs use ${login} ${agent} login and ${props.whose} GitHub access.`}
       </span>
     </p>
   )
@@ -24,12 +34,16 @@ function Logins(props: { whose: string; choice: AgentChoice }) {
 
 /**
  * The prompt of an automation, which the owner writes, with the model and the
- * effort of its runs at the bottom of the box, as in a composer.
+ * effort of its runs at the bottom of the box, as in a composer. The line
+ * under the box names the logins of the runs. A run takes the default login
+ * of the owner (org login decision 5 A), so `login` names the org, such as
+ * "Acme's", while that is the org login.
  */
 export function PromptEditor(props: {
   prompt: string
   choice: AgentChoice
   models: readonly AgentModel[]
+  login?: string
   changePrompt: (prompt: string) => void
   changeChoice: (choice: AgentChoice) => void
 }) {
@@ -61,7 +75,7 @@ export function PromptEditor(props: {
           />
         </div>
       </div>
-      <Logins choice={props.choice} whose="your" />
+      <Logins choice={props.choice} login={props.login} whose="your" />
     </section>
   )
 }

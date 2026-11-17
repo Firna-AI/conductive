@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { CornerDownLeft, Paperclip } from 'lucide-react'
+import { SessionLoginLabel } from '../../../docs/mockups/src/components/chat/SessionLogin'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import layer from '../../../docs/mockups/src/components/common/ConfirmDialog.module.css'
 import styles from '../../../docs/mockups/src/components/new-workspace/NewWorkspaceDialog.module.css'
@@ -218,6 +219,7 @@ function DialogCard(props: {
                 models={form.models}
               />
             ) : null}
+            {form.login ? <SessionLoginLabel {...form.login} /> : null}
             <span className={styles.spacer} />
             <IconButton
               disabled={sending}
@@ -256,8 +258,9 @@ function DialogCard(props: {
  * and the section of the new workspace at the top right, as a menu of the
  * sections of the org. The message and
  * its files fill the middle, with the notices of the page under them. The
- * model picker sits at the bottom left, and the attach button and Create
- * at the bottom right. The dialog and the page of an org and a section
+ * model picker sits at the bottom left, with the label of the org login
+ * after it when the first message runs on it, and the attach button and
+ * Create at the bottom right. The dialog and the page of an org and a section
  * share one draft, so a close keeps the message and its files.
  */
 export function NewWorkspaceDialog(props: {

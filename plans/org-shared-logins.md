@@ -583,6 +583,59 @@ Milestone 5 added these calls on 17 November 2026. Each is the agent's call.
   wasn't removed.", as the account does. Reason: the mockups draw neither
   state.
 
+Milestone 6 added these calls on 17 November 2026. Each is the agent's call.
+
+- The browser reads the default logins in one module,
+  `src/app/default-logins.ts`. A new session takes the org login while the
+  server names it. Otherwise the own login serves while the app can use it.
+  Reason: the account shows a change of an own login at once, before the
+  next read names the new default, and the order stays with the server.
+- After a save, a remove, or a connected sign-in of an own login, and after
+  a save, a switch change, or a remove of an org login in the same tab, the
+  account reads the logins of that agent again for the new default logins.
+  A read shows the default logins of an agent only while that agent had no
+  change during the read. Reason: the screens then show the default login
+  of the server also just after a change, as option F of decision 6 asks.
+- The screens count the default logins only of the orgs that the org list
+  shows. Reason: a leave or a delete then shows at once, as the org step of
+  Get started does.
+- A session record without a login takes the default login of its starter,
+  as the Worker does. In the own session of the reader, the composer names
+  the org login while the server names it as the default login. In an empty
+  session of another member, the composer follows the record as for the
+  personal login of that member. Reason: only the account of that member
+  names their default login. The open question of this case is in the
+  report of the milestone.
+- When the own login of the reader's session can no longer be used and the
+  org login serves the reader, the notice of the new session says "The
+  login for this session is not available.", and the label names the org
+  login. Reason: no mockup draws this case, and these words of
+  `linkedCopy.ts` fit the own login of the reader.
+- When the record says that the login of a session cannot serve, and the
+  account still names that login as the default login, the account is
+  older. After the org login, the own login serves while the app can use
+  it. After the own login, the composer asks to connect. Reason: only the
+  server knows whether the org login serves after the own login.
+- A model of the other agent in the picker of the composer follows the list
+  of the default login of the reader for that agent, also in a session on
+  the login of another member. Reason: such a model opens a new session on
+  that login.
+- The default model of Preferences keeps the lists of the own logins.
+  Reason: it belongs to no org.
+- `AgentList` draws the lines of the org logins on the account and in Get
+  started, also under an own login while the switch of an org is on. The
+  agent step says Ready, with the words of the org login, only when no own
+  login serves. Its words name the first org, in the order of the account,
+  whose default login is its org login.
+- The line under the prompt of an automation of the person names the org
+  login, as the mockups do. A member who reads the automation of another
+  member still reads the login of the owner, such as "Cal's". Reason: only
+  the account of the owner names the default login of the owner.
+- The development fake keeps the org logins in its state, and its account
+  names the default logins. `?orgLogin=every-member` turns the switch on,
+  and `?sessionLogin=org|removed` puts the sessions of
+  `checkout-autocomplete` on the org login.
+
 ## Components
 
 - D1: a table `org_agent_logins` keyed by `org_id` and `agent`, with
@@ -828,29 +881,36 @@ Tags: ui
 
 Depends on: 1, 4
 
-- [ ] Move `src/chat/state/session-login.ts` and the composer blockers to
+- [x] Move `src/chat/state/session-login.ts` and the composer blockers to
       the login of the session and decision 4.
-- [ ] Move `src/app/setup-steps.ts` to decision 4.
-- [ ] Show the default login from the server in the new workspace form,
+- [x] Move `src/app/setup-steps.ts` to decision 4.
+- [x] Show the default login from the server in the new workspace form,
       the automation form, the account page, and Get started. Take the words
       from `docs/mockups/src/components/settings/OrgLoginLines.tsx` and
       `docs/mockups/src/screens/getStartedCopy.ts`.
-- [ ] Change the note of the owner menu in `src/members/OwnerChoices.tsx`
+- [x] Change the note of the owner menu in `src/members/OwnerChoices.tsx`
       to "Each session keeps its agent login.", as `app/reassign` shows.
-- [ ] Change the hint of the share switch in
+- [x] Change the hint of the share switch in
       `docs/mockups/src/components/settings/LoginShare.tsx` to "Their
       messages in your sessions start a new session.", with the app tests
       that assert it, such as `src/shell/account/AccountScreen.test.tsx`.
       The app renders this part, so the words change in the app change.
-- [ ] Rename the field `starter` of `SessionLogin` in
+- [x] Rename the field `starter` of `SessionLogin` in
       `docs/mockups/src/components/chat/SessionLogin.tsx` to `owner`, with
       its users in `src/chat/`, because it can name the org.
-- [ ] Make the model pickers follow the list of the org endpoint, by
+- [x] Make the model pickers follow the list of the org endpoint, by
       decision 3, also in `src/shell/automations/AutomationEditor.tsx:72`.
-- [ ] Update the READMEs that name the login code of the app:
+- [x] Update the READMEs that name the login code of the app:
       `src/app/README.md`, `src/chat/README.md`, `src/chat/sessions.md`,
-      `src/chat/dev/README.md`, and `src/shared/README.md`.
-- [ ] Check the changed screens in a browser against the mockups.
+      `src/chat/dev/README.md`, and `src/shared/README.md`. The login rules
+      of `src/app/README.md` moved to `src/app/login-data.md`, because the
+      README passed 300 lines. `src/shared/README.md` needed no change: it
+      states the contracts of Milestone 4, and names no code of the app.
+- [x] Check the changed screens in a browser against the mockups.
+
+Evidence: `.context/org-shared-logins/m6/` holds the screenshots of the
+browser check in `screens/`, the screenshots of the mockups in `mockups/`,
+the check logs, and the failure proofs of the tests.
 
 ## Milestone 7: Verification, commit, review, and pull request
 

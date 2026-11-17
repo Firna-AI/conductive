@@ -78,5 +78,5 @@ export function loginOwnerOf(
 export function sessionLoginFor(
   owner: string | undefined,
 ): SessionLogin | undefined {
-  return owner === undefined ? undefined : { starter: owner }
+  return owner === undefined ? undefined : { owner }
 }

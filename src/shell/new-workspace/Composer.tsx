@@ -4,6 +4,10 @@ import { Button } from '@firna/ui/button'
 import { ArrowUp, Paperclip } from 'lucide-react'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import styles from '../../../docs/mockups/src/components/chat/Composer.module.css'
+import {
+  SessionLoginLabel,
+  type SessionLogin,
+} from '../../../docs/mockups/src/components/chat/SessionLogin'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import type { NewWorkspaceModel } from '../../app/new-workspace-model'
@@ -28,7 +32,9 @@ import ui from '../ui/ui.module.css'
  * and Send. The files of a pick go into the text at the caret, or at the end
  * when the text has no caret. The whole box takes a drop of files, as
  * `useComposerDrop` says. They upload before the workspace exists, with
- * the chips and the notices of the workspace chat. Send is off until the
+ * the chips and the notices of the workspace chat. When the first message
+ * runs on a login that is not the person's own, such as the org login, a
+ * label after the model picker names it. Send is off until the
  * message can go, as the screen decides for Send and Try again. Enter sends
  * as in every composer: on a computer, Enter sends and Shift+Enter adds a
  * line. While the create runs, the text, the attach button, and the drop
@@ -38,6 +44,8 @@ import ui from '../ui/ui.module.css'
 export function Composer(props: {
   model: NewWorkspaceModel
   choice: AgentChoice | undefined
+  /** The login of the first message when it is not the person's own. */
+  login?: SessionLogin
   models: readonly AgentModel[]
   /** Whether the message can go now. */
   ready: boolean
@@ -107,6 +115,7 @@ export function Composer(props: {
                 models={props.models}
               />
             ) : null}
+            {props.login ? <SessionLoginLabel {...props.login} /> : null}
             <span className={styles.spacer} />
             <Button
               accessibilityLabel="Send"

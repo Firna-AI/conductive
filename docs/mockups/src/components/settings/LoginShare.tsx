@@ -3,7 +3,7 @@ import { SettingSwitch } from './SettingSwitch'
 /** What a message of another member in a session of the owner does. */
 const hints = {
   shared: 'Their messages in your sessions use this login.',
-  kept: 'Their messages in your sessions start a new session on their own login.',
+  kept: 'Their messages in your sessions start a new session.',
 } as const
 
 /**

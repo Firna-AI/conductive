@@ -49,7 +49,10 @@ const PATHS = ['plain', 'masked'] as const
 const MODEL_LISTS = ['unlisted', 'none', 'v1-only', 'read-failed'] as const
 
 /** The org login seeds of Acme. */
-const ORG_LOGINS = ['endpoint', 'unlisted'] as const
+const ORG_LOGINS = ['endpoint', 'unlisted', 'every-member'] as const
+
+/** The logins of the open sessions of `checkout-autocomplete`. */
+const SESSION_LOGINS = ['org', 'removed'] as const
 
 /** The states of the invite code of the user, besides the pause. */
 const INVITE_CODES = ['left', 'used-up', 'disabled'] as const
@@ -81,9 +84,15 @@ type DevInviteCode = (typeof INVITE_CODES)[number]
  *   host that lists only under /v1, or the host that never lists models.
  *   With `read-failed`, the Claude login keeps a list from a day before
  *   that does not name the last Claude model of the app.
- * - `orgLogin=endpoint|unlisted`: Acme has an org login of Claude on its
- *   gateway, whose last model list names every Claude model of the app,
- *   or lacks the last one.
+ * - `orgLogin=endpoint|unlisted|every-member`: Acme has an org login of
+ *   Claude on its gateway, whose last model list names every Claude model
+ *   of the app, or lacks the last one. With `every-member`, its switch
+ *   "Use for every member" is on. The account names the default login of
+ *   each org and agent, as the Worker does.
+ * - `sessionLogin=org|removed`: each open session of
+ *   `checkout-autocomplete` runs on the org login of Acme, as after a
+ *   first message on it. With `removed`, an admin removed that login
+ *   later, so the records say that it is not available.
  * - `deleted=1`: Acme is deleted, as its admins see it.
  * - `suspended=1`: the operator suspended Acme. Each write of Acme gets
  *   `org_suspended`, except a leave, as the Worker does.
@@ -136,6 +145,8 @@ export interface DevOptions {
   modelList: (typeof MODEL_LISTS)[number] | null
   /** The seeded org login of Acme, or `null` for none. */
   orgLogin: (typeof ORG_LOGINS)[number] | null
+  /** The login of the open sessions of `checkout-autocomplete`, or `null`. */
+  sessionLogin: (typeof SESSION_LOGINS)[number] | null
   deleted: boolean
   suspended: boolean
   operator: boolean
@@ -193,6 +204,7 @@ export function readDevOptions(search: string): DevOptions {
     endpointLogins: params.get('login') === 'endpoint',
     modelList: pick(params, 'modelList', MODEL_LISTS) ?? null,
     orgLogin: pick(params, 'orgLogin', ORG_LOGINS) ?? null,
+    sessionLogin: pick(params, 'sessionLogin', SESSION_LOGINS) ?? null,
     deleted: params.get('deleted') === '1',
     suspended: params.get('suspended') === '1',
     operator,

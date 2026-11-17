@@ -3,18 +3,14 @@ import type { Agent } from '../../shared/generated/Agent'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import type { Effort } from '../../shared/generated/Effort'
 import type { MessageSender } from '../../shared/generated/MessageSender'
+import type { DefaultAgentLogin } from '../../shared/generated/DefaultAgentLogin'
+import type { SessionLogin } from '../../shared/generated/SessionLogin'
 import {
   NEW_WORKSPACE_VIEWS,
   type AccountResponse,
   type AgentLoginStatus,
   type EndpointModelList,
-  type GitHubInstallation,
-  type GitHubInstallationsResponse,
-  type GitHubRepositoriesResponse,
-  type GitHubRepository,
-  type PollCodexDeviceResponse,
   type SetNewWorkspaceViewResponse,
-  type StartCodexDeviceResponse,
 } from '../../shared/account'
 
 import type { OrgRole, User } from '../../shared/api'
@@ -185,42 +181,38 @@ export function loginUsable(login: LoginUse | undefined): boolean {
   return login?.connected === true && login.unusableCause === undefined
 }
 
-/** The states of a ChatGPT sign-in of Codex, as a poll answers them. */
-const CODEX_DEVICE_STATES = [
-  'waiting',
-  'connected',
-  'expired',
-  'failed',
-] as const satisfies readonly PollCodexDeviceResponse['state'][]
+/** The owner of the login of a session: a member, or the org. */
+function readSessionLogin(value: unknown): SessionLogin {
+  const login = record(value, 'session login')
+  if (choice(login, 'type', ['personal', 'org']) === 'org') {
+    return { type: 'org', orgId: text(login, 'orgId') }
+  }
+  return { type: 'personal', userId: text(login, 'userId') }
+}
 
-/** A started ChatGPT sign-in: its handle, its code, and its times. */
-export function readCodexDeviceStart(value: unknown): StartCodexDeviceResponse {
-  const start = record(value, 'ChatGPT sign-in')
+/**
+ * The default login of the person for one org and one agent, as the
+ * resolver of the Worker names it, without a credential. Each model list
+ * is optional.
+ */
+function readDefaultLogin(value: unknown): DefaultAgentLogin {
+  const entry = record(value, 'default login')
+  const modelList = maybeNested(entry, 'modelList', readEndpointModelList)
+  const orgModelList = maybeNested(entry, 'orgModelList', readEndpointModelList)
   return {
-    handle: text(start, 'handle'),
-    userCode: text(start, 'userCode'),
-    verificationUrl: text(start, 'verificationUrl'),
-    expiresAt: count(start, 'expiresAt'),
-    pollIntervalMs: count(start, 'pollIntervalMs'),
+    orgId: text(entry, 'orgId'),
+    orgName: text(entry, 'orgName'),
+    agent: choice(entry, 'agent', AGENTS),
+    login: maybeNested(entry, 'login', readSessionLogin),
+    ...(modelList === null ? {} : { modelList }),
+    ...(orgModelList === null ? {} : { orgModelList }),
   }
 }
 
-/** The state of a ChatGPT sign-in, with the connected login at the end. */
-export function readCodexDevicePoll(value: unknown): PollCodexDeviceResponse {
-  const poll = record(value, 'ChatGPT sign-in')
-  const state = choice(poll, 'state', CODEX_DEVICE_STATES)
-  switch (state) {
-    case 'waiting':
-      return { state, pollIntervalMs: count(poll, 'pollIntervalMs') }
-    case 'connected':
-      return { state, login: nested(poll, 'login', readLogin) }
-    case 'expired':
-      return { state }
-    case 'failed':
-      return { state, cause: text(poll, 'cause') }
-  }
-}
-
+/**
+ * The account of the person signed in. An older reply has no
+ * `defaultLogins`, so the account then names no default login.
+ */
 export function readAccount(value: unknown): AccountResponse {
   const account = record(value, 'account')
   return {
@@ -229,6 +221,9 @@ export function readAccount(value: unknown): AccountResponse {
     newWorkspaceView: choice(account, 'newWorkspaceView', NEW_WORKSPACE_VIEWS),
     shortcuts: nested(account, 'shortcuts', readShortcuts),
     agentLogins: items(account, 'agentLogins', readLogin),
+    ...(account.defaultLogins === undefined
+      ? {}
+      : { defaultLogins: items(account, 'defaultLogins', readDefaultLogin) }),
     operator: flag(account, 'operator'),
     githubAppUrl: text(account, 'githubAppUrl'),
   }
@@ -238,43 +233,6 @@ export function readNewWorkspaceView(
   value: unknown,
 ): SetNewWorkspaceViewResponse {
   return { view: choice(record(value), 'view', NEW_WORKSPACE_VIEWS) }
-}
-
-function readInstallation(value: unknown): GitHubInstallation {
-  const installation = record(value, 'installation')
-  return {
-    id: count(installation, 'id'),
-    account: text(installation, 'account'),
-    repositoryCount: count(installation, 'repositoryCount'),
-    settingsUrl: text(installation, 'settingsUrl'),
-  }
-}
-
-export function readInstallations(value: unknown): GitHubInstallationsResponse {
-  const body = record(value, 'installations')
-  return {
-    installations: items(body, 'installations', readInstallation),
-    installUrl: text(body, 'installUrl'),
-  }
-}
-
-function readGitHubRepository(value: unknown): GitHubRepository {
-  const repository = record(value, 'repository')
-  return {
-    githubId: count(repository, 'githubId'),
-    fullName: text(repository, 'fullName'),
-    description: text(repository, 'description'),
-    defaultBranch: text(repository, 'defaultBranch'),
-    installationId: count(repository, 'installationId'),
-  }
-}
-
-/** The repositories that the person and the GitHub App both reach. */
-export function readGitHubRepositories(
-  value: unknown,
-): GitHubRepositoriesResponse {
-  const body = record(value, 'repositories')
-  return { repositories: items(body, 'repositories', readGitHubRepository) }
 }
 
 export function readGetStarted(value: unknown): GetStartedResponse {

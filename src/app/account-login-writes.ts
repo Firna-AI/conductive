@@ -16,8 +16,8 @@ import { ignore } from './api/parse'
 import {
   readCodexDevicePoll,
   readCodexDeviceStart,
-  readLogin,
-} from './api/read-core'
+} from './api/read-codex-device'
+import { readLogin } from './api/read-core'
 import { readModelListRefresh, readSavedLogin } from './api/read-login-writes'
 import type { EndpointReads } from './endpoint-reads'
 import type { AppServices } from './services'
@@ -53,7 +53,8 @@ export class AccountLoginWrites {
    * the endpoint, which its answer does not hold, so the account is read
    * again for it. Its answer says how those reads went. A failed read of
    * the account leaves the saved login without its list, so the pickers
-   * hide nothing until the next read.
+   * hide nothing until the next read. The read also gives the default
+   * logins after the save, as `readDefaults` says.
    */
   async save(request: SaveAgentLoginRequest): Promise<void> {
     const saved = await this.services.api.send(
@@ -65,10 +66,36 @@ export class AccountLoginWrites {
     const { login } = saved
     this.logins.put(login)
     this.endpointReads.saved(saved)
-    if (login.connected && login.kind === 'endpoint')
-      await this.loginReads
-        .readAgent(login.agent, this.logins.mark())
-        .catch(() => undefined)
+    await this.readDefaults(
+      login.agent,
+      login.connected && login.kind === 'endpoint',
+    )
+  }
+
+  /**
+   * Reads the logins of `agent` again after a change of one of its logins,
+   * so that the screens show the default logins that the server names
+   * after the change (decision 6 F of the org logins plan). An account that
+   * names no default login, from an older reply, needs no such read, unless
+   * `always`. A failed read keeps what shows.
+   */
+  async readDefaults(agent: Agent, always = false): Promise<void> {
+    if (!always && !this.logins.namesDefaults()) return
+    await this.loginReads
+      .readAgent(agent, this.logins.mark())
+      .catch(() => undefined)
+  }
+
+  /**
+   * An admin saved or removed an org login of `agent`, or changed its
+   * switch. The default logins of the agent can then name another login, so
+   * they are read again. The change counts, so a read that started before
+   * it does not show its older default logins.
+   */
+  async orgLoginChanged(agent: Agent): Promise<void> {
+    if (!this.logins.namesDefaults()) return
+    this.logins.change(agent)
+    await this.readDefaults(agent)
   }
 
   /**
@@ -97,7 +124,10 @@ export class AccountLoginWrites {
       {},
       readCodexDevicePoll,
     )
-    if (answer.state === 'connected') this.logins.put(answer.login)
+    if (answer.state === 'connected') {
+      this.logins.put(answer.login)
+      await this.readDefaults(answer.login.agent)
+    }
     return answer
   }
 
@@ -142,10 +172,14 @@ export class AccountLoginWrites {
     this.logins.putReply(change, saved)
   }
 
-  /** Removes a login, with the note and the warning of its reads. */
+  /**
+   * Removes a login, with the note and the warning of its reads, and reads
+   * the default logins after it, as `readDefaults` says.
+   */
   async remove(agent: Agent): Promise<void> {
     await this.services.api.send('DELETE', agentLoginPath(agent), {}, ignore)
     this.logins.put({ agent, connected: false })
     this.endpointReads.removed(agent)
+    await this.readDefaults(agent)
   }
 }

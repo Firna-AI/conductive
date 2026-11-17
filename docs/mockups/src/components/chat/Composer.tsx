@@ -75,9 +75,9 @@ export type ComposerState = {
   /** The agent of the chosen model is not connected, so Send is off. */
   blocked?: boolean
   /**
-   * The agent login of another member that the session uses: the login of
-   * its starter. A label in the bar names it. A message on the own login of
-   * the viewer has no label.
+   * The agent login that a message uses when it is not the own login of the
+   * viewer: the login of another member, or the org login. A label in the
+   * bar names it. A message on the own login of the viewer has no label.
    */
   sessionLogin?: SessionLogin
   /**

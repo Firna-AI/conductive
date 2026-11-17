@@ -1,3 +1,4 @@
+import type { Agent } from '../shared/generated/Agent'
 import type { Workspace } from '../shared/generated/Workspace'
 import type { GitHubCapabilities } from '../shared/github'
 import { membersPath, type MembersResponse } from '../shared/members'
@@ -93,10 +94,15 @@ export class OrgModel {
   private readonly parts: Readonly<Record<OrgPart, Refreshing>>
   private readonly drafts = new Map<string, NewWorkspaceModel>()
 
+  /**
+   * `loginsChanged` runs after each change of an org login that an admin
+   * makes here, because it can change the default logins of the account.
+   */
   constructor(
     services: AppServices,
     orgId: string,
     suspension: OrgSuspension = neverSuspended,
+    loginsChanged: (agent: Agent) => void = () => undefined,
   ) {
     this.suspension = suspension
     const api = noteOrgRefusals(services.api, () => suspension.note())
@@ -141,7 +147,7 @@ export class OrgModel {
     this.builds = builds.store
     this.members = members.store
     this.automations = automations.store
-    this.agentLogins = new OrgAgentLogins(api, orgId)
+    this.agentLogins = new OrgAgentLogins(api, orgId, loginsChanged)
     this.parts = {
       list: new Refresher(list, listWait, this.services),
       repositories: new Refresher(repositories, onEntry, this.services),

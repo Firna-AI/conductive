@@ -1,5 +1,6 @@
 import { Section } from '../../../docs/mockups/src/components/settings/Section'
 import { getStartedCopy } from '../../../docs/mockups/src/screens/getStartedCopy'
+import { inOrgs, orgLoginOnly } from '../../app/default-logins'
 import type { StepState } from '../../app/get-started'
 import { useStore } from '../../app/store'
 import { AgentList } from '../account/AgentList'
@@ -14,18 +15,26 @@ const copy = getStartedCopy.agent
  * that, Connect stays on, as the mockup draws it: a login belongs to the
  * person, not to the org, so it can come first. A connect loads the steps
  * again.
+ *
+ * A person with no login of their own, whose org login serves an agent,
+ * needs none (org login decision 4). The step is then done with "Ready",
+ * its words name the login of that org, and a line under the agent names
+ * it, as on the account.
  */
 export function AgentStep(props: { state: StepState }) {
   const app = useApp()
   const account = useStore(app.account.account)
+  const orgs = useStore(app.orgs)
   const refresh = useRefreshSteps()
   const next = props.state === 'next'
   const initial = next ? (account?.defaultChoice.agent ?? null) : null
+  const done = props.state === 'done'
+  const org = done && account ? orgLoginOnly(inOrgs(account, orgs)) : null
   return (
     <Section
-      description={copy.description}
+      description={org ? copy.orgDescription(org) : copy.description}
       status={
-        props.state === 'done' ? <DoneStatus label={copy.done} /> : undefined
+        done ? <DoneStatus label={org ? copy.orgDone : copy.done} /> : undefined
       }
       title={copy.title}
     >

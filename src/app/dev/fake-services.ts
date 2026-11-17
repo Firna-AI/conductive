@@ -35,6 +35,7 @@ import { routeFetch, RouteError, type Route } from './router'
 import { runRoutes } from './run-routes'
 import { sectionRoutes } from './section-routes'
 import { seedState } from './seed'
+import { sessionLoginRoutes } from './session-login-routes'
 import { settingsRoutes } from './settings-routes'
 import { admitOpenSignup, waitlistRoutes } from './waitlist-routes'
 import { workspaceRoutes } from './workspace-routes'
@@ -75,6 +76,7 @@ export function createFakeServices(search: string): AppServices {
     : []
   const routes = [
     ...signedOut,
+    ...sessionLoginRoutes(options.sessionLogin, server.fetch),
     ...waitlistRoutes(backend),
     ...feedbackRoutes(backend, options),
     ...accountRoutes(backend),
@@ -86,7 +88,7 @@ export function createFakeServices(search: string): AppServices {
     ...attachmentRoutes(backend, options.upload),
     ...attachmentFileRoutes(backend),
     ...settingsRoutes(backend),
-    ...orgLoginRoutes(backend, options.orgLogin),
+    ...orgLoginRoutes(backend),
     ...buildRoutes(backend),
     ...automationRoutes(backend),
     ...runRoutes(backend),

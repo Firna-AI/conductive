@@ -83,7 +83,8 @@ Each path is relative to `src/app/`, the folder of this page.
   `api/read-invitations.ts`: their readers.
 - `get-started.ts`: the order and the states of the steps of Get started.
   `setup-steps.ts`: `setupSteps`, the steps that the screens show, and
-  `setupOrg`, the org of Get started and of the address `/`.
+  `setupOrg`, the org of Get started and of the address `/`. The agent
+  step is complete with an own login or an org login that serves.
 - [getStartedCopy.ts](../../docs/mockups/src/screens/getStartedCopy.ts): the
   setup text that the app and mockups share.
 - `org-model.ts`: the sections, workspaces, repositories, builds, members,
@@ -92,7 +93,9 @@ Each path is relative to `src/app/`, the folder of this page.
   `OrgModel.startBuild` sends Build computer and Try again for each screen
   that offers them.
 - `org-agent-logins.ts`: `OrgAgentLogins`, the org logins of one org with
-  the save, the switch, Remove, and Refresh of an admin.
+  the save, the switch, Remove, and Refresh of an admin. Each save, switch
+  change, and remove calls `changed`, which reads the default logins of
+  the account again.
   `api/read-org-logins.ts` reads them. `../shell/settings/AgentsTab.tsx`,
   `OrgLoginList.tsx`, and `EveryMemberSetting.tsx` draw the Agents tab.
 - `first-build.ts`: `firstBuildOf` and `useFirstBuild`, the state of the
@@ -143,6 +146,12 @@ Each path is relative to `src/app/`, the folder of this page.
   ChatGPT sign-in of Codex. `../shell/account/codex-sign-in.ts`:
   `CodexSignIn`, the steps, the polls, and the timer of that sign-in.
   `api/read-core.ts`: `loginUsable`, whether turns can run on a login.
+  After a save, a remove, or a connected sign-in, `readDefaults` reads the
+  logins of the agent again for the default logins of the account, and
+  `orgLoginChanged` does so after a change of an org login.
+  `default-logins.ts`: `newSessionLogin`, the login of a new session of
+  the person in an org, from the default logins that the server names,
+  and the readers of those default logins for the screens.
 - `panels.ts`: `PanelLayout`, the widths of the panels, whether the right
   column shows, and `next`, the one rule of their steps.
 - `resource.ts`: `Resource`, a server value with its confirmed changes and

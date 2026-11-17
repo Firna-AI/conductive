@@ -52,10 +52,20 @@ export class OrgAgentLogins {
   readonly endpointReads: Readable<LoginReads> = this.reads.store
   private readonly api: ApiClient
   private readonly orgId: string
+  /**
+   * Runs after each save, switch change, and remove that the Worker took,
+   * because each can change the default logins of the members.
+   */
+  private readonly changed: (agent: Agent) => void
 
-  constructor(api: ApiClient, orgId: string) {
+  constructor(
+    api: ApiClient,
+    orgId: string,
+    changed: (agent: Agent) => void = () => undefined,
+  ) {
     this.api = api
     this.orgId = orgId
+    this.changed = changed
     this.resource = new Resource(() =>
       api.get(orgSettingsPaths.agentLogins(orgId), readOrgLogins),
     )
@@ -89,6 +99,7 @@ export class OrgAgentLogins {
       (answer) => put(answer.login),
     )
     this.reads.saved(saved)
+    this.changed(request.agent)
   }
 
   /**
@@ -111,6 +122,7 @@ export class OrgAgentLogins {
       () => this.api.send('PATCH', this.path(agent), request, readOrgLogin),
       put,
     )
+    this.changed(agent)
   }
 
   /** Removes the org login of `agent`, with the note and the warning. */
@@ -121,6 +133,7 @@ export class OrgAgentLogins {
       () => put({ agent, connected: false }),
     )
     this.reads.removed(agent)
+    this.changed(agent)
   }
 
   /**

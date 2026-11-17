@@ -14,16 +14,13 @@ import {
   orgSettingsPaths,
   refreshOrgAgentLoginModelsPath,
 } from '../../shared/org-settings'
-import {
-  coreFixtures,
-  FAKE_IDS,
-  FAKE_TIME,
-} from '../../test-support/fixtures/core'
+import { coreFixtures, FAKE_TIME } from '../../test-support/fixtures/core'
 import { choice, flag, record } from '../api/parse'
 import { AGENTS } from '../api/read-core'
 import { requireOrg, type DevBackend } from './backend'
 import { devEndpointHosts } from './endpoint-logins'
 import type { DevOptions } from './options'
+import type { DevOrgLogin } from './state'
 import {
   ID,
   json,
@@ -34,19 +31,20 @@ import {
   type Route,
 } from './router'
 
-type OrgLogin = Extract<OrgAgentLoginStatus, { connected: true }>
-
 /** The host of the gateway of Acme, as the mockups name it. */
 const acmeGateway = 'llm.acme.example.com'
 
 /**
- * The org logins of `orgLogin=endpoint|unlisted`: Claude on the gateway of
- * Acme, saved an hour before the fake starts, with the switch off. Its
- * last model list was read 12 minutes before the start. With `unlisted`,
- * that list lacks the last Claude model of the app.
+ * The org logins of Acme for `orgLogin=endpoint|unlisted|every-member`:
+ * Claude on the gateway of Acme, saved an hour before the fake starts,
+ * with the switch off. Its last model list was read 12 minutes before the
+ * start. With `unlisted`, that list lacks the last Claude model of the
+ * app. With `every-member`, the switch "Use for every member" is on.
  */
-function seededLogins(seed: DevOptions['orgLogin']): Map<Agent, OrgLogin> {
-  const logins = new Map<Agent, OrgLogin>()
+export function seededOrgLogins(
+  seed: DevOptions['orgLogin'],
+): Map<Agent, DevOrgLogin> {
+  const logins = new Map<Agent, DevOrgLogin>()
   if (seed === null) return logins
   const claude = coreFixtures()
     .models.models.filter((model) => model.agent === 'claude')
@@ -56,7 +54,7 @@ function seededLogins(seed: DevOptions['orgLogin']): Map<Agent, OrgLogin> {
     connected: true,
     kind: 'endpoint',
     host: acmeGateway,
-    useForEveryMember: false,
+    useForEveryMember: seed === 'every-member',
     updatedAt: FAKE_TIME - 60 * 60_000,
     modelList: {
       missing: seed === 'unlisted' ? claude.slice(-1) : [],
@@ -67,24 +65,19 @@ function seededLogins(seed: DevOptions['orgLogin']): Map<Agent, OrgLogin> {
 }
 
 /**
- * The org logins of the dev fake, in a private route closure, as the
- * Worker serves them: each member reads them, and only an admin of an
- * active org gets the model list of an own endpoint. Only an admin saves,
+ * The org logins of the dev fake, from its state, as the Worker serves
+ * them: each member reads them, and only an admin of an active org gets
+ * the model list of an own endpoint. Only an admin saves,
  * changes the switch, removes, or refreshes, and a suspended org refuses
  * each write. The fake keeps no key or full address. Saves and Refresh read
  * the model lists of the fake hosts of `devEndpointHosts`, as the account
  * routes do. With `shareSave=fail`, each change of the switch fails.
  */
-export function orgLoginRoutes(
-  backend: DevBackend,
-  seed: DevOptions['orgLogin'],
-): Route[] {
-  const orgs = new Map<string, Map<Agent, OrgLogin>>([
-    [FAKE_IDS.org, seededLogins(seed)],
-  ])
+export function orgLoginRoutes(backend: DevBackend): Route[] {
+  const { orgLogins } = backend.state
   const loginsOf = (orgId: string) => {
-    const logins = orgs.get(orgId) ?? new Map<Agent, OrgLogin>()
-    orgs.set(orgId, logins)
+    const logins = orgLogins.get(orgId) ?? new Map<Agent, DevOrgLogin>()
+    orgLogins.set(orgId, logins)
     return logins
   }
   const shown = (params: Params): OrgAgentLoginStatus[] => {
@@ -181,7 +174,7 @@ export function orgLoginRoutes(
  */
 function saveOrgLogin(
   backend: DevBackend,
-  logins: Map<Agent, OrgLogin>,
+  logins: Map<Agent, DevOrgLogin>,
   agent: Agent,
   body: unknown,
 ): Response {
@@ -196,7 +189,7 @@ function saveOrgLogin(
     updatedAt: backend.now(),
   }
   if (kind === 'api-key') {
-    const login: OrgLogin = { ...saved, kind }
+    const login: DevOrgLogin = { ...saved, kind }
     logins.set(agent, login)
     return json(login satisfies SaveOrgAgentLoginResponse)
   }
@@ -208,7 +201,7 @@ function saveOrgLogin(
       ENDPOINT_ADDRESS_ERROR.message,
     )
   const modelListReadFailed = address.host === devEndpointHosts.noModels
-  const login: OrgLogin = {
+  const login: DevOrgLogin = {
     ...saved,
     kind,
     host: address.host,

@@ -204,10 +204,15 @@ export class AppModel {
   org(orgId: string): OrgModel {
     let model = this.orgModels.get(orgId)
     if (!model) {
-      model = new OrgModel(this.services, orgId, {
-        suspended: suspendedOrg(orgId, this.orgs, this.refusedOrgs),
-        note: () => this.noteSuspended(orgId),
-      })
+      model = new OrgModel(
+        this.services,
+        orgId,
+        {
+          suspended: suspendedOrg(orgId, this.orgs, this.refusedOrgs),
+          note: () => this.noteSuspended(orgId),
+        },
+        (agent) => void this.account.orgLoginChanged(agent),
+      )
       this.orgModels.set(orgId, model)
     }
     return model

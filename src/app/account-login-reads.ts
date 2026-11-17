@@ -1,17 +1,17 @@
 import type { Agent } from '../shared/generated/Agent'
-import {
-  ACCOUNT_PATHS,
-  type AccountResponse,
-  type AgentLoginStatus,
-} from '../shared/account'
-import type { AgentLogins } from './agent-logins'
+import { ACCOUNT_PATHS, type AccountResponse } from '../shared/account'
+import type { AgentLogins, LoginRead } from './agent-logins'
 import { readAccount } from './api/read-core'
 import type { AppModel } from './app-model'
 import type { Store } from './store'
 
 const refreshWait = 60_000
 
-/** Shared login reads for list opens, page returns, and endpoint model updates. */
+/**
+ * Shared reads of the logins for list opens, page returns, and the changes
+ * of a login. Each read takes the own logins and the default logins of the
+ * account, as `AgentLogins.mark` says.
+ */
 export class AccountLoginReads {
   private running: Promise<void> | null = null
   private cancelTimer: (() => void) | null = null
@@ -48,16 +48,20 @@ export class AccountLoginReads {
     return this.running
   }
 
-  /** Reads one login after its save or model refresh, with the caller's mark. */
+  /**
+   * Reads one login after a change of a login of its agent, with the
+   * caller's mark. The read also gives the default logins of that agent,
+   * which the change can move to another login.
+   */
   async readAgent(
     agent: Agent,
-    show: (logins: readonly AgentLoginStatus[]) => void,
+    show: (read: LoginRead, only?: Agent) => void,
   ): Promise<void> {
     const account = await this.app.services.api.get(
       ACCOUNT_PATHS.account,
       readAccount,
     )
-    show(account.agentLogins.filter((login) => login.agent === agent))
+    show(account, agent)
   }
 
   private async read(): Promise<void> {
@@ -66,7 +70,7 @@ export class AccountLoginReads {
     const account = await this.app.services.api
       .get(ACCOUNT_PATHS.account, readAccount)
       .catch(() => null)
-    if (account && this.app.boot.get() === boot) show(account.agentLogins)
+    if (account && this.app.boot.get() === boot) show(account)
   }
 
   private follow(): void {
