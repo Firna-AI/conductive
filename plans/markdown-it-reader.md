@@ -133,7 +133,8 @@ Each is my call, with its reason. Calls 1 to 9 date from 16 November
 Contract owners:
 
 - [Chat Markdown](../docs/protocol/chat-markdown.md), its linked pages
-  [Chat tables](../docs/protocol/chat-tables.md) and
+  [Chat tables](../docs/protocol/chat-tables.md),
+  [Chat message lines](../docs/protocol/chat-message-lines.md), and
   [Chat links](../docs/protocol/chat-links.md), and
   [File mentions](../docs/protocol/file-mentions.md).
 - [Workspace tools](../docs/protocol/workspace-tools.md), for the file
@@ -266,10 +267,15 @@ Depends on: 1
 
 Depends on: 2
 
-- [ ] Add `markdown-it` to `package.json`.
-- [ ] Add `src/markdown/parser.ts` with design calls 1 and 2, and its
+- [x] Add `markdown-it` to `package.json`.
+- [x] Add `src/markdown/parser.ts` with design calls 1 and 2, and its
       tests: each break form, tags that stay text, crafted inputs from
       the advisories, and deep nesting with no lost text.
+      My call, 17 November 2026: use 64 block levels so that sixteen
+      nested lists fit, with two block levels per list. Record the source
+      range and token index when the parser drops lines. Container maps
+      cover those lines too, so map coverage alone cannot find them.
+      The check logs are in `.context/markdown-it-reader/m3/`.
 
 ## Milestone 4: The chat on the parser
 
