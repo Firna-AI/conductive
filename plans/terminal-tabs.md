@@ -665,9 +665,9 @@ Depends on: every other milestone
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
-- [ ] Delete this plan when the `plans` skill says, under "Deleting the
+- [x] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
-- [ ] Open the pull request. Its description gives the decisions and the
+- [x] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds. It says that an
       existing workspace gets terminal tabs after the automatic software
