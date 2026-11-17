@@ -49,7 +49,8 @@ export function createdCapabilities(
   const grants: WorkspaceGrants = {
     preapprovedSecretIds: knownIds(
       store,
-      optional(fields, 'preapprovedSecretIds', texts) ?? [],
+      optional(fields, 'preapprovedSecretIds', texts) ??
+        NEW_WORKSPACE_CAPABILITIES.preapprovedSecretIds,
     ),
     macAccess:
       optional(fields, 'macAccess', flag) ??

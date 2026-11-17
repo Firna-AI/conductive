@@ -116,6 +116,7 @@ export async function insertWorkspace(
     capabilities?: WorkspaceCapabilities
   },
 ): Promise<LeasedImage> {
+  const capabilities = input.capabilities ?? NEW_WORKSPACE_CAPABILITIES
   if (!input.sectionId) {
     await db
       .prepare(
@@ -162,9 +163,7 @@ export async function insertWorkspace(
         input.branch,
         input.baseBranch ?? null,
         input.providerAccount,
-        Number(
-          input.capabilities?.macAccess ?? NEW_WORKSPACE_CAPABILITIES.macAccess,
-        ),
+        Number(capabilities.macAccess),
         input.now,
         input.now,
         input.now,
@@ -195,7 +194,7 @@ export async function insertWorkspace(
     creationPreapprovals(db, {
       orgId: input.orgId,
       workspaceId: input.id,
-      secretIds: input.capabilities?.preapprovedSecretIds ?? [],
+      secretIds: capabilities.preapprovedSecretIds,
       userId: input.senderUserId ?? input.user.id,
       now: input.now,
     }),
