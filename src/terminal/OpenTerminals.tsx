@@ -81,8 +81,9 @@ function TerminalPane(
  * Each terminal that the user showed stays mounted and connected while
  * another one shows. A terminal that the user never showed opens no
  * connection. A focus request of the owner goes to the screen of the shown
- * terminal only. Older software opens one shell, so the tool shows the
- * first terminal, with no row.
+ * terminal only. A click on a tab and the + ask for the focus of the
+ * terminal that they show, through `focusOnShow`. Older software opens one
+ * shell, so the tool shows the first terminal, with no row.
  */
 export function OpenTerminals(
   props: ScreenProps & {
@@ -92,6 +93,11 @@ export function OpenTerminals(
     route: TerminalRoute
     /** Moves the keyboard focus to the screen of the shown terminal. */
     focusRequest?: TerminalFocusRequest | null
+    /**
+     * Starts a focus request for the terminal that a click on its tab or
+     * the + shows. The result asks for the focus once it shows.
+     */
+    focusOnShow?: () => () => void
   },
 ) {
   const { ready, dispatch, actions, route } = props
@@ -126,9 +132,17 @@ export function OpenTerminals(
           closing={ready.closing}
           href={route.href}
           onClose={setAsking}
-          onOpen={actions.open}
+          onOpen={() => {
+            const focus = props.focusOnShow?.()
+            actions.openThen(() => focus?.())
+          }}
           onSelect={(id) => {
+            // A click, or Enter on the link of a tab, also moves the focus
+            // into its terminal. A move along the tabs with Tab activates
+            // no link, so the focus stays on the row.
+            const focus = props.focusOnShow?.()
             if (id !== terminal.id) route.show(id, 'push')
+            focus?.()
           }}
           opening={ready.opening}
           shown={terminal.id}

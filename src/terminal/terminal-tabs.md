@@ -42,8 +42,17 @@ states the requirements.
   failed close keeps the focus on its close button.
 - A focus request of the owner, after a choice of the Terminal tool, goes
   to the screen of the shown terminal only, as `focusRequest` in
-  [Mount the tool](README.md#mount-the-tool) says. The +, a press on a
-  tab, and New terminal of the palette move no focus.
+  [Mount the tool](README.md#mount-the-tool) says.
+- On desktop, a click on a tab, Enter on its link, the +, and New terminal
+  of the palette move the focus into the terminal that they show
+  (terminal tabs decision 5 D). They start a request at the press, through
+  `focusOnShow`, and ask once their terminal shows. So a terminal that
+  still opens or connects takes the focus only while the user did not
+  move it since the press. A move along the tabs with Tab activates no
+  link, so the focus stays on the row. A phone moves no focus.
+- A close asks for no focus of a terminal. So after a confirmed close the
+  focus goes to the tab of the terminal that then shows, as the next
+  bullet says, and stays on the row.
 - An open and a close that worked change the tabs at once, before their
   event, while their list is newer. A new terminal shows, and the address
   follows it, only while the list that shows still holds it. The + and the
@@ -55,9 +64,10 @@ states the requirements.
   before it shows, or the first one. The route then follows that terminal.
 - The tool shows the terminal of the address, else of the saved view. A
   saved terminal that is not in the list shows the first terminal. An
-  address that names a terminal that is not in the list shows the first
-  terminal too, and the tool saves nothing then. A terminal of the address
-  that the saved view lacks goes into the saved view.
+  address that names a terminal that is not in the list shows the saved
+  terminal, or the first, and the address then names that terminal, with
+  no new history entry (terminal tabs decision 4 A). A terminal of the
+  address that the saved view lacks goes into the saved view.
 - Each terminal has its own connection, at the `socketPath` of its entry.
   Each terminal that the user showed stays mounted and connected while
   another one shows, so a switch shows its screen at once. A terminal that
@@ -68,3 +78,9 @@ states the requirements.
 - A workspace whose software opens one shell, with `several` false, shows
   its first terminal with no row of tabs. An answer without a list, as from
   an older server, shows one terminal at the `socketPath` of the answer.
+- After a Restart, the workspace shows Starting, so the tool unmounts with
+  its store, and it reads the terminal state again when the workspace runs
+  (terminal tabs decision 6 B). A list event can also give `several`,
+  after a Restart that changed it. The tool takes it in the order of the
+  event numbers, as the list, so an open tab shows or hides the row with
+  no reload.

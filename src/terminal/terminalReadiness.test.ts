@@ -224,4 +224,30 @@ describe('terminal readiness', () => {
       },
     })
   })
+  it('takes several from a list event only when its event is newer, and keeps it after an event without it', () => {
+    const severalOf = (state: TerminalReadiness) =>
+      state.view.state === 'ready' && state.view.several
+    const one = reduce(answer(1, { ...at(2, [first]), several: false }))
+    // A Restart started a terminal service that opens several shells.
+    const restarted = readinessReducer(one, {
+      type: 'listed',
+      terminals: [first],
+      eventNumber: 3,
+      several: true,
+    })
+    const late = readinessReducer(restarted, {
+      type: 'listed',
+      terminals: [first],
+      eventNumber: 3,
+      several: false,
+    })
+    const opened = readinessReducer(late, changed([first, second], 4))
+
+    expect([one, restarted, late, opened].map(severalOf)).toEqual([
+      false,
+      true,
+      true,
+      true,
+    ])
+  })
 })

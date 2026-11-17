@@ -62,12 +62,17 @@ function portsEvent(envelope: StreamEnvelope): WorkspaceEvent | null {
 }
 
 /**
- * The terminals of the workspace after a change of the list. A list that the
- * app can't read leaves the last one in place.
+ * The terminals of the workspace after a change of the list, and whether
+ * the terminal service opens several shells, when a Restart changed it. A
+ * list that the app can't read leaves the last one in place.
  */
 function terminalsEvent(envelope: StreamEnvelope): WorkspaceEvent | null {
   const terminals = parseTerminalList(envelope.event.terminals)
-  return terminals === null ? null : { type: 'terminals.updated', terminals }
+  const { several } = envelope.event
+  if (terminals === null) return null
+  if (several === undefined) return { type: 'terminals.updated', terminals }
+  if (typeof several !== 'boolean') return null
+  return { type: 'terminals.updated', terminals, several }
 }
 
 /**

@@ -28,32 +28,31 @@ export interface ShownTerminal {
   requested: string | null
   /**
    * The route needs this terminal in its place: the shown terminal closed,
-   * or the saved view lacks the terminal of the address.
+   * the saved view lacks the terminal of the address, or the address names
+   * a terminal that is not in the list.
    */
   follow: boolean
 }
 
 /**
  * The terminal that shows when the address names a terminal that is not in
- * the list, such as the address of a terminal that closed earlier.
- *
- * TODO(terminal tabs): the user has not yet chosen what this case shows.
- * The options are A, the saved terminal or the first, as for an address
- * without a terminal; B, always the first; C, the first with a notice.
- * Until the answer, this function gives the first terminal, as for any
- * terminal that is not in the list. The tool then saves nothing and moves
- * no address, so the answer can still change both.
+ * the list, such as the address of a terminal that closed earlier: the saved
+ * terminal, or the first, as for an address without a terminal (terminal
+ * tabs decision 4 A). The address then moves to it.
  */
 function unlistedAddressTerminal(
   terminals: readonly TerminalEntry[],
+  saved: TerminalEntry | undefined,
 ): TerminalEntry {
-  return terminals[0]
+  return saved ?? terminals[0]
 }
 
 /**
  * The terminal of the route: the terminal of the address, else of the saved
  * view. A shown terminal that closed gives its place to the terminal before
- * it. A saved terminal that is not in the list shows the first terminal.
+ * it. A saved terminal that is not in the list shows the first terminal. An
+ * address that names a terminal that is not in the list shows the saved
+ * terminal, or the first, and the route follows it.
  */
 export function shownTerminal(
   terminals: readonly TerminalEntry[],
@@ -72,9 +71,9 @@ export function shownTerminal(
     const terminal = listed(replaced.to) ?? terminals[0]
     return { terminal, requested, follow: true }
   }
-  const terminal =
-    route.terminalId === null
-      ? terminals[0]
-      : unlistedAddressTerminal(terminals)
-  return { terminal, requested, follow: false }
+  if (route.terminalId === null) {
+    return { terminal: terminals[0], requested, follow: false }
+  }
+  const terminal = unlistedAddressTerminal(terminals, listed(route.saved))
+  return { terminal, requested, follow: true }
 }

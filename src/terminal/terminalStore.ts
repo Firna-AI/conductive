@@ -18,18 +18,18 @@ export type TerminalStore = ToolStore<
 /**
  * The action of one event of the workspace. A list of the terminals keeps
  * the number of its event, so the tool orders it against its read and the
- * replies of its writes.
+ * replies of its writes. So does `several`, which a Restart can change.
  */
 function fromEnvelope(
   envelope: WorkspaceEventEnvelope,
 ): TerminalReadinessAction | WorkspaceEvent {
   const { event } = envelope
   if (event.type !== 'terminals.updated') return event
-  return {
-    type: 'listed',
-    terminals: [...event.terminals].sort(byNumber),
-    eventNumber: envelope.eventNumber,
-  }
+  const terminals = [...event.terminals].sort(byNumber)
+  const { eventNumber } = envelope
+  return event.several === undefined
+    ? { type: 'listed', terminals, eventNumber }
+    : { type: 'listed', terminals, eventNumber, several: event.several }
 }
 
 /**

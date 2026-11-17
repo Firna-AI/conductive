@@ -158,15 +158,18 @@ this guide.
   preview address on a phone, a port address on desktop and on a phone,
   one GitHub read for the bar and Checks with a live event, the Checks row
   of a phone, an archived phone, and the key of Open PR on GitHub.
-- `tools/TerminalTabs.test.tsx`, `tools/TerminalAddress.test.tsx`, and
-  `tools/TerminalReconnect.test.tsx` mount the whole app over the fake API,
-  with the helpers of `tools/terminal-tabs-kit.ts`. They check the + and
-  the limit, a switch, the connections of the shown terminals, a close and
-  its question, the focus after a close, a close by another member, the
-  failed open and close, the saved terminal after a reload, the address of
-  a terminal, a reply of an open after a newer close, older software, and
-  the Reconnect of one terminal over the fake sockets of the server.
-  `wiring-test-kit.tsx` holds their helpers.
+- `tools/TerminalTabs.test.tsx`, `tools/TerminalAddress.test.tsx`,
+  `tools/TerminalReconnect.test.tsx`, `tools/TerminalTabsFocus.test.tsx`,
+  and `tools/TerminalRestart.test.tsx` mount the whole app over the fake
+  API, with the helpers of `tools/terminal-tabs-kit.ts`. They check the +
+  and the limit, a switch, the connections of the shown terminals, a close
+  and its question, the focus after a close, a close by another member,
+  the failed open and close, the saved terminal after a reload, the
+  address of a terminal and of a terminal that is not in the list, a reply
+  of an open after a newer close, older software, and the Reconnect of one
+  terminal over the fake sockets of the server. They also check the focus
+  after a tab, the +, and New terminal, on desktop and on a phone, and the
+  row of tabs after a Restart. `wiring-test-kit.tsx` holds their helpers.
 - `../palette/PaletteNewTerminal.test.tsx` mounts the whole app over the
   fake API for New terminal of the palette. It runs the row while Preview
   shows and while the Terminal tool shows. It checks the place of the row,

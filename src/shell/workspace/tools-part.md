@@ -22,7 +22,7 @@ tools.
 | Address | What shows |
 | ------- | ---------- |
 | `terminal` | The Terminal tool, with the saved terminal or the first |
-| `terminal/<terminalId>` | The Terminal tool, with that terminal |
+| `terminal/<terminalId>` | The Terminal tool, with that terminal. A terminal that is not in the list shows the saved one, or the first, and the address moves to it |
 | `preview`, `preview/<previewId>` | The Preview tool, with that preview |
 | `preview/port/<port>` | The Preview tool, which shows or opens the preview of that port |
 | `desktop` | The Terminal tool, because Desktop is hidden |
@@ -52,9 +52,15 @@ tools.
   The request holds the element with the focus at the choice. A choice of
   another tool drops it. The tools part passes it through `TerminalPart`
   to the `focusRequest` of the Terminal tool, only while Terminal shows,
-  and clears it once the terminal took it. Only the screen of the shown
+  and drops it once the terminal took it. Only the screen of the shown
   terminal takes it, also when that terminal still loads or connects. A
   phone asks for no focus, because its keyboard would cover the page.
+- New terminal, the + of the terminal tabs, and a click on a terminal tab
+  also move the focus on desktop (terminal tabs decision 5 D). They start
+  a request with `askOnShow` of `TerminalFocus`, which keeps the element
+  with the focus at the press, and ask once their terminal shows. A choice
+  of another tool before that ends the wait. A terminal that took the
+  request calls `done`, which ends no other wait.
 - On a phone each tool that the app offers is a page of the tab bar, with
   its own address.
 - The terminal and Preview each mount at their first show, then stay
@@ -112,8 +118,10 @@ The command palette offers New terminal after the Go to rows, as
   does. It shows no terminal before the open ends, so a terminal that the
   user never showed opens no connection. A failed open shows the failure
   toast of the +.
-- New terminal moves no focus, as the + moves none: it shows the tool with
-  `select('terminal', { focus: false })`.
+- New terminal moves the focus into the new terminal, as the + does. It
+  starts its request at the run, and shows the tool with
+  `select('terminal', { focus: false })`, so that the select makes no
+  request of its own.
 - A key that the person gives New terminal on the Keyboard shortcuts tab
   runs the row, as for each command that the palette lists. It has no
   default key.

@@ -42,6 +42,12 @@ export interface TerminalToolProps {
   focusRequest?: TerminalFocusRequest | null
   /** The screen took the focus request, or dropped it after a focus move. */
   onFocusDone?: () => void
+  /**
+   * Starts a focus request for a terminal that the user shows: a click on
+   * its tab, or the + of the tabs. The result asks for the focus once that
+   * terminal shows. Without it, as on a phone, these controls move no focus.
+   */
+  focusOnShow?: () => () => void
 }
 
 /**
@@ -114,6 +120,7 @@ export function TerminalToolView(props: TerminalToolViewProps) {
           actions={actions}
           connect={props.connect}
           dispatch={dispatch}
+          focusOnShow={props.focusOnShow}
           focusRequest={props.focusRequest}
           links={props.links}
           onActivity={props.onActivity}

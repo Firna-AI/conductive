@@ -57,6 +57,7 @@ describe('the shown terminal of the saved view and of the address', () => {
       saved: 'third',
       shown: 'third',
       saves: [],
+      moves: 'tool',
     },
     {
       entry: 'a saved terminal that is not in the list shows the first one',
@@ -64,6 +65,7 @@ describe('the shown terminal of the saved view and of the address', () => {
       saved: 'closed',
       shown: 'first',
       saves: [],
+      moves: 'tool',
     },
     {
       entry: 'an address that names a terminal shows it, and the view saves it',
@@ -71,24 +73,50 @@ describe('the shown terminal of the saved view and of the address', () => {
       saved: 'third',
       shown: 'second',
       saves: ['second'],
+      moves: 'second',
+    },
+    {
+      entry:
+        'an address that names a terminal that is not in the list shows the saved terminal, and the address moves to it',
+      address: 'closed',
+      saved: 'third',
+      shown: 'third',
+      saves: [],
+      moves: 'third',
+    },
+    {
+      entry:
+        'an address and a saved view that name no terminal of the list show the first one, and the address moves to it',
+      address: 'closed',
+      saved: 'closed',
+      shown: 'first',
+      saves: ['first'],
+      moves: 'first',
     },
   ] as const)(
     'after a reload, $entry, and only the shown terminal connects',
-    async ({ address, saved, shown, saves }) => {
+    async ({ address, saved, shown, saves, moves }) => {
       holdAnimationFrames()
       const server = new FakeApiServer()
       const [second, third] = await openTerminals(server, 2)
       const terminals = { first: firstTerminal, second, third }
-      const ids = { second: second.id, third: third.id, closed }
+      const ids = {
+        first: firstTerminal.id,
+        second: second.id,
+        third: third.id,
+        closed,
+      }
       server.json('GET', viewPath, {
         view: { ...workspaceFixtures().view.view, terminal: ids[saved] },
       })
       const { events, opened } = socketsOf(server)
-      const href =
-        address === 'tool'
+      const href = (name: 'tool' | 'first' | 'second' | 'third' | 'closed') =>
+        name === 'tool'
           ? toolHref(org, id, 'terminal')
-          : terminalHref(org, id, second.id)
-      const { view } = await openTab(server, href, { events })
+          : terminalHref(org, id, ids[name])
+      const { view, navigation } = await openTab(server, href(address), {
+        events,
+      })
 
       expect(terminalTabs(view).shown).toEqual([names[shown]])
       expect(opened.map(({ path }) => path)).toEqual([
@@ -96,6 +124,8 @@ describe('the shown terminal of the saved view and of the address', () => {
       ])
       const writes = await bodiesOf(server, 'PUT', viewPath, 0)
       expect(writes.map(terminalOf)).toEqual(saves.map((name) => ids[name]))
+      // The address takes no new history entry when it moves.
+      expect(navigation.history).toEqual([href(moves)])
     },
   )
 

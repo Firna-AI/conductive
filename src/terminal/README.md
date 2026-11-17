@@ -143,6 +143,10 @@ change can move the shared parts to the app's shared components.
   clears the request. So a reconnect does not take the focus again. In
   StrictMode, the second screen takes the request too, because the request
   still holds until the owner clears it.
+- `focusOnShow` is optional. A click on a tab and the + call it at the
+  press, and call its result once their terminal shows, so the owner asks
+  for the focus with the element of the press. Without it, as on a phone,
+  these controls move no focus.
 - `screenRef` is optional. It gets the element of the xterm.js screen,
   without the key row and the buttons of the tool, such as Reconnect. The
   workspace screen marks this element for the shortcut layer, so only the

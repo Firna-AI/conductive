@@ -9,12 +9,10 @@ import type { ToolRequests } from './tool-parts/workspace'
 
 /** The writes of the terminal tabs. */
 export interface TerminalActions {
-  /** The +: opens a terminal, then shows it. */
-  open: () => void
   /**
-   * The + from outside the tool, such as New terminal of the command
-   * palette: opens a terminal and shows it, then calls `shown`, so that
-   * the owner can show the tool where another tool showed.
+   * The +, and New terminal of the command palette: opens a terminal and
+   * shows it, then calls `shown`, such as to show the tool where another
+   * tool showed, or to ask for the focus of the new terminal.
    */
   openThen: (shown: () => void) => void
   /** Closes a terminal after its question, which ends its shell. */
@@ -55,7 +53,7 @@ export function useTerminalActions(
     latestRoute.current = route
   })
 
-  const openThen = (shown?: () => void) => {
+  const openThen = (shown: () => void) => {
     if (opening) return
     dispatch({ type: 'open' })
     void openTerminal(workspace).then((result) => {
@@ -73,7 +71,7 @@ export function useTerminalActions(
       dispatch({ type: 'opened', ...result.value })
       if (!listed(terminal.id)) return
       latestRoute.current.show(terminal.id, 'push')
-      shown?.()
+      shown()
     })
   }
 
@@ -94,5 +92,5 @@ export function useTerminalActions(
     })
   }
 
-  return { open: () => openThen(), openThen, close }
+  return { openThen, close }
 }

@@ -50,7 +50,15 @@ export type WorkspaceEvent =
       checks: GitHubChecksResponse
     }
   | { type: 'preview.revoked'; previewId: string }
-  | { type: 'terminals.updated'; terminals: readonly TerminalEntry[] }
+  | {
+      type: 'terminals.updated'
+      terminals: readonly TerminalEntry[]
+      /**
+       * Whether the terminal service opens several shells, after a Restart
+       * that changed it. Older events and other changes leave it out.
+       */
+      several?: boolean
+    }
 
 /** The workspace assigns contiguous event numbers, starting at 1. */
 export interface WorkspaceEventEnvelope {

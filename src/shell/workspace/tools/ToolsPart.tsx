@@ -176,7 +176,7 @@ export function ToolsPart(props: {
           key={workspaceKey(toolWorkspace)}
           links={links}
           navigation={navigation}
-          onFocusDone={context.terminalFocus.clear}
+          onFocusDone={context.terminalFocus.done}
           route={terminalRoute}
           screenRef={terminal}
           shown={terminalShown}

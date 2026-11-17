@@ -57,8 +57,16 @@ export type ReadyTerminalsAction =
   | { type: 'shown'; terminalId: string; requested: string | null }
   | { type: 'ended'; terminalId: string }
   | { type: 'reconnect'; terminalId: string }
-  /** The list of a `terminals.updated` event, with the number of its event. */
-  | { type: 'listed'; terminals: readonly TerminalEntry[]; eventNumber: number }
+  /**
+   * The list of a `terminals.updated` event, with the number of its event,
+   * and `several` when a Restart changed it.
+   */
+  | {
+      type: 'listed'
+      terminals: readonly TerminalEntry[]
+      eventNumber: number
+      several?: boolean
+    }
   | { type: 'open' }
   | ({ type: 'opened'; terminal: TerminalEntry } & RepliedList)
   | { type: 'open-failed' }
@@ -139,18 +147,21 @@ function withTerminals(
 }
 
 /**
- * The tool with a list and the number of the event that holds it. Only a
- * number newer than the number of the list that shows changes the list, so
- * a late event or a late reply cannot undo a newer change. After the read
- * of an older server, which sent no number, each list counts as newer.
+ * The tool with a list and the number of the event that holds it, and with
+ * `several` when the event gives it. Only a number newer than the number of
+ * the list that shows changes the list, so a late event or a late reply
+ * cannot undo a newer change. After the read of an older server, which sent
+ * no number, each list counts as newer.
  */
 function withNewerList(
   ready: ReadyTerminals,
   terminals: readonly TerminalEntry[],
   eventNumber: number,
+  several?: boolean,
 ): ReadyTerminals {
   if (ready.revision !== null && eventNumber <= ready.revision) return ready
-  return { ...withTerminals(ready, terminals), revision: eventNumber }
+  const next = { ...withTerminals(ready, terminals), revision: eventNumber }
+  return several === undefined ? next : { ...next, several }
 }
 
 /**
@@ -193,8 +204,10 @@ export function readyReducer(
       connections.set(terminalId, (connections.get(terminalId) ?? 0) + 1)
       return { ...ready, ended: removed(ready.ended, terminalId), connections }
     }
-    case 'listed':
-      return withNewerList(ready, action.terminals, action.eventNumber)
+    case 'listed': {
+      const { terminals, eventNumber, several } = action
+      return withNewerList(ready, terminals, eventNumber, several)
+    }
     case 'open':
       return ready.opening ? ready : { ...ready, opening: true }
     case 'opened': {

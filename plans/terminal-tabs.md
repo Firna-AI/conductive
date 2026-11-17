@@ -577,7 +577,7 @@ Depends on: 1, 5
       the message of the server.
 - [x] Keep each terminal that the user showed mounted and connected while
       it is hidden.
-- [ ] Save the shown terminal in the saved view. Follow the address
+- [x] Save the shown terminal in the saved view. Follow the address
       `terminal/<terminalId>`.
 - [x] When the shown terminal closes, show the terminal before it, or the
       first.
@@ -595,6 +595,7 @@ beside `ToolsWiring.test.tsx`, which would pass 300 lines with them. The
 save and the address work, except for an address that names a terminal
 that is not in the list, which waits for a decision of the user. Evidence:
 `.context/terminal-tabs/reports/m6.md` and `.context/terminal-tabs/m6-shots/`.
+The last TODO was ticked in Milestone 16, after decision 4 A.
 
 ## Milestone 7: New terminal in the command palette
 
@@ -790,17 +791,22 @@ Tags: ui
 
 Depends on: 14
 
-- [ ] Decision 4 A: an address with an unknown terminal shows the saved
+- [x] Decision 4 A: an address with an unknown terminal shows the saved
       terminal, or the first, and moves the address to it. Remove the
       placeholder of the open question. Test it.
-- [ ] Decision 5 D: on desktop, New terminal in the palette, the +, and a
+- [x] Decision 5 D: on desktop, New terminal in the palette, the +, and a
       click on a terminal tab give the focus to the shown terminal. A
       phone moves no focus. Test each control.
-- [ ] Decision 6 B: after a Restart, the Terminal tool reads the terminal
+- [x] Decision 6 B: after a Restart, the Terminal tool reads the terminal
       state again, so the tab row shows when the new terminal service
       opens several shells. Test it.
-- [ ] Update `src/terminal/README.md`, `src/terminal/terminal-tabs.md`, and
+- [x] Update `src/terminal/README.md`, `src/terminal/terminal-tabs.md`, and
       `src/shell/workspace/tools-part.md`.
+
+Done on 17 November 2026. The new read after a Restart needed no change:
+Starting unmounts the tool. The app now also takes `several` from a
+`terminals.updated` event. Evidence: `.context/terminal-tabs/reports/m16.md`
+and `.context/terminal-tabs/m16/`.
 
 ## Milestone 17: Guide for decisions 5 and 6
 
