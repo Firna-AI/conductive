@@ -15,8 +15,10 @@ says.
   workspace, and gives them to the chat as `host`. The chat places them.
 - The shell also gives the composer the Capabilities tool of the
   workspace, from `../capabilities/WorkspaceCapabilities.tsx` (secrets
-  decision 8 B). Its control reads the secrets of the org and the
-  capabilities of the workspace each time that it opens. Every member
+  decision 8 B). The chat reads the secrets of the org and the
+  capabilities of the workspace when the workspace first shows, and the
+  app keeps them while it is open. So the control shows them at once. Each
+  open reads them again behind the shown values. Every member
   changes the pre-approved secrets and Mac access there, and removes each
   approval of a session, which names its session by the title that the
   chat holds, and each value that a member gave for the workspace. The control shows only where the composer shows.
