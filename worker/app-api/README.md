@@ -245,9 +245,13 @@ The machine tools use the configured app origin instead.
   moved row at the index. That keyword makes
   SQLite compute the snapshot once, before the update changes a row.
 - `markWorkspaceArchived` gives each first live descendant, reached
-  through archived rows, the archived workspace's section and position.
+  through archived rows, the archived workspace's section. These rows,
+  oldest first, take consecutive positions from the archived row's position.
+  Each other row of that section above that position, live or archived,
+  gains the promoted count minus one. With zero or one promoted row,
+  no other row changes position. All other stored positions stay.
   `writeWorkspaceTree` selects these descendants inside the Archive batch.
-  Its write follows Archive and checks `changes()`.
+  Its single position write follows Archive and checks `changes()`.
   It runs only when Archive wrote. Promoted top-level rows then keep their
   initial places and can move independently. Restore shows them under
   their nearest live ancestor again.

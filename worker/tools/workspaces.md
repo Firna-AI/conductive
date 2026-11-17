@@ -99,8 +99,12 @@ states the rule.
   gets HTTP 403 `archive_forbidden`, and nothing changes.
 - An archive of an archived workspace changes nothing.
 - The Archive batch selects its first live descendants through archived
-  rows and gives them the archived row's section and place.
-  The shared tree-write helper runs this promotion only when Archive wrote.
+  rows and gives them the archived row's section. Oldest first, they take
+  consecutive places from the archived row's place. In that same guarded
+  statement, each other row of the section above that place, live or
+  archived, gains the promoted count minus one. With zero or one promoted
+  row, no other row changes place. All other stored places stay.
+  The shared tree-write helper writes these places only when Archive wrote.
 - An archive of the calling workspace stops its sandbox and revokes its
   token. So the calling turn ends, and the caller can miss the reply.
 
@@ -166,6 +170,13 @@ states the rule.
 - `parentId` travels through `ToolWorkspaceCreation`, the lifecycle request,
   the creation plan's `parent_workspace_id`, and the start job to the workspace insert.
   A replay keeps that parent even when the repeated input names another one.
+- Before a new creation claim, the lifecycle waits for a pending parent's
+  saved admission or failure. The wait has the workspace start limit of
+  20 minutes. A failed unadmitted parent or a missing parent gets HTTP 404
+  `workspace_not_found`: "The parent workspace is not available."
+  An admitted parent stays available after a later start failure.
+  The parent read stays within the calling org. A replay checks its saved
+  parent before it queues a pending creation.
 - The insert reads the parent's own section in the statement that creates the workspace row.
   `sectionId` still passes the org section check.
   When it differs from the inherited section, the saved admission and the create reply give a `notice`.
@@ -196,4 +207,8 @@ The [Rust tools crate](../../crates/cnd-tools/README.md) tests CLI and MCP reque
   the stored depth limit and sibling advice, and the existing section check.
 - [workspace-tree.test.ts](../../src/shared/workspace-tree.test.ts): tree order and the place of rows after an archive.
 - [workspace-data.test.ts](../lifecycle/workspace-data.test.ts): the parent's section at the insert when a move races with creation.
-- [creation-parent.test.ts](../lifecycle/creation-parent.test.ts): the stored parent, section notice, and replay after an admission restart.
+- [creation-parent.test.ts](../lifecycle/creation-parent.test.ts): the stored
+  parent, section notice, replay after an admission restart, pending parent
+  admission, failed provisional cleanup, and an admitted parent's later failure.
+- [creation-admission-wait.test.ts](../lifecycle/creation-admission-wait.test.ts):
+  a saved creation failure without an admission and the bounded admission wait.

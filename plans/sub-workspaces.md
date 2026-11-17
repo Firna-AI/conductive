@@ -425,9 +425,12 @@ options 4 F, 5 C, and 6 A.
   the top-level rows. To give it the place of the archived row, an Archive
   gives each live workspace below the archived one, reached only through
   archived workspaces, the section and the place of the archived
-  workspace, in the same write. With equal places, the order by creation
-  puts these rows right after the archived row, oldest first. A later move
-  of such a row then changes its own place, as for any top-level row.
+  workspace, in the same write: the promoted rows, oldest first, take the
+  places p, p+1, and so on, where p is the place of the archived row, and
+  each other row of the section above p, live or archived, moves up by the
+  number of promoted rows less one. A later move of such a row then changes
+  its own place, as for any top-level row. Review finding 3 replaced the
+  first rule, equal places with the order by creation, on 17 November 2026.
 - The indent of a row follows the rows that the list shows. So a row under
   its grandparent indents one step less than its depth.
 
@@ -696,6 +699,27 @@ Milestone 6 led to these calls, of 16 November 2026, by the
 - The dev fake shows trees only with `?subWorkspaces=1`, so its default
   list and the tests stay as before. Its moves and Archives follow the
   Worker's tree rules.
+
+The review of Milestone 7 led to these calls, of 16 and 17 November 2026,
+by the orchestrator.
+
+- Finding 1, fixed now with option B: the move and the Archive select
+  their rows inside their own D1 batch, as the list-order rule of
+  `worker/app-api/README.md` requires. The review had proposed a fix
+  after the merge.
+- Finding 2, fixed now with option D of its check: a nested create waits
+  until its parent's own create is admitted or has failed, and gets HTTP
+  404 when it failed. Reason: it keeps every current outcome, while
+  keeping a never-admitted parent would add an outcome that no requirement
+  states. The wider fix, no provisional row at all, needs the user:
+  `plans/follow-ups/provisional-workspace-rows-visible.md`.
+- Finding 3, fixed now with option D of its check: the Archive writes the
+  promoted rows in place and shifts only the later rows of the section.
+  Reason: renumbering would break the place of a later Restore. The wider
+  in-place rule for moves goes with
+  `plans/follow-ups/restore-order-after-reorder.md`.
+- The app's chat and members readers read a missing `parentId` as null,
+  because a tab can meet an older Worker during a deploy.
 
 ## Milestone 1: Mockups
 

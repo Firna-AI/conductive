@@ -24,8 +24,10 @@
   - **A.** Keep the stored place, and make the app's local Restore sort by the same stored places, so that the app and a reload agree. Effort: Small.
   - **B.** At a Restore, rank the live rows of the section again with the restored workspace at its old index among them, in the same write, as a move does. Effort: Medium.
   - **C.** At a Restore, put the workspace at the top of its section, as a new workspace goes, and change the protocol sentence. Effort: Small.
+  - **D.** Give moves the in-place rule that the Archive of sub-workspaces uses since review finding 3 of `calummoore/perth-5m3h`: a move takes the place of the top-level row at its drop index and adds 1 to each later row of the target section, live or archived, with no renumbering. No write then renumbers, so each archived row keeps its Restore place. This changes the stored places that moves write, which `worker/app-api/feature-workspaces-data.test.ts` asserts. Effort: Medium.
 - **Left out:** Keeping the places of archived rows up to date at each move, because each move would then rewrite every archived row of the section.
-- **Wider fix:** B. One write rule for places then serves moves and Restores.
+- **Wider fix:** D. No write renumbers places, so a Restore never meets renumbered rows, for moves and for Archives.
 - **Previous examples:** Commit `c04b9cf09e54`, "fix(shell): keep workspace and section order atomic", moved the ranking of places into one transaction.
-- **Recommendation:** B. It keeps "at its place in the list" true after a reorder, and the app and a reload agree.
-- **Action:** fix after merge, apply B, because the problem is older than the branch that found it and affects every workspace.
+- **Related:** Review finding 3 of `calummoore/perth-5m3h` gave the Archive the in-place rule of D, and its check named D as the wider fix of this item.
+- **Recommendation:** D. It keeps "at its place in the list" true after any reorder, with one place rule for moves and Archives.
+- **Action:** fix after merge, apply D, because the problem is older than the branch that found it and affects every workspace.

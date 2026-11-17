@@ -5,14 +5,26 @@ import { markWorkspaceArchived } from './archive-data'
 import {
   beforeFirstListBatch,
   setupShellListTests,
+  type ShellListFixture,
 } from './shell-list.test-support'
 import {
+  restoreTreeWorkspace,
   seedWorkspaceTree,
   storedTreePlaces,
   workspacePlaces,
 } from './workspace-tree.test-support'
 
 const fixtureForTest = setupShellListTests()
+
+function archive(fixture: ShellListFixture, id: string) {
+  return markWorkspaceArchived(
+    fixture.env,
+    fixture.orgId,
+    id,
+    fixture.user.id,
+    TEST_TIME + 100,
+  )
+}
 
 it('gives the archived row place to its first live descendants through archived rows', async () => {
   const fixture = fixtureForTest()
@@ -52,7 +64,7 @@ it('gives the archived row place to its first live descendants through archived 
   expect(await storedTreePlaces(fixture)).toEqual([
     { id: 'before', sectionId: reviewId, position: 0, parentId: null },
     { id: 'root', sectionId: reviewId, position: 1, parentId: null },
-    { id: 'after', sectionId: reviewId, position: 2, parentId: null },
+    { id: 'after', sectionId: reviewId, position: 3, parentId: null },
     { id: 'live-child', sectionId: reviewId, position: 1, parentId: 'root' },
     {
       id: 'archived-child',
@@ -63,7 +75,7 @@ it('gives the archived row place to its first live descendants through archived 
     {
       id: 'promoted-grandchild',
       sectionId: reviewId,
-      position: 1,
+      position: 2,
       parentId: 'archived-child',
     },
     {
@@ -79,6 +91,95 @@ it('gives the archived row place to its first live descendants through archived 
     ['nested-grandchild', reviewId, 'live-child'],
     ['promoted-grandchild', reviewId, null],
     ['after', reviewId, null],
+  ])
+})
+
+it('keeps the surviving tree order on a fresh read after repeated Archives', async () => {
+  const fixture = fixtureForTest()
+  const { generalId } = fixture
+  await seedWorkspaceTree(fixture, [
+    { id: 'before', sectionId: generalId, position: 0 },
+    { id: 'root', sectionId: generalId, position: 1 },
+    { id: 'after', sectionId: generalId, position: 2 },
+    { id: 'a', sectionId: generalId, position: -1, parentId: 'root' },
+    { id: 'b', sectionId: generalId, position: -2, parentId: 'root' },
+    { id: 'aa', sectionId: generalId, position: -3, parentId: 'a' },
+  ])
+  await archive(fixture, 'root')
+  await archive(fixture, 'a')
+  expect(await workspacePlaces(fixture)).toEqual([
+    ['before', generalId, null],
+    ['aa', generalId, null],
+    ['b', generalId, null],
+    ['after', generalId, null],
+  ])
+})
+
+it('restores the archived parent at its saved place after repeated Archives', async () => {
+  const fixture = fixtureForTest()
+  const { generalId } = fixture
+  await seedWorkspaceTree(fixture, [
+    { id: 'before', sectionId: generalId, position: 5 },
+    { id: 'root', sectionId: generalId, position: 9 },
+    { id: 'after', sectionId: generalId, position: 12 },
+    { id: 'a', sectionId: generalId, position: -1, parentId: 'root' },
+    { id: 'b', sectionId: generalId, position: -2, parentId: 'root' },
+    { id: 'aa', sectionId: generalId, position: -3, parentId: 'a' },
+  ])
+  await archive(fixture, 'root')
+  await archive(fixture, 'a')
+  expect(await restoreTreeWorkspace(fixture, 'a')).toBe(true)
+  expect(await storedTreePlaces(fixture)).toEqual([
+    { id: 'before', sectionId: generalId, position: 5, parentId: null },
+    { id: 'root', sectionId: generalId, position: 9, parentId: null },
+    { id: 'after', sectionId: generalId, position: 13, parentId: null },
+    { id: 'a', sectionId: generalId, position: 9, parentId: 'root' },
+    { id: 'b', sectionId: generalId, position: 10, parentId: 'root' },
+    { id: 'aa', sectionId: generalId, position: 9, parentId: 'a' },
+  ])
+  expect(await workspacePlaces(fixture)).toEqual([
+    ['before', generalId, null],
+    ['a', generalId, null],
+    ['aa', generalId, 'a'],
+    ['b', generalId, null],
+    ['after', generalId, null],
+  ])
+})
+
+it('keeps an earlier archived row in place when Restore follows another Archive', async () => {
+  const fixture = fixtureForTest()
+  const { generalId, reviewId } = fixture
+  await seedWorkspaceTree(fixture, [
+    { id: 'before', sectionId: generalId, position: 5, archived: true },
+    { id: 'earlier', sectionId: generalId, position: 12, archived: true },
+    { id: 'root', sectionId: generalId, position: 9 },
+    { id: 'after', sectionId: generalId, position: 13 },
+    { id: 'a', sectionId: generalId, position: -1, parentId: 'root' },
+    { id: 'b', sectionId: generalId, position: -2, parentId: 'root' },
+    { id: 'aa', sectionId: generalId, position: -3, parentId: 'a' },
+    { id: 'other-section', sectionId: reviewId, position: 12 },
+  ])
+  await archive(fixture, 'root')
+  await archive(fixture, 'a')
+  expect(await restoreTreeWorkspace(fixture, 'earlier')).toBe(true)
+  expect(
+    (await storedTreePlaces(fixture)).map(({ id, position }) => [id, position]),
+  ).toEqual([
+    ['before', 5],
+    ['earlier', 13],
+    ['root', 9],
+    ['after', 14],
+    ['a', 9],
+    ['b', 10],
+    ['aa', 9],
+    ['other-section', 12],
+  ])
+  expect(await workspacePlaces(fixture)).toEqual([
+    ['aa', generalId, null],
+    ['b', generalId, null],
+    ['earlier', generalId, null],
+    ['after', generalId, null],
+    ['other-section', reviewId, null],
   ])
 })
 

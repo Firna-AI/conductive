@@ -40,3 +40,18 @@ export async function markCreationFailed(
     .bind(error?.code ?? null, error?.message ?? null, workspaceId)
     .run()
 }
+
+export function parentCreationState(
+  db: D1Database,
+  orgId: string,
+  workspaceId: string,
+): Promise<{ state: 'pending' | 'succeeded' | 'failed' | null } | null> {
+  return db
+    .prepare(
+      `SELECT a.state FROM workspaces w
+       LEFT JOIN workspace_creation_attempts a ON a.workspace_id = w.id AND a.org_id = w.org_id
+       WHERE w.id = ? AND w.org_id = ?`,
+    )
+    .bind(workspaceId, orgId)
+    .first()
+}
