@@ -34,7 +34,7 @@
   - PATCH replies with only the changed fields: they break app copies that read the whole org from the reply.
   - A new read of the org after the saves end: the old value still shows until that read returns.
 - **Wider fix:** B. Each partial save then changes only its own fields, so the class cannot recur in other partial org writes.
-- **Previous examples:** `plans/follow-ups/partial-change-restores-old-owner.md` records the same class for workspaces. Commit `8eaf4b21e` added field-specific workspace merges in `src/app/list-changes.ts`.
+- **Previous examples:** The item [`plans/follow-ups/partial-change-restores-old-owner.md`](https://github.com/Firna-AI/conductive/blob/eb3409411/plans/follow-ups/partial-change-restores-old-owner.md), since deleted, recorded the same class for workspaces. Its fix limits each partial change of the open workspace to its own field in the list, through `workspaceRenamed` and `workspaceRead` in `src/app/list-changes.ts`. Commit `8eaf4b21e` added field-specific workspace merges in `src/app/list-changes.ts`.
 - **Related:** `plans/follow-ups/org-name-editor-stale-draft.md` covers the same name editor. Its per-field draft does not stop this defect, because an unchanged field still takes the saved value, also an old one.
 - **Recommendation:** B. It covers each overlap that the screen allows today and keeps both saves parallel. D is the fix if a later change allows two saves of one field at once.
 - **Action:** fix after merge, apply B, because the defect needs overlapping saves with reversed replies, and the fix does not get harder after the merge.
