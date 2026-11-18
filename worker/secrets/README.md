@@ -81,6 +81,19 @@ An answer is one of these JSON objects:
 - `{ "kind": "allow" }` for stored secrets.
 - `{ "kind": "values", "lifetime": "15-minutes" | "workspace" | "save", "values": { "NAME": "value" } }`.
 
+An allow also allows each other open request that its grants cover, in
+the same chat operation. A request is covered when the answer's own
+grant reaches each name that it asked for, in the request's session.
+Approvals and 15-minute values reach only the answered session. Workspace
+values reach every session. A grant from elsewhere, such as Capabilities,
+never makes a request covered. The covered request records the same member
+and time. Its lifetime is the answer's lifetime when it asked for a value,
+and null otherwise. A waiting call of a covered request gets its values.
+One answer sends at most one late notice for each session, and none to a
+session where a waiting call gets the values. A suppressed late request
+keeps `lateAnswer` false and `notice` null. A deny changes only its own
+request.
+
 Every missing name needs a nonempty value before any grant is written.
 A mixed request also approves each stored secret for its session. One
 lifetime covers all supplied values. Save uses the request reason as the
@@ -164,6 +177,7 @@ filter state. No automation-specific rule changes these grants.
 - [capabilities-input.ts](capabilities-input.ts): capability request parsing and create defaults.
 - [runtime.ts](runtime.ts), [request-run.ts](request-run.ts), and [run-values.ts](run-values.ts): machine calls and their waiters.
 - [request-answer.ts](request-answer.ts) and [request-reconcile.ts](request-reconcile.ts): member answers, late notices, and lifecycle cleanup.
+- [request-covered.ts](request-covered.ts): the other open requests that an allow covers, and their notices.
 - [notice-delivery.ts](notice-delivery.ts): runner delivery and resume after an accepted late notice.
 - [request-records.ts](request-records.ts) and [request-storage.ts](request-storage.ts): durable requests and encrypted temporary values.
 - [output-values.ts](output-values.ts) and [filter state](../chat/output-filter-records.ts): exact-copy filtering.
@@ -175,7 +189,7 @@ filter state. No automation-specific rule changes these grants.
 Run `npm run test -- worker/app-api/secrets.test.ts worker/app-api/secrets-reveal.test.ts worker/app-api/secrets-reveal-lifetime.test.ts worker/app-api/capabilities.test.ts worker/app-api/create-capabilities.test.ts worker/lifecycle/create-capabilities.test.ts worker/devices/mac-access.test.ts` from the repository root.
 
 Run `npm run test -- worker/secrets --maxWorkers=1` for tool routes,
-member answers, grants, fake-clock deadlines, lifecycle cleanup,
+member answers, covered requests, grants, fake-clock deadlines, lifecycle cleanup,
 encrypted value lifetimes, restart, and filtering.
 
 See [Secrets](../../docs/protocol/secrets.md) and

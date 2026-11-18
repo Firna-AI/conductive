@@ -2,10 +2,10 @@
 
 This doc holds the requirements and the decisions in force for the use of
 secrets by agents. It covers the two calls of the workspace tools, the
-requests, their time limit, temporary values, mixed requests, what the
-chat shows, the exact-copy filter, and the end of a request. It belongs to
-[Secrets](secrets.md), which covers the secrets, their rights, their
-grants, and Capabilities. [Late secret requests](secret-late-answers.md)
+requests, covered requests, their time limit, temporary values, mixed
+requests, what the chat shows, the exact-copy filter, and the end of a
+request. It belongs to [Secrets](secrets.md), which covers the secrets,
+their rights, their grants, and Capabilities. [Late secret requests](secret-late-answers.md)
 covers late requests and late answers.
 [Secret variables](secret-variables.md) covers the names of new secrets
 and the environment of the command. The terms are those of
@@ -117,6 +117,30 @@ decision number names a decision of the change that adds
   names.
 - Only the request and needs input show that a request waits. The Mac app
   shows no notification for it, as it does for a Mac command request.
+
+## Covered requests
+
+- An Allow also allows each other open request, waiting or late, that its
+  new grants cover. A request is covered when the grant of the answer
+  reaches each secret that it asks for, in the session of the request.
+- The scope of each grant sets the reach. An approval for the session and
+  a value for 15 minutes reach the session that asked. A value for this
+  workspace reaches each session of the workspace.
+- A covered request names the member who answered. A waiting call of a
+  covered request gets its values at once.
+- A request that asks for a secret that the answer does not give stays
+  open, and does not change. This holds also when another grant, such as
+  one of Capabilities, now covers that secret. Reason: the request then
+  names only grants that the member gave.
+- Reason: an agent often asks again after its request becomes late. The
+  member then answers once, and no call waits for an answer that it
+  already has.
+- A Deny ends only its own request. Reason: a Deny judges one command, and
+  the agent can ask again with a better reason.
+- A settle of the requests that a grant of Capabilities covers was
+  rejected. Each such write must then reach every workspace that it
+  covers, for a rare case. So was a new call that waits on the open
+  request of the same secrets, because its card then shows an old command.
 
 ## Who answers
 

@@ -255,6 +255,7 @@ Every member can remove approvals in **Capabilities**.
 
 A request waits 90 seconds for an answer.
 After that, it stays in the chat, and a later **Allow** tells the agent in a new turn.
+An **Allow** also allows each other open request of the same secrets that its approval covers, so you answer once.
 An automation run follows the same rules.
 Text in a pull request can steer its agent to use the secrets that need no new approval.
 
