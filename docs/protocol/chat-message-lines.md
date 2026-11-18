@@ -5,12 +5,15 @@ message lines of the work of a turn. It belongs to
 [Chat Markdown](chat-markdown.md), which defines an agent message and
 holds the other Markdown of agent messages. Chat Markdown also says which
 code blocks of a message line have a Copy code button. The terms are
-those of the [architecture doc](../architecture.md#terms). The
+those of the [architecture doc](../architecture.md#terms). A Markdown
+parser decision, such as Markdown parser decision 14 B, is a decision of
+the change that reads Markdown with one parser, as Chat Markdown says. The
 [mockup catalogue](../mockups/catalogue.md) draws message lines in the
 open work of a turn at `app/chat/work`. It draws their tables at
 `app/chat/work/table`, their lists at `app/chat/lists/work`, and their
 headings at `app/chat/headings/work`. It draws their quotes, rules,
-marks, and line breaks at `app/chat/formatting/work`.
+marks, and line breaks at `app/chat/formatting/work`, and their task
+boxes at `app/chat/lists/tasks-work`.
 
 ## In the work of a turn
 
@@ -48,3 +51,13 @@ marks, and line breaks at `app/chat/formatting/work`.
   rule after the first table shows as in an answer.
 - Reason: the closed line stays one line, as for a table. The colour shows
   where a quote ends, so the words after it read as new text.
+- A closed message line shows each task box as a fixed check box in the
+  line, before the words of its task (Markdown parser decision 14 B,
+  18 November 2026). An open message line shows each task box as an
+  answer does, as [Lists](chat-markdown.md#lists) says.
+- A press on a box opens or closes its line, as a press on the words of
+  the line does. The box does not change.
+- A screen reader reads whether each task of a line is done.
+- Reason: the closed line stays one line, and it keeps the state of each
+  task in view. The line is a button, so a press on a box acts on the
+  line.

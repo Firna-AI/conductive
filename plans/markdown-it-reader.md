@@ -474,18 +474,42 @@ Depends on: 6
 
 Depends on: 8
 
-- [ ] `docs/protocol/chat-markdown.md`: the live-text exception of item 9
-      C, and task boxes in the chat by item 14 B.
-- [ ] `docs/protocol/chat-tables.md`: rows without a pipe by item 13 A, a
+- [x] `docs/protocol/chat-markdown.md`: the live-text exception of item 9
+      C, and task boxes in the chat by item 14 B. Strong text joins the
+      shared look by item 11 C. Images move from the chat exceptions to
+      the shared parts, because item 10 B shows a web image in one way in
+      both views. My calls, 18 November 2026: an open mark is one in the
+      paragraph, heading, or table cell where the live text ends, as the
+      mockups close only the marks of the last paragraph. The saved
+      history shows what a live tab shows once the agent message is
+      complete, because its last live update can close an open mark. The
+      doc has 284 lines.
+- [x] `docs/protocol/chat-tables.md`: rows without a pipe by item 13 A, a
       table after a list item by item 17 A, no table at a list, quote, or
       heading line by item 18 B, cells at the top of the row by item 12 B,
-      and no limit in the chat by item 15 B.
-- [ ] `docs/protocol/workspace-tools.md`: a web image in the file preview
-      by item 10 B.
-- [ ] `docs/mockups/design-markdown.md`: bold weight by item 11 C.
-- [ ] Read the Terms page, the Privacy page, and each public guide in
+      and no limit in the chat by item 15 B. My calls, 18 November 2026:
+      the body rows end where the parser ends them: at a blank line, at a
+      line that starts a list item, a quote, a heading, a rule, or a code
+      block, and at a line outside the item or quote of the table. Lines
+      without `>` under the text of a quote continue that text too, by the
+      same rule of CommonMark. `chat-message-lines.md` gives the task
+      boxes of a closed and an open line, a press on a box, which acts on
+      the line, and the state of each box for a screen reader, which
+      item 14 B settles. The parser probes are in
+      `.context/markdown-it-reader/m9/probe/`.
+- [x] `docs/protocol/workspace-tools.md`: a web image in the file preview
+      by item 10 B. The look of the preview also names strong text and
+      task boxes. The doc has 409 lines, over the target of about 250 for
+      a protocol doc. A split is outside this milestone, and the final
+      report of the milestone raises it.
+- [x] `docs/mockups/design-markdown.md`: bold weight by item 11 C.
+      Milestone 8 already gave it. The built tokens give the heading
+      weight and the strong weight as 600, so bold text at 700 is heavier,
+      as the page says. No change.
+- [x] Read the Terms page, the Privacy page, and each public guide in
       `src/marketing/docs/` in full. Update each sentence that restates a
-      changed fact.
+      changed fact. No sentence restates one, so none changed. The link
+      check of the changed docs is in `.context/markdown-it-reader/m9/`.
 
 ## Milestone 10: The table rule for the answers of 18 November 2026
 

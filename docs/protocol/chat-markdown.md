@@ -17,9 +17,9 @@ the change that reads the Markdown of the chat and of the file preview
 with one parser. Its pull request keeps the record. The
 [mockup catalogue](../mockups/catalogue.md) draws tables in agent messages
 at `app/chat/tables`. It draws lists inside list items at
-`app/chat/lists`, and headings at `app/chat/headings`. It draws quotes,
-rules, marks, line breaks, and images at `app/chat/formatting`, and links
-at `app/chat/links`.
+`app/chat/lists`, task boxes at `app/chat/lists/tasks`, and headings at
+`app/chat/headings`. It draws quotes, rules, marks, line breaks, and
+images at `app/chat/formatting`, and links at `app/chat/links`.
 
 ## Formatting
 
@@ -45,7 +45,8 @@ at `app/chat/links`.
   - paragraphs, which a blank line ends
   - headings at six levels, as [Headings](#headings) says
   - bulleted lists with `-`, `*`, or `+`, and numbered lists, such as `1.`
-    or `1)`, with lists inside their items, as [Lists](#lists) says
+    or `1)`, with lists inside their items and task boxes, as
+    [Lists](#lists) says
   - quotes and rules, as [Quotes and rules](#quotes-and-rules) says
   - code blocks, between two lines of three or more backticks or tildes,
     or indented by four spaces
@@ -53,13 +54,10 @@ at `app/chat/links`.
     marks, emphasis between `*` or `_` marks, and strikethrough between
     `~~` marks
   - line breaks, as [Line breaks](#line-breaks) says
-  - Markdown links and bare web addresses, as
+  - Markdown links, images, and bare web addresses, as
     [Chat links](chat-links.md) says
   - tables, as [Chat tables](chat-tables.md) says
 - The chat draws these parts in its own way:
-  - images, as
-    [Bare addresses and Markdown links](chat-links.md#bare-addresses-and-markdown-links)
-    says
   - the text while the agent writes, as
     [While the agent writes](#while-the-agent-writes) says
   - short table rows, as [Short rows](chat-tables.md#short-rows) says
@@ -84,9 +82,11 @@ at `app/chat/links`.
   [Files in answers](file-mentions.md#files-in-answers) says.
 - The chat reads marks, entities, and escapes as CommonMark does. A mark
   without its pair shows as typed, such as one `**`, or the `**` and the
-  `*` of a file pattern such as `tests/**/*.test.ts`. An entity, such as
-  `&amp;`, shows its character. A backslash before a mark shows the mark
-  as typed, such as `\*`.
+  `*` of a file pattern such as `tests/**/*.test.ts`. The one exception is
+  an open mark while the agent writes, as
+  [While the agent writes](#while-the-agent-writes) says. An entity, such
+  as `&amp;`, shows its character. A backslash before a mark shows the
+  mark as typed, such as `\*`.
 - Inline code between two or more backticks can hold a backtick. Strong
   text, emphasis, and strikethrough can hold inline code, links, and
   chips.
@@ -181,7 +181,6 @@ at `app/chat/links`.
 - Lists and quotes nest at most 16 levels deep, as in the file preview.
   Deeper content shows as the text of a paragraph. No text of the agent
   message is lost.
-- A task box, such as `[ ]` at the start of an item, shows as text.
 - A code block outside a list keeps its text exactly, with its tabs.
 - Reason: each list keeps the structure that the agent wrote, so the
   options of a choice show under that choice. A list under an item that
@@ -190,6 +189,13 @@ at `app/chat/links`.
 - Reason: lists cannot differ between agent messages and the file
   preview, as for tables. List rules for the chat alone were rejected for
   that reason.
+- A task box, `[ ]`, `[x]`, or `[X]` at the start of the first paragraph
+  of a list item, shows as a fixed check box, as in the file preview
+  (Markdown parser decision 14 B, 18 November 2026). The box shows
+  whether the task is done, and a press does not change it. The
+  [mockups](../mockups/design-markdown.md#the-parts) give the look.
+- Reason: as for quotes and emphasis, the chat draws the part as the file
+  preview draws it. A task box as text was not chosen for that reason.
 
 ## Quotes and rules
 
@@ -197,11 +203,14 @@ at `app/chat/links`.
   block of [Formatting](#formatting), such as paragraphs, lists, code
   blocks, and tables.
 - A rule, such as `---`, shows as a line across the width of the text.
-- Quotes, rules, emphasis, and strikethrough have the same look in agent
-  messages and in the file preview. The
+- Quotes, rules, strong text, emphasis, and strikethrough have the same
+  look in agent messages and in the file preview. The
   [mockups](../mockups/design-markdown.md#the-parts) give the look.
+- Strong text has one weight in both views, which is heavier than the
+  weight of a heading (Markdown parser decision 11 C, 18 November 2026).
 - Reason: as for headings and tables, the same Markdown cannot look
-  different in the two views.
+  different in the two views. A look for each view, and strong text in
+  the weight of a heading, were not chosen.
 
 ## Line breaks
 
@@ -233,8 +242,19 @@ at `app/chat/links`.
   [What the chat shows](chat-and-events.md#what-the-chat-shows) says. The
   chat shows each update at once.
 - Each update shows the text so far in the same way as a complete agent
-  message with the same text. So no formatting waits for the end of the
-  agent message.
+  message with the same text, apart from an open mark. So no formatting
+  waits for the end of the agent message.
+- An open mark opens strong text, emphasis, or strikethrough, and has no
+  pair yet. It stands in the paragraph, heading, or table cell where the
+  text so far ends. While the agent writes, an open mark closes at the end
+  of the text (Markdown parser decision 9 C, 18 November 2026). So
+  `**Next:` shows `Next:` in bold at once.
+- Only a mark that can open and cannot close, by the rules of CommonMark,
+  is an open mark. So a mark that can also close stays text, such as the
+  `**` of `tests/**/*.test.ts`, as in a complete agent message.
+- Reason: words show their formatting while the agent writes them, and
+  keep it when the pair arrives. A mark as typed until its pair arrives,
+  and a hidden mark, were not chosen.
 - A header row shows as text, with its pipes, until its separator row
   arrives. The table then shows, with the rows that have arrived.
 - The table grows with each row that arrives. A row that the agent still
@@ -249,8 +269,8 @@ at `app/chat/links`.
 - The events and the saved history carry the text of each agent message.
   They carry no heading data, no table data, and no link data.
 - An agent message from the saved history shows the same formatting, the
-  same tables, and the same links as the same agent message after its last
-  live update.
+  same tables, and the same links as a live tab shows once the agent
+  message is complete.
 - The text keeps the cells that a table does not show, such as the cells
   past the width of its header.
 - Reason: headings, tables, and links need no change to the events or to

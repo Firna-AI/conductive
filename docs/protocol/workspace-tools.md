@@ -31,8 +31,9 @@ The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 - The Markdown preview reads a file with the parser of the chat, by the
   rules of CommonMark with the tables and the strikethrough of GitHub, as
   [Formatting](chat-markdown.md#formatting) says (Markdown parser decision
-  3 C, 16 November 2026). Quotes, rules, emphasis, strikethrough,
-  headings, and tables have the same look as in the chat.
+  3 C, 16 November 2026). Quotes, rules, strong text, emphasis,
+  strikethrough, task boxes, headings, and tables have the same look as in
+  the chat.
 - HTML in a Markdown file shows as text. A line-break tag, `<br>`,
   `<br/>`, or `<br />` in any letter case, shows as a line break, also in a
   table cell, as [Line breaks](chat-markdown.md#line-breaks) says
@@ -68,6 +69,15 @@ The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 - Unlike chat text, the Markdown preview also links a `mailto` address,
   an address with a user name or a password, and an address of the app
   that names no page.
+- An image of the Markdown preview shows its alt text, and no picture
+  loads. At a web address, the alt text is a link to that address, with
+  the rules of a link of the Markdown preview (Markdown parser decision
+  10 B, 18 November 2026). Any other image shows its alt text only.
+- Reason: such an image then shows as in an agent message, as
+  [Chat links](chat-links.md#bare-addresses-and-markdown-links) says. The
+  alt text without a link was not chosen for that reason. No picture
+  loads, because a picture at a web address makes the browser of each
+  reader call a server that the file chose.
 - The header of a file tab can copy and download the file.
 - Reading a file has a size limit of 5 MiB, or 5,242,880 bytes.
   Reason: Boat's file read stops at 5 MiB, so a file read that falls back
