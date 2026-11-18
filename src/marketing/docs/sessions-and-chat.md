@@ -197,6 +197,12 @@ A turn with **Fast** on can still run at standard speed, for example when the ag
 The turn then continues, and its end shows **Standard speed** with the cause.
 **Fast** stays on, so later turns run fast when the cause ends.
 
+A newly added Codex model can need newer cloud computer software.
+Until the cloud computer updates, an OpenAI API key or an own endpoint can run that model at a lower effort and without **Fast**.
+The chat shows no note for this.
+The cloud computer updates on its own within minutes of being idle.
+A ChatGPT sign-in is not affected.
+
 The message box offers **Connect** when neither the session's login nor your personal or org login can serve the chosen agent.
 Connect a personal login in **Account**, or ask an admin to connect an org login.
 
