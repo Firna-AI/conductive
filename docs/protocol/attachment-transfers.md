@@ -13,7 +13,9 @@ those of the [architecture doc](../architecture.md#terms). A decision
 number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. A
 large-upload decision number, such as large-upload decision 1, names a
-decision of the change that lets a message carry files of up to 1 GB. The
+decision of the change that lets a message carry files of up to 1 GB. A
+transfer-retry decision number names a decision of the change that tries a
+transfer or a check again when the provider gives no answer. The
 [mockup catalogue](../mockups/catalogue.md) draws a file that is no longer
 in the cloud computer at `app/attachments/missing`.
 
@@ -73,6 +75,25 @@ in the cloud computer at `app/attachments/missing`.
 - A turn cannot start when a file of its message cannot reach the cloud
   computer. That turn fails and names the cause. Its Try again transfers
   again each file that the cloud computer did not get.
+- When the provider of the cloud computer gives no answer to a step of a
+  transfer or of a check, the Worker runs that transfer or check once more
+  (transfer-retry decision 2). No answer is a request that times out, or
+  an answer with a server error. A new transfer uses a new one-use token.
+- Reason: a slow provider can answer a few seconds too late, and one more
+  try then delivers the file with no Try again. A turn that fails at once
+  was not chosen. More tries were not chosen, because each try can wait
+  for the time limit of the provider requests.
+- After two such tries, the turn fails with the cause "The cloud computer
+  did not answer, so the attached files did not arrive. Try again."
+  (transfer-retry decision 2). Each other failure of a transfer or a check
+  gives the cause "The attached files could not reach the cloud computer.
+  Try again." Both use the error code `attachment_copy_failed`.
+- Reason: the member then knows that the cloud computer was slow, not
+  that the file is wrong. A new error code was not chosen, because the app
+  and the stored turns already know this code.
+- A late answer can let the first try of a transfer still run in the cloud
+  computer. Its one-use token still works, and two downloads of one file
+  never mix their bytes at its copy path.
 - A transfer or a check that fails for a message that joins a running turn
   fails that turn in the same way. The workspace also stops the agent of
   that turn, as [The agent runner](agent-runner.md#the-agent-runner) says.

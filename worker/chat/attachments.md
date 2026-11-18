@@ -127,7 +127,15 @@ It removes its temporary file on failure and prints no output.
 The token appears only in the Authorization header of the download.
 `SandboxProvider.startCommand` starts it, and `getCommandStatus` polls it to completion.
 [attachment-download-process.ts](attachment-download-process.ts) waits 100, 200, 400, and 800 ms between the first status checks, then 1 second, so a small file does not wait a full second after its curl exits.
-A failed command gives `attachment_copy_failed` through the normal failed-turn path.
+[attachment-transfer-failure.ts](attachment-transfer-failure.ts) defines `AttachmentTransferFailed`, an `attachment_copy_failed` HTTP error that keeps the failed step and its cause.
+The steps are `check`, `start`, `status`, and `command`.
+A failed start or status request, or a command that exits without success, gives this error through the normal failed-turn path.
+A provider error of the kind `unavailable` marks the error as unanswered: the request timed out, or the provider answered with a server error.
+`retryUnanswered` runs a check or a download once more after an unanswered error, and logs `attachment_transfer_retried`.
+A download run creates its token inside the retried work, so the second run uses a new token.
+The first command can still run late with its own token, as after a restart.
+An unanswered error gives the text "The cloud computer did not answer, so the attached files did not arrive. Try again."
+Each other copy failure gives "The attached files could not reach the cloud computer. Try again."
 The helper checks the sandbox and provider account before and after the transfer.
 After a successful download, [attachment-transfer-data.ts](attachment-transfer-data.ts) records `transferred_sandbox_id` before the message proof.
 This update keeps the claim revision and the `claimed` state.
@@ -170,7 +178,8 @@ A new computer or message gets a new preparation key and joins or starts its fil
 A failed proof save closes the runner connection and clears the owner.
 Redelivery reads any proof that committed before the failure.
 
-A failed copy clears its owner in the chat queue.
+A failed copy first logs `attachment_copy_failed` with the step and the error summary of its cause, or with no step for another error.
+It then clears its owner in the chat queue.
 `AttachmentPreparation.currentCommand` then finds the current command of the message.
 That is the first pending `turn` or `message` command of the message that the newest connection of the owner can still send.
 The failure ends the turn of that command, queued or running, through the existing failed-turn path.
@@ -196,7 +205,7 @@ The current connection and computer then get their own owner.
 It uses the absolute copy path and compares the byte size with the stored upload size.
 It accepts a same-size edit without reading R2 or starting another download.
 A directory, a changed size, or a provider 404 makes the file missing.
-Other provider failures give `attachment_copy_failed`.
+Other provider failures give `attachment_copy_failed` with the step `check`, after one more check when the provider gave no answer.
 The message owner checks every transferred file and collects missing names in message order.
 [attachment-missing.ts](attachment-missing.ts) builds the singular or plural `attachment_missing` cause.
 The failed-turn path saves that cause in both the turn and its event.
@@ -259,6 +268,8 @@ Shell tests execute the generated command with a fake curl boundary to check byt
 The copy owner tests use that fake transfer to count the writers of each computer and path, and the writes after delivery.
 The later-message test keeps a same-size edit and checks metadata without another transfer or R2 read.
 The missing-file tests cover ordered names, changed sizes, a replacement sandbox, provider outages, and Try again after restoration.
+The retry tests let the fake provider run a download but answer its start with a server error, as with a late answer.
+They check the second download with a new token, and the failed turn after two unanswered starts.
 The retention and cleanup tests cover proof order, failed first starts, retryable byte deletion, and purge after byte deletion.
 The legacy-path tests store an old absolute or message-derived relative path with a proof, and check that the turn fails.
 The fixture never sends a request to a real provider.

@@ -1,5 +1,6 @@
 import { D1_ERROR_REASONS } from './d1-errors'
 import {
+  ATTACHMENT_STEPS,
   RUNNER_MESSAGE_STAGES,
   SIMPLE_WARNINGS,
   type RunnerWarningFields,
@@ -108,6 +109,18 @@ function warningFields(warning: WorkerWarning) {
         kind: warning.kind,
         message: 'A workspace could not admit its first message.',
         workspaceId: warning.workspaceId.text,
+        error: errorFields(warning.error),
+      }
+    case 'attachment_transfer_retried':
+    case 'attachment_copy_failed':
+      return {
+        kind: warning.kind,
+        message:
+          warning.kind === 'attachment_transfer_retried'
+            ? 'The provider did not answer a file transfer step. The transfer runs once more.'
+            : 'The files of a message did not reach the cloud computer.',
+        workspaceId: warning.workspaceId.text,
+        step: ATTACHMENT_STEPS.find((step) => step === warning.step) ?? null,
         error: errorFields(warning.error),
       }
     case 'automation_report_failed':

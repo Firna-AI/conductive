@@ -97,6 +97,9 @@ const HTTP_CODES = [
   'current_turn_required',
   'github_reconnect_required',
   'github_refresh_failed',
+  'attachment_copy_failed',
+  'attachment_missing',
+  'attachment_not_found',
 ] as const
 
 export type WarningCode = (typeof HTTP_CODES)[number] | 'unknown'
