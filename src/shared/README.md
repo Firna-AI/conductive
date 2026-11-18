@@ -174,7 +174,8 @@ It keeps the answer contexts in one encrypted state of the workspace, which each
 It saves both before it confirms the corresponding raw event.
 
 `secret-text.ts` holds the exact-copy scanner of that filter. The Worker's
-filter of private tool-detail parts uses it too.
+tool-detail filter uses it for the target of a tool. The text of a private
+tool-detail source has its own [scanner](../../worker/chat/tool-detail-scan.ts).
 
 `event-limits.ts` applies the same chat excerpt caps after either filter.
 Its UTF-8 byte count works in the Worker and Node.

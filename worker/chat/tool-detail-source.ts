@@ -1,4 +1,3 @@
-import { scanSecretText } from '../../src/shared/secret-text'
 import type { AppEnv } from '../env'
 import { decrypt, encrypt } from '../security/crypto'
 import { counter } from './inputs'
@@ -16,24 +15,6 @@ export function* toolTextBlocks(text: string) {
     yield text.slice(start, end)
     start = end
   }
-}
-
-/** The raw held end is bounded by active matching values, never by source length. */
-export async function* scanToolText(
-  blocks: AsyncIterable<string> | Iterable<string>,
-  values: readonly string[],
-  state: { held: string },
-  final: boolean,
-) {
-  const scan = (text: string, complete: boolean) => {
-    let output = ''
-    state.held = scanSecretText(state.held + text, complete, values, (text) => {
-      output += text
-    })
-    return output
-  }
-  for await (const block of blocks) yield* toolTextBlocks(scan(block, false))
-  yield* toolTextBlocks(scan('', final))
 }
 
 function context(

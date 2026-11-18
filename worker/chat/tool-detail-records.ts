@@ -4,8 +4,9 @@ import { decrypt, encrypt } from '../security/crypto'
 import { parseAgentEvent } from './agent-events'
 import { counter, number, record, string } from './inputs'
 import type { ChatTransaction } from './store'
+import { readHeldMatches, type ToolHeldState } from './tool-detail-held'
 
-export interface ToolDetailState {
+export interface ToolDetailState extends ToolHeldState {
   sessionId: string
   turnId: string
   tool: ToolCall
@@ -14,7 +15,7 @@ export interface ToolDetailState {
   partNumber: number
   sourceGeneration: number
   sourceChunks: number
-  held: string
+  matchSalt?: string
 }
 
 export type ToolDetailOwner = Pick<ChatTransaction, 'output' | 'workspaceId'>
@@ -52,6 +53,9 @@ export async function readToolDetail(
     sourceGeneration: counter(input.sourceGeneration),
     sourceChunks: counter(input.sourceChunks),
     held: string(input.held),
+    heldMatches: readHeldMatches(input.heldMatches),
+    matchSalt:
+      input.matchSalt === undefined ? undefined : string(input.matchSalt),
   }
 }
 

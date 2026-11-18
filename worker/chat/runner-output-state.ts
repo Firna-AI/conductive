@@ -42,8 +42,18 @@ export class RunnerOutputState {
     return this.streamsAt(TOOL_PREFIX)
   }
 
-  maskTools(env: AppEnv, workspaceId: string, active: ReadonlySet<string>) {
-    return maskOpenToolDetails(env, { output: this, workspaceId }, active)
+  maskTools(
+    env: AppEnv,
+    workspaceId: string,
+    before: ReadonlySet<string>,
+    after: ReadonlySet<string>,
+  ) {
+    return maskOpenToolDetails(
+      env,
+      { output: this, workspaceId },
+      before,
+      after,
+    )
   }
 
   private async streamsAt(prefix: string): Promise<string[]> {

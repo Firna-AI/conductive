@@ -4,6 +4,7 @@ import { TOOL_DETAIL_MAX_BYTES } from '../../src/shared/chat-events'
 import { jsonBytes } from '../../src/shared/event-limits'
 import { filterSecretText } from '../../src/shared/secret-text'
 import type { AppEnv } from '../env'
+import { randomToken } from '../security/crypto'
 import { counter, invalidInput } from './inputs'
 import type { FilteredRunnerOutput } from './runner-output'
 import type { ChatTransaction } from './store'
@@ -15,9 +16,11 @@ import {
 import {
   appendToolDetailSource,
   readToolDetailSource,
-  scanToolText,
   toolTextBlocks,
 } from './tool-detail-source'
+import { heldBuffer } from './tool-detail-held'
+import { toolCandidates } from './tool-detail-identity'
+import { scanToolText } from './tool-detail-scan'
 
 const encoder = new TextEncoder()
 
@@ -47,6 +50,7 @@ export async function filterToolDetail(
       sourceGeneration: 0,
       sourceChunks: 0,
       held: '',
+      matchSalt: randomToken(),
     }
   } else {
     const saved = await readToolDetail(env, transaction, input.streamId)
@@ -58,10 +62,18 @@ export async function filterToolDetail(
     state.partNumber + 1 !== part.partNumber
   )
     return invalidInput()
+  state.matchSalt ??= randomToken()
+  const candidates = await toolCandidates(
+    env,
+    transaction.workspaceId,
+    input.streamId,
+    state.matchSalt,
+    values,
+  )
   const arrival = () =>
     scanToolText(
       toolTextBlocks(part.detail.replace(/[\uD800-\uDFFF]/gu, '\uFFFD')),
-      values,
+      candidates,
       state,
       false,
     )
@@ -72,12 +84,12 @@ export async function filterToolDetail(
   if (part.finalPart) {
     const complete = async function* () {
       yield* readToolDetailSource(env, transaction, input.streamId, state)
-      yield* toolTextBlocks(state.held)
+      yield heldBuffer(state)
       yield* toolTextBlocks(part.detail.replace(/[\uD800-\uDFFF]/gu, '\uFFFD'))
     }
     for await (const text of scanToolText(
       complete(),
-      values,
+      candidates,
       { held: '' },
       true,
     )) {

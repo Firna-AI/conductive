@@ -90,32 +90,26 @@ export async function reconcileSecretRequests(
     await operation.change(async (view) => {
       const workspace = { id: workspaceId, orgId: state.orgId }
       const running = await runningOutputSecrets(runtime.env, workspace)
-      await view.output.maskTools(
-        runtime.env,
-        workspaceId,
-        new Set([
-          ...running,
-          ...(await storedAgentOutputSecrets(
-            runtime.env,
-            view.secrets,
-            workspace,
-          )),
-        ]),
-      )
+      const before = new Set([
+        ...running,
+        ...(await storedAgentOutputSecrets(
+          runtime.env,
+          view.secrets,
+          workspace,
+        )),
+      ])
       await view.secrets.expire(runtime.now(), state.archivedAt !== null)
-      await pruneSavedOutputSecrets(
-        runtime.env,
-        view,
-        new Set([
-          ...running,
-          ...(await agentOutputSecrets(
-            runtime.env,
-            view.secrets,
-            { id: workspaceId, orgId: state.orgId },
-            runtime.now(),
-          )),
-        ]),
-      )
+      const after = new Set([
+        ...running,
+        ...(await agentOutputSecrets(
+          runtime.env,
+          view.secrets,
+          { id: workspaceId, orgId: state.orgId },
+          runtime.now(),
+        )),
+      ])
+      await view.output.maskTools(runtime.env, workspaceId, before, after)
+      await pruneSavedOutputSecrets(runtime.env, view, after)
     })
   return notices
 }

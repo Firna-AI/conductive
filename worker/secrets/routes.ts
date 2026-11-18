@@ -100,32 +100,26 @@ export async function fetchSecretRequests(
           runtime.env,
           access.workspace,
         )
-        await view.output.maskTools(
-          runtime.env,
-          workspaceId,
-          new Set([
-            ...running,
-            ...(await storedAgentOutputSecrets(
-              runtime.env,
-              view.secrets,
-              access.workspace,
-            )),
-          ]),
-        )
+        const before = new Set([
+          ...running,
+          ...(await storedAgentOutputSecrets(
+            runtime.env,
+            view.secrets,
+            access.workspace,
+          )),
+        ])
         await view.secrets.removeValue(decodeId(value[1]))
-        await pruneSavedOutputSecrets(
-          runtime.env,
-          view,
-          new Set([
-            ...running,
-            ...(await agentOutputSecrets(
-              runtime.env,
-              view.secrets,
-              access.workspace,
-              runtime.now(),
-            )),
-          ]),
-        )
+        const after = new Set([
+          ...running,
+          ...(await agentOutputSecrets(
+            runtime.env,
+            view.secrets,
+            access.workspace,
+            runtime.now(),
+          )),
+        ])
+        await view.output.maskTools(runtime.env, workspaceId, before, after)
+        await pruneSavedOutputSecrets(runtime.env, view, after)
       })
       return privateResponse(new Response(null, { status: 204 }))
     }

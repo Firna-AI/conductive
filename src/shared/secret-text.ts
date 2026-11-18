@@ -1,7 +1,7 @@
 const REDACTION_MARKER = '[redacted]'
 
 /** Stream exact-copy masking without retaining the filtered source. */
-export function scanSecretText(
+function scanSecretText(
   text: string,
   final: boolean,
   values: readonly string[],

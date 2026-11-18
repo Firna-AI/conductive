@@ -98,8 +98,8 @@ it('rolls back source masking and secret removal together, then retries across r
   )
   expect(stagedCleanup).toMatchObject({
     ...f.context,
-    text: 'ordinary [redacted]|[redacted]|',
-    held: 'ephemeral-',
+    text: 'ordinary [redacted]|[redacted]|ephemeral-',
+    held: '',
     cursor: 3,
     tool: { target: '[redacted]' },
   })
