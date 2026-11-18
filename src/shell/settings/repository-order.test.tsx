@@ -17,6 +17,7 @@ import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { repositoryFixtures } from '../../test-support/fixtures/repositories'
 import { MOUNTED_TEST_TIMEOUT } from '../../test-support/mount'
+import { mouse } from '../layout/rail-test-kit'
 import { click, mountScreen, press, settle } from '../test-mount'
 import { startedApp } from '../test-render'
 import { OrgSettingsScreen } from './OrgSettingsScreen'
@@ -68,9 +69,13 @@ async function moves(server: FakeApiServer) {
   )
 }
 
-/** The list that the server answers after a move to `index`. */
+/** The saved order that the server answers after a move to `index`. */
 function answer(repositoryId: string, index: number) {
-  return { repositories: repositoryMoved(repositories, repositoryId, index) }
+  return {
+    order: repositoryMoved(repositories, repositoryId, index)
+      .filter((item) => item.selected)
+      .map((item) => item.id),
+  }
 }
 
 describe('repositoryMoved', () => {
@@ -210,6 +215,52 @@ describe('the repository order of the Repositories tab', () => {
         'acme/marketing-site',
       ],
       more: null,
+    })
+  })
+
+  test('a drag of a row by the mouse moves it, says its place during the drag, and says its new place after the drop', async () => {
+    const server = new FakeApiServer()
+    server.json(
+      'PUT',
+      repositoryPositionPath(org, 'marketing-site'),
+      answer('marketing-site', 0),
+    )
+    const view = await repositoriesTab(server)
+    const list = byRole('list', 'Repositories', view)
+    const items = Array.from(list.querySelectorAll('li'))
+    items.forEach((item, index) => {
+      const box = new DOMRect(0, index * 44, 600, 44)
+      Object.defineProperty(item, 'getBoundingClientRect', {
+        configurable: true,
+        value: () => box,
+      })
+    })
+    const last = items[2]
+    mouse(last, 'pointerdown', { clientY: 110 })
+    mouse(window, 'pointermove', { clientY: 100 })
+    mouse(window, 'pointermove', { clientY: 5 })
+    const during = status(view)
+    mouse(window, 'pointerup', { clientY: 5, buttons: 0 })
+    await settle()
+    expect({
+      during,
+      after: rows(view),
+      status: status(view),
+      moves: await moves(server),
+    }).toEqual({
+      during: 'Moving acme/marketing-site to place 1 of 3',
+      after: [
+        'acme/marketing-site Default',
+        'acme/storefront',
+        'acme/billing-service',
+      ],
+      status: 'acme/marketing-site moves to place 1 of 3',
+      moves: [
+        {
+          path: repositoryPositionPath(org, 'marketing-site'),
+          body: { index: 0 },
+        },
+      ],
     })
   })
 })

@@ -1,4 +1,4 @@
-import { useEffect, type KeyboardEvent } from 'react'
+import type { KeyboardEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { useToast } from '@firna/ui/toast'
 import { FolderGit2, GripVertical, MoreHorizontal } from 'lucide-react'
@@ -17,8 +17,8 @@ import type { Repository } from '../../shared/org-settings'
 import { SectionText } from '../../../docs/mockups/src/components/settings/Section'
 import { IconButton } from '../ui/actions'
 import { MenuButton, type MenuEntry } from '../ui/Menu'
-import { useListDrag, type ListDrag } from '../ui/useListDrag'
-import { useListMoves } from '../ui/useListMoves'
+import type { ListDrag } from '../ui/useListDrag'
+import { useListOrder } from '../ui/useListOrder'
 
 /** A chosen repository as the order moves it: its ID and its spoken name. */
 interface Movable {
@@ -116,13 +116,7 @@ export function RepositoryOrder(props: {
       }),
     )
   }
-  const moves = useListMoves({ items, move })
-  const drag = useListDrag(items, move)
-  const dragging = drag.dragged !== null
-  const { forget } = moves
-  useEffect(() => {
-    if (dragging) forget()
-  }, [dragging, forget])
+  const { drag, moves, status } = useListOrder({ items, move })
   if (items.length === 0) {
     return <SectionText muted>Select Edit to add a repository.</SectionText>
   }
@@ -155,7 +149,7 @@ export function RepositoryOrder(props: {
       </ul>
       <LiftedRow drag={drag} />
       <span className={a11y.hidden} role="status">
-        {drag.status || moves.status}
+        {status}
       </span>
     </div>
   )
