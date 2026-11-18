@@ -67,7 +67,7 @@ function Row(props: {
           <IconButton
             expanded={props.menu === 'open'}
             icon={MoreHorizontal}
-            label={`Actions for ${repository.name}`}
+            label={`More for ${repository.name}`}
             menu
             quiet
           />
