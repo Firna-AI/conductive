@@ -10,6 +10,8 @@ import type { MessageList } from '../../fixtures/listConversations'
 import type { MessageQuote } from '../../fixtures/proseBlocks'
 import { classes } from '../common/classes'
 import prose from '../common/MarkdownProse.module.css'
+import { taskText } from '../common/markdownTasks'
+import { TaskBox } from '../common/TaskBox'
 import markdown from '../files/MarkdownView.module.css'
 import { AgentBlocks } from './AgentBlocks'
 import { answerNodes } from './answerNodes'
@@ -51,23 +53,32 @@ function TableText(props: { table: MessageTable }) {
 /**
  * A list of a message line, with the lists under its items. Each item of a
  * numbered list writes its number, because a browser numbers a list item
- * of spans by the items of the list of the fold.
+ * of spans by the items of the list of the fold. A task item shows its
+ * fixed check box: closed, before its text, and open, in the place of its
+ * bullet (item 14 B).
  */
 function LineList(props: { list: MessageList }) {
   const { list } = props
   return (
     <span className={classes(styles.bullets, list.numbered && styles.numbered)}>
-      {list.items.map((item, index) => (
-        <span className={styles.bullet} key={index}>
-          {list.numbered ? (
-            <>
-              <span className={styles.number}>{index + 1}.</span>{' '}
-            </>
-          ) : null}
-          <AnswerText line text={item.text} />{' '}
-          {item.list ? <LineList list={item.list} /> : null}
-        </span>
-      ))}
+      {list.items.map((item, index) => {
+        const { text, checked } = taskText(item.text)
+        return (
+          <span
+            className={classes(styles.bullet, checked !== null && line.task)}
+            key={index}
+          >
+            {list.numbered ? (
+              <>
+                <span className={styles.number}>{index + 1}.</span>{' '}
+              </>
+            ) : null}
+            {checked === null ? null : <TaskBox checked={checked} />}
+            <AnswerText line text={text} />{' '}
+            {item.list ? <LineList list={item.list} /> : null}
+          </span>
+        )
+      })}
     </span>
   )
 }

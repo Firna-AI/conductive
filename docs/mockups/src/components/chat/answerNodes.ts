@@ -139,13 +139,14 @@ function withText(nodes: readonly AnswerNode[]): AnswerNode[] {
  * marks, the mentions. So `**` around code, a chip, or a link makes it
  * bold, and an unpaired `**` shows as typed (design call 7). A path keeps
  * its `_`, and a mention inside marks ends before the closing mark (design
- * call 11).
+ * call 11). `live` reads text that the agent still writes: a mark that can
+ * only open closes at its end, so `**Next:` shows bold (item 9 C).
  */
-export function answerNodes(text: string): AnswerNode[] {
+export function answerNodes(text: string, live = false): AnswerNode[] {
   const items = text
     .split('`')
     .flatMap((part, index) =>
       index % 2 === 1 ? [codeItem(part)] : fileLinkItems(part),
     )
-  return withText(markNodes(keptBreaks(items)))
+  return withText(markNodes(keptBreaks(items), live))
 }

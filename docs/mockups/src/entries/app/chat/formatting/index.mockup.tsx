@@ -10,9 +10,9 @@ const relatedDocs = ['docs/protocol/chat-markdown.md']
 export const chatFormatting = defineScreen({
   title: 'Quotes, rules, and emphasis in replies',
   description:
-    'Cal asked what Priya asked for in her review of #482. The agent quotes each of her two comments, with a rule between the two parts of its answer. A quote has a thin line at its left and muted text, and the rule is a thin line across the reply, as in the Markdown preview of a file. The word "stops" shows in italics, and the option that Priya turned down shows with a line through it. The address of her test shows on two lines, where the agent wrote a line-break tag. The bold label "Next:" keeps its weight. The variants show the work of a turn, the answer while the agent writes it, marks without a pair, and pictures.',
+    'Cal asked what Priya asked for in her review of #482. The agent quotes each of her two comments, with a rule between the two parts of its answer. A quote has a thin line at its left and muted text, and the rule is a thin line across the reply, as in the Markdown preview of a file. The word "stops" shows in italics, and the option that Priya turned down shows with a line through it. The address of her test shows on two lines, where the agent wrote a line-break tag. The bold label "Next:" has weight 700, as bold text has in the file preview, and keeps the colour of the text around it. The variants show the work of a turn, the answer while the agent writes it, marks without a pair, and pictures.',
   rationale:
-    'The user chose D of item 8 of the Markdown plan on 17 November 2026: the chat draws each Markdown part as the file preview draws it, with one shared style for quotes, rules, emphasis, and strikethrough. Before, the chat showed the > and * marks that agents write. On 16 November 2026, the user chose C of item 3, one markdown-it parser for the chat and the file preview, and with it item 1: <br>, <br/>, and <br />, in any letter case, draw a line break. Other HTML stays text, so no HTML of an agent reaches the page.',
+    'The user chose D of item 8 of the Markdown plan on 17 November 2026: the chat draws each Markdown part as the file preview draws it, with one shared style for quotes, rules, emphasis, and strikethrough. Before, the chat showed the > and * marks that agents write. On 18 November 2026, the user chose C of item 11: bold text joins the shared style with weight 700 in both views. Before, bold text had the weight of the browser in the chat, and weight 600 in the file preview. On 16 November 2026, the user chose C of item 3, one markdown-it parser for the chat and the file preview, and with it item 1: <br>, <br/>, and <br />, in any letter case, draw a line break. Other HTML stays text, so no HTML of an agent reaches the page.',
   relatedDocs,
   propSchema: workspaceStateSchema,
   props: { ...readyWorkspace, conversation: 'formatting' },
@@ -33,9 +33,9 @@ export const chatFormatting = defineScreen({
       slug: 'writing',
       title: 'While the agent writes',
       description:
-        'The agent writes the same answer. The bold label at its end has its first ** and not its closing **, so it shows as the agent typed it, with its stars, while the agent works. The next update with the closing ** shows the label in bold, as the first screen of this page does.',
+        'The agent writes the same answer. The bold label at its end has its first ** and not its closing ** yet. The open mark closes at the end of the text, so "Next:" shows in bold at once, without its stars, as in the finished answer on the first screen of this page.',
       rationale:
-        'The chat reads bold text as CommonMark does, so a ** without a pair shows as typed (design call 7 of the Markdown plan). Before, a ** without a pair made the rest of the text bold. Each update shows the text so far as a finished answer with the same text shows it.',
+        'The user chose C of item 9 of the Markdown plan on 18 November 2026: while the agent writes, a mark that opens at the end of the text closes there, so its words show bold, in italics, or with a line through them at once. Not chosen: A, the mark shows as typed until its pair arrives. B, hide the mark. A finished message still shows a mark without a pair as typed, as the as-typed page shows, because CommonMark pairs only marks that can open and close (design call 7). A mark that could also close, such as the ** of a file pattern, stays text while the agent writes too, so the rest of the text never turns bold.',
       props: { conversation: 'formatting-writing' },
     },
     {

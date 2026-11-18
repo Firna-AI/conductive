@@ -58,7 +58,8 @@ const commentsAnswer: readonly AgentBlock[] = [
 
 /**
  * The same answer while the agent writes it. The bold label at its end has
- * its first `**`, and its closing `**` has not arrived.
+ * its first `**`, and its closing `**` has not arrived. The open mark
+ * closes at the end of the text, so the label shows bold at once.
  */
 const writingAnswer: readonly AgentBlock[] = [
   ...commentsAnswer.slice(0, -1),
@@ -98,7 +99,12 @@ export const formattingConversations = {
   ],
   'formatting-writing': [
     ...commentsAsk,
-    { kind: 'agent', id: 'comments-answer', blocks: writingAnswer },
+    {
+      kind: 'agent',
+      id: 'comments-answer',
+      blocks: writingAnswer,
+      live: true,
+    },
     { kind: 'working', id: 'working', elapsed: '19s' },
   ],
   'formatting-in-work': formattingInWork,

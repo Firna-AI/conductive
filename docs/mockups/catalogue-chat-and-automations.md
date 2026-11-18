@@ -25,10 +25,16 @@ separator row arrives and after its table appears. Its saved states
 kept their paths, so the page shows only its canonical screen. The new
 child page `app/chat/tables/line-break` compares the two address providers
 in a table whose cells hold two lines, where the agent wrote `<br>`,
-`<br/>`, or `<br />`, from item 1 of the Markdown plan. `app/chat/lists` draws a reply with a numbered
+`<br/>`, or `<br />`, from item 1 of the Markdown plan. Each cell stands
+at the top of its row, from item 12 B of 18 November 2026. `app/chat/lists` draws a reply with a numbered
 list of choices, each with its options in a list under its text, as the
 user chose on 10 November 2026, and an open message line in the work of a
-turn with a plan whose steps sit under each item. `app/chat/headings`
+turn with a plan whose steps sit under each item. Its `tasks` variant draws
+a reply with a task list, whose fixed check boxes take the place of the
+bullets, from item 14 B of the Markdown plan of 18 November 2026. Its
+`tasks-work` variant draws the work of the same turn: two closed message
+lines with the boxes before the words of their tasks, and an open message
+line with the boxes in the place of the bullets. `app/chat/headings`
 draws headings in a reply, as the user chose on 11 November 2026: a review
 with a title at level 1, the section Needs your answer at level 2, a
 heading at level 3 for each choice with its bold fields under it, and a
@@ -50,7 +56,9 @@ Its variants:
   cell as a space. Its open message line shows a quote and a rule as
   blocks, and a line break as a new line.
 - `writing` has the same answer while the agent writes it: the bold label
-  at its end has no closing `**` yet, so it shows as typed.
+  at its end has no closing `**` yet, and the open mark closes at the end
+  of the text, so the label shows bold at once, from item 9 C of
+  18 November 2026.
 - `as-typed` has marks without a pair, which show as typed, and `<kbd>`
   tags, which show as text.
 - `pictures` has a picture at a web address, which shows its alt text as

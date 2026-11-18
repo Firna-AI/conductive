@@ -1,7 +1,10 @@
 import type { AgentBlock } from '../../fixtures/conversations'
 import type { MessageHeading } from '../../fixtures/headingConversations'
 import type { MessageList } from '../../fixtures/listConversations'
+import prose from '../common/MarkdownProse.module.css'
 import { MarkdownTable } from '../common/MarkdownTable'
+import { taskText } from '../common/markdownTasks'
+import { TaskBox } from '../common/TaskBox'
 import { answerNodes } from './answerNodes'
 import { AnswerNodes, AnswerText } from './AnswerText'
 import { CodeBlock } from './CodeBlock'
@@ -30,23 +33,32 @@ function HeadingView(props: { heading: MessageHeading }) {
 /**
  * A list with the lists under its items. An item with a list keeps its own
  * text in a paragraph, and the list follows it inside the item, as the app
- * draws a Markdown list that the agent indents under an item.
+ * draws a Markdown list that the agent indents under an item. A task item
+ * shows its fixed check box in the place of its bullet (item 14 B).
  */
 function ListView(props: { list: MessageList }) {
-  const items = props.list.items.map((item, index) => (
-    <li key={index}>
-      {item.list ? (
-        <>
-          <p>
-            <AnswerText text={item.text} />
-          </p>
-          <ListView list={item.list} />
-        </>
-      ) : (
-        <AnswerText text={item.text} />
-      )}
-    </li>
-  ))
+  const items = props.list.items.map((item, index) => {
+    const { text, checked } = taskText(item.text)
+    const box = checked === null ? null : <TaskBox checked={checked} />
+    return (
+      <li className={checked === null ? undefined : prose.task} key={index}>
+        {item.list ? (
+          <>
+            <p>
+              {box}
+              <AnswerText text={text} />
+            </p>
+            <ListView list={item.list} />
+          </>
+        ) : (
+          <>
+            {box}
+            <AnswerText text={text} />
+          </>
+        )}
+      </li>
+    )
+  })
   return props.list.numbered ? <ol>{items}</ol> : <ul>{items}</ul>
 }
 
@@ -59,12 +71,18 @@ function ListView(props: { list: MessageList }) {
  * is a path of the tree, is a file chip. A code block stays code. A
  * paragraph of only line breaks draws nothing. A quote holds its own
  * blocks. The element around them sets the type and the space between
- * them, and its `prose` class gives quotes and rules their look.
+ * them, and its `prose` class gives quotes and rules their look. `live`
+ * marks a message that the agent still writes: a mark that opens in its
+ * last paragraph and has no pair yet closes at its end (item 9 C).
  */
-export function AgentBlocks(props: { blocks: readonly AgentBlock[] }) {
+export function AgentBlocks(props: {
+  blocks: readonly AgentBlock[]
+  live?: boolean
+}) {
+  const last = props.blocks.length - 1
   return props.blocks.map((block, index) => {
     if (typeof block === 'string') {
-      const nodes = answerNodes(block)
+      const nodes = answerNodes(block, props.live === true && index === last)
       if (nodes.length === 0) return null
       return (
         <p key={index}>

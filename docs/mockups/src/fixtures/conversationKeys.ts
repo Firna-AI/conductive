@@ -64,6 +64,7 @@ export const conversationKeys = [
   'tables-in-work',
   'nested-lists',
   'nested-lists-in-work',
+  'task-lists',
   'headings',
   'headings-in-work',
   'formatting',

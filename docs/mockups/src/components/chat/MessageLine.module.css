@@ -1,9 +1,9 @@
 /*
  * The parts of a message line that ToolGroup.module.css does not draw: a
- * quote, a rule, and a line break. `.message` marks the `<details>` of the
- * line, beside the `.message` of ToolGroup.module.css. A `<summary>` holds
- * no quote and no rule element, so the line draws them as spans with the
- * look of MarkdownProse.module.css.
+ * quote, a rule, a line break, and a task box. `.message` marks the
+ * `<details>` of the line, beside the `.message` of ToolGroup.module.css. A
+ * `<summary>` holds no quote and no rule element, so the line draws them as
+ * spans with the look of MarkdownProse.module.css.
  *
  * Closed, the line stays one line (design calls 3 and 13 of the Markdown
  * plan). A quote shows as its text, in the muted colour of a quote and
@@ -52,6 +52,27 @@
 
 .message[open] .rule:not(:last-child) {
   margin-bottom: 10px;
+}
+
+/*
+ * A task item of the line, with the fixed check box of the browser, from
+ * item 14 B of the Markdown plan. Closed, the box stands in the line before
+ * the text of its item. Open, it takes the place of the bullet, as in an
+ * answer. A press on the box opens or closes the line, as a press on the
+ * words of the line does. `span.task` outranks the bullet of an open item.
+ */
+.task > input {
+  margin: 0 4px 0 0;
+  vertical-align: -2px;
+  pointer-events: none;
+}
+
+.message[open] span.task {
+  list-style: none;
+}
+
+.message[open] .task > input {
+  margin: 0 6px 0 -18px;
 }
 
 /*

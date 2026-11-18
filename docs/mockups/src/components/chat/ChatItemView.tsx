@@ -89,7 +89,7 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
         <div
           className={classes(styles.agent, headingStyles.headings, prose.prose)}
         >
-          <AgentBlocks blocks={item.blocks} />
+          <AgentBlocks blocks={item.blocks} live={item.live} />
         </div>
       )
     case 'mac-command':

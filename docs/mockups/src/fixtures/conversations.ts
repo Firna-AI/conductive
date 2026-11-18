@@ -40,6 +40,7 @@ import type { LateAnswerItem, SecretRunItem } from './secretRequests'
 import { secretValueConversations } from './secretValueConversations'
 import { speedConversations } from './speedConversations'
 import { tableConversations } from './tableConversations'
+import { taskListConversations } from './taskListConversations'
 import { unavailableConversations } from './unavailableConversations'
 import { workConversations } from './workConversations'
 import { conversationKeys } from './conversationKeys'
@@ -88,6 +89,11 @@ export type ChatItem =
       id: string
       /** The blocks of the message, in order. */
       blocks: readonly AgentBlock[]
+      /**
+       * The agent still writes the message, so a mark that opens at the end
+       * of its text closes there (item 9 C of the Markdown plan).
+       */
+      live?: true
     }
   | {
       kind: 'tool'
@@ -247,6 +253,7 @@ export const conversations: Readonly<
   ...tableConversations,
   ...barConversations({ history, cutOff: cutOffTurn }),
   ...listConversations,
+  ...taskListConversations,
   ...headingConversations,
   ...formattingConversations,
   ...chatLinkConversations(history),

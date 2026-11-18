@@ -3,12 +3,28 @@ import { classes } from '../common/classes'
 import headingStyles from '../common/MarkdownHeadings.module.css'
 import prose from '../common/MarkdownProse.module.css'
 import { MarkdownTable } from '../common/MarkdownTable'
+import { taskText } from '../common/markdownTasks'
+import { TaskBox } from '../common/TaskBox'
 import { PreviewText } from './PreviewText'
 import styles from './MarkdownView.module.css'
 
 /** A cell of a table, with its inline code, its marks, and its breaks. */
 function fileCell(text: string) {
   return <PreviewText text={text} />
+}
+
+/**
+ * An item of a list. A task item shows its fixed check box in the place of
+ * its bullet, as the chat does (item 14 B).
+ */
+function listItem(item: string) {
+  const { text, checked } = taskText(item)
+  return (
+    <li className={checked === null ? undefined : prose.task} key={item}>
+      {checked === null ? null : <TaskBox checked={checked} />}
+      <PreviewText text={text} />
+    </li>
+  )
 }
 
 function Block(props: { block: MarkdownBlock }) {
@@ -36,15 +52,7 @@ function Block(props: { block: MarkdownBlock }) {
     case 'ol':
     case 'ul': {
       const List = block.kind
-      return (
-        <List>
-          {block.items.map((item) => (
-            <li key={item}>
-              <PreviewText text={item} />
-            </li>
-          ))}
-        </List>
-      )
+      return <List>{block.items.map(listItem)}</List>
     }
     case 'code':
       return <pre className={styles.block}>{block.text}</pre>
@@ -73,9 +81,9 @@ function Block(props: { block: MarkdownBlock }) {
 
 /**
  * A Markdown file, rendered as formatted text. The headings take the look
- * of MarkdownHeadings.module.css, and the quotes, the rules, the emphasis,
- * and the strikethrough the look of MarkdownProse.module.css, which the
- * replies of the chat share.
+ * of MarkdownHeadings.module.css, and the quotes, the rules, the bold text,
+ * the emphasis, the strikethrough, and the task boxes the look of
+ * MarkdownProse.module.css, which the replies of the chat share.
  */
 export function MarkdownView(props: { blocks: readonly MarkdownBlock[] }) {
   return (

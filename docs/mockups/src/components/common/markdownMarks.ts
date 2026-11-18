@@ -4,8 +4,11 @@
  * strikethrough. A mark pairs only where CommonMark
  * lets it open and close, so a mark without a pair, such as the `**` of
  * `src/**`, shows as typed. Code, links, and chips are units that the marks
- * do not read into, as the parser reads them before the marks.
+ * do not read into, as the parser reads them before the marks. While the
+ * agent writes, a mark that can only open closes at the end of the text.
  */
+
+import { flanking } from './markFlanking'
 
 /** What a pair of marks makes of the text between them. */
 type Mark = 'strong' | 'emphasis' | 'strike'
@@ -44,27 +47,6 @@ type Run = {
 }
 
 const markRun = /\*+|_+|~+/g
-const whitespace = /\s/u
-const punctuation = /[\p{P}\p{S}]/u
-
-/**
- * Whether a run of `char` between `before` and `after` can open and close,
- * from the flanking rules of CommonMark. The start and the end of the text
- * count as spaces. `_` cannot open or close inside a word.
- */
-function flanking(char: string, before: string, after: string) {
-  const spaceBefore = before === '' || whitespace.test(before)
-  const spaceAfter = after === '' || whitespace.test(after)
-  const markBefore = punctuation.test(before)
-  const markAfter = punctuation.test(after)
-  const left = !spaceAfter && (!markAfter || spaceBefore || markBefore)
-  const right = !spaceBefore && (!markBefore || spaceAfter || markAfter)
-  if (char !== '_') return { open: left, close: right }
-  return {
-    open: left && (!right || markBefore),
-    close: right && (!left || markAfter),
-  }
-}
 
 function sourceOf<Unit>(item: MarkItem<Unit>): string {
   if (item.kind === 'text') return item.text
@@ -140,6 +122,19 @@ function openerOf(runs: readonly Run[], closer: Run): number {
   return -1
 }
 
+/** The mark that `use` characters of a run of `char` make. */
+function markOf(char: string, use: number): Mark {
+  return char === '~' ? 'strike' : use === 2 ? 'strong' : 'emphasis'
+}
+
+/** Takes `use` characters of each run, and keeps the rest as its text. */
+function take(runs: readonly Run[], use: number) {
+  for (const run of runs) {
+    run.left -= use
+    run.node.text = run.char.repeat(run.left + run.extra)
+  }
+}
+
 /** Puts the nodes between two runs inside a mark, and takes its marks. */
 function wrap<Unit>(
   nodes: MarkNode<Unit>[],
@@ -149,13 +144,27 @@ function wrap<Unit>(
 ) {
   const start = nodes.indexOf(opener.node)
   const end = nodes.indexOf(closer.node)
-  const mark: Mark =
-    closer.char === '~' ? 'strike' : use === 2 ? 'strong' : 'emphasis'
+  const mark = markOf(closer.char, use)
   const children = nodes.slice(start + 1, end)
   nodes.splice(start + 1, end - start - 1, { kind: 'mark', mark, children })
-  for (const run of [opener, closer]) {
-    run.left -= use
-    run.node.text = run.char.repeat(run.left + run.extra)
+  take([opener, closer], use)
+}
+
+/**
+ * Closes at the end of the text each run that can only open and has no
+ * pair, the last run first, so that an earlier run holds the later mark.
+ * This is the rule for text that the agent still writes (item 9 C of the
+ * Markdown plan). A run that can also close, such as the `**` of
+ * `tests/**`, stays text, as it does in a finished message.
+ */
+function closeAtEnd<Unit>(nodes: MarkNode<Unit>[], runs: readonly Run[]) {
+  for (const run of runs.toReversed()) {
+    while (run.open && !run.close && run.left > 0) {
+      const use = run.char === '~' || run.left > 1 ? 2 : 1
+      const children = nodes.splice(nodes.indexOf(run.node) + 1)
+      nodes.push({ kind: 'mark', mark: markOf(run.char, use), children })
+      take([run], use)
+    }
   }
 }
 
@@ -177,10 +186,13 @@ function tidy<Unit>(nodes: readonly MarkNode<Unit>[]): MarkNode<Unit>[] {
  * The items as nodes, with the marks paired as CommonMark pairs them: each
  * closing run, from the first, takes the nearest run before it that can
  * open it. Two marks of each run make bold text and one makes emphasis,
- * and `~~` makes strikethrough. The runs between a pair stay text.
+ * and `~~` makes strikethrough. The runs between a pair stay text. `live`
+ * reads text that the agent still writes, whose open marks close at its
+ * end.
  */
 export function markNodes<Unit>(
   items: readonly MarkItem<Unit>[],
+  live = false,
 ): MarkNode<Unit>[] {
   const { nodes, runs } = scan(items)
   let index = 0
@@ -197,5 +209,6 @@ export function markNodes<Unit>(
     runs.splice(at + 1, index - at - 1)
     index = at + 1
   }
+  if (live) closeAtEnd(nodes, runs)
   return tidy(nodes)
 }

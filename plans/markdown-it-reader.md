@@ -430,18 +430,45 @@ Tags: mockup
 
 Depends on: 6
 
-- [ ] Item 9 C: `app/chat/formatting/writing` shows an open mark closed at
-      the end of live text, so `**Next:` shows bold.
-- [ ] Item 11 C: bold text has weight 700 in the shared style module, in
-      the chat and in the file preview mockups.
-- [ ] Item 12 B: each cell of `MarkdownTable` stands at the top of its row.
-- [ ] Item 14 B: a chat state with a task list, unchecked and checked, in
-      an answer and in a closed and an open message line.
-- [ ] Item 10 B: the README of the file preview mockup holds a web image
+- [x] Item 9 C: `app/chat/formatting/writing` shows an open mark closed at
+      the end of live text, so `**Next:` shows bold. My call, 18 November
+      2026: only a mark that can open and cannot close closes there. So
+      the `**` of a file pattern, such as `tests/**/*.test.ts`, stays text
+      while the agent writes, as in a finished message. A fixture marks a
+      message that the agent still writes with `live`.
+- [x] Item 11 C: bold text has weight 700 in the shared style module, in
+      the chat and in the file preview mockups. My call, 18 November 2026:
+      bold text keeps the colour of the text around it, as emphasis and
+      strikethrough do. The ink colour of the file preview stood out from
+      its text, but not from the text of a reply, so it gave two looks.
+- [x] Item 12 B: each cell of `MarkdownTable` stands at the top of its row.
+- [x] Item 14 B: a chat state with a task list, unchecked and checked, in
+      an answer and in a closed and an open message line. The states are
+      `app/chat/lists/tasks` and `app/chat/lists/tasks-work`, because
+      `app/chat/formatting` already shows five screens. The file preview
+      mockup drew no task box, so README.md of `app/files/markdown` now
+      has a task list too, with the box of the app: the disabled check box
+      of the browser. `markdownTasks.ts` and `TaskBox.tsx` serve both
+      views.
+- [x] Item 10 B: the README of the file preview mockup holds a web image
       that shows its alt text as a link.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
-      the mockups show.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages. The logs,
+      the reader probes, and the screenshots are in
+      `.context/markdown-it-reader/m8/`.
+- [x] Update the design and the TODOs of this plan for each problem that
+      the mockups show. `docs/mockups/design-markdown.md` now gives the
+      bold weight of item 11 C too. Problems that the mockups show: in the
+      light scheme, the disabled check box of the browser draws a done
+      task in light grey with a white check, which is hard to see. The
+      app's file preview draws the box of a task item with more blocks on
+      its own line, above the text. The mockups put it at the start of the
+      first paragraph, as GitHub does. A message line is a summary, which
+      a screen reader reads as one button, so it can lose the state of
+      each box in the line. The Files development page copies this README
+      in `src/files/dev/dev-samples.ts`, without the picture and the task
+      list. The app imports `MarkdownTable` and
+      `MarkdownProse.module.css`, so its tables already align to the top,
+      and its chat draws bold text at 700.
 
 ## Milestone 9: Documentation for the answers of 18 November 2026
 
@@ -491,6 +518,18 @@ Depends on: 9
       alignment of `MarkdownTable`.
 - [ ] Update `src/chat/agent-text.md`, `src/files/markdown-preview.md`,
       and the other guides that name the changed code.
+- [ ] From the mockups of Milestone 8: one shared task-item drawing for
+      both views, with the box at the start of the first paragraph, so a
+      task with sub-tasks keeps its box on the line of its words. Today
+      the file preview puts that box on a line of its own.
+- [ ] From the mockups of Milestone 8: each task box in a message line has
+      a name that states its state, such as "done", so a screen reader
+      reads it inside the line's button. Check with a screen reader.
+- [ ] From the mockups of Milestone 8: the README sample of
+      `src/files/dev/dev-samples.ts` adds the web picture and the task list
+      of the mockup README.
+- [ ] Waits for the user's answer to item 82: the look of a done task box
+      in the light scheme.
 
 ## Milestone 7: Verification, commit, review, and pull request
 
