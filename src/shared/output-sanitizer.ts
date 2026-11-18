@@ -1,5 +1,6 @@
 import type { RunnerEvent } from './generated/RunnerEvent'
 import type { RunnerFileEvent } from './generated/RunnerFileEvent'
+import { filterSecretText } from './secret-text'
 import {
   filterFileReport,
   filterOutput,
@@ -16,7 +17,6 @@ export interface HeldOutput {
   secrets: readonly string[]
   contexts?: readonly OutputContext[]
 }
-const REDACTION_MARKER = '[redacted]'
 
 /** Holds only the suffix that can still become a known credential. */
 export class OutputSanitizer {
@@ -179,35 +179,7 @@ export class OutputSanitizer {
     values: readonly string[] = [...this.secrets],
     continuations: readonly string[] = [],
   ): { text: string; held: string } {
-    const secrets = [...values].sort((a, b) => b.length - a.length)
-    const initial = [...secrets, ...continuations].sort(
-      (a, b) => b.length - a.length,
-    )
-    let output = ''
-    let index = 0
-    while (index < text.length) {
-      const candidates = index === 0 ? initial : secrets
-      const rest = text.slice(index)
-      if (
-        !final &&
-        candidates.some(
-          (secret) => secret.length > rest.length && secret.startsWith(rest),
-        )
-      )
-        return { text: output, held: rest }
-      const secret = candidates.find((secret) => text.startsWith(secret, index))
-      if (
-        text.startsWith(REDACTION_MARKER, index) &&
-        (!secret || secret.length <= REDACTION_MARKER.length)
-      ) {
-        output += REDACTION_MARKER
-        index += REDACTION_MARKER.length
-      } else if (secret) {
-        output += REDACTION_MARKER
-        index += secret.length
-      } else output += text[index++]
-    }
-    return { text: output, held: '' }
+    return filterSecretText(text, final, values, continuations)
   }
 
   private clean(event: RunnerEvent): RunnerEvent {

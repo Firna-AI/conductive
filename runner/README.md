@@ -29,6 +29,11 @@ to that folder in the same process, after its turns end, and sends a new
 of each later message. The [runner library](../crates/cnd-runner/README.md)
 gives the move.
 
+The `hello` also offers complete tool details, as `completeToolDetails`.
+Only after a `welcome` that accepts them does the runner send a long tool
+detail whole, in private parts, as [Event limits](event-limits.md) says.
+A Worker without that support omits the field, so the runner keeps its cut.
+
 The service runs `/opt/conductive/current/conductive runner`.
 The [Rust runner library](../crates/cnd-runner/README.md) owns the connection,
 saved state, turns, reports, and output filter. Its [SDK helper](sdk-helper/README.md)

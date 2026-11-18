@@ -36,4 +36,8 @@ export type RunnerHello = {
    * accepts repository.move. Older runners omit it.
    */
   repositoryFolder?: string
+  /**
+   * Offer complete tool sources in private numbered parts.
+   */
+  completeToolDetails?: boolean
 }

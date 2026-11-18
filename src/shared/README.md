@@ -173,6 +173,9 @@ The Worker keeps the held text in the encrypted state of its runner stream.
 It keeps the answer contexts in one encrypted state of the workspace, which each runner stream uses.
 It saves both before it confirms the corresponding raw event.
 
+`secret-text.ts` holds the exact-copy scanner of that filter. The Worker's
+filter of private tool-detail parts uses it too.
+
 `event-limits.ts` applies the same chat excerpt caps after either filter.
 Its UTF-8 byte count works in the Worker and Node.
 The workspace's [port report owner](../../worker/chat/port-reports.ts)

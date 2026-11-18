@@ -100,7 +100,8 @@ first.
   protocol version `RUNNER_PROTOCOL_VERSION`, and its `welcome` repeats
   that version. It also keeps `hello.loginKinds` for the connection's
   dispatch checks, `hello.processStartId` for its warnings, and
-  `hello.repositoryFolder` for the folder check.
+  `hello.repositoryFolder` for the folder check. Its `welcome` accepts
+  `hello.completeToolDetails` when the `hello` offers it.
 - `runner-repository-move.ts`: `RepositoryMoves` compares the runner folder
   with the record folder from `branch-data.ts`. It sends one
   `repository.move` to each capable connection in the stored folder of
@@ -131,13 +132,24 @@ first.
   two streams has no order. A workspace record with no answer ends still
   marks the move as done, so later receipts do not scan older stream
   records again.
+- `tool-detail-input.ts`, `tool-detail-filter.ts`, and
+  `tool-detail-records.ts`: the parse of each private `tool.detail.part`,
+  the exact-copy filter across the parts of one source, and the encrypted
+  assembly of each runner stream in `runner-output-state.ts`. The assembly
+  keeps the held end that can still start a secret, the displayed prefix,
+  the counts, and the retained values, never the whole source. Each part
+  filters with the retained values and the current values.
+  Only the last part makes one `tool.updated`. A refusal, an interrupted
+  sequence, or a new stream drops the assembly.
 - `authenticated-runner.ts`: `AuthenticatedRunner`, the token check of the
   runner connection before each message. `RunnerConnections.alarm` runs it
   while the connection is idle.
 - [`runner-version-data.ts`](runner-version-data.ts): `readRunnerProtocolVersion`, the workspace pin read before a runner's welcome or commands.
-  [`runner-handshake.ts`](runner-handshake.ts): `prepareRunnerHello` checks the `hello`, closes an unsupported version or a runner below that pin, and starts the stream before the `welcome`.
+  [`runner-handshake.ts`](runner-handshake.ts): `prepareRunnerHello` checks the `hello`, closes an unsupported version or a runner below that pin, and starts the stream before the `welcome`. That start drops the tool-detail assembly of every other stream.
 - `runner-event-identity.ts`: `readRunnerEventIdentity` returns the readable
   fields in `RunnerEventIdentity` for refusal, repair, and turn-context checks.
+  A private tool-detail part reads as `tool.updated`. Only its first part
+  carries a turn context.
 - `runner-delivery.ts`: the sends of pending commands, with the login
   and runner support checks and the current branches that `branch-data.ts`
   reads. Each `turn` command gets a turn token, after the running state
