@@ -57,15 +57,15 @@ folders that this doc uses. The terms are those of the
   install for the repository, so that builds and pull request updates use
   it. The user chose this on 18 November 2026.
 - The Worker does so only in an org that already uses the new install for
-  another repository. Each other org keeps the old values, and its builds
-  fail until an admin chooses the repository again in Settings.
+  another repository. Each other org keeps the old values until an admin
+  chooses the repository again in Settings. Until then, its builds fail,
+  and its workspaces and automations of the repository get no GitHub
+  events.
 - Reason: an org must not reach a repository through an install that no
   admin of the org chose. An admin chooses an install when the admin
   chooses one of its repositories in Settings.
 - A move to the new install in each org that saves the repository was
   rejected, for the same reason.
-- Without this rule, a move kept the old install. That install no longer
-  reaches the repository, so each build of the org failed.
 
 ## A missed repository webhook
 
@@ -77,8 +77,8 @@ folders that this doc uses. The terms are those of the
 - These webhooks also name the install that sent them. When it differs
   from the saved install, the repository moved, and the Worker follows
   the move as [A move to another owner](#a-move-to-another-owner) says.
-  It does so before it finds the workspaces of the webhook, so that the
-  workspaces of the repository get the pull request updates.
+  The same webhook then takes effect in each org that follows the move, as
+  any webhook of the repository does.
 - Reason: a repository webhook can fail, or never arrive. The next webhook
   of the repository then repairs the saved values, and webhooks stay the
   only trigger.
