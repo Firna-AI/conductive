@@ -126,6 +126,7 @@ a dropped folder that the browser cannot read. The app shares these words.
 | `src/render.tsx`          | The renderer: the Firna theme and the tokens of the colour scheme   |
 | `src/theme.ts`            | The Firna theme of each scheme, and the tokens as CSS variables     |
 | `src/paths.ts`            | The catalogue paths that screens link to                            |
+| `src/barPaths.ts`         | The catalogue paths of the pull request bar and of its checks       |
 | `src/brand.ts`            | The name "Conductive", its domains, its repository, and DMG names   |
 | `src/fonts/`              | Inter, which the Firna theme names first, with its licence          |
 | `../../mokly.config.json` | The Mokly configuration: the root, the renderer, and the schemes    |
@@ -141,7 +142,7 @@ a dropped folder that the browser cannot read. The app shares these words.
   screen declares its states in `src/screens/automationState.ts` in the same
   way. The tab and composer states of the workspace screen live in
   `src/screens/chatStates.ts`. `tabStates` covers the session, file,
-  image, and Preview tabs of the centre column. `temporaryTabStates` covers the
+  image, HTML, and Preview tabs of the centre column. `temporaryTabStates` covers the
   temporary tab, which `src/screens/workspaceTemporaryTab.ts` draws in the
   row. `composerStates` covers the composer, with its links, mentions,
   attached files, drops, and the chip of Add to chat.

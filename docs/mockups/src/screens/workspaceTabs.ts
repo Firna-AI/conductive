@@ -8,13 +8,13 @@ import {
   startedSession,
   workspaceSessions,
 } from '../fixtures/sessions'
-import { screenshotCopy } from '../fixtures/attachments'
 import { detectedServers, openPort, openPorts } from '../fixtures/previews'
 import { previewTabLabel } from '../components/tools/previewCopy'
-import { branchPictures, splitPath } from '../fixtures/files'
+import { splitPath } from '../fixtures/files'
 import { maskedDiffPath } from '../fixtures/maskedFiles'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
+import { pressedFileTab } from './workspaceFileTab'
 import type { WorkspaceState } from './workspaceState'
 import { codeTabKey, moreTabs, withCodeMoved } from './workspaceTabRow'
 import { withTemporaryTab } from './workspaceTemporaryTab'
@@ -77,33 +77,6 @@ export function workspaceName(
 ): string {
   const untitled = state.name === 'untitled' && isNew(state)
   return nameLabel(untitled ? null : workspace.name)
-}
-
-/**
- * The tab of an image file that the state opens: a picture of the branch,
- * an image whose bytes the browser cannot draw, or the copy of an attached
- * screenshot. A picture takes the icon that All files gives each other
- * file. A read of the copy names it by its file name, because no list
- * names it.
- */
-function pictureTab(state: WorkspaceState): WorkspaceTab | undefined {
-  const tab = (key: string, path: string, to: string): WorkspaceTab => ({
-    key,
-    kind: 'file',
-    title: splitPath(path).name,
-    to,
-    selected: true,
-  })
-  switch (state.tab) {
-    case 'image':
-      return tab('image', branchPictures.picture, paths.image)
-    case 'image-not-drawn':
-      return tab('image', branchPictures.damaged, paths.imageNotDrawn)
-    case 'attachment':
-      return tab('copy', screenshotCopy.path, paths.attachmentOpen)
-    default:
-      return undefined
-  }
 }
 
 /**
@@ -209,8 +182,8 @@ export function tabsFor(
       hidesPath: masked,
     })
   }
-  const picture = pictureTab(state)
-  if (picture) tabs.push(picture)
+  const pressed = pressedFileTab(state)
+  if (pressed) tabs.push(pressed)
   tabs.push(...previewTabs(state))
   if (state.tab === 'unnamed-file') {
     tabs.push({

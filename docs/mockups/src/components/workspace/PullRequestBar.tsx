@@ -1,7 +1,7 @@
 import { ChevronRight, GitBranch, GitPullRequest } from 'lucide-react'
 import { pullRequest } from '../../fixtures/pullRequests'
 import type { Workspace } from '../../fixtures/workspaces'
-import { barPaths, checksPaths } from '../../paths'
+import { barPaths, checksPaths } from '../../barPaths'
 import { classes } from '../common/classes'
 import { ScreenLink } from '../common/ScreenLink'
 import { BarButtons, BarMessage } from './BarActions'

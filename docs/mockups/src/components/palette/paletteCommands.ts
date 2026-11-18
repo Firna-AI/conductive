@@ -19,7 +19,8 @@ import {
 } from 'lucide-react'
 import { orgList, type Org } from '../../fixtures/orgs'
 import { orgCommand, type CommandId } from '../../fixtures/shortcutCommands'
-import { checksPaths, paths } from '../../paths'
+import { checksPaths } from '../../barPaths'
+import { paths } from '../../paths'
 import { sendFeedbackLabel, sendFeedbackWords } from '../feedback/feedbackCopy'
 import {
   mergeLatestLabel,

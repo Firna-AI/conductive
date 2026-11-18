@@ -310,8 +310,10 @@ The cloud computer:
   7683 out, as it leaves out the other ports of the app's own services.
   When another program holds the port, the runner warns and announces no
   file server.
-- The file server answers only `GET` and `HEAD`. It answers only a
-  request whose `Host` is `localhost:7683` or `127.0.0.1:7683`. Reason: a
+- The file server answers only `GET` and `HEAD`. A request with an
+  `Upgrade` header gets 400, because the file server upgrades no
+  connection. It answers only a request whose `Host` is `localhost:7683`
+  or `127.0.0.1:7683`. Reason: a
   check of `Host` stops DNS rebinding from a browser in the cloud
   computer, as dev servers do. The relay sends `Host: localhost:7683`.
 - The file server answers only a request with the files mark. Every other
@@ -363,10 +365,14 @@ The Worker:
   the workspace, or returns the active one, as a `PreviewResponse`. It
   needs a running cloud computer and a connected runner that announced its
   file server. Otherwise it answers 409 `file_server_unavailable`, and the
-  app asks for a Restart of the software.
+  app asks for a Restart of the software. It checks the announcement of
+  the file server before the relay. So an older cloud computer gets
+  `file_server_unavailable`, not `preview_relay_unavailable`.
 - The proxy sends each request of a files preview to port 7683 through
   the relay, with the files mark. It uses the checks, the cookies, and the
-  headers of a port preview.
+  headers of a port preview. It refuses a WebSocket upgrade of a files
+  preview with the 404 of an unknown preview, before any call to the
+  cloud computer.
 - The lists of the Preview tool and of the agent preview calls leave the
   files preview out. An agent cannot close it. It ends when the cloud
   computer stops and after 24 hours, as a port preview does. The next
@@ -411,6 +417,31 @@ The app:
   state of the cloud computer, as a file tab does.
 - A runner without a file server gives a notice in place of the page. The
   notice asks for Restart in the workspace header, as Preview asks today.
+  It has no button of its own.
+
+The mockups of Milestone 1 raised two questions on 18 November 2026. I
+settled them under the decision test, because existing tab rules settle
+them:
+
+- From the press until the page loads, the tab shows the "Opening
+  preview" look of the launch page: first while the app opens the files
+  preview, then while the frame loads. So the member sees one wait. A
+  failed open, other than `file_server_unavailable`, shows the failure of
+  a Preview tab: "The preview couldn't open", the message of the server,
+  and Try again. Reload shows while a page opens or shows. Open shows
+  only once the files preview exists, as on the bar of a Preview tab,
+  because it needs the launch address.
+  Reason: a Preview tab already shows these states, and the launch page
+  already shows this look.
+- When the workspace leaves Starting, such as after a Restart, a tab that
+  shows the notice opens the files preview again. Each new show of the
+  tab also opens it again. So a release that the runner installs while
+  the workspace is idle shows the page at the next show of the tab.
+  Reason: a Restart shows Starting until the runner is ready, as
+  [Restart the software](../docs/protocol/restart-the-software.md) says,
+  and a file tab already reads again when the state of the cloud computer
+  leaves its place. A new event for the file server was not chosen,
+  because the open route already answers the current state.
 - A file whose label hides a secret value offers no Preview, and its tab
   shows Source. Reason: the address of the page holds the real path, and
   Open shows that address.
@@ -435,6 +466,13 @@ The app:
 - [boat-file-read-allows-git-paths.md](follow-ups/boat-file-read-allows-git-paths.md):
   the options check found that the fallback file read accepts paths in
   `.git`. It is outside the scope of this change.
+- [relay-notice-asks-for-new-workspace.md](follow-ups/relay-notice-asks-for-new-workspace.md):
+  the mockups found that the relay message asks for a new workspace,
+  while the public guide asks for Restart. It is outside the scope of
+  this change.
+- [preview-failure-says-try-again-twice.md](follow-ups/preview-failure-says-try-again-twice.md):
+  the mockups found that a failed preview shows "Try again" in its
+  message and on its button. It is outside the scope of this change.
 
 ## Milestone 1: Mockups
 
@@ -445,21 +483,26 @@ Depends on: none
 The new `app/files/html` page draws an HTML file tab, on desktop and on a
 phone.
 
-- [ ] Add `app/files/html` beside `app/files/markdown` and
+- [x] Add `app/files/html` beside `app/files/markdown` and
       `app/files/image`. It shows `.context/report.html`, opened from All
       files, in Preview, with the view switch, Reload, Open, Copy, and
       Download.
-- [ ] Add the variant Source, with the text and its syntax colours.
-- [ ] Add the variant Opening, with the "Opening preview" page of
+- [x] Add the variant Source, with the text and its syntax colours.
+- [x] Add the variant Opening, with the "Opening preview" page of
       `app/tools/preview-opening` in the frame.
-- [ ] Add the variant Older software, with the notice that asks for
+- [x] Add the variant Older software, with the notice that asks for
       Restart in the workspace header.
-- [ ] Describe the page in
+- [x] Add the variant Failed, with "The preview couldn't open", the
+      message of the server, and Try again.
+- [x] Describe the page in
       `docs/mockups/catalogue-attachments-and-files.md`.
-- [ ] Run `npm run mockups:check`. Smoke-test the page on desktop and on a
+- [x] Run `npm run mockups:check`. Smoke-test the page on desktop and on a
       phone with `npm run mockups:serve`.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+
+The mockup check and the screenshots of 18 November 2026 are in
+`.context/html-file-preview/logs/` and `.context/html-file-preview/mockups/`.
 
 ## Milestone 2: Documentation and protocol
 

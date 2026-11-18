@@ -60,3 +60,13 @@ export const previewOpeningCopy = {
   failedTitle: 'Preview not available',
   failedBody: 'Open it again from the workspace.',
 } as const
+
+/**
+ * The words of a preview that the app could not open, in a Preview tab and
+ * in the tab of an HTML file. The message of the server shows under the
+ * title.
+ */
+export const previewOpenFailedCopy = {
+  title: "The preview couldn't open",
+  retry: 'Try again',
+} as const

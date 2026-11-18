@@ -6,4 +6,5 @@ export const previewPaths = {
   markdown: paths.markdown,
   image: paths.image,
   'image-not-drawn': paths.imageNotDrawn,
+  html: paths.html,
 } as const

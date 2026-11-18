@@ -23,6 +23,7 @@ import { CodeView, type LineRange } from './CodeView'
 import { DiffStat } from './DiffStat'
 import { DiffView } from './DiffView'
 import type { FileTabView } from './FilesPanel'
+import { htmlSpec } from './htmlSpecs'
 import { ImageView } from './ImageView'
 import { MarkdownView } from './MarkdownView'
 
@@ -37,6 +38,16 @@ export type FileSpec = {
   closed?: true
   /** The file is not text, so the header keeps Download, and Copy is off. */
   binary?: true
+  /**
+   * The file shows rendered or as its source, so the header has the switch
+   * between Preview and Source, which shows this view.
+   */
+  mode?: 'preview' | 'source'
+  /**
+   * The address of the page that the tab shows in a frame, which Open opens
+   * in a new tab. The header then has Reload and Open.
+   */
+  pageUrl?: string
 }
 
 /**
@@ -103,6 +114,7 @@ export function specFor(view: FileTabView): FileSpec {
       return {
         path: 'README.md',
         icon: FileText,
+        mode: 'preview',
         content: <MarkdownView blocks={readme} />,
       }
     case 'diff':
@@ -134,5 +146,11 @@ export function specFor(view: FileTabView): FileSpec {
       return notDrawn(branchPictures.damaged)
     case 'attachment':
       return picture(screenshotCopy.path, true)
+    case 'html':
+    case 'html-source':
+    case 'html-opening':
+    case 'html-older-software':
+    case 'html-failed':
+      return htmlSpec(view)
   }
 }

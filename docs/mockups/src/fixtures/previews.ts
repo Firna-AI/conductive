@@ -42,6 +42,14 @@ export const detectedServers: readonly ListeningPort[] = [
  */
 export const serversUnavailable = { data: 'servers', ago: '3m ago' } as const
 
+/**
+ * The message of the server when the cloud computer does not answer a
+ * request of a preview: the 502 `sandbox_unavailable` reply of
+ * `toolFailure` in `worker/previews/access.ts`.
+ */
+export const sandboxNotAnswering =
+  'The cloud computer did not answer. Try again.'
+
 /** The launch address of the open preview, which a new tab opens. */
 export const previewUrl = new URL(
   previewPath(orgs.acme.key, checkoutAutocomplete.key, 'preview-1'),

@@ -219,6 +219,11 @@ export const paths = {
   diff: 'app/files/diff',
   image: 'app/files/image',
   imageNotDrawn: 'app/files/image/cannot-draw',
+  html: 'app/files/html',
+  htmlSource: 'app/files/html/source',
+  htmlOpening: 'app/files/html/opening',
+  htmlOlderSoftware: 'app/files/html/older-software',
+  htmlFailed: 'app/files/html/failed',
   maskedPaths: 'app/chat/masked-paths',
   maskedPathsChanges: 'app/chat/masked-paths/changes',
   maskedPathsAllFiles: 'app/chat/masked-paths/all-files',
@@ -256,44 +261,4 @@ export const paths = {
   secretLateValue: 'app/secret-requests/temporary/late/value',
   secretLateGiven: 'app/secret-requests/temporary/late/given',
   secretMixedValue: 'app/secret-requests/several/mixed-value',
-} as const
-
-/** The screens of the actions of the pull request bar. */
-export const barPaths = {
-  merging: 'app/banner/merge',
-  mergeMovedHead: 'app/banner/merge/moved-head',
-  mergeNoRight: 'app/banner/merge/no-right',
-  mergeRefused: 'app/banner/merge/refused',
-  markingReady: 'app/banner/blocked/marking-ready',
-  localWork: 'app/banner/local-work',
-  noCommitsLocalWork: 'app/banner/no-commits/local-work',
-  continueQuestion: 'app/banner/continue',
-  continuing: 'app/banner/continue/running',
-  continueFailed: 'app/banner/continue/failed',
-  continueWaits: 'app/banner/continue/waits',
-  continued: 'app/banner/continued',
-  /** The message that each agent action sends, in the chat. */
-  sent: {
-    'fix-checks': 'app/banner/sent',
-    'create-pull-request': 'app/banner/sent/create-pull-request',
-    'commit-and-push': 'app/banner/sent/commit-and-push',
-    push: 'app/banner/sent/push',
-    'resolve-conflicts': 'app/banner/sent/resolve-conflicts',
-    'address-review': 'app/banner/sent/address-review',
-  },
-} as const
-
-/** The screen that shows the checks of each pull request state. */
-export const checksPaths = {
-  none: 'app/banner',
-  'no-commits': 'app/banner/no-commits',
-  'checks-running': 'app/banner/checks',
-  'checks-failed': 'app/banner/checks/failed',
-  'ready-to-merge': 'app/banner/checks/ready-to-merge',
-  merged: 'app/banner/checks/merged',
-  conflict: 'app/banner/blocked',
-  'changes-requested': 'app/banner/blocked/changes-requested',
-  draft: 'app/banner/blocked/draft',
-  closed: 'app/banner/blocked/closed',
-  blocked: 'app/banner/blocked/blocked',
 } as const
