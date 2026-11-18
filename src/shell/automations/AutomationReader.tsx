@@ -1,5 +1,8 @@
 import { Power, Trash2 } from 'lucide-react'
-import { hasSchedule } from '../../../docs/mockups/src/components/automations/triggerCopy'
+import {
+  hasPullRequestTrigger,
+  hasSchedule,
+} from '../../../docs/mockups/src/components/automations/triggerCopy'
 import { loginOwnerName } from '../../app/login-owner'
 import { personName } from '../../app/people'
 import { turnOffAutomation } from '../../app/automation-actions'
@@ -21,6 +24,7 @@ import { AutomationFacts } from './AutomationFields'
 import { AutomationFrame } from './AutomationFrame'
 import { AutomationNote, type AutomationAccess } from './AutomationNote'
 import { RunsPanel, type RunsSource } from './RunsPanel'
+import { useChosenSecretNames } from './RunSecrets'
 import { TriggerFacts } from './TriggerList'
 
 /**
@@ -44,12 +48,14 @@ function readerLogins(
 
 /**
  * An automation as a person who cannot change it reads it: its facts, its
- * triggers, and its prompt with the model, beside its runs. An admin can
- * turn it off while it is on, and delete it. In a suspended org nobody
- * acts, and no line names the logins of runs, because no run starts.
- * `user` is the person signed in, who reads the causes of their own failed
- * runs as their owner. `runLogin` is the login of the runs that the server
- * names, or null when no login serves the owner.
+ * triggers, and its prompt with the model and the chosen secrets, beside
+ * its runs. While the saved triggers have a pull request trigger, a hint
+ * follows the chosen secrets. An admin can turn it off while it is on, and
+ * delete it. In a suspended org nobody acts, and no line names the logins
+ * of runs and no hint shows, because no run starts. `user` is the person
+ * signed in, who reads the causes of their own failed runs as their owner.
+ * `runLogin` is the login of the runs that the server names, or null when
+ * no login serves the owner.
  */
 export function AutomationReader(props: {
   access: Exclude<AutomationAccess, 'owner'>
@@ -66,6 +72,10 @@ export function AutomationReader(props: {
   const models = useStore(useApp().models)
   const orgModel = useOrgModel(org.id)
   const triggers = draftOf(automation).triggers
+  const secretNames = useChosenSecretNames(
+    org.id,
+    automation.capabilities.preapprovedSecretIds,
+  )
   const repositoryName =
     props.repositories.find((item) => item.id === automation.repositoryId)
       ?.fullName ?? automation.repositoryId
@@ -131,6 +141,8 @@ export function AutomationReader(props: {
         }
         models={models}
         prompt={automation.prompt}
+        pullRequest={access !== 'suspended' && hasPullRequestTrigger(triggers)}
+        secrets={secretNames}
       />
       {deletion.question}
     </AutomationFrame>

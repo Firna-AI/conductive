@@ -46,7 +46,8 @@ screens show.
   phone it is above the content of either tab, so the Runs tab shows it
   too. The frame of the page draws it, not the content of a tab.
 - The automation shows without fields, with no action, no note about a
-  turn-off, and no line about the logins of runs. The page of a new automation
+  turn-off, and no line about the logins of runs. It keeps the line that
+  names the chosen secrets, with no pull request hint. The page of a new automation
   shows only the notice.
 - The rail names the org as suspended.
 - The settings show the notice above each tab. Each tab is read-only, also

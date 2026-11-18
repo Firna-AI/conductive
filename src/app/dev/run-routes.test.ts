@@ -14,6 +14,7 @@ import { createBackend, guardScope } from './backend'
 import { readDevOptions } from './options'
 import { routeFetch } from './router'
 import { runRoutes } from './run-routes'
+import { orgSecretsOf } from './secret-store'
 import { seedState } from './seed'
 
 const orgId = FAKE_IDS.org
@@ -40,7 +41,7 @@ function setup(search = '') {
   )
   const acme = backend.state.orgs.find((org) => org.org.id === orgId)
   if (!acme) throw new Error('The seed has no Acme.')
-  return { api, acme }
+  return { api, acme, backend }
 }
 
 function runs(
@@ -131,6 +132,26 @@ describe('the runs of the dev fake', () => {
       },
       first: 'run-error-triage-request-1',
     })
+  })
+
+  test('Run now pre-approves the chosen secrets of the automation in its workspace, with Mac access off', async () => {
+    const { api, acme, backend } = setup()
+    acme.automations = acme.automations.map((automation) =>
+      automation.id === 'error-triage'
+        ? {
+            ...automation,
+            capabilities: { preapprovedSecretIds: ['figma-token'] },
+          }
+        : automation,
+    )
+    const run = await runNow(api, 'error-triage', 'request-secrets')
+    const grants = orgSecretsOf(backend.state, orgId).capabilities.get(
+      run.workspaceId ?? '',
+    )
+    expect({
+      preapproved: grants?.preapprovedSecretIds,
+      macAccess: grants?.macAccess,
+    }).toEqual({ preapproved: ['figma-token'], macAccess: false })
   })
 
   test('Run now refuses another owner and an automation of pull requests, fails without an agent login, and keeps the workspace of a start that failed', async () => {

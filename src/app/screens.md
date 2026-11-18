@@ -306,6 +306,15 @@ the Help row of the command palette opens.
   the next draft starts again from the defaults. The create leaves out
   each pre-approved secret that the last read no longer lists, and a
   refusal of a missing secret reads the secrets again for Try again.
+- The automation page gives its owner the same icon before the model
+  picker, in the bar of the prompt box. Its control has the secrets part
+  only, with no Mac access. On a phone the icon stays in the bar and opens
+  the control as a sheet. A change of the checks turns Save on, and the
+  icon is off while a save runs. Under the prompt, every member reads the
+  line that names the chosen secrets. While the triggers hold a pull
+  request trigger, the pull request hint follows that line. For the owner,
+  both follow the form. For another member, both follow the saved
+  automation.
 - The Secrets tab of the org settings follows the Agents tab (secrets
   decisions 2, 3, and 6). Its rights come from `secretRights` in
   `permissions.ts`: every member adds secrets, a member replaces and

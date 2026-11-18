@@ -176,6 +176,8 @@ option overrides this default, including queued chats that show no spinner.
   the run fails with no workspace. A prompt that contains `fail` stands for
   a cloud computer that did not start: the run fails and keeps its
   workspace, in the error state with Try again, as the Worker does. The
+  workspace of a run starts with the chosen secrets of its automation
+  pre-approved, and Mac access off. The
   recorded server has no chat for
   a workspace that the fake made, so its chat does not load, and the line
   of its automation does not show.

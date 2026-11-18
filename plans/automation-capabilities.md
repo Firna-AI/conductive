@@ -333,28 +333,56 @@ Tags: ui
 
 Depends on: 1, 3
 
-- [ ] Add the list to the draft in `src/app/automation-draft.ts`, so that
+- [x] Add the list to the draft in `src/app/automation-draft.ts`, so that
       Save turns on after a change and the update sends the field.
-- [ ] Add the Capabilities tool to the prompt box of
+- [x] Add the Capabilities tool to the prompt box of
       `src/shell/automations/AutomationEditor.tsx`, as the mockup draws it.
-- [ ] Add a secrets-only list of parts to
+- [x] Add a secrets-only list of parts to
       `src/shell/capabilities/capability-parts.tsx`, with no grants and no
       Mac part. Take the words from `capabilitiesIntro.automation` and
       `secretsPartWords.automationHint`.
-- [ ] On a phone, keep the icon in the bar of the prompt box, and open the
+- [x] On a phone, keep the icon in the bar of the prompt box, and open the
       control as a sheet. Today a tool opens its sheet only from the +
       menu of a composer (`src/chat/components/ComposerMenu.tsx`).
-- [ ] Show the line of the chosen secrets under the prompt box, in the
+- [x] Show the line of the chosen secrets under the prompt box, in the
       editor and in `src/shell/automations/AutomationReader.tsx`, with
       `runSecretsWords`. Keep it in a suspended org.
-- [ ] Show the pull request hint for every member, with
+- [x] Show the pull request hint for every member, with
       `hasPullRequestTrigger` of
       `docs/mockups/src/components/automations/triggerCopy.ts`: the
       triggers of the form for the owner, and the saved triggers for each
       other member. Hide it in a suspended org.
-- [ ] Tests for the draft and the screens.
-- [ ] Check the page in a browser: choose a secret, save, reload, and
-      Run now. Check that the run workspace shows the pre-approval.
+- [x] Tests for the draft and the screens.
+- [x] Check the page in a browser: choose a secret, save, return to the
+      page, and Run now. The dev fake gives no chat for a workspace that
+      it makes, so its Capabilities do not show. The post-merge smoke test
+      below checks the run workspace with a real cloud computer.
+- [x] The dev fake's Run now pre-approves the chosen secrets in the run
+      workspace, with Mac access off, as the Worker does.
+- [x] Describe the page parts in `src/app/screens.md`,
+      `src/app/data-lifecycle.md`, `src/app/suspended-org.md`, and
+      `src/app/dev-fake.md`.
+
+Implementation and check evidence: `.context/automation-capabilities/m4/`.
+
+Design calls of Milestone 4, on 18 November 2026:
+
+- The order of chosen secrets does not count for Save. Reason: the Worker
+  answers in its own order, and a check that the owner takes back must
+  leave Save off.
+- The line lists names in the order of the org's secrets list, and leaves
+  out an ID with no name. The page reads the secrets only when a chosen ID
+  has no name in the list. The line and the hint hide until the names
+  load, because the hint refers to "these secrets".
+- The phone sheet lives in `src/shell/automations/PromptTool.tsx`. A later
+  change can move it into `src/chat/components/ComposerTools.tsx`.
+- The icon and the checks are off while a save runs. The other fields stay
+  editable, as today.
+- My call: the run-workspace part of the browser check moves to a
+  post-merge smoke test. Reason: a run needs a real cloud computer, and
+  the `plans` skill puts such a check after the merge.
+  `worker/automations/run-capabilities.test.ts` covers the copy into the
+  run workspace before the merge.
 
 ## Milestone 5: Verification, commit, review, and pull request
 
@@ -372,3 +400,9 @@ Depends on: every other milestone
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
+
+## Post-merge follow-up (non-blocking)
+
+- [ ] On `conductive.build`, choose a secret on an automation, use Run
+      now, and check that the Capabilities of the run workspace show it as
+      pre-approved by the owner, with Mac access off.
