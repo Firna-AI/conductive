@@ -60,6 +60,39 @@ The user chose each one. The full items, with every option, are in
   each reader's browser call a server that sandbox text chose, and the
   content security policy blocks it.
 
+- **Items 9 to 15 and 17 to 20, from the milestones** (Cal, 18 November
+  2026). Each took the recommended option. The full items, with every
+  option, are in the conversation record and in the findings re-print of
+  17 November 2026.
+  - **9 C:** while the agent writes, an open mark at the end closes, so
+    its words show bold, emphasis, or strikethrough at once. Not chosen:
+    A, the mark shows as typed until its pair arrives. B, hide the mark.
+  - **10 B:** a web image in the file preview shows its alt text as a
+    link, as in the chat. Not chosen: A, the alt text only.
+  - **11 C:** bold text has weight 700 in both views, in the shared style
+    module. Not chosen: A, two looks. B, weight 600.
+  - **12 B:** each table cell stands at the top of its row, in both views.
+    Not chosen: A, the middle of the row.
+  - **13 A:** a line without a pipe after a table is one more row, as
+    `markdown-it` and GitHub read it. Not chosen: B, end the table in the
+    chat only. C, end it in the shared table rule.
+  - **14 B:** the chat draws a task box as a fixed check box, as the file
+    preview does. Not chosen: A, keep it as text.
+  - **15 B:** the chat adds no limit for tables. The per-table stop of the
+    table rule applies only where the file preview needs it. Not chosen:
+    A, accept the stop in the chat.
+  - **17 A:** an unindented table right after a list item reads as text of
+    the item, as CommonMark says. Not chosen: B, the old reading in the
+    chat. C, a source rewrite for both views.
+  - **18 B:** a line that starts a list item, a quote, or a heading starts
+    no table. Not chosen: A, the parser's reading. C, the chat only.
+  - **19 B:** a live update draws again only the blocks whose text
+    changed. Not chosen: A, accept the cost. C, a parse worker.
+  - **20 A:** both views accept the parser's reading of a shortcut
+    reference before brackets. The relaxed test stays, a follow-up item
+    records the case, and the case goes to the `markdown-it` project. Not
+    chosen: B, a wrapped link rule.
+
 ## Design calls
 
 Each is my call, with its reason. Calls 1 to 9 date from 16 November
@@ -261,28 +294,32 @@ Depends on: 1
       `src/marketing/docs/` in full. Update each sentence that restates a
       changed fact. Only the list of the parts of a reply in
       `sessions-and-chat.md` changed: it adds quotes.
-- [ ] Ask the user, from the mockups: while the agent writes, an opening
+- [x] Ask the user, from the mockups: while the agent writes, an opening
       `**` shows its stars until its pair arrives, as
       `app/chat/formatting/writing` shows. Keep this, or hide or close an
       open mark of live text? State the answer in `chat-markdown.md`.
-- [ ] Ask the user, from the mockups: does a web picture in the file
+      Answered: item 9 C, close the open mark while the agent writes.
+- [x] Ask the user, from the mockups: does a web picture in the file
       preview also show as a link with its alt text? Item 5 asked about
       both views, and design call 12 covers only the chat. State the
-      answer in `workspace-tools.md`.
-- [ ] Ask the user, from the docs: the file preview draws a task box, such
+      answer in `workspace-tools.md`. Answered: item 10 B, a link.
+- [x] Ask the user, from the docs: the file preview draws a task box, such
       as `- [ ]`, as a box, and `chat-markdown.md` keeps it as text in the
       chat. Item 8 D lists no task box among the chat exceptions, and the
       mockups draw none. Draw it in the chat as the file preview does, or
       keep it as text? `markdown-it` reads no task box, so the preview
-      adapter of Milestone 5 must keep its own.
-- [ ] Ask the user, from the docs: `markdown-it` reads a line of text
+      adapter of Milestone 5 must keep its own. Answered: item 14 B, a
+      check box in the chat too.
+- [x] Ask the user, from the docs: `markdown-it` reads a line of text
       without a pipe after a table as one more row, as GitHub does.
       `chat-tables.md` says that such a line ends the table, and both
       readers end it there today. Follow the parser, or keep the rule?
-- [ ] Ask the user, from the docs: `markdown-it` ends a table at the row
+      Answered: item 13 A, follow the parser. Milestone 9 states it.
+- [x] Ask the user, from the docs: `markdown-it` ends a table at the row
       whose short rows would fill more than 65,536 empty cells. Such rows
       then show as text. `chat-tables.md` says that the chat adds no limit
       for tables. Accept the limit of the parser, or keep no limit?
+      Answered: item 15 B, no limit in the chat. Milestone 10 builds it.
 
 ## Milestone 3: The parser
 
@@ -317,19 +354,20 @@ Depends on: 3
       assertion. List each changed expectation in the pull request. The
       assertion that a line without a pipe ends a table waits for the
       answer to the table question of Milestone 2.
-- [ ] Check live updates in the app with a 100 KiB answer. Stop and ask
-      if one update takes more than 50 ms. Measured on 17 November 2026
+- [x] Check live updates in the app with a 100 KiB answer. Stop and ask
+      if one update takes more than 50 ms. Answered: item 19 B, draw again
+      only the blocks whose text changed. Milestone 11 builds it. Measured on 17 November 2026
       in headless Chrome, production build: the median update takes
       70 ms with the parser, and 66 ms with the old reader. The parse
       takes about 15 ms. The data is in `.context/markdown-it-reader/m4/`.
-- [ ] Ask the user, from the mockups: bold text has the strong weight and
+- [x] Ask the user, from the mockups: bold text has the strong weight and
       the ink colour in the file preview, and the weight of the browser in
       the chat. Does bold text join the shared style module, and with
-      which look?
-- [ ] Ask the user, from the mockups: with line breaks, a cell of one line
+      which look? Answered: item 11 C, weight 700 in both views.
+- [x] Ask the user, from the mockups: with line breaks, a cell of one line
       sits in the middle of a higher row, in both views, as
       `app/chat/tables/line-break` shows. Align each cell to the top of
-      its row?
+      its row? Answered: item 12 B, the top of the row.
 
 ## Milestone 5: The file preview on the parser
 
@@ -385,6 +423,74 @@ Depends on: 4, 5
       `table-header-takes-block-line`. Eight more items that named the
       replaced readers now name the current code. The probes and their
       output are in `.context/markdown-it-reader/m6/`.
+
+## Milestone 8: Mockups for the answers of 18 November 2026
+
+Tags: mockup
+
+Depends on: 6
+
+- [ ] Item 9 C: `app/chat/formatting/writing` shows an open mark closed at
+      the end of live text, so `**Next:` shows bold.
+- [ ] Item 11 C: bold text has weight 700 in the shared style module, in
+      the chat and in the file preview mockups.
+- [ ] Item 12 B: each cell of `MarkdownTable` stands at the top of its row.
+- [ ] Item 14 B: a chat state with a task list, unchecked and checked, in
+      an answer and in a closed and an open message line.
+- [ ] Item 10 B: the README of the file preview mockup holds a web image
+      that shows its alt text as a link.
+- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [ ] Update the design and the TODOs of this plan for each problem that
+      the mockups show.
+
+## Milestone 9: Documentation for the answers of 18 November 2026
+
+Depends on: 8
+
+- [ ] `docs/protocol/chat-markdown.md`: the live-text exception of item 9
+      C, and task boxes in the chat by item 14 B.
+- [ ] `docs/protocol/chat-tables.md`: rows without a pipe by item 13 A, a
+      table after a list item by item 17 A, no table at a list, quote, or
+      heading line by item 18 B, cells at the top of the row by item 12 B,
+      and no limit in the chat by item 15 B.
+- [ ] `docs/protocol/workspace-tools.md`: a web image in the file preview
+      by item 10 B.
+- [ ] `docs/mockups/design-markdown.md`: bold weight by item 11 C.
+- [ ] Read the Terms page, the Privacy page, and each public guide in
+      `src/marketing/docs/` in full. Update each sentence that restates a
+      changed fact.
+
+## Milestone 10: The table rule for the answers of 18 November 2026
+
+Depends on: 9
+
+- [ ] Item 15 B: the per-table stop of `src/markdown/table-rule.ts`
+      applies only in a parse for the file preview.
+- [ ] Item 18 B: a line that starts a list item, a quote, or a heading
+      starts no table. Delete `plans/follow-ups/table-header-takes-block-line.md`.
+- [ ] Item 13 A: `rowsInTable` keeps each row that the parser reads, with
+      a test, and without the open-question comment.
+- [ ] Item 20 A: a follow-up item for the shortcut reference case, with
+      the text of the report to the `markdown-it` project.
+
+## Milestone 11: The chat and the preview for the answers of 18 November 2026
+
+Tags: ui
+
+Depends on: 9
+
+- [ ] Item 9 C: while the agent writes, the chat adapter closes an open
+      mark at the end of the text.
+- [ ] Item 19 B: a live update draws again only the blocks whose text
+      changed. Measure a 100 KiB answer again.
+- [ ] Item 14 B: the chat draws task boxes with the reader of the file
+      preview, moved to `src/markdown/`.
+- [ ] Item 10 B: the file preview shows a web image as a link with its
+      alt text.
+- [ ] Items 11 C and 12 B: the app uses the shared bold weight and the top
+      alignment of `MarkdownTable`.
+- [ ] Update `src/chat/agent-text.md`, `src/files/markdown-preview.md`,
+      and the other guides that name the changed code.
 
 ## Milestone 7: Verification, commit, review, and pull request
 
