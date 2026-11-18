@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Common. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-18, from branch `calummoore/lima-djh5`, item 3.
-- **Location:** `image/release/conductive-terminal-sessions.service`, `docs/protocol/terminal.md`.
+- **Location:** `image/release/conductive-terminal-sessions.service`, `docs/protocol/terminal.md`, `worker/terminal/README.md:80`.
 - **Reason:** The decision for the runner covered only the runner's unit, so the same change for the terminals waits for a decision of its own.
 
 **Terms:**
@@ -19,7 +19,7 @@
 **Root question:** How can an out-of-memory kill in one terminal end only that command?
 
 **Options:**
-- **A.** Add `OOMPolicy=continue` to `conductive-terminal-sessions.service`, as out-of-memory decision 1 did for the runner. Only the large command then ends, and the other shells keep running. Add the requirement to `docs/protocol/terminal.md`. Effort: Small.
+- **A.** Add `OOMPolicy=continue` to `conductive-terminal-sessions.service`, as out-of-memory decision 1 did for the runner. Only the large command then ends, and the other shells keep running. Add the requirement to `docs/protocol/terminal.md`. Also correct `worker/terminal/README.md:80`, which says that the running terminal services keep their old units until their next start. A changed `OOMPolicy` applies at the `systemctl daemon-reload` of the installer, as `runner/service/README.md` says for the runner. Effort: Small.
 - **B.** Keep the default `stop` for the terminal service. Each out-of-memory kill in a terminal then ends every shell. Effort: Small.
 
 **Left out:**
