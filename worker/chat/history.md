@@ -46,14 +46,16 @@ streams, and the order of the runner commands.
   page while the replay goes on, and no page waits in memory for the
   handshake.
 - `REPLAY_BUDGET` in [`browser-subscription.ts`](browser-subscription.ts)
-  limits the JSON text of the pages of one connection to 8 MiB. The object
-  sends at least one page. After the page that reaches the budget, while
-  more pages remain, it removes the tab and closes the socket. The tab
-  connects again after the `nextAfterEventNumber` of that page, and the
-  replay goes on with a new cutoff.
+  limits the events of the pages of one connection to 8 MiB of UTF-8 JSON.
+  The page reads spend it, so a page ends after the event that uses it up.
+  So a connection sends at most one event past the budget, and at least
+  one event. When more events remain, the object then removes the tab and
+  closes the socket. The tab connects again after the
+  `nextAfterEventNumber` of its last page, and the replay goes on with a
+  new cutoff.
 - A replay that fails after the handshake removes the tab and closes the
-  socket. An error that is not an `HttpError` writes the `unexpected_error`
-  warning.
+  socket once. The upgrade route then writes the `unexpected_error`
+  warning for an error that is not an `HttpError`.
 - The records use the `chat:v1:` key prefix of the Durable Object storage.
 - Each runner stream numbers its events from 1. The Durable Object stores
   a runner event, or its refusal marker, only when its number is the stream
@@ -158,8 +160,9 @@ workspace's current event number.
 `ChatTransaction.history` and `HistoryPages.read` read forward after a
 numeric cursor. Each page reads one storage list of 32 events. The events
 socket, workspace summary, Continue, and transcript copy use that read.
-The transcript copy also uses its session filter. The browser's scan and
-byte limits apply only to the newest-first read.
+The transcript copy also uses its session filter. The events socket also
+gives the byte budget of its connection, which can end a page early. The
+browser's scan limit applies only to the newest-first read.
 
 [`readNewestStoredEvents`](../../src/chat/api/read-workspace.ts) reads the
 reverse response. `ChatHistoryResponse` and `readStoredEvents` keep the

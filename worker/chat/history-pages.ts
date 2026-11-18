@@ -4,6 +4,7 @@ import type {
   WorkspaceEventEnvelope,
   WorkspaceEvent,
 } from './workspace-events'
+import { jsonBytes } from '../../src/shared/event-limits'
 import { HistoryCompaction } from './history-compaction'
 import { readNewestHistory } from './history-newest-pages'
 import {
@@ -52,6 +53,17 @@ const BROWSER_PAGE_LIMITS: PageLimits = {
 /** The session whose events the page shows. */
 export interface SessionPage {
   sessionId: string
+}
+
+/** What a forward read shows and spends. */
+export interface ReadScope {
+  /** The session whose events the page shows. Without it, every event shows. */
+  sessionId?: string
+  /**
+   * The UTF-8 JSON bytes that the reads may still show. Each read lowers it,
+   * and ends its page after the shown event that uses it up.
+   */
+  budget?: { bytes: number }
 }
 
 /** The index keeps replacement identities without retaining event payloads. */
@@ -122,26 +134,33 @@ export class HistoryPages {
   /**
    * Reads one storage list after `after`, through `through`. The events
    * socket, workspace summary, Continue, and transcript copy use this read.
-   * A session filter keeps only that session's events in the list.
+   * A session filter keeps only that session's events in the list. A budget
+   * ends the page after the shown event that uses it up.
    */
   async read(
     after: number,
     through: number,
-    session?: SessionPage,
+    scope: ReadScope = {},
   ): Promise<ChatHistoryResponse> {
     await this.prepare(through)
     const events: WorkspaceEventEnvelope[] = []
     const records = await this.list(after, through)
     let last = after
     let more = records.length === PAGE_SIZE
-    for (const stored of records) {
+    for (const [index, stored] of records.entries()) {
       if (stored.eventNumber > through) {
         more = false
         break
       }
       last = stored.eventNumber
-      const envelope = await this.shown(stored, through, session?.sessionId)
-      if (envelope) events.push(envelope)
+      const envelope = await this.shown(stored, through, scope.sessionId)
+      if (!envelope) continue
+      events.push(envelope)
+      if (!scope.budget) continue
+      scope.budget.bytes -= jsonBytes(envelope)
+      if (scope.budget.bytes > 0) continue
+      more ||= index < records.length - 1
+      break
     }
     if (!more || last >= through) return { events, throughEventNumber: through }
     return {

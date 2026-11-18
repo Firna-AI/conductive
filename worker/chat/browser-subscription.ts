@@ -6,12 +6,12 @@ import type { ChatStore } from './store'
 import type { WorkspaceEventPeer } from './workspace-events'
 
 /**
- * The most JSON text, in UTF-16 code units, that the history pages of one
+ * The most UTF-8 JSON bytes of events that the history pages of one
  * connection send: 8 MiB. Each page waits in the memory of the Durable
  * Object until the tab reads it. So a longer replay closes the connection,
  * and the tab connects again after its last page.
  */
-export const REPLAY_BUDGET = 8 * 1024 * 1024
+const REPLAY_BUDGET = 8 * 1024 * 1024
 
 interface BrowserSubscriptionOptions {
   store: ChatStore
@@ -27,23 +27,10 @@ interface BrowserSubscriptionOptions {
   after: number
   peer: WorkspaceEventPeer
   persist?: BrowserPersistence
-  /** The replay budget of the connection. The default is `REPLAY_BUDGET`. */
+  /** Runs once the tab is registered with a valid grant, before its history. */
+  registered?: () => void
+  /** The replay budget of the connection, in bytes. The default is 8 MiB. */
   budget?: number
-}
-
-/** A new tab: its registration first, then the replay of its history. */
-export interface BrowserSubscription {
-  /**
-   * Settles once the tab is registered with a valid grant, before its first
-   * history page. It rejects with the refusal of the tab.
-   */
-  registered: Promise<void>
-  /**
-   * Settles when the replay ends, with the removal of the tab. A replay that
-   * reaches the budget has already removed and closed the tab. A failed
-   * replay removes the tab and rejects.
-   */
-  replayed: Promise<() => void>
 }
 
 /** Closes a tab that can already be gone. */
@@ -58,17 +45,16 @@ export function closeTab(peer: WorkspaceEventPeer): void {
 /**
  * Registers the tab and replays its history in one task of the chat queue,
  * so no event falls between them and no event comes twice. The tab gets each
- * live event after the task.
+ * live event after the task. The promise settles when the replay ends, with
+ * the removal of the tab. A refusal closes the tab and rejects. A replay that
+ * reaches the budget, or fails, removes and closes the tab once, so the tab
+ * connects again after its last page. A failed replay also rejects.
  */
 export function subscribeBrowser(
   options: BrowserSubscriptionOptions,
-): BrowserSubscription {
+): Promise<() => void> {
   const { store, browsers, operation, access, peer, persist } = options
-  let markRegistered: () => void = () => undefined
-  const registration = new Promise<void>((resolve) => {
-    markRegistered = resolve
-  })
-  const replayed = store.run(async () => {
+  return store.run(async () => {
     if (access.workspace.archivedAt === null) await operation.logins.refresh()
     const unsubscribe = await browsers
       .add(
@@ -89,26 +75,20 @@ export function subscribeBrowser(
       })
     try {
       browsers.check(peer)
-      markRegistered()
-      if (!(await replay(options))) {
-        unsubscribe()
-        closeTab(peer)
-      }
+      options.registered?.()
+      if (!(await replay(options))) browsers.close(peer)
       return unsubscribe
     } catch (error) {
-      unsubscribe()
+      browsers.close(peer)
       throw error
     }
   })
-  return {
-    registered: Promise.race([registration, replayed.then(() => undefined)]),
-    replayed,
-  }
 }
 
 /**
  * Sends the stored history after `after` in pages that share one cutoff.
- * It returns false when the budget ends the replay before its final page.
+ * The page reads spend the budget. It returns false when the budget ends
+ * the replay before its final page.
  */
 async function replay({
   store,
@@ -118,17 +98,16 @@ async function replay({
   after,
   budget = REPLAY_BUDGET,
 }: BrowserSubscriptionOptions): Promise<boolean> {
+  const left = { bytes: budget }
   let through: number | undefined
-  let sent = 0
   while (true) {
     const history = await store.read(access.workspace.id, (view) =>
-      view.history(after, through),
+      view.history(after, through, { budget: left }),
     )
     browsers.check(peer)
     peer.send({ type: 'history', history })
     if (!history.hasMore) return true
-    sent += JSON.stringify(history).length
-    if (sent >= budget) return false
+    if (left.bytes <= 0) return false
     through = history.throughEventNumber
     after = history.nextAfterEventNumber
   }

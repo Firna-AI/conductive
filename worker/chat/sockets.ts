@@ -16,7 +16,6 @@ export async function openBrowser(
   if (access.suffix !== '/events')
     throw new HttpError(404, 'not_found', 'The page is not available.')
   return chat.subscribe(access, afterNumber(new URL(request.url)), peer)
-    .replayed
 }
 
 function socketPair(request: Request) {
@@ -37,8 +36,8 @@ function socketPair(request: Request) {
 /**
  * Answers the events socket once the tab is registered, before its history.
  * A refusal before then is the HTTP reply. The history pages follow the
- * handshake, so the tab reads them while the replay goes on. A failed replay
- * closes the socket, and the tab connects again.
+ * handshake, so the tab reads them while the replay goes on. The replay
+ * closes the socket itself when it fails. The route logs the failure.
  */
 export async function browserUpgrade(
   chat: WorkspaceChat,
@@ -46,27 +45,24 @@ export async function browserUpgrade(
   access: BrowserAccess,
 ): Promise<Response> {
   const { client, server } = socketPair(request)
+  const after = afterNumber(new URL(request.url))
   const peer = {
     send: (message: WorkspaceSocketMessage) =>
       server.send(JSON.stringify(message)),
     close: () => server.close(1000, 'Connection closed.'),
   }
-  const subscription = chat.subscribe(
-    access,
-    afterNumber(new URL(request.url)),
-    peer,
-    server,
-  )
+  let registered: () => void = () => undefined
+  const ready = new Promise<void>((resolve) => {
+    registered = resolve
+  })
+  const replay = chat.subscribe(access, after, peer, server, () => registered())
   try {
-    await subscription.registered
+    await Promise.race([ready, replay])
   } catch (error) {
     closeTab(peer)
     throw error
   }
-  void subscription.replayed.catch((error: unknown) => {
-    closeTab(peer)
-    warnUnexpectedError(error, request)
-  })
+  void replay.catch((error: unknown) => warnUnexpectedError(error, request))
   return new Response(null, { status: 101, webSocket: client })
 }
 

@@ -6,6 +6,7 @@ import { readJsonObject } from '../http/json-body'
 import { NativeCloseProbe } from '../test-support/native-close.test-support'
 import { BrowserSuspensionProbe } from './browser-suspension.test-support'
 import { holdHistoryLists } from './history-hold.test-support'
+import { nativeWarningObservation } from '../test-support/native-warnings'
 
 import { BROWSER_TEST_NOW } from './browser-clock.test-support'
 
@@ -43,6 +44,7 @@ export class Workspace extends ProductionWorkspace {
   private readonly closeProbe: NativeCloseProbe
   private readonly suspension: BrowserSuspensionProbe
   private readonly history: ReturnType<typeof holdHistoryLists>
+  private readonly warnings = nativeWarningObservation()
 
   constructor(context: DurableObjectState, env: WorkspaceCompositionEnv) {
     const closeProbe = new NativeCloseProbe(context)
@@ -195,6 +197,10 @@ export class Workspace extends ProductionWorkspace {
       await this.controls.entered.promise
     } else if (action === 'release') {
       this.controls.release.resolve()
+    } else if (action === 'capture-warnings') {
+      await this.warnings.captureWarnings(true)
+    } else if (action === 'history-fail') {
+      this.history.fail(number(input.list))
     } else if (action === 'history-hold') {
       this.history.hold(number(input.list))
     } else if (action === 'history-entered') {
@@ -235,6 +241,7 @@ export class Workspace extends ProductionWorkspace {
       alarm: await this.ctx.storage.getAlarm(),
       alarmsCompleted: this.alarmsCompleted,
       answered: this.answered,
+      warnings: await this.warnings.warningCalls(),
       reads: this.ctx.storage.kv.get('__test:browser-access-reads') ?? 0,
       opened: this.ctx.storage.kv.get('__test:browser-opened') ?? 0,
       closed: this.ctx.storage.kv.get('__test:browser-closed') ?? 0,

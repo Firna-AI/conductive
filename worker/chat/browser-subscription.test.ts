@@ -14,15 +14,22 @@ const access = {
   context: { user: { id: 'user' }, sessionId: 'session' },
 }
 
-/** A store with 70 events, so a full replay takes three pages of 32 events. */
+/**
+ * A store with 40 events. Each event names 1,000 emoji. An emoji takes four
+ * UTF-8 bytes and two UTF-16 code units, so each event takes a little over
+ * 4,000 bytes.
+ */
 async function storedWorkspace() {
   const { storage } = await nativeChatStore()
   const store = new ChatStore(storage, () => 25)
   await store.change(
     'workspace',
     async (transaction) => {
-      for (let index = 1; index <= 70; index++)
-        await transaction.emit({ type: 'workspace.title', name: `${index}` })
+      for (let index = 1; index <= 40; index++)
+        await transaction.emit({
+          type: 'workspace.title',
+          name: '🙂'.repeat(1_000),
+        })
     },
     () => undefined,
   )
@@ -67,70 +74,83 @@ const range = (first: number, last: number) =>
 
 const live: WorkspaceEventEnvelope = {
   workspaceId: 'workspace',
-  eventNumber: 71,
+  eventNumber: 41,
   occurredAt: 25,
   event: { type: 'workspace.title', name: 'live' },
 }
 
 const logins = { logins: { refresh: async () => undefined } }
 
-it('closes a replay after the page that reaches its budget, and a connection after that page goes on', async () => {
+it('ends a replay within a page at its UTF-8 byte budget and closes the tab, and a tab after its last event gets the rest', async () => {
   const store = await storedWorkspace()
   const browsers = grants()
   const first = tab()
-  const paused = subscribeBrowser({
+  // Two events stay under 10,000 bytes, and the third passes it. A count of
+  // UTF-16 code units would end the page only after the fifth event.
+  await subscribeBrowser({
     store,
     browsers,
     operation: logins,
     access,
     after: 0,
     peer: first.peer,
-    budget: 1,
+    budget: 10_000,
   })
-  await paused.registered
-  await paused.replayed
   browsers.publish([live])
   expect(pages(first.state.messages)).toEqual([
-    { numbers: range(1, 32), through: 70, next: 32 },
+    { numbers: [1, 2, 3], through: 40, next: 3 },
   ])
   expect(first.state.closed).toBe(1)
 
   const second = tab()
-  const resumed = subscribeBrowser({
+  await subscribeBrowser({
     store,
     browsers,
     operation: logins,
     access,
-    after: 32,
+    after: 3,
     peer: second.peer,
   })
-  await resumed.replayed
   browsers.publish([live])
   expect(pages(second.state.messages)).toEqual([
-    { numbers: range(33, 64), through: 70, next: 64 },
-    { numbers: range(65, 70), through: 70, next: null },
-    { live: 71 },
+    { numbers: range(4, 35), through: 40, next: 35 },
+    { numbers: range(36, 40), through: 40, next: null },
+    { live: 41 },
   ])
   expect(second.state.closed).toBe(0)
 })
 
-it('refuses a tab without a grant before its first history page', async () => {
-  const store = await storedWorkspace()
-  const refused = tab()
-  const subscription = subscribeBrowser({
-    store,
-    browsers: grants(0),
-    operation: logins,
-    access,
-    after: 0,
-    peer: refused.peer,
-  })
-  const error = await subscription.registered.then(
-    () => null,
-    (reason: unknown) => reason,
-  )
-  await expect(subscription.replayed).rejects.toBe(error)
-  expect(error).toBeInstanceOf(HttpError)
-  expect(error).toMatchObject({ status: 404, code: 'workspace_not_found' })
-  expect(refused.state).toEqual({ messages: [], closed: 1 })
+it('refuses a tab without a grant before its first history page, with no unhandled rejection', async () => {
+  const unhandled: unknown[] = []
+  const listener = (reason: unknown) => unhandled.push(reason)
+  process.on('unhandledRejection', listener)
+  try {
+    const store = await storedWorkspace()
+    const refused = tab()
+    let registered = 0
+    const subscription = subscribeBrowser({
+      store,
+      browsers: grants(0),
+      operation: logins,
+      access,
+      after: 0,
+      peer: refused.peer,
+      registered: () => {
+        registered++
+      },
+    })
+    const error = await subscription.then(
+      () => null,
+      (reason: unknown) => reason,
+    )
+    expect(error).toBeInstanceOf(HttpError)
+    expect(error).toMatchObject({ status: 404, code: 'workspace_not_found' })
+    expect(registered).toBe(0)
+    expect(refused.state).toEqual({ messages: [], closed: 1 })
+    // Node reports an unhandled rejection after the pending jobs run.
+    await new Promise((resolve) => setImmediate(resolve))
+    expect(unhandled).toEqual([])
+  } finally {
+    process.off('unhandledRejection', listener)
+  }
 })
