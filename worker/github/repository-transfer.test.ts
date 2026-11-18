@@ -98,6 +98,8 @@ it('repairs a missed move from a push of the new install and refreshes the works
   expect(await saved()).toEqual([`${orgId}:Octo-Org/Hello-World#2`])
   expect(changed).toEqual([{ repositoryId: 186853002, installationId: 2 }])
   expect(
-    harness.memory(workspace.id).events.map((envelope) => envelope.event.type),
+    (await harness.inspect(workspace.id)).events.map(
+      (envelope) => envelope.event.type,
+    ),
   ).toEqual(['github.updated'])
 })
