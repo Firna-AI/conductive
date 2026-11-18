@@ -5,7 +5,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use hyper::header::{
     ACCEPT_RANGES, CACHE_CONTROL, CONTENT_LENGTH, CONTENT_RANGE, CONTENT_TYPE, IF_MODIFIED_SINCE,
-    LAST_MODIFIED, RANGE,
+    LAST_MODIFIED,
 };
 use hyper::{Method, Request, Response, StatusCode};
 use tokio::io::AsyncSeekExt;
@@ -71,18 +71,7 @@ pub(super) async fn file(
         response.headers_mut().remove(CONTENT_LENGTH);
         return Ok(response);
     }
-    let range = if request.headers().get_all(RANGE).iter().count() > 1 {
-        Selection::Whole
-    } else {
-        range::select(
-            request
-                .headers()
-                .get(RANGE)
-                .and_then(|value| value.to_str().ok()),
-            content.size,
-        )
-    };
-    let (start, length) = match range {
+    let (start, length) = match range::select(request, &content) {
         Selection::Whole => (0, content.size),
         Selection::Partial { start, length } => {
             *response.status_mut() = StatusCode::PARTIAL_CONTENT;

@@ -1,9 +1,10 @@
 //! A bound server per test, with raw HTTP paths that no URL parser normalizes.
 
 use std::collections::BTreeMap;
-use std::fs;
+use std::fs::{self, File};
 use std::net::SocketAddr;
 use std::sync::Arc;
+use std::time::SystemTime;
 
 use cnd_runner::file_server::files::RepositoryFiles;
 use cnd_runner::file_server::listener::LoopbackListener;
@@ -56,6 +57,15 @@ impl Fixture {
         let target = self.directory.path().join(path);
         fs::create_dir_all(target.parent().unwrap()).unwrap();
         fs::write(target, content).unwrap();
+    }
+
+    pub(super) fn set_modified(&self, path: &str, modified: SystemTime) {
+        File::options()
+            .write(true)
+            .open(self.directory.path().join(path))
+            .unwrap()
+            .set_modified(modified)
+            .unwrap();
     }
 
     pub(super) async fn get(&self, path: &str) -> Reply {

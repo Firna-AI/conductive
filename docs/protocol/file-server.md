@@ -53,6 +53,12 @@ names a dated record, as
 - A request for one byte range gets that range. A request for several
   ranges gets the whole file. A range that the file cannot satisfy gets
   HTTP 416. Reason: Safari plays a video only with byte ranges.
+- A range request with `If-Range` gets its range only when that header is
+  a date equal to the current `Last-Modified` of the file. Else it gets
+  the whole file with HTTP 200, also in place of a 416. An entity tag in
+  `If-Range` never matches, because the file server sends no ETag. Reason:
+  a browser that asks for a missing part of a stored file must never join
+  bytes of two versions of the file.
 - The file server writes no request path to a log, because a path can hold
   a secret value.
 - The runner announces its file server in its `hello`, as

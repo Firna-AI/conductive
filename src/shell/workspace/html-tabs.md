@@ -47,8 +47,16 @@ sends no preview request and imports nothing from the Preview tool.
   an open runs. One hook serves each file tab of the centre, so a new tab
   ends the show, the failure, and the page of the last one.
 - When the workspace leaves Starting, such as after a Restart or a resume,
-  the hook ends a failure and opens the files preview again, also while
-  the app keeps one. The open answers the files preview that lives.
+  the hook ends a failure, and the next show that it serves opens the
+  files preview again, also while the app keeps one: the show that runs,
+  or the first show after it. The open answers the files preview that
+  lives.
+- While the cloud computer does not run, the hook builds no page from the
+  files preview, also while a Restart keeps it. A tab keeps only the page
+  that it shows when Starting begins, and only while that show runs. Each
+  other tab, also a tab that changes from Source to Preview, and a tab
+  whose show ends, shows the state of the cloud computer until the
+  workspace is ready. The hidden frames of the other tabs stay loaded.
 - While the open runs, the page shows the look of the launch page. Then the
   frame loads the launch address at the path of the file, from
   `previewLaunchUrl`, and the launch page shows the same look.
@@ -58,10 +66,11 @@ sends no preview request and imports nothing from the Preview tool.
 - A files preview that ends while the page shows keeps the page, with no
   Open, until the next show. A stop of the cloud computer keeps it too: the
   file page keeps the page through `keepShown`, as it keeps a file.
-- Reload loads the frame again while a files preview lives. Otherwise it
-  is a show. The frame also loads again when `versionOf` of its file grows.
+- Reload loads the frame again while a files preview lives and the cloud
+  computer runs. Otherwise it is a show. The frame also loads again when
+  `versionOf` of its file grows.
 - Open is `OpenInNewTab` of the previews, at the path of the file, while a
-  files preview lives.
+  files preview lives and the cloud computer runs.
 
 ## Kept frames
 
@@ -85,5 +94,6 @@ sends no preview request and imports nothing from the Preview tool.
 - On a phone, the file page shows its own frame, and nothing is kept.
 
 `previews/HtmlTabs.test.tsx`, `previews/HtmlTabKeep.test.tsx`,
-`previews/HtmlTabFrames.test.tsx`, and `previews/HtmlTabReturn.test.tsx`
-mount the whole app over the fake API and check these rules.
+`previews/HtmlTabFrames.test.tsx`, `previews/HtmlTabReturn.test.tsx`, and
+`previews/HtmlTabStarting.test.tsx` mount the whole app over the fake API
+and check these rules.

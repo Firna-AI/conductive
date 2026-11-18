@@ -42,13 +42,20 @@ type OpenFailure = Extract<HtmlPageView, { kind: 'failed' | 'older-software' }>
  * the app has none. A show is the first show of the page, a visit that
  * shows the tab again, as `useTabVisits` says, and Reload and Try again
  * while the app has no files preview. When the workspace leaves Starting,
- * as after a Restart or a resume, the show opens the files preview again
- * also while the app keeps one, and the open answers the one that lives.
+ * as after a Restart or a resume, the next show that the hook serves opens
+ * the files preview again also while the app keeps one: the show that runs,
+ * or the first show after it. The open answers the one that lives.
  * It waits while the sandbox does not run and while an open runs. After a
  * failed open, it asks again only at the next show, so a refusal sends no
  * loop of requests, as `useTabPreview` does for a Preview tab. A files
  * preview that ends while the page shows keeps the page until the next
  * show, because the protocol opens a new one at the next show of the tab.
+ *
+ * While the cloud computer does not run, the hook builds no page from the
+ * files preview record, which a Restart keeps. A tab keeps only the page
+ * that it shows when Starting begins, and only while that show runs. Each
+ * other tab, and a tab whose show ends, shows the state of the cloud
+ * computer. Reload is then a show, and Open hides.
  *
  * The tab keeps the page that it showed after its files preview ends, such
  * as while the cloud computer stops, until a new files preview or a failed
@@ -88,10 +95,15 @@ export function useHtmlPreview(
   const [showing, setShowing] = useState(false)
   /** Grows at each show. The open of a show runs once. */
   const [shows, setShows] = useState(0)
-  /** The show that opens the files preview also while the app has one. */
+  /**
+   * The show from which the hook opens the files preview again, also while
+   * the app has one: the count of shows when the workspace left Starting.
+   */
   const [renews, setRenews] = useState<number | null>(null)
   /** The last show that its open served, as its connection and its count. */
   const served = useRef<string | null>(null)
+  /** The renewal that an open already served, so each renewal opens once. */
+  const renewed = useRef<number | null>(null)
   const [failure, setFailure] = useState<{
     path: string
     failure: OpenFailure
@@ -147,7 +159,12 @@ export function useHtmlPreview(
     if (served.current === thisShow || !ready || current.opening) return
     served.current = thisShow
     if (openFailure !== null) return
-    if (current.preview !== null && renews !== shows) return
+    // The first show that the hook serves after the workspace left Starting
+    // renews the files preview: the show that runs, or a show that starts
+    // with the page, which the hook builds again only once the sandbox runs.
+    const renewing = renews !== null && renewed.current !== renews
+    if (current.preview !== null && !renewing) return
+    renewed.current = renews
     const startedIn = current.connection
     store.dispatch({ type: 'open' })
     void openFilesPreview(requests).then((result) => {
@@ -192,16 +209,23 @@ export function useHtmlPreview(
       : labelName(tabLabel(snapshot, path, 'file'))
   const version =
     path === null || snapshot === null ? '' : versionOf(snapshot, path)
+  // While the cloud computer does not run, a Restart keeps the files
+  // preview record, but the hook builds no page from it. A tab keeps only
+  // the page that it shows, while that show runs, so each other tab shows
+  // the state of the cloud computer.
   const live: FramedPage | null =
-    path !== null && preview !== null ? { path, name, preview, version } : null
+    path !== null && preview !== null && ready
+      ? { path, name, preview, version }
+      : null
   if (live && (shownPage === null || !samePage(shownPage, live))) {
     setShownPage(live)
   }
+  if (!ready && !showing && shownPage !== null) setShownPage(null)
   const page = live ?? (shownPage?.path === path ? shownPage : null)
 
   const reload = () => {
     if (path === null) return
-    if (preview !== null && openFailure === null) {
+    if (live !== null && openFailure === null) {
       // A files preview lives, so the frame loads the page again.
       if (frames) frames.reload(path)
       else setReloads((count) => count + 1)
@@ -231,7 +255,7 @@ export function useHtmlPreview(
   }
   return {
     view,
-    open: preview ? <OpenInNewTab path={path} preview={preview} /> : null,
+    open: live ? <OpenInNewTab path={path} preview={live.preview} /> : null,
     reload,
     show,
   }

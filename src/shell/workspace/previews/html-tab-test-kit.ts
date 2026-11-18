@@ -44,31 +44,43 @@ export const frameAddresses = (view: HTMLElement) =>
   [...view.querySelectorAll('iframe')].map((frame) => frame.getAttribute('src'))
 
 /**
- * The fake API with the text of the report. By default no list names it.
- * `listed` puts it into All files, with no recorded report of the lists,
- * so its label is known before its read, as for a file of the branch.
+ * The fake API with the text of the report, and of each of `others`. By
+ * default no list names them. `listed` puts them into All files, with no
+ * recorded report of the lists, so their labels are known before their
+ * reads, as for the files of the branch.
  */
-export function serverWithReport(listed = false): FakeApiServer {
+export function serverWithReport(
+  listed = false,
+  others: readonly string[] = [],
+): FakeApiServer {
   const server = new FakeApiServer(listed ? { savedLists: false } : {})
+  const paths = [reportPath, ...others]
   if (listed) {
     const tree = toolFixtures().files
     server.json('GET', filePaths.tree(org, id), {
       ...tree,
       entries: [
         ...tree.entries,
-        { path: reportPath, name: 'report.html', kind: 'file', change: null },
+        ...paths.map((path) => ({
+          path,
+          name: path.slice(path.lastIndexOf('/') + 1),
+          kind: 'file' as const,
+          change: null,
+        })),
       ],
     })
   }
   const content = '<!doctype html>\n<h1>Checkout report</h1>\n'
-  const file: FileResponse = {
-    path: reportPath,
-    mediaType: 'text/html',
-    encoding: 'utf-8',
-    content,
-    sizeBytes: new TextEncoder().encode(content).byteLength,
+  for (const path of paths) {
+    const file: FileResponse = {
+      path,
+      mediaType: 'text/html',
+      encoding: 'utf-8',
+      content,
+      sizeBytes: new TextEncoder().encode(content).byteLength,
+    }
+    server.json('GET', filePaths.content(org, id, path), file)
   }
-  server.json('GET', filePaths.content(org, id, reportPath), file)
   return server
 }
 

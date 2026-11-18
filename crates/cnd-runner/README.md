@@ -188,6 +188,7 @@ and connection drops. It does not run the Worker.
 - [open.rs](src/repository/open.rs): `verified_file` checks containment through the opened descriptor for file tabs and HTTP.
 - [server.rs](src/file_server/server.rs): `FileServer` owns HTTP connections and their shutdown.
 - [policy.rs](src/file_server/policy.rs): `FileRequests` enforces private HTTP requests, paths, and file replies.
+- [range.rs](src/file_server/range.rs): selects byte ranges only when `If-Range` is absent or matches the file's modification date to the second.
 - [files.rs](src/file_server/files.rs): `Files` provides safe repository files and rejects dot files.
 - [setup.rs](src/repository/setup.rs): context setup adds the exclude rule once and creates attachment storage.
 - [files.rs](src/reports/files.rs): `FileReporter` serializes captured report parts and file requests.

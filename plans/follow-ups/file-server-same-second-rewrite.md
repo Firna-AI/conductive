@@ -26,6 +26,6 @@
 - **Left out:** No change, because the stale page stays until the next write. No browser cache, because it breaks the low-cost reload that the user chose on 2026-11-11. No validator for HTML files only, because a style file or a picture can still go stale. A version query in the frame address, because it renews only the page and not the files that it loads.
 - **Wider fix:** B, because its version value also covers a file time that a tool sets back, and the same fixed time that an archive writes again.
 - **Previous examples:** None found.
-- **Related:** The file server also ignores `If-Range`. A check of `If-Range` would use the same version value as B.
+- **Related:** The same branch fixed `If-Range` with an exact date match, as the direct fix of review finding 2. The wider fix of finding 2 waits here: once B adds the version value, check every conditional header that the Worker forwards in one step, in the order of RFC 9110. A false `If-Match` or `If-Unmodified-Since` then gets 412, which the file server ignores today. A false `If-None-Match` or `If-Modified-Since` gets 304, and a false `If-Range` gets 200 with the whole file.
 - **Recommendation:** B. It keeps a 304 for each unchanged file, and it uses headers that the Worker already forwards.
 - **Action:** fix after merge, apply B, because a Rare product bug of Medium severity waits for a later branch under the fix rule.

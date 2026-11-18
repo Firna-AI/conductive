@@ -1,4 +1,12 @@
-//! Single byte-range selection with whole-file fallback for multiple ranges.
+//! Request-aware byte ranges conditioned on the file's modification date.
+
+use std::time::SystemTime;
+
+use httpdate::HttpDate;
+use hyper::Request;
+use hyper::header::{IF_RANGE, RANGE};
+
+use super::files::FileContent;
 
 pub(super) enum Selection {
     Whole,
@@ -6,17 +14,43 @@ pub(super) enum Selection {
     Unsatisfiable,
 }
 
-pub(super) fn select(header: Option<&str>, size: u64) -> Selection {
-    let Some(bytes) = header.and_then(|value| value.strip_prefix("bytes=")) else {
+pub(super) fn select(request: &Request<()>, content: &FileContent) -> Selection {
+    let headers = request.headers();
+    if !headers.contains_key(RANGE)
+        || !if_range_matches(request, content.modified)
+        || headers.get_all(RANGE).iter().count() > 1
+    {
+        return Selection::Whole;
+    }
+    let Some(bytes) = headers
+        .get(RANGE)
+        .and_then(|value| value.to_str().ok())
+        .and_then(|value| value.strip_prefix("bytes="))
+    else {
         return Selection::Whole;
     };
     if bytes.contains(',') {
         return Selection::Whole;
     }
-    match single(bytes, size) {
+    match single(bytes, content.size) {
         Some((start, length)) => Selection::Partial { start, length },
         None => Selection::Unsatisfiable,
     }
+}
+
+fn if_range_matches(request: &Request<()>, modified: SystemTime) -> bool {
+    let mut values = request.headers().get_all(IF_RANGE).iter();
+    let Some(value) = values.next() else {
+        return true;
+    };
+    if values.next().is_some() {
+        return false;
+    }
+    value
+        .to_str()
+        .ok()
+        .and_then(|value| httpdate::parse_http_date(value).ok())
+        .is_some_and(|date| HttpDate::from(date) == HttpDate::from(modified))
 }
 
 fn number(text: &str) -> Option<u64> {

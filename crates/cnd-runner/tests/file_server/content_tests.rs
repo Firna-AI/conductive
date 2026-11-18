@@ -5,6 +5,9 @@ use std::time::{Duration, UNIX_EPOCH};
 
 use super::support::Fixture;
 
+#[path = "if_range_tests.rs"]
+mod if_range_tests;
+
 #[tokio::test]
 async fn uses_fixed_case_insensitive_web_types_with_an_octet_stream_fallback() {
     let h = Fixture::new().await;
