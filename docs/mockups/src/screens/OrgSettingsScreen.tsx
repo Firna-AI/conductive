@@ -102,7 +102,8 @@ export const orgSettingsSchema = {
     },
     /**
      * A dialog over the page: Delete org, the removal of a member, the
-     * leave of a suspended org, or the question before Delete of a secret.
+     * leave of a suspended org, that leave while it runs, or the question
+     * before Delete of a secret.
      */
     dialog: {
       enum: [
@@ -110,6 +111,7 @@ export const orgSettingsSchema = {
         'delete-org',
         'remove-member',
         'leave-org',
+        'leaving-org',
         'delete-secret',
       ],
     },
@@ -185,7 +187,14 @@ export function OrgSettingsScreen(props: {
       <RemoveMemberDialog viewport={viewport} />
     ),
     'leave-org': suspended ? (
-      <LeaveOrgDialog viewer={settingsViewer(state)} viewport={viewport} />
+      <LeaveOrgDialog
+        busy={false}
+        viewer={settingsViewer(state)}
+        viewport={viewport}
+      />
+    ) : null,
+    'leaving-org': suspended ? (
+      <LeaveOrgDialog busy viewer={settingsViewer(state)} viewport={viewport} />
     ) : null,
     'delete-secret': suspended ? null : (
       <DeleteSecretDialog viewport={viewport} />
