@@ -1,7 +1,7 @@
-import { productName } from '../../docs/mockups/src/brand'
 import type { GitHubIdentity } from '../data/users'
 import type { AppEnv, HttpFetch } from '../env'
 import { HttpError, isRecord } from '../http'
+import { outboundRequest } from '../http/outbound-request'
 import { parseGitHubTokens, type GitHubTokenBundle } from './github-token-data'
 
 const SIGN_IN_FAILED = 'GitHub sign-in failed. Start sign-in again.'
@@ -32,9 +32,8 @@ export class GitHubClient {
     now = Date.now(),
   ): Promise<{ profile: AuthorizedGitHubIdentity; tokens: GitHubTokenBundle }> {
     const value = await this.request(
-      new Request('https://github.com/login/oauth/access_token', {
+      outboundRequest('https://github.com/login/oauth/access_token', {
         method: 'POST',
-        redirect: 'manual',
         signal: AbortSignal.timeout(30_000),
         headers: {
           Accept: 'application/json',
@@ -54,13 +53,11 @@ export class GitHubClient {
       throw new HttpError(502, 'github_sign_in_failed', SIGN_IN_FAILED)
     }
     const profile = await this.request(
-      new Request('https://api.github.com/user', {
-        redirect: 'manual',
+      outboundRequest('https://api.github.com/user', {
         signal: AbortSignal.timeout(30_000),
         headers: {
           Authorization: `Bearer ${tokens.accessToken}`,
           Accept: 'application/vnd.github+json',
-          'User-Agent': productName,
           'X-GitHub-Api-Version': '2022-11-28',
         },
       }),
@@ -102,15 +99,13 @@ export class GitHubClient {
     let next = true
     for (let page = 1; next; page++) {
       const response = await this.response(
-        new Request(
+        outboundRequest(
           `https://api.github.com/user/emails?per_page=100&page=${page}`,
           {
-            redirect: 'manual',
             signal: AbortSignal.timeout(30_000),
             headers: {
               Authorization: `Bearer ${accessToken}`,
               Accept: 'application/vnd.github+json',
-              'User-Agent': productName,
               'X-GitHub-Api-Version': '2022-11-28',
             },
           },
