@@ -40,6 +40,20 @@ streams, and the order of the runner commands.
   `event` message for each new event.
 - The history pages and the new subscription run in one queue task. So no
   event falls between them, and no event comes twice.
+- The object answers the socket upgrade once the tab is registered with a
+  valid grant, before the first `history` page. A refusal before then is
+  the HTTP reply. The pages follow the handshake. So the tab reads each
+  page while the replay goes on, and no page waits in memory for the
+  handshake.
+- `REPLAY_BUDGET` in [`browser-subscription.ts`](browser-subscription.ts)
+  limits the JSON text of the pages of one connection to 8 MiB. The object
+  sends at least one page. After the page that reaches the budget, while
+  more pages remain, it removes the tab and closes the socket. The tab
+  connects again after the `nextAfterEventNumber` of that page, and the
+  replay goes on with a new cutoff.
+- A replay that fails after the handshake removes the tab and closes the
+  socket. An error that is not an `HttpError` writes the `unexpected_error`
+  warning.
 - The records use the `chat:v1:` key prefix of the Durable Object storage.
 - Each runner stream numbers its events from 1. The Durable Object stores
   a runner event, or its refusal marker, only when its number is the stream

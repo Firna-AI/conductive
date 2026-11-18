@@ -226,6 +226,13 @@ holds how an agent action of the pull request bar sends its fixed prompt.
   one read, also in a long session. Live events after the full history
   were rejected, because a long session then showed nothing new until its
   whole history had loaded.
+- A connection opens before its stored history comes. One connection
+  sends at most about 8 MB of stored history. Then the workspace closes
+  it, and the tab connects again after the last part that it got.
+- Reason: the stored history of a connection waits in the memory of the
+  workspace until the tab reads it, and that memory has a fixed limit. A
+  replay of the whole history on one connection was rejected, because a
+  long history then stopped the workspace.
 - The chat shows each event of a session once and in event order, also
   when earlier history arrives after newer events.
 - While the earlier history loads, the chat says so above the messages

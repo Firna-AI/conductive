@@ -5,7 +5,10 @@ import type {
 } from '../native-sockets'
 import type { BrowserAccess } from './browser-authorization'
 import { BrowserTabs, type BrowserRegistration } from './browser-tabs'
-import { subscribeBrowser } from './browser-subscription'
+import {
+  subscribeBrowser,
+  type BrowserSubscription,
+} from './browser-subscription'
 import type { ChatOperation } from './operation'
 import type { ChatStore } from './store'
 import type { BrowserPeer, ChatDependencies } from './types'
@@ -49,7 +52,7 @@ export class BrowserConnections extends BrowserTabs {
     after: number,
     peer: BrowserPeer,
     socket?: WebSocket,
-  ): Promise<() => void> {
+  ): BrowserSubscription {
     const presented = this.present(peer, access.presentation)
     let persist:
       ((registration: BrowserRegistration | null) => Promise<void>) | undefined

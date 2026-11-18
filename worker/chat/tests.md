@@ -86,6 +86,7 @@ npm run typecheck
 - `native-store.test-support.ts` gives direct storage tests the native records of a production object.
   Pure storage owners can run locally over that native storage.
   `history-session-pages.test.ts` reads session pages of `HistoryPages` there with small limits, and checks where each limit ends a page.
+  `browser-subscription.test.ts` replays a tab there with a small budget. It checks that the replay closes the tab after the page that reaches the budget, and that a tab after that page gets the rest.
 - `outputFixture` in `runner-output.test-support.ts` seeds an encrypted environment capture in D1 and starts a turn.
   `runner-output-durability.test.ts` fails the native commit of held text.
   It retries on the live object, then checks eviction, replay, and a gap.
@@ -192,6 +193,11 @@ npm run typecheck
   `runner-native.test-support.ts` drive them. Their
   `hibernate` helpers evict with `webSockets: 'hibernate'`, and they check
   the instance marker, as [Wake tests](../README.md#wake-tests) says.
+- `browser-native-replay.test.ts` holds the second history page of a real
+  tab socket with `holdHistoryLists` from `history-hold.test-support.ts`.
+  The entry counts each answered socket upgrade. The case checks that the
+  object answered the upgrade and sent the first page while the second
+  page waits.
 - `browser-native-access.test.ts` checks the tab access clocks through
   member fences and a wake, expiry while access and lifecycle work wait,
   and expiry with failed lifecycle reads and writes. `closeBrowserPeers`

@@ -1,8 +1,9 @@
 import type { WorkspaceToRunner } from '../../src/shared/generated/WorkspaceToRunner'
 import type { WorkspaceSocketMessage } from '../../src/shared/events'
-import { HttpError } from '../http'
+import { HttpError, warnUnexpectedError } from '../http'
 import type { WorkspaceChat } from './backend'
 import type { BrowserAccess } from './browser-authorization'
+import { closeTab } from './browser-subscription'
 import { afterNumber } from './http-routes'
 import type { BrowserPeer } from './types'
 
@@ -15,6 +16,7 @@ export async function openBrowser(
   if (access.suffix !== '/events')
     throw new HttpError(404, 'not_found', 'The page is not available.')
   return chat.subscribe(access, afterNumber(new URL(request.url)), peer)
+    .replayed
 }
 
 function socketPair(request: Request) {
@@ -32,6 +34,12 @@ function socketPair(request: Request) {
   return { client: pair[0], server: pair[1] }
 }
 
+/**
+ * Answers the events socket once the tab is registered, before its history.
+ * A refusal before then is the HTTP reply. The history pages follow the
+ * handshake, so the tab reads them while the replay goes on. A failed replay
+ * closes the socket, and the tab connects again.
+ */
 export async function browserUpgrade(
   chat: WorkspaceChat,
   request: Request,
@@ -43,18 +51,23 @@ export async function browserUpgrade(
       server.send(JSON.stringify(message)),
     close: () => server.close(1000, 'Connection closed.'),
   }
+  const subscription = chat.subscribe(
+    access,
+    afterNumber(new URL(request.url)),
+    peer,
+    server,
+  )
   try {
-    await chat.subscribe(
-      access,
-      afterNumber(new URL(request.url)),
-      peer,
-      server,
-    )
-    return new Response(null, { status: 101, webSocket: client })
+    await subscription.registered
   } catch (error) {
-    peer.close()
+    closeTab(peer)
     throw error
   }
+  void subscription.replayed.catch((error: unknown) => {
+    closeTab(peer)
+    warnUnexpectedError(error, request)
+  })
+  return new Response(null, { status: 101, webSocket: client })
 }
 
 export async function runnerUpgrade(

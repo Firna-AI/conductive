@@ -22,6 +22,7 @@ import {
   BrowserConnections,
   type NativeBrowserConnections,
 } from './browser-connections'
+import type { BrowserSubscription } from './browser-subscription'
 import { authorizeChatRunner } from './runner-authorization'
 import { WorkspaceTitles } from './workspace-titles'
 import { WorkspaceOperations } from './workspace-operations'
@@ -274,7 +275,7 @@ export class WorkspaceChat {
     after: number,
     peer: BrowserPeer,
     socket?: WebSocket,
-  ): Promise<() => void> {
+  ): BrowserSubscription {
     return this.browsers.subscribe(access, after, peer, socket)
   }
 
