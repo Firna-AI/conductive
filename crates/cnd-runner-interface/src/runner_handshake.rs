@@ -47,6 +47,10 @@ pub enum RunnerHello {
         #[ts(optional)]
         #[ts(as = "Option<ReadonlyVec<RunnerLoginKind>>")]
         login_kinds: Option<Vec<RunnerLoginKind>>,
+        /// True while this runner's repository file server listens.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        file_server: Option<bool>,
     },
 }
 

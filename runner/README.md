@@ -20,6 +20,15 @@ The `hello` advertises every login kind that this runner can run.
 The Worker checks that list before dispatching a turn or message.
 A login kind that a runner does not advertise gets no command, and the turn fails with recovery steps.
 
+The runner also serves repository files for HTML previews on
+`127.0.0.1:7683`. It announces `fileServer: true` only after the listener
+binds. A bind failure warns and lets the runner continue without file previews.
+The [file server protocol](../docs/protocol/file-server.md) gives the private
+request checks, file access, cache dates, and byte ranges. Port reports
+leave this port out. The server shares safe file opens with file tabs and
+streams files without their read limit. It refuses dot files and links to
+dot files, while files in dot folders remain available.
+
 The service runs `/opt/conductive/current/conductive runner`.
 The [Rust runner library](../crates/cnd-runner/README.md) owns the connection,
 saved state, turns, reports, and output filter. Its [SDK helper](sdk-helper/README.md)
@@ -97,6 +106,7 @@ their defaults, and the startup failure message.
 Rust tests use controlled helper boundaries and a fake helper process.
 They test transport and state with fake workspace endpoints.
 Repository tests use temporary Git repositories and native filesystem watches.
+File-server tests use real loopback HTTP and temporary repository folders.
 The relay tests use local HTTP and WebSocket servers and socket activation.
 The [crate README](../crates/cnd-runner/README.md#development) gives their commands.
 

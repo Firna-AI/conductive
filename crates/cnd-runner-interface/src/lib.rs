@@ -5,6 +5,7 @@ pub mod api;
 pub mod chat_events;
 pub mod commit_author;
 pub mod file_changes;
+pub mod file_server;
 pub mod file_tree;
 pub mod files;
 pub mod json;

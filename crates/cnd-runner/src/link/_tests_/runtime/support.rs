@@ -116,6 +116,7 @@ impl Fixture {
             Arc::new(connector),
             runtime_clock.clone(),
             store.clone(),
+            false,
         ));
         let reports_release = Arc::new(Notify::new());
         let reports_done = Arc::new(Notify::new());

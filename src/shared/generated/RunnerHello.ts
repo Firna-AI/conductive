@@ -31,4 +31,8 @@ export type RunnerHello = {
    * loginKinds.
    */
   loginKinds?: ReadonlyVec<RunnerLoginKind>
+  /**
+   * True while this runner's repository file server listens.
+   */
+  fileServer?: boolean
 }

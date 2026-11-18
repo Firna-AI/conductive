@@ -13,6 +13,7 @@ The `conductive runner` command composes this crate. The installed service runs 
 - Keep conversation references, instructions, file revisions, turn records, and report receipts.
 - Read and write the existing Node state file format without a migration.
 - Read safe repository files and compare Git changes through private indexes and objects.
+- Stream repository files over private loopback HTTP for HTML file previews.
 - Send bounded file reports and stable listening-port reports.
 - Watch recursive repository changes and repair watches after a restore.
 - Prepare ignored context storage, including linked Git worktrees.
@@ -65,6 +66,14 @@ Comparisons preserve the real index and object store. Reads check the opened
 descriptor, reject escaped paths and Git metadata, and preserve binary bytes.
 Diffs use Git representations, including filters, link text, and submodules.
 
+The CLI starts the repository file server on `127.0.0.1:7683`. A failed
+bind warns and leaves the runner available without that capability.
+The hello carries `fileServer: true` while the server listens.
+The [file server protocol](../../docs/protocol/file-server.md) defines its
+private request headers, file access, indexes, types, cache dates, and byte ranges.
+The server shares descriptor checks with file reads. It streams files
+without the file-tab size limit and refuses dot files and links to dot files.
+
 File reports keep separate tree and changes histories. Filtering runs on each
 complete report before splitting. Multipart reports keep whole entries and
 independent revisions. Report repair saves the answer and request receipt
@@ -88,6 +97,7 @@ Compose `Arc<dyn Disk>`, `Arc<dyn EventStore>`, `Arc<dyn Clock>`,
 `Arc<dyn Connector>`, and `Arc<dyn RunnerLink>`. Give `DurableStore` a fresh
 random stream ID for a missing file. Call `EventStore::load` once before
 sharing the store. An existing file supplies its saved stream ID.
+Give `SavedRunnerLink` a true file-server flag only after the listener binds.
 Give each `SavedRunnerLink` the process-start ID of the runner start.
 Make one random version 4 UUID when the program starts. Give that ID to
 each later link of the same program. Never save it in the store.
@@ -143,6 +153,8 @@ cargo build --release --target x86_64-unknown-linux-musl -p cnd-cli
 ```
 
 Unit tests use unimock at the disk, Git, process, watch, scan, and link boundaries.
+File policy unit tests mock file access. HTTP integration tests bind isolated
+loopback listeners and stream real repository files from temporary folders.
 Connection-loop tests hold message processing after receipt and control report completion.
 Timer tests use paused Tokio time. Integration tests use temporary real Git
 repositories, native watches, a controlled disk, and an in-memory endpoint.
@@ -173,6 +185,10 @@ and connection drops. It does not run the Worker.
 - [limits.rs](src/limits.rs): `bound_event` applies serialized chat excerpts.
 - [commands.rs](src/json/commands.rs): `workspace_message` repairs and validates command JSON.
 - [service.rs](src/repository/service.rs): `Repository` supplies scans, reads, diffs, and checkpoints.
+- [open.rs](src/repository/open.rs): `verified_file` checks containment through the opened descriptor for file tabs and HTTP.
+- [server.rs](src/file_server/server.rs): `FileServer` owns HTTP connections and their shutdown.
+- [policy.rs](src/file_server/policy.rs): `FileRequests` enforces private HTTP requests, paths, and file replies.
+- [files.rs](src/file_server/files.rs): `Files` provides safe repository files and rejects dot files.
 - [setup.rs](src/repository/setup.rs): context setup adds the exclude rule once and creates attachment storage.
 - [files.rs](src/reports/files.rs): `FileReporter` serializes captured report parts and file requests.
 - [handler.rs](src/reports/handler.rs): `ReportCommandHandler` connects reports to commands and durable state.
@@ -184,6 +200,7 @@ and connection drops. It does not run the Worker.
 ### Related Docs
 
 - [Agent runner protocol](../../docs/protocol/agent-runner.md)
+- [File server protocol](../../docs/protocol/file-server.md)
 - [Runner warnings](../../docs/protocol/runner-warnings.md)
 - [Agent instructions](../../docs/protocol/agent-instructions.md)
 - [Sub-workspaces](../../docs/protocol/sub-workspaces.md)

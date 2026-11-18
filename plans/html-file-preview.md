@@ -575,24 +575,24 @@ Depends on: 2
 The runner serves the files of the repository folder on
 `127.0.0.1:7683`, and announces it in its `hello`.
 
-- [ ] Move the safe file open of `crates/cnd-runner/src/repository/io.rs`
+- [x] Move the safe file open of `crates/cnd-runner/src/repository/io.rs`
       into a function that the file read and the file server share.
-- [ ] Add the file server as a module of `crates/cnd-runner`, with the
+- [x] Add the file server as a module of `crates/cnd-runner`, with the
       rules of the design calls, the files mark, one byte range, and no
       dot file, under option D of decision 2.
-- [ ] Start it with the runner. When the bind fails, warn and run on
+- [x] Start it with the runner. When the bind fails, warn and run on
       without it.
-- [ ] Leave port 7683 out of the ports report in
+- [x] Leave port 7683 out of the ports report in
       `crates/cnd-runner/src/ports/sockets.rs`.
-- [ ] Add the optional field to the `hello` in
+- [x] Add the optional field to the `hello` in
       `crates/cnd-runner-interface/src/runner_handshake.rs`, and send it.
       Run `cargo run -p cnd-runner-interface --example export_bindings`.
-- [ ] Add tests over real local HTTP: each rule of the design calls, a
+- [x] Add tests over real local HTTP: each rule of the design calls, a
       link that leaves the folder, `.git`, `Host`, the files mark, one
       byte range, a dot file, a link to a dot file, a file in a dot
       folder, and a folder with and without `index.html`.
-- [ ] Update the `cnd-runner` README and the runner README.
-- [ ] Run the Rust checks of `AGENTS.md`.
+- [x] Update the `cnd-runner` README and the runner README.
+- [x] Run the Rust checks of `AGENTS.md`.
 
 ## Milestone 4: A launch at a path
 
