@@ -200,6 +200,9 @@ This page lists each protocol doc and what it covers.
 - [Feedback](../protocol/feedback.md): the Feedback dialog that Send
   feedback opens, its screenshots and context, the reply address, the
   routes, and the email to the team inbox.
+  - [Feedback: the send limit](../protocol/feedback-send-limit.md): how
+    often a person can send feedback, the repeats of one draft, the
+    notice of a refused send, and the record of each send.
 - [Keyboard shortcuts](../protocol/keyboard-shortcuts.md): the commands that
   keys run, where a key goes, and where the changes of a person live.
   - [Keyboard shortcuts: the keys](../protocol/keyboard-shortcuts-keys.md)

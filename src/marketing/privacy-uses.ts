@@ -207,6 +207,11 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         metadata, such as a photo's location, from selected screenshots
         before sending. The reply address is your primary verified email
         on GitHub, when available.`,
+      text`Feedback send records: ${productName} keeps your user ID, hashed
+        delivery identifiers, random identifiers, attempt times, delivery
+        status, and active request counts. They limit feedback sends and
+        prevent duplicate emails. These records hold no message, screenshot,
+        email address, or secret.`,
       text`Panel sizes: your browser keeps the sizes of the panels of the
         app. They stay in your browser.`,
       text`Last workspaces: your browser keeps the address of the last

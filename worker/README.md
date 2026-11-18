@@ -132,6 +132,7 @@ Its authorizer redeems the one-use viewer grant before any sandbox request.
 The object owns preview expiry and revocation beside its other alarm sources.
 The `*/15 * * * *` Cron Trigger runs deleted-org maintenance and cleanup every 15 minutes.
 It also removes expired Codex device sign-in records.
+It also deletes each feedback send record whose 24 hours and hourly count have both ended, as [The send limit](app-api/feedback.md#the-send-limit) says.
 It also retries pending approval emails until delivery or 24 hours from
 approval. [Approval delivery](operator/README.md#approval-email-delivery)
 describes the saved messages and delivery keys.
@@ -286,7 +287,7 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [server-timing.ts](server-timing.ts): `ServerTiming` records the steps of one request for its `Server-Timing` header. The preview proxy and the create of a workspace use it.
 - [codex-auth/README.md](codex-auth/README.md) owns device authorization,
   encrypted ChatGPT sign-ins, and serialized refresh-token renewal.
-- [http.ts](http.ts) serializes `HttpError` as the shared API error body, with optional structured details. It answers an error of a Durable Object that restarted, such as for a deploy, as `503 server_restarted`, and each other unexpected error as `500 internal_error`. Each error that is not an `HttpError` writes the `unexpected_error` warning, with the route when the caller passes its request.
+- [http.ts](http.ts) serializes `HttpError` as the shared API error body, with optional structured details and an optional `retryAt`. It answers an error of a Durable Object that restarted, such as for a deploy, as `503 server_restarted`, and each other unexpected error as `500 internal_error`. Each error that is not an `HttpError` writes the `unexpected_error` warning, with the route when the caller passes its request.
 - [waitlist/route.ts](waitlist/route.ts) reads the signed-in user's waitlist state and uses invite or referral codes.
 - [waitlist/grant.ts](waitlist/grant.ts) supplies the shared app access grant statements for D1 batches.
 - [app-api/README.md](app-api/README.md) names the entry points of the account, shell, and workspace routes.

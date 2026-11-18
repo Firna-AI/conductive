@@ -98,7 +98,11 @@ option overrides this default, including queued chats that show no spinner.
   `<GitHub login>@example.com`, and each send answers 204.
   `?feedback=no-email` gives a reply without an address.
   `?feedback=fail` fails the first send of the page with
-  `502 feedback_email_failed`, so a retry sends. With `?waiting=1`, both
+  `502 feedback_email_failed`, so a retry sends.
+  `?feedback=limit` refuses the first send of the page with
+  `429 feedback_send_limit`, as the send limit does. Its `retryAt` is
+  23 minutes and 40 seconds after the clock of the fake. A retry sends.
+  With `?waiting=1`, both
   routes refuse with `access_required`. The fake sends no email and keeps
   no copy.
 - `?operator=1` makes the dev user an operator, so the rail and the org
