@@ -601,21 +601,21 @@ Depends on: 2
 The launch address takes an optional path, and the authorizer sends the
 browser to it, under option A of decision 3.
 
-- [ ] Read an optional `path` in the launch GET of `worker/previews/`.
+- [x] Read an optional `path` in the launch GET of `worker/previews/`.
       Check it with `isFilePath` of `src/shared/file-path.ts`.
-- [ ] Post the path from the launch page. Read it in both modes of the
+- [x] Post the path from the launch page. Read it in both modes of the
       authorizer, before the redemption. Send the browser to the path, or
       return its address.
-- [ ] Carry the path in the fragment of the browser launch, and in the
+- [x] Carry the path in the fragment of the browser launch, and in the
       authorizer page.
-- [ ] Add the address builder of a launch with a path to
+- [x] Add the address builder of a launch with a path to
       `src/shared/previews.ts`. It encodes each segment and reads no path
       as an address.
-- [ ] Add tests: a path in each mode, a refused path that leaves the
+- [x] Add tests: a path in each mode, a refused path that leaves the
       grant unused, a path with `\`, `%2F`, or `//`, and a launch without
       a path.
-- [ ] Update the preview backend README.
-- [ ] Update `plans/follow-ups/local-address-path-in-preview.md`: the
+- [x] Update the preview backend README.
+- [x] Update `plans/follow-ups/local-address-path-in-preview.md`: the
       launch address now takes a path, so its option B only needs to pass
       the path of a local address.
 
@@ -626,6 +626,9 @@ Depends on: 3, 4
 The Worker opens the files preview, proxies it to port 7683, and keeps it
 out of the lists of port previews.
 
+- [x] Add the shared constants and the path helper of the files preview
+      to `src/shared/previews.ts`, before this milestone and Milestone 6
+      start.
 - [ ] Keep the file server field of the `hello` with the runner
       connection in the workspace object.
 - [ ] Add the app route that opens or returns the files preview, with its
@@ -646,9 +649,13 @@ out of the lists of port previews.
 
 Tags: ui
 
-Depends on: 1, 5
+Depends on: 1, 4
 
-The file tab of an HTML file shows the page, as the mockups draw it.
+The file tab of an HTML file shows the page, as the mockups draw it. The
+protocol docs fix the route, its reply, and its error code, and the
+shared helpers are in `src/shared/previews.ts` before Milestones 5 and 6
+start. So this milestone runs beside Milestone 5, with the fake API of
+the tests. My call of 18 November 2026, to save time.
 
 - [ ] Let `fileKind` know an HTML file. Show the view switch for it in
       `FilePage`.
