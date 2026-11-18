@@ -26,7 +26,10 @@ export async function createAdapterRuntime(entryPoint = 'worker/workspace.ts') {
         config: {
           name: 'chat-adapter-tests',
           compatibilityDate: '2026-11-06',
-          compatibilityFlags: ['global_fetch_strictly_public'],
+          compatibilityFlags: [
+            'global_fetch_strictly_public',
+            'enable_request_signal',
+          ],
           exports: { Workspace: { type: 'durable-object', storage: 'sqlite' } },
           env: {
             DB: { type: 'd1', id: TEST_D1_ID },
