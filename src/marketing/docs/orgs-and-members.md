@@ -94,7 +94,7 @@ You can connect an agent login while that build runs.
 If a repository is missing, use **Manage access** to check the GitHub App's access.
 The list needs access from both your GitHub account and the app.
 
-Admins can later change the selection in **Settings**, under **Repositories**.
+Admins can later change the selection and its order in **Settings**, under **Repositories**.
 A build applies that changed selection to new workspaces.
 Adding a repository starts a build automatically.
 
