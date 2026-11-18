@@ -49,6 +49,7 @@ fn command(origin: &str) -> Command {
         .env("CONDUCTIVE_WORKSPACE_TOKEN", "test-workspace-token")
         .env("CONDUCTIVE_TURN_ID", "test-turn")
         .env_remove("CND_CLI_SECRET_TEST_VALUE")
+        .env("CLOUDFLARE_READ_ONLY", "inherited-value")
         .kill_on_drop(true);
     command
 }
@@ -65,11 +66,15 @@ async fn secrets_tools_send_turn_headers_and_preserve_filtered_process_results()
             ),
             (
                 "POST /v1/tools/secrets/run HTTP/1.1",
-                json!({"status":"allowed","values":{"CND_CLI_SECRET_TEST_VALUE":"test-secret-value-571"},"grants":[{"name":"CND_CLI_SECRET_TEST_VALUE","grant":"workspace-value"}]}),
+                json!({"status":"allowed","values":{"CND_CLI_SECRET_TEST_VALUE":"test-secret-value-571","Cloudflare (read-only)":"test-secret-value-571"},"grants":[{"name":"CND_CLI_SECRET_TEST_VALUE","grant":"workspace-value"},{"name":"Cloudflare (read-only)","grant":"15-minutes"}]}),
             ),
             (
                 "POST /v1/tools/secrets/run HTTP/1.1",
-                json!({"status":"allowed","values":{"CND_CLI_SECRET_TEST_VALUE":"test-secret-value-571"},"grants":[{"name":"CND_CLI_SECRET_TEST_VALUE","grant":"all-agents"}]}),
+                json!({"status":"allowed","values":{"CND_CLI_SECRET_TEST_VALUE":"test-secret-value-571","Cloudflare (read-only)":"test-secret-value-571"},"grants":[{"name":"CND_CLI_SECRET_TEST_VALUE","grant":"all-agents"},{"name":"Cloudflare (read-only)","grant":"session"}]}),
+            ),
+            (
+                "POST /v1/tools/secrets/run HTTP/1.1",
+                json!({"status":"allowed","values":{"CND_CLI_SECRET_TEST_VALUE":"test-secret-value-571","Cloudflare (read-only)":"test-secret-value-571"},"grants":[{"name":"CND_CLI_SECRET_TEST_VALUE","grant":"workspace-value"},{"name":"Cloudflare (read-only)","grant":"workspace-value"}]}),
             ),
         ] {
             let (mut stream, _) = listener.accept().await.internal()?;
@@ -91,7 +96,7 @@ async fn secrets_tools_send_turn_headers_and_preserve_filtered_process_results()
             let writing = route.starts_with("POST");
             assert_eq!(
                 body.as_ref().map(|body| body["names"].clone()),
-                writing.then(|| json!(["CND_CLI_SECRET_TEST_VALUE"]))
+                writing.then(|| json!(["CND_CLI_SECRET_TEST_VALUE", "Cloudflare (read-only)"]))
             );
             assert_eq!(
                 body.as_ref().and_then(|body| body["reason"].as_str()),
@@ -101,7 +106,11 @@ async fn secrets_tools_send_turn_headers_and_preserve_filtered_process_results()
                 .as_ref()
                 .and_then(|body| body["command"].as_str())
                 .unwrap_or_default();
-            assert!(!writing || command.contains("$CND_CLI_SECRET_TEST_VALUE"));
+            assert!(
+                !writing
+                    || command.contains("$CND_CLI_SECRET_TEST_VALUE")
+                    || command.contains("printenv")
+            );
             assert!(!command.contains("test-secret-value-571"));
             let body = response.to_string();
             let reply = format!(
@@ -121,11 +130,11 @@ async fn secrets_tools_send_turn_headers_and_preserve_filtered_process_results()
     assert_eq!(list.stderr, b"");
     assert_eq!(
         serde_json::from_slice::<Value>(&list.stdout).internal()?,
-        json!({"secrets":[{"name":"CND_CLI_SECRET_TEST_VALUE","description":"Test command","available":true}]})
+        json!({"secrets":[{"name":"CND_CLI_SECRET_TEST_VALUE","description":"Test command","available":true,"environmentVariable":"CND_CLI_SECRET_TEST_VALUE"}]})
     );
     let mut child = command(&origin).args([
-        "secrets", "run", "--secret", "CND_CLI_SECRET_TEST_VALUE", "--reason", "Check the native command", "--", "/bin/sh", "-c",
-        "read -r input; printf 'input:%s\\narg:%s\\nout:%s\\n' \"$input\" \"$1\" \"$CND_CLI_SECRET_TEST_VALUE\"; printf 'err:%s\\n' \"$CND_CLI_SECRET_TEST_VALUE\" >&2; printf '\\377'; exit 7",
+        "secrets", "run", "--secret", "CND_CLI_SECRET_TEST_VALUE", "--secret", "Cloudflare (read-only)", "--reason", "Check the native command", "--", "/bin/sh", "-c",
+        "/bin/sh -c 'test \"$CLOUDFLARE_READ_ONLY\" = \"$CND_CLI_SECRET_TEST_VALUE\"' || exit 93; read -r input; printf 'input:%s\\narg:%s\\nout:%s\\n' \"$input\" \"$1\" \"$CND_CLI_SECRET_TEST_VALUE\"; printf 'err:%s\\n' \"$CND_CLI_SECRET_TEST_VALUE\" >&2; printf '\\377'; exit 7",
         "test-command", "argument with spaces and 'quotes'", "--help",
     ]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().internal()?;
     {
@@ -138,11 +147,11 @@ async fn secrets_tools_send_turn_headers_and_preserve_filtered_process_results()
         output.stdout,
         b"input:agent input\narg:argument with spaces and 'quotes'\nout:[redacted]\n\xff"
     );
-    assert_eq!(output.stderr, b"err:[redacted]\n");
+    assert_eq!(output.stderr, b"err:[redacted]\nenvironmentVariables: {\"CND_CLI_SECRET_TEST_VALUE\":\"CND_CLI_SECRET_TEST_VALUE\",\"Cloudflare (read-only)\":\"CLOUDFLARE_READ_ONLY\"}\n");
     let input = [
         json!({"jsonrpc":"2.0","id":"init","method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"test","version":"1"}}}),
         json!({"jsonrpc":"2.0","method":"notifications/initialized"}),
-        json!({"jsonrpc":"2.0","id":"run","method":"tools/call","params":{"name":"run_with_secrets","arguments":{"names":["CND_CLI_SECRET_TEST_VALUE"],"reason":"Check the native command","command":"printf 'out:%s\\n' \"$CND_CLI_SECRET_TEST_VALUE\"; printf 'err:%s\\n' \"$CND_CLI_SECRET_TEST_VALUE\" >&2; exit 7"}}}),
+        json!({"jsonrpc":"2.0","id":"run","method":"tools/call","params":{"name":"run_with_secrets","arguments":{"names":["CND_CLI_SECRET_TEST_VALUE","Cloudflare (read-only)"],"reason":"Check the native command","command":"/bin/sh -c 'test \"$CLOUDFLARE_READ_ONLY\" = \"$CND_CLI_SECRET_TEST_VALUE\"' || exit 93; printf 'out:%s\\n' \"$CND_CLI_SECRET_TEST_VALUE\"; printf 'err:%s\\n' \"$CND_CLI_SECRET_TEST_VALUE\" >&2; exit 7"}}}),
     ].map(|message| message.to_string()).join("\n") + "\n";
     let mut mcp = command(&origin)
         .arg("mcp")
@@ -168,7 +177,7 @@ async fn secrets_tools_send_turn_headers_and_preserve_filtered_process_results()
         .iter()
         .find(|reply| reply["id"] == "run")
         .ok_or(Error::Reply { mac: false })?["result"];
-    let expected = json!({"status":"completed","stdout":"out:[redacted]\n","stderr":"err:[redacted]\n","exitCode":7});
+    let expected = json!({"status":"completed","stdout":"out:[redacted]\n","stderr":"err:[redacted]\n","exitCode":7,"environmentVariables":{"CND_CLI_SECRET_TEST_VALUE":"CND_CLI_SECRET_TEST_VALUE","Cloudflare (read-only)":"CLOUDFLARE_READ_ONLY"}});
     assert_eq!(result["structuredContent"], expected);
     assert_eq!(result["isError"], true);
     assert_eq!(
@@ -180,6 +189,26 @@ async fn secrets_tools_send_turn_headers_and_preserve_filtered_process_results()
         .internal()?,
         expected
     );
+    let original = command(&origin)
+        .args([
+            "secrets",
+            "run",
+            "--secret",
+            "CND_CLI_SECRET_TEST_VALUE",
+            "--secret",
+            "Cloudflare (read-only)",
+            "--reason",
+            "Check the native command",
+            "--",
+            "/usr/bin/printenv",
+            "Cloudflare (read-only)",
+        ])
+        .output()
+        .await
+        .internal()?;
+    assert_eq!(original.status.code(), Some(0));
+    assert_eq!(original.stdout, b"[redacted]\n");
+    assert_eq!(original.stderr, b"environmentVariables: {\"CND_CLI_SECRET_TEST_VALUE\":\"CND_CLI_SECRET_TEST_VALUE\",\"Cloudflare (read-only)\":\"CLOUDFLARE_READ_ONLY\"}\n");
     server.await.internal()??;
     Ok(())
 }

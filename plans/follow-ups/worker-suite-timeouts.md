@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Post-merge task.
 - **Added:** 2026-11-16, during the merge of main into pull request #366.
-- **Location:** `worker/operator/org-activity-race.test.ts:22,94`, `worker/features/workspace-links.test.ts:27`, `worker/app-api/feature-repository-builds.test.ts:112`, `worker/operator/org-native.test.ts:81`, `worker/operator/ownership-stop-race.test.ts:68`, `worker/model-gateway/codex-concurrent.test.ts`, `worker/lifecycle/restore-watch.test.ts`, and `worker/tools/workspace-creation.test.ts`.
+- **Location:** `worker/operator/org-activity-race.test.ts:22,94`, `worker/features/workspace-links.test.ts:27`, `worker/app-api/feature-repository-builds.test.ts:112`, `worker/operator/org-native.test.ts:81`, `worker/operator/ownership-stop-race.test.ts:68`, `worker/model-gateway/codex-concurrent.test.ts`, `worker/lifecycle/restore-watch.test.ts`, `worker/tools/workspace-creation.test.ts`, `worker/chat/attachment-missing.test.ts`, `worker/chat/integration/failed-first-start-retry.test.ts`, `worker/chat/integration/workspace-resume-response.test.ts`, `worker/features/allocated-creation-restore.test.ts`, `worker/lifecycle/repository-capture.test.ts`, `worker/lifecycle/terminal-lifecycle.test.ts`, `worker/lifecycle/workspace-run-recovery.test.ts`, `worker/lifecycle/disk-retention-time-limit.test.ts`.
 - **Reason:** These files match main, and every failed test passed in a focused rerun without a source change.
 
 - **Background:**
@@ -42,6 +42,21 @@
     - `worker/lifecycle/restore-watch.test.ts`: `writes the restore marker when hydrated is absent after create and resume`.
     - `worker/tools/workspace-creation.test.ts`: `keeps one titled admission for overlapping creates and a lost reply after restart or changed defaults`.
   - The branch changes no Worker code. A focused rerun of the four files at the same path, with `TMPDIR` on the repository filesystem, passed all 28 tests. Resource contention during the full run is still the suspected source.
+  - On 17 November 2026, the secrets-variable branch at `11ac3d90a61a4783a6442470e999b9bfbaf19a62` ran `npm run check` from `/tmp/conductive-secrets-names-gate-f60a52b`, with Node 24.22.1. All static checks passed. The unfiltered suite passed 4,050 tests and failed nine tests in eight files, with no skips, across 1,250 files in 1,487.05 seconds. Each failure was `Error: Test timed out in 15000ms.`:
+    - `worker/features/allocated-creation-restore.test.ts`: `opens a restored allocated create at ready without losing its sandbox, message, or allocation pin`.
+    - `worker/chat/attachment-missing.test.ts`: `reports provider metadata outages as copy failures instead of missing files`.
+    - `worker/operator/org-activity-race.test.ts`: `refuses held HTTP activity after org suspension without changing its deadline, activity or stop alarm`.
+    - `worker/chat/integration/failed-first-start-retry.test.ts`: `retries the same failed workspace with a fresh token and dispatches every stored message once in order`.
+    - `worker/chat/integration/workspace-resume-response.test.ts`: `answers resume and retry with durable starting state while chat and startup failure stay on the event path`.
+    - `worker/lifecycle/repository-capture.test.ts`: `captures the published image folder map and environment for a created workspace`.
+    - `worker/lifecycle/terminal-lifecycle.test.ts`: `starts and caches the terminal after startup at create and resume while retention starts no terminal`.
+    - `worker/lifecycle/workspace-run-recovery.test.ts`: `runs idle lifecycle work from a due run lease`.
+    - `worker/lifecycle/workspace-run-recovery.test.ts`: `runs idle lifecycle work from a future lease and due state retry`.
+  - All eight files were outside the secrets-variable diff and matched the tested main commit `273582d8a`. One focused rerun of those same files at the same path and commit passed all 15 tests in 21.49 seconds. The command was `npm run test --` followed by the eight file paths and `--reporter=verbose`. No source, assertion, timeout or gate configuration changed. Resource contention during the full run remains the suspected source. The blocked awaits and exact cause remain unknown.
+  - After the org-login integration and release 0.25.0 merge, `npm run check` at `bb4d2fbc52f84ab933d85a6ef80e9892c114407a` passed every static check. The unfiltered suite passed 4,124 tests and timed out two tests in 1,270 files, with no skips, in 1,355.78 seconds. Both errors were `Error: Test timed out in 15000ms.`:
+    - `worker/features/allocated-creation-restore.test.ts`: `opens a restored allocated create at ready without losing its sandbox, message, or allocation pin`.
+    - `worker/lifecycle/disk-retention-time-limit.test.ts`: `ends an unready retention restart at its original deadline through phase changes, reconstruction, and stop retries, then permits user resume`.
+  - Both files match main `23173c844`. One focused rerun of those files at the same commit and path passed all four tests in 12.93 seconds. The command was `npm run test -- worker/features/allocated-creation-restore.test.ts worker/lifecycle/disk-retention-time-limit.test.ts --reporter=verbose`. No source, assertion, timeout or test configuration changed. Resource contention remains suspected. The exact cause remains unknown.
   - On 17 November 2026, integration of main `273582d8a` into `calummoore/quito-q38c` passed the complete static gate. A first complete gate command ended with signal 15 during Vitest and produced no final totals. A detached complete gate passed every static check again. Its test step then ran for more than 30 minutes. It reported these failed cases before the run was stopped:
     - `worker/lifecycle/workspace-runtime.test.ts`: `runs the production Workspace across caller loss, a full runtime restart, and idle stop`. The runner reported failure after 31,458 ms.
     - `worker/lifecycle/image-sources/parallel.test.ts`: `retries a definite refused copy start within the saved window and Retry-After`. The runner reported failure after 15,402 ms.

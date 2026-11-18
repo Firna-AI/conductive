@@ -38,5 +38,23 @@ export const temporaryValue = defineScreen({
         'Save creates an org secret with the name of the request. Its creator is the person who answers, and the session gets an approval for it. Its description is the reason of the agent (item 8 A of the mockups), which its creator and the admins can change in the Replace form of the Secrets tab. Save does not set the mark for all agents, because only admins set it (secrets decision 3 B).',
       props: { conversation: 'secret-temporary-saved' },
     },
+    {
+      slug: 'invalid-name',
+      title: 'A requested name with spaces',
+      description:
+        'The agent asks for Google Places key, a name with spaces that Acme does not have. Cal typed a value and kept 15 minutes, so Allow is on. Save as secret is off, and a line under the choices says that Save as secret needs a name with only letters, digits, and underscores. This workspace stays on. On a phone, the sheet that Give a value opened shows the same choices and line.',
+      rationale:
+        'Cal chose on 17 November 2026 that a new secret name uses only letters, digits, and underscores. Save as secret creates a secret with the name of the request, so it is off for this name. The other two choices create no secret, so they stay, and the command still gets the value.',
+      props: { conversation: 'secret-invalid-name' },
+    },
+    {
+      slug: 'mixed-invalid-name',
+      title: 'A mixed request with a name with spaces',
+      description:
+        'The agent compares Mapbox and Google Places on addresses from production, so it names PROD_DATABASE_URL, a secret of Acme, and MAPBOX_TOKEN and Google Places key, which Acme does not have. Cal typed both values and chose This workspace. Save as secret is off for the whole answer. The line under the choices says that Save as secret needs each name to use only letters, digits, and underscores. The line about PROD_DATABASE_URL follows. On a phone, the sheet holds both fields, the choices, the lines, and Allow.',
+      rationale:
+        'One choice covers every value of a request (item 7 A of the mockups). So when one name cannot become a secret, Save as secret is off for every value, also for MAPBOX_TOKEN. 15 minutes and This workspace stay for both values.',
+      props: { conversation: 'secret-mixed-invalid-name' },
+    },
   ],
 })

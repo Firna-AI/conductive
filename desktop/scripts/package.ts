@@ -13,7 +13,7 @@ if (process.argv.includes('--release')) {
   process.exit(0)
 }
 // The packaged tests run only the package of this Mac's architecture.
-// The release command builds both architectures.
+// The release command builds the architectures that its flags name, or both.
 const architecture = process.arch
 if (architecture !== 'arm64' && architecture !== 'x64') {
   throw new Error('Build the Mac packages on an arm64 or x64 Mac')

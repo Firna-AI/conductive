@@ -117,12 +117,19 @@ This page lists each protocol doc and what it covers.
       settings, and the default login of a new session.
     - [Secrets](../protocol/secrets.md): the secrets of an org that agents
       use in one command, their storage, the Secrets tab, the rights,
-      Reveal, the mark for all agents, the grants, Capabilities with Mac
-      access, and their risks.
+      Reveal, the mark for all agents, the grants, and their risks.
+      - [Capabilities](../protocol/capabilities.md): the control of New
+        workspace and of each workspace, with its secrets part and Mac
+        access.
+      - [Secret variables](../protocol/secret-variables.md): the names of
+        new secrets, the variable name of each secret, the command
+        environment, conflicting variable names, and older tools.
       - [Secret requests](../protocol/secret-requests.md): the calls that
         list the secrets and run a command with secrets, the requests and
-        their time limit, late answers, temporary values, and what the
-        chat shows.
+        their time limit, temporary values, and what the chat shows.
+        - [Late secret requests](../protocol/secret-late-answers.md): the
+          requests after the wait of their tool call ends, and their late
+          answers.
   - [Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md)
   - [Attachment uploads](../protocol/attachment-uploads.md): the upload of
     an attached file in parts, with the gate rules and the body limit of

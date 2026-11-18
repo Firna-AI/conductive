@@ -12,6 +12,7 @@ import {
 } from '../components/settings/OrgSections'
 import {
   OrgRepositoryList,
+  RepositoryEditToggle,
   RepositoryList,
 } from '../components/settings/RepositoryList'
 import { Section } from '../components/settings/Section'
@@ -22,6 +23,7 @@ import {
   type Membership,
   type PersonKey,
 } from '../fixtures/members'
+import { olderSecret, type OrgSecret } from '../fixtures/secrets'
 import { orgAgentsFor } from './orgAgentsState'
 import type { OrgSettingsState } from './OrgSettingsScreen'
 import { settingsOrg } from './settingsOrgs'
@@ -60,6 +62,19 @@ function secretsAccess(state: OrgSettingsState): SecretsAccess {
 }
 
 /**
+ * The secrets of the Secrets tab. The Replace state for an older name also
+ * lists Cloudflare (read-only), a secret of Acme, first, as the list sorts
+ * by name.
+ */
+function tabSecrets(
+  state: OrgSettingsState,
+  secrets: readonly OrgSecret[],
+): readonly OrgSecret[] {
+  if (state.secrets !== 'replace-older' || state.org === 'new') return secrets
+  return [olderSecret, ...secrets]
+}
+
+/**
  * The sentence after the description of the repositories. The notice of a
  * suspended org says why nothing changes, so the tab adds nothing.
  */
@@ -95,16 +110,18 @@ export function TabBody(props: { state: OrgSettingsState }) {
       )
     case 'repositories': {
       const note = repositoryNotes[readOnly ?? 'editable']
+      const editing = !readOnly && state.repositoryView === 'edit'
       return (
         <Section
+          action={readOnly ? null : <RepositoryEditToggle editing={editing} />}
           description={`The cloud computer of ${org.name} holds these repositories, and its workspaces start in them.${note}`}
           title="Repositories"
         >
           {settingsRepositoryNotice(state, settings)}
-          {readOnly ? (
-            <OrgRepositoryList repositories={settings.repositories} />
-          ) : (
+          {editing ? (
             <RepositoryList repositories={settings.repositories} search="" />
+          ) : (
+            <OrgRepositoryList repositories={settings.repositories} />
           )}
         </Section>
       )
@@ -132,7 +149,7 @@ export function TabBody(props: { state: OrgSettingsState }) {
           access={secretsAccess(state)}
           computerTo={settings.links.computer}
           org={org.name}
-          secrets={settings.secrets}
+          secrets={tabSecrets(state, settings.secrets)}
           view={state.secrets}
         />
       )

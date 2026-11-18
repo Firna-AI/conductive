@@ -40,15 +40,21 @@ screens.
   long covers every value, and it starts at 15 minutes, as the mockups draw
   it. A computer shows the fields in the card. A phone shows Deny and Give
   a value, which opens a sheet in the layer of the app frame.
+- Save as secret stays in the choices, but it is off for every value when
+  one name that asks for a value breaks the rule of new names of
+  `validSecretName` in `src/shared/secret-names.ts`. A line under the
+  choices says what Save as secret needs. The names of secrets of the org do
+  not count, and 15 minutes and This workspace stay.
 - A value leaves the browser once, in the answer. A failed answer keeps the
   typed value and gives the choices back, with a notice. The card of a
   request mounts again when the request ends, so a typed value leaves the
   page with the choices.
-- The words come from `secretRunCopy.ts` of the mockups. The mockup words of
-  a grant, of a late answer, and of an answered request take the fixture
-  people of the mockups, so `secret-words.ts` writes them again for the
-  members of the contract. A suspension of the owner and a close of the
-  session follow the pattern of the mockup words of an Archive.
+- The words come from `secretRunCopy.ts` of the mockups, and the line of
+  Save as secret from `secretNameCopy.ts`. The mockup words of a grant, of
+  a late answer, and of an answered request take the fixture people of the
+  mockups, so `secret-words.ts` writes them again for the members of the
+  contract. A suspension of the owner and a close of the session follow
+  the pattern of the mockup words of an Archive.
 - The line of a late answer uses the words of the mockups, with "You" for
   the member who answered. Until the app knows whether the answer told the
   agent, the line under the request says only who answered.
@@ -56,9 +62,9 @@ screens.
 ## Tests
 
 - `secret-requests.test.tsx` renders the chat with secret events in its
-  history: a request above the composer and its read-only form, the runs in
-  the fold of their turn, and the lines of late, answered, and ended
-  requests.
+  history: a request above the composer and its read-only form, the choices
+  of a request with a name that a new secret cannot take, the runs in the
+  fold of their turn, and the lines of late, answered, and ended requests.
 - `secret-snapshot.test.ts` checks the merge of the states of a request.
 - `answer-request.test.tsx` mounts the chat and answers a request for a
   value: Allow waits for the value, a failed answer keeps it, and the answer

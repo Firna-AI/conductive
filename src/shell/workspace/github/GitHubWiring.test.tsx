@@ -4,6 +4,7 @@ import { describe, expect, test, vi } from 'vitest'
 import { requestLines } from '../../../app/test-kit'
 import { routes } from '../../../app/router'
 import { githubPaths } from '../../../shared/github'
+import { workspacesPath } from '../../../shared/workspaces'
 import { byLabel, queryByRole } from '../../../test-support/dom-queries'
 import { FakeApiServer } from '../../../test-support/fake-api'
 import { FAKE_IDS } from '../../../test-support/fixtures/core'
@@ -50,6 +51,37 @@ describe('the GitHub state in the workspace', () => {
     })
     expect(column.textContent).toContain('2 checks failed')
     expect(column.textContent).toContain('2 of 6 failed')
+  })
+
+  test('a live event changes the list mark of the workspace with the bar, before the next list read', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer()
+    const { view } = await openTab(server, routes.workspace(org, id))
+    // The row of the list, whose words name its GitHub state.
+    const row = () =>
+      linksTo(view, routes.workspace(org, id)).find((link) =>
+        link.textContent?.includes('Checkout address autocomplete'),
+      )
+    const before = row()?.textContent ?? ''
+    const listReads = () =>
+      requestLines(server).filter(
+        (line) => line === `GET ${workspacesPath(org)}`,
+      ).length
+    const reads = listReads()
+    const merged = toolFixtures('merged')
+    emit(server, {
+      type: 'github.updated',
+      banner: merged.banner.banner,
+      checks: merged.checks,
+    })
+    await settle()
+    const column = byLabel('Files and tools', view)
+    expect({
+      before: before.includes('Ready to merge'),
+      bar: (column.textContent ?? '').includes('Merged into'),
+      mark: (row()?.textContent ?? '').includes('Merged'),
+      reads: listReads() - reads,
+    }).toEqual({ before: true, bar: true, mark: true, reads: 0 })
   })
 
   test('the key of Open PR on GitHub opens the pull request in a new tab while the bar links it', async () => {

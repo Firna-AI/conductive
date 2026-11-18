@@ -194,7 +194,8 @@ them. [The catalogue](catalogue.md) gives its pages.
 
 A secret of an org differs from an env var. An env var reaches every cloud
 computer at each start. A secret reaches only one command that an agent
-runs after a member allows it, and the agent gets only its name. Every
+runs after a member allows it. The agent gets its name and its variable
+name, never its value. Every
 member adds secrets on the Secrets tab, and only an admin reveals a value,
 one at a time, as `app/org-settings/secrets` shows.
 [Secrets and Capabilities](design-secrets.md) gives the tab, the

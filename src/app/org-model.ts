@@ -23,6 +23,7 @@ import {
   readSettings,
 } from './api/read-settings'
 import { listWithArchives } from './archive-overlay'
+import { LiveGitHubStates, listWithLiveGitHub } from './live-github'
 import { Creations } from './creations'
 import { workspaceUpdated, type ListData } from './list-changes'
 import { NewWorkspaceModel } from './new-workspace-model'
@@ -45,6 +46,8 @@ import {
   noteOrgRefusals,
   type OrgSuspension,
 } from './suspension'
+
+export { latestBuild } from './latest-build'
 
 export type OrgPart =
   'list' | 'repositories' | 'builds' | 'members' | 'automations' | 'agentLogins'
@@ -83,7 +86,8 @@ export class OrgModel {
   /**
    * The workspaces as the server confirmed them, without the Archives that
    * wait for their reply. The detail of the open workspace follows them, so
-   * its order never takes a record that a failed Archive takes back.
+   * its order never takes a record that a failed Archive takes back. A
+   * workspace whose pull request bar shows takes its summary from the bar.
    */
   readonly confirmedWorkspaces: Readable<Loadable<readonly Workspace[]>>
   readonly repositories: Readable<Loadable<readonly Repository[]>>
@@ -96,6 +100,8 @@ export class OrgModel {
   readonly secrets: SecretsModel
   /** The create requests of this tab, which a sign-out ends. */
   readonly creations = new Creations()
+  /** The GitHub state of each open pull request bar, over its list mark. */
+  readonly liveGitHub = new LiveGitHubStates()
   /** The GitHub access of the signed-in member, by repository ID. */
   private readonly githubAccess = new Map<string, GitHubCapabilities>()
   readonly workspaceActions: WorkspaceActions
@@ -147,7 +153,11 @@ export class OrgModel {
     this.secrets = new SecretsModel(api, orgId, services.now)
     this.workspaceActions = new WorkspaceActions(this)
     this.sections = partOf(list.store, (value) => value.sections)
-    this.confirmedWorkspaces = partOf(list.store, (value) => value.workspaces)
+    this.confirmedWorkspaces = derived(
+      partOf(list.store, (value) => value.workspaces),
+      this.liveGitHub.store,
+      listWithLiveGitHub,
+    )
     this.workspaces = derived(
       this.confirmedWorkspaces,
       this.workspaceActions.running,
@@ -287,14 +297,4 @@ export class OrgModel {
       },
     }
   }
-}
-
-/**
- * The newest run of the install script, which the Cloud computer tab shows
- * first. A refresh only fetches commits, so it does not count.
- */
-export function latestBuild(builds: BuildsResponse): ImageBuild | undefined {
-  return builds.builds
-    .filter((build) => build.kind === 'build')
-    .sort((a, b) => b.startedAt - a.startedAt)[0]
 }

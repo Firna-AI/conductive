@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test } from 'vitest'
+import { olderSecret } from '../../../docs/mockups/src/fixtures/secrets'
 import type { WorkspaceEvent } from '../../shared/events'
 import type { SecretRequest } from '../../shared/secret-requests'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
@@ -37,6 +38,17 @@ function buttonsOf(page: ParentNode, label: string): string[] {
   )
 }
 
+/** The choices of how long the values of one card last, each marked when off. */
+function lifetimesOf(page: ParentNode, label: string): string[] {
+  const card = page.querySelector(`section[aria-label="${label}"]`)
+  return Array.from(card?.querySelectorAll('[role="radio"]') ?? [], (radio) => {
+    const name = textOf(radio.outerHTML).trim()
+    return radio.getAttribute('aria-disabled') === 'true'
+      ? `${name} (off)`
+      : name
+  })
+}
+
 describe('secret requests in the chat', () => {
   test('a request that waits for its tool call shows just above the composer with Deny and Allow for this session, and a read-only chat shows it with no choices', async () => {
     const waiting = request('waiting', asks.database, FAKE_TIME + 8 * second)
@@ -60,6 +72,41 @@ describe('secret requests in the chat', () => {
         'Read-only replica of the production database. Reason Read the addresses that failed the postcode check. Command the agent says it will run',
       ),
       readOnly: [],
+    })
+  })
+
+  test('a name that asks for a value and cannot become a secret keeps 15 minutes and This workspace, and turns Save as secret off for every value with a line that says why, and a secret of the org with such a name does not', async () => {
+    const older = {
+      name: olderSecret.name,
+      secretId: 'cloudflare-read-only',
+      description: olderSecret.description,
+    }
+    const page = await renderSecrets({
+      conversation: 'running',
+      events: [
+        updated(request('providers', asks.providers, FAKE_TIME + 8 * second)),
+        updated(
+          request('older', asks.mapbox, FAKE_TIME + 9 * second, {
+            secrets: [older, ...asks.mapbox.secrets],
+          }),
+        ),
+      ],
+    })
+    const providers =
+      'Request for PROD_DATABASE_URL, MAPBOX_TOKEN, Google Places key'
+    const stored = 'Request for Cloudflare (read-only), MAPBOX_TOKEN'
+    expect({
+      providers: lifetimesOf(page, providers),
+      providersText: textOfCard(page, providers),
+      stored: lifetimesOf(page, stored),
+      storedText: textOfCard(page, stored),
+    }).toEqual({
+      providers: ['15 minutes', 'This workspace', 'Save as secret (off)'],
+      providersText: expect.stringContaining(
+        'Save as secret needs each name to use only letters, digits, and underscores.',
+      ),
+      stored: ['15 minutes', 'This workspace', 'Save as secret'],
+      storedText: expect.not.stringContaining('Save as secret needs'),
     })
   })
 
