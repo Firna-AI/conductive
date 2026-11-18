@@ -96,8 +96,9 @@ A running runner also applies a staged release when its workspace is idle,
 as the [runner service guide](../runner/service/README.md) describes. It
 runs `update apply` through `sudo -n`, then executes the new
 `current/system/runner-start.sh` in the same process. The service does not
-restart, so a changed runner unit applies only at the next start of the
-service. A runner without this step applies a release only at its next start.
+restart. [Release installation](install.md#release-installation) says when
+a changed runner unit applies. A runner without this step applies a release
+only at its next start.
 The relay and terminal processes keep their release until they start again.
 A new terminal connection runs the bridge from `current` under the command
 line of the running terminal service. So the bridge keeps its command-line

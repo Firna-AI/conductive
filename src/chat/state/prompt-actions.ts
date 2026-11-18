@@ -1,8 +1,8 @@
 import type { SendMessageRequest } from '../../shared/messages'
 import { sendBlock } from './blockers'
-import { showNotice, type ChatContext } from './context'
+import type { ChatContext } from './context'
 import { showTarget } from './linked-replies'
-import { postMessage, sendFailedTitle } from './message-send'
+import { postMessage, showSendFailed } from './message-send'
 
 /**
  * How a prompt ended. `blocked`: the session needs a login that is missing,
@@ -43,7 +43,7 @@ export async function sendPrompt(
   const posted = await postMessage(context, session.id, request, [])
   if ('error' in posted) {
     context.prompts.set(key, request.id)
-    showNotice(context, session.id, sendFailedTitle, posted.error)
+    showSendFailed(context, session.id, request.id, posted.error)
     return 'failed'
   }
   context.prompts.delete(key)

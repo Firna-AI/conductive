@@ -17,9 +17,8 @@ of the data that the screens read and write.
   limits. `org-waits.ts` holds them.
 - A row that the list already has takes its GitHub state only from list
   reads while its branch stays the same. Each other record keeps that row's GitHub state: a read, a
-  Resume reply, a `workspace.updated` event, or a partial change of the
-  open workspace. So the open row shows a newer GitHub state at the
-  next list read, as every other row does.
+  Resume reply, or a `workspace.updated` event. So the open row shows a
+  newer GitHub state at the next list read, as every other row does.
 - A record for a new branch takes that branch's GitHub state. Continue clears it when it stores the branch, before its refresh.
 - A new row, such as a created workspace, takes the GitHub state of its
   record. Titles and read marks still change the row at once. The shared
@@ -76,6 +75,14 @@ of the data that the screens read and write.
   answer sets the section of the workspace, not its state. A workspace
   record from an event, an open, Archive, or Restore keeps the place of its
   row, because only a read of the list and a move change the place.
+- A partial change of the open workspace changes only its own field in
+  the list. A `workspace.title` event changes the name, a read mark clears
+  the unread state, and a `start.updated` event changes no field. So the
+  other fields of the row stay, such as a newer owner, branch, GitHub
+  state, or `updatedAt`. The list `Resource` keeps a name change and a read
+  mark under their own keys, apart from the key of the whole record. So
+  neither one replaces a whole record, such as one from a read, a Resume
+  reply, or a `workspace.updated` event.
 - A save can answer with the whole value, such as the repositories or
   computer settings. Its answer counts from its arrival. A read that
   started before it changes nothing.
@@ -235,38 +242,8 @@ of the data that the screens read and write.
   sends nothing. The Worker also serves an event stream of each build, as
   the [lifecycle routes](../../worker/lifecycle/README.md#browser-routes)
   say. The app does not read it.
-- Output that an open, visible workspace shows counts as read. The read
-  mark tells the Worker the last event number that the user saw.
-- Each kept `WorkspaceModel` owns one `WorkspaceReadMarks` for all its
-  visits. It follows two numbers, not the `unread` state of the workspace,
-  and a close keeps both. The shown number is `last` of the event stream: the
-  stream has applied the complete state through that number. The confirmed
-  number is the newest mark that the Worker accepted.
-- While the shown number is above the confirmed number,
-  `WorkspaceReadMarks` sends a mark through the shown number. One request
-  runs at a time. When the shown number rises meanwhile, the next request
-  takes the new number, after a short wait. A failed request tries again
-  after a longer wait. An open sends a mark that is still due, also without
-  a new event.
-- An `unread` detail becomes `ready` when the confirmed number reaches the
-  shown number, and the shown number reaches the event number of the
-  detail. A read or a Resume reply gives the detail its event number, and
-  so does each stream event that changes it. So after a return, a read can
-  show `unread` at a number that the stream has not reached. That detail
-  stays `unread` until the stream reaches its number and a mark covers it.
-  The list row changes with the detail.
-- While the model is closed, the page is hidden, or the workspace is
-  archived, `WorkspaceReadMarks` sends no new mark and keeps no timer. When
-  the page shows again, the mark goes through the current shown number. A
-  page without the focus still shows its output, so the focus does not
-  count.
-- An archived detail stops the marks until a Restore shows, also while the
-  history replays records from before the archive. After a Restore, the
-  next mark covers the output that came while the workspace was archived.
-  A replay in pages moves `last` only after its final page, so a mark never
-  passes output that a later page holds.
-- Known limit: a request that never answers holds back each later mark,
-  because the API client has no timeout.
+- [Read marks](read-marks.md) gives the rules of the read marks of an
+  open workspace.
 - The chat, the GitHub views, the terminal tool, the preview tool, the
   workspace screen, the Files part, and the files development pages keep
   one store for each workspace through `useWorkspaceStore`. The hook makes

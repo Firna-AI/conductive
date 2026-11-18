@@ -250,7 +250,7 @@ names a decision of the change that added this action.
   [Folder variables](repository-folders.md#folder-variables) says.
 - Each new terminal starts in the new folder.
 - Each terminal tab attaches to the shell that runs, as
-  [The shell](terminal.md#the-shell) says. After the change, each idle
+  [The shell](terminal-shell.md#the-shell) says. After the change, each idle
   shell in the old folder moves to the new folder with `cd` (repository
   change decision 12 B). A shell is idle when no command runs in it. The
   move clears a line that a member typed and did not send.
