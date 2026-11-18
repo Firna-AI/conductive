@@ -549,9 +549,10 @@ Depends on: 9
       text would: a mark between a pair stays text, and the closing mark
       joins a closing run right before it, so `**a b*` shows `a b` in bold,
       as when its pair arrives. An underline at the end shows as text, and
-      the marks close after it. A live block that reads a reference link
-      keeps its reading, because the read of one block has no reference
-      definitions.
+      the marks close after it. The read of the live block gets the
+      reference definitions of the whole message, so a reference link reads
+      as in the whole message (finding 101 of review round 3, 18 November
+      2026).
 - [x] Item 19 B: a live update draws again only the blocks whose text
       changed. Measure a 100 KiB answer again. Each block and each text of
       an answer compares its new data with its last data, and the chips and

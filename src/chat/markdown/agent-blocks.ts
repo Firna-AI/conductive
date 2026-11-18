@@ -125,8 +125,8 @@ function block(read: AgentRead, depth: number, quotes: number): TextBlock[] {
       read.index += 1
       return [{ kind: 'code', text: token.content.replace(/\n$/u, '') }]
     case 'table_open': {
-      const { tokens, lines, live } = read
-      const { table, next } = readTable(tokens, read.index, lines, quotes, live)
+      const { tokens, lines } = read
+      const { table, next } = readTable(tokens, read.index, lines, quotes, read)
       read.index = next
       return [table]
     }
@@ -177,6 +177,7 @@ export function agentBlocks(text: string, live = false): TextBlock[] {
   const read: AgentRead = {
     ...tokenRead(parsed),
     live: live ? liveEnd(parsed.tokens, parsed.lines) : null,
+    references: parsed.references,
   }
   return blocksUntil(read, null, 0, 0)
 }

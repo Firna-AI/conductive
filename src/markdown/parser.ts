@@ -19,6 +19,8 @@ export interface ParsedMarkdown {
   lines: readonly string[]
   /** The original source line where the file's literal tail starts. */
   tailLine: number | null
+  /** The reference definitions of the message, for a second inline read. */
+  references: Env['references']
 }
 
 /** Lists and quotes deeper than this show their source as paragraph text. */
@@ -141,5 +143,6 @@ export function parseMarkdownTokens(
     tokens: markdownParser.parse(source, env),
     lines: source.split(/\r\n?|\n/),
     tailLine: typeof env.tableTailLine === 'number' ? env.tableTailLine : null,
+    references: env.references,
   }
 }

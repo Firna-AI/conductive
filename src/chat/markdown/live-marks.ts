@@ -1,5 +1,5 @@
 import type { Delimiter, Env, StateInline, Token } from 'markdown-it'
-import { linkTail, markdownParser } from '../../markdown/parser'
+import { markdownParser } from '../../markdown/parser'
 
 /**
  * The open marks of text that the agent still writes, as "While the agent
@@ -77,37 +77,18 @@ function closeOpenMarks(state: StateInline): boolean {
 }
 
 /**
- * Whether the tokens read a reference link or image. The inline read of one
- * block has none of the reference definitions of the message, so it could
- * not read them again.
- */
-function readsReference(tokens: readonly Token[]): boolean {
-  return tokens.some((token) => {
-    if (token.type === 'link_open') {
-      const tail = linkTail(token)
-      return tail !== null && !tail.startsWith('](')
-    }
-    if (token.type !== 'image') return false
-    const source = token.meta?.source
-    if (typeof source === 'string' && !source.endsWith(')')) return true
-    return readsReference(token.children ?? [])
-  })
-}
-
-/**
  * The inline tokens of the text of one block, as the parser reads them, with
- * each open mark closed at the end of the text. `parsed` holds the tokens of
- * the parse of the whole message. Null when the text has no open mark, or
- * when it reads a reference link, which the block alone cannot read: the
- * block then keeps the tokens of the parse.
+ * each open mark closed at the end of the text. Null when the text has no
+ * open mark: the block then keeps the tokens of the parse. `references` are
+ * the reference definitions of the whole message, so a reference link reads
+ * as it does in the parse of the message.
  */
 export function closedMarks(
   content: string,
-  parsed: readonly Token[],
+  references: Env['references'],
 ): Token[] | null {
-  if (readsReference(parsed)) return null
   const md = markdownParser
-  const env: Env = { chat: true }
+  const env: Env = { chat: true, references }
   const state = new md.inline.State(content, md, env, [])
   md.inline.tokenize(state)
   const post = running(md.inline.ruler2.__rules__)

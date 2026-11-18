@@ -53,8 +53,18 @@ it('closes each open mark at the end of live text, only in the paragraph, headin
   })
 })
 
-it('keeps the finished reading of the live block when it reads a reference link, so the link stays a link while its open mark shows as typed', () => {
-  expect(
-    liveOf('[1]: https://e.com/a', '', 'See [docs][1] and **then'),
-  ).toEqual([p('See {[docs][1]} and **then')])
+it('closes the open mark of a live block that reads a reference link, and keeps the link, with the definitions of the whole message', () => {
+  expect({
+    full: liveOf('[1]: https://e.com/a', '', 'See [docs][1] and **then'),
+    shortcut: liveOf('[docs]: https://e.com/a', '', 'See [docs] and *then'),
+    image: liveOf(
+      '[pic]: https://e.com/a.png',
+      '',
+      'See ![logo][pic] and ~~then',
+    ),
+  }).toEqual({
+    full: [p('See {[docs][1]} and <b>then</b>')],
+    shortcut: [p('See {[docs]} and <em>then</em>')],
+    image: [p('See {img logo -> https://e.com/a.png} and <del>then</del>')],
+  })
 })

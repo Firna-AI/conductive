@@ -1,4 +1,4 @@
-import type { Token } from 'markdown-it'
+import type { Env, Token } from 'markdown-it'
 import { unquoted, type TokenRead } from '../../markdown/token-read'
 import type { HeadingLevel, TextBlock } from './agent-blocks'
 import { inlineText, type InlineText } from './agent-inline'
@@ -18,6 +18,8 @@ export interface AgentRead extends TokenRead {
    * marks close at its end. Null for a finished message.
    */
   readonly live: Token | null
+  /** The reference definitions of the message, for the live block. */
+  readonly references: Env['references']
 }
 
 /** The level of each heading element. */
@@ -45,7 +47,7 @@ export function paragraph(text: InlineText): TextBlock[] {
 export function textOf(read: AgentRead, inline: Token): InlineText {
   const children = inline.children ?? []
   const live =
-    inline === read.live ? closedMarks(inline.content, children) : null
+    inline === read.live ? closedMarks(inline.content, read.references) : null
   return inlineText(live ?? children)
 }
 
@@ -74,7 +76,7 @@ export function heading(read: AgentRead, quotes: number): TextBlock[] {
     const children = inline.children ?? []
     const live =
       inline === read.live
-        ? closedMarks(`${inline.content}\n${typed}`, children)
+        ? closedMarks(`${inline.content}\n${typed}`, read.references)
         : null
     if (live) return paragraph(inlineText(live))
     return paragraph(withText(inlineText(children), ` ${typed}`))

@@ -36,8 +36,9 @@ React.
   parser, and adds a closing mark for each mark that can open and cannot
   close, has no pair, and stands outside each pair and each link, the last
   mark first. The parser and the tokens of the whole message stay as they
-  are. A block that reads a reference link keeps its reading, because the
-  read of one block has no reference definitions. Without `live`, a
+  are. The read of the block gets the reference definitions of the whole
+  message, from `references` of the parse, so a reference link reads as
+  in the whole message. Without `live`, a
   message reads each mark as CommonMark does, so a complete message from
   the saved history shows each open mark as typed.
 - The inline tree holds text, inline code, line breaks, marks, links, and
