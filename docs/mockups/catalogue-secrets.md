@@ -25,6 +25,24 @@ sees it. Its child pages:
   has her form without the switch for all agents, and its `replace` variant
   has the Replace form of one of her secrets.
 - `empty` has Firna, a new org, without secrets.
+- `combined` is a proposal for review, not the spec in force. It draws
+  the open items of 17 November 2026: env vars and secrets in one list on
+  the Secrets tab (item 1 B), Move to After approval (item 2 C), the mark
+  Hide on screen (item 3 B), and one name rule for both kinds (item 4 B).
+  Each row shows its kind, Each start or After approval, and has Rename.
+  Its child pages:
+  - `add` has one Add secret form, which asks an admin how agents get the
+    value. Its `each-start` variant has the form for a value for each
+    start.
+  - `rename` has the Rename form of FIGMA_TOKEN. Its `each-start` variant
+    has the Rename form of PLACES_API_KEY.
+  - `move` has the question before Move of STRIPE_SECRET_KEY.
+  - `member` has the list as Priya, a member, sees it. Its `add` variant
+    has her form, with no choice of the kind.
+  - `cloud-computer` has the Cloud computer tab with a link to the
+    Secrets tab in the place of the env vars.
+  - `two-sections` draws option 1 A for comparison: the secrets, then the
+    env vars, on one tab.
 
 The child page `app/orgs/suspended/settings/secrets` has the tab of a
 suspended org, with no action.

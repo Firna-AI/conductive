@@ -71,7 +71,8 @@ export function SecretsTab(props: {
   secrets: readonly OrgSecret[]
   access: SecretsAccess
   view: SecretsView
-  computerTo: string
+  /** The Cloud computer tab, which the env var note links to. No note without it. */
+  computerTo?: string
 }) {
   const { access } = props
   const adds = mayAddSecret(access)
@@ -113,13 +114,15 @@ export function SecretsTab(props: {
           </SectionText>
         </>
       )}
-      <SectionText muted>
-        {envVarsNote.before}
-        <ScreenLink className={styles.link} to={props.computerTo}>
-          {envVarsNote.link}
-        </ScreenLink>
-        {envVarsNote.after}
-      </SectionText>
+      {props.computerTo === undefined ? null : (
+        <SectionText muted>
+          {envVarsNote.before}
+          <ScreenLink className={styles.link} to={props.computerTo}>
+            {envVarsNote.link}
+          </ScreenLink>
+          {envVarsNote.after}
+        </SectionText>
+      )}
       {adding ? (
         <AddSecretForm
           mark={access.kind === 'admin'}

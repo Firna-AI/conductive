@@ -169,6 +169,10 @@ export function OrgSettingsScreen(props: {
   viewport: Viewport
   /** The orgs of the person signed in, which the rail lists. */
   railOrgs?: readonly Org[]
+  /** A body in place of the open tab, for a proposal that is not in force yet. */
+  body?: ReactNode
+  /** A dialog in place of the one that `state.dialog` names. */
+  dialog?: ReactNode
 }) {
   const { state, viewport } = props
   const admin = state.viewer === 'admin'
@@ -191,7 +195,7 @@ export function OrgSettingsScreen(props: {
       <DeleteSecretDialog viewport={viewport} />
     ),
   }
-  const dialog = dialogs[state.dialog]
+  const dialog = props.dialog ?? dialogs[state.dialog]
   const page = (
     <Page
       back={mobile ? { label: 'Workspaces', to: settings.list } : undefined}
@@ -203,7 +207,7 @@ export function OrgSettingsScreen(props: {
       viewport={viewport}
     >
       {suspended ? <SuspendedOrgNotice org={org} /> : null}
-      <TabBody state={state} />
+      {props.body ?? <TabBody state={state} />}
     </Page>
   )
   if (mobile) {
