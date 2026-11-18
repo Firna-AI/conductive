@@ -1,4 +1,9 @@
-import { createContext, useContext, useSyncExternalStore } from 'react'
+import {
+  createContext,
+  useContext,
+  useLayoutEffect,
+  useSyncExternalStore,
+} from 'react'
 import page from '../../../../docs/mockups/src/components/tools/PreviewPage.module.css'
 import type { Preview } from '../../../shared/generated/Preview'
 import { PreviewFrame } from '../../../previews/PreviewFrame'
@@ -43,10 +48,11 @@ export function samePage(left: FramedPage, right: FramedPage): boolean {
 
 /**
  * The pages of the tabs of HTML files on desktop, each in its frame, so a
- * page stays loaded while another tab shows. The tab that shows the page of
- * its file puts it here with `show`, and the page mounts at that first
- * show. A page keeps its place in the order, because a frame that moves
- * loads again. Each screen of a workspace has its own.
+ * page stays loaded while another tab shows. Only `KeptPageFrame`, which the
+ * file page renders while it shows the page, puts a page here with `show`,
+ * and the page mounts at that first show. A page keeps its place in the
+ * order, because a frame that moves loads again. Each screen of a workspace
+ * has its own.
  */
 export class PageFrames {
   private snapshot: PageFramesSnapshot = { pages: [], shown: null }
@@ -98,6 +104,24 @@ export class PageFrames {
     this.snapshot = next
     for (const listener of [...this.listeners]) listener()
   }
+}
+
+/**
+ * Puts the page into the kept frames, and shows it there, while the file
+ * page renders it. The file page renders it only while it shows the page
+ * of its file, so no other file can start a frame: not a tab in Source,
+ * and not a file whose label hides a secret value or is not known yet. Its
+ * end hides the page, which stays loaded while its tab is open and its
+ * files preview lives. It draws nothing in place.
+ */
+export function KeptPageFrame(props: { frames: PageFrames; page: FramedPage }) {
+  const { frames } = props
+  const { path, name, preview, version } = props.page
+  useLayoutEffect(
+    () => frames.show({ path, name, preview, version }),
+    [frames, path, name, preview, version],
+  )
+  return null
 }
 
 /**

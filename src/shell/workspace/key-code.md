@@ -155,10 +155,10 @@ this guide.
 - `previews/use-html-preview.tsx`: `useHtmlPreview`, the `htmlPreview` of
   the file page of an HTML file: its open at each show, its failure, its
   frame, Reload, and Open. `previews/page-frames.tsx`: `PageFrames` and
-  `KeptPageFrames`, the frames that the chat keeps on desktop.
-  [The tabs of HTML files](html-tabs.md) gives the rules, and
-  `previews/HtmlTabs.test.tsx` and `previews/HtmlTabKeep.test.tsx` check
-  them over the fake API.
+  `KeptPageFrames`, the frames that the chat keeps on desktop, and
+  `KeptPageFrame`, the element through which only the file page puts a
+  page there. [The tabs of HTML files](html-tabs.md) gives the rules, and
+  the `previews/HtmlTab*.test.tsx` files check them over the fake API.
 - `ContinueDialog.tsx`: the question of Continue with the local work, which
   `LocalWorkList` of the mockups lists.
 - `github/BarMerge.test.tsx`, `github/BarAgent.test.tsx`,

@@ -411,7 +411,10 @@ The app:
   Reload.
 - The app keeps the files preview of each workspace while it lives. It
   drops it at a `preview.revoked` event with its ID or at its expiry. The
-  next show of an HTML tab then opens a new one.
+  next show of an HTML tab then opens a new one. After review finding 103
+  of 18 November 2026, the app also forgets it when the workspace screen
+  closes, and at a failed open, after finding 104. So the first show after
+  a return, and Try again, open it again.
 - While the cloud computer stops or starts, the tab keeps the page that it
   already shows, as a file tab keeps its file. Otherwise the tab shows the
   state of the cloud computer, as a file tab does.

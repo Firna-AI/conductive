@@ -1,13 +1,11 @@
 import {
   useCallback,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
   useSyncExternalStore,
 } from 'react'
-import type { Preview } from '../../../shared/generated/Preview'
 import { FILE_SERVER_UNAVAILABLE } from '../../../shared/previews'
 import { showsAsPage } from '../../../files/code/file-kind'
 import { labelName, tabLabel } from '../../../files/model/file-labels'
@@ -27,7 +25,12 @@ import { useOrgServices } from '../../context'
 import type { WorkspaceContext } from '../features'
 import { useTabVisits } from '../tab-visits'
 import { useFilesPreviewState } from './kept-files-preview'
-import { samePage, usePageFrames, type FramedPage } from './page-frames'
+import {
+  KeptPageFrame,
+  samePage,
+  usePageFrames,
+  type FramedPage,
+} from './page-frames'
 
 /** An open of this show that failed, which shows in place of the page. */
 type OpenFailure = Extract<HtmlPageView, { kind: 'failed' | 'older-software' }>
@@ -50,8 +53,15 @@ type OpenFailure = Extract<HtmlPageView, { kind: 'failed' | 'older-software' }>
  * The tab keeps the page that it showed after its files preview ends, such
  * as while the cloud computer stops, until a new files preview or a failed
  * open. The frame loads again at a new files preview, at a new version of
- * the file, and at Reload. On desktop the chat keeps the frame, as
- * `KeptPageFrames` says. On a phone the page shows its own frame.
+ * the file, and at Reload. The file page renders the frame only while it
+ * shows the page. On desktop the frame is a `KeptPageFrame`, so the chat
+ * keeps the page loaded, as `KeptPageFrames` says. On a phone the page
+ * shows its own frame.
+ *
+ * An open belongs to the connection of the screen in which it started. Its
+ * answer after the end of that connection changes nothing, and a show that
+ * a new connection finds opens again, because the end of the connection
+ * forgot the files preview.
  */
 export function useHtmlPreview(
   context: WorkspaceContext,
@@ -80,20 +90,23 @@ export function useHtmlPreview(
   const [shows, setShows] = useState(0)
   /** The show that opens the files preview also while the app has one. */
   const [renews, setRenews] = useState<number | null>(null)
-  const served = useRef<number | null>(null)
+  /** The last show that its open served, as its connection and its count. */
+  const served = useRef<string | null>(null)
   const [failure, setFailure] = useState<{
     path: string
     failure: OpenFailure
   } | null>(null)
-  const [kept, setKept] = useState<FramedPage | null>(null)
+  const [shownPage, setShownPage] = useState<FramedPage | null>(null)
   const [reloads, setReloads] = useState(0)
 
-  // Another tab ends the failure and the page of the last one.
+  // Another tab ends the show, the failure, and the page of the last one.
+  // The file page of the new tab starts its own show.
   const [lastPath, setLastPath] = useState(path)
   if (path !== lastPath) {
     setLastPath(path)
+    setShowing(false)
     setFailure(null)
-    setKept(null)
+    setShownPage(null)
     setReloads(0)
   }
   // The return of the sandbox, as when the workspace leaves Starting after
@@ -122,26 +135,35 @@ export function useHtmlPreview(
     return () => setShowing(false)
   }, [])
 
-  const { preview, opening } = state
+  const { preview, opening, connection } = state
   const openFailure = failure?.path === path ? failure.failure : null
   useEffect(() => {
-    if (path === null || !showing || served.current === shows) return
+    if (path === null || !showing) return
     // The store, not this render, says whether an open runs, so a second
-    // run of the effect starts no second open.
+    // run of the effect starts no second open. A show counts as served in
+    // one connection: a new connection forgot the files preview.
     const current = store.getSnapshot()
-    if (!ready || current.opening) return
-    served.current = shows
+    const thisShow = `${current.connection}:${shows}`
+    if (served.current === thisShow || !ready || current.opening) return
+    served.current = thisShow
     if (openFailure !== null) return
     if (current.preview !== null && renews !== shows) return
+    const startedIn = current.connection
     store.dispatch({ type: 'open' })
     void openFilesPreview(requests).then((result) => {
+      // The answer of a connection that ended is no longer current.
+      if (store.getSnapshot().connection !== startedIn) return
       if (result.ok) {
-        store.dispatch({ type: 'opened', preview: result.value })
+        store.dispatch({
+          type: 'opened',
+          preview: result.value,
+          connection: startedIn,
+        })
         return
       }
-      store.dispatch({ type: 'open-failed' })
+      store.dispatch({ type: 'open-failed', connection: startedIn })
       const { code, message } = result.error
-      setKept(null)
+      setShownPage(null)
       setFailure({
         path,
         failure:
@@ -158,6 +180,7 @@ export function useHtmlPreview(
     ready,
     opening,
     preview,
+    connection,
     openFailure,
     store,
     requests,
@@ -171,20 +194,10 @@ export function useHtmlPreview(
     path === null || snapshot === null ? '' : versionOf(snapshot, path)
   const live: FramedPage | null =
     path !== null && preview !== null ? { path, name, preview, version } : null
-  if (live && (kept === null || !samePage(kept, live))) setKept(live)
-  const page = live ?? (kept?.path === path ? kept : null)
-  const pagePreview: Preview | null = page?.preview ?? null
-  const pageVersion = page?.version ?? null
-  useLayoutEffect(() => {
-    if (!frames || !showing || path === null) return undefined
-    if (pagePreview === null || pageVersion === null) return undefined
-    return frames.show({
-      path,
-      name,
-      preview: pagePreview,
-      version: pageVersion,
-    })
-  }, [frames, showing, path, name, pagePreview, pageVersion])
+  if (live && (shownPage === null || !samePage(shownPage, live))) {
+    setShownPage(live)
+  }
+  const page = live ?? (shownPage?.path === path ? shownPage : null)
 
   const reload = () => {
     if (path === null) return
@@ -204,13 +217,16 @@ export function useHtmlPreview(
   if (openFailure === null && page !== null) {
     view = {
       kind: 'page',
-      frame: frames ? null : (
+      frame: frames ? (
+        <KeptPageFrame frames={frames} page={page} />
+      ) : (
         <PreviewFrame
           file={{ path, name }}
           key={`${page.preview.id}:${page.version}:${reloads}`}
           preview={page.preview}
         />
       ),
+      kept: frames !== null,
     }
   }
   return {

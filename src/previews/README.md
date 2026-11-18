@@ -102,11 +102,16 @@ port preview: no list and no tab of the Preview tool holds it.
   preview of the workspace, with port 0, or the active one. A runner that
   announced no file server gets the error `file_server_unavailable`.
 - `filesPreview.ts` holds the store of the files preview of one workspace:
-  the files preview that lives, the previews that ended, and whether an
-  open runs. A `preview.revoked` event of its ID ends it, and so does the
-  action `ended`, which the shell sends at its expiry and when the cloud
-  computer stops. An open that answers with a preview that ended changes
-  nothing.
+  the files preview that lives, the previews that ended, whether an open
+  runs, and the count of the ends of the connection of the screen. A
+  `preview.revoked` event of its ID ends it, and so does the action
+  `ended`, which the shell sends at its expiry and when the cloud computer
+  stops. An open that answers with a preview that ended changes nothing.
+- The action `disconnected`, at the end of the connection of the screen,
+  forgets the files preview and the open that runs. An open answers with
+  the count of its connection, and an answer of an earlier connection
+  changes nothing. A failed open forgets the files preview too, but ends
+  no ID, so the next open can answer it again.
 - `PreviewFrame` takes an optional `file`: the real path, which the launch
   address names through `previewLaunchUrl`, and the file name of its
   label, which names the frame, such as "Preview of report.html".

@@ -43,7 +43,8 @@ export function useFilesPreviewState(context: WorkspaceContext): {
  * kept revokes come first at each connect. The files preview also ends at
  * its expiry, by the clock of the app, and when the cloud computer stops:
  * while the sandbox is stopped, failed, or archived. A Restart shows
- * Starting and stops no cloud computer, so it ends nothing.
+ * Starting and stops no cloud computer, so it ends nothing. The end of the
+ * connection forgets the files preview, as `connectFilesPreview` says.
  */
 export function useFilesPreviewConnection(context: WorkspaceContext): void {
   const { store, state } = useFilesPreviewState(context)
@@ -55,7 +56,7 @@ export function useFilesPreviewConnection(context: WorkspaceContext): void {
     archived || context.sandbox === 'stopped' || context.sandbox === 'error'
   useEffect(() => {
     if (archived) return undefined
-    return store.connect({ fetch, subscribe })
+    return connectFilesPreview(store, { fetch, subscribe })
   }, [store, fetch, subscribe, archived])
   const { preview } = state
   useEffect(() => {
@@ -67,4 +68,23 @@ export function useFilesPreviewConnection(context: WorkspaceContext): void {
     }
     return delay(Math.max(0, preview.expiresAt - now()), end)
   }, [store, preview, stopped, now, delay])
+}
+
+/**
+ * Connects the kept files preview. When the connection ends, the app no
+ * longer knows whether the files preview lives: it can expire, or end by a
+ * revoke or a stop, while no screen watches it. So the end forgets it and
+ * ends the open that runs, as `connectPreviews` marks the list of the port
+ * previews for a new read. The first show after a return then opens again,
+ * and the route answers the files preview that lives, or a new one.
+ */
+function connectFilesPreview(
+  store: FilesPreviewStore,
+  source: Parameters<FilesPreviewStore['connect']>[0],
+): () => void {
+  const stop = store.connect(source)
+  return () => {
+    stop()
+    store.dispatch({ type: 'disconnected' })
+  }
 }

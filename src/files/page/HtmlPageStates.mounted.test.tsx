@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 
+import { useLayoutEffect } from 'react'
 import { describe, expect, it } from 'vitest'
 import type { HtmlPageView } from './html-preview'
 import {
@@ -12,6 +13,21 @@ import {
   serverWithReport,
   standInShell,
 } from './html-test-kit'
+
+/**
+ * Stands in for the kept frame of the shell, which draws nothing in place:
+ * it records each mount and each end.
+ */
+function KeptMark(props: { marks: string[] }) {
+  const { marks } = props
+  useLayoutEffect(() => {
+    marks.push('kept')
+    return () => {
+      marks.push('ended')
+    }
+  }, [marks])
+  return null
+}
 
 describe('the page of an HTML file', () => {
   it('shows the error of a read that finds no file in place of the page, and keeps the page after a read over the limit', async () => {
@@ -38,7 +54,9 @@ describe('the page of an HTML file', () => {
     )
     const shell = standInShell()
     for (const each of [missing, tooLarge]) {
-      each.render(shell.preview({ kind: 'page', frame: pageFrame }))
+      each.render(
+        shell.preview({ kind: 'page', frame: pageFrame, kept: false }),
+      )
       await each.release()
     }
 
@@ -70,14 +88,25 @@ describe('the page of an HTML file', () => {
     })
   })
 
-  it('keeps only its header for a frame under the page, keeps a page that shows while the sandbox does not run, and else shows the state of the sandbox', async () => {
+  it('renders a kept frame only while it shows the page, with only its header, keeps a page that shows while the sandbox does not run, and else shows the state of the sandbox', async () => {
     const { view, render, release } = await mountedReport(
       serverWithReport(htmlFile(reportPath, reportSource)),
     )
     const { calls, preview } = standInShell()
-    render(preview({ kind: 'page', frame: null }))
+    const marks: string[] = []
+    const kept: HtmlPageView = {
+      kind: 'page',
+      frame: <KeptMark marks={marks} />,
+      kept: true,
+    }
+    render(preview(kept))
     await release()
-    const below = view.container.querySelector('section')?.children.length
+    const shown = {
+      parts: view.container.querySelector('section')?.children.length,
+      marks: [...marks],
+    }
+    render(preview(kept), { mode: 'source' })
+    const source = [...marks]
     const waiting = <p>Waiting for the sandbox</p>
     const keeps = (each: HtmlPageView) => {
       render(preview(each), { placeholder: waiting })
@@ -88,17 +117,19 @@ describe('the page of an HTML file', () => {
     }
 
     expect({
-      below,
-      page: keeps({ kind: 'page', frame: pageFrame }),
+      shown,
+      source,
+      page: keeps({ kind: 'page', frame: pageFrame, kept: false }),
       opening: keeps({ kind: 'opening' }),
       calls,
     }).toEqual({
-      below: 1,
+      shown: { parts: 1, marks: ['kept'] },
+      source: ['kept', 'ended'],
       page: { frame: true, waits: false },
       opening: { frame: false, waits: true },
-      // The kept page goes on with its show, and the state of the sandbox
-      // ends it.
-      calls: ['show', 'stop'],
+      // Source ends the first show. The kept page goes on with its show, and
+      // the state of the sandbox ends it.
+      calls: ['show', 'stop', 'show', 'stop'],
     })
   })
 })

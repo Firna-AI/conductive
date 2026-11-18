@@ -27,6 +27,15 @@ sends no preview request and imports nothing from the Preview tool.
   sandbox is stopped, failed, or archived. A Restart shows Starting and
   stops no cloud computer, so it ends nothing.
 - An open that answers with a preview that ended changes nothing.
+- The end of the connection of the screen forgets the files preview and
+  the open that runs, as `connectPreviews` marks the list of the port
+  previews for a new read. The files preview can expire, or end by a
+  revoke or a stop, while no screen watches it. So the first show after a
+  return opens it again, and the route answers the one that lives, or a
+  new one. An open belongs to the connection in which it started, and its
+  answer after the end of that connection changes nothing.
+- A failed open forgets the files preview too, but ends no ID. So Try
+  again, a return, and the tab of another HTML file open it again.
 
 ## The page of the tab
 
@@ -35,7 +44,8 @@ sends no preview request and imports nothing from the Preview tool.
   has none. A show is the first show of the page, a visit that shows the
   tab again, as `useTabVisits` says, and Reload or Try again while the app
   has no files preview. It waits while the sandbox does not run and while
-  an open runs.
+  an open runs. One hook serves each file tab of the centre, so a new tab
+  ends the show, the failure, and the page of the last one.
 - When the workspace leaves Starting, such as after a Restart or a resume,
   the hook ends a failure and opens the files preview again, also while
   the app keeps one. The open answers the files preview that lives.
@@ -58,7 +68,13 @@ sends no preview request and imports nothing from the Preview tool.
 - On desktop, the chat keeps the frame of each HTML tab under the tab that
   shows, as it keeps the pages of the Preview tabs: `KeptPageFrames` of
   `previews/page-frames.tsx`, in the `kept` slot of the chat. `ChatArea`
-  gives the file pages its `PageFrames` through `PageFramesContext`.
+  gives the tabs its `PageFrames` through `PageFramesContext`.
+- Only the file page puts a page there. The hook gives it a
+  `KeptPageFrame` as the frame of the page view, and the file page renders
+  it only while it shows that view. The element puts the page into the
+  `PageFrames` when it mounts, and hides it when it unmounts. So no tab in
+  Source, and no file whose label hides a secret value or is not known
+  yet, can start a frame and run the scripts of its page.
 - A frame mounts at the first show of its page. It stays loaded and hidden
   while another tab, Source, or another state shows. It goes when its tab
   closes or its files preview ends. The frame that shows stays after the
@@ -68,5 +84,6 @@ sends no preview request and imports nothing from the Preview tool.
   moves loads again.
 - On a phone, the file page shows its own frame, and nothing is kept.
 
-`previews/HtmlTabs.test.tsx` and `previews/HtmlTabKeep.test.tsx` mount the
-whole app over the fake API and check these rules.
+`previews/HtmlTabs.test.tsx`, `previews/HtmlTabKeep.test.tsx`,
+`previews/HtmlTabFrames.test.tsx`, and `previews/HtmlTabReturn.test.tsx`
+mount the whole app over the fake API and check these rules.

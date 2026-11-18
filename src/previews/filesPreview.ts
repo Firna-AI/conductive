@@ -12,7 +12,10 @@ import {
  * no port preview, so no list of the Preview tool holds it.
  */
 export interface FilesPreviewState {
-  /** The files preview that lives, or null before an open and after its end. */
+  /**
+   * The files preview that lives, or null before an open, after its end,
+   * after a failed open, and after the end of the connection of the screen.
+   */
   preview: Preview | null
   /**
    * The previews that ended, by a revoke event or by an end that the app
@@ -21,22 +24,34 @@ export interface FilesPreviewState {
   ended: ReadonlySet<string>
   /** An open runs, so no second open starts. */
   opening: boolean
+  /**
+   * Grows at each end of the connection of the screen. An open belongs to
+   * the connection in which it started, and its answer after the end of
+   * that connection changes nothing.
+   */
+  connection: number
 }
 
 type FilesPreviewAction =
   | { type: 'open' }
-  | { type: 'opened'; preview: Preview }
-  | { type: 'open-failed' }
+  | { type: 'opened'; preview: Preview; connection: number }
+  | { type: 'open-failed'; connection: number }
   /**
    * The files preview ended with no event that names it: at its expiry, or
    * when the cloud computer stopped.
    */
   | { type: 'ended'; previewId: string }
+  /**
+   * The connection of the screen ended. The files preview can end while no
+   * screen watches it, so the app forgets it, and the next show opens again.
+   */
+  | { type: 'disconnected' }
 
 const initialFilesPreview: FilesPreviewState = {
   preview: null,
   ended: new Set(),
   opening: false,
+  connection: 0,
 }
 
 function withEnded(
@@ -56,6 +71,8 @@ function withEnded(
  * the files preview, its expiry, and a stop of the cloud computer end it.
  * A revoke names any preview of the workspace, so the state keeps each
  * ended ID: an open that answers with an ended preview changes nothing.
+ * A failed open forgets the files preview, as the end of the connection
+ * does, but ends no ID, so the next open can answer it again.
  */
 function filesPreviewReducer(
   state: FilesPreviewState,
@@ -65,13 +82,22 @@ function filesPreviewReducer(
     case 'open':
       return { ...state, opening: true }
     case 'opened':
+      if (action.connection !== state.connection) return state
       return state.ended.has(action.preview.id)
         ? { ...state, opening: false }
         : { ...state, preview: action.preview, opening: false }
     case 'open-failed':
-      return { ...state, opening: false }
+      if (action.connection !== state.connection) return state
+      return { ...state, preview: null, opening: false }
     case 'ended':
       return withEnded(state, action.previewId)
+    case 'disconnected':
+      return {
+        ...state,
+        preview: null,
+        opening: false,
+        connection: state.connection + 1,
+      }
     case 'preview.revoked':
       return withEnded(state, action.previewId)
     default:

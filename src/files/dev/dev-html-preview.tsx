@@ -35,6 +35,7 @@ export function useDevHtmlPreview(
   const views: Readonly<Record<DevPreview, HtmlPageView>> = {
     page: {
       kind: 'page',
+      kept: false,
       frame: (
         <iframe
           className={styles.stubFrame}

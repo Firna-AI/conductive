@@ -74,10 +74,11 @@ export function fakeGitHub(
 /**
  * How the fake API answers the open of the files preview: with the files
  * preview, as `open` does by default, with the refusal of a runner that
- * announced no file server, or with the failure of a cloud computer that
- * did not answer.
+ * announced no file server, with the failure of a cloud computer that did
+ * not answer, or with the refusal while the cloud computer does not run.
  */
-export type FakeFilesPreview = 'open' | 'older-software' | 'failed'
+export type FakeFilesPreview =
+  'open' | 'older-software' | 'failed' | 'not-ready'
 
 /** Sets the reply of the open of the files preview of the fake workspace. */
 export function fakeFilesPreview(
@@ -114,6 +115,19 @@ export function fakeFilesPreview(
           },
         },
         502,
+      )
+      return
+    case 'not-ready':
+      routes.json(
+        'POST',
+        path,
+        {
+          error: {
+            code: 'sandbox_not_ready',
+            message: 'Open the workspace to start its cloud computer.',
+          },
+        },
+        409,
       )
       return
   }

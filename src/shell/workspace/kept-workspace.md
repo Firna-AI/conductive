@@ -50,10 +50,12 @@ the `AppModel` of the tab, for the signed-in user.
   the store. The chat reads it for the list of `@` and the file chips, also
   on a phone before a visit to Files. A sign-out stops and forgets it with
   the other kept parts.
-- The tab also keeps the files preview of each workspace that it showed,
-  which the tabs of HTML files show. `KeptConnections` connects it while the
-  screen shows the workspace, so its end reaches it, as
-  [The tabs of HTML files](html-tabs.md) says. A sign-out forgets it.
+- The tab also keeps the store of the files preview of each workspace that
+  it showed, which the tabs of HTML files show. `KeptConnections` connects
+  it while the screen shows the workspace, so its end reaches it. The end
+  of that connection forgets the files preview, so a return opens it
+  again, as [The tabs of HTML files](html-tabs.md) says. A sign-out forgets
+  the store.
 - Nothing goes to browser storage. So a reload or a new tab starts empty,
   and reads the stored history again.
 - The memory has no size limit. It keeps each workspace that the tab

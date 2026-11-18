@@ -11,12 +11,14 @@ export type HtmlPageView =
    */
   | { kind: 'opening' }
   /**
-   * The page of the file in its frame, from the files preview. `frame` is
-   * null while the shell shows the frame under the file page, where it
-   * keeps it loaded while another tab shows. The file page then keeps only
-   * its header.
+   * The page of the file in its frame, from the files preview. The file
+   * page renders `frame` only while it shows this view, so a frame starts
+   * only for a file whose page may show. With `kept`, `frame` draws nothing
+   * in place: it puts the page into the frames that the shell keeps under
+   * the file page, loaded while another tab shows. The file page then keeps
+   * only its header.
    */
-  | { kind: 'page'; frame: ReactNode | null }
+  | { kind: 'page'; frame: ReactNode; kept: boolean }
   /** The open failed: the message of the server, and Try again. */
   | { kind: 'failed'; message: string }
   /**
@@ -47,8 +49,7 @@ export interface HtmlPreview {
    * Runs while the page shows the Preview of the file, from a layout effect,
    * and its result runs when the page stops showing it: at Source, at
    * another tab, or at a state that takes its place. Keep it stable. The
-   * shell opens the files preview and shows a kept frame only while a show
-   * runs.
+   * shell opens the files preview only while a show runs.
    */
   show: () => () => void
 }

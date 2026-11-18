@@ -1,6 +1,7 @@
 import type { FileResponse } from '../../../shared/generated/FileResponse'
 import type { Preview } from '../../../shared/generated/Preview'
 import type { WorkspaceState } from '../../../shared/generated/WorkspaceState'
+import { requestLines } from '../../../app/test-kit'
 import { filePaths } from '../../../shared/files'
 import { filesPreviewPath } from '../../../shared/previews'
 import { byLabel, byRole, queryByRole } from '../../../test-support/dom-queries'
@@ -35,10 +36,30 @@ export const openLink = (view: HTMLElement) =>
 /** The bodies of the opens of the files preview. */
 export const opens = (server: FakeApiServer) =>
   bodiesOf(server, 'POST', opensPath, 0)
+/** The count of the opens of the files preview, for a wait. */
+export const openCount = (server: FakeApiServer) =>
+  requestLines(server).filter((line) => line === `POST ${opensPath}`).length
+/** The address of each frame of the view. */
+export const frameAddresses = (view: HTMLElement) =>
+  [...view.querySelectorAll('iframe')].map((frame) => frame.getAttribute('src'))
 
-/** The fake API with the text of the report, which no list names. */
-export function serverWithReport(): FakeApiServer {
-  const server = new FakeApiServer()
+/**
+ * The fake API with the text of the report. By default no list names it.
+ * `listed` puts it into All files, with no recorded report of the lists,
+ * so its label is known before its read, as for a file of the branch.
+ */
+export function serverWithReport(listed = false): FakeApiServer {
+  const server = new FakeApiServer(listed ? { savedLists: false } : {})
+  if (listed) {
+    const tree = toolFixtures().files
+    server.json('GET', filePaths.tree(org, id), {
+      ...tree,
+      entries: [
+        ...tree.entries,
+        { path: reportPath, name: 'report.html', kind: 'file', change: null },
+      ],
+    })
+  }
   const content = '<!doctype html>\n<h1>Checkout report</h1>\n'
   const file: FileResponse = {
     path: reportPath,

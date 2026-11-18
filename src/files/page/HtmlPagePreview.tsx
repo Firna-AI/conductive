@@ -43,7 +43,8 @@ function OpeningLook() {
  * The Preview of an HTML file in place of its text, as `app/files/html` of
  * the mockups draws it: the wait, the page in its frame from edge to edge,
  * the failure of a Preview tab with Try again, or the notice of older
- * software. A frame that the shell shows under the page draws nothing here.
+ * software. A kept frame, which the shell shows under the page, draws
+ * nothing here, but it must render to put the page into the kept frames.
  */
 export function HtmlPageBody(props: { preview: HtmlPreview }) {
   const { view, reload } = props.preview
@@ -55,7 +56,7 @@ export function HtmlPageBody(props: { preview: HtmlPreview }) {
         </PageFrame>
       )
     case 'page':
-      return view.frame === null ? null : <PageFrame>{view.frame}</PageFrame>
+      return view.kept ? view.frame : <PageFrame>{view.frame}</PageFrame>
     case 'failed':
       return (
         <EmptyState

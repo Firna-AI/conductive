@@ -16,7 +16,9 @@ import { click, settle } from '../../test-mount'
 import { emit } from '../kept-test-kit'
 import { linkTo, openTab } from '../wiring-test-kit'
 import {
+  frameAddresses,
   frameOf,
+  openCount,
   openLink,
   opened,
   opens,
@@ -24,6 +26,7 @@ import {
   pageOf,
   reportHref,
   reportPath as path,
+  rowOf,
   serverWithReport,
   turnTo,
 } from './html-tab-test-kit'
@@ -88,6 +91,37 @@ describe('the tab of an HTML file', () => {
     expect({ failed, opens: (await opens(server)).length }).toEqual({
       failed: { message: true, reload: null, open: null },
       opens: 2,
+    })
+  })
+
+  test('shows no page after a failed open when the workspace leaves Starting after a Restart, and Try again and a return each open the files preview again', async () => {
+    holdAnimationFrames()
+    const server = serverWithReport()
+    const { view } = await openTab(server, reportHref)
+    await waitFor(() => frameOf(view), 'the page')
+    fakeFilesPreview(server, 'failed')
+    turnTo(server, 'starting')
+    await settle()
+    turnTo(server, 'ready')
+    await waitFor(
+      () => pageOf(view).textContent?.includes("The preview couldn't open"),
+      'the failure of the open after Restart',
+    )
+    const failed = { frames: frameAddresses(view), opens: openCount(server) }
+
+    click(byRole('button', 'Try again', pageOf(view)))
+    await waitFor(() => openCount(server) === 3, 'the open of Try again')
+    await settle()
+    const retried = { frames: frameAddresses(view), opens: openCount(server) }
+    fakeFilesPreview(server, 'open')
+    click(byRole('button', 'Address autocomplete', rowOf(view)))
+    await settle()
+    click(linkTo(rowOf(view), reportHref))
+    await waitFor(() => frameOf(view), 'the page after the return')
+    expect({ failed, retried, opens: openCount(server) }).toEqual({
+      failed: { frames: [], opens: 2 },
+      retried: { frames: [], opens: 3 },
+      opens: 4,
     })
   })
 

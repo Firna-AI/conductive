@@ -108,8 +108,7 @@ export function FilePage(props: {
     () => (showsPage && show ? show() : undefined),
     [showsPage, show],
   )
-  const below =
-    showsPage && page.view.kind === 'page' && page.view.frame === null
+  const below = showsPage && page.view.kind === 'page' && page.view.kept
   let body: ReactNode = <LoadingFile />
   if (showsPage) {
     body = <HtmlPageBody preview={page} />
@@ -168,7 +167,8 @@ export function FilePage(props: {
           ) : undefined
         }
       />
-      {below ? null : <div className={styles.body}>{body}</div>}
+      {/* A kept frame draws nothing in place, but it must still render. */}
+      {below ? body : <div className={styles.body}>{body}</div>}
     </LayoutRoot>
   )
 }

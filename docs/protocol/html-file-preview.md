@@ -122,10 +122,16 @@ the tab at `app/files/html`, on desktop and on a phone.
   newest release before it restarts the runner.
 - When the workspace leaves Starting, such as after a Restart or a
   resume, each HTML tab in Preview opens the files preview again: a tab
-  that shows the notice, and a tab that kept its page. Each new show of
-  the tab also opens it again, and Reload is a show. So a release that the
-  runner installs while the workspace is idle shows the page at the next
-  show of the tab.
+  that shows the notice, and a tab that kept its page.
+- A show of the tab opens the files preview when the app keeps no live
+  one: at the first show after a return to the workspace, after the files
+  preview ended, and after a failed open. Reload loads the page again, and
+  it opens a new files preview when the app keeps none. So a release that
+  the runner installs while the workspace is idle shows the page at the
+  next show of the tab.
+- Reason for the open after a return: the files preview can end while the
+  member is in another workspace, such as at a stop, and the page of an
+  ended preview cannot load.
 - Reason: a Restart shows Starting until the runner is ready, and a file
   tab already reads again when the state of the cloud computer changes. A
   new event for the file server was not chosen, because the open route

@@ -14,8 +14,8 @@ Preview shows the page, as `app/files/html` of the mockups draws it.
   `page/html-preview.ts`, holds the `view` to draw, the `open` link, a
   `reload`, and a stable `show`. The page calls `show` from a layout
   effect while it shows the Preview of the file, and the result when it
-  stops. So the shell opens the files preview, and keeps its frame, only
-  while the page shows it, and the Files code sends no preview request.
+  stops. So the shell opens the files preview only while the page shows
+  it, and the Files code sends no preview request.
 - The view is the wait, the page in its frame, a failed open, or the
   notice of older software. `page/HtmlPagePreview.tsx` draws each one with
   the parts and the words of the mockups: the look of the launch page with
@@ -24,9 +24,14 @@ Preview shows the page, as `app/files/html` of the mockups draws it.
 - The header keeps Download and Copy. While the page opens or shows, it
   adds Reload and the `open` link before Copy. A narrow page, such as a
   phone, moves them to a second line of the header, at its end.
-- A frame that the shell shows under the page, where it keeps the frame
-  while another tab shows, is a `page` view with no `frame`. The page then
-  keeps only its header, and gives the frame its room.
+- The page renders the `frame` of a `page` view only while it shows that
+  view. So a frame starts only for a file whose page may show, never for
+  Source, a dot file, or a label that hides a secret value or is not known
+  yet.
+- With `kept`, the `frame` of a `page` view draws nothing in place: it puts
+  the page into the frames that the shell keeps under the page, loaded
+  while another tab shows. The page still renders it, and keeps only its
+  header, so the kept frame gets the room.
 - The page has no read limit. The page still reads the file for Copy,
   Download, and Source. A read that finds no file shows its error in place
   of the page, and every other read keeps the page.

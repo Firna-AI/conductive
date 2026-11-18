@@ -29,12 +29,12 @@ describe('the tab of an HTML file', () => {
     )
     const { calls, preview } = standInShell()
     const open = <a href="https://launch.test/?path=report">Open</a>
-    render(preview({ kind: 'page', frame: pageFrame }, open))
+    render(preview({ kind: 'page', frame: pageFrame, kept: false }, open))
     await release()
     const inPreview = { ...seen(view.container), calls: [...calls] }
 
     press(view.container, 'radio', 'Source')
-    render(preview({ kind: 'page', frame: pageFrame }, open), {
+    render(preview({ kind: 'page', frame: pageFrame, kept: false }, open), {
       mode: 'source',
     })
 
@@ -77,7 +77,7 @@ describe('the tab of an HTML file', () => {
     view.render(
       <FilePage
         files={files}
-        htmlPreview={preview({ kind: 'page', frame: pageFrame })}
+        htmlPreview={preview({ kind: 'page', frame: pageFrame, kept: false })}
         layout="desktop"
         navigation={testNavigation()}
         tab={{ kind: 'file', path: secret, mode: 'preview' }}
@@ -122,7 +122,7 @@ describe('the tab of an HTML file', () => {
     view.render(
       <FilePage
         files={files}
-        htmlPreview={preview({ kind: 'page', frame: pageFrame })}
+        htmlPreview={preview({ kind: 'page', frame: pageFrame, kept: false })}
         layout="desktop"
         navigation={testNavigation()}
         tab={{ kind: 'file', path: dotFile, mode: 'preview' }}
