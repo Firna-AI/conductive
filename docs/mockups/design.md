@@ -87,6 +87,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   A move that the place of a tab rules out keeps its place, greyed.
   A read-only workspace leaves out each item that it does not allow,
   from decision 214.
+- The app opens a menu beside its button in the top layer, so no box cuts
+  it. `app/chat/menu-placement` draws such menus above the page, and CSS
+  anchors place each one at its button.
 - A sub-workspace shows under the row of its parent, from sub-workspace
   decisions 1 C, 4 F, 5 C, and 6 A, as `app/sub-workspaces` shows.
   `withTrees` in `src/components/workspaces/trees.ts` places the rows of
