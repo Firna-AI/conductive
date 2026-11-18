@@ -161,7 +161,12 @@ mount the chat.
   so the list of `@` lies just above the box. A dialog or a sheet covers
   the nearest positioned frame: the app frame. The lifted tab of a drag,
   and the tab menu on desktop, draw on `document.body` with a fixed
-  position, because the row clips what it holds.
+  position, because the row clips what it holds. The model menu, the
+  session history on desktop, and the menu of Allow open beside their
+  button, in the top layer, on
+  [`PopoverSurface`](../shell/ui/PopoverSurface.tsx). So no box of the host
+  cuts them, as `app/chat/menu-placement` in
+  [the mockups](../../docs/mockups/catalogue-chat-and-automations.md) shows.
 - The menus, the dialogs, and the sheets of the chat note themselves in
   the open layers of the app shell, from `../shell/ui/layers.ts`. So the
   key of the command palette closes an open menu, and does nothing while

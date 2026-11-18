@@ -116,6 +116,7 @@ export function ModelPicker(props: {
       </ShortcutTip>
       {open ? (
         <Menu
+          anchor={anchor}
           entries={modelMenu(props.models, choice, props.sessionAgent, choose, {
             toggle: toggleFast,
             hint: fastHint,
