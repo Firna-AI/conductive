@@ -11,12 +11,16 @@ import {
   installLocationHarness,
 } from './install-location.test-support.js'
 
-vi.mock('node:fs/promises', () => ({
-  mkdtemp: vi.fn(),
-  readFile: vi.fn(),
-  rmdir: vi.fn(),
-  writeFile: vi.fn(),
-}))
+vi.mock('node:fs/promises', async () => {
+  const actual =
+    await vi.importActual<typeof import('node:fs/promises')>('node:fs/promises')
+  return {
+    mkdtemp: vi.fn(),
+    readFile: vi.fn(actual.readFile),
+    rmdir: vi.fn(),
+    writeFile: vi.fn(actual.writeFile),
+  }
+})
 
 it('offers the native move after EROFS beside the running app bundle', async () => {
   const { dependencies } = installLocationHarness()
