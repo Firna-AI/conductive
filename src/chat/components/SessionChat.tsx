@@ -197,6 +197,7 @@ export function SessionChat(props: SessionChatProps) {
           block={block}
           model={modelLabel(snapshot.models, session.choice)}
           onConnectAgent={props.onConnectAgent}
+          watch={controller.watchMissingLogin}
         />
       ) : null}
       {!down && session && !block && login?.kind === 'linked' ? (

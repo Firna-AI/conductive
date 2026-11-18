@@ -46,6 +46,7 @@ interface KeptWorkspace extends ShownWorkspace {
  * while it shows, as the sidebar does.
  */
 function chatSources(app: AppModel, org: OrgModel): ChatSources {
+  const boot = app.boot.get()
   return {
     account: app.account.account,
     models: app.models,
@@ -62,6 +63,16 @@ function chatSources(app: AppModel, org: OrgModel): ChatSources {
       subscribe: org.workspaces.subscribe,
     },
     watchWorkspaces: () => org.watch('list'),
+    observeLogin: (observation) => {
+      if (app.boot.get() === boot) app.account.observeLogin(observation)
+    },
+    loginObservationCurrent: (observation) =>
+      app.boot.get() === boot &&
+      app.account.loginObservationCurrent(observation),
+    watchMissingLogin: () =>
+      app.boot.get() === boot
+        ? app.account.watchMissingLogin()
+        : () => undefined,
   }
 }
 
