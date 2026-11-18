@@ -32,7 +32,8 @@ When `current` then names the newer release, it executes the new
 `/opt/conductive/current/system/runner-start.sh` in the same process.
 The service does not stop, so systemd stops no process of the service group.
 When `current` did not change, the runner warns and connects again on its release.
-A changed runner unit applies only at the next start of the service.
+[Release installation](../../image/install.md#release-installation) says when a
+changed runner unit applies.
 
 A new runner confirms its release only after its first valid `welcome`.
 Its startup hook calls the resolved executable's `update started` through
@@ -45,4 +46,8 @@ So after an idle install, a new release that exits at its start restarts the ser
 That restart stops each process of the service group, and its pre-start apply restores the previous release.
 SIGTERM closes helper processes and ends running turns before the connection closes.
 `KillMode=control-group` keeps its child processes in the service group.
+`OOMPolicy=continue` keeps the service running when the kernel ends one of
+those processes for lack of memory, as
+[Out of memory](../../docs/protocol/agent-runner.md#out-of-memory) says.
+The default policy, `stop`, would stop the service and end every running turn.
 [Workspace startup](../../image/start.md) gives the build and retention gates.
