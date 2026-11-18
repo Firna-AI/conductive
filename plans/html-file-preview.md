@@ -40,9 +40,13 @@ Contract owners:
 - **File server:** the part of the agent runner that answers HTTP requests
   for the files of the workspace's repository folder, on `127.0.0.1:7683`.
 - **Files preview:** the preview of the file server. A workspace has at
-  most one active files preview, or one for each folder under option E of
-  decision 2. It has a random hostname on the preview domain, as a port
-  preview has.
+  most one active files preview. It has a random hostname on the preview
+  domain, as a port preview has.
+- **Dot file:** a file whose own name starts with a dot, such as `.env`
+  or `.npmrc`. A file in a folder whose name starts with a dot, such as
+  `.context/report.html`, is not a dot file.
+- **Files mark:** the header `X-Conductive-Files: 1`, which the Worker
+  adds to each request of a files preview.
 - **Launch address:** the address on the app's hostname that loads a
   preview. Each load gets a new grant, and the authorizer then sends the
   browser to the preview hostname.
@@ -56,7 +60,8 @@ protocol docs cite it so, as
 [Decision numbers](../docs/architecture.md#decision-numbers) says. The
 options check of 18 November 2026 brought back option D and added option
 E of decision 1. It changed decision 2 and added decision 3. Its report
-is in `.context/html-file-preview/options-check-report.md`.
+is in `.context/html-file-preview/options-check-report.md`. Cal answered
+decisions 2 and 3 on 18 November 2026.
 
 ### 1. HTML files show only as source
 
@@ -133,16 +138,12 @@ is in `.context/html-file-preview/options-check-report.md`.
 
 ### 2. Which files a files preview can load
 
-- **Answer:** Open.
+- **Answer:** D, on 18 November 2026, by Cal.
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design.
 - **Category:** Security.
 - **Location:** The file server in `crates/cnd-runner/`, and the new HTML
   preview page of the protocol docs.
-- **Terms:**
-  - **Dot file:** a file whose own name starts with a dot, such as `.env`
-    or `.npmrc`. A file in a folder whose name starts with a dot, such as
-    `.context/report.html`, is not a dot file.
 - **Background:**
   - A page loads other files by their relative addresses, such as
     `style.css` or `images/chart.png`. The file server answers each such
@@ -234,7 +235,7 @@ is in `.context/html-file-preview/options-check-report.md`.
 
 ### 3. The frame must open the page of the file
 
-- **Answer:** Open.
+- **Answer:** A, on 18 November 2026, by Cal.
 - **Severity:** Medium. **Effort:** Medium.
 - **Source:** Design. The options check of 18 November 2026.
 - **Category:** Security.
@@ -313,17 +314,19 @@ The cloud computer:
   request whose `Host` is `localhost:7683` or `127.0.0.1:7683`. Reason: a
   check of `Host` stops DNS rebinding from a browser in the cloud
   computer, as dev servers do. The relay sends `Host: localhost:7683`.
-- The file server answers only a request with the files mark, a header
-  that the Worker adds to each request of a files preview. The Worker
-  forwards no such header from a browser. So a port preview of port 7683
-  shows an error, as a port preview of port 7682 does. Reason: a member
-  or an agent can open a port preview of any port.
+- The file server answers only a request with the files mark. Every other
+  request gets 403. The Worker forwards no files mark from a browser. So a
+  port preview of port 7683 shows an error, as a port preview of port 7682
+  does. Reason: a member or an agent can open a port preview of any port.
 - The path of a request names a file by its path from the top of the
   repository, with each segment percent-decoded. So an address that
   starts with `/` names a file from the top of the repository. The file
   server ignores the query. A segment that decodes to a `/` or a NUL gets
-  404. A path that a file read refuses, or that the answer of decision 2
-  leaves out, gets 404.
+  404. A path that a file read refuses gets 404.
+- A path that names a dot file gets 404, under option D of decision 2. So
+  does a link whose target is a dot file. Reason: a link named
+  `config.txt` that leads to `.env` must not give the page the content of
+  `.env`.
 - A folder path that ends with `/` serves the `index.html` of the folder.
   A folder path without the `/` redirects to the same path with it, so
   relative addresses work. A folder without `index.html` gets 404. No
@@ -331,28 +334,36 @@ The cloud computer:
 - The content type comes from the file extension, with a fixed table of
   web file types: HTML, CSS, JavaScript, JSON, SVG, PNG, JPEG, GIF, WebP,
   AVIF, ICO, WOFF, WOFF2, TTF, OTF, WASM, MP4, WebM, MP3, WAV, plain text,
-  Markdown, XML, and PDF. Every other file is
-  `application/octet-stream`.
+  Markdown, XML, PDF, and source maps. `.js` and `.mjs` are JavaScript.
+  Each text type carries `charset=utf-8`. Every other file is
+  `application/octet-stream`. Reason: the Worker sends `nosniff`, so a
+  browser runs a script or a style only with its correct type.
 - Each reply carries `Cache-Control: no-cache` and `Last-Modified`. So a
   reload shows the newest file, and an unchanged file costs a 304.
 - The file server streams each file, with no size limit. The read limit
   of 5 MiB stays for Source. A request for one byte range gets that
   range, so Safari can play a video. A request for several ranges gets
-  the whole file.
-- The runner announces its file server in its `hello`, in a new optional
-  field. An older runner sends no field. Reason: the `hello` already
-  announces the login kinds of the runner. The runner protocol version
-  stays 2.
+  the whole file. A range that the file cannot satisfy gets 416. Any
+  other method gets 405.
+- The file server writes no request path to a log, because a path can
+  hold a secret value.
+- The runner announces its file server with `fileServer: true` in its
+  `hello`, only while the file server listens. An older runner sends no
+  field. Reason: the `hello` already announces the login kinds of the
+  runner. The runner protocol version stays 2.
+- The port 7683 is a constant of the shared contracts, in Rust and in
+  TypeScript, as the relay port 7682 is.
 
 The Worker:
 
 - A files preview is a preview row of the workspace with port 0. Reason:
   the row needs no migration, and no port preview can have port 0. During
   a rollback, the previous Worker lists it as port 0.
-- A new app route opens the files preview of the workspace, or returns
-  the active one. It needs a running cloud computer and a runner that
-  announced its file server. Otherwise it answers 409, with a code that
-  the app shows as a request for a Restart of the software.
+- The new app route `POST .../previews/files` opens the files preview of
+  the workspace, or returns the active one, as a `PreviewResponse`. It
+  needs a running cloud computer and a connected runner that announced its
+  file server. Otherwise it answers 409 `file_server_unavailable`, and the
+  app asks for a Restart of the software.
 - The proxy sends each request of a files preview to port 7683 through
   the relay, with the files mark. It uses the checks, the cookies, and the
   headers of a port preview.
@@ -360,8 +371,11 @@ The Worker:
   files preview out. An agent cannot close it. It ends when the cloud
   computer stops and after 24 hours, as a port preview does. The next
   show of an HTML tab then opens a new one.
-- The next three calls apply option A of decision 3, which waits for the
-  user. Milestone 4 follows the answer.
+- The launch address takes an optional `path` query. The launch page
+  posts the path with the grant. In both modes, the authorizer sends the
+  browser to that path on the hostname of the redeemed preview. The
+  browser launch of the Mac app carries the path in the fragment, beside
+  the grant. This applies option A of decision 3.
 - The Worker checks the path with `isFilePath` of
   `src/shared/file-path.ts` before the redemption. A refused path gets the
   same 404 as an invalid grant, and its grant stays unused.
@@ -389,6 +403,9 @@ The app:
 - The frame loads again when an event changes the file, so an edit of an
   agent shows. A change of another file, such as a style file, needs
   Reload.
+- The app keeps the files preview of each workspace while it lives. It
+  drops it at a `preview.revoked` event with its ID or at its expiry. The
+  next show of an HTML tab then opens a new one.
 - While the cloud computer stops or starts, the tab keeps the page that it
   already shows, as a file tab keeps its file. Otherwise the tab shows the
   state of the cloud computer, as a file tab does.
@@ -452,14 +469,15 @@ The protocol docs state the requirements of the HTML preview, the files
 preview, and the launch path, with decisions 1 and 2.
 
 - [ ] Add `docs/protocol/html-file-preview.md` with the requirements of
-      the HTML tab, the file server, and the files preview, with the
-      answers of decisions 2 and 3. Say that an address that starts with
+      the HTML tab, the file server, and the files preview, with option D
+      of decision 2 and option A of decision 3. Say that an address that starts with
       `/` names a file from the top of the repository. Link the page from
       [Files and changes](../docs/protocol/workspace-tools.md#files-and-changes).
       Reason: `workspace-tools.md` has 243 lines, near the target of 250.
 - [ ] Change the authorizer rule of
-      `docs/protocol/terminal-previews-and-desktop.md` to the answer of
-      decision 3.
+      `docs/protocol/terminal-previews-and-desktop.md` to option A of
+      decision 3: it sends the browser to the path that the launch names,
+      on the hostname of the redeemed preview.
 - [ ] State in `docs/protocol/port-previews.md` that the files preview is
       no port preview: it has no Preview tab, and the tool does not list
       it.
@@ -482,8 +500,8 @@ The runner serves the files of the repository folder on
 - [ ] Move the safe file open of `crates/cnd-runner/src/repository/io.rs`
       into a function that the file read and the file server share.
 - [ ] Add the file server as a module of `crates/cnd-runner`, with the
-      rules of the design calls, the files mark, one byte range, and the
-      answer of decision 2.
+      rules of the design calls, the files mark, one byte range, and no
+      dot file, under option D of decision 2.
 - [ ] Start it with the runner. When the bind fails, warn and run on
       without it.
 - [ ] Leave port 7683 out of the ports report in
@@ -493,8 +511,8 @@ The runner serves the files of the repository folder on
       Run `cargo run -p cnd-runner-interface --example export_bindings`.
 - [ ] Add tests over real local HTTP: each rule of the design calls, a
       link that leaves the folder, `.git`, `Host`, the files mark, one
-      byte range, the answer of decision 2, and a folder with and without
-      `index.html`.
+      byte range, a dot file, a link to a dot file, a file in a dot
+      folder, and a folder with and without `index.html`.
 - [ ] Update the `cnd-runner` README and the runner README.
 - [ ] Run the Rust checks of `AGENTS.md`.
 
@@ -503,8 +521,7 @@ The runner serves the files of the repository folder on
 Depends on: 2
 
 The launch address takes an optional path, and the authorizer sends the
-browser to it. These TODOs apply option A of decision 3. Change them to
-the answer of decision 3 before the milestone starts.
+browser to it, under option A of decision 3.
 
 - [ ] Read an optional `path` in the launch GET of `worker/previews/`.
       Check it with `isFilePath` of `src/shared/file-path.ts`.
@@ -520,6 +537,9 @@ the answer of decision 3 before the milestone starts.
       grant unused, a path with `\`, `%2F`, or `//`, and a launch without
       a path.
 - [ ] Update the preview backend README.
+- [ ] Update `plans/follow-ups/local-address-path-in-preview.md`: the
+      launch address now takes a path, so its option B only needs to pass
+      the path of a local address.
 
 ## Milestone 5: The files preview in the Worker
 
