@@ -139,6 +139,9 @@ export async function handleGitHubWebhook(
     if (route === null || (await isProcessed(env.DB, deliveryId)))
       return new Response(null, { status: 204 })
     await recordDelivery(env.DB, deliveryId, dependencies.now())
+    // The pull request runs, the workspace lookup, and the push refresh below
+    // match saved rows by the install of the event. So the repair of a missed
+    // move or rename runs first, and this webhook reaches the repaired rows.
     await checkRepositoryValues(
       env.DB,
       {
