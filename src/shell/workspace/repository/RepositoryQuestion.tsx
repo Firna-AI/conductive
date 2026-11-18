@@ -24,20 +24,16 @@ export function RepositoryQuestion(props: {
   const cancel = () => change.cancel()
   return (
     <Dialog
-      actions={
-        <>
-          <ActionButton onPress={cancel}>
-            {repositoryQuestion.cancel}
-          </ActionButton>
-          <ActionButton
-            icon={FolderGit2}
-            onPress={() => change.confirm()}
-            tone="primary"
-          >
-            {repositoryQuestion.confirm}
-          </ActionButton>
-        </>
+      action={
+        <ActionButton
+          icon={FolderGit2}
+          onPress={() => change.confirm()}
+          tone="primary"
+        >
+          {repositoryQuestion.confirm}
+        </ActionButton>
       }
+      busy={false}
       close={cancel}
       title={repositoryQuestion.title}
     >
