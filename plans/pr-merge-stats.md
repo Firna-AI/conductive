@@ -217,7 +217,7 @@ Depends on: none
 The Stats tab of the account at `app/account/stats`, in the browser and the
 phone layouts, with its loading and failed states.
 
-- [ ] Check PR #420. When it merged, merge `origin/main` into this branch.
+- [x] Check PR #420. When it merged, merge `origin/main` into this branch.
 - [ ] Add the "Merged pull requests" tile with its 7-day change to
       `docs/mockups/src/components/settings/StatsSections.tsx`.
 - [ ] Add the "Merged pull requests" chart of 30 UTC days there.
