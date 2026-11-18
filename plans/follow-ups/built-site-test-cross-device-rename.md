@@ -39,6 +39,15 @@
   - Astro could not rename a built asset from `.astro/.prerender/_astro/` into `/tmp/conductive-site-*/_astro/`.
   - All 12 site tests then passed unchanged with `TMPDIR` set to `/home/user/code/remote-code/.context/merge-347/tmp`.
   - This keeps the temporary output on the checkout's file system. No assertion, build command, or timeout changed.
+  - On 18 November 2026, on branch `calummoore/bern-3jpp` at `f68bc2754`, `npm run check` in `/home/user/code/remote-code` reproduced the failure:
+
+    ```text
+    Error: Command failed: node_modules/.bin/astro build --force --outDir /tmp/conductive-site-VVvF8b
+    EXDEV: cross-device link not permitted, rename '/home/user/code/remote-code/.astro/.prerender/_astro/agents-desktop-dark.CDPTog9s.webp' -> '/tmp/conductive-site-VVvF8b/_astro/agents-desktop-dark.CDPTog9s.webp'
+    ```
+
+  - On that machine, `df -P /tmp /home/user/code/remote-code` gave the device `/dev/vda1` for both folders, mounted at `/` and at `/home`. So two mount points of one device are enough to make `rename` fail.
+  - All 12 site tests then passed with `TMPDIR` set to `/home/user/code/remote-code/.context/tmp`.
 - **Task:**
   - Find out when the build moves an asset out of the prerender folder, and why the first run did not fail. A cold image cache and two builds that share the prerender folder are suspected sources. Neither is confirmed.
   - Find out whether `--force` removes the case.

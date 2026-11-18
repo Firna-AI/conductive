@@ -16,8 +16,9 @@ const access = {
 
 /**
  * A store with 40 events. Each event names 1,000 emoji. An emoji takes four
- * UTF-8 bytes and two UTF-16 code units, so each event takes a little over
- * 4,000 bytes.
+ * UTF-8 bytes and two UTF-16 code units. So an event takes 4,104 bytes of
+ * JSON, or 4,105 from event 10, and the first page of 32 events takes
+ * 131,351 bytes.
  */
 async function storedWorkspace() {
   const { storage } = await nativeChatStore()
@@ -81,44 +82,62 @@ const live: WorkspaceEventEnvelope = {
 
 const logins = { logins: { refresh: async () => undefined } }
 
-it('ends a replay within a page at its UTF-8 byte budget and closes the tab, and a tab after its last event gets the rest', async () => {
-  const store = await storedWorkspace()
-  const browsers = grants()
-  const first = tab()
-  // Two events stay under 10,000 bytes, and the third passes it. A count of
-  // UTF-16 code units would end the page only after the fifth event.
-  await subscribeBrowser({
-    store,
-    browsers,
-    operation: logins,
-    access,
-    after: 0,
-    peer: first.peer,
-    budget: 10_000,
-  })
-  browsers.publish([live])
-  expect(pages(first.state.messages)).toEqual([
-    { numbers: [1, 2, 3], through: 40, next: 3 },
-  ])
-  expect(first.state.closed).toBe(1)
+const budgetCases = [
+  {
+    end: 'inside the short second page',
+    // After the first page, 10,649 bytes are left, and event 35 uses them
+    // up. A count of UTF-16 code units, or a fresh budget for each page,
+    // would send all 40 events on this connection.
+    budget: 142_000,
+    first: [
+      { numbers: range(1, 32), through: 40, next: 32 },
+      { numbers: [33, 34, 35], through: 40, next: 35 },
+    ],
+    rest: [{ numbers: range(36, 40), through: 40, next: null }],
+  },
+  {
+    end: 'at the last event of the full first page',
+    // Event 32 uses up the budget with 1,351 bytes over it. The page still
+    // has more events after it, because its storage list was full.
+    budget: 130_000,
+    first: [{ numbers: range(1, 32), through: 40, next: 32 }],
+    rest: [{ numbers: range(33, 40), through: 40, next: null }],
+  },
+]
 
-  const second = tab()
-  await subscribeBrowser({
-    store,
-    browsers,
-    operation: logins,
-    access,
-    after: 3,
-    peer: second.peer,
-  })
-  browsers.publish([live])
-  expect(pages(second.state.messages)).toEqual([
-    { numbers: range(4, 35), through: 40, next: 35 },
-    { numbers: range(36, 40), through: 40, next: null },
-    { live: 41 },
-  ])
-  expect(second.state.closed).toBe(0)
-})
+it.each(budgetCases)(
+  'ends a replay at its UTF-8 byte budget $end and closes the tab, and a tab after its last event gets the rest',
+  async ({ budget, first, rest }) => {
+    const store = await storedWorkspace()
+    const browsers = grants()
+    const ended = tab()
+    await subscribeBrowser({
+      store,
+      browsers,
+      operation: logins,
+      access,
+      after: 0,
+      peer: ended.peer,
+      budget,
+    })
+    browsers.publish([live])
+    expect(pages(ended.state.messages)).toEqual(first)
+    expect(ended.state.closed).toBe(1)
+
+    const resumed = tab()
+    await subscribeBrowser({
+      store,
+      browsers,
+      operation: logins,
+      access,
+      after: first.at(-1)?.next ?? 0,
+      peer: resumed.peer,
+    })
+    browsers.publish([live])
+    expect(pages(resumed.state.messages)).toEqual([...rest, { live: 41 }])
+    expect(resumed.state.closed).toBe(0)
+  },
+)
 
 it('refuses a tab without a grant before its first history page, with no unhandled rejection', async () => {
   const unhandled: unknown[] = []
