@@ -6,7 +6,7 @@ import { openSecretRequest, type StoredSecretRequest } from './request-records'
 import type { SecretRuntime } from './runtime'
 import { pruneSavedOutputSecrets } from '../chat/output-filter-records'
 import { runningOutputSecrets } from '../lifecycle/output-secrets'
-import { agentOutputSecrets } from './output-values'
+import { agentOutputSecrets, storedAgentOutputSecrets } from './output-values'
 
 export const SECRET_REQUEST_WAIT_MS = 90_000
 
@@ -88,23 +88,28 @@ export async function reconcileSecretRequests(
     )
   )
     await operation.change(async (view) => {
+      const workspace = { id: workspaceId, orgId: state.orgId }
+      const running = await runningOutputSecrets(runtime.env, workspace)
+      const before = new Set([
+        ...running,
+        ...(await storedAgentOutputSecrets(
+          runtime.env,
+          view.secrets,
+          workspace,
+        )),
+      ])
       await view.secrets.expire(runtime.now(), state.archivedAt !== null)
-      await pruneSavedOutputSecrets(
-        runtime.env,
-        view,
-        new Set([
-          ...(await runningOutputSecrets(runtime.env, {
-            id: workspaceId,
-            orgId: state.orgId,
-          })),
-          ...(await agentOutputSecrets(
-            runtime.env,
-            view.secrets,
-            { id: workspaceId, orgId: state.orgId },
-            runtime.now(),
-          )),
-        ]),
-      )
+      const after = new Set([
+        ...running,
+        ...(await agentOutputSecrets(
+          runtime.env,
+          view.secrets,
+          { id: workspaceId, orgId: state.orgId },
+          runtime.now(),
+        )),
+      ])
+      await view.output.maskTools(runtime.env, workspaceId, before, after)
+      await pruneSavedOutputSecrets(runtime.env, view, after)
     })
   return notices
 }

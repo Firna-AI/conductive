@@ -9,7 +9,7 @@ import { readSecretAnswer, readSecretRun } from './request-input'
 import type { SecretRuntime } from './runtime'
 import { authorizeChatBrowser } from '../chat/browser-authorization'
 import { pruneSavedOutputSecrets } from '../chat/output-filter-records'
-import { agentOutputSecrets } from './output-values'
+import { agentOutputSecrets, storedAgentOutputSecrets } from './output-values'
 import { runningOutputSecrets } from '../lifecycle/output-secrets'
 
 export function isSecretMachinePath(path: string) {
@@ -96,20 +96,30 @@ export async function fetchSecretRequests(
         )
       await runtime.chat.changeWorkspace(workspaceId, async (view) => {
         await authorizeChatBrowser(request, runtime.env, runtime.now(), {})
-        await view.secrets.removeValue(decodeId(value[1]))
-        await pruneSavedOutputSecrets(
+        const running = await runningOutputSecrets(
           runtime.env,
-          view,
-          new Set([
-            ...(await runningOutputSecrets(runtime.env, access.workspace)),
-            ...(await agentOutputSecrets(
-              runtime.env,
-              view.secrets,
-              access.workspace,
-              runtime.now(),
-            )),
-          ]),
+          access.workspace,
         )
+        const before = new Set([
+          ...running,
+          ...(await storedAgentOutputSecrets(
+            runtime.env,
+            view.secrets,
+            access.workspace,
+          )),
+        ])
+        await view.secrets.removeValue(decodeId(value[1]))
+        const after = new Set([
+          ...running,
+          ...(await agentOutputSecrets(
+            runtime.env,
+            view.secrets,
+            access.workspace,
+            runtime.now(),
+          )),
+        ])
+        await view.output.maskTools(runtime.env, workspaceId, before, after)
+        await pruneSavedOutputSecrets(runtime.env, view, after)
       })
       return privateResponse(new Response(null, { status: 204 }))
     }

@@ -16,6 +16,9 @@ The crate provides handshake messages, commands, numbered events, confirmations,
 resend requests, file results, and temporary turn credentials.
 `runner_repository` holds the repository move, its refusal reply, and the
 current repository of each turn and message.
+`runner_tool_detail` holds the private `tool.detail.part` events of a
+complete tool-detail source. Only the first part carries the turn and the
+tool metadata.
 The workspace tools provide workspace, session, message, repository, section,
 model, preview, Mac command, and secret requests and replies. Their replies preserve
 accepted message and turn pairs, resume errors, and transcript positions.
@@ -58,6 +61,7 @@ let hello = RunnerHello::Hello {
     login_kinds: None,
     process_start_id: None,
     repository_folder: Some("/home/user/code/storefront".into()),
+    complete_tool_details: Some(true),
 };
 ```
 
@@ -85,6 +89,7 @@ One test compares the TypeScript runtime limits with their Rust constants.
 - [Commands](src/runner_commands.rs) defines turn, message, control, and report requests.
 - [Credentials](src/runner_credentials.rs) defines supported logins and temporary credentials.
 - [Chat events](src/chat_events.rs) defines agent events and tool output.
+- [Tool details](src/runner_tool_detail.rs) defines the private parts of a complete tool-detail source.
 - [File reports](src/file_tree.rs) defines report parts, deltas, and their identities.
 - [File results](src/runner_files.rs) defines read commands and their results.
 - [Helper messages](src/sdk_helper.rs) defines JSON line requests and outputs.

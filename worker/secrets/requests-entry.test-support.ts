@@ -6,6 +6,10 @@ import { OUTER_WORKSPACE } from '../chat/integration/outer-seed.test-support'
 import { readOutputSnapshot } from '../chat/output-filter-records'
 import { advanceScheduledAlarms } from '../lifecycle/scheduled-alarms.test-support'
 import type { MessageSender } from '../../src/shared/generated/MessageSender'
+import { readToolDetail, toolDetailContext } from '../chat/tool-detail-records'
+import { readToolDetailSource } from '../chat/tool-detail-source'
+import { toolSourcePrefix } from '../chat/tool-detail-source-records'
+import { decrypt } from '../security/crypto'
 
 const CLOCK_KEY = '__test:secret-clock'
 
@@ -103,6 +107,31 @@ export class Workspace extends ProductionWorkspace {
         ),
       ),
     )
+  }
+
+  savedToolDetail() {
+    return this.chat.readWorkspace(OUTER_WORKSPACE, async (view) => {
+      const streamId = 'outer-runner-stream'
+      const state = await readToolDetail(this.env, view, streamId)
+      if (!state) return undefined
+      const header = await decrypt(
+        (await view.output.readTool(streamId)) ?? '',
+        toolDetailContext(OUTER_WORKSPACE, streamId),
+        this.env.BOAT_KEY_ENCRYPTION_KEY,
+      )
+      let retainedText = ''
+      for await (const text of readToolDetailSource(
+        this.env,
+        view,
+        streamId,
+        state,
+      ))
+        retainedText += text
+      const sourceRecordCount = (
+        await this.ctx.storage.list({ prefix: toolSourcePrefix(streamId) })
+      ).size
+      return { ...state, retainedText, sourceRecordCount, header }
+    })
   }
 
   async secretAlarm() {

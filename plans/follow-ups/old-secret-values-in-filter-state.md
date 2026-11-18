@@ -1,0 +1,47 @@
+# Old org secret values stay in filter state
+
+- **Severity:** High. **Effort:** Large. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-18, from both finding checks of review round 1 on branch `calummoore/follow-up-tool-detail-cuts-precede-env-q1hv`, under New problems.
+- **Location:** `worker/app-api/secrets.ts:121` and `:130`, `worker/secrets/writes.ts:43` and `:75`, `retainActiveSecrets` and `pruneSavedOutputSecrets` in `worker/chat/output-filter-records.ts`, and `filterRunnerOutput` in `worker/chat/runner-output.ts`.
+- **Reason:** The gap is on `origin/main`, in the org secret write path, and the tool-detail branch that found it does not change that path.
+
+- **Source:** Review.
+- **Category:** Security.
+- **Terms:**
+  - **Org secret:** a named value in the Secrets tab of an org, kept encrypted in the D1 table `org_secrets`, that a run in a workspace can use.
+  - **Durable Object:** the server-side object of one workspace in the Worker, which keeps the chat and the saved filter state of that workspace.
+  - **Saved filter state:** the encrypted records of the Durable Object that keep text that can still start a secret value, for each runner stream and the workspace.
+  - **Active values:** the values that the filter hides at a runner event: secret env values, current values of used org secrets, and live temporary values.
+  - **Temporary value:** a value that a member gives an agent for 15 minutes or for the workspace, which the Durable Object keeps encrypted.
+- **Background:**
+  - The Durable Object hides each exact copy of each active value in runner text, in `filterRunnerOutput`. At each runner event, `agentOutputSecrets` in `worker/secrets/output-values.ts` reads the current D1 value of each org secret that a run used.
+  - Each entry of the saved filter state lists each whole value that its held text or its shown answer end can still start. `retain` and `contexts` in `src/shared/output-sanitizer.ts` build these lists.
+  - So a record keeps a whole value only while some text can start it. An example is an answer that ends with the first characters of the value.
+  - `retainActiveSecrets` drops each value that is no longer active. Each accepted runner event runs it, then rewrites the record of its own stream and the workspace record.
+  - `pruneSavedOutputSecrets` runs the same drop over every record. Only the cleanup of temporary values calls it. It runs at expiry, at archive of a workspace that holds a temporary value, and at removal of a temporary value.
+  - Its callers are `reconcileSecretRequests` in `worker/secrets/request-reconcile.ts` and the `DELETE` of a temporary value in `worker/secrets/routes.ts`.
+  - The Secrets tab replaces or deletes an org secret through `worker/app-api/secrets.ts`. `replaceSecret` and `deleteSecret` in `worker/secrets/writes.ts` each run one D1 statement. Neither calls a workspace.
+  - Only `filterRunnerOutput` and `pruneSavedOutputSecrets` read the saved value lists. Both drop inactive values first. So the filter never uses an old value after the change, and no browser gets it.
+  - The held text stays, as in the cleanup of temporary values. It usually holds only the start of a value, and the filter hides only whole copies. It can also hold a whole copy of a shorter value, when a longer active value starts with that copy. `plans/follow-ups/held-answer-text-keeps-ended-secret.md` records that case.
+  - The private tool-detail assemblies of `worker/chat/tool-detail-records.ts` are another kind of saved filter record. A fix checks that they keep no old value either.
+  - Rule: "The exact-copy filter" in `docs/protocol/secret-requests.md` says: "For a secret of the org, the filter reads the current value. It keeps no old value of a replaced or deleted secret." It keeps a temporary value only "for the time of that value".
+  - Rule: `docs/protocol/secrets.md` says that Delete asks first, "because the value cannot come back". The Privacy page in `src/marketing/privacy.ts` says: "A secret in the Secrets settings of an org stays until a member who may delete it deletes it."
+  - `worker/secrets/README.md` says that replacement and deletion "change the next filter read". It says that expiry and removal remove temporary copies from the saved filter state.
+- **Problem:** A replace or a delete of an org secret leaves its old value in each saved filter record that lists it. The copy stays, encrypted, until a later runner event of that workspace, or a cleanup of temporary values. A stopped workspace keeps it until its next start, and an archived or removed workspace can keep it until the org is deleted.
+- **Impact if no action:** An encrypted copy of a deleted or replaced secret value can stay in workspace storage for months, against the protocol rule and the Privacy page. Only the Worker can read it, so the harm is the retention, not a display.
+- **Root question:** How does a workspace keep no saved copy of an org secret value after a member replaces or deletes that secret?
+- **Options:**
+  - **A.** Change the rules to allow the copy. `docs/protocol/secret-requests.md` and the Privacy page then say that a workspace can keep an encrypted old value until its next runner event. That time has no limit for a stopped, archived, or removed workspace. This changes a requirement and a legal page, so it needs the user. Effort: Small.
+  - **B.** Clean up at the write. After `replaceSecret` changes a value, or after `deleteSecret`, call each workspace object of the org. Each object drops the values that are no longer active from its saved filter state. Org suspension already calls each workspace object, in `suspendOrg` of `worker/members/composition.ts`. Cost: each such write wakes each workspace object of the org, also archived and removed ones. A failed call needs a retry, or its copy stays. The copies that earlier writes left need one pass over each workspace. Effort: Medium.
+  - **C.** Save no secret value in the saved filter state. Keep a reference with its source and its version in place of each value. An example is the secret ID and the value version that `replaceSecret` raises. Resolve the references to the active values at each runner event. A reference with its version keeps today's matching, because a new value never takes the place of an old one. A replaced or deleted secret then leaves no value to remove, and no write path needs its own cleanup. Cost: it changes the shared record type `HeldOutput` and its encrypted format. The previous Worker must still read the new records after a rollback. Records that earlier Workers wrote keep their values until a runner event or one pass over each workspace rewrites them. Effort: Large.
+- **Left out:**
+  - No change. It breaks the rule that the filter keeps no old value of a replaced or deleted secret.
+  - A scheduled sweep alone. It keeps a copy until its next run, so it breaks the same rule. It fits only as the retry of B.
+  - A key for each secret version that a delete destroys. C keeps no copy and needs no new keys, so C is better on every point.
+  - A filter state only in memory. The Durable Object can leave memory between runner events, and the filter must still hide a copy that two events of one answer split.
+- **Wider fix:** C. It removes every saved value list, so no write path or value source needs its own cleanup.
+- **Previous examples:** Commit `a54fe3981` of 17 November 2026 added the rule and `pruneSavedOutputSecrets`, with the test `filters temporary values for their lifetime and prunes saved copies at expiry` in `worker/secrets/output-filter.test.ts`. It called the cleanup only for temporary values. On branch `calummoore/follow-up-tool-detail-cuts-precede-env-q1hv`, the private tool-detail assembly first kept a value list that outlived expired values. That branch fixed it before its merge.
+- **Related:** `plans/follow-ups/worker-output-contexts-grow-across-answers.md` has the same code. Its option A stores the answer ends of the workspace record by answer. A fix of either item must cover the storage layout of the other. `plans/follow-ups/held-answer-text-keeps-ended-secret.md` has the same code. It records a whole copy that held text can keep after its value ends. Its option C and option C here both change `HeldOutput`, so one change can do both.
+- **Recommendation:** C. It keeps no value in the saved filter state, so this gap cannot come back for a new write path or value source.
+- **Action:** fix after merge, apply C, because the gap lies in the org secret write path on `origin/main`, outside the branch that found it.

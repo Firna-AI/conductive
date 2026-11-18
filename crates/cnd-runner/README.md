@@ -20,6 +20,7 @@ The `conductive runner` command composes this crate. The installed service runs 
 - Prepare ignored context storage, including linked Git worktrees.
 - Run independent sessions through private Node SDK helper processes.
 - Filter credentials before saving chat output and preparing report labels.
+- Offer complete tool details in hello, and send each accepted long source as private parts.
 - Cancel pending turns, helper requests, and repository reads on Stop or shutdown.
 
 ## What This Crate Does
@@ -37,7 +38,14 @@ The event emitter retries pending agent output and terminal events once.
 A failed output retry permits the turn to continue. A failed start still
 reaches its caller. The caller supplies events after its credential filter.
 This crate bounds tool details, whole turn-file prefixes, file payloads,
-and complete envelopes. The shared credential filter keeps tokens in process
+and complete envelopes. When the `welcome` accepts complete tool details,
+it sends each complete filtered tool-detail source instead, and the Worker
+keeps the prefix after its own filter. A detail that fits stays one
+`tool.updated`. A longer source goes as consecutive `tool.detail.part`
+events that each fit the envelope. Only the first part carries the tool
+metadata. `EventStore::append_batch` saves all parts of one update in one
+write. The link starts without that support, keeps an accepted support
+across reconnects, and replaces it at each `welcome`. The shared credential filter keeps tokens in process
 memory. It masks each whole token and each run of at least 21 characters of
 a token. It holds streamed text that can still grow into either, and
 preserves operational paths and file contents. Report labels use the same
@@ -181,7 +189,7 @@ and connection drops. It does not run the Worker.
 
 - [config.rs](src/config.rs): `Configuration::parse` reads supplied service settings.
 - [instructions.rs](src/engine/instructions.rs): `build` adds validated workspace tree facts and the cases of when to nest to new session instructions.
-- [store.rs](src/state/store.rs): `EventStore` defines serialized state operations.
+- [store.rs](src/state/store.rs): `EventStore` defines serialized state operations, and `append_batch` saves all parts of one update in one write.
 - [records.rs](src/state/records.rs): `RunnerState` reads the existing JSON format.
 - [disk.rs](src/disk.rs): `AtomicDisk` replaces the private state file atomically.
 - [connection.rs](src/link/connection.rs): `SavedRunnerLink` sends hello and saved events.
@@ -198,6 +206,7 @@ and connection drops. It does not run the Worker.
 - [startup.rs](src/helper/startup.rs): `RunnerStartup` clears stale credentials, warms the SDK, and confirms a welcome.
 - [runner_command.rs](../cnd-cli/src/runner_command.rs): the CLI makes the process-start ID once, and composes the full runner and signal handling.
 - [limits.rs](src/limits.rs): `bound_event` applies serialized chat excerpts.
+- [tool_detail.rs](src/link/tool_detail.rs): `prepare` keeps a fitting tool detail whole, or splits a longer complete source into private parts that each fit the envelope.
 - [commands.rs](src/json/commands.rs): `workspace_message` repairs and validates command JSON.
 - [service.rs](src/repository/service.rs): `Repository` supplies scans, reads, diffs, and checkpoints.
 - [setup.rs](src/repository/setup.rs): context setup adds the exclude rule once and creates attachment storage.

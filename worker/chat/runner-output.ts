@@ -1,4 +1,5 @@
 import type { RunnerEventEnvelope } from '../../src/shared/generated/RunnerEventEnvelope'
+import type { AgentChatEvent } from '../../src/shared/generated/AgentChatEvent'
 import { boundChatEvent } from '../../src/shared/event-limits'
 import {
   OutputSanitizer,
@@ -10,6 +11,7 @@ import type { ChatTransaction } from './store'
 import type { RunnerWorkspaceRecord } from './types'
 import { displayPortReport } from './port-reports'
 import { agentOutputSecrets } from '../secrets/output-values'
+import { filterToolDetail } from './tool-detail-filter'
 import {
   readOutputSnapshot,
   saveOutputSnapshot,
@@ -18,6 +20,7 @@ import {
 
 export interface FilteredRunnerOutput {
   events: RunnerEventEnvelope[]
+  privateContext?: AgentChatEvent
   save(): Promise<void>
 }
 
@@ -75,6 +78,23 @@ export async function filterRunnerOutput(
   workspace: RunnerWorkspaceRecord,
   input: RunnerEventEnvelope,
 ): Promise<FilteredRunnerOutput> {
+  const activeValues = new Set([
+    ...(await runningOutputSecrets(env, workspace)),
+    ...(await agentOutputSecrets(
+      env,
+      transaction.secrets,
+      workspace,
+      transaction.now,
+    )),
+  ])
+  if (input.event.type === 'tool.detail.part')
+    return filterToolDetail(
+      env,
+      transaction,
+      { ...input, event: input.event },
+      activeValues,
+    )
+  await transaction.output.saveTool(input.streamId, undefined)
   const readStream = (streamId: string) =>
     readOutputSnapshot(env, transaction, workspace.id, streamId)
   const pending = await readStream(input.streamId)
@@ -94,15 +114,6 @@ export async function filterRunnerOutput(
         legacy.push({ streamId, snapshot })
     }
   }
-  const activeValues = new Set([
-    ...(await runningOutputSecrets(env, workspace)),
-    ...(await agentOutputSecrets(
-      env,
-      transaction.secrets,
-      workspace,
-      transaction.now,
-    )),
-  ])
   const sanitizer = new OutputSanitizer(
     retainActiveSecrets(
       combine([

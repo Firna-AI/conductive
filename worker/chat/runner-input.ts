@@ -11,6 +11,7 @@ import {
   checkRunnerEventLimits,
 } from './runner-event-limits'
 import { checkDisplayedPortReport } from './port-reports'
+import { parseToolDetailPart } from './tool-detail-input'
 
 export interface IncomingRunnerEnvelope {
   type: 'event'
@@ -54,6 +55,9 @@ export function parseRunnerTransport(
       workspaceId: identifier(input.workspaceId),
       streamId: identifier(input.streamId),
       processStartId: warningProcessStartId(input.processStartId),
+      ...(input.completeToolDetails === true
+        ? { completeToolDetails: true }
+        : {}),
       ...(input.loginKinds === undefined
         ? {}
         : { loginKinds: parseLoginKinds(input.loginKinds) }),
@@ -131,7 +135,10 @@ export function parseRunnerOutputEnvelope(
 function parseRunnerPayload(
   input: Omit<IncomingRunnerEnvelope, 'raw'>,
 ): RunnerEventEnvelope {
-  const event = parseOtherEvent(input.event) ?? parseAgentEvent(input.event)
+  const event =
+    parseToolDetailPart(input.event) ??
+    parseOtherEvent(input.event) ??
+    parseAgentEvent(input.event)
   checkRunnerEventLimits(event)
   return {
     type: 'event',
