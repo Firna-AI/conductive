@@ -140,7 +140,8 @@ that shows the screenshots of agents as pictures in their answers.
   [Tables and headings in the work of a turn](chat-markdown.md#tables-and-headings-in-the-work-of-a-turn)
   says.
 - A copy of chat text with a picture gives the Markdown image as the agent
-  wrote it, as a copy of a chip gives its text. The
+  wrote it, as a copy of a chip gives its text. A copy of the loading box
+  gives the same text, because the box takes the place of the picture. The
   [transcript](session-transcripts.md) of the session keeps the Markdown
   image as text. Reason: a copy gives the text as written.
 - Risk: a picture shows its file as the read found it. When an agent saves

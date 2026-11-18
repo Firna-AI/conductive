@@ -73,8 +73,12 @@ The shell gives the chat an optional picture reader through
 `ChatMentions.pictures` in `mentions/MentionsContext.tsx`. The reader and
 its types live in `../files/page/picture-reads.ts`. The shell gives it only
 while the sandbox runs. It reads a real file path from the workspace tree
-through the existing file client. No chat component draws these pictures
-yet.
+through the existing file client. With it, the Markdown image of a PNG,
+JPEG, GIF, or WebP file of an answer shows as a picture, and without it
+as its link, as
+[Pictures in answers](../../docs/protocol/file-mentions-answers.md#pictures-in-answers)
+says. [Pictures in answers](agent-text.md#pictures-in-answers) gives the
+rules of the code that draws them.
 
 ## Rules for this code
 

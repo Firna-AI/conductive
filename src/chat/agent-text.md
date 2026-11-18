@@ -3,7 +3,7 @@
 This guide belongs to [the chat](README.md). It gives the rules of the code
 that formats the text of agent messages: in the chat, and in a message line
 of an open work fold. It also gives the workspace chips of sent messages
-and answers, and the file chips of answers.
+and answers, and the file chips and the pictures of answers.
 [Chat Markdown](../../docs/protocol/chat-markdown.md),
 [Chat tables](../../docs/protocol/chat-tables.md),
 [Workspace links](../../docs/protocol/workspace-links.md), and
@@ -124,7 +124,8 @@ text. These parts read and draw them:
   its address reads as a bare address: a chip, a link, or text. The
   Markdown of an image, `![alt](address)`, shows as typed in the same way,
   also in an answer, unless its target names a file of the workspace.
-  A file target shows its label as a link that opens the file. Each other
+  A file target shows its label as a link that opens the file, or its
+  picture, as [Pictures in answers](#pictures-in-answers) says. Each other
   Markdown link whose address is no link shows as typed, with its code
   and bold.
 - Inline code whose text, without the spaces at its ends, is one address
@@ -207,8 +208,10 @@ text. These parts read and draw them:
 - A Markdown link or image of an answer whose target is an entry of the
   tree gives a `file-link` part: `fileLinkTarget` reads the target, and
   `FileTextLink` draws a normal link with the label, which opens the file.
-  `chat-tokens.ts` reads a target that is not a web address only where
-  paths count, as in an answer.
+  An image of a picture file can show as its picture instead, as
+  [Pictures in answers](#pictures-in-answers) says. `chat-tokens.ts` reads
+  a target that is not a web address only where paths count, as in an
+  answer.
 - Code in the label of a Markdown link stays code. Where `**` marks bold, a
   mention ends before the mark.
 - A text follows the tree only when it holds `@`, or in an answer a
@@ -220,6 +223,62 @@ text. These parts read and draw them:
 - The chip of a file with lines shows them after its name, and its press
   calls `openFile` with the lines. The shell opens the file tab as text at
   the lines.
+
+## Pictures in answers
+
+[Pictures in answers](../../docs/protocol/file-mentions-answers.md#pictures-in-answers)
+states the requirements. These parts read and draw the pictures:
+
+- `chatParts` sets `picture` on the `file-link` part of the image form,
+  `![label](path)`, of a PNG, JPEG, GIF, or WebP file, which
+  `pictureType` of `src/files/page/file-view.ts` knows by the name. A
+  link without `!`, a folder, and each other file, such as an SVG file,
+  keep `picture` false. The part does not know where it shows, so one
+  reading serves each place.
+- `AnswerText` and `ChatText` take `pictures`, an `AnswerPictures` with the
+  ID of the agent message. `Part` draws a part with `picture` as
+  `FilePicture` only with `pictures`, else as `FileTextLink`. `AgentText`
+  gives `pictures`, with the ID of its item in the transcript, to its
+  paragraphs and list items. A heading and a table cell get none, so the
+  image keeps its link there.
+- `MessageLine` gives `pictures` only while the line is open, also to the
+  blocks that open under the line. So the closed line shows the link and
+  stays one line. The hidden copy of a line that starts with a table gets
+  none.
+- `FilePicture`, in `links/FilePicture.tsx`, draws the mockups'
+  `AnswerPicture` with an opener: the link of `fileOpener`. So a plain
+  press opens the file tab in each state, and a press with a modifier key
+  stays with the browser. The title is the path. The alternative text and
+  the label of the box are the label without its code and bold marks. The
+  link shows the label with its code and bold, through `labelText` of
+  `links/FileTextLink.tsx`, so it looks as the link of each other file.
+- Without `ChatMentions.pictures`, the picture shows the link and watches
+  nothing. With a reader, the box of the label shows until the read and
+  the decode end. `useNearView`, in `ui/near-view.ts`, watches the box
+  with an `IntersectionObserver`. The read starts when the box comes
+  within 400 CSS px of the part of the chat that shows.
+- `ChatPane` gives its scroll box to the observer as its root, through
+  `NearViewRoot`. Reason: a scroll box clips each element at its own
+  edges, so a margin around the window does not reach into the chat.
+  Outside a chat, the margin applies to the window. Without
+  `IntersectionObserver`, the read starts at once.
+- `usePictureRead`, in `links/picture-read.ts`, reads the path with
+  `ChatPictures.read`, with the ID of the agent message as `message`.
+  Then `decodePicture` of `src/files/page/decode-picture.ts` gives the
+  size. A failed read and bytes that the browser cannot draw show the
+  link. An unmount, or a change of the reader, the path, or the message,
+  aborts the read and stops the decode.
+- When the shell takes the reader away, as when the sandbox stops, each
+  picture shows its link. When the reader comes back, the read gives the
+  result that the reader kept, and the picture shows again.
+- A picture is a link, so a press on a picture in an open message line
+  opens the file, and `useFold` leaves the line open.
+- In the box and the picture states, `FilePicture` puts its link in a
+  span with `data-mention`, beside a `ChipCopyText` with the Markdown
+  image as the agent wrote it. So a copy gives that Markdown, as a copy of
+  a chip gives its mention, and the copy holds no picture bytes. The link
+  state has no such span, so a copy gives the label, as for each other
+  link.
 
 ## List parts
 

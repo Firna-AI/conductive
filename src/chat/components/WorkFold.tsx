@@ -26,7 +26,7 @@ function Step(props: { step: WorkStep<ReactNode> }) {
     case 'agent':
       return (
         <li>
-          <MessageLine text={item.text} />
+          <MessageLine id={item.id} text={item.text} />
         </li>
       )
     case 'lost':

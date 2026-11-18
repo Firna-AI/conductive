@@ -121,6 +121,27 @@ under the decision test.
   and a picture breaks the closed line as it breaks a heading. The open
   line shows a code block in the same way.
 
+These are my calls of 18 November 2026 from Milestone 5.
+
+- The picture rule is a flag on the existing file link part, as in the
+  mockups. Reason: each place then decides between the picture and the
+  link with one rule.
+- The ID of the agent message reaches the picture as a required prop.
+  Reason: the type then makes each read pass it.
+- Until the read starts, the loading box shows, not the link. Reason: the
+  box never grows, so the answer moves little.
+- The view for "near" is the scroll box of the chat, with a margin of
+  400 CSS px. Reason: a scroll box clips at its own edges, so a margin
+  around the window never reaches inside the chat.
+- A copy of the loading box gives the Markdown image, as a copy of the
+  picture does. Reason: the box takes the place of the picture.
+- The link keeps the code and bold of its label. Reason: it then looks
+  like the link of each other file, also in headings and table cells.
+- When the sandbox stops, pictures that already show turn into links.
+  Reason: the chat has no reader while the sandbox does not run.
+- Without `IntersectionObserver`, the read starts at once. Reason: the
+  picture still shows in an older browser.
+
 Contract owners:
 
 - [Agent instructions](../docs/protocol/agent-instructions.md).
@@ -209,21 +230,21 @@ Tags: ui
 
 Depends on: 1, 4
 
-- [ ] Add a picture part for the `![label](path)` form of a picture file
+- [x] Add a picture part for the `![label](path)` form of a picture file
       in `src/chat/links/chat-parts.ts`. Keep the link part for headings,
       table cells, and each other file.
-- [ ] Add the picture component beside `FileTextLink.tsx`. It draws
+- [x] Add the picture component beside `FileTextLink.tsx`. It draws
       `AnswerPicture` of `docs/mockups/src/components/chat/`: the loading
       box, the picture, the press that opens the file tab, and the link
       when no reader exists or the read fails.
-- [ ] In a message line of the work of a turn, keep the link while the
+- [x] In a message line of the work of a turn, keep the link while the
       line is closed, and show the picture while it is open, as
       `app/file-mentions/answers/work` shows.
-- [ ] Start the read only when the picture comes near the view.
-- [ ] Add DOM tests for each state, for a closed and an open message
+- [x] Start the read only when the picture comes near the view.
+- [x] Add DOM tests for each state, for a closed and an open message
       line, and for the copy of an answer with a picture.
-- [ ] Update the chat README and the links docs of the chat.
-- [ ] Smoke-test in the browser: an answer with a screenshot, a stopped
+- [x] Update the chat README and the links docs of the chat.
+- [x] Smoke-test in the browser: an answer with a screenshot, a stopped
       sandbox, and a phone width. Save the screenshots under
       `.context/screenshots-in-answers/`.
 
