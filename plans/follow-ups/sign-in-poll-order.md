@@ -27,6 +27,6 @@
 - **Left out:** Dropping every reply after Cancel: it hides a login that the Worker holds. A Cancel route alone: a remove can come while the form polls, with no Cancel. A change in the Worker: `plans/follow-ups/removal-ends-sign-ins.md` holds it as its own decision.
 - **Wider fix:** D. One place orders every login request of a tab, so a new login path cannot overlap a change.
 - **Previous examples:** `src/app/account-model.test.ts:77` covers the same order for a share reply after a removal.
-- **Related:** `AccountLoginReads` in `src/app/account-login-reads.ts` is the one owner of the account reads after the app opens. Its reads change the same login data of `AccountModel`, so they must keep this order. `plans/follow-ups/removal-ends-sign-ins.md` decides the Worker side of the same race. Each of its options works with D.
+- **Related:** `AccountLoginReads` in `src/app/account-login-reads.ts` is the one owner of the account reads after the app opens. Its reads change the same login data of `AccountModel`, so they must keep this order. `plans/follow-ups/removal-ends-sign-ins.md` decides the Worker side of the same race. Each of its options works with D. `plans/follow-ups/account-model-guarded-refresh.md` orders the account GETs and session facts apart from local-change marks. Its B and this item's D can work together.
 - **Recommendation:** D. The requests of one tab then reach the Worker in the member's order, with no new contract.
 - **Action:** fix after merge, apply D.
