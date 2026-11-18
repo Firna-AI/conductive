@@ -21,6 +21,14 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
 - [handleGitHubWebhook](webhook.ts) accepts `POST /v1/github/webhooks` on `MACHINE_ORIGIN`.
   It verifies `X-Hub-Signature-256` against the raw body before parsing or D1 access.
   It authenticates machines with `GITHUB_WEBHOOK_SECRET`, without the app gate.
+  [handleRepositoryChange](repository-change.ts) takes a `repository` event that renames a repository or changes its default branch.
+  It reads the current values from GitHub through [readGitHubRepository](repository-read.ts), with a metadata token that it revokes.
+  [syncRepositoryValues](repository-sync.ts) saves them only while no other save came after the read, then reads GitHub again to confirm them.
+  It then calls `repositoryChange.changed`, which in production runs [wakeImagesForRepositoryChange](../lifecycle/repository-change-builds.ts).
+  A failed read leaves the delivery retryable. A failed wake only warns, because the image coordinator checks the saved values at each alarm.
+  [checkRepositoryValues](repository-values-check.ts) compares the repository name and default branch of each other routed webhook with the saved values.
+  When they differ, it runs the same read, guarded save, and wake. A failure there only warns, so the original event still completes.
+  [Repository changes on GitHub](../../docs/protocol/repository-changes-on-github.md) states the requirements.
 - [handleGitHubRead](app-handler.ts) accepts GET and HEAD for the banner and checks routes of `githubPaths`.
   It runs the existing app gate and checks the workspace's org before a read.
   It returns the shared banner or checks response, with private response headers.
@@ -85,7 +93,7 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
    No active installation means no read or webhook publication.
 3. Route `MACHINE_PATHS.githubWebhook`, which is `/v1/github/webhooks`, to `handleGitHubWebhook` before the machine stub.
    Set the webhook URL of the GitHub App to the address in [The GitHub App](../../docs/protocol/github-banner.md#the-github-app).
-   Subscribe to `push`, `pull_request`, `pull_request_review`, `pull_request_review_thread`, `check_run`, `check_suite`, and `status`.
+   Subscribe to `push`, `pull_request`, `pull_request_review`, `pull_request_review_thread`, `check_run`, `check_suite`, `status`, and `repository`.
    Keep the raw request body intact.
 4. Route both app read paths to `handleGitHubRead` before the existing general app gate dispatch.
    This handler already owns its gate.

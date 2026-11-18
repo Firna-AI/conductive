@@ -129,6 +129,10 @@ decision number names a dated record, as
   for such a change during an added build.
 - An added repository starts its own build, as
   [Added repositories](#added-repositories) says (decision 240).
+- A new name or a new default branch of a repository on GitHub starts a
+  build too, as
+  [Repository changes on GitHub](repository-changes-on-github.md#the-org-image)
+  says.
 
 ## The software image
 
