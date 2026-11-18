@@ -94,6 +94,30 @@ Contract owners:
   [Workspace Durable Object](../worker/lifecycle/workspace-object.md).
 - The [migrations README](../migrations/README.md).
 
+Design calls of Milestone 3, made on 18 November 2026 by its implementer:
+
+- The wait to enter the queue again comes from the outside calls of
+  `startGuard`, not from a wrapper of the queue turn. Reason: the
+  receiver fence finds the generation of a turn by the turn object, so a
+  wrapper would skip that check.
+- The env of the lifecycle controller is a live view of the object env
+  with a timed D1 binding. That binding marks the env for the provider
+  wrapper. Reason: the test harness sets env values after the object
+  starts, and a copy of the env keeps the binding.
+- A sent step row of the running job stays in object storage until the
+  job ends. Reason: the first ready read must close `computer:boot`, and
+  the job end must close each open step.
+- The `step:<id>` rows copy the steps of the lifecycle state at each send
+  and at the job end, only for the step IDs that the Worker sets. Reason:
+  one place sees every step change, and runner step IDs are not fixed
+  names.
+- The run that ends a start sends at most 10 batches of 50 rows. Later
+  shown-state writes send the rest. Reason: a long start can buffer
+  hundreds of run rows.
+- When the batch with the rows fails, the shown state is written alone
+  and the rows are dropped. Reason: a bad row must never hold back the
+  shown state.
+
 ## Milestone 1: Documentation, schema, and shared records
 
 Depends on: none
