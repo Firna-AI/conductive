@@ -108,9 +108,10 @@ Archived workspaces keep a faint grey mark.
 
 A light runs around the mark while the agent works or the checks run.
 The moving light means that you do not need to act.
-The mark pulses when the agent needs input.
+The mark turns blue and pulses when the agent needs input.
+The pull request bar still shows the state of the pull request.
 With reduced motion, a still ring means the agent works.
-A still middle column means it needs input.
+A still blue middle column means it needs input.
 Bold workspace names mark unread output.
 
 The command palette and workspace links use the same marks.
