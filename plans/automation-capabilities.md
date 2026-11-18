@@ -91,8 +91,9 @@ answer. Its report is in `.context/automation-capabilities/options-check.md`.
   workspace, and it adds the first grant that depends on the sender.
   Effort: Large.
 
-The check recommends E over A. Option E leaves no secret in kept run
-workspaces, as B does. Cal's answer stays A until Cal changes it.
+The check recommended E over A, because E leaves no secret in kept run
+workspaces, as B does. Cal kept A on 18 November 2026, after he read
+options E and F.
 
 ### Automation capabilities decision 2: Whether Mac access joins
 
