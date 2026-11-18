@@ -14,13 +14,19 @@ Select **+**, named **New session**, to start another conversation.
 Sessions in the same workspace share its cloud computer, files, and branch.
 Use a separate workspace when a task needs a separate copy of the files.
 
-You need a connected login for the agent you choose.
-Other members can also send messages under the session's login-sharing rules.
+You can use a personal or org login for the agent you choose.
+You need no personal login when the org login serves you.
+Other members can also send messages under the session's login rules.
 
 An archived workspace offers read-only chat instead of a message box.
 Restore the workspace before starting a session or sending another message.
 Restore is available for 14 days after Archive while its computer is kept.
 Select **Resume** if the restored workspace is already open.
+
+After 14 days, the workspace leaves **Archived** and the command palette.
+A direct link or a chat link still opens its read-only chat.
+The bar says **Removed on** followed by the removal date.
+Conductive keeps its chat history until the org is deleted.
 
 - [Create a workspace](/docs/workspaces#create-a-workspace-from-a-message)
 - [Connect an agent login](/docs/agent-logins)
@@ -98,7 +104,8 @@ Each chip keeps its place in the sent message.
 When the message reaches the agent, select its file chip to open the copy.
 The copy opens in the workspace's file view.
 This can start a stopped cloud computer.
-Restore an archived workspace before opening its attached files.
+Restore an archived workspace within 14 days before opening its attached files.
+After removal, the cloud computer and the attached files in it are deleted.
 
 Attached files arrive in `.context/attachments/` in the workspace's repository folder.
 Conductive keeps each attached file until the workspace's cloud computer has it and its first start succeeds.
@@ -141,6 +148,7 @@ Its workspace tools reach every workspace of the same org.
 Agents can also rename, stop, and close sessions there.
 Closing a running session through the tools can stop its turn.
 Use a separate workspace when the delegated task needs separate files and a branch.
+The agent usually makes that workspace a [sub-workspace of the current one](/docs/workspaces#let-an-agent-manage-workspaces).
 
 Messages from agent tools end with a `---` line and **Sent by:** with a link to the sending session.
 This also applies to the first message when an agent creates a workspace or session.
@@ -156,8 +164,10 @@ The title of a session in another workspace updates when the chat loads.
 Session links also show as small boxes in agent answers and pasted message drafts.
 A member can type the same **Sent by:** line, so it does not prove who wrote a message.
 
-An agent can read archived workspaces and closed sessions.
-It cannot send messages to an archived workspace or a closed session.
+An agent can read archived and removed workspaces by ID.
+It can also read closed sessions.
+Workspace lists leave out removed workspaces unless the agent asks for them.
+It cannot send messages to an archived or removed workspace or a closed session.
 Use **Stop** in each affected session if agents keep replying to each other without useful work.
 
 - [Get the current workspace tools](/docs/cloud-computer#apply-setup-changes)
@@ -186,13 +196,14 @@ A turn with **Fast** on can still run at standard speed, for example when the ag
 The turn then continues, and its end shows **Standard speed** with the cause.
 **Fast** stays on, so later turns run fast when the cause ends.
 
-If the chosen agent has no usable login, the message box offers **Connect** for that agent.
-Connect the login in **Account** before you send.
+The message box offers **Connect** when neither the session's login nor your personal or org login can serve the chosen agent.
+Connect a personal login in **Account**, or ask an admin to connect an org login.
 
 For your own endpoint login, your pickers hide app models that its last successful model list does not name.
 They show all app models for the agent before the first successful read, or when the list names none of them.
 The session keeps its current model.
-Other members' pickers still show all app models.
+Other members' pickers in sessions on your personal endpoint still show all app models.
+On an org endpoint, every member's pickers follow the org endpoint's model list in the same way.
 
 - [Refresh an endpoint's model list](/docs/agent-logins#keep-the-model-list-current)
 
@@ -251,7 +262,7 @@ In the folded work of a turn, open a message line to read its table.
 
 ## Manage session tabs
 
-Use a tab's menu to rename or move it, to copy its link, or to close the tabs after it.
+Use a tab's menu to rename or move it, to copy its link, or to close other tabs or the tabs after it.
 Open the menu with a right click on a computer.
 You can also use **Shift+F10** while the tab has focus.
 On a phone, use a long press.
@@ -259,8 +270,9 @@ On a phone, use a long press.
 - **Rename session** changes the tab's title.
 - **Copy link** copies a link that opens the workspace with that session shown.
 - **Move left** and **Move right** move it one place.
+- **Close other tabs** closes every other tab in the row.
 - **Close tabs to the right** closes every tab after it in the row.
-  If the shown tab closes, this tab shows.
+  With either close, if the shown tab closes, this tab shows.
 - Drag a tab to place it elsewhere in the row.
 
 File and diff tabs share the row on a computer.
@@ -308,7 +320,7 @@ A long read returns part of the transcript, with its line range and a way to rea
 For a stop through an agent's tools, the transcript gives **Stopped from** and the sending session's link.
 
 You can copy another tab's conversation without changing the selected tab.
-Both options work in archived and other read-only workspaces.
+Both options work in archived and removed workspaces, and in other read-only workspaces.
 
 For a closed session, reopen it from **Session history** before copying.
 
@@ -317,35 +329,44 @@ Select the same copy option within one minute to retry.
 
 ## Know whose account a session uses
 
-The member who starts a session supplies its agent login.
-A subscription token or provider API key bills model use to that member's connected account.
+Each session keeps one agent login: its starter's personal login or the org login.
+A new session uses the starter's usable personal login, or else the org login.
+An admin can give the org login priority for new sessions with **Use for every member**.
+Older sessions keep their login when that switch changes.
+
+A subscription token or provider API key bills model use to its connected account.
 On an own endpoint login, model use bills where the endpoint's owner runs it.
 The endpoint gets the messages, files, and command results of each turn on that login, whoever sent the message.
 
-If that member shares the login, other members' messages use it too.
-The message box names that member's login when you use it.
+If the starter shares a personal login, other members' messages use it too.
+Each member can send messages on a session's org login.
+The message box names another member's login or the org login when you use it.
+An org login shows the org's name, such as **Acme's login**.
 It uses the same login label for an own endpoint.
 The chat does not show the endpoint's host.
 
-If the login is private or unavailable, your message starts a new session on your own login.
+If you cannot use the session's login, your message starts a new session when another usable login serves you.
+This happens when its login is unavailable or another member does not share their personal login.
+It uses the personal or org login that serves you for a new session.
 That session links back to the earlier conversation.
 It has no copy of the earlier history.
 
 Any member who can send in a session can change its model, effort, and **Fast** setting.
-That choice also applies to the messages of the member whose login the session uses.
+That choice applies to every member's messages on the session's login.
 
 GitHub operations follow the person whose message started the running turn.
+After a late answer to a secret request, the new turn follows the person whose message started the turn that asked.
 Commits name that person as both author and committer.
 In a workspace with older cloud computer software, agent commits name the workspace owner.
 Mac command requests go to that same person's connected Mac.
-They can differ from the member whose agent login the session uses.
+The session can use another member's personal login or the org login.
 The agent can identify the member who sent each message.
 Another member's message during a turn does not change its GitHub account, commit author, or receiving Mac.
 
 An agent tool creates a session or sends a message as the sender of its calling turn.
 That sender must still belong to the org.
-A new session uses their login.
-A message to an existing session follows the same login-sharing rules as a message they send themselves.
+A new session uses that sender's personal or org login under the same rule above.
+A message to an existing session follows the same login rules as a message they send themselves.
 
 - [Choose who can use an agent login](/docs/agent-logins#choose-who-can-use-your-login)
 - [Understand account and credential access](/docs/security)
@@ -357,8 +378,9 @@ If a turn fails, read its error before retrying.
 **Try again** retries the newest failed request of that session.
 
 A login or membership change can stop a waiting message from running.
-Reconnect the needed login or send a new message under your own login.
-Another member's retry can start a new linked session when the earlier login is unavailable.
+Reconnect your personal login, or ask an admin to check the org login.
+If a personal or org login serves you, send a new message or use **Try again**.
+This can start a new linked session when the earlier login is unavailable.
 
 If a turn says **Changed files unavailable**, inspect **Changes**.
 That notice means its changed-file summary is missing.

@@ -1,6 +1,10 @@
 import type { Workspace } from '../../shared/generated/Workspace'
 
-import { coreFixtures, FAKE_ORIGIN } from '../../test-support/fixtures/core'
+import {
+  coreFixtures,
+  FAKE_ORIGIN,
+  FAKE_TIME,
+} from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { routes } from '../router'
 import { ready } from '../store'
@@ -34,6 +38,7 @@ export function source(overrides: Partial<PaletteSource> = {}): PaletteSource {
     org: acme,
     suspended: false,
     list: ready({ sections, workspaces }),
+    listTime: FAKE_TIME,
     repositories: ready(repositories),
     openWorkspaceId: null,
     createOrgHref: routes.createOrg(),

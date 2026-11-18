@@ -52,6 +52,10 @@ pub struct AgentCreateWorkspaceRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub section_id: Option<String>,
+    /// Parent workspace for the new sub-workspace.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub parent_id: Option<String>,
     /// name.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
@@ -76,6 +80,10 @@ pub struct AgentCreateWorkspaceResponse {
     pub session_id: String,
     /// session link.
     pub session_link: String,
+    /// Notice about the section chosen for the workspace.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub notice: Option<String>,
 }
 
 /// AgentWorkspaceOwner wire fields.
@@ -97,6 +105,8 @@ pub struct AgentWorkspaceListEntry {
     /// summary.
     #[serde(flatten)]
     pub summary: AgentWorkspaceSummary,
+    /// Parent workspace, or null for a top-level workspace.
+    pub parent_id: Option<String>,
     /// owner.
     pub owner: AgentWorkspaceOwner,
 }
@@ -109,6 +119,10 @@ pub struct AgentListWorkspacesRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub owner_id: Option<String>,
+    /// Filter by the direct parent workspace.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub parent_id: Option<String>,
     /// state.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
@@ -129,6 +143,10 @@ pub struct AgentListWorkspacesRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub archived: Option<bool>,
+    /// Only removed workspaces when true. False or omission leaves them out.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub removed: Option<bool>,
     /// limit.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
@@ -181,6 +199,13 @@ pub struct AgentWorkspaceDetail {
     /// entry.
     #[serde(flatten)]
     pub entry: AgentWorkspaceListEntry,
+    /// Parent entry, including an archived parent, or null.
+    pub parent: Option<AgentWorkspaceListEntry>,
+    /// Number of parent links, including archived parents.
+    pub depth: u64,
+    /// Direct sub-workspaces in creation order, including archived ones.
+    #[ts(as = "ReadonlyVec<AgentWorkspaceListEntry>")]
+    pub children: Vec<AgentWorkspaceListEntry>,
     /// repository.
     pub repository: AgentWorkspaceRepository,
     /// base branch.
@@ -195,6 +220,9 @@ pub struct AgentWorkspaceDetail {
     pub archived_at: Option<Timestamp>,
     /// restore until.
     pub restore_until: Option<Timestamp>,
+    /// When the workspace left the list, 14 days after its archive. Null
+    /// until then.
+    pub removed_at: Option<Timestamp>,
 }
 
 /// AgentWorkspaceResponse wire fields.
@@ -203,6 +231,10 @@ pub struct AgentWorkspaceDetail {
 pub struct AgentWorkspaceResponse {
     /// workspace.
     pub workspace: AgentWorkspaceDetail,
+    /// Notice about a workspace write.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub notice: Option<String>,
 }
 
 /// AgentRenameWorkspaceRequest wire fields.
@@ -217,6 +249,16 @@ pub struct AgentRenameWorkspaceRequest {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 pub struct AgentMoveWorkspaceRequest {
-    /// section id.
-    pub section_id: String,
+    /// Destination section. Optional when the call gives a parent target.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub section_id: Option<String>,
+    /// New parent workspace for the moved tree.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub parent_id: Option<String>,
+    /// Move the tree to the top level when true.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub top_level: Option<bool>,
 }

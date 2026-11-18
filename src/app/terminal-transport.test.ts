@@ -1,7 +1,6 @@
 import { expect, it, vi } from 'vitest'
 
 import { terminalPaths } from '../shared/terminal'
-import type { ReadyTerminal } from '../terminal/terminalApi'
 import {
   createTerminalConnector,
   type OpenTerminalSocket,
@@ -60,9 +59,13 @@ class FakeSocket extends EventTarget implements TerminalSocket {
   message(data: string | ArrayBuffer): void {
     this.dispatchEvent(new MessageEvent('message', { data }))
   }
-  end(): void {
+  /** A close event of a browser socket carries the close code. */
+  end(code?: number): void {
     this.readyState = 3
-    this.dispatchEvent(new Event('close'))
+    const event = new Event('close')
+    this.dispatchEvent(
+      code === undefined ? event : Object.assign(event, { code }),
+    )
   }
   fail(): void {
     this.dispatchEvent(new Event('error'))
@@ -73,18 +76,14 @@ function fixture(state = 0) {
   const socket = new FakeSocket()
   socket.readyState = state
   const open = vi.fn<OpenTerminalSocket>(() => socket)
-  const terminal: ReadyTerminal = {
-    state: 'ready',
-    socketPath: terminalPaths.socket('org', 'workspace'),
-    protocol: 'tty',
-  }
-  const transport = createTerminalConnector(open)(terminal)
-  return { socket, open, terminal, transport }
+  const socketPath = terminalPaths.socket('org', 'workspace')
+  const transport = createTerminalConnector(open)(socketPath)
+  return { socket, open, socketPath, transport }
 }
 
 it('initializes once with the latest early size and preserves ordered input and resize frames', () => {
-  const { socket, open, terminal, transport } = fixture()
-  expect(open.mock.calls).toEqual([[terminal.socketPath, 'tty']])
+  const { socket, open, socketPath, transport } = fixture()
+  expect(open.mock.calls).toEqual([[socketPath, 'tty']])
   expect(socket.binaryType).toBe('arraybuffer')
   transport.resize(80, 24)
   transport.write('ls\r')
@@ -204,4 +203,97 @@ it('reports send failure through close and releases the failed connection', () =
   expect(closed).toHaveBeenCalledTimes(1)
   expect(socket.closes).toBe(1)
   expect(socket.listenerCount).toBe(0)
+})
+
+it('reports a close frame of the server as the end of the shell, and a drop or a restart as a lost connection', () => {
+  const ends = [
+    { end: (socket: FakeSocket) => socket.end(1011), expected: 'closed' },
+    { end: (socket: FakeSocket) => socket.end(1000), expected: 'closed' },
+    { end: (socket: FakeSocket) => socket.end(1006), expected: 'lost' },
+    { end: (socket: FakeSocket) => socket.end(1012), expected: 'lost' },
+    { end: (socket: FakeSocket) => socket.fail(), expected: 'lost' },
+  ]
+  for (const { end, expected } of ends) {
+    const { socket, transport } = fixture(1)
+    const closed = vi.fn()
+    transport.onClose(closed)
+    end(socket)
+    const late = vi.fn()
+    transport.onClose(late)
+    expect([closed.mock.calls, late.mock.calls], end.toString()).toEqual([
+      [[expected]],
+      [[expected]],
+    ])
+  }
+})
+
+it('drops input while its socket closes, and lets the close event say how it ended', () => {
+  const { socket, transport } = fixture(1)
+  const closed = vi.fn()
+  transport.onClose(closed)
+  transport.resize(80, 24)
+  socket.readyState = 2
+  transport.write('typed during the close')
+  transport.resize(100, 30)
+  expect(closed).not.toHaveBeenCalled()
+  socket.end(1011)
+  expect(closed.mock.calls).toEqual([['closed']])
+  expect(socket.sent).toEqual(['{"columns":80,"rows":24}'])
+})
+
+it('keeps input, output, and close notifications separate for each terminal connection', () => {
+  const sockets: FakeSocket[] = []
+  const open = vi.fn<OpenTerminalSocket>(() => {
+    const socket = new FakeSocket()
+    sockets.push(socket)
+    return socket
+  })
+  const connect = createTerminalConnector(open)
+  const first = terminalPaths.terminalSocket('org', 'workspace', 'workspace')
+  const second = terminalPaths.terminalSocket(
+    'org',
+    'workspace',
+    'a'.repeat(32),
+  )
+  const connections = [first, first, second].map((socketPath) => {
+    const transport = connect(socketPath)
+    const output: string[] = []
+    const closed = vi.fn()
+    transport.onData((data) => output.push(data))
+    transport.onClose(closed)
+    transport.resize(80, 24)
+    return { transport, output, closed }
+  })
+  expect(open.mock.calls).toEqual([
+    [first, 'tty'],
+    [first, 'tty'],
+    [second, 'tty'],
+  ])
+  sockets.forEach((socket) => socket.open())
+  connections[0].transport.write('first\r')
+  connections[2].transport.write('second\r')
+  expect(sockets.map((socket) => socket.sent)).toEqual([
+    ['{"columns":80,"rows":24}', '0first\r'],
+    ['{"columns":80,"rows":24}'],
+    ['{"columns":80,"rows":24}', '0second\r'],
+  ])
+  connections[0].transport.close()
+  sockets[0].message('0closed output')
+  sockets[1].message(new TextEncoder().encode('0live output').buffer)
+  expect(connections.map(({ output }) => output)).toEqual([
+    [],
+    ['live output'],
+    [],
+  ])
+  expect(sockets.map((socket) => socket.closes)).toEqual([1, 0, 0])
+  expect(connections.map(({ closed }) => closed.mock.calls.length)).toEqual([
+    1, 0, 0,
+  ])
+  sockets[1].end()
+  expect(connections.map(({ closed }) => closed.mock.calls.length)).toEqual([
+    1, 1, 0,
+  ])
+  sockets[2].message('0second output')
+  expect(connections[2].output).toEqual(['second output'])
+  connections[2].transport.close()
 })

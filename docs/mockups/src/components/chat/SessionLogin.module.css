@@ -1,15 +1,16 @@
 /*
- * A muted label in the bar of the composer, after the model picker. When the
- * bar is narrow, as on a phone during a turn, the name ends with an ellipsis,
- * so that the controls keep their room.
+ * A muted label in the bar of the composer, after the model picker. It keeps
+ * its whole name, so the member sees whose login a message spends. When the
+ * bar is narrow, as on a phone during a turn, the picker gives way first:
+ * its effort, then its model (secrets decision 16 G). Its padding is small,
+ * so the model keeps its name at 360 px.
  */
 .label {
   display: inline-flex;
-  flex: 0 1 auto;
+  flex: 0 0 auto;
   align-items: center;
   gap: 4px;
-  min-width: 0;
-  padding: 0 4px;
+  padding: 0 2px;
   color: var(--ui-muted);
   font-size: var(--ui-text-sm);
   line-height: 16px;

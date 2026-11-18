@@ -41,6 +41,10 @@ pub enum RunnerHello {
         workspace_id: String,
         /// streamId.
         stream_id: String,
+        /// One runner program start, retained across reconnections and fresh links.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        process_start_id: Option<String>,
         /// loginKinds.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[ts(optional)]

@@ -22,7 +22,7 @@ export class RunnerOutputState {
     return this.readAt(CONTEXT_KEY)
   }
 
-  saveContexts(ciphertext: string): Promise<void> {
+  saveContexts(ciphertext: string | undefined): Promise<void> {
     return this.saveAt(CONTEXT_KEY, ciphertext)
   }
 

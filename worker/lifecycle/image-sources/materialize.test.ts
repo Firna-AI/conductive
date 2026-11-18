@@ -134,7 +134,7 @@ it('revokes a failed native clone and keeps raw credential-bearing failures out 
       ).results,
     ).toEqual([
       { text: 'Updating the repositories.\n' },
-      { text: 'Repository copy complete.\n' },
+      { text: 'Repository copy complete: example/source-repository\n' },
     ])
     expect(fixture.provider.commands.join('\n')).not.toContain(
       INSTALLATION_TOKEN,

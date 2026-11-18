@@ -4,7 +4,6 @@ import { MessageSquarePlus } from 'lucide-react'
 import { ChatPane } from '../components/chat/ChatPane'
 import { ChatWorkspaces } from '../components/chat/chatWorkspaces'
 import { EmptyState } from '../components/common/EmptyState'
-import { FilePage } from '../components/files/FilePage'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { acmeRail } from '../components/layout/OrgRail'
 import { useMacApp } from '../components/mac/MacApp'
@@ -29,14 +28,14 @@ import { suspendedOwner } from '../fixtures/startRefusals'
 import { paths } from '../paths'
 import { composerFor, isRunning } from './composerFor'
 import { composerNotice } from './composerNotice'
+import { centreOf } from './workspaceCentre'
 import { placeLostUpdate } from './lostUpdates'
 import { changedWorkspaces, chatWorkspacesOf } from './orgWorkspaces'
 import { viewerOf } from './sessionStarter'
 import { barOf, headerMenusOf, placeOf } from './workspaceBar'
+import { headerMenuOf } from './workspaceHeaderMenu'
 import {
   FilesContent,
-  filePlaceholder,
-  openFile,
   startingLogFor,
   ToolContent,
   workspaceSidebar,
@@ -56,7 +55,7 @@ import {
 } from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
 import { tabRowOf } from './workspaceTabRow'
-import { historyFor, tabsFor, workspaceName } from './workspaceTabs'
+import { historyFor, noMessages, tabsFor, workspaceName } from './workspaceTabs'
 import styles from './WorkspaceScreen.module.css'
 
 /** The right column in the middle of a drag that widens it, in px. */
@@ -115,7 +114,7 @@ export function WorkspaceScreen(props: {
   const restorable = archiveRestore(state) === 'available'
   const bar = barOf(state, { archivable, readOnly })
   const problem = sandboxNotice(state)
-  const fresh = state.tab === 'new-session'
+  const empty = noMessages(state)
   const rightHidden = state.rightColumn === 'hidden'
   const rows = chatWorkspacesOf(state, { workspace, status })
   const chat = (
@@ -130,7 +129,7 @@ export function WorkspaceScreen(props: {
           />
         }
         fold={state.fold}
-        items={fresh ? [] : chatItemsFor(open.items, state.paths)}
+        items={empty ? [] : chatItemsFor(open.items, state.paths)}
         notice={
           // An archived workspace keeps its archived bar, so the notice of a
           // suspended org shows above it.
@@ -155,6 +154,12 @@ export function WorkspaceScreen(props: {
       copy={state.copyLink === 'none' ? undefined : state.copyLink}
       name={workspace.name}
       {...headerMenusOf(state)}
+      menu={
+        state.overlay === 'workspace-menu' && viewport === 'desktop'
+          ? headerMenuOf(state, workspace.owner)
+          : undefined
+      }
+      renaming={state.overlay === 'header-rename'}
       run={open.run}
       rightHidden={rightHidden}
       status={status}
@@ -244,7 +249,6 @@ export function WorkspaceScreen(props: {
       </MobileFrame>
     )
   }
-  const file = openFile(state)
   return (
     <AppFrame
       overlay={
@@ -269,18 +273,12 @@ export function WorkspaceScreen(props: {
         suspended,
         viewer: membership,
         changed: changedWorkspaces(state),
-        restoreOpen: state.archive === 'kept',
+        archive: state.archive,
         shortcuts: props.shortcuts,
       })}
     >
       <WorkspaceBody
-        center={
-          file ? (
-            <FilePage placeholder={filePlaceholder(state, true)} view={file} />
-          ) : (
-            chat
-          )
-        }
+        center={centreOf(state, chat)}
         files={files}
         filesShare={state.resize === 'split' ? raisedSplit : undefined}
         header={header}

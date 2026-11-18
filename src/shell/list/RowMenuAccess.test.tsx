@@ -127,4 +127,25 @@ describe('the actions of a workspace menu', () => {
       archived: ['Copy link'],
     })
   })
+
+  test('a nested row offers no Move to section, and the top-level row of its tree does', async () => {
+    const server = new FakeApiServer({ subWorkspaces: true })
+    await openPaletteTab(open, { server })
+    expect({
+      nested: itemsOf('places-client', 'Places API client'),
+      topLevel: itemsOf(
+        'checkout-autocomplete',
+        'Checkout address autocomplete',
+      ),
+    }).toEqual({
+      nested: ['Reassign to >', 'Rename', 'Copy link', 'Archive'],
+      topLevel: [
+        'Move to section >',
+        'Reassign to >',
+        'Rename',
+        'Copy link',
+        'Archive',
+      ],
+    })
+  })
 })

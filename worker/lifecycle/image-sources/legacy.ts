@@ -30,7 +30,13 @@ export async function advanceLegacySources(
       const current = await readSourceJob(env.DB, job.buildId)
       if (!current) throw new Error('Missing legacy source ownership')
       const succeeded = sourceCommandSucceeded(status) && !current.grantHash
-      await finishSourceCopy(env.DB, current, succeeded, dependencies.now())
+      await finishSourceCopy(
+        env.DB,
+        current,
+        input.repositories[current.sourceIndex]?.fullName,
+        succeeded,
+        dependencies.now(),
+      )
       const revoked = await revokeSourceToken(env, dependencies.fetch, current)
       if (!succeeded) throw new Error('The source command failed')
       if (revoked)

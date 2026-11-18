@@ -1,7 +1,8 @@
 import type { AppEnv, AppDependencies } from '../env'
 import { HttpError } from '../http'
 import { requireOrgMember } from './access'
-import { insertWorkspace, workspaceExists } from './workspace-data'
+import { insertWorkspace } from './workspace-data'
+import { workspaceExists } from './creation-attempt-data'
 import { leasedCreationImage } from './image-leases'
 import { ensureWorkspaceToken } from './tokens'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
@@ -76,6 +77,7 @@ async function prepareWorkspaceRecords(
         providerAccount: image.providerAccount,
         repositoryId: creation.repositoryId,
         sectionId: creation.sectionId,
+        parentId: creation.parentId,
         user: creation.user,
         senderUserId: creation.sender.id,
         city: creation.city,
@@ -87,6 +89,7 @@ async function prepareWorkspaceRecords(
         message: creation.request,
         now: creation.createdAt,
         repositoryLocations: job.repositoryLocations,
+        capabilities: creation.capabilities,
       })
     }
     const locations =

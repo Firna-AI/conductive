@@ -1,14 +1,14 @@
 Conductive workspace tools
 
-conductive workspaces list [--owner MEMBER_ID] [--state STATE] [--repository ID]
-  [--query TEXT] [--updated-since MILLISECONDS] [--archived true|false]
+conductive workspaces list [--owner MEMBER_ID] [--parent ID] [--state STATE] [--repository ID]
+  [--query TEXT] [--updated-since MILLISECONDS] [--archived true|false] [--removed true|false]
   [--limit NUMBER] [--offset NUMBER]
 conductive workspaces get [--workspace ID]
 conductive workspaces create --repository ID --message TEXT
   [--agent claude|codex --model NAME] [--effort LEVEL] [--fast true|false] [--section ID] [--name TEXT]
-  [--first-session-title TEXT] [--request-id ID]
+  [--parent ID] [--first-session-title TEXT] [--request-id ID]
 conductive workspaces rename --name TEXT [--workspace ID]
-conductive workspaces move --section ID [--workspace ID]
+conductive workspaces move [--section ID] [--parent ID | --top-level] [--workspace ID]
 conductive workspaces archive [--workspace ID]
 conductive repositories list
 conductive sections list
@@ -33,6 +33,8 @@ conductive previews close --preview ID [--workspace ID]
 conductive mcp
 conductive mac run --command TEXT --folder PATH --reason TEXT
   [--timeout-seconds SECONDS] [--longer-timeout-reason TEXT] [--request-id ID]
+conductive secrets list
+conductive secrets run --secret NAME [--secret NAME...] [--reason TEXT] -- <command>
 
 Workspace and session calls reach every workspace in this org.
 An omitted --workspace names the calling workspace.
@@ -40,6 +42,7 @@ Reads need only the workspace token. Writes need an active calling turn.
 Writes act for the member whose message started that turn.
 Only a workspace owner or an org admin can archive that workspace.
 Archiving the calling workspace ends this turn. A member can restore it for 14 days.
+Then the workspace leaves the list. Get can still read it by ID.
 Stopping or closing the calling session can end this turn.
 Close refuses a running turn unless --stop-running-turn is given.
 Stop with no running turn succeeds and reports idle.
@@ -49,6 +52,27 @@ Close of an already closed preview succeeds with closed: false.
 
 Create uses the calling workspace's org and owner.
 Omitted workspace model and effort use the owner's defaults and the default section.
+For workspace create, --parent ID nests the new workspace under that parent.
+Nest work that belongs to the calling workspace's task: a part of a large task that can run in parallel,
+follow-up work that the task starts, work in another repository for the same task,
+or a change that needs its own pull request. Each separate pull request needs its own workspace.
+Omit --parent for unrelated work. When a member names the place, follow the member.
+Agents usually pass their own workspace ID from their instructions.
+The new workspace joins its parent's section. --section has no effect with --parent.
+Nesting stops at depth 3. A create under a workspace at depth 3 fails with nesting_limit.
+Its message gives the parentId for a sibling. Pass that ID with --parent.
+Start the sibling's name with a one-word group prefix, such as "Limits: ".
+The workspace in a create reply gives parentId. The reply can give a section notice.
+For workspace list, --parent ID lists only the direct sub-workspaces of that workspace.
+Each workspace list entry gives parentId, or null for a top-level workspace.
+Workspace get also gives parent, depth, and children, including archived children.
+Workspace move needs a section, a target, or both. Use only one target.
+For workspace move, --parent ID nests the whole tree under that parent.
+The tree joins its parent's section. Another --section gives a notice.
+--top-level takes the tree out of its parent, to the top of the named or shown section.
+A target equal to the current place changes nothing.
+The Worker refuses loops and moves past depth 3, including archived links, without changes.
+A section-only move of a nested row moves nothing and gives a notice naming the top-level workspace to move.
 Session create uses the turn sender's default model and effort.
 Creates run fast only with --fast true, for a marked model.
 Send keeps the session's choice when omitted. --fast false turns fast mode off.
@@ -58,7 +82,9 @@ Keep --request-id to retry a create or send. Omission generates an ID.
 --name, --title, and --first-session-title: Use plain words separated by spaces.
 Avoid underscores unless the user tells you to add them.
 
-List returns every entry unless filters or paging are given. Limit is 1 to 100.
+Workspace lists leave out removed workspaces by default. Use --removed true to list only them.
+--removed false keeps that default. Each workspace filter must match.
+Lists support a limit of 1 to 100.
 A limited list gives hasMore. Use offset to read the next page.
 --updated-since is a signed epoch timestamp in milliseconds.
 --owner takes a stable member ID. Each workspace row gives its owner's ID, login, and display name.
@@ -69,3 +95,16 @@ Use next.line and next.offset as the next read's start-line and start-offset.
 Use names and returned links in normal answers. A session link holds workspace and session IDs.
 A workspace link in a message names that workspace. Workspace and session links in an answer show as chips.
 A Sent by: line names the sending session. Do not reply only to confirm it.
+
+Secrets list gives each org secret's name, environmentVariable, description, and availability, never its value.
+Read each value through its environmentVariable, also when the secret name has spaces.
+A running turn adds session approvals to availability. Without it, only org and workspace grants count.
+Secrets run needs an active turn. It puts approved values only in the command's environment.
+Repeat --secret for more names. A missing name asks a member for a temporary value.
+Two names that need one environment key fail before any request. Run those names separately.
+Put the command and its arguments after --. To use shell syntax, run sh -c 'command'.
+The CLI keeps stdin, streams filtered stdout and stderr, and returns the command's exit status.
+After the command ends, stderr gives environmentVariables: followed by the JSON name-to-variable map.
+A request waits up to 90 seconds. Pending, denied, or not-answered prints the message and exits 1.
+After a late-answer notice, call secrets run again. A pending call never starts the command.
+Keep each value out of output, files, and answers. The filter hides only exact copies.

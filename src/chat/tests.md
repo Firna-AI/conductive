@@ -27,7 +27,9 @@ on one fake stream. `components/SessionLogin.test.tsx` renders the login
 label and its notices. `components/ComposerModels.dom.test.tsx` opens the
 model picker of a reader whose own endpoint list leaves models out, in the
 reader's own session, in the session of another member, and before a
-message that starts a linked session. `components/ModelPicker.dom.test.tsx`
+message that starts a linked session. In an empty session of another
+member, it checks that the label and the picker follow the default login
+that the record names, the org login. `components/ModelPicker.dom.test.tsx`
 checks the New session mark of each model of the other agent, and the Fast
 row of the model picker: the keys reach it, a change of it sends a choice
 that differs only in fast and keeps the menu open, the trigger names Fast,
@@ -107,11 +109,15 @@ and a read-only row opens no menu on it. `state/tab-order.test.ts` moves tabs th
 the controller and checks the saved order. A move that changes the place
 of the temporary tab drops its mark in the same save. A move of another
 tab, and a move to its own place, keep the mark.
-`components/CloseRight.dom.test.tsx` presses Close tabs to the right on
+`components/CloseTabs.dom.test.tsx` presses Close tabs to the right on
 the first tab of a row with a file tab and a session tab. The file tab
 leaves the view in one save, with its temporary mark, the session closes
 with no stop, and the shown tab stays. When the shown tab is to the right,
-the tab of the menu shows first. The item is off on the last tab.
+the tab of the menu shows first. The item is off on the last tab. The
+same file presses Close other tabs on the middle tab of a row with a
+session tab, which shows, before it and the file tab after it. Both other
+tabs close, the tab of the menu shows, and its session gets no close.
+Then the item is off, because the row holds only that tab.
 `state/controller.test.ts` closes an idle and a running session in one
 close: the idle one closes at once, and the running one waits for one
 question. `components/CloseQuestion.dom.test.tsx` checks the words of
@@ -376,6 +382,9 @@ files and Changes stay as they were. A queued message gets its copy only
 after Resume gives it to the agent. `../app/dev/attachment-files.test.ts`
 checks the same store in the fake of the app. `../app/dev/attachment-test-kit.ts`
 holds the helpers of both tests.
+
+The tests of the secret requests are in the
+[README of the secret requests](secrets/README.md#tests).
 
 `components/ReadOnlyChat.dom.test.tsx` checks the read-only behavior of both hosts.
 A right click and Shift and F10 open a tab menu with only the copy items, with no line.

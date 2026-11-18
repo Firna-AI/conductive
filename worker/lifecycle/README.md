@@ -35,7 +35,7 @@ gives the create, read, resume, and activity routes of a workspace to
   sandbox and sessions.
 - Change the repository of a workspace to another repository that its
   sandbox holds, with the same sandbox and sessions.
-- Restart the runner and the preview relay of a running workspace, after
+- Restart the runner, preview relay, and terminal service of a running workspace, after
   an update check, as [Restart](routes.md#restart) says.
 - Give the GitHub CLI the workspace owner's token outside an agent turn.
 
@@ -56,11 +56,20 @@ It sets the branch's `gh-merge-base` Git setting to the workspace base.
 Create, resume, and disk retention pass that base through `CONDUCTIVE_DEFAULT_BRANCH`.
 A null stored base uses the repository default branch.
 
+The browser create takes optional workspace capabilities.
+`request-parser.ts` reads the pre-approved secret IDs and Mac access.
+`create-request.ts` checks that the selected secrets belong to the org.
+`creation-plan-statements.ts` saves these choices, and `creation-claims.ts`
+reads them for each retry. `workspace-data.ts` writes Mac access and the
+pre-approvals with the workspace records in one D1 batch.
+An omitted choice gives no pre-approval and leaves Mac access off.
+The [secrets backend](../secrets/README.md) owns the capability data.
+
 ### Input activity
 
 [Input activity](routes.md#input-activity) gives how one
 `InputActivityOwner` in each workspace object takes the input of the
-browser and of previews. Terminal frames report no activity.
+browser. Previews and terminal frames report no activity.
 
 ### Machine route
 
@@ -115,6 +124,13 @@ A normal workspace startup bootstraps a missing program in a detached root job.
 Downloads never hold the lock used by runner restarts.
 Activation shares `/run/conductive/bootstrap-activate.lock` with the restart.
 The first activation confirms its installation before it releases that lock.
+Restart applies a complete download in the runner's pre-start step under
+the same lock. It then restarts the relay and ttyd, with no restart of the
+terminal shell server. A terminal restart or support check failure warns
+and keeps Restart successful. The workspace object reads the terminal
+password and support again for the captured sandbox and provider account.
+A failed read keeps its cache. Changed support commits one terminal list
+event with the new value, through the workspace event sequence.
 The release program includes the workspace CLI and MCP server.
 Its system installer links `/usr/local/bin/conductive` to the active program.
 Disk retention starts do not bootstrap or restart the runner.
@@ -166,6 +182,7 @@ A confirmed missing archived disk uses that batch too.
 
 - [software-release.ts](software-release.ts): reads and validates the newest release JSON.
 - [software-bootstrap.ts](software-bootstrap.ts): verifies downloads and serializes first activation with runner restarts.
+- [software-restart.ts](software-restart.ts): checks for updates, restarts the running services, and asks the workspace object to refresh terminal support.
 
 [Key code](key-code.md) lists the entry points of the lifecycle code, and
 the guides that give the entry points of each part.

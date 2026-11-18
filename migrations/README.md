@@ -4,6 +4,112 @@ D1 applies SQL files in filename order. Each filename starts with a full
 date, hour, and minute: `YYYYMMDDHHMM_description.sql`.
 Never change a migration that has merged or has been applied to a shared database.
 
+## Keep the previous Worker working
+
+Each migration keeps the previous Worker working on the new schema. The
+previous Worker is the version that was live before the deploy.
+[Migrations and the previous Worker](../docs/automatic-deploys.md#migrations-and-the-previous-worker)
+says when and for how long it runs on the new schema.
+
+- Do not rename or drop a table, a column, an index, or a trigger that the
+  previous Worker uses.
+- Do not add a check, a `NOT NULL` column without a default, or a unique
+  rule that rejects a write of the previous Worker.
+- Do not rewrite stored values into a form that the previous Worker cannot
+  read.
+- A rebuild of a table is safe when it keeps every name, every column,
+  every default, every unique rule, and every value that the previous
+  Worker reads or writes.
+
+A rename or a drop takes two pull requests:
+
+1. The first pull request keeps the old name working for the previous
+   Worker. Its own Worker code does not read or write the old name, because
+   that code is the previous Worker at the second deploy. It also adds a
+   follow-up item of the kind Post-merge task under `plans/follow-ups/`.
+   The item names the old name and each part of the compatibility path,
+   and asks for their removal.
+   - For a rename, the migration adds the new name and copies the rows.
+     The old table or column stays a real table or column. Triggers copy
+     each write from one name to the other, in both directions. So each
+     Worker sees the rows that the other one writes. Guard each trigger, so
+     that a copied write does not copy back or fail on the row that exists.
+   - Do not replace the old table with a view. D1 counts no changed rows
+     for a write through the triggers of a view. An upsert on a view fails
+     with `cannot UPSERT a view`.
+   - For a drop, the Worker code stops each use of the old name. When the
+     schema rejects a write without the old column, the migration first
+     makes the column accept a missing value, for example with a rebuild.
+2. The second pull request does that follow-up item. It removes the
+   compatibility path and drops the old name with a new migration. It
+   merges only after the deploy of the first pull request has been live
+   for at least one hour. The next deploy can apply its migrations about
+   5 minutes after the first upload, while old Durable Objects still run
+   the Worker from before the first pull request. Two merges close together
+   can also deploy in one run, because GitHub keeps only the newest
+   waiting deploy.
+
+When a migration cannot keep the previous Worker working, ask the user
+before it merges. Then name it in the pull request description and in
+[When a deploy fails](../docs/automatic-deploys.md#when-a-deploy-fails).
+
+## Reserved ranges
+
+Each milestone owns the complete inclusive range below.
+Use a free minute in that range for each new migration.
+These reservations keep concurrent branches from choosing the same prefix.
+UI and wiring milestones normally need no migration. Their ranges stay reserved.
+
+| Milestone | Inclusive prefix range |
+| --- | --- |
+| 4a Contracts | `202611060100`–`202611060159` |
+| 5 Lifecycle | `202611070000`–`202611070059` |
+| 6 App shell | `202611070100`–`202611070159` |
+| 7r Runner | `202611070200`–`202611070259` |
+| 7 Chat backend | `202611070300`–`202611070359` |
+| 8 Chat UI | `202611070400`–`202611070459` |
+| 8i Chat wiring | `202611070500`–`202611070559` |
+| 16a First deployment | `202611070600`–`202611070659` |
+| 9 Files backend | `202611070700`–`202611070759` |
+| 10 Files UI | `202611070800`–`202611070859` |
+| 11 Tools backend | `202611070900`–`202611070959` |
+| 12 Tools UI | `202611071000`–`202611071059` |
+| 13 GitHub backend | `202611071100`–`202611071159` |
+| 14 GitHub UI | `202611071200`–`202611071259` |
+| 15 Agent tools | `202611071300`–`202611071359` |
+| 15a Members backend | `202611071400`–`202611071459` |
+| 15c Members UI | `202611071500`–`202611071559` |
+| 15i Feature wiring | `202611071600`–`202611071659` |
+| 15d Marketing | `202611071700`–`202611071759` |
+| 15e Mac app | `202611072000`–`202611072059` |
+| 15m Marketing and mockup fixes | `202611072200`–`202611072259` |
+| 15o Org suspension | `202611080000`–`202611080059` |
+| Agent tool lists and names | `202611081300`–`202611081359` |
+| Workspace link chips | `202611091200`–`202611091259` |
+| Chat attachment metadata | `202611081800`–`202611081859` |
+| Preferences and New workspace dialog | `202611082300`–`202611082359` |
+| Codex logins | `202611100000`–`202611100059` |
+| Computer ledger account merge | `202611100900`–`202611100959` |
+| Software image for first builds | `202611101200`–`202611101259` |
+| 16 Deployment | `202611071800`–`202611071859` |
+| 17 Verification | `202611071900`–`202611071959` |
+| Automations: records and routes | `202611101300`–`202611101359` |
+| Automations: runs and Run now | `202611101400`–`202611101459` |
+| Automations: pull request runs | `202611101500`–`202611101559` |
+| Keyboard shortcuts storage | `202611101600`–`202611101659` |
+| Agent workspace calls | `202611111200`–`202611111259` |
+| Parallel image sources | `202611161200`–`202611161259` |
+| Sub-workspaces | `202611161700`–`202611161759` |
+
+## Key code
+
+- [The test harness](../worker/test-support/harness.ts) applies every SQL
+  migration in filename order to a fresh local D1 database.
+- [Shared contracts](../src/shared/) define the browser and runner payloads.
+- Run `npm run db:migrate` to apply the migrations to local development storage.
+
+## The migrations
+
 `202611060000_worker_core.sql` creates sign-in and the first org records.
 `202611060100_contracts.sql` adds the tables used by the feature backends.
 It keeps existing rows and gives each existing org its General section.
@@ -23,7 +129,8 @@ So a build whose create reply was lost finds that sandbox again. When the user w
 
 Chat history, sessions, runner event cursors, start steps, and banner state
 belong to workspace Durable Object storage. They have no D1 tables.
-Stored secrets use ciphertext columns. The browser reads only metadata.
+Stored secrets use ciphertext columns. The browser reads metadata, except
+when an org admin reveals one secret value through the recorded Reveal action.
 The git credential helper uses the GitHub user token of the turn's sender, as
 [GitHub tokens](../docs/protocol/github-tokens.md) says.
 The older comment on `github_connections` in `202611060100_contracts.sql`
@@ -246,6 +353,23 @@ It keeps every other preference and every saved view.
 An unset view now uses the dialog, so only accounts made after this migration get the dialog without a choice.
 [The preference](../docs/protocol/create-a-workspace.md#the-preference) gives the requirement.
 
+`202611141345_agent_secrets.sql` adds encrypted org secrets, workspace
+pre-approvals, and session approvals. A name is unique in its org.
+Composite foreign keys keep each grant within its org and delete its rows
+with its secret or workspace. Creator and approver IDs are opaque
+attribution IDs, so account removal keeps the records.
+The migration adds `workspaces.mac_access`, on for each existing and new
+row, and `workspace_creation_plans.capabilities_json` for create recovery.
+The [secrets backend](../worker/secrets/README.md) owns these records.
+
+`202611161353_secret_reveals.sql` adds retained reveal records with the
+secret ID and name, value version, admin ID, and time. An org foreign key
+removes its records at org purge. Secret and admin IDs have no foreign
+key, so their deletion keeps the records. No record holds a secret value.
+The migration gives each existing secret value version 1. Replacement
+increments that version, so metadata shows only a reveal of the current
+value. An index serves the last reveal of each value version.
+
 `202611161200_parallel_image_sources.sql` rebuilds `image_source_jobs` with the primary key `(build_id, source_index)`, so an image job keeps one row for each repository.
 It copies every column of each older row, including the encrypted token, process, output offsets, source index, and provider account.
 The new `estimate_bytes` column holds the memory estimate of the Git commands of a repository, 256 MiB by default.
@@ -286,52 +410,32 @@ The partial index `workspaces_running_since` holds running, unarchived rows
 with a non-null time. Its running states match `runningWorkspacePredicate`.
 The [operator Overview](../worker/operator/overview.md) uses this index to read the ten oldest runs.
 
-## Reserved ranges
+`202611161700_workspace_parents.sql` adds the nullable parent workspace link
+to `workspaces` and `workspace_creation_plans`. Existing rows keep `NULL`.
+The workspace link references `workspaces(id)`. The index on
+`(org_id, parent_workspace_id)` serves direct sub-workspace reads.
+The creation plan keeps the parent through creation retries and replay.
+[Sub-workspaces](../docs/protocol/sub-workspaces.md) gives the parent rules.
 
-Each milestone owns the complete inclusive range below.
-Use a free minute in that range for each new migration.
-These reservations keep concurrent branches from choosing the same prefix.
-UI and wiring milestones normally need no migration. Their ranges stay reserved.
+`202611170110_org_agent_logins.sql` adds `org_agent_logins`, keyed by org
+and agent. It accepts only API keys and own endpoints. The org foreign key
+deletes its logins with the org. The nullable creator reference clears
+when that user is deleted. The encrypted key and address use an org
+context. Only the endpoint origin stays in plain text.
+The table also holds the endpoint model list and its read and attempt
+times. `use_for_every_member` starts off. A switch write keeps the login's
+`updated_at` version. Existing personal logins and their data stay intact.
+[Org logins](../docs/protocol/org-logins.md) states the requirements.
 
-| Milestone | Inclusive prefix range |
-| --- | --- |
-| 4a Contracts | `202611060100`–`202611060159` |
-| 5 Lifecycle | `202611070000`–`202611070059` |
-| 6 App shell | `202611070100`–`202611070159` |
-| 7r Runner | `202611070200`–`202611070259` |
-| 7 Chat backend | `202611070300`–`202611070359` |
-| 8 Chat UI | `202611070400`–`202611070459` |
-| 8i Chat wiring | `202611070500`–`202611070559` |
-| 16a First deployment | `202611070600`–`202611070659` |
-| 9 Files backend | `202611070700`–`202611070759` |
-| 10 Files UI | `202611070800`–`202611070859` |
-| 11 Tools backend | `202611070900`–`202611070959` |
-| 12 Tools UI | `202611071000`–`202611071059` |
-| 13 GitHub backend | `202611071100`–`202611071159` |
-| 14 GitHub UI | `202611071200`–`202611071259` |
-| 15 Agent tools | `202611071300`–`202611071359` |
-| 15a Members backend | `202611071400`–`202611071459` |
-| 15c Members UI | `202611071500`–`202611071559` |
-| 15i Feature wiring | `202611071600`–`202611071659` |
-| 15d Marketing | `202611071700`–`202611071759` |
-| 15e Mac app | `202611072000`–`202611072059` |
-| 15m Marketing and mockup fixes | `202611072200`–`202611072259` |
-| 15o Org suspension | `202611080000`–`202611080059` |
-| Agent tool lists and names | `202611081300`–`202611081359` |
-| Workspace link chips | `202611091200`–`202611091259` |
-| Chat attachment metadata | `202611081800`–`202611081859` |
-| Preferences and New workspace dialog | `202611082300`–`202611082359` |
-| Codex logins | `202611100000`–`202611100059` |
-| Computer ledger account merge | `202611100900`–`202611100959` |
-| Software image for first builds | `202611101200`–`202611101259` |
-| 16 Deployment | `202611071800`–`202611071859` |
-| 17 Verification | `202611071900`–`202611071959` |
-| Automations: records and routes | `202611101300`–`202611101359` |
-| Automations: runs and Run now | `202611101400`–`202611101459` |
-| Automations: pull request runs | `202611101500`–`202611101559` |
-| Keyboard shortcuts storage | `202611101600`–`202611101659` |
-| Agent workspace calls | `202611111200`–`202611111259` |
-| Parallel image sources | `202611161200`–`202611161259` |
+`202611171200_mac_access_off.sql` turns Mac access off one time in each
+existing workspace, also in a workspace where a member turned it on. The
+`DEFAULT 1` of `workspaces.mac_access` stays, because SQLite changes a
+column default only with a rebuild of the table. Each insert sets the
+column itself, and an absent choice now gives 0. A workspace that the
+previous Worker creates on the new schema starts with Mac access on, as
+[Migrations and the previous Worker](../docs/automatic-deploys.md#migrations-and-the-previous-worker)
+says. A member turns it off in its Capabilities.
+[Mac access](../docs/protocol/secrets.md#mac-access) gives the rule.
 
 `202611131221_attachment_download_tokens.sql` adds one-use attachment download grants.
 Each row holds a token digest, the file and destination identities, its expiry, and its claim time.
@@ -341,13 +445,6 @@ Deleting an attachment also removes its grants.
 Existing rows keep null in both columns.
 The partial index serves the cleanup of transferred bytes.
 The attachment record stays after its R2 object is deleted.
-
-## Key code
-
-- [The test harness](../worker/test-support/harness.ts) applies every SQL
-  migration in filename order to a fresh local D1 database.
-- [Shared contracts](../src/shared/) define the browser and runner payloads.
-- Run `npm run db:migrate` to apply the migrations to local development storage.
 
 `202611121610_fast_choices.sql` adds fast mode to workspace runtime records,
 creation plans, account defaults, and automations. Each column starts at 0.
@@ -375,3 +472,8 @@ workspaces, automations, and automation runs. The
 [Stats tab of the account](../docs/protocol/account-stats.md) counts the
 records of one person, and these indexes keep each read to that person's
 rows.
+
+`202611171100_org_color.sql` adds the nullable `orgs.color` column. It keeps
+the preset colour that an admin picks for the tile of the open org, as
+[Orgs and members](../docs/protocol/orgs-and-members.md) says. Existing orgs
+get null, which the app shows as Blue.

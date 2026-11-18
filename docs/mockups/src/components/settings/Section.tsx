@@ -1,10 +1,14 @@
 import type { ReactNode } from 'react'
 import styles from './Section.module.css'
 
-/** A titled card of settings, with its actions at the bottom. */
+/**
+ * A titled card of settings, with its actions at the bottom. `action` sits
+ * at the end of the title row, such as Edit.
+ */
 export function Section(props: {
   title: string
   status?: ReactNode
+  action?: ReactNode
   description?: string
   actions?: ReactNode
   children?: ReactNode
@@ -14,6 +18,9 @@ export function Section(props: {
       <div className={styles.header}>
         <h2 className={styles.title}>{props.title}</h2>
         {props.status}
+        {props.action ? (
+          <div className={styles.headerAction}>{props.action}</div>
+        ) : null}
       </div>
       {props.description ? (
         <p className={styles.description}>{props.description}</p>

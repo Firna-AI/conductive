@@ -6,6 +6,7 @@ import type { RunnerProtocolVersion } from '../../src/shared/generated/RunnerPro
 import type { RunnerLoginKind } from '../../src/shared/generated/RunnerLoginKind'
 import type { RunnerFileResponse } from '../../src/shared/generated/RunnerFileResponse'
 import type { RunnerRepositoryMoveRefused } from '../../src/shared/generated/RunnerRepositoryMoveRefused'
+import type { RunnerHello } from '../../src/shared/generated/RunnerHello'
 import type {
   RunnerConnection,
   RunnerConnectionRequest,
@@ -20,6 +21,7 @@ export interface FakeRunnerOptions {
   loginKinds?: readonly RunnerLoginKind[]
   /** A runner that accepts repository.move names its folder. */
   repositoryFolder?: string
+  processStartId?: RunnerHello['processStartId']
 }
 
 /**
@@ -58,6 +60,9 @@ export class FakeRunner {
       protocolVersion: this.options.protocolVersion ?? 2,
       workspaceId: this.options.workspaceId,
       streamId: this.streamId,
+      ...(this.options.processStartId === undefined
+        ? {}
+        : { processStartId: this.options.processStartId }),
       ...(this.options.loginKinds
         ? { loginKinds: this.options.loginKinds }
         : {}),

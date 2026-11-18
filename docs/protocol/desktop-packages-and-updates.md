@@ -6,7 +6,9 @@ It includes the download names and addresses of the public GitHub releases.
 ## Packages
 
 - The electron-builder tool packages a DMG and a ZIP for each processor
-  type, arm64 and x64 (decision 62).
+  type, arm64 and x64 (decision 62). Each release packages both types.
+- A development or pull request build packages only the processor type of
+  the Mac that builds it. Reason: its packaged tests run only that package.
 - Each package carries the app icon of the [brand files](../brand/README.md).
 - Development and pull request packages have an ad-hoc signature and no
   notarization. They need no Apple signing credentials.
@@ -15,6 +17,14 @@ It includes the download names and addresses of the public GitHub releases.
   signed and notarized. Each app and DMG has a stapled notarization ticket.
 - Release packaging fails if credentials are missing, the signing team is
   wrong, or signature, ticket, or Gatekeeper verification fails.
+- Each release step that waits for Apple's notarization has a time limit
+  of 20 minutes. One step builds, signs, and notarizes the app. Each DMG
+  submission is another step. When a step runs out of time, the release
+  stops it and runs it again, once. A second time-out fails the release. Reason: Apple usually
+  answers in one or two minutes, but one submission can stay in progress
+  for an hour or more, and a new submission then usually passes. Without
+  a limit, a stuck submission held the release of `v0.25.0` for 55 minutes,
+  until a person cancelled it.
 - A release package runs on macOS 13 or later. Its app has
   `LSMinimumSystemVersion` 13.0, so macOS 12 and older refuse to open it.
 - Risk: macOS refuses to open a downloaded ad-hoc build until
@@ -37,9 +47,15 @@ It includes the download names and addresses of the public GitHub releases.
 - A version from a pushed tag or from a hand edit was rejected. Reason: one
   merge then sets the version, writes the changelog, and starts the
   release.
-- After the merge, the release workflow runs the Mac checks. It then signs
-  and notarizes both architectures, runs the packaged tests, and uploads
-  the files to the draft.
+- After the merge, the release workflow runs the Mac checks on Apple
+  silicon. It then signs and notarizes both architectures and runs the
+  packaged tests. The Mac checks on Intel run at the same time as the
+  signing. The workflow uploads the files to the draft only after both
+  checks and the signing pass.
+- Reason: the Intel checks take several times longer than the other jobs.
+  Signing does not need their result, but publishing does. Intel checks
+  before the signing were rejected, because the signing then waited for
+  them and each release took longer.
 - Before it signs, the release workflow checks that the tag `vX.Y.Z` points
   to the merge commit of the release pull request. A branch with the same
   name does not count. The release stops before signing when the check

@@ -3,14 +3,17 @@ import { ChevronLeft, PanelRight } from 'lucide-react'
 import { people } from '../../fixtures/members'
 import type { ActivityStatus, Workspace } from '../../fixtures/workspaces'
 import { paths } from '../../paths'
+import { Menu, type MenuEntry } from '../common/Menu'
 import { ScreenLink } from '../common/ScreenLink'
 import { ShortcutTip } from '../common/ShortcutTip'
 import { classes } from '../common/classes'
 import { IconButton } from '../common/actions'
 import { useCornerControls } from '../layout/sidebarPlace'
 import { workspaceLabel } from '../workspaces/label'
+import rowMenu from '../workspaces/RowMenu.module.css'
 import { CopyLinkButton, type CopyResult } from './CopyLinkButton'
 import { HeaderState } from './HeaderState'
+import { NameMenuButton } from './NameMenuButton'
 import { OwnerPicker } from './OwnerPicker'
 import { RepositoryPicker } from './RepositoryPicker'
 import { RunLinks, type RunSource } from './RunLinks'
@@ -28,7 +31,9 @@ import styles from './WorkspaceHeader.module.css'
  * header ends with the toggle that hides the right column and shows it
  * again. A run workspace also links to its automation and its pull request.
  * While the software of the cloud computer runs, the state opens a menu with
- * Restart, for every member of an org that is not suspended.
+ * Restart, for every member of an org that is not suspended. The name is a
+ * button with no caret. It opens the workspace menu of the list below it,
+ * and Rename in that menu puts the field in place of the name.
  */
 export function WorkspaceHeader(props: {
   workspace: Workspace
@@ -57,6 +62,13 @@ export function WorkspaceHeader(props: {
    * runs. A phone shows the menu as a sheet.
    */
   repositoryControl?: 'open' | 'changing'
+  /**
+   * The workspace menu that the name opened, below the name on desktop. A
+   * phone shows it as a sheet.
+   */
+  menu?: readonly MenuEntry[]
+  /** Rename of the workspace menu put the field in place of the name. */
+  renaming?: boolean
 }) {
   const { workspace, name } = props
   const corner = useCornerControls()
@@ -78,6 +90,26 @@ export function WorkspaceHeader(props: {
     />
   )
   const label = workspaceLabel(workspace.number)
+  // A view runs no script, so a span stands for the field, which opens
+  // focused, with the name selected.
+  const title = props.renaming ? (
+    <span
+      aria-label="Workspace name"
+      className={classes(rowMenu.field, styles.titleField)}
+      role="textbox"
+    >
+      <span className={rowMenu.selection}>{name}</span>
+    </span>
+  ) : props.menu ? (
+    <span className={styles.nameAnchor}>
+      <NameMenuButton name={name} open />
+      <span className={styles.nameMenu}>
+        <Menu entries={props.menu} label={name} placement="point" />
+      </span>
+    </span>
+  ) : (
+    <NameMenuButton name={name} />
+  )
   const copyLink = (
     <ShortcutTip command="copy-link" label={`Copy link to ${label}`}>
       <CopyLinkButton
@@ -94,7 +126,7 @@ export function WorkspaceHeader(props: {
           <IconButton icon={ChevronLeft} label="All workspaces" />
         </ScreenLink>
         <div className={styles.titles}>
-          <h1 className={styles.title}>{name}</h1>
+          {title}
           <span className={styles.line}>
             {copyLink}
             {repository}
@@ -110,7 +142,7 @@ export function WorkspaceHeader(props: {
       </header>
     ) : (
       <header className={classes(styles.bar, corner && styles.cornerBar)}>
-        <h1 className={styles.title}>{name}</h1>
+        {title}
         {copyLink}
         <span
           className={classes(styles.metas, repositoryOpen && styles.metasOpen)}

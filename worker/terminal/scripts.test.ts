@@ -101,8 +101,8 @@ it('attaches each terminal connection to the workspace shell at the repository p
   await writeFile(
     fixture.terminal,
     `#!/bin/sh
-printf '%s\\0' "$1" "$2" "$3" "$4" "$5" "$6" "$7"
-shift 7
+printf '%s\\0' "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8"
+shift 8
 exec "$@"
 `,
   )
@@ -117,6 +117,7 @@ exec "$@"
     '--writable',
     '--credential',
     `conductive:${'11'.repeat(32)}`,
+    '--url-arg',
     fixture.repository,
     'workspace environment',
     '-N',

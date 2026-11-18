@@ -89,6 +89,13 @@ D1 keeps at most 4 MiB of each build log: the first and the last output.
 A write that passes that budget removes whole rows from the middle.
 The line `[N output bytes omitted]` takes their place in the event order.
 
+Each step writes a heading line to the log: the repository copies, the
+software command, and the install script. The snapshot step writes
+`SNAPSHOT_START_LOG` from [`build-command-data.ts`](build-command-data.ts)
+in the same D1 batch as the new snapshot name, before the provider call.
+It writes `SNAPSHOT_DONE_LOG` in the same batch as the change to the
+`publish` phase. So a retry or a replayed save repeats neither line.
+
 - A build loads the chosen repositories, installs the image software, runs
   the install script with Bash, and saves a snapshot. A first build that
   pins a matching ready software image starts from it and still installs

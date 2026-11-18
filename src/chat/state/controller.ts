@@ -2,9 +2,11 @@ import type { TranscriptDetail } from '../../shared/generated/TranscriptDetail'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import type { IntakeRefusals } from '../../app/draft-files'
 import type { DeviceApprovalAction } from '../../shared/device'
+import type { AnswerSecretRequest } from '../../shared/secret-requests'
 
 import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import { answerCommand, refreshDevices } from '../device/device-actions'
+import { answerSecret } from '../secrets/secret-actions'
 import type { MentionTarget } from '../mentions/MentionsContext'
 import { copyTranscript, type CopyServices } from '../transcript-copy'
 import { showAddressSession } from './address-session'
@@ -125,6 +127,9 @@ export class ChatController extends ChatRuns {
     this.write(() => answerCommand(this.context, requestId, action))
   /** Reads the Mac commands and the pairing again, such as after a failure. */
   readonly loadDevices = () => refreshDevices(this.context)
+  /** Sends the answer of a member to a secret request, as `answerSecret` says. */
+  readonly answerSecret = (requestId: string, answer: AnswerSecretRequest) =>
+    this.write(() => answerSecret(this.context, requestId, answer))
   /**
    * Changes the saved view with a change of the app, such as an open file
    * tab, through the one writer of the view. Until the load reads the view,

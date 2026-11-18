@@ -8,8 +8,10 @@ and states the text that each session gets apart from the messages. The
 other terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says. A repository change decision number names a decision of the change
-that added the [repository change](repository-change.md).
+says. A secrets decision number names a decision of the change that adds
+[secrets](secrets.md), as that doc says. A repository change decision
+number names a decision of the change that added the
+[repository change](repository-change.md).
 
 ## The sender line
 
@@ -20,9 +22,9 @@ that added the [repository change](repository-change.md).
   member ID of the member who sent the message (decision 283). For a
   member without a display name, it gives only the GitHub login and the
   member ID.
-- Reason: several members can write in one session while the starter
-  shares the login (decision 116). So the agent needs to know who sent
-  each message.
+- Reason: several members can write in one session, on the org login or
+  while the starter shares the login (decision 116). So the agent needs to
+  know who sent each message.
 - A message that joins a running turn gives its own sender, who can
   differ from the sender of the turn.
 - Reason for the member ID: the owner filter of the
@@ -31,6 +33,10 @@ that added the [repository change](repository-change.md).
 - The sender line of a message from the workspace tools names the sender
   of the turn that made the call, as
   [The sender](session-calls.md#the-sender) says.
+- The line of the app that a late answer to a secret request sends is not
+  a message of a member. Its text names the member who answered, in place
+  of a sender line, as [Late answers](secret-requests.md#late-answers)
+  says.
 - The sender line exists only in the text that reaches the agent. The
   stored message, the chat, and the titles from messages never hold it.
 - The chat never shows the sender line or the agent instructions. Reason:
@@ -48,6 +54,10 @@ that added the [repository change](repository-change.md).
   member too, as [Commit author](github-tokens.md#commit-author) says.
 - A message that another member sends during the turn changes none of
   them.
+- A turn that a late answer to a secret request starts has the sender of
+  the turn that asked (secrets decision 10 B). So its Mac commands, its
+  GitHub token, and its commits follow that sender, not the member who
+  answered.
 - Each write of the workspace tools acts for the sender of the turn too,
   also while the agent answers a message of another member, as
   [The sender](agent-tool-access.md#the-sender) says.

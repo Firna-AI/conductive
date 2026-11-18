@@ -25,10 +25,15 @@
   font-weight: 500;
 }
 
-/* Fast follows the effort while fast mode is on, in the same style. */
+/*
+ * Fast follows the effort while fast mode is on, in the same style. Their
+ * shrink factor is so large that the model takes no share of the shrink
+ * while they still have width, so the model never ends with an ellipsis
+ * before they are gone.
+ */
 .effort,
 .fast {
-  flex-shrink: 1000;
+  flex-shrink: 100000;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;

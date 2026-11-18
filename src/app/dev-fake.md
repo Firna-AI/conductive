@@ -33,9 +33,31 @@ option overrides this default, including queued chats that show no spinner.
   one part. Create org of the dev fake
   requires at least one repository and starts a simulated build. Its
   repository catalogue keeps the saved choices, and its custom initials
-  stay through rename, delete, and restore. Settings changes during the
+  and its colour stay through rename, delete, and restore. Settings changes during the
   first good build start one added build. The fake compares settings
   revisions with builds as the Worker does.
+- Acme also holds Postcode lookup for the shipping and billing forms,
+  `postcode-lookup`, which a member archived 3 weeks before the clock of
+  the fake starts. Its 14 days ended, so the workspace list and the
+  palette leave it out. The list route still sends it, as the Worker does,
+  so its link and its chip still open its read-only chat, at
+  `/orgs/acme/workspaces/postcode-lookup`, with the Removed bar.
+- `?subWorkspaces=1` gives Acme the sub-workspaces of the mockup page
+  `app/sub-workspaces`, from `fixtures/sub-workspaces.ts` of
+  `src/test-support/`: two trees in Checkout, under Apple Pay button and
+  under Checkout address autocomplete, down to depth 3, with the sibling
+  Rate limits: Load test. They come first in Checkout, the newest first,
+  as the Worker lists new workspaces, and each opens with the recorded
+  chat, as the other rows do. Without the option, no workspace has a
+  parent.
+- The writes of the fake place the trees as the Worker does, with or
+  without the option. A move of a top-level row, by a drag, by keys, or by
+  Move to section, takes its whole tree, and writes the section of each
+  workspace under it, live or archived. A move of a nested row changes
+  nothing, and a rename of it changes only the name. An Archive gives each
+  live workspace that showed under the archived row its section and its
+  place, so the next read shows them where that row was.
+  `dev/workspace-writes.ts` holds these writes.
 - Own endpoint saves return `endpointV1Added` and `modelListReadFailed`, as
   the Worker does. Refresh returns HTTP 200 with `modelListReadFailed`.
   False means the read produced a list. These response flags never enter
@@ -143,6 +165,11 @@ option overrides this default, including queued chats that show no spinner.
   Worker does. Its author filter knows the members of the org and a few
   bots, such as `dependabot[bot]`. Any other login gets the refusal of a
   login that names no GitHub account, with its trigger and its list.
+  Each reply of one automation names the login of its runs, as the
+  Worker does: the default login of the person signed in for an own
+  automation. The fake knows no logins of other people, so the runs of
+  another owner use the org login while `?orgLogin=every-member` turns its
+  switch on, and else the own login of that owner.
 - Run now makes the workspace of the run as Create workspace does, in the
   section of the automation, and the run takes the state of that workspace.
   Without the agent login of the automation's model, as with `?login=none`,
@@ -154,9 +181,74 @@ option overrides this default, including queued chats that show no spinner.
   of its automation does not show.
   The dev backend records each run's agent and owner when Run now starts it.
 
+- `dev/secret-routes.ts` serves the secrets of each org, as the Worker
+  does. Acme starts with the secrets of the mockups, with made-up values,
+  and the other orgs with none (`dev/secret-store.ts`). The list holds no
+  value. A member changes only the own secrets, and only an admin sets the
+  mark for all agents or reveals a value, which the fake records. A Replace
+  of the value ends the record of the last reveal, and a Delete ends each
+  grant of the secret. A suspended org refuses each write, also a reveal.
+  `dev/capability-routes.ts` serves the Capabilities of each workspace:
+  `checkout-autocomplete` pre-approves FIGMA_TOKEN and has two approvals of
+  its sessions, and a create keeps the choices of its control. The fake
+  keeps no value for a workspace, and a reload starts the secrets again.
+- `dev/secret-request-routes.ts` serves the secret requests of each
+  workspace: the list with the values of the workspace, the answer of a
+  member, and the removal of a value. An Allow in time sends the run of
+  its request, and a late Allow sends the line of the app with the notice
+  of a new turn. A value for this workspace joins the list of the
+  workspace, and Save adds a secret of the org. `?secrets=<state>` puts a
+  state into the session of `checkout-autocomplete`, from
+  `dev/secret-request-seed.ts`. `waiting`, `value`, `mixed`,
+  `invalid-name`, and `mixed-invalid-name` wait for an answer above the
+  composer, so use them with `conversation=running`. `invalid-name` asks
+  for a value of Google Places key, a name that a new secret cannot take,
+  so Save as secret is off. `mixed-invalid-name` adds that name to a mixed
+  request.
+  `late`, `late-value`, `results`, and `ended` sit in a short turn after
+  the recorded one: a late request, a late request for a value, the runs
+  with a denied request and a late Allow with its line, and a request that
+  an Archive ended. The results also give MAPBOX_TOKEN a value for the
+  workspace, which Capabilities lists. As the Worker does, a request that
+  waits or is late gives the workspace the state `input`, so the header
+  says Needs input. The last answer gives back the state from before
+  (`followOpenRequests` of `dev/secret-store.ts`).
+
 The development fake keeps each org's workspace number counter.
 A create gets the next number and a web link on the fake API origin.
 Workspace readers keep the number and link that the Worker supplies.
+
+The development fake keeps the org logins in its state, `orgLogins` of
+`DevState`, and serves them through `dev/org-login-routes.ts`, as the
+Worker does. Each member reads them, and
+only an admin of an active org gets the model list of an own endpoint. Only
+an admin saves, changes the switch "Use for every member", removes, or
+refreshes. The saves and Refresh use the fake hosts of the account above,
+so a save of `https://no-models.example.test` shows the warning, and a Codex
+save of `https://v1-only.example.test` shows the `/v1` note.
+`?orgLogin=endpoint` gives Acme an org login of Claude on its gateway, whose
+last model list names every Claude model. `?orgLogin=unlisted` gives a list
+without the last Claude model. `?orgLogin=every-member` gives the login of
+`endpoint` with its switch on. With `?shareSave=fail`, each change of the
+switch fails. A reload starts again from the options.
+
+Each read of the account names the default login of each org and agent,
+from the own logins and the org logins of the state, as the resolver of
+the Worker does. `dev/default-logins.ts` works out the order, because the
+fake stands in for the Worker. So `?login=none&orgLogin=endpoint` gives a
+person whose new Claude sessions in Acme take the org login. Each read of
+the org logins of an org names the default logins of that org in the same
+way, as the Worker does.
+`?sessionLogin=org` makes each session of `checkout-autocomplete` run on the
+org login of Acme, as after a first message on it. `?sessionLogin=removed`
+says in each record that an admin removed that login later.
+`?sessionLogin=empty` adds an empty session of Cal after the recorded
+sessions. Its record names the default login of Cal as `defaultLogin`,
+which its first message takes, from the logins of Cal in the fixtures and
+the org logins of the state, as the Worker does. So
+`?role=member&orgLogin=every-member&sessionLogin=empty` gives Priya an
+empty session of Cal whose composer names "Acme's login".
+`dev/session-login-routes.ts` changes the recorded sessions in this way.
 
 The development fake saves shortcut batches through `dev/shortcut-routes.ts`.
 It checks the whole batch with the shared reader before it changes state.
@@ -167,4 +259,6 @@ The next account read returns both keyboards.
 The Stats tab of the account reads its counts from `dev/account-stats.ts`.
 It counts the orgs of the fake that are not deleted, the workspaces and
 the automations that the person owns in them, and the automation runs of the
-person that were not skipped, by the rules of the Worker.
+person that were not skipped, by the rules of the Worker. Its reply keeps
+the removed workspaces in `archived` and counts them again in `removed`,
+as the Worker does. So Cal's tab shows Postcode lookup in its Removed row.

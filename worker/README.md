@@ -47,6 +47,8 @@ On the app hostname, the Worker serves these API routes:
 - The session, sign-out, the org list, a new org, and one org.
 - The waitlist state and code use, through the [waitlist backend](waitlist/README.md).
 - The account, its default model, its agent logins, the model list, and Get started.
+- The org login metadata for members, and admin writes and endpoint model
+  refreshes, through [org login routes](app-api/org-agent-logins.ts).
 - The start and poll of a Codex ChatGPT device code sign-in, through
   [Codex authentication](codex-auth/README.md).
 - The sections, the repositories, the members, and the workspace list of an org.
@@ -54,6 +56,11 @@ On the app hostname, the Worker serves these API routes:
 - Leave org, under the existing last-active-admin rule.
 - The create, read, resume, and activity routes of a workspace.
 - The view and the read mark of a workspace.
+- `GET /api/orgs/<orgId>/workspaces/<workspaceId>/terminal`, the terminal state, list, and software support.
+- `POST /api/orgs/<orgId>/workspaces/<workspaceId>/terminal/terminals`, a new terminal entry.
+- `DELETE /api/orgs/<orgId>/workspaces/<workspaceId>/terminal/terminals/<terminalId>`, the close of a terminal and its shell.
+- `GET /api/orgs/<orgId>/workspaces/<workspaceId>/terminal/socket`, the legacy terminal socket.
+- Org secret settings, workspace capabilities, and secret request answers, through the [secrets backend](secrets/README.md).
 - The Mac device routes.
 - `GET /api/feedback`, the reply address of feedback, and `POST /api/feedback`, the send of feedback, as [Feedback routes](app-api/feedback.md) says.
 - `GET /api/operator/overview`, the app-wide numbers for operators.
@@ -109,8 +116,10 @@ credential route, the image source credential route, the
 [workspace tools](tools/README.md), GitHub webhooks, the model gateway, and the runner socket.
 The machine host also serves the one-use [attachment download](chat/attachments.md#dispatch).
 These handlers use their own machine credentials and skip the browser gate.
+The [secret tool routes](secrets/README.md#workspace-tool-routes) list metadata
+with a workspace token and return approved run values only during a running turn.
 The [model gateway](model-gateway/README.md) accepts only a turn token.
-It adds the starter's login to allowed Anthropic, OpenAI, or own endpoint requests.
+It adds the login of the session to allowed Anthropic, OpenAI, or own endpoint requests.
 Its request upload and model answer both stream.
 The chat backend checks the login kinds of the runner before delivery.
 Each `turn` command carries a turn token and never a real login.
@@ -188,7 +197,7 @@ Its access checks use the scheduler that the test injects. Production has no def
 ### Alarms
 
 `WorkspaceAlarms` in [features/alarms.ts](features/alarms.ts) keeps the due time of each source in its `alarm:<source>` marker, and it sets the one platform alarm.
-The security sources are `browser`, `runner`, and `devices`. They use raw storage, so a member fence cannot refuse their writes.
+The security sources are `browser`, `runner`, `devices`, and `secrets`. They use raw storage, so a member fence cannot refuse their writes.
 The regular sources are the lifecycle tasks, `github`, `previews`, `continue`, and `repository-change`. They use the guarded receiver storage, as [Lifecycle ownership](members/README.md#lifecycle-ownership) says.
 [The object alarm scheduler](lifecycle/alarm-scheduler.md) gives the shared rules, such as the lifecycle run lease and the steps at the end of each run.
 
@@ -277,10 +286,11 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [server-timing.ts](server-timing.ts): `ServerTiming` records the steps of one request for its `Server-Timing` header. The preview proxy and the create of a workspace use it.
 - [codex-auth/README.md](codex-auth/README.md) owns device authorization,
   encrypted ChatGPT sign-ins, and serialized refresh-token renewal.
-- [http.ts](http.ts) serializes `HttpError` as the shared API error body, with optional structured details.
+- [http.ts](http.ts) serializes `HttpError` as the shared API error body, with optional structured details. It answers an error of a Durable Object that restarted, such as for a deploy, as `503 server_restarted`, and each other unexpected error as `500 internal_error`. Each error that is not an `HttpError` writes the `unexpected_error` warning, with the route when the caller passes its request.
 - [waitlist/route.ts](waitlist/route.ts) reads the signed-in user's waitlist state and uses invite or referral codes.
 - [waitlist/grant.ts](waitlist/grant.ts) supplies the shared app access grant statements for D1 batches.
 - [app-api/README.md](app-api/README.md) names the entry points of the account, shell, and workspace routes.
+- [secrets/README.md](secrets/README.md) owns encrypted org secrets, their grants, and workspace capabilities.
 - [configuration.ts](configuration.ts): `appFrameSources` reads extra frame origins. Release admission reads validated newest-release metadata.
 - [chat/router.ts](chat/router.ts) forwards the browser chat routes and the runner socket to the Durable Object of their workspace. It records the [last active time](#last-active-time) of a sent message.
 - [workspace.ts](workspace.ts) composes each workspace Durable Object. [workspace-lifecycle.ts](workspace-lifecycle.ts) exposes its lifecycle RPC methods and owns its [input activity](lifecycle/README.md#input-activity). Its constructor restores the native sockets, and it receives their message, close, and error events.
@@ -288,17 +298,18 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [model-gateway/README.md](model-gateway/README.md): the machine model routes, credential replacement, header rules, stream cancellation, and turn-token checks.
   Each runner `turn` command carries one of these tokens.
 - [warnings.ts](warnings.ts): `warnWorker`, the one console warning of the Worker. It writes one structured object with fixed text and selected safe fields. It copies no extra caller field, token, error message, request body, command output, or response body. `WarningRecord` names the logged object type. `CommandFailed` carries a failed command's state, exit code, and time-out.
-- [warning-types.ts](warning-types.ts): `WorkerWarning`, the fixed warning kinds and their typed fields. Warning callbacks use this type too.
-- [warning-values.ts](warning-values.ts): `WarningId.checked` accepts the canonical 43-character base64url IDs from `randomToken`. Other values become `unknown` in the log only. `warningCode` and `errorSummary` keep allowlisted codes and command states. A generic error has the fixed kind `error`, with no class name.
-- [workspace-alarms.ts](workspace-alarms.ts): `runWorkspaceAlarms`, the dispatch of the regular owners of each alarm run: a running Continue, a running repository change, the lifecycle run, the previews, and GitHub. It runs the owners whose due time has come, then sets the alarm to the earliest stored due time.
-- [features/alarms.ts](features/alarms.ts): `WorkspaceAlarms`, the one alarm scheduler of each workspace object. It keeps a durable due time for each owner: each lifecycle task, the previews, GitHub, Continue, the repository change, and the `browser`, `runner`, and `devices` security sources. `scheduleWorkspaceAlarm` sets the one platform alarm. `suspendWorkspaceAlarms` is the alarm step of each member suspension stage. [The object alarm scheduler](lifecycle/alarm-scheduler.md) gives its rules.
+- [warning-types.ts](warning-types.ts): `WorkerWarning`, the fixed warning kinds and their typed fields. Warning callbacks use this type too. It also names the stages of `runner_message_failed`: `parse`, `hello`, `file_result`, `event`, and `after_commit`, the work after the commit of a runner event.
+- [unexpected-error.ts](unexpected-error.ts): `unexpectedErrorFields`, the safe fields of the `unexpected_error` warning that `errorResponse` writes for each error that is not an `HttpError`. It keeps a built-in error name, a fixed kind for each known Cloudflare runtime text, the Cloudflare flags `retryable`, `overloaded`, and `durableObjectReset`, the method, the route with each segment outside a fixed list of API route words as `*`, and up to 8 stack lines that hold only a code place in a `.js`, `.mjs`, `.cjs`, or `.ts` file, with no `[as key]` part. An error that throws when the log reads it logs fixed fields, and the reply stays the same. It keeps no message and no stack line of a stack that does not start with its own name and message. Cal chose this on 17 November 2026, as option B of item 2 of the investigation of a failed session close.
+- [warning-values.ts](warning-values.ts): `WarningId.checked` accepts the canonical 43-character base64url IDs from `randomToken`. Other values become `unknown` in the log only. `warningCode` and `errorSummary` keep allowlisted codes and command states. A D1 error has the kind `d1` and one fixed reason from [d1-errors.ts](d1-errors.ts), such as `no_such_table`, with no text of the error. A generic error has the fixed kind `error`, with no class name.
+- [workspace-alarms.ts](workspace-alarms.ts): `runWorkspaceAlarms`, the dispatch of the regular owners of each alarm run: a running Continue, a running repository change, the lifecycle run, the previews, GitHub, and the automation report retry. It runs the owners whose due time has come, then sets the alarm to the earliest stored due time.
+- [features/alarms.ts](features/alarms.ts): `WorkspaceAlarms`, the one alarm scheduler of each workspace object. It keeps a durable due time for each owner: each lifecycle task, the previews, GitHub, Continue, the repository change, the automation report retry, and the `browser`, `runner`, `devices`, and `secrets` security sources. `scheduleWorkspaceAlarm` sets the one platform alarm. `suspendWorkspaceAlarms` is the alarm step of each member suspension stage. [The object alarm scheduler](lifecycle/alarm-scheduler.md) gives its rules.
 - [features/workspace-alarm.ts](features/workspace-alarm.ts): `WorkspaceAlarmRunner`, the short native alarm handler, the security work before the fences, and the fenced regular work.
 - [features/alarm-tasks.ts](features/alarm-tasks.ts): `WorkspaceAlarmTasks`, the tracked background work of an alarm.
 - [members/workspace-receiver.ts](members/workspace-receiver.ts) fences suspension, Restore, and payload deletion.
 - [operator/route.ts](operator/route.ts) serves the operator routes after the request gate.
 - [automations/route.ts](automations/route.ts) serves automation records after the request gate.
 - [automations/run-route.ts](automations/run-route.ts) serves Run now and paginated run history.
-- [automations/run-starter.ts](automations/run-starter.ts) starts queued runs with the owner's logins.
+- [automations/run-starter.ts](automations/run-starter.ts) starts queued runs in the name of the automation owner.
 - [automations/pull-request-dispatch.ts](automations/pull-request-dispatch.ts) applies author filters, trust, and loop guards before it stores pull request runs.
 - [automations/schedule-scan.ts](automations/schedule-scan.ts) claims up to 50 due automations and retries up to 50 old queued runs each minute.
 - [operator/approval-email.ts](operator/approval-email.ts) sends approval messages and retries pending deliveries from the scheduled entry.

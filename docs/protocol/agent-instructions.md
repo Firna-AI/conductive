@@ -10,7 +10,12 @@ agents and their sessions. [Agent tools](agent-tools.md) states the tools
 of the agents. The other terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says.
+says. A secrets decision number names a decision of the change that adds
+[secrets](secrets.md), as that doc says. A stop diagnostics decision number
+names a decision of the change that adds the
+[runner warnings](runner-warnings.md), as that doc says. A parent-move
+decision number names a decision of the change that adds
+[parent changes](parent-changes.md), as that doc says.
 
 ## Terms
 
@@ -52,6 +57,11 @@ says.
     this folder, and attached files arrive in its attachments folder, as
     [The context folder](repository-folders.md#the-context-folder) says.
   - The workspace branch and the target branch.
+  - The ID and the link of the workspace.
+  - Whether the workspace is a [top-level workspace](sub-workspaces.md#terms)
+    or a sub-workspace. For a sub-workspace, its depth, and the ID and the
+    link of its parent.
+  - The [deepest depth](sub-workspaces.md#the-depth-limit) of a sub-workspace.
 - The instructions also give this guidance:
   - The agent keeps notes, screenshots, and files for other sessions of the
     workspace in the context folder.
@@ -65,12 +75,32 @@ says.
     front and use foreground input without asking.
   - Other sessions of the workspace share that desktop.
   - A member opens a port preview in the app by its port number.
+  - Every agent of the workspace runs inside the service
+    `conductive-runner.service` of the cloud computer. A stop or a restart
+    of that service ends each running turn of each session.
+  - `sudo journalctl -u conductive-runner.service` shows the cause of a
+    stop of that service.
   - The workspace tools create, list, get, rename, move, and archive the
     workspaces of the org. In each workspace of the org, they also start,
     list, get, rename, close, and stop sessions, send and get messages,
     read a chat, and list, open, and close previews. They also create and
     delete the sections of the org, and ask to run a command on the Mac of
-    the sender of the turn.
+    the sender of the turn. They also list the secrets of the org, and run
+    a command with secrets, as [Secret requests](secret-requests.md) says.
+  - The agent nests a new workspace under this workspace when the work
+    belongs to the task of this workspace. It makes a top-level workspace
+    for other work. [When to nest](sub-workspaces.md#when-to-nest) gives
+    the cases.
+  - To nest a new workspace under this workspace, the agent passes the ID
+    of this workspace as the parent of the create call.
+  - At the deepest depth, the agent creates a sibling in place of a
+    sub-workspace, with the [sibling advice](sub-workspaces.md#the-sibling-advice).
+  - `get_workspace` gives the parent and the sub-workspaces of a
+    workspace. `list_workspaces` with a parent lists the sub-workspaces of
+    one workspace.
+  - `move_workspace` with a target changes the parent of a workspace. A
+    move can change the parent and the depth of this workspace, and
+    `get_workspace` gives the current ones.
   - A message that ends with a `Sent by:` line comes from an agent of the
     session that the line links to, through the workspace tools.
   - The agent names a file or a folder of the repository in a chat reply
@@ -93,6 +123,19 @@ says.
   Agents that decide from each refusal of a tool were rejected, because
   they spend calls on background input or ask a member. A guide that names
   each computer tool was rejected, because the provider can change them.
+- Reason for the service guidance: work of one agent can stop or restart
+  that service, and so end the turns of every session. The chat then shows
+  "The agent stopped" with no cause, as
+  [Messages](messages-and-attachments.md#messages) says. The journal gives
+  the agent that cause (stop diagnostics decision 4 A).
+- An existing session keeps its saved instructions, and gets no later
+  change of the instructions, as
+  [The same text for the life of a session](#the-same-text-for-the-life-of-a-session)
+  says.
+- When an older or manual runner start lacks the link or the depth of the
+  workspace, the runner warns and continues. Its instructions then leave
+  out the workspace ID, link, depth, parent, and deepest depth, and the
+  guidance on sub-workspaces, also the cases of when to nest. They never call such a workspace top-level.
 - The instructions never tell the agent to send a member to a tool that
   the app hides, such as Desktop. [Desktop](workspace-tools.md#desktop)
   says why the app hides it.
@@ -134,11 +177,30 @@ says.
   a new branch, in the folder of another repository. It is a change of
   the app too.
 
+### The parent and the depth
+
+- A [parent change](parent-changes.md) changes the parent and the depth of
+  a workspace, and the depth of each workspace under it.
+- The instructions still hold the parent and the depth (parent-move
+  decision 2 A). They also say that a move can change them, and that
+  `get_workspace` gives the current ones. The sub-workspaces change too,
+  so the instructions name the calls that list them.
+- Accepted cost: a running session keeps the parent and the depth of its
+  instructions. A new session gets the parent and the depth of the last
+  start of the cloud computer.
+- These ways were rejected (parent-move decision 2), because the user
+  chose the smallest change:
+  - A tree line in each message with the current parent and depth, as
+    [the branch line](message-lines.md#the-branch-line) of decision 227.
+  - Instructions without the parent and the depth, so that each agent
+    reads them with `get_workspace`.
+
 ## The sender line
 
 [The sender line](message-lines.md#the-sender-line) holds the
 requirements of the line that names the sender of each message, and
-[Access](message-lines.md#access) says that no access depends on it.
+[Access](message-lines.md#access) states the access of a turn, which does
+not depend on the sender line.
 
 ## The repository line
 
@@ -161,12 +223,14 @@ requirements of the line that names the current branches.
   base prompt changes later. An example is a new default branch of the
   repository at a later resume.
 - A new session gets the instructions with the current facts and wording.
+  The parent and the depth are the exception, as
+  [The parent and the depth](#the-parent-and-the-depth) says.
 - A session that started without agent instructions can get them once, at
   a later turn. It then keeps that text.
-- Apart from the branches and the repository folder, the instructions
-  hold no fact that changes
-  during the work, such as the date, the Git state, or the pull request
-  state. The agent reads such facts with its tools.
+- Apart from the branches, the repository folder, the parent, and the
+  depth, the instructions hold no fact that changes during the work, such
+  as the date, the Git state, or the pull request state. The agent reads
+  such facts with its tools.
 - Reason: a change of the text rewrites the prompt cache of the
   conversation. An agent can also keep the first instructions of a session
   until it summarizes the conversation.
@@ -187,39 +251,9 @@ requirements of the line that names the current branches.
 
 ## How each agent gets them
 
-- Claude and Codex get the same agent instructions, each as its own system
-  instructions. Reason: the app offers both agents (decision 19), and each
-  agent takes system instructions.
-- An agent without system instructions gets the agent instructions at the
-  start of its first message.
-- Reason: system instructions keep their weight for the whole session,
-  also after the agent summarizes a long conversation.
-- The agent runner in the sandbox builds the agent instructions.
-- These ways were rejected:
-  - A block in the first message of each session. A summary of a long
-    conversation can shorten or drop it, and it has less weight than
-    system instructions.
-  - Instruction files in the home folder of the agents. They have less
-    weight than system instructions, and Claude must then load the user
-    settings.
-  - An instruction file in the repository folder. Codex reads one such
-    file in each folder, so the file would hide the repository's own agent
-    rules.
-  - Hooks that add the text at the start of a session and after a summary.
-    The agent gives such text the weight of a user message, and each hook
-    must skip the resume at each turn.
-  - Instructions that the Worker builds and sends with each turn. The text
-    of a session would then change with each fact. Each message carries
-    only the current branches and the current repository folder, for the
-    branch line and the repository line.
-  - Text that a model gateway adds to each model request. No such gateway
-    exists yet.
-  - Text for Claude only. It leaves out Codex, which also takes system
-    instructions.
-- A subagent of a Claude agent gets neither the base prompt nor the agent
-  instructions. Reason: the agent SDK sets the system instructions of the
-  main agent only.
-- Risk: such a subagent does not know the rule that keeps the branch name.
+[How each agent gets them](agent-instructions-delivery.md) states how
+Claude and Codex get the agent instructions, and the ways that were
+rejected.
 
 ## Base prompts
 

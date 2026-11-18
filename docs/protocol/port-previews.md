@@ -6,17 +6,34 @@ previews of the Preview tool. It belongs to
 number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. A chat link
 decision number names a decision of the change that makes each web
-address of chat text a link, as [Chat links](chat-links.md) says.
+address of chat text a link, as [Chat links](chat-links.md) says. A
+terminal links decision number names a decision of the change that makes
+the addresses in the terminal open, as [Terminal](terminal.md) says.
 
-- A preview shows in a frame inside the app, with an "Open" link that
-  opens it in a new tab. Reason: Safari blocks the cookies of the
-  previewed app inside a frame.
+- On desktop, each previewed port has its own Preview tab in the tab row
+  of the centre column, beside the session, file, and diff tabs
+  (decisions 288 and 291). The page of the preview fills the tab, in a
+  frame. Reason: the frame in the tools panel was too small to use the
+  page. The user chose this on 13 and 16 November 2026.
+- One shared Preview tab, whose page follows the preview that the user
+  picks, was rejected. The user opens many ports at the same time.
+- A bar over the page holds Reload and an "Open" link that opens the
+  preview in a new tab. Only a Preview tab has this bar. The Preview tool
+  in the tools panel has no bar on desktop. The user asked for this on 13
+  November 2026, because the bar of the tool is not needed when the page
+  lives in the centre.
+- Reason for "Open": Safari blocks the cookies of the previewed app inside
+  a frame.
+- On a phone, the Preview page shows the page in a frame, with a bar of
+  the tabs of the open previews, "+", Reload, and Open. Reason: a phone has
+  no tab row of files, so it shows no Preview tab.
 - The accessible name of the link is "Open in new tab". Reason: the user
   asked for the short label, and a screen reader user must still hear
   that the link opens a new tab.
 - The port form lists the servers that listen in the sandbox, from the
-  report of the runner (decision 220). The form shows when no preview is
-  open, and after "+".
+  report of the runner (decision 220). On desktop, the tool always shows
+  the form, with no "+" (decision 290). On a phone, the form shows when no
+  preview is open, and after "+".
   [Listening ports](agent-runner.md#listening-ports) says which ports the
   list holds.
 - Reason: a user often does not know the port, such as when an agent
@@ -45,11 +62,19 @@ address of chat text a link, as [Chat links](chat-links.md) says.
   with the same request and checks as a typed port. A preview of that port
   that is open already shows with no new request. The path, the query,
   and the hash of the address do not carry over, as
-  [Terminal](workspace-tools.md#terminal) says (terminal links decision
+  [Links](terminal-links.md#links) says (terminal links decision
   1 B).
 - A click on a server opens its preview with the same request and checks
-  as a typed port. A port that has an open preview leaves the list,
-  because its tab shows it.
+  as a typed port.
+- On desktop, the list holds each port: each server of the report, then
+  each port with a Preview tab or an open preview that the report does not
+  name, as `Port 8080`. A click on a port shows its Preview tab when it has
+  one. Else a new Preview tab opens at the end of the row and shows
+  (decision 291). The row of the port whose tab shows is the current one.
+- Reason: the tool opens many ports at the same time, and a port with a
+  tab must stay reachable from the tool.
+- On a phone, a port that has an open preview leaves the list, because its
+  tab shows it.
 - A server joins or leaves the list within about 4 seconds after it starts
   or stops. Each open tab gets each new list, and a tab that opens later
   shows the latest list.
@@ -63,8 +88,9 @@ address of chat text a link, as [Chat links](chat-links.md) says.
 - When the sandbox stops, the workspace sends `ports.updated` with
   `ports: null` to the open tabs. A null list means that the app has no
   report. Reason: an old list would offer servers that the stop ended.
-- The tab of an open preview shows the port and at most 10 characters of
-  the name. A longer name shows 9 characters and "…". The tab shows no
+- A Preview tab, and the tab of an open preview on a phone, shows the port
+  and at most 10 characters of the name. A Preview tab also shows a globe
+  icon. A longer name shows 9 characters and "…". The tab shows no
   folder. A port that the latest list does not name shows `Port 3000`.
 - The tooltip and the accessible name of the tab give the port, the full
   name, and the folder. Reason: the user asked for a short tab label, and
@@ -77,7 +103,9 @@ address of chat text a link, as [Chat links](chat-links.md) says.
 - The link of a local address is the address of the Preview tool with
   that port. That address opens the preview of the port, also in a new
   tab. A port that has an open preview shows that preview, with no new
-  request. The address then names the preview.
+  request. On desktop, the address shows the Preview tab of the port, and
+  it keeps naming the port. On a phone, the address then names the
+  preview.
 - The path, the query, and the hash of the local address do not carry
   over. So the preview opens at the first page of the server.
 - Reason: an agent gives the local address of a server that it started in
@@ -90,7 +118,9 @@ address of chat text a link, as [Chat links](chat-links.md) says.
   preview address was rejected, because answers still copy local
   addresses from the output of servers.
 - Nothing opens by itself, and no notice of a server shows outside the
-  Preview tool.
+  Preview tool. A Preview tab that the user shows opens the preview of its
+  port, as [Preview tabs and the end of a preview](#preview-tabs-and-the-end-of-a-preview)
+  says.
 - A name and a folder are text that screens show. So the filters of
   [Secrets that users enter](tokens-and-secrets.md#secrets-that-users-enter)
   hide each secret value in them.
@@ -103,3 +133,42 @@ address of chat text a link, as [Chat links](chat-links.md) says.
   The user starts a new workspace after an admin runs Build computer.
 - The sandbox keeps port 7682 for the relay. A preview of port 7682 shows
   an error.
+
+## Preview tabs and the end of a preview
+
+- A Preview tab names a port, not a preview. Each member has their own
+  tabs in each workspace, in the one order of the tab row, as
+  [The tab row](agents-and-sessions.md#the-tab-row) says.
+- A port has at most one Preview tab.
+- Close on a Preview tab removes only the tab, and ends no preview
+  (decision 289). Reason: a tab is a view of the preview.
+- On desktop, no control ends a preview (decision 292). A preview stays
+  open until the cloud computer stops, 24 hours pass, or an agent closes it
+  (decision 294). On a phone, the Close of a tab of the Preview page still
+  ends its preview.
+- Use of a preview never keeps the cloud computer running (decision 293).
+  A preview works while the computer runs, but it never makes the computer
+  run longer, as [Stop and resume](workspace-life.md#stop-and-resume)
+  says.
+- No screen shows the time that a preview has left.
+- When a Preview tab shows and its port has no open preview, the app opens
+  one, with no notice. A show is a click on the tab or on its port, a visit
+  to its address, or Reload. Two open previews of one port, such as one
+  that an agent opened, show the oldest one.
+- Reason: a new preview costs the user nothing but a new load of the page,
+  so an end needs no control and no notice. The user chose this on 16
+  November 2026.
+- A new preview gets a new address, so the previewed app loses its cookies
+  and its storage after an end.
+- A show of a Preview tab resumes a stopped cloud computer, as the show of
+  a file tab does. While the computer does not run, the tab shows its
+  state in place of the bar and the page.
+- A page stays loaded while another tab shows, so a return does not load
+  it again while its preview lives.
+- Close of a tab of the tool, Close preview in the centre bar, and an end
+  after a time without use were rejected. A clock for each preview, which
+  each request or the shown tab resets, was rejected too. The stop of the
+  computer already follows a time without use.
+- A count of the user's clicks and keys in the frame as activity was
+  rejected. The user chose that no use of a preview keeps the computer
+  running.

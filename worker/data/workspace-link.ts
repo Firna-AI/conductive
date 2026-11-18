@@ -1,12 +1,14 @@
 import type { Workspace } from '../../src/shared/generated/Workspace'
 import { routes } from '../../src/app/router'
 
-/** Older saved records can omit workspace links and the GitHub summary. */
+/** Older saved records can omit workspace links, parents, and the GitHub summary. */
 export type WorkspaceSnapshot = Omit<
   Workspace,
-  'number' | 'link' | 'restoreUntil' | 'github'
+  'number' | 'link' | 'restoreUntil' | 'github' | 'parentId'
 > &
-  Partial<Pick<Workspace, 'number' | 'link' | 'restoreUntil' | 'github'>>
+  Partial<
+    Pick<Workspace, 'number' | 'link' | 'restoreUntil' | 'github' | 'parentId'>
+  >
 
 export interface WorkspaceLinkContext {
   orgId: string
@@ -30,6 +32,7 @@ export function presentWorkspace(
   return {
     ...snapshot,
     github: snapshot.github ?? null,
+    parentId: snapshot.parentId ?? null,
     restoreUntil: snapshot.restoreUntil ?? null,
     number: context.number,
     link: workspaceLink(context.origin, context.orgId, context.workspaceId),

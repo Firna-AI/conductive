@@ -99,6 +99,7 @@ async fn start(root: tempfile::TempDir) -> Harness {
                 current.clone(),
             ),
         ]),
+        workspace_context: None,
         state_path: root.path().join("state.json"),
     };
     std::fs::create_dir_all(billing.join(".git")).unwrap();
@@ -107,6 +108,7 @@ async fn start(root: tempfile::TempDir) -> Harness {
     let link = Arc::new(
         SavedRunnerLink::new(
             "workspace".into(),
+            "abcdef01-2345-4678-89ab-cdef01234567".into(),
             request(),
             Arc::new(EndpointConnector(fixture.endpoint.clone())),
             Arc::new(MoveClock),

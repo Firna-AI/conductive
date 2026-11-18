@@ -237,10 +237,10 @@ names a decision of the change that added this action.
 - `CONDUCTIVE_REPOSITORY_DIR` names the new folder, as
   [Folder variables](repository-folders.md#folder-variables) says.
 - Each new terminal starts in the new folder. A terminal that already
-  runs keeps its folder. The Terminal tab attaches to the shell that runs,
-  as [Terminal](workspace-tools.md#terminal) says, so that shell keeps the
-  old folder. A shell that starts after the change, such as after the
-  member ends that shell, starts in the new folder.
+  runs keeps its folder. Each terminal tab attaches to the shell that runs,
+  as [The shell](terminal.md#the-shell) says, so that shell keeps the old
+  folder. A shell that starts after the change, such as after the member
+  ends that shell, starts in the new folder.
 - The change stops no program that an agent or a member started, such as
   a dev server. Such a program keeps working in the old folder, and its
   preview shows the old repository. Reason: the agent runner moves in its

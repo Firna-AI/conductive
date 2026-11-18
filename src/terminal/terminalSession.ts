@@ -1,4 +1,4 @@
-import type { TerminalTransport } from '../shared/terminal'
+import type { TerminalEnd, TerminalTransport } from '../shared/terminal'
 import { bridgeInputMessage, type BridgeSize } from '../shared/terminal-bridge'
 import { mouseMessage, pasteMessage, type BridgeEvent } from './bridgeLink'
 import { keySequence, withControl, type ExtraKey } from './terminalKeys'
@@ -42,8 +42,11 @@ export interface TerminalScreen {
 }
 
 export interface TerminalSessionEvents {
-  /** The transport closed on its side, for example when the shell exits. */
-  onClosed(): void
+  /**
+   * The transport closed on its side, for example when the shell exits or
+   * the connection drops.
+   */
+  onClosed(end: TerminalEnd): void
   /** The Ctrl key of the key row was held or released. */
   onControlChange(held: boolean): void
   /** The user typed or pressed a key of the key row. */
@@ -95,11 +98,11 @@ export class TerminalSession {
     const { screen, transport } = this
     this.cleanups.push(
       transport.onData((output) => screen.write(output)),
-      transport.onClose(() => {
+      transport.onClose((end) => {
         this.ended = true
         // The program is gone, so its output stays selectable.
         screen.releaseMouse()
-        this.events.onClosed()
+        this.events.onClosed(end)
       }),
     )
     const input = screen.onUserInput((data) =>

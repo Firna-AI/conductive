@@ -24,6 +24,10 @@ export type RunnerHello = {
    */
   streamId: string
   /**
+   * One runner program start, retained across reconnections and fresh links.
+   */
+  processStartId?: string
+  /**
    * loginKinds.
    */
   loginKinds?: ReadonlyVec<RunnerLoginKind>

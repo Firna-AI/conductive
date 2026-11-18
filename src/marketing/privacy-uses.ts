@@ -38,7 +38,8 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         every account, also while you wait for app access. It uses the
         token to read GitHub for you, and for the git calls of your
         turns. It reads your repository rights and merge method. A merge
-        uses the token of the member who clicks. Continue fetches the
+        and Ready for review of a draft pull request use the token of the
+        member who clicks. Continue fetches the
         latest default branch with the token of the member who clicks
         Continue. A repository change fetches the latest default branch of
         the new repository with the token of the member who changes the
@@ -95,29 +96,43 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         request. A skipped
         run keeps the GitHub login of the account outside the org whose
         event it skipped. They run the automations and show their runs.`,
-      text`Keys and logins: the env var values of each org, and your
-        agent logins. An own endpoint login holds the endpoint address and
-        its key. ${productName} stores these values encrypted. It
-        uses your login only for the turns of the sessions that you start,
-        also the sessions that the runs of your automations start. The one
+      text`Keys and logins: the env var values and agent logins of each
+        org, the values of its secrets, and your personal agent logins. An
+        own endpoint login holds the endpoint address and its key.
+        ${productName} stores these values encrypted. It
+        uses a login only for the turns of sessions on it, including
+        automation runs. The one
         exception is that ${productName} reads an own endpoint's model list
         with its key, at the times in Endpoint models below.
-        The messages of other members in those sessions use it only when
-        you let other members use that login. ${productName} keeps agent
+        A personal login serves the sessions that its owner starts on it.
+        Other members use a personal login in those sessions only when its
+        owner allows it. Each member can send messages on a session's org
+        login. ${productName} keeps agent
         logins outside cloud computers. Each turn gets only a temporary
         credential for model requests through ${productName} while that
         turn runs. ${productName} renews your saved ChatGPT sign-in itself.
         An own endpoint's address and key never reach a cloud computer.
         ${productName} starts turns only with supported agent software.`,
+      text`Secrets: the Secrets settings of an org keep the name, the
+        description, and the value of each secret. They also keep the member
+        who added it, whether it is for all agents, and the admin and the
+        time of each reveal. ${productName} keeps the approvals of each
+        session and the pre-approvals of each workspace. It also keeps a
+        value that a member gives an agent, for 15 minutes or until its
+        workspace is archived. They let an agent use a secret in a command
+        only after a member allows it.`,
       text`Endpoint models: ${productName} reads the endpoint's model list
-        with its key when you save the login or press Refresh on your account
-        page. When you save a Codex endpoint whose address gives no model
-        list, it can read the list a second time, at that address with /v1
-        added. When only that read gives a list, it saves the address with
-        /v1 added. It also reads the list in the background when a turn on
-        that login starts, at most once in 10 minutes. It stores the model
+        with its key when you or an admin save the login or select Refresh. For a
+        personal login, you use Refresh on your account page. For an org
+        login, an admin uses Refresh on the Agents tab of the org settings.
+        When you or an admin save a Codex endpoint whose address gives no
+        model list, it can read the list a second time, at that address with
+        /v1 added. When only that read gives a list, it saves the address
+        with /v1 added. It also reads the list in the background when a turn
+        on that login starts, at most once in 10 minutes. It stores the model
         IDs from the last list it could read to set the models in your
-        pickers.`,
+        pickers. For an org endpoint, that list sets the pickers of every
+        member on the org login.`,
       text`Own endpoints: ${productName} sends each model request of a turn
         on an own endpoint login to that endpoint, with its key. The endpoint
         gets the messages, the files, and the command results of each turn
@@ -143,7 +158,18 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         message. The cloud computer of the workspace then downloads them.
         When the cloud computer has a file and its first start succeeded,
         ${productName} deletes its own copy. The file stays in the cloud
-        computer.`,
+        computer. Removing the workspace from the list keeps its chat
+        history until the org is deleted.`,
+      text`Operational logs: ${productName} records when the program that
+        runs workspace agents connects to the service or disconnects.
+        It also records turns that end without a Stop request, including
+        whether they finished, stopped, or failed.
+        These records include the workspace ID and any available turn,
+        connection, and event stream IDs, and communication protocol version.
+        When available, they also include a random ID for each start of that
+        program. The team uses these logs to investigate connection problems,
+        program restarts, and interrupted agent work. These logs hold no tokens,
+        secret values, message text, file contents, or connection close reasons.`,
       text`Mac commands: ${productName} keeps each request and its result.
         They record the command, its folder, its reason, its time limit,
         and the output. A request also names the Mac that gets it.
@@ -152,6 +178,11 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         permissions stay only on your Mac. The Mac saves timed permissions,
         including the end time set by Extend. Permission until you stop
         stays only in memory and ends when you quit the Mac app or sign out.`,
+      text`Secret requests: ${productName} keeps each request of an agent
+        for a secret, and its result, in the chat history. They record the
+        names, the reason, the command that the agent said it would run, the
+        member who answered, and what let the command run. They never hold a
+        value or the output of the command.`,
       text`Your code: your repositories and files live in the cloud
         computers that ${productName} runs for your org. ${productName}
         reads a file or a diff when you open it, to show it to you. The
@@ -183,10 +214,11 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         app. They stay in your browser.`,
       text`Last workspaces: your browser keeps the address of the last
         workspace page that you opened in each org. The address holds the
-        IDs of the org, the workspace, and the session or the preview. It
-        can also hold the name of a tool and the path of an open file. A
-        switch to the org opens that page again. The addresses stay in your
-        browser, also after you sign out, until you clear its saved data.`,
+        IDs of the org, the workspace, and the session, the preview, the
+        port of a preview, or the terminal. It can also hold the name of a
+        tool and the path of an open file. A switch to the org opens that
+        page again. The addresses stay in your browser, also after you sign
+        out, until you clear its saved data.`,
     ),
     paragraph`Where data protection law requires a lawful basis, the
       operator relies on performance of a contract to provide the

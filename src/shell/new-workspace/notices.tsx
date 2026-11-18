@@ -5,10 +5,10 @@ import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
 import { firstBuildCopy as buildCopy } from '../../../docs/mockups/src/screens/firstBuildCopy'
 import type { ApiError } from '../../app/api/client'
-import { loginUsable } from '../../app/api/read-core'
+import { newSessionLogin } from '../../app/default-logins'
 import { firstBuildOf } from '../../app/first-build'
 import { mayChangeSettings } from '../../app/permissions'
-import type { CreateState } from '../../app/new-workspace-model'
+import type { CreateState } from '../../app/new-workspace-draft'
 import { routes } from '../../app/router'
 import { useStore, valueOf } from '../../app/store'
 import { formatElapsed, useNow } from '../../app/time'
@@ -95,22 +95,23 @@ export function useFirstBuildNotice(
 }
 
 /**
- * The notice over the composer when a message cannot go yet: the agent of
- * the chosen model has no login that can run turns. A login that the app
- * can no longer use counts as none. A notice turns Send off. Its Connect
- * goes to the account through `open`, where the form of the agent opens.
+ * The notice over the composer when a message cannot go yet: no login
+ * serves the agent of the chosen model in the org `orgId`. The own login of
+ * the person serves while the app can use it, and the org login serves when
+ * the server names it as the default login (org login decision 4). A login
+ * that the app can no longer use counts as none. A notice turns Send off.
+ * Its Connect goes to the account through `open`, where the form of the
+ * agent opens.
  */
 export function useBlockingNotice(
+  orgId: string,
   choice: AgentChoice | undefined,
   models: readonly AgentModel[],
   open: (to: string) => void,
 ): ReactNode {
   const app = useApp()
   const account = useStore(app.account.account)
-  const login = account?.agentLogins.find(
-    (item) => item.agent === choice?.agent,
-  )
-  if (choice && account && !loginUsable(login)) {
+  if (choice && account && !newSessionLogin(account, orgId, choice.agent)) {
     const agent = agentNames[choice.agent]
     return (
       <Notice

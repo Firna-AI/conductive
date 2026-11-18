@@ -8,6 +8,8 @@ import { requireCallingToolTurn } from './calling-turn'
 import { choice } from './input'
 import { agentToolMessage } from './message-text'
 import type { AgentToolServices } from './services'
+import { workspaceParent } from './workspace-parent-data'
+import { requireWorkspaceParentDepth } from '../lifecycle/workspace-insert-data'
 import {
   type CallingWorkspace,
   creationSection,
@@ -46,6 +48,10 @@ export async function createFromTool(
     createdByWorkspaceId: caller.workspaceId,
   })
   if (previous) return previous
+  if (input.parentId !== undefined) {
+    const parent = await workspaceParent(db, caller.orgId, input.parentId)
+    requireWorkspaceParentDepth(parent)
+  }
   const owner = await memberSender(db, caller.orgId, caller.ownerUserId)
   if (!sender || !owner) {
     throw new HttpError(
@@ -75,7 +81,10 @@ export async function createFromTool(
     orgId: caller.orgId,
     owner,
     repositoryId: input.repositoryId,
-    sectionId,
+    ...((input.parentId === undefined || input.sectionId !== undefined) && {
+      sectionId,
+    }),
+    ...(input.parentId !== undefined && { parentId: input.parentId }),
     choice: choice({
       ...model,
       effort,

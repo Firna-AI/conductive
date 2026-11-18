@@ -135,7 +135,9 @@ describe('Archive from the workspace list', () => {
         body: {},
         history: [href],
         section: 'Archived',
-        toasts: ['Invoice PDF fonts is archived.Restore'],
+        toasts: [
+          'Invoice PDF fonts is archived.It leaves the list on 29 January.Restore',
+        ],
       },
       restored: { writes: 1, section, archived: null },
       orgChange: {
@@ -143,7 +145,8 @@ describe('Archive from the workspace list', () => {
         otherOrg: [],
         writes: 1,
         back: [],
-        toast: 'Pricing page copy is archived.Restore',
+        toast:
+          'Pricing page copy is archived.It leaves the list on 29 January.Restore',
       },
     })
   })

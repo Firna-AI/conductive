@@ -14,8 +14,7 @@ a failed create, the access stop, and the image coordinator are lifecycle
 owners too. Archive owns `lifecycle:archive` separately. Its saved phases keep
 allocation recovery, stop confirmation, retention, and deletion across reconstruction.
 Its publication retries include confirmed deletion, even while the state stays archived.
-The previews, GitHub, Continue, and the repository change store their due
-times there too. So do
+The previews, GitHub, Continue, the repository change, and the automation report retry store their due times there too. So do
 the `browser`, `runner`, and `devices` security sources, on raw storage, as
 [Alarms](../README.md#alarms) says.
 
@@ -27,16 +26,17 @@ the `browser`, `runner`, and `devices` security sources, on raw storage, as
   or ends early still leaves the next alarm, also after a restart of the
   object.
 - The scheduler clears the due time of a security source, of Continue,
-  and of the repository change, after its run succeeds, unless that run
-  stored a new one.
+  of the repository change, and of the automation report retry, after
+  its run succeeds, unless that run stored a new one. A failed retry keeps
+  its due time, and the steps at the end of the run move it later.
 - `WorkspaceAlarmRunner` in [`workspace-alarm.ts`](../features/workspace-alarm.ts)
   runs the due security sources first. After the member fence checks, its
   regular task calls `runWorkspaceAlarms` in
   [`workspace-alarms.ts`](../workspace-alarms.ts), the outer run. The outer
   run first advances a running [Continue](continue.md#phases), then a
   running [repository change](repository-change.md#phases), each with its
-  own due time. It runs the
-  previews and GitHub. It also starts the lifecycle run,
+  own due time. It runs the previews, GitHub, and the automation report
+  retry. It also starts the lifecycle run,
   `runWorkspaceAlarm` in [`workspace-alarm.ts`](workspace-alarm.ts). The
   lifecycle run runs the lifecycle owners.
 - While a Continue job or a repository change is pending, the outer run
@@ -74,7 +74,8 @@ the `browser`, `runner`, and `devices` security sources, on raw storage, as
   2. The run finds each of its due times that had come when the run
      started and that did not change during the run. The lifecycle run
      looks only at due times of the lifecycle owners. The outer run looks
-     only at due times of Continue, the previews, and GitHub.
+     only at due times of Continue, the previews, GitHub, and the
+     automation report retry.
   3. It moves each due time that it found to the earliest stored due time
      in the future. When no stored due time is in the future, it moves the
      due time 30 seconds into the future.

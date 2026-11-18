@@ -37,6 +37,10 @@ import { macConversations } from './macConversations'
 import type { PersonKey } from './members'
 import { linkedSession } from './sessions'
 import { newWorkspaceConversations } from './newWorkspaceConversations'
+import { postcodeHistory } from './postcodeConversation'
+import { secretConversations } from './secretConversations'
+import type { LateAnswerItem, SecretRunItem } from './secretRequests'
+import { secretValueConversations } from './secretValueConversations'
 import { speedConversations } from './speedConversations'
 import { tableConversations } from './tableConversations'
 import { unavailableConversations } from './unavailableConversations'
@@ -171,6 +175,8 @@ export type ChatItem =
     }
   | ContinuedItem
   | RepositoryChangedItem
+  | SecretRunItem
+  | LateAnswerItem
 
 /** One tool call of an agent turn. */
 export type ToolCallItem = Extract<ChatItem, { kind: 'tool' }>
@@ -218,6 +224,8 @@ export const conversations: Readonly<
   ...endpointConversations({ history, followUp: followUpDraft }),
   ...newWorkspaceConversations,
   ...macConversations(history),
+  ...secretConversations(history),
+  ...secretValueConversations(history),
   ...lostConversations(history),
   ...unavailableConversations({ history, cutOff: cutOffTurn }),
   ...speedConversations({ history, cutOff: cutOffTurn }),
@@ -238,5 +246,7 @@ export const conversations: Readonly<
   ...barConversations({ history, cutOff: cutOffTurn }),
   ...listConversations,
   ...headingConversations,
+  /** The chat of the removed workspace that a chip opens. */
+  'postcode-history': postcodeHistory,
   ...chatLinkConversations(history),
 }

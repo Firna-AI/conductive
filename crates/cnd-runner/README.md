@@ -7,7 +7,7 @@ The `conductive runner` command composes this crate. The installed service runs 
 
 ## Responsibilities
 
-- Open an authenticated outbound TLS WebSocket and send the version 2 hello.
+- Open an authenticated outbound TLS WebSocket and send the version 2 hello with the caller's process-start ID.
 - Name the repository folder in hello, and move the runner to another
   repository folder of the sandbox on `repository.move`.
 - Save numbered events before sending them. Keep unconfirmed events across restarts.
@@ -105,6 +105,9 @@ Compose `Arc<dyn Disk>`, `Arc<dyn EventStore>`, `Arc<dyn Clock>`,
 `Arc<dyn Connector>`, and `Arc<dyn RunnerLink>`. Give `DurableStore` a fresh
 random stream ID for a missing file. Call `EventStore::load` once before
 sharing the store. An existing file supplies its saved stream ID.
+Give each `SavedRunnerLink` the process-start ID of the runner start.
+Make one random version 4 UUID when the program starts. Give that ID to
+each later link of the same program. Never save it in the store.
 Give `RunnerCore` the loaded store, link, clock, a `CommandHandler`, and a
 `ReleaseReadiness` port. `NoUpdates` disables swaps for other embeddings.
 Drive `Runner::run` with a Tokio watch channel for shutdown. Handle its
@@ -129,8 +132,16 @@ command, the folder and branch variables of the current round.
 Use the engine as the next handler of `ReportCommandHandler`.
 
 Each session pins its agent, instructions, branch context, and the
-repository folder that its instructions name. Helper
-handoffs retain the first turn's token, author, tool context, conversation,
+repository folder that its instructions name.
+New sessions also name their workspace ID, link, parent, depth, and depth limit.
+The instructions give the cases of when to nest a new workspace.
+The Worker supplies these tree facts through the service environment at runner start.
+The instructions direct agents to `get_workspace` for the current parent and depth after a move.
+At the depth limit, the instructions give the parent ID for a sibling and a short name prefix.
+Missing or malformed tree settings produce one warning and omit all tree guidance.
+Saved sessions keep their exact instructions across runner updates.
+
+Helper handoffs retain the first turn's token, author, tool context, conversation,
 and background deadline. Result lists resolve only their named inputs.
 An empty ordinary result resolves all sent inputs. A wake-up resolves none.
 Claude background work can keep a turn open for thirty days from its first
@@ -167,6 +178,7 @@ and connection drops. It does not run the Worker.
 ### Key Code
 
 - [config.rs](src/config.rs): `Configuration::parse` reads supplied service settings.
+- [instructions.rs](src/engine/instructions.rs): `build` adds validated workspace tree facts and the cases of when to nest to new session instructions.
 - [store.rs](src/state/store.rs): `EventStore` defines serialized state operations.
 - [records.rs](src/state/records.rs): `RunnerState` reads the existing JSON format.
 - [disk.rs](src/disk.rs): `AtomicDisk` replaces the private state file atomically.
@@ -181,7 +193,7 @@ and connection drops. It does not run the Worker.
 - [driver.rs](src/helper/driver.rs): `HelperConnection` correlates requests while agent events stream.
 - [process.rs](src/helper/process.rs): `NodeHelpers` owns private pipes and process-group cleanup.
 - [startup.rs](src/helper/startup.rs): `RunnerStartup` clears stale credentials, warms the SDK, and confirms a welcome.
-- [runner_command.rs](../cnd-cli/src/runner_command.rs): the CLI composes the full runner and signal handling.
+- [runner_command.rs](../cnd-cli/src/runner_command.rs): the CLI makes the process-start ID once, and composes the full runner and signal handling.
 - [limits.rs](src/limits.rs): `bound_event` applies serialized chat excerpts.
 - [commands.rs](src/json/commands.rs): `workspace_message` repairs and validates command JSON.
 - [service.rs](src/repository/service.rs): `Repository` supplies scans, reads, diffs, and checkpoints.
@@ -196,6 +208,10 @@ and connection drops. It does not run the Worker.
 ### Related Docs
 
 - [Agent runner protocol](../../docs/protocol/agent-runner.md)
+- [Runner warnings](../../docs/protocol/runner-warnings.md)
+- [Agent instructions](../../docs/protocol/agent-instructions.md)
+- [Sub-workspaces](../../docs/protocol/sub-workspaces.md)
+- [Parent changes](../../docs/protocol/parent-changes.md)
 - [Lost workspace updates](../../docs/protocol/lost-workspace-updates.md)
 - [Version pins](../../docs/protocol/version-pins.md)
 - [Sandbox architecture](../../docs/architecture/components.md#sandbox-software)

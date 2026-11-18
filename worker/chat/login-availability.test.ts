@@ -63,9 +63,12 @@ it('loads open-session starter metadata in one query for one or four sessions wi
   expect(queries[0]?.query).not.toMatch(/ciphertext|SELECT\s+\*/i)
   expect(queries[0]?.bindings).toEqual([
     JSON.stringify([
-      { sessionId: first.id, userId: fixture.owner.id, agent: 'claude' },
+      { sessionId: first.id, agent: 'claude', userId: fixture.owner.id },
     ]),
+    null,
     WORKSPACE_ID,
+    null,
+    null,
   ])
   expect(await decrypt.decryptCalls()).toBe(0)
   await harness.env.DB.prepare(
@@ -84,12 +87,15 @@ it('loads open-session starter metadata in one query for one or four sessions wi
   expect(queries[0]?.query).not.toMatch(/ciphertext|SELECT\s+\*/i)
   expect(queries[0]?.bindings).toEqual([
     JSON.stringify([
-      { sessionId: first.id, userId: fixture.owner.id, agent: 'claude' },
-      { sessionId: second.id, userId: fixture.owner.id, agent: 'codex' },
-      { sessionId: third.id, userId: fixture.owner.id, agent: 'claude' },
-      { sessionId: fourth.id, userId: fixture.owner.id, agent: 'codex' },
+      { sessionId: first.id, agent: 'claude', userId: fixture.owner.id },
+      { sessionId: second.id, agent: 'codex', userId: fixture.owner.id },
+      { sessionId: third.id, agent: 'claude', userId: fixture.owner.id },
+      { sessionId: fourth.id, agent: 'codex', userId: fixture.owner.id },
     ]),
+    null,
     WORKSPACE_ID,
+    null,
+    null,
   ])
   expect(await decrypt.decryptCalls()).toBe(0)
   const response = await fixture.fetch(list)

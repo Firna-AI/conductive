@@ -5,6 +5,9 @@ It implements the [agent-tool requirements](../../docs/protocol/agent-tools.md).
 It uses the existing [shared contracts](../../src/shared/README.md) and D1 tables.
 The [workspace name migration](../../migrations/202611081300_workspace_creation_name.sql) keeps an agent's chosen name through creation retries.
 The [first session title migration](../../migrations/202611111230_workspace_first_session_title.sql) keeps a requested first session title in the same way.
+The [parent migration](../../migrations/202611161700_workspace_parents.sql) keeps the parent link in the workspace and its creation plan.
+[Sub-workspaces](../../docs/protocol/sub-workspaces.md) gives the nesting rules.
+[Parent changes](../../docs/protocol/parent-changes.md) gives the move targets and refusals.
 [Workspace calls](workspaces.md) gives the get, rename, move, and archive routes, the list options, and the replay of a create.
 [Session management calls](sessions.md) gives the session get, rename, close, and stop routes, the message get, and the session list paging.
 [Section and preview calls](sections-and-previews.md) gives the section create and delete routes, and the preview list, open, and close routes.
@@ -15,6 +18,12 @@ The real application dispatches those paths before the machine stub.
 The object resolves the stored active sender and selects that sender's connected Mac.
 Command reads use the returned `requestKey` in the URL.
 The raw request ID stays in retry input and device messages.
+The [secret request feature](../secrets/README.md#workspace-tool-routes)
+uses the same machine entry point. `secrets.ts` forwards only
+`GET /v1/tools/secrets` and `POST /v1/tools/secrets/run` to the token's
+workspace object. The list needs only the token. A run needs the stored
+running turn. The feature README gives the command, grant, pending-result,
+browser-answer, and event contracts for the workspace tools.
 The create handler, the session writes, the workspace rename and move routes, and the Mac command handler use `readJsonObject` from the [shared request reader](../http/README.md#json-request-objects).
 The entry owns the 1,000,000-byte cap, and the reader owns the media type policy.
 The entry preserves HTTP 413, and the handler preserves HTTP 415.
@@ -22,7 +31,8 @@ Direct handler tests also use the shared entry policy before dispatch.
 
 ## Handler
 
-`createAgentToolsHandler` takes the database, the machine origin, the app origin, and `AgentToolServices`.
+`createAgentToolsHandler` takes the database, the machine origin, the app origin, `AgentToolServices`, and an injected clock.
+Workspace lists and details use that clock to compute removal at the time of the read.
 It accepts GET and POST at `MACHINE_PATHS.workspaces`, which is `/v1/tools/workspaces`, on that origin only.
 It also accepts GET at `/v1/tools/repositories`, `/v1/tools/sections`, and `/v1/tools/models`.
 It accepts the section writes and the preview routes, as [Routes](sections-and-previews.md#routes) says.
@@ -38,10 +48,11 @@ Its current owner must still belong to that org.
 The token must not be revoked.
 The handler grants no access to other routes, methods, hosts, or sockets.
 
-GET returns the number, web link, name, branch, state, and owner of every workspace in the calling org.
+GET returns the number, web link, name, branch, state, parent ID, and owner of every workspace in the calling org that is not removed.
 The owner gives `id`, `githubLogin`, and `displayName`, with no avatar.
 The link uses the configured app origin, not the machine request origin.
 It includes other owners' workspaces and archived workspaces.
+A [removed workspace](../../docs/protocol/workspace-life.md#removed-workspaces) shows only with the `removed` option.
 Its optional filters and paging follow [Workspace lists](workspaces.md#workspace-lists).
 The repository list reads the calling org's newest good image, in GitHub name order.
 `current` marks the calling workspace's repository.
@@ -63,7 +74,7 @@ The reserved workspace path value `current` resolves to the calling workspace fr
 No new sandbox credential supplies that ID.
 The handler and the real target object both check the target's org and the org's active state.
 The object also checks its exact workspace identity before it reads chat storage.
-An archived target remains readable. The caller's own token still needs its normal live-workspace access.
+An archived target remains readable, also after its removal. The caller's own token still needs its normal live-workspace access.
 
 The session list includes closed sessions, in creation order with ID as the tie breaker.
 Its optional `limit` and `offset` follow [Session list paging](sessions.md#session-list-paging).
@@ -124,6 +135,11 @@ Provider startup remains with the lifecycle alarm.
 ## Workspace creation
 
 POST binds the repository and section to the calling org.
+An optional `parentId` names a workspace of that org, including an archived workspace or one of another repository.
+The parent check runs after creation replay and before a new create.
+The Worker counts stored parent links, including archived ancestors, against `MAX_WORKSPACE_DEPTH` in [workspace-tree.ts](../../src/shared/workspace-tree.ts).
+The workspace insert reads the parent's section in its own statement.
+A different requested section gives a notice in the saved admission and the create reply.
 It inherits the calling workspace's current owner.
 It preserves the first message text.
 It cleans an optional name with `sessionTitleFrom` in the [shared title helper](../../src/shared/session-title.ts).
@@ -151,7 +167,7 @@ It never uses the workspace owner as a substitute sender.
 
 `createWorkspace` receives one `ToolWorkspaceCreation` value.
 The value keeps the inherited owner separate from the first message sender.
-It also carries the stable first-message ID and the optional first session title.
+It also carries the stable first-message ID, the optional first session title, and the optional parent ID.
 The lifecycle service must keep the first message durably and start it at once.
 It must use the latest good org image.
 It must use the sender's agent login.
@@ -215,12 +231,15 @@ The real-object route tests live in [worker/features](../features/).
 - [handler.ts](handler.ts) owns the public machine handler and token gate.
 - [input.ts](input.ts) narrows workspace creation inputs and stored model choices.
 - [workspace-replies.ts](workspace-replies.ts) narrows the created workspace reply and stored sender fields.
-- [create.ts](create.ts) builds the stable first-message ID and tries a replay. It then resolves the owner, sender, section, and model choice.
+- [create.ts](create.ts) builds the stable first-message ID and tries a replay. It then checks the parent and depth, and resolves the owner, sender, section, and model choice.
 - [lists.ts](lists.ts) reads the four lists and resolves the listed default choice.
 - [store.ts](store.ts) reads the token's workspace, members, owner defaults, sections, and repository admission in D1.
 - [workspace-routes.ts](workspace-routes.ts) matches the workspace routes and runs their reads and writes.
+- [workspace-move-input.ts](workspace-move-input.ts) reads a move's optional section and parent target.
 - [workspace-input.ts](workspace-input.ts) reads the options of the workspace list.
-- [workspace-data.ts](workspace-data.ts) queries the workspace list and the details of one workspace.
+- [workspace-data.ts](workspace-data.ts) queries the workspace list with its default removal filter and builds details with the removal time.
+- [workspace-parent-data.ts](workspace-parent-data.ts) reads a parent's stored depth within its org.
+- [workspace-tree.ts](../../src/shared/workspace-tree.ts) places live rows with their shown section, parent, and depth.
 - [workspace-write-composition.ts](workspace-write-composition.ts) runs a rename, a move, or an archive as the sender.
 - [workspace-create-composition.ts](workspace-create-composition.ts) completes a create and its replay.
 - [agent-workspaces.ts](../../src/shared/agent-workspaces.ts) holds the workspace path builders.

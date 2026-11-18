@@ -1,6 +1,7 @@
 import type { Workspace } from '../shared/generated/Workspace'
 import type { Section } from '../shared/sections'
 
+import { replaceWorkspace } from './list-trees'
 import type { Change } from './resource'
 import {
   moveWorkspace,
@@ -19,12 +20,15 @@ export type ListChange = Change<ListData>
 
 /**
  * A newer record of a workspace, such as from an event, an open, or
- * Archive. A workspace that the list has keeps its place: its section and
- * its order change only through a read of the list or a move. The
- * record of a workspace can be older than a move, so its section does not
- * count. A listed row also keeps its GitHub summary, which only a list
+ * Archive. A workspace that the list has keeps its place: its parent,
+ * section, and order change only through a read of the list, a move, or the
+ * Archive of a workspace above it, as `replaceWorkspace` says. The
+ * record of a workspace can be older than a move, so its placement does
+ * not count. A listed row also keeps its GitHub summary, which only a list
  * read replaces on the same branch. A branch change takes the new branch's
- * summary. A new workspace goes to the top with its initial summary.
+ * summary. A new workspace goes to the top with its initial summary. An
+ * open pull request bar shows its own state over the summary, as
+ * `LiveGitHubStates` says.
  */
 export function workspaceUpdated(workspace: Workspace): ListChange {
   return (list) => {
@@ -33,18 +37,13 @@ export function workspaceUpdated(workspace: Workspace): ListChange {
     }
     return {
       ...list,
-      workspaces: list.workspaces.map((item) =>
-        item.id === workspace.id
-          ? {
-              ...workspace,
-              sectionId: item.sectionId,
-              github:
-                item.branch === workspace.branch
-                  ? item.github
-                  : workspace.github,
-            }
-          : item,
-      ),
+      workspaces: replaceWorkspace(list.workspaces, workspace.id, (item) => ({
+        ...workspace,
+        parentId: item.parentId,
+        sectionId: item.sectionId,
+        github:
+          item.branch === workspace.branch ? item.github : workspace.github,
+      })),
     }
   }
 }
@@ -80,14 +79,15 @@ export function workspaceReassigned(
  * A confirmed Archive or Restore changes only its own fields, so a newer
  * name, owner, or section stays. Each one raises `updatedAt`, so it changes
  * nothing over a record that is not older, such as a later Restore that a
- * read brought.
+ * read brought. An Archive also gives its place to the rows under it, as
+ * `replaceWorkspace` says.
  */
 export function workspaceLifecycle(workspace: Workspace): ListChange {
   const { state, archivedAt, restoreUntil, updatedAt } = workspace
   return (list) => ({
     ...list,
-    workspaces: list.workspaces.map((current) =>
-      current.id === workspace.id && current.updatedAt < updatedAt
+    workspaces: replaceWorkspace(list.workspaces, workspace.id, (current) =>
+      current.updatedAt < updatedAt
         ? { ...current, state, archivedAt, restoreUntil, updatedAt }
         : current,
     ),
@@ -154,9 +154,10 @@ export function sectionDeleted(sectionId: string): ListChange {
 }
 
 /**
- * A move to `index` of a section, which counts the workspaces of that
- * section without the moved one. It applies to the list as it is then, so
- * a move stays right over a newer read.
+ * A move of the tree of a top-level row to `index` of a section, which
+ * counts the top-level rows of that section without the moved one. It
+ * applies to the list as it is then, so a move stays right over a newer
+ * read.
  */
 export function workspaceMoved(
   workspaceId: string,

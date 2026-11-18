@@ -3,6 +3,7 @@ import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
 import { routes } from '../../src/app/router'
 import { MACHINE_PATHS, TOOL_TURN_HEADER } from '../../src/shared/agent-tools'
 import { sessionLink } from '../../src/shared/session-link'
+import { WORKSPACE_RESTORE_MS } from '../../src/shared/workspaces'
 import type { AgentModel } from '../../src/shared/generated/AgentModel'
 import { requestBodyEntry } from '../http/request-body'
 import { hash } from '../security/crypto'
@@ -157,7 +158,8 @@ export async function toolFixture(harness: TestHarness) {
       link: `${harness.env.APP_ORIGIN}${routes.workspace(input.orgId, 'created-workspace')}`,
       orgId: input.orgId,
       repositoryId: input.repositoryId,
-      sectionId: input.sectionId,
+      sectionId: input.sectionId ?? 'general-a',
+      parentId: input.parentId ?? null,
       owner: input.owner,
       name: 'Berlin',
       branch: `${input.owner.githubLogin}/berlin-ij90`,
@@ -196,7 +198,10 @@ export async function toolFixture(harness: TestHarness) {
     writeSession: vi.fn<AgentToolServices['writeSession']>(),
   }
   const env = { ...harness.env, MACHINE_ORIGIN: TOOL_TEST_ORIGIN }
-  const entry = requestBodyEntry(createAgentToolsHandler(env, services))
+  let now = TEST_TIME
+  const entry = requestBodyEntry(
+    createAgentToolsHandler(env, services, () => now),
+  )
   const handler = (request: Request) => entry(request, env)
   const request = (
     init: RequestInit = {},
@@ -213,7 +218,26 @@ export async function toolFixture(harness: TestHarness) {
   }
   const create = (body: unknown, headers?: HeadersInit) =>
     request({ method: 'POST', body: JSON.stringify(body), headers })
-  return { db, request, create, services }
+  return {
+    db,
+    request,
+    create,
+    services,
+    setTime: (at: number) => {
+      now = at
+    },
+  }
+}
+
+export async function seedRemovedWorkspace(db: D1Database) {
+  await db
+    .prepare(
+      `INSERT INTO workspaces
+       (id, org_id, repository_id, owner_user_id, section_id, name, branch, state, archived_at, created_at, updated_at)
+       VALUES ('removed-workspace', 'org-a', 'repo-a', 'owner', 'general-a', 'Madrid', 'owner-login/madrid-kl12', 'archived', ?, ?, ?)`,
+    )
+    .bind(TEST_TIME - WORKSPACE_RESTORE_MS, TEST_TIME + 3, TEST_TIME + 3)
+    .run()
 }
 
 export type ToolFixture = Awaited<ReturnType<typeof toolFixture>>

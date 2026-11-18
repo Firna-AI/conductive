@@ -24,6 +24,11 @@ export async function creationAdmissionResponse(
   if (!first) throw new Error('Missing stored first message')
   return {
     workspace: workspaceRecord(row),
+    ...(job.creation.parentId &&
+      job.creation.sectionId &&
+      job.creation.sectionId !== row.sectionId && {
+        notice: 'The workspace joined the section of its parent.',
+      }),
     start: state?.start ?? null,
     error: null,
     first: {

@@ -2,18 +2,18 @@ import { createChatApi, type WorkspaceTarget } from '../api/client'
 import type { SessionReads } from '../links/session-reads'
 import { browserTimers } from '../stream/workspace-stream'
 import {
-  ChatStore,
   initialSnapshot,
   type ChatSnapshot,
   type Overlay,
 } from './chat-snapshot'
+import { ChatStore } from './chat-store'
 import { isArchived } from './archive-view'
 import type { ChatContext } from './context'
 import {
   createChatContext,
   type ChatContextOptions,
 } from './controller-context'
-import { endDraftFiles } from './drafts'
+import { withEndedDraftFiles } from './drafts'
 import { watchShownSession } from './history'
 import { loadChat } from './load'
 import { followSources, withSources } from './sources'
@@ -98,15 +98,7 @@ export class ChatRuns {
     this.context.sessionReads.close()
     for (const upload of this.context.uploads.values()) upload.abort()
     this.context.uploads.clear()
-    this.store.update((snapshot) => ({
-      ...snapshot,
-      sessionStates: Object.fromEntries(
-        Object.entries(snapshot.sessionStates).map(([id, state]) => [
-          id,
-          { ...state, draft: endDraftFiles(state.draft) },
-        ]),
-      ),
-    }))
+    this.store.update(withEndedDraftFiles)
     this.unwatch?.()
     this.unwatch = null
     this.unfollow?.()

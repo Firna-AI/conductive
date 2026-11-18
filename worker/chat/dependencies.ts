@@ -5,6 +5,7 @@ import { readUser } from '../data/users'
 import { runnerTokenAllowed } from '../data/workspace-token-access'
 import { randomToken } from '../security/crypto'
 import { readConnectionAccess } from '../security/connection-access'
+import { resolveDefaultLogin } from './default-login'
 import { loginResolver } from './login-access'
 import {
   readLoginMetadata,
@@ -35,10 +36,10 @@ export function chatDependencies(
 ): ChatDependencies {
   return {
     normalizeChoice: (choice) => modelChoice(env, choice),
-    refreshEndpointModels: async (userId, agent) => {
+    refreshEndpointModels: async (owner, agent) => {
       await refreshEndpointModels(
         env,
-        userId,
+        owner,
         agent,
         {
           fetch: (request) => fetch(request),
@@ -73,6 +74,16 @@ export function chatDependencies(
       return id === null
         ? Promise.resolve(new Map<string, SessionLoginMetadata>())
         : readLoginMetadata(env, id, targets)
+    },
+    readOrgName: (orgId) =>
+      env.DB.prepare('SELECT name FROM orgs WHERE id = ?')
+        .bind(orgId)
+        .first<string>('name'),
+    resolveDefaultLogin: (userId, agent, excluded) => {
+      const id = workspaceId()
+      return id === null
+        ? Promise.resolve(null)
+        : resolveDefaultLogin(env, { workspaceId: id }, userId, agent, excluded)
     },
     resolveAttachments: (userId, id, ids, messageId, usedIds) =>
       resolveMessageAttachments(

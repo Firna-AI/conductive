@@ -12,6 +12,31 @@ export async function expireWorkspacePreviews(
   if (id) await alarms.set('previews', await previews.nextExpiry(id))
 }
 
+/** A failed report retry, which its task already logged. */
+class ReportRetryFailed extends Error {}
+
+/**
+ * A failed retry keeps its due time, and the end of the run moves it later.
+ * The other owners of the run still run. Other errors end the run.
+ */
+async function retryAutomationReport(
+  alarms: WorkspaceAlarms,
+  startedAt: number,
+  report: () => Promise<void>,
+): Promise<void> {
+  try {
+    await alarms.run('automation-report', startedAt, async () => {
+      try {
+        await report()
+      } catch {
+        throw new ReportRetryFailed()
+      }
+    })
+  } catch (error) {
+    if (!(error instanceof ReportRetryFailed)) throw error
+  }
+}
+
 export async function runWorkspaceAlarms(
   alarms: WorkspaceAlarms,
   now: () => number,
@@ -24,6 +49,7 @@ export async function runWorkspaceAlarms(
     previews(): Promise<void>
     devices(): Promise<void>
     publishRevocations(): Promise<void>
+    automationReport?(): Promise<void>
   },
   options: { securityHandled?: boolean; fallbackLifecycle?: boolean } = {},
 ): Promise<void> {
@@ -33,7 +59,7 @@ export async function runWorkspaceAlarms(
     (source) =>
       !source.startsWith('lifecycle') &&
       (!options.securityHandled ||
-        !['browser', 'runner', 'devices'].includes(source)),
+        !['browser', 'runner', 'devices', 'secrets'].includes(source)),
   )
   const { due } = run
   try {
@@ -56,6 +82,8 @@ export async function runWorkspaceAlarms(
     }
     if (due.has('github')) await tasks.github()
     if (due.has('previews')) await tasks.previews()
+    if (due.has('automation-report') && tasks.automationReport)
+      await retryAutomationReport(alarms, startedAt, tasks.automationReport)
     if (!options.securityHandled)
       await alarms.run('devices', startedAt, tasks.devices)
     await tasks.publishRevocations()

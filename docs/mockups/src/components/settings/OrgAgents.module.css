@@ -1,0 +1,11 @@
+/*
+ * Replace and Remove at the end of the row of an org login. They stay
+ * together, so a narrow list, as on a phone, keeps both beside the two
+ * lines of the row.
+ */
+.actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+}

@@ -16,12 +16,6 @@ import type { PaletteContext } from '../components/palette/paletteContent'
 import { ArchivedToast } from '../components/workspace/ArchivedToast'
 import { ContinueDialog } from '../components/workspace/ContinueDialog'
 import { reassignMenu } from '../components/workspace/OwnerPicker'
-import { RepositoryChangeDialog } from '../components/workspace/RepositoryChangeDialog'
-import { repositoryMenuEntries } from '../components/workspace/RepositoryPicker'
-import {
-  repositoryFailure,
-  repositoryMenu,
-} from '../components/workspace/repositoryMoveCopy'
 import {
   RestartDialog,
   RestartSheet,
@@ -30,13 +24,15 @@ import {
 import type { WorkspaceTab } from '../components/workspace/TabItem'
 import { TabMenuSheet } from '../components/workspace/TabMenu'
 import { transcriptToasts } from '../components/workspace/transcriptCopy'
-import { repositories } from '../fixtures/repositories'
-import { movedRepository } from '../fixtures/repositoryMove'
 import { workspaceSessions } from '../fixtures/sessions'
 import { closedTerminal, cloudComputerSilent } from '../fixtures/terminals'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
+import { valueSheet } from './requestSheets'
+import { headerMenuOf } from './workspaceHeaderMenu'
+import { capabilitiesSheet } from './workspaceCapabilities'
 import { openFile } from './workspaceParts'
+import { repositoryOverlay } from './workspaceRepositoryOverlay'
 import { rowMenuOf } from './workspaceRowMenu'
 import type { WorkspaceState } from './workspaceState'
 import { historyFor } from './workspaceTabs'
@@ -163,9 +159,11 @@ function rowMenuSheet(state: WorkspaceState, viewport: Viewport): ReactNode {
  * What lies open over a workspace. Desktop draws the menus beside their
  * buttons, the tab menu below its tab, and the menu of a row of the Files
  * panel at the pointer, so only the dialog lies over the app. A phone draws
- * each one as a sheet. `row` holds the tabs that the viewport shows, the
- * tab whose menu is open, if any, and whether the workspace is read-only,
- * which leaves items out of that menu.
+ * each one as a sheet, and the open Capabilities control too. `row` holds
+ * the tabs that the viewport shows, the tab whose menu is open, if any, and
+ * whether the workspace is read-only, which leaves items out of that menu.
+ * Desktop draws the workspace menu of the header at the pointer in the
+ * header, and a phone as a sheet.
  */
 export function workspaceOverlay(
   state: WorkspaceState,
@@ -176,7 +174,10 @@ export function workspaceOverlay(
   const mobile = viewport === 'mobile'
   switch (state.overlay) {
     case 'none':
-      return mobile ? rowMenuSheet(state, viewport) : null
+      return (
+        capabilitiesSheet(state, viewport) ??
+        (mobile ? rowMenuSheet(state, viewport) : null)
+      )
     case 'restarting':
       return null
     case 'restart':
@@ -210,31 +211,9 @@ export function workspaceOverlay(
         </Sheet>
       ) : null
     case 'repository':
-      return mobile ? (
-        <Sheet title={workspace.name}>
-          <Menu
-            entries={repositoryMenuEntries(workspace.repository)}
-            label={repositoryMenu.label}
-            placement="sheet"
-          />
-        </Sheet>
-      ) : null
     case 'repository-change':
-      return (
-        <RepositoryChangeDialog
-          from={workspace.repository}
-          to={movedRepository}
-          viewport={viewport}
-        />
-      )
     case 'repository-failed':
-      return (
-        <FailureToast
-          message={repositoryFailure.clash(repositories[movedRepository].name)}
-          phone={mobile}
-          title={repositoryFailure.title}
-        />
-      )
+      return repositoryOverlay(state.overlay, workspace, viewport)
     case 'tab-menu':
       return mobile && row.menuTab ? (
         <TabMenuSheet
@@ -259,6 +238,20 @@ export function workspaceOverlay(
           viewport={viewport}
         />
       )
+    case 'value-sheet':
+      return valueSheet(state, viewport)
+    case 'workspace-menu':
+      return mobile ? (
+        <Sheet title={workspace.name}>
+          <Menu
+            entries={headerMenuOf(state, workspace.owner)}
+            label={workspace.name}
+            placement="sheet"
+          />
+        </Sheet>
+      ) : null
+    case 'header-rename':
+      return null
   }
 }
 

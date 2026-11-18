@@ -44,6 +44,13 @@ each feature.
   task. A repository change moves it to another repository of the org.
 - **Workspace owner:** the person who is responsible for a workspace. It is
   the person who created the workspace, until an admin reassigns it.
+- **Sub-workspace:** a workspace nested under another workspace, its
+  parent workspace. An agent creates it under that parent, or moves it
+  there later. The workspace list shows it under the row of its parent, as
+  [Sub-workspaces](protocol/sub-workspaces.md) says.
+- **Parent workspace:** the workspace that a sub-workspace is nested
+  under. The docs also call it the parent. A workspace has at most one
+  parent workspace.
 - **Continue:** the action after a merge that moves a workspace to a new
   branch from the latest default branch. The workspace keeps its sandbox
   and its sessions.
@@ -54,8 +61,24 @@ each feature.
   have: changed files that are not committed, also untracked files, and
   commits that no remote branch holds.
 - **Sender:** the person who sent the message of a turn. The GitHub token
-  and the Mac requests of the turn belong to its sender. The agent login
-  belongs to the starter of the session, the member who started it.
+  and the Mac requests of the turn belong to its sender. The turn runs on
+  the login of its session, which can belong to another member or to the
+  org. A turn that a late answer to a secret request starts has the sender
+  of the turn that asked, as
+  [Late answers](protocol/secret-requests.md#late-answers) says.
+- **Starter:** the member who started a session. The starter of a session
+  never changes.
+- **Agent login:** the key, the token, the sign-in, or the own endpoint
+  that the turns of an agent run on. It is a personal login or an org
+  login.
+- **Personal login:** an agent login that a member connects on the account
+  page. It serves all of the orgs of that member.
+- **Org login:** an API key or an own endpoint that an admin connects for
+  one agent of an org. It serves the members of that org.
+- **Login of a session:** the agent login that each turn of a session runs
+  on: the personal login of its starter, or the org login.
+- **Default login:** the agent login that a new session of a member takes,
+  as [The default login](protocol/org-logins.md#the-default-login) says.
 - **Boat key:** the one key of the app's own Boat account, where every
   sandbox and every org image of every org runs. It is a Worker secret.
 - **Provider account:** an account with a sandbox provider. The Worker
@@ -92,6 +115,9 @@ each feature.
   schedules. A wake-up is a prompt for the agent at a later time.
 - **Workspace token:** a secret of one workspace. Its sandbox uses the
   token to call the Worker.
+- **Secret:** a named value of an org that agents use in one command at a
+  time, after a member allows it. It is not an env var.
+  [Secrets](protocol/secrets.md) states the secrets.
 - **Preview hostname:** a random hostname on the preview domain. It shows
   one port of one sandbox.
 - **Start:** each create or resume of a sandbox, also the sandbox of a
@@ -106,8 +132,10 @@ each feature.
 - **Automation:** a saved prompt of an org that runs an agent without a
   person. A schedule, a GitHub pull request event, or Run now starts each
   run. Each run creates a new workspace, the run workspace.
-- **Automation owner:** the member whose logins the runs of an automation use. It
-  is the member who created the automation, until that member leaves the org.
+- **Automation owner:** the member in whose name the runs of an automation
+  act. The runs use the GitHub access and the default login of that member.
+  It is the member who created the automation, until that member leaves the
+  org.
 - **Base branch:** the branch that the work of a workspace targets. Changes
   compares with it, and "Create PR" opens into it.
 
@@ -137,8 +165,9 @@ the app (decision 6).
 ## Flows
 
 The [flows page](architecture/flows.md) describes how the components work
-together for a new workspace, chat, the terminal, previews, the desktop,
-GitHub events, a merge, Continue, automation runs, and stops.
+together for a new workspace, chat, a run with secrets, the terminal,
+previews, the desktop, GitHub events, a merge, Continue, automation runs, and
+stops.
 
 ## Where data lives
 

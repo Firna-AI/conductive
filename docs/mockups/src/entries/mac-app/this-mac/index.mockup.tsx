@@ -25,9 +25,9 @@ export const thisMac = defineScreen({
       slug: 'needs-input',
       title: 'A workspace needs input',
       description:
-        'An agent asks to run a command on this Mac while the app shows This Mac. The workspace list marks Checkout address autocomplete with Needs input: its green mark pulses. Its row opens the workspace, where the request waits above the composer.',
+        'An agent asks to run a command on this Mac while the app shows This Mac. The workspace list marks Checkout address autocomplete with Needs input: its mark turns blue and pulses. Its row opens the workspace, where the request waits above the composer.',
       rationale:
-        'The request no longer opens a dialog over every page, so the user asked for a blue mark on the workspace that asks for help, an approval, or an answer (decision 62). The list mark now shows the GitHub state in its colour (list mark decision 1), so the row pulses in that colour. The header of the workspace keeps the blue column.',
+        'The request no longer opens a dialog over every page, so the user asked for a blue mark on the workspace that asks for help, an approval, or an answer (decision 62). The list mark shows the GitHub state in its colour (list mark decision 1), but on 17 November 2026 the user asked again for a blue mark that pulses while the workspace needs input, whatever the GitHub state. The header of the workspace keeps the blue column.',
       props: { command: 'prompt' },
     },
     {

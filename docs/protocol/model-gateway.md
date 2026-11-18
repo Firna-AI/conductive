@@ -190,7 +190,7 @@ through a slow turn check. Its pull request keeps these records.
 - A turn token works only on the gateway routes.
 - A turn token works only while its turn runs. After a Stop request, it
   works for no new request.
-- A turn token uses only the agent login of the starter of its session.
+- A turn token uses only the login of its session.
 - The gateway accepts no workspace token. Reason: each process in the
   sandbox can read the workspace token, also between turns.
 - A token for each session was rejected, because it also works in the
@@ -203,17 +203,23 @@ through a slow turn check. Its pull request keeps these records.
 ## Checks of each request
 
 - At each request, the gateway checks the turn, its workspace, and the
-  access of the starter.
+  login of its session.
 - The turn must still run in its workspace.
-- The starter of its session must still be a member of the org, and must
-  not be suspended.
-- The agent login of the starter must still be the login that the turn
-  started with.
+- On a personal login, the starter of the session must still be a member
+  of the org, and must not be suspended. A session on the org login does
+  not depend on its starter, as
+  [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
+  says.
+- The login of the session must still be the login that the turn started
+  with.
 - Any change of that login ends the turn at its next request (gateway
-  decision 7). A removal of the login, or a loss of the access of the
-  starter, does the same.
+  decision 7). A removal of the login does the same. On a personal login,
+  a loss of the access of the starter does the same too.
 - The turn then fails and names the cause. After a change of the login,
-  Try again starts a turn on the new login.
+  Try again starts a turn on the new login. This holds also when an admin
+  replaces the org login.
+- A change of the switch "Use for every member" of the org login changes
+  no login, so it ends no turn.
 - Reason: a turn never moves to another key in its middle. A loss of
   access stops the turn at once. The gateway needs no copy of the login of
   the turn start.

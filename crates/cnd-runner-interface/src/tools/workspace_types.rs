@@ -81,6 +81,8 @@ pub struct Workspace {
     pub repository_id: String,
     /// section id.
     pub section_id: String,
+    /// Parent workspace, or null for a top-level workspace.
+    pub parent_id: Option<String>,
     /// owner.
     pub owner: MessageSender,
     /// name.

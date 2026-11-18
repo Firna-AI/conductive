@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { ChevronLeft } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import owner from '../../../docs/mockups/src/components/workspace/OwnerPicker.module.css'
+import { NameMenuButton } from '../../../docs/mockups/src/components/workspace/NameMenuButton'
 import styles from '../../../docs/mockups/src/components/workspace/WorkspaceHeader.module.css'
 import { personName } from '../../app/people'
 import { routes } from '../../app/router'
@@ -10,6 +11,7 @@ import { nameLabel } from '../../shared/name-label'
 import { useMacBar } from '../mac/mac-app'
 import { IconButton } from '../ui/actions'
 import { useGo } from '../ui/AppLink'
+import { WorkspaceNameField } from '../list/WorkspaceNameField'
 import { PersonAvatar } from '../ui/Avatars'
 import ui from '../ui/ui.module.css'
 import { CopyLink } from './CopyLink'
@@ -19,6 +21,7 @@ import { RepositoryControl } from './repository/RepositoryControl'
 import { RightColumnToggle } from './WorkspaceColumns'
 import { RunLine } from './RunLine'
 import { useRunAutomation } from './saved-view'
+import { useHeaderMenu } from './useHeaderMenu'
 
 /** The owner of the workspace, without the menu that reassigns it. */
 function Owner(props: { workspace: Workspace; compact: boolean }) {
@@ -46,7 +49,10 @@ function Owner(props: { workspace: Workspace; compact: boolean }) {
  * of the right column. A run workspace links to its automation below it.
  * While the open of the workspace resumes its sandbox, the state shows
  * Starting at once, before the Resume reply. While the software runs, the
- * state opens the menu with Restart.
+ * state opens the menu with Restart. The name is a button with no caret. It
+ * opens the workspace menu of the list below it, and Rename in that menu
+ * puts the field in place of the name. Until the list of the org loads, the
+ * name is plain text.
  */
 export function WorkspaceHeader(props: {
   context: WorkspaceContext
@@ -57,6 +63,7 @@ export function WorkspaceHeader(props: {
   const go = useGo()
   const bar = useMacBar()
   const automation = useRunAutomation(props.context.savedView)
+  const menu = useHeaderMenu(props.context)
   const repository = (
     <RepositoryControl context={props.context} key={workspace.id} />
   )
@@ -69,6 +76,24 @@ export function WorkspaceHeader(props: {
   const stateView = (
     <HeaderState context={props.context} key={workspace.id} state={state} />
   )
+  const title = menu.rename ? (
+    <WorkspaceNameField
+      className={styles.titleField}
+      name={workspace.name}
+      page={false}
+      rename={menu.rename}
+    />
+  ) : menu.toggle ? (
+    <NameMenuButton
+      buttonRef={menu.buttonRef}
+      name={name}
+      onPointerDown={menu.pressStart}
+      onPress={menu.toggle}
+      open={menu.open}
+    />
+  ) : (
+    <h1 className={styles.title}>{name}</h1>
+  )
   const copyLink = (
     <CopyLink inline={phone} key={workspace.link} workspace={workspace} />
   )
@@ -80,7 +105,7 @@ export function WorkspaceHeader(props: {
         onPress={() => go(routes.org(org.id))}
       />
       <div className={styles.titles}>
-        <h1 className={styles.title}>{name}</h1>
+        {title}
         <span className={styles.line}>
           {copyLink}
           {repository}
@@ -91,7 +116,7 @@ export function WorkspaceHeader(props: {
     </header>
   ) : (
     <header className={classes(styles.bar, bar)}>
-      <h1 className={styles.title}>{name}</h1>
+      {title}
       {copyLink}
       <span className={styles.metas}>{repository}</span>
       {ownerView}
@@ -99,11 +124,11 @@ export function WorkspaceHeader(props: {
       <RightColumnToggle />
     </header>
   )
-  if (!automation) return header
   return (
     <>
       {header}
-      <RunLine orgId={org.id} automation={automation} />
+      {automation ? <RunLine orgId={org.id} automation={automation} /> : null}
+      {menu.layer}
     </>
   )
 }

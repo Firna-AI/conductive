@@ -29,6 +29,7 @@ const connection: Omit<StoredRunnerConnection, 'generation'> = {
     archivedAt: null,
   },
   streamId: 'stream',
+  processStartId: null,
   protocolVersion: 2,
   ready: true,
   checkAt: 100,

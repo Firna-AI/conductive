@@ -74,6 +74,11 @@ const { controller, state } = useMacSettings(services.api)
   less makes it short again. A command that fits shows no button. The
   whole text stays in the page, so a screen reader and a copy get all of
   it. A change of the width measures the command again.
+- `CommandCard` shows the output of a finished run through
+  `CommandOutput`, with the same rules: long output shows its first ten
+  lines, its last lines fade out, and Show all and Show less open and close
+  it. Output that fits shows no button. `useClipped` in `use-clipped.ts`
+  measures both.
 - `ThisMacSection` and `AllowAllBar` show the settings that the Mac keeps.
   One read or change of the settings runs at a time, in the order of the
   user's actions, so the Mac gets them in that order and the last reply
@@ -124,7 +129,8 @@ menu of Allow over the region. Build the Mac app first, then run
 - `mac-settings.ts`: the reads and the changes of the Mac's settings for
   `ThisMacSection.tsx`, `SavedChoices.tsx`, and `AllowAllBar.tsx`.
 - `AllowedCommand.tsx`: one always-allowed command, short with Show all
-  when it is long.
+  when it is long. `CommandOutput.tsx` does the same for the output of a
+  card, and `use-clipped.ts` measures whether a text is cut.
 - `settings-results.ts`: the result of each control, and its words.
 
 ### Related docs

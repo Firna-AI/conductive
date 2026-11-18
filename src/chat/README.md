@@ -113,9 +113,12 @@ chips.
   files and folders, and the marks that hold the files. They also cover
   undo, the uploads, the send, and the end of the files.
 - [Sessions, logins, and drafts](sessions.md) give the rules of the draft
-  moves, the login of each session, and the linked sessions.
+  moves, the login of each session, a personal login or the org login, the
+  default login of a new session, and the linked sessions.
 - [The Mac commands](device/README.md) hold the rules of the requests,
   their answers, and the settings of the Mac.
+- [The secret requests](secrets/README.md) hold the rules of the requests
+  for secrets, their answers, the runs, and the line of a late answer.
 - Reusable code imports no fixture data and no fake. Fixtures, replays, and
   stateful fakes live in `dev/` and in test files only.
 - The parts reuse the mockup CSS modules and the mockup parts that are pure,

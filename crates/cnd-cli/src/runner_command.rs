@@ -21,7 +21,6 @@ use cnd_runner::engine::handler::AgentEngine;
 use cnd_runner::filter::service::{CredentialFilter, Credentials, FilteredEmitter};
 use cnd_runner::helper::process::NodeHelpers;
 use cnd_runner::helper::startup::RunnerStartup;
-use cnd_runner::link::connection::SavedRunnerLink;
 use cnd_runner::ports::proc::{DiskProcReader, ProcPortScanner};
 use cnd_runner::ports::reporter::{PortReporter, PortReports};
 use cnd_runner::relocation::RepositoryFolders;
@@ -41,11 +40,13 @@ use uuid::Uuid;
 
 use crate::error::{ErrorResultExt, Result};
 use crate::release::VERSION;
+use crate::runner_start::RunnerStart;
 
 /// Role containing the SDK helper and its runtime packages.
 pub(crate) const SDK_HELPER_PART: &str = "sdk-helper";
 
 pub(crate) async fn execute() -> Result<()> {
+    let start = RunnerStart::new();
     let environment: BTreeMap<String, String> = std::env::vars().collect();
     let cwd = std::env::current_dir().internal()?;
     let home = environment
@@ -106,6 +107,7 @@ pub(crate) async fn execute() -> Result<()> {
     let result = async {
         while !*shutdown.borrow() && shutdown.has_changed().is_ok() {
             let exit = run_once(
+                &start,
                 configuration.clone(),
                 &helper,
                 executable.clone(),
@@ -136,6 +138,7 @@ struct HelperPaths {
 }
 
 async fn run_once(
+    start: &RunnerStart,
     configuration: Configuration,
     helper: &HelperPaths,
     executable: PathBuf,
@@ -155,14 +158,15 @@ async fn run_once(
     store.load().await.internal()?;
     let loaded = store.snapshot().await;
     let link = Arc::new(
-        SavedRunnerLink::new(
-            configuration.workspace_id.clone(),
-            configuration.request.clone(),
-            Arc::new(WebSocketConnector),
-            clock.clone(),
-            store.clone(),
-        )
-        .with_repository_folder(&configuration.cwd),
+        start
+            .link(
+                configuration.workspace_id.clone(),
+                configuration.request.clone(),
+                Arc::new(WebSocketConnector),
+                clock.clone(),
+                store.clone(),
+            )
+            .with_repository_folder(&configuration.cwd),
     );
     let io = Arc::new(LocalRepositoryIo);
     let folders = RepositoryFolders::new(&configuration, io.clone());

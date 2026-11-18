@@ -11,6 +11,7 @@ import { installationTokenProvider } from '../github/credentials'
 import { refreshWorkspace } from '../github/refresh'
 import { WorkspaceGitHubState } from '../github/workspace-state'
 import { HttpError } from '../http'
+import { handleGitHubRead } from '../github/app-handler'
 import { handleGitHubMerge } from '../github/merge-handler'
 import { authorizeMerge } from '../github/merge-access'
 import { GitHubReader } from '../github/client'
@@ -107,6 +108,22 @@ export class WorkspaceGitHub {
       storage: this.storage,
       refresh: (workspace, signal) => this.refresh(workspace, signal),
     })
+  }
+
+  /**
+   * The GitHub routes of the workspace object, or null for another route:
+   * the reads of the app, which gate themselves, then the other GitHub
+   * routes of `fetch`.
+   */
+  async route(request: Request): Promise<Response | null> {
+    const path = new URL(request.url).pathname
+    if (/\/github(?:\/checks|\/stored)?$/.test(path))
+      return handleGitHubRead(request, this.env, {
+        now: this.dependencies.now,
+        refresh: (workspace, signal) => this.refresh(workspace, signal),
+        stored: (workspace) => this.stored(workspace),
+      })
+    return /\/github\/.*$/.test(path) ? this.fetch(request) : null
   }
 
   /**

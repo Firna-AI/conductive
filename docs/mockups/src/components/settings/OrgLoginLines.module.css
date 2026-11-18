@@ -1,0 +1,13 @@
+/*
+ * The line of an org login that serves the person, under the row of an
+ * agent, in the same box as the rows, at the inset of the share setting
+ * below it. A long org name wraps.
+ */
+.line {
+  margin: 0;
+  padding: 0 8px 10px 12px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}

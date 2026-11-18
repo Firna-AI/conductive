@@ -9,9 +9,14 @@ import { memoryNavigation, NavigationContext } from '../../app/navigation'
 import { routes } from '../../app/router'
 import { ManualDelay, requestLines } from '../../app/test-kit'
 import { workspacesPath } from '../../shared/workspaces'
-import { accessibleName, byText } from '../../test-support/dom-queries'
+import {
+  accessibleName,
+  byText,
+  queryByLabel,
+} from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME, fakeUser } from '../../test-support/fixtures/core'
+import { removedWorkspace } from '../../test-support/fixtures/removed-workspace'
 import {
   senderSnapshot,
   workspaceFixtures,
@@ -22,7 +27,7 @@ import {
 } from '../../test-support/mount'
 import { Shell } from '../Shell'
 import { click, mountScreen, settle } from '../test-mount'
-import { startedApp } from '../test-render'
+import { startedApp, textOf } from '../test-render'
 import { emit, here, org, recordingSocket } from './kept-test-kit'
 import { linksTo, linkTo } from './wiring-test-kit'
 
@@ -190,5 +195,49 @@ describe('workspace chips in the chat of the app', () => {
     await timers.runAll()
     await settle()
     expect(listReads()).toBe(hidden)
+  })
+
+  test('the chip of a removed workspace keeps the archived mark and opens its read-only chat with the Removed bar', async () => {
+    holdAnimationFrames()
+    // Its 14 days ended, so the list leaves it out, but the list of the org
+    // still holds it.
+    const removed = removedWorkspace()
+    const server = new FakeApiServer()
+    const app = await startedApp(server, {
+      events: recordingSocket(server).source,
+    })
+    const navigation = memoryNavigation(here)
+    const view = mountScreen(app, <Shell />, { navigation })
+    await settle()
+    emit(server, {
+      type: 'message.accepted',
+      message: { ...message, text: `The old work: ${removed.link}` },
+    })
+    await settle()
+    const chips = linksTo(view, routes.workspace(org, removed.id))
+    const [chip] = chips
+    const names = chips.map(accessibleName)
+    if (chip) click(chip)
+    await settle()
+    const main = view.querySelector('main')
+    if (!main) throw new Error('The workspace has no main area.')
+    const text = textOf(main.innerHTML)
+    expect({
+      names,
+      at: navigation.href(),
+      bar: text.includes(
+        'Removed on 8 January It left the list. Its cloud computer is deleted, and the chat is read-only.',
+      ),
+      panel: text.includes(
+        'Removed The files and the tools went with the cloud computer.',
+      ),
+      composer: queryByLabel('Message', main) !== null,
+    }).toEqual({
+      names: [`W-${removed.number} ${removed.name}, Archived`],
+      at: routes.workspace(org, removed.id),
+      bar: true,
+      panel: true,
+      composer: false,
+    })
   })
 })

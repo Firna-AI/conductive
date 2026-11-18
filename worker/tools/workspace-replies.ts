@@ -51,6 +51,7 @@ function workspace(value: unknown): Workspace {
     orgId: text(fields.orgId),
     repositoryId: text(fields.repositoryId),
     sectionId: text(fields.sectionId),
+    parentId: nullableText(fields.parentId),
     owner: messageSender(fields.owner),
     name: nullableText(fields.name),
     branch: text(fields.branch),
@@ -72,5 +73,6 @@ export function createdWorkspace(value: unknown): AgentCreateWorkspaceResponse {
     workspace: workspace(fields.workspace),
     sessionId: text(fields.sessionId),
     sessionLink: text(fields.sessionLink),
+    ...(fields.notice !== undefined && { notice: text(fields.notice) }),
   }
 }

@@ -7,6 +7,9 @@ import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
 import { orgProviderForAccount } from '../sandbox/client'
 import type { SandboxProvider } from '../sandbox/provider'
+import type { WorkspaceTarget } from '../previews/types'
+import { terminalRestartCommand } from '../terminal/support'
+import { warnWorker } from '../warnings'
 import { requireOrgMember } from './access'
 import { continueBusy } from './continue-admission'
 import { pendingContinue, type ContinueOptions } from './continue-types'
@@ -22,8 +25,8 @@ import {
 import type { WorkspaceController } from './workspace-controller-types'
 import { readWorkspace } from './workspace-data'
 
-/** Begin shows Starting. Fail ends a restart that did not run. */
-export type RestartStep = 'begin' | 'fail'
+/** Refresh uses the sandbox identity captured before the runner restart. */
+export type RestartStep = 'begin' | 'fail' | { terminal: WorkspaceTarget }
 
 /**
  * Download the newest release with the unit of the periodic check, so that
@@ -37,11 +40,13 @@ export const UPDATE_CHECK_COMMAND =
  * Restart the runner under the lock of each start. Its pre-start step
  * applies a complete download, and that apply restarts the relay. The relay
  * restarts again here, so that a relay with no new release restarts too. A
- * sandbox without the relay unit still restarts its runner.
+ * sandbox without the relay unit still restarts its runner. Restart ttyd
+ * after the apply, without restarting its separate shell server.
  */
 export const RESTART_COMMAND = `set -eu
 sudo -n -- flock /run/conductive/bootstrap-activate.lock systemctl restart conductive-runner.service
-sudo -n -- systemctl restart conductive-preview-relay.service || echo 'conductive: the preview relay did not restart' >&2`
+sudo -n -- systemctl restart conductive-preview-relay.service || echo 'conductive: the preview relay did not restart' >&2
+${terminalRestartCommand()}`
 
 function restartFailed(): HttpError {
   return new HttpError(
@@ -58,7 +63,7 @@ export async function changeRestart(
     storage: ContinueOptions['storage']
   },
   workspaceId: string,
-  step: RestartStep,
+  step: Extract<RestartStep, string>,
   now: number,
 ): Promise<void> {
   const { controller } = workspace
@@ -86,7 +91,7 @@ async function checkForUpdates(
 
 /**
  * Restart of a running workspace by a member: the checks of a resume, then
- * Starting, the update check, and the restart of the runner and the relay.
+ * Starting, the update check, and the restart of the runner, relay, and ttyd.
  * A failed restart shows the error state, whose Try again resumes it.
  */
 export async function restartWorkspaceSoftware(input: {
@@ -121,6 +126,19 @@ export async function restartWorkspaceSoftware(input: {
   if (!restarted) {
     await input.step('fail')
     throw restartFailed()
+  }
+  try {
+    await input.step({
+      terminal: {
+        orgId,
+        workspaceId,
+        sandboxId: row.sandboxId,
+        providerAccount: row.providerAccount,
+        state: row.state,
+      },
+    })
+  } catch {
+    warnWorker({ kind: 'terminal_restart_refresh_failed' })
   }
   return { updateCheck }
 }

@@ -1,6 +1,6 @@
 ---
 title: Agent logins
-description: Connect your own account for agents powered by Claude and Codex, and choose who can use each login.
+description: Use a personal or org login for agents powered by Claude and Codex, and manage personal login sharing.
 group: Start
 order: 30
 ---
@@ -10,8 +10,10 @@ order: 30
 Sign in to Conductive with GitHub first.
 Your account needs access before you can connect an agent.
 
-Each login serves all your Conductive orgs.
-Connect at least one of these:
+Your personal logins serve all your Conductive orgs.
+An org login serves only the members and workspaces of that org.
+You need no personal login when a usable org login serves your chosen agent.
+For a personal login, choose one of these:
 
 | Agent | Supported login |
 | --- | --- |
@@ -24,6 +26,49 @@ An own endpoint is a gateway or proxy that you choose, with its address and key.
 Model use on an own endpoint bills where its owner runs it.
 
 - [Get access to Conductive](/docs/get-started#get-access)
+
+## Use an org login
+
+An admin can connect one org login for each agent.
+It can be an Anthropic API key for Claude, an OpenAI API key for Codex, or an own endpoint.
+A Claude subscription token or ChatGPT sign-in cannot be an org login.
+The admin must have permission to use the key or endpoint for the org.
+The account of that key or endpoint pays for model use, including automation runs.
+
+To connect an org login as an admin:
+
+1. Open the org's **Settings**.
+2. Open **Agents**, after **Cloud computer**.
+3. Find Claude or Codex.
+4. Select **Connect**.
+5. Choose **API key** or **Own endpoint**.
+6. Enter the key and, for an endpoint, its address.
+7. Select **Connect**.
+
+Other members see this tab read-only.
+It shows the login's kind, the host of an endpoint, and **Use for every member**.
+Nobody sees the saved key or full endpoint address.
+The login stays when the admin who connected it leaves the org.
+
+Your usable personal login comes first for a new session.
+Without one, the new session uses the org login when available.
+**Use for every member** starts off.
+An admin can turn it on to give the org login priority for new sessions.
+If the org login cannot be used, your usable personal login serves instead.
+Older sessions keep their login when the switch changes.
+
+Automation runs follow the same rule for their owner.
+
+The message box names an org login, such as **Acme's login**.
+**Get started** shows **Ready** when the org login serves you.
+You can start without connecting your own login.
+You can connect a personal login later in **Account**.
+
+An admin uses **Replace** or **Remove** on the org's **Agents** tab to change or remove its login.
+The current login serves until its replacement saves.
+**Replace** keeps **Use for every member**, also when the login kind changes.
+The org login has no personal share switch.
+Each member can send messages in sessions on it.
 
 ## Connect Claude
 
@@ -91,7 +136,7 @@ The form has a link to create a key with OpenAI.
 The row shows **Connected** after either connection succeeds.
 
 Choose a model for the connected agent when you send a message.
-The message box asks you to connect the agent if its login is missing.
+The message box asks you to connect only when no usable personal or org login serves the agent.
 
 ## Connect an own endpoint
 
@@ -172,13 +217,17 @@ A failed read keeps the last successful list.
 Before the first successful read, your pickers show all app models for the agent.
 They also show all app models for that agent when the list names none of them.
 An existing session keeps its current model.
-Other members' pickers still show all app models.
+Other members' pickers in sessions on your personal endpoint still show all app models.
+In a session on an org endpoint, every member's picker follows that endpoint's model list.
+This includes new workspaces, sessions, and automations that use the org login.
+Only an admin sees the org endpoint's model list and **Refresh** on the org's **Agents** tab.
 Your choices remain the models that Conductive offers.
 
 ## Choose who can use your login
 
-Each session uses the login of the member who started it.
-Other members can spend that login when you let them use it.
+Each session keeps its starter's personal login or the org login.
+This share setting applies only to your personal login.
+Other members can spend it in sessions that you start on it when you allow them.
 
 In **Account**, find **Let other members use this login** under the connected agent.
 The switch saves each change at once.
@@ -186,7 +235,7 @@ The switch saves each change at once.
 | Setting | What another member's message does in your session |
 | --- | --- |
 | On | Uses your login and its connected account or endpoint |
-| Off | Starts a new session on that member's own login |
+| Off | Starts a new session on that member's personal or org login under the rule above |
 
 Sharing starts off for a new Claude subscription token or ChatGPT sign-in.
 It starts on for a new API key or own endpoint login.
@@ -195,7 +244,7 @@ Only its owner may use a ChatGPT plan under OpenAI's terms.
 An endpoint can use personal subscriptions that other members then spend.
 Turn sharing off if their terms do not allow that use.
 
-A new session on another member's login has no copy of your conversation.
+A new session on a personal or org login has no copy of your conversation.
 The earlier session keeps its history.
 
 Share a login only when the provider's terms allow that use.
@@ -220,6 +269,8 @@ Removing it from Conductive does not revoke a copy held elsewhere.
 
 **Connected** confirms that Conductive saved the login.
 The first agent request can still report an authentication error.
+For an org login, ask an admin to check the login on the org's **Agents** tab.
+The steps below manage your personal login in **Account**.
 
 Conductive shows **Signed out** in place of **Connected** when OpenAI no longer accepts your ChatGPT sign-in.
 This also applies after Conductive renewed it.
@@ -251,11 +302,11 @@ Conductive stores agent logins encrypted.
 It keeps these logins outside cloud computers.
 
 Model requests and answers pass through Conductive on Cloudflare.
-Conductive adds the session starter's login before sending each request to Anthropic, OpenAI, or the chosen endpoint.
+Conductive adds the session's personal or org login before sending each request to Anthropic, OpenAI, or the chosen endpoint.
 Each turn gets a temporary credential called a turn token.
 Code and members with terminal access can read or copy that credential.
 
-They can use it only through Conductive on the session starter's login while the turn runs.
+They can use it only through Conductive on the session's login while the turn runs.
 A copied token also works from outside the computer during that turn.
 A copied token cannot start a new model request after the turn ends.
 Your ChatGPT sign-in never enters a cloud computer.

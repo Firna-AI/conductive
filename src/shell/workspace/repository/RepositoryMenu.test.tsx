@@ -151,6 +151,8 @@ describe('the repository menu in the header', () => {
         ...view.view,
         activeTab: view.view.activeTab,
         temporaryTab: null,
+        previewTabs: [],
+        activePreview: null,
       },
     })
   })

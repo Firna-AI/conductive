@@ -145,7 +145,8 @@ describe('Archive from a workspace row', () => {
         inCheckout: false,
         history: [open],
         header: 'Checkout address autocomplete',
-        toast: 'Apple Pay button is archived.Restore',
+        toast:
+          'Apple Pay button is archived.It leaves the list on 29 January.Restore',
       },
     })
   })
@@ -218,7 +219,7 @@ describe('Archive from a workspace row', () => {
     })
   })
 
-  test('the toast of an Archive offers Restore only while the workspace can come back', async () => {
+  test('the toast of an Archive gives the day when the workspace leaves the list, and offers Restore only while the workspace can come back', async () => {
     const server = new FakeApiServer()
     // A failed first start leaves no cloud computer to keep, and a repeated
     // Archive can give a Restore that already ended.
@@ -241,8 +242,8 @@ describe('Archive from a workspace row', () => {
       byToast('Apple Pay button is archived.').textContent,
       byToast('Pricing page copy is archived.').textContent,
     ]).toEqual([
-      'Apple Pay button is archived.',
-      'Pricing page copy is archived.',
+      'Apple Pay button is archived.It leaves the list on 29 January.',
+      'Pricing page copy is archived.It leaves the list on 29 January.',
     ])
   })
 })

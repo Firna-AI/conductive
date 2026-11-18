@@ -49,16 +49,15 @@ export async function createAutomation(
   org: OrgModel,
   request: CreateAutomationRequest,
 ): Promise<Automation> {
-  const automation = await org.services.api.send(
+  const reply = await org.services.api.send(
     'POST',
     automationsPath(org.orgId),
     request,
     readAutomationResponse,
   )
+  const { automation } = reply
   // The page of the new automation shows the answer at once, without a read.
-  await automationModel(org, automation.id).resource.save(
-    async () => automation,
-  )
+  await automationModel(org, automation.id).resource.save(async () => reply)
   org.resources.automations.confirm(
     automationPut(automation),
     `automation ${automation.id}`,
@@ -73,7 +72,7 @@ export async function updateAutomation(
   request: UpdateAutomationRequest,
 ): Promise<Automation> {
   const model = automationModel(org, automationId)
-  const automation = await model.resource.save(() =>
+  const { automation } = await model.resource.save(() =>
     model.client.send(
       'PATCH',
       automationPath(org.orgId, automationId),

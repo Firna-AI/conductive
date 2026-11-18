@@ -1,16 +1,16 @@
 # The actions of the bar
 
 This guide belongs to [the GitHub banner UI](README.md). It gives the one
-action state of the pull request bar: the member's access, Merge, the fixed
-prompts of the agent, Continue, and their keys. [GitHub banner](../../docs/protocol/github-banner.md)
+action state of the pull request bar: the member's access, Merge, Ready
+for review, the fixed prompts of the agent, Continue, and their keys. [GitHub banner](../../docs/protocol/github-banner.md)
 and [Continue](../../docs/protocol/continue.md) state the requirements, and
 the mockups under `app/banner` draw them.
 
 ## One action state
 
 The desktop bar and the top of the phone Checks tab share one `BarActions`
-store, so they make one read of the access and run one merge or Continue
-at a time. `useBarActions` in [useBarControls.ts](useBarControls.ts) makes
+store, so they make one read of the access and run one merge, Ready for
+review, or Continue at a time. `useBarActions` in [useBarControls.ts](useBarControls.ts) makes
 it for each workspace through `useWorkspaceStore`, from a stable `ports`
 function. A new workspace, member, or branch gives a new `ports` function,
 and so a new store. The stop of the old store aborts its reads and its run,
@@ -86,6 +86,23 @@ checks in GitHub's order, and the reviewers.
 - A line shows until the bar shows a newer GitHub state, from a read or an
   event, or until the next press.
 
+## Ready for review
+
+- A draft shows Ready for review only with write access that the
+  capability route read, as Merge does. `barModel` gives it, and local
+  work still comes first.
+- One press sends the number of the pull request that the bar shows to the
+  `ready` route. The Worker marks it ready with the member's token, then
+  reads the GitHub state again and pushes it to every tab.
+- Marking ready shows until the bar shows a newer GitHub state, as after a
+  merge. The store also reads the GitHub state once.
+- `readyOutcome` in [barRuns.ts](barRuns.ts) turns a refusal into the line
+  under the bar of the draft. A missing right, another pull request, and
+  another refusal of GitHub take the words of the mockups. Another refusal
+  adds Open on GitHub. A missing right hides the button at once, and reads
+  the access again. Another failure keeps the app's safe words, with Open
+  on GitHub.
+
 ## Agent actions
 
 - A press sends the prompt through `sendPrompt` of the kept chat, to the
@@ -95,6 +112,11 @@ checks in GitHub's order, and the reviewers.
 - A prompt that did not go out shows the chat of its session, where the
   composer names the cause: a missing login, or a failed send. Without an
   open session, the chat shows. A sent prompt keeps the view.
+- Merge latest of the command palette sends its prompt through the same
+  `sendPrompt` of the store. `offersAgentActions` of
+  [barView.ts](barView.ts) gives it the access rule of the agent actions.
+  `useMergeLatest` of the workspace screen builds it, as
+  [the key code of the screen](../shell/workspace/key-code.md) says.
 
 ## Continue
 
@@ -136,7 +158,7 @@ says.
 - `barActions.ts`: `BarActions`, the store of the access, the runs, the
   outcomes, and the question.
 - `barRuns.ts`: the waits of a pending job and of the stream, and the
-  outcomes of a refused merge or Continue.
+  outcomes of a refused merge, Ready for review, or Continue.
 - `barView.ts`: `barViewOf`, `localWorkOf`, and `BarControls`.
 - `barPrompts.ts`: `promptOf` and the checks that block the merge.
 - `continueActions.ts`: the Continue client and its reply reader.
@@ -147,3 +169,4 @@ says.
   and `buttonKey`, the key that the tooltip of a button names.
 - `barActions.test.ts`, `barView.test.ts`, and `barPrompts.test.ts`: the
   runs over the fake API with a manual timer, the rules, and the prompts.
+- `barReady.test.ts`: the rules and the run of Ready for review.

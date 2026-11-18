@@ -16,8 +16,9 @@ export type SandboxProblem = 'stopped' | 'error' | 'refused' | 'archived'
  * stopped cloud computer, and every member may restore the workspace until
  * the last day of Restore. `refused`: the app keeps it, but a suspended org
  * refuses Restore, so the notice promises no files. `ended`: the last day
- * of Restore passed. The app can still keep the cloud computer while its
- * delete tries again, so the notice says nothing of the cloud computer.
+ * of Restore passed, so the workspace is removed too. The app can still
+ * keep the cloud computer while its delete tries again, so the notice says
+ * that the cloud computer is being deleted.
  */
 export type ArchiveRestore = 'available' | 'refused' | 'ended'
 
@@ -29,10 +30,13 @@ export type ArchiveRestore = 'available' | 'refused' | 'ended'
  * the failed first start of a new workspace. The workspace keeps its chat
  * and its queued messages, and it has no files yet. An archived workspace
  * without `restore` has no cloud computer left, so nothing comes back.
+ * `removed` marks an archived workspace whose 14 days ended: it left the
+ * list, and only a link opens it. Until then, the notice gives the day
+ * when it leaves the list.
  */
 export type SandboxNoticeState =
   | { problem: 'stopped' }
-  | { problem: 'archived'; restore?: ArchiveRestore }
+  | { problem: 'archived'; restore?: ArchiveRestore; removed?: boolean }
   | { problem: 'error'; message?: string | null; firstStart?: boolean }
   | { problem: 'refused'; reason: string }
 

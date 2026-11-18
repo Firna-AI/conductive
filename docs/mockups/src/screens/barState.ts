@@ -17,14 +17,16 @@ export const barStateProperties = {
   localWork: { enum: localWorkKinds },
   /**
    * The GitHub access of the viewer to the repository: write or more, read
-   * only, or unknown when the Worker could not read it. Merge needs write,
-   * and the agent actions show unless the access is read only.
+   * only, or unknown when the Worker could not read it. Merge and Ready
+   * for review need write, and the agent actions show unless the access is
+   * read only.
    */
   access: { enum: gitHubAccesses },
   /**
    * The action of the app that the bar shows: a merge that runs, a merge
    * that GitHub refused for a moved head, a missing right, or another
-   * reason, or a Continue that runs or that stopped.
+   * reason, Ready for review while it runs, or a Continue that runs or
+   * that stopped.
    */
   appAction: { enum: appActions },
   /**

@@ -10,6 +10,7 @@ import type {
 } from '../native-sockets'
 import { CONNECTION_CHECK_MS } from '../security/connection-access'
 import { AuthenticatedRunner } from './authenticated-runner'
+import { warnRunnerConnection } from './runner-diagnostics'
 import {
   RunnerConnectionStore,
   type StoredRunnerConnection,
@@ -33,6 +34,7 @@ export class RunnerConnections {
   private record: StoredRunnerConnection | null = null
   private retained = false
   private readonly peers = new WeakMap<WebSocket, RunnerPeer>()
+  private readonly connected = new WeakSet<ActiveRunner>()
   private readonly store: ChatStore
   private readonly dependencies: ChatDependencies
   private readonly publish: (events: readonly WorkspaceEventEnvelope[]) => void
@@ -90,6 +92,7 @@ export class RunnerConnections {
         generation: 1,
         workspace,
         streamId: null,
+        processStartId: null,
         protocolVersion: null,
         loginKinds: undefined,
         ready: false,
@@ -123,6 +126,7 @@ export class RunnerConnections {
       id: record.id,
       workspace: record.workspace,
       streamId: record.streamId,
+      processStartId: record.processStartId,
       protocolVersion,
       loginKinds: record.loginKinds,
       repositoryFolder: record.repositoryFolder,
@@ -138,6 +142,8 @@ export class RunnerConnections {
         },
         () => {
           if (this.current !== active) return
+          this.reportConnected(active)
+          warnRunnerConnection('runner_disconnected', active)
           this.current = null
           this.record = null
           this.dependencies.runnerDetached(active.id)
@@ -163,7 +169,14 @@ export class RunnerConnections {
       ),
     }
     this.current = active
+    if (record.streamId !== null) this.connected.add(active)
     if (active.ready) this.attachFiles(active)
+  }
+
+  reportConnected(active: ActiveRunner): void {
+    if (this.connected.has(active)) return
+    this.connected.add(active)
+    warnRunnerConnection('runner_connected', active)
   }
 
   private async restore(
@@ -185,6 +198,7 @@ export class RunnerConnections {
       (protocolVersion !== null || record.streamId !== null)
     ) {
       await this.saved?.save(null, record.generation)
+      warnRunnerConnection('runner_disconnected', record)
       if (protocolVersion === null || protocolVersion < RUNNER_PROTOCOL_VERSION)
         await this.store.run(() =>
           failUnsupportedRunner(
@@ -218,6 +232,7 @@ export class RunnerConnections {
     const record = this.record
     if (this.current !== active || !record) return
     record.streamId = active.streamId
+    record.processStartId = active.processStartId
     record.protocolVersion = active.protocolVersion
     record.loginKinds = active.loginKinds
     record.repositoryFolder = active.repositoryFolder

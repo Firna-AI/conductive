@@ -40,6 +40,7 @@ fn configuration() -> Configuration {
                 PathBuf::from("/home/user/code/storefront"),
             ),
         ]),
+        workspace_context: None,
         state_path: "/state".into(),
     }
 }

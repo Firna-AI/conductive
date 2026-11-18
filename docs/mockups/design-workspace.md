@@ -25,11 +25,11 @@ computer.
   shown tab in view, and fades each end that clips tabs. A right click on a
   tab opens its menu at the pointer: Rename session, a line, Copy link,
   Copy concise transcript, and Copy full transcript, a line, Move left and
-  Move right, a line, then Close tabs to the right, from decisions 188 and
-  215. Copy link copies the link of the session. A kept file or diff tab
-  has Copy path, a line, the moves, a line, and the close, from decision
-  3 B of the file row menu change. Copy path copies the path of the file,
-  as in the menu of its row. A tab whose label can hide a secret value
+  Move right, a line, then Close other tabs and Close tabs to the right,
+  from decisions 188 and 215. Copy link copies the link of the session. A
+  kept file or diff tab has Copy path, a line, the moves, a line, and the
+  two closes, from decision 3 B of the file row menu change. Copy path
+  copies the path of the file, as in the menu of its row. A tab whose label can hide a secret value
   leaves it out. In a read-only workspace, the menu of a session tab holds
   only the three copy items, and the menu of a file or diff tab only Copy
   path. A copy keeps the shown tab, and a toast gives its result, as
@@ -115,10 +115,13 @@ computer.
   cloud computer: stopped, error, archived, and refused. A refused start
   shows "The sandbox can't start" with the words of its cause and no
   action. The notice takes any refusal reason. An archived workspace
-  offers Restore until its last day, and the bar gives that day. After
-  it, the bar gives the day when Restore ended while a failed delete of
-  the cloud computer tries again, and it says that the cloud computer is
-  deleted only after the delete. `sandboxNoticeState.ts` beside it owns
+  offers Restore until its last day, and the bar gives that day and says
+  that the workspace leaves the list then. A bar without Restore gives
+  that day too. After it, the workspace is removed: the bar says "Removed
+  on" and the day, that the workspace left the list, and that the chat is
+  read-only. It says that the cloud computer is being deleted while a
+  failed delete tries again, and that it is deleted only after the
+  delete. Its panels say Removed. `sandboxNoticeState.ts` beside it owns
   the types of the bar and the panels, which the app imports too.
   - For a suspended workspace owner, the history, the tabs, the header, and
     the owner picker stay, as `app/shell/refused` and its `reassign`

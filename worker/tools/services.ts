@@ -25,6 +25,7 @@ import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
 import type { MessageSender } from '../../src/shared/generated/MessageSender'
 
 import type { User } from '../../src/shared/api'
+import type { WorkspaceParentTarget } from '../app-api/workspace-parent-change-data'
 
 export type ToolSectionWrite = { orgId: string; senderUserId: string } & (
   | ({ kind: 'create' } & AgentCreateSectionRequest)
@@ -41,7 +42,8 @@ export interface ToolWorkspaceCreation {
   orgId: string
   owner: MessageSender
   repositoryId: string
-  sectionId: string
+  sectionId?: string
+  parentId?: string
   choice: AgentChoice
   firstMessage: string
   firstMessageId: string
@@ -96,7 +98,10 @@ export type ToolWorkspaceWrite = {
   senderUserId: string
 } & (
   | ({ kind: 'rename' } & AgentRenameWorkspaceRequest)
-  | ({ kind: 'move' } & AgentMoveWorkspaceRequest)
+  | ({
+      kind: 'move'
+      target?: WorkspaceParentTarget
+    } & AgentMoveWorkspaceRequest)
   | { kind: 'archive' }
 )
 
