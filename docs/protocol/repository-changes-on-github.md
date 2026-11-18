@@ -31,13 +31,21 @@ folders that this doc uses. The terms are those of the
 - Reason: a webhook can arrive late, or again after a failure. Its values
   can then be older than a later change. A record of each saved webhook was
   rejected, because it does not help a webhook that arrives late.
+- When two webhooks of one repository run at the same time, the saved
+  values still end equal to the values on GitHub. A webhook saves only when
+  no other save came after its read, and it reads GitHub again after its
+  save.
+- Reason: two reads can return in the wrong order. A lock across Worker
+  instances was rejected, because the check and the second read give the
+  same result in one place.
 - Other repository events, and an edit that keeps the default branch, change
   nothing.
 - The Worker accepts a repository webhook only with a valid GitHub
   signature, as for every GitHub webhook.
-- When the read from GitHub fails, the Worker answers GitHub with an error
-  and saves nothing. GitHub does not send the webhook again by itself. An
-  owner of the GitHub App can send it again from the settings of the app.
+- When a read from GitHub fails, or the values do not settle after three
+  tries, the Worker answers GitHub with an error. GitHub does not send the
+  webhook again by itself. An owner of the GitHub App can send it again
+  from the settings of the app.
 
 ## The org image
 
@@ -52,8 +60,12 @@ folders that this doc uses. The terms are those of the
 - The build starts at once after the change. While a job runs, it starts
   when that job ends. When it cannot start, the next automatic refresh,
   daily or after a push, starts the build in place of the refresh.
-- Reason: one check of the saved values then covers a change during a job,
-  a start that failed, and a webhook that did not arrive.
+- Reason: one check of the saved values then covers a change during a job
+  and a start that failed.
+- The check compares the saved values with the org image. It does not read
+  GitHub. So a change whose webhook never arrives keeps the old values,
+  on screens and in the org image, until a later change of the repository
+  or until the webhook is sent again.
 - A start only at the webhook was rejected. Reason: a start that failed, or
   a change during a job, then needed a manual build.
 - A refresh that finds the repository by its ID, not by its name, was

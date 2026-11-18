@@ -3,6 +3,7 @@ import { warnWorker } from '../warnings'
 import { installedRepository } from './composition-data'
 import { completeDelivery, isProcessed, recordDelivery } from './data'
 import type { GitHubRepositoryValues } from './repository-read'
+import { syncRepositoryValues } from './repository-sync'
 
 /**
  * A `repository` webhook that changes the name or the default branch of a
@@ -63,29 +64,6 @@ export function repositoryChange(
 }
 
 /**
- * Saves the values in each org that connected the repository through the
- * same installation.
- */
-async function saveRepositoryValues(
-  db: D1Database,
-  change: RepositoryChange,
-  values: GitHubRepositoryValues,
-): Promise<void> {
-  await db
-    .prepare(
-      `UPDATE repositories SET full_name = ?, default_branch = ?
-       WHERE github_repository_id = ? AND installation_id = ?`,
-    )
-    .bind(
-      values.fullName,
-      values.defaultBranch,
-      change.repositoryId,
-      change.installationId,
-    )
-    .run()
-}
-
-/**
  * A failed read leaves the delivery retryable, and a retry reads GitHub
  * again. A failed wake only warns, because the image coordinator compares
  * the saved values with its image at each later alarm.
@@ -103,7 +81,7 @@ export async function handleRepositoryChange(
     dependencies &&
     (await installedRepository(db, change.repositoryId, change.installationId))
   ) {
-    await saveRepositoryValues(db, change, await dependencies.read(change))
+    await syncRepositoryValues(db, change, () => dependencies.read(change))
     try {
       await dependencies.changed(change)
     } catch {

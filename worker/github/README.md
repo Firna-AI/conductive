@@ -22,7 +22,8 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
   It verifies `X-Hub-Signature-256` against the raw body before parsing or D1 access.
   It authenticates machines with `GITHUB_WEBHOOK_SECRET`, without the app gate.
   [handleRepositoryChange](repository-change.ts) takes a `repository` event that renames a repository or changes its default branch.
-  It reads the current values from GitHub through [readGitHubRepository](repository-read.ts), with a metadata token that it revokes, and saves them.
+  It reads the current values from GitHub through [readGitHubRepository](repository-read.ts), with a metadata token that it revokes.
+  [syncRepositoryValues](repository-sync.ts) saves them only while no other save came after the read, then reads GitHub again to confirm them.
   It then calls `repositoryChange.changed`, which in production runs [wakeImagesForRepositoryChange](../lifecycle/repository-change-builds.ts).
   A failed read leaves the delivery retryable. A failed wake only warns, because the image coordinator checks the saved values at each alarm.
   [Repository changes on GitHub](../../docs/protocol/repository-changes-on-github.md) states the requirements.

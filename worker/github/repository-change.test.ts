@@ -95,7 +95,8 @@ it('keeps the newer value when an older delivery arrives again after a failed re
   )
   expect(await saved()).toEqual(['Codertocat/Current@main'])
   await harness.webhook('repository', renamed(), 'older')
-  expect(reads).toHaveLength(2)
+  // Each saving delivery reads once, then once more to confirm the values.
+  expect(reads).toHaveLength(4)
 })
 
 it('ignores another installation and another edit, and completes after a failed wake', async () => {
@@ -143,4 +144,46 @@ it('refuses a change event without a repository or an installation ID', async ()
     expect(response.status, JSON.stringify(payload)).toBe(400)
   }
   expect(reads).toEqual([])
+})
+
+it('reads again when another save comes between its read and its save', async () => {
+  await harness.seed()
+  const answers: (() => Promise<GitHubRepositoryValues>)[] = [
+    async () => {
+      await harness.env.DB.prepare(
+        "UPDATE repositories SET full_name = 'Codertocat/Newest'",
+      ).run()
+      return { fullName: 'Codertocat/Intermediate', defaultBranch: 'main' }
+    },
+    async () => ({ fullName: 'Codertocat/Newest', defaultBranch: 'main' }),
+    async () => ({ fullName: 'Codertocat/Newest', defaultBranch: 'main' }),
+  ]
+  if (harness.repositoryChange)
+    harness.repositoryChange.read = async () => {
+      const answer = answers.shift()
+      if (!answer) throw new Error('Unexpected read')
+      return answer()
+    }
+  expect((await harness.webhook('repository', renamed())).status).toBe(204)
+  expect(await saved()).toEqual(['Codertocat/Newest@main'])
+  expect(answers).toEqual([])
+})
+
+it('ends with the GitHub value when the repository is renamed back during a read', async () => {
+  await harness.seed()
+  const answers: GitHubRepositoryValues[] = [
+    { fullName: 'Codertocat/Renamed', defaultBranch: 'main' },
+    { fullName: 'Codertocat/Hello-World', defaultBranch: 'main' },
+    { fullName: 'Codertocat/Hello-World', defaultBranch: 'main' },
+    { fullName: 'Codertocat/Hello-World', defaultBranch: 'main' },
+  ]
+  if (harness.repositoryChange)
+    harness.repositoryChange.read = async () => {
+      const answer = answers.shift()
+      if (!answer) throw new Error('Unexpected read')
+      return answer
+    }
+  expect((await harness.webhook('repository', renamed())).status).toBe(204)
+  expect(await saved()).toEqual(['Codertocat/Hello-World@main'])
+  expect(answers).toEqual([])
 })

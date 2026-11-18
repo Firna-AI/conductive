@@ -232,8 +232,9 @@ A daily refresh sets the saved daily deadline 24 hours after its start.
 published image holds a repository name or default branch that differs from
 the saved one, and the newest build succeeded. `readImageSchedule` then makes
 the next alarm due at once, and `runImageAlarm` and `refreshImagesForPush`
-start a build in place of a refresh. So a build follows each job, failed
-start, or missed webhook that leaves old values in the image.
+start a build in place of a refresh. So a build follows each job or failed
+start that leaves old values in the image. The check reads no GitHub data,
+so it cannot find a change whose webhook never saved it.
 `wakeImagesForRepositoryChange` in
 [`repository-change-builds.ts`](repository-change-builds.ts) wakes the
 coordinator of each such org after the GitHub webhook receiver saves a
