@@ -28,20 +28,23 @@ export function currentWorkerVersion(): string | null {
   return workerVersion
 }
 
-/** Closes each open step of the job, except the step that stays open. */
+/** Closes each open step of the job, except the steps that stay open. */
 export function closeJobStepsStatement(
   db: D1Database,
   jobId: string,
   endedAt: number,
   outcome: JobOutcome,
-  except: string | null = null,
+  keep: readonly string[] = [],
 ): D1PreparedStatement {
+  const kept = keep.length
+    ? ` AND step NOT IN (${keep.map(() => '?').join(', ')})`
+    : ''
   return db
     .prepare(
       `UPDATE job_steps SET ended_at = MAX(started_at, ?), outcome = ?
-       WHERE job_id = ? AND ended_at IS NULL AND step != ?`,
+       WHERE job_id = ? AND ended_at IS NULL${kept}`,
     )
-    .bind(endedAt, outcome, jobId, except ?? '')
+    .bind(endedAt, outcome, jobId, ...keep)
 }
 
 /** Opens a step of a build or refresh. The build row gives its kind and org. */
@@ -61,16 +64,16 @@ export function openBuildStepStatement(
     .bind(step, startedAt, currentWorkerVersion(), buildId)
 }
 
-/** Closes the open steps of a build and opens its next step, in that order. */
+/** Closes the other open steps of a build and opens the given steps. */
 export function buildStepStatements(
   db: D1Database,
   buildId: string,
-  step: string,
+  steps: readonly string[],
   now: number,
 ): D1PreparedStatement[] {
   return [
-    closeJobStepsStatement(db, buildId, now, 'done', step),
-    openBuildStepStatement(db, buildId, step, now),
+    closeJobStepsStatement(db, buildId, now, 'done', steps),
+    ...steps.map((step) => openBuildStepStatement(db, buildId, step, now)),
   ]
 }
 

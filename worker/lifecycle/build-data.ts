@@ -10,6 +10,7 @@ import type { CommandStatus } from '../sandbox/provider'
 import { readImageSoftware, type ImageSoftwareArtifact } from './image-software'
 import { readBuildSnapshot } from './build-log-reader'
 import { buildLogStatements } from './build-log-statements'
+import { failedBuildStepsStatement } from './build-step-data'
 import { decodeBuildJob, type StoredBuildJob } from './build-job-codec'
 import type { ProviderRetryState } from './provider-retry'
 import type { SavedScript } from './saved-script'
@@ -175,8 +176,9 @@ export async function writeBuildLog(
   buildId: string,
   text: string,
   now: number,
+  records: readonly D1PreparedStatement[] = [],
 ): Promise<void> {
-  await db.batch(buildLogStatements(db, buildId, text, now))
+  await db.batch([...buildLogStatements(db, buildId, text, now), ...records])
 }
 
 export async function failBuild(
@@ -192,6 +194,7 @@ export async function failBuild(
       )
       .bind(now, message, buildId),
     ...buildLogStatements(db, buildId, message, now),
+    failedBuildStepsStatement(db, buildId, now),
   ])
 }
 

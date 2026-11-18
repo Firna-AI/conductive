@@ -126,6 +126,8 @@ export async function createHarness(
       await native.reset()
       await db.batch(
         [
+          'job_runs',
+          'job_steps',
           'chat_attachments',
           'github_webhook_deliveries',
           'github_connections',

@@ -36,9 +36,9 @@ it('opens each build step and closes the step before it, also on a replay', asyn
     kind: 'refresh',
     software: SOFTWARE,
   })
-  await db.batch(buildStepStatements(db, id, 'phase:sources', TEST_TIME))
-  await db.batch(buildStepStatements(db, id, 'phase:software', TEST_TIME + 5))
-  await db.batch(buildStepStatements(db, id, 'phase:software', TEST_TIME + 9))
+  await db.batch(buildStepStatements(db, id, ['phase:sources'], TEST_TIME))
+  await db.batch(buildStepStatements(db, id, ['phase:software'], TEST_TIME + 5))
+  await db.batch(buildStepStatements(db, id, ['phase:software'], TEST_TIME + 9))
   await db.batch([closeJobStepsStatement(db, id, TEST_TIME + 12, 'failed')])
 
   expect(await steps(db, id)).toEqual([
@@ -62,7 +62,9 @@ it('opens each build step and closes the step before it, also on a replay', asyn
 it('writes no build step for a missing build and never fails the batch', async () => {
   const { runtime } = await fixtureForTest()
   const db = runtime.env.DB
-  await db.batch(buildStepStatements(db, 'missing', 'phase:sources', TEST_TIME))
+  await db.batch(
+    buildStepStatements(db, 'missing', ['phase:sources'], TEST_TIME),
+  )
   expect(await steps(db, 'missing')).toEqual([])
 })
 

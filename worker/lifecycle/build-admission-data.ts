@@ -1,3 +1,4 @@
+import { publishedBuildStepsStatement } from './build-step-data'
 import type { ImageBuild } from '../../src/shared/org-settings'
 import { RUNNER_PROTOCOL_VERSION } from '../../src/shared/runner'
 import { activeOrgIdPredicate } from '../data/org-access'
@@ -162,6 +163,7 @@ export async function publishBuild(
         job.orgId,
         job.buildId,
       ),
+    publishedBuildStepsStatement(db, job.buildId, now),
   ])
   await requireActiveOrg(db, job.orgId)
 }

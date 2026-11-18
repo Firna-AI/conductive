@@ -111,10 +111,10 @@ Depends on: none
 
 Depends on: 1
 
-- [ ] Write the step statements in each build phase change, the failure,
+- [x] Write the step statements in each build phase change, the failure,
       the publish, and the copy start that ends `computer:boot`.
-- [ ] Test a build, a refresh, a failed build, and a replayed phase change.
-- [ ] Update `worker/lifecycle/image-builds.md`.
+- [x] Test a build, a refresh, a failed build, and a replayed phase change.
+- [x] Update `worker/lifecycle/image-builds.md`.
 
 ## Milestone 3: Start steps and runs
 
