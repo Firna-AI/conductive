@@ -178,13 +178,13 @@ Depends on: 1
 
 Depends on: 2
 
-- [ ] Add the screenshot line to `crates/cnd-runner/src/engine/instructions.rs`,
+- [x] Add the screenshot line to `crates/cnd-runner/src/engine/instructions.rs`,
       after the line on the computer tools.
-- [ ] Update the tests of the instructions text.
-- [ ] Update the instructions test of the SDK helper in
+- [x] Update the tests of the instructions text.
+- [x] Update the instructions test of the SDK helper in
       `runner/sdk-helper/src/providers/instructions.test.ts` when it holds
-      the text.
-- [ ] Run the Rust checks of `AGENTS.md` and the runner tests.
+      the text. It holds placeholder text, so it needed no change.
+- [x] Run the Rust checks of `AGENTS.md` and the runner tests.
 
 ## Milestone 4: Picture reads for the chat
 
