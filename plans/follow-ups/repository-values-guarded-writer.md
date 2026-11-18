@@ -24,9 +24,9 @@
   - **A.** Let Continue save the branch only when the saved branch still equals the value that it held before the verify read. Leave the chooser as it is, because its window is one request. Effort: Small.
   - **B.** Export one guarded writer from `worker/github/repository-sync.ts`, with the compare and the confirming read. Route the webhook, Continue, and the chooser through it. Add a test for each writer with a save between its read and its save. Effort: Medium.
   - **C.** Add a revision column to each repository row, and let every writer save against the revision that it read. This needs a migration that the previous Worker tolerates. Effort: Medium.
-- **Left out:** A daily check of every repository against GitHub covers the result but not the cause, and it is the subject of `plans/follow-ups/missed-repository-webhook.md`.
+- **Left out:** A daily check of every repository against GitHub covers the result but not the cause. The user rejected it on 18 November 2026 for missed webhooks, because its GitHub traffic grows with the number of saved repositories.
 - **Wider fix:** B. One writer stops the class for every present and later writer of the two columns.
 - **Previous examples:** `plans/follow-ups/org-saves-restore-older-fields.md` records older replies that replace newer org values.
-- **Related:** `plans/follow-ups/missed-repository-webhook.md` adds one more writer if its option C or D is chosen. That writer must use the guard of B.
+- **Related:** `worker/github/repository-values-check.ts` already saves through `syncRepositoryValues` when another webhook names other values. B keeps it on the same writer.
 - **Recommendation:** B. It keeps one rule for every writer, with no migration.
 - **Action:** fix after merge, apply B, because it changes code on `origin/main` outside this branch and the windows are rare.

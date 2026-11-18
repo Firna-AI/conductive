@@ -13,6 +13,7 @@ import {
   repositoryChange,
   type RepositoryChangeDependencies,
 } from './repository-change'
+import { checkRepositoryValues } from './repository-values-check'
 import { webhookRoute, type GitHubPullRequestEvent } from './webhook-routing'
 
 export const GITHUB_WEBHOOK_BODY_BYTES = 26 * 1024 * 1024
@@ -138,6 +139,15 @@ export async function handleGitHubWebhook(
     if (route === null || (await isProcessed(env.DB, deliveryId)))
       return new Response(null, { status: 204 })
     await recordDelivery(env.DB, deliveryId, dependencies.now())
+    await checkRepositoryValues(
+      env.DB,
+      {
+        repositoryId: route.repositoryId,
+        installationId: route.installationId,
+      },
+      value,
+      dependencies.repositoryChange,
+    )
     let pullRequestFailure: { error: unknown } | undefined
     try {
       if (route.pullRequest)

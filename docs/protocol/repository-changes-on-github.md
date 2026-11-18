@@ -47,6 +47,26 @@ folders that this doc uses. The terms are those of the
   webhook again by itself. An owner of the GitHub App can send it again
   from the settings of the app.
 
+## A missed repository webhook
+
+- Push, pull request, check, and status webhooks also carry the name and
+  the default branch of their repository. When these differ from the saved
+  values, the Worker reads GitHub, saves the current values, and checks the
+  org images, as for a repository webhook. The user chose this on
+  18 November 2026.
+- Reason: a repository webhook can fail, or never arrive. The next webhook
+  of the repository then repairs the saved values, and webhooks stay the
+  only trigger.
+- When that read or save fails, the Worker only logs a warning. The
+  original event still completes, and the next webhook checks again.
+- A repository with no later webhook keeps the old values until a later
+  change, or until the repository webhook is sent again.
+- These ways were rejected:
+  - A job that asks GitHub to send failed webhooks again. It cannot
+    recover a webhook that GitHub never sent.
+  - A daily read of every saved repository from GitHub. Its GitHub traffic
+    grows with the number of saved repositories.
+
 ## The org image
 
 - A refresh copies each repository with the name and the default branch
@@ -63,9 +83,9 @@ folders that this doc uses. The terms are those of the
 - Reason: one check of the saved values then covers a change during a job
   and a start that failed.
 - The check compares the saved values with the org image. It does not read
-  GitHub. So a change whose webhook never arrives keeps the old values,
-  on screens and in the org image, until a later change of the repository
-  or until the webhook is sent again.
+  GitHub. A change whose repository webhook never arrives reaches the saved
+  values through the next webhook of the repository, as
+  [A missed repository webhook](#a-missed-repository-webhook) says.
 - A start only at the webhook was rejected. Reason: a start that failed, or
   a change during a job, then needed a manual build.
 - A refresh that finds the repository by its ID, not by its name, was

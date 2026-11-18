@@ -26,6 +26,8 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
   [syncRepositoryValues](repository-sync.ts) saves them only while no other save came after the read, then reads GitHub again to confirm them.
   It then calls `repositoryChange.changed`, which in production runs [wakeImagesForRepositoryChange](../lifecycle/repository-change-builds.ts).
   A failed read leaves the delivery retryable. A failed wake only warns, because the image coordinator checks the saved values at each alarm.
+  [checkRepositoryValues](repository-values-check.ts) compares the repository name and default branch of each other routed webhook with the saved values.
+  When they differ, it runs the same read, guarded save, and wake. A failure there only warns, so the original event still completes.
   [Repository changes on GitHub](../../docs/protocol/repository-changes-on-github.md) states the requirements.
 - [handleGitHubRead](app-handler.ts) accepts GET and HEAD for the banner and checks routes of `githubPaths`.
   It runs the existing app gate and checks the workspace's org before a read.
