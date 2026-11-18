@@ -318,7 +318,7 @@ The machine tools use the configured app origin instead.
   Each other row of that section above that position, live or archived,
   gains the promoted count minus one. With zero or one promoted row,
   no other row changes position. All other stored positions stay.
-  `writeWorkspaceTree` selects these descendants inside the Archive batch.
+  `markWorkspaceArchived` selects these descendants inside its Archive batch.
   Its single position write follows Archive and checks `changes()`.
   It runs only when Archive wrote. Promoted top-level rows then keep their
   initial places and can move independently. Restore shows them under
@@ -375,15 +375,21 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   publishes the metadata of each moved workspace. `feature-workspaces.ts` and the
   [agent workspace tools](../tools/workspaces.md#rename-and-move) both call
   it. A tool move to the current section of a workspace changes nothing.
+- [`shell-guard.ts`](shell-guard.ts): `guardedStatement` inserts the current
+  shell member check at each `shellGuard` token and appends its org and user
+  bindings. Guarded SQL uses numbered placeholders. `GuardedStatement`
+  limits `guardedBatch` and `guardedRun` to statements from the builder.
+  `shellRead` prepares a single `SELECT` for reads in the writer files.
 - [`workspace-parent-change-data.ts`](workspace-parent-change-data.ts):
   `writeWorkspaceParentChange`, the guarded parent change and tree placement
   in one D1 batch, including creates in flight under the moved tree.
 - [`feature-workspaces-data.ts`](feature-workspaces-data.ts):
   `readWorkspaceTree` and `readWorkspaceMove` read the org's tree and its
   shown places for reads and notices. `updateShellWorkspace` prepares the
-  guarded metadata write. `writeWorkspaceTree` saves tree moves and Archive
-  promotions in one D1 batch, with current membership and places.
-  [`archive-data.ts`](archive-data.ts) guards Archive and its promoted rows.
+  guarded metadata write. `writeWorkspaceTree` saves tree moves in one D1
+  batch, with current membership and places.
+  [`archive-data.ts`](archive-data.ts) keeps Archive, descendant promotion,
+  and token revocation in one batch with its owner-or-admin access check.
   [`feature-sections-data.ts`](feature-sections-data.ts): the
   section writes `insertShellSection`, `updateShellSection`, and
   `deleteShellSection`. [List order](#list-order) gives their rules.
