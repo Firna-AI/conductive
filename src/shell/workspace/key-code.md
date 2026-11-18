@@ -202,6 +202,9 @@ this guide.
   the host over the app's own parts.
 - `WorkspaceHeader.tsx` and `WorkspaceColumns.tsx`: the header, the
   columns, the toggle of the right column, and the tab bar of a phone.
+  `useHeaderMenu.tsx` gives the header the workspace menu of the list,
+  which a press on the name opens. `HeaderMenu.test.tsx` opens it and renames the
+  workspace from it in the whole app.
   `RightColumnToggle.test.tsx` mounts the whole app over the fake API. It
   hides the right column, opens the workspace again, and shows the column.
   `WorkspaceKeys.test.tsx` runs the keys of the tab row, of the

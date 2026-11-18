@@ -29,6 +29,7 @@ import { closedTerminal, cloudComputerSilent } from '../fixtures/terminals'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import { valueSheet } from './requestSheets'
+import { headerMenuOf } from './workspaceHeaderMenu'
 import { capabilitiesSheet } from './workspaceCapabilities'
 import { openFile } from './workspaceParts'
 import { rowMenuOf } from './workspaceRowMenu'
@@ -160,6 +161,8 @@ function rowMenuSheet(state: WorkspaceState, viewport: Viewport): ReactNode {
  * each one as a sheet, and the open Capabilities control too. `row` holds
  * the tabs that the viewport shows, the tab whose menu is open, if any, and
  * whether the workspace is read-only, which leaves items out of that menu.
+ * Desktop draws the workspace menu of the header at the pointer in the
+ * header, and a phone as a sheet.
  */
 export function workspaceOverlay(
   state: WorkspaceState,
@@ -232,6 +235,18 @@ export function workspaceOverlay(
       )
     case 'value-sheet':
       return valueSheet(state, viewport)
+    case 'workspace-menu':
+      return mobile ? (
+        <Sheet title={workspace.name}>
+          <Menu
+            entries={headerMenuOf(state, workspace.owner)}
+            label={workspace.name}
+            placement="sheet"
+          />
+        </Sheet>
+      ) : null
+    case 'header-rename':
+      return null
   }
 }
 

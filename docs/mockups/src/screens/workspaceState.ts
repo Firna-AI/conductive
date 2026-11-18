@@ -158,7 +158,8 @@ export const workspaceStateSchema = {
      * request, which Give a value opens on a phone. Or the menu of the header
      * state, the question of Restart while an agent works, the time after
      * Restart until the agents are back, or that time with the toast of a
-     * failed update check.
+     * failed update check. Or the workspace menu that the name in the
+     * header opens, or the field of its Rename in place of the name.
      */
     overlay: {
       enum: [
@@ -176,6 +177,8 @@ export const workspaceStateSchema = {
         'restart-confirm',
         'restarting',
         'restart-update-failed',
+        'workspace-menu',
+        'header-rename',
       ],
     },
     ...archiveStateProperties,
