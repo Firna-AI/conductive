@@ -124,11 +124,13 @@ the folder of this page.
   and a failed read. `ScreenshotChips` draws the chips.
   `screenshot-input.ts` gives `pastedFiles` and `useScreenshotDrop`.
   `FeedbackDialog.test.tsx` mounts the dialog in happy-dom, with
-  `feedback-test-kit.tsx`.
+  `feedback-test-kit.tsx`. `send-limit.test.tsx` checks the notice of the
+  send limit.
 - `../shell/ui/Dialog.tsx` and `Sheet.tsx`: their optional `initial` names
   the part that takes the focus as they open. The Feedback dialog passes
   its message box. `Sheet` puts its content in the scrolling `.body` of
   the mockup sheet.
 - [feedbackCopy.ts](../../docs/mockups/src/components/feedback/feedbackCopy.ts):
   the words of the row, the dialog, and the toast that the app and the
-  mockups share.
+  mockups share. Its `sendLimitBody` gives the words of a send over the
+  limit.

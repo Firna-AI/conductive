@@ -143,7 +143,7 @@
   Each reported `Error: Test timed out in 15000ms.`
   Marketing setup reported `EXDEV: cross-device link not permitted` while
   Astro renamed an asset from `.astro/.prerender/` into `/tmp`.
-  This is the existing issue in `plans/follow-ups/built-site-test-cross-device-rename.md`.
+  This is the existing issue in [`plans/follow-ups/built-site-test-cross-device-rename.md`](https://github.com/Firna-AI/conductive/blob/af68ff544c64b86351a731daa79e48c2a790e93b/plans/follow-ups/built-site-test-cross-device-rename.md).
   Running that marketing file with `TMPDIR` inside the ignored `.context/`
   folder passed all 12 cases in 8.83 seconds, with no code or test edit.
 - On 16 November 2026, the main merge into `calummoore/delft-i3g7`

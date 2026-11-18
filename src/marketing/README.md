@@ -179,9 +179,13 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
 before the Worker serves them.
 
 - Run the site tests with `npm run test -- worker/marketing src/marketing`.
-  The built-site test clears Astro's content cache and builds once in a
-  temporary folder, so Markdown hooks always use current source. The
-  capture tests use fake pages and a fake browser, so they need no Chrome.
+  The built-site test clears Astro's content cache so Markdown hooks use
+  current source. It builds once into a new
+  `node_modules/.cache/conductive-site-<suffix>` folder, which Git and the
+  checks ignore. The folder stays on the checkout's mount so Astro can
+  rename built assets. The test removes its folder after success or
+  failure. The capture tests use fake pages and a fake browser, so they
+  need no Chrome.
 - Work on the pages with `npm run site:dev`. It serves them at
   `http://localhost:4321` and reloads them after edits. Sign-in links lead
   to the app of `npm run dev`. The footer shows the current year.

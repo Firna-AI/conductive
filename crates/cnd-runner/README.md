@@ -40,8 +40,10 @@ A failed output retry permits the turn to continue. A failed start still
 reaches its caller. The caller supplies events after its credential filter.
 This crate bounds tool details, whole turn-file prefixes, file payloads,
 and complete envelopes. The shared credential filter keeps tokens in process
-memory. It holds incomplete streamed prefixes and preserves operational paths
-and file contents. Report labels use the same filter before byte limits.
+memory. It masks each whole token and each run of at least 21 characters of
+a token. It holds streamed text that can still grow into either, and
+preserves operational paths and file contents. Report labels use the same
+filter before byte limits.
 
 The socket accepts HTTPS or WSS endpoints and uses rustls with public roots.
 It repairs lone UTF-16 surrogate escapes to U+FFFD before typed decoding.
@@ -213,6 +215,7 @@ and connection drops. It does not run the Worker.
 - [relocation.rs](src/relocation.rs): `RepositoryFolders` checks a repository move and refuses unknown folders.
 - [handler.rs](src/engine/handler.rs): `AgentEngine` routes turns and Stop to independent session actors.
 - [service.rs](src/filter/service.rs): `CredentialFilter` filters chat, report labels, and helper warnings.
+- [registry.rs](src/filter/registry.rs): keeps one canonical value per credential and resolves historical matches for retained suffixes.
 - [driver.rs](src/helper/driver.rs): `HelperConnection` correlates requests while agent events stream.
 - [process.rs](src/helper/process.rs): `NodeHelpers` owns private pipes and process-group cleanup.
 - [startup.rs](src/helper/startup.rs): `RunnerStartup` clears stale credentials, warms the SDK, and confirms a welcome.

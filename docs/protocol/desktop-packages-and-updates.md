@@ -147,8 +147,25 @@ It includes the download names and addresses of the public GitHub releases.
   check.
 - A notification or a label in the Help menu was rejected as the answer.
   Reason: the person who asks could miss either one.
-- Risk: a copy that runs from a read-only volume cannot update itself, and
-  the app shows no error. This holds for a copy that runs from its mounted
-  DMG. It also holds for a downloaded copy that macOS runs from a hidden
-  read-only place until the user moves it.
-- A later change adds an offer to move such a copy into Applications.
+- At launch, a copy with the updater on checks whether it runs from a
+  read-only volume outside an Applications folder. Only such a copy shows
+  a native dialog: "Move Conductive to Applications to get updates." with
+  Move to Applications and Not now.
+- The dialog shows for a copy that runs from its mounted DMG. It also
+  shows for a downloaded copy that macOS runs from a hidden read-only
+  place until the user moves it.
+- Reason: the macOS update framework cannot replace an app on a read-only
+  volume. Without the dialog, such a copy downloads each new version,
+  never installs one, and shows no error.
+- Move to Applications moves the app into an Applications folder, and
+  restarts it from there.
+- Not now hides the dialog until a new version of the app runs.
+- A copy with the updater off shows no dialog, because it gets no updates
+  in any folder.
+- A copy in a writable folder shows no dialog, because it can update
+  itself. A dialog for every copy outside an Applications folder was
+  rejected for that reason.
+- A dialog only after macOS refuses a downloaded version was rejected,
+  because it then comes only after a new version downloads.
+- The check for a read-only volume changes nothing inside the app.
+  Reason: a change inside the app breaks its signature.

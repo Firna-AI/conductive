@@ -489,3 +489,15 @@ without a new matching grant. Restoring the old source cannot restore its
 old trust. A change of letter case keeps the same identity. The settings
 writer saves a replacement and its new named grant together.
 [Repository trust](../docs/protocol/org-skills-trust.md#save) gives the contract.
+
+`202611181200_feedback_sends.sql` adds `feedback_sends`. Each row holds one
+24-hour epoch of the delivery key of one feedback email of one user. It
+keeps the user, the delivery key, the time of the first try, the time of
+the hourly count, a generation token, the delivery state, and the number
+of tries that still run. A row keeps no message, screenshot, email
+address, browser string, or secret. Deleting the user deletes the rows
+through the foreign key. Three indexes serve the lookup of a delivery key,
+the hourly count, and the cleanup. The migration changes no existing
+table, so the previous Worker keeps working.
+[The send limit](../worker/app-api/feedback.md#the-send-limit) gives the
+rules of these rows.

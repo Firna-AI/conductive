@@ -14,7 +14,7 @@
   - The same 11 files passed, 34 of 34 tests, from a copy of the same tree at `/tmp/main-wt`. They also passed from a checkout of `origin/main` at that path.
   - Two kinds of failure showed. Some tests assert that a command does not contain the home folder, and the checkout path is under it: `AssertionError: expected '/usr/bin/env -i PATH=/usr/bin:/bin HO…' not to contain '/home/user'`.
   - Other tests run Git and Bash in a case folder under the checkout, and Git got a doubled path: `error: could not lock config file /home/user/code/remote-code/.context/boat-native-remote-workspaces/milestone-5/orchestrator-round-2/saved-bash/local-scripts/case-iwNgfp/code/remote-code/.context/boat-native-remote-workspaces/milestone-5/orchestrator-round-2/saved-bash/local-scripts/case-iwNgfp/system-gitconfig: No such file or directory`. The exit codes were 255 or 2 in place of 0.
-  - `worker/marketing/built-site.test.ts` failed too, but `plans/follow-ups/built-site-test-cross-device-rename.md` covers it.
+  - `worker/marketing/built-site.test.ts` failed too, but [`plans/follow-ups/built-site-test-cross-device-rename.md`](https://github.com/Firna-AI/conductive/blob/af68ff544c64b86351a731daa79e48c2a790e93b/plans/follow-ups/built-site-test-cross-device-rename.md) covers it.
   - On 2026-11-13, the same failures reproduced during the merge of main into pull request #326. The saved workspace startup failure also reproduced on unchanged main at `246e2d787025de390f0de633801a60172e00cfd2` under `/home/user/code`.
   - The helpers replace production prefixes in sequence. A later replacement can rewrite the absolute fixture path that an earlier replacement inserted.
   - All 34 tests in the affected files passed on that main commit from `/tmp`. The exact merged source then passed 165 tests in 52 files there, including the affected files and the chat, Worker, and desktop device suites.
@@ -29,7 +29,7 @@
   - **D.** Share one mapper that replaces original paths once and excludes the known fixture root from production-path checks. Effort: Medium.
 - **Left out:** A skip of these tests in Conductive workspaces, because it hides real failures.
 - **Wider fix:** A. One helper for the case folders of every such test removes the class.
-- **Previous examples:** `plans/follow-ups/built-site-test-cross-device-rename.md`, another test that depends on where the checkout is.
+- **Previous examples:** [`plans/follow-ups/built-site-test-cross-device-rename.md`](https://github.com/Firna-AI/conductive/blob/af68ff544c64b86351a731daa79e48c2a790e93b/plans/follow-ups/built-site-test-cross-device-rename.md), another test that depends on where the checkout is.
 - **Related:** `plans/follow-ups/tests-leave-storage-in-context.md` changes fixture storage ownership. Its shared temporary folders can also avoid these path collisions.
 - **Recommendation:** A. The tests then pass on every machine with no rule to remember.
 - **Action:** fix after merge, apply A, because the failures are outside the diff of the branch that met them.

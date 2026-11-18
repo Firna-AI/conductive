@@ -28,7 +28,7 @@ const REVIEW_RUNS = ['failed', 'skipped'] as const
 /** The runs whose workspace `checkout-autocomplete` can be. */
 const RUN_WORKSPACES = ['pull-request', 'schedule'] as const
 const UPLOADS = ['wait', 'fail'] as const satisfies readonly DevUploadMode[]
-const FEEDBACK = ['ready', 'fail', 'no-email'] as const
+const FEEDBACK = ['ready', 'fail', 'no-email', 'limit'] as const
 
 const BANNERS = [
   'none',

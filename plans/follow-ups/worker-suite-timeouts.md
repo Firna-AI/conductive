@@ -16,7 +16,7 @@
     - `starts an added repository build after a failed build`.
   - The same source at main commit `a20746b99`, with the terminal links branch merged, then passed all four tests from a source copy under `/tmp`. The focused run also included the site tests and the preview port tests: 22 tests passed in five files in 13.83 seconds.
   - The full suite spawned 1,089 test workers and took 1,295.78 seconds. Resource contention and checkout path dependence are suspected sources. Neither is confirmed because the rerun changed both the location and the set of tests.
-  - The separate site error is recorded in [built-site-test-cross-device-rename.md](built-site-test-cross-device-rename.md). Earlier checkout path failures are recorded in [worker-tests-fail-under-home-folder.md](worker-tests-fail-under-home-folder.md).
+  - The separate site error is recorded in [built-site-test-cross-device-rename.md](https://github.com/Firna-AI/conductive/blob/af68ff544c64b86351a731daa79e48c2a790e93b/plans/follow-ups/built-site-test-cross-device-rename.md). Earlier checkout path failures are recorded in [worker-tests-fail-under-home-folder.md](worker-tests-fail-under-home-folder.md).
   - A later full run from `/tmp`, after merging main commit `b7fc10313`, passed all static checks and 3,496 tests. Two other unchanged tests failed with `Error: Test timed out in 15000ms.`:
     - `worker/operator/org-native.test.ts`: `suppresses a due native disk restart after org suspension while an active org still resumes`.
     - `worker/operator/ownership-stop-race.test.ts`: `leaves eligible pending starts intact and reports a skipped access stop as incomplete`.

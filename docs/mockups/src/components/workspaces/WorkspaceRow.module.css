@@ -55,6 +55,11 @@
   white-space: nowrap;
 }
 
+/*
+ * The look of the name of a row in each state, which `WorkspaceName`
+ * chooses. The name of a selected row takes the ink colour, but a stopped
+ * or archived name stays muted.
+ */
 .strong {
   color: var(--ui-ink);
   font-weight: var(--ui-weight-strong);
@@ -199,4 +204,9 @@
   font-family: var(--ui-font-label);
   font-size: var(--ui-text-sm);
   font-variant-numeric: tabular-nums;
+}
+
+/* The count of a lifted tree takes the strong weight of an unread name. */
+.strong + .moving {
+  font-weight: var(--ui-weight-strong);
 }

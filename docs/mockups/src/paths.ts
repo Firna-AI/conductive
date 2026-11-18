@@ -263,4 +263,4 @@ export const paths = {
   secretMixedValue: 'app/secret-requests/several/mixed-value',
 } as const
 
-export { barPaths, checksPaths } from './bannerPaths'
+export { barPaths, checksPaths } from './bannerPaths.ts'

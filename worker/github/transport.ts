@@ -1,5 +1,9 @@
 import type { HttpFetch } from '../env'
 import { readBoundedBody } from '../http/bounded-body'
+import {
+  outboundRequest,
+  type OutboundRequestOptions,
+} from '../http/outbound-request'
 import { githubFailure, object } from './parsers'
 
 const GITHUB_API_VERSION = '2026-03-10'
@@ -8,16 +12,14 @@ export const GITHUB_API_BODY_BYTES = 26 * 1024 * 1024
 export function githubRequest(
   path: string,
   token: string,
-  init: RequestInit = {},
+  init: OutboundRequestOptions = {},
 ): Request {
-  return new Request(`https://api.github.com${path}`, {
+  return outboundRequest(`https://api.github.com${path}`, {
     ...init,
-    redirect: 'manual',
     headers: {
       Accept: 'application/vnd.github+json',
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
-      'User-Agent': 'Conductive',
       'X-GitHub-Api-Version': GITHUB_API_VERSION,
     },
   })
