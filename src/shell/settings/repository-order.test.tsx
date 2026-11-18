@@ -14,69 +14,19 @@ import {
   shownToasts,
 } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
-import { FAKE_IDS } from '../../test-support/fixtures/core'
-import { repositoryFixtures } from '../../test-support/fixtures/repositories'
 import { MOUNTED_TEST_TIMEOUT } from '../../test-support/mount'
-import { mouse } from '../layout/rail-test-kit'
-import { click, mountScreen, press, settle } from '../test-mount'
-import { startedApp } from '../test-render'
-import { OrgSettingsScreen } from './OrgSettingsScreen'
+import {
+  answer,
+  moves,
+  org,
+  repositories,
+  repositoriesTab,
+  rows,
+  status,
+} from './repository-order-test-kit'
+import { click, press, settle } from '../test-mount'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
-
-const { org } = FAKE_IDS
-const { repositories } = repositoryFixtures(org).repositories
-
-/** The Repositories tab of Acme, mounted for the role of the server. */
-async function repositoriesTab(server: FakeApiServer) {
-  const app = await startedApp(server)
-  const boot = app.boot.get()
-  const acme = app.orgs.get().find((item) => item.id === org)
-  if (boot.state !== 'ready' || !acme) throw new Error('The app did not start.')
-  const view = mountScreen(
-    app,
-    <OrgSettingsScreen org={acme} tab="repositories" user={boot.user} />,
-  )
-  await settle()
-  return view
-}
-
-/** Each row of the list: its name, and Default when it shows. */
-function rows(view: HTMLElement): string[] {
-  const list = byRole('list', 'Repositories', view)
-  return Array.from(list.querySelectorAll('li')).map((row) => {
-    const name = row.querySelector('span span')?.textContent ?? ''
-    return row.textContent?.includes('Default') ? `${name} Default` : name
-  })
-}
-
-/** The status that a screen reader hears after a move. */
-function status(view: HTMLElement): string {
-  const list = byRole('list', 'Repositories', view)
-  return list.parentElement?.querySelector('[role="status"]')?.textContent ?? ''
-}
-
-/** The bodies of the moves that the app sent, with their paths. */
-async function moves(server: FakeApiServer) {
-  const sent = server.requests.filter((request) =>
-    request.url.endsWith('/position'),
-  )
-  return Promise.all(
-    sent.map(async (request) => ({
-      path: new URL(request.url).pathname,
-      body: (await request.json()) as unknown,
-    })),
-  )
-}
-
-/** The saved order that the server answers after a move to `index`. */
-function answer(repositoryId: string, index: number) {
-  return {
-    order: repositoryMoved(repositories, repositoryId, index)
-      .filter((item) => item.selected)
-      .map((item) => item.id),
-  }
-}
 
 describe('repositoryMoved', () => {
   const list: Repository[] = repositories.map((item) => ({ ...item }))
@@ -215,52 +165,6 @@ describe('the repository order of the Repositories tab', () => {
         'acme/marketing-site',
       ],
       more: null,
-    })
-  })
-
-  test('a drag of a row by the mouse moves it, says its place during the drag, and says its new place after the drop', async () => {
-    const server = new FakeApiServer()
-    server.json(
-      'PUT',
-      repositoryPositionPath(org, 'marketing-site'),
-      answer('marketing-site', 0),
-    )
-    const view = await repositoriesTab(server)
-    const list = byRole('list', 'Repositories', view)
-    const items = Array.from(list.querySelectorAll('li'))
-    items.forEach((item, index) => {
-      const box = new DOMRect(0, index * 44, 600, 44)
-      Object.defineProperty(item, 'getBoundingClientRect', {
-        configurable: true,
-        value: () => box,
-      })
-    })
-    const last = items[2]
-    mouse(last, 'pointerdown', { clientY: 110 })
-    mouse(window, 'pointermove', { clientY: 100 })
-    mouse(window, 'pointermove', { clientY: 5 })
-    const during = status(view)
-    mouse(window, 'pointerup', { clientY: 5, buttons: 0 })
-    await settle()
-    expect({
-      during,
-      after: rows(view),
-      status: status(view),
-      moves: await moves(server),
-    }).toEqual({
-      during: 'Moving acme/marketing-site to place 1 of 3',
-      after: [
-        'acme/marketing-site Default',
-        'acme/storefront',
-        'acme/billing-service',
-      ],
-      status: 'acme/marketing-site moves to place 1 of 3',
-      moves: [
-        {
-          path: repositoryPositionPath(org, 'marketing-site'),
-          body: { index: 0 },
-        },
-      ],
     })
   })
 })

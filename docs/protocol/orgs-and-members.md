@@ -114,8 +114,8 @@ adds this order. The pull request of that change keeps its record.
   read-only. Reason: the order sets the default of the whole org.
 - An admin moves a chosen repository in three ways
   (repository-order decision 1 F):
-  - A drag of its row, by its handle. On a phone, a long press lifts the
-    row. The lifted row, its faint copy, and the line where it lands look
+  - A drag of its row. Its handle shows where it lifts. On a phone, a long
+    press lifts the row. A press on the row menu starts no drag. The lifted row, its faint copy, and the line where it lands look
     like the drag of an org tile. Escape ends the drag, and the order
     stays as it was.
   - The row menu: Make default, Move up, and Move down. Make default moves

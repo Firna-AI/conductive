@@ -87,7 +87,7 @@ Each move saves at once and starts no build.
 
 Outside **Edit**, move a repository in one of these ways:
 
-- Drag it by its handle.
+- Drag its row up or down.
   Press **Escape** to cancel a drag.
   On a phone, long-press it and move it.
 - Open its **More** menu.
