@@ -2,6 +2,7 @@ import { act, useEffect, useState } from 'react'
 import type { FileEntry } from '../../../shared/generated/FileEntry'
 import { ApiError } from '../../../app/api/client'
 import type { DraftFile } from '../../../app/draft-files'
+import { Store } from '../../../app/store'
 import { attachmentPath } from '../../../shared/attachment-paths'
 import { accessibleName, byRole } from '../../../test-support/dom-queries'
 import { FAKE_IDS } from '../../../test-support/fixtures/core'
@@ -23,32 +24,25 @@ import { FakeFiles } from './mention-field-test-kit'
 
 /** The files of a draft, as the store of its owner keeps them. */
 class DraftFilesStore implements FieldFiles {
-  private items: readonly DraftFile[]
-  private readonly listeners = new Set<() => void>()
+  private readonly store: Store<readonly DraftFile[]>
   /** The ID of each file that Try again asked to upload again. */
   readonly retried: string[] = []
 
   constructor(items: readonly DraftFile[]) {
-    this.items = items
+    this.store = new Store(items)
   }
 
-  files = () => this.items
+  files = () => this.store.get()
 
   retry = (id: string) => {
     this.retried.push(id)
   }
 
-  subscribe = (listener: () => void) => {
-    this.listeners.add(listener)
-    return () => {
-      this.listeners.delete(listener)
-    }
-  }
+  subscribe = (listener: () => void) => this.store.subscribe(listener)
 
   /** Gives the draft these files, as an attach, an upload, or an end does. */
   set(items: readonly DraftFile[]) {
-    this.items = items
-    this.listeners.forEach((listener) => listener())
+    this.store.set(items)
   }
 }
 

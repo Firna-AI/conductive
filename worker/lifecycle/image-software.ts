@@ -1,6 +1,7 @@
 import type { CommitAuthor } from '../../src/shared/generated/CommitAuthor'
 import { HttpError, isRecord } from '../http'
 import { privilegedCommand } from '../terminal/privileged'
+import { TERMINAL_FOLDER_FILE } from '../terminal/bridge/folder'
 import { shellQuote } from './commands'
 import { packagesStep, type ImagePackages } from './image-packages'
 import {
@@ -104,6 +105,8 @@ export function workspaceStartupCommand(
     'umask 077',
     ...(owner ? [ownerGitSettingsCommand(owner)] : []),
     'sudo -n install -d -m 700 -o user -g user /run/conductive',
+    // A start gives the terminal the folder of its variables again.
+    `rm -f -- ${shellQuote(TERMINAL_FOLDER_FILE)}`,
     savedScriptCommand(path, script, [
       'set -a',
       '. /run/ascii-secrets/env.sh',
