@@ -26,6 +26,7 @@ export class GitHubTestHarness {
   states = new Map<string, MemoryWorkspace>()
   tokens: GitHubWorkspace[] = []
   pushed?: GitHubWebhookDependencies['pushed']
+  repositoryChange?: GitHubWebhookDependencies['repositoryChange']
 
   constructor(base: TestHarness) {
     this.base = base
@@ -39,6 +40,7 @@ export class GitHubTestHarness {
     this.states = new Map()
     this.tokens = []
     this.pushed = undefined
+    this.repositoryChange = undefined
   }
 
   async seed(branch = 'changes', workspaceId = 'workspace-1', orgId?: string) {
@@ -144,7 +146,12 @@ export class GitHubTestHarness {
         MACHINE_ORIGIN,
         GITHUB_WEBHOOK_SECRET: WEBHOOK_SECRET,
       },
-      { now: () => TEST_TIME, refresh: this.refresh, pushed: this.pushed },
+      {
+        now: () => TEST_TIME,
+        refresh: this.refresh,
+        pushed: this.pushed,
+        repositoryChange: this.repositoryChange,
+      },
     )
   }
 }

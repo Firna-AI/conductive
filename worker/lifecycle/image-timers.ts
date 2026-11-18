@@ -19,6 +19,7 @@ import {
   claimPushRefresh,
   consumePendingPushRefresh,
   markPendingPushRefresh,
+  imageHoldsOldValues,
   pushedImageRepositories,
 } from './org-image-refresh-data'
 
@@ -78,7 +79,13 @@ export async function refreshImagesForPush(
         {
           orgId: repository.orgId,
           userId: admin.userId,
-          kind: 'refresh',
+          kind: (await imageHoldsOldValues(
+            runtime.env.DB,
+            repository.orgId,
+            providerAccount,
+          ))
+            ? 'build'
+            : 'refresh',
           software: input.software,
         },
         providerAccount,
@@ -156,12 +163,14 @@ export async function runImageAlarm(
       runtime.dependencies.now(),
     )
   }
+  // A refresh copies the old values of the image and fails, so a build
+  // takes in the saved values in its place.
   await startImageBuild(
     runtime,
     {
       orgId: state.orgId,
       userId: admin.userId,
-      kind: 'refresh',
+      kind: next.oldValues ? 'build' : 'refresh',
       software: state.software,
       dailyRefresh: next.dailyAt <= runtime.dependencies.now(),
     },
