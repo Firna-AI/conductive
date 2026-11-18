@@ -83,11 +83,18 @@ These facts belong to this implementation, not to the protocol docs.
   only the running turn that it names. Others get only a local warning. An
   idle `model` command only saves the choice, and the next turn applies it.
 - The shared output filter stays in the runner, before saved and sent events.
-  It replaces the workspace token and the turn
-  tokens in displayed text with `[redacted]`. It holds possible secret
-  prefixes across answer events. After a completion or a turn end, it
-  keeps the shown end of each answer that can still start a secret. Later
-  text of that answer then masks the part that completes a secret.
+  It replaces each whole copy of the workspace token and of the turn
+  tokens in displayed text with `[redacted]`, at any length. It also
+  replaces each run of at least 21 consecutive characters of such a token,
+  from any place in the token. It counts Unicode scalar values, not bytes.
+  A run of 20 or fewer characters stays, unless it is a whole token or
+  lies in a longer masked run. The filter does not check whether a run is
+  secret.
+- Across answer events, the filter holds the end of the text that can
+  still grow into a whole token or such a run. After a completion or a
+  turn end, it keeps the shown end of each answer that can still grow into
+  one. Later text of that answer then masks the part that, with that end,
+  makes a whole token or a run of at least 21 characters.
 - The filter keeps real file paths and base branches for operations, and
   masks their separate display labels. The workspace object filters marked
   org env values before it stores or sends events. The runner receives no
