@@ -76,9 +76,9 @@ This page lists each protocol doc and what it covers.
     composer, the chips of files and folders, Add to chat, the sent chips
     of attached files, and the removal of each chip of the composer.
   - [Agent runner](../protocol/agent-runner.md): the connection of the runner,
-    its events and their limits, its turns, the background work of Claude
-    turns with its note and its time limit, its port reports, and the repair
-    of lost workspace updates.
+    its events and their limits, its turns, what an out-of-memory kill ends,
+    the background work of Claude turns with its note and its time limit,
+    its port reports, and the repair of lost workspace updates.
     - [Background work of Claude turns](../protocol/background-work.md):
       the wait of a Claude turn for background work, its note, and its time
       limit.

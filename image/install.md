@@ -176,9 +176,11 @@ A running runner also runs apply itself, through `sudo -n`, when its
 workspace is idle and its own release is confirmed. It then executes the new
 `current/system/runner-start.sh` in the same process, as the
 [runner service guide](../runner/service/README.md) says. That apply runs the
-same system installer, which restarts no unit. So a changed runner unit
-applies at the next start of the service, and the relay and terminal keep
-their running release until they start again.
+same system installer, which restarts no unit. So a changed start of the
+runner unit, such as its commands, user, or environment, applies at the
+next start of the service. The reload of the installer applies a changed
+`OOMPolicy` at once. The relay and terminal keep their running release
+until they start again.
 The runner, relay, and terminal entry points use `current/system/`.
 The runner executes `/opt/conductive/current/conductive runner`. It resolves
 its private Node and SDK helper beside that executable. The relay executes
