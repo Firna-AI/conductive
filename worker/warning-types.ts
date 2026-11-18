@@ -37,6 +37,10 @@ export const SIMPLE_WARNINGS = {
     'Could not start the added cloud computer build.',
   repository_image_build_start_failed:
     'Could not start the cloud computer build for the added repository.',
+  repository_change_wake_failed:
+    'Could not wake the image coordinator after a repository change. Its next alarm checks again.',
+  github_repository_token_revoke_failed:
+    'Could not revoke the token of a repository read. It expires within 1 hour.',
   approval_email_delivery_failed:
     'Approval email delivery failed. The email remains pending.',
   approval_email_retry_failed:

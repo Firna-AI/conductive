@@ -227,15 +227,20 @@ verified GitHub webhook receiver may call it. The
 coordinator starts the daily refresh by itself.
 A daily refresh sets the saved daily deadline 24 hours after its start.
 
-`buildImagesForRepositoryChange` in
-[`repository-change-builds.ts`](repository-change-builds.ts) starts a build
-for each org whose published image holds a repository with a name or a
-default branch that differs from the saved one. It skips an org whose newest
-build did not succeed. It reads the software release only when an org needs
-a build. The same GitHub webhook receiver calls it after it saves a
-repository change, as
+`imageHoldsOldValues` in
+[`org-image-refresh-data.ts`](org-image-refresh-data.ts) is true when the
+published image holds a repository name or default branch that differs from
+the saved one, and the newest build succeeded. `readImageSchedule` then makes
+the next alarm due at once, and `runImageAlarm` and `refreshImagesForPush`
+start a build in place of a refresh. So a build follows each job, failed
+start, or missed webhook that leaves old values in the image.
+`wakeImagesForRepositoryChange` in
+[`repository-change-builds.ts`](repository-change-builds.ts) wakes the
+coordinator of each such org after the GitHub webhook receiver saves a
+repository change. It reads the software release only when an org needs a
+wake.
 [Repository changes on GitHub](../../docs/protocol/repository-changes-on-github.md)
-says.
+states the rules.
 
 Both refreshes start with the first admin who is not suspended, from
 `firstActiveOrgAdmin` in [`settings-data.ts`](settings-data.ts). An org
@@ -273,7 +278,7 @@ states the rule.
 - [`image-timers.ts`](image-timers.ts): `refreshImagesForPush` and
   `runImageAlarm`.
 - [`repository-change-builds.ts`](repository-change-builds.ts):
-  `buildImagesForRepositoryChange`, the build after a repository change on
+  `wakeImagesForRepositoryChange`, the wake-up after a repository change on
   GitHub.
 - [`image-coordinator.ts`](image-coordinator.ts): `ImageCoordinator`.
 - [Software images](../software-image/README.md): the shared software builds and their cleanup.

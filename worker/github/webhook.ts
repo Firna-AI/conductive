@@ -8,7 +8,11 @@ import {
   recordDelivery,
   repositoryWorkspaces,
 } from './data'
-import { repositoryChange, saveRepositoryChange } from './repository-change'
+import {
+  handleRepositoryChange,
+  repositoryChange,
+  type RepositoryChangeDependencies,
+} from './repository-change'
 import { webhookRoute, type GitHubPullRequestEvent } from './webhook-routing'
 
 export const GITHUB_WEBHOOK_BODY_BYTES = 26 * 1024 * 1024
@@ -31,11 +35,8 @@ export interface GitHubWebhookDependencies {
     installationId: number,
     branch: string,
   ) => Promise<void>
-  /** Runs after a saved change of the name or the default branch. */
-  repositoryChanged?: (
-    repositoryId: number,
-    installationId: number,
-  ) => Promise<void>
+  /** Without it, the handler ignores repository changes. */
+  repositoryChange?: RepositoryChangeDependencies
 }
 
 async function authenticatedBody(
@@ -124,17 +125,13 @@ export async function handleGitHubWebhook(
     }
     const change = repositoryChange(event, value)
     if (change) {
-      if (!(await isProcessed(env.DB, deliveryId))) {
-        await recordDelivery(env.DB, deliveryId, dependencies.now())
-        await saveRepositoryChange(env.DB, change)
-        // A failed start leaves the delivery retryable. The retry finds the
-        // image that still holds the old values and starts the build again.
-        await dependencies.repositoryChanged?.(
-          change.repositoryId,
-          change.installationId,
-        )
-        await completeDelivery(env.DB, deliveryId, dependencies.now())
-      }
+      await handleRepositoryChange(
+        env.DB,
+        change,
+        deliveryId,
+        dependencies.now,
+        dependencies.repositoryChange,
+      )
       return new Response(null, { status: 204 })
     }
     const route = webhookRoute(event, value)

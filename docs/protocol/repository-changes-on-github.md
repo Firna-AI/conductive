@@ -11,10 +11,11 @@ folders that this doc uses. The terms are those of the
 ## Saved values
 
 - The app saves the name and the default branch of each repository of an
-  org. Screens, workspace starts, and the org image read the saved values.
+  org. Screens, pull requests, and builds read the saved values. A
+  workspace start uses the values of the org image that it starts from.
 - The GitHub App sends repository webhooks to the Worker. When GitHub
   renames a repository, or changes its default branch, the Worker saves
-  the new value. It does so in each org that reaches the repository
+  the new values. It does so in each org that reaches the repository
   through the same install of the GitHub App. The user chose this on
   17 November 2026.
 - So every member of an org sees the same name, the name on GitHub.
@@ -24,30 +25,44 @@ folders that this doc uses. The terms are those of the
 - A copy of the names from the list of each member was rejected. Reason: a
   read then changes saved data, and the copy happens only when a member
   with such a token opens the list.
+- The Worker reads the current name and default branch of the repository
+  from GitHub, and saves those values. It does not save the values of the
+  webhook.
+- Reason: a webhook can arrive late, or again after a failure. Its values
+  can then be older than a later change. A record of each saved webhook was
+  rejected, because it does not help a webhook that arrives late.
 - Other repository events, and an edit that keeps the default branch, change
   nothing.
 - The Worker accepts a repository webhook only with a valid GitHub
   signature, as for every GitHub webhook.
+- When the read from GitHub fails, the Worker answers GitHub with an error
+  and saves nothing. GitHub does not send the webhook again by itself. An
+  owner of the GitHub App can send it again from the settings of the app.
 
 ## The org image
 
 - A refresh copies each repository with the name and the default branch
   that the org image holds. So only a build takes in a new value.
-- A change of a repository that the org image holds starts a build at once.
-  The build runs for an admin who is not suspended, as an automatic refresh
-  does. The user chose this on 17 November 2026.
+- While the org image holds a name or a default branch that differs from
+  the saved value, the app starts a build. The build runs for an admin who
+  is not suspended, as an automatic refresh does. The user chose this on
+  17 November 2026.
 - Reason: a refresh fails while the saved values differ from the values of
   the org image. Without the build, new workspaces start with old commits.
+- The build starts at once after the change. While a job runs, it starts
+  when that job ends. When it cannot start, the next automatic refresh,
+  daily or after a push, starts the build in place of the refresh.
+- Reason: one check of the saved values then covers a change during a job,
+  a start that failed, and a webhook that did not arrive.
+- A start only at the webhook was rejected. Reason: a start that failed, or
+  a change during a job, then needed a manual build.
 - A refresh that finds the repository by its ID, not by its name, was
   rejected. Reason: the checks that guard each copy of a repository then
   change, and the folder takes the new name only at a later manual build.
 - The app starts no build when the newest build failed. The change then
-  waits for Try again. Reason: the app starts no build by itself after a
-  failed build (decision 12), as [The org image](org-image.md) says.
-- While a job runs, the change starts no second job, as for an added
-  repository.
-- When the build cannot start, the Worker answers GitHub with an error.
-  A new delivery of the same event then starts the build.
+  waits for Try again, which builds the saved values. Reason: the app
+  starts no build by itself after a failed build (decision 12), as
+  [The org image](org-image.md) says.
 
 ## Folders
 
