@@ -28,7 +28,7 @@
   - **D.** Share one mapper that replaces original paths once and excludes the known fixture root from production-path checks. Effort: Medium.
 - **Left out:** A skip of these tests in Conductive workspaces, because it hides real failures.
 - **Wider fix:** A. One helper for the case folders of every such test removes the class.
-- **Previous examples:** `plans/follow-ups/built-site-test-cross-device-rename.md`, another test that depends on where the checkout is.
+- **Previous examples:** [`plans/follow-ups/built-site-test-cross-device-rename.md`](https://github.com/Firna-AI/conductive/blob/af68ff544c64b86351a731daa79e48c2a790e93b/plans/follow-ups/built-site-test-cross-device-rename.md), another test that depends on where the checkout is.
 - **Related:** `plans/follow-ups/tests-leave-storage-in-context.md` changes fixture storage ownership. Its shared temporary folders can also avoid these path collisions.
 - **Recommendation:** A. The tests then pass on every machine with no rule to remember.
 - **Action:** fix after merge, apply A, because the failures are outside the diff of the branch that met them.
