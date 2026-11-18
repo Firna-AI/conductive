@@ -58,25 +58,12 @@
 }
 
 /*
- * The look of quotes and rules comes from MarkdownProse.module.css of the
- * mockups, which the chat shares. A rule has 16px above and below it.
+ * The look of quotes, rules, bold text, emphasis, strikethrough, and task
+ * boxes comes from MarkdownProse.module.css of the mockups, which the chat
+ * shares. A rule has 16px above and below it.
  */
 .doc hr {
   margin: 16px 0;
-}
-
-.doc strong {
-  color: var(--ui-ink);
-  font-weight: var(--ui-weight-strong);
-}
-
-.task {
-  list-style: none;
-}
-
-.task input {
-  margin: 0 6px 0 -18px;
-  vertical-align: -1px;
 }
 
 .block {

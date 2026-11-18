@@ -2,15 +2,14 @@ import type { Token } from 'markdown-it'
 import type { TableCells } from '../../markdown/table-rows'
 import { readTableTokens } from '../../markdown/table-tokens'
 import { inlineText, type InlineText } from './agent-inline'
+import { closedMarks } from './live-marks'
 
 /** A table of an agent message. Each body row has at least one cell. */
 export type TextTable = { kind: 'table' } & TableCells<InlineText>
 
 /** A table of an agent message and the next token. */
-export interface TableRead {
+interface TableRead {
   table: TextTable
-  /** No row leaves the table. Kept for the block reader's current return shape. */
-  rest: []
   /** The index of the token after the table. */
   next: number
 }
@@ -20,15 +19,25 @@ export interface TableRead {
  * source lines, and `quotes` is the number of quotes around the table.
  * Each parsed row keeps its source cells, up to the width of the header.
  * A row with no source cell gets one empty cell. The last cell spans the
- * rest, as "Short rows" of `chat-tables.md` says.
+ * rest, as "Short rows" of `chat-tables.md` says. `live` is the inline
+ * token where the text of a live message ends: when it is a cell of this
+ * table, its open marks close at its end.
  */
 export function readTable(
   tokens: readonly Token[],
   at: number,
   lines: readonly string[],
   quotes: number,
+  live: Token | null,
 ): TableRead {
-  const read = readTableTokens(tokens, at, lines, quotes, inlineText)
+  const cell = (children: Token[] | null) => {
+    const closed =
+      live !== null && children !== null && children === live.children
+        ? closedMarks(live.content, children)
+        : null
+    return inlineText(closed ?? children)
+  }
+  const read = readTableTokens(tokens, at, lines, quotes, cell)
   return {
     table: {
       kind: 'table',
@@ -36,7 +45,6 @@ export function readTable(
       rows: read.rows.map((row) => row.cells),
       align: read.align,
     },
-    rest: [],
     next: read.next,
   }
 }

@@ -25,6 +25,12 @@ The Acme web shop, built with Next.js and Postgres.
 
 Checkout suggests addresses as you type. Suggestions come from \`/api/places\`, which needs \`PLACES_API_KEY\`. Without the key, the form falls back to *manual entry*.
 
+![Suggestions under the address field](https://design.acme.example/forms/address/suggestions.png)
+
+- [x] Suggestions from the places API
+- [x] Manual entry without the key
+- [ ] Saved addresses for signed-in customers
+
 ---
 
 ## Tests

@@ -4,7 +4,8 @@ This guide belongs to [Agent text](agent-text.md). It gives the rules of
 the code that draws each agent message as a line in an open work fold.
 [Chat message lines](../../docs/protocol/chat-message-lines.md) states the
 requirements, and the mockups draw them at `app/chat/work`,
-`app/chat/headings/work`, and `app/chat/formatting/work`.
+`app/chat/headings/work`, `app/chat/formatting/work`, and
+`app/chat/lists/tasks-work`.
 
 - `MessageLine` in `components/MessageLine.tsx` reads the text of the
   message with `agentBlocks`, once for each text, as `AgentText` does.
@@ -28,6 +29,16 @@ requirements, and the mockups draw them at `app/chat/work`,
   as a middle dot. Open, it shows both as blocks.
 - `AnswerText` with `line` draws a space before each line break. The CSS
   of the closed line hides each `br`, so the space keeps the words apart.
+- A task item draws its fixed check box before the words of its first
+  paragraph, which stay in the line of the box, as the mockups draw it. The
+  item has the `task` class of `MessageLine.module.css`: closed, the box
+  stands in the line, and open, it takes the place of the bullet. A
+  numbered task item writes no number, as in an answer.
+- The line is a button for a screen reader, which reads no check box
+  inside it. So each box has the name "done" or "not done", which the name
+  of the line holds. The box is disabled, so it never changes. The CSS
+  of the `task` class lets a press pass through the box to the line, which
+  opens or closes.
 - `MessageLine` draws the code blocks of its summary as spans, with no
   button, because a summary is a button. A code block under an open line
   draws through `AgentBlocks`, so it has the button.

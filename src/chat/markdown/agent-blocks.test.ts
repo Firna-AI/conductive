@@ -81,7 +81,8 @@ it('nests lists and quotes at most 16 levels deep, and shows deeper content and 
   let depth = 0
   while (found?.kind === 'ul') {
     depth += 1
-    deepest = found.items[0] ?? []
+    const [item] = found.items
+    deepest = Array.isArray(item) ? item : (item?.blocks ?? [])
     found = inner(deepest)
   }
   let quote = shortBlocks(agentBlocks(`${'> '.repeat(80)}leaf\n\nafter`))

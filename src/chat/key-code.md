@@ -221,18 +221,23 @@ is relative to `src/chat/`, the folder of this guide.
   of an ended turn with its steps, and the message line that grows to the
   full text. A message line with a table opens the table under the line.
 - `markdown/agent-blocks.ts`: `agentBlocks`, the chat adapter of the
-  shared Markdown parser. It gives the paragraphs, headings, lists, code
-  blocks, quotes, rules, and tables of an agent message, with `TextTable`
-  of `markdown/agent-tables.ts`. `markdown/agent-inline.ts` gives the
-  inline tree of each block, with every line break. `markdown/answer-parts.ts`:
-  `answerParts`, the chips and the links of an inline tree, with the line
-  breaks of `markdown/agent-breaks.ts` and the mentions of
-  `markdown/answer-text.ts`. `markdown/AnswerText.tsx`: `AnswerText`,
-  which draws them, and `markdown/FileTextLink.tsx`, a link to a file.
-  `components/AgentText.tsx`: `AgentText`, which draws the blocks, with the
-  heading and prose styles that the file preview shares, and
-  `AgentBlocks`, which the message line shares.
-  `components/LineBlocks.tsx`: the blocks of a message line, as spans.
+  shared Markdown parser. It gives the paragraphs, headings, lists with
+  their task boxes, code blocks, quotes, rules, and tables of an agent
+  message, with `TextTable` of `markdown/agent-tables.ts` and the
+  paragraphs and headings of `markdown/agent-paragraphs.ts`. In live text,
+  `markdown/live-end.ts` finds the block where the text ends, and
+  `markdown/live-marks.ts` closes its open marks. `markdown/agent-inline.ts`
+  gives the inline tree of each block, with every line break.
+  `markdown/answer-parts.ts`: `answerParts`, the chips and the links of an
+  inline tree, with the line breaks of `markdown/agent-breaks.ts` and the
+  mentions of `markdown/answer-text.ts`. `markdown/AnswerText.tsx`:
+  `AnswerText`, which draws them, and `markdown/FileTextLink.tsx`, a link
+  to a file. `markdown/same-data.ts`: `sameData`, which lets a block draw
+  again only when its data changes. `components/AgentText.tsx`:
+  `AgentText`, which draws the blocks, with the heading and prose styles
+  that the file preview shares, and `AgentBlocks`, which the message line
+  shares. `components/LineBlocks.tsx`: the blocks of a message line, as
+  spans, with the named task boxes of the line.
 - `components/ToolGroup.tsx`: a run of tool calls, with `FoldLine` and
   `CallLine`, which the work fold shares.
 - `components/reading-place.ts`: the keeper of the reader's place, which

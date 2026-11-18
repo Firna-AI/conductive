@@ -1,5 +1,10 @@
 import type { CellAlign } from '../../markdown/table-rows'
-import { agentBlocks, type HeadingLevel, type TextBlock } from './agent-blocks'
+import {
+  agentBlocks,
+  type HeadingLevel,
+  type TextBlock,
+  type TextItem,
+} from './agent-blocks'
 import type { InlineMark, InlineText } from './agent-inline'
 
 // The helpers of the tests of the chat adapter: blocks and inline text in a
@@ -41,16 +46,28 @@ function shortText(text: InlineText): string {
     .join('')
 }
 
-/** A block in a short form: each inline text as its `shortText`. */
+/**
+ * A block in a short form: each inline text as its `shortText`. A list item
+ * is its blocks, and a task item also gives the state of its box.
+ */
 export type ShortBlock =
   | { kind: 'p'; text: string }
   | { kind: 'heading'; level: HeadingLevel; text: string }
-  | { kind: 'ul'; items: ShortBlock[][] }
-  | { kind: 'ol'; start: number; items: ShortBlock[][] }
+  | { kind: 'ul'; items: ShortItem[] }
+  | { kind: 'ol'; start: number; items: ShortItem[] }
   | { kind: 'code'; text: string }
   | { kind: 'quote'; blocks: ShortBlock[] }
   | { kind: 'rule' }
   | { kind: 'table'; head: string[]; rows: string[][]; align: CellAlign[] }
+
+/** A list item in the short form. */
+type ShortItem = ShortBlock[] | { checked: boolean; blocks: ShortBlock[] }
+
+/** A list item in its short form. */
+function shortItem(item: TextItem): ShortItem {
+  const blocks = shortBlocks(item.blocks)
+  return item.checked === null ? blocks : { checked: item.checked, blocks }
+}
 
 /** The blocks in their short form. */
 export function shortBlocks(blocks: readonly TextBlock[]): ShortBlock[] {
@@ -61,7 +78,7 @@ export function shortBlocks(blocks: readonly TextBlock[]): ShortBlock[] {
         return { ...block, text: shortText(block.text) }
       case 'ul':
       case 'ol':
-        return { ...block, items: block.items.map(shortBlocks) }
+        return { ...block, items: block.items.map(shortItem) }
       case 'quote':
         return { kind: 'quote', blocks: shortBlocks(block.blocks) }
       case 'table':

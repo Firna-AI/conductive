@@ -24,27 +24,63 @@ function TableText(props: { table: TextTable }) {
   ))
 }
 
+/** The words that name the state of a task box for a screen reader. */
+const taskStates = { done: 'done', open: 'not done' } as const
+
+/**
+ * The fixed check box of a task item in a message line, as in an answer. A
+ * screen reader reads the line as one button, so the name of the box says
+ * whether its task is done. `MessageLine.module.css` lets a press pass
+ * through the box to the line, which opens or closes, and the box does not
+ * change.
+ */
+function LineTaskBox(props: { checked: boolean }) {
+  const { checked } = props
+  return (
+    <input
+      aria-label={checked ? taskStates.done : taskStates.open}
+      checked={checked}
+      disabled
+      type="checkbox"
+    />
+  )
+}
+
 /**
  * The text of a list item in a message line. An item of one paragraph shows
  * its text alone. Another item shows its blocks, such as its text and the
- * list that the agent indents under it.
+ * list that the agent indents under it. A task item shows its box before
+ * the words of its first paragraph, which stay in the line of the box, as
+ * the mockups draw it.
  */
 function LineItem(props: { item: TextItem; open: boolean }) {
-  const [first] = props.item
-  if (props.item.length === 1 && first.kind === 'p') {
+  const { checked, blocks } = props.item
+  const [first, ...rest] = blocks
+  const box = checked === null ? null : <LineTaskBox checked={checked} />
+  if (first?.kind === 'p' && (rest.length === 0 || checked !== null)) {
     return (
       <>
+        {box}
         <AnswerText line text={first.text} />{' '}
+        {rest.length > 0 ? (
+          <LineBlocks blocks={rest} open={props.open} />
+        ) : null}
       </>
     )
   }
-  return <LineBlocks blocks={props.item} open={props.open} />
+  return (
+    <>
+      {box}
+      <LineBlocks blocks={blocks} open={props.open} />
+    </>
+  )
 }
 
 /**
  * A list of a message line. Each item of a numbered list writes its
  * number, from the start of its list, because a browser numbers a list
- * item of spans by the items of the list of the fold.
+ * item of spans by the items of the list of the fold. A task item shows
+ * its box in the place of its number, as an answer does.
  */
 function LineList(props: { list: TextList; open: boolean }) {
   const { list } = props
@@ -58,8 +94,11 @@ function LineList(props: { list: TextList; open: boolean }) {
       )}
     >
       {list.items.map((item, index) => (
-        <span className={styles.bullet} key={index}>
-          {list.kind === 'ol' ? (
+        <span
+          className={classes(styles.bullet, item.checked !== null && line.task)}
+          key={index}
+        >
+          {list.kind === 'ol' && item.checked === null ? (
             <>
               <span className={styles.number}>{list.start + index}.</span>{' '}
             </>

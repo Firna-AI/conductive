@@ -1,14 +1,12 @@
 import { maxDepth, parseMarkdownTokens } from '../../markdown/parser'
-import {
-  closeOf,
-  containerLines,
-  tokenRead,
-  unquoted,
-  type TokenRead,
-} from '../../markdown/token-read'
-import { inlineText, type InlineText } from './agent-inline'
+import { readTaskBox, type ListItem } from '../../markdown/task-boxes'
+import { closeOf, containerLines, tokenRead } from '../../markdown/token-read'
+import { showsInline } from './agent-breaks'
+import type { InlineText } from './agent-inline'
+import { heading, paragraph, textOf, type AgentRead } from './agent-paragraphs'
 import { linesText } from './agent-source'
 import { readTable, type TextTable } from './agent-tables'
+import { liveEnd } from './live-end'
 
 export type { TextTable }
 
@@ -35,69 +33,43 @@ export type TextBlock =
 /** A list of an agent message. */
 export type TextList = Extract<TextBlock, { kind: 'ul' | 'ol' }>
 
-/** The blocks of one list item, from the lines indented under its marker. */
-export type TextItem = readonly TextBlock[]
-
-/** The level of each heading element. */
-const headingLevels: ReadonlyMap<string, HeadingLevel> = new Map<
-  string,
-  HeadingLevel
->([
-  ['h1', 1],
-  ['h2', 2],
-  ['h3', 3],
-  ['h4', 4],
-  ['h5', 5],
-  ['h6', 6],
-])
-
-/** A paragraph of the text, or nothing when the text draws nothing. */
-function paragraph(text: InlineText): TextBlock[] {
-  return text.length > 0 ? [{ kind: 'p', text }] : []
-}
-
-/** The inline text with more text at its end. */
-function withText(text: InlineText, more: string): InlineText {
-  const last = text.at(-1)
-  if (last?.kind !== 'text') return [...text, { kind: 'text', text: more }]
-  return [...text.slice(0, -1), { kind: 'text', text: last.text + more }]
-}
+/**
+ * A list item of an agent message: its task box, and the blocks of the
+ * lines indented under its marker.
+ */
+export type TextItem = ListItem<TextBlock>
 
 /**
  * A list or a quote past the depth limit, as the text of a paragraph: its
  * source lines, with their marks.
  */
-function deepText(read: TokenRead, quotes: number): TextBlock[] {
+function deepText(read: AgentRead, quotes: number): TextBlock[] {
   return paragraph(linesText(containerLines(read), quotes))
 }
 
 /**
- * A heading. An underline counts only when a line break follows it, so a
- * message that ends on an underline shows that line as text of the
- * paragraph above it. A heading with no text draws nothing.
+ * A list item with its task box, which `readTaskBox` reads at the start of
+ * its first paragraph, as the file preview does. `content` is the source
+ * text of that paragraph, or undefined when the item starts with another
+ * block. The box leaves the text with the space after it, and a paragraph
+ * that then shows nothing leaves the item.
  */
-function heading(read: TokenRead, quotes: number): TextBlock[] {
-  const open = read.tokens[read.index]
-  const text = inlineText(read.tokens[read.index + 1].children)
-  read.index += 3
-  const underline = open.markup === '=' || open.markup === '-'
-  const end = open.map?.[1] ?? 0
-  if (underline && end >= read.lines.length) {
-    const typed = unquoted(read.lines[end - 1] ?? '', quotes).trim()
-    return paragraph(withText(text, ` ${typed}`))
-  }
-  const level = headingLevels.get(open.tag)
-  if (text.length === 0 || level === undefined) return paragraph(text)
-  return [{ kind: 'heading', level, text }]
+function taskItem(content: string | undefined, blocks: TextBlock[]): TextItem {
+  const [first, ...rest] = blocks
+  const box =
+    content !== undefined && first?.kind === 'p'
+      ? readTaskBox(content, first.text)
+      : null
+  if (box === null) return { checked: null, blocks }
+  const text = showsInline(box.nodes) ? box.nodes : []
+  return { checked: box.checked, blocks: [...paragraph(text), ...rest] }
 }
 
 /**
- * A bulleted or a numbered list, with the blocks of each item. The parser
- * reads no task box, so `[ ]` at the start of an item stays its text, as
- * "Lists" of `chat-markdown.md` says (open question, item 14 of the
- * Markdown parser plan).
+ * A bulleted or a numbered list, with the blocks and the task box of each
+ * item, as "Lists" of `chat-markdown.md` says.
  */
-function list(read: TokenRead, depth: number, quotes: number): TextBlock[] {
+function list(read: AgentRead, depth: number, quotes: number): TextBlock[] {
   const open = read.tokens[read.index]
   const close = closeOf(read.tokens, read.index)
   const items: TextItem[] = []
@@ -105,9 +77,14 @@ function list(read: TokenRead, depth: number, quotes: number): TextBlock[] {
   while (read.index < close) {
     const token = read.tokens[read.index]
     read.index += 1
-    if (token.type === 'list_item_open') {
-      items.push(blocksUntil(read, 'list_item_close', depth + 1, quotes))
-    }
+    if (token.type !== 'list_item_open') continue
+    const first = read.tokens[read.index]
+    const content =
+      first?.type === 'paragraph_open'
+        ? read.tokens[read.index + 1]?.content
+        : undefined
+    const blocks = blocksUntil(read, 'list_item_close', depth + 1, quotes)
+    items.push(taskItem(content, blocks))
   }
   read.index = close + 1
   if (open.type !== 'ordered_list_open') return [{ kind: 'ul', items }]
@@ -115,11 +92,11 @@ function list(read: TokenRead, depth: number, quotes: number): TextBlock[] {
 }
 
 /** The block at the index of the read, and the index after it. */
-function block(read: TokenRead, depth: number, quotes: number): TextBlock[] {
+function block(read: AgentRead, depth: number, quotes: number): TextBlock[] {
   const token = read.tokens[read.index]
   switch (token.type) {
     case 'paragraph_open': {
-      const text = inlineText(read.tokens[read.index + 1].children)
+      const text = textOf(read, read.tokens[read.index + 1])
       read.index += 3
       return paragraph(text)
     }
@@ -148,20 +125,14 @@ function block(read: TokenRead, depth: number, quotes: number): TextBlock[] {
       read.index += 1
       return [{ kind: 'code', text: token.content.replace(/\n$/u, '') }]
     case 'table_open': {
-      const { table, rest, next } = readTable(
-        read.tokens,
-        read.index,
-        read.lines,
-        quotes,
-      )
+      const { tokens, lines, live } = read
+      const { table, next } = readTable(tokens, read.index, lines, quotes, live)
       read.index = next
-      return [table, ...paragraph(linesText(rest, 0))]
+      return [table]
     }
     default:
       read.index += 1
-      return token.type === 'inline'
-        ? paragraph(inlineText(token.children))
-        : []
+      return token.type === 'inline' ? paragraph(textOf(read, token)) : []
   }
 }
 
@@ -171,7 +142,7 @@ function block(read: TokenRead, depth: number, quotes: number): TextBlock[] {
  * around the blocks, and `quotes` the quotes alone.
  */
 function blocksUntil(
-  read: TokenRead,
+  read: AgentRead,
   close: string | null,
   depth: number,
   quotes: number,
@@ -193,15 +164,19 @@ function blocksUntil(
  * the rules of CommonMark, with the tables and the strikethrough of GitHub.
  * The chat adds its own rules, as `chat-markdown.md` says: an underline
  * counts only when a line break follows it, a short table row keeps its
- * own cells, and lists and quotes nest at most 16 deep, with deeper source
- * kept as paragraph text. Each update of a live message reads the
- * whole text again, so it shows as the same message from the history.
+ * own cells, lists and quotes nest at most 16 deep, with deeper source
+ * kept as paragraph text, and a list item can start with a task box.
  *
- * Open question, item 9 of the Markdown parser plan: while the agent
- * writes, a mark whose pair has not arrived shows as typed, because each
- * update reads as a finished message with the same text.
+ * `live` reads a message that the agent still writes: each open mark of
+ * the paragraph, the heading, or the table cell where its text ends closes
+ * at the end of the text, as "While the agent writes" says. A finished
+ * message, also from the saved history, reads each mark as CommonMark does.
  */
-export function agentBlocks(text: string): TextBlock[] {
-  const read = tokenRead(parseMarkdownTokens(text, { chat: true }))
+export function agentBlocks(text: string, live = false): TextBlock[] {
+  const parsed = parseMarkdownTokens(text, { chat: true })
+  const read: AgentRead = {
+    ...tokenRead(parsed),
+    live: live ? liveEnd(parsed.tokens, parsed.lines) : null,
+  }
   return blocksUntil(read, null, 0, 0)
 }

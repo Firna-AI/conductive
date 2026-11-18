@@ -1,4 +1,5 @@
 import { maxDepth, parseMarkdownTokens } from '../../markdown/parser'
+import { readTaskBox } from '../../markdown/task-boxes'
 import {
   closeOf,
   containerLines,
@@ -13,9 +14,8 @@ import type {
   MdInline,
   MdListItem,
 } from './markdown-document'
-import { previewInline } from './preview-inline'
+import { previewBreaks, previewInline } from './preview-inline'
 import { maxAddedCells, previewTable, TableBudget } from './preview-tables'
-import { taskItem } from './preview-tasks'
 
 /** A read of the tokens of one file, with its table budget and its tail. */
 interface PreviewRead extends TokenRead {
@@ -51,6 +51,24 @@ function paragraph(text: MdInline[]): MdBlock[] {
  */
 function linesParagraph(lines: readonly string[], quotes: number): MdBlock[] {
   return paragraph(previewInline(linesInline(lines, quotes)))
+}
+
+/**
+ * A list item with its task box, which `readTaskBox` reads at the start of
+ * its first paragraph. `content` is the source text of that paragraph, or
+ * undefined when the item starts with another block. The box leaves the
+ * text with the space after it, and a paragraph that then shows nothing
+ * leaves the item.
+ */
+function taskItem(content: string | undefined, blocks: MdBlock[]): MdListItem {
+  const [first, ...rest] = blocks
+  const box =
+    content !== undefined && first?.kind === 'paragraph'
+      ? readTaskBox(content, first.text)
+      : null
+  if (box === null) return { checked: null, blocks }
+  const text = previewBreaks(box.nodes)
+  return { checked: box.checked, blocks: [...paragraph(text), ...rest] }
 }
 
 /**

@@ -20,11 +20,26 @@ of `src/markdown/parser.ts`. Its modules are pure functions and import no
 React.
 
 - `agentBlocks` in `markdown/agent-blocks.ts` reads the whole text of a
-  message at each update. So a live message and the same message from the
-  saved history show the same blocks. It gives a `TextBlock` for each
-  paragraph, heading, list, code block, quote, rule, and table. A
-  paragraph, a heading, and a table cell hold `InlineText`, the inline
-  tree of `markdown/agent-inline.ts`.
+  message at each update. It gives a `TextBlock` for each paragraph,
+  heading, list, code block, quote, rule, and table. A paragraph, a
+  heading, and a table cell hold `InlineText`, the inline tree of
+  `markdown/agent-inline.ts`. `markdown/agent-paragraphs.ts` reads the
+  text of each paragraph and heading.
+- With `live`, `agentBlocks` reads a message that the agent still writes,
+  as [While the agent writes](../../docs/protocol/chat-markdown.md#while-the-agent-writes)
+  says. `liveEnd` in `markdown/live-end.ts` finds the paragraph, the
+  heading, or the table cell where the text ends: the last line of the
+  text is in it, a paragraph also when only a line break follows it, and
+  no pipe closes the cell. In that block alone, `closedMarks` in
+  `markdown/live-marks.ts` closes each open mark at the end of the text.
+  It reads the inline text of the block again with the rules of the
+  parser, and adds a closing mark for each mark that can open and cannot
+  close, has no pair, and stands outside each pair and each link, the last
+  mark first. The parser and the tokens of the whole message stay as they
+  are. A block that reads a reference link keeps its reading, because the
+  read of one block has no reference definitions. Without `live`, a
+  message reads each mark as CommonMark does, so a complete message from
+  the saved history shows each open mark as typed.
 - The inline tree holds text, inline code, line breaks, marks, links, and
   images. It keeps each line break that the parser read, also in a link
   label and in the alt text of an image. A mark is bold text, emphasis, or
@@ -44,7 +59,13 @@ React.
   is lost.
 - An underline counts only when a line break follows it. `agentBlocks`
   turns a heading whose underline is the last line of the message back
-  into the text of a paragraph, with the underline.
+  into the text of a paragraph, with the underline. In live text, its open
+  marks close after the underline.
+- A list item is a `TextItem`: the state of its task box, and its blocks.
+  `readTaskBox` of `src/markdown/task-boxes.ts`, which the file preview
+  shares, reads a task box at the start of the first paragraph of the
+  item, as [Lists](../../docs/protocol/chat-markdown.md#lists) says, and
+  takes it out of the text.
 - A fence and an indented code block are `code` blocks, with their text
   as the agent wrote it, without the line break at the end.
 - `answerParts` in `markdown/answer-parts.ts` reads the inline tree of one
@@ -62,15 +83,27 @@ React.
 ## Drawing
 
 - `AgentText` in `components/AgentText.tsx` draws an answer. It parses the
-  text once for each text, with `useMemo`. `AgentBlocks` draws the blocks
-  in order, and the open body of `MessageLine` shares it.
-- An item of one paragraph draws its text alone, in `AgentText` and in a
-  message line, as in the file preview. Another item draws its blocks.
+  text once for each text and `live`, with `useMemo`. `AgentBlocks` draws
+  the blocks in order, and the open body of `MessageLine` shares it.
+- `ItemView` of `components/TranscriptItem.tsx` gives `live` to the
+  answer that the agent writes now. `TranscriptView` names it: the newest
+  item of the running turn, when that item is an agent message that is not
+  complete. `agentItem` of `src/shared/transcript/turn-events.ts` marks a
+  message `complete` at its `assistant.completed` event. A later step of
+  the turn, such as a tool call, or the end of the turn also shows that
+  the message is complete.
+- `MarkdownItem` of `src/markdown/MarkdownItem.tsx` draws each list item,
+  in an answer and in the file preview. An item of one paragraph draws its
+  text alone. Another item draws its blocks. A task item draws the fixed
+  check box of the mockups' `TaskBox` at the start of its first paragraph,
+  so a task with sub-tasks keeps its box on the line of its words. The box
+  is the disabled check box of the browser, so a press changes nothing.
 - A quote is a `blockquote` with its own blocks, and a rule is an `hr`.
   The `prose` class of the mockups' `MarkdownProse.module.css` gives them
-  their look, and the look of emphasis and strikethrough. `AgentText` adds
-  the class to the element around the blocks, beside the `agent` class of
-  `ChatItemView.module.css`, which sets the space around them.
+  their look, and the look of bold text, emphasis, strikethrough, and task
+  items. `AgentText` adds the class to the element around the blocks,
+  beside the `agent` class of `ChatItemView.module.css`, which sets the
+  space around them.
 - `AnswerText` in `markdown/AnswerText.tsx` draws the text of a paragraph,
   a heading, a list item, and a table cell: `strong`, `em`, and `del` for
   the marks, `br` for a line break, and the chips and links of
@@ -93,9 +126,14 @@ React.
   reads HTML as text, apart from a line-break tag.
   [Formatting](../../docs/protocol/chat-markdown.md#formatting) gives the
   rule for HTML in a message.
-- Each live update parses the whole message and draws each block again.
-  For an answer of 100 KiB, the parse takes about 15 ms in Node, and the
-  drawing takes most of the time of an update. `answer=long` of
+- Each live update parses the whole message, and draws again only the
+  blocks whose data changed. `AgentText` draws nothing again while its
+  text and `live` stay the same. Each block and each `AnswerText` compares
+  its new data with its last data, with `sameData` of
+  `markdown/same-data.ts`, and draws again only on a change. `AnswerText`
+  reads the workspaces, the tree, and the links of the screen itself, so
+  a change of them still draws its chips and links again. For an answer of
+  100 KiB, the parse takes about 15 ms in Node. `answer=long` of
   [the development page](dev/README.md) shows such an answer.
 
 ## List parts
@@ -110,8 +148,11 @@ CommonMark. Both views read their lists through the shared parser of
   text. `src/markdown/block-depth.ts` keeps the parser one level past that
   limit, so the parser drops no line. `src/markdown/token-read.ts` gives
   both views the source lines of a deeper list or quote.
-- The file preview reads task boxes, with `preview-tasks.ts` of
-  `src/files/markdown/`. The chat reads none, so it shows them as text.
+- Both views read task boxes with `readTaskBox` of
+  `src/markdown/task-boxes.ts`, and draw their list items with
+  `MarkdownItem` of `src/markdown/MarkdownItem.tsx`. A message line draws
+  its task boxes in `components/LineBlocks.tsx`, as
+  [Message lines](message-lines.md) says.
 
 ## Heading parts
 
@@ -160,9 +201,8 @@ mockups:
   gives each row only the cells that its source line has, up to the width
   of the header. A body row with no source cell gets one empty cell, so it
   stays visible. The table budgets still count the missing source cells.
-- `rowsInTable` in `markdown/agent-tables.ts` says which body rows stay in
-  the table. Today each row that the parser reads stays in it, also a line
-  without a pipe. The rows after its count show as paragraph text.
+  Each row that the parser reads stays in the table, also a line without
+  a pipe.
 - `src/markdown/table-tokens.ts` reads the tokens of a table for both
   views. `src/markdown/table-rows.ts` holds `CellAlign` and `TableCells`,
   the shared types.
@@ -181,3 +221,6 @@ mockups:
   stands between two cells. Keep them. With collapsed borders, Chrome lays
   out a table in time that grows with the width of its header times its
   rows, also when a short row spans the missing columns.
+- Its styles also stand each cell at the top of its row, in both views, as
+  [Columns and cells](../../docs/protocol/chat-tables.md#columns-and-cells)
+  says.

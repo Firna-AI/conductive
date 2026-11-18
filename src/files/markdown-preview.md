@@ -32,7 +32,11 @@ the preview:
 - A task box, `[ ]`, `[x]`, or `[X]`, at the start of the first paragraph
   of a list item shows as a check box, as on GitHub. A space, a tab, or
   the end of the line follows the box as typed. The parser reads no task
-  box, and the chat shows one as text.
+  box, so `readTaskBox` of `src/markdown/task-boxes.ts` reads it, for the
+  preview and for the chat. `MarkdownItem` of `src/markdown/MarkdownItem.tsx`
+  draws each list item in both views, with the box at the start of the
+  first paragraph, so a task with sub-tasks keeps its box on the line of
+  its words.
 - Lists and quotes nest at most 16 levels deep, as in the chat. A deeper
   list or quote shows as one paragraph of its source lines, with their
   marks. The parser reads one more level, inside which list and quote
@@ -41,7 +45,12 @@ the preview:
   other link shows its label as text. The parser makes no link of a
   script or a data address, so such a link shows as typed. A link in the
   label of a link shows as its text.
-- An image shows its alt text, and no picture loads.
+- An image shows its alt text, and no picture loads. At a web address,
+  an absolute `http` or `https` address, the alt text is a link to that
+  address, with the link rule above, as
+  [Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes)
+  says. In the label of a link, and at any other address, an image shows
+  its alt text alone.
 - A line-break tag and a hard line break show as a line break. Each block
   draws its line breaks by the rule of `src/markdown/kept-breaks.ts`,
   which the chat shares, as

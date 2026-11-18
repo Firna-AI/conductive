@@ -54,12 +54,9 @@ export interface PreviewTable {
  * adapter fills each short row with empty cells. The row whose empty cells
  * do not fit in the budget of the file ends the table, and the rest of the
  * file from that row shows as text, as "Files and changes" of
- * `workspace-tools.md` says.
- *
- * Open question, item 13 of the Markdown parser plan: `chat-tables.md`
- * says that a line without a pipe ends a table, and the parser reads such
- * a line as one more row, as GitHub does. Until the user decides, each row
- * that the parser reads stays in the table, within the budget.
+ * `workspace-tools.md` says. Each other row that the parser reads stays in
+ * the table, also a line without a pipe, as "Table text" of
+ * `chat-tables.md` says.
  */
 export function previewTable(
   tokens: readonly Token[],

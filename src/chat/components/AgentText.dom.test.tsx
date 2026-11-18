@@ -165,9 +165,6 @@ it('shows a workspace link in a table cell as its chip, and a link in code as co
   ])
 })
 
-// Open question, item 13 of the Markdown parser plan: whether a line without
-// a pipe ends a table. A blank line ends the table here, so this test does
-// not decide it.
 it('starts a table directly after a line of a paragraph, and reads unindented lines after a list item as text of the item, as CommonMark does', () => {
   const page = render(
     [

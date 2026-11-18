@@ -155,8 +155,10 @@ Markdown renderer builds React elements from the parts that the shared
 parser gives, so no HTML of a file reaches the page.
 [Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes)
 gives the rule for HTML in a file, and for a line-break tag. A Markdown
-image shows its alt text, and only absolute `http`, `https`, and `mailto`
-links become links. A bare address in the text stays text. Quotes and
+image shows its alt text, and no picture loads. Only absolute `http`,
+`https`, and `mailto` addresses become links. An image at an `http` or
+`https` address shows its alt text as a link. A bare address in the text
+stays text. Quotes and
 lists nest at most 16 levels deep, and deeper content shows as text. The
 parse runs in the worker, off the thread of the page, so a long or
 crafted file cannot stop the page.

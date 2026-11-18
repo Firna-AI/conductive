@@ -57,6 +57,19 @@ each row, and the span of at most 1,000 columns. It also checks workspace
 chips in cells and links that stay code inside a code span. It checks the
 heading element of each level, with code, bold, and a chip in a heading,
 and that an empty heading draws nothing.
+`components/AgentLists.dom.test.tsx` renders lists in an answer and in a
+message line: the numbers from the first item, a list under an item, the
+list that holds the first table, which opens under the line, and task
+boxes. A task box is a disabled check box before the words of its task,
+and each box of a line has a name that says whether its task is done.
+`components/AgentUpdates.dom.test.tsx` makes a live update of an answer,
+and counts the blocks that draw again with a spy on `answerParts`. Then it
+changes the workspaces, the tree, and the links of the screen, and checks
+the chips and the links of the blocks whose text did not change.
+`components/TranscriptView.test.tsx` renders the line of a stopped turn
+and of an end reason. It also closes the open mark of the message that
+the running turn writes last, and shows it as typed once a later step or
+the end of the turn follows.
 `components/AgentProse.dom.test.tsx` renders quotes, rules, emphasis,
 strikethrough, and line breaks in an answer, with the shared prose style.
 It checks them in a closed and an open message line, and a quote that
@@ -64,7 +77,10 @@ holds the first table of a message, which opens under the line.
 `markdown/agent-blocks.test.ts` reads the blocks of agent messages: lists
 by the rules of CommonMark, headings, underlines, quotes, rules, the own
 cells of a table row in a quote, and the depth limit of lists and quotes
-with no lost text. `markdown/agent-inline.test.ts` reads marks, entities,
+with no lost text. `markdown/agent-live.test.ts` reads live text: an open
+mark closes only in the paragraph, the heading, or the table cell where
+the text ends, and a finished message keeps it as typed. A live block that
+reads a reference link keeps its reading. `markdown/agent-inline.test.ts` reads marks, entities,
 escapes, code, and each form of a line break, with the line breaks that a
 block draws. `markdown/agent-text-test-kit.ts` writes blocks and inline
 text in a short form.

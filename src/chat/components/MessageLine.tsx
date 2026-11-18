@@ -29,7 +29,7 @@ function holdsTable(block: TextBlock): boolean {
   if (block.kind === 'table') return true
   if (block.kind === 'quote') return block.blocks.some(holdsTable)
   if (block.kind !== 'ul' && block.kind !== 'ol') return false
-  return block.items.some((item) => item.some(holdsTable))
+  return block.items.some((item) => item.blocks.some(holdsTable))
 }
 
 /**

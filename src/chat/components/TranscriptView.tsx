@@ -49,11 +49,27 @@ function WorkingRow(props: { turn: RunningTurn; now: number }) {
 }
 
 /**
+ * The ID of the agent message that the agent writes now: the newest item of
+ * the running turn, when it is an agent message that `assistant.completed`
+ * has not completed. A later step of the turn or the end of the turn also
+ * shows that the message is complete.
+ */
+function writingMessage(transcript: Transcript): string | null {
+  const running = transcript.turn?.turnId
+  if (running === undefined) return null
+  const newest = transcript.items.findLast(
+    (item) => 'turnId' in item && item.turnId === running,
+  )
+  return newest?.kind === 'agent' && !newest.complete ? newest.id : null
+}
+
+/**
  * The parts of a session's chat in order: messages, answers, folded tool
  * calls, the folded work of each ended turn, the end of each turn, and the
  * line of each lost event. Messages that the stream has not shown yet
  * follow, also while their send waits, then the running turn, then `children`, such as the steps of a
- * sandbox start.
+ * sandbox start. The agent message that the agent writes now closes its
+ * open marks, as "While the agent writes" of `chat-markdown.md` says.
  */
 export function TranscriptView(props: {
   transcript: Transcript
@@ -71,6 +87,7 @@ export function TranscriptView(props: {
   // The newest session record gives the permission. The order of the items
   // gives none. A read-only chat offers no Try again.
   const retryable = props.readOnly ? null : retryItemId(transcript)
+  const writing = writingMessage(transcript)
   return (
     <>
       {groupEntries(transcript, props.inserts ?? []).map((entry) => {
@@ -104,6 +121,7 @@ export function TranscriptView(props: {
                     onOpenDiff: props.onOpenDiff,
                   }}
                   item={entry.item}
+                  live={entry.item.id === writing}
                   readers={props.readers}
                   transcript={transcript}
                 />

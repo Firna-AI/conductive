@@ -84,19 +84,23 @@ export interface ItemActions {
   onOpenDiff?: (path: string) => void
 }
 
-/** One part of a session's chat, other than a run of tool calls. */
+/**
+ * One part of a session's chat, other than a run of tool calls. `live`
+ * marks the agent message that the agent writes now.
+ */
 export function ItemView(props: {
   item: SingleItem
   transcript: Transcript
   actions: ItemActions
   readers: ChatReaders
+  live?: boolean
 }) {
   const { item, actions } = props
   switch (item.kind) {
     case 'user':
       return <UserBubble message={item.message} />
     case 'agent':
-      return <AgentText text={item.text} />
+      return <AgentText live={props.live} text={item.text} />
     case 'turn-end':
       return (
         <TurnEnd

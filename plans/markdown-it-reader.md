@@ -539,28 +539,64 @@ Tags: ui
 
 Depends on: 9
 
-- [ ] Item 9 C: while the agent writes, the chat adapter closes an open
-      mark at the end of the text.
-- [ ] Item 19 B: a live update draws again only the blocks whose text
-      changed. Measure a 100 KiB answer again.
-- [ ] Item 14 B: the chat draws task boxes with the reader of the file
-      preview, moved to `src/markdown/`.
-- [ ] Item 10 B: the file preview shows a web image as a link with its
-      alt text.
-- [ ] Items 11 C and 12 B: the app uses the shared bold weight and the top
-      alignment of `MarkdownTable`.
-- [ ] Update `src/chat/agent-text.md`, `src/files/markdown-preview.md`,
+- [x] Item 9 C: while the agent writes, the chat adapter closes an open
+      mark at the end of the text. My calls, 18 November 2026: the events
+      give no end of one agent message, so the chat writes the newest item
+      of the running turn, when it is an agent message. A later step of the
+      turn, such as a tool call, or the end of the turn ends it. Between
+      `assistant.completed` and the next step, the message still closes its
+      open marks. An open mark closes as a closing mark at the end of the
+      text would: a mark between a pair stays text, and the closing mark
+      joins a closing run right before it, so `**a b*` shows `a b` in bold,
+      as when its pair arrives. An underline at the end shows as text, and
+      the marks close after it. A live block that reads a reference link
+      keeps its reading, because the read of one block has no reference
+      definitions.
+- [x] Item 19 B: a live update draws again only the blocks whose text
+      changed. Measure a 100 KiB answer again. Each block and each text of
+      an answer compares its new data with its last data, and the chips and
+      links still follow the workspaces, the tree, and the links of the
+      screen. Measured on 18 November 2026 in headless Chrome, production
+      build, as Milestone 4 did, six runs of each build, alternated: the
+      median update takes 82 ms, and 149 ms before this change. The highest
+      update takes 264 ms, at the end of a turn, which parses the answer
+      again as a finished message. The highest update before an end takes
+      181 ms. The machine had 4 cores and a load of about 3, so the times
+      are higher than the 70 ms of Milestone 4 on 17 November. The parse
+      takes about 15 to 20 ms of each update, and style and layout about
+      30 ms. The data is in `.context/markdown-it-reader/m11/timing/`.
+- [x] Item 14 B: the chat draws task boxes with the reader of the file
+      preview, moved to `src/markdown/`. It is `readTaskBox` of
+      `src/markdown/task-boxes.ts`. My call, 18 November 2026: a numbered
+      task item shows its box and no number, in an answer and in a message
+      line, as the shared style hides the marker of a task item.
+- [x] Item 10 B: the file preview shows a web image as a link with its
+      alt text. Only an absolute `http` or `https` address is a link, as
+      `workspace-tools.md` says, with the link rules of the preview. In the
+      label of a link, an image shows its alt text alone.
+- [x] Items 11 C and 12 B: the app uses the shared bold weight and the top
+      alignment of `MarkdownTable`. The file preview lost its own bold rule:
+      bold text now has weight 700 and the colour of its text, also in a
+      quote. Both views already stood each cell at the top of its row.
+- [x] Update `src/chat/agent-text.md`, `src/files/markdown-preview.md`,
       and the other guides that name the changed code.
-- [ ] From the mockups of Milestone 8: one shared task-item drawing for
+- [x] From the mockups of Milestone 8: one shared task-item drawing for
       both views, with the box at the start of the first paragraph, so a
       task with sub-tasks keeps its box on the line of its words. Today
-      the file preview puts that box on a line of its own.
-- [ ] From the mockups of Milestone 8: each task box in a message line has
+      the file preview puts that box on a line of its own. It is
+      `MarkdownItem` of `src/markdown/MarkdownItem.tsx`.
+- [x] From the mockups of Milestone 8: each task box in a message line has
       a name that states its state, such as "done", so a screen reader
-      reads it inside the line's button. Check with a screen reader.
-- [ ] From the mockups of Milestone 8: the README sample of
+      reads it inside the line's button. Check with a screen reader. The
+      names are "done" and "not done". Chrome gives the closed line the
+      name "Two changes to make: not done Debounce the lookups not done
+      Move the fields under the list". No screen reader ran: the check read
+      the accessibility tree of Chrome, which screen readers read.
+- [x] From the mockups of Milestone 8: the README sample of
       `src/files/dev/dev-samples.ts` adds the web picture and the task list
-      of the mockup README.
+      of the mockup README. The chat development page adds `answer=tasks`.
+      The logs, the screenshots, and the browser checks are in
+      `.context/markdown-it-reader/m11/`.
 - [ ] Waits for the user's answer to item 82: the look of a done task box
       in the light scheme.
 

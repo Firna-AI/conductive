@@ -153,7 +153,18 @@ it('links only absolute http, https, and mailto addresses, with the shared link 
     ['[page](data:text/html,hi)', '<p>[page](data:text/html,hi)</p>'],
     ['[setup](docs/setup.md)', '<p>setup</p>'],
     ['[other](//evil.example/x)', '<p>other</p>'],
-    ['![logo](https://example.com/logo.png)', '<p>logo</p>'],
+    // An image shows its alt text, as a link where a link of the same
+    // address opens. No picture loads.
+    [
+      '![logo](https://example.com/logo.png)',
+      `<p><a ${drawn('https://example.com/logo.png')} href="https://example.com/logo.png" ${newTab}>logo</a></p>`,
+    ],
+    ['![logo](assets/logo.png)', '<p>logo</p>'],
+    ['![mail](mailto:dev@example.com)', '<p>mail</p>'],
+    [
+      '[![logo](https://example.com/logo.png) home](https://example.com/)',
+      `<a ${drawn('https://example.com/')} href="https://example.com/" ${newTab}>logo home</a>`,
+    ],
     [
       '[ref]\n\n[ref]: https://example.com/ref',
       `<a ${drawn('https://example.com/ref')} href="https://example.com/ref" ${newTab}>ref</a>`,
@@ -175,7 +186,7 @@ it('keeps a link to a local address as a link that opens a new tab, also where t
   )
 })
 
-it('renders a table, a quote, a rule, and a task list', () => {
+it('renders a table, a quote, a rule, and a task list, with the box of a task with sub-tasks at the start of its words', () => {
   const html = render(`| Name | Count |
 | :--- | ---: |
 | a \\| b | 2 |
@@ -186,18 +197,23 @@ it('renders a table, a quote, a rule, and a task list', () => {
 
 - [x] Done
 - [ ] Open
+  - Saved addresses
 `)
   expect(html).toContain('<th style="text-align:left">Name</th>')
   expect(html).toContain('<td style="text-align:left">a | b</td>')
   expect(html).toContain('<td style="text-align:right">2</td>')
   expect(html).toContain('<blockquote><p>Quoted</p></blockquote>')
   expect(html).toContain('<hr/>')
-  // Quotes and rules take the look that the chat shares.
+  // Quotes, rules, and task items take the look that the chat shares.
   const article = /<article class="([^"]*)"/u.exec(html)?.[1].split(' ')
   expect(article).toContain(prose.prose)
   expect(html.match(/type="checkbox"/g)).toHaveLength(2)
-  expect(html).toContain('<input disabled="" type="checkbox" checked=""/>Done')
-  expect(html).toContain('<input disabled="" type="checkbox"/>Open')
+  expect(html).toContain(
+    `<li class="${prose.task}"><input disabled="" type="checkbox" checked=""/>Done</li>`,
+  )
+  expect(html).toContain(
+    `<li class="${prose.task}"><p><input disabled="" type="checkbox"/>Open</p><ul><li>Saved addresses</li></ul></li>`,
+  )
 })
 
 it('shows quotes nested deeper than the limit as text, without a stack overflow', () => {

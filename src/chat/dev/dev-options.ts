@@ -50,9 +50,10 @@ export interface DevOptions {
    * The answer of each scripted turn: a line of text, three tables that
    * arrive one line at a time, a review under headings, with a plan under a
    * heading, quotes, a rule, marks, and line breaks, with a plan that holds
-   * them too, or an answer of about 100 KiB that then grows in ten parts.
+   * them too, an answer of about 100 KiB that then grows in ten parts, or
+   * task lists in the plan and in the answer.
    */
-  answer: 'text' | 'tables' | 'headings' | 'prose' | 'long'
+  answer: 'text' | 'tables' | 'headings' | 'prose' | 'long' | 'tasks'
 }
 
 export const choices = {
@@ -105,7 +106,7 @@ export const choices = {
   page: ['chat', 'this-mac'],
   files: ['listed', 'unread'],
   speed: ['none', 'fast', 'limit', 'older', 'other'],
-  answer: ['text', 'tables', 'headings', 'prose', 'long'],
+  answer: ['text', 'tables', 'headings', 'prose', 'long', 'tasks'],
 } as const satisfies Record<keyof DevOptions, readonly string[]>
 
 /** The options in the order that the page lists them. */

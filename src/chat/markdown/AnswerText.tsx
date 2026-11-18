@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { useTextLinks } from '../../shell/ui/text-links'
 import { FileLink, LinkChip, useEntryLookup } from '../links/LinkedText'
 import { useChatLinks } from '../links/LinksContext'
@@ -11,11 +12,12 @@ import {
   type AnswerReading,
 } from './answer-parts'
 import { FileTextLink } from './FileTextLink'
+import { sameData } from './same-data'
 
 /**
  * The element of each mark. Their look comes from the `prose` class of
- * `MarkdownProse.module.css` around the text. Bold text keeps the weight of
- * the browser (open question, item 11 of the Markdown parser plan).
+ * `MarkdownProse.module.css` around the text, which the file preview
+ * shares, such as the weight of bold text.
  */
 const markTags = { strong: 'strong', emphasis: 'em', strike: 'del' } as const
 
@@ -91,6 +93,12 @@ function AnswerParts(props: { parts: readonly AnswerPart[]; line: boolean }) {
   ))
 }
 
+/** The inline text of a block, and whether it draws in a message line. */
+interface AnswerTextProps {
+  text: InlineText
+  line?: boolean
+}
+
 /**
  * The inline text of one block of an agent message, such as a paragraph,
  * a heading, a list item, or a table cell: its inline code, its bold text,
@@ -99,8 +107,16 @@ function AnswerParts(props: { parts: readonly AnswerPart[]; line: boolean }) {
  * a file chip, and each web link, as `answerParts` reads them. `line`
  * draws the text of a message line, whose closed line shows each line
  * break as a space.
+ *
+ * A text draws again when its data changes, or when what the chat reads it
+ * with changes: the workspaces, the tree, or the links of the screen. So a
+ * live update draws only the texts that changed.
  */
-export function AnswerText(props: { text: InlineText; line?: boolean }) {
-  const parts = answerParts(props.text, useAnswerReading(props.text))
-  return <AnswerParts line={props.line ?? false} parts={parts} />
-}
+export const AnswerText = memo(
+  function AnswerText(props: AnswerTextProps) {
+    const parts = answerParts(props.text, useAnswerReading(props.text))
+    return <AnswerParts line={props.line ?? false} parts={parts} />
+  },
+  (before, after) =>
+    before.line === after.line && sameData(before.text, after.text),
+)

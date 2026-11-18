@@ -69,6 +69,27 @@ const headings = [
 ]
 
 /**
+ * Task lists, as the mockups draw them at `app/chat/lists/tasks`: the plan
+ * holds two open tasks, so its message line in the folded work shows two
+ * empty boxes, and the answer holds two done tasks and an open task with a
+ * note in a list under it. Each part is one line or one blank line.
+ */
+const taskPlan = [
+  'Two changes to make:\n\n',
+  '- [ ] Debounce the lookups\n',
+  '- [ ] Move the fields under the list',
+]
+
+const taskAnswer = [
+  'I pushed both changes:\n\n',
+  '- [x] Each lookup waits 250 ms after the last key press, in `useAddressAutocomplete`.\n',
+  '- [x] On a phone, the fields move down under the list.\n',
+  '- [ ] Priya approves the changes.\n',
+  '  - She asked to see the phone test first.\n\n',
+  'Only her approval is left.',
+]
+
+/**
  * What a scripted turn writes, in parts: its plan before its tool calls,
  * which folds with its work when the turn ends, and its answer.
  */
@@ -102,4 +123,5 @@ export const devScripts: Readonly<Record<DevOptions['answer'], DevScript>> = {
   },
   prose: { plan: prosePlan, answer: proseAnswer },
   long: { plan, answer: longAnswer },
+  tasks: { plan: taskPlan, answer: taskAnswer },
 }

@@ -38,13 +38,14 @@ it('shows the current state of each task box after the text changes, also in a r
     true,
   )
 
-  // The first task goes, so the boxes of Plan and Build show Build and Ship.
-  show('- [x] Build\n  - [ ] Check\n- [ ] Ship\n')
+  // The first task goes, so the boxes of Plan, Build, and Check show Build,
+  // Ship, and Check. The box of an item with sub-tasks stands in its first
+  // paragraph, so each item keeps the shape of the item that it replaces.
+  show('- [x] Build\n- [ ] Ship\n  - [ ] Check\n')
   const removed = boxes(view.container)
   expect(removed.map((box) => box.checked)).toEqual([true, false, false])
-  expect(removed[0]).toBe(first[0])
-  expect(removed[2]).toBe(first[1])
-  expect(view.container.textContent).toBe('BuildCheckShip')
+  expect(removed.every((box, index) => box === first[index])).toBe(true)
+  expect(view.container.textContent).toBe('BuildShipCheck')
 })
 
 it('parses each text in its own module worker, and ends each worker that the view no longer needs', () => {

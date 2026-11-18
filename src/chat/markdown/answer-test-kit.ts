@@ -21,7 +21,7 @@ function firstText(blocks: readonly TextBlock[]): InlineText | undefined {
       block.kind === 'quote'
         ? firstText(block.blocks)
         : block.kind === 'ul' || block.kind === 'ol'
-          ? firstText(block.items.flat())
+          ? firstText(block.items.flatMap((item) => item.blocks))
           : undefined
     if (inner) return inner
   }

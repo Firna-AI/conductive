@@ -56,12 +56,14 @@ first. Each path is relative to `src/files/`, the folder of this guide.
   It turns the tokens of a file into a `MarkdownDocument`, with the parts
   that it shares with the chat: the depth limit of lists and quotes,
   `maxDepth` of the parser, and the source lines of a deeper list or quote
-  from `../markdown/token-read.ts`. `markdown/preview-tasks.ts` gives
-  `taskItem`, the task box at the start of a list item.
+  from `../markdown/token-read.ts`. It reads the task box at the start of a
+  list item with `readTaskBox` of `../markdown/task-boxes.ts`, which the
+  chat shares.
 - `markdown/preview-inline.ts`: `previewInline`, the inline content of one
-  block, with the link rule of the preview, the alt text of each image,
-  and the line breaks of `../markdown/kept-breaks.ts`, which the chat
-  shares. The parser limits marks, links, and images to 12 levels, with
+  block, with the link rule of the preview, the alt text of each image, as
+  a link at an `http` or `https` address, and the line breaks of
+  `../markdown/kept-breaks.ts`, which the chat shares. The parser limits
+  marks, links, and images to 12 levels, with
   `../markdown/inline-depth.ts`.
 - `markdown/preview-tables.ts`: `previewTable`, which reads one table of a
   file with `readTableTokens` of `../markdown/table-tokens.ts`, and
@@ -74,8 +76,10 @@ first. Each path is relative to `src/files/`, the folder of this guide.
   through the shared `MarkdownTable` of the mockups, with the margin of
   its `.table` class. Its headings take their look from the shared
   `MarkdownHeadings.module.css` of the mockups, and its quotes, rules,
-  emphasis, and strikethrough from the shared `MarkdownProse.module.css`.
-  Chat answers use both modules too. Its own CSS sets only their margins.
+  bold text, emphasis, strikethrough, and task boxes from the shared
+  `MarkdownProse.module.css`. Chat answers use both modules too. Its own
+  CSS sets only their margins. It draws each list item with `MarkdownItem`
+  of `../markdown/MarkdownItem.tsx`, which chat answers share.
 - `markdown/inline-render.tsx`: `inlineNodes`, the inline content of a
   block as React elements. It draws each link with the mockups' `TextLink`
   through the link opener of the app shell.

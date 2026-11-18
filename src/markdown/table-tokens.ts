@@ -3,7 +3,7 @@ import type { CellAlign } from './table-rows'
 import { unquoted } from './token-read'
 
 /** A body row as the parser read it, with its source line. */
-export interface TableRow<Cell> {
+interface TableRow<Cell> {
   /** The source line of the row, without the marks of its quotes. */
   line: string
   cells: Cell[]

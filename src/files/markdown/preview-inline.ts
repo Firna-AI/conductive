@@ -61,6 +61,11 @@ function safeHref(href: string): string | null {
   }
 }
 
+/** Text as content: one text node, or none for empty text. */
+function textNodes(text: string): MdInline[] {
+  return text === '' ? [] : [{ kind: 'text', text }]
+}
+
 /** Adds text to content, after the text before it. */
 function addText(nodes: MdInline[], text: string): void {
   if (text === '') return
@@ -146,6 +151,21 @@ class InlineTree {
     node.close(this.nodes)
   }
 
+  /**
+   * Adds an image as its alt text, and no picture loads. At a web address,
+   * an absolute `http` or `https` address, the alt text is a link to that
+   * address, by the link rule of the preview. In the label of a link, and
+   * at any other address, the alt text shows alone.
+   */
+  image(token: Token): void {
+    const alt = plainText(token.children ?? [])
+    const address = token.attrGet('src')
+    const href =
+      this.labels > 0 || typeof address !== 'string' ? null : safeHref(address)
+    if (href === null || !/^https?:/u.test(href)) addText(this.nodes, alt)
+    else this.nodes.push({ kind: 'link', href, children: textNodes(alt) })
+  }
+
   /** Closes each mark and each link that is still open. */
   end(): MdInline[] {
     while (this.open.length > 0) this.leave()
@@ -168,9 +188,8 @@ class InlineTree {
  * The inline content of one block from the tokens of its inline token. The
  * parser pairs the marks, so a mark without its pair is already text. A
  * soft line break stays a line of the text. An image shows its alt text,
- * and no picture loads (open question, item 10 of the Markdown parser plan:
- * a web image keeps the rule in force, its alt text with no link). The
- * line breaks are the ones that the block draws.
+ * as a link at a web address, and no picture loads, as `workspace-tools.md`
+ * says. The line breaks are the ones that the block draws.
  */
 export function previewInline(tokens: readonly Token[] | null): MdInline[] {
   const tree = new InlineTree()
@@ -196,7 +215,7 @@ export function previewInline(tokens: readonly Token[] | null): MdInline[] {
         tree.nodes.push({ kind: 'code', text: token.content })
         break
       case 'image':
-        addText(tree.nodes, plainText(token.children ?? []))
+        tree.image(token)
         break
       default:
         addText(tree.nodes, token.content)

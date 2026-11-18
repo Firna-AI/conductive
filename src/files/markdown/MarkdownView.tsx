@@ -3,6 +3,7 @@ import { classes } from '../../../docs/mockups/src/components/common/classes'
 import headingStyles from '../../../docs/mockups/src/components/common/MarkdownHeadings.module.css'
 import prose from '../../../docs/mockups/src/components/common/MarkdownProse.module.css'
 import { MarkdownTable } from '../../../docs/mockups/src/components/common/MarkdownTable'
+import { MarkdownItem } from '../../markdown/MarkdownItem'
 import type { FilesError } from '../api/files-errors'
 import { LoadingFile, ReadError } from '../ui/FileStates'
 import { inlineNodes } from './inline-render'
@@ -36,18 +37,19 @@ function tableCell(nodes: readonly MdInline[]) {
   return <Inline nodes={nodes} />
 }
 
+/** The text of a paragraph of a list item, or null for another block. */
+function itemText(block: MdBlock) {
+  return block.kind === 'paragraph' ? <Inline nodes={block.text} /> : null
+}
+
+/** The blocks of a list item after its text. */
+function itemBlocks(blocks: readonly MdBlock[]) {
+  return <Blocks blocks={blocks} />
+}
+
+/** An item of a list, with its task box, as `MarkdownItem` draws it. */
 function Item(props: { item: MdListItem }) {
-  const { item } = props
-  const [first] = item.blocks
-  const tight = item.blocks.length === 1 && first.kind === 'paragraph'
-  return (
-    <li className={item.checked === null ? undefined : styles.task}>
-      {item.checked === null ? null : (
-        <input checked={item.checked} disabled type="checkbox" />
-      )}
-      {tight ? <Inline nodes={first.text} /> : <Blocks blocks={item.blocks} />}
-    </li>
-  )
+  return <MarkdownItem blocks={itemBlocks} item={props.item} text={itemText} />
 }
 
 function Block(props: { block: MdBlock }) {
@@ -109,9 +111,9 @@ function Blocks(props: { blocks: readonly MdBlock[] }) {
 /**
  * One parsed document. A new render of the same document, as after Copy,
  * renders and splits the text of no block again. The headings, the quotes,
- * the rules, the emphasis, and the strikethrough take the styles that the
- * chat shares, with the margins of the preview. A file tab keeps its
- * scroll offset.
+ * the rules, the bold text, the emphasis, the strikethrough, and the task
+ * boxes take the styles that the chat shares, with the margins of the
+ * preview. A file tab keeps its scroll offset.
  */
 const Document = memo(function Document(props: { document: MarkdownDocument }) {
   const box = useKeptScroll('preview')
