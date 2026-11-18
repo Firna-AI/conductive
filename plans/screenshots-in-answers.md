@@ -189,13 +189,15 @@ Depends on: 1. It adds no behaviour that a member sees, so it does not wait for 
 The chat gets a way to read the picture of one workspace file, with the
 limits of the design calls. It adds no screen.
 
-- [ ] Add a picture reader beside the file page in `src/files/`. It uses
+- [x] Add a picture reader beside the file page in `src/files/`. It uses
       `FilesClient.readFile` and `fileView`, runs at most two reads at one
       time, and keeps one result for each path.
-- [ ] Give the reader to the chat through `ChatMentions`, only while the
+- [x] Give the reader to the chat through `ChatMentions`, only while the
       sandbox runs. Wire it where the workspace screen builds the mentions.
-- [ ] Add unit tests for the limit of two reads, the result for each
+- [x] Add unit tests for the limit of two reads, the result for each
       path, a failed read, and a file over the limit.
+      Evidence: `.context/screenshots-in-answers/m4/evidence.md`. A cancelled
+      read keeps no failure, so a later caller reads the path again.
 
 ## Milestone 5: Pictures in answers
 

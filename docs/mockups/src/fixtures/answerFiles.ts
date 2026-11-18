@@ -1,6 +1,12 @@
 import type { ChatItem } from './conversations'
 import { repositoryFolder } from './fileMentions'
-import type { CheckoutView } from './pictures'
+
+/**
+ * What a screenshot of the checkout shows: the form alone, the list of
+ * suggestions of the address field over the postcode field, or that list
+ * under the postcode field after the fix.
+ */
+export type CheckoutView = 'form' | 'covered' | 'fixed'
 
 /**
  * The screenshot that the agent took after the fix, in the context folder

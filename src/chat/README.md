@@ -69,6 +69,13 @@ says how `WorkspaceChatView` draws a controller that the app keeps: its
 `show`, `hide`, and `stop`, its `sources`, and the workspace list of its
 chips.
 
+The shell gives the chat an optional picture reader through
+`ChatMentions.pictures` in `mentions/MentionsContext.tsx`. The reader and
+its types live in `../files/page/picture-reads.ts`. The shell gives it only
+while the sandbox runs. It reads a real file path from the workspace tree
+through the existing file client. No chat component draws these pictures
+yet.
+
 ## Rules for this code
 
 - [The tab row](tab-row.md) gives the rules of the one order of the

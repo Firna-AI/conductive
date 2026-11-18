@@ -1,3 +1,4 @@
+import type { CheckoutView } from './answerFiles'
 /**
  * The pictures of the image files of the mockups: screenshots of the
  * checkout form of Checkout address autocomplete on a phone. A screenshot
@@ -83,12 +84,7 @@ function Suggestions(props: { top: number }) {
   )
 }
 
-/**
- * What a screenshot of the checkout shows: the form alone, the list of
- * suggestions of the address field over the postcode field, or that list
- * under the postcode field after the fix.
- */
-export type CheckoutView = 'form' | 'covered' | 'fixed'
+export type { CheckoutView }
 
 /** The top edge of the list of suggestions in each view that has one. */
 const suggestionsTop = { covered: 310, fixed: 382 } as const

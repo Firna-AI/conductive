@@ -1,25 +1,12 @@
-import {
-  useContext,
-  useMemo,
-  useSyncExternalStore,
-  type ReactNode,
-} from 'react'
-import type { FileEntry } from '../../../shared/generated/FileEntry'
+import { useSyncExternalStore, type ReactNode } from 'react'
 import { useNavigation } from '../../../app/navigation'
 import { routes } from '../../../app/router'
 import type { RenderedTab, TabDraw } from '../../../chat/components/tab-row'
 import type { ChatMentions } from '../../../chat/mentions/MentionsContext'
 import { tabHidesSecret, tabLabel } from '../../../files/model/file-labels'
-import type { WorkspaceFiles } from '../../../files/model/files-store'
 import { scrollTabKey } from '../../../files/ui/kept-scroll'
 import { useFollowTabs } from '../../../app/tab-places'
-import type {
-  FilesNavigation,
-  FilesTab,
-  FilesTarget,
-} from '../../../files/navigation'
-import type { LineRange } from '../../../shared/line-target'
-import { PanelContext } from '../../layout/panels'
+import type { FilesNavigation, FilesTab } from '../../../files/navigation'
 import {
   FileTabItem,
   fileTabName,
@@ -30,6 +17,7 @@ import { useShortcutOffer } from '../../shortcuts/shortcut-context'
 import type { WorkspaceContext } from '../features'
 import { useSavedView } from '../saved-view'
 import { useCopyPath } from './copy-path'
+import { useMentions } from './chat-mentions'
 import { filesPlace, tabOf } from './files-address'
 import { useFilesNavigation, useLeaveForSession } from './files-navigation'
 import {
@@ -129,48 +117,6 @@ export interface ChatFiles {
   renderTab?: (tab: FilesTab) => RenderedTab
   onOpenDiff?: (path: string) => void
   mentions?: ChatMentions
-}
-
-/**
- * The page of a chip: the file, or All files for a folder. A file with
- * lines opens as text, also a Markdown file, because only the text has
- * line numbers.
- */
-function chipTarget(entry: FileEntry, lines?: LineRange): FilesTarget {
-  return entry.kind === 'directory'
-    ? { kind: 'list', list: 'all' }
-    : { kind: 'file', path: entry.path, mode: lines ? 'source' : 'preview' }
-}
-
-/**
- * The files that the composer lists after `@`, and the pages of the chips.
- * A file opens as a press in All files opens it. A folder shows All files
- * with the folder open, in the right column on desktop, which then shows.
- */
-function useMentions(
-  context: WorkspaceContext,
-  files: WorkspaceFiles | null,
-  navigation: FilesNavigation,
-): ChatMentions | undefined {
-  const panels = useContext(PanelContext)
-  const phone = context.viewport === 'phone'
-  return useMemo(() => {
-    if (!files) return undefined
-    return {
-      files,
-      openFile: (path, lines) =>
-        navigation.navigate(
-          { kind: 'file', path, mode: lines ? 'source' : 'preview' },
-          lines,
-        ),
-      showFolder: (path) => {
-        files.revealFolder(path)
-        if (!phone) panels?.rightShown.set(true)
-        navigation.navigate({ kind: 'list', list: 'all' })
-      },
-      href: (entry, lines) => navigation.href(chipTarget(entry, lines), lines),
-    }
-  }, [files, navigation, panels, phone])
 }
 
 /**
