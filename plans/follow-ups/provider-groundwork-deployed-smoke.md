@@ -38,7 +38,6 @@
 - **Needs:** The merged change, deployed to `conductive.build` by the `Deploy` workflow. A test account with app access, the admin of a test org with one repository that has the GitHub App. A Claude or Codex login of that account. The production Boat account in the Worker, through `BOAT_API_KEY` and `BOAT_ORG_ID`. Wrangler access to the deployed D1 and to the Worker logs.
 - **Done when:** Every step passes on the deployed app before the public launch. A failed step gets its own follow-up item, and this item stays open until a rerun of that step passes. Then delete this item.
 - **Related:** These items check parts of the same flow on the deployed app. One session can run them together, and each keeps its own checks:
-  - `plans/follow-ups/first-automatic-deploys-check.md` checks the deploy run and a message.
   - `plans/follow-ups/runner-archive-from-deploy-check.md` checks an image build with the deployed runner archive.
   - `plans/follow-ups/first-build-smoke-test.md` checks the automatic first build of a new org.
   - `plans/follow-ups/agent-instructions-deployed-smoke-test.md` checks agent instructions, with a stop and a resume.
