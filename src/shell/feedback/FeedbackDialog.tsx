@@ -13,9 +13,11 @@ import {
   sendFeedbackLabel,
   sendingLabel,
   sendLabel,
+  sendLimitBody,
   sentToastTitle,
 } from '../../../docs/mockups/src/components/feedback/feedbackCopy'
 import styles from '../../../docs/mockups/src/components/feedback/FeedbackDialog.module.css'
+import type { ApiError } from '../../app/api/client'
 import {
   screenshotIntake,
   type RefusedScreenshot,
@@ -49,6 +51,17 @@ function RefusalNotice(props: { refusal: RefusedScreenshot }) {
       tone="danger"
     />
   )
+}
+
+/**
+ * The words of a failed send. A refusal by the send limit with a valid
+ * time says when to try again, on the clock of the person. Each other
+ * failure gives the message of its error.
+ */
+function notSentBody(error: ApiError, timeZone: string | undefined): string {
+  return error.code === 'feedback_send_limit' && error.retryAt !== null
+    ? sendLimitBody(error.retryAt, timeZone)
+    : error.message
 }
 
 /**
@@ -196,7 +209,7 @@ export function FeedbackDialog() {
       ))}
       {state.send.state === 'failed' ? (
         <Notice
-          body={state.send.error.message}
+          body={notSentBody(state.send.error, app.services.timeZone)}
           icon={CircleAlert}
           title={notSentTitle}
           tone="danger"

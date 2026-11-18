@@ -74,11 +74,17 @@ The detached build command streams its output to the build log.
 The release installer supplies both terminal units and their scripts.
 It enables the ttyd unit, which requires the shell server unit.
 It starts nothing and puts no password in the image.
+The shell server unit sets `OOMPolicy=continue`. So an out-of-memory kill of
+one command ends only that command, as
+[Out of memory](../../docs/protocol/terminal-shell.md#out-of-memory) says.
+The default policy, `stop`, would stop the unit and end every shell.
 
 Release updates bring terminal script and unit changes to existing workspaces.
 The program downloads them in the background. The runner applies them at a
 later start, or in place when its workspace is idle. The running terminal
-services keep their old units and scripts until their next start. Restart
+services keep their old scripts until their next start.
+[Release installation](../../image/install.md#release-installation) says when
+a changed unit applies. Restart
 of the workspace software restarts ttyd after the runner applies the release.
 It keeps the shell server running. But each
 new terminal connection runs the bridge from `/opt/conductive/current` at

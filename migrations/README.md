@@ -477,3 +477,15 @@ rows.
 the preset colour that an admin picks for the tile of the open org, as
 [Orgs and members](../docs/protocol/orgs-and-members.md) says. Existing orgs
 get null, which the app shows as Blue.
+
+`202611181200_feedback_sends.sql` adds `feedback_sends`. Each row holds one
+24-hour epoch of the delivery key of one feedback email of one user. It
+keeps the user, the delivery key, the time of the first try, the time of
+the hourly count, a generation token, the delivery state, and the number
+of tries that still run. A row keeps no message, screenshot, email
+address, browser string, or secret. Deleting the user deletes the rows
+through the foreign key. Three indexes serve the lookup of a delivery key,
+the hourly count, and the cleanup. The migration changes no existing
+table, so the previous Worker keeps working.
+[The send limit](../worker/app-api/feedback.md#the-send-limit) gives the
+rules of these rows.

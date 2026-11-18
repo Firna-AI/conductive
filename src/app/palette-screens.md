@@ -39,7 +39,11 @@ The mockups `app/feedback`, its child pages, and
   and the send key call `send`. When `send` gives true, the dialog closes
   and `useToast` shows "Thanks for your feedback" in the success tone. A
   false result shows no toast. A failed send keeps the draft, with its
-  notice.
+  notice. A refusal by the
+  [send limit](../../docs/protocol/feedback-send-limit.md#the-notice),
+  `feedback_send_limit`, shows `sendLimitBody` of its `retryAt`, in the
+  time zone of the services. Without a valid `retryAt`, the notice shows
+  the message of the error, as for each other failed send.
 - Cancel, Escape, and a press outside call `close`, which keeps the draft.
   The model refuses a close while a send runs.
 - A change of the address keeps the dialog open, with the context of its

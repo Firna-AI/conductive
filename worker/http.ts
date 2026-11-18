@@ -10,17 +10,20 @@ export class HttpError extends Error {
   readonly status: number
   readonly code: string
   readonly details?: ApiErrorBody['error']['details']
+  readonly retryAt?: number
 
   constructor(
     status: number,
     code: string,
     message: string,
     details?: ApiErrorBody['error']['details'],
+    retryAt?: number,
   ) {
     super(message)
     this.status = status
     this.code = code
     this.details = details
+    this.retryAt = retryAt
   }
 }
 
@@ -86,6 +89,7 @@ export function errorResponse(error: unknown, request?: Request): Response {
           code: error.code,
           message: error.message,
           details: error.details,
+          retryAt: error.retryAt,
         },
       } satisfies ApiErrorBody,
       { status: error.status },

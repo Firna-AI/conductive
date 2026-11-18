@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { ACCOUNT_PATHS } from '../../shared/account'
+import { FEEDBACK_PATH } from '../../shared/feedback'
 import { sectionPath } from '../../shared/sections'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { coreFixtures, FAKE_IDS } from '../../test-support/fixtures/core'
@@ -20,6 +21,52 @@ describe('createApiClient', () => {
       .catch((error) => error)
     expect(failure).toBeInstanceOf(ApiError)
     expect(failure).toMatchObject({ status: 404, code: 'fake_route_missing' })
+  })
+
+  test('an error keeps a valid retry time, and a missing or invalid one reads as none, with the code, the message, and the details', async () => {
+    const server = new FakeApiServer()
+    const api = createApiClient(server.fetch)
+    const details = { login: 'octocat', triggerIndex: 1, list: 'isNot' }
+    const errors: unknown[] = []
+    for (const retryAt of [
+      1_800_003_600_000,
+      undefined,
+      '1800003600000',
+      -1,
+      Number.MAX_SAFE_INTEGER,
+    ]) {
+      server.json(
+        'POST',
+        FEEDBACK_PATH,
+        {
+          error: {
+            code: 'feedback_send_limit',
+            message: 'Try again later.',
+            details,
+            retryAt,
+          },
+        },
+        429,
+      )
+      errors.push(
+        await api
+          .send('POST', FEEDBACK_PATH, {}, ignore)
+          .catch((error: unknown) => error),
+      )
+    }
+    const kept = {
+      status: 429,
+      code: 'feedback_send_limit',
+      message: 'Try again later.',
+      details,
+    }
+    expect(errors).toMatchObject([
+      { ...kept, retryAt: 1_800_003_600_000 },
+      { ...kept, retryAt: null },
+      { ...kept, retryAt: null },
+      { ...kept, retryAt: null },
+      { ...kept, retryAt: null },
+    ])
   })
 
   test('a part goes through the file transport, and its answer and errors read as a write does', async () => {
