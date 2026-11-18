@@ -1,6 +1,6 @@
 import { MAX_WORKSPACE_DEPTH } from '../../src/shared/workspace-tree'
 import { HttpError } from '../http'
-import { activeShellMemberPredicate } from './feature-shell-access'
+import { guardedBatch, guardedStatement, shellGuard } from './shell-guard'
 import { workspaceTreeSql } from './feature-workspaces-data'
 
 export type WorkspaceParentTarget =
@@ -65,7 +65,7 @@ const parentChangeSql = `${workspaceTreeSql}, move_input AS MATERIALIZED (
       THEN 'parent_not_found'
     WHEN ?3 IN (SELECT id FROM subtree) THEN 'nesting_cycle'
     WHEN parent_depth + 1 + height > ${MAX_WORKSPACE_DEPTH} THEN 'nesting_limit'
-    WHEN NOT ${activeShellMemberPredicate} THEN 'access'
+    WHEN NOT ${shellGuard} THEN 'access'
     END AS error,
     COALESCE((SELECT effective_section_id FROM placements WHERE id = ?3),
       ?4, (SELECT effective_section_id FROM placements WHERE id = ?2)) AS destination,
@@ -89,14 +89,20 @@ export async function writeWorkspaceParentChange(
     input.target.kind === 'parent' ? input.target.id : null,
     input.sectionId ?? null,
     input.now,
-    input.orgId,
-    input.userId,
   ]
-  const results = await db.batch<MoveCheck & { id: string; changed: number }>([
-    db.prepare(`${parentChangeSql} SELECT * FROM checked`).bind(...bindings),
-    db
-      .prepare(
-        `${parentChangeSql}, ranks AS MATERIALIZED (
+  const results = await guardedBatch<
+    MoveCheck & { id: string; changed: number }
+  >(db, [
+    guardedStatement(
+      db,
+      input,
+      `${parentChangeSql} SELECT * FROM checked`,
+      bindings,
+    ),
+    guardedStatement(
+      db,
+      input,
+      `${parentChangeSql}, ranks AS MATERIALIZED (
           SELECT id, ROW_NUMBER() OVER (ORDER BY position, created_at, id) AS position
           FROM top_level WHERE shown_section_id = (SELECT destination FROM moving)
             AND id NOT IN (SELECT id FROM subtree) AND ?3 IS NULL
@@ -111,8 +117,8 @@ export async function writeWorkspaceParentChange(
         WHERE org_id = ?1 AND EXISTS (SELECT 1 FROM moving)
           AND (id IN (SELECT id FROM subtree) OR id IN (SELECT id FROM ranks))
         RETURNING id, id IN (SELECT id FROM subtree) AS changed`,
-      )
-      .bind(...bindings),
+      bindings,
+    ),
   ])
   const check = results[0].results[0]
   if (!check) throw new Error('The parent change check is missing.')

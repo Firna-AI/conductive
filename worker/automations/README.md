@@ -146,6 +146,9 @@ The batch-limit test passes 2 for each limit and checks the stored operation cou
 - [automation-data.ts](automation-data.ts) reads automations and checks their repository and section.
 - [automation-response.ts](automation-response.ts) adds the resolved public login owner to each record reply.
 - [automation-write-data.ts](automation-write-data.ts) guards mutations with current membership and ownership.
+  It uses `guardedStatement` and `guardedRun` from
+  [shell-guard.ts](../app-api/shell-guard.ts) for the shared member check.
+  Its numbered bindings also retain the ownership and reference checks.
 - [schedules.ts](schedules.ts) validates schedules and computes their next time through `croner`.
 - [schedule-scan.ts](schedule-scan.ts) starts due schedules and retries old queued runs through the shared starter.
 - [schedule-scan-data.ts](schedule-scan-data.ts) reads bounded scan batches and claims due times with their run rows atomically.
