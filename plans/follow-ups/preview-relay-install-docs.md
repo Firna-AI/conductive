@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-16, from the docs review of the branch `calummoore/terminal-tabs-implementation-l5ml`.
-- **Location:** `docs/protocol/sandbox-software.md:144`, `src/marketing/docs/cloud-computer.md:156`, `image/install-system.sh:21`, `image/install.md:179-181`, `image/README.md:101`.
+- **Location:** `docs/protocol/sandbox-software.md:144`, `src/marketing/docs/cloud-computer.md:156`, `image/install-system.sh:21`, `image/install.md:182-183`, `image/README.md:102`.
 - **Reason:** The conflict already exists on `origin/main`, and the terminal tabs change does not touch the relay.
 
 - **Source:** Review.
