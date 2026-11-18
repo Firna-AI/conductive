@@ -129,7 +129,7 @@ vars, and the revision, which all accounts of the org share.
 - [`org-image-data.ts`](org-image-data.ts) gives `OrgImage`, `readOrgImage`,
   and `imageIsPublished`.
   [`org-image-refresh-data.ts`](org-image-refresh-data.ts) holds the push
-  refresh queries for the account of each org.
+  refresh and repository-change queries for the fixed account of each org.
 - [`org-provider-account.ts`](../data/org-provider-account.ts) reads the fixed
   account from `orgs.provider_account`. New creates, builds, refreshes,
   settings reads, and repository lists use that account. Low-level image
@@ -142,6 +142,9 @@ vars, and the revision, which all accounts of the org share.
   belong to the record of one account. The Cron repair advances the record
   of the fixed org account. A push refresh finds each matching org through
   that account, including orgs on different accounts.
+- A repository-change wake finds old values in the fixed account's image.
+  [`scheduleIdleImage`](image-schedule.ts) reads that account and schedules
+  the coordinator from its saved job and refresh deadlines.
 - Build cleanup keeps an old snapshot while any `org_images` record names
   the same account and name, and while a lease holds it.
 - One org still runs one build at a time, with one image coordinator. The

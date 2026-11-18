@@ -121,6 +121,7 @@ function WeightsBox(props: {
         <ActionButton
           busy={save.pending}
           disabled={!ready}
+          keepFocus
           onPress={() => save.run()}
           tone="primary"
         >

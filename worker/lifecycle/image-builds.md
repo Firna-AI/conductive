@@ -177,8 +177,10 @@ so it cannot find a change whose webhook never saved it.
 `wakeImagesForRepositoryChange` in
 [`repository-change-builds.ts`](repository-change-builds.ts) wakes the
 coordinator of each such org after the GitHub webhook receiver saves a
-repository change. It reads the software release only when an org needs a
-wake.
+repository change. Its discovery reads the image of each org's fixed account.
+It calls `scheduleIdleImage` in [`image-schedule.ts`](image-schedule.ts),
+which reads that account and schedules from the saved job and refresh deadlines.
+It reads the software release only when an org needs a wake.
 [Repository changes on GitHub](../../docs/protocol/repository-changes-on-github.md)
 states the rules.
 

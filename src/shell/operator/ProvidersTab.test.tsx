@@ -76,7 +76,9 @@ describe('the Providers tab of the operator section', () => {
       saving,
       saved: {
         box: boxText(view, 'New orgs'),
-        saveOff: isOff(controls(view).save),
+        saveOff:
+          isOff(controls(view).save) ||
+          controls(view).save.closest('[aria-disabled="true"]') !== null,
       },
       requests: await operatorRequests(server),
     }).toEqual({

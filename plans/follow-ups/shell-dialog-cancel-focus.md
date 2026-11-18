@@ -63,6 +63,7 @@
 - **Related:**
   - `plans/follow-ups/busy-buttons-lose-focus.md`: the same class, a natively disabled button that loses the focus. There the pressed busy button itself turns off, in the chat `ActionButton` and two shell callers. Here a Cancel that had the first focus turns off when another button starts the write. Neither fix covers the other.
   - `plans/follow-ups/busy-menu-escape-loses-focus.md`: the same class, for the trigger of a busy shell menu after Escape. Neither fix covers the other.
+  - `plans/follow-ups/shell-button-focus-default.md`: the same class, as a choice for every shell button. Its option C, a `keepFocus` default in the shell `ActionButton`, would give the shared Cancel the behaviour of B here. This item does not wait for that answer.
 - **Recommendation:** B, after a real browser shows the path. B reuses the tested `keepFocus` in one line, changes nothing on the proven paths, and covers the unproven one.
   - First reproduce the path in Firefox on a Mac. Open a question without a field, such as Delete secret. Slow the network so that the write runs for a few seconds.
   - Press the confirming action with the mouse. Read `document.activeElement` before the press, during the write, and after it.

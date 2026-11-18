@@ -82,24 +82,29 @@ export async function consumePendingPushRefresh(
 }
 
 type StaleImageFilter =
-  { githubRepositoryId: number; installationId: number } | { orgId: string }
+  | { githubRepositoryId: number; installationId: number }
+  | { orgId: string; providerAccount: string }
 
 /**
  * The orgs whose published image holds a repository with a name or a
  * default branch that differs from the saved one. Only an org whose newest
  * build succeeded counts, because the app starts no build by itself after
- * a failed build. The filter names one repository or one org.
+ * a failed build. The repository filter uses each org's fixed account.
+ * The org filter uses its explicit account.
  */
 export async function staleImageOrgs(
   db: D1Database,
   filter: StaleImageFilter,
-  providerAccount: string,
 ): Promise<string[]> {
   const [condition, values] =
     'orgId' in filter
-      ? ['image.org_id = ?', [filter.orgId]]
+      ? [
+          'image.provider_account = ? AND image.org_id = ?',
+          [filter.providerAccount, filter.orgId],
+        ]
       : [
-          'r.github_repository_id = ? AND r.installation_id = ?',
+          `image.provider_account = orgs.provider_account
+           AND r.github_repository_id = ? AND r.installation_id = ?`,
           [filter.githubRepositoryId, filter.installationId],
         ]
   const { results } = await db
@@ -109,7 +114,7 @@ export async function staleImageOrgs(
        JOIN json_each(j.repositories_json) entry
        JOIN repositories r ON r.id = json_extract(entry.value, '$.id') AND r.org_id = image.org_id
        JOIN orgs ON orgs.id = r.org_id
-       WHERE image.provider_account = ? AND image.image_name IS NOT NULL AND ${condition}
+       WHERE image.image_name IS NOT NULL AND ${condition}
        AND (json_extract(entry.value, '$.fullName') != r.full_name
          OR json_extract(entry.value, '$.defaultBranch') != r.default_branch)
        AND orgs.deleted_at IS NULL AND ${activeOrgPredicate('orgs')}
@@ -119,7 +124,7 @@ export async function staleImageOrgs(
          ORDER BY started_at DESC, id DESC LIMIT 1) = 'succeeded'
        ORDER BY image.org_id`,
     )
-    .bind(providerAccount, ...values)
+    .bind(...values)
     .all<{ orgId: string }>()
   return results.map((row) => row.orgId)
 }
@@ -129,5 +134,5 @@ export async function imageHoldsOldValues(
   orgId: string,
   providerAccount: string,
 ): Promise<boolean> {
-  return (await staleImageOrgs(db, { orgId }, providerAccount)).length > 0
+  return (await staleImageOrgs(db, { orgId, providerAccount })).length > 0
 }
