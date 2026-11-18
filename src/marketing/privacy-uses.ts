@@ -41,7 +41,9 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         and Ready for review of a draft pull request use the token of the
         member who clicks. Continue fetches the
         latest default branch with the token of the member who clicks
-        Continue.`,
+        Continue. A repository change fetches the latest default branch of
+        the new repository with the token of the member who changes the
+        repository.`,
       text`The waitlist: a new account without app access waits while the
         waitlist is on or sign-ups are paused. It sees only the waitlist.
         When the waitlist is off and sign-ups are not paused, open sign-up
@@ -146,7 +148,9 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         This includes a close that stops a running turn. The chat and
         copied transcripts name that session with Stopped from and its link.
         The chat history also records
-        who used Continue, the new branch, and the branch it starts from. It keeps
+        who used Continue, the new branch, and the branch it starts from.
+        It also records who changed the repository of a workspace, the new
+        repository, and the new branch. It keeps
         the last file list and the last summary of changes of each
         workspace. With the chat history, it keeps each list of the
         servers that run in the cloud computer of a workspace: the port,
@@ -195,7 +199,8 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         of them to its logs. ${productName} still keeps the chat history and
         the Mac command records above.`,
       text`GitHub events: the state of the pull requests and the checks
-        of your branches, which GitHub sends to ${productName}. An automation
+        of your branches, and the new name or default branch of a
+        repository, which GitHub sends to ${productName}. An automation
         also uses the GitHub accounts that open, push to, or merge a pull
         request, to decide whether the event starts a run.`,
       text`Feedback: your message and any screenshots help the team answer

@@ -106,7 +106,7 @@ it('rechecks revoked access before the GitHub write and before publication', asy
       ).run()
   }
   expect((await ready(orgId, session)).status).toBe(409)
-  expect(fixture.harness.memory('workspace-1').published).toEqual([])
+  expect((await fixture.harness.inspect('workspace-1')).published).toEqual([])
 })
 
 it('refuses a pull request that is not open, with no GitHub write', async () => {

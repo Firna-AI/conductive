@@ -8,11 +8,12 @@ import {
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { KeyChips } from '../../../docs/mockups/src/components/common/KeyChips'
 import styles from '../../../docs/mockups/src/components/palette/CommandPalette.module.css'
-import {
-  activityPresentation,
-  listMarkLabel,
-} from '../../../docs/mockups/src/components/workspaces/status'
+import { listMarkLabel } from '../../../docs/mockups/src/components/workspaces/status'
 import { WorkspaceMark } from '../../../docs/mockups/src/components/workspaces/WorkspaceMark'
+import {
+  WorkspaceName,
+  type EmphasisClasses,
+} from '../../../docs/mockups/src/components/workspaces/WorkspaceName'
 import type { PaletteResults } from '../../app/palette/palette-results'
 import type { PaletteRow } from '../../app/palette/palette-rows'
 import type { PaletteRead } from '../../app/palette/palette-source'
@@ -24,6 +25,16 @@ import { PaletteEmpty } from './PaletteEmpty'
 import { PaletteStatusPart } from './PaletteStatus'
 import { RowLead } from './RowLead'
 import { nameLabel } from '../../shared/name-label'
+
+/**
+ * The look of the name of a workspace in each state, as in the list: the
+ * strong weight for unread output, and the muted colour while the workspace
+ * is stopped or archived.
+ */
+const nameEmphasis: EmphasisClasses = {
+  strong: styles.strong,
+  dim: styles.dim,
+}
 
 /** A press in the list keeps the focus in the search field. */
 function keepFieldFocus(event: MouseEvent) {
@@ -44,9 +55,10 @@ function opensElsewhere(event: MouseEvent): boolean {
 /**
  * What a row shows. A workspace shows its list mark, as the list does, the
  * label of its number while the query matches that label, its name, its
- * repository, and the age of its latest activity. A command row ends with the key of its
- * command, as `useShortcutHint` gives it. The option names that key to a
- * screen reader, so the chips are hidden from it.
+ * repository, and the age of its latest activity. `WorkspaceName` gives the
+ * name the look of the state, as in the list. A command row ends with the
+ * key of its command, as `useShortcutHint` gives it. The option names that
+ * key to a screen reader, so the chips are hidden from it.
  */
 function RowContent(props: {
   row: PaletteRow
@@ -81,7 +93,13 @@ function RowContent(props: {
       {row.numberLabel ? (
         <span className={styles.number}>{row.numberLabel}</span>
       ) : null}
-      <span className={styles.label}>{nameLabel(workspace.name)}</span>
+      <WorkspaceName
+        className={styles.label}
+        emphasis={nameEmphasis}
+        status={workspace.state}
+      >
+        {nameLabel(workspace.name)}
+      </WorkspaceName>
       <span className={styles.repository}>{row.repository}</span>
       <span className={styles.end}>
         {formatAgo(props.now, workspace.updatedAt)}
@@ -114,15 +132,7 @@ function Row(props: {
   useEffect(() => {
     if (highlighted) option.current?.scrollIntoView?.({ block: 'nearest' })
   }, [highlighted])
-  const emphasis =
-    row.kind === 'workspace'
-      ? styles[activityPresentation[row.workspace.state].emphasis]
-      : undefined
-  const className = classes(
-    styles.row,
-    emphasis,
-    highlighted && styles.highlighted,
-  )
+  const className = classes(styles.row, highlighted && styles.highlighted)
   const onClick = (event: MouseEvent) => {
     if (row.href !== undefined && opensElsewhere(event)) return
     event.preventDefault()

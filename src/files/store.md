@@ -78,3 +78,20 @@ all files is unavailable" shows under the lists, with no age. With no tree
 to show, All files says "The list of all files is unavailable" in place of
 an empty list. That state shows also while the first read of the tree
 waits, or after it failed.
+
+A repository change moves the workspace to the folder of another
+repository, as
+[Repository change](../../docs/protocol/repository-change.md#after-the-change)
+says. The store reads the repository of each `workspace.updated` record in
+the stream, in event order:
+
+- The first record only sets the repository. A record of the same
+  repository changes nothing.
+- A record of another repository marks the tree as unavailable and drops
+  the changes, as the Worker marks its stored lists. The tree keeps its
+  revision, so the updates that follow still apply. Each open page reads
+  again.
+- The store then reads the changes route again, which waits for the
+  report of the new folder. The next full tree and the next changes report
+  of the stream replace both lists.
+- `files-moved.test.ts` checks these steps.

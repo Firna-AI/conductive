@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process'
-import { createInterface } from 'node:readline'
 
+import { TextLines } from '../text-lines'
 import { ProviderLifetime } from './lifetime'
 
 export interface ProcessPort {
@@ -29,7 +29,18 @@ export const startProcess: StartProcess = (request) => {
     stdio: ['pipe', 'pipe', 'ignore'],
   })
   const completion = lifetime.register(child)
-  const lines = createInterface({ input: child.stdout })
+  const lines = new TextLines()
+  const listeners = new Set<(line: string) => void>()
+  let reading = true
+  const deliver = (line: string) => {
+    if (!reading) return
+    for (const listener of listeners) listener(line)
+  }
+  child.stdout.on('data', (chunk: Buffer) => lines.push(chunk, deliver))
+  child.stdout.on('end', () => {
+    const rest = lines.end()
+    if (rest) deliver(rest)
+  })
   const exits = new Set<() => void>()
   let exited = false
   const exit = () => {
@@ -54,14 +65,14 @@ export const startProcess: StartProcess = (request) => {
       child.stdin.write(`${line}\n`)
     },
     onLine: (listener) => {
-      lines.on('line', listener)
+      listeners.add(listener)
     },
     onExit: (listener) => {
       exits.add(listener)
       if (exited) listener()
     },
     close: async () => {
-      lines.close()
+      reading = false
       child.stdin.end()
       await lifetime.close()
       child.stdout.destroy()

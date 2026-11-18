@@ -77,9 +77,10 @@ command start. For a workspace object, it:
   [The shown state](recovery-and-shown-state.md#the-shown-state) says
 - recovers and deletes an unresolved allocation after a start reaches its limit
 - keeps failed or cancelled resume stop cleanup after the start result ends
-- advances a running Continue by one phase. While it runs, the lifecycle
-  steps run only to advance a queued start, as
-  [Continue](continue.md#the-reservation) says
+- advances a running Continue or repository change by one phase. While
+  one of them runs, the lifecycle steps run only to advance a queued
+  start, as [Continue](continue.md#the-reservation) and
+  [Repository change](repository-change.md#the-reservation) say
 
 [The object alarm scheduler](alarm-scheduler.md) gives `WorkspaceAlarms`,
 the one scheduler of the object alarm: the owners and their due times, the

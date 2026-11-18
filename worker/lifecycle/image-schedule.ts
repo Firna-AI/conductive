@@ -6,6 +6,7 @@ import type { ImageRuntime } from './image-builds'
 import { pendingImageCleanup } from './image-maintenance-data'
 import type { ImageSoftwareArtifact } from './image-software'
 import { readOrgImage } from './org-image-data'
+import { imageHoldsOldValues } from './org-image-refresh-data'
 import { imageRetryAt } from './image-retry-data'
 
 export const IMAGE_DAY_MS = 86_400_000
@@ -20,6 +21,8 @@ type ImageSchedule =
       dailyAt: number
       pendingAt: number
       imageName: string | null
+      /** The image holds an old name or default branch, so a build is due. */
+      oldValues: boolean
     }
 
 /** Every idle caller uses the persisted daily and pending push deadlines. */
@@ -52,12 +55,14 @@ export async function readImageSchedule(
           image.pendingPushRefreshAt,
           (image.lastPushRefreshAt ?? -Infinity) + IMAGE_PUSH_MS,
         )
+  const oldValues = await imageHoldsOldValues(db, orgId, providerAccount)
   return {
     buildId: null,
-    nextAt: Math.min(dailyAt, pendingAt),
+    nextAt: oldValues ? now : Math.min(dailyAt, pendingAt),
     dailyAt,
     pendingAt,
     imageName: image?.imageName ?? null,
+    oldValues,
   }
 }
 

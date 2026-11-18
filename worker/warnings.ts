@@ -162,6 +162,29 @@ function warningFields(warning: WorkerWarning) {
           'The runner closes because its protocol version is not supported or does not meet the workspace version pin.',
         workspaceId: warning.workspaceId.text,
       }
+    case 'runner_repository_move_refused':
+      return {
+        kind: warning.kind,
+        message:
+          'The runner refused to move to the repository folder of its workspace.',
+        workspaceId: warning.workspaceId.text,
+        reason: warning.reason,
+      }
+    case 'repository_change_settle_failed':
+      return {
+        kind: warning.kind,
+        message:
+          'A step after a repository change failed: the second context copy or the terminal folder.',
+        workspaceId: warning.workspaceId.text,
+      }
+    case 'repository_change_ended':
+      return {
+        kind: warning.kind,
+        message:
+          'A repository change ended after the steps after its move failed for 10 minutes. The record keeps the old repository.',
+        workspaceId: warning.workspaceId.text,
+        phase: warning.phase,
+      }
     case 'lifecycle_repair_limited':
       return {
         kind: warning.kind,

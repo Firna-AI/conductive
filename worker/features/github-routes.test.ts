@@ -66,6 +66,12 @@ it('shares chat history with GitHub reads, retries pending reads, and refreshes 
     active.env.DB.prepare(
       "UPDATE repositories SET github_repository_id = 186853002, full_name = 'Codertocat/Hello-World', installation_id = 1 WHERE id = 'chat-repository'",
     ),
+    // The published image holds the same name, so a push refreshes it. An
+    // image with an older name gets a build instead.
+    active.env.DB.prepare(
+      `UPDATE image_build_jobs SET repositories_json = replace(repositories_json, '"owner/repository"', '"Codertocat/Hello-World"')
+       WHERE build_id IN (SELECT image_build_id FROM org_images WHERE org_id = 'chat-org')`,
+    ),
     active.env.DB.prepare(
       "UPDATE workspaces SET branch = 'changes' WHERE id = ?",
     ).bind(OUTER_WORKSPACE),

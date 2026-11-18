@@ -41,7 +41,7 @@ it('stores and publishes fresh banner state when recorded review threads change'
   ).toBe(204)
   expect(harness.api.requests).toHaveLength(reads)
 
-  const memory = harness.memory(workspace.id)
+  const inspect = () => harness.inspect(workspace.id)
   for (const sample of [
     { action: 'resolved', mergeState: 'CLEAN', banner: 'ready-to-merge' },
     { action: 'unresolved', mergeState: 'BLOCKED', banner: 'blocked' },
@@ -56,16 +56,22 @@ it('stores and publishes fresh banner state when recorded review threads change'
         )
       ).status,
     ).toBe(204)
-    expect(memory.values.get('github:state'), sample.action).toMatchObject({
+    expect(
+      (await inspect()).records.get('github:state'),
+      sample.action,
+    ).toMatchObject({
       banner: { state: sample.banner },
     })
-    expect(memory.published.at(-1)?.event, sample.action).toMatchObject({
+    expect(
+      (await inspect()).published.at(-1)?.event,
+      sample.action,
+    ).toMatchObject({
       type: 'github.updated',
       banner: { state: sample.banner },
     })
   }
-  expect(memory.events.map((envelope) => envelope.eventNumber)).toEqual([
-    1, 2, 3,
-  ])
-  expect(memory.published).toEqual(memory.events)
+  expect(
+    (await inspect()).events.map((envelope) => envelope.eventNumber),
+  ).toEqual([1, 2, 3])
+  expect((await inspect()).published).toEqual((await inspect()).events)
 })

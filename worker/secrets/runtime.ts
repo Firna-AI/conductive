@@ -154,7 +154,7 @@ export class SecretRuntime {
     member: MessageSender,
   ) {
     await this.reconcile()
-    const { result, orgId, acceptedNotice } =
+    const { result, orgId, acceptedNotice, notices } =
       await this.chat.authorizedWorkspaceOperation(
         workspaceId,
         async () => {},
@@ -167,7 +167,7 @@ export class SecretRuntime {
               'The request is not available.',
             )
           const open = openSecretRequest(record.request)
-          const result = await answerSecretRequest(
+          const { request: result, notices } = await answerSecretRequest(
             this,
             operation,
             record,
@@ -179,10 +179,13 @@ export class SecretRuntime {
             result,
             orgId: record.orgId,
             acceptedNotice: open && result.notice?.state === 'sent',
+            notices,
           }
         },
       )
     if (acceptedNotice) await deliverSecretNotice(this, orgId, result)
+    for (const notice of notices)
+      await deliverSecretNotice(this, notice.orgId, notice.request)
     return result
   }
 

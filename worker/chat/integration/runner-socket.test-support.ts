@@ -42,6 +42,8 @@ export class OuterFakeRunner {
       streamId?: string
       eventNumber?: number
       protocolVersion?: RunnerProtocolVersion
+      /** A runner that accepts repository.move names its folder. */
+      repositoryFolder?: string
       processStartId?: RunnerHello['processStartId']
     } = {},
   ) {
@@ -72,6 +74,9 @@ export class OuterFakeRunner {
       protocolVersion: options.protocolVersion ?? 2,
       workspaceId,
       streamId: this.streamId,
+      ...(options.repositoryFolder
+        ? { repositoryFolder: options.repositoryFolder }
+        : {}),
       ...(options.processStartId === undefined
         ? {}
         : { processStartId: options.processStartId }),
