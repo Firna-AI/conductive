@@ -258,7 +258,7 @@ Depends on: every other milestone
       passed after a split of `workspaceParts.tsx`, which the merge of
       `main` took past 300 lines.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
