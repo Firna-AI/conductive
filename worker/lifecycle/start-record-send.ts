@@ -6,6 +6,7 @@ import {
   bufferedRows,
   patchSteps,
   readStartRecordMeta,
+  recordJobId,
   settleRows,
 } from './start-record-buffer'
 import { startStepPatches } from './start-record-patches'
@@ -83,10 +84,14 @@ function collect(
     if (job && start)
       await storage.transaction(async (transaction) => {
         const meta = await readStartRecordMeta(transaction)
-        if (meta?.jobId === job.attempt)
+        if (meta?.jobId === recordJobId(job))
           await patchSteps(transaction, meta, startStepPatches(start, meta))
       })
-    const rows = await bufferedRows(storage, job?.attempt ?? null, SEND_LIMIT)
+    const rows = await bufferedRows(
+      storage,
+      job ? recordJobId(job) : null,
+      SEND_LIMIT,
+    )
     return {
       ...rows,
       statements: rows.unsent.map(([, entry]) =>
@@ -107,7 +112,12 @@ async function settle(
   await recordSafely(undefined, () =>
     storage.transaction(async (transaction) => {
       const job = await transaction.get('job', START_JOB_KEY)
-      await settleRows(transaction, rows, job?.attempt ?? null, dropped)
+      await settleRows(
+        transaction,
+        rows,
+        job ? recordJobId(job) : null,
+        dropped,
+      )
     }),
   )
 }

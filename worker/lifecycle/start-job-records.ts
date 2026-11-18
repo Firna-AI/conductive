@@ -12,6 +12,7 @@ import {
   closeOpenSteps,
   patchSteps,
   readStartRecordMeta,
+  recordJobId,
   START_RECORD_META_KEY,
   type StartRecordJob,
   type StartRecordMeta,
@@ -231,16 +232,6 @@ export class StartJobRecords {
       if (meta?.jobId === jobId) await patchSteps(transaction, meta, patches)
     })
   }
-}
-
-/**
- * Each try of a start gets its own records. A continued create keeps its
- * attempt and gets a new command attempt, as its command journal does.
- */
-function recordJobId(
-  job: Pick<WorkspaceStartJob, 'attempt' | 'commandAttempt'>,
-): string {
-  return job.commandAttempt ?? job.attempt
 }
 
 function recordJob(job: WorkspaceStartJob): StartRecordJob {

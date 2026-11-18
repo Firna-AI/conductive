@@ -192,3 +192,14 @@ export async function settleRows(
     if (same(await transaction.get('startRecord', key), entry))
       await transaction.delete(key)
 }
+
+/**
+ * Each try of a start gets its own records. A continued create keeps its
+ * attempt and gets a new command attempt, as its command journal does.
+ */
+export function recordJobId(job: {
+  attempt: string
+  commandAttempt?: string
+}): string {
+  return job.commandAttempt ?? job.attempt
+}

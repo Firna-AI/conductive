@@ -204,6 +204,10 @@ it('gives a continued create its own records and closes the steps of the try tha
   await records.jobBegan(continued)
   await (await records.begin(TEST_TIME + 5)).end()
   await records.send(state, write)
+  await records.send(state, write)
+  clock.at = TEST_TIME + 8
+  await records.jobEnded(continued, 'done')
+  await records.send(state, write)
 
   expect(await steps()).toEqual([
     {
@@ -217,8 +221,8 @@ it('gives a continued create its own records and closes the steps of the try tha
     {
       step: 'phase:machine',
       startedAt: TEST_TIME + 5,
-      endedAt: null,
-      outcome: null,
+      endedAt: TEST_TIME + 8,
+      outcome: 'done',
     },
   ])
 })
