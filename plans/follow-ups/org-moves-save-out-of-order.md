@@ -101,7 +101,7 @@ The result:
 
 More facts about the timing:
 
-- A held Alt and Up key repeats the move, because `onKeyDown` in `src/shell/layout/useRailMoves.ts:50` does not check `event.repeat`. So two moves overlap easily.
+- A held Alt and Up key repeats the move, because `onKeyDown` in `src/shell/ui/useListMoves.ts:55` does not check `event.repeat`. So two moves overlap easily.
 - The reverse run is still unusual. Before its write, each request reads the session and the app access from D1, at `worker/security/gate.ts:71` and `:80`.
 - Two moves of different orgs can show the defect too, when the result depends on their order. Two moves of one org are the simplest case.
 

@@ -219,6 +219,27 @@ Each call is mine, on 18 November 2026.
   is the repository list, with the chosen repositories first in the
   repository order, then the others by name. Reason: it follows the
   section move, and the list answer matches Add and Remove.
+- The Edit list sorts by name in the client, with
+  `compareRepositoryNames`. The mockup of Edit sorts by name too.
+- The tab text gives the rule of decision 1 F in two sentences: "New
+  workspaces and automations start in the first one. While it waits for a
+  build, new workspaces start in the next ready one." A new automation
+  takes the first repository also while it waits, so the text names the
+  wait for new workspaces only.
+- The row menu opens from a visible More button on each row, named "More
+  for" and the repository, as the section menu. A right click opens the
+  menu of the browser. Reason: a settings list has no tile, and a visible
+  button is easier to find.
+- Alt and Up or Down move a row while the focus is in the row, such as on
+  its More button. The row itself takes no focus. Reason: a second tab
+  stop for each row adds nothing that the button does not give.
+- The drag and key hooks of the rail move to `src/shell/ui/useListDrag.ts`
+  and `src/shell/ui/useListMoves.ts`, for any item with an ID and a name.
+  The rail and the org switcher use them as before.
+- Each add and each Remove gives the chosen rows dense positions first.
+  The order ignores a position on a row that is not chosen, because the
+  previous Worker keeps it at a Remove. A move keeps the settings revision,
+  because the image does not depend on the order.
 - After a move, a screen reader hears the name and the new place, such
   as "acme/web moves to place 1 of 3", as on the rail.
 
@@ -232,58 +253,58 @@ The Repositories tab of the org settings gets the reorder control of
 decision 1, for a computer and a phone. The New workspace and the
 automation repository menus show the repository order.
 
-- [ ] Update the repositories mockups of the org settings under
+- [x] Update the repositories mockups of the org settings under
       `docs/mockups/src/entries/app/org-settings/` with the reorder
       control, its states, and the order after a move, as decision 1
       chooses.
-- [ ] Show a member's read-only view of the order and of the default.
-- [ ] Show the New workspace repository menu in an order that is not the
+- [x] Show a member's read-only view of the order and of the default.
+- [x] Show the New workspace repository menu in an order that is not the
       GitHub name order, with the first ready repository picked.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
 ## Milestone 2: Documentation and protocol
 
 Depends on: 1
 
-- [ ] Add the repository order to
+- [x] Add the repository order to
       [Orgs and members](../docs/protocol/orgs-and-members.md): one order
       per org, admins only, the first repository as the default, new
       repositories at the end, and the control of decision 1.
-- [ ] Say in
+- [x] Say in
       [New workspace notices](../docs/protocol/new-workspace-notices.md#waiting-repositories)
       that the picker follows the repository order.
-- [ ] Say in [Automations](../docs/protocol/automations.md) that a new
+- [x] Say in [Automations](../docs/protocol/automations.md) that a new
       automation gets the first repository of the order.
-- [ ] Update [create-call-lists.md](../docs/protocol/create-call-lists.md#repositories)
+- [x] Update [create-call-lists.md](../docs/protocol/create-call-lists.md#repositories)
       as decision 2 chooses.
-- [ ] Update the steps of the public guide
+- [x] Update the steps of the public guide
       [Cloud computer](../src/marketing/docs/cloud-computer.md#choose-repositories).
       Read each public guide in full for other sentences that restate the
       order.
-- [ ] Read the Terms page and the Privacy page in full. Update each
+- [x] Read the Terms page and the Privacy page in full. Update each
       sentence that restates a changed fact.
 
 ## Milestone 3: Stored order and the move route
 
 Depends on: 2
 
-- [ ] Add a migration that adds `repositories.position` and fills it for
+- [x] Add a migration that adds `repositories.position` and fills it for
       the chosen rows of each org, in the name order of the design calls.
-- [ ] Add one Worker helper for the repository order. Use it in
+- [x] Add one Worker helper for the repository order. Use it in
       `shellRepositories`, in the merged list of `shellRepositoryChoices`,
       and in the tool list of `worker/tools/lists.ts`, as decision 2
       chooses.
-- [ ] Give a newly chosen repository the last position, in
+- [x] Give a newly chosen repository the last position, in
       `saveShellRepository` and in Create org. Clear the position at a
       Remove. Give each chosen row a dense position at each add and move.
-- [ ] Add the move route for admins: one repository to one place, as the
+- [x] Add the move route for admins: one repository to one place, as the
       section move does. A repository that is not chosen moves nothing.
-- [ ] Add the same route to the dev server in
+- [x] Add the same route to the dev server in
       `src/app/dev/settings-routes.ts`.
-- [ ] Update the Worker README where it describes the org routes.
-- [ ] Add Worker tests: the migration order, an add at the end, a Remove,
+- [x] Update the Worker README where it describes the org routes.
+- [x] Add Worker tests: the migration order, an add at the end, a Remove,
       a move, two moves at the same time, a move of a removed repository,
       a member who may not move, a row without a position, the tool list
       order, and no build after a move.
@@ -294,20 +315,20 @@ Tags: ui
 
 Depends on: 1, 3
 
-- [ ] Add the move action to `src/app/settings-actions.ts`, with an
+- [x] Add the move action to `src/app/settings-actions.ts`, with an
       optimistic order that a failure takes back.
-- [ ] Make the rail move hooks take any item with an ID and a name, and
+- [x] Make the rail move hooks take any item with an ID and a name, and
       use them for the chosen list of the Repositories tab, as decision 1
       chooses. Keep the rail tests green.
-- [ ] Add the screen-reader message after a move.
-- [ ] Show the default as decision 1 chooses, also on the read-only tab of
+- [x] Add the screen-reader message after a move.
+- [x] Show the default as decision 1 chooses, also on the read-only tab of
       a member.
-- [ ] Sort the Edit list by GitHub name in the client.
-- [ ] Check that each list of chosen repositories follows the order of
+- [x] Sort the Edit list by GitHub name in the client.
+- [x] Check that each list of chosen repositories follows the order of
       the server list: New workspace, the automation editor, the workspace
       repository menu, the palette filter, the org home, and the read-only
       tab of a member.
-- [ ] Add component tests for the control and for the default of New
+- [x] Add component tests for the control and for the default of New
       workspace after a move.
 - [ ] Check the tab in a browser, on a computer and on a phone.
 

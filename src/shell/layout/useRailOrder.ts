@@ -1,9 +1,9 @@
 import { useEffect, type HTMLAttributes, type RefCallback } from 'react'
 import type { PointerDragProps } from '../../app/pointer-drag'
 import type { OrgSummary } from '../../shared/orgs'
-import { useOrgDrag } from '../orgs/useOrgDrag'
 import { useOrgMove } from '../orgs/useOrgMove'
-import { useRailMoves } from './useRailMoves'
+import { useListDrag } from '../ui/useListDrag'
+import { useListMoves } from '../ui/useListMoves'
 import { useTileMenu } from './useTileMenu'
 
 /** The props of the list item of an org tile: its drag, its menu, and its keys. */
@@ -22,8 +22,8 @@ export type TileProps = PointerDragProps &
  */
 export function useRailOrder(orgs: readonly OrgSummary[]) {
   const move = useOrgMove()
-  const moves = useRailMoves({ orgs, move })
-  const drag = useOrgDrag(orgs, move)
+  const moves = useListMoves({ items: orgs, move })
+  const drag = useListDrag(orgs, move)
   const menu = useTileMenu({ orgs, step: moves.step })
   const dragging = drag.dragged !== null
   const { forget } = moves
