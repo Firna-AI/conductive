@@ -18,7 +18,7 @@ function unavailable(): Error {
 }
 
 /** GitHub names a repository as `owner/name`. A branch name has no whitespace. */
-export function readRepositoryValues(value: unknown): GitHubRepositoryValues {
+function readRepositoryValues(value: unknown): GitHubRepositoryValues {
   if (
     !isRecord(value) ||
     typeof value.full_name !== 'string' ||
