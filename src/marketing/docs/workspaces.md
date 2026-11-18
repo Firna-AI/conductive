@@ -129,8 +129,9 @@ Use **+** for a new conversation on that same task.
 
 **Link copied** confirms the copy.
 
-You can also copy the link from the workspace list.
+You can also copy the link from the workspace's menu.
 Right-click the workspace's row, or press **Shift+F10** while the row has focus.
+You can also select the workspace's name in the header of the open workspace.
 Then select **Copy link**.
 This works for archived workspaces too.
 
@@ -337,10 +338,11 @@ In an active org, only the workspace owner and org admins can archive it.
 On a computer, point to the workspace's row in the org's workspace list.
 Select **Archive workspace** when its icon appears over the time.
 
-You can also open the row's menu:
+You can also open the workspace's menu:
 
 - On a computer, right-click the row.
 - With a keyboard, press **Shift+F10** while the row has focus.
+- Select the workspace's name in the header of the open workspace.
 
 Then select **Archive**.
 

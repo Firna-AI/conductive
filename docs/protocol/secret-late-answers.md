@@ -64,3 +64,7 @@ decision number names a decision of the change that adds
   So was a new linked session, because it has none of the earlier history.
 - A late Deny sends nothing. The late request then shows that it was
   denied. Reason: no agent waits, because its call already ended.
+- One answer sends at most one line for each session, also when it allows
+  [covered requests](secret-requests.md#covered-requests). It sends none to
+  a session where a waiting call gets the values. Reason: that agent
+  already has them.
