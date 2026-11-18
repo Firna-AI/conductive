@@ -281,7 +281,8 @@ export class WorkspaceLifecycle
   }
 
   protected async alarmLifecycle(): Promise<void> {
-    await this.run((turn) => this.controller.alarm(turn))
+    const { startRecords } = this.integration
+    await this.run(startRecords.queued((turn) => this.controller.alarm(turn)))
   }
 
   deviceOperation(

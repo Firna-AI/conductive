@@ -12,7 +12,24 @@ import type { SandboxProvider } from './provider'
 type ProviderAccountEnvironment = Pick<
   AppEnv,
   'BOAT_API_KEY' | 'BOAT_ORG_ID' | 'SANDBOX_PROVIDER_ACCOUNTS'
->
+> &
+  Partial<Pick<AppEnv, 'DB'>>
+
+type ProviderObserver = (provider: SandboxProvider) => SandboxProvider
+
+const observers = new WeakMap<D1Database, ProviderObserver>()
+
+/**
+ * A workspace object times the provider calls of its start runs. Its env
+ * holds its own timed D1 binding, so the binding marks that env, also in a
+ * copy made with `{ ...env }`.
+ */
+export function observeProviders(
+  db: D1Database,
+  observer: ProviderObserver,
+): void {
+  observers.set(db, observer)
+}
 
 /** Trusted callers authorize the org and its resource before requesting a provider. */
 export function providerForAccount(
@@ -22,8 +39,11 @@ export function providerForAccount(
 ): SandboxProvider {
   const account = configuredAccount(env, accountId)
   switch (account.kind) {
-    case 'boat':
-      return new BoatClient(account.apiKey, fetch, account.orgId)
+    case 'boat': {
+      const provider = new BoatClient(account.apiKey, fetch, account.orgId)
+      const observer = env.DB && observers.get(env.DB)
+      return observer ? observer(provider) : provider
+    }
     default: {
       const unsupported: never = account.kind
       throw new Error(

@@ -136,6 +136,7 @@ of the isolate when a workspace object starts, and each row holds it. The
 the rows of a purged org.
 
 - Builds and refreshes: [Step records](image-builds.md#step-records).
+- Starts: [Start step records](workspace-object.md#start-step-records).
 
 ## Settings
 

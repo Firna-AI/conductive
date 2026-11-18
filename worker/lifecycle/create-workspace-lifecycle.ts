@@ -134,6 +134,7 @@ export function createWorkspaceLifecycle(
     env,
     dependencies,
     journal,
+    records: ctx.startRecords,
     readLifecycle: () => lifecycle.read(),
     deviceWaiting: async (id) => (await ctx.deviceWaiting?.(id)) ?? false,
     latestTitle: async (id) =>

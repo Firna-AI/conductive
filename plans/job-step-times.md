@@ -120,15 +120,15 @@ Depends on: 1
 
 Depends on: 1
 
-- [ ] Add the run timer and the timed D1, provider, and queue turn
+- [x] Add the run timer and the timed D1, provider, and queue turn
       wrappers. Test each wrapper.
-- [ ] Buffer the phase, computer, and user-visible step rows of a start in
+- [x] Buffer the phase, computer, and user-visible step rows of a start in
       Durable Object storage.
-- [ ] Record one run row for each run of a start.
-- [ ] Send the buffer to D1 in the shown-state batch, and the rest after
+- [x] Record one run row for each run of a start.
+- [x] Send the buffer to D1 in the shown-state batch, and the rest after
       the last run.
-- [ ] Test a create, a resume, a failed start, and a repeated send.
-- [ ] Update `worker/lifecycle/workspace-object.md`.
+- [x] Test a create, a resume, a failed start, and a repeated send.
+- [x] Update `worker/lifecycle/workspace-object.md`.
 
 ## Milestone 4: Verification, commit, review, and pull request
 

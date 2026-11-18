@@ -62,6 +62,11 @@ Ask for the client of that stored account:
 
 Both return `SandboxProvider`. Neither gives a key to its caller.
 The caller checks ownership before it passes a sandbox or saved snapshot ID.
+When `observeProviders` marks the D1 binding of the env, the client comes
+through the observer of that binding. A workspace object uses it to time
+the provider calls of its starts, as
+[Start step records](../lifecycle/workspace-object.md#start-step-records)
+says.
 
 The `boat` account, `DEFAULT_PROVIDER_ACCOUNT` in
 [account-identity.ts](account-identity.ts), always uses `BOAT_API_KEY` and

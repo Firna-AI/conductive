@@ -15,6 +15,10 @@ import type { GatewayRefusal } from './model-gateway/errors'
 export const SIMPLE_WARNINGS = {
   workspace_alarm_failed:
     'Workspace alarm work failed. Its durable deadline will retry.',
+  start_record_failed:
+    'A job step record of a start could not be saved. The start goes on without it.',
+  start_record_send_failed:
+    'The job step records of a start could not be sent. The shown state was saved without them.',
   terminal_restart_refresh_failed:
     'The terminal credentials and support could not be refreshed after Restart.',
   automation_schedule_failed:
