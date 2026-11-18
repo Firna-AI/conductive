@@ -137,7 +137,9 @@ This also works while you view a file or **Checks**.
 Your draft, attached files, and uploads stay as they were.
 The action's message appears in chat as your message.
 During a turn, it follows the same rules as a message you send from the box.
-If it cannot send, the chat opens and shows the cause.
+If it cannot send while you stay in the workspace on the same branch, the chat opens and shows the cause.
+If you leave or change the branch before the failure arrives, your chosen page stays open.
+The cause waits in that session's message box, also if you return before the failure arrives.
 
 - [Choose a pull request action](/docs/pull-requests#read-the-pull-request-state)
 
