@@ -58,6 +58,7 @@ is in `.context/repository-order/options-check-report.md`.
 
 ### 1. How an admin sets the order and the default
 
+- **Answer:** F, on 18 November 2026.
 - **Severity:** Medium. **Effort:** Medium.
 - **Source:** Design.
 - **Category:** Product bug.
@@ -123,6 +124,7 @@ is in `.context/repository-order/options-check-report.md`.
 
 ### 2. The default and the order that an agent sees
 
+- **Answer:** B, on 18 November 2026.
 - **Severity:** Low. **Effort:** Small.
 - **Source:** Design.
 - **Category:** Docs or spec.
@@ -211,6 +213,12 @@ Each call is mine, on 18 November 2026.
   now in the repository order. A kept draft and a pick of the person stay.
 - A new automation gets the first chosen repository in the repository
   order. An existing automation keeps its repository.
+- The move route is `PUT` on the path of the repository with
+  `/position`, with the body `{ "index": n }`. The index counts the chosen
+  repositories without the moved one, as a section move does. The answer
+  is the repository list, with the chosen repositories first in the
+  repository order, then the others by name. Reason: it follows the
+  section move, and the list answer matches Add and Remove.
 - After a move, a screen reader hears the name and the new place, such
   as "acme/web moves to place 1 of 3", as on the rail.
 
