@@ -1,4 +1,5 @@
 import type { SchemaProps } from '@mokly/mokly'
+import { pictureReads } from '../components/chat/chatPictures'
 import { foldStates } from '../components/chat/WorkFold'
 import { fileLists, treeStates } from '../components/files/FilesPanel'
 import { paletteViews } from '../components/palette/paletteViews'
@@ -49,6 +50,7 @@ export const workspaceStateSchema = {
     'startError',
     'conversation',
     'fold',
+    'pictures',
     'banner',
     'files',
     'tool',
@@ -102,6 +104,13 @@ export const workspaceStateSchema = {
      * so a chat with open folds starts at its top.
      */
     fold: { enum: foldStates },
+    /**
+     * The pictures of the answers while the cloud computer runs (screenshot
+     * decision 2): shown, or the box of each label while the reads run. The
+     * chat reads no picture without a running cloud computer, so each
+     * Markdown image of a picture file then shows as its link.
+     */
+    pictures: { enum: pictureReads },
     banner: { enum: bannerStates },
     /** The list of the files panel: All files, Changes, or Checks. */
     files: { enum: fileLists },
@@ -245,6 +254,7 @@ export const readyWorkspace: WorkspaceState = {
   startError: 'failed',
   conversation: 'history',
   fold: 'closed',
+  pictures: 'shown',
   banner: 'ready-to-merge',
   files: 'changes',
   tool: 'terminal',

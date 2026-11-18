@@ -86,7 +86,7 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
     case 'agent':
       return (
         <div className={classes(styles.agent, headingStyles.headings)}>
-          <AgentBlocks blocks={item.blocks} />
+          <AgentBlocks blocks={item.blocks} pictures />
         </div>
       )
     case 'mac-command':

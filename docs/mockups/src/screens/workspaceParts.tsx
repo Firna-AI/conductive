@@ -56,6 +56,7 @@ export function openFile(state: WorkspaceState): FileTabView | undefined {
     case 'image':
     case 'image-not-drawn':
     case 'attachment':
+    case 'screenshot':
       return state.tab
     case 'session':
     case 'new-session':
@@ -83,6 +84,7 @@ function backFrom(open: FileTabView): BackLink {
     case 'image':
     case 'image-not-drawn':
     case 'attachment':
+    case 'screenshot':
       return { label: 'All files', to: paths.filesAll }
   }
 }

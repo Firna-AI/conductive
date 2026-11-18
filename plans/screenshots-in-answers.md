@@ -76,10 +76,11 @@ These are my calls of 18 November 2026, under the decision test.
 - A read starts only when the picture comes near the view. At most two
   reads run at one time. One open chat reads each path once. Reason: an
   image can be up to 5 MiB, and a long chat can hold many.
-- While the read runs, a box of the final width shows the label. When the
-  read fails, the file passes the read limit, or the browser cannot draw
-  the bytes, the image shows as the link of today. Reason: the link still
-  opens the file tab, which gives the reason.
+- While the read runs, a box shows the label, with the size of the
+  loading call below. When the read fails, the file passes the read
+  limit, or the browser cannot draw the bytes, the image shows as the
+  link of today. Reason: the link still opens the file tab, which gives
+  the reason.
 - A picture shows in the text of each agent message, also in list items.
   In a heading and a table cell, the image stays a link. Reason: a picture
   in those places breaks the layout of the heading or the row.
@@ -87,6 +88,34 @@ These are my calls of 18 November 2026, under the decision test.
   the agent wrote. Reason: a copy gives the text as written.
 - Risk: when an agent saves a new screenshot under an old name, an older
   answer shows the newer image. The file tab has the same behaviour.
+
+These are my calls of 18 November 2026 from the mockups of Milestone 1,
+under the decision test.
+
+- The picture stands in the line of text at the place of the image, as
+  an image of a Markdown preview does. The text of the line keeps to the
+  top edge of the picture, as beside a chip. An image alone in its
+  paragraph stands on a line of its own. Reason: the sentence keeps its
+  order and reads on from the line above, and two screenshots of a phone
+  can stand side by side.
+- A picture smaller than the limits keeps its own size, as in the file
+  tab. Reason: a larger copy blurs.
+- Loading call: the size of a picture is known only after its read, so
+  the box cannot have the final width. The box takes the most room that
+  a picture takes: the width of the answer and a height of 240 CSS
+  pixels. It shows the icon of a picture beside the label, in the muted
+  colour on the raised fill. A press on the box opens the file tab.
+  Reason: most screenshots fill that height, so the answer moves little
+  when the picture comes, and the box never grows.
+- Each state of the picture holds only inline content, because it stands
+  in a paragraph. So the loading box shows an icon and no spinner, which
+  draws a block. Reason: a block in a paragraph breaks the paragraph, as
+  the first mockup of the loading box showed.
+- A closed message line in the work of a turn shows the image as the
+  link, so that the line stays one line. The open line shows the picture.
+  Reason: a picture shows in the text of each agent message, as above,
+  and a picture breaks the closed line as it breaks a heading. The open
+  line shows a code block in the same way.
 
 Contract owners:
 
@@ -105,19 +134,23 @@ The answer of `app/file-mentions/answers` already holds the Markdown
 image of a screenshot, "Postcode field on a phone". It shows that image as
 a picture, on desktop and on a phone.
 
-- [ ] Show the Markdown image of `app/file-mentions/answers` as a picture,
+- [x] Show the Markdown image of `app/file-mentions/answers` as a picture,
       with the size rules of the design calls. Update its description and
       rationale with screenshot decision 2.
-- [ ] Add child pages for the loading box and for a stopped sandbox,
+- [x] Add child pages for the loading box and for a stopped sandbox,
       where the image shows as a link. Keep each page at five screens or
       fewer.
-- [ ] Update `user-flows/open-a-file-from-an-answer` so that a press on
-      the picture opens the picture in the file tab, `app/files/image`.
-- [ ] Update `docs/mockups/catalogue-workspace-tools.md` for the changed
+- [x] Add the child page `app/file-mentions/answers/work` for the work of
+      a turn: the closed message line keeps the link, and the open line
+      shows the picture.
+- [x] Update `user-flows/open-a-file-from-an-answer` so that a press on
+      the picture opens the picture in the file tab, `app/files/image`, in
+      its new `from-answer` variant.
+- [x] Update `docs/mockups/catalogue-workspace-tools.md` for the changed
       pages and the flow.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages on desktop
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages on desktop
       and on a phone.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
 ## Milestone 2: Documentation and protocol
@@ -151,7 +184,7 @@ Depends on: 2
 
 ## Milestone 4: Picture reads for the chat
 
-Depends on: 2
+Depends on: 1. It adds no behaviour that a member sees, so it does not wait for the docs of Milestone 2.
 
 The chat gets a way to read the picture of one workspace file, with the
 limits of the design calls. It adds no screen.
@@ -173,12 +206,16 @@ Depends on: 1, 4
 - [ ] Add a picture part for the `![label](path)` form of a picture file
       in `src/chat/links/chat-parts.ts`. Keep the link part for headings,
       table cells, and each other file.
-- [ ] Add the picture component beside `FileTextLink.tsx`: the loading
+- [ ] Add the picture component beside `FileTextLink.tsx`. It draws
+      `AnswerPicture` of `docs/mockups/src/components/chat/`: the loading
       box, the picture, the press that opens the file tab, and the link
       when no reader exists or the read fails.
+- [ ] In a message line of the work of a turn, keep the link while the
+      line is closed, and show the picture while it is open, as
+      `app/file-mentions/answers/work` shows.
 - [ ] Start the read only when the picture comes near the view.
-- [ ] Add DOM tests for each state, and for the copy of an answer with a
-      picture.
+- [ ] Add DOM tests for each state, for a closed and an open message
+      line, and for the copy of an answer with a picture.
 - [ ] Update the chat README and the links docs of the chat.
 - [ ] Smoke-test in the browser: an answer with a screenshot, a stopped
       sandbox, and a phone width. Save the screenshots under

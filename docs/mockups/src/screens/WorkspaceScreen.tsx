@@ -139,6 +139,7 @@ export function WorkspaceScreen(props: {
             composerNotice(state, workspace)
           )
         }
+        pictures={state.sandbox === 'ready' ? state.pictures : undefined}
         problem={problem}
         starting={startingLogFor(state)}
         viewer={viewer}

@@ -99,6 +99,10 @@ failed, because a file of its message is no longer in the cloud computer.
 `app/files/image` shows the picture of an image file in its tab, and an
 image that the browser cannot draw. The flow `user-flows/drop-a-file` goes
 from the drop of a screenshot, through Send, to its file tab.
+`app/file-mentions/answers` shows a screenshot of the agent as a small
+picture in its answer, and its child pages show the picture while it
+loads, the link while the cloud computer is stopped, and the pictures in
+the work of a turn.
 
 `app/new-workspace/files` shows the same chips in the first message of a
 new workspace, before the workspace exists. `app/new-workspace/dialog/files`
@@ -107,9 +111,11 @@ shows them in the New workspace dialog.
 `DraftFileChip` in `src/components/chat/` draws the chip of an attached
 file in the text of a message box, in each state of its upload.
 `SentFileChip` beside it draws the chip of an attached file at its place in
-a sent message. `ImageView` in `src/components/files/` draws the picture of
-an image file in its tab. These three parts take no fixtures, so the app
-can draw them too. [attachmentCopy.ts](src/components/chat/attachmentCopy.ts)
+a sent message. `AnswerPicture` beside them draws a Markdown image of an
+answer to a picture file: its picture, the box of its label while it
+loads, or its link. `ImageView` in `src/components/files/` draws the
+picture of an image file in its tab. These four parts take no fixtures, so
+the app can draw them too. [attachmentCopy.ts](src/components/chat/attachmentCopy.ts)
 holds the words of the chips, and of the notices for a file over 1 GB and
 a dropped folder that the browser cannot read. The app shares these words.
 [The chat](design-chat.md) gives the design of each part.
