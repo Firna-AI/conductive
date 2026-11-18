@@ -19,8 +19,8 @@
   - **B.** Keep the prompt guard and pending client ID in the kept chat that already owns the send. Set them before awaiting the request. Suppress the identical pending press, and preserve failed-send retry IDs and successful cleanup. Effort: Small.
 - **Left out:** A per-mount guard loses ownership on navigation. A Worker-only change cannot know that the browser still awaits a reply, and existing server deduplication already works for the same ID. Cancelling accepted work breaks retained chat behavior. The two retained browser owners are the direct choices without a new acknowledgement protocol.
 - **Wider fix:** B. The same owner holds the operation, guard, and client ID for its entire lifetime.
-- **Previous examples:** The current prompt map already preserves the ID after a failed send. `plans/follow-ups/bar-prompt-completion-after-navigation.md` records a late navigation result from the same split between screen and send ownership.
-- **Related:** The late-completion follow-up above shares the lifetime cause but has a different symptom and correction. Preserve chosen-page ownership when both fixes are implemented.
+- **Previous examples:** The current prompt map already preserves the ID after a failed send. `BarActions.sendPrompt` in `src/github/barActions.ts` suppresses a late result after its connection ends, while the kept chat still owns the send.
+- **Related:** Late-completion suppression shares the lifetime cause but has a different symptom and correction. Preserve chosen-page ownership when this fix is implemented.
 - **Recommendation:** B. It uses the retained owner of the authorized send and protects every bar caller.
 - **Action:** fix after merge, apply B, because this rare browser-only timing fix is independent and costs the same later.
 
