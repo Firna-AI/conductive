@@ -39,6 +39,8 @@
   - Astro could not rename a built asset from `.astro/.prerender/_astro/` into `/tmp/conductive-site-*/_astro/`.
   - All 12 site tests then passed unchanged with `TMPDIR` set to `/home/user/code/remote-code/.context/merge-347/tmp`.
   - This keeps the temporary output on the checkout's file system. No assertion, build command, or timeout changed.
+  - On 18 November 2026, the complete gate of branch `calummoore/lima-djh5` in `/home/user/code/remote-code`, on main `7eab46042`, reproduced `EXDEV` for `.astro/.prerender/_astro/agents-desktop-light.DaL090yX.webp`.
+  - All 12 site tests then passed unchanged with `TMPDIR` set to a folder under `/home/user/code/remote-code/.context/`.
 - **Task:**
   - Find out when the build moves an asset out of the prerender folder, and why the first run did not fail. A cold image cache and two builds that share the prerender folder are suspected sources. Neither is confirmed.
   - Find out whether `--force` removes the case.
