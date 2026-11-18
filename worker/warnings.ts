@@ -1,4 +1,5 @@
 import { D1_ERROR_REASONS } from './d1-errors'
+import { mailDiagnosticFields } from './mail-diagnostics'
 import {
   RUNNER_MESSAGE_STAGES,
   SIMPLE_WARNINGS,
@@ -34,6 +35,20 @@ export function warnWorker(warning: WorkerWarning): void {
 
 function warningFields(warning: WorkerWarning) {
   switch (warning.kind) {
+    case 'invitation_email_delivery_failed':
+    case 'approval_email_delivery_failed':
+    case 'feedback_email_delivery_failed':
+      return {
+        kind: warning.kind,
+        message: {
+          invitation_email_delivery_failed:
+            'Invitation email delivery failed. The invitation remains saved.',
+          approval_email_delivery_failed:
+            'Approval email delivery failed. The email remains pending.',
+          feedback_email_delivery_failed: 'Feedback email delivery failed.',
+        }[warning.kind],
+        error: errorFields(warning.error),
+      }
     case 'runner_connected':
     case 'runner_disconnected':
       return {
@@ -229,6 +244,8 @@ function runnerFields(warning: RunnerWarningFields) {
 
 function errorFields(error: ErrorSummary): ErrorSummary {
   switch (error.kind) {
+    case 'mail':
+      return { kind: 'mail', ...mailDiagnosticFields(error) }
     case 'provider':
       return {
         kind: error.kind,

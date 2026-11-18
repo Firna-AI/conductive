@@ -43,8 +43,6 @@ export const SIMPLE_WARNINGS = {
     'Could not update the repository values that a GitHub webhook named. The next webhook checks again.',
   github_repository_token_revoke_failed:
     'Could not revoke the token of a repository read. It expires within 1 hour.',
-  approval_email_delivery_failed:
-    'Approval email delivery failed. The email remains pending.',
   approval_email_retry_failed:
     'The retry of approval emails failed. It runs again at the next timer.',
   feedback_send_cleanup_failed:
@@ -113,6 +111,13 @@ export type WorkerWarning =
       error: ErrorSummary
     }
   | { kind: keyof typeof SIMPLE_WARNINGS }
+  | {
+      kind:
+        | 'invitation_email_delivery_failed'
+        | 'approval_email_delivery_failed'
+        | 'feedback_email_delivery_failed'
+      error: ErrorSummary
+    }
   | { kind: 'runner_protocol_version_mismatch'; workspaceId: WarningId }
   | {
       kind: 'runner_repository_move_refused'

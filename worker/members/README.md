@@ -182,8 +182,9 @@ Only an acknowledged resume followed by a stop creates a new real stop date.
 A failed or uncertain resume keeps the older conservative date.
 The capability expires when its callback ends or its lease expires.
 
-[Invitations](invitations.md) gives the email of an invitation, the match
-of verified emails at each sign-in, and the explicit acceptance.
+[Invitations](invitations.md) gives the email of an invitation and the
+diagnostics of a failed send. It also gives the match of verified emails
+at each sign-in and the explicit acceptance.
 
 The lifecycle stores the ID of the member who creates a workspace in
 `owner_user_id`, in the creation transaction.
