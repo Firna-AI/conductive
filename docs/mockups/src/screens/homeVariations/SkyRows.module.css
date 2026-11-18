@@ -1,0 +1,156 @@
+/*
+ * The feature rows of variation A, "Sky": the words on one side and a
+ * stage in the tint of the feature on the other. The rows change sides. A
+ * picture wider than its stage starts at the inner edge and runs off the
+ * outer edge. The phone layout starts below 760 px, as on the site.
+ */
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 128px;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 32px;
+  box-sizing: border-box;
+  scroll-margin-top: 16px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  align-items: center;
+  gap: 64px;
+  scroll-margin-top: 16px;
+}
+
+.flip {
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+}
+
+.flip .copy {
+  order: 2;
+}
+
+.copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ui-ink2);
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--tint, var(--ui-primary));
+}
+
+.title {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: 38px;
+  font-weight: 700;
+  letter-spacing: -0.032em;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+.text {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: 17px;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+/* A stage in the tint of the feature, with a glow in one corner. */
+.stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 440px;
+  overflow: hidden;
+  border-radius: 28px;
+  background:
+    radial-gradient(
+      80% 90% at 0% 0%,
+      color-mix(in oklab, var(--tint) 28%, transparent) 0%,
+      transparent 70%
+    ),
+    var(--tint-soft);
+}
+
+/* A tall picture starts near the top and runs off the bottom edge. */
+.tall {
+  align-items: flex-start;
+  height: 520px;
+  padding-top: 48px;
+  box-sizing: border-box;
+}
+
+/* A wide picture starts at the inner edge of its stage. */
+.wide {
+  justify-content: flex-start;
+  padding-left: 48px;
+}
+
+.flip .wide {
+  justify-content: flex-end;
+  padding-right: 48px;
+  padding-left: 0;
+}
+
+@media (max-width: 759.98px) {
+  .rows {
+    gap: 72px;
+    padding: 0 20px;
+  }
+
+  .row,
+  .flip {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+
+  .flip .copy {
+    order: 0;
+  }
+
+  .copy > :last-child:not(.text) {
+    align-self: stretch;
+  }
+
+  .title {
+    font-size: 28px;
+  }
+
+  .text {
+    font-size: 15px;
+  }
+
+  .stage,
+  .wide,
+  .flip .wide {
+    justify-content: center;
+    height: auto;
+    min-height: 0;
+    padding: 24px 12px;
+    border-radius: 20px;
+  }
+
+  .tall {
+    height: 440px;
+    padding-bottom: 0;
+  }
+}

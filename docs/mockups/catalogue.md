@@ -6,6 +6,7 @@ how a screen is built, and links to the other pages.
 | Path                | What it shows                                                                 |
 | ------------------- | ----------------------------------------------------------------------------- |
 | `marketing`         | The home page of the site: the app, its features, the Mac app downloads, and Sign up |
+| `marketing/variations` | Four proposed variations of the home page, Sky, Bento, Steps, and Editorial, with the same words and pictures as `marketing` |
 | `marketing/docs`    | The overview of the public docs, then a guide, with its Docs menu or its contents open on a phone |
 | `marketing/pricing` | The pricing page: four plans with their prices and cloud hours, the tax line, and how cloud hours count |
 | `marketing/terms`   | The Terms of use, with the operator details, suspension, and abuse reports     |

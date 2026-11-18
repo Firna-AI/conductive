@@ -132,6 +132,27 @@ Changes to those screens require recapture with the [capture steps](../../src/ma
   Astro builds the agreement page with the same layouts and styles as the
   site. The Worker fills its Continue address and its links to the site.
 
+## Variations of the home page
+
+`marketing/variations` holds four proposals for a new look of the home
+page. None of them is the spec yet. `marketing` stays the spec of the
+site until the user chooses one. Each variation keeps the words, the
+order of the features, and the pictures of the current page, from
+`features.ts`. Each one uses only CSS that the site can serve without a
+script.
+
+- `marketing/variations/sky`: the blue field of the share card behind the
+  hero and the last call, and features in rows that change sides, each on
+  a stage in its own tint.
+- `marketing/variations/bento`: a large centred headline with a gradient
+  last word, and every feature as a tile of one grid.
+- `marketing/variations/steps`: the page follows one task, with the first
+  four features as numbered steps on a rail.
+- `marketing/variations/editorial`: very large type, the app tilted back,
+  and one full-width band for each feature, every second band in ink.
+
+The screens live in `src/screens/homeVariations/`.
+
 ## The docs
 
 The docs pages draw the layout of the public guides of the site, at

@@ -1,0 +1,258 @@
+/*
+ * Variation D, "Editorial": the very large headline, the app tilted back,
+ * the line of feature names, the smaller features, and the last call.
+ * `EditorialBands.module.css` draws the bands of the features.
+ */
+.page {
+  --frame-scale: 0.42;
+
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 120px;
+}
+
+@media (min-width: 760px) {
+  .page {
+    --frame-scale: 0.5;
+  }
+}
+
+@media (min-width: 980px) {
+  .page {
+    --frame-scale: 0.625;
+  }
+}
+
+@media (min-width: 1180px) {
+  .page {
+    --frame-scale: 0.75;
+  }
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  width: 100%;
+  max-width: 1244px;
+  margin: 0 auto;
+  padding: 88px 32px 0;
+  box-sizing: border-box;
+}
+
+.heroTitle {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: clamp(64px, 11.5vw, 168px);
+  font-weight: 800;
+  letter-spacing: -0.06em;
+  line-height: 0.9;
+}
+
+/* The sentence on the left and the actions on the right, on one line. */
+.heroRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px 48px;
+}
+
+.heroText {
+  max-width: 560px;
+  margin: 0;
+  color: var(--ui-ink2);
+  font-size: 19px;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+/* The app leans back, and its foot fades into the page. */
+.heroPicture {
+  display: flex;
+  justify-content: center;
+  height: calc(640px * var(--frame-scale));
+  margin-top: 24px;
+  perspective: 2400px;
+  mask-image: linear-gradient(180deg, black 60%, transparent);
+}
+
+.tilt {
+  transform: rotateX(18deg);
+  transform-origin: 50% 0;
+}
+
+/* The names of the features, large and outlined, between two rules. */
+.names {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 28px;
+  width: calc(100% - 64px);
+  max-width: 1180px;
+  margin: 24px auto 0;
+  padding: 36px 0;
+  border-top: 1px solid var(--ui-border);
+  color: transparent;
+  font-size: 44px;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  -webkit-text-stroke: 1px var(--ui-faint);
+}
+
+.name:nth-child(odd) {
+  color: var(--ui-ink);
+  -webkit-text-stroke: 0;
+}
+
+/* The smaller features: a numbered list in two columns. */
+.more {
+  display: grid;
+  grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+  gap: 48px;
+  width: 100%;
+  max-width: 1244px;
+  margin: 0 auto;
+  padding: 120px 32px 0;
+  box-sizing: border-box;
+}
+
+.moreTitle {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: 44px;
+  font-weight: 750;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+}
+
+.moreList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 36px 40px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.moreItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 16px;
+  border-top: 1px solid var(--ui-border);
+}
+
+.moreNumber {
+  color: var(--ui-faint);
+  font-family: var(--ui-font-mono);
+  font-size: 12px;
+}
+
+.moreItemTitle {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: 17px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.moreItemText {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.closing {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  width: 100%;
+  max-width: 1244px;
+  margin: 0 auto;
+  padding: 144px 32px 0;
+  box-sizing: border-box;
+}
+
+.closingTitle {
+  max-width: 1100px;
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: clamp(48px, 7vw, 104px);
+  font-weight: 800;
+  letter-spacing: -0.055em;
+  line-height: 0.95;
+  text-wrap: balance;
+}
+
+.closingText {
+  max-width: 520px;
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+/* The phone: one column, and the picture stands upright. */
+.mobile {
+  padding-bottom: 64px;
+}
+
+.mobile .hero {
+  gap: 24px;
+  padding: 48px 20px 0;
+}
+
+.mobile .heroTitle {
+  font-size: 60px;
+}
+
+.mobile .heroText {
+  font-size: 16px;
+}
+
+.mobile .heroRow > :last-child {
+  flex-basis: 100%;
+}
+
+.mobile .heroPicture {
+  height: 460px;
+  perspective: none;
+}
+
+.mobile .tilt {
+  transform: none;
+}
+
+.mobile .names {
+  width: calc(100% - 40px);
+  gap: 0 14px;
+  padding: 24px 0;
+  font-size: 26px;
+}
+
+.mobile .more {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+  padding: 72px 20px 0;
+}
+
+.mobile .moreTitle {
+  font-size: 30px;
+}
+
+.mobile .moreList {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+}
+
+.mobile .closing {
+  gap: 24px;
+  padding: 88px 20px 0;
+}
+
+.mobile .closingTitle {
+  font-size: 40px;
+}

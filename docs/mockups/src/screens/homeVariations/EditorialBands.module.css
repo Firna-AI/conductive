@@ -1,0 +1,140 @@
+/*
+ * The feature bands of variation D, "Editorial". An inverted band swaps
+ * the ink and the surface. The pictures keep the tokens of the app, so the
+ * screens look the same on each band. The phone layout starts below 760 px.
+ */
+.bands {
+  display: flex;
+  flex-direction: column;
+  scroll-margin-top: 16px;
+}
+
+.band {
+  --band-ink: var(--ui-ink);
+  --band-muted: var(--ui-muted);
+  --band-line: var(--ui-border);
+
+  display: flex;
+  flex-direction: column;
+  gap: 64px;
+  padding: 112px 32px 0;
+  overflow: hidden;
+  background: var(--ui-surface);
+  scroll-margin-top: 16px;
+}
+
+.inverted {
+  --band-ink: var(--ui-surface);
+  --band-muted: color-mix(in oklab, var(--ui-surface) 62%, var(--ui-ink));
+  --band-line: color-mix(in oklab, var(--ui-surface) 18%, var(--ui-ink));
+
+  background: var(--ui-ink);
+}
+
+.head {
+  display: grid;
+  grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+  gap: 48px;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding-top: 24px;
+  border-top: 1px solid var(--band-line);
+}
+
+.count {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--band-muted);
+  font-family: var(--ui-font-mono);
+  font-size: 13px;
+}
+
+.label {
+  color: var(--band-ink);
+  font-family: var(--ui-font-sans);
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.title {
+  margin: 0;
+  color: var(--band-ink);
+  font-size: 60px;
+  font-weight: 750;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  text-wrap: balance;
+}
+
+.text {
+  max-width: 600px;
+  margin: 0;
+  color: var(--band-muted);
+  font-size: 18px;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+/* The secondary download keeps its look on an inverted band. */
+.inverted .copy p:last-child {
+  color: var(--band-muted);
+}
+
+/* The picture stands at the foot of the band and runs off its bottom. */
+.picture {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  height: 300px;
+}
+
+.tall {
+  height: 440px;
+}
+
+@media (max-width: 759.98px) {
+  .band {
+    gap: 36px;
+    padding: 64px 20px 0;
+  }
+
+  .head {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+    padding-top: 16px;
+  }
+
+  .count {
+    flex-direction: row;
+    gap: 12px;
+  }
+
+  .copy > :last-child:not(.text) {
+    align-self: stretch;
+  }
+
+  .title {
+    font-size: 34px;
+  }
+
+  .text {
+    font-size: 16px;
+  }
+
+  .picture {
+    height: 280px;
+  }
+
+  .tall {
+    height: 380px;
+  }
+}

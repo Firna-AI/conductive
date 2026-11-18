@@ -1,0 +1,142 @@
+/*
+ * The places around the work in variation C, "Steps": the org across the
+ * row, then the phone and the Mac app side by side. Each picture runs off
+ * the bottom of its card. The phone layout starts below 760 px.
+ */
+.around {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 20px;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 32px;
+  box-sizing: border-box;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  overflow: hidden;
+  border: 1px solid var(--ui-border);
+  border-radius: 24px;
+  background: var(--ui-sidebar);
+  scroll-margin-top: 16px;
+}
+
+.cardCopy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 36px 36px 0;
+}
+
+.cardLabel {
+  color: var(--ui-muted);
+  font-family: var(--ui-font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.cardTitle {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.12;
+  text-wrap: balance;
+}
+
+.cardText {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: 15px;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.cardPicture {
+  display: flex;
+  flex: 1;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 0;
+}
+
+/* The org: the words on the left, the cloud computer of the org beside. */
+.orgCard {
+  flex-direction: row;
+  grid-column: span 12;
+  height: 420px;
+}
+
+.orgCard .cardCopy {
+  flex: 0 0 380px;
+  justify-content: center;
+  padding: 36px;
+}
+
+.orgCard .cardPicture {
+  justify-content: flex-start;
+  padding-top: 52px;
+}
+
+.phoneCard {
+  grid-column: span 5;
+  height: 860px;
+}
+
+.macCard {
+  grid-column: span 7;
+  height: 860px;
+}
+
+.macCard .cardPicture {
+  justify-content: flex-start;
+  padding-left: 36px;
+}
+
+@media (max-width: 759.98px) {
+  .around {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    padding: 0 16px;
+  }
+
+  .card,
+  .orgCard,
+  .phoneCard,
+  .macCard {
+    flex-direction: column;
+    grid-column: auto;
+    gap: 24px;
+    height: auto;
+    border-radius: 20px;
+  }
+
+  .cardCopy,
+  .orgCard .cardCopy {
+    flex: none;
+    padding: 24px 22px 0;
+  }
+
+  .cardCopy > :last-child:not(.cardText) {
+    align-self: stretch;
+  }
+
+  .cardTitle {
+    font-size: 22px;
+  }
+
+  .cardPicture,
+  .orgCard .cardPicture,
+  .macCard .cardPicture {
+    justify-content: center;
+    height: 360px;
+    padding: 0 12px;
+  }
+}

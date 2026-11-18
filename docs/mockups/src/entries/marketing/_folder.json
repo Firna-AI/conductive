@@ -1,5 +1,6 @@
 {
   "order": [
+    "variations",
     "docs",
     "open-sign-up",
     "pricing",

@@ -1,0 +1,176 @@
+/*
+ * The numbered steps of variation C, "Steps". A rail runs down the column
+ * of the numbers. The rail is a line beside the steps, not an edge of a
+ * box. Each number stays in view while its step scrolls past. The phone
+ * layout starts below 760 px, as on the site.
+ */
+.list {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  gap: 120px;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 32px;
+  list-style: none;
+  box-sizing: border-box;
+  scroll-margin-top: 16px;
+}
+
+.list::before {
+  position: absolute;
+  top: 12px;
+  bottom: 0;
+  left: 59px;
+  width: 1px;
+  background: linear-gradient(
+    180deg,
+    var(--ui-border2),
+    var(--ui-border2) 85%,
+    transparent
+  );
+  content: '';
+}
+
+.step {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 48px;
+}
+
+.marker {
+  display: flex;
+  position: sticky;
+  top: 32px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  align-self: start;
+}
+
+.number {
+  display: inline-flex;
+  position: relative;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border: 1px solid color-mix(in oklab, var(--tint) 45%, transparent);
+  border-radius: 999px;
+  background: var(--ui-surface);
+  color: var(--tint);
+  font-family: var(--ui-font-mono);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.label {
+  color: var(--ui-muted);
+  font-family: var(--ui-font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 6px;
+}
+
+.title {
+  max-width: 680px;
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+.text {
+  max-width: 620px;
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: 17px;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+/* A stage with a fine grid in the tint of the step. */
+.stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 420px;
+  margin-top: 16px;
+  padding: 48px 32px;
+  overflow: hidden;
+  border: 1px solid var(--ui-border);
+  border-radius: 20px;
+  background-color: var(--ui-sidebar);
+  background-image:
+    linear-gradient(
+      color-mix(in oklab, var(--tint) 14%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      color-mix(in oklab, var(--tint) 14%, transparent) 1px,
+      transparent 1px
+    );
+  background-position: -1px -1px;
+  background-size: 32px 32px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 759.98px) {
+  .list {
+    gap: 72px;
+    padding: 0 20px;
+  }
+
+  .list::before {
+    left: 41px;
+  }
+
+  .step {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .marker {
+    position: static;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .number {
+    width: 44px;
+    height: 44px;
+    font-size: 15px;
+  }
+
+  .body {
+    padding-top: 0;
+    padding-left: 60px;
+  }
+
+  .title {
+    font-size: 26px;
+  }
+
+  .text {
+    font-size: 15px;
+  }
+
+  .stage {
+    min-height: 0;
+    margin-left: -60px;
+    padding: 24px 12px;
+    border-radius: 16px;
+  }
+}

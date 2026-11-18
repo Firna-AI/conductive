@@ -1,0 +1,139 @@
+/*
+ * The feature tiles of variation B, "Bento". Each tile reads its tint from
+ * `--tint`. The picture starts at the left padding of the tile and runs off
+ * its right and bottom edges. The phone layout starts below 760 px, as on
+ * the site.
+ */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 20px;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 32px;
+  box-sizing: border-box;
+  scroll-margin-top: 16px;
+}
+
+.tile {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  gap: 32px;
+  height: 540px;
+  overflow: hidden;
+  border: 1px solid var(--ui-border);
+  border-radius: 24px;
+  background:
+    radial-gradient(
+      70% 60% at 100% 0%,
+      color-mix(in oklab, var(--tint) 18%, transparent) 0%,
+      transparent 70%
+    ),
+    var(--ui-sidebar);
+  scroll-margin-top: 16px;
+}
+
+.copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 36px 36px 0;
+}
+
+.label {
+  color: var(--tint);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.title {
+  max-width: 460px;
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+.text {
+  max-width: 520px;
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: 15px;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.picture {
+  display: flex;
+  flex: 1;
+  align-items: flex-start;
+  min-height: 0;
+  padding-left: 36px;
+}
+
+/* The phone stands in the middle of its tile and runs off the bottom. */
+.phone .picture {
+  justify-content: center;
+  padding-left: 0;
+}
+
+/* The Mac app spans the row: the words on the left, the window beside. */
+.wide {
+  flex-direction: row;
+  align-items: stretch;
+  height: 480px;
+}
+
+.wide .copy {
+  flex: 0 0 380px;
+  justify-content: center;
+  padding: 36px;
+}
+
+.wide .picture {
+  padding-top: 48px;
+  padding-left: 0;
+}
+
+@media (max-width: 759.98px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    padding: 0 16px;
+  }
+
+  .tile,
+  .wide {
+    flex-direction: column;
+    gap: 24px;
+    height: auto;
+    border-radius: 20px;
+  }
+
+  .copy,
+  .wide .copy {
+    flex: none;
+    padding: 24px 22px 0;
+  }
+
+  .copy > :last-child:not(.text) {
+    align-self: stretch;
+  }
+
+  .title {
+    font-size: 22px;
+  }
+
+  .picture,
+  .wide .picture {
+    justify-content: center;
+    height: 340px;
+    padding: 0 12px;
+  }
+}
