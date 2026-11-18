@@ -37,7 +37,10 @@ export const markdownParser = new MarkdownIt('commonmark', {
 }).enable(['table', 'strikethrough'])
 
 markdownParser.core.ruler.after('inline', 'inline_depth', limitInlineDepth)
-markdownParser.block.ruler.at('table', sparseTable, {
+const blockRules = markdownParser.block.ruler
+// Read lists, quotes, and headings before a table can take their marks.
+blockRules.__rules__.splice(blockRules.__find__('table'), 1)
+blockRules.after('heading', 'table', sparseTable, {
   alt: ['paragraph', 'reference'],
 })
 limitBlockDepth(markdownParser, maxDepth)

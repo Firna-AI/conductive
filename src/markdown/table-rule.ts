@@ -23,7 +23,7 @@
 import type { StateBlock, Token } from 'markdown-it'
 import { tableColumns, tableHeader, tableLine } from './table-source'
 
-/** The library's per-table stop. It counts missing source cells. */
+/** The library's per-table stop for the preview. It counts missing source cells. */
 const maxAutocompletedCells = 65_536
 
 /** Emits the given cells, up to the header width. */
@@ -88,15 +88,15 @@ export function sparseTable(
     const line = tableLine(state, nextLine).trim()
     if (line === '' || state.sCount[nextLine] - state.blkIndent >= 4) break
     const row = tableColumns(line)
-    // Keep the library's signed count: an overfull row reduces this count.
-    autocompletedCells += align.length - row.length
-    if (autocompletedCells > maxAutocompletedCells) {
-      stop(state, table, nextLine)
-      break
-    }
     const left = state.env.tableCellsLeft
-    const missing = Math.max(0, align.length - row.length)
     if (typeof left === 'number') {
+      // Keep the library's signed count: an overfull row reduces this count.
+      autocompletedCells += align.length - row.length
+      if (autocompletedCells > maxAutocompletedCells) {
+        stop(state, table, nextLine)
+        break
+      }
+      const missing = Math.max(0, align.length - row.length)
       if (missing > left) {
         stop(state, table, nextLine)
         break
@@ -108,7 +108,7 @@ export function sparseTable(
       state.push('tbody_open', 'tbody', 1).map = bodyLines
     }
     state.push('tr_open', 'tr', 1).map = [nextLine, nextLine + 1]
-    // Keep an empty row visible after both budgets count its source cells.
+    // Keep a row with no source cell visible.
     cells(state, row.length ? row : [''], align, false)
     state.push('tr_close', 'tr', -1)
   }

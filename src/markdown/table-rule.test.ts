@@ -25,7 +25,7 @@ test('allocates one cell per empty body row, including repeated sparse tables', 
   }
 })
 
-test('records the library missing-cell stop as a source line before references disappear', () => {
+test('records the preview missing-cell stop as a source line before references disappear', () => {
   const source =
     'a|'.repeat(1024) +
     '\n' +
@@ -33,7 +33,9 @@ test('records the library missing-cell stop as a source line before references d
     '\n' +
     '|\n'.repeat(64) +
     '[ref]: <a|b>\n\n# After'
-  const { tokens } = parseMarkdownTokens(source)
-  expect(tokens[0].meta?.tableStopLine).toBe(66)
+  const { tokens, tailLine } = parseMarkdownTokens(source, {
+    tableBudget: 70_000,
+  })
+  expect(tailLine).toBe(66)
   expect(tokens.filter((token) => token.type === 'tr_open')).toHaveLength(65)
 })

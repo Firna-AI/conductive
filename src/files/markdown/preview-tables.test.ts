@@ -65,3 +65,88 @@ test('takes no empty-cell budget for a table inside a flattened deep quote', () 
     rows: [[[], []]],
   })
 })
+
+test('keeps a line without a pipe as one more preview row and pads its missing cell', () => {
+  expect(previewDocument('a | b\n--- | ---\nc | d\nno pipe').blocks).toEqual([
+    {
+      kind: 'table',
+      head: [[{ kind: 'text', text: 'a' }], [{ kind: 'text', text: 'b' }]],
+      align: [null, null],
+      rows: [
+        [[{ kind: 'text', text: 'c' }], [{ kind: 'text', text: 'd' }]],
+        [[{ kind: 'text', text: 'no pipe' }], []],
+      ],
+    },
+  ])
+})
+
+test.each([
+  [
+    '- a | b',
+    [
+      {
+        kind: 'list',
+        ordered: false,
+        start: 1,
+        items: [
+          {
+            checked: null,
+            blocks: [
+              {
+                kind: 'paragraph',
+                text: [{ kind: 'text', text: 'a | b\n--- | ---' }],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  ],
+  [
+    '1. a | b',
+    [
+      {
+        kind: 'list',
+        ordered: true,
+        start: 1,
+        items: [
+          {
+            checked: null,
+            blocks: [
+              {
+                kind: 'paragraph',
+                text: [{ kind: 'text', text: 'a | b\n--- | ---' }],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  ],
+  [
+    '> a | b',
+    [
+      {
+        kind: 'quote',
+        blocks: [
+          {
+            kind: 'paragraph',
+            text: [{ kind: 'text', text: 'a | b\n--- | ---' }],
+          },
+        ],
+      },
+    ],
+  ],
+  [
+    '# a | b',
+    [
+      { kind: 'heading', level: 1, text: [{ kind: 'text', text: 'a | b' }] },
+      { kind: 'paragraph', text: [{ kind: 'text', text: '--- | ---' }] },
+    ],
+  ],
+])(
+  'keeps the block mark of %s out of a preview table header',
+  (header, blocks) => {
+    expect(previewDocument(`${header}\n--- | ---`).blocks).toEqual(blocks)
+  },
+)

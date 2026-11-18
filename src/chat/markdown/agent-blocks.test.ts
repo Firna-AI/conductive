@@ -133,7 +133,7 @@ it('ends a list item at an unindented line after a code block or a table, as Com
   ])
 })
 
-it('starts a list after a line of text only where CommonMark lets it, and reads a header row with a list mark as a table, as markdown-it does', () => {
+it('starts a list after a line of text only where CommonMark lets it, and keeps an indented table inside its item', () => {
   expect({
     numberInItem: blocksOf(
       '1. The supported runtime is',
@@ -158,7 +158,7 @@ it('starts a list after a line of text only where CommonMark lets it, and reads 
       { kind: 'ol', start: 3, items: [[p('Add the screen.')]] },
     ],
     emptyAfterText: [p('The list: -')],
-    tableInItem: [table(['- a', 'b'], [['c', 'd']])],
+    tableInItem: [{ kind: 'ul', items: [[table(['a', 'b'], [['c', 'd']])]] }],
     headingEndsItem: [
       { kind: 'ol', start: 1, items: [[p('Build the page.')]] },
       h(2, 'Next'),

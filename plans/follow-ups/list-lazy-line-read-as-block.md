@@ -33,6 +33,5 @@
 - **Left out:** Dropping all lazy lines, because CommonMark keeps them in the paragraph. Agent instructions, because the file preview also shows files that people write. A wait for an upstream fix alone, because both views keep the defect for an unknown time.
 - **Wider fix:** C. One indent test against the right container prevents the class in both views.
 - **Previous examples:** The readers that the shared parser replaced had the same class, in other cases: the nested-list branch fixed some, and this item and the merged fence item recorded the rest.
-- **Related:** `plans/follow-ups/table-header-takes-block-line.md` records another defect of the block rules of `markdown-it`. Both fixes change `src/markdown/parser.ts`, so one branch can fix both.
 - **Recommendation:** C. It removes the class in both views and keeps Markdown parser decision 3 C.
 - **Action:** fix after merge, apply C, because each case needs an unusual indent, and the fix costs the same later.

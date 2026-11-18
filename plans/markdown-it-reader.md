@@ -515,14 +515,23 @@ Depends on: 8
 
 Depends on: 9
 
-- [ ] Item 15 B: the per-table stop of `src/markdown/table-rule.ts`
+- [x] Item 15 B: the per-table stop of `src/markdown/table-rule.ts`
       applies only in a parse for the file preview.
-- [ ] Item 18 B: a line that starts a list item, a quote, or a heading
-      starts no table. Delete `plans/follow-ups/table-header-takes-block-line.md`.
-- [ ] Item 13 A: `rowsInTable` keeps each row that the parser reads, with
-      a test, and without the open-question comment.
-- [ ] Item 20 A: a follow-up item for the shortcut reference case, with
-      the text of the report to the `markdown-it` project.
+- [x] Item 18 B: a line that starts a list item, a quote, or a heading
+      starts no table. The table rule now follows the heading rule.
+      Delete `plans/follow-ups/table-header-takes-block-line.md`.
+- [x] Item 13 A: `readTable` keeps each row that the parser reads.
+      Remove the no-op `rowsInTable`, `ownCells`, and the row split.
+      Test a line without a pipe in both views. The return field `rest`
+      stays empty for the unchanged block reader, outside this scope.
+- [x] Item 20 A: `plans/follow-ups/shortcut-reference-before-brackets.md`
+      records the shortcut reference case, the relaxed test, and the text
+      of divergence 1 of `markdown-it` issue 1226.
+- [x] Add `plans/follow-ups/split-workspace-terminal-protocol-section.md`
+      for the split of the Terminal section after the merge.
+
+Evidence: `.context/markdown-it-reader/m10/` holds the regression failures,
+the CommonMark comparison, and the check logs.
 
 ## Milestone 11: The chat and the preview for the answers of 18 November 2026
 
