@@ -90,6 +90,11 @@ export interface ChatNotice {
   sessionId: string | null
   title: string
   message: string
+  /**
+   * The client ID of the message of a failed send. The notice goes when a
+   * transcript shows that message, as `withLateSends` says.
+   */
+  messageId?: string
 }
 
 /**
