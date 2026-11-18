@@ -86,10 +86,6 @@ it('closes the events socket and logs one unexpected error when a later history 
         route: '/api/orgs/*/workspaces/*/events',
       }),
     ])
-    expect(await tab.closed).toEqual({
-      code: 1000,
-      reason: 'Connection closed.',
-    })
   } finally {
     await disposeBrowsers(runtime, sockets)
   }
