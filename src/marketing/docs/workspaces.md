@@ -376,8 +376,8 @@ The agents keep their conversations and work in the new folder.
 Programs that already run, such as development servers, keep running in the old folder.
 Their previews show the old repository until you start them again in the new folder.
 The pull request bar then follows the new branch without a pull request.
-The **Terminal** tab keeps its running shell, in the old folder.
-A shell that starts after the change, such as after you end that shell, starts in the new folder.
+Each idle shell in the old folder moves to the new folder, and a line that you typed but did not send is cleared.
+A shell that runs a command keeps its folder.
 File tabs of the old repository close.
 The startup script runs in the new folder at the next start.
 The old branch, its pull request, and the files in the old folder stay.

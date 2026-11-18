@@ -109,9 +109,33 @@ printf '%s\\n' "$conductive_current_branch"`
 }
 
 /**
+ * Moves each idle terminal shell whose folder is in the old repository
+ * folder to the new folder, as repository change decision 12 B says. A
+ * pane whose program is a shell is idle. A pane that runs a command keeps
+ * its folder. The line that a member typed is cleared, and the command
+ * starts with a space, so a shell that ignores such lines keeps it out of
+ * its history.
+ */
+function idleShellMove(oldFolder: string, newFolder: string): string {
+  const tmux = `/usr/bin/tmux -S ${shellQuote(`${TERMINAL_RUNTIME}/tmux.sock`)}`
+  const old = shellQuote(oldFolder.replace(/\/+$/u, ''))
+  const line = shellQuote(` cd -- ${shellQuote(newFolder)}`)
+  return `conductive_tab=$(printf '\t')
+${tmux} list-panes -a -F "#{pane_id}\${conductive_tab}#{pane_current_command}\${conductive_tab}#{pane_current_path}" 2>/dev/null |
+while IFS="$conductive_tab" read -r conductive_pane conductive_program conductive_path; do
+  case "$conductive_program" in bash|sh|dash|zsh|fish) ;; *) continue ;; esac
+  case "$conductive_path/" in ${old}/*) ;; *) continue ;; esac
+  ${tmux} send-keys -t "$conductive_pane" C-e C-u &&
+  ${tmux} send-keys -t "$conductive_pane" -l ${line} &&
+  ${tmux} send-keys -t "$conductive_pane" Enter || true
+done`
+}
+
+/**
  * The steps after publication. Each step only warns when it fails. It
  * copies the context folder again, for a file attached during the change,
- * and gives new terminals the new folder, as the terminal README says.
+ * gives new terminals the new folder, as the terminal README says, and
+ * moves each idle shell of the old folder to the new folder.
  */
 export function repositoryChangeSettleCommand(
   job: Pick<RepositoryChangeJob, 'directory' | 'target'>,
@@ -132,5 +156,6 @@ if [ -d /run/conductive ]; then
   ) || { echo 'conductive: the terminal folder was not written' >&2; conductive_status=1; }
 fi
 /usr/bin/tmux -S ${shellQuote(`${TERMINAL_RUNTIME}/tmux.sock`)} set-environment -g CONDUCTIVE_REPOSITORY_DIR ${folder} 2>/dev/null || true
+${idleShellMove(job.directory, job.target.directory)}
 exit "$conductive_status"`
 }

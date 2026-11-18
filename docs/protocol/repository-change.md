@@ -53,6 +53,11 @@ names a decision of the change that added this action.
 
 - The repository in the workspace header is a button, on desktop and on a
   phone. On a phone, it is in the line under the workspace name.
+- The header shows the repository as text, with no menu, when the menu has
+  no other repository to show, in an archived workspace, and in a
+  suspended org (repository change decision 11 A). Reason: a menu with
+  nothing to pick adds nothing. A menu with only the current repository
+  was rejected for this reason.
 - Its menu lists the repositories that the org chose and that this sandbox
   holds, in the order of New workspace. The current repository has a
   check. The menu has no notes.
@@ -60,9 +65,9 @@ names a decision of the change that added this action.
   holds also for a
   [waiting repository](org-image.md#repository-changes)
   (repository change decision 4 G).
-- When the app has no record of the folders of a sandbox, the menu lists
-  only the current repository. Reason: the app knows no other folder of
-  that sandbox.
+- When the app has no record of the folders of a sandbox, no other
+  repository can show, so the header shows text. Reason: the app knows no
+  other folder of that sandbox.
 - A pick of the current repository changes nothing.
 - The app refuses a change to a repository that the org did not choose, or
   that this sandbox does not hold.
@@ -121,8 +126,15 @@ names a decision of the change that added this action.
   reason.
 - The change starts a stopped sandbox first, because the change runs in
   the sandbox.
-- While the change runs, the repository button shows the progress and the
-  name of the new repository.
+- While the change runs, the repository button of the browser tab that
+  started the change shows the progress and the name of the new
+  repository (repository change decision 9 A).
+- Other tabs and other members see the new repository when the change
+  ends. A pick in another tab while the change runs gets the message that
+  the change runs.
+- Reason: Continue shows its progress in the same way, and a change takes
+  seconds in most cases. Progress in every tab was rejected for now,
+  because it needs new events from the Worker.
 - The change does not run the startup script. The next start or resume
   runs it in the new folder. Reason: the script can start services that
   already run.
@@ -236,11 +248,21 @@ names a decision of the change that added this action.
   [The repository line](message-lines.md#the-repository-line) says.
 - `CONDUCTIVE_REPOSITORY_DIR` names the new folder, as
   [Folder variables](repository-folders.md#folder-variables) says.
-- Each new terminal starts in the new folder. A terminal that already
-  runs keeps its folder. Each terminal tab attaches to the shell that runs,
-  as [The shell](terminal.md#the-shell) says, so that shell keeps the old
-  folder. A shell that starts after the change, such as after the member
-  ends that shell, starts in the new folder.
+- Each new terminal starts in the new folder.
+- Each terminal tab attaches to the shell that runs, as
+  [The shell](terminal.md#the-shell) says. After the change, each idle
+  shell in the old folder moves to the new folder with `cd` (repository
+  change decision 12 B). A shell is idle when no command runs in it. The
+  move clears a line that a member typed and did not send.
+- A shell that runs a command keeps its folder. A shell in a folder outside
+  the old folder keeps its folder too.
+- Reason: the first terminal that a member sees after the change then
+  works in the new repository, and no running command stops.
+- These ways were rejected (repository change decision 12):
+  - Each shell keeps its folder until the member ends it. The first
+    terminal after the change then works in the old repository.
+  - A new shell for each terminal. Each command that runs in an old shell
+    then ends.
 - The change stops no program that an agent or a member started, such as
   a dev server. Such a program keeps working in the old folder, and its
   preview shows the old repository. Reason: the agent runner moves in its

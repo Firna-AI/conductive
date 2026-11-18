@@ -18,7 +18,10 @@ copy the context folder to the new repository. After the options check,
 the user chose decisions 3 D and 4 D on the same day. On 16 November
 2026 the user changed decision 4 to G, which hides a repository that the
 cloud computer does not hold. The user chose decisions 5 A and 6 B on
-16 November 2026. The brainstorm notes are
+16 November 2026. On 18 November 2026 the user answered the review
+items 9 A (progress only in the tab that started the change), 11 A (text
+when nothing can be picked), and 12 B (idle shells move to the new
+folder), as repository change decisions 9, 11, and 12. The brainstorm notes are
 in `.context/repository-change/brainstorm-notes.md`.
 
 This change does not cover a workspace with more than one repository, a
@@ -480,10 +483,12 @@ Found in M3c (16 November 2026):
       `CONDUCTIVE_REPOSITORY_DIR` in the global tmux environment after
       publication. The terminal bridge reads the file when it creates the
       session. The startup command deletes the file at each start.
-- [ ] The Terminal tab attaches to the shell that runs, so it keeps the
+- [x] The Terminal tab attaches to the shell that runs, so it keeps the
       old folder until the member ends that shell. The protocol doc and
       the guides now say so. Ask the user whether a new terminal should
-      instead mean a new shell for each open of the tab.
+      instead mean a new shell for each open of the tab. Answered on 18
+      November 2026 as review item 12 B: each idle shell in the old folder
+      moves to the new folder with `cd`.
 
 ## Milestone 4: Web app
 

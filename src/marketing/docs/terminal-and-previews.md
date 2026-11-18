@@ -32,8 +32,8 @@ On a phone, or after you select something else, select the terminal area to give
 A new workspace starts with **Terminal 1**.
 Each terminal starts its own shell in the workspace's repository folder.
 After a repository change, each new shell starts in the folder of the new repository.
-A shell that already runs stays in its folder.
-To work in the new folder, open a new terminal, or end the shell with `exit` and select **Reconnect**.
+Each idle shell in the old folder also moves to the new folder, and a line that you typed but did not send is cleared.
+A shell that runs a command stays in its folder.
 Its prompt shows the current folder name.
 Use `pwd` to see the full path.
 For a quick check, you can run:
