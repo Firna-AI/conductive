@@ -1,12 +1,15 @@
 import type { SoftwareRelease } from '../lifecycle/software-release'
 import { softwareImageName } from '../lifecycle/image-names'
+import { softwareImageOutputStatements } from './output-data'
 import type { SoftwareImage } from './types'
 
-const columns = `id, provider_account AS providerAccount, version, software_json AS softwareJson,
+const columns = `software_images.id, provider_account AS providerAccount, version, software_json AS softwareJson,
   snapshot_name AS snapshotName, snapshot_recorded AS snapshotRecorded, state, phase, revision,
   sandbox_id AS sandboxId, process_id AS processId, stdout_offset AS stdoutOffset,
   stderr_offset AS stderrOffset, output, error, token_digest AS tokenDigest,
-  started_at AS startedAt, completed_at AS completedAt, packages_version AS packagesVersion`
+  started_at AS startedAt, completed_at AS completedAt, packages_version AS packagesVersion,
+  (SELECT operation FROM software_image_operations o WHERE o.image_id = software_images.id
+    AND o.phase = software_images.phase AND o.revision = software_images.revision) AS operation`
 
 export function readSoftwareImage(
   db: D1Database,
@@ -30,6 +33,21 @@ export function latestSoftwareImage(
     ORDER BY CASE state WHEN 'ready' THEN 0 ELSE 1 END, started_at DESC, rowid DESC LIMIT 1`,
     )
     .bind(account, version)
+    .first<SoftwareImage>()
+}
+
+export function softwareImageForDeploy(
+  db: D1Database,
+  account: string,
+  digest: string,
+): Promise<SoftwareImage | null> {
+  return db
+    .prepare(
+      `SELECT ${columns} FROM software_images WHERE provider_account = ? AND state != 'deleting'
+       AND (token_digest = ? OR id IN (SELECT image_id FROM software_image_deploys WHERE token_digest = ?))
+       ORDER BY started_at DESC, rowid DESC LIMIT 1`,
+    )
+    .bind(account, digest, digest)
     .first<SoftwareImage>()
 }
 
@@ -105,9 +123,10 @@ export async function saveSoftwareImage(
   db: D1Database,
   before: SoftwareImage,
   changes: Progress,
+  newOutput = '',
 ): Promise<boolean> {
   const next = { ...before, ...changes }
-  const result = await db
+  const update = db
     .prepare(
       `UPDATE software_images SET phase = ?, state = ?, sandbox_id = ?,
     process_id = ?, stdout_offset = ?, stderr_offset = ?, output = ?, error = ?,
@@ -131,8 +150,11 @@ export async function saveSoftwareImage(
       before.phase,
       before.revision,
     )
-    .run()
-  return result.meta.changes === 1
+  const statements = softwareImageOutputStatements(db, before, newOutput)
+  const result = statements.length
+    ? (await db.batch([...statements, update])).at(-1)
+    : await update.run()
+  return result?.meta.changes === 1
 }
 
 export async function claimSoftwareImageDeletion(
