@@ -38,7 +38,7 @@ export const filesHtml = defineScreen({
       slug: 'opening',
       title: 'Opening the preview',
       description:
-        'From the press until the page loads, the tab shows one wait: first while the app opens the preview of the files, then while the frame loads the page. The frame shows the page that shows while a preview opens, as app/tools/preview-opening draws it: the logo tile, a turning ring, and "Opening preview". Reload and Open show in the header, because a page opens. The page of the file takes its place when it loads.',
+        'From the press until the page loads, the tab shows one wait: first while the app opens the preview of the files, then while the frame loads the page. The frame shows the page that shows while a preview opens, as app/tools/preview-opening draws it: the logo tile, a turning ring, and "Opening preview". Reload shows in the header for the whole wait, because a page opens. Open shows once the preview of the files exists, as here, while the frame loads the page, because Open needs its launch address. The page of the file takes its place when it loads.',
       rationale:
         'A design call of 18 November 2026 gives the tab the look of the launch page for the whole wait, so the member sees one wait. Each load of the frame starts at the launch address of the preview, as for a port preview, and that page shows while the browser gets its grant. The page fades in after a short wait, so a fast open shows no flash.',
       props: { tab: 'html-opening' },

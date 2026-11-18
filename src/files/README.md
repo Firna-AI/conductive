@@ -5,13 +5,15 @@ tree of every file. Changes lists the files that the branch changes
 against the base branch, under the totals of the change. A file opens as a
 page with rendered Markdown or text with line numbers and syntax colours.
 An image file, which is a PNG, JPEG, GIF, or WebP file, opens as a
-picture. A changed file opens its unified diff, with the same syntax
+picture. An HTML file opens its page in a frame from the files preview of
+the workspace. A changed file opens its unified diff, with the same syntax
 colours. The requirements are in
-[Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes).
+[Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes)
+and [HTML file preview](../../docs/protocol/html-file-preview.md).
 The visual spec is the `app/files` page of the
-[mockup catalogue](../../docs/mockups/README.md), and
-`app/chat/unavailable-files` for a tree that the cloud computer could not
-read.
+[mockup catalogue](../../docs/mockups/README.md), `app/files/html` for the
+tab of an HTML file, and `app/chat/unavailable-files` for a tree that the
+cloud computer could not read.
 
 The screens render data from the Worker only. The workspace screen of the
 app shell mounts them, as
@@ -156,13 +158,16 @@ The screens:
   or refuses the new one. Bytes that the browser cannot draw offer
   Download, as a binary file does. An image file with no bytes shows that
   it is empty.
+- `FilePage` shows the tab of an HTML file, a name that ends with `.html`
+  or `.htm` in any case, as [The page of an HTML file](html-page.md) says.
 - `DiffPage` shows the diff of one changed file.
 - The `placeholder` prop of `FilePage` and `DiffPage` replaces the content
   of the page, for example with a sandbox state. The page then reads
   nothing, and its header offers no Download. A diff keeps its changed
   lines from Changes. With `keepShown`, a page that already shows its file
-  keeps it, with Copy, and the placeholder shows only in place of a page
-  with nothing to show. When the placeholder goes, the page reads at once.
+  keeps it, with Copy, and so does the page of an HTML file that shows in
+  its frame. The placeholder shows only in place of a page with nothing to
+  show. When the placeholder goes, the page reads at once.
 - `FileTabItem` is the closable tab of a file or a diff, and
   `LiftedFileTab` is the copy that a drag lifts.
   [File tabs](file-tabs.md) gives their props, their names, the temporary
@@ -171,6 +176,9 @@ The screens:
 [The Markdown preview](markdown-preview.md#the-worker) gives the worker
 that parses the Markdown of a preview, and what the preview shows while
 it waits for the worker or when the worker fails.
+
+[The page of an HTML file](html-page.md) gives the tab of an HTML file:
+its views, the `htmlPreview` prop that the shell gives, and its read.
 
 Each screen takes `layout`: `desktop`, or `phone` with touch targets of at
 least 40 px. On a phone, a file page and a diff page link back to All
@@ -240,6 +248,8 @@ of the tab menu, for such a path.
 
 File content, Markdown, paths, and diffs are untrusted. The screens show
 them as React text only, apart from the picture of an image file. The
+page of an HTML file shows only in the frame that the shell gives, from
+the preview domain, so no script of the file runs on the app's site. The
 Markdown renderer builds React elements from its own parse: HTML in a
 file shows as text, a Markdown image shows its alt text, and only
 absolute `http`, `https`, and `mailto` links become links. A bare address
@@ -301,8 +311,10 @@ GitHub banner tests do. The kit also starts a store, presses a control,
 and answers the Markdown worker with `parseMarkdown`.
 `page/picture-test-kit.tsx` opens a file page with a given read. Its
 `fakeDecoder` draws or refuses each picture by hand, in place of the image
-decoder of the browser. These tests do not run that decoder. The other
-screen tests keep their static markup checks in Node.
+decoder of the browser. These tests do not run that decoder.
+`page/html-test-kit.tsx` opens the page of an HTML file with a preview that
+stands in for the shell. The other screen tests keep their static markup
+checks in Node.
 
 ## Key code
 
@@ -382,10 +394,15 @@ screen tests keep their static markup checks in Node.
   through the link opener of the app shell.
 - `code/`: the syntax colours and the code view. `code/file-kind.ts` gives
   `fileKind`, the kind of a file by its name: Markdown, code, or another
-  file. A file is code when the code view gives it syntax colours.
+  file. A file is code when the code view gives it syntax colours. It also
+  gives `isMarkdown` and `isHtml`, the files whose tab has a Preview. An
+  HTML file keeps the kind and the icon of code.
   `panel/file-icons.tsx` draws the icon of each kind through `EntryIcon` of
   the mockups, the one icon map of All files, the tabs, the list of `@`,
   and the file chips.
+- `page/html-preview.ts` and `page/HtmlPagePreview.tsx`: the
+  `htmlPreview` prop of `FilePage`, and the drawing of its views and of
+  Reload and Open.
 - `diff/`: the unified diff parser and view. `diff/highlight-diff.ts`
   colours each diff line from the whole old or new file of the diff
   reply, so a line inside a comment that opens above its hunk keeps its

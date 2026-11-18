@@ -104,6 +104,10 @@ the tab at `app/files/html`, on desktop and on a phone.
   [Paths that hide a secret value](file-row-menu.md#paths-that-hide-a-secret-value)
   says which labels hide one. Reason: the address of the page holds the
   real path, and Open shows that address.
+- An HTML file whose own name starts with a dot, such as `.draft.html`,
+  has no Preview, and its tab shows Source. Reason: the files preview
+  serves no dot file (HTML preview decision 2 D), so its page can never
+  load.
 - The page and the files that it loads have no read limit. The read limit
   of 5 MiB holds for Source.
 

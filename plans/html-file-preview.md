@@ -471,6 +471,39 @@ or one option is clearly best:
   does, and 404 to a segment that is not valid percent-encoding or not
   UTF-8.
 
+The UI milestone raised these calls on 18 November 2026. I settled them
+under the same test:
+
+- An HTML file whose own name starts with a dot, such as `.draft.html`,
+  has no Preview, and its tab shows Source, as for a label that hides a
+  secret value. Reason: the files preview serves no dot file under option
+  D of decision 2, so the page can never load, and a bare 404 in the frame
+  helps no one.
+- The text of the mockup `app/files/html/opening` now says that Reload
+  shows for the whole wait and Open once the files preview exists. Reason:
+  the earlier call on Open says so, and the drawing already shows the
+  later part of the wait.
+- The kind of an HTML file stays code, with the icon of code, because the
+  icon map of the mockups is typed by the three kinds.
+- A label that no record names yet counts as hiding a secret value, as
+  for every tab. So such a file shows its page after its read gives the
+  label.
+- In Preview, only a read that finds no file replaces the page. Each other
+  failed read keeps the page, with Copy off, because the page does not
+  use the read.
+- The tab opens the files preview once for each show. A files preview that
+  ends while the page shows keeps the page, without Open, until the next
+  show. Reason: the protocol page names the next show, and a new open on
+  the clock of the app could loop.
+- When the workspace leaves Starting, the tab opens the files preview
+  again, also when the app still has one.
+- The app drops its files preview at its revocation, at its expiry by the
+  clock of the app, and while the cloud computer is stopped, failed, or
+  archived. Risk: a browser clock that runs ahead ends it early, and the
+  tab then waits for its next show.
+- Reload shows on a page that the tab keeps while the cloud computer does
+  not run, and it counts as a show. Open does not show then.
+
 The documentation milestone moved the grant rules of
 `docs/protocol/terminal-previews-and-desktop.md` to the new page
 `docs/protocol/preview-grants.md`, the rules of the file server to
@@ -657,23 +690,26 @@ shared helpers are in `src/shared/previews.ts` before Milestones 5 and 6
 start. So this milestone runs beside Milestone 5, with the fake API of
 the tests. My call of 18 November 2026, to save time.
 
-- [ ] Let `fileKind` know an HTML file. Show the view switch for it in
+- [x] Let `fileKind` know an HTML file. Show the view switch for it in
       `FilePage`.
-- [ ] Add the frame prop of `FilePage`, and draw the frame in Preview.
-- [ ] In the shell, open the files preview through the previews API, and
+- [x] Add the frame prop of `FilePage`, and draw the frame in Preview.
+- [x] In the shell, open the files preview through the previews API, and
       give the frame the launch address with the path of the file.
-- [ ] Add Reload and Open. Open uses a new tab in the web app and the
+- [x] Add Reload and Open. Open uses a new tab in the web app and the
       browser launch in the Mac app.
-- [ ] Load the frame again when the version of the file grows.
-- [ ] Show the notice of an older runner, and the states of the cloud
+- [x] Load the frame again when the version of the file grows.
+- [x] Show the notice of an older runner, and the states of the cloud
       computer.
-- [ ] Show Source only for a file whose label hides a secret value.
-- [ ] Add an HTML file to the development page of `src/files/dev/`.
-- [ ] Add mounted tests for the switch, the frame address, the reload
+- [x] Show Source only for a file whose label hides a secret value.
+- [x] Add an HTML file to the development page of `src/files/dev/`.
+- [x] Add mounted tests for the switch, the frame address, the reload
       after a change, and the notice. Run each new asynchronous test 10
       times.
-- [ ] Update the Files README and the previews README.
-- [ ] Smoke-test the tab in the development app.
+- [x] Update the Files README and the previews README.
+- [x] Smoke-test the tab in the development app.
+
+The screenshots of the smoke test of 18 November 2026 are in
+`.context/html-file-preview/ui/`.
 
 ## Milestone 7: Verification, commit, review, and pull request
 

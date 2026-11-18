@@ -66,6 +66,9 @@ tabs at their places in the tab row.
 
 [The Files part](screen-parts.md#the-files-part) gives the Files screens
 of the shell, their addresses, and the saved view.
+[The tabs of HTML files](html-tabs.md) gives the files preview of the
+workspace, which shows the page of an HTML file in its tab, and the frames
+that the chat keeps.
 
 ## The tools part
 
