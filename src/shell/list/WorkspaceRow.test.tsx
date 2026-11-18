@@ -8,9 +8,13 @@ import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { renderScreen, startedApp, textOf } from '../test-render'
 import { WorkspaceRow } from './WorkspaceRow'
 
-/** The classes of the link of a row, from its HTML. */
-function linkClasses(html: string): string[] {
-  return /<a [^>]*class="([^"]*)"/.exec(html)?.[1].split(' ') ?? []
+/** The classes of the name of a row, from its HTML. */
+function nameClasses(html: string): string[] {
+  return (
+    new RegExp(`<span [^>]*class="([^"]*${styles.name}[^"]*)"`)
+      .exec(html)?.[1]
+      .split(' ') ?? []
+  )
 }
 
 describe('WorkspaceRow', () => {
@@ -33,7 +37,7 @@ describe('WorkspaceRow', () => {
     const app = await startedApp(new FakeApiServer())
     const { workspace } = workspaceFixtures().detail
     const strong = (state: WorkspaceState) =>
-      linkClasses(
+      nameClasses(
         renderScreen(
           app,
           <WorkspaceRow

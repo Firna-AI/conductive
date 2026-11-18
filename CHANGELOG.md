@@ -1,5 +1,34 @@
 # Changelog
 
+## [0.26.0](https://github.com/Firna-AI/conductive/compare/v0.25.0...v0.26.0) (2026-11-18)
+
+
+### Features
+
+* **builds:** log the snapshot step in the build log ([#446](https://github.com/Firna-AI/conductive/issues/446)) ([989adcb](https://github.com/Firna-AI/conductive/commit/989adcb9319497507f9f6ab007ffdd3c094b1762))
+* change the repository of a workspace ([#423](https://github.com/Firna-AI/conductive/issues/423)) ([424bf73](https://github.com/Firna-AI/conductive/commit/424bf736d1353631ca57e425a8140eb89aa1091d))
+* **chat:** cut long Mac command output with a fade and Show all ([#450](https://github.com/Firna-AI/conductive/issues/450)) ([4f73d20](https://github.com/Firna-AI/conductive/commit/4f73d20d4cec6066c57ddb9083f5bc5e2091225c))
+* **github:** follow repository renames and default branch changes ([#463](https://github.com/Firna-AI/conductive/issues/463)) ([9983ba5](https://github.com/Firna-AI/conductive/commit/9983ba58be06f4a082bc34a806d507b5853c73a0))
+* **list:** pulse the workspace mark in blue while it needs input ([#460](https://github.com/Firna-AI/conductive/issues/460)) ([3d3a8b7](https://github.com/Firna-AI/conductive/commit/3d3a8b70b7850def94107f55eaa398b72447de3b))
+* **palette:** add Merge latest to merge the target branch ([#442](https://github.com/Firna-AI/conductive/issues/442)) ([367ecff](https://github.com/Firna-AI/conductive/commit/367ecffa2027a17cf03694706923b772bb68b18b))
+* remove archived workspaces from the list after 14 days ([#420](https://github.com/Firna-AI/conductive/issues/420)) ([1909ae3](https://github.com/Firna-AI/conductive/commit/1909ae3516107d18346b30be3dc7886aa09adb04))
+* **runner:** identify runner program starts in safe warnings ([#448](https://github.com/Firna-AI/conductive/issues/448)) ([6b82c51](https://github.com/Firna-AI/conductive/commit/6b82c51767573920cea704b6587687aea1ffb757))
+* **secrets:** let one Allow settle the requests that its grant covers ([#456](https://github.com/Firna-AI/conductive/issues/456)) ([2a0818f](https://github.com/Firna-AI/conductive/commit/2a0818f3d0d945b61b21c677c6e2008764a1cc50))
+* **settings:** list chosen repositories with Edit for admins ([#452](https://github.com/Firna-AI/conductive/issues/452)) ([ac3825d](https://github.com/Firna-AI/conductive/commit/ac3825d69408fe4f356cd7ad402f07fd175509a8))
+* **workspace:** open the workspace menu from the header name ([#462](https://github.com/Firna-AI/conductive/issues/462)) ([2d9335a](https://github.com/Firna-AI/conductive/commit/2d9335a67dafe6b6cff3e544d997c3ff14d39156))
+* **workspaces:** move workspaces into or out of a parent ([#444](https://github.com/Firna-AI/conductive/issues/444)) ([aedaaec](https://github.com/Firna-AI/conductive/commit/aedaaec18507026c2294b67ed9577f28752f4121))
+
+
+### Bug Fixes
+
+* answer Durable Object restarts as 503, reconnect a dropped terminal once, and log unexpected errors safely ([#445](https://github.com/Firna-AI/conductive/issues/445)) ([8ae7c26](https://github.com/Firna-AI/conductive/commit/8ae7c26d1af951bdaf5fc1bb8b21e16e86f10852))
+* **list:** show the bar's GitHub state in the list mark at once ([#455](https://github.com/Firna-AI/conductive/issues/455)) ([9cac31c](https://github.com/Firna-AI/conductive/commit/9cac31cda1d4c3d7ce69ac9051f176178074fbf6))
+* **new-workspace:** align the dialog footer with the chat composer bar ([#443](https://github.com/Firna-AI/conductive/issues/443)) ([70baf6c](https://github.com/Firna-AI/conductive/commit/70baf6cd20c08f49ac02ca125deba3eeda0dc143))
+* **secrets:** expose valid environment names and validate new names ([#453](https://github.com/Firna-AI/conductive/issues/453)) ([4ff3a95](https://github.com/Firna-AI/conductive/commit/4ff3a95a2b229c81c3e90f4ebc59cce19a93daa1))
+* **titles:** try the workspace title request again when the model is slow ([#454](https://github.com/Firna-AI/conductive/issues/454)) ([01ffe33](https://github.com/Firna-AI/conductive/commit/01ffe33d2b4ccc12596acfe8e91bb42c572d21f2))
+* **worker:** keep a failed automation report out of chat writes ([#449](https://github.com/Firna-AI/conductive/issues/449)) ([661dc48](https://github.com/Firna-AI/conductive/commit/661dc48be3ae54b9b03a41ec79add17175ff12b8))
+* **workspace:** show the last tab again at a return to a workspace ([#459](https://github.com/Firna-AI/conductive/issues/459)) ([a179c07](https://github.com/Firna-AI/conductive/commit/a179c07a881608fe79f0d8468c960add86dceac3))
+
 ## [0.25.0](https://github.com/Firna-AI/conductive/compare/v0.24.0...v0.25.0) (2026-11-17)
 
 

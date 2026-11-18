@@ -3,6 +3,7 @@ import type { HelperRequest } from './generated/HelperRequest'
 import type { HelperCredential } from './generated/HelperCredential'
 import type { ProviderInput } from './generated/ProviderInput'
 import type { RunnerBranches } from './generated/RunnerBranches'
+import type { RunnerRepository } from './generated/RunnerRepository'
 import { array, nullable, object, oneOf, string } from './parse'
 import {
   parseChoice,
@@ -17,6 +18,11 @@ function branches(value: unknown): RunnerBranches {
     workspaceBranch: string(input.workspaceBranch),
     targetBranch: string(input.targetBranch),
   }
+}
+
+function repository(value: unknown): RunnerRepository {
+  const input = object(value)
+  return { fullName: string(input.fullName), folder: string(input.folder) }
 }
 
 function credential(value: unknown): HelperCredential {
@@ -58,6 +64,9 @@ function options(value: unknown): HelperOptions {
               ? null
               : branches(input.instructionBranches),
         }),
+    ...(input.instructionFolder === undefined
+      ? {}
+      : { instructionFolder: nullable(input.instructionFolder) }),
     tools: {
       machineOrigin: string(tools.machineOrigin),
       workspaceToken: string(tools.workspaceToken),
@@ -84,6 +93,9 @@ function providerInput(value: unknown): ProviderInput {
     ...(input.branches === undefined
       ? {}
       : { branches: branches(input.branches) }),
+    ...(input.repository === undefined
+      ? {}
+      : { repository: repository(input.repository) }),
   }
   if (input.type === 'message') return { ...command, type: 'message' }
   if (input.type === 'turn')

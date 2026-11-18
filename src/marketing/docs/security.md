@@ -40,6 +40,7 @@ A turn that a late answer to a secret request starts keeps the sender of the tur
 | Merge from the pull request bar | The GitHub account of the member who selects Merge |
 | Ready for review from the pull request bar | The GitHub account of the member who selects Ready for review |
 | Continue's repository fetch | The GitHub account of the member who selects Continue |
+| A repository change's fetch | The GitHub account of the member who changes the repository |
 | Commit in an agent turn | The turn sender, as author and committer |
 | Commit outside a turn, including Terminal and scripts | The workspace owner by default, as author and committer |
 | A request to run a Mac command | The turn sender's connected Mac |
@@ -74,6 +75,7 @@ It reaches repositories that both the GitHub account and the GitHub App can reac
 GitHub checks the clicking member's access and branch rules for a merge.
 GitHub also checks the clicking member's access for Ready for review.
 Every org member can Continue after a merge, but their GitHub account needs repository read access for its fetch.
+Every org member can also change a workspace's repository, and their GitHub account needs read access to the new repository for its fetch.
 
 ## Understand what agents can reach
 
@@ -185,7 +187,7 @@ If its turn cannot start, follow the [ChatGPT recovery steps](/docs/agent-logins
 
 Code on the computer can also obtain the GitHub credential available to that workspace.
 This includes the workspace owner's GitHub credential outside a running agent turn.
-Continue also brings the clicking member's GitHub token into the cloud computer while it fetches the latest default branch.
+Continue and a repository change also bring the member's GitHub token into the cloud computer while they fetch the latest default branch.
 Code or members with terminal access can read that token during the fetch.
 
 Removing a member ends their ordinary access to the org.

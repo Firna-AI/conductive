@@ -25,6 +25,6 @@
 - **Left out:** Dropping every large detail loses the required longest prefix. Keeping the early cut leaves the defect. A fixed fragment length still misses shorter fragments.
 - **Wider fix:** A. A complete-source private stream keeps secret matching before every displayed tool-detail excerpt.
 - **Previous examples:** The workspace-title path once cut before filtering. The preview-port change found and corrected the same order in its new label path. This item concerns the unchanged tool-detail path.
-- **Related:** [Credential fragments](credential-parts-in-runner-output.md) records arbitrary parts of credentials known to the runner. This item concerns the later Worker filter for marked org values. They share an early-cut cause but have different secret sources and transport needs.
+- **Related:** The runner hides each run of 21 or more characters of a credential that it knows, as [Secrets that users enter](../../docs/protocol/tokens-and-secrets.md#secrets-that-users-enter) says. This item concerns the later Worker filter for marked org values, which the runner does not know and which that rule does not cover. The two cases share an early-cut cause but have different secret sources and transport needs.
 - **Recommendation:** A. It preserves exact matching, displayed details, and the existing separation of runner and Worker secret sources.
 - **Action:** fix after merge, apply A, because this existing path needs a separate change with its own private-stream design and checks.

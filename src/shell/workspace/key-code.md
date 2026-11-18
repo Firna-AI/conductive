@@ -102,8 +102,10 @@ this guide.
 - `WorkspaceOwner.tsx` and `WorkspaceMacBar.tsx`: the owner picker of the
   members UI, and the bar of the 15 minutes in the Mac app.
 - `saved-view.ts`: the saved view of the kept chat, `saveView`, which
-  writes a change only once the chat read the view, and `useRunAutomation`,
-  the automation of a run workspace, which the chat reads with the view.
+  writes a change only once the chat read the view, `useRunAutomation`,
+  the automation of a run workspace, and `useHeldRepositories`, the
+  repositories that the cloud computer holds, which the chat reads with
+  the view.
 - `tools/ToolsPart.tsx`, `tools/tool-navigation.ts`, and
   `tools/tool-address.ts`: the tools panel and its `placeholder`, which
   takes the place of the tools inside the tabs, the tool of the address or
@@ -150,6 +152,23 @@ this guide.
   workspace, its snapshot, and its connection while the sandbox runs.
 - `ContinueDialog.tsx`: the question of Continue with the local work, which
   `LocalWorkList` of the mockups lists.
+- `repository/RepositoryControl.tsx`: the repository of the header, its
+  menu, its progress, and its failure toast. `repository/use-repository-change.ts`
+  gives `repositoryChoices`, the rows of the menu, and the store of the
+  workspace. `repository/repository-change.ts`: `RepositoryChange`, the
+  run of one change and its question. `repository/repository-api.ts`:
+  the requests and the reader of their replies.
+  `repository/RepositoryQuestion.tsx`: the question.
+  `repository/RepositoryMenu.test.tsx` and
+  `repository/RepositoryQuestion.test.tsx` mount the whole app over the
+  fake API: the menu, the progress, the note, the close of a file tab, a
+  phone sheet, the text in read-only states, the question, and the
+  failure toasts. `repository/repository-test-kit.tsx` holds their
+  helpers, and `test-support/fake-repository-change.ts` the replies.
+- `screen-addons.tsx`: `ScreenAddons`, the parts of the screen with no
+  place of their own, in each layout: the question of Continue, the
+  palette actions, `RestoreShownTab`, `ResumeOnTabOpen`, `LeaveMovedFiles`
+  of `files/moved-files.tsx`, and `OpenSessionAddress`.
 - `github/BarMerge.test.tsx`, `github/BarAgent.test.tsx`,
   `github/BarContinue.test.tsx`, and `files/KeptFiles.test.tsx`: mount the
   whole app over the fake API. They check Merge and its refusals, the

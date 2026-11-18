@@ -1,0 +1,19 @@
+/*
+ * The menu above its trigger, and an open submenu beside it. A view runs
+ * no script, so the submenu starts level with the row of All models: below
+ * the five favourites and their line.
+ */
+.pair {
+  display: flex;
+  position: absolute;
+  z-index: 20;
+  bottom: calc(100% + 6px);
+  left: 0;
+  align-items: flex-start;
+  gap: 4px;
+  width: max-content;
+}
+
+.submenu {
+  margin-top: calc(var(--ui-row-height) * 5 + 12px);
+}

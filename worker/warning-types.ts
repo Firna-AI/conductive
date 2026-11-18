@@ -37,6 +37,12 @@ export const SIMPLE_WARNINGS = {
     'Could not start the added cloud computer build.',
   repository_image_build_start_failed:
     'Could not start the cloud computer build for the added repository.',
+  repository_change_wake_failed:
+    'Could not wake the image coordinator after a repository change. Its next alarm checks again.',
+  repository_values_check_failed:
+    'Could not update the repository values that a GitHub webhook named. The next webhook checks again.',
+  github_repository_token_revoke_failed:
+    'Could not revoke the token of a repository read. It expires within 1 hour.',
   approval_email_delivery_failed:
     'Approval email delivery failed. The email remains pending.',
   approval_email_retry_failed:
@@ -106,6 +112,17 @@ export type WorkerWarning =
     }
   | { kind: keyof typeof SIMPLE_WARNINGS }
   | { kind: 'runner_protocol_version_mismatch'; workspaceId: WarningId }
+  | {
+      kind: 'runner_repository_move_refused'
+      workspaceId: WarningId
+      reason: 'unknown_folder' | 'not_repository' | 'other'
+    }
+  | { kind: 'repository_change_settle_failed'; workspaceId: WarningId }
+  | {
+      kind: 'repository_change_ended'
+      workspaceId: WarningId
+      phase: 'move' | 'publish'
+    }
   | {
       kind: 'workspace_title_request_failed' | 'workspace_title_save_failed'
       error: ErrorSummary

@@ -54,8 +54,9 @@ cause. Reconnect cannot send that turn again.
   [Model requests](../worker/model-gateway/README.md#model-requests) says
   how the gateway reads that prefix.
 - The output filter keeps the token of each `turn` command, so that it can
-  replace that token with `[redacted]` in displayed text. It keeps the
-  tokens in memory until the runner process ends.
+  replace that token, and each run of at least 21 consecutive characters
+  of it, with `[redacted]` in displayed text. It keeps the tokens in memory
+  until the runner process ends.
 - The state file holds no turn token. No token goes in an agent's arguments.
   Claude reads its token from a credentials file, as [Claude](#claude) says.
   A Codex ChatGPT turn reads its token from a temporary login file.

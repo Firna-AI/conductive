@@ -18,7 +18,11 @@ import {
   history,
 } from './autocompleteTurn'
 import { backgroundConversations } from './backgroundConversations'
-import { barConversations, type ContinuedItem } from './barConversations'
+import {
+  barConversations,
+  type ContinuedItem,
+  type RepositoryChangedItem,
+} from './barConversations'
 import { chatLinkConversations } from './chatLinkConversations'
 import type { ChangedFile } from './files'
 import {
@@ -170,6 +174,7 @@ export type ChatItem =
       from: string
     }
   | ContinuedItem
+  | RepositoryChangedItem
   | SecretRunItem
   | LateAnswerItem
 
