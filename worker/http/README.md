@@ -190,7 +190,7 @@ Under the entry limit, an oversized webhook gets the shared `body_too_large` err
 ## Development
 
 Run `npm run test -- worker/http` from the repository root with Node 24.
-The focused tests use deterministic in-memory streams that count pulls, bytes, and cancellations.
+The body tests use deterministic in-memory streams that count pulls, bytes, and cancellations.
 Run `npm run test -- worker/security/gate-body.test.ts` to check the request body boundary through the app.
 Run `npm run test -- worker/security/gate.test.ts` to check the JSON request type and object policy.
 Run `npm run test -- worker/http/raw-upload-body.test.ts worker/security/raw-upload.test.ts` to check the raw upload routes.
@@ -211,6 +211,8 @@ Run `npm run test -- worker/files worker/sandbox worker/http/bounded-body.test.t
 - [json-body.ts](json-body.ts) exports `readJsonObject` and owns the JSON request policy.
 - [bounded-body.ts](bounded-body.ts) exposes `readBoundedBody`, `readBoundedJson`, and `BodyBudgetExceeded`.
 - [bounded-body.test.ts](bounded-body.test.ts) checks the exact byte boundary and early cancellation.
+- [outbound-request.ts](outbound-request.ts) exports `outboundRequest`, which builds the Worker's requests to the GitHub, Boat, and Resend APIs. The helper sets `redirect: 'manual'` and a `User-Agent` header with the product name. Its options type, `OutboundRequestOptions`, leaves out `redirect`.
+- [outbound-request.test.ts](outbound-request.test.ts) checks the redirect mode and the `User-Agent` header of a built request.
 
 ### Related Docs
 

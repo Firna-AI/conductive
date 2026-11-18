@@ -1,5 +1,6 @@
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
+import { outboundRequest } from '../http/outbound-request'
 import { parseGitHubTokens, type GitHubTokenBundle } from './github-token-data'
 
 export async function refreshGitHubTokens(
@@ -10,9 +11,8 @@ export async function refreshGitHubTokens(
   const now = dependencies.now()
   try {
     const response = await dependencies.fetch(
-      new Request('https://github.com/login/oauth/access_token', {
+      outboundRequest('https://github.com/login/oauth/access_token', {
         method: 'POST',
-        redirect: 'manual',
         signal: AbortSignal.timeout(30_000),
         headers: {
           Accept: 'application/json',
