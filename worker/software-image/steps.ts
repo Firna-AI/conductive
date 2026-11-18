@@ -76,6 +76,8 @@ export async function advanceSoftwareImageStep(
       image.processId,
       image,
     )
+    // A later poll must read any output that this response cannot return.
+    if (runtime.poll?.stopped()) return { wait: true }
     const output = status.stdout + status.stderr
     const waiting = status.more || status.running
     const failed =

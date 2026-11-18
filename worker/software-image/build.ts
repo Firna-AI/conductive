@@ -24,6 +24,7 @@ import {
   SOFTWARE_IMAGE_TIME_LIMIT,
 } from './failure'
 import { advanceSoftwareImageStep } from './steps'
+import { softwareImageResult } from './result'
 import type {
   SoftwareImage,
   SoftwareImageResult,
@@ -39,6 +40,8 @@ export async function advanceSoftwareImage(
   for (;;) {
     const image = await readSoftwareImage(runtime.env.DB, id)
     if (!image) throw new AttemptChanged()
+    runtime.poll?.checkpoint(image, output)
+    if (runtime.poll?.stopped()) return { image, output }
     if (image.state !== 'building') {
       await retrySoftwareImageCleanup(runtime, image)
       if (image.state === 'ready')
@@ -79,6 +82,7 @@ export async function advanceSoftwareImage(
         image,
       )
       output += step.output ?? ''
+      runtime.poll?.output(output)
       if (step.wait)
         return {
           image: (await readSoftwareImage(runtime.env.DB, id)) ?? image,
@@ -121,13 +125,15 @@ export async function requestSoftwareImage(
         error: SOFTWARE_IMAGE_REPLACED,
         completedAt: runtime.dependencies.now(),
       })
-    )
+    ) {
+      if (runtime.poll?.stopped()) continue
       await retrySoftwareImageCleanup(runtime, {
         ...old,
         state: 'failed',
         error: SOFTWARE_IMAGE_REPLACED,
         revision: old.revision + 1,
       })
+    }
   }
   let image = await latestSoftwareImage(runtime.env.DB, account, version)
   if (
@@ -146,17 +152,5 @@ export async function requestSoftwareImage(
   }
   if (!image) throw new AttemptChanged()
   const result = await advanceSoftwareImage(runtime, image.id)
-  const { state, phase, error } = result.image
-  return {
-    state: state === 'deleting' ? 'failed' : state,
-    phase,
-    version,
-    output: result.output,
-    ...(state === 'failed'
-      ? {
-          error: error ?? SOFTWARE_IMAGE_FAILED,
-          keptOutput: result.image.output,
-        }
-      : {}),
-  }
+  return softwareImageResult(result.image, result.output)
 }

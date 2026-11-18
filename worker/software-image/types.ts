@@ -37,6 +37,11 @@ export interface SoftwareImage {
 export interface SoftwareImageRuntime {
   env: AppEnv
   dependencies: AppDependencies
+  poll?: {
+    stopped(): boolean
+    checkpoint(image: SoftwareImage, output: string): void
+    output(output: string): void
+  }
 }
 
 export interface SoftwareImageResult {
