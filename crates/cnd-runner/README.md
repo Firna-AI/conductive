@@ -168,6 +168,7 @@ and connection drops. It does not run the Worker.
 - [update.rs](src/update.rs): `ReleaseReadiness` supplies local release conditions for an idle swap.
 - [handler.rs](src/engine/handler.rs): `AgentEngine` routes turns and Stop to independent session actors.
 - [service.rs](src/filter/service.rs): `CredentialFilter` filters chat, report labels, and helper warnings.
+- [registry.rs](src/filter/registry.rs): keeps one canonical value per credential and resolves historical matches for retained suffixes.
 - [driver.rs](src/helper/driver.rs): `HelperConnection` correlates requests while agent events stream.
 - [process.rs](src/helper/process.rs): `NodeHelpers` owns private pipes and process-group cleanup.
 - [startup.rs](src/helper/startup.rs): `RunnerStartup` clears stale credentials, warms the SDK, and confirms a welcome.

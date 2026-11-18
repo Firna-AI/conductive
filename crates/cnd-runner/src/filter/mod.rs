@@ -1,6 +1,7 @@
 //! Shared credential filtering before persistence and report byte limits.
 
 mod fields;
+mod registry;
 pub mod service;
 mod streaming;
 mod text;

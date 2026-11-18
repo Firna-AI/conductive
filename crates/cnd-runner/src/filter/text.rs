@@ -1,5 +1,7 @@
 //! Longest credential-fragment matches and incomplete streamed suffixes.
 
+use std::sync::Arc;
+
 pub(super) const MARKER: &str = "[redacted]";
 const MIN_FRAGMENT_CHARS: usize = 21;
 
@@ -8,7 +10,7 @@ pub(super) struct Continuation<'a> {
     /// Displayed suffix that can still extend into a credential match.
     pub(super) text: &'a str,
     /// Credentials that matched the displayed suffix.
-    pub(super) secrets: &'a [String],
+    pub(super) secrets: &'a [Arc<str>],
 }
 
 struct Candidate<'a> {
@@ -41,14 +43,14 @@ struct Matches {
 
 impl Matches {
     /// A missing 21-character seed rules out fragments, but permits whole short credentials.
-    fn known(&mut self, text: &str, final_text: bool, values: &[String]) {
+    fn known(&mut self, text: &str, final_text: bool, values: &[Arc<str>]) {
         let seed = text
             .char_indices()
             .nth(MIN_FRAGMENT_CHARS - 1)
             .map(|(index, character)| &text[..index + character.len_utf8()]);
         for secret in values {
             if seed.is_some_and(|prefix| !secret.contains(prefix)) {
-                if text.starts_with(secret) {
+                if text.starts_with(secret.as_ref()) {
                     self.longest = self.longest.max(secret.len());
                 }
             } else {
@@ -105,7 +107,7 @@ impl Matches {
 pub(super) fn filter(
     text: &str,
     final_text: bool,
-    values: &[String],
+    values: &[Arc<str>],
     continuations: &[Continuation<'_>],
 ) -> (String, String) {
     let mut output = String::new();

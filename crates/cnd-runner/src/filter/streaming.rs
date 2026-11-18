@@ -1,15 +1,18 @@
 //! Held answer suffixes and already displayed continuation contexts.
 
+use std::sync::Arc;
+
 use cnd_runner_interface::chat_events::{AgentChatEvent, TurnEventContext};
 use cnd_runner_interface::runner::RunnerEvent;
 
 use super::fields::clean;
+use super::registry::Registry;
 use super::text::{Continuation, filter};
 
 #[derive(Clone)]
 struct Context {
     text: String,
-    secrets: Vec<String>,
+    position: usize,
 }
 
 #[derive(Clone)]
@@ -17,19 +20,19 @@ struct Held {
     context: TurnEventContext,
     message_id: String,
     text: String,
-    secrets: Vec<String>,
+    position: usize,
     contexts: Vec<Context>,
 }
 
 #[derive(Default, Clone)]
 pub(super) struct Sanitizer {
-    pub(super) secrets: Vec<String>,
+    pub(super) registry: Registry,
     pending: Vec<Held>,
 }
 
 impl Sanitizer {
     pub(super) fn text(&self, text: &str) -> String {
-        filter(text, true, &self.secrets, &[]).0
+        filter(text, true, &self.registry.active, &[]).0
     }
 
     fn delta(
@@ -44,11 +47,11 @@ impl Sanitizer {
             .iter()
             .position(|h| h.context == context && h.message_id == message_id)
             .map(|i| self.pending[i].clone());
-        let mut secrets = self.secrets.clone();
+        let mut secrets = self.registry.active.clone();
         if let Some(held) = &previous {
-            secrets.extend(held.secrets.clone());
+            secrets.extend(self.registry.supporting(&held.text, held.position));
             for c in &held.contexts {
-                secrets.extend(c.secrets.clone());
+                secrets.extend(self.registry.supporting(&c.text, c.position));
             }
         }
         secrets.sort();
@@ -57,11 +60,16 @@ impl Sanitizer {
             .as_ref()
             .map(|h| h.contexts.clone())
             .unwrap_or_default();
+        let supported: Vec<_> = contexts
+            .iter()
+            .map(|context| self.registry.supporting(&context.text, context.position))
+            .collect();
         let continuations: Vec<_> = contexts
             .iter()
-            .map(|context| Continuation {
+            .zip(&supported)
+            .map(|(context, secrets)| Continuation {
                 text: &context.text,
-                secrets: &context.secrets,
+                secrets,
             })
             .collect();
         let source = previous
@@ -77,7 +85,7 @@ impl Sanitizer {
             context.clone(),
             message_id.clone(),
             held_text,
-            secrets,
+            &secrets,
             texts,
         );
         if shown.is_empty() {
@@ -98,38 +106,25 @@ impl Sanitizer {
         context: TurnEventContext,
         message_id: String,
         text: String,
-        secrets: Vec<String>,
+        secrets: &[Arc<str>],
         texts: Vec<String>,
     ) {
         let mut contexts: Vec<Context> = vec![];
         for value in texts {
-            let suffix = filter(&value, false, &secrets, &[]).1;
+            let suffix = filter(&value, false, secrets, &[]).1;
             if !suffix.is_empty() && !contexts.iter().any(|c| c.text == suffix) {
-                let matched = secrets
-                    .iter()
-                    .filter(|s| !filter(&suffix, false, &[(*s).clone()], &[]).1.is_empty())
-                    .cloned()
-                    .collect();
                 contexts.push(Context {
                     text: suffix,
-                    secrets: matched,
+                    position: self.registry.position(),
                 });
             }
         }
         if !text.is_empty() || !contexts.is_empty() {
-            let secrets = secrets
-                .into_iter()
-                .filter(|s| {
-                    !filter(&text, false, std::slice::from_ref(s), &[])
-                        .1
-                        .is_empty()
-                })
-                .collect();
             let held = Held {
                 context,
                 message_id,
                 text,
-                secrets,
+                position: self.registry.position(),
                 contexts,
             };
             if let Some(index) = self
@@ -192,13 +187,13 @@ impl Sanitizer {
                     .iter()
                     .position(|h| h.context == *turn_event_context && h.message_id == *message_id)
                     .map(|i| self.pending[i].clone());
-                let mut secrets = self.secrets.clone();
+                let mut secrets = self.registry.active.clone();
                 let mut texts = vec![];
                 if let Some(h) = previous {
-                    secrets.extend(h.secrets);
+                    secrets.extend(self.registry.supporting(&h.text, h.position));
                     for c in h.contexts {
+                        secrets.extend(self.registry.supporting(&c.text, c.position));
                         texts.push(c.text);
-                        secrets.extend(c.secrets);
                     }
                 }
                 secrets.sort();
@@ -209,7 +204,7 @@ impl Sanitizer {
                     turn_event_context.clone(),
                     message_id.clone(),
                     String::new(),
-                    secrets,
+                    &secrets,
                     texts,
                 );
                 events.push(event);

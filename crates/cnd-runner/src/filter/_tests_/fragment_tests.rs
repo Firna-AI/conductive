@@ -32,11 +32,13 @@ fn answer(message: &str, text: &str) -> RunnerEvent {
 #[test]
 fn masks_long_fragments_and_counts_unicode_scalars_without_hiding_short_parts() {
     let mut filter = Sanitizer::default();
-    filter.secrets = vec![
-        "sk-ant-oat01-gt1.WyJ.ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".into(),
-        "start-αβγδεζηθικλμνξοπρστυφχψω-end".into(),
-        "tiny".into(),
-    ];
+    for secret in [
+        "sk-ant-oat01-gt1.WyJ.ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+        "start-αβγδεζηθικλμνξοπρστυφχψω-end",
+        "tiny",
+    ] {
+        filter.registry.add(secret.into());
+    }
     assert_eq!(
         filter.text("tiny | sk-ant-oat01-gt1.WyJ | sk-ant-oat01-gt1.WyJ. | ABCDEFGHIJKLMNOPQRST | ABCDEFGHIJKLMNOPQRSTU | JKLMNOPQRSTUVWXYZ0123456789 | [redacted]"),
         "[redacted] | sk-ant-oat01-gt1.WyJ | [redacted] | ABCDEFGHIJKLMNOPQRST | [redacted] | [redacted] | [redacted]"
@@ -60,8 +62,8 @@ fn masks_held_fragments_when_a_completion_or_turn_end_stops_the_stream()
     ] {
         let mut filter = Sanitizer::default();
         filter
-            .secrets
-            .push("before-ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-after".into());
+            .registry
+            .add("before-ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-after".into());
         assert_eq!(
             filter.accept(delta("a", "part: EFGHIJKLMN")),
             vec![delta("a", "part: ")]
@@ -80,13 +82,13 @@ fn masks_held_fragments_when_a_completion_or_turn_end_stops_the_stream()
 fn masks_new_text_that_extends_a_released_interior_fragment_without_mixing_answers() {
     let mut filter = Sanitizer::default();
     filter
-        .secrets
-        .push("before-ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-after".into());
+        .registry
+        .add("before-ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-after".into());
     assert_eq!(
         filter.accept(answer("a", "EFGHIJKLMNOPQRSTUVWX")),
         vec![answer("a", "EFGHIJKLMNOPQRSTUVWX")]
     );
-    filter.secrets.clear();
+    filter.registry.active.clear();
     assert_eq!(filter.accept(delta("b", "YZ?")), vec![delta("b", "YZ?")]);
     assert_eq!(filter.accept(delta("a", "Y")), vec![]);
     assert_eq!(
