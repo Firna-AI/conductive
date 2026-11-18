@@ -23,7 +23,8 @@ report is in `.context/automation-capabilities/widen.md`.
 Contract owners:
 
 - [Automations](../docs/protocol/automations.md) and
-  [Automation runs](../docs/protocol/automation-runs.md).
+  [Automation runs](../docs/protocol/automation-runs.md), with
+  [Automation risks](../docs/protocol/automation-risks.md).
 - [Secrets](../docs/protocol/secrets.md) and
   [Capabilities](../docs/protocol/capabilities.md).
 - The [automations README](../worker/automations/README.md) and the
@@ -263,28 +264,41 @@ The automation page gets the Capabilities control in its prompt box.
 
 Depends on: 1
 
-- [ ] `docs/protocol/automations.md`: the chosen secrets of an
+- [x] `docs/protocol/automations.md`: the chosen secrets of an
       automation, who sees and changes them, the pull request hint, the
       owner move, and the new risk under Risks that stay open. Add the
       line under the prompt that names the chosen secrets, and say that
       every member sees it and the hint, and that a suspended org keeps
       the line and shows no hint, as the design calls of the mockups say.
-- [ ] `docs/protocol/automation-runs.md`: a run workspace starts with the
+- [x] Move Risks that stay open from `docs/protocol/automations.md`
+      to the new page `docs/protocol/automation-risks.md`, because the
+      new sections take the doc past about 250 lines. Update each link
+      to the section, and the list in
+      `docs/architecture/protocol-docs.md`.
+- [x] `docs/protocol/automation-runs.md`: a run workspace starts with the
       chosen secrets as pre-approvals. Mac access stays off.
-- [ ] `docs/protocol/secrets.md`: the Grants rule and Turns that no
+- [x] `docs/protocol/secrets.md`: the Grants rule and Turns that no
       person started. Remove the rejection of a picker on the automation
       form, and keep its reason in this plan.
-- [ ] `docs/protocol/capabilities.md`: the control on the automation page,
+  - The removed line rejected option B of secrets decision 5, "The
+    routine form gets the secret picker of New workspace". Cal chose C
+    on 13 November 2026, because the time limit of a request ends the
+    wait of its tool call, so an unanswered request keeps no cloud
+    computer awake (`plans/agent-secrets.md`). That reason still holds
+    for each secret that the automation did not choose.
+- [x] `docs/protocol/capabilities.md`: the control on the automation page,
       with its secrets part only. Only the owner opens it.
-- [ ] Add the risk that the creator of a chosen secret, or an admin, can
+- [x] Add the risk that the creator of a chosen secret, or an admin, can
       replace its value, and each later run then uses the new value.
-- [ ] Read `src/marketing/terms.ts` and `src/marketing/privacy.ts` in
+- [x] Read `src/marketing/terms.ts` and `src/marketing/privacy.ts` in
       full. Update each sentence that restates a changed fact.
-- [ ] Read each guide in `src/marketing/docs/` that names automations,
+- [x] Read each guide in `src/marketing/docs/` that names automations,
       secrets, or Capabilities in full. Update each sentence that restates
       a changed fact.
-- [ ] Update `worker/automations/README.md` and `worker/secrets/README.md`.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Update `worker/automations/README.md` and `worker/secrets/README.md`.
+- [x] Check each relative link of each changed Markdown file.
+  - [x] The protocol docs, the architecture docs, and the READMEs.
+  - [x] The guides in `src/marketing/docs/`.
 
 ## Milestone 3: Store and use the chosen secrets
 

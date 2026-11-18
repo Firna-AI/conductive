@@ -88,10 +88,12 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         repositories, workspaces, automations, scripts, and settings that you and your
         team make. Each invite includes the invited email address. They
         run the service.`,
-      text`Automations: the prompt, the triggers, and the author filters of
-        each automation, with the GitHub accounts that a filter names. Each
-        run keeps its owner, its agent, its trigger, its state, and its pull
-        request. A skipped
+      text`Automations: the prompt, the triggers, the chosen org secrets, and
+        the author filters of each automation, with the GitHub accounts
+        that a filter names. Each run keeps its owner, its agent, its trigger,
+        its state, and its pull request. Each run workspace records the
+        chosen secrets as pre-approved by the owner. Its agents use them
+        without a new request. A skipped
         run keeps the GitHub login of the account outside the org whose
         event it skipped. They run the automations and show their runs.`,
       text`Keys and logins: the env var values and agent logins of each

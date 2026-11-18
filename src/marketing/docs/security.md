@@ -255,8 +255,6 @@ Every member can remove approvals in **Capabilities**.
 
 A request waits 90 seconds for an answer.
 After that, it stays in the chat, and a later **Allow** tells the agent in a new turn.
-An automation run follows the same rules.
-Text in a pull request can steer its agent to use the secrets that need no new approval.
 
 While a command runs with a secret, its value is on the cloud computer.
 Programs and members with terminal access can read it then.
@@ -266,6 +264,30 @@ Conductive hides exact copies of a value in the command's output and in the chat
 Changed or encoded values can still appear, also to the agent and its model provider.
 
 - [Add secrets for agents](/docs/cloud-computer#add-secrets-for-agents)
+
+## Choose secrets for automation runs
+
+The owner of an automation can choose org secrets in **Capabilities** on the automation page, beside the model picker.
+Every member sees the chosen secret names under the prompt.
+Only the owner changes the selection.
+Each run workspace starts with those secrets pre-approved.
+Conductive records the owner as the member who approved them.
+
+Agents in every session of that workspace can use them without a new request.
+The same selection serves schedules, pull request triggers, and **Run now**.
+Requests for other secrets still wait for a member, unless another approval allows them.
+
+These pre-approvals stay in a run workspace that you keep.
+Every member can remove them in that workspace's **Capabilities**.
+Changing the automation's selection affects only later run workspaces.
+It does not remove pre-approvals from earlier runs.
+A workspace that the run's agent creates gets no copied pre-approvals.
+
+Text in a pull request, such as a comment or review, can steer the agent to use these secrets.
+The automation page warns every member about this risk when the automation has a pull request trigger and a chosen secret.
+The member who added a chosen secret, or an admin, can replace its value.
+Later runs then use the new value.
+**Mac access** stays off in each new run workspace.
 
 ## Understand previews and Mac commands
 

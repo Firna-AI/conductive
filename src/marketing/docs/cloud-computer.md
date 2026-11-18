@@ -164,6 +164,8 @@ The command gets the value.
 The agent gets the secret's name and environment variable name, without the value.
 A member allows each session with **Allow for this session**.
 A secret for **All agents**, or one that is pre-approved in the workspace's **Capabilities**, needs no approval.
+The owner of an automation can choose secrets in **Capabilities** on its page.
+Each run workspace starts with those secrets pre-approved by the owner.
 
 The secret list gives the environment variable name that the command must read.
 Use the secret's name to request it.
@@ -179,6 +181,7 @@ An older tool can still omit a value if the secret's name cannot be a shell vari
 An [automatic software update](#apply-setup-changes) adds support for these names.
 
 - [Understand secrets](/docs/security#understand-secrets)
+- [Choose secrets for automation runs](/docs/security#choose-secrets-for-automation-runs)
 
 ## Apply setup changes
 

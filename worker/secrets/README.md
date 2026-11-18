@@ -17,6 +17,15 @@ Their foreign keys enforce the org of both the secret and workspace.
 Deleting a secret deletes both kinds of grant. Sessions live in Durable
 Object storage, so their approval rows carry the workspace and session IDs.
 
+`automation_secret_preapprovals` holds the chosen secrets of each
+automation by secret ID. Its foreign keys enforce the org of both the
+secret and the automation. Deleting a secret or an automation deletes its
+rows. A row grants nothing by itself. Each automation run copies the rows
+of its automation into the `workspace_secret_preapprovals` of its new run
+workspace, with the automation owner as the approver. The
+[automations README](../automations/README.md) gives the routes and the
+run start.
+
 The settings API uses the existing member and admin permission helpers.
 Each SQL write repeats its membership, suspension, and role checks.
 List, create, Replace, and all-agents replies return metadata only.
@@ -149,7 +158,9 @@ and deletion therefore change the next filter read. Every live temporary
 value also enters the filter, including a supplied value before a run.
 The filter covers runner text and each request's reason and command.
 Expiry and removal also remove temporary copies from encrypted saved
-filter state. No automation-specific rule changes these grants.
+filter state. An automation run has no grant kind and no rule of its own.
+Its copied pre-approvals report the `workspace` grant, so older tools read
+them.
 
 ## Key code
 

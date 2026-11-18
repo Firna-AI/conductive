@@ -24,6 +24,21 @@ Every reader gets the same owner, independently of their own default login.
 The value has no credential, endpoint host, or full address.
 The automation owner still supplies GitHub access.
 
+Each automation in a reply has `capabilities`, an `AutomationCapabilities` with `preapprovedSecretIds`.
+They are the chosen secrets that each run workspace starts with as pre-approvals.
+Every org member reads them, and only the owner changes them.
+`automation_secret_preapprovals` stores one row for each chosen secret.
+It follows `workspace_secret_preapprovals`.
+Its foreign keys to `automations` and `org_secrets` enforce the org of both and cascade on delete.
+So a deleted secret leaves each list, and a deleted automation leaves no row.
+A create and an update take an optional `capabilities` of the same shape.
+A create without it stores an empty list.
+An update without it keeps the stored list, so an older app tab keeps the choices.
+A save drops each ID that names no secret of the org and stores the rest.
+A `capabilities` value without a list of string IDs returns `invalid_input`, as other bad fields do.
+The shape has no `macAccess`, because each run workspace keeps Mac access off.
+[Chosen secrets](../../docs/protocol/automations.md#chosen-secrets) gives the rules.
+
 `POST` of `automationPaths.runNow` takes a `RunAutomationRequest` with the page's request ID.
 Only the owner can use it, also while the automation is off.
 An automation whose triggers are all pull request triggers refuses Run now.
@@ -70,6 +85,13 @@ The personal share setting does not restrict the owner's own run.
 The runner gets only a turn token for that login through the model gateway.
 GitHub access and Mac commands still act as the owner.
 It calls the existing workspace create and first-message admission paths.
+Right before the create, it reads the chosen secrets of the automation and keeps only the IDs that name a secret of the org.
+It passes them as `capabilities`, with `macAccess: false`.
+The create stores them as normal workspace pre-approvals, with the owner as the approver.
+When a secret goes between that read and the create, the create refuses it with `secret_not_found`.
+The starter then reads the list again and creates once more.
+The creation plan keeps the list for each retry of that create.
+[The secrets of a run](../../docs/protocol/automation-runs.md#the-secrets-of-a-run) gives the rules.
 It does not wait for cloud computer startup.
 A repeat with a creation attempt uses its original sender and bypasses the automation access and login checks.
 The create joins the existing workspace through the stored first-message ID.
@@ -160,7 +182,7 @@ The batch-limit test passes 2 for each limit and checks the stored operation cou
 - [run-runtime.ts](run-runtime.ts) connects the starter to the real workspace object.
 - [pull-request-dispatch.ts](pull-request-dispatch.ts) filters events, stores runs, and schedules background starts.
 - [pull-request-data.ts](pull-request-data.ts) reads matching automations, org accounts, and loop guards.
-- [run-starter.ts](run-starter.ts) starts or skips a stored queued run.
+- [run-starter.ts](run-starter.ts) starts or skips a stored queued run, and passes the chosen secrets to the create.
 - [run-record-data.ts](run-record-data.ts) stores run keys, message IDs, owner snapshots, and workspace links.
 - [run-admission-data.ts](run-admission-data.ts) checks current access and finds existing creation attempts.
 - [run-choice-data.ts](run-choice-data.ts) saves the first agent choice atomically for concurrent starters.
@@ -174,6 +196,9 @@ The batch-limit test passes 2 for each limit and checks the stored operation cou
 ### Related docs
 
 - [Automations protocol](../../docs/protocol/automations.md)
+- [Automation runs](../../docs/protocol/automation-runs.md)
+- [Automation risks](../../docs/protocol/automation-risks.md)
 - [Shared contracts](../../src/shared/automations.ts)
+- [Org secrets](../secrets/README.md)
 - [App API](../app-api/README.md)
 - [Migrations](../../migrations/README.md)
