@@ -4,7 +4,7 @@ use cnd_runner_interface::chat_events::{AgentChatEvent, TurnEventContext};
 use cnd_runner_interface::runner::RunnerEvent;
 
 use super::fields::clean;
-use super::text::filter;
+use super::text::{Continuation, filter};
 
 #[derive(Clone)]
 struct Context {
@@ -53,21 +53,17 @@ impl Sanitizer {
         }
         secrets.sort();
         secrets.dedup();
-        let mut continuations = vec![];
         let contexts = previous
             .as_ref()
             .map(|h| h.contexts.clone())
             .unwrap_or_default();
-        for c in &contexts {
-            for (index, _) in c.text.char_indices() {
-                let prefix = &c.text[index..];
-                for secret in &c.secrets {
-                    if secret.len() > prefix.len() && secret.starts_with(prefix) {
-                        continuations.push(secret[prefix.len()..].to_owned());
-                    }
-                }
-            }
-        }
+        let continuations: Vec<_> = contexts
+            .iter()
+            .map(|context| Continuation {
+                text: &context.text,
+                secrets: &context.secrets,
+            })
+            .collect();
         let source = previous
             .as_ref()
             .map(|h| h.text.as_str())

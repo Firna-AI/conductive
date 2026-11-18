@@ -36,8 +36,10 @@ A failed output retry permits the turn to continue. A failed start still
 reaches its caller. The caller supplies events after its credential filter.
 This crate bounds tool details, whole turn-file prefixes, file payloads,
 and complete envelopes. The shared credential filter keeps tokens in process
-memory. It holds incomplete streamed prefixes and preserves operational paths
-and file contents. Report labels use the same filter before byte limits.
+memory. It masks each whole token and each run of at least 21 characters of
+a token. It holds streamed text that can still grow into either, and
+preserves operational paths and file contents. Report labels use the same
+filter before byte limits.
 
 The socket accepts HTTPS or WSS endpoints and uses rustls with public roots.
 It repairs lone UTF-16 surrogate escapes to U+FFFD before typed decoding.
