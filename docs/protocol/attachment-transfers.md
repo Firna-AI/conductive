@@ -59,8 +59,12 @@ in the cloud computer at `app/attachments/missing`.
   transfer. Reason: the app deletes the stored copy after the first
   transfer, as [The stored copy](#the-stored-copy) says.
 - After a restart of the Durable Object of the workspace, a second
-  download of a file can start. Two downloads of one file never mix their
-  bytes at its copy path.
+  download of a file can start. Two downloads of one file into one cloud
+  computer run one after the other, never at the same time. A download
+  that finds the file at its copy path leaves it as it is, also when an
+  agent or a member changed it, and it ends with success.
+- Reason: a late download then never deletes the temporary file of
+  another download, and never replaces a file that an agent changed.
 - The agent gets a message only after each of its files is in the cloud
   computer. This holds also for a message that joins a running turn.
 - While the files of a message transfer, or while the Worker checks them,
@@ -77,8 +81,9 @@ in the cloud computer at `app/attachments/missing`.
   again each file that the cloud computer did not get.
 - When the provider of the cloud computer gives no answer to a step of a
   transfer or of a check, the Worker runs that transfer or check once more
-  (transfer-retry decision 2). No answer is a request that times out, or
-  an answer with a server error. A new transfer uses a new one-use token.
+  (transfer-retry decision 2). No answer is a request that times out or
+  gets no connection, or an answer with a server error. A new transfer
+  uses a new one-use token.
 - Reason: a slow provider can answer a few seconds too late, and one more
   try then delivers the file with no Try again. A turn that fails at once
   was not chosen. More tries were not chosen, because each try can wait
@@ -92,8 +97,8 @@ in the cloud computer at `app/attachments/missing`.
   that the file is wrong. A new error code was not chosen, because the app
   and the stored turns already know this code.
 - A late answer can let the first try of a transfer still run in the cloud
-  computer. Its one-use token still works, and two downloads of one file
-  never mix their bytes at its copy path.
+  computer. The second try then waits for it, as for a download after a
+  restart.
 - A transfer or a check that fails for a message that joins a running turn
   fails that turn in the same way. The workspace also stops the agent of
   that turn, as [The agent runner](agent-runner.md#the-agent-runner) says.

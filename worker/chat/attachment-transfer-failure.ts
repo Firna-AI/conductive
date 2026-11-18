@@ -17,12 +17,14 @@ const ATTACHMENT_COPY_UNANSWERED_MESSAGE =
 export class AttachmentTransferFailed extends HttpError {
   readonly step: AttachmentStep
   readonly failure: unknown
-  /** The provider gave no answer in time, or answered with a server error. */
+  /** The provider gave no answer, as after a time-out, or a server error. */
   readonly unanswered: boolean
 
   constructor(step: AttachmentStep, failure: unknown) {
     const unanswered =
-      failure instanceof ProviderError && failure.kind === 'unavailable'
+      failure instanceof ProviderError &&
+      failure.kind === 'unavailable' &&
+      failure.status >= 500
     super(
       503,
       'attachment_copy_failed',

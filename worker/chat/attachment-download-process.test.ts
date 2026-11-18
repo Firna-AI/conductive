@@ -86,23 +86,29 @@ it('fails a nonzero, timed-out, or lost download with the existing attachment co
 })
 
 it('names the failed provider step, and marks only a provider without an answer as unanswered', async () => {
-  await expect(
-    runAttachmentDownload(
-      {
-        startCommand: async () => {
-          throw new ProviderError('rate_limited', 429)
+  // A status that the provider client does not list also has the kind
+  // unavailable, but it is an answer.
+  for (const error of [
+    new ProviderError('rate_limited', 429),
+    new ProviderError('unavailable', 405),
+  ])
+    await expect(
+      runAttachmentDownload(
+        {
+          startCommand: async () => {
+            throw error
+          },
+          getCommandStatus: async () => status(),
         },
-        getCommandStatus: async () => status(),
-      },
-      'sandbox',
-      'download command',
-    ),
-  ).rejects.toMatchObject({
-    step: 'start',
-    unanswered: false,
-    message:
-      'The attached files could not reach the cloud computer. Try again.',
-  })
+        'sandbox',
+        'download command',
+      ),
+    ).rejects.toMatchObject({
+      step: 'start',
+      unanswered: false,
+      message:
+        'The attached files could not reach the cloud computer. Try again.',
+    })
   await expect(
     runAttachmentDownload(
       {
