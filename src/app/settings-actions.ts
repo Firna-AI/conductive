@@ -4,7 +4,7 @@ import {
   type MoveRepositoryRequest,
   type Repository,
 } from '../shared/org-settings'
-import { readRepositories } from './api/read-settings'
+import { readRepositories, readRepositoryOrder } from './api/read-settings'
 import type { OrgModel } from './org-model'
 
 /**
@@ -49,10 +49,32 @@ export function repositoryMoved(
 }
 
 /**
+ * The repositories in the saved repository `order`: the chosen ones in that
+ * order, then the others as they were. A chosen repository that the order
+ * does not name keeps its place after the named ones.
+ */
+function repositoriesInOrder(
+  list: readonly Repository[],
+  order: readonly string[],
+): readonly Repository[] {
+  const rank = new Map(order.map((id, index) => [id, index]))
+  const chosen = list
+    .filter((item) => item.selected)
+    .map((item, index) => ({ item, index }))
+    .sort(
+      (a, b) =>
+        (rank.get(a.item.id) ?? order.length + a.index) -
+        (rank.get(b.item.id) ?? order.length + b.index),
+    )
+    .map(({ item }) => item)
+  return [...chosen, ...list.filter((item) => !item.selected)]
+}
+
+/**
  * Moves a chosen repository of the org to `index` of the repository order
  * (repository-order decision 1 F). The move shows at once. The answer is
- * the whole list, and a failure takes back only this move. A move starts no
- * build, so the builds do not read again.
+ * the saved order, which the list then follows, and a failure takes back
+ * only this move. A move starts no build, so the builds do not read again.
  */
 export async function moveRepository(
   org: OrgModel,
@@ -67,8 +89,8 @@ export async function moveRepository(
         'PUT',
         repositoryPositionPath(org.orgId, repositoryId),
         body,
-        readRepositories,
+        readRepositoryOrder,
       ),
-    (answer) => () => answer,
+    (answer) => (list) => repositoriesInOrder(list, answer.order),
   )
 }

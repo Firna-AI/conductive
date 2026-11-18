@@ -199,8 +199,10 @@ View writes cannot change this branch.
   admin. Its body `MoveRepositoryRequest` holds `index`, which counts the
   chosen repositories without the moved one. A larger index moves it to
   the end. A body without a number index gets `400 invalid_input`. A
-  repository that is not chosen moves nothing. The reply is the repository
-  list, as for an add. A move starts no build, and it keeps the settings
+  repository that is not chosen moves nothing. The reply is
+  `RepositoryOrderResponse`, the IDs of the chosen repositories in the
+  saved order. It reads stored data only, so that no call to GitHub can
+  fail a move that saved. A move starts no build, and it keeps the settings
   revision, because the image does not depend on the order.
 - The build history reply also gives `BuildsResponse.changes`: the saved
   install script change and the added and removed repositories. The

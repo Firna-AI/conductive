@@ -56,10 +56,18 @@ export interface Repository {
 
 /**
  * A move of a chosen repository. `index` counts the chosen repositories
- * without the moved one. The reply is a `RepositoriesResponse`.
+ * without the moved one. The reply is a `RepositoryOrderResponse`.
  */
 export interface MoveRepositoryRequest {
   index: number
+}
+/**
+ * The saved repository order of an org: the IDs of its chosen
+ * repositories, first one first. A move answers with it alone, from stored
+ * data, so that no call to GitHub can fail a move that saved.
+ */
+export interface RepositoryOrderResponse {
+  order: readonly string[]
 }
 
 function compareText(a: string, b: string): number {

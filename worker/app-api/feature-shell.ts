@@ -84,7 +84,6 @@ export async function featureShellRoute(
       userId,
       movedRepositoryId,
       context.body,
-      dependencies,
     )
   const repositoryId = shellChildId(path, orgSettingsPaths.repositories(orgId))
   if (repositoryId && ['PUT', 'DELETE'].includes(request.method))

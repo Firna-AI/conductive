@@ -12,6 +12,7 @@ import { createApiClient } from '../api/client'
 import {
   readBuilds,
   readRepositories,
+  readRepositoryOrder,
   readSettings,
 } from '../api/read-settings'
 import { createBackend, guardScope } from './backend'
@@ -180,8 +181,9 @@ it('adds a repository again at the end of the order and moves a chosen one witho
     'PUT',
     repositoryPositionPath(org.org.id, removed.id),
     { index: 0 },
-    readRepositories,
+    readRepositoryOrder,
   )
-  expect(chosen(moved)).toEqual(before)
+  expect(moved.order).toEqual(before)
+  expect(chosen(org.repositories)).toEqual(before)
   expect(org.builds).toHaveLength(builds)
 })

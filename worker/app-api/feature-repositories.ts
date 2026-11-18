@@ -1,6 +1,12 @@
 import type { GitHubRepository } from '../../src/shared/account'
-import type { Repository } from '../../src/shared/org-settings'
-import { compareInRepositoryOrder } from '../data/repository-order'
+import type {
+  Repository,
+  RepositoryOrderResponse,
+} from '../../src/shared/org-settings'
+import {
+  chosenRepositoryIds,
+  compareInRepositoryOrder,
+} from '../data/repository-order'
 import { latestSoftwareRelease } from '../lifecycle/software-release'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
@@ -137,7 +143,8 @@ export async function changeShellRepository(
  * admin. The index counts the chosen repositories without the moved one.
  * A repository that is not chosen moves nothing. A move starts no build and
  * keeps the settings revision, because the image does not depend on the
- * order. The reply is the repository list.
+ * order. The reply is the saved repository order, from stored data only,
+ * so that no call to GitHub can fail a move that saved.
  */
 export async function moveShellRepositoryRoute(
   env: AppEnv,
@@ -145,7 +152,6 @@ export async function moveShellRepositoryRoute(
   userId: string,
   repositoryId: string,
   body: RequestContext['body'],
-  dependencies: AppDependencies,
 ): Promise<Response> {
   const index = optionalShellPosition(body?.index)
   if (index === undefined) throw invalidShellInput()
@@ -158,13 +164,8 @@ export async function moveShellRepositoryRoute(
   })
   if (!moved) await assertCanChangeSharedSettings(env.DB, orgId, userId)
   return Response.json({
-    repositories: await shellRepositoryChoices(
-      env,
-      orgId,
-      userId,
-      dependencies,
-    ),
-  })
+    order: await chosenRepositoryIds(env.DB, orgId),
+  } satisfies RepositoryOrderResponse)
 }
 
 function repositoryNotFound(): HttpError {

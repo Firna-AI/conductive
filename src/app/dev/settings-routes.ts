@@ -5,6 +5,7 @@ import {
   repositoryPositionPath,
   type OrgSettingsResponse,
   type RepositoriesResponse,
+  type RepositoryOrderResponse,
   type Repository,
 } from '../../shared/org-settings'
 import {
@@ -153,7 +154,11 @@ function moveRepository(
       ...ordered.filter((repository) => !repository.selected),
     ]
   }
-  return repositoriesReply(org)
+  return json({
+    order: org.repositories
+      .filter((repository) => repository.selected)
+      .map((repository) => repository.id),
+  } satisfies RepositoryOrderResponse)
 }
 
 /**

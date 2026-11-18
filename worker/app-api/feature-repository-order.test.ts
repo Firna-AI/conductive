@@ -134,7 +134,10 @@ it('moves a chosen repository for an admin without a build or a settings change'
   const before = await state()
   const moved = await move('beta', { index: 0 })
   expect(moved.status).toBe(200)
-  expect(await list(moved)).toEqual([
+  expect(await moved.json()).toEqual({
+    order: ['beta', 'zeta', OUTER_REPOSITORY],
+  })
+  expect(await list()).toEqual([
     'beta',
     'zeta',
     OUTER_REPOSITORY,
@@ -145,7 +148,8 @@ it('moves a chosen repository for an admin without a build or a settings change'
     beta: 0,
     zeta: 1,
   })
-  expect(await list(await move('beta', { index: 9 }))).toEqual([
+  expect((await move('beta', { index: 9 })).status).toBe(200)
+  expect(await list()).toEqual([
     'zeta',
     OUTER_REPOSITORY,
     'beta',
@@ -175,7 +179,8 @@ it('moves nothing for a member, for a repository that is not chosen, or for a bo
   })
   const removed = await move(CANDIDATE, { index: 0 })
   expect(removed.status).toBe(200)
-  expect(await list(removed)).toEqual([
+  expect(await removed.json()).toEqual({ order: ['zeta', OUTER_REPOSITORY] })
+  expect(await list()).toEqual([
     'zeta',
     OUTER_REPOSITORY,
     `${CANDIDATE} (not chosen)`,
@@ -186,4 +191,27 @@ it('moves nothing for a member, for a repository that is not chosen, or for a bo
     error: { code: 'invalid_input' },
   })
   expect(await positions()).toEqual(before)
+})
+
+it('saves a move and answers with the saved order while GitHub fails, without a call to GitHub', async () => {
+  const { active, list, move } = await setup([['zeta', 'owner/zeta', 0]])
+  const github = active.github.fetch
+  let calls = 0
+  active.github.fetch = async () => {
+    calls += 1
+    return new Response('GitHub is down', { status: 502 })
+  }
+  const moved = await move(OUTER_REPOSITORY, { index: 0 })
+  const answer = { status: moved.status, body: await moved.json(), calls }
+  active.github.fetch = github
+  expect(answer).toEqual({
+    status: 200,
+    body: { order: [OUTER_REPOSITORY, 'zeta'] },
+    calls: 0,
+  })
+  expect(await list()).toEqual([
+    OUTER_REPOSITORY,
+    'zeta',
+    `${CANDIDATE} (not chosen)`,
+  ])
 })

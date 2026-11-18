@@ -10,7 +10,7 @@ import { FakeApiServer } from '../test-support/fake-api'
 import { coreFixtures, FAKE_IDS } from '../test-support/fixtures/core'
 import { repositoryFixtures } from '../test-support/fixtures/repositories'
 import { OrgModel } from './org-model'
-import { moveRepository, repositoryMoved } from './settings-actions'
+import { moveRepository } from './settings-actions'
 import { testServices } from './test-kit'
 
 const org = FAKE_IDS.org
@@ -127,11 +127,7 @@ describe('the repository of a New workspace draft', () => {
     const kept = model.newWorkspace(null)
     kept.setText('Fix the flaky cart test.')
     server.json('PUT', repositoryPositionPath(org, 'marketing-site'), {
-      repositories: repositoryMoved(
-        repositoryFixtures(org).repositories.repositories,
-        'marketing-site',
-        0,
-      ),
+      order: ['marketing-site', 'storefront', 'billing-service'],
     })
     await moveRepository(model, 'marketing-site', 0)
     const fresh = model.newWorkspace('checkout')
