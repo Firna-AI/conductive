@@ -4,11 +4,16 @@ import { Switch } from '@firna/ui/switch'
 import { Plus } from 'lucide-react'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import {
+  addNameHint,
+  refusedNameError,
+} from '../../../docs/mockups/src/components/secrets/secretNameCopy'
+import {
   allAgentsHint,
   secretsWords,
 } from '../../../docs/mockups/src/components/secrets/secretsCopy'
 import styles from '../../../docs/mockups/src/components/secrets/SecretsTab.module.css'
 import sections from '../../../docs/mockups/src/components/settings/Section.module.css'
+import type { ApiError } from '../../app/api/client'
 import type { SecretsModel } from '../../app/secrets-model'
 import type { OrgSummary } from '../../shared/orgs'
 import type { OrgSecret, ReplaceSecretRequest } from '../../shared/secrets'
@@ -110,11 +115,30 @@ function AllAgentsField(props: {
 }
 
 /**
+ * The refusal of the name of a new secret, which shows under the name: a
+ * name that the org has already, or a name with characters that a new name
+ * cannot use. Null for any other error, which shows under the value.
+ */
+function nameRefusal(error: ApiError | null): string | null {
+  switch (error?.code) {
+    case 'secret_name_exists':
+      return error.message
+    case 'invalid_secret_name':
+      return refusedNameError
+    default:
+      return null
+  }
+}
+
+/**
  * A new secret: its name, its description, and its value. The form of an
  * admin also sets the mark for all agents, which starts off. A member has
- * no switch, because only admins set the mark (secrets decision 3 B). The
- * name must not be empty. A name that the org has already shows its
- * refusal under the name.
+ * no switch, because only admins set the mark. The name must not be empty,
+ * and its hint gives the characters that a new name can use. The Worker
+ * checks them. A name that the org has already shows its refusal under the
+ * name, and a name with other characters shows its refusal in place of the
+ * hint. Each field keeps its text after a refusal, and a new name ends the
+ * refusal of the name.
  */
 export function AddSecretForm(props: {
   org: OrgSummary
@@ -129,7 +153,8 @@ export function AddSecretForm(props: {
   const { form, value, state, save } = useValueForm(props.close)
   const added = name.trim()
   const ready = added !== ''
-  const taken = state.error?.code === 'secret_name_exists'
+  const refusal = nameRefusal(state.error)
+  const invalid = state.error?.code === 'invalid_secret_name'
   const add = () => {
     if (!ready) return
     save(added, (typed) =>
@@ -148,13 +173,13 @@ export function AddSecretForm(props: {
         autoComplete="off"
         autoCorrect={false}
         editable={!state.saving}
-        error={taken ? state.error?.message : undefined}
-        hint={secretsWords.nameHint}
+        error={refusal}
+        hint={invalid ? undefined : addNameHint}
         label={secretsWords.name}
         onChangeText={(text) => {
           setName(text)
-          // A new name ends the refusal of the name that the org has.
-          if (taken) form.set(value)
+          // A new name ends the refusal of the name.
+          if (refusal !== null) form.set(value)
         }}
         size={field}
         spellCheck={false}
@@ -171,7 +196,7 @@ export function AddSecretForm(props: {
       <Input
         autoComplete="off"
         editable={!state.saving}
-        error={taken ? undefined : state.error?.message}
+        error={refusal === null ? state.error?.message : undefined}
         hint={secretsWords.valueHint}
         label={secretsWords.value}
         onChangeText={(text) => form.set(text)}

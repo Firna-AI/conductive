@@ -231,10 +231,11 @@ sessions as tabs above the chat, and four tabs at the bottom.
   of `ConfirmDialog`. The repository picker sits at the top left, and the
   org and the section of the new workspace, in plain text, at the top
   right. The message and its files fill the middle, and the notices of the
-  New workspace page follow them. The model picker sits at the bottom left,
-  and the Capabilities icon, the attach button, and Create, with the hint
-  of the Enter key, at the bottom right. A phone always opens the page, so the dialog has no phone
-  layout.
+  New workspace page follow them. The attach button, the Capabilities icon,
+  and the model picker sit at the bottom left. The org login label follows
+  the model picker when the first message uses it. Create, with the hint of
+  the Enter key, sits at the bottom right. A phone always opens the page,
+  so the dialog has no phone layout.
 - The account has five tabs, General, Agents, Preferences, Keyboard
   shortcuts, and Stats, as links, as the org settings have. The Mac app
   adds This Mac as its sixth tab. On a phone, a tab that

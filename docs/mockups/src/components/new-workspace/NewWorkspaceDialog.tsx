@@ -152,7 +152,7 @@ export type NewWorkspaceDialogProps = {
    */
   ready: boolean
   /**
-   * The Capabilities icon beside the attach button, and its control when
+   * The Capabilities icon after the attach button, and its control when
    * it is open, above the icon (secrets decision 6).
    */
   capabilities?: CapabilitiesControl
@@ -165,13 +165,13 @@ export type NewWorkspaceDialogProps = {
  * section. The message fills
  * the middle, with a chip for each of its files at its place, and a pasted
  * link to a workspace of the org shows as a chip, as in the composer. The
- * model picker sits at the bottom left, with the label of the org login
- * after it when the first message runs on it, and the Capabilities icon,
- * the attach button, and Create at the bottom right. The attach button puts
- * each picked file at the caret. The whole card takes a drop of files, and
- * its full border shows the drop state while they hover over it. A phone
- * always opens the page instead. The files show the chips of every
- * composer, and Create waits for their uploads, as Send does.
+ * attach button, the Capabilities icon, and the model picker sit at the
+ * bottom left, with the label of the org login after the model picker when
+ * the first message runs on it. Create sits at the bottom right. The attach
+ * button puts each picked file at the caret. The whole card takes a drop
+ * of files, and its full border shows the drop state while they hover over
+ * it. A phone always opens the page instead. The files show the chips of
+ * every composer, and Create waits for their uploads, as Send does.
  */
 export function NewWorkspaceDialog(props: NewWorkspaceDialogProps) {
   const uploads = props.attachments.some((file) => file.state !== undefined)
@@ -211,13 +211,16 @@ export function NewWorkspaceDialog(props: NewWorkspaceDialogProps) {
           <div className={styles.notices}>{props.notices}</div>
         ) : null}
         <div className={styles.footer}>
+          <IconButton icon={Paperclip} label="Attach files" />
+          {props.capabilities ? (
+            <CapabilitiesButton
+              {...props.capabilities}
+              placement="above-start"
+            />
+          ) : null}
           <ModelPicker choice={props.choice} />
           {props.login ? <SessionLoginLabel {...props.login} /> : null}
           <span className={styles.spacer} />
-          {props.capabilities ? (
-            <CapabilitiesButton {...props.capabilities} placement="above-end" />
-          ) : null}
-          <IconButton icon={Paperclip} label="Attach files" />
           <CreateButton ready={props.ready && !uploads} />
         </div>
       </section>

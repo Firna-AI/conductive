@@ -5,6 +5,8 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use serde_json::Value;
 
+use cnd_runner_interface::tools::secret_results::RunWithSecretsResult;
+
 use crate::call::{Call, Name};
 use crate::cli_parse;
 use crate::client::{Client, Configuration, Dispatch};
@@ -82,6 +84,18 @@ impl ToolProgram {
         }
         let reply = self.client.execute(call).await?;
         if let Reply::RunWithSecrets(result) = &reply {
+            if let RunWithSecretsResult::Completed {
+                environment_variables,
+                ..
+            } = result
+            {
+                self.streams
+                    .stderr(&format!(
+                        "environmentVariables: {}\n",
+                        serde_json::to_string(environment_variables).internal()?
+                    ))
+                    .await?;
+            }
             if let Some(message) = result.message() {
                 self.streams.stderr(&format!("{message}\n")).await?;
             }

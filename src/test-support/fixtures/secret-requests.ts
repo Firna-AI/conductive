@@ -45,6 +45,17 @@ const mapbox: RequestedSecret = {
   description: '',
 }
 
+/**
+ * A name with spaces that Acme has no secret for. Save as secret cannot
+ * add it, because a new secret name takes only letters, digits, and
+ * underscores.
+ */
+const placesKey: RequestedSecret = {
+  name: 'Google Places key',
+  secretId: null,
+  description: '',
+}
+
 export const asks = {
   database: {
     secrets: [stored('PROD_DATABASE_URL')],
@@ -67,6 +78,19 @@ export const asks = {
     secrets: [stored('VERCEL_TOKEN')],
     reason: 'Deploy a preview of the checkout.',
     command: 'npx vercel deploy --token "$VERCEL_TOKEN"',
+  },
+  places: {
+    secrets: [placesKey],
+    reason:
+      'Compare the address suggestions of the places proxy with the Google Places API.',
+    command: 'node scripts/compare-suggestions.mjs --provider google',
+  },
+  providers: {
+    secrets: [stored('PROD_DATABASE_URL'), mapbox, placesKey],
+    reason:
+      'Compare the Mapbox and Google Places suggestions with the places proxy on 200 saved addresses from production.',
+    command:
+      'node scripts/compare-suggestions.mjs --provider mapbox --provider google --sample production',
   },
 } as const
 
