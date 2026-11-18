@@ -17,7 +17,7 @@
   - Help → Check for updates answers with a dialog. With no new version: "Conductive is up to date.". After a failed check: "Conductive could not check for updates. Try again later.". With a new version: "Downloading the new version. Conductive tells you when it is ready.".
   - When a downloaded version waits, Help → Check for updates shows "The update is ready." again.
   - After "Downloading the new version.", a failed download or a refusal by macOS shows no dialog. That is the current behaviour, and `plans/follow-ups/manual-update-check-ends-silently.md` holds the open decision about it.
-  - A read-only copy downloads each update but never installs it. `plans/follow-ups/read-only-copies-never-update.md` records that problem. So the test installs the app into Applications.
+  - A read-only copy downloads each update but never installs it. The section "Updates in the app" of `docs/protocol/desktop-packages-and-updates.md` requires an offer at launch to move such a copy into Applications. Older releases, such as `0.1.0`, do not make that offer. So the test installs the app into Applications.
   - Conductive → About Conductive shows the version of the running app.
   - electron-updater writes its steps to the terminal when the app starts from Terminal. A failed update step also writes "Conductive: A desktop operation failed." there.
   - release-please opens the next release pull request after a `fix` or `feat` commit on `main`. From `0.1.0`, a `fix` commit gives `0.1.1`, and a `feat` commit gives `0.2.0`.
