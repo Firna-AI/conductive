@@ -224,6 +224,7 @@ export const paths = {
   diff: 'app/files/diff',
   image: 'app/files/image',
   imageNotDrawn: 'app/files/image/cannot-draw',
+  imageFromAnswer: 'app/files/image/from-answer',
   maskedPaths: 'app/chat/masked-paths',
   maskedPathsChanges: 'app/chat/masked-paths/changes',
   maskedPathsAllFiles: 'app/chat/masked-paths/all-files',

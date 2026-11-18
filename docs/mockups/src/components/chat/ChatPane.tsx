@@ -10,6 +10,7 @@ import { SandboxBar, type BarNotice } from '../workspace/SandboxNotice'
 import { replacesComposer } from '../workspace/sandboxNoticeState'
 import { StartingCard } from '../workspace/StartingCard'
 import { ChatItemView } from './ChatItemView'
+import { ChatPictures, type PictureRead } from './chatPictures'
 import { Composer, type ComposerState } from './Composer'
 import { groupItems } from './groupItems'
 import { isPendingCommand, PendingCommand } from './PendingCommand'
@@ -53,6 +54,11 @@ export function ChatPane(props: {
    * open folds starts at its top.
    */
   fold?: FoldState
+  /**
+   * The reads of the pictures of the answers. The chat reads pictures only
+   * while the cloud computer runs. Without reads, each shows as its link.
+   */
+  pictures?: PictureRead
 }) {
   const mac = useMacApp()
   const empty = props.items.length === 0 && !props.starting
@@ -80,35 +86,37 @@ export function ChatPane(props: {
           data-mokly-scroll="chat-transcript"
         >
           <div className={styles.transcript}>
-            {groupItems(transcript).map((entry) => {
-              switch (entry.kind) {
-                case 'tools':
-                  return (
-                    <ToolGroup
-                      calls={entry.calls}
-                      open={entry.open}
-                      key={entry.id}
-                    />
-                  )
-                case 'work':
-                  return (
-                    <WorkFold
-                      key={entry.id}
-                      state={fold}
-                      steps={entry.steps}
-                      viewer={props.viewer}
-                    />
-                  )
-                case 'item':
-                  return (
-                    <ChatItemView
-                      item={entry.item}
-                      key={entry.item.id}
-                      viewer={props.viewer}
-                    />
-                  )
-              }
-            })}
+            <ChatPictures read={props.pictures}>
+              {groupItems(transcript).map((entry) => {
+                switch (entry.kind) {
+                  case 'tools':
+                    return (
+                      <ToolGroup
+                        calls={entry.calls}
+                        open={entry.open}
+                        key={entry.id}
+                      />
+                    )
+                  case 'work':
+                    return (
+                      <WorkFold
+                        key={entry.id}
+                        state={fold}
+                        steps={entry.steps}
+                        viewer={props.viewer}
+                      />
+                    )
+                  case 'item':
+                    return (
+                      <ChatItemView
+                        item={entry.item}
+                        key={entry.item.id}
+                        viewer={props.viewer}
+                      />
+                    )
+                }
+              })}
+            </ChatPictures>
             {props.starting ? <StartingCard log={props.starting} /> : null}
           </div>
         </div>

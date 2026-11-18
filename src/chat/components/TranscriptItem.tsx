@@ -97,7 +97,7 @@ export function ItemView(props: {
     case 'user':
       return <UserBubble message={item.message} />
     case 'agent':
-      return <AgentText text={item.text} />
+      return <AgentText id={item.id} text={item.text} />
     case 'turn-end':
       return (
         <TurnEnd

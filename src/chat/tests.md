@@ -265,6 +265,27 @@ files over the size limit, with one name or the count and the limit. It
 also renders the files under a sent message, with their sizes and no
 Remove.
 `links/AnswerText.dom.test.tsx` mounts answers with file chips.
+`links/FilePicture.dom.test.tsx` mounts an answer with the Markdown image
+of a screenshot in the chat pane, with a fake picture reader. The box of
+the label shows, and the read starts for the message only when the box
+comes near the view, with the scroll box of the chat as the root. The
+picture shows at its own size with the label as its alternative text. A
+plain press opens the file tab, and a press with a modifier key stays with
+the browser. The link shows without a reader, with the code of its label,
+and after a failed read and for bytes that the browser cannot draw. Without
+a reader, nothing watches the image. An unmount aborts the read, and a copy
+gives the Markdown image while the box and while the picture shows.
+`components/AgentPictures.dom.test.tsx` checks the places of a picture: a
+paragraph and a list item show it, and a heading and a table cell keep
+the link. A closed message line shows the link, and the open line shows
+the picture, which a press opens. happy-dom toggles a `<details>` for a
+click on a link in its summary, which a browser does not, so the browser
+smoke test checks that the line stays open.
+`links/picture-test-kit.tsx` holds their helpers: a stand-in for
+`IntersectionObserver`, the fake reader, and the mount. They take the
+image decoder of `fakeDecoder` from `../files/page/picture-test-kit.tsx`.
+`links/chat-parts-answers.test.ts` also checks that only the image of a
+picture file can show as its picture.
 `links/workspace-links.test.ts` reads links with and without a tab path,
 Markdown links, a code label in a sent message, code, `..`, other origins
 and orgs, which are links and no chips, unknown workspaces, and

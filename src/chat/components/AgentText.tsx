@@ -2,6 +2,7 @@ import itemStyles from '../../../docs/mockups/src/components/chat/ChatItemView.m
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import headingStyles from '../../../docs/mockups/src/components/common/MarkdownHeadings.module.css'
 import { MarkdownTable } from '../../../docs/mockups/src/components/common/MarkdownTable'
+import type { AnswerPictures } from '../links/FilePicture'
 import { AnswerText } from '../links/LinkedText'
 import { textBlocks, type TextBlock, type TextItem } from './agent-text'
 import { CodeBlock } from './CodeBlock'
@@ -17,29 +18,38 @@ function tableCell(text: string) {
  * paragraphs, headings, code blocks, and tables that the agent indents
  * under it.
  */
-function ListItems(props: { items: readonly TextItem[] }) {
+function ListItems(props: {
+  items: readonly TextItem[]
+  pictures?: AnswerPictures
+}) {
+  const { pictures } = props
   return props.items.map((item, index) => {
     const [first] = item
     const tight = item.length === 1 && first.kind === 'p'
     return (
       <li key={index}>
         {tight ? (
-          <AnswerText text={first.text} />
+          <AnswerText pictures={pictures} text={first.text} />
         ) : (
-          <AgentBlocks blocks={item} />
+          <AgentBlocks blocks={item} pictures={pictures} />
         )}
       </li>
     )
   })
 }
 
-function Block(props: { block: TextBlock }) {
-  const { block } = props
+/**
+ * One block of an answer. Only a paragraph and a list item get `pictures`:
+ * a heading and a table cell keep the link of an image, because a picture
+ * breaks the layout of the heading or of the row.
+ */
+function Block(props: { block: TextBlock; pictures?: AnswerPictures }) {
+  const { block, pictures } = props
   switch (block.kind) {
     case 'p':
       return (
         <p>
-          <AnswerText text={block.text} />
+          <AnswerText pictures={pictures} text={block.text} />
         </p>
       )
     case 'heading': {
@@ -56,13 +66,13 @@ function Block(props: { block: TextBlock }) {
     case 'ul':
       return (
         <ul>
-          <ListItems items={block.items} />
+          <ListItems items={block.items} pictures={pictures} />
         </ul>
       )
     case 'ol':
       return (
         <ol start={block.start}>
-          <ListItems items={block.items} />
+          <ListItems items={block.items} pictures={pictures} />
         </ol>
       )
     case 'code':
@@ -82,9 +92,16 @@ function Block(props: { block: TextBlock }) {
 /**
  * The blocks of an answer in order, as `AgentText` and an open message line
  * draw them. The element around them sets the type and the space between.
+ * With `pictures`, the Markdown image of a picture file in a paragraph or a
+ * list item shows as its picture.
  */
-export function AgentBlocks(props: { blocks: readonly TextBlock[] }) {
-  return props.blocks.map((block, index) => <Block block={block} key={index} />)
+export function AgentBlocks(props: {
+  blocks: readonly TextBlock[]
+  pictures?: AnswerPictures
+}) {
+  return props.blocks.map((block, index) => (
+    <Block block={block} key={index} pictures={props.pictures} />
+  ))
 }
 
 /**
@@ -95,12 +112,17 @@ export function AgentBlocks(props: { blocks: readonly TextBlock[] }) {
  * text of a paragraph, a heading, a list item, or a table cell has `code`
  * and **strong** parts, as `chatParts` reads it. Each workspace link outside
  * code is a chip, and so is a Markdown link to a workspace, also with a bold
- * or code label.
+ * or code label. The Markdown image of a picture file in a paragraph or a
+ * list item shows as its picture, read for the message with the ID `id`,
+ * the ID of its item in the transcript.
  */
-export function AgentText(props: { text: string }) {
+export function AgentText(props: { id: string; text: string }) {
   return (
     <div className={classes(itemStyles.agent, headingStyles.headings)}>
-      <AgentBlocks blocks={textBlocks(props.text)} />
+      <AgentBlocks
+        blocks={textBlocks(props.text)}
+        pictures={{ message: props.id }}
+      />
     </div>
   )
 }

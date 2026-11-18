@@ -99,19 +99,25 @@ is relative to `src/chat/`, the folder of this guide.
   `ChatText`. `useChatParts` reads the parts of a text with the workspaces
   and the tree of the chat, the files of a sent message, and the web links
   of `useTextLinks` in `../shell/ui/text-links.tsx`. `ChatText`
-  draws the parts with their workspace, session, and file chips, their
-  links through `WebLinkText.tsx`, and each
-  `AttachmentPart` as the mockups' `SentFileChip`.
+  draws the parts with their workspace and session chips, and their
+  links through `WebLinkText.tsx`. `FileChips.tsx` draws the file chips,
+  and each `AttachmentPart` as the mockups' `SentFileChip`.
   `SessionLinkText` draws a session that the chat names by its IDs, such
   as the session whose agent stopped a turn, with the same session chip.
   [Chips of attached files](../../docs/protocol/file-mentions.md#chips-of-attached-files)
   states the rules of that chip. The chip opens the file tab of its copy
   through `openFile` and `href` of `ChatMentions`. It opens nothing when
   `ChatText` gets no `opens`, or in a chat without `ChatMentions`.
-  `AnswerText` reads and draws the text of an answer in one step.
+  `AnswerText` reads and draws the text of an answer in one step. With
+  `pictures`, the ID of the agent message, it draws each part of a
+  Markdown image of a picture file with `FilePicture.tsx`. That part
+  draws the mockups' `AnswerPicture`, and `picture-read.ts` reads and
+  decodes its file, as
+  [Pictures in answers](agent-text.md#pictures-in-answers) says.
   `mention-copy.ts` makes
   the browser's own copy of chat text give the text of each chip that has
-  a `data-mention` mark: each file chip and each `SentFileChip`. Each such
+  a `data-mention` mark: each file chip, each `SentFileChip`, and each
+  picture of an answer, with the box of its label. Each such
   chip holds its copy text in a `ChipCopyText`, which shows only while the
   root of the page has `COPYING_CLASS`. The style sheet of `ChipCopyText`
   gives that class, so the class name has one source. The copy sets the class, moves an
@@ -265,6 +271,9 @@ is relative to `src/chat/`, the folder of this guide.
   Preview tab at its place in the row and the shown terminal.
 - `components/`: the tabs, the chat, the composer, the model picker, and the
   overlays. `ui/`: interactive buttons, menus, sheets, and dialogs.
+  `ui/near-view.ts`: `useNearView`, which says when an element comes near
+  the view of the chat, and `NearViewRoot`, the scroll box that `ChatPane`
+  gives as the view. The pictures of answers start their reads with it.
 - `components/send-key.ts`: `useSendKey`, the send key that the composer
   shares with the page and the dialog of New workspace in the app shell.
 - `device/`: the Mac commands. Their [README](device/README.md) names

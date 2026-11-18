@@ -15,7 +15,10 @@ says. A secrets decision number names a decision of the change that adds
 names a decision of the change that adds the
 [runner warnings](runner-warnings.md), as that doc says. A parent-move
 decision number names a decision of the change that adds
-[parent changes](parent-changes.md), as that doc says.
+[parent changes](parent-changes.md), as that doc says. A screenshot
+decision number names a decision of the change that shows the screenshots
+of agents as pictures in their answers, as
+[File mentions: files in answers](file-mentions-answers.md) says.
 
 ## Terms
 
@@ -75,6 +78,10 @@ decision number names a decision of the change that adds
     front and use foreground input without asking.
   - Other sessions of the workspace share that desktop.
   - A member opens a port preview in the app by its port number.
+  - When the agent designs or checks an interface in a browser, it saves a
+    screenshot of the result as a PNG file in the context folder. It shows
+    that screenshot in its reply as a Markdown image (screenshot decision
+    1 B).
   - Every agent of the workspace runs inside the service
     `conductive-runner.service` of the cloud computer. A stop or a restart
     of that service ends each running turn of each session.
@@ -106,8 +113,8 @@ decision number names a decision of the change that adds
   - The agent names a file or a folder of the repository in a chat reply
     as `@` and its path inside the repository, such as `@src/app.ts` or
     `@src/app.ts:42`. The chat shows each one as a file chip, as
-    [Files in answers](file-mentions.md#files-in-answers) says (answer
-    chip decision 1).
+    [Files in answers](file-mentions-answers.md#files-in-answers) says
+    (answer chip decision 1).
   - In commits, pull requests, issues, and files, the agent writes paths
     in backticks. Reason: GitHub reads `@` and a name as a mention of a
     person or a team, and notifies them.
@@ -128,6 +135,17 @@ decision number names a decision of the change that adds
   "The agent stopped" with no cause, as
   [Messages](messages-and-attachments.md#messages) says. The journal gives
   the agent that cause (stop diagnostics decision 4 A).
+- Reason for the screenshot guidance: no member watches the desktop, so
+  the screenshot shows the member what the agent saw. The chat shows that
+  Markdown image as a picture, as
+  [Pictures in answers](file-mentions-answers.md#pictures-in-answers)
+  says.
+- An agent that reads the saved screenshot, so that an automatic preview
+  shows it, was rejected (screenshot decision 1). The chat shows only the
+  pictures that the agent picks. A second read also costs tokens.
+- Screenshots that the runner takes by itself were rejected, because the
+  sessions share one desktop. The screenshot guidance names no computer
+  tool, for the reason of the desktop guidance.
 - An existing session keeps its saved instructions, and gets no later
   change of the instructions, as
   [The same text for the life of a session](#the-same-text-for-the-life-of-a-session)
@@ -139,10 +157,6 @@ decision number names a decision of the change that adds
 - The instructions never tell the agent to send a member to a tool that
   the app hides, such as Desktop. [Desktop](workspace-tools.md#desktop)
   says why the app hides it.
-- The instructions do not ask the agent to show a screenshot in a reply.
-  Reason: the chat shows no picture in an answer. The Markdown of an image
-  of a file of the workspace shows as a link that opens the file, as
-  [Chat Markdown](chat-markdown.md#formatting) says.
 - The instructions hold no secret, such as the workspace token or an agent
   login.
 - The instructions follow the naming rules of user-facing text, as

@@ -8,7 +8,7 @@ import { workspaceLabel } from '../workspaces/label'
 import type { WorkspaceRow } from '../workspaces/sections'
 import type { ChipRemoval } from './ChipRemove'
 import { useChatWorkspaces } from './chatWorkspaces'
-import { FileLinkText, MentionChip } from './MentionChip'
+import { FileLinkText, FilePicture, MentionChip } from './MentionChip'
 import { SentFileChip } from './SentFileChip'
 import { SessionChip, type ChipSession } from './SessionChip'
 import { strongRuns } from './strongText'
@@ -105,11 +105,17 @@ function ChatLink(props: { part: WebAddressLink; answer: boolean }) {
 }
 
 /**
- * One part of the text of a message: text, code, a chip, or a link. While
- * its message `waits` for the cloud computer, the chip of an attached file
- * opens nothing, because its copy does not exist yet.
+ * One part of the text of a message: text, code, a chip, a link, or a
+ * picture. While its message `waits` for the cloud computer, the chip of an
+ * attached file opens nothing, because its copy does not exist yet. With
+ * `pictures`, the Markdown image of a picture file shows as its picture.
  */
-function Part(props: { part: TextPart; answer: boolean; waits?: boolean }) {
+function Part(props: {
+  part: TextPart
+  answer: boolean
+  waits?: boolean
+  pictures?: boolean
+}) {
   const { part } = props
   if (part.kind === 'text') return part.text
   if (part.kind === 'code') {
@@ -127,7 +133,13 @@ function Part(props: { part: TextPart; answer: boolean; waits?: boolean }) {
     )
   }
   if (part.kind === 'mention') return <MentionChip part={part} />
-  if (part.kind === 'file-link') return <FileLinkText part={part} />
+  if (part.kind === 'file-link') {
+    return part.picture && props.pictures ? (
+      <FilePicture part={part} />
+    ) : (
+      <FileLinkText part={part} />
+    )
+  }
   return <ChatLink answer={props.answer} part={part} />
 }
 
@@ -155,6 +167,9 @@ export function LinkText(props: { href: string; source?: string }) {
  * shows as its label. In the text of a member, `mentions` makes each
  * mention of a file or a folder of the tree a chip that opens the file.
  * In an answer, each mention and each inline path of the file tree is a file chip.
+ * With `pictures`, as in a paragraph or a list item of an answer, the
+ * Markdown image of a picture file shows as its picture (screenshot
+ * decision 2). A heading and a table cell keep its link.
  *
  * `files` are the attached files of a sent message. A mention of the copy
  * path of one of them shows as the chip of that file, which opens the file
@@ -167,6 +182,7 @@ export function MessageText(props: {
   answer?: boolean
   files?: readonly Attachment[]
   waits?: boolean
+  pictures?: boolean
 }) {
   const answer = props.answer === true
   const parts = textParts(
@@ -179,7 +195,13 @@ export function MessageText(props: {
   const runs = props.answer ? strongRuns(parts) : [{ strong: false, parts }]
   return runs.map((run, index) => {
     const content = run.parts.map((part, inner) => (
-      <Part answer={answer} key={inner} part={part} waits={props.waits} />
+      <Part
+        answer={answer}
+        key={inner}
+        part={part}
+        pictures={props.pictures}
+        waits={props.waits}
+      />
     ))
     return run.strong ? (
       <strong key={index}>{content}</strong>

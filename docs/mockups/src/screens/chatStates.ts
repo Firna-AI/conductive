@@ -8,7 +8,9 @@
  * names, with the lines in view and marked. An image of
  * the branch shows as its picture, or with the state of an image that the
  * browser cannot draw. `attachment` is the copy of an attached screenshot,
- * which a press on its sent chip opens. A phone shows a file in Files.
+ * which a press on its sent chip opens. `screenshot` is the screenshot of
+ * the agent, which a press on its picture in an answer opens. A phone shows
+ * a file in Files.
  *
  * `preview` shows the page of port 3000 in its Preview tab, beside the
  * Preview tab of port 6006 (decision 291). `preview-behind` shows the first
@@ -30,6 +32,7 @@ export const tabStates = [
   'image',
   'image-not-drawn',
   'attachment',
+  'screenshot',
   'preview',
   'preview-behind',
 ] as const
