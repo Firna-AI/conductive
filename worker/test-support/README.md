@@ -131,9 +131,11 @@ Tests need no Cloudflare Durable Object or real WebSocket.
 `FakeRunnerConnection` adapts the handler to the connector. Its constructor
 receives runner messages. Its `reply` method sends workspace messages.
 
-`runner.commands` records turns, messages, interrupts, model changes, file
-reads, and diffs. `runner.emit` sends numbered events. `runner.reply` sends
-file replies. Reconnect the same fake runner to keep its outbox.
+`runner.commands` records turns, messages, interrupts, model changes,
+repository moves, file reads, and diffs. `runner.emit` sends numbered events.
+`runner.reply` sends file replies and move refusals. The `repositoryFolder`
+option names the folder in `hello`, as a runner that can move does.
+Reconnect the same fake runner to keep its outbox.
 `runner.sendEnvelope` injects duplicates and gaps. Tests of the production
 workspace object check validation, ordering, storage, replay, and masking.
 Rust tests own the runner's transport, saved state, and report assembly.

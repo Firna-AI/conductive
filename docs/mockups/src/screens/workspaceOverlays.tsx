@@ -32,6 +32,7 @@ import { valueSheet } from './requestSheets'
 import { headerMenuOf } from './workspaceHeaderMenu'
 import { capabilitiesSheet } from './workspaceCapabilities'
 import { openFile } from './workspaceParts'
+import { repositoryOverlay } from './workspaceRepositoryOverlay'
 import { rowMenuOf } from './workspaceRowMenu'
 import type { WorkspaceState } from './workspaceState'
 import { historyFor } from './workspaceTabs'
@@ -209,6 +210,10 @@ export function workspaceOverlay(
           />
         </Sheet>
       ) : null
+    case 'repository':
+    case 'repository-change':
+    case 'repository-failed':
+      return repositoryOverlay(state.overlay, workspace, viewport)
     case 'tab-menu':
       return mobile && row.menuTab ? (
         <TabMenuSheet

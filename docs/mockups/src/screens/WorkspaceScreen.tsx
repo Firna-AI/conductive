@@ -32,8 +32,8 @@ import { centreOf } from './workspaceCentre'
 import { placeLostUpdate } from './lostUpdates'
 import { changedWorkspaces, chatWorkspacesOf } from './orgWorkspaces'
 import { viewerOf } from './sessionStarter'
+import { barOf, headerMenusOf, placeOf } from './workspaceBar'
 import { headerMenuOf } from './workspaceHeaderMenu'
-import { barOf, branchOf } from './workspaceBar'
 import {
   FilesContent,
   startingLogFor,
@@ -100,7 +100,7 @@ export function WorkspaceScreen(props: {
     ...record,
     owner,
     name: workspaceName(state, record),
-    branch: branchOf(state, record),
+    ...placeOf(state, record),
     github: bannerSummary(state.banner),
   }
   const status = activityOf(state)
@@ -155,16 +155,15 @@ export function WorkspaceScreen(props: {
       canRestart={!readOnly}
       copy={state.copyLink === 'none' ? undefined : state.copyLink}
       name={workspace.name}
+      {...headerMenusOf(state)}
       menu={
         state.overlay === 'workspace-menu' && viewport === 'desktop'
           ? headerMenuOf(state, workspace.owner)
           : undefined
       }
-      ownerOpen={state.overlay === 'reassign'}
       renaming={state.overlay === 'header-rename'}
       run={open.run}
       rightHidden={rightHidden}
-      stateOpen={state.overlay === 'restart'}
       status={status}
       viewport={viewport}
       workspace={workspace}
