@@ -8,7 +8,9 @@ import styles from './WorkspaceHeader.module.css'
  * The name of the open workspace in its header, as a plain button that
  * opens the workspace menu below it. It looks like the name: it has no
  * caret, and only a hover or a press shows that it is a button. Its text
- * ends with an ellipsis when the header has no room for it.
+ * ends with an ellipsis when the header has no room for it. Its name is the
+ * name of the workspace, so the heading keeps that name, and its popup
+ * says that it opens a menu.
  */
 export function NameMenuButton(props: {
   name: string
@@ -24,7 +26,7 @@ export function NameMenuButton(props: {
   return (
     <h1 className={styles.titleHeading} onPointerDown={props.onPointerDown}>
       <Button
-        accessibilityLabel={`${props.name}. Workspace menu`}
+        accessibilityLabel={props.name}
         buttonRef={props.buttonRef}
         content={<span className={styles.title}>{props.name}</span>}
         expanded={props.open ?? false}

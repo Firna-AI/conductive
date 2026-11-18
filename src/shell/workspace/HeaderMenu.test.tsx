@@ -47,7 +47,11 @@ function title(): HTMLElement {
 
 /** The name of the open workspace in its header, as the button of its menu. */
 function nameButton(shown = name): HTMLElement {
-  return byRole('button', `${shown}. Workspace menu`, header())
+  const button = byRole('button', shown, header())
+  if (button.getAttribute('aria-haspopup') !== 'menu') {
+    throw new Error('The name opens no menu.')
+  }
+  return button
 }
 
 /**
