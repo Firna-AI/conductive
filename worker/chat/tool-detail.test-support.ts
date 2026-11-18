@@ -1,4 +1,14 @@
 import type { RunnerToolDetailPart } from '../../src/shared/generated/RunnerToolDetailPart'
+import { toolSourcePrefix } from './tool-detail-source-records'
+
+export function sourceRecords(
+  records: ReadonlyMap<string, unknown>,
+  streamId = 'fake-stream-1',
+) {
+  return new Map(
+    [...records].filter(([key]) => key.startsWith(toolSourcePrefix(streamId))),
+  )
+}
 
 export function part(
   context: { sessionId: string; turnId: string },

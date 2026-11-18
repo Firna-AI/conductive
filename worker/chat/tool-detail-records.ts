@@ -2,7 +2,7 @@ import type { ToolCall } from '../../src/shared/generated/ToolCall'
 import type { AppEnv } from '../env'
 import { decrypt, encrypt } from '../security/crypto'
 import { parseAgentEvent } from './agent-events'
-import { counter, number, record, string, strings } from './inputs'
+import { counter, number, record, string } from './inputs'
 import type { ChatTransaction } from './store'
 
 export interface ToolDetailState {
@@ -12,20 +12,20 @@ export interface ToolDetailState {
   occurredAt: number
   through: number
   partNumber: number
-  prefix: string
-  prefixBytes: number
-  closed: boolean
+  sourceGeneration: number
+  sourceChunks: number
   held: string
-  values: string[]
 }
 
-function context(workspaceId: string, streamId: string) {
+export type ToolDetailOwner = Pick<ChatTransaction, 'output' | 'workspaceId'>
+
+export function toolDetailContext(workspaceId: string, streamId: string) {
   return JSON.stringify(['runner-tool-detail', workspaceId, streamId])
 }
 
 export async function readToolDetail(
   env: AppEnv,
-  transaction: ChatTransaction,
+  transaction: ToolDetailOwner,
   streamId: string,
 ): Promise<ToolDetailState | undefined> {
   const ciphertext = await transaction.output.readTool(streamId)
@@ -34,7 +34,7 @@ export async function readToolDetail(
     JSON.parse(
       await decrypt(
         ciphertext,
-        context(transaction.workspaceId, streamId),
+        toolDetailContext(transaction.workspaceId, streamId),
         env.BOAT_KEY_ENCRYPTION_KEY,
       ),
     ),
@@ -49,17 +49,15 @@ export async function readToolDetail(
     occurredAt: number(input.occurredAt),
     through: counter(input.through),
     partNumber: counter(input.partNumber),
-    prefix: string(input.prefix),
-    prefixBytes: counter(input.prefixBytes),
-    closed: input.closed === true,
+    sourceGeneration: counter(input.sourceGeneration),
+    sourceChunks: counter(input.sourceChunks),
     held: string(input.held),
-    values: strings(input.values),
   }
 }
 
 export async function saveToolDetail(
   env: AppEnv,
-  transaction: ChatTransaction,
+  transaction: ToolDetailOwner,
   streamId: string,
   state: ToolDetailState | undefined,
 ): Promise<void> {
@@ -68,7 +66,7 @@ export async function saveToolDetail(
     state
       ? await encrypt(
           JSON.stringify(state),
-          context(transaction.workspaceId, streamId),
+          toolDetailContext(transaction.workspaceId, streamId),
           env.BOAT_KEY_ENCRYPTION_KEY,
         )
       : undefined,

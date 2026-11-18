@@ -2,7 +2,7 @@ import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { outputFixture } from './runner-output.test-support'
 import { WORKSPACE_ID } from './harness.test-support'
-import { part } from './tool-detail.test-support'
+import { part, sourceRecords } from './tool-detail.test-support'
 import { readChatEvent } from '../../src/chat/api/read-chat'
 import { record } from './inputs'
 import { FakeRunner } from '../test-support/fake-runner'
@@ -69,6 +69,7 @@ it('filters complete tool sources across parts and JSON cuts with Unicode, liter
       view.output.readTool('fake-stream-1'),
     ),
   ).toBeUndefined()
+  expect(sourceRecords((await f.snapshot()).records).size).toBe(0)
 })
 
 it('uses compatible refusal markers and clears interrupted private sources while keeping late and null details', async () => {
@@ -107,6 +108,8 @@ it('uses compatible refusal markers and clears interrupted private sources while
       view.output.readTool('fake-stream-1'),
     ),
   ).toBeUndefined()
+  expect(sourceRecords((await f.snapshot()).records).size).toBe(0)
+  await f.emit(part(f.context, 'interrupted by terminal event', 1))
   await f.emit({
     type: 'turn.completed',
     ...f.context,
@@ -116,6 +119,7 @@ it('uses compatible refusal markers and clears interrupted private sources while
     omittedFileCount: 0,
     userMessageIds: [f.messageId],
   })
+  expect(sourceRecords((await f.snapshot()).records).size).toBe(0)
   await f.emit(part(f.context, 'late ordinary', 1))
   await f.emit(part(f.context, ' text', 2, true))
   await f.emit({
@@ -162,4 +166,5 @@ it('uses compatible refusal markers and clears interrupted private sources while
       view.output.readTool('fake-stream-1'),
     ),
   ).toBeUndefined()
+  expect(sourceRecords((await f.snapshot()).records).size).toBe(0)
 })

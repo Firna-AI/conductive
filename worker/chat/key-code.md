@@ -134,13 +134,33 @@ first.
   records again.
 - `tool-detail-input.ts`, `tool-detail-filter.ts`, and
   `tool-detail-records.ts`: the parse of each private `tool.detail.part`,
-  the exact-copy filter across the parts of one source, and the encrypted
-  assembly of each runner stream in `runner-output-state.ts`. The assembly
-  keeps the held end that can still start a secret, the displayed prefix,
-  the counts, and the retained values, never the whole source. Each part
-  filters with the retained values and the current values.
-  Only the last part makes one `tool.updated`. A refusal, an interrupted
-  sequence, or a new stream drops the assembly.
+  `filterToolDetail`, and the encrypted header of the assembly of each
+  runner stream in `runner-output-state.ts`. The header keeps the turn, the
+  tool with its target masked at receipt, and the cursor. It also keeps the
+  source generation, the record count, and the raw end that can still start
+  a value. It keeps no value list.
+- `tool-detail-source.ts` and `tool-detail-source-records.ts`:
+  `scanToolText`, `appendToolDetailSource`, `readToolDetailSource`, and
+  `ToolDetailSourceRecords`. The text of each part before the last, masked
+  with the values that are active at its receipt, goes into the source
+  records of the assembly.
+  The plaintext of each record holds at most 16,384 UTF-16 code units. Its
+  encryption context binds the workspace, the stream, the generation, and
+  the index.
+- At the last part, `filterToolDetail` scans all source records, the raw
+  end, the new text, and the target again with the current values. Only
+  then does it cut the longest prefix, count the omitted bytes, and make the
+  one `tool.updated`.
+- `tool-detail-cleanup.ts`: `maskOpenToolDetails`, which
+  `RunnerOutputState.maskTools` runs before expiry, removal, or archive
+  changes the temporary values. It masks each open assembly in place with
+  the full value set from before the change. It writes a new source
+  generation and removes the old one in the same transaction. It keeps all
+  source text apart from the masked copies.
+- `RunnerOutputState.saveTool` with no header clears the header and every
+  source record of a stream. The last part, a refusal, an interrupted
+  sequence, and a new stream use it. A refusal of a later part first reads
+  its session and turn from `RunnerOutputState.toolContext`.
 - `authenticated-runner.ts`: `AuthenticatedRunner`, the token check of the
   runner connection before each message. `RunnerConnections.alarm` runs it
   while the connection is idle.

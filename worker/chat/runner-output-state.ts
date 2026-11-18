@@ -3,6 +3,9 @@ import type { TurnEventContext } from '../../src/shared/generated/TurnEventConte
 import { isRecord } from '../http'
 import type { ChatData } from './types'
 import { chatKey } from './storage-keys'
+import type { AppEnv } from '../env'
+import { maskOpenToolDetails } from './tool-detail-cleanup'
+import { ToolDetailSourceRecords } from './tool-detail-source-records'
 
 const CHUNK_CHARACTERS = RUNNER_EVENT_MAX_BYTES / 16
 const CONTEXT_KEY = chatKey('output-context', 'workspace')
@@ -12,9 +15,11 @@ const TOOL_PREFIX = chatKey('output-tool', '')
 /** Only encrypted filter state enters these transaction-owned records. */
 export class RunnerOutputState {
   private readonly data: ChatData
+  readonly toolSources: ToolDetailSourceRecords
 
   constructor(data: ChatData) {
     this.data = data
+    this.toolSources = new ToolDetailSourceRecords(data)
   }
 
   async read(streamId: string): Promise<string | undefined> {
@@ -30,18 +35,31 @@ export class RunnerOutputState {
   }
 
   async streams(): Promise<string[]> {
+    return this.streamsAt(STREAM_PREFIX)
+  }
+
+  toolStreams(): Promise<string[]> {
+    return this.streamsAt(TOOL_PREFIX)
+  }
+
+  maskTools(env: AppEnv, workspaceId: string, active: ReadonlySet<string>) {
+    return maskOpenToolDetails(env, { output: this, workspaceId }, active)
+  }
+
+  private async streamsAt(prefix: string): Promise<string[]> {
     const streams: string[] = []
     let startAfter: string | undefined
     while (true) {
       const entries = await this.data.list<unknown>({
-        prefix: STREAM_PREFIX,
+        prefix,
+        limit: 16,
         ...(startAfter === undefined ? {} : { startAfter }),
       })
       if (!entries.size) return streams
       for (const [key, value] of entries) {
         startAfter = key
         if (typeof value === 'number')
-          streams.push(decodeURIComponent(key.slice(STREAM_PREFIX.length)))
+          streams.push(decodeURIComponent(key.slice(prefix.length)))
       }
     }
   }
@@ -76,6 +94,7 @@ export class RunnerOutputState {
     await this.saveAt(key, ciphertext)
     if (ciphertext && context) await this.data.put(`${key}:identity`, context)
     else await this.data.delete(`${key}:identity`)
+    if (!ciphertext) await this.toolSources.clear(streamId)
   }
 
   async beginToolStream(streamId: string): Promise<void> {
@@ -84,17 +103,21 @@ export class RunnerOutputState {
     while (true) {
       const entries = await this.data.list<unknown>({
         prefix: TOOL_PREFIX,
+        limit: 16,
         ...(startAfter === undefined ? {} : { startAfter }),
       })
-      if (!entries.size) return
+      if (!entries.size) break
       for (const [key, value] of entries) {
         startAfter = key
         if (typeof value === 'number' && key !== keep) {
-          await this.saveAt(key, undefined)
-          await this.data.delete(`${key}:identity`)
+          await this.saveTool(
+            decodeURIComponent(key.slice(TOOL_PREFIX.length)),
+            undefined,
+          )
         }
       }
     }
+    await this.toolSources.beginStream(streamId)
   }
 
   private async readAt(key: string): Promise<string | undefined> {

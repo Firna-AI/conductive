@@ -161,8 +161,11 @@ used. It keeps no stored value copy in the request records. Replacement
 and deletion therefore change the next filter read. Every live temporary
 value also enters the filter, including a supplied value before a run.
 The filter covers runner text and each request's reason and command.
-Expiry and removal also remove temporary copies from encrypted saved
-filter state. No automation-specific rule changes these grants.
+Before expiry, removal, or archive changes the temporary values, the
+cleanup masks each open private tool-detail source in place. It uses the
+full value set from before the change. It then removes temporary copies
+from encrypted saved filter state. No automation-specific rule changes
+these grants.
 
 ## Key code
 
@@ -180,7 +183,8 @@ filter state. No automation-specific rule changes these grants.
 - [request-covered.ts](request-covered.ts): the other open requests that an allow covers, and their notices.
 - [notice-delivery.ts](notice-delivery.ts): runner delivery and resume after an accepted late notice.
 - [request-records.ts](request-records.ts) and [request-storage.ts](request-storage.ts): durable requests and encrypted temporary values.
-- [output-values.ts](output-values.ts) and [filter state](../chat/output-filter-records.ts): exact-copy filtering.
+- [output-values.ts](output-values.ts) and [filter state](../chat/output-filter-records.ts): exact-copy filtering. `storedAgentOutputSecrets` also reads stored values whose time just ended, for the cleanup before expiry.
+- [tool-detail-cleanup.ts](../chat/tool-detail-cleanup.ts): `maskOpenToolDetails`, the in-place mask of open tool-detail sources before a temporary value goes.
 - [Settings routes](../app-api/secrets.ts) and
   [capability routes](../app-api/capabilities.ts): the signed-in browser API.
 
