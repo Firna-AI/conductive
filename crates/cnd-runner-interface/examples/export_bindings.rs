@@ -7,7 +7,7 @@ use ts_rs::{Config, TS};
 use cnd_runner_interface::{
     agents, api, chat_events, commit_author, file_changes, file_tree, files, messages, ports,
     provider_events, runner, runner_commands, runner_credentials, runner_files, runner_handshake,
-    sdk_helper, sdk_helper_options, tools, workspaces,
+    runner_repository, sdk_helper, sdk_helper_options, tools, workspaces,
 };
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -79,10 +79,19 @@ fn main() -> Result<(), Box<dyn Error>> {
     runner_handshake::RunnerToWorkspace::export_all(&cfg)?;
     runner_handshake::RunnerWelcome::export_all(&cfg)?;
     runner_handshake::WorkspaceToRunner::export_all(&cfg)?;
+    runner_repository::RunnerRepository::export_all(&cfg)?;
+    runner_repository::RunnerRepositoryMove::export_all(&cfg)?;
+    runner_repository::RunnerRepositoryMoveRefusal::export_all(&cfg)?;
+    runner_repository::RunnerRepositoryMoveRefused::export_all(&cfg)?;
     workspaces::StartStep::export_all(&cfg)?;
     workspaces::WorkspaceStart::export_all(&cfg)?;
     tools::device::DeviceCommandInput::export_all(&cfg)?;
     tools::device::DeviceCommandResponse::export_all(&cfg)?;
+    tools::secrets::ListSecretsResponse::export_all(&cfg)?;
+    tools::secrets::RunWithSecretsRequest::export_all(&cfg)?;
+    tools::secrets::RunWithSecretsResponse::export_all(&cfg)?;
+    tools::secret_results::RunWithSecretsResult::export_all(&cfg)?;
+    tools::secret_results::ListSecretsResult::export_all(&cfg)?;
     tools::previews::OpenPreviewRequest::export_all(&cfg)?;
     tools::previews::AgentListPreviewsResponse::export_all(&cfg)?;
     tools::previews::AgentOpenPreviewResponse::export_all(&cfg)?;

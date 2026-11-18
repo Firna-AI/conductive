@@ -27,7 +27,7 @@ it('re-reads a non-default pull request base after its unchanged delivery commit
     (await harness.webhook('pull_request', recordedPullRequest, 'initial'))
       .status,
   ).toBe(204)
-  const memory = harness.memory(workspace.id)
+  const inspect = () => harness.inspect(workspace.id)
   const reads = harness.api.requests.length
   expect(
     (
@@ -39,9 +39,9 @@ it('re-reads a non-default pull request base after its unchanged delivery commit
     ).status,
   ).toBe(204)
   expect(harness.api.requests.length).toBeGreaterThan(reads)
-  expect(memory.events).toHaveLength(1)
-  expect(memory.published).toHaveLength(1)
-  expect(memory.scheduled).toEqual([
+  expect((await inspect()).events).toHaveLength(1)
+  expect((await inspect()).published).toHaveLength(1)
+  expect((await inspect()).scheduled).toEqual([
     {
       request: { workspace, signal: { retryAttempt: 1 } },
       delayMs: 1000,
@@ -58,12 +58,14 @@ it('re-reads a non-default pull request base after its unchanged delivery commit
   await expect(harness.runScheduled(workspace.id)).resolves.toMatchObject({
     banner: { state: 'blocked', baseBranch: 'release' },
   })
-  expect(memory.values.get('github:state')).toMatchObject({
+  expect((await inspect()).records.get('github:state')).toMatchObject({
     banner: { state: 'blocked', baseBranch: 'release' },
   })
-  expect(memory.events.map((envelope) => envelope.eventNumber)).toEqual([1, 2])
-  expect(memory.published).toEqual(memory.events)
-  expect(memory.scheduled).toEqual([])
+  expect(
+    (await inspect()).events.map((envelope) => envelope.eventNumber),
+  ).toEqual([1, 2])
+  expect((await inspect()).published).toEqual((await inspect()).events)
+  expect((await inspect()).scheduled).toEqual([])
 })
 
 it('schedules fresh reads while merge state is pending and stores the later known state', async () => {
@@ -72,17 +74,17 @@ it('schedules fresh reads while merge state is pending and stores the later know
     (await harness.webhook('pull_request', recordedPullRequest, 'initial'))
       .status,
   ).toBe(204)
-  const memory = harness.memory(workspace.id)
+  const inspect = () => harness.inspect(workspace.id)
   harness.api.pulls[2].mergeStateStatus = 'UNKNOWN'
   expect(
     (await harness.webhook('status', recordedStatus, 'pending')).status,
   ).toBe(503)
-  expect(memory.scheduled).toHaveLength(1)
+  expect((await inspect()).scheduled).toHaveLength(1)
   await expect(harness.runScheduled(workspace.id)).rejects.toMatchObject({
     code: 'github_pending',
   })
-  expect(memory.events).toHaveLength(1)
-  expect(memory.scheduled).toEqual([
+  expect((await inspect()).events).toHaveLength(1)
+  expect((await inspect()).scheduled).toEqual([
     {
       request: { workspace, signal: { retryAttempt: 2 } },
       delayMs: 1000,
@@ -92,12 +94,14 @@ it('schedules fresh reads while merge state is pending and stores the later know
   await expect(harness.runScheduled(workspace.id)).resolves.toMatchObject({
     banner: { state: 'blocked' },
   })
-  expect(memory.values.get('github:state')).toMatchObject({
+  expect((await inspect()).records.get('github:state')).toMatchObject({
     banner: { state: 'blocked' },
   })
-  expect(memory.events.map((envelope) => envelope.eventNumber)).toEqual([1, 2])
-  expect(memory.published).toEqual(memory.events)
-  expect(memory.scheduled).toEqual([])
+  expect(
+    (await inspect()).events.map((envelope) => envelope.eventNumber),
+  ).toEqual([1, 2])
+  expect((await inspect()).published).toEqual((await inspect()).events)
+  expect((await inspect()).scheduled).toEqual([])
 })
 
 it('stops scheduling after three deferred reads when merge state stays unknown', async () => {
@@ -106,9 +110,9 @@ it('stops scheduling after three deferred reads when merge state stays unknown',
   expect(
     (await harness.webhook('status', recordedStatus, 'pending')).status,
   ).toBe(503)
-  const memory = harness.memory(workspace.id)
+  const inspect = () => harness.inspect(workspace.id)
   for (const retryAttempt of [1, 2, 3]) {
-    expect(memory.scheduled).toEqual([
+    expect((await inspect()).scheduled).toEqual([
       {
         request: { workspace, signal: { retryAttempt } },
         delayMs: 1000,
@@ -119,9 +123,9 @@ it('stops scheduling after three deferred reads when merge state stays unknown',
       code: 'github_pending',
     })
   }
-  expect(memory.scheduled).toEqual([])
-  expect(memory.values.get('github:state')).toBeUndefined()
-  expect(memory.events).toEqual([])
-  expect(memory.published).toEqual([])
+  expect((await inspect()).scheduled).toEqual([])
+  expect((await inspect()).records.get('github:state')).toBeUndefined()
+  expect((await inspect()).events).toEqual([])
+  expect((await inspect()).published).toEqual([])
   expect(harness.tokens).toHaveLength(4)
 })

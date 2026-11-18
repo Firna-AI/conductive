@@ -102,8 +102,10 @@ this guide.
 - `WorkspaceOwner.tsx` and `WorkspaceMacBar.tsx`: the owner picker of the
   members UI, and the bar of the 15 minutes in the Mac app.
 - `saved-view.ts`: the saved view of the kept chat, `saveView`, which
-  writes a change only once the chat read the view, and `useRunAutomation`,
-  the automation of a run workspace, which the chat reads with the view.
+  writes a change only once the chat read the view, `useRunAutomation`,
+  the automation of a run workspace, and `useHeldRepositories`, the
+  repositories that the cloud computer holds, which the chat reads with
+  the view.
 - `tools/ToolsPart.tsx`, `tools/tool-navigation.ts`, and
   `tools/tool-address.ts`: the tools panel and its `placeholder`, which
   takes the place of the tools inside the tabs, the tool of the address or
@@ -125,7 +127,8 @@ this guide.
   control of the screen: +, the clock of the history, a tab of the right
   column, Archive, or Restore. `useNewTerminalOffer` offers New terminal
   for the Terminal tool, where the Go to rows show, while the + of the
-  terminal tabs takes a press.
+  terminal tabs takes a press. Merge latest has no control: it runs
+  `github/merge-latest.ts`.
 - `tools/tool-events.ts`: `ToolEvents`, the events of the tools from the
   ordered stream. It keeps the revokes of previews, the latest report of the
   listening ports, and the first failed repair of that report since it. A
@@ -138,13 +141,34 @@ this guide.
   the bar and its controls, and `github/bar-feed.ts` shows a GitHub state of
   another branch as loading. `github/bar-keys.tsx`: `BarKeys`, the keys of
   the bar, beside the bar of the right column and beside the actions at
-  the top of the Checks tab of a phone.
+  the top of the Checks tab of a phone. `github/merge-latest.ts`:
+  `useMergeLatest`, the label and the run of the Merge latest row of the
+  palette. It sends its prompt through the store of the bar actions, and
+  `useShowChat` of `bar-controls.ts` shows the chat when the prompt did
+  not go out.
 - `kept-connections.tsx`: `KeptConnections`, the one connection of the
   kept files and of the kept previews for the whole screen.
 - `previews/kept-previews.ts`: the kept previews store of the open
   workspace, its snapshot, and its connection while the sandbox runs.
 - `ContinueDialog.tsx`: the question of Continue with the local work, which
   `LocalWorkList` of the mockups lists.
+- `repository/RepositoryControl.tsx`: the repository of the header, its
+  menu, its progress, and its failure toast. `repository/use-repository-change.ts`
+  gives `repositoryChoices`, the rows of the menu, and the store of the
+  workspace. `repository/repository-change.ts`: `RepositoryChange`, the
+  run of one change and its question. `repository/repository-api.ts`:
+  the requests and the reader of their replies.
+  `repository/RepositoryQuestion.tsx`: the question.
+  `repository/RepositoryMenu.test.tsx` and
+  `repository/RepositoryQuestion.test.tsx` mount the whole app over the
+  fake API: the menu, the progress, the note, the close of a file tab, a
+  phone sheet, the text in read-only states, the question, and the
+  failure toasts. `repository/repository-test-kit.tsx` holds their
+  helpers, and `test-support/fake-repository-change.ts` the replies.
+- `screen-addons.tsx`: `ScreenAddons`, the parts of the screen with no
+  place of their own, in each layout: the question of Continue, the
+  palette actions, `RestoreShownTab`, `ResumeOnTabOpen`, `LeaveMovedFiles`
+  of `files/moved-files.tsx`, and `OpenSessionAddress`.
 - `github/BarMerge.test.tsx`, `github/BarAgent.test.tsx`,
   `github/BarContinue.test.tsx`, and `files/KeptFiles.test.tsx`: mount the
   whole app over the fake API. They check Merge and its refusals, the
@@ -197,6 +221,9 @@ this guide.
   the host over the app's own parts.
 - `WorkspaceHeader.tsx` and `WorkspaceColumns.tsx`: the header, the
   columns, the toggle of the right column, and the tab bar of a phone.
+  `useHeaderMenu.tsx` gives the header the workspace menu of the list,
+  which a press on the name opens. `HeaderMenu.test.tsx` opens it and renames the
+  workspace from it in the whole app.
   `RightColumnToggle.test.tsx` mounts the whole app over the fake API. It
   hides the right column, opens the workspace again, and shows the column.
   `WorkspaceKeys.test.tsx` runs the keys of the tab row, of the
@@ -218,8 +245,12 @@ this guide.
 - `RunLine.tsx`: the line under the header of a run workspace, which links to its automation and the pull request of a pull request run. `RunLine.test.tsx` checks the line and its links.
 - `SandboxNotice.tsx`, `notice-copy.ts`, and `StartingCard.tsx`: the
   states of the cloud computer, their words, and the start steps. The bar
-  of an archived workspace offers Restore until its last day, then says
-  when Restore ended. `useArchiveActions.ts` runs Archive and Restore for
+  of an archived workspace offers Restore until its last day, and gives
+  the day when the workspace leaves the list, also without Restore. After
+  that day it has the title "Removed on" and the day, and its panels have
+  the title Removed. `notice-copy.ts` takes the stages of the mockups from
+  the `restore` and `removed` marks of the notice. `notice-copy.test.ts`
+  checks the words of each stage. `useArchiveActions.ts` runs Archive and Restore for
   each control, with their toasts. Archive from the row of the open
   workspace, by its shortcut or its menu, acts once, also during the first
   read, as [Archive](../../../docs/protocol/workspace-menu.md#archive)
@@ -233,9 +264,14 @@ this guide.
   Meanwhile `WorkspaceHeader.tsx` shows Starting in place of Stopped, and
   `contentState` gives the tools and the file pages the wait of a start,
   with no Resume. The lists keep their saved copy. A tab that opens then
-  sends no second Resume.
+  sends no second Resume. `WorkspaceScreen.tsx` sets the `removed` mark of
+  the bar at the end of Restore, from `archivedAt`, also without a kept
+  cloud computer. `useArchiveEnds` in `archive-ends.ts` gives it that mark
+  and the end of Restore, and renders the screen again at each of them.
   `ArchivedRestore.test.tsx` mounts the whole app
-  for Restore by a member and for its end at the last day.
+  for Restore by a member and for its end at the last day, when the
+  workspace also leaves the list. `LinkChips.test.tsx` opens a removed
+  workspace from its chip.
 - `dev/`: the development page, with its options in `dev-options.ts` and
   its controls in `DevControls.tsx`.
   `dev/main.tsx` supplies the real window host, keyboard, and key events

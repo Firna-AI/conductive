@@ -25,9 +25,14 @@ Archive shows as done before its reply: the row moves to the Archived
 group, and the open workspace shows as archived. A failed Archive brings
 both back and names the failure in a toast, as
 [Archive](../../../docs/protocol/workspace-menu.md#archive) says. The
-toast after the reply offers Restore. The archived bar, the row of the Archived group, and
+toast after the reply gives the day when the workspace leaves the list,
+and offers Restore. The archived bar, the row of the Archived group, and
 the palette offer Restore to each member until the last day, as
-[Restore](../../../docs/protocol/workspace-life.md#restore) says.
+[Restore](../../../docs/protocol/workspace-life.md#restore) says. On that
+day the workspace leaves the list. A link still opens its read-only chat,
+whose bar has the title "Removed on" and the day, as
+[Removed workspaces](../../../docs/protocol/workspace-life.md#removed-workspaces)
+says.
 
 The state in the header is a menu button while the software of the cloud
 computer runs: Ready, Working, Needs input, and Done, unread.
@@ -37,6 +42,51 @@ while an agent works, and names a failed update check or a failed restart
 in a toast, as
 [Restart the software](../../../docs/protocol/workspace-life.md#restart-the-software)
 says. The mockups are at `app/restart`.
+
+A press on the name in the header opens the workspace menu of the list
+for the open workspace, below the name.
+[`useHeaderMenu`](useHeaderMenu.tsx) reuses the menus of the list, so the
+two menus have the same actions for the same people. Rename puts its field
+in place of the name in the header, as
+[The menu in the header](../../../docs/protocol/workspace-menu.md#the-menu-in-the-header)
+says. The mockups are at `app/workspace-menu/header`.
+
+## The repository in the header
+
+[`RepositoryControl`](repository/RepositoryControl.tsx) draws the
+repository of the header as a button, on desktop and in the line under the
+name of a phone, as
+[The menu](../../../docs/protocol/repository-change.md#the-menu) says. The
+mockups are at `app/repository-change`. The button and the words come from
+the mockups' `RepositoryPicker` and `repositoryMoveCopy`.
+
+- Its menu lists the repositories of the org that the cloud computer
+  holds, in the order of New workspace, with a check on the current one.
+  The chat reads `heldRepositoryIds` with the view, and
+  `useHeldRepositories` gives it. Without a record of the folders, only
+  the current repository shows. Desktop opens the menu below the button,
+  and a phone opens a sheet. Every member may pick (repository change
+  decision 2 B).
+- The repository shows as text when the menu has no other repository, in
+  an archived workspace, and in a suspended org.
+- A pick of another repository starts the change at once, through
+  `RepositoryChange` of `repository/repository-change.ts`. It reads a
+  pending job again each second, as Continue does. While it runs, the
+  button shows a spinner and the new repository. It ends when the stream
+  shows the new repository.
+- Work that the workspace stops following ends the run with the question
+  of `RepositoryQuestion`. Its text is `RepositoryChangeText` of the
+  mockups. Change repository asks again with `allowWork`, and Cancel sends
+  nothing.
+- A refused or failed change shows the toast "The repository didn't
+  change." with the message of the Worker.
+- After the change, the chat closes the file and diff tabs of the old
+  repository and saves the view, the address leaves a file page, and the
+  Files store reads the changes again, as
+  [The chat of the workspace](screen-parts.md#the-chat-of-the-workspace)
+  and [The Files part](screen-parts.md#the-files-part) say. The chat draws
+  the note of each session, as
+  [the transcript](../../chat/transcript.md) says.
 
 ## The kept workspace
 

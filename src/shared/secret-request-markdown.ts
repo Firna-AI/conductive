@@ -1,7 +1,7 @@
+import type { SecretGrant } from './generated/SecretGrant'
 import type {
   SecretRequest,
   SecretWorkspaceEvent,
-  SecretGrant,
   SecretRequestEnd,
   SecretNoticeFailure,
   SecretValueLifetime,

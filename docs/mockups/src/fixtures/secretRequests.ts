@@ -14,8 +14,15 @@ import { workspaceSessions } from './sessions'
 /**
  * A secret that a run names: a secret of the org, with its description,
  * or a name that the org does not have, which asks for a value.
+ * `invalidName` marks a name that the org does not have and that holds
+ * characters other than letters, digits, and underscores, so Save as
+ * secret cannot add it.
  */
-type RequestedSecret = { name: string; description?: string }
+type RequestedSecret = {
+  name: string
+  description?: string
+  invalidName?: true
+}
 
 /**
  * One command with secrets, and the reason that the agent gave. The run
@@ -120,8 +127,15 @@ export type LateAnswerItem = {
  * and the command.
  */
 export function cliCall(request: SecretRequest): string {
-  const secrets = request.secrets.map((secret) => `--secret ${secret.name}`)
+  const secrets = request.secrets.map(
+    (secret) => `--secret ${shellWord(secret.name)}`,
+  )
   return `conductive secrets run ${secrets.join(' ')} --reason "${request.reason}" -- ${request.command}`
+}
+
+/** A name as one word of the shell: quoted when it holds other characters. */
+function shellWord(name: string): string {
+  return /^\w+$/.test(name) ? name : `"${name}"`
 }
 
 /** A secret of the org as a run names it, with its description. */
@@ -176,6 +190,36 @@ export const mixedRequest: SecretRequest = {
 
 /** The value that a member types for that name, which shows as dots. */
 export const typedValue = 'pk.demo.Lm4f8Kq2nWx7'
+
+/**
+ * A name with spaces that Acme does not have. The card asks for a value,
+ * and Save as secret is off, because a new secret name cannot hold spaces.
+ */
+const placesKey: RequestedSecret = {
+  name: 'Google Places key',
+  invalidName: true,
+}
+
+/** A comparison with Google Places, which names only that key. */
+export const placesRequest: SecretRequest = {
+  secrets: [placesKey],
+  reason:
+    'Compare the address suggestions of the places proxy with the Google Places API.',
+  command: 'node scripts/compare-suggestions.mjs --provider google',
+}
+
+/**
+ * A secret of Acme, a name that Acme does not have, and the name with
+ * spaces, in one request. One choice covers both values, so Save as
+ * secret is off for the whole answer.
+ */
+export const providersRequest: SecretRequest = {
+  secrets: [stored(replicaUrl), { name: 'MAPBOX_TOKEN' }, placesKey],
+  reason:
+    'Compare the Mapbox and Google Places suggestions with the places proxy on 200 saved addresses from production.',
+  command:
+    'node scripts/compare-suggestions.mjs --provider mapbox --provider google --sample production',
+}
 
 /** An approval of one secret in one session of the workspace. */
 type SessionApproval = {

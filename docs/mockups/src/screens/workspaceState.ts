@@ -11,6 +11,7 @@ import { runWorkspaceKeys } from '../fixtures/runWorkspaces'
 import { startErrorKeys } from '../fixtures/starting'
 import { terminalStates } from '../fixtures/terminals'
 import { openableWorkspaces } from '../fixtures/workspaces'
+import { archiveStateProperties } from './archiveState'
 import { barStateDefaults, barStateKeys, barStateProperties } from './barState'
 import { tabStates, temporaryTabStates } from './chatStates'
 import {
@@ -28,6 +29,7 @@ import {
   layoutStateKeys,
   layoutStateProperties,
 } from './layoutState'
+import { overlayStates } from './overlayStates'
 import {
   rowMenuStateDefaults,
   rowMenuStateKeys,
@@ -147,44 +149,9 @@ export const workspaceStateSchema = {
     temporary: { enum: temporaryTabStates },
     ...composerStateProperties,
     ...layoutStateProperties,
-    /**
-     * What lies open over the workspace: the session history, the question
-     * before a running session closes, the owner of the workspace, the tab
-     * menu of the first session or of the shown file or diff tab, such as
-     * the temporary tab, or the question of Continue with work that is not
-     * pushed. Or the question before a terminal closes, or the toast of a
-     * terminal that did not open or close. Or the sheet of the values of a
-     * request, which Give a value opens on a phone. Or the menu of the header
-     * state, the question of Restart while an agent works, the time after
-     * Restart until the agents are back, or that time with the toast of a
-     * failed update check.
-     */
-    overlay: {
-      enum: [
-        'none',
-        'history',
-        'close-session',
-        'reassign',
-        'tab-menu',
-        'continue-unpushed',
-        'close-terminal',
-        'terminal-open-failed',
-        'terminal-close-failed',
-        'value-sheet',
-        'restart',
-        'restart-confirm',
-        'restarting',
-        'restart-update-failed',
-      ],
-    },
-    /**
-     * The cloud computer of an archived workspace: kept, until the app
-     * deletes it 14 days after the Archive, kept past the last day of
-     * Restore while its delete tries again, or deleted. Until that last day,
-     * every member of an org that is not suspended may restore the
-     * workspace.
-     */
-    archive: { enum: ['kept', 'ended', 'deleted'] },
+    /** What lies open over the workspace, as `overlayStates` says. */
+    overlay: { enum: overlayStates },
+    ...archiveStateProperties,
     /** The person signed in: an admin of the org, or a member who is not. */
     viewer: { enum: ['admin', 'member'] },
     /**

@@ -11,6 +11,7 @@ import type {
 } from './warning-values'
 import type { GatewayCheckErrorKind } from './model-gateway/check-error'
 import type { GatewayRefusal } from './model-gateway/errors'
+import type { UnexpectedErrorFields } from './unexpected-error'
 
 export const SIMPLE_WARNINGS = {
   workspace_alarm_failed:
@@ -40,6 +41,12 @@ export const SIMPLE_WARNINGS = {
     'Could not start the added cloud computer build.',
   repository_image_build_start_failed:
     'Could not start the cloud computer build for the added repository.',
+  repository_change_wake_failed:
+    'Could not wake the image coordinator after a repository change. Its next alarm checks again.',
+  repository_values_check_failed:
+    'Could not update the repository values that a GitHub webhook named. The next webhook checks again.',
+  github_repository_token_revoke_failed:
+    'Could not revoke the token of a repository read. It expires within 1 hour.',
   approval_email_delivery_failed:
     'Approval email delivery failed. The email remains pending.',
   approval_email_retry_failed:
@@ -64,10 +71,22 @@ export const SIMPLE_WARNINGS = {
     'A model turn check took longer than its interval. The answer keeps streaming.',
 } as const
 
+/** Where the handling of one runner message failed. */
+export const RUNNER_MESSAGE_STAGES = [
+  'parse',
+  'hello',
+  'file_result',
+  'event',
+  'after_commit',
+] as const
+
+export type RunnerMessageStage = (typeof RUNNER_MESSAGE_STAGES)[number]
+
 export interface RunnerWarningFields {
   workspaceId: WarningId
   connectionId: WarningId | null
   streamId: WarningStreamId | null
+  processStartId: WarningStreamId | null
   protocolVersion: number | null
 }
 
@@ -100,6 +119,17 @@ export type WorkerWarning =
   | { kind: keyof typeof SIMPLE_WARNINGS }
   | { kind: 'runner_protocol_version_mismatch'; workspaceId: WarningId }
   | {
+      kind: 'runner_repository_move_refused'
+      workspaceId: WarningId
+      reason: 'unknown_folder' | 'not_repository' | 'other'
+    }
+  | { kind: 'repository_change_settle_failed'; workspaceId: WarningId }
+  | {
+      kind: 'repository_change_ended'
+      workspaceId: WarningId
+      phase: 'move' | 'publish'
+    }
+  | {
       kind: 'workspace_title_request_failed' | 'workspace_title_save_failed'
       error: ErrorSummary
     }
@@ -117,8 +147,20 @@ export type WorkerWarning =
       cancelled: boolean
     }
   | {
-      kind: 'workspace_first_message_failed' | 'runner_message_failed'
+      kind: 'workspace_first_message_failed'
       workspaceId: WarningId
+      error: ErrorSummary
+    }
+  | {
+      kind: 'runner_message_failed'
+      workspaceId: WarningId
+      stage: RunnerMessageStage
+      error: ErrorSummary
+    }
+  | {
+      kind: 'automation_report_failed'
+      workspaceId: WarningId
+      retry: 'scheduled' | 'alarm'
       error: ErrorSummary
     }
   | {
@@ -144,6 +186,7 @@ export type WorkerWarning =
       resource: RepairKind
       limit: number
     }
+  | ({ kind: 'unexpected_error' } & UnexpectedErrorFields)
   | {
       kind: 'lifecycle_repair_pending'
       workspaces: number

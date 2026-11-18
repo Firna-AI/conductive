@@ -18,6 +18,7 @@ import {
   turnFilesUnavailable,
 } from '../../../docs/mockups/src/components/chat/lostCopy'
 import { continuedNote } from '../../../docs/mockups/src/components/workspace/barCopy'
+import { repositoryChangedNote } from '../../../docs/mockups/src/components/workspace/repositoryMoveCopy'
 import {
   commandCopy,
   commandRan,
@@ -160,6 +161,15 @@ export function itemMarkdown(
         inlineCode(item.baseBranch),
       )
       return note(`${words.before}${inlineCode(item.branch)}${words.after}`)
+    }
+    case 'repository-changed': {
+      // The words of the note of the chat, with the names as code.
+      const words = repositoryChangedNote(
+        plainText(continuedBy(item.member, readers)),
+      )
+      return note(
+        `${words.before}${inlineCode(item.repository.fullName)}${words.between}${inlineCode(item.branch)}`,
+      )
     }
   }
 }

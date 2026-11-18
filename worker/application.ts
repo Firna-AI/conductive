@@ -255,7 +255,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
           ),
         )
       } catch (error) {
-        const response = errorResponse(error)
+        const response = errorResponse(error, request)
         if (path === API_PATHS.githubCallback) {
           response.headers.append('Set-Cookie', cookie(OAUTH_COOKIE, '', 0))
         }

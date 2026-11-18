@@ -11,10 +11,7 @@ import {
   WORKSPACE_TOKEN,
 } from './harness.test-support'
 import { agentLoginContext } from './queries'
-export async function createAdapterRuntime(
-  entryPoint = 'worker/workspace.ts',
-  workspaceId = WORKSPACE_ID,
-) {
+export async function createAdapterRuntime(entryPoint = 'worker/workspace.ts') {
   const code = await workerLibraryBundle(entryPoint)
   // The global teardown deletes this folder, because callers dispose only
   // the runtime.
@@ -55,7 +52,7 @@ export async function createAdapterRuntime(
                 contents: `
           export { Workspace } from './workspace.js';
           export default { fetch(request, env) {
-            return env.WORKSPACES.get(env.WORKSPACES.idFromName('${workspaceId}')).fetch(request);
+            return env.WORKSPACES.get(env.WORKSPACES.idFromName('${WORKSPACE_ID}')).fetch(request);
           } };`,
               },
             },
@@ -96,7 +93,7 @@ export async function createAdapterRuntime(
         'INSERT INTO workspaces (id, org_id, repository_id, owner_user_id, name, branch, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
       )
       .bind(
-        workspaceId,
+        WORKSPACE_ID,
         'org',
         'repo',
         'owner',
@@ -109,7 +106,7 @@ export async function createAdapterRuntime(
       .prepare(
         'INSERT INTO workspace_tokens (workspace_id, token_hash, ciphertext, created_at) VALUES (?, ?, ?, ?)',
       )
-      .bind(workspaceId, await hash(WORKSPACE_TOKEN), 'unused', 1),
+      .bind(WORKSPACE_ID, await hash(WORKSPACE_TOKEN), 'unused', 1),
   ])
   await seedAppAccess(db, ['owner'], 1)
   await db

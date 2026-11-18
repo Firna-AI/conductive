@@ -20,13 +20,15 @@ export type ListChange = Change<ListData>
 
 /**
  * A newer record of a workspace, such as from an event, an open, or
- * Archive. A workspace that the list has keeps its place: its section and
- * its order change only through a read of the list, a move, or the
+ * Archive. A workspace that the list has keeps its place: its parent,
+ * section, and order change only through a read of the list, a move, or the
  * Archive of a workspace above it, as `replaceWorkspace` says. The
- * record of a workspace can be older than a move, so its section does not
- * count. A listed row also keeps its GitHub summary, which only a list
+ * record of a workspace can be older than a move, so its placement does
+ * not count. A listed row also keeps its GitHub summary, which only a list
  * read replaces on the same branch. A branch change takes the new branch's
- * summary. A new workspace goes to the top with its initial summary.
+ * summary. A new workspace goes to the top with its initial summary. An
+ * open pull request bar shows its own state over the summary, as
+ * `LiveGitHubStates` says.
  */
 export function workspaceUpdated(workspace: Workspace): ListChange {
   return (list) => {
@@ -37,6 +39,7 @@ export function workspaceUpdated(workspace: Workspace): ListChange {
       ...list,
       workspaces: replaceWorkspace(list.workspaces, workspace.id, (item) => ({
         ...workspace,
+        parentId: item.parentId,
         sectionId: item.sectionId,
         github:
           item.branch === workspace.branch ? item.github : workspace.github,

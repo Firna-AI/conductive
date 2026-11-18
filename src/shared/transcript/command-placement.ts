@@ -8,7 +8,10 @@ export interface PlacedCommand<Request> {
 
 /** The turn of an item. A message, a lost line, and a note place no command. */
 const turnOf = (item: TranscriptItem): string | null =>
-  item.kind === 'user' || item.kind === 'lost' || item.kind === 'continued'
+  item.kind === 'user' ||
+  item.kind === 'lost' ||
+  item.kind === 'continued' ||
+  item.kind === 'repository-changed'
     ? null
     : item.turnId
 

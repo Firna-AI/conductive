@@ -129,11 +129,13 @@ it('keeps checked runner identities and strips private fields and invalid diagno
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
   const productionId = 'abcdefghijklmnopqrstuvwxyz0123456789_-ABCDE'
   const streamId = '12345678-1234-4234-8234-123456789abc'
+  const processStartId = 'abcdef01-2345-4678-89ab-cdef01234567'
   const warning = {
     kind: 'runner_connected' as const,
     workspaceId: WarningId.checked(productionId),
     connectionId: WarningId.checked(productionId),
     streamId: WarningStreamId.checked(streamId),
+    processStartId: WarningStreamId.checked(processStartId),
     protocolVersion: 2,
     token: marker,
     message: marker,
@@ -147,6 +149,7 @@ it('keeps checked runner identities and strips private fields and invalid diagno
     turnId: WarningId.checked(marker),
     state: 'failed',
     streamId: WarningStreamId.checked(marker),
+    processStartId: WarningStreamId.checked(marker),
     protocolVersion: Number.POSITIVE_INFINITY,
   })
   expect(warn.mock.calls).toEqual([
@@ -157,6 +160,7 @@ it('keeps checked runner identities and strips private fields and invalid diagno
         workspaceId: productionId,
         connectionId: productionId,
         streamId,
+        processStartId,
         protocolVersion: 2,
       },
     ],
@@ -167,6 +171,7 @@ it('keeps checked runner identities and strips private fields and invalid diagno
         workspaceId: productionId,
         connectionId: productionId,
         streamId: 'unknown',
+        processStartId: 'unknown',
         protocolVersion: null,
         turnId: 'unknown',
         state: 'failed',

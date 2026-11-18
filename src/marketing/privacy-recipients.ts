@@ -60,10 +60,11 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         files, code, and command results of turns on the session's login.
         This includes the messages of other members who use that login.
         Each Mac command request and its result also go to the agent and
-        to that provider or endpoint. So do the names and descriptions of
-        the secrets that the agent lists, and the output of each command
-        that it runs with a secret. That output hides each exact copy of a
-        secret value, but not a changed or encoded value.
+        to that provider or endpoint. They also get each listed secret's
+        name, description, and environment variable name. They get the
+        output of each command that the agent runs with a secret.
+        That output hides each exact copy of a secret value, but not a
+        changed or encoded value.
         With each message, they also get
         the GitHub login, the display name, and the ${productName} user ID of
         its sender. They get the
@@ -95,9 +96,9 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         the value of each secret, also of a secret that you added.
         A member with a terminal in a cloud computer can read
         the GitHub token of a turn that runs there. They can also read the
-        value of a secret while a command runs with it there. During Continue, they
-        can also read the GitHub token of the member who clicked, while the
-        branch fetch runs. Outside an agent turn,
+        value of a secret while a command runs with it there. During Continue
+        or a repository change, they can also read the GitHub token of the
+        member who started it, while the branch fetch runs. Outside an agent turn,
         the GitHub CLI uses the workspace owner's account. Each member with
         a terminal can get that owner's GitHub token without a running
         turn.`,
@@ -129,9 +130,9 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         tool rights. Messages follow the same session login rules.`,
       text`A workspace token is a credential for the workspace tools.
         Any program with that token can read workspace, session, and
-        message details, list sessions and previews, list the names and
-        descriptions of secrets, and read chats across its org without a
-        running turn.
+        message details, list sessions and previews, and read chats across
+        its org. It can also list each secret's name, description, and
+        environment variable name. These reads need no running turn.
         A copied token keeps this access after the person who copied it
         leaves the org. This access lasts while the token remains valid
         and the org remains active.`,

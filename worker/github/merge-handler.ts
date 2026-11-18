@@ -117,6 +117,6 @@ export async function handleGitHubMerge(
       Response.json(result, { status: result.state === 'pending' ? 202 : 200 }),
     )
   } catch (error) {
-    return privateResponse(errorResponse(error))
+    return privateResponse(errorResponse(error, request))
   }
 }

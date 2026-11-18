@@ -141,6 +141,20 @@ When the selected session does not exist, the bridge creates it with a login Bas
 repository folder. It gives tmux the path of that folder, not its own
 current folder.
 
+After a [repository change](../lifecycle/repository-change.md#publication),
+the ttyd and tmux services still have the start variables of the old
+folder, and only a resume rewrites them. So the Worker writes the new
+folder to `/run/conductive/repository`, and sets
+`CONDUCTIVE_REPOSITORY_DIR` in the global tmux environment for each new
+shell. `terminalFolder` in [`bridge/folder.ts`](bridge/folder.ts) reads
+that file when the bridge creates the session. It takes the folder only
+when it is a folder under `/home/user/code` that exists. Otherwise it
+takes the folder of its command line. A session that runs keeps its
+folder. The startup command deletes the file at each start, because the
+start variables then name the folder of the new repository. A bridge of
+an older release, and the plain tmux client, ignore the file, so a new
+session there starts in the old folder until the software update.
+
 When the private Node or the bridge is missing, or the bridge exits with
 code 3 because tmux exited before the bridge attached, the attach program
 runs the plain tmux client with the same session and folder. Any other exit

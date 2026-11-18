@@ -27,6 +27,11 @@ Its computer and files can stay available for Restore for 14 days after Archive.
 Restore the workspace while **Restore** is available.
 Then select **Resume** before you use the file tools.
 
+After 14 days, the workspace leaves **Archived** and the command palette.
+A direct link or a chat link still opens its read-only chat.
+Conductive keeps its chat history until the org is deleted.
+File tools stay unavailable after removal.
+
 - [Restore an archived workspace](/docs/workspaces#restore-an-archived-workspace)
 
 ## Read a file
@@ -62,7 +67,7 @@ The address of the tab keeps the line.
 
 You can also open an attached file from its chip in a sent message.
 It opens the copy in the workspace's repository folder after the message reaches the agent.
-Restore an archived workspace before opening its attached files.
+Restore an archived workspace within 14 days before opening its attached files.
 
 - [Attach files to messages](/docs/sessions-and-chat#attach-files)
 
@@ -148,6 +153,7 @@ A workspace you create uses the repository's default branch.
 A run for an opened or pushed pull request uses that pull request's head branch.
 A run for a merged pull request uses that pull request's base branch.
 After **Continue**, the workspace's base branch is the repository's latest default branch.
+After a repository change, it is the latest default branch of the new repository.
 The comparison starts at the common commit of the workspace branch and its base branch.
 Newer commits on the base branch therefore stay out of **Changes**.
 

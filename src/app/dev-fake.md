@@ -36,6 +36,12 @@ option overrides this default, including queued chats that show no spinner.
   and its colour stay through rename, delete, and restore. Settings changes during the
   first good build start one added build. The fake compares settings
   revisions with builds as the Worker does.
+- Acme also holds Postcode lookup for the shipping and billing forms,
+  `postcode-lookup`, which a member archived 3 weeks before the clock of
+  the fake starts. Its 14 days ended, so the workspace list and the
+  palette leave it out. The list route still sends it, as the Worker does,
+  so its link and its chip still open its read-only chat, at
+  `/orgs/acme/workspaces/postcode-lookup`, with the Removed bar.
 - `?subWorkspaces=1` gives Acme the sub-workspaces of the mockup page
   `app/sub-workspaces`, from `fixtures/sub-workspaces.ts` of
   `src/test-support/`: two trees in Checkout, under Apple Pay button and
@@ -193,8 +199,12 @@ option overrides this default, including queued chats that show no spinner.
   of a new turn. A value for this workspace joins the list of the
   workspace, and Save adds a secret of the org. `?secrets=<state>` puts a
   state into the session of `checkout-autocomplete`, from
-  `dev/secret-request-seed.ts`. `waiting`, `value`, and `mixed` wait for an
-  answer above the composer, so use them with `conversation=running`.
+  `dev/secret-request-seed.ts`. `waiting`, `value`, `mixed`,
+  `invalid-name`, and `mixed-invalid-name` wait for an answer above the
+  composer, so use them with `conversation=running`. `invalid-name` asks
+  for a value of Google Places key, a name that a new secret cannot take,
+  so Save as secret is off. `mixed-invalid-name` adds that name to a mixed
+  request.
   `late`, `late-value`, `results`, and `ended` sit in a short turn after
   the recorded one: a late request, a late request for a value, the runs
   with a denied request and a late Allow with its line, and a request that
@@ -249,4 +259,6 @@ The next account read returns both keyboards.
 The Stats tab of the account reads its counts from `dev/account-stats.ts`.
 It counts the orgs of the fake that are not deleted, the workspaces and
 the automations that the person owns in them, and the automation runs of the
-person that were not skipped, by the rules of the Worker.
+person that were not skipped, by the rules of the Worker. Its reply keeps
+the removed workspaces in `archived` and counts them again in `removed`,
+as the Worker does. So Cal's tab shows Postcode lookup in its Removed row.

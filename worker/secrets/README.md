@@ -39,7 +39,10 @@ Description and all-agents changes keep the version and last reveal.
 
 The two fixed machine routes use a workspace bearer token on the machine
 host. The outer Worker forwards them only to that token's workspace object.
-The contracts and path helpers live in
+The Rust-owned tool contracts live in
+[secrets.rs](../../crates/cnd-runner-interface/src/tools/secrets.rs).
+The Worker imports their generated TypeScript directly.
+The browser contracts and path helpers stay in
 [secret-requests.ts](../../src/shared/secret-requests.ts).
 
 | Method and path | Input | Reply |
@@ -77,6 +80,19 @@ An answer is one of these JSON objects:
 - `{ "kind": "deny" }`.
 - `{ "kind": "allow" }` for stored secrets.
 - `{ "kind": "values", "lifetime": "15-minutes" | "workspace" | "save", "values": { "NAME": "value" } }`.
+
+An allow also allows each other open request that its grants cover, in
+the same chat operation. A request is covered when the answer's own
+grant reaches each name that it asked for, in the request's session.
+Approvals and 15-minute values reach only the answered session. Workspace
+values reach every session. A grant from elsewhere, such as Capabilities,
+never makes a request covered. The covered request records the same member
+and time. Its lifetime is the answer's lifetime when it asked for a value,
+and null otherwise. A waiting call of a covered request gets its values.
+One answer sends at most one late notice for each session, and none to a
+session where a waiting call gets the values. A suppressed late request
+keeps `lateAnswer` false and `notice` null. A deny changes only its own
+request.
 
 Every missing name needs a nonempty value before any grant is written.
 A mixed request also approves each stored secret for its session. One
@@ -153,12 +169,15 @@ filter state. No automation-specific rule changes these grants.
 - [data.ts](data.ts): `listSecrets`, `readSecret`, and the encryption context.
 - [access.ts](access.ts): the creator and admin rights and guarded SQL access.
 - [writes.ts](writes.ts): secret creation, replacement, deletion, and the all-agents mark.
+- [names.ts](names.ts): `requireSecretName`, used at insertion and before a combined save writes.
+- [secret-names.ts](../../src/shared/secret-names.ts): the shared browser-safe name predicate and refusal text.
 - [reveals.ts](reveals.ts): `recordSecretReveal`, the guarded reveal record and ciphertext read.
 - [capabilities-data.ts](capabilities-data.ts): workspace capabilities and session approval metadata.
 - [capabilities-writes.ts](capabilities-writes.ts): workspace pre-approvals and removal of session approvals.
 - [capabilities-input.ts](capabilities-input.ts): capability request parsing and create defaults.
 - [runtime.ts](runtime.ts), [request-run.ts](request-run.ts), and [run-values.ts](run-values.ts): machine calls and their waiters.
 - [request-answer.ts](request-answer.ts) and [request-reconcile.ts](request-reconcile.ts): member answers, late notices, and lifecycle cleanup.
+- [request-covered.ts](request-covered.ts): the other open requests that an allow covers, and their notices.
 - [notice-delivery.ts](notice-delivery.ts): runner delivery and resume after an accepted late notice.
 - [request-records.ts](request-records.ts) and [request-storage.ts](request-storage.ts): durable requests and encrypted temporary values.
 - [output-values.ts](output-values.ts) and [filter state](../chat/output-filter-records.ts): exact-copy filtering.
@@ -170,7 +189,7 @@ filter state. No automation-specific rule changes these grants.
 Run `npm run test -- worker/app-api/secrets.test.ts worker/app-api/secrets-reveal.test.ts worker/app-api/secrets-reveal-lifetime.test.ts worker/app-api/capabilities.test.ts worker/app-api/create-capabilities.test.ts worker/lifecycle/create-capabilities.test.ts worker/devices/mac-access.test.ts` from the repository root.
 
 Run `npm run test -- worker/secrets --maxWorkers=1` for tool routes,
-member answers, grants, fake-clock deadlines, lifecycle cleanup,
+member answers, covered requests, grants, fake-clock deadlines, lifecycle cleanup,
 encrypted value lifetimes, restart, and filtering.
 
 See [Secrets](../../docs/protocol/secrets.md) and

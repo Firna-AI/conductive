@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import { sectionsPath, type Section } from '../shared/sections'
 import { FakeApiServer } from '../test-support/fake-api'
-import { FAKE_IDS } from '../test-support/fixtures/core'
+import { FAKE_IDS, FAKE_TIME } from '../test-support/fixtures/core'
 import { OrgModel } from './org-model'
 import { createSection } from './section-actions'
 import { groupWorkspaces } from './sections'
@@ -36,6 +36,7 @@ async function created(afterSectionId?: string, position = 3) {
     order: groupWorkspaces(
       valueOf(model.sections.get()) ?? [],
       valueOf(model.workspaces.get()) ?? [],
+      FAKE_TIME,
     ).sections.map((group) => group.section.id),
   }
 }

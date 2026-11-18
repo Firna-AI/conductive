@@ -6,9 +6,16 @@ import { requestLines } from '../../app/test-kit'
 import type { OrgRole } from '../../shared/api'
 import { membersPath } from '../../shared/members'
 import { leaveOrgPath } from '../../shared/orgs'
+import { workspacesPath } from '../../shared/workspaces'
 import { byRole } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
-import { coreFixtures, FAKE_IDS } from '../../test-support/fixtures/core'
+import {
+  coreFixtures,
+  FAKE_IDS,
+  fakeUsers,
+} from '../../test-support/fixtures/core'
+import { removedWorkspace } from '../../test-support/fixtures/removed-workspace'
+import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { MOUNTED_TEST_TIMEOUT } from '../../test-support/mount'
 import { serveSuspendedAcme } from '../../test-support/suspended-org'
 import { click, mountScreen, settle } from '../test-mount'
@@ -52,8 +59,17 @@ function suspendedServer(role: OrgRole): FakeApiServer {
 }
 
 describe('Leave org in a suspended org', () => {
-  test('a member leaves: the question counts their workspaces, and the org leaves their list', async () => {
+  test('a member leaves: the question counts their workspaces in the list, without a removed one, and the org leaves their list', async () => {
     const server = suspendedServer('member')
+    // Priya also owns a workspace whose 14 days ended, which left the list.
+    const priya = fakeUsers.find((user) => user.id === 'priya')
+    if (!priya) throw new Error('The fixtures have no Priya.')
+    server.json('GET', workspacesPath(FAKE_IDS.org), {
+      workspaces: [
+        ...workspaceFixtures().workspaces.workspaces,
+        { ...removedWorkspace(), id: 'old-banner', owner: priya },
+      ],
+    })
     const app = await startedApp(server)
     const dialog = await leave(app)
     expect({

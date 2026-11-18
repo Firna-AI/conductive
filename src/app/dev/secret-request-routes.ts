@@ -1,4 +1,6 @@
+import type { SecretRunGrant } from '../../shared/generated/SecretRunGrant'
 import type { MessageSender } from '../../shared/generated/MessageSender'
+import { SECRET_NAME_ERROR, validSecretName } from '../../shared/secret-names'
 import {
   lateAnswerParts,
   lateAnswerText,
@@ -9,7 +11,6 @@ import {
   workspaceSecretValuePath,
   type SecretRequest,
   type SecretRequestsResponse,
-  type SecretRunGrant,
   type SecretValueLifetime,
 } from '../../shared/secret-requests'
 import { choice, record, text } from '../api/parse'
@@ -171,6 +172,12 @@ export function secretRequestRoutes(backend: DevBackend): Route[] {
             )
           }
         }
+        if (
+          answer.kind === 'values' &&
+          answer.lifetime === 'save' &&
+          missing.some((secret) => !validSecretName(secret.name))
+        )
+          throw new RouteError(400, 'invalid_secret_name', SECRET_NAME_ERROR)
         const member = senderOf(backend.state.account.user)
         const now = backend.now()
         const late = found.state === 'late'

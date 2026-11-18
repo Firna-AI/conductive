@@ -49,9 +49,10 @@ function stoppedLine(by: string | null, readers: ChatReaders): string {
 }
 
 /**
- * Who pressed Continue: "You" to that member, and the name that the note
- * keeps of the member to the others, also after the member left the org. A
- * copy has no reader, so it always gives the name.
+ * Who pressed Continue or changed the repository: "You" to that member,
+ * and the name that the note keeps of the member to the others, also after
+ * the member left the org. A copy has no reader, so it always gives the
+ * name.
  */
 export function continuedBy(
   member: MessageSender,

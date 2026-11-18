@@ -21,7 +21,9 @@ image names and no attachment bytes.
 through the replaceable `runTitleModel` dependency. It sends only the first
 4,000 characters of that text, so the names go in before the cut. It asks
 for three to five plain words with no underscores, limits the answer to 32
-tokens, and aborts after 15 seconds.
+tokens, and aborts a try after 45 seconds. A try that fails, times out,
+or gives no title starts the next try, up to three tries per request.
+The request warns once, after the last failed try.
 It reads either the model's `response` text or the first chat completion's
 `message.content`. The deployment configuration supplies the title model.
 `title-text.ts` cleans the first line with text. It removes title labels,
@@ -33,8 +35,8 @@ Only the title model uses `modelTitleFrom`.
 states the requirements of the title request and its answer.
 
 A missing configuration logs one safe warning per workspace object and
-keeps the name empty. A failed call or an empty title also warns and keeps
-the name empty. A message without own words asks nothing. Own words are
+keeps the name empty. Three failed tries also warn and keep the name
+empty. A message without own words asks nothing. Own words are
 any text outside the mentions of the message's own attached files, as
 `hasOwnWords` checks. So a message with no text, or with only those
 mentions, starts no request. A typed mention of a repository file counts

@@ -74,6 +74,10 @@ pub struct HelperOptions {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional = nullable)]
     pub instruction_branches: Option<RunnerBranches>,
+    /// Repository folder named by the saved instructions, when known.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional = nullable)]
+    pub instruction_folder: Option<String>,
     /// Workspace MCP context.
     pub tools: WorkspaceToolContext,
     /// Work named by earlier processes of this turn.

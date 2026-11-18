@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { invitesPath, memberPath } from '../shared/members'
 import { FakeApiServer } from '../test-support/fake-api'
 import type { FakeMethod } from '../test-support/fake-api-routes'
-import { FAKE_IDS } from '../test-support/fixtures/core'
+import { FAKE_IDS, FAKE_TIME } from '../test-support/fixtures/core'
 import { deferred, type Deferred } from '../test-support/mount'
 import { createMembersApi, type FetchLike } from './api/client'
 import {
@@ -11,10 +11,14 @@ import {
   type MembersAction,
   type MembersStore,
 } from './membersStore'
+import { countOwners } from './people'
 
 const org = FAKE_IDS.org
 
-/** The fake's org has Cal (admin), Priya, and Jonas, with 6, 2, and 1 workspaces. */
+/**
+ * The fake's org has Cal (admin), Priya, and Jonas, with 6, 2, and 1
+ * workspaces in the list. Cal also owns a removed workspace, which left it.
+ */
 async function loadedStore(
   server = new FakeApiServer(),
   fetch: FetchLike = server.fetch,
@@ -28,6 +32,11 @@ function ready(store: MembersStore) {
   const state = store.getState()
   if (state.status !== 'ready') throw new Error(`The store is ${state.status}.`)
   return state
+}
+
+/** The workspaces of each member that the list shows, by user ID. */
+function owned(store: MembersStore) {
+  return countOwners(ready(store).data.workspaces, FAKE_TIME)
 }
 
 function roles(store: MembersStore) {
@@ -76,14 +85,14 @@ function holdingFetch(server: FakeApiServer) {
 }
 
 describe('createMembersStore', () => {
-  it('loads_each_member_with_the_number_of_workspaces_they_own', async () => {
+  it('loads_each_member_with_the_number_of_workspaces_they_own_in_the_list_without_a_removed_one', async () => {
     const { store } = await loadedStore()
     expect(roles(store)).toEqual([
       ['cal', 'admin'],
       ['priya', 'member'],
       ['jonas', 'member'],
     ])
-    expect(ready(store).data.owned).toEqual({ cal: 6, priya: 2, jonas: 1 })
+    expect(owned(store)).toEqual({ cal: 6, priya: 2, jonas: 1 })
   })
 
   it('moves_the_workspaces_of_a_removed_member_to_the_admin_who_removes_them', async () => {
@@ -97,7 +106,7 @@ describe('createMembersStore', () => {
       ['cal', 'admin'],
       ['jonas', 'member'],
     ])
-    expect(ready(store).data.owned).toEqual({ cal: 8, jonas: 1 })
+    expect(owned(store)).toEqual({ cal: 8, jonas: 1 })
   })
 
   it('keeps_the_member_and_gives_the_reason_when_a_removal_fails', async () => {
@@ -111,7 +120,7 @@ describe('createMembersStore', () => {
       ['priya', 'member'],
       ['jonas', 'member'],
     ])
-    expect(ready(store).data.owned).toEqual({ cal: 6, priya: 2, jonas: 1 })
+    expect(owned(store)).toEqual({ cal: 6, priya: 2, jonas: 1 })
     expect(failures(store)).toEqual(failed('remove', 'priya', message))
     expect(ready(store).pending).toEqual([])
   })

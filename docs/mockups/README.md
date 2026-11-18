@@ -125,7 +125,7 @@ a dropped folder that the browser cannot read. The app shares these words.
 | `src/design/`             | The design tokens: colours, type, density, sizes, radii, and fonts  |
 | `src/render.tsx`          | The renderer: the Firna theme and the tokens of the colour scheme   |
 | `src/theme.ts`            | The Firna theme of each scheme, and the tokens as CSS variables     |
-| `src/paths.ts`            | The catalogue paths that screens link to                            |
+| `src/paths.ts`            | The catalogue paths that screens link to, with those of `src/bannerPaths.ts` for the pull request bar |
 | `src/brand.ts`            | The name "Conductive", its domains, its repository, and DMG names   |
 | `src/fonts/`              | Inter, which the Firna theme names first, with its licence          |
 | `../../mokly.config.json` | The Mokly configuration: the root, the renderer, and the schemes    |
@@ -185,7 +185,8 @@ pages, and its `member` page show them.
 
 A secret of an org differs from an env var. An env var reaches every cloud
 computer at each start. A secret reaches only one command that an agent
-runs after a member allows it, and the agent gets only its name. Every
+runs after a member allows it. The agent gets its name and its variable
+name, never its value. Every
 member adds secrets on the Secrets tab, and only an admin reveals a value,
 one at a time, as `app/org-settings/secrets` shows.
 [Secrets and Capabilities](design-secrets.md) gives the tab, the

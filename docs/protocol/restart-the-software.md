@@ -33,7 +33,9 @@ tabs to the Terminal tool, as [Terminal](terminal.md) says.
   Restart change.
 - Terminal access during a restart was rejected for now, because it needs
   a stored restart flag and a migration. A tab that reconnects by itself
-  was rejected for the same choice.
+  after a Restart was rejected for the same choice. This holds only for a
+  Restart: a connection that drops with no close of the server connects
+  again once by itself, as [Terminal](terminal.md) says.
 - A stop and resume, a one-step restart of the whole sandbox, and a
   restart of a dev server of the project were rejected. Reason: Restart
   fixes a stuck runner or relay in seconds and keeps the shells of the

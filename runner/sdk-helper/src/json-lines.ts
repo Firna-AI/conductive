@@ -1,9 +1,8 @@
-import { StringDecoder } from 'node:string_decoder'
+import { TextLines } from './text-lines'
 
 /** Frames UTF-8 input without treating a partial line as a message. */
 export class JsonLines<T> {
-  private readonly decoder = new StringDecoder('utf8')
-  private pending = ''
+  private readonly lines = new TextLines()
 
   private readonly read: (value: unknown) => T
   private readonly accept: (message: T) => void
@@ -14,20 +13,14 @@ export class JsonLines<T> {
   }
 
   push(chunk: Buffer): void {
-    this.pending += this.decoder.write(chunk)
-    for (;;) {
-      const end = this.pending.indexOf('\n')
-      if (end < 0) return
-      const line = this.pending.slice(0, end)
-      this.pending = this.pending.slice(end + 1)
+    this.lines.push(chunk, (line) => {
       const value: unknown = JSON.parse(line)
       this.accept(this.read(value))
-    }
+    })
   }
 
   end(): void {
-    this.pending += this.decoder.end()
-    if (this.pending.length)
+    if (this.lines.end().length)
       throw new Error('The helper JSON line is incomplete.')
   }
 }

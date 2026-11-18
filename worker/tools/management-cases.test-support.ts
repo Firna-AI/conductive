@@ -130,6 +130,7 @@ export const TOOL_ROUTE_CASES: readonly ToolRouteCase[] = [
       query: 'Par',
       updatedSince: '-1',
       archived: 'false',
+      removed: 'false',
       limit: '1',
       offset: '0',
     },
@@ -150,8 +151,8 @@ export const TOOL_ROUTE_CASES: readonly ToolRouteCase[] = [
   {
     name: 'list_workspaces',
     path: MACHINE_PATHS.workspaces,
-    query: { archived: 'true' },
-    reply: { workspaces: [{ id: 'archived-workspace' }] },
+    query: { archived: 'true', removed: 'true' },
+    reply: { workspaces: [{ id: 'removed-workspace' }] },
   },
   {
     name: 'list_sessions',

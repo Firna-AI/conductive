@@ -12,7 +12,7 @@ The [Worker handler](../worker/tools/README.md) verifies the workspace token
 and the calling turn. Rust owns the shared runner request and reply types in
 [cnd-runner-interface](../crates/cnd-runner-interface/README.md).
 The Worker imports their generated TypeScript directly.
-The tools decode the existing secret route contracts in `cnd-tools`.
+The shared interface also owns the secret route contracts and printable tool results.
 
 The sandbox release ships the tools in its Rust executable.
 The system installer links `/usr/local/bin/conductive` to
@@ -30,6 +30,8 @@ conductive models list
 conductive workspaces create --repository repo-id --message 'Build this feature.'
 conductive workspaces create --repository repo-id --parent workspace-id --message 'Build the subtask.'
 conductive workspaces list --parent workspace-id
+conductive workspaces move --workspace workspace-id --parent parent-id
+conductive workspaces move --workspace workspace-id --top-level
 conductive workspaces create --repository repo-id --message-file task.md \
   --agent codex --model model-name --effort high --fast true --section section-id \
   --name 'Review the change' --first-session-title 'First review' --request-id review-1
@@ -51,7 +53,9 @@ conductive secrets run --secret API_TOKEN --reason 'Deploy the service' -- ./dep
 
 The CLI writes one JSON response to stdout, except for `secrets run`.
 Local and HTTP failures print a message on stderr and return exit status 1.
-Workspace create and list accept `--parent ID`, or `parentId` through MCP.
+Workspace create, list, and move accept `--parent ID`, or `parentId` through MCP.
+Move also accepts `--top-level`, or MCP `topLevel: true`, to take a tree out of its parent.
+Move needs a section, a target, or both. A section-only move keeps its existing rules.
 The create help gives the depth limit, the section rule, and sibling advice.
 Both adapters keep parent IDs, parent entries, depth, direct children, and notices in their JSON replies.
 The [workspace calls](calls.md#workspaces) describe these fields.
@@ -122,32 +126,45 @@ The Worker rejects stale turn context.
 ## Secrets
 
 `secrets list` and `list_secrets` return each org secret's name, description,
-and availability. They never return values. A running turn adds session
-approvals to availability. Without one, only org and workspace grants count.
+availability, and `environmentVariable`. They never return values. A running
+turn adds session approvals to availability. Without one, only org and
+workspace grants count. The tools derive each variable name from the secret
+name. The Worker's list reply has no variable names.
 
-`secrets run` and `run_with_secrets` need an active turn. They send the names,
-command text, and optional reason to the Worker. A missing grant makes a
-request that waits up to 90 seconds. A pending result starts no command.
-After a notice of a late answer, the agent calls run again.
+`secrets run` and `run_with_secrets` need an active turn. They first refuse
+two requested names that need one environment key. That refusal is a local
+failure before any Worker call. It names both secrets and the shared
+variable, and never a value. Otherwise the tools send the names, command
+text, and optional reason to the Worker. A missing grant makes a request
+that waits up to 90 seconds. A pending result starts no command. After a
+notice of a late answer, the agent calls run again.
 
-An allowed result puts values only in the child environment, under their
-secret names. The tools never put returned values in arguments, files,
-logs, or replies. Both output streams hide exact copies with `[redacted]`,
-including copies split between reads. Keep each value out of output,
-files, and answers. The filter hides only exact copies.
+An allowed result puts values only in the child environment. Each value
+gets its variable name, and its exact secret name unless that name is
+empty or holds `=` or NUL. These entries replace inherited variables of the
+same name in the child only. The Worker keeps the values under the exact
+requested names, so older tools still accept its reply. The tools never put
+returned values in arguments, files, logs, or replies. Both output streams
+hide exact copies with `[redacted]`, including copies split between reads.
+Keep each value out of output, files, and answers. The filter hides only
+exact copies.
 
 The CLI executes the arguments after `--` directly. It keeps stdin and
 streams filtered stdout and stderr. It returns the child's exit status.
+After the child ends, it writes `environmentVariables: ` and the JSON map of
+secret names to variable names on stderr. Stdout holds only the child's output.
 For shell syntax, pass `sh -c 'command'` after `--`.
 MCP runs its `command` text through `/bin/sh -c`, with closed stdin.
-It returns filtered `stdout`, `stderr`, and `exitCode` with `status: "completed"`.
+It returns filtered `stdout`, `stderr`, `exitCode`, and the
+`environmentVariables` map with `status: "completed"`.
 A nonzero exit code sets `isError: true`. A Unix signal gives 128 plus its number.
 
 `pending`, `denied`, and `not-answered` keep the Worker's message and start
 no command. The CLI prints that message on stderr and exits 1.
 MCP preserves the status, `requestId`, and message, with `isError: true`.
 No command output or exit status goes back to the Worker.
-See [Secret requests](../docs/protocol/secret-requests.md).
+See [Secret variables](../docs/protocol/secret-variables.md) and
+[Secret requests](../docs/protocol/secret-requests.md).
 
 ## Mac commands
 

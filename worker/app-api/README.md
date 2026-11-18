@@ -28,6 +28,7 @@ repository selection, sections, and workspace metadata.
 The [invitation route](invitations.ts) serves the signed-in pending list and explicit acceptance.
 The [archive route](archive.ts) archives and restores a workspace through its workspace object, as [Archive](../../docs/protocol/workspace-life.md#archive) says.
 The [Continue route](continue.ts) starts a Continue job and reads its result in the real workspace object, as [Continue routes](../lifecycle/continue-routes.md) says.
+The [repository change route](repository-change.ts) starts a repository change and reads its result in the same way, as [Repository change](../lifecycle/repository-change.md#routes) says.
 `membersRoute` alone serves the org list and one org.
 It also serves Leave, org recovery, roles, invitations, and workspace ownership.
 Leave keeps the existing last-active-admin rule and native owner-change maintenance.
@@ -68,10 +69,13 @@ View writes cannot change this branch.
   [account contract](../../src/shared/account.ts) for the signed-in user
   only. [`account-stats.ts`](account-stats.ts) reads every count from D1 in
   one batch, with the windows and the state SQL of the operator Overview
-  from [`workspace-counts.ts`](../operator/workspace-counts.ts). It leaves
-  out deleted orgs and skipped automation runs. A run counts for the
-  `owner_user_id` of its row. The route keeps no history and calls no
-  sandbox provider.
+  from [`workspace-counts.ts`](../operator/workspace-counts.ts). As the
+  Overview reply does, `archived` counts every archived workspace, removed
+  ones included, so an older app that reads four states still adds up to
+  the total. `removed` counts the removed ones again, and the app takes
+  them out of Archived. It leaves out deleted orgs and skipped automation
+  runs. A run counts for the `owner_user_id` of its row. The route keeps no
+  history and calls no sandbox provider.
   [Account stats](../../docs/protocol/account-stats.md) states the rules.
 - Org login routes use the paths in `org-settings.ts` and the contracts in
   [`org-agent-logins.ts`](../../src/shared/org-agent-logins.ts).
@@ -260,6 +264,9 @@ The machine tools use the configured app origin instead.
   workspace takes 0. So it lists first, as the
   [mockups](../../docs/mockups/src/components/workspaces/sections.ts)
   show. A position can be negative.
+  [`workspace-insert-data.ts`](../lifecycle/workspace-insert-data.ts) checks
+  the parent's depth in the same batch as the insert. It refuses a create
+  whose parent moved to the deepest depth after the tool's first check.
 - The [app](../../src/app/list-changes.ts) and its
   [dev fake](../../src/app/dev/create-routes.ts) also show a new workspace
   first.
@@ -274,10 +281,19 @@ The machine tools use the configured app origin instead.
   archived ancestors and the default section for an unknown section.
   A move writes every descendant's section, including archived descendants.
   `RETURNING` gives the workspace IDs for metadata publication after the batch.
-  A move of a nested row changes no placement or activity time.
+  A section-only move of a nested row changes no placement or activity time.
   A name write still works for a nested row.
   A tool move to the current section also changes nothing, as checked
   inside the batch. `readWorkspaceMove` reads only the tool reply's notice.
+- Agent move targets use `writeWorkspaceParentChange` in
+  [`workspace-parent-change-data.ts`](workspace-parent-change-data.ts).
+  The shared metadata writer waits for a target parent's creation admission.
+  The batch checks the target, depth, pending creates, archive state, and
+  current membership before it writes. It changes the root parent link,
+  each descendant's section, and the top-level places together. A target
+  equal to the current place writes nothing. The shared recursive readers
+  stop at repeated workspace IDs. [Parent changes](../../docs/protocol/parent-changes.md)
+  states the requirements.
 - A section move request holds `position`, the index in the section list.
   Each index counts the rows without the moved row.
 - A section create request can hold `afterSectionId`. The insert and a
@@ -295,7 +311,7 @@ The machine tools use the configured app origin instead.
   Each other row of that section above that position, live or archived,
   gains the promoted count minus one. With zero or one promoted row,
   no other row changes position. All other stored positions stay.
-  `writeWorkspaceTree` selects these descendants inside the Archive batch.
+  `markWorkspaceArchived` selects these descendants inside its Archive batch.
   Its single position write follows Archive and checks `changes()`.
   It runs only when Archive wrote. Promoted top-level rows then keep their
   initial places and can move independently. Restore shows them under
@@ -336,6 +352,9 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 - [`lifecycle.ts`](lifecycle.ts): the lifecycle routes and their options.
 - [`continue.ts`](continue.ts): `continueRoute`, which checks the Continue
   request body and gives the start and each poll to the workspace object.
+- [`repository-change.ts`](repository-change.ts): `repositoryChangeRoute`,
+  which checks the `ChangeRepositoryRequest` body and gives the start and
+  each poll to the workspace object.
 - [`feature-shell.ts`](feature-shell.ts): shell write dispatch after the
   request gate. [`feature-settings.ts`](feature-settings.ts) encrypts env
   values and their secret marks. Replies return names and marks only.
@@ -348,16 +367,25 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   it with the sender as the user.
 - [`workspace-metadata.ts`](workspace-metadata.ts):
   `changeWorkspaceMetadata`, the rename and the move of a workspace tree. It
-  checks the member and the archive state, runs `updateShellWorkspace`, and
+  checks the member and the archive state, runs the section or parent write, and
   publishes the metadata of each moved workspace. `feature-workspaces.ts` and the
   [agent workspace tools](../tools/workspaces.md#rename-and-move) both call
   it. A tool move to the current section of a workspace changes nothing.
+- [`shell-guard.ts`](shell-guard.ts): `guardedStatement` inserts the current
+  shell member check at each `shellGuard` token and appends its org and user
+  bindings. Guarded SQL uses numbered placeholders. `GuardedStatement`
+  limits `guardedBatch` and `guardedRun` to statements from the builder.
+  `shellRead` prepares a single `SELECT` for reads in the writer files.
+- [`workspace-parent-change-data.ts`](workspace-parent-change-data.ts):
+  `writeWorkspaceParentChange`, the guarded parent change and tree placement
+  in one D1 batch, including creates in flight under the moved tree.
 - [`feature-workspaces-data.ts`](feature-workspaces-data.ts):
   `readWorkspaceTree` and `readWorkspaceMove` read the org's tree and its
   shown places for reads and notices. `updateShellWorkspace` prepares the
-  guarded metadata write. `writeWorkspaceTree` saves tree moves and Archive
-  promotions in one D1 batch, with current membership and places.
-  [`archive-data.ts`](archive-data.ts) guards Archive and its promoted rows.
+  guarded metadata write. `writeWorkspaceTree` saves tree moves in one D1
+  batch, with current membership and places.
+  [`archive-data.ts`](archive-data.ts) keeps Archive, descendant promotion,
+  and token revocation in one batch with its owner-or-admin access check.
   [`feature-sections-data.ts`](feature-sections-data.ts): the
   section writes `insertShellSection`, `updateShellSection`, and
   `deleteShellSection`. [List order](#list-order) gives their rules.

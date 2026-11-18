@@ -8,6 +8,7 @@ import {
 import { noop } from '../../noop'
 import { classes } from '../common/classes'
 import { useControlSizes } from '../common/touch'
+import { saveNeedsName } from '../secrets/secretNameCopy'
 import {
   lifetimeHint,
   lifetimeLabels,
@@ -16,10 +17,17 @@ import {
 } from './secretRunCopy'
 import styles from './SecretRequest.module.css'
 
-/** The choices of how long a value lasts, in their order. */
-const lifetimes: readonly SegmentOption<ValueLifetime>[] = (
-  ['minutes', 'workspace', 'saved'] as const
-).map((value) => ({ label: lifetimeLabels[value], value }))
+/**
+ * The choices of how long a value lasts, in their order. Save as secret is
+ * off when `saves` is false.
+ */
+function lifetimes(saves: boolean): readonly SegmentOption<ValueLifetime>[] {
+  return (['minutes', 'workspace', 'saved'] as const).map((value) => ({
+    label: lifetimeLabels[value],
+    value,
+    disabled: value === 'saved' && !saves,
+  }))
+}
 
 /** The names of a request that the org does not have, and the others. */
 function splitNames(item: SecretRunItem) {
@@ -32,11 +40,13 @@ function splitNames(item: SecretRunItem) {
 
 /**
  * The values of a request: one field for each name that the org does not
- * have, and one choice of how long every value lasts (item 7 A of the
- * mockups). The line under the choices says what the chosen one does. A
- * request that also names secrets of the org says that Allow allows them
- * for the session too. `labelled` names each field, as a sheet does and
- * as a card with several names does. `sheet` drops the indent of a card.
+ * have, and one choice of how long every value lasts. The line under the
+ * choices says what the chosen one does. A name with characters that a new
+ * secret name cannot use turns Save as secret off, and a line says what
+ * Save needs. A request that also names secrets of the org says that Allow
+ * allows them for the session too. `labelled` names each field, as a sheet
+ * does and as a card with several names does. `sheet` drops the indent of
+ * a card.
  */
 export function ValueAnswer(props: {
   item: SecretRunItem
@@ -49,6 +59,7 @@ export function ValueAnswer(props: {
   const lifetime = props.item.draft?.lifetime ?? 'minutes'
   const typed = props.item.draft?.typed === true
   const names = missing.map((secret) => secret.name).join(', ')
+  const saves = missing.every((secret) => secret.invalidName !== true)
   return (
     <div className={classes(styles.answer, props.sheet && styles.inSheet)}>
       {missing.map((secret) => (
@@ -68,11 +79,14 @@ export function ValueAnswer(props: {
         accessibilityLabel="How long the value lasts"
         hint={lifetimeHint(lifetime, names, props.org)}
         onChange={noop}
-        options={lifetimes}
+        options={lifetimes(saves)}
         size={field}
         value={lifetime}
         wrap
       />
+      {saves ? null : (
+        <p className={styles.text}>{saveNeedsName(missing.length)}</p>
+      )}
       {stored.length > 0 ? (
         <p className={styles.text}>
           {storedAlso(stored.map((secret) => secret.name).join(', '))}

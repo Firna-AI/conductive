@@ -144,7 +144,7 @@ export function createFilesHandler(options: FilesHandlerOptions) {
       return privateResponse(
         error instanceof FileTooLargeError
           ? error.response()
-          : errorResponse(error),
+          : errorResponse(error, request),
       )
     }
   }

@@ -20,8 +20,8 @@ This page lists each protocol doc and what it covers.
     shell variable of each repository in a sandbox, and the context folder
     of each workspace.
   - [Life of a workspace](../protocol/workspace-life.md): the start steps,
-    the time limits, the states, the stop and resume, the archive, the
-    restore, and Continue.
+    the time limits, the states, the archive, the restore, the removal from
+    the list after 14 days, and Continue.
     - [Workspace list marks](../protocol/workspace-marks.md): GitHub colours,
       agent motion, unread output, and reduced motion.
     - [Stop and resume](../protocol/stop-and-resume.md): the stop of an
@@ -32,11 +32,17 @@ This page lists each protocol doc and what it covers.
       newest release before it.
   - [Continue](../protocol/continue.md): the next task of a workspace after a
     merge, on a new branch with the same sandbox and sessions.
+  - [Repository change](../protocol/repository-change.md): the move of a
+    workspace to another repository of its org, on a new branch with the
+    same sandbox and sessions.
   - [Workspace menu](../protocol/workspace-menu.md): the menu of a workspace
     row, which moves, reassigns, renames, and archives the workspace.
   - [Sub-workspaces](../protocol/sub-workspaces.md): the parent link, when
     to nest, the depth limit, the nested rows of the list, an archived parent, the moves
     of a tree, and the agent context.
+    - [Parent changes](../protocol/parent-changes.md): the moves that nest
+      a workspace under another parent or take it out of its tree, the
+      place of the moved tree, and the refusals.
   - [Workspace tools](../protocol/workspace-tools.md)
     - [Terminal](../protocol/terminal.md): the terminals of a workspace
       and their tabs, and the shell of each terminal.
@@ -85,7 +91,8 @@ This page lists each protocol doc and what it covers.
       reports that belong to no session, the repair request after a refused
       update, and the notice of a failed repair.
     - [Runner warnings](../protocol/runner-warnings.md): the warnings of the
-      Worker for runner connections and for turn ends with no Stop request.
+      Worker for runner connections and for turn ends with no Stop request,
+      and the process-start ID of the runner.
   - [Session transcripts](../protocol/session-transcripts.md): copying a
     session as concise or full Markdown, and the text of a copy.
     - [Transcript routes](../protocol/transcript-routes.md): the route of
@@ -110,12 +117,19 @@ This page lists each protocol doc and what it covers.
       settings, and the default login of a new session.
     - [Secrets](../protocol/secrets.md): the secrets of an org that agents
       use in one command, their storage, the Secrets tab, the rights,
-      Reveal, the mark for all agents, the grants, Capabilities with Mac
-      access, and their risks.
+      Reveal, the mark for all agents, the grants, and their risks.
+      - [Capabilities](../protocol/capabilities.md): the control of New
+        workspace and of each workspace, with its secrets part and Mac
+        access.
+      - [Secret variables](../protocol/secret-variables.md): the names of
+        new secrets, the variable name of each secret, the command
+        environment, conflicting variable names, and older tools.
       - [Secret requests](../protocol/secret-requests.md): the calls that
         list the secrets and run a command with secrets, the requests and
-        their time limit, late answers, temporary values, and what the
-        chat shows.
+        their time limit, temporary values, and what the chat shows.
+        - [Late secret requests](../protocol/secret-late-answers.md): the
+          requests after the wait of their tool call ends, and their late
+          answers.
   - [Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md)
   - [Attachment uploads](../protocol/attachment-uploads.md): the upload of
     an attached file in parts, with the gate rules and the body limit of
@@ -132,6 +146,9 @@ This page lists each protocol doc and what it covers.
   actions, Merge, and its events.
   - [The GitHub state](../protocol/github-summary.md): the four summary
     values for workspace list marks and their order.
+  - [Repository changes on GitHub](../protocol/repository-changes-on-github.md):
+    a new name or default branch of a repository, the saved values, and the
+    build that the change starts.
 - [Agent tools](../protocol/agent-tools.md): the tools that agents use in a
   sandbox, and Mac commands.
   - [Agent tool access](../protocol/agent-tool-access.md): what each call
@@ -222,11 +239,10 @@ This page lists each protocol doc and what it covers.
   GitHub actions of the Worker as a member, and the GitHub tokens that an
   image job uses to copy the repositories.
 - [Agent instructions](../protocol/agent-instructions.md): the text that each
-  agent session gets, and the sender line and the branch line of each
-  message.
-  - [Agent instructions: the sender line](../protocol/agent-instructions-sender-line.md):
-    the sender line of each message, and the access of a turn, which does
-    not depend on that line.
+  agent session gets.
+  - [Message lines](../protocol/message-lines.md): the sender line, the
+    repository line, and the branch line of each message, and the access
+    of a turn, which does not depend on the sender line.
   - [Base prompts](../protocol/base-prompts.md): the base prompt of Claude
     agents and the base instructions of Codex agents.
   - [Agent instructions: how each agent gets them](../protocol/agent-instructions-delivery.md):

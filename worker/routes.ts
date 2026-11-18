@@ -16,6 +16,7 @@ import { membersRoute } from './members/route'
 import { productionMembersHooks } from './members/composition'
 import { archiveRoute } from './app-api/archive'
 import { continueRoute } from './app-api/continue'
+import { repositoryChangeRoute } from './app-api/repository-change'
 import { restartRoute } from './app-api/restart'
 import { automationsRoute } from './automations/route'
 import { automationRunsRoute } from './automations/run-route'
@@ -98,6 +99,8 @@ export async function route(
   if (archive) return archive
   const continued = await continueRoute(request, env, context)
   if (continued) return continued
+  const changed = await repositoryChangeRoute(request, env, context)
+  if (changed) return changed
   const restart = await restartRoute(request, env, context, dependencies)
   if (restart) return restart
   const boot = await bootRoute(request, env, context, dependencies)

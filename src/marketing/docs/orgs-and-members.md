@@ -174,6 +174,7 @@ An org has two roles: **Admin** and **Member**.
 | Read workspaces and chats | All workspaces in the org | All workspaces in the org |
 | Send messages | Under the session's login rules | Under the session's login rules |
 | Continue after a merge | All workspaces in the org | All workspaces in the org |
+| Change the repository of a workspace | All workspaces in the org | All workspaces in the org |
 | Merge from the pull request bar | With GitHub write access or more | With GitHub write access or more |
 | Mark a draft ready for review from the pull request bar | With GitHub write access or more | With GitHub write access or more |
 | Manage members and org settings, except secrets | Yes | Read-only |
@@ -190,16 +191,23 @@ An org can have several admins.
 Every member of an active org can restore another member's archived workspace within 14 days of Archive while its computer is kept.
 Restore ends after 14 days, even while Conductive retries deleting the computer.
 Archived chats stay read-only until Restore.
+After 14 days, the workspace leaves **Archived** and the command palette.
+A direct link or a chat link still opens its read-only chat.
+Conductive keeps its chat history until the org is deleted.
+
+The workspace counts in **Members** leave out removed workspaces.
 
 - [Restore an archived workspace](/docs/workspaces#restore-an-archived-workspace)
 
 Continue uses the GitHub account of the member who selects it to fetch the latest default branch.
 That account needs read access to the repository.
+A repository change uses the GitHub account of the member who changes it in the same way, for the new repository.
 Merge uses the clicking member's GitHub account, and GitHub checks its branch rules.
 **Ready for review** also uses the clicking member's GitHub account.
 An org role does not add GitHub access.
 
 - [Continue after a merge](/docs/workspaces#continue-after-a-merge)
+- [Change the repository](/docs/workspaces#change-the-repository)
 - [Merge a pull request](/docs/pull-requests#merge-the-pull-request)
 
 To reassign a workspace, select its owner in the workspace header.
@@ -226,6 +234,7 @@ Work with people you trust with your agent and GitHub logins.
 An admin can remove another member from **Members**.
 That member loses ordinary access to the org.
 Their workspaces stay in the org and move to the admin who removed them.
+This includes removed workspaces, although the member's workspace count leaves them out.
 
 If you need to leave an active org, ask another admin to remove your membership.
 The last active admin must arrange another active admin or delete the org.
@@ -261,6 +270,8 @@ It lists each deleted org with **Restore** above its steps.
 Restoring brings back its workspaces, chats, and settings.
 Archived workspaces stay archived after the org returns.
 Their existing Restore deadlines continue to apply.
+Workspaces archived at least 14 days ago stay out of **Archived** and the command palette.
+Their read-only chat still opens by direct link or chat link.
 Deleting the org does not extend a workspace's 14 days of Restore.
 Other stopped workspaces start their computers when you open them.
 

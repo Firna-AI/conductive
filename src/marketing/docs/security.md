@@ -40,6 +40,7 @@ A turn that a late answer to a secret request starts keeps the sender of the tur
 | Merge from the pull request bar | The GitHub account of the member who selects Merge |
 | Ready for review from the pull request bar | The GitHub account of the member who selects Ready for review |
 | Continue's repository fetch | The GitHub account of the member who selects Continue |
+| A repository change's fetch | The GitHub account of the member who changes the repository |
 | Commit in an agent turn | The turn sender, as author and committer |
 | Commit outside a turn, including Terminal and scripts | The workspace owner by default, as author and committer |
 | A request to run a Mac command | The turn sender's connected Mac |
@@ -74,6 +75,7 @@ It reaches repositories that both the GitHub account and the GitHub App can reac
 GitHub checks the clicking member's access and branch rules for a merge.
 GitHub also checks the clicking member's access for Ready for review.
 Every org member can Continue after a merge, but their GitHub account needs repository read access for its fetch.
+Every org member can also change a workspace's repository, and their GitHub account needs read access to the new repository for its fetch.
 
 ## Understand what agents can reach
 
@@ -89,8 +91,11 @@ The workspace tools can list workspaces and usable repositories, sections, and m
 They can also list sessions and previews.
 They can read details of a workspace, session, or message, and read transcripts across the org.
 This includes workspaces that members created themselves.
-They can also list the names and descriptions of the org's secrets, without values.
-Agents can read archived workspaces and closed sessions, but cannot send messages to them.
+They can also list each org secret's name, description, and environment variable name, without its value.
+Agents can read archived and removed workspaces by ID.
+Workspace lists leave out removed workspaces unless the agent asks for them.
+Agents can also read closed sessions.
+They cannot send messages to archived or removed workspaces or closed sessions.
 The tools reach only the org of the calling workspace.
 
 A workspace token is a credential that lets programs use these tools.
@@ -182,7 +187,7 @@ If its turn cannot start, follow the [ChatGPT recovery steps](/docs/agent-logins
 
 Code on the computer can also obtain the GitHub credential available to that workspace.
 This includes the workspace owner's GitHub credential outside a running agent turn.
-Continue also brings the clicking member's GitHub token into the cloud computer while it fetches the latest default branch.
+Continue and a repository change also bring the member's GitHub token into the cloud computer while they fetch the latest default branch.
 Code or members with terminal access can read that token during the fetch.
 
 Removing a member ends their ordinary access to the org.
@@ -194,7 +199,7 @@ If you suspect exposure, stop the agent's turn.
 Use the provider's controls to revoke exposed logins or tokens.
 Archive stops its cloud computer and ends that workspace's connection access.
 It also revokes that workspace's token, including copies used to read other chats.
-Conductive keeps its files for 14 days.
+The cloud computer keeps its disk files for 14 days.
 Those files can still hold copied credentials during that window.
 
 - [Replace an agent login](/docs/agent-logins#replace-or-remove-a-login)
@@ -242,8 +247,9 @@ Values show as dots.
 An admin can reveal one value at a time, also of a secret that another member added.
 Every member sees who revealed a value last, and when.
 
-An agent gets a secret's value only for one command.
-The command gets the value, and the agent sees only the name.
+An agent can ask to run one command with a secret.
+The command gets the value.
+The agent gets the secret's name and environment variable name, without the value.
 Each session needs a member's approval, unless the secret is for **All agents** or pre-approved in the workspace's **Capabilities**.
 Any member who sees the session can allow the request.
 The approval lasts for that session.
@@ -251,6 +257,7 @@ Every member can remove approvals in **Capabilities**.
 
 A request waits 90 seconds for an answer.
 After that, it stays in the chat, and a later **Allow** tells the agent in a new turn.
+An **Allow** also allows each other open request of the same secrets that its approval covers, so you answer once.
 An automation run follows the same rules.
 Text in a pull request can steer its agent to use the secrets that need no new approval.
 
@@ -300,7 +307,10 @@ Restore returns the workspace stopped.
 
 Restore ends after 14 days.
 Conductive then deletes the computer and its files.
-Its chat remains read-only after deletion.
+The workspace leaves **Archived**, the command palette, and the workspace counts of the org.
+A direct link or a chat link still opens its read-only chat.
+The bar says **Removed on** followed by the removal date.
+Conductive keeps its chat history until the org is deleted.
 
 Deleting an org stops its computers and starts a seven-day restore window.
 After that window, deletion removes its data and computers.

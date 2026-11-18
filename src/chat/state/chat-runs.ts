@@ -2,11 +2,11 @@ import { createChatApi, type WorkspaceTarget } from '../api/client'
 import type { SessionReads } from '../links/session-reads'
 import { browserTimers } from '../stream/workspace-stream'
 import {
-  ChatStore,
   initialSnapshot,
   type ChatSnapshot,
   type Overlay,
 } from './chat-snapshot'
+import { ChatStore } from './chat-store'
 import { isArchived } from './archive-view'
 import type { ChatContext } from './context'
 import {
