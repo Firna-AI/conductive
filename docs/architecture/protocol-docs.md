@@ -135,6 +135,9 @@ This page lists each protocol doc and what it covers.
   actions, Merge, and its events.
   - [The GitHub state](../protocol/github-summary.md): the four summary
     values for workspace list marks and their order.
+  - [Repository changes on GitHub](../protocol/repository-changes-on-github.md):
+    a new name or default branch of a repository, the saved values, and the
+    build that the change starts.
 - [Agent tools](../protocol/agent-tools.md): the tools that agents use in a
   sandbox, and Mac commands.
   - [Agent tool access](../protocol/agent-tool-access.md): what each call

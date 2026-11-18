@@ -79,3 +79,37 @@ export async function consumePendingPushRefresh(
     .bind(now, orgId, providerAccount)
     .run()
 }
+
+/**
+ * The orgs whose published image holds the repository with a name or a
+ * default branch that differs from the saved one. Only an org whose newest
+ * build succeeded counts, because the app starts no build by itself after
+ * a failed build.
+ */
+export async function changedImageRepositoryOrgs(
+  db: D1Database,
+  input: { githubRepositoryId: number; installationId: number },
+  providerAccount: string,
+): Promise<string[]> {
+  const { results } = await db
+    .prepare(
+      `SELECT DISTINCT image.org_id AS orgId
+       FROM org_images image JOIN image_build_jobs j ON j.build_id = image.image_build_id
+       JOIN json_each(j.repositories_json) entry
+       JOIN repositories r ON r.id = json_extract(entry.value, '$.id') AND r.org_id = image.org_id
+       JOIN orgs ON orgs.id = r.org_id
+       WHERE image.provider_account = ? AND image.image_name IS NOT NULL
+       AND r.github_repository_id = ? AND r.installation_id = ?
+       AND (json_extract(entry.value, '$.fullName') != r.full_name
+         OR json_extract(entry.value, '$.defaultBranch') != r.default_branch)
+       AND orgs.deleted_at IS NULL AND ${activeOrgPredicate('orgs')}
+       AND EXISTS (SELECT 1 FROM github_installations i
+         WHERE i.id = r.installation_id AND i.suspended_at IS NULL)
+       AND (SELECT state FROM image_builds WHERE org_id = image.org_id AND kind = 'build'
+         ORDER BY started_at DESC, id DESC LIMIT 1) = 'succeeded'
+       ORDER BY image.org_id`,
+    )
+    .bind(providerAccount, input.githubRepositoryId, input.installationId)
+    .all<{ orgId: string }>()
+  return results.map((row) => row.orgId)
+}

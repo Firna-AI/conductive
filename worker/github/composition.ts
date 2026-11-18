@@ -3,6 +3,7 @@ import { workspaceBinding } from '../app-api/workspace-state'
 import { latestSoftwareRelease } from '../lifecycle/software-release'
 import { imageRuntime } from '../lifecycle/runtime'
 import { refreshImagesForPush } from '../lifecycle/image-timers'
+import { buildImagesForRepositoryChange } from '../lifecycle/repository-change-builds'
 import { handleGitHubWebhook } from './webhook'
 import { installedRepository } from './composition-data'
 import { requireFeatureResult } from '../features/result'
@@ -47,6 +48,13 @@ export async function productionGitHubWebhook(
           installationId,
           ref: `refs/heads/${branch}`,
           software: await latestSoftwareRelease(env, dependencies.fetch),
+        })
+      },
+      repositoryChanged: async (repositoryId, installationId) => {
+        await buildImagesForRepositoryChange(imageRuntime(env, dependencies), {
+          githubRepositoryId: repositoryId,
+          installationId,
+          software: () => latestSoftwareRelease(env, dependencies.fetch),
         })
       },
     },

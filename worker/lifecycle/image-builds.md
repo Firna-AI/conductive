@@ -227,6 +227,16 @@ verified GitHub webhook receiver may call it. The
 coordinator starts the daily refresh by itself.
 A daily refresh sets the saved daily deadline 24 hours after its start.
 
+`buildImagesForRepositoryChange` in
+[`repository-change-builds.ts`](repository-change-builds.ts) starts a build
+for each org whose published image holds a repository with a name or a
+default branch that differs from the saved one. It skips an org whose newest
+build did not succeed. It reads the software release only when an org needs
+a build. The same GitHub webhook receiver calls it after it saves a
+repository change, as
+[Repository changes on GitHub](../../docs/protocol/repository-changes-on-github.md)
+says.
+
 Both refreshes start with the first admin who is not suspended, from
 `firstActiveOrgAdmin` in [`settings-data.ts`](settings-data.ts). An org
 without such an admin gets neither refresh. Its push uses no part of the
@@ -262,6 +272,9 @@ states the rule.
   reads the build state and its log in one D1 batch.
 - [`image-timers.ts`](image-timers.ts): `refreshImagesForPush` and
   `runImageAlarm`.
+- [`repository-change-builds.ts`](repository-change-builds.ts):
+  `buildImagesForRepositoryChange`, the build after a repository change on
+  GitHub.
 - [`image-coordinator.ts`](image-coordinator.ts): `ImageCoordinator`.
 - [Software images](../software-image/README.md): the shared software builds and their cleanup.
 - [`image-software.ts`](image-software.ts): the release install and workspace startup commands.

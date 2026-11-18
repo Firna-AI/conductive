@@ -1,0 +1,32 @@
+# A repository change during a build is lost
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-17, from branch `calummoore/firna-ai-user-interface-discrepancy-lsqt`.
+- **Location:** `worker/lifecycle/org-image-refresh-data.ts` (`changedImageRepositoryOrgs`), `worker/lifecycle/build-admission-data.ts` (the `cleanup-build` case of `publishBuild`), and `worker/lifecycle/image-sources/data.ts` (`readSourceRepositories` and `readSourceRepository`).
+- **Reason:** the problem needs a GitHub rename during a running build, and the fix is not harder after the merge.
+
+- **Source:** Implementation. **Category:** Product bug.
+- **Terms:**
+  - **Org image:** the saved copy of a cloud computer of an org, with its chosen repositories already copied in. New workspaces start from it.
+  - **Job:** a build or a refresh of the org image. One job runs at a time in each org.
+  - **Repository change:** a `repository` webhook from GitHub that renames a repository or changes its default branch.
+- **Background:**
+  - The app saves the name and the default branch of each repository in the `repositories` table. Each job saves the name and the default branch of each repository that it copies, in `image_build_jobs.repositories_json`.
+  - Each copy of a repository checks that the saved values still match the values of its job. `readSourceRepositories` checks this for a build, and `readSourceRepository` for a refresh. On a mismatch they throw `Repository source access is not available`.
+  - On 17 November 2026 the user chose that a repository change saves the new values and starts a build at once, for each org whose published image holds the old values. `docs/protocol/repository-changes-on-github.md` states the rule.
+  - `changedImageRepositoryOrgs` finds those orgs. It skips an org whose newest build did not succeed, so it also skips an org with a running build. `startImageBuild` would only return the running build anyway.
+  - When a job succeeds, `publishBuild` starts one added build only for a chosen repository that the job did not copy.
+- **Problem:** A repository change can arrive while a job runs with the old values. If the job has not copied its repositories yet, it fails on the mismatch. If it has, it publishes an image that holds the old values. In both cases no later build starts by itself.
+- **Impact if no action:** Each later refresh of that org fails on the mismatch, and new workspaces start with old commits. An admin must start Build computer by hand.
+- **Root question:** How does a repository change that arrives during a job reach the org image?
+- **Options:**
+  - **A.** Let `publishBuild` also start the added build when the job holds a name or a default branch that differs from the saved one. A failed job still gets no added build, so the change then waits for Try again. Effort: Medium.
+  - **B.** As A, and let a build that fails only on such a mismatch start one added build. This breaks the rule that the app starts no build by itself after a failed build, so it needs a protocol decision. Effort: Medium.
+  - **C.** Change nothing. An admin starts Build computer when refreshes fail. Effort: Small.
+- **Left out:** A queue of builds that waits for the running job was left out, because `publishBuild` already gives one place that runs after each job.
+- **Wider fix:** A, because the check at the end of each job covers every way that the saved values can change during a job.
+- **Previous examples:** `plans/follow-ups/added-build-can-be-lost.md` covers other ways to lose an added build.
+- **Related:** `plans/follow-ups/added-build-can-be-lost.md` changes the same added-build code.
+- **Recommendation:** A. It reuses the added build that `docs/protocol/org-image.md` already requires, and it keeps the rule for failed builds.
+- **Action:** fix after merge, apply A, because the problem needs a rare timing and loses no data.
