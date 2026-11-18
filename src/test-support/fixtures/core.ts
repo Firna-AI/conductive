@@ -134,12 +134,14 @@ export function coreFixtures(role: OrgRole = 'admin') {
       createdAt: FAKE_TIME - 172_800_000,
     })),
   }
+  /** Acme's skills repository starts untrusted, as each repository does. */
   const settings: OrgSettingsResponse = {
     settings: {
       baseImage: BASE_IMAGE,
       installScript,
       startupScript,
       skillsRepository,
+      trustedSkillsRepository: '',
       envVars,
       updatedAt: FAKE_TIME,
     },

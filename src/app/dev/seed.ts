@@ -98,6 +98,7 @@ export function seedState(options: DevOptions): DevState {
     stopAfterMs: options.stopAfterMs,
     operator: operatorRecords(options, user),
     shareSaveFails: options.shareSaveFails,
+    skillsSaveFails: options.skillsSaveFails,
     waitlist: {
       appAccess: !waits,
       approvalEmail:

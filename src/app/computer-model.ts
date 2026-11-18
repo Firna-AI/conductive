@@ -11,6 +11,7 @@ import { BuildLogFollower, type BuildLog } from './build-log-follower'
 import type { Delay } from './events'
 import { latestBuild, type OrgModel } from './org-model'
 import { SkillsLookup } from './skills-lookup'
+import type { SkillsChoice } from './skills-trust'
 import { Store, type Loadable, type Readable } from './store'
 
 export type ScriptKind = 'installScript' | 'startupScript'
@@ -178,15 +179,21 @@ export class ComputerModel {
   }
 
   /**
-   * Saves the skills repository as the admin typed it. The Worker stores a
-   * link from GitHub as owner/name, and empty text removes the repository.
-   * The list belongs to the saved repository, so after the save the list
-   * of the old repository goes, and the lookup runs again while the tab
-   * shows.
+   * Saves the skills repository as the admin typed it, with its trust
+   * choice, in one write. A grant names the repository of the same write,
+   * so it never trusts another repository, and a choice that is off sends
+   * an empty name. The Worker stores a link from GitHub as owner/name,
+   * empty text removes the repository, and the answer gives the choice
+   * that took effect. The list belongs to the saved repository, so after
+   * the save the list of the old repository goes, and the lookup runs
+   * again while the tab shows.
    */
-  async saveSkillsRepository(repository: string): Promise<void> {
+  async saveSkillsRepository(choice: SkillsChoice): Promise<void> {
     const run = this.generation
-    await this.write({ skillsRepository: repository })
+    await this.write({
+      skillsRepository: choice.repository,
+      trustedSkillsRepository: choice.trusted ? choice.repository : '',
+    })
     if (run !== this.generation) return
     this.lookup.afterSave(() => run === this.generation)
   }

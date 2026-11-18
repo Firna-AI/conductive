@@ -26,7 +26,7 @@ how a screen is built, and links to the other pages.
 | `app/banner`        | The pull request bar and Checks: no pull request, its other states, Merge, local work, the agent actions in the chat, and Continue |
 | `app/new-workspace` | An empty chat, the first build of a new org, a repository that waits for its build, its error, files on the first message, the Capabilities control, the model menu with Fast on, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/automations` | The automations of the org, an automation, its triggers, its runs, and a run workspace |
-| `app/org-settings`  | General with Delete org, the colour of the org in the rail, then Repositories and Cloud computer with the notice of a repository change, the first build of a new org, and the skills repository with its list of skills and its notices, then Agents with the org logins, Secrets with Reveal for an admin and the view of a member, and Members |
+| `app/org-settings`  | General with Delete org, the colour of the org in the rail, then Repositories and Cloud computer with the notice of a repository change, the first build of a new org, and the skills repository with its trust switch, its list of skills, and its notices, then Agents with the org logins, Secrets with Reveal for an admin and the view of a member, and Members |
 | `app/chat`          | A finished turn with its work folded, then running turns, turns that an agent stopped, open work, tables in replies, lists in replies, headings in replies, links in chat text, lost data, lost updates, unread files, the time limit of background work, and a fast turn at standard speed |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat, and one that a workspace with Mac access off refused |
 | `app/secret-requests` | A request for secrets above the composer, two secrets, a mixed request, a temporary request with its sheet on a phone, the results in the chat, and a request that outlived its tool call or ended with no answer |
@@ -168,23 +168,33 @@ notice in place of the list. It is the last section of the tab, after the
 environment variables:
 
 - `app/org-settings/cloud-computer` has acme/agent-skills in the field of
-  an admin, with Save repository off until the field changes. Its 12
-  skills show under the field.
+  an admin, with the switch "Trust this skills repository" off under the
+  field, and Save repository off until the field or the switch changes.
+  Its 12 skills show under the switch.
 - `app/org-settings/cloud-computer/skills` has Acme before an admin chose
-  a repository, with the placeholder in the empty field. Its child pages
-  show the other states of the section:
-  - `pasted-link` has a link from GitHub in the field, with Save
-    repository on.
+  a repository, with the placeholder in the empty field and no trust
+  switch. Its child pages show the other states of the section:
+  - `trust` has a trusted repository, from decision 403 of the skills
+    trust plan, of 17 and 18 November 2026. The hint of the switch says
+    what the value does, and "How trust works" opens the guide. Its
+    `unsaved` variant has the switch turned on before Save, its
+    `replaced` variant has acme/team-skills typed in place of the trusted
+    repository, with the switch off, and its `member` variant has the
+    choice as read-only text.
+  - `pasted-link` has a link from GitHub in the field, with the trust
+    switch off and Save repository on.
   - `private` has the notice of a private repository.
   - `not-found` has the notice of a repository that GitHub does not find.
+  - `invalid` has the same notice for saved text that is not owner/name,
+    without a trust switch.
   - `without-skills` has the notice of a repository without skills, which
     says where the skill folders go.
   - `incomplete` has the list from a file tree that GitHub cut short,
     with the note that the list can be incomplete.
   - `lookup-failed` has the notice of a list that did not load, with Try
     again.
-- `app/org-settings/cloud-computer/member` shows the repository as text to
-  a member, with the same list. Its `no-skills` variant has the empty text
+- `app/org-settings/cloud-computer/member` shows the repository and its
+  trust choice as text to a member, with the same list. Its `no-skills` variant has the empty text
   of a member. Its `private-skills` and `skills-not-found` variants have
   the notices of a member, which say that an admin can act. The other
   notices read the same for a member as for an admin.

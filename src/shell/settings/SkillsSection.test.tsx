@@ -4,11 +4,8 @@ import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 import skillListStyles from '../../../docs/mockups/src/components/settings/SkillList.module.css'
 import { ComputerModel } from '../../app/computer-model'
-import { ManualDelay, requestLines } from '../../app/test-kit'
-import {
-  orgSettingsPaths,
-  type SkillsRepositoryLookupResponse,
-} from '../../shared/org-settings'
+import { ManualDelay } from '../../app/test-kit'
+import type { SkillsRepositoryLookupResponse } from '../../shared/org-settings'
 import { byRole } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { coreFixtures, FAKE_IDS } from '../../test-support/fixtures/core'
@@ -20,48 +17,29 @@ import { click, mountScreen, settle, typeText } from '../test-mount'
 import { startedApp, textOf } from '../test-render'
 import { ComputerSettings } from './ComputerTab'
 import { noticesOf } from './test-builds'
-import { listed, lookup, mountedTab, skillsOf, skillsPath } from './test-skills'
+import {
+  field,
+  listed,
+  lookup,
+  lookups,
+  mountedTab,
+  saveOff,
+  settingsPath,
+  settingsWrites,
+  skillsOf,
+  skillsPath,
+  trustOf,
+} from './test-skills'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
 const { org } = FAKE_IDS
-const settingsPath = orgSettingsPaths.settings(org)
 const saved = coreFixtures().settings.settings
 const expired = {
   error: {
     code: 'github_reconnect_required',
     message: 'GitHub access expired. Sign in with GitHub again.',
   },
-}
-
-/** The Repository field of an admin. */
-function field(view: HTMLElement): HTMLInputElement {
-  const input = byRole('textbox', 'Repository', view)
-  if (!(input instanceof HTMLInputElement)) throw new Error('No field.')
-  return input
-}
-
-/** Whether Save repository is off, also while it keeps the focus. */
-function saveOff(view: HTMLElement): boolean {
-  const button = byRole('button', 'Save repository', view)
-  if (!(button instanceof HTMLButtonElement)) throw new Error('No button.')
-  return button.disabled || button.closest('[aria-disabled="true"]') !== null
-}
-
-/** The number of lookups of the skills that the server got. */
-function lookups(server: FakeApiServer): number {
-  return requestLines(server).filter((line) => line === `GET ${skillsPath}`)
-    .length
-}
-
-/** The bodies of the saves of the settings, in their order. */
-function settingsWrites(server: FakeApiServer): Promise<unknown[]> {
-  const writes = server.requests.filter(
-    (request) =>
-      request.method === 'PATCH' &&
-      new URL(request.url).pathname === settingsPath,
-  )
-  return Promise.all(writes.map((request) => request.clone().json()))
 }
 
 describe('the Skills section of an admin', () => {
@@ -102,7 +80,7 @@ describe('the Skills section of an admin', () => {
       loaded: {
         value: 'acme/agent-skills',
         saveOff: true,
-        text: 'Skills Agents in every workspace use the skills of a GitHub repository, and get its updates within minutes. The repository must be public. Repository Changes here apply at the next start of each workspace. 2 skills databases testing Save repository',
+        text: "Skills Agents in every workspace use the skills of a GitHub repository, and get its updates within minutes. The repository must be public. Repository Changes here apply at the next start of each workspace. Trust this skills repository Claude runs no automatic commands from any skill or custom slash command, including the workspace's own. Agents can still choose to run commands that a skill suggests. Running cloud computers keep their current trust until their next start or resume. How trust works 2 skills databases testing Save repository",
         skills: ['databases', 'testing'],
       },
       typed: { saveOff: false, skills: ['databases', 'testing'] },
@@ -111,12 +89,17 @@ describe('the Skills section of an admin', () => {
         saveOff: true,
         skills: ['release-notes'],
       },
-      writes: [{ skillsRepository: 'https://github.com/acme/team-skills' }],
+      writes: [
+        {
+          skillsRepository: 'https://github.com/acme/team-skills',
+          trustedSkillsRepository: '',
+        },
+      ],
       lookups: 2,
     })
   })
 
-  test('an empty Save removes the repository, and the section shows the empty field without a list', async () => {
+  test('an empty Save removes the repository, and the section shows the empty field without a trust switch or a list', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer()
     const view = await mountedTab(server)
@@ -131,6 +114,7 @@ describe('the Skills section of an admin', () => {
       value: field(view).value,
       placeholder: field(view).placeholder,
       saveOff: saveOff(view),
+      trust: trustOf(view),
       skills: listed(view),
       notices: noticesOf(skillsOf(view)),
       writes: await settingsWrites(server),
@@ -138,9 +122,10 @@ describe('the Skills section of an admin', () => {
       value: '',
       placeholder: 'owner/repository',
       saveOff: true,
+      trust: null,
       skills: null,
       notices: [],
-      writes: [{ skillsRepository: '' }],
+      writes: [{ skillsRepository: '', trustedSkillsRepository: '' }],
     })
   })
 
@@ -163,7 +148,12 @@ describe('the Skills section of an admin', () => {
       value: 'acme/agent-skills',
       saveOff: true,
       skills: ['updated-skill'],
-      writes: [{ skillsRepository: 'https://github.com/acme/agent-skills' }],
+      writes: [
+        {
+          skillsRepository: 'https://github.com/acme/agent-skills',
+          trustedSkillsRepository: '',
+        },
+      ],
       lookups: 2,
     })
   })

@@ -21,6 +21,7 @@ import {
 } from './orgAgentsState'
 import { settingsViewer, TabBody } from './orgSettingsTabs'
 import { settingsOrg } from './settingsOrgs'
+import { skillsDefaults, skillsKeys, skillsProperties } from './settingsSkills'
 
 export const orgSettingsSchema = {
   type: 'object',
@@ -32,7 +33,7 @@ export const orgSettingsSchema = {
     'repositoryChange',
     'repositoryView',
     'envForm',
-    'skills',
+    ...skillsKeys,
     'secrets',
     'dialog',
     'viewer',
@@ -84,28 +85,7 @@ export const orgSettingsSchema = {
      * DATABASE_URL.
      */
     envForm: { enum: ['none', 'add', 'change'] },
-    /**
-     * The skills repository of the org on the Cloud computer tab, and what
-     * the lookup of the saved repository found on GitHub: acme/agent-skills
-     * with its skills, none chosen yet, or none with a link from GitHub
-     * that an admin pasted into the field and has not saved. Then a saved
-     * repository that is private, acme/agent-skils that GitHub does not
-     * find, a repository without skills, a file tree that GitHub cut
-     * short, and a lookup that failed. A member sees the saved repository
-     * and the same result. Firna, a new org, has none.
-     */
-    skills: {
-      enum: [
-        'chosen',
-        'none',
-        'pasted-link',
-        'private',
-        'not-found',
-        'without-skills',
-        'incomplete',
-        'lookup-failed',
-      ],
-    },
+    ...skillsProperties,
     /**
      * The Secrets tab: the list, the value of PROD_DATABASE_URL that an
      * admin just revealed, the Add secret form, that form after it refused
@@ -171,7 +151,7 @@ export const acmeSettings: OrgSettingsState = {
   repositoryChange: 'none',
   repositoryView: 'list',
   envForm: 'none',
-  skills: 'chosen',
+  ...skillsDefaults,
   secrets: 'list',
   dialog: 'none',
   viewer: 'admin',

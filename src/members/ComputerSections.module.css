@@ -46,8 +46,9 @@
 }
 
 /*
- * The saved skills repository: one row of a term and its value, in a box
- * with a full outline, as `DetailList` of the mockups draws it.
+ * The saved skills repository and its trust choice: rows of a term and its
+ * value, in a box with a full outline, as `DetailList` of the mockups draws
+ * them.
  */
 .details {
   margin: 0;
@@ -60,6 +61,10 @@
   align-items: baseline;
   gap: 12px;
   padding: 9px 12px;
+}
+
+.detail + .detail {
+  border-top: 1px solid var(--ui-border);
 }
 
 .term {
@@ -75,6 +80,14 @@
   color: var(--ui-ink);
   font-size: var(--ui-text-md);
   overflow-wrap: anywhere;
+}
+
+/* What the saved trust choice does, as the hint of the switch of an admin. */
+.trustHint {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
 }
 
 /* The number of skills, then their names, then the note of a cut tree. */

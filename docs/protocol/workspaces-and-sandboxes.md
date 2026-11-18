@@ -20,7 +20,8 @@ These docs belong to this doc:
   variable of each repository in a sandbox, and the context folder of each
   workspace.
 - [Org skills](org-skills.md): the skills repository of the org, its copy
-  in each cloud computer, the skills that load, and the list of skills.
+  in each cloud computer, the skills that load, the list of skills, and
+  the trust choice of the repository.
 - [Life of a workspace](workspace-life.md): the start steps, the time
   limits, the states, the stop and resume, the archive, the restore, the
   removal from the list after 14 days, and Continue.
@@ -123,8 +124,10 @@ for, downloads, and applies an update.
 - Only an admin changes the install script, the startup script, the env
   vars, and the repositories (decision 57). Other members see them
   read-only.
-- Only an admin changes the skills repository, as
-  [The Skills section](org-skills.md#the-skills-section) says.
+- Only an admin changes the skills repository and its trust choice, as
+  [The Skills section](org-skills.md#the-skills-section) and
+  [Who changes the choice](org-skills-trust.md#who-changes-the-choice)
+  say.
 - Each sandbox gets the org's env vars at create and at each resume
   (decision 17). A changed value applies at the next start.
 - The app's own variables replace an org env var with the same name.

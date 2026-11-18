@@ -8,7 +8,7 @@ import {
   orgSettingsPaths,
   type SkillsRepositoryLookupResponse,
 } from '../../shared/org-settings'
-import { normalizeSkillsRepository } from '../../shared/skill-folders'
+import { savedSkillsRepositorySettings } from '../../shared/skills-repository-settings'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { requireOrg, type DevBackend } from './backend'
 import type { DevSkills } from './options'
@@ -16,20 +16,16 @@ import { ID, json, RouteError, type Route } from './router'
 import type { DevState } from './state'
 
 /**
- * The saved form of the text of the Skills field, as the Worker saves it:
- * the shared rule trims spaces and line breaks at both ends, converts a
- * valid GitHub link to owner/name, and keeps other trimmed text. Empty
- * text removes the repository.
- */
-export function savedSkillsRepository(typed: string): string {
-  return normalizeSkillsRepository(typed)
-}
-
-/**
  * Saves the skills repository of Acme that `?skills` chooses: none, the
- * misspelled acme/agent-skils, or else acme/agent-skills.
+ * misspelled acme/agent-skils, or else acme/agent-skills. With `trusted`,
+ * from `?skillsTrust=trusted`, Acme trusts a saved repository, as the
+ * shared save rule stores it.
  */
-export function seedSkills(state: DevState, skills: DevSkills | null): void {
+export function seedSkills(
+  state: DevState,
+  skills: DevSkills | null,
+  trusted: boolean,
+): void {
   const acme = state.orgs.find((org) => org.org.id === FAKE_IDS.org)
   if (!acme) return
   const repository =
@@ -38,7 +34,13 @@ export function seedSkills(state: DevState, skills: DevSkills | null): void {
       : skills === 'not-found'
         ? misspelledSkillsRepository
         : skillsRepository
-  acme.settings = { ...acme.settings, skillsRepository: repository }
+  acme.settings = {
+    ...acme.settings,
+    ...savedSkillsRepositorySettings(acme.settings, {
+      skillsRepository: repository,
+      trustedSkillsRepository: trusted ? repository : '',
+    }),
+  }
 }
 
 /**

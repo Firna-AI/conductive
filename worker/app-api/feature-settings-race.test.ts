@@ -71,10 +71,18 @@ it('preserves a concurrent skills repository change when another settings save r
   const update = settingsData.updateShellSettings
   const writes = vi.spyOn(settingsData, 'updateShellSettings')
   writes.mockImplementationOnce(async (db, input) => {
-    await db
-      .prepare('UPDATE settings SET skills_repository = ? WHERE org_id = ?')
-      .bind('concurrent/skills', org.id)
-      .run()
+    const concurrent = await harness.request(
+      orgSettingsPaths.settings(org.id),
+      cookie,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({
+          skillsRepository: 'concurrent/skills',
+          trustedSkillsRepository: 'concurrent/skills',
+        }),
+      },
+    )
+    expect(concurrent.status).toBe(200)
     return update(db, input)
   })
   const response = await harness.request(
@@ -90,6 +98,72 @@ it('preserves a concurrent skills repository change when another settings save r
     settings: {
       startupScript: 'echo start',
       skillsRepository: 'concurrent/skills',
+      trustedSkillsRepository: 'concurrent/skills',
+    },
+  })
+  expect(writes).toHaveBeenCalledTimes(3)
+})
+
+it('clears a named grant when a concurrent repository replacement makes its save retry', async () => {
+  const cookie = await harness.login()
+  const org = await harness.createOrg(cookie)
+  const path = orgSettingsPaths.settings(org.id)
+  const save = (body: unknown) =>
+    harness.request(path, cookie, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    })
+  expect((await save({ skillsRepository: 'owner/skills' })).status).toBe(200)
+  const update = settingsData.updateShellSettings
+  const writes = vi.spyOn(settingsData, 'updateShellSettings')
+  writes.mockImplementationOnce(async (db, input) => {
+    expect((await save({ skillsRepository: 'concurrent/skills' })).status).toBe(
+      200,
+    )
+    return update(db, input)
+  })
+  const response = await save({ trustedSkillsRepository: 'owner/skills' })
+  expect(response.status).toBe(200)
+  expect(writes).toHaveBeenCalledTimes(3)
+  expect(await response.json()).toMatchObject({
+    settings: {
+      skillsRepository: 'concurrent/skills',
+      trustedSkillsRepository: '',
+    },
+  })
+})
+
+it('preserves a concurrent trust revocation when a script save retries', async () => {
+  const cookie = await harness.login()
+  const org = await harness.createOrg(cookie)
+  const path = orgSettingsPaths.settings(org.id)
+  const save = (body: unknown) =>
+    harness.request(path, cookie, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    })
+  expect(
+    (
+      await save({
+        skillsRepository: 'owner/skills',
+        trustedSkillsRepository: 'owner/skills',
+      })
+    ).status,
+  ).toBe(200)
+  const update = settingsData.updateShellSettings
+  const writes = vi.spyOn(settingsData, 'updateShellSettings')
+  writes.mockImplementationOnce(async (db, input) => {
+    expect((await save({ trustedSkillsRepository: '' })).status).toBe(200)
+    return update(db, input)
+  })
+  const response = await save({ startupScript: 'echo after revocation' })
+  expect(response.status).toBe(200)
+  expect(writes).toHaveBeenCalledTimes(3)
+  expect(await response.json()).toMatchObject({
+    settings: {
+      startupScript: 'echo after revocation',
+      skillsRepository: 'owner/skills',
+      trustedSkillsRepository: '',
     },
   })
 })

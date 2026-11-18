@@ -1,5 +1,6 @@
 import { Hammer } from 'lucide-react'
 import { changedScriptNotice } from '../app/first-build'
+import { savedSkillsTrust } from '../app/skills-trust'
 import type { Org } from '../shared/api'
 import type {
   BuildLogEvent,
@@ -81,9 +82,10 @@ export function MemberComputerIntro(props: {
  * The Cloud computer tab of a member who is not an admin, from data that
  * the caller gives: the repository notice, the builds with the log of the
  * newest build, both scripts as text, the names of the env vars, and the
- * skills repository with the skills that its lookup found. It has no Build
- * computer, no Save script, no Add variable, and no Save repository,
- * because only admins change the cloud computer. The notice of the install
+ * skills repository with its saved trust choice and the skills that its
+ * lookup found. It has no Build computer, no Save script, no Add variable,
+ * no trust switch, and no Save repository, because only admins change the
+ * cloud computer. The notice of the install
  * script shows only for a change of the script. It holds no state and
  * loads nothing, so each new value of its props shows at once, such as a
  * new log event. Mount it in the page column of the org settings.
@@ -133,6 +135,7 @@ export function MemberComputerView(props: MemberComputerViewProps) {
         onRetry={props.onRetrySkills}
         repository={settings.skillsRepository ?? ''}
         suspended={props.suspended === true}
+        trusted={savedSkillsTrust(settings)}
       />
     </ViewportScope>
   )

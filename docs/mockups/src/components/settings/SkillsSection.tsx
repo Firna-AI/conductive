@@ -6,7 +6,7 @@ import { InlineText } from '../common/InlineText'
 import { LoadFailure } from '../common/LoadFailure'
 import { Notice } from '../common/Notice'
 import { useControlSizes } from '../common/touch'
-import { DetailList } from './DetailList'
+import { type Detail, DetailList } from './DetailList'
 import type { ReadOnlyCause } from './OrgSections'
 import { Section, SectionText } from './Section'
 import { SkillList } from './SkillList'
@@ -17,6 +17,12 @@ import {
   skillsNoticeText,
   type SkillsViewer,
 } from './skillsCopy'
+import {
+  SavedTrustHint,
+  type SkillsTrust,
+  trustDetail,
+  TrustSwitch,
+} from './SkillsTrust'
 
 /**
  * The field of an admin. It takes owner/name or a link from GitHub, and
@@ -108,29 +114,52 @@ function LookupResult(props: {
 }
 
 /**
+ * The saved repository and its trust choice as read-only rows, then what
+ * the choice does. Text that names no repository has no choice.
+ */
+function SavedSkills(props: { repository: string; trust?: SkillsTrust }) {
+  const { trust } = props
+  const rows: Detail[] = [{ term: copy.label, value: props.repository }]
+  if (trust) rows.push(trustDetail(trust.saved))
+  return (
+    <>
+      <DetailList rows={rows} />
+      {trust ? <SavedTrustHint trusted={trust.saved} /> : null}
+    </>
+  )
+}
+
+/**
  * The public GitHub repository whose skills the agents of every workspace
- * of the org use. Only an admin changes it, for the reason of decision 57:
- * it changes the work of every agent of the org. `repository` is the
+ * of the org use. Only an admin changes it, because it changes the work of
+ * every agent of the org. `repository` is the
  * saved owner/name, or none for an org without one, such as a new org.
  * `lookup` is what the lookup of the saved repository found on GitHub, and
  * the section lists those skills under the repository. `draft` is the
  * text of the field when an admin changed it and has not saved, such as a
- * pasted link. Save repository waits for a change. `readOnly` shows the
- * saved repository as text, without the field and Save, for a member who
- * is not an admin and in a suspended org.
+ * pasted link.
+ *
+ * `trust` is the trust choice of the repository, while the field names
+ * one: a switch under the field, off for each new repository. The field
+ * and the switch form one draft, and Save repository waits for a change
+ * of either. `readOnly` shows the saved repository and its choice
+ * as text, without the field, the switch, and Save, for a member who is
+ * not an admin and in a suspended org.
  */
 export function SkillsSection(props: {
   repository?: string
   lookup?: SkillsLookup
   draft?: string
+  trust?: SkillsTrust
   readOnly?: ReadOnlyCause
 }) {
   const saved = props.repository ?? ''
+  const { trust } = props
   if (props.readOnly) {
     return (
       <Section description={copy.description} title={copy.title}>
         {saved ? (
-          <DetailList rows={[{ term: copy.label, value: saved }]} />
+          <SavedSkills repository={saved} trust={trust} />
         ) : (
           <SectionText muted>{copy.empty[props.readOnly]}</SectionText>
         )}
@@ -143,15 +172,18 @@ export function SkillsSection(props: {
     )
   }
   const value = props.draft ?? saved
+  const trusted = trust ? (trust.draft ?? trust.saved) : false
+  const changed = value !== saved || (trust ? trusted !== trust.saved : false)
   return (
     <Section
-      actions={
-        <ActionButton disabled={value === saved}>{copy.save}</ActionButton>
-      }
+      actions={<ActionButton disabled={!changed}>{copy.save}</ActionButton>}
       description={copy.description}
       title={copy.title}
     >
       <RepositoryField value={value} />
+      {trust ? (
+        <TrustSwitch replaced={value !== saved} trusted={trusted} />
+      ) : null}
       <LookupResult lookup={props.lookup} repository={saved} viewer="admin" />
     </Section>
   )

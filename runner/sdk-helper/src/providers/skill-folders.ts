@@ -5,7 +5,7 @@ import { findSkillFolders } from '../../../../src/shared/skill-folders'
 import type { ProviderOptions } from './types'
 
 export async function orgSkillFolders(options: ProviderOptions) {
-  const directory = options.skillsDirectory
+  const directory = options.orgSkills?.directory
   if (!directory) return []
   const paths: string[] = []
   const walk = async (folder: string): Promise<void> => {

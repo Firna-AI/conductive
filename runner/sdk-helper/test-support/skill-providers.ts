@@ -16,7 +16,7 @@ export async function skillProviders(agent: Agent, refuseRoots = false) {
   const h = await providerFixture(agent)
   const copy = join(h.home, 'copies', 'first', 'org-skills')
   h.options.cwd = join(h.home, 'workspace')
-  h.options.skillsDirectory = copy
+  h.options.orgSkills = { repository: 'Owner/Skills', directory: copy }
   h.options.conversationId = 'saved-conversation'
   await mkdir(h.options.cwd, { recursive: true })
   const queries: FakeClaudeQuery[] = []

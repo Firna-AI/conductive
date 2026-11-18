@@ -22,7 +22,7 @@ it('saves skills links as names, preserves other text, removes an empty setting,
   fixture = await createOuterRuntime(bundle)
   const path = orgSettingsPaths.settings(OUTER_ORG)
   expect(await (await fixture.request(path)).json()).toMatchObject({
-    settings: { skillsRepository: '' },
+    settings: { skillsRepository: '', trustedSkillsRepository: '' },
   })
   for (const link of [
     'https://github.com/owner/skills',
@@ -39,20 +39,43 @@ it('saves skills links as names, preserves other text, removes an empty setting,
     })
     expect(saved.status).toBe(200)
     expect(await saved.json()).toMatchObject({
-      settings: { skillsRepository: 'owner/skills' },
+      settings: {
+        skillsRepository: 'owner/skills',
+        trustedSkillsRepository: '',
+      },
     })
   }
+  const trusted = await fixture.request(path, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      skillsRepository: 'Owner/Skills',
+      trustedSkillsRepository: ' https://github.com/OWNER/SKILLS.git ',
+    }),
+  })
+  expect(trusted.status).toBe(200)
+  expect(await trusted.json()).toMatchObject({
+    settings: {
+      skillsRepository: 'Owner/Skills',
+      trustedSkillsRepository: 'owner/skills',
+    },
+  })
   const memberRead = await fixture.request(path, {
     headers: { Cookie: fixture.cookies.memberCookie },
   })
   expect(memberRead.status).toBe(200)
   expect(await memberRead.json()).toMatchObject({
-    settings: { skillsRepository: 'owner/skills' },
+    settings: {
+      skillsRepository: 'Owner/Skills',
+      trustedSkillsRepository: 'owner/skills',
+    },
   })
   const denied = await fixture.request(path, {
     method: 'PATCH',
     headers: { Cookie: fixture.cookies.memberCookie },
-    body: JSON.stringify({ skillsRepository: 'member/replacement' }),
+    body: JSON.stringify({
+      skillsRepository: 'member/replacement',
+      trustedSkillsRepository: 'member/replacement',
+    }),
   })
   expect(denied.status).toBe(403)
   expect(await denied.json()).toMatchObject({
@@ -60,11 +83,45 @@ it('saves skills links as names, preserves other text, removes an empty setting,
   })
   const unchanged = await fixture.request(path, {
     method: 'PATCH',
-    body: JSON.stringify({ startupScript: 'echo start' }),
+    body: JSON.stringify({
+      startupScript: 'echo start',
+      envVars: [{ operation: 'set', name: 'SITE', value: 'example' }],
+    }),
   })
   expect(await unchanged.json()).toMatchObject({
-    settings: { skillsRepository: 'owner/skills' },
+    settings: {
+      skillsRepository: 'Owner/Skills',
+      trustedSkillsRepository: 'owner/skills',
+    },
   })
+  for (const [body, repository, trust] of [
+    [{ skillsRepository: 'owner/skills' }, 'owner/skills', 'owner/skills'],
+    [{ skillsRepository: 'other/skills' }, 'other/skills', ''],
+    [{ skillsRepository: 'owner/skills' }, 'owner/skills', ''],
+    [{ trustedSkillsRepository: 'other/skills' }, 'owner/skills', ''],
+    [
+      {
+        skillsRepository: 'other/skills',
+        trustedSkillsRepository: 'other/skills',
+      },
+      'other/skills',
+      'other/skills',
+    ],
+    [{ skillsRepository: '' }, '', ''],
+    [{ skillsRepository: 'other/skills' }, 'other/skills', ''],
+  ] as const) {
+    const saved = await fixture.request(path, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    })
+    expect(saved.status).toBe(200)
+    expect(await saved.json()).toMatchObject({
+      settings: {
+        skillsRepository: repository,
+        trustedSkillsRepository: trust,
+      },
+    })
+  }
   for (const [value, expected] of [
     ['not a repository', 'not a repository'],
     ['owner /name', 'owner /name'],
@@ -78,14 +135,17 @@ it('saves skills links as names, preserves other text, removes an empty setting,
   ]) {
     const saved = await fixture.request(path, {
       method: 'PATCH',
-      body: JSON.stringify({ skillsRepository: value }),
+      body: JSON.stringify({
+        skillsRepository: value,
+        trustedSkillsRepository: value,
+      }),
     })
     expect(saved.status).toBe(200)
     expect(await saved.json()).toMatchObject({
-      settings: { skillsRepository: expected },
+      settings: { skillsRepository: expected, trustedSkillsRepository: '' },
     })
     expect(await (await fixture.request(path)).json()).toMatchObject({
-      settings: { skillsRepository: expected },
+      settings: { skillsRepository: expected, trustedSkillsRepository: '' },
     })
   }
   expect(
@@ -95,5 +155,34 @@ it('saves skills links as names, preserves other text, removes an empty setting,
       .bind(OUTER_ORG)
       .first('skills_repository'),
   ).toBe('')
+  await fixture.env.DB.prepare('UPDATE orgs SET suspended_at = 1 WHERE id = ?')
+    .bind(OUTER_ORG)
+    .run()
+  const suspended = await fixture.request(path, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      skillsRepository: 'suspended/skills',
+      trustedSkillsRepository: 'suspended/skills',
+    }),
+  })
+  expect(suspended.status).toBe(403)
+  expect(await suspended.json()).toMatchObject({
+    error: { code: 'org_suspended' },
+  })
+  expect(await (await fixture.request(path)).json()).toMatchObject({
+    settings: { skillsRepository: '', trustedSkillsRepository: '' },
+  })
+  expect(
+    await fixture.env.DB.prepare(
+      'SELECT revision FROM settings WHERE org_id = ?',
+    )
+      .bind(OUTER_ORG)
+      .first('revision'),
+  ).toBe(1)
+  expect(
+    await fixture.env.DB.prepare(
+      'SELECT COUNT(*) AS count FROM image_builds',
+    ).first('count'),
+  ).toBe(1)
   expect(fixture.github.requests).toEqual([])
 })

@@ -74,6 +74,11 @@ it.each(['claude', 'codex'] as const)(
   'gives %s safe skill metadata and inert inline commands with its support files',
   async (agent) => {
     const h = await skillProviders(agent)
+    h.options.orgSkills = {
+      repository: 'Owner/Skills',
+      trustedRepository: agent === 'codex' ? 'owner/skills' : null,
+      directory: h.copy,
+    }
     await h.write('skills/safe-skill/SKILL.md', unsafe)
     await h.write('skills/safe-skill/nested/SKILL.md', unsafe)
     await h.write('skills/safe-skill/support.txt', 'Support stays available.')

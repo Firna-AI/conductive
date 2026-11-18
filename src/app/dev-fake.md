@@ -46,7 +46,12 @@ option overrides this default, including queued chats that show no spinner.
   `not-found` saves acme/agent-skils. `private`, `without-skills`,
   `incomplete`, and `lookup-failed` give that answer for each saved
   repository, and `expired` refuses the lookup as an expired GitHub
-  sign-in.
+  sign-in. Each repository starts untrusted. `?skillsTrust=trusted` makes
+  Acme trust its saved repository, so a member and a suspended org see
+  Trusted. `?skillsSave=fail` fails the first save of the page that names
+  the skills repository or its trust, and that save changes nothing. The
+  next save works, so Save repository can show a failed save and its
+  retry.
 - Acme also holds Postcode lookup for the shipping and billing forms,
   `postcode-lookup`, which a member archived 3 weeks before the clock of
   the fake starts. Its 14 days ended, so the workspace list and the

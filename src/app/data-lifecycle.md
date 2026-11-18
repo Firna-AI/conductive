@@ -223,7 +223,7 @@ of the data that the screens read and write.
 - Each opening of the Cloud computer tab looks up the skills repository
   on GitHub, through the Worker, beside the read of the settings. Nothing
   keeps the list after the tab closes, as
-  [The list of skills](../../docs/protocol/org-skills.md#the-list-of-skills)
+  [The list of skills](../../docs/protocol/org-skills-list.md#the-list-of-skills)
   says. A save of the repository that succeeds removes the list of the
   old repository at once, and looks it up again while the tab shows. Only
   the answer of the newest lookup shows, so the lookup after a save wins

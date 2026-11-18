@@ -17,6 +17,7 @@ The [agent runner](README.md) reads these variables when the service starts.
 | `CONDUCTIVE_DEFAULT_BRANCH`          | Yes      | The workspace base branch, as a name that Git resolves in that folder.       |
 | `CONDUCTIVE_WORKSPACE_BRANCH`        | No       | The workspace branch that the app tracks, from the Worker's record.   |
 | `CONDUCTIVE_SKILLS_REPOSITORY`       | No       | One public GitHub skills repository as `owner/name`, or empty.         |
+| `CONDUCTIVE_TRUSTED_SKILLS_REPOSITORY` | No     | The skills repository that the org trusts, as `owner/name`, or empty.  |
 | `CONDUCTIVE_HOME`                    | No       | The home folder of the agents. The default is the home of the user.   |
 | `CONDUCTIVE_STATE_PATH`              | No       | The state file. The default is `.conductive/runner-state.json` there. |
 
@@ -80,8 +81,20 @@ The [agent runner](README.md) reads these variables when the service starts.
   names warn and load no org skills. The runner never uses a GitHub token
   for this copy. A repository with no commits gives no skills. Its empty
   state warns once until the state changes.
-  [Org skills](../docs/protocol/org-skills.md#the-copy) gives its background
-  timing and failure behavior.
+  [The copy](../docs/protocol/org-skills-copy.md#the-copy) gives its
+  background timing and failure behavior.
+- `CONDUCTIVE_TRUSTED_SKILLS_REPOSITORY` names the skills repository that
+  an admin trusts. The Worker sets it at each start, including a resume.
+  The runner trusts the repository of `CONDUCTIVE_SKILLS_REPOSITORY` only
+  when this value is a valid name that matches it without regard to letter
+  case. A missing, invalid, or different value means untrusted. A valid
+  `CONDUCTIVE_SKILLS_REPOSITORY` sets the trust policy of each agent start,
+  also before its first copy ends. An empty or invalid repository sets no
+  policy. [Repository trust](../docs/protocol/org-skills-trust.md) states
+  the policy. A changed value reaches the runner only at the next start or
+  resume of the cloud computer, because the Worker supplies these
+  variables only then. Restart and a release update keep the values of
+  that start.
 - After a failed or dropped connection, the runner connects again in 1 second.
 
 When a required variable is missing or the state file cannot be read,

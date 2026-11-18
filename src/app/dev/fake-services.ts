@@ -66,7 +66,7 @@ export function createFakeServices(search: string): AppServices {
   const offset = FAKE_TIME - Date.now()
   const now = () => Date.now() + offset
   const newId = () => crypto.randomUUID()
-  seedSkills(state, options.skills)
+  seedSkills(state, options.skills, options.skillsTrusted)
   const backend = createBackend(state, server.events, now, newId)
   seedSecretRequests(backend, server.events, options.secrets)
   const signedOut: Route[] = options.signedOut

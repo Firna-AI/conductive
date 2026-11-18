@@ -180,7 +180,7 @@ A skill's subfolders do not load as separate skills.
 Agents skip the `.git/` folder.
 
 The setting loads skills only.
-It loads no hooks, MCP servers, agents, rules files such as `AGENTS.md`, commands, or settings from that repository.
+It loads no hooks, MCP servers, agents, rules files such as `AGENTS.md`, separate custom slash commands, or settings from that repository.
 Keep project instruction files in your workspace's own repository.
 A skill in the workspace's own repository takes priority over a shared skill with the same name.
 
@@ -220,6 +220,76 @@ If the list does not load, use **Try again**.
 A failed lookup keeps the saved repository.
 An expired GitHub sign-in shows a sign-in error instead.
 Sign in again to load the list.
+
+## Trust a skills repository
+
+**Trust this skills repository** lets Claude run commands automatically while it reads that repository's skills.
+These commands have the workspace's access to files, available credentials, and tools.
+Trust covers future updates to the repository too.
+Review the repository and who can change it before you trust it.
+
+Each repository starts untrusted.
+Only an org admin can change the choice.
+Other members see the saved choice without being able to change it.
+Everyone sees a read-only choice in a suspended org.
+
+To trust a repository:
+
+1. Open the org's **Settings**.
+2. Select **Cloud computer**.
+3. Enter or check the repository under **Skills**.
+4. Turn on **Trust this skills repository**.
+5. Select **Save repository**.
+
+The switch appears when the field names a repository as `owner/repository` or a GitHub link.
+Changing or removing the repository clears trust.
+To trust a replacement, turn on its switch before saving.
+The repository and its trust choice save together.
+
+### Understand the scope
+
+With a valid saved repository name and trust off, Claude runs no automatic commands from any skill or custom slash command.
+This includes the workspace's own skills and custom slash commands.
+The restriction also applies when the shared repository is private, missing, has no skills, or cannot be copied.
+Agents can still choose to run commands through their ordinary shell tool, including commands that a skill suggests.
+
+The choice concerns Claude only.
+It does not change Codex's behavior.
+With no valid repository name saved, workspace skills keep their usual behavior.
+Trust permits automatic commands without forcing them or bypassing other restrictions.
+It still loads only skills, as [Prepare the skill folders](#prepare-the-skill-folders) explains.
+
+### Apply or revoke trust
+
+Each cloud computer takes the saved repository and trust choice at its next start or resume.
+Saving does not change an active turn.
+A running computer can keep its previous trust indefinitely.
+It still checks for repository updates every 5 minutes.
+
+To revoke trust:
+
+1. Turn off **Trust this skills repository** under **Skills**.
+2. Select **Save repository**.
+3. Let each running computer stop, then resume it.
+
+A computer stops after 30 minutes with no user activity and no running agent turn.
+Use **Stop** in each session to end any running turn before you wait for the computer to stop.
+After it stops, open the workspace, or select **Resume** if it is still open.
+To stop it at once, the workspace owner or an org admin can use **Archive**.
+Then use **Restore** within 14 days and select **Resume**.
+Archive ends its running agent work and programs.
+
+**Restart** restarts software inside a running computer.
+It keeps that computer's current repository and trust settings.
+Use a stop and resume to apply the saved choice.
+
+This choice needs updated cloud computer software.
+Automatic software updates bring that support to existing workspaces.
+Software updates and saved settings apply separately.
+
+- [Understand software updates](/docs/cloud-computer#apply-setup-changes)
+- [Resume a stopped computer](/docs/workspaces#resume-a-stopped-computer)
+- [Archive and restore a workspace](/docs/workspaces#archive-a-workspace)
 
 ## Add secrets for agents
 

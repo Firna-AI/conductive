@@ -14,6 +14,7 @@ import { basename, dirname, join, relative, sep } from 'node:path'
 
 import type { Agent } from '../generated/Agent'
 import type { ProviderLifetime } from './lifetime'
+import { isTrustedOrgSkills } from './org-skills'
 import { safeSkillContent, safeSkillSidecar } from './skill-metadata'
 import { selectAgentSkills } from './skills'
 import type { ProviderOptions } from './types'
@@ -33,7 +34,12 @@ async function replaceMetadata(
   await writeFile(path, safe)
 }
 
-async function exportSkills(source: string, destination: string, agent: Agent) {
+async function exportSkills(
+  source: string,
+  destination: string,
+  agent: Agent,
+  trustedClaudeBody: boolean,
+) {
   await cp(source, destination, {
     recursive: true,
     verbatimSymlinks: true,
@@ -63,7 +69,7 @@ async function exportSkills(source: string, destination: string, agent: Agent) {
     const entries = await readdir(directory, { withFileTypes: true })
     if (entries.some((entry) => entry.name === 'SKILL.md')) {
       await replaceMetadata(join(directory, 'SKILL.md'), (content) =>
-        safeSkillContent(content, directory, agent),
+        safeSkillContent(content, directory, agent, trustedClaudeBody),
       )
       await replaceMetadata(
         join(directory, 'agents', 'openai.yaml'),
@@ -81,7 +87,7 @@ export async function prepareSkillView(
   agent: Agent,
   lifetime: ProviderLifetime,
 ) {
-  const source = options.skillsDirectory
+  const source = options.orgSkills?.directory
   if (!source) return null
   const preparation = (async () => {
     const selected = await selectAgentSkills(options, agent)
@@ -91,18 +97,25 @@ export async function prepareSkillView(
     const directory = await mkdtemp(join(parent, 'turn-'))
     try {
       const repository = join(directory, 'repository', basename(source))
-      await exportSkills(source, repository, agent)
+      await exportSkills(
+        source,
+        repository,
+        agent,
+        isTrustedOrgSkills(options.orgSkills),
+      )
       const skills = selected.map((skill) => ({
         ...skill,
         path: join(repository, relative(source, skill.path)),
       }))
-      if (agent === 'claude') {
-        const links = join(directory, '.claude', 'skills')
+      const claudeDirectory =
+        agent === 'claude' ? join(directory, 'discovery') : null
+      if (claudeDirectory) {
+        const links = join(claudeDirectory, '.claude', 'skills')
         await mkdir(links, { recursive: true })
         for (const skill of skills)
           await symlink(skill.path, join(links, skill.alias), 'dir')
       }
-      return { directory, skills }
+      return { directory, skills, claudeDirectory }
     } catch (error) {
       await rm(directory, { recursive: true, force: true })
       throw error

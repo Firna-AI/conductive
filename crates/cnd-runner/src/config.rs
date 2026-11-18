@@ -55,6 +55,8 @@ pub struct Configuration {
     pub workspace_branch: Option<String>,
     /// Public GitHub skills repository, validated before use in paths or URLs.
     pub skills_repository: Option<String>,
+    /// Matching trusted source identity, compared without letter case.
+    pub trusted_skills_repository: Option<String>,
     /// Validated tree facts, omitted for older or malformed service settings.
     pub workspace_context: Option<WorkspaceContext>,
     /// Image repository variables in name order.
@@ -84,6 +86,29 @@ impl Configuration {
                 "The workspace tree context is unavailable. Agent instructions will omit it."
             );
         }
+        let skills_repository = env
+            .get("CONDUCTIVE_SKILLS_REPOSITORY")
+            .filter(|value| !value.is_empty())
+            .filter(|value| {
+                if is_skills_repository(value) {
+                    true
+                } else {
+                    tracing::warn!(
+                        "The skills repository name is invalid. No org skills will load."
+                    );
+                    false
+                }
+            })
+            .cloned();
+        let trusted_skills_repository = env
+            .get("CONDUCTIVE_TRUSTED_SKILLS_REPOSITORY")
+            .filter(|value| is_skills_repository(value))
+            .filter(|value| {
+                skills_repository
+                    .as_ref()
+                    .is_some_and(|source| source.eq_ignore_ascii_case(value))
+            })
+            .map(|value| value.to_ascii_lowercase());
         Ok(Self {
             workspace_id,
             request: ConnectionRequest {
@@ -98,20 +123,8 @@ impl Configuration {
             home,
             default_branch: required(env, "CONDUCTIVE_DEFAULT_BRANCH")?,
             workspace_branch,
-            skills_repository: env
-                .get("CONDUCTIVE_SKILLS_REPOSITORY")
-                .filter(|value| !value.is_empty())
-                .filter(|value| {
-                    if is_skills_repository(value) {
-                        true
-                    } else {
-                        tracing::warn!(
-                            "The skills repository name is invalid. No org skills will load."
-                        );
-                        false
-                    }
-                })
-                .cloned(),
+            skills_repository,
+            trusted_skills_repository,
             workspace_context,
             repository_directories: env
                 .iter()

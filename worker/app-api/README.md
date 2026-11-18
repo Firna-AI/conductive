@@ -196,9 +196,17 @@ View writes cannot change this branch.
   warning through `warnWorker`. The account and Get started still load. The
   installation list of the account shows its own error.
 - A repository without a GitHub installation is not in the list.
-- Settings reads and saves return `skillsRepository`. Admins save it through
+- Settings reads and saves return `skillsRepository` and
+  `trustedSkillsRepository`. Admins save them through
   `PATCH /api/orgs/:orgId/settings`. A GitHub link becomes `owner/name`.
   Empty text removes it. Other text stays as typed.
+  `savedSkillsRepositorySettings` resolves the pair on every retry.
+  A grant must match the resulting valid source without letter case.
+  A replacement without a matching grant clears trust. Unrelated saves
+  keep the pair. The SQL compare-and-swap checks both names and the current
+  active-admin guard. A trust change starts no image build.
+  [Repository trust](../../docs/protocol/org-skills-trust.md#save) states
+  the save contract.
 - `GET /api/orgs/:orgId/settings/skills` reads the saved repository for any
   org member. Call it when the Skills section loads and after Save.
   It returns `SkillsRepositoryLookupResponse` from the shared settings types.
@@ -366,6 +374,8 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 - [`feature-shell.ts`](feature-shell.ts): shell write dispatch after the
   request gate. [`feature-settings.ts`](feature-settings.ts) encrypts env
   values and their secret marks. Replies return names and marks only.
+  [`feature-settings-data.ts`](feature-settings-data.ts) reads and saves
+  scripts, the skills source and trust, and encrypted env values.
   [`feature-sections.ts`](feature-sections.ts)
   and [`feature-workspaces.ts`](feature-workspaces.ts) save list changes and
   publish workspace metadata through the workspace object.

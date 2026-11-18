@@ -160,6 +160,10 @@ type DevInviteCode = (typeof INVITE_CODES)[number]
  *   saved acme/agent-skils is not found. `private`, `without-skills`,
  *   `incomplete`, and `lookup-failed`: the lookup of each saved repository
  *   answers so. `expired`: the GitHub sign-in of the user expired.
+ * - `skillsTrust=trusted`: Acme trusts its saved skills repository. Without
+ *   it, the repository starts untrusted, as each repository does.
+ * - `skillsSave=fail`: the first save of the page that names the skills
+ *   repository or its trust fails, so the next one saves.
  */
 export interface DevOptions {
   /** The options of the recorded server. */
@@ -186,6 +190,8 @@ export interface DevOptions {
   /** What each file upload does. */
   upload: DevUploadMode
   shareSaveFails: boolean
+  /** The first save of the skills repository fails. */
+  skillsSaveFails: boolean
   feedback: (typeof FEEDBACK)[number]
   /** The run list of Review pull requests in place of its newest runs. */
   reviewRuns: (typeof REVIEW_RUNS)[number] | null
@@ -199,6 +205,8 @@ export interface DevOptions {
   inviteCode: DevInviteCode
   /** The state of the skills repository of Acme, or `null` for its list. */
   skills: DevSkills | null
+  /** Acme trusts its saved skills repository. */
+  skillsTrusted: boolean
   /** The state of the secret requests of `checkout-autocomplete`, or null. */
   secrets: SecretScenario | null
 }
@@ -247,6 +255,7 @@ export function readDevOptions(search: string): DevOptions {
     stopAfterMs: stopAfter(params.get('stop')),
     upload: pick(params, 'upload', UPLOADS) ?? 'ready',
     shareSaveFails: params.get('shareSave') === 'fail',
+    skillsSaveFails: params.get('skillsSave') === 'fail',
     feedback: pick(params, 'feedback', FEEDBACK) ?? 'ready',
     reviewRuns: pick(params, 'runs', REVIEW_RUNS) ?? null,
     runWorkspace: pick(params, 'run', RUN_WORKSPACES) ?? null,
@@ -256,6 +265,7 @@ export function readDevOptions(search: string): DevOptions {
     waitlistOff: params.get('waitlist') === 'off',
     inviteCode: pick(params, 'inviteCode', INVITE_CODES) ?? 'left',
     skills: pick(params, 'skills', SKILLS) ?? null,
+    skillsTrusted: params.get('skillsTrust') === 'trusted',
     secrets: pick(params, 'secrets', SECRET_SCENARIOS) ?? null,
   }
 }

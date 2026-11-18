@@ -55,9 +55,29 @@ The frontmatter allowlist keeps `name`, `description`, `argument-hint`,
 `version`, `license`, `compatibility`, and `metadata.short-description`.
 These fields describe a skill or control its invocation. All execution,
 tool-grant, model-setting, and unknown fields are omitted. Shell markers
-in the body become ordinary inline or fenced code. This includes markers
+in the body become ordinary inline or fenced code, except in Claude's view
+of a trusted repository. This includes markers
 before argument placeholders, which Claude expands after export. Scripts
 and other support files remain available for an agent to choose to read or run.
+
+The optional `HelperOptions.orgSkills` value of each start sets the trust policy.
+Its `OrgSkills` fields are `repository`, `trustedRepository`, and `directory`.
+The trusted name and directory can be absent.
+Without the value, neither adapter loads org skills, and Claude keeps the
+settings of the workspace. When its trusted repository does not match its
+configured repository, the repository is untrusted. The Claude adapter
+then sets `disableSkillShellExecution: true` in the SDK flag settings.
+Those settings also carry effort and fast mode. Later model, effort, and
+fast mode changes keep the restriction, and project settings cannot turn
+it off. The restriction applies also before the first copy ends and when
+no skill folder is selected. When both names match without regard to
+letter case, the repository is trusted. Claude's view then keeps the
+original inline shell syntax of each body, and the adapter omits the
+setting. Omitting it keeps each restriction that Claude settings or a
+managed policy supply. The Codex view filters shell markers for either
+policy. Claude's additional directory holds only `.claude/skills` links
+to the selected skill folders, so trust loads no separate custom slash
+command, setting, hook, or agent of the repository.
 
 Codex also reads `agents/openai.yaml`. The view keeps only its descriptive
 `interface` fields (`display_name`, `short_description`, `icon_small`,
@@ -79,7 +99,9 @@ After shared folder selection, the first org skill in
 path order with a given agent-shown name wins. Unusable names and duplicate
 names produce warnings. Workspace skill files are unchanged.
 [Org skills](../../docs/protocol/org-skills.md#what-loads) gives the loading
-requirements.
+requirements, and
+[Repository trust](../../docs/protocol/org-skills-trust.md#what-claude-and-codex-get)
+gives the requirements of each trust policy.
 
 ## Development
 

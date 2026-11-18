@@ -20,6 +20,7 @@ The `conductive runner` command composes this crate. The installed service runs 
 - Prepare ignored context storage, including linked Git worktrees.
 - Run independent sessions through private Node SDK helper processes.
 - Copy the public org skills repository in the background and retain complete snapshots for agent starts.
+- Give each agent start the org skills trust policy from the configured and trusted repository names.
 - Filter credentials before saving chat output and preparing report labels.
 - Cancel pending turns, helper requests, and repository reads on Stop or shutdown.
 
@@ -95,6 +96,14 @@ and abandoned helper views, and prunes unreachable Git objects.
 The helper owns skill folder selection and the safe agent view.
 Failures warn and stop no start or turn. An unborn repository gives no
 skills and warns only when its state changes.
+Configuration reads the configured and trusted repository names once at
+service start. A missing, invalid, or different trusted name means
+untrusted. Each helper start gets the optional `HelperOptions.org_skills`
+value with both names and the leased folder, when one exists. Its `OrgSkills`
+fields are `repository`, `trusted_repository`, and `directory`.
+A valid configured name
+sends the value also before the first copy completes, so its trust policy
+applies at once. Without a valid configured name, the start has no value.
 
 File reports keep separate tree and changes histories. Filtering runs on each
 complete report before splitting. Multipart reports keep whole entries and
@@ -228,6 +237,7 @@ and connection drops. It does not run the Worker.
 
 - [Agent runner protocol](../../docs/protocol/agent-runner.md)
 - [Org skills](../../docs/protocol/org-skills.md)
+- [Org skills: repository trust](../../docs/protocol/org-skills-trust.md)
 - [Runner warnings](../../docs/protocol/runner-warnings.md)
 - [Agent instructions](../../docs/protocol/agent-instructions.md)
 - [Sub-workspaces](../../docs/protocol/sub-workspaces.md)

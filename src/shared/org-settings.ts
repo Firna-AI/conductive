@@ -56,6 +56,8 @@ export interface OrgSettings {
   startupScript: string
   /** Older replies may omit the skills repository. */
   skillsRepository?: string
+  /** An absent name means untrusted, also in older replies. */
+  trustedSkillsRepository?: string
   /** A stored value never goes back to the browser. */
   envVars: readonly { name: string; secret: boolean }[]
   updatedAt: Timestamp
@@ -67,6 +69,7 @@ export interface UpdateOrgSettingsRequest {
   installScript?: string
   startupScript?: string
   skillsRepository?: string
+  trustedSkillsRepository?: string
   envVars?: readonly (
     | { operation: 'set'; name: string; value: string; secret?: boolean }
     | { operation: 'classify'; name: string; secret: boolean }

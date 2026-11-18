@@ -1,6 +1,8 @@
+import { isSkillsRepository } from '../../../src/shared/skill-folders'
 import type { HelperOptions } from './generated/HelperOptions'
 import type { HelperRequest } from './generated/HelperRequest'
 import type { HelperCredential } from './generated/HelperCredential'
+import type { OrgSkills } from './generated/OrgSkills'
 import type { ProviderInput } from './generated/ProviderInput'
 import type { RunnerBranches } from './generated/RunnerBranches'
 import type { RunnerRepository } from './generated/RunnerRepository'
@@ -43,15 +45,31 @@ function credential(value: unknown): HelperCredential {
   throw new Error('The helper credential is invalid.')
 }
 
+function orgSkills(value: unknown): OrgSkills | null {
+  if (value === null) return null
+  const input = object(value)
+  const repository = string(input.repository)
+  if (!isSkillsRepository(repository)) return null
+  return {
+    repository,
+    ...(input.trustedRepository === undefined
+      ? {}
+      : { trustedRepository: nullable(input.trustedRepository) }),
+    ...(input.directory === undefined
+      ? {}
+      : { directory: nullable(input.directory) }),
+  }
+}
+
 function options(value: unknown): HelperOptions {
   const input = object(value)
   const tools = object(input.tools)
   return {
     cwd: string(input.cwd),
     home: string(input.home),
-    ...(input.skillsDirectory === undefined
+    ...(input.orgSkills === undefined
       ? {}
-      : { skillsDirectory: nullable(input.skillsDirectory) }),
+      : { orgSkills: orgSkills(input.orgSkills) }),
     sessionId: string(input.sessionId),
     endpoint: string(input.endpoint),
     credential: credential(input.credential),

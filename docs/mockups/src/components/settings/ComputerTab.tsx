@@ -9,6 +9,7 @@ import { EnvVarsSection, type EnvVarForm } from './EnvVarsSection'
 import type { ReadOnlyCause } from './OrgSections'
 import type { SkillsLookup } from './skillsCopy'
 import { SkillsSection } from './SkillsSection'
+import type { SkillsTrust } from './SkillsTrust'
 import { TabIntro } from './TabIntro'
 
 /**
@@ -73,9 +74,10 @@ function changedNotice(props: {
  * skills repository. `readOnly` shows them without edit fields and
  * actions, for a member who is not an admin (decision 57), and for
  * everyone in a suspended org. `envForm` opens a form of the env vars.
- * `skillsDraft` is the unsaved text of the Skills field. `repositoryNotice`
- * shows the repository changes that the computer does not hold yet, under
- * the intro.
+ * `skillsDraft` is the unsaved text of the Skills field, and `skillsTrust`
+ * the trust choice of the repository that the section names.
+ * `repositoryNotice` shows the repository changes that the computer does
+ * not hold yet, under the intro.
  */
 export function ComputerTab(props: {
   org: string
@@ -87,6 +89,8 @@ export function ComputerTab(props: {
   envForm?: EnvVarForm
   /** The text of the Skills field, when an admin changed it and has not saved. */
   skillsDraft?: string
+  /** The trust choice, while the Skills section names a repository. */
+  skillsTrust?: SkillsTrust
   /** The repository notice, while a repository change waits for a build. */
   repositoryNotice?: ReactNode
 }) {
@@ -142,6 +146,7 @@ export function ComputerTab(props: {
         lookup={computer.skillsLookup}
         readOnly={props.readOnly}
         repository={computer.skillsRepository}
+        trust={props.skillsTrust}
       />
     </>
   )

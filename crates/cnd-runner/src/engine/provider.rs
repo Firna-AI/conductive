@@ -6,7 +6,7 @@ use cnd_runner_interface::agents::Agent;
 use cnd_runner_interface::runner_commands::RunnerTurn;
 use cnd_runner_interface::sdk_helper::{HelperModelResult, HelperOutput};
 use cnd_runner_interface::sdk_helper_options::{
-    HelperCredential, HelperOptions, ProviderInput, WorkspaceToolContext,
+    HelperCredential, HelperOptions, OrgSkills, ProviderInput, WorkspaceToolContext,
 };
 use url::Url;
 
@@ -67,10 +67,23 @@ impl Session {
         } = &turn.first;
         turn.skills_lease = self.skills.current();
         let options = HelperOptions {
-            skills_directory: turn
-                .skills_lease
+            org_skills: self
+                .dependencies
+                .configuration
+                .skills_repository
                 .as_ref()
-                .map(|lease| lease.path().to_string_lossy().into_owned()),
+                .map(|repository| OrgSkills {
+                    repository: repository.clone(),
+                    trusted_repository: self
+                        .dependencies
+                        .configuration
+                        .trusted_skills_repository
+                        .clone(),
+                    directory: turn
+                        .skills_lease
+                        .as_ref()
+                        .map(|lease| lease.path().to_string_lossy().into_owned()),
+                }),
             cwd: self
                 .dependencies
                 .configuration

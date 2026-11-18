@@ -14,7 +14,7 @@
   - **Discovery alias:** The name of a link that the helper creates under `.claude/skills`.
   - **Shown name:** The name in the metadata header of `SKILL.md`.
   - **Root skill:** A repository whose root `SKILL.md` makes the repository itself one skill.
-- **Background:** Conductive gives selected org skills to both agents, as `docs/protocol/org-skills.md:142` and `:182` require. The helper prepares a temporary view for Claude. It keeps each safe source folder name as the discovery alias. A root skill uses the repository name.
+- **Background:** Conductive gives selected org skills to both agents, as What loads and Skills in a session in `docs/protocol/org-skills.md` require. The helper prepares a temporary view for Claude. It keeps each safe source folder name as the discovery alias. A root skill uses the repository name.
 - **Problem:** `skills/synced/SKILL.md` passes selection with a valid shown name such as `sync-data`. The helper keeps `synced` as its alias. The pinned Claude reader skips that directory before reading its instructions. It also skips `SYNCED` and `synced.`. A root-skill repository named `synced` has the same defect.
 - **Impact if no action:** The app lists the skill, and Codex can load it, but Claude cannot discover it. Renaming the source folder or the root-skill repository is a workaround.
 - **Evidence:** Static inspection found the following behavior in SDK `0.3.318`, which bundles Claude `2.1.318`.
@@ -49,7 +49,7 @@
 - **Related:**
   - `plans/follow-ups/skill-duplicate-order.md` needs a unique alias for each selected Claude skill. Two safe folders named `review` would otherwise create the same link, and the failed preparation would drop every org skill. Apply C before that item's selection change, or in the same change.
   - `plans/follow-ups/claude-reserved-skill-identities.md` records refused shown names and workspace precedence. C alone does not fix them.
-  - `plans/follow-ups/claude-skill-inline-shell-setting.md` concerns all workspace skills. Its open decision does not block this alias change.
+  - `docs/protocol/org-skills-trust.md` gives the repository trust policy, including its effect on workspace skills. This alias change keeps that policy.
 - **Recommendation:** C. It gives Claude readable, stable names and gives duplicate folder names distinct aliases. It supersedes the first review's recommendation B. Keep D optional because it cannot verify non-user-invocable skills.
 - **Action:** fix after merge, apply C, because the input is rare and the fix does not get harder later.
 

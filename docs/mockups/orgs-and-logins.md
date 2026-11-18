@@ -23,8 +23,9 @@ plan limits.
   waitlist screen, where Accept invitation also gives app access, as
   `app/sign-in/waitlist/invited` shows.
 - Only an admin renames the org, and changes the repositories, the scripts,
-  the env vars, the skills repository, and the org logins, from decisions 54 and 57 and
-  decision 2 of the org skills repository plan. A member sees the General,
+  the env vars, the skills repository and its trust choice, and the org
+  logins, from decisions 54 and 57, decision 2 of the org skills
+  repository plan, and decision 403 of the skills trust plan. A member sees the General,
   Repositories, Cloud computer, and Agents tabs read-only: the values, without edit
   fields, Save, Build computer, or Connect. The General tab of a member is the child
   page `app/org-settings/member`, because `app/org-settings` has child

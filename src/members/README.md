@@ -166,6 +166,21 @@ again, which calls `onRetrySkills`. The shell gives the lookup of
 `ComputerModel`. `MemberComputerTab` loads the lookup on its own, so a
 failed lookup never keeps the tab from showing.
 
+When the saved text names a repository as owner/name, a Trust row
+follows it, with Trusted or Not trusted. Under the rows comes the
+hint of that value: what the choice does, that a running cloud computer
+keeps its trust until its next start or resume, and How trust works,
+which opens the Cloud computer guide in a new tab. The section has no
+switch, as
+[Who changes the choice](../../docs/protocol/org-skills-trust.md#who-changes-the-choice)
+says. The row reads Trusted only while `settings.trustedSkillsRepository`
+names the saved repository, without regard to letter case. A reply
+without it, such as one of an older Worker, reads Not trusted. Saved text
+that names no repository has no Trust row and no hint. The words come
+from `skillsTrustCopy.ts` of the mockups, and the rule from
+`savedSkillsTrust` in `../app/skills-trust.ts`, whose saved choice the
+tab of an admin also uses.
+
 The repository notice shows under the intro of the view, and above the
 list of `MemberRepositoriesTab` when its caller gives `builds`. It names
 the repositories that the org image lacks or still holds, from
@@ -276,10 +291,11 @@ callbacks and `FakeApiServer`. The other test files run in Node.
   The settings parser keeps only the names and the Secret marks of the env
   vars. `parseSkillsLookup` reads the lookup of the skills repository.
 - `ComputerSections.tsx`: the read-only sections of the Cloud computer tab:
-  the scripts, the env vars, and the Skills section with its list and
-  notices. It takes the words of the Skills section from `skillsCopy.ts`
-  of the mockups, and the choice of a notice from `shownSkills` in
-  `../app/skills-lookup.ts`, as the tab of an admin does.
+  the scripts, the env vars, and the Skills section with its Trust row,
+  its list, and its notices. It takes the words of the Skills section from
+  `skillsCopy.ts` and `skillsTrustCopy.ts` of the mockups, and the choice
+  of a notice from `shownSkills` in `../app/skills-lookup.ts`, as the tab
+  of an admin does.
 - `membersStore.ts`: the state of the Members tab and each change.
 - `actionOwners.ts`: the owner of each action, and `keepExistingOwners`,
   the owner rule that the store applies after each state change.

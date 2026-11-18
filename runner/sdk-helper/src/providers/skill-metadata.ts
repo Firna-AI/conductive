@@ -67,7 +67,12 @@ const DESCRIPTIVE_FIELDS = [
   'compatibility',
 ] as const
 
-export function safeSkillContent(content: string, path: string, agent: Agent) {
+export function safeSkillContent(
+  content: string,
+  path: string,
+  agent: Agent,
+  trustedClaudeBody = false,
+) {
   const { name, frontmatter, body } = skillMetadata(content, path, agent)
   const safe: Record<string, unknown> = {}
   if (name) safe.name = name
@@ -85,8 +90,11 @@ export function safeSkillContent(content: string, path: string, agent: Agent) {
     safe.metadata = { 'short-description': metadata['short-description'] }
   // Insert separators. Removing ! can turn an inert !!` into a live !`.
   // Argument placeholders can expand to backticks after this filter runs.
-  const inert = body.replace(/!(?=[`$])/gu, '! ').replaceAll('```!', '``` !')
-  return `---\n${stringify(safe)}---\n${inert}`
+  const exportedBody =
+    agent === 'claude' && trustedClaudeBody
+      ? body
+      : body.replace(/!(?=[`$])/gu, '! ').replaceAll('```!', '``` !')
+  return `---\n${stringify(safe)}---\n${exportedBody}`
 }
 
 const INTERFACE_FIELDS = [

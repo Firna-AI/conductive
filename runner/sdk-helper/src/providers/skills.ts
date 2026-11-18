@@ -64,7 +64,7 @@ export async function selectAgentSkills(
   const shown = new Map<string, string>()
   for (const skill of skills) {
     const value = await metadata(skill.path, agent)
-    const path = relative(options.skillsDirectory ?? '', skill.path)
+    const path = relative(options.orgSkills?.directory ?? '', skill.path)
     if (!value.name) {
       options.warn(
         `The org skill ${path} has no usable ${agent === 'claude' ? 'Claude' : 'Codex'} name. It will not load.`,

@@ -16,7 +16,6 @@ import {
   RepositoryList,
 } from '../components/settings/RepositoryList'
 import { Section } from '../components/settings/Section'
-import { skillsRepositoryLink } from '../fixtures/computer'
 import {
   memberViewer,
   you,
@@ -28,6 +27,7 @@ import { orgAgentsFor } from './orgAgentsState'
 import type { OrgSettingsState } from './OrgSettingsScreen'
 import { settingsOrg } from './settingsOrgs'
 import { settingsRepositoryNotice } from './settingsRepositoryNotice'
+import { skillsDraft, skillsTrust } from './settingsSkills'
 
 /** The person signed in: Cal, an admin, or Priya, a member who is not. */
 export function settingsViewer(state: OrgSettingsState): PersonKey {
@@ -136,9 +136,8 @@ export function TabBody(props: { state: OrgSettingsState }) {
           readOnly={readOnly}
           repositoryNotice={settingsRepositoryNotice(state, settings)}
           script={state.script}
-          skillsDraft={
-            state.skills === 'pasted-link' ? skillsRepositoryLink : undefined
-          }
+          skillsDraft={skillsDraft(state)}
+          skillsTrust={skillsTrust(state, readOnly !== undefined)}
         />
       )
     case 'agents':

@@ -2,6 +2,7 @@
 import type { AgentChoice } from './AgentChoice.js'
 import type { CommitAuthor } from './CommitAuthor.js'
 import type { HelperCredential } from './HelperCredential.js'
+import type { OrgSkills } from './OrgSkills.js'
 import type { ReadonlyVec } from './ReadonlyVec.js'
 import type { RunnerBranches } from './RunnerBranches.js'
 import type { WorkspaceToolContext } from './WorkspaceToolContext.js'
@@ -19,9 +20,9 @@ export type HelperOptions = {
    */
   home: string
   /**
-   * Immutable current skills copy, absent before a successful copy or restore.
+   * Org source and trust policy, absent when no valid source is configured.
    */
-  skillsDirectory?: string | null
+  orgSkills?: OrgSkills | null
   /**
    * Conductive session identity.
    */

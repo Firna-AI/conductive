@@ -239,7 +239,9 @@ describe('the environment variables of the cloud computer', () => {
         'Value',
         'Repository',
       ],
-      openSwitches: names.length + 1,
+      // The Secret switch of each row and of the new variable, and the
+      // trust switch of the Skills section.
+      openSwitches: names.length + 2,
       fields: [],
       buttons: 0,
       switches: 0,

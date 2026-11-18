@@ -67,7 +67,7 @@ function envVar(value: unknown): OrgSettings['envVars'][number] {
   }
 }
 
-/** The settings of the cloud computer. An older reply has no skills repository. */
+/** A missing trusted repository in an older reply means untrusted. */
 export function parseSettings(value: unknown): OrgSettings {
   const source = nested(object(value, 'settings response'), 'settings')
   return {
@@ -76,6 +76,10 @@ export function parseSettings(value: unknown): OrgSettings {
     ...(source.skillsRepository === undefined
       ? {}
       : { skillsRepository: text(source, 'skillsRepository') }),
+    trustedSkillsRepository:
+      source.trustedSkillsRepository === undefined
+        ? ''
+        : text(source, 'trustedSkillsRepository'),
     envVars: list(source, 'envVars', envVar),
     updatedAt: count(source, 'updatedAt'),
   }

@@ -6,6 +6,7 @@ import { ComputerModel } from '../../app/computer-model'
 import { changedScriptNotice } from '../../app/first-build'
 import { latestBuild } from '../../app/org-model'
 import { mayChangeSettings } from '../../app/permissions'
+import { savedSkillsChoice } from '../../app/skills-trust'
 import { useStore, valueOf } from '../../app/store'
 import { softwareSentence } from '../../members/software'
 import type { BuildsResponse } from '../../shared/org-settings'
@@ -119,7 +120,7 @@ export function ComputerSettings(props: {
             />
             <SkillsSection
               computer={computer}
-              repository={value.skillsRepository ?? ''}
+              saved={savedSkillsChoice(value)}
             />
           </>
         )}

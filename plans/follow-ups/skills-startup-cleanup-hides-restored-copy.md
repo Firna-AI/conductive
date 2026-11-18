@@ -16,7 +16,7 @@
   - **Skills copy:** A complete local copy of the org's shared skills repository.
   - **Sweep:** Cleanup that removes retired copies and unused Git objects.
   - **Helper view:** A temporary skill export under `~/.conductive/skill-sessions/turn-*` that one running agent reads.
-- **Background:** The runner restores the last complete skills copy when a cloud computer starts or resumes. The contract requires a failed copy or check to retain the last good copy across stops and resumes. See `docs/protocol/org-skills.md`, under The copy. The runner must also remove retired copies and abandoned helper views at startup.
+- **Background:** The runner restores the last complete skills copy when a cloud computer starts or resumes. The contract requires a failed copy or check to retain the last good copy across stops and resumes. See `docs/protocol/org-skills-copy.md`, under The copy. The runner must also remove retired copies and abandoned helper views at startup.
 - **Problem:** `prepare` first removes abandoned helper views. It then checks the selection, finds the current copy, and closes links that leave that copy. Before it returns the checked copy, it requires `sweep` to succeed. A failure in either cleanup operation makes `prepare` fail. The schedule then publishes no copy and skips the update. It retries preparation at the next five-minute tick. Each Git command in a sweep has a 30-second limit, so cleanup can also delay restoration.
 - **Impact if no action:** Agents can receive no org skills although a complete, readable copy remains on disk. Repeated cleanup errors also prevent a newer copy from arriving.
 - **Root question:** How does startup keep usable skills available when cleanup fails?

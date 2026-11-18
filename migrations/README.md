@@ -480,3 +480,12 @@ Existing orgs and new orgs without a choice get empty text.
 the preset colour that an admin picks for the tile of the open org, as
 [Orgs and members](../docs/protocol/orgs-and-members.md) says. Existing orgs
 get null, which the app shows as Blue.
+
+`202611181130_org_skills_repository_trust.sql` adds
+`settings.trusted_skills_repository` with an empty default. Existing orgs
+gain no trust. Its guarded `settings_clear_replaced_skills_trust` trigger
+clears stale trust when a previous Worker changes or removes the source
+without a new matching grant. Restoring the old source cannot restore its
+old trust. A change of letter case keeps the same identity. The settings
+writer saves a replacement and its new named grant together.
+[Repository trust](../docs/protocol/org-skills-trust.md#save) gives the contract.

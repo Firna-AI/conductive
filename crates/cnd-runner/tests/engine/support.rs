@@ -4,6 +4,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicI64, Ordering};
 use std::time::Duration;
 
+use cnd_runner::config::Configuration;
 use cnd_runner::emitter::{EventEmitter, SavingEmitter};
 use cnd_runner::engine::dependencies::EngineDependencies;
 use cnd_runner::engine::handler::AgentEngine;
@@ -44,6 +45,18 @@ impl Fixture {
         )
         .await
     }
+    pub(super) async fn configured(
+        configuration: Configuration,
+    ) -> std::result::Result<Self, Box<dyn std::error::Error>> {
+        Self::compose_with_configuration(
+            Arc::new(Memory::default()),
+            Arc::new(Helpers::default()),
+            None,
+            None,
+            configuration,
+        )
+        .await
+    }
     pub(super) async fn open(
         memory: Arc<Memory>,
         helpers: Arc<Helpers>,
@@ -57,12 +70,20 @@ impl Fixture {
         saved: Option<Arc<dyn EventStore>>,
         factory: Option<Arc<dyn HelperFactory>>,
     ) -> std::result::Result<Self, Box<dyn std::error::Error>> {
+        Self::compose_with_configuration(memory, helpers, saved, factory, configuration()?).await
+    }
+    async fn compose_with_configuration(
+        memory: Arc<Memory>,
+        helpers: Arc<Helpers>,
+        saved: Option<Arc<dyn EventStore>>,
+        factory: Option<Arc<dyn HelperFactory>>,
+        configuration: Configuration,
+    ) -> std::result::Result<Self, Box<dyn std::error::Error>> {
         let store: Arc<dyn EventStore> =
             saved.unwrap_or_else(|| Arc::new(DurableStore::new(memory.clone(), "stream".into())));
         store.load().await?;
         store.recover(100).await?;
         let clock = Arc::new(TestClock(AtomicI64::new(100)));
-        let configuration = configuration()?;
         let link = Arc::new(SavedRunnerLink::new(
             "workspace".into(),
             "abcdef01-2345-4678-89ab-cdef01234567".into(),

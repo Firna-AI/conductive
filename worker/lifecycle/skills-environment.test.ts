@@ -11,17 +11,19 @@ const fixtureForTest = setupBackendTests()
 it('sets skills at create and refreshes them at each resume, overriding org env vars also when invalid or removed', async () => {
   const fixture = fixtureForTest()
   const { runtime, org, user, boat } = fixture
-  const save = async (repository: string) => {
+  const save = async (repository: string, trust = '') => {
     await runtime.env.DB.prepare(
-      'UPDATE settings SET skills_repository = ? WHERE org_id = ?',
+      `UPDATE settings SET skills_repository = ?, trusted_skills_repository = ?
+       WHERE org_id = ?`,
     )
-      .bind(repository, org.id)
+      .bind(repository, trust, org.id)
       .run()
   }
   await saveEnvironment(fixture, 'test-secret', false, {
     CONDUCTIVE_SKILLS_REPOSITORY: 'env/override',
+    CONDUCTIVE_TRUSTED_SKILLS_REPOSITORY: 'env/override',
   })
-  await save('owner/skills')
+  await save('Owner/Skills', 'owner/skills')
   const resumes: unknown[] = []
   const fetch = runtime.dependencies.fetch
   runtime.dependencies.fetch = async (request) => {
@@ -36,27 +38,33 @@ it('sets skills at create and refreshes them at each resume, overriding org env 
     }),
   )
   expect(boat.starts[0]).toMatchObject({
-    env: { CONDUCTIVE_SKILLS_REPOSITORY: 'owner/skills' },
+    env: {
+      CONDUCTIVE_SKILLS_REPOSITORY: 'Owner/Skills',
+      CONDUCTIVE_TRUSTED_SKILLS_REPOSITORY: 'owner/skills',
+    },
   })
   const actor = fixture.actors.get(created.workspace.id)?.endpoint()
   if (!actor) throw new Error('Missing workspace controller')
-  for (const [repository, expected] of [
-    ['other/new-skills', 'other/new-skills'],
-    ['owner/../bad', ''],
-    ['', ''],
+  for (const [repository, trust, expected, expectedTrust] of [
+    ['other/new-skills', '', 'other/new-skills', ''],
+    ['owner/../bad', 'owner/../bad', '', ''],
+    ['', 'owner/skills', '', ''],
   ]) {
-    await save(repository)
+    await save(repository, trust)
     await actor.lifecycleStopped()
     boat.states.set('bx_1', 'archived')
     await fixture.run(() =>
       resumeCompletedWorkspace(runtime, org.id, created.workspace.id, user.id),
     )
     expect(resumes.at(-1)).toMatchObject({
-      env: { CONDUCTIVE_SKILLS_REPOSITORY: expected },
+      env: {
+        CONDUCTIVE_SKILLS_REPOSITORY: expected,
+        CONDUCTIVE_TRUSTED_SKILLS_REPOSITORY: expectedTrust,
+      },
     })
   }
   expect(resumes).toHaveLength(3)
-  await save('retention/skills')
+  await save('retention/skills', 'RETENTION/SKILLS')
   await actor.lifecycleStopped()
   boat.states.set('bx_1', 'archived')
   await fixture.setTime(runtime.dependencies.now() + 1_123_200_000)
@@ -65,6 +73,7 @@ it('sets skills at create and refreshes them at each resume, overriding org env 
   expect(resumes.at(-1)).toMatchObject({
     env: {
       CONDUCTIVE_SKILLS_REPOSITORY: 'retention/skills',
+      CONDUCTIVE_TRUSTED_SKILLS_REPOSITORY: 'retention/skills',
       CONDUCTIVE_DISK_KEEPALIVE: '1',
     },
   })

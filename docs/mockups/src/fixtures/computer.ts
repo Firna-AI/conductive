@@ -85,6 +85,16 @@ export const cutTreeSkills: readonly string[] = agentSkills.slice(0, 7)
 export const misspelledSkillsRepository = 'acme/agent-skils'
 
 /**
+ * The name of the repository without its owner. It is neither owner/name
+ * nor a link from GitHub, so Save stores it as typed, and it names no
+ * repository that an admin can trust.
+ */
+export const invalidSkillsRepository = 'agent-skills'
+
+/** Another repository of Acme, which an admin types in place of the saved one. */
+export const replacementSkillsRepository = 'acme/team-skills'
+
+/**
  * An env var of the org: its name, and its Secret mark. The chat and the
  * start logs hide the value of a secret variable. No screen shows a value.
  */

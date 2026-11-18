@@ -104,7 +104,7 @@ it.each(['claude', 'codex'] as const)(
     const nextCopy = join(h.home, 'copies', 'next', 'org-skills')
     await cp(h.copy, nextCopy, { recursive: true })
     await h.skill('skills/unique', 'unique', 'Updated org skill', nextCopy)
-    h.options.skillsDirectory = nextCopy
+    h.options.orgSkills = { repository: 'Owner/Skills', directory: nextCopy }
     expect(await readFile(join(first, 'SKILL.md'), 'utf8')).toContain(
       'Original org skill',
     )
@@ -153,7 +153,7 @@ it.each(['claude', 'codex'] as const)(
     const malformed = join(h.copy, 'not-a-directory')
     await symlink(join(h.copy, 'missing'), join(h.copy, 'SKILL.md'))
     for (const directory of [malformed, h.copy]) {
-      h.options.skillsDirectory = directory
+      h.options.orgSkills = { repository: 'Owner/Skills', directory }
       const provider = await h.open()
       onTestFinished(() => provider.close())
       expect(await h.paths()).toEqual([])

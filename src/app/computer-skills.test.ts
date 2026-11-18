@@ -56,7 +56,10 @@ async function openTab(holdSettings = false) {
 test('a reopened tab follows the repository saved by its closed tab', async () => {
   const { server, held, computer, open } = await openTab()
   held.hold('PATCH', settingsPath)
-  const saving = computer.saveSkillsRepository('acme/new-skills')
+  const saving = computer.saveSkillsRepository({
+    repository: 'acme/new-skills',
+    trusted: false,
+  })
   computer.stop()
   const reopened = open()
   await flushMicrotasks()
@@ -168,7 +171,10 @@ test('an older lookup cannot replace the lookup after a repository save', async 
   await flushMicrotasks()
   server.json('PATCH', settingsPath, { settings: changed })
   server.json('GET', skillsPath, newSkills)
-  await computer.saveSkillsRepository('acme/new-skills')
+  await computer.saveSkillsRepository({
+    repository: 'acme/new-skills',
+    trusted: false,
+  })
   await flushMicrotasks()
   held.release('GET', skillsPath)
   await reading

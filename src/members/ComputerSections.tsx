@@ -7,11 +7,16 @@ import {
   skillsNoticeText,
   type NoSkillsCause,
 } from '../../docs/mockups/src/components/settings/skillsCopy'
+import {
+  skillsTrustCopy,
+  trustHint,
+} from '../../docs/mockups/src/components/settings/skillsTrustCopy'
 import { shownSkills } from '../app/skills-lookup'
 import type {
   OrgSettings,
   SkillsRepositoryLookupResponse,
 } from '../shared/org-settings'
+import { ExternalLink } from '../shell/ui/links'
 import type { Resource } from './useResource'
 import { InlineText } from './ui/InlineText'
 import { Loading, LoadFailure } from './ui/Loading'
@@ -172,20 +177,55 @@ function LookupResult(props: {
   }
 }
 
+/** A row of the saved values: its term and its value. */
+function Detail(props: { term: string; value: string }) {
+  return (
+    <div className={styles.detail}>
+      <dt className={styles.term}>{props.term}</dt>
+      <dd className={styles.detailValue}>{props.value}</dd>
+    </div>
+  )
+}
+
+/**
+ * What the saved trust choice does, then how long a running cloud computer
+ * keeps the choice that it started with, then the link to the guide, which
+ * opens in a new tab.
+ */
+function SavedTrustHint(props: { trusted: boolean }) {
+  const hint = trustHint({ trusted: props.trusted, replaced: false })
+  return (
+    <p className={styles.trustHint}>
+      {hint} {skillsTrustCopy.note}{' '}
+      <ExternalLink href={skillsTrustCopy.guide.href}>
+        {skillsTrustCopy.guide.label}
+      </ExternalLink>
+    </p>
+  )
+}
+
 /**
  * The skills repository of the org as text, without a field or Save, for a
  * member who is not an admin (skills decision 2 A), and for everyone in a
- * suspended org. Under it, the skills that the lookup found, or a notice in
- * place of them. Without a saved repository, a member reads that an admin
- * can choose one, and a suspended org says only that none is chosen.
+ * suspended org. A repository named as owner/name has a trust choice, which
+ * shows as the Trust row with its hint, without a switch. Under them, the
+ * skills that the lookup found, or a notice in place of them. Without a
+ * saved repository, a member reads that an admin can choose one, and a
+ * suspended org says only that none is chosen.
  */
 export function SkillsSection(props: {
   /** The saved owner/name, or empty text when the org has none. */
   repository: string
+  /**
+   * The saved trust choice, or `undefined` when the saved text names no
+   * repository, which has no choice.
+   */
+  trusted?: boolean
   lookup: Resource<SkillsRepositoryLookupResponse>
   onRetry: () => void
   suspended: boolean
 }) {
+  const { trusted } = props
   const viewer = props.suspended ? 'suspended' : 'member'
   return (
     <Section description={skillsCopy.description} title={skillsCopy.title}>
@@ -194,11 +234,17 @@ export function SkillsSection(props: {
       ) : (
         <>
           <dl className={styles.details}>
-            <div className={styles.detail}>
-              <dt className={styles.term}>{skillsCopy.label}</dt>
-              <dd className={styles.detailValue}>{props.repository}</dd>
-            </div>
+            <Detail term={skillsCopy.label} value={props.repository} />
+            {trusted === undefined ? null : (
+              <Detail
+                term={skillsTrustCopy.term}
+                value={
+                  trusted ? skillsTrustCopy.trusted : skillsTrustCopy.untrusted
+                }
+              />
+            )}
           </dl>
+          {trusted === undefined ? null : <SavedTrustHint trusted={trusted} />}
           <LookupResult
             lookup={props.lookup}
             onRetry={props.onRetry}

@@ -48,6 +48,22 @@ pub enum ProviderInput {
     Message(RunnerMessageDuringTurn),
 }
 
+/// Configured org source and trust policy, independent of copy availability.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+pub struct OrgSkills {
+    /// Valid public GitHub source identity as owner/name.
+    pub repository: String,
+    /// Trusted repository identity, absent when no matching grant exists.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional = nullable)]
+    pub trusted_repository: Option<String>,
+    /// Immutable available copy, absent before a successful copy or restore.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional = nullable)]
+    pub directory: Option<String>,
+}
+
 /// Serializable agent start configuration. It is never persisted by the helper.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
@@ -56,10 +72,10 @@ pub struct HelperOptions {
     pub cwd: String,
     /// Private agent home.
     pub home: String,
-    /// Immutable current skills copy, absent before a successful copy or restore.
+    /// Org source and trust policy, absent when no valid source is configured.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional = nullable)]
-    pub skills_directory: Option<String>,
+    pub org_skills: Option<OrgSkills>,
     /// Conductive session identity.
     pub session_id: String,
     /// Model gateway or native measurement endpoint.

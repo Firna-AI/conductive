@@ -66,7 +66,7 @@ function readEnvVar(value: unknown): OrgSettings['envVars'][number] {
 
 /**
  * The settings of the cloud computer. An older reply has no base image and
- * no skills repository.
+ * no skills repository or trusted repository.
  */
 export function readSettings(value: unknown): OrgSettings {
   const settings = record(record(value, 'settings').settings, 'settings')
@@ -77,6 +77,8 @@ export function readSettings(value: unknown): OrgSettings {
     installScript: text(settings, 'installScript'),
     startupScript: text(settings, 'startupScript'),
     ...(skillsRepository === null ? {} : { skillsRepository }),
+    trustedSkillsRepository:
+      maybeText(settings, 'trustedSkillsRepository') ?? '',
     envVars: items(settings, 'envVars', readEnvVar),
     updatedAt: count(settings, 'updatedAt'),
   }
