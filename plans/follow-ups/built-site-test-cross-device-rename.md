@@ -39,6 +39,9 @@
   - Astro could not rename a built asset from `.astro/.prerender/_astro/` into `/tmp/conductive-site-*/_astro/`.
   - All 12 site tests then passed unchanged with `TMPDIR` set to `/home/user/code/remote-code/.context/merge-347/tmp`.
   - This keeps the temporary output on the checkout's file system. No assertion, build command, or timeout changed.
+  - On 18 November 2026, pull request #465 merged main `2a0818f3d0d945b61b21c677c6e2008764a1cc50` into its branch. The merge commit was `1e5070a3c3a1ed6c21cfabcb82285c1faafd9341`. The full gate and one focused rerun reproduced the error.
+  - The full gate passed every static check and 4,218 tests. The 12 site tests could not run after setup failed with `EXDEV: cross-device link not permitted, rename` from `.astro/.prerender/` into `/tmp/conductive-site-*/`.
+  - A focused run of `worker/marketing/built-site.test.ts` then passed all 12 tests with `TMPDIR=/home/user/code/remote-code/.context/merge-pr-465/tmp`. No source, assertion, or timeout changed. GitHub CI passed its complete gate on the same commit.
 - **Task:**
   - Find out when the build moves an asset out of the prerender folder, and why the first run did not fail. A cold image cache and two builds that share the prerender folder are suspected sources. Neither is confirmed.
   - Find out whether `--force` removes the case.

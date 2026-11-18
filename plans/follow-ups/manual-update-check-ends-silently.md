@@ -40,6 +40,6 @@
   - A notification, a Help menu label, or a Dock progress bar as the answer: the user rejected on 9 November 2026 an answer that the person can miss.
 - **Wider fix:** E. It ends each manual check with one true answer, whatever step fails after the promise.
 - **Previous examples:** None found.
-- **Related:** `plans/follow-ups/read-only-copies-never-update.md` adds an offer at launch to move a read-only copy into Applications. E's read-only text only explains a refusal after a manual check. Either item can ship first.
+- **Related:** The section "Updates in the app" of `docs/protocol/desktop-packages-and-updates.md` requires an offer at launch to move a read-only copy into Applications. That offer does not answer a manual check, so this item stays open. E's read-only text only explains a refusal after a manual check.
 - **Recommendation:** E. It costs the same as B, and its answer stays true for every failure after the promise, also on a read-only copy, where B's "Try again later." never helps. The first recommendation was B.
 - **Action:** ask the user, because B, D, E, and F add or change answers that no requirement covers, and C changes the found-version text that the user chose. The user deferred this choice on 9 November 2026, so it is still open.

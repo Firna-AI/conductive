@@ -1,7 +1,8 @@
 import { expect, it, vi } from 'vitest'
 
 import type { GitHubSnapshot } from './contracts'
-import { MemoryWorkspace } from './memory-workspace'
+import { CHAT_META, chatEventKey } from '../chat/storage-keys'
+import { nativeGitHubStore } from './state-fixture.test-support'
 
 const snapshot: GitHubSnapshot = {
   banner: {
@@ -24,15 +25,19 @@ function deferred() {
   return { promise, resolve }
 }
 
-it('stores banner state, an event, and a receipt before broadcast through the unit-test port', async () => {
-  const memory = new MemoryWorkspace('workspace-1')
-  memory.values.set('workspace:event-number', 7)
-  const state = await memory.state.refresh(async () => snapshot, authorize, {
+it('stores banner state, an event, and a receipt before broadcast through the production chat port', async () => {
+  const native = await nativeGitHubStore()
+  await native.storage.put(CHAT_META, {
+    workspaceId: 'workspace-1',
+    through: 7,
+    commandThrough: 0,
+  })
+  const state = await native.state.refresh(async () => snapshot, authorize, {
     deliveryId: 'd-1',
   })
   expect(state).toEqual(snapshot)
-  expect(memory.values.get('github:state')).toEqual(snapshot)
-  expect(memory.values.get('workspace:event:8')).toEqual({
+  expect(await native.storage.get('github:state')).toEqual(snapshot)
+  expect(await native.storage.get(chatEventKey(8))).toEqual({
     workspaceId: 'workspace-1',
     eventNumber: 8,
     occurredAt: 1800000000000,
@@ -42,7 +47,7 @@ it('stores banner state, an event, and a receipt before broadcast through the un
       checks: snapshot.checks,
     },
   })
-  expect(memory.values.get('github:delivery:d-1')).toEqual({
+  expect(await native.storage.get('github:delivery:d-1')).toEqual({
     snapshot,
     envelope: {
       workspaceId: 'workspace-1',
@@ -50,28 +55,37 @@ it('stores banner state, an event, and a receipt before broadcast through the un
       occurredAt: 1800000000000,
     },
   })
-  expect(memory.published).toEqual(memory.events)
+  expect((await native.inspect()).published).toEqual(
+    (await native.inspect()).events,
+  )
 })
 
 it('rolls back a receipt-write failure and retries with one new read and event', async () => {
-  const memory = new MemoryWorkspace('workspace-1')
+  const native = await nativeGitHubStore()
   const read = vi.fn(async () => snapshot)
-  memory.failWritePrefix = 'github:delivery:'
+  await native.setStorageHooks({
+    beforeCommit: async (commit) => {
+      if (commit.writes.some((key) => key.startsWith('github:delivery:')))
+        throw new Error('Test storage write failed')
+    },
+  })
   await expect(
-    memory.state.refresh(read, authorize, { deliveryId: 'd-1' }),
+    native.state.refresh(read, authorize, { deliveryId: 'd-1' }),
   ).rejects.toThrow('Test storage write failed')
   expect(read).toHaveBeenCalledTimes(1)
-  expect(memory.values.get('github:state')).toBeUndefined()
-  expect(memory.values.get('workspace:event:1')).toBeUndefined()
-  expect(memory.values.get('workspace:event-number')).toBeUndefined()
-  expect(memory.values.get('github:delivery:d-1')).toBeUndefined()
-  expect(memory.values.size).toBe(0)
-  expect(memory.events).toEqual([])
-  expect(memory.published).toEqual([])
-
-  memory.failWritePrefix = null
+  expect(await native.storage.get('github:state')).toBeUndefined()
+  expect(await native.storage.get(chatEventKey(1))).toBeUndefined()
   expect(
-    await memory.state.refresh(read, authorize, { deliveryId: 'd-1' }),
+    (await native.storage.get<{ through: number }>(CHAT_META))?.through,
+  ).toBeUndefined()
+  expect(await native.storage.get('github:delivery:d-1')).toBeUndefined()
+  expect((await native.snapshot()).records.size).toBe(0)
+  expect((await native.inspect()).events).toEqual([])
+  expect((await native.inspect()).published).toEqual([])
+
+  await native.clearFaults()
+  expect(
+    await native.state.refresh(read, authorize, { deliveryId: 'd-1' }),
   ).toEqual(snapshot)
   expect(read).toHaveBeenCalledTimes(2)
   const envelope = {
@@ -84,10 +98,12 @@ it('rolls back a receipt-write failure and retries with one new read and event',
       checks: snapshot.checks,
     },
   }
-  expect(memory.values.get('github:state')).toEqual(snapshot)
-  expect(memory.values.get('workspace:event-number')).toBe(1)
-  expect(memory.values.get('workspace:event:1')).toEqual(envelope)
-  expect(memory.values.get('github:delivery:d-1')).toEqual({
+  expect(await native.storage.get('github:state')).toEqual(snapshot)
+  expect(
+    (await native.storage.get<{ through: number }>(CHAT_META))?.through,
+  ).toBe(1)
+  expect(await native.storage.get(chatEventKey(1))).toEqual(envelope)
+  expect(await native.storage.get('github:delivery:d-1')).toEqual({
     snapshot,
     envelope: {
       workspaceId: 'workspace-1',
@@ -95,16 +111,16 @@ it('rolls back a receipt-write failure and retries with one new read and event',
       occurredAt: 1800000000000,
     },
   })
-  expect(memory.events).toEqual([envelope])
-  expect(memory.published).toEqual([envelope])
+  expect((await native.inspect()).events).toEqual([envelope])
+  expect((await native.inspect()).published).toEqual([envelope])
 })
 
 it('serializes refresh reads so a slow older operation cannot replace newer state', async () => {
-  const memory = new MemoryWorkspace('workspace-1')
+  const native = await nativeGitHubStore()
   const started = deferred()
   const release = deferred()
   const order: string[] = []
-  const first = memory.state.refresh(async () => {
+  const first = native.state.refresh(async () => {
     order.push('first-start')
     started.resolve()
     await release.promise
@@ -113,21 +129,23 @@ it('serializes refresh reads so a slow older operation cannot replace newer stat
   }, authorize)
   await started.promise
   const newer = { ...snapshot, banner: { ...snapshot.banner, updatedAt: 2 } }
-  const second = memory.state.refresh(async () => {
+  const second = native.state.refresh(async () => {
     order.push('second')
     return newer
   }, authorize)
   release.resolve()
   await Promise.all([first, second])
   expect(order).toEqual(['first-start', 'first-end', 'second'])
-  expect(memory.values.get('github:state')).toEqual(snapshot)
-  expect(memory.published.map((envelope) => envelope.eventNumber)).toEqual([1])
+  expect(await native.storage.get('github:state')).toEqual(snapshot)
+  expect(
+    (await native.inspect()).published.map((envelope) => envelope.eventNumber),
+  ).toEqual([1])
 })
 
 it('keeps state and events unchanged when access is revoked before the commit', async () => {
-  const memory = new MemoryWorkspace('workspace-1')
+  const native = await nativeGitHubStore()
   let allowed = true
-  const pending = memory.state.refresh(
+  const pending = native.state.refresh(
     async () => {
       allowed = false
       return snapshot
@@ -137,13 +155,13 @@ it('keeps state and events unchanged when access is revoked before the commit', 
     },
   )
   await expect(pending).rejects.toThrow('Access revoked')
-  expect(memory.values.size).toBe(0)
-  expect(memory.published).toEqual([])
+  expect((await native.snapshot()).records.size).toBe(0)
+  expect((await native.inspect()).published).toEqual([])
 })
 
 it('keeps an unchanged display snapshot without storing or publishing a fresh read', async () => {
-  const memory = new MemoryWorkspace('workspace-1')
-  await memory.state.refresh(async () => snapshot, authorize)
+  const native = await nativeGitHubStore()
+  await native.state.refresh(async () => snapshot, authorize)
   const fresh = {
     banner: {
       pullRequest: null,
@@ -158,10 +176,14 @@ it('keeps an unchanged display snapshot without storing or publishing a fresh re
     } satisfies GitHubSnapshot['checks'],
     headSha: 'new-head-with-the-same-display',
   }
-  expect(await memory.state.refresh(async () => fresh, authorize)).toEqual(
+  expect(await native.state.refresh(async () => fresh, authorize)).toEqual(
     fresh,
   )
-  expect(memory.values.get('github:state')).toEqual(snapshot)
-  expect(memory.events.map((envelope) => envelope.eventNumber)).toEqual([1])
-  expect(memory.published).toEqual(memory.events)
+  expect(await native.storage.get('github:state')).toEqual(snapshot)
+  expect(
+    (await native.inspect()).events.map((envelope) => envelope.eventNumber),
+  ).toEqual([1])
+  expect((await native.inspect()).published).toEqual(
+    (await native.inspect()).events,
+  )
 })

@@ -5,6 +5,7 @@ import { ChatOperation } from './operation'
 import { commandDispatchState, type DispatchResult } from './ordered-dispatch'
 import { compatibilityFailure } from './runner-gateway-command'
 import { failCommandLogin } from './runner-login-failure'
+import { failRepositoryTurn, RepositoryMoves } from './runner-repository-move'
 import type { ChatStore } from './store'
 import type {
   ActiveRunner,
@@ -18,6 +19,7 @@ export class RunnerCommandPreparation {
   private readonly store: ChatStore
   private readonly dependencies: ChatDependencies
   private readonly publish: (events: readonly WorkspaceEventEnvelope[]) => void
+  private readonly moves: RepositoryMoves
 
   constructor(
     store: ChatStore,
@@ -27,6 +29,7 @@ export class RunnerCommandPreparation {
     this.store = store
     this.dependencies = dependencies
     this.publish = publish
+    this.moves = new RepositoryMoves(dependencies)
   }
 
   async prepare(
@@ -43,6 +46,17 @@ export class RunnerCommandPreparation {
       view.message(command.messageId),
     )
     if (!message) return { state: 'skip' }
+    const folder = await this.moves.check(active)
+    if (folder.state === 'wait') return { state: 'wait' }
+    if (folder.state === 'refused') {
+      await failRepositoryTurn(
+        this.store,
+        this.publish,
+        active.workspace.id,
+        command.turnId,
+      )
+      return this.unavailable(active.workspace.id, command)
+    }
     let login: AgentLogin | null
     try {
       const operation = new ChatOperation(
@@ -96,6 +110,7 @@ export class RunnerCommandPreparation {
       attachments: command.attachments,
       login,
       branches,
+      ...(folder.repository ? { repository: folder.repository } : {}),
     }
     if (command.type === 'message')
       return { state: 'send', command: { type: 'message', ...fields } }

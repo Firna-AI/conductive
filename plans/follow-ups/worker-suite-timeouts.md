@@ -4,6 +4,7 @@
 - **Kind:** Post-merge task.
 - **Added:** 2026-11-16, during the merge of main into pull request #366.
 - **Location:** `worker/operator/org-activity-race.test.ts:22,94`, `worker/features/workspace-links.test.ts:27`, `worker/app-api/feature-repository-builds.test.ts:112`, `worker/operator/org-native.test.ts:81`, `worker/operator/ownership-stop-race.test.ts:68`, `worker/model-gateway/codex-concurrent.test.ts`, `worker/lifecycle/restore-watch.test.ts`, `worker/tools/workspace-creation.test.ts`, `worker/chat/attachment-missing.test.ts`, `worker/chat/integration/failed-first-start-retry.test.ts`, `worker/chat/integration/workspace-resume-response.test.ts`, `worker/features/allocated-creation-restore.test.ts`, `worker/lifecycle/repository-capture.test.ts`, `worker/lifecycle/terminal-lifecycle.test.ts`, `worker/lifecycle/workspace-run-recovery.test.ts`, `worker/lifecycle/disk-retention-time-limit.test.ts`.
+  Also `worker/lifecycle/provisioning.test.ts` and `worker/chat/integration/retried-creation-restore.test.ts`.
 - **Reason:** These files match main, and every failed test passed in a focused rerun without a source change.
 
 - **Background:**
@@ -79,6 +80,10 @@
     - `worker/features/retained-creation-commands.test.ts`: `runs interrupted saved startup after Restore instead of following its dead journal owner`. The runner reported failure after 15,080 ms.
     - `worker/chat/integration/attachment-multipart-complete.test.ts`: `streams two native R2 parts and publishes the exact file and its copy path`. The runner reported failure after 15,226 ms.
   - The interrupted full run produced no final pass or skip totals. All 11 reported failing files exactly matched main `273582d8a`. At the same `/tmp` checkout and source tree, with `TMPDIR` still on that checkout filesystem, an isolated `--maxWorkers=1` rerun passed all 35 tests in those files. It took 118.95 seconds and skipped no test. No source, assertion, or timeout changed. Resource contention is suspected. The root cause remains unknown.
+  - On 18 November 2026, the main merge for pull request #465 at `1e5070a3c3a1ed6c21cfabcb82285c1faafd9341` passed every static check. A full `npm run check` with `TMPDIR=/home/user/code/remote-code/.context/merge-pr-465/tmp` passed 4,228 tests and failed two, with no skips. It ran 1,300 files in 1,647.82 seconds. Both failures were `Error: Test timed out in 15000ms.`:
+    - `worker/lifecycle/provisioning.test.ts`: `recovers an accepted create after its caller closes and the actor restarts`.
+    - `worker/chat/integration/retried-creation-restore.test.ts`: `restores an interrupted replacement create with its pinned data and a fresh command journal`.
+  - Both files match main `2a0818f3d0d945b61b21c677c6e2008764a1cc50`. A focused rerun at the same path and commit, with the same `TMPDIR`, passed both tests in 12.51 seconds. The command was `npm run test -- worker/lifecycle/provisioning.test.ts worker/chat/integration/retried-creation-restore.test.ts`. No source, assertion, or timeout changed. Both tests also passed in an earlier full local run with the default temporary folder. GitHub CI passed its complete gate on the same commit. Resource contention or temporary storage delays are suspected. The exact cause remains unknown.
 - **Task:** Find the source of these timeouts. Compare focused and full runs at the same path, then compare paths with the same test set. Make the tests deterministic with readiness signals, event order, or isolated state. Keep each assertion. Add no retry, sleep, skip, or longer timeout.
 - **Impact if no action:** A complete check can fail while a focused run passes. This can hide a real regression or delay another branch.
 - **Needs:** Node 24 and a Conductive workspace that can run the full suite.

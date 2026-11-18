@@ -31,7 +31,8 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
     must skip the resume at each turn.
   - Instructions that the Worker builds and sends with each turn. The text
     of a session would then change with each fact. Each message carries
-    only the current branches, for the branch line.
+    only the current branches and the current repository folder, for the
+    branch line and the repository line.
   - Text that a model gateway adds to each model request. No such gateway
     exists yet.
   - Text for Claude only. It leaves out Codex, which also takes system

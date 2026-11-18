@@ -115,5 +115,5 @@ says.
 - Each session shows a note at the place of Continue, as
   [What the chat shows](chat-and-events.md#what-the-chat-shows) says.
 - Each session works on the new branch, also a session that starts or
-  reopens later, as [The branch line](agent-instructions.md#the-branch-line)
+  reopens later, as [The branch line](message-lines.md#the-branch-line)
   says (decision 227).

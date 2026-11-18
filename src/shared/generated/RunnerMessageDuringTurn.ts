@@ -2,6 +2,7 @@
 import type { ReadonlyVec } from './ReadonlyVec.js'
 import type { RunnerAttachment } from './RunnerAttachment.js'
 import type { RunnerBranches } from './RunnerBranches.js'
+import type { RunnerRepository } from './RunnerRepository.js'
 import type { UserMessage } from './UserMessage.js'
 
 /**
@@ -29,6 +30,10 @@ export type RunnerMessageDuringTurn = {
    * branches.
    */
   branches?: RunnerBranches
+  /**
+   * Current repository. Only Workers that can move the runner send it.
+   */
+  repository?: RunnerRepository
   /**
    * attachments.
    */

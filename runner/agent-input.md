@@ -64,6 +64,10 @@ requirements.
 - An older saved session has no saved pair. The runner reads the pair from
   the `Workspace branch:` and `Target branch:` lines of its saved text, and
   leaves the text unchanged. When it cannot read both, the pair is unknown.
+- The runner also saves the repository folder that the text names, as
+  `instructionFolder`. An older saved session takes it from the
+  `Workspace repository folder:` line of its text. When the line is
+  missing, the folder is unknown.
 
 ## Messages and files
 
@@ -93,6 +97,33 @@ chat never shows the sender line.
   sessions get no branch line. Existing sessions keep their saved instructions
   after an update.
 
+### The repository line
+
+- The Worker sends the current repository in `repository`, with its full
+  name and its folder, only to a runner whose `hello` names its folder.
+- When that folder differs from the saved `instructionFolder` of the
+  session, a repository line follows the sender line:
+  `Current repository: "<owner/name>" in the folder "<folder>". The workspace now works in this folder. Its context folder is "<folder>/.context".`
+  Each value is a JSON string. A branch line can follow it.
+- A session whose saved folder is the current folder, or is unknown, gets
+  no repository line. A move back to that folder ends the line.
+- The repository line exists only in the text that reaches the agent, as
+  the branch line does.
+- [The repository line](../docs/protocol/message-lines.md#the-repository-line)
+  states these requirements.
+
+### Saved Claude sessions after a move
+
+Claude keeps each saved session in a project folder for its working folder,
+`projects/<folder>/<id>.jsonl`, with each character of the folder outside
+A-Z, a-z, and 0-9 as `-`. Before a resume, the helper looks for the session
+in the project folder of the current folder. When exactly one other project
+folder holds it, the helper moves the file and its `<id>/` folder there. A
+move keeps one copy, so a move back finds the newest turns. A missing or
+ambiguous session stays, and the resume reports its own failure. Codex
+needs no step: it keeps sessions by date and thread ID, and
+`thread/resume` takes the new `cwd`.
+
 A message with attached files adds one read instruction after the
 member's text, then one JSON line per file. Each line gives its original
 name, media type, copied absolute path, and `sizeBytes` from message
@@ -109,7 +140,8 @@ guide gives the exact instruction and the metadata source.
 - [setup.rs](../crates/cnd-runner/src/repository/setup.rs) prepares the context folder and local Git exclusion.
 - [instructions.rs](../crates/cnd-runner/src/engine/instructions.rs) builds session instructions and reads legacy branches.
 - [input.rs](../crates/cnd-runner/src/engine/input.rs) keeps session instructions and the turn's original context.
-- [message.ts](sdk-helper/src/providers/message.ts) formats sender lines, branch lines, and attachments.
+- [message.ts](sdk-helper/src/providers/message.ts) formats sender lines, repository lines, branch lines, and attachments.
+- [claude-transcript.ts](sdk-helper/src/providers/claude-transcript.ts) moves a saved Claude session to the project folder of the current folder.
 - [instructions.test.ts](sdk-helper/src/providers/instructions.test.ts) and
   [branches.test.ts](sdk-helper/src/providers/branches.test.ts) check the helper input text.
 - [context_tests.rs](../crates/cnd-runner/tests/repository/context_tests.rs) checks ordinary and linked Git worktrees.

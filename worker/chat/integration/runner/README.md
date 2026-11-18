@@ -49,6 +49,25 @@ state the requirements.
 - Each `turn` and `message` command also carries the current workspace
   branch and target branch in `branches`, as
   [History and event order](../../history.md) says.
+- `hello.repositoryFolder` names the folder of a runner that accepts
+  `repository.move`. An absent or malformed folder keeps the runner from
+  each move. Such a runner gets each command as before.
+- At each `hello` of such a runner, the Worker compares its folder with the
+  record folder: the folder of the workspace's repository in the stored
+  folders of the workspace. When the runner is in the stored folder of
+  another repository, as after a repository change, the Worker sends one
+  `repository.move` with the record folder and the branches right after the
+  `welcome`, also before `runner.ready`, and holds each
+  `turn` and `message`. The next `hello` with the record folder ends the
+  hold. A workspace without stored folders gets no move. A runner in a
+  folder outside the stored folders also gets no move and no `repository`,
+  because only older start variables give such a folder.
+- A `repository.move.refused` reply keeps the runner in its folder. Each
+  held turn then fails with `workspace_repository_unavailable`. A new
+  `hello` checks the folders again.
+- Each `turn` and `message` to such a runner carries the current repository
+  in `repository`, with its full name and its folder, for the repository
+  line of [Agent input](../../../../runner/agent-input.md#the-repository-line).
 - No stored command holds a login or a turn token. Each send adds the
   credential again. A resent `turn` command carries the same token, also
   after a failed send or a restart of the workspace object.

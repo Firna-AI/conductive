@@ -4,7 +4,8 @@ This folder holds the Worker code that prepares the org image and runs the
 life of each workspace. The org image is the saved snapshot that every new
 sandbox of an org starts from. A workspace has its own Boat sandbox and one
 branch at a time. [Continue](continue.md) moves it to a new branch after
-its merge. The code reaches Boat only through the
+its merge. A [repository change](repository-change.md) moves it to a new
+branch of another repository of the org, in the same sandbox. The code reaches Boat only through the
 `SandboxProvider` interface in [`provider.ts`](../sandbox/provider.ts),
 with the client of the provider account that each record stores.
 [Provider accounts](provider-accounts.md) and the
@@ -28,9 +29,12 @@ gives the create, read, resume, and activity routes of a workspace to
 - Repair the running turns, the idle time, and the name of a workspace
   from its committed chat, when a hook or a restart lost an update.
 - Give the git credential helper a fresh GitHub user token of the sender of
-  the current turn, or of the member who pressed Continue during its fetch.
+  the current turn, or of the member who pressed Continue or changed the
+  repository, during the fetch of that job.
 - Continue a workspace on a new branch after its merge, with the same
   sandbox and sessions.
+- Change the repository of a workspace to another repository that its
+  sandbox holds, with the same sandbox and sessions.
 - Restart the runner, preview relay, and terminal service of a running workspace, after
   an update check, as [Restart](routes.md#restart) says.
 - Give the GitHub CLI the workspace owner's token outside an agent turn.
@@ -89,6 +93,14 @@ its phases, the staged fetch and the branch move, the publication, and the
 recovery. [Continue routes](continue-routes.md) gives its routes and errors.
 [The git credential sender](git-credentials.md#continue) gives the grant
 of its fetch.
+
+### Repository change
+
+[Repository change](repository-change.md) gives the routes and errors, the
+admission and the reservation that it shares with Continue, its phases,
+the move command with the context copy, the publication, and the
+recovery. [`workspace-jobs.ts`](workspace-jobs.ts) owns both jobs for the
+workspace object.
 
 ### Builds and refreshes
 

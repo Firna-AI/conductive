@@ -1,5 +1,7 @@
 //! Command metadata compatibility and credential authority at the wire boundary.
 
+use cnd_runner_interface::runner_commands::{RunnerCommand, RunnerControlCommand};
+use cnd_runner_interface::runner_handshake::WorkspaceToRunner;
 use serde_json::{Value, json};
 
 use crate::error::Error;
@@ -125,6 +127,38 @@ fn rejects_mismatched_identity_and_invalid_temporary_credentials() -> TestResult
             workspace_message(&serde_json::to_vec(&input)?),
             Err(Error::Internal(_))
         ));
+    }
+    Ok(())
+}
+
+#[test]
+fn parses_a_repository_move_and_the_repository_of_turns_and_messages() -> TestResult {
+    let command = json!({"type":"repository.move", "commandId":"move", "folder":"/home/user/code/billing",
+        "branches":{"workspaceBranch":"alice/cart-v2-cd34", "targetBranch":"trunk"}});
+    let parsed = workspace_message(&serde_json::to_vec(&command)?)?;
+    assert_eq!(serde_json::to_value(&parsed)?, command);
+    assert!(matches!(
+        parsed,
+        WorkspaceToRunner::RunnerCommand(command) if matches!(
+            *command,
+            RunnerCommand::RunnerControlCommand(RunnerControlCommand::RunnerRepositoryMove(_))
+        )
+    ));
+    let mut missing = command.clone();
+    missing
+        .as_object_mut()
+        .ok_or("Missing command")?
+        .remove("branches");
+    assert!(workspace_message(&serde_json::to_vec(&missing)?).is_err());
+    let repository = json!({"fullName":"acme/billing", "folder":"/home/user/code/billing"});
+    for kind in ["turn", "message"] {
+        let mut input = turn();
+        input["type"] = json!(kind);
+        input["repository"] = repository.clone();
+        let parsed = serde_json::to_value(workspace_message(&serde_json::to_vec(&input)?)?)?;
+        assert_eq!(parsed["repository"], repository);
+        let parsed = serde_json::to_value(workspace_message(&serde_json::to_vec(&turn())?)?)?;
+        assert_eq!(parsed.get("repository"), None);
     }
     Ok(())
 }
