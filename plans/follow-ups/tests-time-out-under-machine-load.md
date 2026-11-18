@@ -163,6 +163,17 @@
   This proves that the Continue timeout occurs without the merge.
   The other failures were not reproduced on main in this attempt.
   The blocked await and cause remain unknown.
+- On 18 November 2026, the branch `calummoore/kyoto-votd` ran the complete
+  gate on a machine with 4 CPUs. The workspace runner used about 55% of
+  one CPU, and the load average was about 5. Both tests of
+  `worker/lifecycle/disk-retention.test.ts` failed with
+  `Error: Test timed out in 15000ms.`: "keeps a stopped disk through
+  startup and stop failures without a stale stop after user open" and
+  "ends failed maintenance and refuses destructive resume of a normal
+  errored workspace". Both failed again alone on the branch, and alone
+  on a clean `main` at `c3bae7b43`, in 16.6 to 17.1 seconds. That branch
+  changed no Worker file. The gate's test step then passed its 1-hour
+  limit on that machine before it ended.
 - **Problem:** These tests depend on wall-clock time limits, so a busy machine can fail them with no defect in the code.
 - **Impact if no action:** A slow CI runner or a busy developer machine can fail the gate now and then, and a person must rerun it.
 - **Root question:** How do these tests stay correct on a slow or busy machine?

@@ -68,9 +68,9 @@ org logins, as [Tokens and secrets](tokens-and-secrets.md) says.
 - A session keeps its memory across a stop and a resume of the sandbox.
 - A Codex session keeps its conversation when the kind of its login
   changes, such as from an OpenAI API key to a ChatGPT sign-in.
-- When Codex refuses to resume because the saved model provider differs
-  from the current provider or is no longer configured, the session
-  continues in a fork.
+- When the saved model provider of the conversation differs from the
+  current provider or is no longer configured, the session continues in
+  a fork.
 - The fork keeps the earlier messages. The session keeps the same chat.
 - The session saves the fork's conversation ID. Later turns use that ID,
   also after a restart of the runner.
