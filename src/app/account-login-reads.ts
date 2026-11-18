@@ -5,12 +5,18 @@ import { AGENTS, readAccount } from './api/read-core'
 import type { AppModel } from './app-model'
 import { inOrgs, orgLoginsInUse } from './default-logins'
 import { modelListWait } from './endpoint-models'
+import {
+  contradictsLogin,
+  loginObservationKey,
+  type LoginObservation,
+} from './login-observation'
 import type { Store } from './store'
 
 /**
  * The one owner of the reads of the logins and of the default logins of the
  * account: list opens, page returns, the timer, the reads after a change of
- * a login, and an org that joins the orgs of the person. Each read is a read
+ * a login, an org that joins the orgs of the person, newer login facts, and
+ * shown missing-login notices. Each read is a read
  * of the whole account, because only its reply holds the logins and the
  * default logins of every org. It shows only what `AgentLogins.mark` lets
  * it show. A read across a new app start or a sign-out shows nothing.
@@ -20,6 +26,11 @@ export class AccountLoginReads {
   private cancelTimer: (() => void) | null = null
   /** The orgs of the person that are not deleted, while the app is ready. */
   private activeOrgs: ReadonlySet<string> | null = null
+  private readonly observations = new Map<
+    string,
+    { available: boolean; readVersion: number }
+  >()
+  private readonly missingNotices = new Set<object>()
   private readonly app: AppModel
   private readonly account: Store<AccountResponse | null>
   private readonly logins: AgentLogins
@@ -32,7 +43,12 @@ export class AccountLoginReads {
     this.app = app
     this.account = account
     this.logins = logins
-    app.boot.subscribe(() => this.followOrgs())
+    app.boot.subscribe(() => {
+      this.running = null
+      this.observations.clear()
+      this.missingNotices.clear()
+      this.followOrgs()
+    })
     app.orgs.subscribe(() => this.followOrgs())
     account.subscribe(() => this.follow())
     const pageChanged = () => {
@@ -47,6 +63,48 @@ export class AccountLoginReads {
   /** Reads the account. A read that runs already counts for this call. */
   refresh(): Promise<void> {
     return this.running ?? this.start()
+  }
+
+  /** A newer status invalidates reads that started before its observation. */
+  observe(observation: LoginObservation): void {
+    const account = this.account.get()
+    if (!account || this.app.boot.get().state !== 'ready') return
+    if (
+      observation.login?.type === 'personal' &&
+      observation.login.userId !== account.user.id
+    )
+      return
+    const key = loginObservationKey(observation)
+    if (this.observations.get(key)?.available === observation.available) return
+    this.observations.set(key, {
+      available: observation.available,
+      readVersion: this.logins.readVersion(observation.agent),
+    })
+    const contradicted = contradictsLogin(account, observation)
+    if (!observation.available || contradicted)
+      this.logins.invalidateReads(observation.agent)
+    if (contradicted) void this.start()
+  }
+
+  /** Only an accepted complete reply after the observation makes its default current. */
+  current(observation: LoginObservation): boolean {
+    const before = this.observations.get(loginObservationKey(observation))
+    return (
+      before?.available === observation.available &&
+      this.logins.readVersion(observation.agent) > before.readVersion
+    )
+  }
+
+  /** A notice reads at its appearance and keeps the visible-page timer due. */
+  watchMissing(): () => void {
+    if (this.app.boot.get().state !== 'ready') return () => undefined
+    const notice = {}
+    this.missingNotices.add(notice)
+    void this.refresh()
+    return () => {
+      this.missingNotices.delete(notice)
+      this.follow()
+    }
   }
 
   /**
@@ -123,14 +181,16 @@ export class AccountLoginReads {
    * Keeps the timer of the reads while the page shows and a model list can
    * change in the background: an own endpoint of the person, or an org
    * login that a picker of the person follows, as `orgLoginsInUse` says.
+   * A shown missing-login notice also keeps the timer due.
    */
   private follow(): void {
     const account = this.account.get()
     const due =
       account !== null &&
-      (account.agentLogins.some(
-        (login) => login.connected && login.kind === 'endpoint',
-      ) ||
+      (this.missingNotices.size > 0 ||
+        account.agentLogins.some(
+          (login) => login.connected && login.kind === 'endpoint',
+        ) ||
         orgLoginsInUse(inOrgs(account, this.app.orgs.get())))
     if (
       this.running ||
