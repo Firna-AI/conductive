@@ -1,0 +1,53 @@
+# The files README overstates request cancellation
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-18, from the docs audit of the follow-up item `gateway-request-signal-off` on branch `calummoore/follow-up-gateway-client-disconnect-sf34`.
+- **Location:** `worker/files/README.md:13`, `worker/files/README.md:141`, and the code that they describe: `worker/chat/router.ts:79-81`, `worker/files/handlers.ts:85`, and `worker/files/handlers.ts:116`.
+- **Reason:** This README is outside the files of the change that turns on `enable_request_signal`, and its correction changes no behaviour.
+
+- **Terms:**
+  - **Workspace object:** the Durable Object of one workspace, the `Workspace` class in `worker/workspace.ts`, which serves the file routes.
+  - **Outer Worker:** the Worker entry in `worker/application.ts`, which gets each browser request and forwards the workspace routes to the workspace object.
+  - **Request signal:** the `AbortSignal` of a `Request`, which fires `abort` on a client disconnect when `wrangler.jsonc` turns on `enable_request_signal`.
+  - **Passthrough:** the Cloudflare flag `request_signal_passthrough`, off in `wrangler.jsonc`, which passes an incoming request's signal on to a forwarded subrequest.
+  - **Pending file read:** a file content, download, or diff request that waits in the workspace object for the runner's answer, in `RunnerFiles` of `worker/files/runner.ts`.
+- **Background:**
+  - `worker/files/README.md:12-13` says: "Production routes forward the original request to that object. Its handler preserves cancellation and reads the captured checkout folder from D1."
+  - `worker/files/README.md:140-141` says: "The production handler calls the local port inside the workspace object. The outer Worker forwards its request through `fetch`, with its cancellation signal."
+  - The path of a file request: `requestBodyEntry` passes a `GET` without a body unchanged (`worker/http/request-body.ts:37`). `routeWorkspaceFeatures` calls `forwardWorkspaceRequest` (`worker/features/router.ts:19`). That function calls `env.WORKSPACES.get(...).fetch(request)` (`worker/chat/router.ts:79-81`).
+  - In the workspace object, `Workspace.fetch` gives its own incoming request to `WorkspaceFeatures.fetch` (`worker/workspace.ts:204-207`), which runs the files handler (`worker/features/workspace.ts:113`).
+  - The files handler passes `request.signal` to `files.diff` (`worker/files/handlers.ts:82-86`) and to `files.read` (`worker/files/handlers.ts:113-117`). That is the signal of the object's own incoming request, not the signal of the browser request.
+  - When that signal aborts, `RunnerFiles.request` rejects with `file_unavailable` (`worker/files/runner.ts:105`). It deletes the pending entry and its listener (`worker/files/runner.ts:97-100` and `:127-131`). The handler then makes no fallback read through the sandbox provider (`worker/files/handlers.ts:113-128`).
+  - The abort sends no cancel command to the runner. The runner still reads the file or makes the diff. Its late result finds no entry, so `receive` returns `false` (`worker/files/runner.ts:49-59`). `receiveFileResult` ignores that value (`worker/chat/workspace-integration.ts:141-143`), and the runner socket stays open.
+  - A pending read keeps the workspace object active until it ends (`worker/README.md:234`).
+  - The official workerd source is `src/workerd/api/http.c++` of `cloudflare/workerd` at tag `v1.20261101.1`, the version that `package-lock.json` installs. Before each fetch, `fetchImplNoOutputLock` calls `jsRequest->clearSignalIfIgnoredForSubrequest(js)` (line 2297).
+  - Its comment says (lines 2294-2296): "Clear the request's signal if the 'ignoreForSubrequests' flag is set. This happens when a request from an incoming fetch is passed-through to another fetch. We want to avoid aborting the subrequest in that case."
+  - `Request::clearSignalIfIgnoredForSubrequest` (lines 610-616) sets the signal of the request to none when `isIgnoredForSubrequests` holds for it.
+  - `AbortSignal::isIgnoredForSubrequests`, in `src/workerd/api/basics.c++` at the same tag (lines 1362-1370), holds for the signal object of an incoming request while `request_signal_passthrough` is off. Its comment says: "True if this is a signal on the request of an incoming fetch." It also says that "this signal will not be passed through to subrequests derived from the incoming request."
+  - `Fetcher::fetch`, the `fetch` of a binding or a Durable Object stub, calls `fetchImpl` (lines 2412-2415), which calls `fetchImplNoOutputLock` (lines 2349-2363). So a forward to the workspace object takes the same path.
+  - `new Request(request, init)` copies the signal object of the original request (`signal = oldRequest->getSignal()`, line 413). So a copy of an incoming request carries the same mark.
+  - Cloudflare's flag reference says: "This flag does not change `request_signal_passthrough`." The reference of `request_signal_passthrough` says that, with that flag, "the `AbortSignal` of an incoming request will be passed through to subrequests when the request is forwarded to a subrequest using the `fetch()` API."
+  - Proven: `worker/files/runner.test.ts:144-150` aborts the signal of a pending read and checks its `file_unavailable` rejection. The test aborts the signal itself.
+  - Proven: on 18 November 2026, a local run of workerd `1.20261101.1` through Miniflare used the date `2026-11-06`. It sent a `POST` through the production `requestBodyEntry`, then closed the client connection. Without `enable_request_signal`, the incoming signal and the signal of the copy fired no `abort` event. With the flag, each fired one. That run had no Durable Object.
+  - Not proven: whether a browser disconnect fires the signal of the request that reaches the workspace object. That needs two runtime steps. The disconnect must cancel the `stub.fetch` subrequest, and the runtime must report that cancel to the object as a disconnect. No test or run checks these steps, locally or on Cloudflare.
+  - The web app aborts an earlier file or diff read when the user opens another file (`src/files/model/resource-loader.ts:41-46` and `:60-62`). So browsers leave pending reads in normal use.
+  - No protocol doc states a requirement for the cancellation of a file read. The cancellation requirement of `docs/protocol/model-gateway-requests.md#streams` covers only model requests.
+- **Problem:** Line 141 says that the outer Worker forwards its cancellation signal, but the runtime clears that signal on the forward, because passthrough is off. Line 13 says that the handler preserves cancellation, but no test or run shows that a browser disconnect reaches the handler's signal.
+- **Impact if no action:** A developer can trust that a pending file read ends when the browser leaves, and leave out a needed cleanup on that basis. Users see no difference, because the browser has already left.
+- **Root question:** What can the files README truthfully say about how a browser disconnect reaches a pending file read?
+- **Options:**
+  - **A.** Correct the two sentences to the proven facts. Keep lines 118-119 and 144, which state the code correctly. Cost: the README states an open question, and the runtime steps stay unknown. Effort: Small.
+    - Line 13 can say: "Its handler gives each runner wait the signal of the request that reaches the object. It reads the captured checkout folder from D1."
+    - Line 141 can say: "The outer Worker forwards the original request with `stub.fetch`. The runtime does not pass the signal of the outer request on, because passthrough is off. No test or run shows that a browser disconnect ends a pending read."
+  - **B.** First run a one-time local workerd proof through a Durable Object. A client sends a `GET`, the Worker forwards it with `stub.fetch(request)`, and the object waits on its own `request.signal`. Close the client, and record whether the object's signal fires, with and without `enable_request_signal`. Then write the measured result into the two sentences. Cost: a probe with a Durable Object, and a local result that does not prove Cloudflare production. Effort: Medium.
+  - **C.** Make the claim true in code. The outer Worker listens for its own `abort` event and calls a workspace object method that ends the pending read with the same request ID. Cost: a new internal call and ID on each forwarded file request, for a result that nobody sees. It also adds behaviour that no requirement covers. Effort: Medium.
+- **Left out:**
+  - Delete the two sentences with no replacement: A is better on every point, because A keeps the true facts of the path.
+  - Give the forward an explicit signal of the outer Worker: even when the forward then stops on a disconnect, the object's own signal still depends on a runtime step that no check shows. This fails the goal.
+  - Turn on passthrough: it changes the cancellation of every forwarded route of the Worker. The object's own signal still depends on a runtime step that no check shows.
+  - Send a cancel command to the runner: it adds a runner message that older runners do not know. The claims are about the Worker side, not the runner.
+- **Wider fix:** None. The rule that a README states only current facts about the code is already in force.
+- **Previous examples:** `worker/model-gateway/README.md:189` says "A client disconnect also cancels the upstream." That was not true while `wrangler.jsonc` lacked `enable_request_signal`. The change that turned on the flag closed that case.
+- **Recommendation:** A. It makes the README true at the smallest cost, and no requirement needs the runtime steps that B would measure. B best protects later work, because it replaces the open question with a measured result.
+- **Action:** fix after merge, apply A, because the README is outside the files of the flag change, and the correction changes no behaviour.

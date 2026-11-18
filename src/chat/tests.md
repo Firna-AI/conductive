@@ -24,7 +24,11 @@ It checks the plain message of a refused retry in a tab that missed newer events
 `state/linked-replies.test.tsx` drives replies of Send and Try again that
 name a linked session, in both orders, and two chats with different readers
 on one fake stream. `components/SessionLogin.test.tsx` renders the login
-label and its notices. `components/ComposerModels.dom.test.tsx` opens the
+label and its notices. `components/MissingLoginNotice.dom.test.tsx` mounts
+the chat and checks the watch of the notice of a missing login. The notice
+keeps one watch while it shows, also while the reader types. The watch ends
+when a read names a login that serves and at the unmount, and a notice that
+shows again starts a new one. `components/ComposerModels.dom.test.tsx` opens the
 model picker of a reader whose own endpoint list leaves models out, in the
 reader's own session, in the session of another member, and before a
 message that starts a linked session. In an empty session of another

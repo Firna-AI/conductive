@@ -3,6 +3,7 @@ import type { Session } from '../../shared/generated/Session'
 import type { Workspace } from '../../shared/generated/Workspace'
 import type { UserMessage } from '../../shared/generated/UserMessage'
 import type { WorkspaceStart } from '../../shared/generated/WorkspaceStart'
+import type { LoginObservation } from '../../app/login-observation'
 import type { MentionTarget } from '../mentions/MentionsContext'
 import type { DraftFile } from '../../app/draft-files'
 
@@ -119,6 +120,8 @@ export interface ChatSnapshot {
   savedError: string | null
   org: OrgSummary | null
   account: AccountSummary | null
+  /** Whether a complete account reply is newer than an observed login fact. */
+  loginObservationCurrent?: (observation: LoginObservation) => boolean
   /** The members of the org, which name the member who stopped a turn. */
   members: readonly MemberSummary[]
   models: readonly AgentModel[]
