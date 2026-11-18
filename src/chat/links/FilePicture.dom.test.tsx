@@ -2,7 +2,16 @@
 
 import { act } from 'react'
 import { describe, expect, test } from 'vitest'
+import {
+  filesAfterHistory,
+  heldTree,
+  waitUntil,
+} from '../../files/files-test-kit'
+import type { WorkspaceFiles } from '../../files/model/files-store'
 import { fakeDecoder } from '../../files/page/picture-test-kit'
+import { filePaths } from '../../shared/files'
+import { FakeApiServer } from '../../test-support/fake-api'
+import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { press } from '../../test-support/mount'
 import { AgentText } from '../components/AgentText'
 import { copyAll } from './mention-copy-test-kit'
@@ -20,13 +29,14 @@ const answer = 'The phone view: ![Phone view](shots/after.png). It fits.'
 const message = 'agent:turn-1:answer-1'
 
 /** An answer with a screenshot, in a chat that reads pictures. */
-async function mountAnswer(text = answer) {
+async function mountAnswer(text = answer, files?: WorkspaceFiles) {
   const near = fakeNearView()
   const decoded = fakeDecoder()
   const pictures = fakeReader()
   const view = await mountPictures(
     <AgentText id={message} text={text} />,
     pictures.reader,
+    files,
   )
   return { ...view, near, decoded, pictures }
 }
@@ -39,6 +49,61 @@ function answerIn(container: HTMLElement): Element {
 }
 
 describe('the picture of a Markdown image in an answer', () => {
+  test('shows the picture when its file tree arrives after the answer', async () => {
+    const server = new FakeApiServer()
+    server.json('GET', filePaths.tree(FAKE_IDS.org, FAKE_IDS.workspace), {
+      revision: 1,
+      entries: [
+        {
+          path: 'shots/after.png',
+          name: 'after.png',
+          kind: 'file',
+          change: null,
+        },
+      ],
+    })
+    const held = heldTree(server)
+    const files = filesAfterHistory(server, held.fetch)
+    files.start()
+    const view = await mountAnswer(answer, files)
+    view.near.come()
+    expect(view.container.querySelector('p')?.textContent).toContain(
+      '[Phone view](shots/after.png)',
+    )
+    expect({
+      images: imagesIn(view.container),
+      watched: view.near.observers.length,
+      asked: view.pictures.asked(),
+    }).toEqual({ images: [], watched: 0, asked: [] })
+
+    await act(async () => {
+      held.release()
+      await waitUntil(() =>
+        expect(files.getSnapshot().tree?.entries.has('shots/after.png')).toBe(
+          true,
+        ),
+      )
+    })
+    expect(imagesIn(view.container)).toEqual([
+      { name: 'Phone view', shows: 'box', in: 'P', title: 'shots/after.png' },
+    ])
+    expect(view.pictures.asked()).toEqual([])
+    view.near.come()
+    expect(view.pictures.asked()).toEqual([
+      { path: 'shots/after.png', message },
+    ])
+    await view.pictures.answer(0, { status: 'picture', address: shotAddress })
+    view.decoded[0]?.draw(390, 844)
+    expect(imagesIn(view.container)).toEqual([
+      {
+        name: 'Phone view',
+        shows: 'picture',
+        in: 'P',
+        title: 'shots/after.png',
+      },
+    ])
+  })
+
   test('shows the box of its label, and reads the file for its message only when it comes near the view of the chat', async () => {
     const view = await mountAnswer()
     const before = view.pictures.asked()

@@ -2,8 +2,12 @@ import { act, type ReactNode } from 'react'
 import { onTestFinished, vi } from 'vitest'
 import paneStyles from '../../../docs/mockups/src/components/chat/ChatPane.module.css'
 import pictureStyles from '../../../docs/mockups/src/components/chat/AnswerPicture.module.css'
+import { filesFor, startFiles } from '../../files/files-test-kit'
+import type { WorkspaceFiles } from '../../files/model/files-store'
 import type { ChatPictures, PictureRead } from '../../files/page/picture-reads'
+import { filePaths } from '../../shared/files'
 import type { FileEntry } from '../../shared/generated/FileEntry'
+import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { deferred, mount, type Deferred } from '../../test-support/mount'
 import { ChatPane } from '../components/ChatPane'
@@ -134,15 +138,22 @@ export function fakeReader() {
  * the screenshots, and with `reader` as the picture reader of the chat,
  * as while the cloud computer runs. A press on a file notes its path.
  */
-export async function mountPictures(content: ReactNode, reader?: ChatPictures) {
+export async function mountPictures(
+  content: ReactNode,
+  reader?: ChatPictures,
+  files?: WorkspaceFiles,
+) {
   const opened: string[] = []
-  const snapshot = {
-    tree: { entries: new Map(entries.map((entry) => [entry.path, entry])) },
-    treeError: null,
-    treeUnavailable: false,
-  }
+  const server = new FakeApiServer({ savedLists: false })
+  server.json('GET', filePaths.tree(FAKE_IDS.org, FAKE_IDS.workspace), {
+    revision: 1,
+    entries,
+  })
+  const store = files ?? filesFor(server)
+  onTestFinished(() => store.stop())
+  if (!files) await startFiles(store)
   const mentions: ChatMentions = {
-    files: { subscribe: () => () => undefined, getSnapshot: () => snapshot },
+    files: store,
     pictures: reader,
     openFile: (path) => opened.push(path),
     showFolder: () => undefined,

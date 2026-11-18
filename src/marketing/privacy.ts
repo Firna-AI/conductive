@@ -165,12 +165,13 @@ export const privacyDocument: LegalDocument = {
             hide a changed or encoded value, or a value in a picture that an
             agent answer shows.`,
           text`An env var is secret until an admin clears its mark. Before
-            ${productName} puts agent output in the chat history or on a
-            screen, it hides each exact copy of a secret value in it. It also
-            hides such a copy in each start log that it shows, and in the
-            names and folders of the servers that it lists. It does not hide
-            a changed or encoded value. A change of the mark applies at
-            the next start of a cloud computer.`,
+            ${productName} puts the text of agent output in the chat history
+            or on a screen, it hides each exact copy of a secret value in it.
+            It also hides such a copy in each start log that it shows, and in
+            the names and folders of the servers that it lists. It does not
+            hide a changed or encoded value, or a value in a picture that an
+            agent answer shows. A change of the mark applies at the next start
+            of a cloud computer.`,
           text`${productName} keeps the real path of each file, because it
             needs that path to open the file. It also keeps the real name of
             the default branch of each repository, and of the base branch of

@@ -252,9 +252,12 @@ Depends on: 1, 4
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
       Run the Rust checks too.
-- [ ] Commit with Conventional Commits and push the branch.
+      Evidence: `.context/screenshots-in-answers/m6/`. The second gate run
+      passed after a split of `workspaceParts.tsx`, which the merge of
+      `main` took past 300 lines.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
