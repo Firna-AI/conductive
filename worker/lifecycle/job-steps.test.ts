@@ -13,6 +13,7 @@ import {
   type JobRunRecord,
   type StartStepRecord,
 } from './job-steps'
+import { timedDatabase } from './timed-d1'
 
 const fixtureForTest = setupBackendTests()
 
@@ -150,4 +151,28 @@ it('keeps the first copy of a run and deletes records after 90 days', async () =
     .all()
   expect(runs.results).toEqual([{ n: 1, endedAt: TEST_TIME + 700 }])
   expect(await steps(db, 'old')).toEqual([])
+})
+
+it('lets the plain binding batch a statement of a timed binding', async () => {
+  const { runtime, org } = await fixtureForTest()
+  const db = runtime.env.DB
+  const names: string[] = []
+  const timed = timedDatabase(db, {
+    time: async (_kind, name, call) => {
+      names.push(name)
+      return await call()
+    },
+  })
+  await db.batch([
+    timed
+      .prepare('UPDATE orgs SET name = ? WHERE id = ?')
+      .bind('Renamed', org.id),
+  ])
+  expect(
+    await timed
+      .prepare('SELECT name FROM orgs WHERE id = ?')
+      .bind(org.id)
+      .first('name'),
+  ).toBe('Renamed')
+  expect(names).toEqual(['d1.first'])
 })
