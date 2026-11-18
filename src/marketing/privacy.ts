@@ -131,8 +131,14 @@ export const privacyDocument: LegalDocument = {
         paragraph`The team keeps each feedback email in its inbox while it
           helps to improve ${productName}. It deletes the email when it no
           longer helps, or when the sender asks. ${productName} keeps no copy
-          of feedback in its own storage. The app keeps an unsent feedback
-          draft only in the memory of its open tab.`,
+          of your feedback message or screenshots in its own storage. The
+          app keeps an unsent feedback draft only in the memory of its open
+          tab.`,
+        paragraph`Feedback send records normally stay for about 24 hours.
+          A late retry whose delivery remains unconfirmed can extend this
+          to about 25 hours. Scheduled cleanup removes them after these
+          periods. Cleanup delays can keep them longer. Account deletion
+          also deletes these records.`,
         paragraph`To request deletion of your personal data, write to
           ${mailLink(legalAddress)}. Deletion rights depend on applicable
           law and can have exceptions.`,

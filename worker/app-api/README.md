@@ -399,9 +399,11 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   and starts a build after an add.
   Their `*-data.ts` files keep queries and guarded writes.
 - [`feedback.ts`](feedback.ts), [`feedback-input.ts`](feedback-input.ts),
-  [`feedback-data.ts`](feedback-data.ts), and
-  [`feedback-mail.ts`](feedback-mail.ts): the feedback routes, the checked
-  body, the reply email and reachable IDs, and the email.
+  [`feedback-data.ts`](feedback-data.ts),
+  [`feedback-mail.ts`](feedback-mail.ts), and
+  [`feedback-quota-data.ts`](feedback-quota-data.ts): the feedback routes,
+  the checked body, the reply email and reachable IDs, the email, and the
+  send limit.
   [Feedback routes](feedback.md#key-code) gives each entry point.
 
 ### Related docs

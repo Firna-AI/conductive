@@ -188,6 +188,11 @@ it('refuses invalid messages, malformed or renamed images, and excess combined i
     })
   }
   expect(client.resend.requests).toHaveLength(0)
+  expect(
+    await harness.env.DB.prepare(
+      'SELECT COUNT(*) AS count FROM feedback_sends',
+    ).first('count'),
+  ).toBe(0)
 })
 
 it('reports missing inboxes and failed delivery without exposing provider data or logging feedback', async () => {

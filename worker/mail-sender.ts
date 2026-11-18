@@ -11,7 +11,19 @@ interface MailMessage {
   subject: string
   text: string
   deliveryKey: (body: string) => Promise<string>
+  beforeSend?: (deliveryKey: string) => Promise<boolean>
   developmentLog: string
+}
+
+export type MailDeliveryOutcome = 'sent' | 'rejected' | 'uncertain'
+
+export class MailDeliveryError extends Error {
+  readonly outcome: MailDeliveryOutcome
+
+  constructor(outcome: MailDeliveryOutcome) {
+    super('Email delivery failed')
+    this.outcome = outcome
+  }
 }
 
 export function createMailSender(
@@ -23,11 +35,12 @@ export function createMailSender(
   )
   return {
     async send(message: MailMessage): Promise<void> {
-      if (local) {
+      if (local && !message.beforeSend) {
         console.info(message.developmentLog)
         return
       }
-      if (!env.RESEND_API_KEY) throw new Error('Mail sender is not configured')
+      if (!local && !env.RESEND_API_KEY)
+        throw new Error('Mail sender is not configured')
       const sender = message.sender ?? { name: productName, mailbox: 'invites' }
       const body = JSON.stringify({
         from: `${sender.name} <${sender.mailbox}@mail.${productDomain}>`,
@@ -41,21 +54,41 @@ export function createMailSender(
           content: imageBase64(image.bytes),
         })),
       })
-      const response = await fetch(
-        outboundRequest('https://api.resend.com/emails', {
-          method: 'POST',
-          signal: AbortSignal.timeout(30_000),
-          headers: {
-            Authorization: `Bearer ${env.RESEND_API_KEY}`,
-            'Content-Type': 'application/json',
-            'Idempotency-Key': await message.deliveryKey(body),
-          },
-          body,
-        }),
-      )
-      const accepted = response.ok
-      await response.body?.cancel()
-      if (!accepted) throw new Error('Email was refused')
+      const deliveryKey = await message.deliveryKey(body)
+      if (message.beforeSend && !(await message.beforeSend(deliveryKey))) return
+      if (local) {
+        console.info(message.developmentLog)
+        return
+      }
+      const request = outboundRequest('https://api.resend.com/emails', {
+        method: 'POST',
+        signal: AbortSignal.timeout(30_000),
+        headers: {
+          Authorization: `Bearer ${env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json',
+          'Idempotency-Key': deliveryKey,
+        },
+        body,
+      })
+      let response: Response
+      try {
+        response = await fetch(request)
+      } catch {
+        throw new MailDeliveryError('uncertain')
+      }
+      const outcome = response.ok
+        ? 'sent'
+        : response.status === 408 ||
+            response.status === 409 ||
+            response.status >= 500
+          ? 'uncertain'
+          : 'rejected'
+      try {
+        await response.body?.cancel()
+      } catch {
+        throw new MailDeliveryError(outcome)
+      }
+      if (!response.ok) throw new MailDeliveryError(outcome)
     },
   }
 }
