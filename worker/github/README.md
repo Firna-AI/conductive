@@ -258,7 +258,8 @@ The retry of a committed delivery replays its receipt and copies again, without 
 
 ## Verification
 
-[Verification](verification.md) gives the test commands and the native storage checks.
+The GitHub tests that store state run on the production workspace object in Miniflare, through the [shared test harness](../test-support/README.md).
+[Verification](verification.md) gives the test commands, the GitHub fixtures and fault controls on that harness, and what each test covers.
 
 ### Key Code
 

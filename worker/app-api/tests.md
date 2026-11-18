@@ -73,5 +73,8 @@ Run the commands in [Development](README.md#development) from the repository roo
 - `feedback.test.ts`, `feedback-refusals.test.ts`, and
   `feedback-body.test.ts` check the feedback routes with a fake Resend, as
   [Feedback routes](feedback.md#development) says.
+  `feedback-quota.test.ts`, `feedback-concurrency.test.ts`,
+  `feedback-windows.test.ts`, and `feedback-delivery.test.ts` check the
+  send limit with the same fake.
 - `codex-device-endpoint.test.ts` checks a switch from an own endpoint to
   ChatGPT and back, including metadata cleanup.

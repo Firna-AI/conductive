@@ -45,8 +45,8 @@ it.each([
       'merge-blocker',
     )
     expect(response.status).toBe(204)
-    const memory = harness.memory(workspace.id)
-    expect(memory.events).toMatchObject([
+    const inspect = () => harness.inspect(workspace.id)
+    expect((await inspect()).events).toMatchObject([
       {
         eventNumber: 1,
         event: {
@@ -70,6 +70,6 @@ it.each([
         },
       },
     ])
-    expect(memory.published).toEqual(memory.events)
+    expect((await inspect()).published).toEqual((await inspect()).events)
   },
 )

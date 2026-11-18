@@ -13,7 +13,7 @@ import { readDevOptions } from './options'
 import { routeFetch } from './router'
 import { seedState } from './seed'
 
-it('serves reply and send previews with success, no reply address, a first-send failure, and waiting-account refusal', async () => {
+it('serves reply and send previews with success, no reply address, a first-send failure, a first-send refusal by the limit, and waiting-account refusal', async () => {
   const api = (search: string) => {
     const options = readDevOptions(search)
     const backend = createBackend(
@@ -50,6 +50,17 @@ it('serves reply and send previews with success, no reply address, a first-send 
   ).rejects.toMatchObject({ status: 502, code: 'feedback_email_failed' })
   await expect(
     fails.send('POST', FEEDBACK_PATH, {}, ignore),
+  ).resolves.toBeUndefined()
+  const limited = api('?feedback=limit')
+  await expect(
+    limited.send('POST', FEEDBACK_PATH, {}, ignore),
+  ).rejects.toMatchObject({
+    status: 429,
+    code: 'feedback_send_limit',
+    retryAt: 1_800_001_420_000,
+  })
+  await expect(
+    limited.send('POST', FEEDBACK_PATH, {}, ignore),
   ).resolves.toBeUndefined()
   const waiting = api('?waiting=1')
   await expect(waiting.get(FEEDBACK_PATH, readFeedback)).rejects.toMatchObject({

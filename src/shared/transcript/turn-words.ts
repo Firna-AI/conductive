@@ -144,7 +144,9 @@ export function stoppedAttribution(
 export function stoppedNotes(transcript: Transcript, turnId: string): string[] {
   if (hasFileRow(transcript, turnId)) return []
   const speed = standardSpeedLine(transcript, turnId)
-  const files = omittedFiles(transcript, turnId)
+  const completion = completionOf(transcript, turnId)
+  const files =
+    (completion?.files.length ?? 0) + (completion?.omittedFileCount ?? 0)
   return [
     ...(speed === undefined ? [] : [speed]),
     ...(files > 0 ? [unlistedFiles(files)] : []),

@@ -14,6 +14,7 @@ import {
 import { offeredModels } from '../../app/endpoint-models'
 import { loginOwnerName } from '../../app/login-owner'
 import { personName } from '../../app/people'
+import type { LoginObservation } from '../../app/login-observation'
 import type { ChatSnapshot } from './chat-snapshot'
 
 /**
@@ -63,6 +64,8 @@ export interface LoginReader {
   orgId: string
   /** The name of that org, or null when the chat does not know it. */
   orgName: string | null
+  /** Only complete account replies newer than a failed empty-session fact count. */
+  current?: (observation: LoginObservation) => boolean
 }
 
 /** The reader of the chat, or null until the account and workspace load. */
@@ -77,6 +80,7 @@ export function loginReader(snapshot: ChatSnapshot): LoginReader | null {
     account,
     orgId: workspace.orgId,
     orgName: snapshot.org?.name ?? entry?.orgName ?? null,
+    current: snapshot.loginObservationCurrent,
   }
 }
 
@@ -195,7 +199,19 @@ export function sessionLoginOf(
   }
   // The reader's own session with no login yet: its first message takes the
   // default login of the reader, while the record says that one serves.
-  if (!session.loginAvailable) return { kind: 'missing', linked: false }
+  if (!session.loginAvailable) {
+    const current = reader.current?.({
+      agent,
+      orgId: reader.orgId,
+      login: session.defaultLogin ?? null,
+      available: false,
+      source: session.id,
+    })
+    const login = current ? newLogin(reader, agent) : null
+    return login
+      ? { kind: 'session', login }
+      : { kind: 'missing', linked: false }
+  }
   return { kind: 'session', login: newLogin(reader, agent) ?? own }
 }
 

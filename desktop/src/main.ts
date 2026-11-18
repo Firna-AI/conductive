@@ -23,6 +23,7 @@ import { startMacDevice } from './device/main.js'
 import { workspaceDeviceAddress } from './device/notification.js'
 import { installDownloads } from './downloads.js'
 import { exportHandler, registerScheme } from './export-handler.js'
+import { offerApplicationsMoveAtLaunch } from './install-location-prompt.js'
 import { startDesktop } from './lifecycle.js'
 import { installMenu } from './menu.js'
 import { installNavigation } from './navigation.js'
@@ -185,6 +186,10 @@ startDesktop({
       updates.check,
       updates.available,
     )
+    void offerApplicationsMoveAtLaunch({
+      enabled: configuration.updates === 'enabled',
+      warn,
+    }).catch(warn)
   },
   createWindow: createAppWindow,
   receive: (address) => signIn.receive(address),

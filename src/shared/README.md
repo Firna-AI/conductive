@@ -61,7 +61,10 @@ The optional `error.details` identifies an unknown automation author login.
 It carries `login`, `triggerIndex`, and `list`.
 `triggerIndex` is zero-based in the automation's complete trigger list.
 `list` uses the author-filter request key, `is` or `isNot`.
-Errors without details keep the code and message only.
+The optional `error.retryAt` is a non-negative Unix millisecond time.
+Only the `feedback_send_limit` refusal gives it: the time when the oldest count of the person ends.
+[Feedback: the send limit](../../docs/protocol/feedback-send-limit.md) states the rules.
+Other errors keep the code and message only.
 `EmptyRequest` means an empty JSON object, including DELETE requests.
 `repositoryPath` names one repository of an org. PUT adds it and DELETE
 removes it. Each request sends `EmptyRequest` and returns the current list.
@@ -114,7 +117,11 @@ It can build model-list addresses without exposing a model-list gateway route.
 `ENDPOINT_ADDRESS_ERROR` gives the one refusal code and field message.
 Own endpoint logins stay outside the runner protocol.
 `feedback.ts` owns `FEEDBACK_PATH`, the request and reply types of the
-feedback routes, and their byte limits. `FEEDBACK_BODY_MAX_BYTES` is the
+feedback routes, their byte limits, and their send limit.
+`FEEDBACK_SENDS_PER_HOUR` is the number of feedback emails that one person
+can send in a rolling hour. The Worker, the dev fake, and the words of the
+dialog read it.
+`FEEDBACK_BODY_MAX_BYTES` is the
 JSON body limit of a send. `FEEDBACK_SCREENSHOTS_MAX_BYTES` is the limit of
 the decoded screenshots of one message. `SendFeedbackRequest` carries each
 screenshot as base64 `content` only, with no name and no media type.

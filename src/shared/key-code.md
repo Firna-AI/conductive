@@ -97,7 +97,7 @@ page.
 - [GitHub contracts](github.ts) give the seven `githubPaths` routes of a workspace: the banner, checks, and stored reads, the member capability, the merge start, the merge result, and Ready for review. `PullRequest.headSha` is the head commit that the banner shows, and `GitHubMergeRequest` sends it back with the merge method. `GitHubCapabilities` gives `canWrite` and the `mergeMethod` that the member may use, or null. `GitHubMergeResponse` is a pending app job with its `mergeId`, or a completed merge. `GitHubReadyRequest` sends the `pullNumber` that the bar shows, and `GitHubReadyResponse` says that the pull request is ready. These member replies never become workspace events. [Member merges](../../worker/github/merges.md) gives the replies and the error codes.
 - `githubSummary` in [GitHub contracts](github.ts) maps the banner state to the list mark, and `checksSummary` gives the checks state that the bar uses. [The summary reader](github-read.ts) reads `Workspace.github`.
 - [Org settings](org-settings.ts) carry the base image software for the Cloud computer tab.
-- [Feedback contracts](feedback.ts) define the feedback path, its request and reply, and its byte limits.
+- [Feedback contracts](feedback.ts) define the feedback path, its request and reply, its byte limits, and its send limit.
 - [Image signatures](images.ts) give `readImage` and `CheckedImage`. [images.test.ts](images.test.ts) checks the four formats, both GIF signatures, and refused or short signatures.
 - [Automations](automations.ts) define automation paths, editable fields, triggers, inactive reasons, and run states.
   Author-filter requests carry logins. Saved filters carry account IDs and canonical logins.

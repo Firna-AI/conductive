@@ -99,6 +99,12 @@ change that adds the org logins, as
   the user typed during the send. A notice says that it did not send.
   Reason: a message that stayed in the composer until the reply made each
   send feel slow.
+- A send with no answer, or with a server error, can still reach the
+  Worker. When the chat later shows that message, the message did send. The
+  notice that it did not send then goes. The composer empties when it holds
+  only that message, unchanged since the failure. A composer that the user
+  changed keeps its text. Reason: a notice and a draft of a message that
+  the chat shows tell the user to send it a second time.
 - The composer shows a notice when no login serves the user for the agent
   of the chosen model (decision 33, org login decision 4). The user then
   has no usable personal login, and the org has no usable org login. The

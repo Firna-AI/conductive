@@ -13,6 +13,9 @@ ExecStartPost=+/usr/bin/systemctl --no-block start conductive-update-check.servi
 Restart=on-failure
 RestartSec=2
 KillMode=control-group
+# An out-of-memory kill of one process, such as a large build of an agent,
+# ends only that process. The runner and every running turn keep running.
+OOMPolicy=continue
 
 [Install]
 WantedBy=multi-user.target

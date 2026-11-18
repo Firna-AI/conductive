@@ -68,31 +68,42 @@ export async function tmuxServer() {
   const parent = resolve('.context/terminal-bridge-tests')
   await mkdir(parent, { recursive: true })
   const root = await mkdtemp(`${parent}/run-`)
+  const home = `${root}/home`
+  await mkdir(home)
+  await writeFile(`${home}/.bash_profile`, "unset PROMPT_COMMAND\nPS1='$ '\n")
+  const environment = { ...process.env, HOME: home }
   // tmux refuses a socket path of 108 characters or more, so the socket
   // lives in a short folder, not under the checkout.
   const socket = `${await mkdtemp(`${tmpdir()}/cbt-`)}/tmux.sock`
   const runner = `${root}/pty-run.py`
   await writeFile(runner, ptyRunner)
-  const started = spawnSync('tmux', [
-    '-S',
-    socket,
-    '-f',
-    '/dev/null',
-    'start-server',
-    ';',
-    'set-option',
-    '-s',
-    'exit-empty',
-    'off',
-    ';',
-    'set-option',
-    '-g',
-    'history-limit',
-    String(TERMINAL_HISTORY_LINES),
-  ])
+  const started = spawnSync(
+    'tmux',
+    [
+      '-S',
+      socket,
+      '-f',
+      '/dev/null',
+      'start-server',
+      ';',
+      'set-option',
+      '-s',
+      'exit-empty',
+      'off',
+      ';',
+      'set-option',
+      '-g',
+      'history-limit',
+      String(TERMINAL_HISTORY_LINES),
+    ],
+    { env: environment },
+  )
   if (started.status !== 0) throw new Error('tmux did not start.')
   const tmux = (...args: string[]) =>
-    spawnSync('tmux', ['-S', socket, ...args], { encoding: 'utf8' }).stdout
+    spawnSync('tmux', ['-S', socket, ...args], {
+      encoding: 'utf8',
+      env: environment,
+    }).stdout
   const viewers: Viewer[] = []
   return {
     root,
@@ -109,7 +120,14 @@ export async function tmuxServer() {
       )
     },
     connect(rows: number, columns: number) {
-      const viewer = new Viewer(runner, socket, root, rows, columns)
+      const viewer = new Viewer(
+        runner,
+        socket,
+        root,
+        environment,
+        rows,
+        columns,
+      )
       viewers.push(viewer)
       return viewer
     },
@@ -132,21 +150,26 @@ class Viewer {
     runner: string,
     socket: string,
     repository: string,
+    environment: NodeJS.ProcessEnv,
     rows: number,
     columns: number,
   ) {
     this.rows = rows
     this.columns = columns
-    this.process = spawn('python3', [
-      runner,
-      String(rows),
-      String(columns),
-      process.execPath,
-      main,
-      'tmux',
-      socket,
-      repository,
-    ])
+    this.process = spawn(
+      'python3',
+      [
+        runner,
+        String(rows),
+        String(columns),
+        process.execPath,
+        main,
+        'tmux',
+        socket,
+        repository,
+      ],
+      { env: environment },
+    )
     this.process.stdout?.on('data', (chunk: Buffer) => {
       this.data = Buffer.concat([this.data, chunk])
     })

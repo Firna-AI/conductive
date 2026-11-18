@@ -148,6 +148,16 @@ The session history stays open. The tab keeps its old name, and the sandbox bar 
   [`state/drafts.ts`](state/drafts.ts) says. Text and files that the user
   added during the send stay after it, and the message then gets a new ID.
   The notice "Your message didn't send" shows the Worker's plain message.
+- A send with no answer, or with a server error, can still reach the
+  Worker, as `isRefusal` of [`state/context.ts`](state/context.ts) says.
+  The notice of a failed send keeps the client ID of its message. When a
+  transcript of any session shows that ID, the notice goes, and a draft
+  that still holds that client ID empties, as `withLateSends` of
+  [`state/late-sends.ts`](state/late-sends.ts) says. An edit of the draft
+  clears its client ID, so a changed draft stays. A stream that shows the
+  message before the error arrives gets the same result, as
+  `showSendFailed` of [`state/message-send.ts`](state/message-send.ts)
+  says. A fixed prompt follows the same rule for its notice.
 - Send takes the files whose marks the draft text holds. It writes the
   returned copy path of each file at its mark, as
   [The send](draft-files.md#the-send) says.

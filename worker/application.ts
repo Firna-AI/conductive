@@ -64,6 +64,7 @@ import { scanAutomationSchedules } from './automations/schedule-scan'
 import { healthResponse } from './health-response'
 import { isSecretMachinePath } from './secrets/routes'
 import { routeSecretTool } from './tools/secrets'
+import { cleanupFeedbackSends } from './app-api/feedback-quota-data'
 
 export function createApp(overrides: Partial<AppDependencies> = {}) {
   const dependencies: AppDependencies = {
@@ -270,6 +271,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
         return
       }
       if (event.cron !== '*/15 * * * *') return
+      await cleanupFeedbackSends(env.DB, dependencies.now())
       await cleanupCodexDevices(env.DB, dependencies.now())
       await cleanupDeletedOrgs(
         env,

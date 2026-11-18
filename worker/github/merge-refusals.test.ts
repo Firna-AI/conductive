@@ -11,7 +11,6 @@ beforeAll(async () => {
 })
 beforeEach(async () => {
   await fixture.harness.reset()
-  fixture.jobs.clear()
 })
 afterAll(async () => {
   await fixture.base.dispose()
@@ -108,7 +107,10 @@ it('maps failed, expired, and enqueued results without exposing upstream text', 
   expect(await (await fixture.request(path, session)).json()).toMatchObject({
     error: { code: 'github_merge_unavailable' },
   })
-  expect(fixture.harness.states.size).toBe(0)
+  expect(
+    (await fixture.harness.inspect('workspace-1')).records.has('github:state'),
+  ).toBe(false)
+  expect((await fixture.harness.inspect('workspace-1')).published).toEqual([])
 })
 
 it('returns an immediate merged result and refreshes shared state', async () => {
@@ -119,6 +121,6 @@ it('returns an immediate merged result and refreshes shared state', async () => 
   expect(response.status).toBe(200)
   expect(await response.json()).toEqual({ state: 'merged' })
   expect(
-    fixture.harness.memory('workspace-1').published.at(-1)?.event,
+    (await fixture.harness.inspect('workspace-1')).published.at(-1)?.event,
   ).toMatchObject({ type: 'github.updated', banner: { state: 'merged' } })
 })
