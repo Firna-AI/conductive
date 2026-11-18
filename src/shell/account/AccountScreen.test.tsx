@@ -124,12 +124,12 @@ describe('AccountScreen', () => {
     const app = await startedApp(server)
     const view = mountScreen(
       app,
-      <AccountScreen connect="codex" tab="general" user={fakeUser} />,
+      <AccountScreen connect="codex" tab="agents" user={fakeUser} />,
     )
     await settle()
     const [claude, codex] = listItems(view.innerHTML, 'Agents')
     expect(textOf(claude)).toBe(
-      'Claude Connected Subscription token Remove Let other members use this login Their messages in your sessions start a new session on their own login.',
+      'Claude Connected Subscription token Remove Let other members use this login Their messages in your sessions start a new session.',
     )
     expect(buttonsOf(claude)).toEqual([
       { label: 'Remove Claude', disabled: false },
@@ -151,11 +151,11 @@ describe('AccountScreen', () => {
     serveAccount(server, [{ ...chatGptLogin, unusableCause: cause }])
     const view = mountScreen(
       app,
-      <AccountScreen connect={null} tab="general" user={fakeUser} />,
+      <AccountScreen connect={null} tab="agents" user={fakeUser} />,
     )
     await settle()
     expect(codexItem(view)).toBe(
-      `Codex ${copy.signedOut} ChatGPT plan Remove ${cause} ${copy.signInAgain} Let other members use this login Their messages in your sessions start a new session on their own login.`,
+      `Codex ${copy.signedOut} ChatGPT plan Remove ${cause} ${copy.signInAgain} Let other members use this login Their messages in your sessions start a new session.`,
     )
   })
 
@@ -186,7 +186,7 @@ describe('AccountScreen', () => {
     }).toEqual({
       general: {
         current: ['General'],
-        sections: ['GitHub', 'Agents', 'Invite code'],
+        sections: ['GitHub', 'Invite code'],
         model: false,
         choice: null,
       },

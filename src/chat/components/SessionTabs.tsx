@@ -1,3 +1,4 @@
+import type { TranscriptDetail } from '../../shared/generated/TranscriptDetail'
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
 import { History, Plus } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
@@ -5,7 +6,7 @@ import tabScroll from '../../../docs/mockups/src/components/workspace/TabScroll.
 import styles from '../../../docs/mockups/src/components/workspace/WorkspaceTabs.module.css'
 import { ownPress } from '../../app/pointer-drag'
 import { useSidewaysWheel } from '../../app/sideways-wheel'
-import type { TranscriptDetail } from '../../shared/sessions'
+
 import type { WorkspaceTab } from '../../shared/workspace-view'
 import type { TabPlace } from '../state/tab-order'
 import { IconButton } from '../ui/actions'
@@ -15,6 +16,7 @@ import { Menu, type MenuEntry } from '../ui/Menu'
 import { useEdgeScroll, useRowScroll } from './row-scroll'
 import { SessionTabItem } from './SessionTab'
 import { DropLine, LiftedTab } from './TabDragParts'
+import { closeOtherTabs, closeTabsRight } from './close-tabs'
 import { TabMenu } from './TabMenu'
 import { TabNodes } from './tab-nodes'
 import { rowKey, type RowTab } from './tab-row'
@@ -38,10 +40,11 @@ function keptTab(tabs: readonly RowTab[], renaming: string | null) {
  * for a new session on the same branch and cloud computer, and the clock of
  * the session history. Every tab closes. A tab moves by drag and drop, or
  * by a long press on a phone, as `useTabDrag` says, and its tab menu renames
- * a session, copies its transcript, and moves a tab one place, as
- * `useTabMenu` says. A row whose tabs do not fit scrolls sideways, as
- * `useRowScroll` says. On desktop the history and the tab menu open beside
- * their trigger; a phone shows them as sheets.
+ * a session, copies its link or its transcript, keeps the temporary tab,
+ * moves a tab one place, and closes the other tabs or the tabs to its
+ * right, as `useTabMenu` says. A row whose tabs do not fit scrolls
+ * sideways, as `useRowScroll` says. On desktop the history and the tab menu open beside their trigger;
+ * a phone shows them as sheets.
  */
 export function SessionTabs(props: {
   tabs: readonly RowTab[]
@@ -55,12 +58,17 @@ export function SessionTabs(props: {
   historyOpen: boolean
   historyEntries: readonly MenuEntry[]
   onSelect: (id: string) => void
-  onClose: (id: string) => void
+  /** Closes session tabs, with one question for the running sessions. */
+  onClose: (...ids: string[]) => void
+  /** Closes file and diff tabs of the host, for the closes of the tab menu. */
+  onCloseTabs: (tabs: readonly WorkspaceTab[]) => void
   onStartRename: (id: string) => void
   onRename: (id: string, title: string) => void
   onCancelRename: () => void
   /** Copies the transcript of a session, during the press of its item. */
   onCopy: (id: string, detail: TranscriptDetail) => void
+  /** Copies the link of a session. Without it, the menu has no Copy link. */
+  onCopyLink?: (id: string) => void
   onMove: (tab: WorkspaceTab, place: TabPlace) => void
   onNew: () => void
   onShowHistory: (open: boolean) => void
@@ -81,7 +89,11 @@ export function SessionTabs(props: {
     renaming,
     onRename: props.onStartRename,
     onStep: moves.step,
+    onCloseOthers: (tab) => closeOtherTabs(tabs, tab, props),
+    onCloseRight: (tab) => closeTabsRight(tabs, tab, props),
+    onKeep: moves.keep,
     onCopy: props.onCopy,
+    onCopyLink: props.onCopyLink,
   })
   const drag = useTabDrag({
     tabs,
@@ -101,7 +113,7 @@ export function SessionTabs(props: {
     nodes,
     keys: tabs.map(rowKey),
     kept: keptTab(tabs, renaming),
-    moved: moves.last,
+    moved: moves.moved,
   })
   useEdgeScroll(row, drag.lifted)
   useSidewaysWheel(row)

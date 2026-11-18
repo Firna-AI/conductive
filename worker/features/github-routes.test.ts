@@ -16,7 +16,6 @@ import {
 } from '../chat/integration/outer-runtime.test-support'
 import {
   OUTER_ORG,
-  OUTER_SOFTWARE,
   OUTER_WORKSPACE,
 } from '../chat/integration/outer-seed.test-support'
 import { RepositoryGitHub } from '../github/fake-repository'
@@ -48,8 +47,6 @@ it('shares chat history with GitHub reads, retries pending reads, and refreshes 
         .export({ type: 'pkcs1', format: 'pem' })
         .toString(),
       GITHUB_WEBHOOK_SECRET: secret,
-      CONDUCTIVE_RUNNER_ARCHIVE_URL: OUTER_SOFTWARE.url,
-      CONDUCTIVE_RUNNER_ARCHIVE_SHA256: OUTER_SOFTWARE.sha256,
     },
     outbound: (request, fallback) => {
       const url = new URL(request.url)
@@ -69,6 +66,12 @@ it('shares chat history with GitHub reads, retries pending reads, and refreshes 
     active.env.DB.prepare(
       "UPDATE repositories SET github_repository_id = 186853002, full_name = 'Codertocat/Hello-World', installation_id = 1 WHERE id = 'chat-repository'",
     ),
+    // The published image holds the same name, so a push refreshes it. An
+    // image with an older name gets a build instead.
+    active.env.DB.prepare(
+      `UPDATE image_build_jobs SET repositories_json = replace(repositories_json, '"owner/repository"', '"Codertocat/Hello-World"')
+       WHERE build_id IN (SELECT image_build_id FROM org_images WHERE org_id = 'chat-org')`,
+    ),
     active.env.DB.prepare(
       "UPDATE workspaces SET branch = 'changes' WHERE id = ?",
     ).bind(OUTER_WORKSPACE),
@@ -81,6 +84,11 @@ it('shares chat history with GitHub reads, retries pending reads, and refreshes 
   expect(
     string(record(record(await sessionResponse.json()).session).id),
   ).not.toBe('')
+  const empty = await active.request(
+    githubPaths.stored(OUTER_ORG, OUTER_WORKSPACE),
+  )
+  expect(empty.status).toBe(200)
+  expect(await empty.json()).toEqual({ state: null })
   const pending = await active.request(
     githubPaths.banner(OUTER_ORG, OUTER_WORKSPACE),
   )
@@ -110,6 +118,16 @@ it('shares chat history with GitHub reads, retries pending reads, and refreshes 
   expect(await checks.json()).toMatchObject({
     state: 'available',
     checks: [{ state: 'passed' }],
+  })
+  const stored = await active.request(
+    githubPaths.stored(OUTER_ORG, OUTER_WORKSPACE),
+  )
+  expect(stored.status).toBe(200)
+  expect(await stored.json()).toMatchObject({
+    state: {
+      banner: { state: 'ready-to-merge', branch: 'changes' },
+      checks: { state: 'available', checks: [{ state: 'passed' }] },
+    },
   })
   const stream = await active.request(
     workspaceEventsPath(OUTER_ORG, OUTER_WORKSPACE),

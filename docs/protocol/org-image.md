@@ -1,16 +1,18 @@
 # Org image
 
-This doc holds the requirements and the decisions in force for the org image
-that every sandbox of an org starts from. It covers the builds and the
-refreshes of the org image, the first build of a new org, the software
-image that a first build starts from, and the builds and the notices of a
-change of the repositories. It belongs to
-[Workspaces and sandboxes](workspaces-and-sandboxes.md). The terms are those
-of the [architecture doc](../architecture.md#terms). A decision number names
-a dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says. An e2b decision number names a decision of the change that adds E2B as
-the second [sandbox provider](workspaces-and-sandboxes.md#the-provider), as
-that doc says.
+This doc holds the requirements and the decisions in force for the org
+image that every sandbox of an org starts from. It covers the builds and
+the refreshes of the org image, the first build of a new org, and the
+builds and the notices of a change of the repositories.
+[Sandbox software](sandbox-software.md) holds the software image that a
+first build starts from. It
+belongs to [Workspaces and sandboxes](workspaces-and-sandboxes.md). The
+terms are those of the [architecture doc](../architecture.md#terms). A
+decision number names a dated record, as
+[Decision numbers](../architecture.md#decision-numbers) says. An e2b
+decision number names a decision of the change that adds E2B as the second
+[sandbox provider](workspaces-and-sandboxes.md#the-provider), as that doc
+says.
 
 ## The org image
 
@@ -46,6 +48,11 @@ that doc says.
   keeps the last good image (decision 9).
 - While a build runs, its log streams on the Cloud computer tab. New
   workspaces keep starting from the last good image.
+- The log names each step that a build or a refresh runs, as the step
+  starts: the repository copies, the cloud computer software, the install
+  script, and the save of the image. It also says when the image is
+  saved. Reason: the log covers every action of the build, not only the
+  output of commands.
 - A failed build shows the end of its log and Try again. The Settings link
   of the sidebar then shows a mark.
 - After a failed build, the app starts no new build by itself
@@ -76,7 +83,8 @@ that doc says.
   [Operator actions](operator-actions.md#starts-stops-and-builds) says.
 - A refresh fetches the new commits of each repository that the org image
   holds. It does not run the install script, and it adds or removes no
-  repository.
+  repository. It installs the newest release of the sandbox software, as
+  [Installs in a build](sandbox-software.md#installs-in-a-build) says.
 - Reason: a new workspace then needs only a small fetch. The limit of one
   refresh in 30 minutes saves starts, because each refresh is a start.
 
@@ -95,8 +103,9 @@ that doc says.
   on the Cloud computer tab, as for every build.
 - A build of an org without an org image starts from the software image
   of its account, when that account has a ready one. It copies the
-  repositories and runs the install script, with no install of the app's
-  own software, as [The software image](#the-software-image) says.
+  repositories, installs the newest release of the sandbox software, and
+  runs the install script, as
+  [The software image](sandbox-software.md#the-software-image) says.
 - When the first build cannot start, Create org still creates the org. An
   admin can then start a build on the Cloud computer tab, with Build
   computer or Try again. Reason: the org is valid without a build.
@@ -131,54 +140,15 @@ that doc says.
   for such a change during an added build.
 - An added repository starts its own build, as
   [Added repositories](#added-repositories) says (decision 240).
+- A new name or a new default branch of a repository on GitHub starts a
+  build too, as
+  [Repository changes on GitHub](repository-changes-on-github.md#the-org-image)
+  says.
 
 ## The software image
 
-- The software image is a saved snapshot of the base image with the app's
-  own software installed: the agent runner, its private Node, the terminal
-  service, the agent tools, the git credential helper, and the GitHub CLI.
-- It holds no org data and no secret, because every org uses it.
-- One software image belongs to each version of the app's own software. A
-  change of any install step of that software makes a new version.
-- The software image lives in the `boat` account. An org on another
-  account, such as `e2b`, has none. Its first build starts from the base
-  image of its own account, as for a missing software image below
-  (e2b decision 222). Reason: a saved snapshot starts sandboxes only in its
-  own provider account.
-- A build of an org without an org image starts from the ready software
-  image of the current version. It copies the repositories, then runs the
-  install script. A later build and a refresh start from the last org
-  image.
-- Reason: the first build of a new org then waits for no install of the
-  app's own software. A skip of the parts that each org image already
-  holds was rejected, because it does not make a first build faster.
-- Without a ready software image of the current version, such a build
-  starts from the base image. It copies the repositories, installs the
-  app's own software, then runs the install script. A missing software
-  image slows a build and never fails it.
-- Each deploy run asks the Worker to build the software image of the
-  deployed version, and waits for the result. A deploy run whose version
-  has a ready software image waits for nothing.
-- A Worker cron job that builds it by itself, and a build at the first org
-  build after a release, were rejected. Reason: the deploy run then shows
-  the result.
-- The deploy run proves itself with a token of its own, as
-  [Hostnames and gates](access-and-security.md#hostnames-and-gates) says.
-- The deploy run fails unless the software image is ready when its wait
-  ends. The new Worker stays live. Reason: one rule covers a failed build,
-  a wait that ends first, and a refused request. A warning in the summary
-  of the run was rejected, because it hides the failure.
-- One software image build runs at a time. A build of a newer version ends
-  an unfinished build of an older version.
-- A failed build starts again only for a later deploy run. So a re-run of
-  the deploy builds again.
-- A software image build has a time limit of 60 minutes. A build that
-  outlasts the wait of its deploy run goes on until it ends or reaches
-  that limit.
-- When a new software image is ready, the app deletes each older one that
-  no running build still starts from. A rollback of the Worker then finds
-  no software image of its version, so builds install the app's own
-  software until the next deploy run builds one.
+[The software image](sandbox-software.md#the-software-image) holds the
+saved snapshot of the app's own software that a first build starts from.
 
 ## Repository changes
 

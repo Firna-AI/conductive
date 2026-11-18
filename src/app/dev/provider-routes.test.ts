@@ -1,7 +1,12 @@
 import { describe, expect, test } from 'vitest'
 import { API_PATHS } from '../../shared/api'
-import { operatorOrgPath, operatorOrgsPath } from '../../shared/operator'
+import {
+  operatorOrgPath,
+  operatorOrgsPath,
+  operatorOverviewPath,
+} from '../../shared/operator'
 import { operatorProvidersPath } from '../../shared/operator-providers'
+import { deleteOrgPath } from '../../shared/orgs'
 import { FAKE_TIME } from '../../test-support/fixtures/core'
 import { devFetch } from './dev-test-kit'
 
@@ -107,5 +112,19 @@ describe('the provider routes of the dev fake', () => {
       created: created.status,
       account: backend.state.providers.made.get('test-lab')?.providerAccount,
     }).toEqual({ created: 201, account: 'boat' })
+  })
+
+  test('keep the Overview answering after an org that Create org made is deleted, with long runs of the samples only', async () => {
+    const { send } = devFetch('?operator=1')
+    await send('POST', API_PATHS.orgs, { name: 'Test Lab', repositoryIds: [7] })
+    await send('POST', deleteOrgPath('test-lab'))
+    expect(await send('GET', operatorOverviewPath())).toMatchObject({
+      status: 200,
+      body: {
+        longRuns: expect.not.arrayContaining([
+          expect.objectContaining({ orgId: 'test-lab' }),
+        ]),
+      },
+    })
   })
 })

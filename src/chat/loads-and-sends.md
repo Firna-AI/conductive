@@ -2,7 +2,8 @@
 
 This guide belongs to [the chat](README.md). It gives the rules of the
 history loads, the read-only chats, the order of the records, the sends,
-and Stop. [The message field](message-field.md) gives the rules of the
+Stop, the fixed prompts, and Add to chat.
+[The message field](message-field.md) gives the rules of the
 message field of each composer.
 [Attached files of a draft](draft-files.md) gives the rules of the files
 of a draft.
@@ -18,14 +19,29 @@ of a draft.
   start steps, keeps it and shows a failed load as a notice by the composer,
   with Try again. An empty chat shows the failure in place of the chat.
 - The chat loads the session list, the view, and the workspace first. It
-  then shows its records, its start steps, and its composer while the full
-  history of the shown session loads. That session shows "Loading the
-  session" until its first page arrives. Then the workspace and the session
-  list load again. The stream starts after the history's
-  `throughEventNumber`, so no change between the reads and the stream gets
-  lost. The view also gives the routine of a run
+  then shows its records, its start steps, and its composer while the
+  newest history page of the shown session loads. That session shows
+  "Loading the session" until its first page arrives. The newest page
+  merges into the session log at once. Then the workspace and the session
+  list load again. The stream starts after that page's
+  `throughEventNumber`, while earlier pages still load. No change between
+  the reads and the stream gets lost. The view also gives the automation of a run
   workspace, with the pull request of a pull request run. The snapshot keeps
-  it as `routine` for the workspace header.
+  it as `automation` for the workspace header.
+- The history API reads newest first. Each earlier request uses the
+  preceding page's `nextBeforeEventNumber` as an exclusive `before`
+  cursor. Every request keeps the first page's cutoff. A cursor
+  that does not move back fails the history load.
+- Earlier pages load one after another. The load holds their events and
+  merges them once, after the oldest page or an earlier-page failure.
+  The session log orders them with newer history and live events, and
+  drops repeats. The chat shows "Loading earlier messages" above the
+  messages until that merge. A failed earlier page keeps the messages and
+  offers Try again beside the composer.
+- Try again starts with the newest page. Each session shares one running
+  load. Session actions wait for the complete history. Only the initial
+  workspace load takes the newest page's cutoff before that load ends.
+  A stopped controller ignores a late reply and requests no further page.
 - The chat writes no browser storage. The drafts stay in memory, and the
   server keeps the open tabs through the view route. A kept controller
   lives only in the memory of its tab, so a reload or a new tab starts
@@ -46,9 +62,10 @@ of a draft.
   visit, and it sends no other write then.
 - A read-only chat shows no composer, no +, no Try again, no drag of a
   tab, and no answer to a Mac command. The tab menu of a session tab holds
-  only the two copy items, and a file or diff tab opens no tab menu, as
-  [the tab row](tab-row.md) says. A copy reads the transcript and sends no
-  write. Its empty state names only the session history.
+  only its three copy items, and the tab menu of a file or diff tab holds
+  only Copy path, as [the tab row](tab-row.md) says. A copy reads the
+  transcript and sends no write. Its empty state names only the session
+  history.
 
 When the chat becomes read-only, it hides an open rename or close question.
 The session history stays open. The tab keeps its old name, and the sandbox bar says why.
@@ -63,7 +80,15 @@ The session history stays open. The tab keeps its old name, and the sandbox bar 
   again. The steps after an action, such as a view save, the focus, or a
   free Resume button, still run when its reply is older. The header of
   [`state/session-records.ts`](state/session-records.ts) gives the pending
-  edits of a rename or a model change.
+  edits of a rename, a model change, or a close.
+- A close of a session tab shows at once, as a pending edit that sets
+  `closedAt`. The tab moves to the session history and the next tab shows
+  before the reply. The reply confirms the close and saves the view. A
+  failed close puts the tab back at its place in the row. When the close
+  moved the user off that tab and the user chose no other tab since, the
+  tab shows again. The notice "The session didn't close" shows with the
+  tab, or on the shown tab when the restored tab stays hidden.
+  [`state/close-actions.ts`](state/close-actions.ts) holds these steps.
 
 ## Sends and Stop
 
@@ -96,7 +121,9 @@ The session history stays open. The tab keeps its old name, and the sandbox bar 
   agent as Stop does while a turn runs and does not stop yet. The key of
   Model picker opens the menu of the model picker. The key of Next effort
   level chooses the next effort of the menu, with a wrap from the last
-  effort to the first.
+  effort to the first. For a model that the model list marks as fast, the
+  key of Fast mode turns fast mode on or off, as the Fast row of the menu
+  does.
 - Send works while the sandbox is not ready: during the first start of a
   new workspace, after it failed, and during a resume. The workspace queues
   each message for the sandbox, as
@@ -110,9 +137,27 @@ The session history stays open. The tab keeps its old name, and the sandbox bar 
   The chat takes it from each read and Resume reply, and from each
   `workspace.updated` event. An event without an error keeps it, and null
   clears it.
-- A send that the Worker refuses keeps its text, its files, and its message
-  ID. The notice "Your message didn't send" shows the Worker's plain
-  message.
+- A send clears the composer at once, with its file chips. The message
+  shows below the transcript while its send waits, as `postMessage` of
+  [`state/message-send.ts`](state/message-send.ts) says. The reply takes
+  its place, and the stream's copy then takes the place of the reply. The
+  Send button stays busy until the reply, so one send of a draft waits at a
+  time. A fixed prompt shows at once in the same way.
+- A send that the Worker refuses leaves the chat. Its text with its chips,
+  its files, and its message ID go back to the draft, as `failSend` of
+  [`state/drafts.ts`](state/drafts.ts) says. Text and files that the user
+  added during the send stay after it, and the message then gets a new ID.
+  The notice "Your message didn't send" shows the Worker's plain message.
+- A send with no answer, or with a server error, can still reach the
+  Worker, as `isRefusal` of [`state/context.ts`](state/context.ts) says.
+  The notice of a failed send keeps the client ID of its message. When a
+  transcript of any session shows that ID, the notice goes, and a draft
+  that still holds that client ID empties, as `withLateSends` of
+  [`state/late-sends.ts`](state/late-sends.ts) says. An edit of the draft
+  clears its client ID, so a changed draft stays. A stream that shows the
+  message before the error arrives gets the same result, as
+  `showSendFailed` of [`state/message-send.ts`](state/message-send.ts)
+  says. A fixed prompt follows the same rule for its notice.
 - Send takes the files whose marks the draft text holds. It writes the
   returned copy path of each file at its mark, as
   [The send](draft-files.md#the-send) says.
@@ -141,3 +186,37 @@ says. `sendPrompt` of the controller, in
 - A reply that names a linked session shows the prompt there. No draft
   moves, and the tab moves only as for a draft that cannot move.
 - A read-only workspace sends nothing.
+
+## Add to chat
+
+Add to chat of the menu of a row of the Files panel puts the chip of a
+file or a folder into a message field, as
+[Add to chat](../../docs/protocol/file-mentions.md#add-to-chat) says.
+`addToChat` of the controller, in
+[`state/mention-actions.ts`](state/mention-actions.ts), takes the path
+of the entry and whether it is a folder:
+
+- The chip goes to the session of the chat, as for a fixed prompt: the
+  session that the member saw last, also while a file, a diff, or another
+  tab of a phone shows. The chat shows that session, so a file or diff tab
+  of the centre gives way to the chat, as for a click on a session tab.
+- Without an open session, a new session starts, as "+" starts one.
+  `newSession` gives the ID of the new session just before the chat shows
+  it, so the chip goes into its field.
+- The controller keeps the request for the chip in `mentionRequest` of
+  the snapshot, with the session. A newer request takes its place. The
+  composer of that session takes the request once, when it shows, and puts
+  the chip into its field with `FieldHandle.insertMention`. Then it ends
+  the request with `takeMention`. A field that mounts again has no caret,
+  so the chip goes to the end of the text.
+- The request changes no draft. The field puts the chip in as an edit, so
+  the draft gets the mention from `onChangeText`, and the chip is one step
+  of undo. A draft write from the owner would replace the content and
+  clear the undo history, as [The message field](message-field.md) says.
+- The request holds no focus. On desktop, the shell also makes a focus
+  request of the app. While that request still stands, the field takes the
+  focus with the chip, and the caret stands after it, as
+  `useRequestedMention` of `components/composer-requests.ts` says. A phone
+  makes no focus request, so the field takes no focus, and no keyboard
+  opens.
+- Before the chat loads, and in a read-only workspace, nothing happens.

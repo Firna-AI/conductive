@@ -1,17 +1,20 @@
+import type { Workspace } from '../../shared/generated/Workspace'
 import { useState, type ReactNode } from 'react'
 import { useToast } from '@firna/ui/toast'
 import {
   workspaceMenuItems,
   type WorkspaceMenuItem,
 } from '../../../docs/mockups/src/components/workspaces/workspaceMenu'
+import { linkResults } from '../../../docs/mockups/src/components/workspace/linkCopy'
 import { errorMessage } from '../../app/api/client'
 import type { ArchiveAction } from '../../app/archive-model'
 import { usePassedDeadlines } from '../../app/deadlines'
 import { mayArchive, mayRestore } from '../../app/permissions'
 import type { SectionGroup } from '../../app/sections'
+import { useServices } from '../../app/services'
 import { useStore } from '../../app/store'
 import type { User } from '../../shared/api'
-import type { Workspace } from '../../shared/workspaces'
+
 import { useApp, useOrgModel } from '../context'
 import { useViewport } from '../ui/viewport'
 import { shownWorkspaces } from '../workspace/tab-memory'
@@ -29,11 +32,14 @@ const renames = (items: readonly WorkspaceMenuItem[]) =>
   items.some((item) => item.kind === 'action' && item.action === 'rename')
 
 /**
- * The menus of the rows of a list, their Rename field, the Archive shortcut
- * of each row, and the Restore shortcut of each archived row. Each row gets
- * only the actions that the person can use, and a row with none gets no
- * menu. A change of the role, the workspace, or the org drops an action
- * that it takes away. The shortcut and Archive in the menu run the one
+ * The menus of the rows of a list, their Rename field, which a double click
+ * on a row also opens, the Archive shortcut of each row, and the Restore
+ * shortcut of each archived row. Each row gets only the actions that the
+ * person can use. Every row offers Copy link, also an archived row and a
+ * row of a read-only list, and a toast gives the result of its copy. A
+ * nested row offers no Move to section, because it moves with its tree. A
+ * change of the role, the workspace, or the org drops an action that it
+ * takes away. The shortcut and Archive in the menu run the one
  * flow of the workspace, which archives at once and offers Restore in its
  * toast. Every member of an org that is not suspended restores an archived
  * row until its `restoreUntil`, and the shortcut ends at that time while
@@ -55,6 +61,7 @@ export function useRowMenus(props: {
   layer: ReactNode
 } {
   const app = useApp()
+  const services = useServices()
   const { toast } = useToast()
   const phone = useViewport() === 'phone'
   const org = useStore(app.orgs).find((item) => item.id === props.orgId)
@@ -75,20 +82,24 @@ export function useRowMenus(props: {
     setRenaming(null)
   }
 
-  const rows = [
-    ...groups.flatMap((group) => group.workspaces),
-    ...props.archived,
-  ]
+  const live = groups.flatMap((group) => group.rows)
+  const rows = [...live.map((row) => row.workspace), ...props.archived]
   const find = (id: string) => rows.find((row) => row.id === id)
+  const nested = new Set(
+    live.flatMap((row) => (row.parentId === null ? [] : [row.workspace.id])),
+  )
   const itemsOf = (workspace: Workspace): WorkspaceMenuItem[] =>
-    props.readOnly || !org
-      ? []
-      : workspaceMenuItems({
-          admin: org.role === 'admin',
-          owner: workspace.owner.id === props.viewer.id,
-          archived: workspace.state === 'archived',
-          otherSection: groups.length > 1,
-        })
+    workspaceMenuItems({
+      admin: org?.role === 'admin',
+      owner: workspace.owner.id === props.viewer.id,
+      archived: workspace.state === 'archived',
+      otherSection: groups.length > 1,
+      // Without the org, the role is unknown, so the menu offers only the
+      // action that changes nothing.
+      readOnly: props.readOnly || !org,
+      // A nested row moves only with its tree, so it has no Move to section.
+      nested: nested.has(workspace.id),
+    })
   const openRow = open ? find(open.workspaceId) : undefined
   const openItems = openRow ? itemsOf(openRow) : []
   if (open && openItems.length === 0) setOpen(null)
@@ -125,10 +136,17 @@ export function useRowMenus(props: {
     setRenaming((current) => (current === workspace.id ? null : current))
     return true
   }
+  const copyLink = (workspace: Workspace) => {
+    services.copy(workspace.link).then(
+      () => toast({ title: linkResults.copied, tone: 'success' }),
+      () => toast({ title: linkResults.failed, tone: 'error' }),
+    )
+  }
   const actions: RowActions = {
     move: (workspace, sectionId) =>
       props.move(workspace.id, { sectionId, index: 0 }),
     rename: (workspace) => setRenaming(workspace.id),
+    copyLink,
     archive,
     reassigned: (workspace) => memory.reassigned(workspace),
   }
@@ -146,11 +164,16 @@ export function useRowMenus(props: {
               cancel: () => setRenaming(null),
             }
           : null,
+      startRename: renames(items)
+        ? () => {
+            setOpen(null)
+            setRenaming(workspace.id)
+          }
+        : null,
     }
   }
   const sectionOf = (id: string) =>
-    groups.find((group) => group.workspaces.some((row) => row.id === id))
-      ?.section.id ?? null
+    live.find((row) => row.workspace.id === id)?.sectionId ?? null
   const layer = (
     <>
       {open && openRow && openItems.length > 0 ? (

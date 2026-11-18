@@ -1,21 +1,20 @@
+import type { SessionLogin } from '../../src/shared/generated/SessionLogin'
+import type { Agent } from '../../src/shared/generated/Agent'
+import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
+import type { CommitAuthor } from '../../src/shared/generated/CommitAuthor'
+import type { Attachment } from '../../src/shared/generated/Attachment'
+import type { RunnerAttachment } from '../../src/shared/generated/RunnerAttachment'
+import type { RunnerChangeModel } from '../../src/shared/generated/RunnerChangeModel'
+import type { RunnerCommand } from '../../src/shared/generated/RunnerCommand'
+import type { RunnerInterrupt } from '../../src/shared/generated/RunnerInterrupt'
+import type { RunnerLoginKind } from '../../src/shared/generated/RunnerLoginKind'
+import type { WorkspaceToRunner } from '../../src/shared/generated/WorkspaceToRunner'
+import type { RunnerEventEnvelope } from '../../src/shared/generated/RunnerEventEnvelope'
+import type { RunnerProtocolVersion } from '../../src/shared/generated/RunnerProtocolVersion'
 import type { TurnStopRequester } from '../../src/shared/session-stop'
-import type { Agent, AgentChoice } from '../../src/shared/agents'
-import type { CommitAuthor } from '../../src/shared/commit-author'
 import type { PendingTurn } from '../lifecycle/workspace-runtime'
 import type { WorkspaceSocketMessage } from '../../src/shared/events'
-import type { Attachment, MessageDraft } from '../../src/shared/messages'
-import type {
-  RunnerAttachment,
-  RunnerChangeModel,
-  RunnerCommandV1,
-  RunnerInterrupt,
-  RunnerLogin,
-  RunnerLoginKind,
-  WorkspaceToRunnerV1,
-  WorkspaceToRunnerV2,
-  RunnerEventEnvelope,
-  RunnerProtocolVersion,
-} from '../../src/shared/runner'
+import type { MessageDraft } from '../../src/shared/messages'
 import type { WorkspaceEvent, WorkspaceEventEnvelope } from './workspace-events'
 import type {
   ConnectionGrant,
@@ -23,14 +22,16 @@ import type {
   ConnectionScheduler,
 } from '../security/connection-access'
 import type { AuthenticatedRunner } from './authenticated-runner'
-import type {
-  SessionLoginMetadata,
-  SessionLoginTarget,
-} from './login-availability'
+import type { SessionLoginMetadata } from './login-availability'
+import type { SessionLoginTarget } from './login-access-data'
+import type { AgentLoginOwner } from './queries'
 import type { FilteredRunnerOutput } from './runner-output'
 import type { ChatTransaction } from './store'
 import type { TurnTokenState } from '../model-gateway/token'
 import type { TitleModelCall } from './title-model'
+import type { AgentLogin } from './login-kind'
+import type { RepositoryMoveState } from './runner-repository-move'
+import type { RunnerRepositoryRecord } from './branch-data'
 
 export interface ChatData {
   get<T>(key: string): Promise<T | undefined>
@@ -70,11 +71,15 @@ export interface StoredTurn {
   /** Retained dispatch evidence. Older records may have no evidence. */
   started?: boolean
   startedAt?: number
+  /** Fast was requested but absent from the runner's started choice. */
+  olderRunner?: true
   closeAfterStop: boolean
-  stopRequest?: TurnStopRequester
+  stopRequest?: TurnStopRequester | null
   /** Internal waiting work. Older records have no successor. */
   nextTurnId?: string | null
   gateway?: TurnTokenState
+  /** The dispatched own endpoint model, without login metadata or secrets. */
+  endpointModel?: string
   loginFailure?: string
 }
 
@@ -92,9 +97,9 @@ export interface StoredAttachment {
 }
 
 export type PreparedMessageCommand = (
-  | Omit<Extract<RunnerCommandV1, { type: 'turn' }>, 'attachments' | 'login'>
-  | Omit<Extract<RunnerCommandV1, { type: 'message' }>, 'attachments' | 'login'>
-) & { attachments: readonly StoredAttachment[]; login: RunnerLogin }
+  | Omit<Extract<RunnerCommand, { type: 'turn' }>, 'attachments' | 'credential'>
+  | Omit<Extract<RunnerCommand, { type: 'message' }>, 'attachments'>
+) & { attachments: readonly StoredAttachment[]; login: AgentLogin }
 
 export type PreparedCommand =
   PreparedMessageCommand | RunnerInterrupt | RunnerChangeModel
@@ -119,7 +124,7 @@ type ResolveCommand<Command> = Command extends PreparedMessageCommand
 export type ResolvedCommand = ResolveCommand<PreparedCommand>
 
 export interface RunnerPeer {
-  send(message: WorkspaceToRunnerV1 | WorkspaceToRunnerV2): void
+  send(message: WorkspaceToRunner): void
   close(): void
 }
 
@@ -128,8 +133,13 @@ export interface ActiveRunner {
   peer: AuthenticatedRunner
   workspace: RunnerWorkspaceRecord
   streamId: string | null
+  processStartId: string | null
   protocolVersion: RunnerProtocolVersion | null
   loginKinds?: readonly RunnerLoginKind[]
+  /** The folder of a runner that accepts repository.move. Older runners omit it. */
+  repositoryFolder?: string
+  /** The move of this connection. A new connection starts without one. */
+  repositoryMove?: RepositoryMoveState
   ready: boolean
 }
 
@@ -150,9 +160,15 @@ export type ChatCallbackPublisher = (
 ) => Promise<void>
 
 export interface ChatDependencies {
+  normalizeChoice(choice: AgentChoice): AgentChoice
+  refreshEndpointModels(owner: AgentLoginOwner, agent: Agent): Promise<void>
   readBranches(
     workspaceId: string,
-  ): Promise<import('../../src/shared/runner').RunnerBranches | null>
+  ): Promise<
+    import('../../src/shared/generated/RunnerBranches').RunnerBranches | null
+  >
+  /** The record repository and the stored folders, or null without them. */
+  readRepository(workspaceId: string): Promise<RunnerRepositoryRecord | null>
   readCommitAuthor: (userId: string) => Promise<CommitAuthor | null>
   readAutomaticTitleWorkspace: (
     workspaceId: string,
@@ -167,12 +183,16 @@ export interface ChatDependencies {
     workspaceId: string,
     connectionId: string,
     send: (
-      command: import('../../src/shared/runner-files').RunnerFileCommand,
+      command: import('../../src/shared/generated/RunnerFileCommand').RunnerFileCommand,
     ) => Promise<boolean>,
   ): void
   runnerDetached(connectionId: string): void
   waitUntil(promise: Promise<unknown>): void
   runnerDisconnected(
+    workspaceId: string,
+    publish: ChatCallbackPublisher,
+  ): Promise<void>
+  runnerUnsupported(
     workspaceId: string,
     publish: ChatCallbackPublisher,
   ): Promise<void>
@@ -199,6 +219,8 @@ export interface ChatDependencies {
   browserAlarm?: (at: number | null) => Promise<void>
   scheduleRunnerCheck?: ConnectionScheduler
   runnerAlarm?: (at: number | null) => Promise<void>
+  /** Stores the due time of the automation report retry, unless an earlier one is due. */
+  automationReportAlarm?: (at: number) => Promise<void>
   readRunnerAccess: (workspaceId: string, tokenHash: string) => Promise<boolean>
   readRunnerProtocolVersion: (workspaceId: string) => Promise<number | null>
   readConnectionAccess: (
@@ -207,15 +229,22 @@ export interface ChatDependencies {
   ) => Promise<readonly ConnectionGrant[]>
   randomId: () => string
   randomConnectionId: () => string
+  refusedEndpointDomains: () => readonly string[]
   readLoginMetadata: (
     targets: readonly SessionLoginTarget[],
   ) => Promise<ReadonlyMap<string, SessionLoginMetadata>>
+  resolveDefaultLogin: (
+    userId: string,
+    agent: Agent,
+    excluded?: SessionLogin,
+  ) => Promise<SessionLogin | null>
+  readOrgName: (orgId: string) => Promise<string | null>
   resolveLogin: (
-    userId: string | null,
+    login: SessionLogin | null,
     agent: Agent,
     runnerTokenHash?: string,
     senderId?: string,
-  ) => Promise<RunnerLogin | null>
+  ) => Promise<AgentLogin | null>
   resolveAttachments: (
     userId: string,
     workspaceId: string,
@@ -230,6 +259,11 @@ export interface ChatDependencies {
     attachments: readonly StoredAttachment[],
     sandboxId: string | null,
   ) => Promise<string | null>
+  completeAttachments: (
+    workspaceId: string,
+    attachments: readonly StoredAttachment[],
+    sandboxId: string | null,
+  ) => Promise<void>
   resolveAttachmentPaths: (
     workspaceId: string,
     userId: string,

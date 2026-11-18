@@ -33,9 +33,9 @@ export const lostData = defineScreen({
       slug: 'files',
       title: 'Files left out',
       description:
-        'A codemod changed 247 files. The turn lists the 200 files that the runner keeps, then "47 more files" as plain text.',
+        'A codemod changed 247 files. The runner keeps 200 of them. The turn shows the first 8 files and "Show 192 more", or 5 files and "Show 195 more" on a phone. That button shows all 200 files, then "47 more files" as plain text.',
       rationale:
-        'The count is text, not a link, because the chat has no action that opens Changes yet. The full list stays in Changes, which the cloud computer reports apart from the chat. The Files panel here shows the sample branch of the other screens.',
+        'A long list pushed the reply out of view, so Cal asked for the limit and the button on 12 November 2026. The count is text, not a link, because the chat has no action that opens Changes yet. The full list stays in Changes, which the cloud computer reports apart from the chat. The Files panel here shows the sample branch of the other screens.',
       props: { conversation: 'files-left-out', banner: 'none' },
     },
     {

@@ -1,24 +1,22 @@
+import type { UserMessage } from '../../src/shared/generated/UserMessage'
+import type { RunnerFileCommand } from '../../src/shared/generated/RunnerFileCommand'
 import {
   type WorkspaceEvent,
   type WorkspaceEventEnvelope,
 } from './workspace-events'
-import type { UserMessage } from '../../src/shared/messages'
 import type {
   ToolSessionAccess,
   ToolSessionWrite,
   ToolSessionManagement,
 } from '../tools/services'
 import type { FirstWorkspaceMessage } from '../lifecycle/workspace-runtime'
-import type { RunnerFileCommand } from '../../src/shared/runner-files'
 import type { AppEnv } from '../env'
-import { HttpError } from '../http'
 import { WorkspaceTurnTokens } from '../model-gateway/workspace'
 import { chatDependencies } from './dependencies'
 import {
   authorizeChatBrowser,
   type BrowserAccess,
 } from './browser-authorization'
-import { afterNumber } from './http-routes'
 import { fetchWorkspaceChat } from './backend-fetch'
 import {
   BrowserConnections,
@@ -34,10 +32,10 @@ import { RunnerChannel } from './runner-channel'
 import type { ChatStore, ChatTransaction } from './store'
 import type { QueueTurn } from './queue-turn'
 import { createWorkspaceChatStore } from './workspace-store'
-import {
-  runWorkspaceOperation,
-  type WorkspaceOperation,
-} from './workspace-operation'
+import { workspaceOperationRunner } from './workspace-operation'
+import { openBrowser } from './sockets'
+import { acceptSecretNotice } from './secret-notice'
+import type { StoredSecretRequest } from '../secrets/request-records'
 import type {
   BrowserPeer,
   ChatDependencies,
@@ -47,6 +45,9 @@ import type {
 
 /** The Durable Object and the in-memory runner adapter use this boundary. */
 export class WorkspaceChat {
+  readonly authorizedWorkspaceOperation: ReturnType<
+    typeof workspaceOperationRunner
+  >
   private readonly storage: ChatStorage
   readonly store: ChatStore
   readonly turnTokens: WorkspaceTurnTokens
@@ -68,6 +69,15 @@ export class WorkspaceChat {
 
   flushRunner(): Promise<void> {
     return this.runner.flush()
+  }
+
+  secretNotice(record: StoredSecretRequest) {
+    return acceptSecretNotice(
+      this.operation(record.request.workspaceId),
+      record,
+      this.env,
+      this.dependencies,
+    )
   }
 
   acceptToolWrite(
@@ -122,6 +132,12 @@ export class WorkspaceChat {
       env,
       this.dependencies,
       this.publish,
+      () => this.runner.connections.current,
+    )
+    this.authorizedWorkspaceOperation = workspaceOperationRunner(
+      this.store,
+      this.publish,
+      (id) => this.binding.bind(id),
     )
     this.titles = new WorkspaceTitles(
       env,
@@ -239,21 +255,6 @@ export class WorkspaceChat {
     )
   }
 
-  authorizedWorkspaceOperation<T>(
-    workspaceId: string,
-    authorize: () => Promise<void>,
-    work: (operation: WorkspaceOperation) => Promise<T>,
-  ): Promise<T> {
-    this.binding.bind(workspaceId)
-    return runWorkspaceOperation(
-      this.store,
-      workspaceId,
-      authorize,
-      this.publish,
-      work,
-    )
-  }
-
   async sendFileCommand(
     workspaceId: string,
     command: RunnerFileCommand,
@@ -265,10 +266,7 @@ export class WorkspaceChat {
   }
 
   async openBrowser(request: Request, peer: BrowserPeer): Promise<() => void> {
-    const access = await this.authorizeBrowser(request)
-    if (access.suffix !== '/events')
-      throw new HttpError(404, 'not_found', 'The page is not available.')
-    return this.subscribe(access, afterNumber(new URL(request.url)), peer)
+    return openBrowser(this, request, peer)
   }
 
   subscribe(

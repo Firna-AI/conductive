@@ -1,4 +1,5 @@
 import type { OrgRole } from './api'
+import type { WorkspaceState } from './generated/WorkspaceState'
 import type { OperatorUserAccess } from './operator-waitlist'
 
 export function operatorOverviewPath(): string {
@@ -23,13 +24,36 @@ export interface OperatorOverview {
     workspaces: number
     running: number
   }[]
+  longRuns: readonly OperatorLongRun[]
 }
 
+export interface OperatorLongRun {
+  workspaceId: string
+  workspaceNumber: number
+  orgId: string
+  orgName: string
+  orgStatus: OperatorOrgSummary['status']
+  ownerGithubId: number
+  ownerLogin: string
+  ownerStatus: OperatorUserSummary['status']
+  cloudComputerId: string | null
+  state: WorkspaceState
+  runningSince: number
+  lastActivityAt: number | null
+}
+
+/**
+ * The workspaces in each state, as the app shows them: Archived counts the
+ * archived workspaces of the list, and Removed those whose Restore ended.
+ * The Worker reply counts every archived workspace in `archived`, so that
+ * an older app adds up. `readWorkspaceStates` takes Removed out of it.
+ */
 export interface OperatorWorkspaceStates {
   running: number
   stopped: number
   failed: number
   archived: number
+  removed: number
 }
 
 export interface OperatorDirectoryQuery {
@@ -84,6 +108,11 @@ export interface OperatorUserSummary extends OperatorUserAccess {
   login: string
   name: string | null
   joinedAt: number
+  /**
+   * The time of the last new workspace or chat message of the person, or
+   * null when the app has no record of one.
+   */
+  lastActiveAt: number | null
   orgs: number
   workspaces: number
   status: 'active' | 'suspended'
@@ -139,7 +168,14 @@ export interface OperatorUserDetail extends OperatorUserAccess {
   githubId: number
   login: string
   name: string | null
+  /** The primary verified email on GitHub, or null without one. */
+  email: string | null
   joinedAt: number
+  /**
+   * The time of the last new workspace or chat message of the person, or
+   * null when the app has no record of one.
+   */
+  lastActiveAt: number | null
   workspaces: { total: number; running: number }
   orgs: readonly OperatorUserOrg[]
   suspension: OperatorSuspension | null

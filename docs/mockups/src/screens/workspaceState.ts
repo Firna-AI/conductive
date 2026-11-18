@@ -1,4 +1,5 @@
 import type { SchemaProps } from '@mokly/mokly'
+import { pictureReads } from '../components/chat/chatPictures'
 import { foldStates } from '../components/chat/WorkFold'
 import { fileLists, treeStates } from '../components/files/FilesPanel'
 import { paletteViews } from '../components/palette/paletteViews'
@@ -9,14 +10,32 @@ import { pathStates } from '../fixtures/maskedFiles'
 import { bannerStates } from '../fixtures/pullRequests'
 import { runWorkspaceKeys } from '../fixtures/runWorkspaces'
 import { startErrorKeys } from '../fixtures/starting'
+import { terminalStates } from '../fixtures/terminals'
 import { openableWorkspaces } from '../fixtures/workspaces'
+import { archiveStateProperties } from './archiveState'
 import { barStateDefaults, barStateKeys, barStateProperties } from './barState'
-import { composerStates, tabStates } from './chatStates'
+import { tabStates, temporaryTabStates } from './chatStates'
+import {
+  composerStateDefaults,
+  composerStateKeys,
+  composerStateProperties,
+} from './composerState'
 import {
   feedbackStateDefaults,
   feedbackStateKeys,
   feedbackStateProperties,
 } from './feedbackState'
+import {
+  layoutStateDefaults,
+  layoutStateKeys,
+  layoutStateProperties,
+} from './layoutState'
+import { overlayStates } from './overlayStates'
+import {
+  rowMenuStateDefaults,
+  rowMenuStateKeys,
+  rowMenuStateProperties,
+} from './rowMenuState'
 
 /**
  * The state of the workspace screen. Each catalogue entry of the screen is a
@@ -32,16 +51,18 @@ export const workspaceStateSchema = {
     'startError',
     'conversation',
     'fold',
+    'pictures',
     'banner',
     'files',
     'tool',
+    'terminals',
     'ports',
     'focus',
     'tab',
     'tabRow',
-    'composer',
-    'resize',
-    'rightColumn',
+    'temporary',
+    ...composerStateKeys,
+    ...layoutStateKeys,
     'overlay',
     'archive',
     'viewer',
@@ -51,6 +72,7 @@ export const workspaceStateSchema = {
     'org',
     'palette',
     ...feedbackStateKeys,
+    ...rowMenuStateKeys,
     ...barStateKeys,
   ],
   properties: {
@@ -83,14 +105,31 @@ export const workspaceStateSchema = {
      * so a chat with open folds starts at its top.
      */
     fold: { enum: foldStates },
+    /**
+     * The pictures of the answers while the cloud computer runs (screenshot
+     * decision 2): shown, or the box of each label while the reads run. The
+     * chat reads no picture without a running cloud computer, so each
+     * Markdown image of a picture file then shows as its link.
+     */
+    pictures: { enum: pictureReads },
     banner: { enum: bannerStates },
     /** The list of the files panel: All files, Changes, or Checks. */
     files: { enum: fileLists },
     /** The tool of the tools panel. */
     tool: { enum: toolKeys },
     /**
-     * The Preview tool: a preview in its frame, or "+" beside the tabs of
-     * the open previews. With no preview open, the port form lists the
+     * The terminals of the Terminal tool, from decisions 1 and 2 of the
+     * terminal tabs change: the one terminal that a workspace starts with, three terminals,
+     * the limit of ten, three terminals whose shown connection ended, the
+     * one terminal of older cloud computer software, which shows no tabs, or
+     * a link of the output under the mouse pointer, from the terminal links
+     * change.
+     */
+    terminals: { enum: terminalStates },
+    /**
+     * The Preview tool: open previews, or on a phone "+" beside their tabs.
+     * The desktop shows the page in the Preview tab of `tab`, and a phone
+     * in a frame of the tool. With no preview open, the port form lists the
      * detected servers, says that the runner reports none, or reads as
      * before when the app has no report, as for an older image. After a
      * failed repair of the list (decision 96), it keeps its last list under
@@ -106,44 +145,22 @@ export const workspaceStateSchema = {
      * drag of a tab, the code file after its move between the two
      * sessions, a full row with more tabs than fit, scrolled to the shown
      * tab, or the rename field in the first session tab after Rename
-     * session in its tab menu. The drag lifts the code file on desktop,
-     * and on a phone the second session, because a phone shows only the
-     * sessions.
+     * session in its tab menu. The drag lifts the temporary tab or else
+     * the code file on desktop, and on a phone the second session, because
+     * a phone shows only the sessions.
      */
     tabRow: { enum: ['opened', 'drag', 'moved', 'full', 'rename'] },
-    /** The composer, as `composerStates` says. */
-    composer: { enum: composerStates },
-    /** The user drags the handle of the right column to widen it. */
-    resize: { enum: ['none', 'right'] },
     /**
-     * The right column of the desktop: shown, or hidden with the toggle at
-     * the end of the header. A phone has no right column.
+     * The temporary tab, as `temporaryTabStates` says. With a temporary
+     * tab, the drag of `tabRow` lifts it on desktop, and the tab menu of
+     * `overlay` opens on it.
      */
-    rightColumn: { enum: ['shown', 'hidden'] },
-    /**
-     * What lies open over the workspace: the session history, the question
-     * before a running session closes, the owner of the workspace, the tab
-     * menu of the first session, or the question of Continue with work that
-     * is not pushed.
-     */
-    overlay: {
-      enum: [
-        'none',
-        'history',
-        'close-session',
-        'reassign',
-        'tab-menu',
-        'continue-unpushed',
-      ],
-    },
-    /**
-     * The cloud computer of an archived workspace: kept, until the app
-     * deletes it 14 days after the Archive, kept past the last day of
-     * Restore while its delete tries again, or deleted. Until that last day,
-     * every member of an org that is not suspended may restore the
-     * workspace.
-     */
-    archive: { enum: ['kept', 'ended', 'deleted'] },
+    temporary: { enum: temporaryTabStates },
+    ...composerStateProperties,
+    ...layoutStateProperties,
+    /** What lies open over the workspace, as `overlayStates` says. */
+    overlay: { enum: overlayStates },
+    ...archiveStateProperties,
     /** The person signed in: an admin of the org, or a member who is not. */
     viewer: { enum: ['admin', 'member'] },
     /**
@@ -175,10 +192,10 @@ export const workspaceStateSchema = {
      */
     org: { enum: ['active', 'suspended'] },
     /**
-     * The run of a routine that made the workspace (decision 501): a run of
+     * The run of an automation that made the workspace (decision 501): a run of
      * a pull request, a run that Run now started, or a failed run that kept
      * its workspace, whose first start or first turn failed. A run
-     * workspace is a normal workspace, whose header links to its routine,
+     * workspace is a normal workspace, whose header links to its automation,
      * and for a pull request run to the pull request. It shows the chat of
      * its run at the stage of `conversation`: `queued` while the sandbox
      * starts or after a failed first start, or else its first turn. A
@@ -192,6 +209,7 @@ export const workspaceStateSchema = {
      */
     palette: { enum: paletteViews },
     ...feedbackStateProperties,
+    ...rowMenuStateProperties,
     ...barStateProperties,
   },
 } as const
@@ -206,16 +224,18 @@ export const readyWorkspace: WorkspaceState = {
   startError: 'failed',
   conversation: 'history',
   fold: 'closed',
+  pictures: 'shown',
   banner: 'ready-to-merge',
   files: 'changes',
   tool: 'terminal',
+  terminals: 'one',
   ports: 'open',
   focus: 'chat',
   tab: 'session',
   tabRow: 'opened',
-  composer: 'empty',
-  resize: 'none',
-  rightColumn: 'shown',
+  temporary: 'none',
+  ...composerStateDefaults,
+  ...layoutStateDefaults,
   overlay: 'none',
   archive: 'kept',
   viewer: 'admin',
@@ -225,6 +245,7 @@ export const readyWorkspace: WorkspaceState = {
   org: 'active',
   palette: 'closed',
   ...feedbackStateDefaults,
+  ...rowMenuStateDefaults,
   ...barStateDefaults,
 }
 

@@ -1,3 +1,5 @@
+import type { Workspace } from '../shared/generated/Workspace'
+import type { GitHubCapabilities } from '../shared/github'
 import { membersPath, type MembersResponse } from '../shared/members'
 import {
   orgSettingsPaths,
@@ -6,12 +8,12 @@ import {
   type OrgSettings,
   type Repository,
 } from '../shared/org-settings'
-import { routinesPath } from '../shared/routines'
+import { automationsPath } from '../shared/automations'
 import { sectionsPath, type Section } from '../shared/sections'
-import { workspacesPath, type Workspace } from '../shared/workspaces'
+import { workspacesPath } from '../shared/workspaces'
 import { items, record } from './api/parse'
 import { readSection } from './api/read-core'
-import { readRoutines, type ListedRoutine } from './api/read-routines'
+import { readAutomations, type ListedAutomation } from './api/read-automations'
 import { readWorkspaces } from './api/read-workspaces'
 import {
   readBuildResponse,
@@ -20,14 +22,24 @@ import {
   readRepositories,
   readSettings,
 } from './api/read-settings'
+import { listWithArchives } from './archive-overlay'
+import { LiveGitHubStates, listWithLiveGitHub } from './live-github'
 import { Creations } from './creations'
 import { workspaceUpdated, type ListData } from './list-changes'
 import { NewWorkspaceModel } from './new-workspace-model'
-import { buildsWait, listWait, onEntry, routinesWait } from './org-waits'
+import { OrgAgentLogins, type OrgLoginChanged } from './org-agent-logins'
+import {
+  automationsWait,
+  buildsWait,
+  listWait,
+  onEntry,
+  orgLoginsWait,
+} from './org-waits'
 import { Refresher, type Refreshing } from './refresh'
 import { Resource } from './resource'
+import { SecretsModel } from './secrets-model'
 import type { AppServices } from './services'
-import { ready, Store, valueOf, type Loadable, type Readable } from './store'
+import { derived, partOf, valueOf, type Loadable, type Readable } from './store'
 import { WorkspaceActions } from './workspace-actions'
 import {
   neverSuspended,
@@ -35,35 +47,18 @@ import {
   type OrgSuspension,
 } from './suspension'
 
-export type OrgPart =
-  'list' | 'repositories' | 'builds' | 'members' | 'routines'
+export { latestBuild } from './latest-build'
 
-/** One part of a loaded value, which changes only when that part changes. */
-function partOf<T, P>(
-  source: Readable<Loadable<T>>,
-  pick: (value: T) => P,
-): Readable<Loadable<P>> {
-  const select = (value: Loadable<T>): Loadable<P> =>
-    value.state === 'ready' ? ready(pick(value.value)) : value
-  const target = new Store(select(source.get()))
-  source.subscribe(() => {
-    const next = source.get()
-    const current = target.get()
-    const kept =
-      next.state === 'ready' &&
-      current.state === 'ready' &&
-      pick(next.value) === current.value
-    if (!kept) target.set(select(next))
-  })
-  return target
-}
+export type OrgPart =
+  'list' | 'repositories' | 'builds' | 'members' | 'automations' | 'agentLogins'
 
 /**
  * The data of one org: its list of sections and workspaces, its
  * repositories, the builds and settings of its cloud computer, its
- * members, and its routines. A part reads while a screen shows it, as
- * `watch` says. The Cloud computer tab reads the settings itself. Each
- * request of the org that the API refuses with `org_suspended` goes to
+ * members, its automations, its org logins, and its secrets. A part reads
+ * while a screen shows it, as `watch` says. The Cloud computer tab reads
+ * the settings itself. The Secrets tab and the Capabilities control read
+ * the secrets. Each request that the API refuses with `org_suspended` goes to
  * `suspension`, so a page with an old org list learns of the suspension.
  */
 export class OrgModel {
@@ -75,7 +70,7 @@ export class OrgModel {
     readonly repositories: Resource<readonly Repository[]>
     readonly builds: Resource<BuildsResponse>
     readonly members: Resource<MembersResponse>
-    readonly routines: Resource<readonly ListedRoutine[]>
+    readonly automations: Resource<readonly ListedAutomation[]>
     /**
      * The settings of the cloud computer. Every opening of the Cloud
      * computer tab shares them, so a save from a closed tab still shows.
@@ -83,21 +78,46 @@ export class OrgModel {
     readonly settings: Resource<OrgSettings>
   }
   readonly sections: Readable<Loadable<readonly Section[]>>
+  /**
+   * The workspaces as screens show them: each Archive that runs shows as
+   * done, so it feels instant. A failed Archive shows the row as before.
+   */
   readonly workspaces: Readable<Loadable<readonly Workspace[]>>
+  /**
+   * The workspaces as the server confirmed them, without the Archives that
+   * wait for their reply. The detail of the open workspace follows them, so
+   * its order never takes a record that a failed Archive takes back. A
+   * workspace whose pull request bar shows takes its summary from the bar.
+   */
+  readonly confirmedWorkspaces: Readable<Loadable<readonly Workspace[]>>
   readonly repositories: Readable<Loadable<readonly Repository[]>>
   readonly builds: Readable<Loadable<BuildsResponse>>
   readonly members: Readable<Loadable<MembersResponse>>
-  readonly routines: Readable<Loadable<readonly ListedRoutine[]>>
+  readonly automations: Readable<Loadable<readonly ListedAutomation[]>>
+  /** The org logins of the agents, which the Agents tab shows. */
+  readonly agentLogins: OrgAgentLogins
+  /** The secrets, which the Secrets tab and Capabilities read when they show. */
+  readonly secrets: SecretsModel
   /** The create requests of this tab, which a sign-out ends. */
   readonly creations = new Creations()
+  /** The GitHub state of each open pull request bar, over its list mark. */
+  readonly liveGitHub = new LiveGitHubStates()
+  /** The GitHub access of the signed-in member, by repository ID. */
+  private readonly githubAccess = new Map<string, GitHubCapabilities>()
   readonly workspaceActions: WorkspaceActions
   private readonly parts: Readonly<Record<OrgPart, Refreshing>>
   private readonly drafts = new Map<string, NewWorkspaceModel>()
 
+  /**
+   * `loginsChanged` runs after each change of an org login that an admin
+   * makes here, as `OrgLoginChanged` says. Without it, such as in a test
+   * of one org, the change reads no account.
+   */
   constructor(
     services: AppServices,
     orgId: string,
     suspension: OrgSuspension = neverSuspended,
+    loginsChanged?: OrgLoginChanged,
   ) {
     this.suspension = suspension
     const api = noteOrgRefusals(services.api, () => suspension.note())
@@ -122,27 +142,43 @@ export class OrgModel {
       members: new Resource<MembersResponse>(() =>
         api.get(membersPath(orgId), readMembers),
       ),
-      routines: new Resource<readonly ListedRoutine[]>(() =>
-        api.get(routinesPath(orgId), readRoutines),
+      automations: new Resource<readonly ListedAutomation[]>(() =>
+        api.get(automationsPath(orgId), readAutomations),
       ),
       settings: new Resource<OrgSettings>(() =>
         api.get(orgSettingsPaths.settings(orgId), readSettings),
       ),
     }
-    const { list, repositories, builds, members, routines } = this.resources
+    const { list, repositories, builds, members, automations } = this.resources
+    this.secrets = new SecretsModel(api, orgId, services.now)
     this.workspaceActions = new WorkspaceActions(this)
     this.sections = partOf(list.store, (value) => value.sections)
-    this.workspaces = partOf(list.store, (value) => value.workspaces)
+    this.confirmedWorkspaces = derived(
+      partOf(list.store, (value) => value.workspaces),
+      this.liveGitHub.store,
+      listWithLiveGitHub,
+    )
+    this.workspaces = derived(
+      this.confirmedWorkspaces,
+      this.workspaceActions.running,
+      listWithArchives,
+    )
     this.repositories = repositories.store
     this.builds = builds.store
     this.members = members.store
-    this.routines = routines.store
+    this.automations = automations.store
+    this.agentLogins = new OrgAgentLogins(api, orgId, loginsChanged)
     this.parts = {
       list: new Refresher(list, listWait, this.services),
       repositories: new Refresher(repositories, onEntry, this.services),
       builds: new Refresher(builds, buildsWait, this.services),
       members: new Refresher(members, onEntry, this.services),
-      routines: new Refresher(routines, routinesWait, this.services),
+      automations: new Refresher(automations, automationsWait, this.services),
+      agentLogins: new Refresher(
+        this.agentLogins.resource,
+        orgLoginsWait,
+        this.services,
+      ),
     }
   }
 
@@ -176,17 +212,29 @@ export class OrgModel {
 
   /**
    * Puts a newer record of a workspace in the list, such as from an event,
-   * an open, Archive, or a create. Its place in the list stays.
+   * an open, Archive, or a create. Its listed placement stays. A different
+   * parent requests a list read after any current read finishes.
    */
   putWorkspace(workspace: Workspace): void {
+    const listed = this.confirmedWorkspace(workspace.id)
     this.resources.list.confirm(
       workspaceUpdated(workspace),
       `workspace ${workspace.id}`,
     )
+    if (listed && listed.parentId !== workspace.parentId)
+      void this.parts.list.reread()
   }
 
+  /** A workspace as screens show it, as `workspaces` says. */
   workspace(workspaceId: string): Workspace | undefined {
     return valueOf(this.workspaces.get())?.find(
+      (item) => item.id === workspaceId,
+    )
+  }
+
+  /** A workspace as the server confirmed it, as `confirmedWorkspaces` says. */
+  confirmedWorkspace(workspaceId: string): Workspace | undefined {
+    return valueOf(this.confirmedWorkspaces.get())?.find(
       (item) => item.id === workspaceId,
     )
   }
@@ -225,22 +273,28 @@ export class OrgModel {
       `build ${build.id}`,
     )
   }
-}
 
-/** The build that new workspaces start from, the newest good build. */
-export function currentBuild(builds: BuildsResponse): ImageBuild | undefined {
-  return (
-    builds.builds.find((build) => build.id === builds.currentImageBuildId) ??
-    builds.builds.find((build) => build.state === 'succeeded')
-  )
-}
+  /** Forgets the GitHub access of the person who signed out. */
+  forgetGitHubAccess(): void {
+    this.githubAccess.clear()
+  }
 
-/**
- * The newest run of the install script, which the Cloud computer tab shows
- * first. A refresh only fetches commits, so it does not count.
- */
-export function latestBuild(builds: BuildsResponse): ImageBuild | undefined {
-  return builds.builds
-    .filter((build) => build.kind === 'build')
-    .sort((a, b) => b.startedAt - a.startedAt)[0]
+  /**
+   * The last GitHub access of the signed-in member to one repository of
+   * the org, as the pull request bar read it. The bar of another workspace
+   * of the repository shows it at once, while it reads the access again.
+   * A sign-out or another person forgets it, as `forgetGitHubAccess` says.
+   */
+  githubAccessOf(repositoryId: string): {
+    get: () => GitHubCapabilities | undefined
+    set: (access: GitHubCapabilities | undefined) => void
+  } {
+    return {
+      get: () => this.githubAccess.get(repositoryId),
+      set: (access) => {
+        if (access) this.githubAccess.set(repositoryId, access)
+        else this.githubAccess.delete(repositoryId)
+      },
+    }
+  }
 }

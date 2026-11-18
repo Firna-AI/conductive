@@ -1,14 +1,11 @@
+import type { Workspace } from '../../shared/generated/Workspace'
 // @vitest-environment happy-dom
 
 import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 import { routes } from '../../app/router'
 import { rightClick } from '../../chat/components/tab-row-test-kit'
-import {
-  workspacePath,
-  workspacesPath,
-  type Workspace,
-} from '../../shared/workspaces'
+import { workspacePath, workspacesPath } from '../../shared/workspaces'
 import { byRole, queryByRole } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
@@ -40,6 +37,25 @@ function startRename(workspaceId: string): HTMLInputElement {
   const field = byRole('textbox', 'Workspace name')
   if (!(field instanceof HTMLInputElement)) throw new Error('No name field.')
   return field
+}
+
+/** Double-clicks a row, as a mouse does: two clicks, then a double click. */
+function doubleClick(link: HTMLElement, init: MouseEventInit = {}): void {
+  const send = (type: string, detail: number) =>
+    act(() => {
+      link.dispatchEvent(
+        new MouseEvent(type, {
+          ...init,
+          detail,
+          bubbles: true,
+          cancelable: true,
+        }),
+      )
+    })
+  act(() => link.focus())
+  send('click', 1)
+  send('click', 2)
+  send('dblclick', 2)
 }
 
 /** Presses a key while an input method composes a word in the field. */
@@ -144,6 +160,45 @@ describe('Rename of a workspace row', () => {
       focus: true,
       history: [open],
       open: [],
+    })
+  })
+
+  test('a plain double click on a row opens the workspace once and the field with the name selected, and the field keeps the focus after the chat shows; a double click with a modifier key opens no field', async () => {
+    const server = new FakeApiServer()
+    const { navigation } = await openPaletteTab(open, { server })
+    doubleClick(rowLink('pricing-copy'), { ctrlKey: true })
+    const modified = {
+      field: queryByRole('textbox', 'Workspace name'),
+      history: [...navigation.history],
+    }
+
+    doubleClick(rowLink('apple-pay'))
+    await settle()
+    const field = byRole('textbox', 'Workspace name')
+    if (!(field instanceof HTMLInputElement)) throw new Error('No name field.')
+    const opened = {
+      value: field.value,
+      selection: [field.selectionStart, field.selectionEnd],
+      focus: document.activeElement === field,
+      history: navigation.history,
+    }
+    press(field, 'Escape')
+
+    expect({
+      modified,
+      opened,
+      closed: queryByRole('textbox', 'Workspace name'),
+      writes: await nameWrites(server),
+    }).toEqual({
+      modified: { field: null, history: [open] },
+      opened: {
+        value: 'Apple Pay button',
+        selection: [0, 16],
+        focus: true,
+        history: [open, routes.workspace(org, 'apple-pay')],
+      },
+      closed: null,
+      writes: [],
     })
   })
 

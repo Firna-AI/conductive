@@ -1,3 +1,4 @@
+import { noRefusals, type IntakeRefusals } from '../../app/draft-files'
 import {
   controlledUploads,
   uploadsSettled,
@@ -9,9 +10,9 @@ export function pickChatFiles(
   chat: ReturnType<typeof chatFor>,
   sessionId: string,
   files: readonly File[],
-  folders: readonly string[] = [],
+  refusals: IntakeRefusals = noRefusals,
 ): Promise<void> {
-  const ids = chat.controller.attachFiles(sessionId, files, folders)
+  const ids = chat.controller.attachFiles(sessionId, files, refusals)
   if (ids.length > 0) {
     chat.controller.setDraft(
       sessionId,
@@ -27,9 +28,13 @@ export function pickChatFiles(
   )
 }
 
-export async function readyChat() {
+/**
+ * A started chat whose uploads wait for the test. Each request that `hold`
+ * picks waits too, until the test lets it go through `held`.
+ */
+export async function readyChat(hold?: (request: Request) => boolean) {
   const upload = controlledUploads()
-  const chat = chatFor({ conversation: 'history', files: upload.files })
+  const chat = chatFor({ conversation: 'history', uploads: upload, hold })
   await chat.controller.start()
   return { ...chat, ...upload }
 }

@@ -16,8 +16,9 @@ export type SandboxProblem = 'stopped' | 'error' | 'refused' | 'archived'
  * stopped cloud computer, and every member may restore the workspace until
  * the last day of Restore. `refused`: the app keeps it, but a suspended org
  * refuses Restore, so the notice promises no files. `ended`: the last day
- * of Restore passed. The app can still keep the cloud computer while its
- * delete tries again, so the notice says nothing of the cloud computer.
+ * of Restore passed, so the workspace is removed too. The app can still
+ * keep the cloud computer while its delete tries again, so the notice says
+ * that the cloud computer is being deleted.
  */
 export type ArchiveRestore = 'available' | 'refused' | 'ended'
 
@@ -29,10 +30,13 @@ export type ArchiveRestore = 'available' | 'refused' | 'ended'
  * the failed first start of a new workspace. The workspace keeps its chat
  * and its queued messages, and it has no files yet. An archived workspace
  * without `restore` has no cloud computer left, so nothing comes back.
+ * `removed` marks an archived workspace whose 14 days ended: it left the
+ * list, and only a link opens it. Until then, the notice gives the day
+ * when it leaves the list.
  */
 export type SandboxNoticeState =
   | { problem: 'stopped' }
-  | { problem: 'archived'; restore?: ArchiveRestore }
+  | { problem: 'archived'; restore?: ArchiveRestore; removed?: boolean }
   | { problem: 'error'; message?: string | null; firstStart?: boolean }
   | { problem: 'refused'; reason: string }
 
@@ -53,20 +57,35 @@ export function replacesComposer(state: SandboxNoticeState): boolean {
 }
 
 /**
- * Whether the panel takes the place of All files and Changes: while the
- * sandbox starts, while its start is refused, and after a failed first
- * start, which leaves no saved lists. A stopped sandbox, and one whose
- * later start failed, keep the lists that the workspace saved.
+ * Whether the panel takes the place of a file or a diff that a tab already
+ * shows: while the start is refused, with the words of the refusal, and
+ * after a failed first start, with Try again. While the sandbox starts, and
+ * while it is stopped or after a later failed start, the tab keeps it.
  */
-export function replacesLists(panel: SandboxPanelState): boolean {
+export function replacesShownFile(panel: SandboxPanelState): boolean {
   switch (panel.problem) {
-    case 'starting':
     case 'refused':
       return true
     case 'error':
       return panel.firstStart === true
+    case 'starting':
     case 'stopped':
     case 'archived':
       return false
   }
+}
+
+/**
+ * Whether the panel takes the place of All files or Changes. `saved` says
+ * that the workspace keeps a copy of the list. While the sandbox starts, a
+ * list shows its saved copy, and the wait takes the place of a list without
+ * one, as on the first start of a new workspace. A refused start and a
+ * failed first start take the place of the list, as of a shown file. A
+ * stopped sandbox, and one whose later start failed, keep the list.
+ */
+export function replacesList(
+  panel: SandboxPanelState,
+  saved: boolean,
+): boolean {
+  return panel.problem === 'starting' ? !saved : replacesShownFile(panel)
 }

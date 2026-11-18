@@ -43,8 +43,45 @@ async function needsRead(
   )
 }
 
-/** Call inside the workspace DO. It rechecks access before reads and commits. */
-export async function refreshWorkspace(
+/**
+ * The key of a read that a tab of one member asks for, or null for another
+ * read, such as a webhook read or a retry. Equal keys read the same thing.
+ */
+function tabReadKey(
+  workspace: GitHubWorkspace,
+  signal: GitHubRefresh,
+): string | null {
+  const { userId, ...other } = signal
+  if (userId === undefined || Object.keys(other).length > 0) return null
+  return JSON.stringify([
+    userId,
+    workspace.repositoryId,
+    workspace.installationId,
+    workspace.fullName,
+    workspace.branch,
+    workspace.baseBranch ?? null,
+  ])
+}
+
+/**
+ * Call inside the workspace DO. It rechecks access before reads and commits.
+ * A tab read joins an equal tab read that has not ended, so the banner and
+ * the checks of one load cost one GitHub read, as
+ * `WorkspaceGitHubState.share` says.
+ */
+export function refreshWorkspace(
+  db: D1Database,
+  workspace: GitHubWorkspace,
+  signal: GitHubRefresh,
+  state: WorkspaceGitHubState,
+  dependencies: GitHubReadDependencies,
+): Promise<GitHubSnapshot | null> {
+  const key = tabReadKey(workspace, signal)
+  const read = () => readAndCommit(db, workspace, signal, state, dependencies)
+  return key === null ? read() : state.share(key, read)
+}
+
+async function readAndCommit(
   db: D1Database,
   workspace: GitHubWorkspace,
   signal: GitHubRefresh,
@@ -136,7 +173,7 @@ export async function refreshWorkspace(
       saveWorkspaceGitHubSummary(
         db,
         { ...workspace, branch: snapshot.banner.branch },
-        githubSummary(snapshot.banner, snapshot.checks.checks),
+        githubSummary(snapshot.banner),
       ),
   )
 }

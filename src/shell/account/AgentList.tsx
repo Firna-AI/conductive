@@ -1,15 +1,18 @@
 import { useEffect, useId, useState, type ReactNode } from 'react'
+import type { Agent } from '../../shared/generated/Agent'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { StatusText } from '../../../docs/mockups/src/components/common/StatusText'
+import { OrgLoginLines } from '../../../docs/mockups/src/components/settings/OrgLoginLines'
 import styles from '../../../docs/mockups/src/components/settings/AccountSections.module.css'
 import { AGENTS } from '../../app/api/read-core'
+import { inOrgs, orgLoginOrgs } from '../../app/default-logins'
 import { useStore } from '../../app/store'
 import type { AccountResponse, AgentLoginStatus } from '../../shared/account'
-import type { Agent } from '../../shared/agents'
 import { useApp } from '../context'
 import { ActionButton } from '../ui/actions'
 import { useAction } from '../ui/useAction'
 import { AgentConnectForm } from './AgentConnectForm'
+import { EndpointDetails } from './EndpointDetails'
 import { agentNames, loginLabels } from './labels'
 import {
   LoginNotUsable,
@@ -83,9 +86,11 @@ function AgentRow(props: {
             ) : (
               <SignedOutStatus />
             )}
-            <span className={styles.kind}>
-              {loginLabels[login.agent][login.kind]}
-            </span>
+            {login.kind === 'endpoint' ? null : (
+              <span className={styles.kind}>
+                {loginLabels[login.agent][login.kind]}
+              </span>
+            )}
           </>
         ) : null}
       </span>
@@ -96,13 +101,21 @@ function AgentRow(props: {
 
 /**
  * Claude and Codex, each with Connect, or Connected and the kind of its
- * login. In a narrow list, as on a phone, Connected and the kind go on a
- * second line under the name, so that the kind shows in full. Connect opens
- * the form of the agent under its row, one form at a time. `initial` opens
- * a form at first. `removable` gives each connected login its Remove, and
- * `shares` its share setting, as on the account. `closable` gives each form
- * its Cancel. `disabled` turns Connect off, as in a later step of Get
- * started.
+ * login. An own endpoint login shows its kind with the host of its endpoint
+ * under its row, so that a phone shows both in full. Under them come the
+ * note and the warning of its last save or Refresh, and the models of the
+ * app that the last model list of the endpoint does not name, with one
+ * Refresh, as `EndpointDetails` draws them. The account model keeps the
+ * note and the warning, so they stay when the list draws again, as in Get
+ * started. Connect opens the form of the agent under its row, one form
+ * at a time. `initial` opens a form at first. `removable` gives each
+ * connected login its Remove, and `shares` its share setting, as on the
+ * account. `closable` gives each form its Cancel. `disabled` turns Connect
+ * off, as in a later step of Get started.
+ *
+ * Under an agent, a line names each org whose org login the new sessions
+ * of the person take, such as "Your new sessions in Acme use Acme's login.",
+ * as the server names the default logins (org login decisions 4 and 7 B).
  *
  * A login that the app can no longer use says Signed out in place of
  * Connected, with its cause and Sign in again under its row. Sign in again,
@@ -121,6 +134,7 @@ export function AgentList(props: {
 }) {
   const app = useApp()
   const account = useStore(app.account.account)
+  const orgs = useStore(app.orgs)
   useEffect(() => {
     void app.account.refreshLogins()
   }, [app])
@@ -147,6 +161,9 @@ export function AgentList(props: {
               open={() => setOpen(agent)}
               removable={props.removable}
             />
+            {login?.kind === 'endpoint' ? (
+              <EndpointDetails login={login} />
+            ) : null}
             {cause !== null && !formOpen ? (
               <LoginNotUsable
                 cause={cause}
@@ -154,6 +171,11 @@ export function AgentList(props: {
                 signInAgain={() => setOpen(agent)}
               />
             ) : null}
+            <OrgLoginLines
+              orgs={
+                account ? orgLoginOrgs(inOrgs(account, orgs), agent) : undefined
+              }
+            />
             {formOpen ? (
               <AgentConnectForm
                 agent={agent}

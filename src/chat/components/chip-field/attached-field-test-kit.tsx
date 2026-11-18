@@ -1,8 +1,9 @@
 import { act, useEffect, useState } from 'react'
+import type { FileEntry } from '../../../shared/generated/FileEntry'
 import { ApiError } from '../../../app/api/client'
 import type { DraftFile } from '../../../app/draft-files'
+import { Store } from '../../../app/store'
 import { attachmentPath } from '../../../shared/attachment-paths'
-import type { FileEntry } from '../../../shared/files'
 import { accessibleName, byRole } from '../../../test-support/dom-queries'
 import { FAKE_IDS } from '../../../test-support/fixtures/core'
 import { mount } from '../../../test-support/mount'
@@ -23,32 +24,25 @@ import { FakeFiles } from './mention-field-test-kit'
 
 /** The files of a draft, as the store of its owner keeps them. */
 class DraftFilesStore implements FieldFiles {
-  private items: readonly DraftFile[]
-  private readonly listeners = new Set<() => void>()
+  private readonly store: Store<readonly DraftFile[]>
   /** The ID of each file that Try again asked to upload again. */
   readonly retried: string[] = []
 
   constructor(items: readonly DraftFile[]) {
-    this.items = items
+    this.store = new Store(items)
   }
 
-  files = () => this.items
+  files = () => this.store.get()
 
   retry = (id: string) => {
     this.retried.push(id)
   }
 
-  subscribe = (listener: () => void) => {
-    this.listeners.add(listener)
-    return () => {
-      this.listeners.delete(listener)
-    }
-  }
+  subscribe = (listener: () => void) => this.store.subscribe(listener)
 
   /** Gives the draft these files, as an attach, an upload, or an end does. */
   set(items: readonly DraftFile[]) {
-    this.items = items
-    this.listeners.forEach((listener) => listener())
+    this.store.set(items)
   }
 }
 
@@ -82,13 +76,19 @@ export function uploadingFile(
   sentBytes: number | null,
   size = 2048,
 ): DraftFile {
-  return { state: 'uploading', id, file: bytes(name, size), sentBytes }
+  return {
+    state: 'uploading',
+    id,
+    file: bytes(name, size),
+    sentBytes,
+    upload: null,
+  }
 }
 
 /** A file of a draft whose upload failed. */
 export function failedFile(id: string, name: string, size = 2048): DraftFile {
   const error = new ApiError(500, 'upload_failed', 'The upload failed.')
-  return { state: 'failed', id, file: bytes(name, size), error }
+  return { state: 'failed', id, file: bytes(name, size), error, upload: null }
 }
 
 /**
@@ -114,6 +114,26 @@ function mentionsOf(tree: readonly FileEntry[] | undefined) {
   return mentions
 }
 
+/**
+ * The attach of a composer, which a large paste calls: `upload` attaches
+ * each file as an upload that runs, and `refuse` attaches nothing, as for
+ * a file over the size limit. Each attached file goes to `attached`.
+ */
+type AttachMode = 'upload' | 'refuse'
+
+function attachOf(store: DraftFilesStore, attached: File[], mode: AttachMode) {
+  return (files: readonly File[]): readonly string[] => {
+    if (mode === 'refuse') return []
+    const added = files.map((file): DraftFile => {
+      attached.push(file)
+      const id = `draft-attached-${attached.length}`
+      return { state: 'uploading', id, file, sentBytes: null, upload: null }
+    })
+    store.set([...store.files(), ...added])
+    return added.map((item) => item.id)
+  }
+}
+
 /** What a test changes of the owner of the field. */
 interface Owner {
   /** Gives the draft a new text, such as a draft that comes back. */
@@ -128,9 +148,12 @@ export async function mountAttachedField(
     value?: string
     files?: readonly DraftFile[]
     tree?: readonly FileEntry[]
+    attach?: AttachMode
   } = {},
 ) {
   const store = new DraftFilesStore(options.files ?? [])
+  const attached: File[] = []
+  const attach = options.attach && attachOf(store, attached, options.attach)
   const mentions = mentionsOf(options.tree)
   const handle: { current: FieldHandle | null } = { current: null }
   const control: { owner: Owner | null } = { owner: null }
@@ -158,6 +181,7 @@ export async function mountAttachedField(
             label="Message"
             lines={2}
             maxLines={8}
+            onAttach={attach}
             onChangeText={(text) => setDraft((now) => ({ ...now, text }))}
             onEnter={(event) => {
               event.preventDefault()
@@ -178,6 +202,8 @@ export async function mountAttachedField(
   return {
     field,
     store,
+    /** Each file that the attach of the composer took, in order. */
+    attached,
     /** The handle of the field, as its composer holds it. */
     handle: () => {
       if (!handle.current) throw new Error('The field has no handle.')

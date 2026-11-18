@@ -29,6 +29,7 @@ A workspace you create uses the repository's default branch.
 For a pull request run, its first message names the initial target under **Your work goes to**.
 The pull request bar names the current target.
 After **Continue**, the workspace targets the latest default branch of its repository.
+After a repository change, it targets the latest default branch of the new repository.
 Your draft and its attached files stay unchanged.
 Conductive then shows the pull request's state for that branch.
 
@@ -51,7 +52,7 @@ You can also ask the agent to create a pull request with the GitHub CLI.
 The CLI is authenticated on computers with the current software.
 
 GitHub operations in an agent turn use the person whose message started that turn.
-Commands in the shared Terminal use the workspace owner's GitHub account.
+Commands in any workspace terminal use the workspace owner's GitHub account.
 
 Commits in each place name that same person as both author and committer.
 An `author` or `committer` setting in the repository or in the global Git settings takes priority over the workspace owner's author.
@@ -76,19 +77,27 @@ The actions and GitHub links sit at the top of that view.
 | Checks failed | **Fix checks** asks the agent to investigate, fix, commit, and push. |
 | Merge conflict | **Resolve conflicts** asks the agent to merge the latest target branch, fix conflicts, test, commit, and push. |
 | Changes requested | **Address review** asks the agent to read the comments, change code, commit, and push. |
-| Draft | Open GitHub when you want to change its draft state. |
+| Draft | **Ready for review** marks it ready for review on GitHub. |
 | Blocked | Open GitHub for the reason it blocks the merge. |
 | Ready to merge | Select the displayed merge action when available. |
 | Merged | Choose **Continue**, or **Archive** when you own the workspace or are an admin. |
 | Closed without a merge | Open GitHub to review what happened. |
 
-On an open pull request, local work gives **Commit and push** priority over Merge and the fix actions.
+On an open pull request, local work gives **Commit and push** or **Push** priority over Merge, **Ready for review**, and the fix actions.
 Local work means files not committed or commits that have not been pushed.
-The action asks the agent to commit and push that work.
+When any file is not committed, **Commit and push** asks the agent to commit and push that work.
+When only commits are left, **Push** asks the agent to push the branch.
 
 Each agent action sends a fixed message to the chat session you viewed last.
-It uses that session's model, effort, and normal send rules.
+It uses that session's model, effort, **Fast** setting, and normal send rules.
 It preserves your draft and uploads.
+
+To bring the latest target branch into your branch at any time, open the command palette and choose **Merge latest**.
+The row names the target branch, as in **Merge latest main**.
+It asks the agent to merge that branch, fix conflicts, test, commit, and push.
+It sends its message in the same way as the agent actions of the bar.
+You see it when the agent actions are available to you.
+It is not offered after the pull request merges.
 
 **Address review** asks the agent to change code without replying on GitHub.
 Select the pull request number to read, reply to, or resolve review comment threads on GitHub.
@@ -107,7 +116,7 @@ The merge uses your GitHub account.
 You need GitHub write access or more to see the action.
 GitHub also needs to allow a merge method.
 If Conductive cannot read that access, it hides Merge.
-Local work on an open pull request shows **Commit and push** instead.
+Local work on an open pull request shows **Commit and push** or **Push** instead.
 
 GitHub checks your access and the branch's rules before completing the merge.
 The bar shows **Merging** until the result arrives.
@@ -116,6 +125,21 @@ The merge alone does not archive the workspace.
 If the branch has new commits, review them before merging again.
 If the error says your GitHub access does not allow the merge, ask a GitHub repository admin for access.
 For another refusal, use **Open on GitHub** to inspect the cause.
+
+## Mark a draft ready for review
+
+Select **Ready for review** in the bar of a draft pull request.
+Conductive marks the pull request ready for review on GitHub at once.
+No agent turn runs.
+
+The change uses your GitHub account.
+You need GitHub write access or more to see the action.
+If Conductive cannot read that access, it hides **Ready for review**.
+The bar shows **Marking ready** until GitHub answers.
+The bar then shows the new state of the pull request.
+
+If GitHub refuses the change, a message under the bar says so.
+Use **Open on GitHub** to inspect the cause.
 
 ## Inspect checks
 
@@ -153,6 +177,7 @@ Ask the org admin to check the GitHub App's repository access when needed.
 
 Every org member can select **Continue** after the workspace's pull request merges.
 It starts a branch from the latest default branch in the same workspace.
+The branch name uses the workspace name and a version, such as `v2`.
 That default branch becomes the workspace's new base branch.
 It keeps the computer, files, sessions, and workspace name.
 Your GitHub account supplies the repository access for that fetch.
@@ -165,17 +190,22 @@ Continue waits while an agent turn runs in any session of the workspace.
 After a merge, the workspace owner and org admins can select **Archive** in the bar.
 Archive stops its cloud computer at once, without checking the work or asking a question.
 It keeps the computer and its files for 14 days.
-The chat stays read-only in **Archived**, with no file lists or tools.
+The workspace stays in **Archived** for those 14 days.
+Its chat is read-only, with no file lists or tools.
 
 The notification after Archive offers **Restore**.
+It also gives the day the workspace leaves the list.
 Every member of an active org can restore the workspace while its computer and Restore window remain available.
-Restore returns it to its section and place in the list, stopped.
+Restore returns the workspace to its place in the list, stopped.
 Select **Resume** if the restored workspace is already open.
 The archived bar and the command palette also offer Restore during that window.
 On a computer, point to its row in **Archived** to find **Restore**.
 
 Restore ends after 14 days.
 Conductive then deletes the computer and its files.
+The workspace leaves **Archived** and the command palette.
+A direct link or a chat link still opens its read-only chat.
+Conductive keeps its chat history until the org is deleted.
 The merge alone does not archive the workspace.
 
 - [Archive a workspace](/docs/workspaces#archive-a-workspace)

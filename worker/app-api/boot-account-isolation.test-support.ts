@@ -1,7 +1,6 @@
 import { expect } from 'vitest'
-
+import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
 import { ACCOUNT_PATHS, agentLoginPath } from '../../src/shared/account'
-import type { AgentChoice } from '../../src/shared/agents'
 import { GET_STARTED_PATH } from '../../src/shared/onboarding'
 import { readShortcutKeyText } from '../../src/shared/shortcut-key'
 import type { TestHarness } from '../test-support/harness'
@@ -66,6 +65,7 @@ export async function expectAccountIsolation(
     await expectAccountState(harness, first, firstState, {
       githubLogin: 'octocat',
       orgId: org.id,
+      orgName: org.name,
       githubComplete: true,
     })
     await expectAccountState(harness, other, otherState, {
@@ -99,30 +99,30 @@ export async function expectAccountIsolation(
   await putAccountValue(harness, other, ACCOUNT_PATHS.defaultModel, { choice })
   await expectBoth(firstSaved, otherSaved)
   await putAccountValue(harness, first, ACCOUNT_PATHS.newWorkspaceView, {
-    view: 'dialog',
-  })
-  const firstDialog: AccountState = {
-    ...firstSaved,
-    newWorkspaceView: 'dialog',
-  }
-  await expectBoth(firstDialog, otherSaved)
-  await putAccountValue(harness, other, ACCOUNT_PATHS.newWorkspaceView, {
     view: 'page',
   })
-  await expectBoth(firstDialog, otherSaved)
+  const firstPage: AccountState = {
+    ...firstSaved,
+    newWorkspaceView: 'page',
+  }
+  await expectBoth(firstPage, otherSaved)
+  await putAccountValue(harness, other, ACCOUNT_PATHS.newWorkspaceView, {
+    view: 'dialog',
+  })
+  await expectBoth(firstPage, otherSaved)
   const removed = await harness.request(agentLoginPath('claude'), first, {
     method: 'DELETE',
     body: '{}',
   })
   expect(removed.status).toBe(204)
   await expectBoth(
-    { ...empty, defaultChoice: otherChoice, newWorkspaceView: 'dialog' },
+    { ...empty, defaultChoice: otherChoice, newWorkspaceView: 'page' },
     otherSaved,
   )
   const firstShortcuts: AccountState = {
     ...empty,
     defaultChoice: otherChoice,
-    newWorkspaceView: 'dialog',
+    newWorkspaceView: 'page',
     shortcuts: {
       mac: [
         { command: 'command-palette', keys: [readShortcutKeyText('Meta+P')] },

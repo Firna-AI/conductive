@@ -1,12 +1,13 @@
-import type { AgentListSectionsResponse } from '../../src/shared/agent-tools'
-import type { AgentChoice } from '../../src/shared/agents'
-import type { MessageSender } from '../../src/shared/messages'
-import { choice, record, text } from '../../tools/input'
-import { messageSender } from '../../tools/responses'
+import type { AgentListSectionsResponse } from '../../src/shared/generated/AgentListSectionsResponse'
+import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
+import type { MessageSender } from '../../src/shared/generated/MessageSender'
+
 import { HttpError } from '../http'
 import { workspaceTokenAccessPredicate } from '../data/workspace-token-access'
 import { hash } from '../security/crypto'
 import { readOrgProviderAccount } from '../data/org-provider-account'
+import { choice, record, text } from './input'
+import { messageSender } from './workspace-replies'
 import {
   imageAdmissionError,
   readImageRepositories,
@@ -87,12 +88,14 @@ export async function ownerPreference(
   const row = await db
     .prepare(
       `SELECT default_agent AS agent, default_model AS model,
-       default_effort AS effort FROM user_preferences
+       default_effort AS effort, default_fast AS fast FROM user_preferences
        WHERE user_id = ? AND default_agent IS NOT NULL`,
     )
     .bind(userId)
     .first<unknown>()
-  return row === null ? null : choice(row)
+  return row === null
+    ? null
+    : choice({ ...record(row), fast: record(row).fast === 1 })
 }
 
 export async function creationSection(

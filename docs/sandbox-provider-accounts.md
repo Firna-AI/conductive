@@ -40,9 +40,9 @@ D1.
   [The app's Boat key](protocol/isolation.md#the-apps-boat-key) says.
 - [The app's Boat account](../worker/sandbox/README.md#the-apps-boat-account)
   says how to make the organization and the key.
-- The key must also allow the `file.write` action. The Worker uses it to
-  copy each attached file into a sandbox. The primary orchestrator
-  supplies that action at the next deployment.
+- The key needs `exec` to start and read the detached attachment download
+  commands. The cloud computer uses a one-use token to read each file from
+  the machine host.
 
 ## The app's E2B account
 

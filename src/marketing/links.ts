@@ -30,7 +30,6 @@ export const sitePaths = {
   pricing: '/pricing',
   terms: '/terms',
   privacy: '/privacy',
-  fromConductor: '/from-conductor',
 } as const
 
 /**
@@ -46,6 +45,5 @@ export function pageHrefs(
     pricing: href(sitePaths.pricing),
     terms: href(sitePaths.terms),
     privacy: href(sitePaths.privacy),
-    fromConductor: href(sitePaths.fromConductor),
   }
 }

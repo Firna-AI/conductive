@@ -34,9 +34,11 @@ number names a dated record, as
 - A return through the sign-in callback was rejected. Reason: the callback
   refuses a GitHub reply that the app's own sign-in did not start.
 - [The Mac app](desktop-sign-in.md#github-app-install) has its own return.
-- The GitHub App sends pull request, check, status, and push webhooks to
-  the Worker, at `https://api.conductive.build/v1/github/webhooks`.
-- A pull request webhook can also start the runs of routines, as
+- The GitHub App sends pull request, check, status, push, and repository
+  webhooks to the Worker, at `https://api.conductive.build/v1/github/webhooks`.
+  [Repository changes on GitHub](repository-changes-on-github.md) says what
+  a repository webhook changes.
+- A pull request webhook can also start the runs of automations, as
   [Pull request runs](pull-request-runs.md) says.
 - The Worker accepts a GitHub webhook only with a valid GitHub signature.
 
@@ -49,6 +51,14 @@ number names a dated record, as
 - The Worker pushes the new state to every open tab of that workspace.
 - When a tab opens, the Worker reads the current pull request and the
   current checks of the branch from the GitHub API.
+- While that read runs, the tab shows the last state that the Worker
+  stored for the branch, when it has one. The fresh state replaces it
+  when the read answers. The user chose this on 12 November 2026.
+- Reason: a read from GitHub takes seconds, while the list already shows
+  the GitHub state of the workspace, so the bar must not show a loading
+  state for a known state.
+- A failed fresh read keeps the stored state on the screen, and the
+  GitHub events of the branch keep it current.
 - Events do not reach an archived workspace. Its open tab still reads the
   state when it opens. The user chose this on 11 November 2026.
 - Reason: each event read every workspace of the repository, also the
@@ -98,7 +108,7 @@ Rules for the bar:
 
 The bar shows one main action for each state (decision 220). The agent
 does each step that changes code, on a fixed prompt. The app merges,
-continues, and archives.
+marks a draft ready for review, continues, and archives.
 
 | Bar state | Main action | Done by |
 | --- | --- | --- |
@@ -106,18 +116,30 @@ continues, and archives.
 | Checks failed | Fix checks | The agent |
 | Merge conflict | Resolve conflicts | The agent |
 | Changes requested | Address review | The agent |
-| An open pull request with local work, in any state | Commit and push | The agent |
+| An open pull request with changed files that are not committed, in any state | Commit and push | The agent |
+| An open pull request with only commits that no remote branch holds, in any state | Push | The agent |
 | Ready to merge, for a member who may merge | Merge, named by its method | The app |
+| Draft, for a member with write access | Ready for review | The app |
 | Merged | Continue and Archive | The app |
 | No commits and no local work | None: "No commits yet" | None |
-| Checks running, draft, blocked, and closed | None | None |
+| Checks running, blocked, and closed | None | None |
 
 - The bar counts the local work of the current branch: its changed files,
   also untracked files, and its commits that no remote branch holds.
 - Local work comes first (decision 228). While an open pull request has
-  local work, Commit and push takes the place of Merge and of the fixes. A
-  merged or a closed pull request is not open.
+  local work, Commit and push or Push takes the place of Merge, of Ready
+  for review, and of the fixes. A merged or a closed pull request is not
+  open.
 - Reason: no merge leaves work behind in the sandbox.
+- The button names the step that the agent does. When a file is not
+  committed, the button is Commit and push, and its prompt asks the agent
+  to commit and push. When the local work is only commits, the button is
+  Push, and its prompt asks the agent to push the branch. The user chose
+  this on 12 November 2026.
+- Reason: Commit and push on a clean tree made members look for files that
+  were not committed.
+- Push and Commit and push share one command and one key, as
+  [the default keys](keyboard-shortcuts-keys.md#the-default-keys) say.
 - In each state that has a pull request, the number of the pull request
   opens it on GitHub. An arrow after the number marks the link. The bar has
   no other link to the pull request. The user chose this on 10 November
@@ -179,6 +201,13 @@ continues, and archives.
   [Merge as the member](github-tokens.md#merge-as-the-member) says.
 - When the Worker cannot read the access, the bar shows no Merge. Reason:
   a button that is sure to fail helps nobody.
+- While the bar reads the access, it uses the last access that the same tab
+  read for the member and the repository, when it has one. This applies to
+  Merge and to the agent actions. A failed read forgets that access, and a
+  sign-out forgets each one. The user chose this on 12 November 2026.
+- Reason: the access seldom changes, and a read from GitHub takes seconds.
+  The bar of another workspace of the same repository must not wait for
+  it. GitHub still checks the access at each merge.
 - GitHub keeps the final say, because it checks the rules of the branch at
   the merge.
 - Merge for every member was rejected, because a member without the right
@@ -206,6 +235,36 @@ continues, and archives.
   rules of the branch are not part of the bar. A direct merge into a branch
   that needs a merge queue gets the refusal of GitHub.
 
+## Ready for review
+
+- A draft offers Ready for review. The user chose this on 17 November
+  2026.
+- Reason: a member must not leave the app to mark a draft ready.
+- The app marks the pull request ready for review at once, with the
+  member's own GitHub token, as for Merge. No agent turn runs. The user
+  chose this on 17 November 2026.
+- Reason: the step changes no code. So it must not wait for a running
+  sandbox and a turn, or use the model quota of a session.
+- A fixed prompt that asks the agent to run `gh pr ready` was rejected for
+  the same reason. A sandbox from an older org image can also lack the
+  GitHub CLI.
+- A member sees Ready for review only when GitHub gives that member write
+  access or more to the repository, as for Merge. When the Worker cannot
+  read the access, the bar shows no Ready for review.
+- The request names the number of the pull request that the bar shows.
+  When the branch has another pull request now, the app changes nothing,
+  and a message under the bar says so.
+- A pull request that is no longer a draft needs no change. The app then
+  only reads the GitHub state again.
+- While the change runs, the bar shows Marking ready. Then every open tab
+  gets the new GitHub state.
+- When GitHub refuses the change, a message under the bar says that GitHub
+  refused it, with Open on GitHub. No GitHub error text reaches the
+  browser. A missing right uses the app's own words, and the bar then
+  hides Ready for review.
+- The command Mark PR ready for review has no default key, as
+  [the default keys](keyboard-shortcuts-keys.md#the-default-keys) say.
+
 ## After the merge
 
 - After the merge, the bar offers Continue and Archive.
@@ -231,8 +290,9 @@ continues, and archives.
   action-required check is a failure. A queued or running check runs. Each
   other check counts as passed.
 - The list mark of the workspace shows its
-  [GitHub state](#the-github-state) in one colour, as
-  [The list mark](workspace-life.md#the-list-mark) says.
+  [GitHub state](#the-github-state), the state of the bar, in the colour of
+  the bar, as [The list mark](workspace-life.md#the-list-mark) says. While
+  the agent needs input, the mark is blue instead.
 
 ## The GitHub state
 

@@ -1,21 +1,18 @@
-import type { FileEntry } from '../../shared/files'
+import type { FileEntry } from '../../shared/generated/FileEntry'
+import { hidesSecret, pathLabel } from '../../files/model/file-labels'
 import { canMention } from '../../shared/mention-text'
 
 /** The most rows that the list shows. A longer query narrows it. */
 const MENTION_ROW_LIMIT = 100
 
-/** The label of the whole path of an entry: the real path when it hides nothing. */
-function pathLabel(entry: FileEntry): string {
-  return entry.displayPath ?? entry.path
-}
-
 /**
  * Whether the list offers an entry. An entry whose label hides a secret
- * value stays out, because the message would hold its real path, and so
- * does a path that no mention can hold.
+ * value stays out, as the shared check of the Files screens says, because
+ * the message would hold its real path. So does a path that no mention can
+ * hold.
  */
 export function mentionable(entry: FileEntry): boolean {
-  return pathLabel(entry) === entry.path && canMention(entry.path)
+  return !hidesSecret(entry) && canMention(entry.path)
 }
 
 /** The label of the folder that holds an entry, with a final `/`, or ''. */

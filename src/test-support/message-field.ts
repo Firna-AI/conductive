@@ -93,6 +93,55 @@ export function focusMessage(field: HTMLElement): void {
 }
 
 /**
+ * Makes each focus of a message field put the caret at the start of the
+ * field when the caret of the page is outside it, as Chrome does before the
+ * focus event. The result stops it.
+ */
+export function chromeCaretOnFocus(): () => void {
+  const place = (event: FocusEvent) => {
+    const field = event.target
+    if (!(field instanceof Element) || !isMessageField(field)) return
+    const selection = field.ownerDocument.getSelection()
+    if (selection && !field.contains(selection.anchorNode)) {
+      selection.collapse(field, 0)
+    }
+  }
+  document.addEventListener('focus', place, true)
+  return () => document.removeEventListener('focus', place, true)
+}
+
+/**
+ * Makes a caret that a script puts into an editable element, such as a
+ * message field, give that element the focus, as Chrome does. The editor
+ * puts its caret into the page at each change that does not skip it. The
+ * result stops it.
+ */
+export function chromeFocusOnCaret(): () => void {
+  const selection = document.getSelection()
+  if (!selection) throw new Error('The page has no selection.')
+  const prototype: Selection = Object.getPrototypeOf(selection)
+  const set = prototype.setBaseAndExtent
+  prototype.setBaseAndExtent = function (
+    this: Selection,
+    anchorNode: Node,
+    anchorOffset: number,
+    focusNode: Node,
+    focusOffset: number,
+  ) {
+    set.call(this, anchorNode, anchorOffset, focusNode, focusOffset)
+    const element =
+      anchorNode instanceof Element ? anchorNode : anchorNode.parentElement
+    const host = element?.closest('[contenteditable="true"]')
+    if (host instanceof HTMLElement && document.activeElement !== host) {
+      host.focus()
+    }
+  }
+  return () => {
+    prototype.setBaseAndExtent = set
+  }
+}
+
+/**
  * Pastes plain text into the field at its caret, as the paste event of a
  * browser gives it. The result is the event, whose `defaultPrevented` says
  * whether the field took the paste.

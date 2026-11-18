@@ -134,9 +134,10 @@ describe('the Connect form of Codex', () => {
       first: [
         { kind: 'API key', selected: true },
         { kind: 'ChatGPT plan', selected: false },
+        { kind: 'Own endpoint', selected: false },
       ],
       intro: {
-        item: `Codex API key ChatGPT plan ${copy.intro} ${copy.settingsLink.label} Cancel ${copy.getCode}`,
+        item: `Codex API key ChatGPT plan Own endpoint ${copy.intro} ${copy.settingsLink.label} Cancel ${copy.getCode}`,
         settings: [copy.settingsLink.href, '_blank'],
       },
       code: {
@@ -189,7 +190,7 @@ describe('the Connect form of Codex', () => {
     const app = await startedApp(server, { delay: delay.delay })
     const page = await mount(
       <AppProviders app={app}>
-        <AccountScreen connect="codex" tab="general" user={fakeUser} />
+        <AccountScreen connect="codex" tab="agents" user={fakeUser} />
       </AppProviders>,
     )
     await press(byRole('radio', 'ChatGPT plan', page.container))

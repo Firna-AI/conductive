@@ -93,6 +93,7 @@ it('serves real shell lists and keeps workspace views private to each member', a
     tabs: [{ kind: 'session', sessionId: 'first-session' }],
     activeTab: { kind: 'session', sessionId: 'first-session' },
     fileList: 'changes',
+    temporaryTab: null,
     tool: 'preview',
   }
   const saved = await fixture.request(path, {
@@ -102,13 +103,19 @@ it('serves real shell lists and keeps workspace views private to each member', a
   expect(saved.status).toBe(200)
   expect(await saved.json()).toEqual({
     view,
-    routine: null,
+    automation: null,
     baseBranch: 'main',
   })
+  // A GET also gives the folder of the repository, for the file chips of
+  // the chat. This workspace keeps the folder of an old snapshot.
+  const folder = '/home/user/conductive/repositories/chat-repository'
   expect(await (await fixture.request(path)).json()).toEqual({
     view,
-    routine: null,
+    automation: null,
     baseBranch: 'main',
+    repositoryFolder: folder,
+    // Without a record of its folders, the menu holds only this repository.
+    heldRepositoryIds: null,
   })
   expect(
     await (
@@ -117,9 +124,17 @@ it('serves real shell lists and keeps workspace views private to each member', a
       })
     ).json(),
   ).toEqual({
-    view: { tabs: [], activeTab: null, fileList: 'all', tool: 'terminal' },
-    routine: null,
+    view: {
+      tabs: [],
+      activeTab: null,
+      temporaryTab: null,
+      fileList: 'all',
+      tool: 'terminal',
+    },
+    automation: null,
     baseBranch: 'main',
+    repositoryFolder: folder,
+    heldRepositoryIds: null,
   })
   const outsider = await fixture.request(path, {
     headers: { Cookie: fixture.cookies.outsiderCookie },
@@ -174,6 +189,7 @@ it('decodes opaque workspace IDs for lifecycle reads and keeps archived writes r
     body: JSON.stringify({
       tabs: [],
       activeTab: null,
+      temporaryTab: null,
       fileList: 'all',
       tool: 'terminal',
     }),

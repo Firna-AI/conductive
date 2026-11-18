@@ -2,8 +2,8 @@
 
 This template supplies the base software and the private loopback relay for
 E2B sandboxes. It uses Ubuntu 24.04, 4 vCPU, and 8192 MiB of memory.
-The org image build then installs the runner archive and terminal software
-with the existing [image installers](../install.md).
+The org image build then installs the newest release of the sandbox
+software with the existing [release installer](../install.md#release-installation).
 
 The template installs every tool in
 [`BASE_IMAGE`](../../src/shared/base-image.ts): Node 24, npm, pnpm, Bun,
@@ -57,11 +57,13 @@ It does not set a total disk size.
 ## Software and pins
 
 `install-base.sh` installs the Ubuntu packages and enables Docker.
-It reuses the Node URL, digest, and version directory from
+It installs the base Node from the URL, digest, and version of
 [`IMAGE_NODE_RUNTIME`](../../worker/lifecycle/image-runtime.ts).
-The [private runtime installer](../runtime.md) verifies that archive.
+It checks the digest of the archive before it unpacks it under
+`/opt/conductive-e2b/node/<version>`.
 The base image also puts Node, npm, and npx on the ordinary user's path.
-The runner keeps its private executable path.
+This base Node is separate from the private Node of each release, which the
+runner uses.
 
 `install-tools.sh` pins pnpm 12.18.0, Bun 1.4.4, and uv 0.13.7.
 It verifies the Bun and uv release archives before it unpacks them.

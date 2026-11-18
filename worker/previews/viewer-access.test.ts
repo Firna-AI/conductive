@@ -90,10 +90,11 @@ it.each([
     ).toBe(404)
     expect((await setup.handler.proxy(browser.request())).status).toBe(404)
     expect(harness.requests).toHaveLength(0)
-    const nextDenied = deniedReader.read()
-    deniedSource.send('must stay private')
-    await expect(nextDenied).rejects.toMatchObject({ name: 'AbortError' })
+    // The refused request reads access for the viewer, so it ends the open stream at once.
     expect(deniedSource.cancelled).toBe(true)
+    await expect(deniedReader.read()).rejects.toMatchObject({
+      name: 'AbortError',
+    })
     const nextAllowed = allowedReader.read()
     allowedSource.send('other viewer keeps access')
     expect(new TextDecoder().decode((await nextAllowed).value)).toBe(

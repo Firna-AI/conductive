@@ -171,12 +171,39 @@ it("gives the browser the previewed server's cache rules for its own use only", 
       sent: expected,
     })
   }
+  reply = { status: 200, headers: {} }
+  const timed = await active.runtime.dispatchFetch(
+    `https://${preview.hostname}/`,
+    { headers: { Cookie: cookie } },
+  )
+  await timed.arrayBuffer()
+  const steps = (timed.headers.get('Server-Timing') ?? '').split(', ')
+  expect(steps.map((step) => step.split(';')[0])).toEqual([
+    'lookup',
+    'workspace',
+    'access',
+    'relay',
+    'check',
+    'upstream',
+    'check-after',
+  ])
+  for (const step of steps) expect(step).toMatch(/^[a-z-]+;dur=\d+$/)
   const unknown = await active.runtime.dispatchFetch(
     `https://${'d'.repeat(32)}.conductive-previews.test/`,
   )
   await unknown.arrayBuffer()
-  expect({
-    status: unknown.status,
-    cacheControl: unknown.headers.get('Cache-Control'),
-  }).toEqual({ status: 404, cacheControl: 'no-store' })
+  const uncredentialed = await active.runtime.dispatchFetch(
+    `https://${preview.hostname}/`,
+  )
+  await uncredentialed.arrayBuffer()
+  expect(
+    [unknown, uncredentialed].map((response) => ({
+      status: response.status,
+      cacheControl: response.headers.get('Cache-Control'),
+      timing: response.headers.get('Server-Timing'),
+    })),
+  ).toEqual([
+    { status: 404, cacheControl: 'no-store', timing: null },
+    { status: 404, cacheControl: 'no-store', timing: null },
+  ])
 })

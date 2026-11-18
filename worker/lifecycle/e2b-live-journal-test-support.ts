@@ -66,8 +66,6 @@ export async function liveJournalFixture() {
       LIVE_E2B_DOMAIN: server.domain,
       LIVE_E2B_TEMPLATE_ID: 'base-template',
       LIVE_E2B_STATE_KEY: btoa('e'.repeat(32)),
-      LIVE_RUNNER_ARCHIVE_URL: 'https://software.example.test/runner.tar.gz',
-      LIVE_RUNNER_ARCHIVE_SHA256: '0'.repeat(64),
       LIVE_E2B_STATE_DIR: join(directory, 'state'),
       LIVE_OUTPUT: join(directory, 'output'),
     },

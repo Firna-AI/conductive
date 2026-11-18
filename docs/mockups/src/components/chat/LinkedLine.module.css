@@ -22,7 +22,7 @@
  * The title of the first session is a link in the link colour, whether the
  * caller gives an anchor, as the mockups do, or a button that opens the
  * session, as the app does. On a phone the touch minimum of the frame makes
- * it a 44 px target, and a long title wraps, centred, inside it. On desktop
+ * it a 40 px target, and a long title wraps, centred, inside it. On desktop
  * the minimum is zero, so the link keeps the height of its text.
  */
 .line a,

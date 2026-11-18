@@ -1,4 +1,5 @@
 import type { ApiClient } from '../../app/api/client'
+import type { OrgModel } from '../../app/org-model'
 import { createMembersApi, type MembersApi } from '../../members/api/client'
 import type { Viewport as MembersViewport } from '../../members/ui/controls'
 import { useOrgModel } from '../context'
@@ -16,7 +17,15 @@ const clients = new WeakMap<ApiClient, MembersApi>()
  * a mounted part load its data again.
  */
 export function useMembersApi(orgId: string): MembersApi {
-  const { api } = useOrgModel(orgId).services
+  return membersApiOf(useOrgModel(orgId))
+}
+
+/**
+ * The client of the members UI for the model of one org, as
+ * `useMembersApi` gives it, for a part that works on several orgs.
+ */
+export function membersApiOf(model: OrgModel): MembersApi {
+  const { api } = model.services
   let client = clients.get(api)
   if (!client) {
     client = createMembersApi(api.fetch)

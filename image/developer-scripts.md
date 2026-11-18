@@ -4,65 +4,28 @@ These scripts of the [sandbox software](README.md) run on a developer
 machine. The deploy workflow also runs the packager. No image build
 installs them.
 
-- `package-runner.mjs` packages the runner archive.
-- `live-check.mjs` checks the chat path in a real sandbox. Then it times
-  the first agent start after a resume.
+- `package-system.sh` packages the system part.
+- `live-check.mjs` checks chat in a real sandbox and times the first agent start.
 - `e2b/build-template.mjs` builds the E2B base template from public inputs.
 
-Run each command from the repository root, with Node 24. These scripts use
-the packages of the [agent runner](../runner/README.md). So run
-`npm ci --prefix runner` first.
+Run commands from the repository root with Node 24. Run `npm ci --prefix runner`
+first. It installs the SDK helper packages and the live-check developer packages.
 
-## Package the archive
+## Package a release
 
-Run the packager on Linux x64, with GNU tar and gzip. Install the runner
-packages on that host, so that their platform files match it.
-
-```sh
-node image/package-runner.mjs \
-  --url https://artifacts.example.com/runner-v1.tar.gz \
-  --output .context/runner-artifact/runner.tar.gz
-```
-
-The script takes these options. Pass exactly one of `--url` and
-`--base-url`.
-
-- `--url` is the public HTTPS URL of the archive after you publish it. It
-  can hold no user name, password, query, or fragment.
-- `--base-url` is a public HTTPS base for the URL, with the same limits.
-  After the script computes the digest, the archive URL is
-  `<base>runner-<sha256>.tar.gz`. The script adds a missing final `/` to
-  the base.
-- `--output` is optional, and it must be under `.context/`. The default is
-  `.context/runner-artifact/runner.tar.gz`.
-- `--help` prints the usage.
-
-The [deploy workflow](../docs/automatic-deploys.md) runs the packager with
-`--base-url https://runner.conductive.build/`.
-
-The script builds the runner bundles. The archive then holds only a
-`runner/` folder: `main.mjs`, `relay.mjs`, `measure.mjs`, `compare.mjs`, the runner
-manifest and lockfile, and the production packages from
-`runner/node_modules`, for Linux x64. It holds no Node. Each image installs
-its own private Node, as [the private Node runtime](runtime.md) says.
-
-The script fixes the order, the times, the owners, and the file modes of
-the archive entries. So the umask of `npm ci --prefix runner` does not
-change the digest. The same source and installed packages give the same
-digest.
-
-The script writes the archive and two files next to it:
-
-- `<archive>.sha256`: the digest, in the format of `sha256sum`.
-- `<archive>.json`: the `url` and `sha256` value of the `software` option.
-
-Then supply the archive, as
-[The runner archive](README.md#the-runner-archive) says.
+Run `bash image/package-system.sh .context/release-input` to make the system
+archive. Run `node runner/sdk-helper/scripts/package.mjs .context/release-input`
+to make the SDK helper archive. Both print the archive digest.
+The [release crate](../crates/cnd-release/README.md#quick-start) gives the
+parts-list and executable packaging commands. Use `node`, `system`, and
+`sdk-helper` as the three parts. The
+[deploy guide](../docs/deployment/runner-archive.md#the-release-in-each-deploy)
+gives their public paths and publication order.
 
 ## Live check
 
 `live-check.mjs` bundles the TypeScript check into
-`.context/chat-live-check/cli.mjs`, with the esbuild of the runner
+`.context/chat-live-check/cli.mjs`, with the esbuild of the SDK helper
 packages. Then it runs that file.
 
 The default mode uses Boat. The
@@ -71,15 +34,18 @@ inputs. It checks clean disposable images and both preview relay layers.
 It does not run the Boat chat or placement measurements.
 
 ```sh
-npm --prefix runner run build
+npm --prefix runner/sdk-helper run build
 node image/live-check.mjs --help
 node image/live-check.mjs --prepare
 node image/live-check.mjs
 ```
 
 - `--help` lists the variables of the selected provider mode.
-- `--prepare` checks that esbuild can bundle the check, and that the runner
-  bundles are in `dist/runner/`. It uses no app, no sandbox, and no agent.
+- `--prepare` checks that esbuild can bundle the check, and that the SDK helper
+  bundles are in `dist/sdk-helper/`. It uses no app, no sandbox, and no agent.
+  In the E2B mode, it checks the shipped probes and the provider migration in
+  place of those bundles, as the [E2B image live check](e2b/live-check.md)
+  says.
 - Without an option, the script runs the real check. It reads its inputs
   and its secrets from the environment. Put no secret in a saved command
   or file.
@@ -90,27 +56,22 @@ node image/live-check.mjs
   and the inputs of [Deployment inputs](../docs/deployment.md). Each
   sandbox must reach the machine origin.
 - A signed-in test account with a stored agent login for `LIVE_AGENT`.
-- An org with a published org image. A build with an archive from
-  `package-runner.mjs` must make that image. The check makes no image.
+- An org with a published org image that contains the release under test.
+  The check makes no image.
 - A repository of that org that the image holds.
 
-Build computer on the Cloud computer tab of the org starts that build, as
-[The org image](../docs/protocol/org-image.md#the-org-image)
-says. [The runner archive](README.md#the-runner-archive) gives the steps
-that supply the archive to the build.
+Build computer on the Cloud computer tab starts an org build, as
+[The org image](../docs/protocol/org-image.md#the-org-image) says.
+Publish the Conductive release from the same commit as the test Worker.
+The image records the Worker runner protocol version. A workspace refuses
+a runner of another protocol version, as
+[Runner versions](../docs/protocol/version-pins.md#runner-versions) says.
 
-A full build records the runner protocol version of the test Worker, not
-the version of the archive. So package the archive from the same commit as
-the test Worker, as [The runner archive](../docs/deployment.md#the-runner-archive)
-says. A workspace refuses a runner below the version of its image. So a
-runner of version 1 from an older archive gets no turns.
-
-The check does not read the runner version of the image. With a runner of
-protocol version 2, the agents send the model requests of the chat steps
-through the [model gateway](../docs/protocol/model-gateway.md) of the test
-Worker. The gateway adds the login that the app stored for the account. A refresh
-keeps the runner and the version of its image. So an image from an older
-build can still hold a runner of version 1, which gets that login itself.
+The check does not read the runner version of the image. The agents send
+the model requests of the chat steps through the
+[model gateway](../docs/protocol/model-gateway.md) of the test Worker. The
+gateway adds the login that the app stored for the account. A build or refresh installs the newest release. Ensure that the test image
+and Worker use compatible protocol versions.
 
 ### Variables
 
@@ -136,7 +97,7 @@ These variables are optional:
 | `LIVE_AGENT_LOGIN_KIND` | `api-key`, the default, or `token` for Claude. |
 | `LIVE_RUNS` | The number of resumes of each placement. The default and the minimum are 3. |
 | `LIVE_OUTPUT` | The output folder. It must be under `.context/`. The default is `.context/chat-live-check/run-<time>`, with the start time in milliseconds. |
-| `LIVE_SOFTWARE_DIR` | The software folder in the sandbox. The default is `/opt/conductive/software`. |
+| `LIVE_SOFTWARE_DIR` | The software folder in the sandbox. The default is `/opt/conductive/current`. |
 | `LIVE_BOAT_API` | The Boat API. The default is `https://boat.dev/api/v1`. Only an HTTP endpoint on `localhost`, `127.0.0.1`, or `[::1]` can replace it. |
 
 Both origins must have no path, query, fragment, or credentials. Each
@@ -161,20 +122,20 @@ Each wait for a state or an answer stops after 10 minutes.
    the same path.
 6. It forks the sandbox twice. The forks get none of its env, so their
    runner service starts nothing.
-7. It copies the runner files and their packages into a new folder of each
+7. It copies the SDK helper files and their packages into a new folder of each
    fork: inside the home folder in one, and under `/opt` in the other. Both
    forks keep the private Node of the image in its place.
 8. It stops and resumes each fork `LIVE_RUNS` times. After each resume,
    the private Node runs the `measure.mjs` of the copy, which times the
    first agent text. Its prompt goes straight to the provider with
    `LIVE_AGENT_LOGIN`.
-9. `dist/runner/compare.mjs` compares the two placements.
+9. `dist/sdk-helper/compare.mjs` compares the two placements.
 10. It deletes the forks and stops the sandbox of the workspace. The
     workspace stays in the org.
 
 The events must have consecutive numbers, with no gap and no duplicate.
 Each answer must stream text, and its turn must finish. The
-[first-start measurement guide](../runner/scripts/README.md) describes
+[first-start measurement guide](../runner/sdk-helper/scripts/README.md) describes
 `measure.mjs` and `compare.mjs`.
 
 ### Output and secrets
@@ -197,8 +158,8 @@ More facts:
 - The check writes no Boat key, cookie, login, response body, or agent
   answer to its output or its files.
 - Each fork gets `LIVE_AGENT_LOGIN` in its resume env. So a fork holds a
-  real login, unlike a sandbox with a version pin of 2 or later. Clean up
-  each sandbox that `cleanupNeeded` lists at once.
+  real login, unlike a workspace sandbox, which holds only turn tokens.
+  Clean up each sandbox that `cleanupNeeded` lists at once.
 
 ## E2B template builder
 
@@ -214,16 +175,16 @@ loopback relay, and required live checks.
 
 - `npm run typecheck` does not check these TypeScript files. Check them
   with `npx tsc -p image/tsconfig.json`.
-- The lint, format, and file-length checks of `npm run check` include these
-  files.
+- The lint and format checks of `npm run check` include these files. Lint
+  includes the file-length limit.
 - The [relay integration tests](e2b/README.md#checks-and-live-prerequisites)
   run the real E2B relay with local TCP peers. The developer entry points
   use their help and prepare commands for checks without credentials.
 
 ## Key code
 
-- [`package-runner.mjs`](package-runner.mjs): packages the archive, and
-  writes its digest and its `software` value.
+- [`package-system.sh`](package-system.sh): packages the system part.
+- [SDK helper packager](../runner/sdk-helper/scripts/package.mjs): packages the SDK helper part.
 - [`live-check.mjs`](live-check.mjs): bundles the check and runs it.
 - [`live-main.ts`](live-main.ts): runs the steps, writes `summary.json`,
   and cleans up the sandboxes.

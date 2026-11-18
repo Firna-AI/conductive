@@ -31,31 +31,43 @@ it('reads upload and sent paths and gives old stored files a null path', () => {
   }
 })
 
-it('preserves each GitHub summary in shell, chat, and member workspace records', () => {
+it('preserves the parent and each GitHub summary in shell, chat, and member workspace records', () => {
   const { detail } = workspaceFixtures()
   for (const github of [
     'checks-running',
     'checks-failed',
-    'checks-passed',
+    'ready-to-merge',
     'merged',
+    'conflict',
+    'changes-requested',
+    'draft',
+    'blocked',
     null,
   ]) {
-    const workspace = { ...detail.workspace, github }
+    const workspace = { ...detail.workspace, parentId: 'parent', github }
     expect(readWorkspace(workspace).github).toBe(github)
+    expect(readWorkspace(workspace).parentId).toBe('parent')
     expect(readChatWorkspace({ ...detail, workspace }).workspace.github).toBe(
       github,
     )
+    expect(readChatWorkspace({ ...detail, workspace }).workspace.parentId).toBe(
+      'parent',
+    )
     expect(parseWorkspace(workspace).github).toBe(github)
+    expect(parseWorkspace(workspace).parentId).toBe('parent')
   }
 })
 
-it('reads older shell, chat, and member replies without a GitHub summary as null', () => {
+it('reads older shell, chat, and member replies without a GitHub summary or a parent as null', () => {
   const { detail } = workspaceFixtures()
   const workspace = { ...detail.workspace }
   Reflect.deleteProperty(workspace, 'github')
+  Reflect.deleteProperty(workspace, 'parentId')
   expect(readWorkspace(workspace).github).toBeNull()
-  expect(
-    readChatWorkspace({ ...detail, workspace }).workspace.github,
-  ).toBeNull()
+  expect(readWorkspace(workspace).parentId).toBeNull()
+  const chat = readChatWorkspace({ ...detail, workspace }).workspace
+  expect(chat.github).toBeNull()
+  expect(chat.parentId).toBeNull()
   expect(parseWorkspace(workspace).github).toBeNull()
+  expect(parseWorkspace(workspace).parentId).toBeNull()
 })

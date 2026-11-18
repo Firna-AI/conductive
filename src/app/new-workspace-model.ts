@@ -1,84 +1,33 @@
+import type { AgentChoice } from '../shared/generated/AgentChoice'
 import type { FieldFiles } from '../chat/components/chip-field/attached-files'
-import type { AgentChoice } from '../shared/agents'
-import type { BuildsResponse, Repository } from '../shared/org-settings'
+import {
+  NEW_WORKSPACE_CAPABILITIES,
+  type WorkspaceCapabilities,
+} from '../shared/secrets'
 import {
   workspacesPath,
   type CreateWorkspaceRequest,
   type CreateWorkspaceResponse,
 } from '../shared/workspaces'
-import type { ApiError } from './api/client'
 import { readCreated } from './api/read-workspaces'
-import {
-  filesWait,
-  isMissingFile,
-  readyIds,
-  type DraftFile,
-} from './draft-files'
+import { withPreapproval } from './capabilities-model'
+import { isMissingFile, readyIds, type IntakeRefusals } from './draft-files'
 import {
   failSentDraft,
   markedFiles,
   messageText,
   withoutFileMarks,
 } from './draft-file-state'
-import { withoutMarks } from './draft-marks'
+import {
+  draftReady,
+  sentCapabilities,
+  withShownRepository,
+  type CreateState,
+  type Draft,
+} from './new-workspace-draft'
 import { DraftUploads } from './new-workspace-files'
 import type { OrgModel } from './org-model'
 import { asApiError, Store, valueOf } from './store'
-
-/** The first message of a workspace that does not exist yet. */
-export interface Draft {
-  text: string
-  /**
-   * The repository of the draft, or `null` while the form shows the first
-   * ready repository. A pick of the user stays after a send. Without a
-   * pick, the draft keeps the repository that the form showed at its first
-   * text or file, while the org chooses it, until the send.
-   */
-  repository: { id: string; picked: boolean } | null
-  choice: AgentChoice | null
-  /** The files, each with its upload. Only ready ones go with the message. */
-  files: readonly DraftFile[]
-  /** Files without chips, kept for undo until this draft ends. */
-  detached: readonly DraftFile[]
-  /** The names of the files of the last pick that are over the size limit. */
-  refused: readonly string[]
-  /** Folder names from the last intake, kept apart from oversized files. */
-  refusedFolders: readonly string[]
-  /** The client ID of the first message. Try again sends the same one. */
-  messageId: string
-}
-
-export type CreateState =
-  | { state: 'idle' }
-  | { state: 'sending' }
-  /** The create request failed. Try again sends the same message ID. */
-  | { state: 'failed'; error: ApiError }
-
-/**
- * Whether the draft can go: it has text, and each of its files is ready,
- * with no upload that runs or failed. Send and Try again both wait for it.
- */
-export function draftReady(draft: Draft): boolean {
-  return (
-    withoutMarks(draft.text).trim() !== '' &&
-    !filesWait(markedFiles(draft.text, draft.files))
-  )
-}
-
-/**
- * The repository that a New workspace form shows while its draft has none:
- * the first chosen repository that is ready, else the first chosen one. A
- * chosen repository that the builds list as added waits for a build, as
- * `waitingRepositoriesOf` says. While the builds load, none waits.
- */
-export function firstReadyRepository(
-  chosen: readonly Repository[],
-  builds: BuildsResponse | undefined,
-): Repository | undefined {
-  const added = builds?.changes.addedRepositories ?? []
-  const waits = (item: Repository) => added.some(({ id }) => id === item.id)
-  return chosen.find((item) => !waits(item)) ?? chosen[0]
-}
 
 /**
  * New workspace: an empty chat whose first message creates the workspace.
@@ -95,11 +44,17 @@ export function firstReadyRepository(
  * Once the server takes the message, the workspace exists. When its first
  * start fails, the workspace keeps the message in its chat, with the saved
  * cause and Try again, so the form gives nothing back.
+ *
+ * The create also takes the choices of the Capabilities control: the
+ * secrets that the new workspace pre-approves, and its Mac access.
  */
 export class NewWorkspaceModel {
   readonly draft: Store<Draft>
   readonly create: Store<CreateState>
-  /** `null` puts the workspace in General, the default section. */
+  /**
+   * The section of the form, where the draft lives. `null` puts the
+   * workspace in General, the default section. A pick of the draft wins.
+   */
   readonly sectionId: string | null
   private readonly org: OrgModel
   private readonly uploads: DraftUploads
@@ -124,6 +79,7 @@ export class NewWorkspaceModel {
       orgId: org.orgId,
       newId: () => org.services.newId(),
       lifetime: () => org.creations.lifetime,
+      delay: org.services.delay,
     })
     this.create = new Store<CreateState>({ state: 'idle' })
     // A draft that got its text before the repositories and the builds
@@ -132,12 +88,18 @@ export class NewWorkspaceModel {
     org.builds.subscribe(() => this.keepShownRepository())
   }
 
-  /** A new draft. It keeps the choice and a picked repository of `keep`. */
+  /**
+   * A new draft. It keeps the choice and a picked repository of `keep`. Its
+   * capabilities start again from the defaults, because the closed icon of
+   * the control shows no state.
+   */
   private emptyDraft(keep?: Draft): Draft {
     return {
       text: '',
       repository: keep?.repository?.picked ? keep.repository : null,
       choice: keep?.choice ?? null,
+      sectionId: null,
+      capabilities: NEW_WORKSPACE_CAPABILITIES,
       files: [],
       detached: [],
       refused: [],
@@ -146,28 +108,12 @@ export class NewWorkspaceModel {
     }
   }
 
-  /**
-   * The draft with the repository that the form shows, once the
-   * repositories and the builds have loaded: a draft with text or a file
-   * takes it when it has no repository yet. A kept repository that the org
-   * no longer chose gives way to it, so the draft follows the form, as a
-   * draft without a repository does. A pick stays.
-   */
-  private withShownRepository(draft: Draft): Draft {
+  private keepShownRepository(): void {
     const repositories = valueOf(this.org.repositories.get())
     const builds = valueOf(this.org.builds.get())
-    const kept = draft.repository
-    if (!repositories || !builds || kept?.picked) return draft
-    const chosen = repositories.filter((item) => item.selected)
-    if (kept && chosen.some((item) => item.id === kept.id)) return draft
-    const written = draft.text.trim() !== '' || draft.files.length > 0
-    const shown = written ? firstReadyRepository(chosen, builds) : undefined
-    if (!shown) return kept ? { ...draft, repository: null } : draft
-    return { ...draft, repository: { id: shown.id, picked: false } }
-  }
-
-  private keepShownRepository(): void {
-    this.draft.change((draft) => this.withShownRepository(draft))
+    this.draft.change((draft) =>
+      withShownRepository(draft, repositories, builds),
+    )
   }
 
   setText(text: string): void {
@@ -186,14 +132,40 @@ export class NewWorkspaceModel {
     this.draft.change((draft) => ({ ...draft, choice }))
   }
 
+  setSection(sectionId: string): void {
+    this.draft.change((draft) => ({ ...draft, sectionId }))
+  }
+
+  /** Pre-approves a secret of the org for the new workspace, or not. */
+  setPreapproved(secretId: string, on: boolean): void {
+    this.changeCapabilities(({ preapprovedSecretIds, macAccess }) => ({
+      preapprovedSecretIds: withPreapproval(preapprovedSecretIds, secretId, on),
+      macAccess,
+    }))
+  }
+
+  setMacAccess(macAccess: boolean): void {
+    this.changeCapabilities((capabilities) => ({ ...capabilities, macAccess }))
+  }
+
+  private changeCapabilities(
+    change: (capabilities: WorkspaceCapabilities) => WorkspaceCapabilities,
+  ): void {
+    if (this.create.get().state === 'sending') return
+    this.draft.change((draft) => ({
+      ...draft,
+      capabilities: change(draft.capabilities),
+    }))
+  }
+
   /**
    * Attaches one pick and returns its new file IDs immediately.
    * While the create runs, it uploads nothing, because the create already
    * sent the files of the draft.
    */
-  attach(files: readonly File[], folders: readonly string[] = []): string[] {
+  attach(files: readonly File[], refusals?: IntakeRefusals): string[] {
     if (this.create.get().state === 'sending') return []
-    const uploads = this.uploads.attach(files, folders)
+    const uploads = this.uploads.attach(files, refusals)
     // The files show at once, before they upload, so the draft has them now.
     this.keepShownRepository()
     return uploads
@@ -224,9 +196,14 @@ export class NewWorkspaceModel {
     if (!draftReady(draft) || this.create.get().state === 'sending') {
       return null
     }
+    const sectionId = draft.sectionId ?? this.sectionId
     const request: CreateWorkspaceRequest = {
       repositoryId: draft.repository?.id ?? defaults.repositoryId,
-      ...(this.sectionId ? { sectionId: this.sectionId } : {}),
+      ...(sectionId ? { sectionId } : {}),
+      capabilities: sentCapabilities(
+        draft.capabilities,
+        valueOf(this.org.secrets.list.store.get()),
+      ),
       firstMessage: {
         id: draft.messageId,
         text: messageText(draft.text, draft.files),
@@ -274,7 +251,11 @@ export class NewWorkspaceModel {
           ...failSentDraft(current, sent, error),
         }))
       }
-      this.create.set({ state: 'failed', error: asApiError(error) })
+      const failure = asApiError(error)
+      // A secret of the draft is gone, so the secrets read again, and Try
+      // again sends only the secrets that remain.
+      if (failure.code === 'secret_not_found') void this.org.secrets.read()
+      this.create.set({ state: 'failed', error: failure })
       return null
     } finally {
       unfollow()

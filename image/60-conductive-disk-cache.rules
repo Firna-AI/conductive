@@ -1,0 +1,7 @@
+# Boat disks report a volatile write cache, so each fsync waits for a flush
+# on the host. Such a flush took about 22 ms, which made tools that sync
+# each write, such as the local Cloudflare runtime, many times slower.
+# Report each whole virtio disk as write-through, so the kernel sends no
+# flush. Firecracker sandboxes run this way by default.
+# Risk: a crash or power loss of the host can lose recent writes.
+ACTION=="add|change", SUBSYSTEM=="block", ENV{DEVTYPE}=="disk", KERNEL=="vd*", ATTR{queue/write_cache}="write through"

@@ -1,12 +1,8 @@
 import { act } from 'react'
+import { entryOf, type DraggedFolder } from './folder-entries'
 
 // Drives a drag of files, folders, or text in happy-dom, as Chrome gives it.
 // The test DOM has no drag of its own, so these helpers fire its events.
-
-/** A folder in a drag from the desktop, by its name. */
-export interface DraggedFolder {
-  folder: string
-}
 
 /** A point of the page, as `clientX` and `clientY` of an event give it. */
 export interface DragPoint {
@@ -16,13 +12,6 @@ export interface DragPoint {
 
 /** The kinds of the drag events that a drop target hears. */
 export type DragEventType = 'dragenter' | 'dragover' | 'dragleave' | 'drop'
-
-/** The entry of a dropped item, as `webkitGetAsEntry` gives it. */
-function entryOf(item: File | DraggedFolder) {
-  return 'folder' in item
-    ? { isFile: false, isDirectory: true, name: item.folder }
-    : { isFile: true, isDirectory: false, name: item.name }
-}
 
 /**
  * The data of a drag of files and folders from the desktop, in their order,

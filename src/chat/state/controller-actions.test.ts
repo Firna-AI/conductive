@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import { pickChatFiles } from './draft-files.test-support'
-import type { AgentChoice } from '../../shared/agents'
-import { filePaths } from '../../shared/files'
+import { attachmentUploadStartPath } from '../../shared/messages'
 import { retryMessagePath, sessionPaths } from '../../shared/sessions'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { record, text } from '../api/json'
@@ -12,7 +12,12 @@ const ws = FAKE_IDS.workspace
 const id = FAKE_IDS.session
 const messages = sessionPaths.messages(org, ws, id)
 const model = sessionPaths.model(org, ws, id)
-const opus: AgentChoice = { agent: 'claude', model: 'Opus 5.5', effort: 'high' }
+const opus: AgentChoice = {
+  agent: 'claude',
+  model: 'Opus 5.5',
+  effort: 'high',
+  fast: false,
+}
 
 describe('ChatController actions', () => {
   it('accepts a message before the sandbox is ready, and shows it as queued until it is sent', async () => {
@@ -62,7 +67,7 @@ describe('ChatController actions', () => {
       },
     ])
     const state = () => chat.controller.getSnapshot().sessionStates[id]
-    expect(state().pending.map((message) => message.state)).toEqual(['queued'])
+    expect(state().pending).toEqual([queued])
     expect(state().draft.text).toBe('')
     chat.emit({ type: 'message.accepted', message: queued })
     expect(state().pending).toEqual([])
@@ -142,6 +147,7 @@ describe('ChatController actions', () => {
       agent: 'codex',
       model: 'GPT-6.1 Sol',
       effort: 'medium',
+      fast: false,
     }
     const chat = chatFor({
       conversation: 'history',
@@ -195,11 +201,15 @@ describe('ChatController actions', () => {
   })
 
   it('waits for a file that uploads before it sends, so the message carries the file', async () => {
+    const startPath = attachmentUploadStartPath(org, {
+      type: 'workspace',
+      workspaceId: ws,
+    })
     const chat = chatFor({
       conversation: 'history',
       hold: (request) =>
         request.method === 'POST' &&
-        new URL(request.url).pathname === filePaths.attachments(org, ws),
+        new URL(request.url).pathname === startPath,
     })
     await chat.controller.start()
     chat.controller.setDraft(id, 'The suggestions cover the postcode.')
@@ -216,8 +226,6 @@ describe('ChatController actions', () => {
     await chat.controller.send(id)
     const [sent] = await chat.bodies('POST', messages)
     expect(sent).toMatchObject({ attachmentIds: ['attachment-1'] })
-    expect(chat.requests('POST', filePaths.attachments(org, ws))).toHaveLength(
-      1,
-    )
+    expect(chat.requests('POST', startPath)).toHaveLength(1)
   })
 })

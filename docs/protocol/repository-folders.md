@@ -35,6 +35,12 @@ number names a dated record, as
 - The install script and the startup script get the folder variable of
   each repository. A workspace also gets `CONDUCTIVE_REPOSITORY_DIR`, with
   the folder of its own repository.
+- After a [repository change](repository-change.md),
+  `CONDUCTIVE_REPOSITORY_DIR` names the folder of the new repository. Each
+  process that starts after the change gets it: a new terminal, each
+  command of a later agent turn, and the startup script at the next start.
+  A process that already runs keeps its value.
+- A repository change changes no folder variable of a repository.
 - The sandbox of a build or a refresh gets only the folder variables, which
   hold no secret. Only the Git command that copies a repository gets a read
   token, as [GitHub tokens](tokens-and-secrets.md#github-tokens) says.
@@ -44,15 +50,26 @@ number names a dated record, as
 - A refresh keeps the folders and the variables of the org image.
 - A build can move a repository folder to a new name. The move keeps every
   file of the folder, also untracked files such as installed dependencies.
+- A rename of a repository on GitHub moves its folder at the build that the
+  rename starts, as
+  [Repository changes on GitHub](repository-changes-on-github.md#folders)
+  says.
 - A workspace keeps the folders and the variables of the org image that it
   starts from. Each resume, and each restart near day 14 of a stop, uses
   them, also after a later build or a change of the chosen repositories.
+- A repository change adds no folder. It moves the workspace to a folder
+  that its sandbox already holds.
 
 ## The context folder
 
 - Each workspace has a context folder, `.context`, at the top of the
   folder of its own repository (decision 243). Git ignores it. Agents keep
   notes, screenshots, and files for other sessions of the workspace there.
+- After a repository change, the context folder of the workspace is the
+  one in the new folder. The change copies the context folder of the old
+  folder there, as
+  [The context folder](repository-change.md#the-context-folder) in
+  Repository change says.
 - Its attachments folder, `.context/attachments/`, holds the attached
   files of each message, as
   [Attachments](messages-and-attachments.md#attachments) says
@@ -65,8 +82,14 @@ number names a dated record, as
   makes the context folder and the attachments folder, when they do not
   exist. Reason: the user that runs the agents then owns both folders.
 - The runner does both before it reports the files of the workspace. So
-  All files and Changes list no file of the folder that the repository
-  does not track. Members find such files in the terminal.
+  Changes lists no file of the folder that the repository does not track.
+- All files lists every file of the folder, also each file that Git
+  ignores, such as an attached file. It shows no change mark on such a
+  file. So `@` mentions can name these files too, as
+  [File mentions](file-mentions.md) says. Reason: agents leave notes and
+  screenshots there for the members, who then need no terminal to open
+  them. A separate list for the folder beside All files was rejected,
+  because it needs a second report and a second view for the same files.
 - The exclude file holds the rule once, also after many starts. The rule
   covers only the folder at the top of the repository. A `.context` folder
   deeper in the repository stays visible to Git.
@@ -78,13 +101,15 @@ number names a dated record, as
   files fails and names the cause. Reason: such a repository is rare, and
   a second place for the files doubles the path rules.
 - A command that deletes ignored files, such as `git clean -fdx`, deletes
-  the folder with its notes and attached files. Reason: Conductor has the
-  same limit, and the app still stores each attached file outside the
-  cloud computer.
-- Each build of the org image installs the newest runner, as
-  [The agent runner](agent-runner.md#the-agent-runner) says. A cloud
-  computer with an older runner gets no rule and no folder at its start.
-  Its agents are not told about the folder.
+  the folder with its notes and attached files. A later message with such
+  a file then fails and names it, as
+  [Later messages](attachment-transfers.md#later-messages) says. Reason:
+  Conductor has the same limit, and the failure names each lost file.
+- A cloud computer with an older runner gets no rule and no folder at its
+  start. Its agents are not told about the folder. Its All files lists no
+  file of the folder that Git ignores. An update gives it a newer runner at
+  a later start, as [The agent runner](agent-runner.md#the-agent-runner)
+  says.
 - These ways were rejected:
   - A `.context/` line in the `.gitignore` of each repository. It adds a
     tracked change on every branch.

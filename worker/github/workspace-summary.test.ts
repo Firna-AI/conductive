@@ -92,7 +92,7 @@ it('copies webhook failures and later read successes into list records without c
     ).status,
   ).toBe(200)
   expect(await list(fixture)).toMatchObject({
-    workspaces: [{ github: 'checks-passed' }],
+    workspaces: [{ github: 'ready-to-merge' }],
   })
   expect(await metadata()).toEqual(original)
   expect(await metadata()).toEqual(persisted)
@@ -117,18 +117,18 @@ it('replays an older delivery event without replacing the newer workspace summar
   })
   expect(replay?.banner.state).toBe('checks-failed')
   expect(await list(fixture)).toMatchObject({
-    workspaces: [{ github: 'checks-passed' }],
+    workspaces: [{ github: 'ready-to-merge' }],
   })
   expect(harness.api.requests).toHaveLength(reads)
   expect(
-    harness
-      .memory(fixture.workspace.id)
-      .events.map((event) => event.eventNumber),
+    (await harness.inspect(fixture.workspace.id)).events.map(
+      (event) => event.eventNumber,
+    ),
   ).toEqual([1, 2])
   expect(
-    harness
-      .memory(fixture.workspace.id)
-      .published.map((event) => event.eventNumber),
+    (await harness.inspect(fixture.workspace.id)).published.map(
+      (event) => event.eventNumber,
+    ),
   ).toEqual([1, 2, 1])
   const branch = 'owner/continued'
   await harness.env.DB.prepare(
@@ -154,7 +154,7 @@ it('repairs a missing summary on an unchanged read and skips a matching copy', a
     .run()
   await harness.refresh(fixture.workspace, {})
   expect(await list(fixture)).toMatchObject({
-    workspaces: [{ github: 'checks-passed' }],
+    workspaces: [{ github: 'ready-to-merge' }],
   })
   await harness.env.DB.prepare(
     `CREATE TRIGGER forbid_matching_github_summary BEFORE UPDATE OF github_summary ON workspaces
@@ -168,9 +168,9 @@ it('repairs a missing summary on an unchanged read and skips a matching copy', a
     ).run()
   }
   expect(
-    harness
-      .memory(fixture.workspace.id)
-      .events.map((event) => event.eventNumber),
+    (await harness.inspect(fixture.workspace.id)).events.map(
+      (event) => event.eventNumber,
+    ),
   ).toEqual([1])
 })
 
@@ -191,22 +191,22 @@ it('fails a refresh on a failed copy and retries its receipt without a fresh eve
     error: { code: 'internal_error' },
   })
   const reads = harness.api.requests.length
-  harness.memory(fixture.workspace.id).restart()
+  await harness.restart(fixture.workspace.id)
   expect(
     (await harness.webhook('status', recordedStatus, 'copy-failure')).status,
   ).toBe(204)
   expect(await list(fixture)).toMatchObject({
-    workspaces: [{ github: 'checks-passed' }],
+    workspaces: [{ github: 'ready-to-merge' }],
   })
   expect(harness.api.requests).toHaveLength(reads)
   expect(
-    harness
-      .memory(fixture.workspace.id)
-      .events.map((event) => event.eventNumber),
+    (await harness.inspect(fixture.workspace.id)).events.map(
+      (event) => event.eventNumber,
+    ),
   ).toEqual([1])
   expect(
-    harness
-      .memory(fixture.workspace.id)
-      .published.map((event) => event.eventNumber),
+    (await harness.inspect(fixture.workspace.id)).published.map(
+      (event) => event.eventNumber,
+    ),
   ).toEqual([1, 1])
 })

@@ -1,15 +1,17 @@
-import type { Agent } from '../../src/shared/agents'
-import type { RunnerLogin } from '../../src/shared/runner'
+import type { SessionLogin } from '../../src/shared/generated/SessionLogin'
+import type { Agent } from '../../src/shared/generated/Agent'
 import type { AppEnv } from '../env'
 import { CODEX_RECONNECT_CAUSE, parseCodexTokens } from '../codex-auth/tokens'
 import { failCodexRefresh } from '../codex-auth/token-store'
-import {
-  workspaceTokenAccessPredicate,
-  workspaceTokenResourcePredicate,
-} from '../data/workspace-token-access'
+import { workspaceTokenAccessPredicate } from '../data/workspace-token-access'
 import { decrypt, hash } from '../security/crypto'
 import { workspaceNameColumn } from '../data/workspace-name'
-import { agentLoginKind } from './login-kind'
+import { namedBranchSql } from '../lifecycle/workspace-branch'
+import {
+  agentLoginKind,
+  type AgentLogin,
+  type AgentLoginKind,
+} from './login-kind'
 import type { RunnerWorkspaceRecord, WorkspaceRecord } from './types'
 
 const workspaceColumns = `w.id, w.org_id AS orgId, w.archived_at AS archivedAt`
@@ -45,19 +47,26 @@ export function findChatWorkspace(
     .first<WorkspaceRecord & { number: number }>()
 }
 
+/**
+ * Stores the automatic title. While the branch is a placeholder, the branch
+ * takes the title too, and the reply gives the org of the workspace.
+ */
 export async function updateWorkspaceTitle(
   db: D1Database,
   workspaceId: string,
   name: string,
   now: number,
-): Promise<void> {
-  await db
+): Promise<{ branchOrgId: string | null }> {
+  const branch = namedBranchSql(name)
+  const row = await db
     .prepare(
-      `UPDATE workspaces SET name = ?, updated_at = MAX(updated_at, ?)
-    WHERE id = ? AND name = '' AND ${automaticTitleWorkspacePredicate}`,
+      `UPDATE workspaces SET name = ?, branch = ${branch.sql}, updated_at = MAX(updated_at, ?)
+    WHERE id = ? AND name = '' AND ${automaticTitleWorkspacePredicate}
+    RETURNING org_id AS orgId, branch_placeholder AS placeholder`,
     )
-    .bind(name, now, workspaceId)
-    .run()
+    .bind(name, ...branch.values, now, workspaceId)
+    .first<{ orgId: string; placeholder: number }>()
+  return { branchOrgId: row?.placeholder === 1 ? row.orgId : null }
 }
 
 export async function tokenWorkspace(
@@ -74,9 +83,16 @@ export async function tokenWorkspace(
     .first<RunnerWorkspaceRecord>()
 }
 
-/** The account-login writer must use this authenticated encryption context. */
-export function agentLoginContext(userId: string, agent: Agent): string {
-  return `agent-login:${userId}:${agent}`
+export type AgentLoginOwner = string | { orgId: string }
+
+/** A string names a personal owner and keeps the stored account context. */
+export function agentLoginContext(
+  owner: AgentLoginOwner,
+  agent: Agent,
+): string {
+  return typeof owner === 'string'
+    ? `agent-login:${owner}:${agent}`
+    : `org-agent-login:${owner.orgId}:${agent}`
 }
 
 /**
@@ -91,7 +107,7 @@ export async function readAgentLogin(
   env: AppEnv,
   userId: string,
   agent: Agent,
-): Promise<RunnerLogin | null> {
+): Promise<AgentLogin | null> {
   const row = await env.DB.prepare(
     'SELECT kind, ciphertext FROM agent_logins WHERE user_id = ? AND agent = ? AND failure_cause IS NULL',
   )
@@ -99,15 +115,11 @@ export async function readAgentLogin(
     .first<{ kind: string; ciphertext: string }>()
   const loginKind = row ? agentLoginKind(agent, row.kind) : null
   if (!row || !loginKind) return null
-  const secret = await decrypt(
-    row.ciphertext,
-    agentLoginContext(userId, agent),
-    env.BOAT_KEY_ENCRYPTION_KEY,
-  )
+  const login = await decryptAgentLogin(env, userId, loginKind, row.ciphertext)
   if (
-    agent === 'codex' &&
-    loginKind.kind === 'token' &&
-    !parseCodexTokens(secret)
+    login?.agent === 'codex' &&
+    login.kind === 'token' &&
+    !parseCodexTokens(login.secret)
   ) {
     await failCodexRefresh(
       env.DB,
@@ -118,64 +130,42 @@ export async function readAgentLogin(
     )
     return null
   }
-  return {
-    ...loginKind,
-    secret:
-      agent === 'codex' && loginKind.kind === 'token'
-        ? secret
-        : loginSecret(secret),
-  }
+  return login
 }
 
-export async function senderLoginAccess(
-  db: D1Database,
-  workspaceId: string,
-  loginOwnerId: string | null,
-  agent: Agent,
-  runnerTokenHash?: string,
-  senderId?: string,
-): Promise<{
-  senderAllowed: boolean
-  loginOwnerAllowed: boolean
-  runnerAllowed: boolean
-  reuseAllowed: boolean
-}> {
-  const row = await db
-    .prepare(
-      `SELECT
-       CASE WHEN ${workspaceTokenResourcePredicate} THEN 1 ELSE 0 END AS workspaceAllowed,
-       EXISTS(SELECT 1 FROM org_members JOIN users sender ON sender.id = org_members.user_id
-         WHERE org_id = w.org_id AND user_id = ? AND sender.suspended_at IS NULL) AS senderAllowed,
-       EXISTS(SELECT 1 FROM org_members JOIN users login_owner ON login_owner.id = org_members.user_id
-         WHERE org_id = w.org_id AND user_id = ? AND login_owner.suspended_at IS NULL) AS loginOwnerAllowed,
-       EXISTS(SELECT 1 FROM agent_logins WHERE user_id = ? AND agent = ?
-         AND no_reuse = 1 AND user_id != ?) AS reuseDenied,
-       EXISTS(SELECT 1 FROM workspace_tokens t WHERE t.workspace_id = w.id
-         AND t.token_hash = ? AND ${workspaceTokenAccessPredicate}) AS runnerAllowed
-     FROM workspaces w WHERE w.id = ?`,
-    )
-    .bind(
-      senderId ?? loginOwnerId,
-      loginOwnerId,
-      loginOwnerId,
-      agent,
-      senderId ?? loginOwnerId,
-      runnerTokenHash ?? null,
-      workspaceId,
-    )
-    .first<{
-      workspaceAllowed: number
-      senderAllowed: number
-      loginOwnerAllowed: number
-      runnerAllowed: number
-      reuseDenied: number
-    }>()
+export async function decryptAgentLogin(
+  env: AppEnv,
+  owner: AgentLoginOwner,
+  kind: AgentLoginKind,
+  ciphertext: string,
+): Promise<AgentLogin | null> {
+  const plaintext = await decrypt(
+    ciphertext,
+    agentLoginContext(owner, kind.agent),
+    env.BOAT_KEY_ENCRYPTION_KEY,
+  )
+  if (kind.kind !== 'endpoint')
+    return {
+      ...kind,
+      secret:
+        kind.agent === 'codex' && kind.kind === 'token'
+          ? plaintext
+          : loginSecret(plaintext),
+    }
+  const value: unknown = JSON.parse(plaintext)
+  if (
+    !value ||
+    typeof value !== 'object' ||
+    !('endpoint' in value) ||
+    typeof value.endpoint !== 'string' ||
+    !('secret' in value) ||
+    typeof value.secret !== 'string'
+  )
+    return null
   return {
-    senderAllowed: row?.workspaceAllowed === 1 && row.senderAllowed === 1,
-    loginOwnerAllowed:
-      row?.workspaceAllowed === 1 && row.loginOwnerAllowed === 1,
-    runnerAllowed: row?.workspaceAllowed === 1 && row.runnerAllowed === 1,
-    reuseAllowed: row?.reuseDenied !== 1,
+    ...kind,
+    endpoint: value.endpoint,
+    secret: loginSecret(value.secret),
   }
 }
 
@@ -190,4 +180,25 @@ export function transcriptWorkspaceName(
     )
     .bind(workspaceId)
     .first<{ name: string | null }>()
+}
+
+/** Reads the credential of the explicit session owner. */
+export async function readSessionLogin(
+  env: AppEnv,
+  login: SessionLogin,
+  agent: Agent,
+): Promise<AgentLogin | null> {
+  if (login.type === 'personal') return readAgentLogin(env, login.userId, agent)
+  const row = await env.DB.prepare(
+    'SELECT kind, ciphertext FROM org_agent_logins WHERE org_id = ? AND agent = ?',
+  )
+    .bind(login.orgId, agent)
+    .first<{ kind: string; ciphertext: string }>()
+  if (!row || (row.kind !== 'api-key' && row.kind !== 'endpoint')) return null
+  return decryptAgentLogin(
+    env,
+    { orgId: login.orgId },
+    { agent, kind: row.kind },
+    row.ciphertext,
+  )
 }

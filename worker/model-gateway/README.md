@@ -6,13 +6,14 @@ Only a turn token authorizes a request.
 Before it obtains a workspace endpoint, the gateway checks in D1 that the workspace is live and its resources remain accessible.
 An unknown or unavailable workspace gets `turn_token_invalid` without a Durable Object call.
 The gateway calls `checkTurnToken` through the trusted workspace runtime before each upstream request.
-It replaces the token with the starter's real login.
-Runner delivery gives a token in each `turn` command to a runner of protocol version 2.
-A runner of protocol version 1 gets only the real login kinds it supports.
-It never gets a ChatGPT sign-in.
-The packaged runner and new full image builds use version 2.
-The runner also declares its login kinds in `hello.loginKinds`.
-A version 2 runner without ChatGPT support gets no ChatGPT turn credential.
+It replaces the token with the fixed personal or org login of the session.
+Both owners use the common access query in `worker/chat/login-access-data.ts`.
+An org session checks the current sender without checking its starter's membership.
+Runner delivery gives a token in each `turn` command. No runner command carries a real login.
+Own endpoint turns use the API-key credential mode with a turn token.
+Their real address and key stay in Worker-only `AgentLogin` values.
+The runner declares its login kinds in `hello.loginKinds`.
+A runner without ChatGPT support gets no ChatGPT turn credential.
 The [model gateway protocol](../../docs/protocol/model-gateway.md) states the requirements.
 
 ## Model requests
@@ -24,25 +25,22 @@ The [model gateway protocol](../../docs/protocol/model-gateway.md) states the re
 | `/v1/model/codex`, ChatGPT sign-in only | `GET /backend-api/wham/config/bundle`, `GET /backend-api/wham/accounts/check`, `GET /backend-api/codex/models` | `https://chatgpt.com` |
 | `/v1/model/codex`, ChatGPT sign-in only | `POST /backend-api/codex/responses` | The workspace's HTTPS backend origin, or `https://chatgpt.com` |
 
-The `/responses` suffix is for an OpenAI API key only.
+[Own endpoints](own-endpoints.md) describes address validation, model list reads,
+the save replies, and Refresh.
 
-### ChatGPT egress proxy
+Each fetch uses manual redirects.
+A connection failure returns `model_endpoint_unreachable` without the host.
+`wrangler.jsonc` enables `global_fetch_strictly_public` for public same-zone routing.
+The runtime's public network also filters the IP addresses returned by DNS.
+Cloudflare documents custom ports for non-proxied hosts in its [compatibility flags](https://developers.cloudflare.com/workers/configuration/compatibility-flags/#allow-specifying-a-custom-port-when-making-a-subrequest-with-the-fetch-api).
+The compatibility date enables that behavior without another flag.
 
-OpenAI blocks Cloudflare Worker traffic on `chatgpt.com`.
-It returns HTTP 403 and a block page, and Codex then stops with "workspace routing discovery failed".
-When the Worker has both `CHATGPT_EGRESS_URL` and `CHATGPT_EGRESS_SECRET`, the gateway sends each request for `chatgpt.com` or a `*.chatgpt.com` origin to that HTTPS proxy instead.
-It keeps the path, the query, the method, the headers, and the streamed body.
-It adds `x-conductive-egress-secret` with the shared secret and `x-conductive-egress-origin` with the ChatGPT origin.
-Every other upstream keeps the direct path.
-Without both settings, or with a URL that is not HTTPS, the gateway keeps the direct path.
+The `/responses` suffix is for an OpenAI API key or own endpoint only.
 
-[tools/chatgpt-egress/proxy.ts](../../tools/chatgpt-egress/proxy.ts) is the proxy.
-It runs on a host outside Cloudflare, behind a named Cloudflare Tunnel.
-A quick tunnel does not work, because it does not stream server-sent events.
-The proxy refuses a request without the secret with HTTP 403.
-It calls only an `https` origin on `chatgpt.com` or a subdomain of it.
-It drops the Cloudflare, tunnel, and connection headers before it calls OpenAI, and it streams the answer back.
-The proxy sees the ChatGPT access token in transit, so it must run on a host that the operator controls.
+### ChatGPT egress
+
+[ChatGPT egress](chatgpt-egress.md) describes the container binding,
+the fallback proxy, and the direct path.
 
 The gateway preserves the query and the request body.
 It refuses every other suffix and method locally, including the connection probe and model discovery.
@@ -67,6 +65,8 @@ In profile mode, Claude sends each token as a bearer token, also for an API key.
 | --- | --- | --- | --- |
 | Claude API key | `sk-ant-api-` | `x-api-key` or `Authorization: Bearer` | `x-api-key` |
 | Claude subscription token | `sk-ant-oat01-` | `Authorization: Bearer` | `Authorization: Bearer` |
+| Own endpoint, Claude | `sk-ant-api-` | `x-api-key` or `Authorization: Bearer` | `x-api-key` |
+| Own endpoint, Codex | `sk-` | `Authorization: Bearer` | `Authorization: Bearer` |
 | OpenAI API key | `sk-` | `Authorization: Bearer` | `Authorization: Bearer` |
 | Codex ChatGPT sign-in | `sk-` | `Authorization: Bearer` | `Authorization: Bearer` |
 
@@ -75,13 +75,17 @@ A token whose prefix does not match the login kind of its turn gets `turn_token_
 A token in a header that the table does not give for its login kind gets the same refusal.
 The upstream gets the real login in the header of the last column.
 
-For a Claude API key, the gateway removes only the `oauth-2025-04-20` value from the `anthropic-beta` list.
+For a Claude API key or own endpoint, the gateway removes only the `oauth-2025-04-20` value from the `anthropic-beta` list.
 It keeps each other value.
 Claude sends two of these values only in profile mode: `prompt-caching-scope-2026-01-05` and `cache-diagnosis-2026-04-07`.
 They stay because the body of a profile request uses their features.
 That body uses a `cache_control` scope of `global` and a top-level `diagnostics` field.
 Do not remove them to match the normal API-key mode of Claude.
-The other login kinds keep `anthropic-beta` unchanged.
+A Claude subscription token keeps `anthropic-beta` unchanged.
+A Claude subscription token requests the one-hour prompt cache in the runner.
+A Claude own endpoint keeps API-key mode and adds `promptCacheTtl: '1h'` to its turn credential.
+The runner uses that field to request the same one-hour cache.
+Native API keys and Codex keep their cache defaults.
 
 The Codex model upload reader checks for one valid JSON object as bytes arrive.
 It checks each top-level `background` key after JSON string unescaping, including repeated keys.
@@ -101,7 +105,15 @@ stored account ID. The request cannot choose another account.
 Response headers use the content type, retry, request ID, and provider rate-limit rules.
 No provider cookie passes.
 Allowed response header values redact the real login.
-Error bodies redact both plain and JSON-escaped login bytes across chunk boundaries.
+For an own endpoint, both filters use the secret forms from the shared address builder.
+These include whole addresses, origin, host, and host name without its port.
+Relative and built request paths join the set only for a saved query or a path beyond the agent's base.
+The base path is empty for Claude. For Codex, it can be empty or `/v1`.
+The builder also includes each saved path segment and query value with at least 12 characters.
+It lists plain, percent-encoded, and JSON-escaped forms, including escaped slashes.
+Shorter address parts match only inside a whole address form.
+Key redaction keeps its existing rules.
+Error bodies redact these values across chunk boundaries.
 Success body chunks pass directly, with no text decoding or copy.
 
 For a ChatGPT sign-in, the fixed request names also include
@@ -123,12 +135,12 @@ A backend is `NO_CONSTRAINT` or an HTTPS origin with no credentials, path, query
 The Worker adds `x-openai-account-routing-override` for `us` and `us_cr`.
 The client cannot supply this header.
 Failed or invalid account discovery sends no model request.
-The same request lease covers discovery, upload, and the streamed answer.
+The same request lifetime covers discovery, upload, and the streamed answer.
 The Worker reads a fresh ChatGPT login before forwarding a request.
 It renews before expiry through [Codex authentication](../codex-auth/README.md).
 Each turn can claim one renewal after a 401, across metadata and model requests.
 Its workspace object saves the used and pending flags before renewal,
-in the same queue as token checks. Completion clears only the pending flag.
+in the chat queue, where each check with a claim runs. Completion clears only the pending flag.
 Concurrent requests, Codex resends, and object eviction keep the same bound.
 The required `CodexTaskOwner` registers credential work through the request's `execution.waitUntil`.
 The renewal service owns its shared renewal through commit and local cleanup.
@@ -166,15 +178,21 @@ That byte stays pending until another chunk passes or valid EOF arrives.
 An early upstream answer waits for the remaining upload to pass that reader.
 The remaining Codex bytes pass the same scan before an early answer can return.
 An overflow aborts the upstream request and returns the entry's shared 413 error.
-Each request gets a 30-second lease from its first turn check, before the upstream fetch.
-Checks start every 15 seconds while the upload, fetch, or answer runs.
-A passing check renews the lease to 30 seconds after that check started.
-A separate timer cancels the upload, fetch, and answer when the lease ends.
-A slow check cannot extend that deadline.
+Each request starts with a turn check that must pass within 30 seconds, before the upstream fetch.
+Otherwise the request returns `model_gateway_unavailable` with HTTP 503.
+After that, a check starts every 15 seconds while the upload, fetch, or answer runs.
+Only one check runs at a time. The next one starts 15 seconds after the previous one started, or at once after a longer check.
+A refusal cancels the upload, fetch, and answer.
+A late or failed check does not, and it logs `model_gateway_check_late` or `model_gateway_check_failed`.
 A refusal before the answer starts returns its stable error code.
+Each check, also each Codex credential check, gets a new Durable Object stub from `runtime.workspace`, because [a stub can stay broken](https://developers.cloudflare.com/durable-objects/best-practices/error-handling/) after an error.
 A client disconnect also cancels the upstream.
 It adds no model filter, rate limit, or answer size limit.
+A Worker warning records each check that throws and each request that the checks end.
+These warnings hold only the workspace ID and the error kind or end code.
+A late check logs only its fixed warning text.
 It writes no request body, answer body, or header value to logs.
+The [stream rules](../../docs/protocol/model-gateway-requests.md#streams) state these requirements.
 
 ## Development
 
@@ -191,28 +209,39 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
 - [route.ts](route.ts): `routeModelGateway` selects a route, checks the Claude markers, checks its turn, replaces authentication, and forwards one request.
 - [workspace-access.ts](workspace-access.ts): `gatewayWorkspaceAllowed` checks the workspace and resource predicates in D1 before object access.
 - [paths.ts](paths.ts): gateway base matching and the fixed model method and suffix list.
+- [endpoint-model-refresh.ts](endpoint-model-refresh.ts) and
+  [endpoint-model-data.ts](endpoint-model-data.ts): model discovery for a
+  personal owner string or an org owner `{ orgId }`. Claims keep the
+  ten-minute background limit. Saves compare ciphertext and attempt ID,
+  and leave the login version intact. Org reads also check active org
+  state. An admin Refresh supplies `adminId` for SQL role checks.
 - [codex-upstream.ts](codex-upstream.ts): ChatGPT metadata forwarding and model routing in the Worker.
+- [codex-request-auth.ts](codex-request-auth.ts): binds ChatGPT credential tasks to the active request and turn.
 - [codex-auth.ts](codex-auth.ts): fresh credentials, one 401 renewal, observation of concurrent rotation, and the redaction set for the request.
 - [../codex-auth/tasks.ts](../codex-auth/tasks.ts): the required credential task owner, built from the request execution context.
 - [codex-routing.ts](codex-routing.ts): account selection, backend validation, and the routing-free account reply.
-- [egress.ts](egress.ts): the optional ChatGPT egress proxy for `chatgpt.com` requests.
+- [egress.ts](egress.ts): the egress path of `chatgpt.com` requests: the egress binding, then the fallback proxy.
 - [headers.ts](headers.ts): request and response header rules and authentication replacement.
   `hasClaudeMarkers` checks the markers of the `claude` program.
-  For a Claude API key, `upstreamHeaders` removes the OAuth value of `anthropic-beta`.
+  For a Claude API key or endpoint, `upstreamHeaders` removes the OAuth value of `anthropic-beta`.
 - [upload.ts](upload.ts): streaming upload and draining after an early reply.
 - [codex-body.ts](codex-body.ts): `CodexBodyScanner` checks the streamed JSON grammar and top-level `background` fields.
 - [json-tokens.ts](json-tokens.ts): `JsonTokens` reads JSON tokens and unescapes keys without keeping token text.
 - [json-stack.ts](json-stack.ts): `JsonStack` stores compact container states without a separate depth limit.
-- [request-lifetime.ts](request-lifetime.ts): `GatewayRequestLifetime` owns the lease, periodic checks, cancellation, and cleanup across every forwarding phase.
-- [stream.ts](stream.ts): answer forwarding under the request lease.
+- [request-lifetime.ts](request-lifetime.ts): `GatewayRequestLifetime` owns the start check, the periodic checks, cancellation, warnings, and cleanup across every forwarding phase.
+- [stream.ts](stream.ts): answer forwarding under the request lifetime.
 - [redact.ts](redact.ts): bounded carry bytes for credential removal from error bodies.
 - [errors.ts](errors.ts): stable gateway refusals in each provider's API shape.
 - [workspace.ts](workspace.ts): `WorkspaceTurnTokens.forRunningTurn` derives a stable token from the turn record.
-  Runner delivery calls it for each version 2 `turn` command, after the running state commits.
+  Runner delivery calls it for each `turn` command, after the running state commits.
   Its caller holds the chat queue, as runner dispatch does.
   It fails the turn and gives no token when the login is missing or changed since the first token.
   It does the same for a login of another kind than the dispatch read.
-  `check` enters that queue and returns the current starter login or a stable refusal reason.
+  `check` returns the current session login or a stable refusal reason.
+  Replacement keeps that owner and fails the running turn with the changed-login cause.
+  A preference switch changes no credential version and ends no turn.
+  Without a claim, it first reads the turn, the session, and the login outside that queue, and returns when that read accepts the token.
+  Every other check enters the queue. Only the queued check refuses a token, fails a turn, or saves a claim.
   It refuses a token whose prefix does not match the login kind.
 - [token.ts](token.ts): `turnTokenRoute` reads the workspace and turn route.
   `deriveTurnToken` puts the prefix of the login kind before each token, and `turnTokenMatchesKind` checks that prefix.
@@ -221,7 +250,9 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
   Web Crypto verifies the signature in constant time.
   The turn keeps a random nonce and the login version for this derivation.
   Separate booleans record whether its Codex 401 recovery was used and remains pending.
-- [login.ts](login.ts): `gatewayLogin` checks starter access and reads the login row with its `updated_at` version.
+- [login.ts](login.ts): `gatewayLogin` checks the session owner's access and reads its login row with its `updated_at` version.
+  It accepts native-provider and own endpoint login kinds.
+  An org owner accepts only an API key or endpoint and uses the org encryption context.
   `decryptGatewayLogin` releases the login only after the turn check accepts that version.
 - [types.ts](types.ts): `TurnTokenCheck` and `TurnTokenEndpoint` define the trusted check result and RPC method.
 - [../workspace-lifecycle.ts](../workspace-lifecycle.ts): `checkTurnToken` selects the workspace from stored chat metadata.
@@ -231,11 +262,15 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
   The common publisher sends one failed end before its session update.
   The runner's own end then stays as late data, with its changed files.
 - [fixture.test-support.ts](fixture.test-support.ts): a running turn whose session starter differs from its message sender.
-- [delivery.test.ts](delivery.test.ts): version 2 `turn` and `message` commands for each login kind, the real login at the upstream, no token in storage, a changed prefix, and Stop.
-- [delivery-runtime.test.ts](delivery-runtime.test.ts): the same version 2 `turn` command after an eviction of the workspace object, with only the nonce and the login version in SQLite.
-- [../chat/gateway-dispatch.test.ts](../chat/gateway-dispatch.test.ts): a failed version 2 send keeps the token state, so the resend carries the same token before the waiting message.
+- [delivery.test.ts](delivery.test.ts): `turn` and `message` commands for each login kind, the real login at the upstream, no token in storage, a changed prefix, and Stop.
+- [delivery-runtime.test.ts](delivery-runtime.test.ts): the same `turn` command after an eviction of the workspace object, with only the nonce and the login version in SQLite.
+- [../chat/gateway-dispatch.test.ts](../chat/gateway-dispatch.test.ts): a failed send keeps the token state, so the resend carries the same token before the waiting message.
 - [workspace.test.ts](workspace.test.ts) and [login.test.ts](login.test.ts): token lifetime, login changes, Stop across a disconnect, event order, late data, and retry.
-- [lease.test.ts](lease.test.ts): late answer starts, held uploads, and lease expiry during a held check, with a manual clock.
+- [org-logins.test.ts](org-logins.test.ts): starter departure, switch stability, replacement failure, retry with the new key, and current-sender suspension.
+- [endpoint-login.test.ts](endpoint-login.test.ts): both agents' endpoint routes and authentication, credential-free runner commands, revalidation, redirects, and unreachable endpoints.
+- [endpoint-errors.test.ts](endpoint-errors.test.ts): split endpoint and key redaction in errors and allowed headers.
+- [endpoint-redaction.test.ts](endpoint-redaction.test.ts): unchanged protocol paths and redaction of saved path or query forms in both filters.
+- [lease.test.ts](lease.test.ts): late answer starts, held uploads, a start check that does not return, and answers that keep streaming through late and failed checks, with a manual clock.
 - [codex-body.test.ts](codex-body.test.ts): HTTP refusals, upload cancellation, and unchanged accepted bytes through the fake OpenAI upstream.
 - [codex-token.test.ts](codex-token.test.ts): ChatGPT metadata, Worker routing, header filtering, route refusals, and failed discovery.
 - [codex-renew.test.ts](codex-renew.test.ts): body-less 401 replay, rotated-token redaction, single model forwarding with a retryable 502, and the per-turn renewal bound.

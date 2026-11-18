@@ -1,59 +1,60 @@
 # Runner service
 
-This guide belongs to the [agent runner](../README.md). The
-[runner commands](../README.md#commands) build the bundles that it installs.
-
-Each build of the org image installs the runner as a systemd service. The
-install script needs root, because it writes a systemd unit.
-
-1. Get the full path of the private Node 24 from
-   [the image software](../../image/runtime.md).
-   Its `npm` command must sit beside it, as in the official Node archive.
-   The runner also needs Git.
-2. Install the runner packages and build the bundles with the
-   [runner commands](../README.md#commands).
-3. Set `CONDUCTIVE_NODE` to that full executable path. As root, run
-   `sh runner/scripts/install.sh <user> [<folder>]`. The user runs the
-   agents. The folder is `/opt/conductive-runner` by default.
-
-The install script does these steps:
-
-- It requires the service user and the explicit private Node path.
-- It copies the three bundles, `runner/package.json`,
-  `runner/package-lock.json`, and `runner/service/start.sh` into the
-  folder.
-- It runs the adjacent npm command with the configured Node and
-  `ci --omit=dev --ignore-scripts`. The runtime packages sit beside the
-  bundles.
-- It writes `/etc/systemd/system/conductive-runner.service` with the user,
-  the folder, and the configured private Node path.
-- It reloads systemd and enables the service. It does not start the
-  service.
+The [agent runner](../README.md) runs as an unprivileged systemd service.
+The [release installer](../../image/install.md#release-installation) installs
+its unit. Installation enables services and starts none.
 
 Boat restarts the enabled services after each resume and fork. On E2B,
 each create and each resume boots the sandbox from its disk, and systemd
 starts the enabled services. So the runner starts in each sandbox that
 starts from the org image.
 
-[`conductive-runner.service`](conductive-runner.service) is the template of
-the unit. The unit has these settings:
+The unit is [conductive-runner.service](../../image/release/conductive-runner.service).
+It runs as `user`, after the network and the local update-apply unit.
+Its launcher is [runner-start.sh](../../image/runner-start.sh).
+The launcher loads `/run/ascii-secrets/env.sh`, the file of the variables
+of the sandbox. Boat writes it on Boat, and the Worker writes it on E2B at
+each create and resume. The launcher then checks the workspace-ready
+marker, workspace identity, and disk-retention setting.
+It maps sandbox settings to the [runner configuration](../configuration.md).
+It then runs `/opt/conductive/current/conductive runner` in the repository folder.
 
-- The service runs as the user, in the home folder of the user, after
-  `network-online.target`.
-- The unit passes the private Node path to the startup wrapper as an
-  argument. Sandbox env changes keep that argument unchanged.
-- systemd starts the service again 2 seconds after it ends, for any
-  reason.
-- `UMask=0077` makes the new files of the runner and its agents private to
-  the user.
-- A stop sends `SIGTERM` to the runner and its agent processes. The runner
-  closes its agents, ends its running turns, and closes its connection. Then
-  it exits with code 0. After 15 seconds, systemd ends each remaining
-  process.
+The Rust executable selects its private Node and SDK helper from its own
+resolved release folder. Agent children cannot mix parts after `current` changes.
+The state file stays at `~/.conductive/runner-state.json` across release changes.
+The Rust reader accepts the Node state format.
 
-[`start.sh`](start.sh) exports each variable of `/run/ascii-secrets/env.sh`,
-the file of the variables of the sandbox. Boat writes it on Boat, and the
-Worker writes it on E2B at each create and resume. Then it starts
-`runner.mjs` from the folder with the full Node path in its service
-argument. The image builder owns that path and its download. When the
-secrets file is missing, the start fails, and systemd tries again.
+The runner requests a background update check after each start.
+The check timer also runs after boot and every 10 minutes.
+A start never waits for its download.
+The next start applies a complete newer release before the runner works.
+
+While it runs, the runner also installs a complete newer release when its
+workspace is idle, as
+[Installs at idle](../../docs/protocol/sandbox-software.md#installs-at-idle) says.
+It installs only when its own release is confirmed and the newer release is not rejected.
+It closes its connection, then closes its helper processes and saves its state, as at SIGTERM.
+It runs its executable's `update apply` through noninteractive sudo.
+When `current` then names the newer release, it executes the new
+`/opt/conductive/current/system/runner-start.sh` in the same process.
+The service does not stop, so systemd stops no process of the service group.
+When `current` did not change, the runner warns and connects again on its release.
+[Release installation](../../image/install.md#release-installation) says when a
+changed runner unit applies.
+
+A new runner confirms its release only after its first valid `welcome`.
+Its startup hook calls the resolved executable's `update started` through
+noninteractive sudo. A process start alone clears no pending marker.
+A later apply restores the previous executable and system files when a
+new release remains unconfirmed. That previous release can still run Node.
+
+The service restarts after failure, with a two-second delay.
+So after an idle install, a new release that exits at its start restarts the service.
+That restart stops each process of the service group, and its pre-start apply restores the previous release.
+SIGTERM closes helper processes and ends running turns before the connection closes.
+`KillMode=control-group` keeps its child processes in the service group.
+`OOMPolicy=continue` keeps the service running when the kernel ends one of
+those processes for lack of memory, as
+[Out of memory](../../docs/protocol/agent-runner.md#out-of-memory) says.
+The default policy, `stop`, would stop the service and end every running turn.
+[Workspace startup](../../image/start.md) gives the build and retention gates.

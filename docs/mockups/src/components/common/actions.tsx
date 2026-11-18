@@ -3,9 +3,15 @@ import type { LucideIcon } from 'lucide-react'
 import { Button } from '@firna/ui/button'
 import { noop } from '../../noop'
 import { useControlSizes } from './touch'
+import { actionStyle } from './outlineTone'
 import styles from './actions.module.css'
 
-export type ActionTone = 'primary' | 'secondary' | 'plain' | 'danger'
+/**
+ * The tone of an action button. `outline` is the border and the label of
+ * `secondary` without its fill, for a button on a tinted bar.
+ */
+export type ActionTone =
+  'primary' | 'secondary' | 'outline' | 'plain' | 'danger'
 
 /** The state of a button that opens a menu. */
 type MenuTrigger = {
@@ -21,7 +27,7 @@ function triggerProps(props: MenuTrigger) {
 
 /**
  * A compact labelled button: a Firna button in the dense control size, with
- * a lighter label than Firna's own sizes. On a phone it is 44px high.
+ * a lighter label than Firna's own sizes. On a phone it is 40px high.
  */
 export function ActionButton(
   props: MenuTrigger & {
@@ -40,6 +46,7 @@ export function ActionButton(
   },
 ) {
   const control = useControlSizes()
+  const tone = props.tone ?? 'secondary'
   return (
     <Button
       {...triggerProps(props)}
@@ -55,8 +62,8 @@ export function ActionButton(
       numberOfLines={1}
       onPress={noop}
       size="sm"
-      style={{ height: control.height, paddingHorizontal: 10 }}
-      tone={props.tone ?? 'secondary'}
+      style={actionStyle(control.height, tone === 'outline')}
+      tone={tone === 'outline' ? 'secondary' : tone}
       trailing={props.trailing}
     >
       {props.children}
@@ -67,7 +74,7 @@ export function ActionButton(
 /**
  * A compact icon-only button with a muted icon, for bars and toolbars. A
  * quiet button has a fainter, smaller icon, for actions on every row. On a
- * phone its box is 44px.
+ * phone its box is 40px.
  */
 export function IconButton(
   props: MenuTrigger & {

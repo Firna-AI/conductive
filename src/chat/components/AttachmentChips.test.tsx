@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-import type { Attachment } from '../../shared/messages'
+import type { Attachment } from '../../shared/generated/Attachment'
 import { OversizeNotice, SentFiles } from './AttachmentChips'
 import { textOf } from './render-kit'
 
@@ -34,8 +34,8 @@ describe('the attached files', () => {
       two: notice(['recording.mov', 'trace.zip']),
     }).toEqual({
       none: '',
-      one: "recording.mov wasn't attached Each file can be up to 25 MB. Attach a smaller file",
-      two: "2 files weren't attached Each file can be up to 25 MB. Attach a smaller file",
+      one: "recording.mov wasn't attached Each file can be up to 1 GB. Attach a smaller file",
+      two: "2 files weren't attached Each file can be up to 1 GB. Attach a smaller file",
     })
   })
 

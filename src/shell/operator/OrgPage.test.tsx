@@ -71,7 +71,7 @@ describe('the page of an org for the operator', () => {
       header: 'Orgs Northwind Org Suspend org',
       body: [
         'Details Org ID org_n0rthw1nd Account e2b Created 30 Sept 2026 Repositories 5',
-        'Workspaces Running 4 2% Stopped 130 79% Failed 2 1% Archived 28 17% 2 cloud computer builds also run now.',
+        'Workspaces Running 4 2% Stopped 130 79% Failed 2 1% Archived 28 17% Removed 0 0% 2 cloud computer builds also run now.',
         'Members 2 members LW @li-wei Li Wei Admin TR @tomas-r Tomás Ruiz Member',
       ],
       opened: '@li-wei',

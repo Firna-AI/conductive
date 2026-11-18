@@ -1,8 +1,11 @@
 {
   "order": [
     "first-build",
+    "section",
+    "capabilities",
     "files",
     "no-login",
+    "org-login",
     "not-created",
     "no-repositories",
     "workspace-link"

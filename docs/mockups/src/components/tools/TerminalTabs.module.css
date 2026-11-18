@@ -1,0 +1,31 @@
+/* The row of terminal tabs, and the line under it at the limit. */
+.terminals {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+}
+
+/*
+ * The line at the limit of 10 terminals. It is text, not a hover tip, so a
+ * phone shows it too.
+ */
+.hint {
+  margin: 0;
+  padding: 6px var(--ui-pad-x);
+  border-bottom: 1px solid var(--ui-border);
+  background: var(--ui-bar);
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.4;
+}
+
+/*
+ * Terminal titles differ only in their number, so a terminal tab never
+ * shrinks below its whole title, also on a phone, where the tabs of the
+ * centre column shrink to their icon. A row whose tabs do not fit scrolls
+ * sideways. The class repeats to outrank the phone rules of
+ * `WorkspaceTabs.module.css`.
+ */
+.whole.whole.whole > li {
+  flex-shrink: 0;
+}

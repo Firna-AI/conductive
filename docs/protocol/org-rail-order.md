@@ -1,0 +1,213 @@
+# Org rail order
+
+This doc holds the requirements and the decisions in force for the order
+of the orgs in the org rail. Each person keeps their own order. It covers
+the drag, the tile menu, the keys, the long press on a phone, and the
+places that use the order. It also covers the page that opens when the
+person opens an org, and the workspace list that the tile opens while the
+sidebar is hidden. It belongs to
+[Orgs and members](orgs-and-members.md), which covers orgs, their
+sections, and their members. The terms are those of the
+[architecture doc](../architecture.md#terms). A decision number names a
+dated record, as [Decision numbers](../architecture.md#decision-numbers)
+says. A list popover decision, such as list popover decision 2 B, is a
+decision of the change that added the popover of a hidden sidebar. Its
+pull request keeps the record. The [mockup catalogue](../mockups/catalogue.md) draws the order at
+`app/orgs/reorder`, on desktop and on a phone.
+
+## Terms
+
+- **Org rail:** the narrow column at the far left of the app. It shows a
+  tile for each org of the person, then Create org. The account sits at
+  its foot. An operator also sees Operator above the account.
+- **Tile:** the item of one org in the rail. It shows the initials of the
+  org.
+- **Tile menu:** the menu of one tile, with Move up and Move down.
+- **Org switcher:** the sheet of a phone that lists the orgs, Create org,
+  and the account. A phone has no rail.
+
+## The order
+
+- Each person has their own order of the orgs in the org rail
+  (decision 515 C). A move changes the rail of no other person.
+- The order stays after a reload. The other devices of the person and the
+  Mac app load the same order.
+- An order that each browser keeps was rejected, because each browser and
+  the Mac app would then keep their own order. A list in Account settings
+  was rejected, because people may not find a control away from the rail.
+- An automatic order, such as the last opened org first, was rejected,
+  because the person cannot choose it. Pins were rejected, because they
+  give only two groups. Folders of orgs were rejected, because they group
+  the orgs and still need an order inside each folder.
+- An org that the person creates or joins goes at the end of the rail.
+  Reason: a new tab also opens at the end of the tab row, as
+  [The tab row](agents-and-sessions.md#the-tab-row) says.
+- Create org, Operator, and the account have no tile menu and do not move.
+
+## Where the order shows
+
+- The org switcher shows the orgs in this order.
+- The Switch to rows of the command palette show the orgs in this order,
+  as [Actions](command-palette-actions.md#actions) says.
+- Each place that picks the first org of the person uses this order. The
+  org that the address `/` opens without a last workspace is one such
+  place, as [Opening an org](#opening-an-org) says. The org of the palette
+  on a page without an org is another, as
+  [The org of the palette](command-palette.md#the-org-of-the-palette)
+  says.
+
+## Opening an org
+
+- The app remembers the last workspace that the person opened in each org,
+  with its session or its tab. The tile of the org in the rail, Switch to
+  org 1 to 9, and the Switch to rows of the palette open that workspace.
+- Without a last workspace, they open the list page of the org.
+- The browser or the Mac app keeps the last workspaces of each person. So
+  they stay after a reload and a restart of the Mac app, as the user chose
+  on 13 November 2026. Another device does not get them.
+- The address `/` opens the workspace that the person opened last, when
+  its org is not deleted and Get started does not show. Otherwise it
+  opens the first org that is not deleted.
+- The app forgets a last workspace when its page shows that the
+  workspace is not available.
+- An archived or a removed workspace stays the last workspace, as a
+  direct link does. Its page shows the archived or the removed bar, as
+  [Removed workspaces](workspace-life.md#removed-workspaces) says
+  (decision 522).
+- The org switcher of a phone opens the list page of the org. Reason: a
+  phone has no sidebar, so the list is the way to move to a workspace.
+- The key of Workspace list still opens the list page of the org, as
+  [Keyboard shortcuts](keyboard-shortcuts.md) says.
+- A memory in the tab only was rejected, because a reload would forget the
+  place. A memory on the server was rejected, because it needs a new API
+  for a small gain.
+
+## The hidden sidebar
+
+- **Sidebar toggle:** the button that hides the sidebar of the org and
+  shows it again. In the browser it sits beside the Settings cog at the
+  top of the sidebar (list popover decision 4). In the Mac app it sits
+  beside the window buttons, as [Mac app](desktop-app.md#the-window)
+  says, and the sidebar shows no second toggle.
+- **List popover:** the whole sidebar of the current org, open over the
+  page beside the rail: the org name, Settings, New workspace,
+  Automations, Search, and the sections with their rows and menus (list
+  popover decision 3 A).
+- The command Hide or show the sidebar runs the toggle in every host, as
+  [Keyboard shortcuts: the keys](keyboard-shortcuts-keys.md#the-default-keys)
+  says (list popover decision 5 A). It runs where the sidebar can show.
+- A hidden sidebar stays hidden until the person shows it, or until the
+  page closes. The browser does not keep the choice.
+- On a page that has a sidebar and shows no workspace list, a click on the
+  tile of the current org opens the list popover (list popover decision
+  2 B, 16 November 2026). The sidebar shows no list when the toggle hid it,
+  and in a window narrower than 900 px.
+- In a window narrower than 900 px, the list page of an org shows the list
+  in its main area, so its tile opens no popover there. A wider list page
+  shows no list while the toggle hides the sidebar, so its tile opens the
+  popover.
+- Reason: since a tile opens the last workspace of its org, a click on the
+  tile of the current org opened the same workspace again. While the
+  sidebar was hidden, no click reached the list.
+- A tile of another org opens that org, as
+  [Opening an org](#opening-an-org) says. A second click on the tile then
+  opens its popover (list popover decision 1 B). Reason: a click on a tile
+  that leads to another org must keep leading there.
+- A click with a modifier key opens the org in a new tab, and Switch to
+  org 1 to 9 opens the org. Neither opens the popover.
+- A second click on the tile, Escape, a click outside the popover, and
+  each page, dialog, or palette that opens from it close the popover. A row
+  menu, a rename, and a drag in the popover keep it open.
+- Escape belongs first to the newest layer or field: a menu, a dialog, or
+  the palette over the popover closes first, and Escape in a rename field
+  of the popover cancels the rename. Escape while an input method composes
+  stays with the text.
+- The focus moves into the popover as it opens, to the row of the open
+  page, else to its first control. As the popover closes, the focus goes
+  back to the tile. A page that opens from it takes the focus instead, and
+  a click outside leaves the focus where the person clicked. After a
+  dialog or the palette that opened from the popover, the focus goes back
+  to the tile.
+- The popover holds the sidebar toggle in the browser, so the toggle there
+  shows the sidebar again. In a window narrower than 900 px the sidebar
+  cannot show, so the popover holds no toggle.
+- While the popover is open, its list offers the actions and the keys of
+  the list. While the sidebar is hidden and the popover is closed, the
+  list offers none of them, because no list shows.
+
+## Drag
+
+- The person can drag a tile to another place in the rail.
+- A drag does not open the org. A click without a move still opens it.
+- Escape cancels a drag and keeps the order.
+- The rail shows no name of an org during a drag. Reason: a name shows on
+  hover and on focus. During a drag, it would name the tile under the
+  pointer, not the drop place.
+- A drag alone was rejected, because a keyboard or screen reader user
+  cannot drag. The tile menu and the keys give them each move.
+
+## The tile menu
+
+- A right click on a tile opens its tile menu at the pointer. The tile menu
+  replaces the menu that the browser shows for a link.
+- On a focused tile, Shift and F10, or the Menu key, also opens the tile
+  menu. This holds on every system.
+- The keys open the tile menu beside the tile, at its right. Reason: the
+  rail is a narrow column at the left edge of the window. A menu below the
+  tile, as on a workspace row, would cover the tiles that a move passes.
+- The tile menu does not open the org.
+- The tile menu holds Move up and Move down. Each item moves the tile one
+  place.
+- On the first tile, Move up is off. On the last tile, Move down is off.
+- After a move from the tile menu, a screen reader user hears the name of
+  the org and its new place, such as "Firna moves to place 1 of 3". The
+  focus then goes back to the tile.
+- Move to top and Move to bottom were rejected, because the tile menu would
+  then differ from the tab menu.
+
+## Keys
+
+- Alt and Up or Down, with no other modifier key, move a focused tile one
+  place, as on a workspace row (decision 517 B).
+- A screen reader user hears the same message as after a move from the tile
+  menu. The focus stays on the tile.
+- Reason: the rail and the workspace list are both vertical lists, so the
+  same keys move an item in both.
+- Alt with Left or Right was rejected, because the rail is vertical, and
+  these keys go Back and Forward in browsers.
+- A drag by keys, with Space to lift and drop the tile, was rejected. No
+  other list of the app works that way. A screen reader in browse mode also
+  takes the plain arrow keys.
+- A palette action that moves an org was rejected, because it must first
+  name the org. So it is slower than the tile menu.
+
+## On a phone
+
+- On a phone, a long press on an org in the org switcher lifts it. The
+  finger then moves it to a new place.
+- The long press opens no menu, also when it ends without a move.
+- Reason: the org switcher is already a sheet. A long press on a workspace
+  row also only lifts the row.
+
+## A suspended or deleted org
+
+- A suspended org moves like any other org (decision 516 A).
+- A deleted org has no tile to move. Its admins restore it from Account
+  settings, as [Delete org](orgs-and-members.md#delete-org) says.
+- Reason: the rail order belongs to the person and spans their orgs, so a
+  move is not a change in the org. Other members see no change.
+  [What members of a suspended org keep](operator-actions.md#what-members-of-a-suspended-org-keep)
+  states this rule.
+- A tile that does not move was rejected for such an org, because it looks
+  like the other tiles and would refuse a move with no visible reason.
+- A place at the end of the rail for such an org was rejected, because its
+  tile would then move without an action of the person.
+
+## Saving a move
+
+- A move shows at once. When its save fails, only that move goes back, and
+  a toast names the failure, as for a failed move of a workspace row.
+- Two moves that overlap, such as from two devices, give the order of the
+  two moves one after the other.
+- The server accepts a move only for an org that the person sees in the
+  rail. A move of another org gets HTTP 404 with the code `org_not_found`.

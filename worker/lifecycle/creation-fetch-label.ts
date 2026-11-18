@@ -1,4 +1,4 @@
-import { readRunTrigger } from '../routines/stored-run'
+import { readRunTrigger } from '../automations/stored-run'
 import type { WorkspaceStartJob } from './start-types'
 
 export async function creationFetchLabel(
@@ -8,7 +8,7 @@ export async function creationFetchLabel(
   const row = await db
     .prepare(
       `SELECT r.full_name AS fullName, run.trigger_json AS triggerJson
-    FROM repositories r LEFT JOIN routine_runs run ON run.org_id = r.org_id
+    FROM repositories r LEFT JOIN automation_runs run ON run.org_id = r.org_id
       AND run.message_id = ? AND run.owner_user_id = ?
     WHERE r.org_id = ? AND r.id = ? LIMIT 1`,
     )

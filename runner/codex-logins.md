@@ -6,13 +6,20 @@ credential and environment rules. The
 [model gateway protocol](../docs/protocol/model-gateway.md) states the requirements.
 
 The runner starts `codex app-server` from the `@openai/codex` package that
-`@openai/codex-sdk` installs. `package.json` pins version 0.167.0.
+`@openai/codex-sdk` installs. `sdk-helper/package.json` pins version 0.170.0.
 Check both routes again at each update of the pinned program.
 
 ## Conversation continuation
 
-Both login kinds use the shared conversation storage. The runner first sends
-`thread/resume` for a saved conversation. If its JSON-RPC error has
+Both login kinds use the shared conversation storage. For a saved
+conversation, the runner first sends `thread/read` with `includeTurns=false`.
+When its `thread.modelProvider` differs from the current provider, the runner
+sends one `thread/fork` for the same thread ID and no `thread/resume`.
+Codex 0.170.0 refuses a resume from `openai` to `conductive` with no error
+data, so only this read finds that change.
+
+When the read fails, gives no provider, or gives the current provider, the
+runner sends `thread/resume`. If its JSON-RPC error has
 `data.type=modelProviderMismatch` or `data.type=modelProviderNotConfigured`,
 the runner sends one `thread/fork` for the same thread ID.
 The fork uses the current provider, model, working folder, developer
@@ -87,21 +94,21 @@ states the conversation continuity requirement.
 
 ## Tests
 
-- `src/providers/codex-resume.test.ts` checks the two provider refusals,
+- `sdk-helper/src/providers/codex-resume.test.ts` checks the two provider refusals,
   the fork's settings and thread ID, and the errors that still fail.
-- `src/providers/rpc.test.ts` checks the JSON-RPC error data and message.
-- `src/engine-conversation.test.ts` checks replacement and restart of a
+- `sdk-helper/src/providers/rpc.test.ts` checks the JSON-RPC error data and message.
+- [Rust lifecycle tests](../crates/cnd-runner/tests/engine/lifecycle_tests.rs) checks replacement and restart of a
   session's saved conversation ID.
-- `src/providers/codex-login.test.ts` checks private login order and failures,
+- `sdk-helper/src/providers/codex-login.test.ts` checks private login order and failures,
   the API key gateway settings, and the native measurement route.
-- `src/commands.test.ts` checks the public ChatGPT account fields.
-- `src/providers/codex-token.test.ts` checks the login file, the gateway
+- [Rust command tests](../crates/cnd-runner/src/json/_tests_/command_tests.rs) checks the public ChatGPT account fields.
+- `sdk-helper/src/providers/codex-token.test.ts` checks the login file, the gateway
   settings, start and resume, and a conflicting address rule.
-- `src/providers/codex-credentials.test.ts` checks file permissions,
+- `sdk-helper/src/providers/codex-credentials.test.ts` checks file permissions,
   session isolation, conversation storage, and startup removal.
-- `src/providers/codex-token-lifecycle.test.ts` checks removal after failure,
+- `sdk-helper/src/providers/codex-token-lifecycle.test.ts` checks removal after failure,
   Stop, abort, and canceled file preparation.
-- `src/codex-token-output.test.ts` checks a turn token split across output.
+- [Rust filter tests](../crates/cnd-runner/src/filter/_tests_/filter_tests.rs) checks a turn token split across output.
   The token stays out of sent events and saved runner state.
 - These tests use fake credentials and a fake App Server. They establish
   neither real-token authentication nor the behavior of the pinned program.

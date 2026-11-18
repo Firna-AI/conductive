@@ -1,10 +1,12 @@
 import type { Delay } from '../app/events'
 import type { Readable } from '../app/store'
+import type { GitHubCapabilities } from '../shared/github'
 import type { LocalWork } from '../shared/workspaces'
 import {
   continueOutcome,
   mergeOutcome,
   pendingJobWait,
+  readyOutcome,
   streamReaches,
   waitFor,
 } from './barRuns'
@@ -30,6 +32,17 @@ export interface BarActionsSnapshot {
   question: ContinueQuestion | null
 }
 
+/**
+ * The last access of the member to the repository of the workspace that
+ * this tab read. Another workspace of the same repository shows it at
+ * once, while the bar reads the access again.
+ */
+export interface AccessMemory {
+  get: () => GitHubCapabilities | undefined
+  /** Keeps a new answer, or forgets the access after a failed read. */
+  set: (capabilities: GitHubCapabilities | undefined) => void
+}
+
 export interface BarActionsPorts {
   /**
    * The branch of the workspace that the bar shows. Continue starts from it,
@@ -53,6 +66,8 @@ export interface BarActionsPorts {
   streamLast: Readable<number>
   /** Grows with each reconnect of the workspace stream. */
   reconnects: Readable<number>
+  /** The access that the tab read last. Without it, the access loads. */
+  access?: AccessMemory
 }
 
 /**
@@ -80,6 +95,12 @@ export class BarActions {
 
   constructor(ports: BarActionsPorts) {
     this.ports = ports
+    const remembered = ports.access?.get()
+    if (remembered)
+      this.snapshot = {
+        ...this.snapshot,
+        capabilities: { status: 'ready', capabilities: remembered },
+      }
   }
 
   readonly subscribe = (listener: () => void): (() => void) => {
@@ -89,7 +110,10 @@ export class BarActions {
 
   readonly getSnapshot = (): BarActionsSnapshot => this.snapshot
 
-  /** Reads the access now and after each reconnect, until the stop. */
+  /**
+   * Reads the access now and after each reconnect, until the stop. A
+   * remembered access shows until the first answer.
+   */
   readonly connect = (): (() => void) => {
     const stops = [
       this.ports.reconnects.subscribe(() => this.readCapabilities()),
@@ -136,6 +160,27 @@ export class BarActions {
       const outcome = mergeOutcome(error)
       const noRight =
         outcome.kind === 'merge-refused' && outcome.reason === 'merge-no-right'
+      // GitHub took the right away, so the access is read again.
+      if (this.end(run, outcome) && noRight) this.readCapabilities()
+    }
+  }
+
+  /** Marks the draft that the bar shows ready for review, as the member. */
+  async markReady(snapshot: GitHubSnapshot): Promise<void> {
+    const pullRequest = snapshot.banner.pullRequest
+    if (pullRequest === null) return
+    const run = this.begin({ kind: 'marking-ready' })
+    if (!run) return
+    const { signal } = run
+    try {
+      await this.ports.github.ready({ pullNumber: pullRequest.number }, signal)
+      // Marking ready shows until the bar reads the new state.
+      if (this.end(run, { kind: 'marking-ready' })) this.ports.refreshGitHub()
+    } catch (error) {
+      if (signal.aborted) return
+      const outcome = readyOutcome(error)
+      const noRight =
+        outcome.kind === 'ready-refused' && outcome.reason === 'ready-no-right'
       // GitHub took the right away, so the access is read again.
       if (this.end(run, outcome) && noRight) this.readCapabilities()
     }
@@ -207,8 +252,14 @@ export class BarActions {
       this.update({ capabilities })
     }
     this.ports.github.capabilities(reading.signal).then(
-      (capabilities) => done({ status: 'ready', capabilities }),
-      () => done({ status: 'failed' }),
+      (capabilities) => {
+        if (this.reading === reading) this.ports.access?.set(capabilities)
+        done({ status: 'ready', capabilities })
+      },
+      () => {
+        if (this.reading === reading) this.ports.access?.set(undefined)
+        done({ status: 'failed' })
+      },
     )
   }
 

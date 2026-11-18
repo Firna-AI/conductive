@@ -1,6 +1,6 @@
-import type { ChangesResponse } from '../../shared/files'
 import type { FilesClient } from '../api/files-client'
-import type { FilesError } from '../api/files-errors'
+import { TabPlaces } from '../../app/tab-places'
+import type { ScrollOffset } from '../ui/kept-scroll'
 import { parseStreamMessage, type StreamEnvelope } from '../api/parse-events'
 import {
   noFailedRepairs,
@@ -8,15 +8,19 @@ import {
   type FailedRepairs,
 } from './failed-repairs'
 import { FilesInvalidation } from './files-invalidation'
+import { RepositoryWatch } from './repository-watch'
+import type { FilesSnapshot } from './files-snapshot'
 import {
   emptySync,
   syncEvent,
   syncFetchedChanges,
   syncFetchedTree,
+  syncMoved,
   type FilesSync,
   type SyncStep,
 } from './files-sync'
-import type { FileTree } from './tree-model'
+
+export type { FilesSnapshot } from './files-snapshot'
 
 /**
  * The workspace event stream after `afterEventNumber`. It sends stored
@@ -29,35 +33,6 @@ export type FilesSubscribe = (
   listener: (message: unknown) => void,
 ) => () => void
 
-export interface FilesSnapshot {
-  tree: FileTree | null
-  /** Why the tree did not load, while no tree shows. */
-  treeError: FilesError | null
-  /**
-   * The cloud computer could not read the files. `tree` is the saved tree,
-   * or empty when none was saved. Only a full tree of the stream clears it.
-   */
-  treeUnavailable: boolean
-  changes: ChangesResponse | null
-  changesError: FilesError | null
-  /** The folders that the user opened or closed in this page session. */
-  folders: ReadonlyMap<string, boolean>
-  /** Grows when affected paths cannot be named, including tree replacement. */
-  epoch: number
-  /** Grows for each path whose content an event may have changed. */
-  versions: ReadonlyMap<string, number>
-  /**
-   * The file lists whose fresh full report was lost too. Only a newer full
-   * report of the same list in the stream clears one.
-   */
-  failedRepairs: FailedRepairs
-  /**
-   * The folder that a press on its chip showed last, so All files scrolls
-   * to it. `count` grows with each press, also on the same folder.
-   */
-  revealed: { path: string; count: number } | null
-}
-
 type Resource = 'tree' | 'changes'
 
 /**
@@ -69,6 +44,11 @@ type Resource = 'tree' | 'changes'
  */
 export class WorkspaceFiles {
   readonly client: FilesClient
+  /**
+   * The scroll offset of each file and diff tab of the workspace, by tab and
+   * view, which stays while the app keeps the store. A reload forgets it.
+   */
+  readonly scrollPlaces = new TabPlaces<ScrollOffset>()
   private readonly subscribeToStream: FilesSubscribe
   private sync: FilesSync = emptySync
   private snapshot: FilesSnapshot = {
@@ -82,6 +62,7 @@ export class WorkspaceFiles {
     versions: new Map(),
     failedRepairs: noFailedRepairs,
     revealed: null,
+    readLabels: new Map(),
   }
   private repairs: FailedRepairs = noFailedRepairs
   private readonly listeners = new Set<() => void>()
@@ -94,6 +75,9 @@ export class WorkspaceFiles {
   private subscription = 0
   private unsubscribe: (() => void) | null = null
   private running = false
+  private readonly repository = new RepositoryWatch()
+  /** A repository change dropped the changes, so the route reads again. */
+  private changesMoved = false
 
   constructor(options: { client: FilesClient; subscribe: FilesSubscribe }) {
     this.client = options.client
@@ -142,6 +126,13 @@ export class WorkspaceFiles {
     }
     const count = (this.snapshot.revealed?.count ?? 0) + 1
     this.publish({ folders, revealed: { path, count } })
+  }
+
+  /** Keeps the label that a file or diff read gave for its real path. */
+  noteReadLabel(path: string, label: string): void {
+    if (this.snapshot.readLabels.get(path) === label) return
+    const readLabels = new Map(this.snapshot.readLabels).set(path, label)
+    this.publish({ readLabels })
   }
 
   subscribe = (listener: () => void): (() => void) => {
@@ -234,6 +225,11 @@ export class WorkspaceFiles {
     const repairs = repairsAfter(this.repairs, envelope)
     const repaired = repairs !== this.repairs
     this.repairs = repairs
+    if (this.repository.moved(envelope.repositoryId)) {
+      this.apply(syncMoved(this.sync), invalidation)
+      this.changesMoved = true
+      return true
+    }
     if (!envelope.event) return repaired
     this.apply(syncEvent(this.sync, envelope.event), invalidation)
     return true
@@ -251,6 +247,12 @@ export class WorkspaceFiles {
     if (this.sync.treeStale && !this.reads.has('tree')) {
       this.read('tree', false)
       change = { ...change, treeError: null }
+    }
+    // The changes of the new folder: the route waits for its first report.
+    if (this.changesMoved) {
+      this.changesMoved = false
+      this.read('changes', false)
+      change = { ...change, changesError: null }
     }
     this.publish({ ...invalidation.apply(this.snapshot), ...change })
   }

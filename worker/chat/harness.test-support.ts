@@ -1,7 +1,7 @@
+import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
-import type { AgentChoice } from '../../src/shared/agents'
 import type {
-  ChatHistoryResponse,
+  NewestChatHistoryResponse,
   WorkspaceEventEnvelope,
   WorkspaceSocketMessage,
 } from '../../src/shared/events'
@@ -34,11 +34,13 @@ export const CLAUDE: AgentChoice = {
   agent: 'claude',
   model: 'test-claude',
   effort: 'high',
+  fast: false,
 }
 export const CODEX: AgentChoice = {
   agent: 'codex',
   model: 'test-codex',
   effort: 'medium',
+  fast: false,
 }
 export const MACHINE_ORIGIN = 'https://machines.conductive.test'
 export const WORKSPACE_ID = 'workspace-chat'
@@ -127,21 +129,21 @@ export async function createChatFixture(
   }
   const history = async (
     sessionId: string,
-    after = 0,
-  ): Promise<ChatHistoryResponse> => {
+  ): Promise<Extract<NewestChatHistoryResponse, { hasMore?: never }>> => {
     const events: WorkspaceEventEnvelope[] = []
+    let before: number | undefined
     let through: number | undefined
     while (true) {
       const response = await fetch(
-        chatHistoryPath(org.id, WORKSPACE_ID, sessionId, after, through),
+        chatHistoryPath(org.id, WORKSPACE_ID, sessionId, before, through),
       )
       if (response.status !== 200)
         throw new Error(`History returned ${response.status}`)
-      const page: ChatHistoryResponse = await response.json()
-      events.push(...page.events)
+      const page: NewestChatHistoryResponse = await response.json()
+      events.unshift(...page.events)
       through = page.throughEventNumber
       if (!page.hasMore) return { events, throughEventNumber: through }
-      after = page.nextAfterEventNumber
+      before = page.nextBeforeEventNumber
     }
   }
   const setStorageHooks = async (hooks: NativeStorageHooks) => {

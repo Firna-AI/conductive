@@ -39,8 +39,10 @@ says.
   4. It cuts a name over 60 Unicode code points at its last space within
      the limit. When the first word is longer than the limit, it cuts the
      name at the limit.
-- A name does not change the branch. The branch keeps its rule: the GitHub
-  login, a city name, and four random characters.
+- A name changes the branch only before the start creates the branch in
+  the sandbox, as
+  [The branch and the name](create-a-workspace.md#the-branch-and-the-name)
+  says.
 - Reason: a name that sandbox code sends reaches the workspace list of
   every member. A short name on one line keeps each list readable.
 - For a create, a refusal of a blank or long name was rejected, because
@@ -59,5 +61,5 @@ says.
   snake case", then loses its underscores. A rule that an agent names a
   workspace only when a member names it was rejected, because agents then
   name fewer workspaces.
-- Risk: an agent that ignores the text still adds underscores. A cloud
-  computer gets the new text only from a full build of its org image.
+- Risk: an agent that ignores the text still adds underscores. The text
+  follows the [sandbox software update rules](sandbox-software.md#updates).

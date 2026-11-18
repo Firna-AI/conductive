@@ -11,8 +11,9 @@ first.
   queued browser requests.
 - `workspace-binding.ts`: `ChatWorkspaceBinding`, which binds chat to one workspace and checks the object identity.
 - [../model-gateway/workspace.ts](../model-gateway/workspace.ts): `WorkspaceTurnTokens`, available through `WorkspaceChat.turnTokens`.
-  It derives a running turn's token and checks the starter's current login in the chat queue.
-  Runner delivery gets the token of each version 2 `turn` command from `forRunningTurn`.
+  It derives a running turn's token and checks its session's fixed login.
+  A check with no Codex claim reads outside the chat queue first. Every refusal and every write comes from a check in the queue.
+  Runner delivery gets the token of each `turn` command from `forRunningTurn`.
 - `dependencies.ts`: the default seams of `WorkspaceChat`, which a feature
   owner can replace. The login resolver always wraps an override.
 - `operation.ts`: `ChatOperation`, the reads and changes of one route, tab
@@ -31,7 +32,8 @@ first.
 - `session-titles.ts`: the empty-name rule for the first session's workspace
   title and each later session's first message with text. A text with only
   the mentions of its own attached files counts as no text. In a title, each
-  such mention becomes the original name of its file.
+  such mention of an image goes out, and each other such mention becomes
+  the original name of its file.
 - `workspace-titles.ts`, `title-model.ts`, and `workspace-title.ts`: the
   background model request and the shared title storage and D1 projection.
   The shared writer checks the empty name and workspace access before it
@@ -63,8 +65,8 @@ first.
 - `session-management.ts`: `renameSession`, which the browser route and the
   tools share, and `stopManagedSession`, a tool stop with its idle reply.
 - `stop-request.ts`: `recordStopRequest`, which keeps the first requester in
-  `StoredTurn.stopRequest`, reads it from history for an older turn, and
-  emits `turn.stop-requested`.
+  `StoredTurn.stopRequest`, reads it from history only for an older record
+  without that field, and emits `turn.stop-requested`.
 - `tool-session-management.ts`: `manageToolSession`, the tool rename, close,
   and stop in one transaction, with the calling session as the stop source.
   `WorkspaceChat.manageToolSession` runs it in the queue.
@@ -72,7 +74,9 @@ first.
   requests match, and ID conflicts.
 - `store.ts` and `history-storage.ts`: `ChatStore` and `ChatTransaction`,
   the records, the event numbers, the GitHub view of a transaction, and the
-  chunks of large file reports and tree deltas.
+  chunks of large file reports and tree deltas. `ChatTransaction.newestHistory`
+  serves the browser's session history. `history` keeps the forward read
+  for the events socket, workspace summary, Continue, and transcript copy.
 - `queue-turn.ts`: `ChatQueue`, the serial queue of `ChatStore.run`, and
   `QueueTurn`, the handle whose `outside(call)` runs one call outside the
   queue. `hasOutsideTurns` tells Archive that a queue task is outside.
@@ -83,25 +87,36 @@ first.
   change in a queue task with its receiver generation, then calls
   `flushRunner`.
 - `history-pages.ts`: `HistoryPages`, the pages of the stored history and
-  the index of replaced answers and tool states. A page reads one storage
-  list of 32 events. The session history route of the browser passes
-  `BROWSER_PAGE_LIMITS`, so its page reads on up to 2,048 stored events or
-  4 MiB of session events, and a long workspace costs few requests.
-- `routine-run.ts`: reports a routine's stored first-turn result after a chat transaction commits.
-- `workspace-store.ts`: creates the chat store with lifecycle turn-end reports and routine outcome recovery after each change.
+  the index of replaced answers and tool states. `read` reads one forward
+  storage list of 32 events. `readNewest` uses `BROWSER_PAGE_LIMITS` for the
+  browser: up to 2,048 stored events or 4 MiB of session events.
+- `history-newest-pages.ts`: the reverse storage loop, its byte and scan
+  limits, and the exclusive cursor of the next earlier page.
+- `automation-run.ts`: reports an automation's stored first-turn result after a chat transaction commits.
+- `workspace-store.ts`: creates the chat store with lifecycle turn-end reports and automation outcome recovery after each change.
 - `runner-channel.ts`, `runner-receipt.ts`, and `runner-refusal.ts`: the
   runner connection, the stream cursors, the file commands, and the receipt
-  or refusal marker of each runner event. A connection keeps the protocol
-  version of its `hello`, 1 or 2, and its `welcome` repeats that version.
-  It also keeps `hello.loginKinds` for the connection's dispatch checks.
+  or refusal marker of each runner event. An accepted connection has the
+  protocol version `RUNNER_PROTOCOL_VERSION`, and its `welcome` repeats
+  that version. It also keeps `hello.loginKinds` for the connection's
+  dispatch checks, `hello.processStartId` for its warnings, and
+  `hello.repositoryFolder` for the folder check.
+- `runner-repository-move.ts`: `RepositoryMoves` compares the runner folder
+  with the record folder from `branch-data.ts`. It sends one
+  `repository.move` to each capable connection in the stored folder of
+  another repository, and holds turns until the folders match. A
+  refused move fails the held turns. `RunnerChannel.checkRepository` runs
+  the same check for the connected runner with no turn, after a
+  [repository change](../lifecycle/repository-change.md#publication).
 - `runner-connections.ts` and `runner-connection-store.ts`:
   `RunnerConnections`, the native acceptance, restore, close, and idle
   alarm of the current runner, and the chunked durable record of a
-  physical runner socket. That record keeps the negotiated protocol
-  version and the login kinds declared in `hello`.
-  A record without login kinds keeps that list absent for legacy support.
-  So after a wake, the runner keeps its login support and gets the commands
-  of its version with no second `hello` or `welcome`.
+  physical runner socket. That record keeps the protocol version, the
+  process-start ID, the login kinds, and the repository folder declared
+  in `hello`. A record without login kinds keeps that list absent, as its
+  `hello` did. So after a wake, the runner keeps its login support and its
+  process-start ID with no second `hello` or `welcome`. A restore retires
+  a record of an unsupported version, or with a stream and no version.
 - `runner-output.ts` and `runner-output-state.ts`: the filter from the
   actual start capture, and its encrypted state. Each runner stream keeps
   its held answer text. One workspace record keeps each shown answer end
@@ -120,28 +135,24 @@ first.
   runner connection before each message. `RunnerConnections.alarm` runs it
   while the connection is idle.
 - [`runner-version-data.ts`](runner-version-data.ts): `readRunnerProtocolVersion`, the workspace pin read before a runner's welcome or commands.
-  [`runner-handshake.ts`](runner-handshake.ts): `prepareRunnerHello` checks the `hello`, closes a runner below that pin, and starts the stream before the `welcome`.
+  [`runner-handshake.ts`](runner-handshake.ts): `prepareRunnerHello` checks the `hello`, closes an unsupported version or a runner below that pin, and starts the stream before the `welcome`.
 - `runner-event-identity.ts`: `readRunnerEventIdentity` returns the readable
   fields in `RunnerEventIdentity` for refusal, repair, and turn-context checks.
 - `runner-delivery.ts`: the sends of pending commands, with the login
   and runner support checks and the current branches that `branch-data.ts`
-  reads. Each command
-  takes the shape of the connection's protocol version. Version 1 gets the
-  real login in each `turn` and `message` command. Version 2 gets a turn
-  token in each `turn` command, after the running state commits, and no
-  credential in a `message` command.
-  `gatewayRunnerCommand` in `runner-gateway-command.ts` builds that
-  version 2 command. Delivery skips a command whose `deliveredTo` names
+  reads. Each `turn` command gets a turn token, after the running state
+  commits. A `message` command gets no credential.
+  `gatewayRunnerCommand` in `runner-gateway-command.ts` builds each
+  command. Delivery skips a command whose `deliveredTo` names
   the current connection. Internal `PreparedCommand` holds the full login and
   relative attachment paths. `ResolvedCommand` holds the live absolute paths.
-  The derived version 1 wire type excludes Codex ChatGPT sign-ins.
-  `runnerSupportsLogin` in the shared runner contract owns the exhaustive
-  rule for each login kind and protocol version. An absent `loginKinds`
-  list keeps legacy support. An explicit version 2 list names its support.
-  Version 1 cannot opt into ChatGPT. An unsupported turn or message gets
-  one failed end before any login or turn token reaches the runner.
+  `runnerSupportsLogin` in the shared runner contract owns the rule for
+  each login kind. An explicit `loginKinds` list names the support of its
+  runner. An absent list supports each login kind except a Codex ChatGPT
+  sign-in. An unsupported turn or message gets one failed end before any
+  turn token reaches the runner.
   [The agent runner](integration/runner/README.md#the-agent-runner) gives
-  the rules of both versions.
+  the rules of the connection.
 - `runner-login-failure.ts`: `failCommandLogin`, the turn failure of a
   command whose login cannot run, after the runner or at once.
 - `attachment-paths.ts`: the captured repository folder lookup and the
@@ -203,9 +214,16 @@ first.
 - `login-access.ts`, `login-availability.ts`, and `login-kind.ts`:
   `readLogin` and the access checks, the metadata query
   `readLoginMetadata`, and the valid login kinds.
+- `login-access-data.ts`: `readLoginAccess`, the common access query for
+  personal and org owners, senders, and optional runner tokens.
+- `default-login.ts`: `defaultLogin`, the sole ordering rule, and
+  `resolveDefaultLogin`, its member lookup for a workspace or org.
+- `login-owner.ts`: `publicLoginOwner`, the shared owner projection for
+  empty-session metadata and automation replies, with no credential or endpoint.
 - `session-login.ts` and `session-storage.ts`: the two login paths of
-  `SessionLogins`, and the defaults of older session records.
+  `SessionLogins`, credential-aware default resolution, and older session defaults.
 - `session-record.ts`: `sessionFor`, the read of one session record.
 - `types.ts`: `ChatDependencies`, `ChatCallbackPublisher`, `ChatStorage`,
   `PreparedCommand`, `ResolvedCommand`, and the peer types.
-  `StoredTurn.stopRequest` is optional, because older records lack it.
+  `StoredTurn.stopRequest` is optional, because older records lack it. A
+  new record holds `null` until the first Stop request.

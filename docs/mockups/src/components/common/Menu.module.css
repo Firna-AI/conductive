@@ -82,7 +82,7 @@
   color: var(--ui-ink);
   font-size: var(--ui-text-md);
   white-space: nowrap;
-  cursor: default;
+  cursor: pointer;
 }
 
 .sheet .item {
@@ -93,7 +93,7 @@
 
 .item:hover,
 .highlighted {
-  background: var(--ui-soft);
+  background: var(--ui-menu-hover);
 }
 
 .icon {
@@ -122,9 +122,20 @@
   text-overflow: ellipsis;
 }
 
+/* The muted words in the line of a label, such as an effort. */
+.muted {
+  color: var(--ui-muted);
+}
+
 .check {
   flex-shrink: 0;
   color: var(--ui-primary);
+}
+
+/* The key of the command of a switch row, between its label and its switch. */
+.keys {
+  display: flex;
+  flex-shrink: 0;
 }
 
 .danger,
@@ -140,6 +151,7 @@
 .disabled,
 .disabled:hover {
   background: none;
+  cursor: default;
 }
 
 .disabled > :not(.detail) {

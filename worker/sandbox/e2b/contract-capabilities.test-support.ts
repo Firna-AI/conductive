@@ -37,6 +37,10 @@ export async function capabilityReply(
     case 'large_file':
       server.envd.sizes.set(reply.path, reply.sizeBytes)
       return true
+    case 'file_info':
+      server.envd.sizes.set(reply.path, reply.sizeBytes)
+      server.envd.paths.set('/home/user/note.txt', reply.path)
+      return true
     case 'wrong_file':
       server.envd.files.set(reply.path, new Uint8Array([1, 2]))
       server.envd.paths.set(reply.path, '/home/user/other.txt')

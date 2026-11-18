@@ -41,7 +41,7 @@ it('offers Create PR for a branch with commits or local work, and no link to Git
     renderBar(branchFeed('none')),
     renderBar(branchFeed('none'), noWrite),
     renderBar(branchFeed('no-commits')),
-    renderBar(branchFeed('no-commits'), { localWork: 'yes' }),
+    renderBar(branchFeed('no-commits'), { localWork: 'changes' }),
   ]
 
   expect(
@@ -109,7 +109,7 @@ it('links the number of the pull request to GitHub in each state, in place of a 
       links: github,
       buttons: ['Address review'],
     },
-    { state: 'draft', links: github, buttons: [] },
+    { state: 'draft', links: github, buttons: ['Ready for review'] },
     { state: 'closed', links: github, buttons: [] },
     { state: 'blocked', links: github, buttons: [] },
   ])

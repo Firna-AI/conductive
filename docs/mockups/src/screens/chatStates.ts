@@ -1,24 +1,59 @@
 /**
  * The tab of the centre column: the first session, a new session, the
  * linked session that a member's message opened from the first session,
- * the second session, or a file, a Markdown preview, a diff, or a file
- * whose name the app does not know, such as a file that moved. An image of
+ * the second session, an empty session that another member started, or a
+ * file, a Markdown preview, a diff, or a file
+ * whose name the app does not know, such as a file that moved.
+ * `code-lines` is the code file at the lines that a chip of an answer
+ * names, with the lines in view and marked. An image of
  * the branch shows as its picture, or with the state of an image that the
  * browser cannot draw. `attachment` is the copy of an attached screenshot,
- * which a press on its sent chip opens. A phone shows a file in Files.
+ * which a press on its sent chip opens. `screenshot` is the screenshot of
+ * the agent, which a press on its picture in an answer opens. A phone shows
+ * a file in Files.
+ *
+ * `preview` shows the page of port 3000 in its Preview tab, beside the
+ * Preview tab of port 6006 (decision 291). `preview-behind` shows the first
+ * session, and both Preview tabs stay in the row with their pages loaded.
+ * A phone row shows no Preview tab, so a phone shows the page on its
+ * Preview page.
  */
 export const tabStates = [
   'session',
   'new-session',
   'linked-session',
   'later-session',
+  'started-session',
   'code',
+  'code-lines',
   'markdown',
   'diff',
   'unnamed-file',
   'image',
   'image-not-drawn',
   'attachment',
+  'screenshot',
+  'preview',
+  'preview-behind',
+] as const
+
+/**
+ * The temporary tab, from decisions 284 to 287: the one file or diff tab
+ * that the next press on a file or a diff replaces. Its title shows in
+ * italics. With `none`, every tab is kept. `opened` draws the file or the
+ * diff of `tab` in the temporary tab, at the end of the row. `replaced`
+ * draws it in the place of the file that the temporary tab held, before
+ * the tab of a new session that opened after that file. `kept` draws the
+ * file that the temporary tab held, which a double-click kept, then the
+ * file of `tab` in a new temporary tab at the end of the row. A session or
+ * the code file in `tab` draws no temporary tab, and a phone row shows no
+ * file tabs.
+ */
+export const temporaryTabStates = [
+  'none',
+  'opened',
+  'replaced',
+  'kept',
 ] as const
 
 /**
@@ -31,20 +66,31 @@ export const tabStates = [
  * stay out of the message. `workspace-link` holds a message with a pasted
  * link to another workspace of the org, which shows as a chip.
  * `session-link` holds pasted links to two sessions, which show as session
- * chips.
+ * chips. `picker-unlisted` opens the picker on an own endpoint whose model
+ * list lacks a model.
  *
  * The `mention-` states open the list of `@`: with a query, without one,
  * with no match, while the tree loads, and with no tree. `file-chips` holds
- * a file chip and a folder chip. The `-pointer` states draw the pointer
- * over the icon of the first chip of the text, where a × takes the place of
- * the icon. A phone has no pointer, so it shows the × at the end of each
- * chip instead.
+ * a file chip and a folder chip. `file-added` holds the chip that Add to
+ * chat of a row menu put at the end of the draft, with a space after it.
+ * The field takes the focus on desktop, so the caret stands after the
+ * space. A phone draws no caret, because the field does not take the focus
+ * there. The `-pointer` states draw the pointer over the icon of the first
+ * chip of the text, where a × takes the place of the icon. A phone has no
+ * pointer, so it shows the × at the end of each chip instead.
  *
  * The `drop` states draw a drop of files on the box: a screenshot that
  * hovers over it with the drop caret in the text, the screenshot at that
  * place after the drop, and a drop with a folder, which the box does not
  * attach. A phone shows a pick at the caret in place of the drag: the caret
  * where the pick goes, then the picked file at the caret.
+ *
+ * The `capabilities` states open the Capabilities control of the icon
+ * beside the attach button (secrets decision 8): with Mac access on, and
+ * after a member turned it off. A computer draws it above the icon, and a
+ * phone as a sheet. `menu` opens the menu of the one button of a phone,
+ * which holds Attach files and Capabilities (secrets decision 16 G). A
+ * computer has no such menu, so it draws the composer as it is.
  */
 export const composerStates = [
   'empty',
@@ -54,6 +100,7 @@ export const composerStates = [
   'upload-failed',
   'too-large',
   'picker',
+  'picker-unlisted',
   'no-agent',
   'no-starter-login',
   'not-shared',
@@ -65,10 +112,15 @@ export const composerStates = [
   'mention-loading',
   'mention-unavailable',
   'file-chips',
+  'file-added',
   'file-chip-pointer',
   'workspace-link-pointer',
   'attachment-pointer',
   'drop-over',
   'dropped',
   'dropped-folder',
+  'unreadable-folder',
+  'capabilities',
+  'capabilities-mac-off',
+  'menu',
 ] as const

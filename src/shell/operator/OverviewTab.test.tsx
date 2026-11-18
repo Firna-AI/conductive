@@ -31,7 +31,7 @@ function axisDays(chart: HTMLElement): string[] {
 }
 
 describe('the Overview of the operator section', () => {
-  test('shows the totals with their 7 days, the workspaces by state with the running builds, the 30-day totals, and the largest orgs, which open their pages', async () => {
+  test('shows the totals with their 7 days, the workspaces by state with Removed apart from Archived and the running builds, the 30-day totals, and the largest orgs, which open their pages', async () => {
     const server = new FakeApiServer()
     serveOperator(server)
     const { view } = await mountShell(server, '/operator')
@@ -46,7 +46,7 @@ describe('the Overview of the operator section', () => {
       states: textOf(byRole('list', 'Workspaces by state').innerHTML),
       lines: lines.filter((line) => queryByText(line) !== null),
     }
-    click(byText('Kestrel Labs'))
+    click(byText('Kestrel Labs', byLabel('Largest orgs')))
     await settle()
     expect({
       ...shown,
@@ -55,7 +55,8 @@ describe('the Overview of the operator section', () => {
       header: 'Operator Updated at 08:00 Refresh',
       totals:
         'Users 1,284 +46 in 7 days 10 on the waitlist Orgs 312 +9 in 7 days Workspaces 2,481 +188 in 7 days Running now 39',
-      states: 'Running 37 1% Stopped 1,604 65% Failed 12 0.5% Archived 828 33%',
+      states:
+        'Running 37 1% Stopped 1,604 65% Failed 12 0.5% Archived 203 8% Removed 625 25%',
       lines,
       opened: 'Kestrel Labs',
     })
@@ -141,7 +142,7 @@ describe('the Overview of the operator section', () => {
     },
   )
 
-  test('keeps the boxes in place while the numbers load, shows only a notice when they fail, and Try again reads them again', async () => {
+  test('keeps the boxes in place while the numbers load, with 10 placeholder rows of the long runs, shows only a notice when they fail, and Try again reads them again', async () => {
     const server = new FakeApiServer()
     serveOperator(server)
     const held = new HeldRequests(server)
@@ -150,6 +151,9 @@ describe('the Overview of the operator section', () => {
       services: { fetch: held.fetch },
     })
     const loading = text()
+    const longRunRows = Array.from(byLabel('Long runs').children).filter(
+      (row) => row.getAttribute('aria-hidden') === 'true',
+    ).length
     server.json(
       'GET',
       overviewPath,
@@ -164,11 +168,13 @@ describe('the Overview of the operator section', () => {
     await settle()
     expect({
       loading,
+      longRunRows,
       failed,
       retried: queryByRole('region', 'Totals') !== null,
     }).toEqual({
       loading:
-        'AC Acme Alt 1 Alt 1 FX Futex Alt 2 Alt 2 FI Firna Alt 3 Alt 3 Operator C Operator Overview Orgs Users Waitlist Invite codes Providers Workspaces New workspaces New users Largest orgs Org Members Workspaces Running',
+        'AC Acme Alt 1 Alt 1 FX Futex Alt 2 Alt 2 FI Firna Alt 3 Alt 3 Operator C Operator Overview Orgs Users Waitlist Invite codes Providers Workspaces Long runs Org Owner Cloud computer Last activity Running for New workspaces New users Largest orgs Org Members Workspaces Running',
+      longRunRows: 10,
       failed:
         'AC Acme Alt 1 Alt 1 FX Futex Alt 2 Alt 2 FI Firna Alt 3 Alt 3 Operator C Operator Overview Orgs Users Waitlist Invite codes Providers The numbers could not load Try again',
       retried: true,

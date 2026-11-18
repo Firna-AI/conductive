@@ -86,7 +86,9 @@ function org(
     initials,
     createdDaysAgo,
     repositories: fields.repositories,
-    states: { running, stopped, failed, archived },
+    // The sample orgs have no removed workspaces, as the org pages of the
+    // mockups show.
+    states: { running, stopped, failed, archived, removed: 0 },
     builds: fields.builds ?? 0,
     members: fields.members,
     computers: fields.computers ?? [],
@@ -137,6 +139,35 @@ export const sampleUsers: readonly SampleUser[] = [
   person(jonas, 138, [4, 0]),
   person(cal, 140, [41, 2]),
 ]
+
+const MINUTE = 60_000
+
+/**
+ * The minutes before the time of the samples of the last new workspace or
+ * sent message of each user. A user without an entry has no recorded
+ * action, as a person who waits.
+ */
+const sampleActiveMinutesAgo: Readonly<Record<string, number>> = {
+  [cal.githubLogin]: 5,
+  'rho-9': 25,
+  'vex-ops': 90,
+  [priya.githubLogin]: 120,
+  'mira-s': 360,
+  'tide-sam': 26 * 60,
+  'dana-k': 2 * 24 * 60 + 180,
+  'ana-p': 3 * 24 * 60,
+  'tomas-r': 4 * 24 * 60,
+  [jonas.githubLogin]: 5 * 24 * 60,
+  'kt-null': 9 * 24 * 60,
+  'li-wei': 40 * 24 * 60,
+  'danny-b': 100 * 24 * 60,
+}
+
+/** The time of the last recorded action of a sample user, or null. */
+export function sampleLastActiveAt(login: string, now: number): number | null {
+  const minutes = sampleActiveMinutesAgo[login]
+  return minutes === undefined ? null : now - minutes * MINUTE
+}
 
 /** The orgs, newest first. The orgs of the people who sign in come last. */
 export const sampleOrgs: readonly SampleOrg[] = [

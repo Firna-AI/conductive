@@ -1,3 +1,4 @@
+import type { DeviceCommandRecord } from '../../src/shared/generated/DeviceCommandRecord.js'
 import { EventEmitter } from 'node:events'
 import { onTestFinished, vi } from 'vitest'
 import { WebSocket } from 'ws'
@@ -7,10 +8,7 @@ import {
   DEVICE_HEARTBEAT_MS,
   DEVICE_OUTPUT_LIMIT_BYTES,
 } from '../../src/shared/device.ts'
-import type {
-  DeviceCommandRecord,
-  WorkerToDevice,
-} from '../../src/shared/device.ts'
+import type { WorkerToDevice } from '../../src/shared/device.ts'
 import { createDeviceConnection } from '../src/device/connection.js'
 import { createPermissionStore } from '../src/device/permissions.js'
 import type { ProcessEvents } from '../src/device/process.js'
@@ -45,6 +43,7 @@ export function deviceLifecycleFixture() {
     dispose: ReturnType<typeof vi.fn>
   }[] = []
   let userId = 'user-one'
+  let signedIn = true
   const sessions = createDeviceSessionFactory({
     files,
     clock: time.clock,
@@ -66,10 +65,13 @@ export function deviceLifecycleFixture() {
   const connection = createDeviceConnection({
     deviceId: 'local-device',
     clock: time.clock,
-    readCredential: async () => ({
-      value: 'fixture.signature',
-      expiresAt: time.clock.now() + 1_000_000,
-    }),
+    readCredential: async () =>
+      signedIn
+        ? {
+            value: 'fixture.signature',
+            expiresAt: time.clock.now() + 1_000_000,
+          }
+        : undefined,
     authenticate: async () => ({ userId, appAccess: true }),
     connect: (credential, events) => {
       const wire = new Wire()
@@ -95,6 +97,7 @@ export function deviceLifecycleFixture() {
         invalid()
         reject()
       }),
+    signedOut: sessions.signedOut,
     warn,
   })
   const receive = (message: WorkerToDevice) =>
@@ -133,8 +136,14 @@ export function deviceLifecycleFixture() {
       await connection.start()
       pair()
     },
+    /** Removes the sign-in cookie, as a sign-out does. */
+    async signOut() {
+      signedIn = false
+      await connection.cookieChanged()
+    },
     async signIn(nextUserId: string) {
       userId = nextUserId
+      signedIn = true
       await connection.cookieChanged()
       pair()
     },

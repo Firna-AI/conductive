@@ -32,7 +32,13 @@ vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 const { org, workspace } = FAKE_IDS
 /** The open workspace: Checkout address autocomplete. */
 const open = routes.workspace(org, workspace)
-const actions = ['Move to section >', 'Reassign to >', 'Rename', 'Archive']
+const actions = [
+  'Move to section >',
+  'Reassign to >',
+  'Rename',
+  'Copy link',
+  'Archive',
+]
 
 /** The answer of a move of a workspace to a section. */
 function movedTo(workspaceId: string, sectionId: string) {
@@ -101,7 +107,7 @@ describe('the menu of a workspace row', () => {
         place: { left: '56px', top: '337px' },
         focus: 'Move to section',
         browserMenu: false,
-        menus: 4,
+        menus: 5,
       },
       menuKey: actions,
       focus: true,
@@ -183,7 +189,7 @@ describe('the menu of a workspace row', () => {
       away: [],
       right: 'Checkout',
       left: { sections: [], focus: 'Move to section' },
-      firstEscape: { sections: [], menu: 4, focus: 'Move to section' },
+      firstEscape: { sections: [], menu: 5, focus: 'Move to section' },
       secondEscape: [],
       sameSection: [],
       body: { sectionId: 'general', position: 0 },

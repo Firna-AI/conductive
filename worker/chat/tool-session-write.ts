@@ -1,6 +1,7 @@
+import type { AgentSessionAccepted } from '../../src/shared/generated/AgentSessionAccepted'
+import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
 import type { User } from '../../src/shared/api'
-import type { AgentChoice } from '../../src/shared/agents'
-import type { AgentSessionAccepted } from '../../src/shared/agent-sessions'
+
 import type { SendMessageResponse } from '../../src/shared/messages'
 import { sessionLink } from '../../src/shared/session-link'
 import { sessionTitleFrom } from '../../src/shared/session-title'
@@ -14,6 +15,7 @@ import type { ToolSessionWrite } from '../tools/services'
 import { acceptMessage } from './messages'
 import type { ChatOperation } from './operation'
 import { send } from './send-message'
+import { SessionLogins } from './session-login'
 import { sessionFor } from './session-record'
 import { createSession } from './sessions'
 import type { ChatTransaction } from './store'
@@ -85,7 +87,13 @@ export async function acceptToolSessionWrite(
       'default_model_unavailable',
       'The default model is not available. Choose a model and effort.',
     )
-  const choice: AgentChoice = { ...model, effort }
+  const choice: AgentChoice = dependencies.normalizeChoice({
+    ...model,
+    effort,
+    fast:
+      input.input.fast ??
+      (input.kind === 'send' ? (defaults?.fast ?? false) : false),
+  })
   const text =
     input.kind === 'send' ? input.input.text : input.input.firstMessage
   const message =
@@ -122,15 +130,15 @@ export async function acceptToolSessionWrite(
     )
     return operation.read((view) => acceptance(view, response))
   }
-  if (message) {
-    const login = await operation.logins.forMember(user.id, choice.agent)
-    if (!login || login.agent !== choice.agent)
-      throw new HttpError(
-        409,
-        'agent_login_required',
-        'Connect your agent login to send a message.',
-      )
-  }
+  const resolved = message
+    ? await SessionLogins.resolve(dependencies, user.id, choice.agent)
+    : null
+  if (message && !resolved)
+    throw new HttpError(
+      409,
+      'agent_login_required',
+      'Connect your agent login to send a message.',
+    )
   return operation.change(async (transaction) => {
     const session = await createSession(
       transaction,
@@ -138,6 +146,8 @@ export async function acceptToolSessionWrite(
       dependencies.randomId(),
       user,
       dependencies,
+      null,
+      resolved?.owner,
     )
     const title =
       input.kind === 'create' && input.input.title !== undefined

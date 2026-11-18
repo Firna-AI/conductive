@@ -14,9 +14,9 @@
     "worker/**/fake-*.ts",
     "worker/github/test-harness.ts",
     "worker/github/reader-test-harness.ts",
-    "worker/github/memory-workspace.ts",
     "worker/github/recorded-webhooks.ts",
     "worker/members/test-pause.ts",
-    "worker/tools/image-test-process.ts"
+    "worker/tools/image-test-process.ts",
+    "worker/terminal/bridge/**"
   ]
 }

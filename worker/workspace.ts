@@ -15,26 +15,24 @@ import {
 import type { WorkspaceDisk } from './members/maintenance-contract'
 import type { ImageCoordinatorState } from './lifecycle/image-timers'
 import type { GitHubRefresh, GitHubWorkspace } from './github/contracts'
-import { handleGitHubRead } from './github/app-handler'
 import { hostSurface } from './hosts'
-import { readWorkspace, workspaceRecord } from './lifecycle/workspace-data'
+import { workspaceUpdate } from './chat/workspace-update'
 import { featureResult } from './features/result'
 import { archiveWorkspace } from './lifecycle/archive-workspace'
-import { continueBusy } from './lifecycle/continue-admission'
 import type { WorkspaceContinue } from './lifecycle/continue'
-import { createWorkspaceContinue } from './lifecycle/continue-composition'
-import { pendingContinue } from './lifecycle/continue-types'
-import type { User } from '../src/shared/api'
-import type { ContinueWorkspaceRequest } from '../src/shared/workspaces'
+import type { WorkspaceRepositoryChange } from './lifecycle/repository-change'
+import { WorkspaceJobs } from './lifecycle/workspace-jobs'
+import { changeRestart, type RestartStep } from './lifecycle/software-restart'
 import { resumeCreationCheckpoint } from './members/creation-checkpoint'
 import type { ConnectionScheduler } from './security/connection-access'
 import { WorkspaceAlarmRunner } from './features/workspace-alarm'
+import { retryAutomationReport } from './chat/automation-run'
 
 export class Workspace extends AgentSessionWorkspace {
   private readonly features: WorkspaceFeatures
   private readonly github: WorkspaceGitHub
   private readonly members: WorkspaceMembersReceiver
-  private readonly continuation: WorkspaceContinue
+  private readonly jobs: WorkspaceJobs
   private readonly now: () => number
   private readonly alarmRunner: WorkspaceAlarmRunner
 
@@ -63,13 +61,13 @@ export class Workspace extends AgentSessionWorkspace {
         await this.integration.storage.put('previews:workspace-id', workspaceId)
         await this.integration.alarms.set('previews', at)
       },
-      (id, at) => this.activity.record(id, at),
       (id, ids, queueOwned) =>
         queueOwned
           ? this.chat.commitPreviewRevocations(id, ids)
           : this.chat.runLifecycle(() =>
               this.chat.commitPreviewRevocations(id, ids),
             ),
+      this.chat,
     )
     this.integration.onStopped((id) => this.features.revokeWorkspace(id, true))
     this.github = new WorkspaceGitHub(
@@ -86,7 +84,7 @@ export class Workspace extends AgentSessionWorkspace {
       this.features,
       now,
     )
-    this.continuation = createWorkspaceContinue({
+    this.jobs = new WorkspaceJobs({
       matches,
       env,
       dependencies,
@@ -103,11 +101,14 @@ export class Workspace extends AgentSessionWorkspace {
       browsers: this.chat.browsers,
       runner: this.chat.runner.connections,
       devices: this.devices,
+      secrets: this.integration.secrets,
       members: this.members,
       github: this.github,
-      continuation: this.continuation,
+      jobs: this.jobs,
       features: this.features,
       lifecycle: () => this.alarmLifecycle(),
+      automationReport: () =>
+        retryAutomationReport(env.DB, this.chat.store, now),
     })
   }
 
@@ -124,8 +125,9 @@ export class Workspace extends AgentSessionWorkspace {
     workspaceId: string | null,
   ) {
     return featureResult(async () => {
-      await this.continuation.cancel()
+      await this.jobs.cancel()
       await this.members.suspend(ownership, workspaceId)
+      await this.integration.secrets.reconcile()
       this.controller.cancelLifecycleWaiters()
       await this.integration.reconcileStopped()
     })
@@ -181,13 +183,10 @@ export class Workspace extends AgentSessionWorkspace {
   ): Promise<void> {
     if (!this.env.WORKSPACES.idFromName(workspaceId).equals(this.ctx.id)) return
     await this.chat.runLifecycle(async () => {
-      const workspace = workspaceRecord(
-        await readWorkspace(this.env.DB, orgId, workspaceId),
+      await this.chat.commitWorkspaceEvent(
+        workspaceId,
+        await workspaceUpdate(this.env.DB, orgId, workspaceId),
       )
-      await this.chat.commitWorkspaceEvent(workspaceId, {
-        type: 'workspace.updated',
-        workspace,
-      })
     })
   }
 
@@ -204,13 +203,8 @@ export class Workspace extends AgentSessionWorkspace {
       return this.features.previews.proxy(request)
     const feature = await this.features.fetch(request)
     if (feature) return feature
-    if (/\/github(?:\/checks)?$/.test(new URL(request.url).pathname))
-      return handleGitHubRead(request, this.env, {
-        now: this.now,
-        refresh: (workspace, signal) => this.github.refresh(workspace, signal),
-      })
-    if (/\/github\/.*$/.test(new URL(request.url).pathname))
-      return this.github.fetch(request)
+    const github = await this.github.route(request)
+    if (github) return github
     return this.fetchChat(request)
   }
 
@@ -222,8 +216,7 @@ export class Workspace extends AgentSessionWorkspace {
   ) {
     return featureResult(() =>
       this.run(async () => {
-        if (await pendingContinue(this.integration.storage))
-          throw continueBusy()
+        await this.jobs.assertIdle()
         return archiveWorkspace(
           this.env,
           { ...lifecycleDependencies(), now: this.now },
@@ -254,37 +247,43 @@ export class Workspace extends AgentSessionWorkspace {
     )
   }
 
-  continueWorkspace(
-    orgId: string,
-    id: string,
-    user: User,
-    request: ContinueWorkspaceRequest,
-    origin: string,
-  ) {
+  softwareRestart(workspaceId: string, step: RestartStep) {
     return featureResult(() =>
-      this.continuation.start(orgId, id, user, request, origin),
+      typeof step === 'string'
+        ? this.run(() =>
+            changeRestart(this.integration, workspaceId, step, this.now()),
+          )
+        : this.features.refreshTerminal(step.terminal),
     )
   }
 
-  readWorkspaceContinue(
-    orgId: string,
-    id: string,
-    userId: string,
-    continueId: string,
-    origin: string,
+  continueWorkspace(...input: Parameters<WorkspaceContinue['start']>) {
+    return featureResult(() => this.jobs.continuation.start(...input))
+  }
+
+  readWorkspaceContinue(...input: Parameters<WorkspaceContinue['result']>) {
+    return featureResult(() => this.jobs.continuation.result(...input))
+  }
+
+  changeWorkspaceRepository(
+    ...input: Parameters<WorkspaceRepositoryChange['start']>
   ) {
-    return featureResult(() =>
-      this.continuation.result(orgId, id, userId, continueId, origin),
-    )
+    return featureResult(() => this.jobs.repositoryChange.start(...input))
+  }
+
+  readWorkspaceRepositoryChange(
+    ...input: Parameters<WorkspaceRepositoryChange['result']>
+  ) {
+    return featureResult(() => this.jobs.repositoryChange.result(...input))
   }
 
   async credentialSender(turnId: string): Promise<string | null> {
-    const continued = await this.continuation.credentialSender(turnId)
-    return continued === undefined ? super.credentialSender(turnId) : continued
+    const sender = await this.jobs.credentialSender(turnId)
+    return sender === undefined ? super.credentialSender(turnId) : sender
   }
 
   async lifecycleStopped(): Promise<void> {
-    await this.continuation.cancel()
+    await this.jobs.cancel()
     return super.lifecycleStopped()
   }
 }

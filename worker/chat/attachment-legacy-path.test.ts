@@ -24,7 +24,7 @@ afterAll(async () => {
 it.each(['absolute', 'message-relative'] as const)(
   'fails a legacy %s path through copy preparation despite stored proof',
   async (kind) => {
-    const provider = providerCopy()
+    const provider = providerCopy(harness.env)
     const fixture = await attachmentFixture(harness, {
       prepareAttachments: (...args) =>
         prepareMessageAttachments(harness.env, ...args, provider.fetch),
@@ -69,6 +69,9 @@ it.each(['absolute', 'message-relative'] as const)(
     const runner = await fixture.connect()
     try {
       runner.emit({ type: 'runner.ready' })
+      // Deliver the ready report first, so the copy work it starts is in the
+      // background before the drain waits for it.
+      await fixture.drain()
       await fixture.drainAttachments()
       expect(messageCommands(runner, 'legacy-message')).toEqual([])
       expect(

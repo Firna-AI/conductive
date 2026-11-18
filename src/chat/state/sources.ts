@@ -1,10 +1,14 @@
+import type { AgentModel } from '../../shared/generated/AgentModel'
+import type { Workspace } from '../../shared/generated/Workspace'
 import type { Readable } from '../../app/store'
+import type { LoginObservation } from '../../app/login-observation'
 import type { AccountResponse } from '../../shared/account'
-import type { AgentModel } from '../../shared/agents'
+
 import type { MembersResponse } from '../../shared/members'
 import type { OrgSummary } from '../../shared/orgs'
-import type { Workspace } from '../../shared/workspaces'
-import type { ChatSnapshot, ChatStore } from './chat-snapshot'
+
+import type { ChatSnapshot } from './chat-snapshot'
+import type { ChatStore } from './chat-store'
 
 /**
  * The inputs of a chat that app models own, for a chat that the app keeps
@@ -33,6 +37,12 @@ export interface ChatSources {
    * no list is on the screen. The result ends the watch.
    */
   watchWorkspaces: () => () => void
+  /** Reports a session's newer login status to the account owner. */
+  observeLogin?: (observation: LoginObservation) => void
+  /** A default counts only after a complete reply newer than its observation. */
+  loginObservationCurrent?: (observation: LoginObservation) => boolean
+  /** Keeps login reads due while a missing-login notice shows. */
+  watchMissingLogin?: () => () => void
 }
 
 /** The snapshot with the current value of each source. */
@@ -44,6 +54,7 @@ export function withSources(
   return {
     ...snapshot,
     account: sources.account.get(),
+    loginObservationCurrent: sources.loginObservationCurrent,
     org: sources.org.get(),
     models: sources.models.get(),
     members: members ? members.members.map((member) => member.user) : [],
@@ -60,11 +71,32 @@ export function followSources(
   sources: ChatSources,
 ): () => void {
   const update = () => store.update((current) => withSources(current, sources))
+  const observed = new Map<string, string>()
   const stops = [
     sources.account.subscribe(update),
     sources.org.subscribe(update),
     sources.models.subscribe(update),
     sources.members.subscribe(update),
+    store.subscribe(() => {
+      const { account, workspace, sessions, history } = store.get()
+      if (!workspace) return
+      for (const session of [...sessions, ...history]) {
+        const login = session.login ?? session.defaultLogin ?? null
+        if (login === null && session.startedBy?.id !== account?.user.id)
+          continue
+        const observation: LoginObservation = {
+          agent: session.choice.agent,
+          orgId: workspace.orgId,
+          login,
+          available: session.loginAvailable,
+          source: session.id,
+        }
+        const fact = JSON.stringify(observation)
+        if (observed.get(session.id) === fact) continue
+        observed.set(session.id, fact)
+        sources.observeLogin?.(observation)
+      }
+    }),
   ]
   return () => {
     for (const stop of stops) stop()

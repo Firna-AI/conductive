@@ -1,3 +1,4 @@
+import type { E2bLiveSandbox } from './live-provider'
 import type { SandboxProvider } from '../../worker/sandbox/provider'
 import { ProviderError } from '../../worker/sandbox/errors'
 import { CheckError, object, until } from '../live-input'
@@ -19,7 +20,7 @@ export async function command(
 }
 
 export async function upload(
-  provider: SandboxProvider,
+  provider: E2bLiveSandbox,
   id: string,
   name: string,
   source: string,

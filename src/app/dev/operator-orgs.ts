@@ -1,8 +1,9 @@
+import type { Workspace } from '../../shared/generated/Workspace'
 import type {
   OperatorOrgDetail,
   OperatorWorkspaceStates,
 } from '../../shared/operator'
-import type { Workspace } from '../../shared/workspaces'
+import { workspaceRemovedAt } from '../../shared/workspaces'
 import { FAKE_TIME } from '../../test-support/fixtures/core'
 import {
   sampleOrgDetail,
@@ -16,16 +17,25 @@ import type { OrgState } from './state'
 const BASE = FAKE_TIME
 
 /**
- * The workspaces of an org in the states of the operator section. Running
- * holds the states of a cloud computer that runs, and Failed the error.
+ * The workspaces of an org in the states of the operator section, as the
+ * Worker replies with them. Running holds the states of a cloud computer
+ * that runs, and Failed the error. Archived keeps the removed workspaces,
+ * whose Restore ended, and Removed counts them too.
  */
-function statesOf(workspaces: readonly Workspace[]): OperatorWorkspaceStates {
-  const states = { running: 0, stopped: 0, failed: 0, archived: 0 }
+function statesOf(
+  workspaces: readonly Workspace[],
+  now: number,
+): OperatorWorkspaceStates {
+  const states = { running: 0, stopped: 0, failed: 0, archived: 0, removed: 0 }
   for (const workspace of workspaces) {
     if (workspace.state === 'stopped') states.stopped += 1
     else if (workspace.state === 'error') states.failed += 1
-    else if (workspace.state === 'archived') states.archived += 1
-    else states.running += 1
+    else if (workspace.state === 'archived') {
+      states.archived += 1
+      if (workspaceRemovedAt(workspace.archivedAt, now) !== null) {
+        states.removed += 1
+      }
+    } else states.running += 1
   }
   return states
 }
@@ -39,9 +49,10 @@ function madeOrgDetail(
   item: OrgState,
   made: { providerAccount: string; createdAt: number },
   records: OperatorRecords,
+  now: number,
 ): OperatorOrgDetail {
   const { org } = item
-  const workspaceStates = statesOf(item.workspaces)
+  const workspaceStates = statesOf(item.workspaces, now)
   const deletion = org.deletion
     ? { deletedAt: org.deletion.deletedAt, purgeAt: org.deletion.deletesAt }
     : null
@@ -84,7 +95,7 @@ export function operatorOrgDetails(
   const records = state.operator
   const made = state.orgs.flatMap((item) => {
     const record = state.providers.made.get(item.org.id)
-    return record ? [madeOrgDetail(item, record, records)] : []
+    return record ? [madeOrgDetail(item, record, records, backend.now())] : []
   })
   const samples = sampleOrgs.map((org) => sampleOrgDetail(org, records, BASE))
   return [...made.reverse(), ...samples]

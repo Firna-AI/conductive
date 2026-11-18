@@ -37,39 +37,49 @@ function bodyOf(request: XhrRequest): unknown {
 }
 
 /**
- * Sends each raw file with an `XMLHttpRequest`, because only it reports the
- * bytes of a body that the browser sent. The request carries the session
- * cookie, also to the app origin of the Mac app, and one header:
- * `Content-Type: application/octet-stream`. The browser adds the length of
- * the file, and the query of the path names the file. `resolve` turns the
- * path into the address that the fetch of the same services uses.
- * `newRequest` makes the request, so a test can give a fake one.
+ * Sends each raw part of a file with an `XMLHttpRequest`, because only it
+ * reports the bytes of a body that the browser sent. The request is a `PUT`
+ * with the session cookie, also to the app origin of the Mac app, and one
+ * header: `Content-Type: application/octet-stream`. The browser adds the
+ * length of the part, and the path names the upload and the part. `resolve`
+ * turns the path into the address that the fetch of the same services
+ * uses. `newRequest` makes the request, so a test can give a fake one.
+ *
+ * One upload sends many parts with one `signal`. So each request stops
+ * listening to the signal when it ends.
  */
 export function xhrFileTransport(
   newRequest: () => XhrRequest,
   resolve: (path: string) => string,
 ): FileTransport {
-  return ({ path, file, progress, signal }) =>
+  return ({ path, body, progress, signal }) =>
     new Promise<FileReply>((done, fail) => {
       if (signal.aborted) {
         fail(stopped())
         return
       }
       const request = newRequest()
-      request.open('POST', resolve(path))
+      const stop = () => request.abort()
+      const end = () => signal.removeEventListener('abort', stop)
+      request.open('PUT', resolve(path))
       request.withCredentials = true
       request.setRequestHeader('Content-Type', 'application/octet-stream')
       request.upload.addEventListener('progress', (event) =>
         progress(event.loaded),
       )
-      request.addEventListener('load', () =>
-        done({ status: request.status, body: bodyOf(request) }),
-      )
-      request.addEventListener('error', () =>
-        fail(new Error('The upload failed.')),
-      )
-      request.addEventListener('abort', () => fail(stopped()))
-      signal.addEventListener('abort', () => request.abort(), { once: true })
-      request.send(file)
+      request.addEventListener('load', () => {
+        end()
+        done({ status: request.status, body: bodyOf(request) })
+      })
+      request.addEventListener('error', () => {
+        end()
+        fail(new Error('The upload failed.'))
+      })
+      request.addEventListener('abort', () => {
+        end()
+        fail(stopped())
+      })
+      signal.addEventListener('abort', stop, { once: true })
+      request.send(body)
     })
 }

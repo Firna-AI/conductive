@@ -10,8 +10,13 @@ the key of each command row.
 
 The catalogue draws the Keyboard shortcuts tab in the Mac app and in a
 browser, from decisions 190 to 196. The pages of
-`app/account` and `mac-app/this-mac` show it as the third tab of the
-account.
+`app/account` and `mac-app/this-mac` show it as the fourth tab of the
+account. The Stats tab follows it. In the Mac app, the This Mac tab comes
+after Stats. Fast mode decision
+258 adds Fast mode to the Chat group, after Next effort level, with ⇧⌘E on
+a Mac and Ctrl+Shift+E on Windows and Linux. On desktop, the Fast row of
+the model menu of a session shows the same key before its switch, as
+`app/fast-mode` shows.
 
 - `app/account/shortcuts` shows the tab in a normal Chrome tab on a Mac.
   The search field of decision 195 stands at the top. The lines under it
@@ -76,6 +81,6 @@ account.
 - `mac-app/command-palette` shows the All tab of the palette over a
   workspace in the Mac app, with the key of each command row. The Search
   row of each Mac app page opens it. Its `actions` and `settings` variants
-  have those tabs. The Settings tab adds This Mac to the Account group,
-  which ends with Keyboard shortcuts. Its `changed-key` variant has the
+  have those tabs. The Settings tab adds This Mac to the end of the
+  Account group, after Keyboard shortcuts. Its `changed-key` variant has the
   Search row with ⇧⌘P, the person's key of the palette.

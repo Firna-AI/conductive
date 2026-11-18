@@ -9,9 +9,21 @@
 export type AgentAction =
   | 'create-pull-request'
   | 'commit-and-push'
+  | 'push'
   | 'fix-checks'
   | 'resolve-conflicts'
   | 'address-review'
+
+/** The agent actions that have a command of their own in the keymap. */
+export type CommandAgentAction = Exclude<AgentAction, 'push'>
+
+/**
+ * The command whose key runs an agent action. Push and Commit and push
+ * share one command, so one key presses whichever of the two the bar shows.
+ */
+export function agentActionCommand(action: AgentAction): CommandAgentAction {
+  return action === 'push' ? 'commit-and-push' : action
+}
 
 /** The merge methods of GitHub. */
 export type MergeMethod = 'merge' | 'squash' | 'rebase'
@@ -19,6 +31,7 @@ export type MergeMethod = 'merge' | 'squash' | 'rebase'
 export const agentActionLabels: Readonly<Record<AgentAction, string>> = {
   'create-pull-request': 'Create PR',
   'commit-and-push': 'Commit and push',
+  push: 'Push',
   'fix-checks': 'Fix checks',
   'resolve-conflicts': 'Resolve conflicts',
   'address-review': 'Address review',
@@ -33,6 +46,8 @@ export const mergeLabels: Readonly<Record<MergeMethod, string>> = {
 
 export const barLabels = {
   merging: 'Merging',
+  readyForReview: 'Ready for review',
+  markingReady: 'Marking ready',
   continue: 'Continue',
   continuing: 'Continuing',
   archive: 'Archive',
@@ -46,6 +61,9 @@ export type BarMessageKind =
   | 'merge-moved-head'
   | 'merge-no-right'
   | 'merge-refused'
+  | 'ready-no-right'
+  | 'ready-pull-changed'
+  | 'ready-refused'
   | 'continue-waits'
   | 'continue-failed'
 
@@ -53,10 +71,10 @@ export type BarMessageKind =
 export type BarBranches = { branch: string; base: string }
 
 /**
- * The words of each message. A moved head and a missing right use the
- * app's own words. Every other refusal of GitHub says only that GitHub
- * refused the merge, beside Open on GitHub, because no GitHub error text
- * reaches the browser.
+ * The words of each message. A moved head, another pull request, and a
+ * missing right use the app's own words. Every other refusal of GitHub
+ * says only that GitHub refused the merge or Ready for review, beside Open
+ * on GitHub, because no GitHub error text reaches the browser.
  */
 export function barMessageText(
   kind: BarMessageKind,
@@ -69,6 +87,12 @@ export function barMessageText(
       return `Not merged: your GitHub access doesn't allow merges into ${branches.base}.`
     case 'merge-refused':
       return 'GitHub refused the merge.'
+    case 'ready-no-right':
+      return "Not marked ready: your GitHub access doesn't allow changes to this pull request."
+    case 'ready-pull-changed':
+      return 'Not marked ready: the branch has another pull request now. Review it, then try again.'
+    case 'ready-refused':
+      return 'Not marked ready: GitHub refused the change.'
     case 'continue-waits':
       return 'Continue waits for the agent to finish.'
     case 'continue-failed':
@@ -153,6 +177,8 @@ export function agentPrompt(action: AgentAction, facts: PromptFacts): string {
       return `Commit the changes that are not committed, push this branch, and open a pull request into \`${facts.base}\` with \`gh pr create\`. Write a short title, and describe what changed and why. If \`gh\` is missing or fails, push the branch and say that \`gh\` failed.`
     case 'commit-and-push':
       return commitAndPush
+    case 'push':
+      return 'Push this branch.'
     case 'fix-checks':
       return `These checks failed on ${pr}: ${listText(facts.failedChecks)}. Find out why with \`gh pr checks ${facts.number}\`, and read the logs of failed GitHub Actions jobs with \`gh run view --log-failed\`. For a check from another service, read its details, or run it locally. Fix the cause, then commit and push. If \`gh\` is missing or fails, run the failed checks locally, and say that \`gh\` failed.`
     case 'resolve-conflicts':

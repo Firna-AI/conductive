@@ -10,7 +10,6 @@ const sitePages: Readonly<Record<SitePage, string>> = {
   pricing: paths.pricing,
   terms: paths.terms,
   privacy: paths.privacy,
-  fromConductor: paths.fromConductor,
 }
 
 /** A link that writes an email. A picture of a page has no address. */

@@ -8,7 +8,8 @@ import { confirmRecord } from './session-records'
 
 /**
  * Puts the message of a Send or Try again reply in the session that the reply
- * names, unless that session already shows or holds it. A reply can name
+ * names, unless its transcript already shows it. The message takes the place
+ * of the same message while its send waits there. A reply can name
  * another session than its request: a linked session that the Worker opened,
  * because the login of the starter was not available. Its record from the
  * reply shows only while no newer record of it came by event number, so a
@@ -25,10 +26,15 @@ export function takeReply(
   if (session.id === target) confirmRecord(context, session, reply.eventNumber)
   context.store.update((snapshot) =>
     withSession(snapshot, target, (state) => {
-      const known =
-        state.pending.some((item) => item.id === message.id) ||
-        state.transcript.items.some((item) => item.id === `user:${message.id}`)
-      return known ? state : { ...state, pending: [...state.pending, message] }
+      const shown = state.transcript.items.some(
+        (item) => item.id === `user:${message.id}`,
+      )
+      if (shown) return state
+      const waits = state.pending.some((item) => item.id === message.id)
+      const pending = waits
+        ? state.pending.map((item) => (item.id === message.id ? message : item))
+        : [...state.pending, message]
+      return { ...state, pending }
     }),
   )
   return target

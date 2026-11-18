@@ -1,9 +1,10 @@
+import type { Workspace } from '../../shared/generated/Workspace'
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import { useState } from 'react'
 import styles from '../../../docs/mockups/src/components/workspaces/SectionList.module.css'
 import type { ArchiveAction } from '../../app/archive-model'
 import type { SectionGroup } from '../../app/sections'
-import type { Workspace } from '../../shared/workspaces'
+
 import type { RowMenus } from './row-menu'
 import { WorkspaceRow, type RowVariant } from './WorkspaceRow'
 
@@ -22,7 +23,7 @@ export function useArchivedOpen(
 ): [boolean, (open: boolean) => void] {
   const [opened, setOpened] = useState<boolean | null>(null)
   const isLive = groups.some((group) =>
-    group.workspaces.some((row) => row.id === selectedId),
+    group.rows.some((row) => row.workspace.id === selectedId),
   )
   /** The open workspace, while it stays open after the list showed it live. */
   const [held, setHeld] = useState<string | null>(isLive ? selectedId : null)
@@ -36,8 +37,8 @@ export function useArchivedOpen(
  * The archived workspaces at the end of the list. The group is the app's
  * own, not a section of the org, so it has no menu, and it is collapsed
  * until the user opens it, as `useArchivedOpen` says. An archived workspace
- * opens with its chat read-only. An admin's row has a menu that reassigns
- * the workspace. `restoreAction` gives a row its Restore shortcut, which
+ * opens with its chat read-only. The menu of each row copies the link of
+ * the workspace, and an admin's menu also reassigns it. `restoreAction` gives a row its Restore shortcut, which
  * covers its time on hover, as Archive does.
  */
 export function ArchivedGroup(props: {
@@ -49,6 +50,10 @@ export function ArchivedGroup(props: {
   onToggle: (open: boolean) => void
   menus?: RowMenus
   restoreAction?: (workspace: Workspace) => (() => void) | undefined
+  /**
+   * The write of a row that runs. Only a Restore shows busy: an Archive
+   * that runs already shows its row here, as done.
+   */
   running?: (workspaceId: string) => ArchiveAction | null
 }) {
   const { open } = props
@@ -76,7 +81,7 @@ export function ArchivedGroup(props: {
           {props.rows.map((row) => (
             <li key={row.id}>
               <WorkspaceRow
-                acting={(props.running?.(row.id) ?? null) !== null}
+                acting={props.running?.(row.id) === 'restore'}
                 menu={props.menus?.(row)}
                 now={props.now}
                 onRestore={props.restoreAction?.(row)}

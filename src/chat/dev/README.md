@@ -18,8 +18,18 @@ sign-in gate.
 The composer lists the files of the Files development page after `@`, and
 a press on a file chip notes what the app opens. The page has no file tab,
 so a press on the chip of a sent attached file also only notes its path.
-As in the app, its message box takes a drop of files, and a drop of files
-elsewhere on the page does nothing.
+The mentions also give a picture reader over the Files development
+fixtures, only while the sandbox runs, as the workspace screen does. So a
+stopped sandbox shows each picture of an answer as its link. The tree also
+holds two screenshots of the context folder, which `dev-pictures.ts`
+draws in the browser, and a third screenshot whose read fails. Each read
+of a picture waits 2.5 seconds, as a read over the network does, so the
+box of its label shows first. `public/hero.png` is a PNG fixture of one
+pixel. The reader uses the fake file routes and runs no cloud computer.
+The page has no workspace screen, so each link of chat text opens a new
+tab, also a local address and a link of the app.
+As in the app, the chat takes a drop of files anywhere on its column for
+its message box, and a drop of files elsewhere on the page does nothing.
 
 `npm run dev` also shows the chat, in the workspace screen of the whole
 app, over the fake API of the app. That fake has limits for the chat, as
@@ -48,7 +58,8 @@ The address chooses the state. The first value of each option is the default:
 | `change` | `done`, `done-not-saved`, `failed` (what the page's Mac does with a change of its settings) |
 | `page` | `chat`, `this-mac` (the This Mac section of the account) |
 | `files` | `listed`, `unread` (each end of a turn of the chat says that the cloud computer could not read its changed files) |
-| `answer` | `text`, `tables` (each scripted turn answers with three tables: the resources of the machine, bundle sizes with a short row, and a wide table of test runs), `headings` (each scripted turn writes its plan under a heading, and answers with a review under headings at levels 2 to 4) |
+| `speed` | `none` (no fast mode), `fast` (each end of a turn of the chat ends a fast turn at fast speed, which shows nothing new), `limit` (each end says "Standard speed · Fast limit reached"), `older` (each end says "Standard speed · Older cloud computer software"), `other` (each end gives a cause that the app does not name, so it says "Standard speed" alone) |
+| `answer` | `text`, `tables` (each scripted turn answers with three tables: the resources of the machine, bundle sizes with a short row, and a wide table of test runs), `headings` (each scripted turn writes its plan under a heading, and answers with a review under headings at levels 2 to 4), `pictures` (each scripted turn writes a plan with a screenshot, and answers with two screenshots side by side, a link and an image that stay links, and an image in a table cell) |
 
 ## What the page does
 
@@ -63,18 +74,25 @@ message that the session record names again, as a new message. It refuses
 each other message with 409. Each accepted message sets that record's
 `retryMessageId` to null. Send and Try again in a session whose starter's
 login is not available, or private, open a linked session, as the Worker
-does. The page
+does. The account of the page names no default login, and its session
+records name no login, as an older reply of the Worker does. So the
+composer follows the own logins of the reader, as
+[Sessions, logins, and drafts](../sessions.md) says. `npm run dev` shows
+the sessions on the org login, with the options of
+[the development fake](../../app/dev-fake.md). The page
 sends as the member of the `role` option, who also starts each new
 session. A model change opens its session under the ID that
 the chat chose. Stop and the close of a running tab
 record the member of the `role` option as the one who pressed Stop. Stop
 the sandbox ends a running turn with no Stop request. With `app=mac`, the
 page's Mac acts on each answer: Deny ends the request, and the other choices
-run the command and keep the choice. The bar of the 15 minutes shows above
-the header while they run. The Mac refuses a change of an older pairing, as
+run the command and keep the choice. The bar of a grant shows above the
+header while it runs. Keep until I stop in the bar of the 15 minutes turns
+them into a grant until Stop. The Mac refuses a change of an older pairing, as
 the Worker does.
 
-Uploads keep their bytes in memory. While the sandbox runs, an accepted
+Uploads go in parts through `dev-uploads.ts`, with the store and the checks
+of the app's fake, and keep their bytes in memory. While the sandbox runs, an accepted
 message gets copies of its files at their returned paths, before the page
 shows it as sent. A queued message gets them when the sandbox becomes
 ready, such as after Resume, before the agent gets it. The page uses the
@@ -94,7 +112,9 @@ Each turn of the page's scripted agent writes its answer in parts, about
 two parts. So each header row shows as text until its separator row comes,
 and the table then grows one row at a time. With `answer=headings`, each
 part is one line too. The plan of each turn then starts with a heading,
-so its message line in the folded work shows the heading.
+so its message line in the folded work shows the heading. With
+`answer=pictures`, the plan holds a screenshot. So its closed message line
+in the folded work shows the link, and the open line shows the picture.
 
 The names follow the backend. A new workspace and each new session have no
 name, and show "Untitled". The page fills a name only while it is empty,
@@ -112,7 +132,8 @@ workspace and its first session take the title.
 Each other session takes the first line of its first message with own words
 as its title. The rule is `sessionTitleFrom` in
 `src/shared/session-title.ts`, which the Worker uses too. That rule first
-puts the original name of each attached file in place of its mention.
+leaves out each mention of an attached image. It puts the original name of
+each other attached file in place of its mention.
 
 ## Key code
 

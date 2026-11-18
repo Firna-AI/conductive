@@ -1,6 +1,6 @@
 ---
 title: Agent logins
-description: Connect your own account for agents powered by Claude and Codex, and choose who can use each login.
+description: Use a personal or org login for agents powered by Claude and Codex, and manage personal login sharing.
 group: Start
 order: 30
 ---
@@ -10,24 +10,71 @@ order: 30
 Sign in to Conductive with GitHub first.
 Your account needs access before you can connect an agent.
 
-Each login serves all your Conductive orgs.
-Connect at least one of these:
+Your personal logins serve all your Conductive orgs.
+An org login serves only the members and workspaces of that org.
+You need no personal login when a usable org login serves your chosen agent.
+For a personal login, choose one of these:
 
 | Agent | Supported login |
 | --- | --- |
-| Claude | A Claude subscription token or an Anthropic API key |
-| Codex | An OpenAI API key or a ChatGPT plan |
+| Claude | A Claude subscription token, an Anthropic API key, or an own endpoint |
+| Codex | An OpenAI API key, a ChatGPT plan, or an own endpoint |
 
 Use a login that you have permission to use.
-Model use goes to its connected account.
+A subscription token or provider API key bills model use to its connected account.
+An own endpoint is a gateway or proxy that you choose, with its address and key.
+Model use on an own endpoint bills where its owner runs it.
 
 - [Get access to Conductive](/docs/get-started#get-access)
+
+## Use an org login
+
+An admin can connect one org login for each agent.
+It can be an Anthropic API key for Claude, an OpenAI API key for Codex, or an own endpoint.
+A Claude subscription token or ChatGPT sign-in cannot be an org login.
+The admin must have permission to use the key or endpoint for the org.
+The account of that key or endpoint pays for model use, including automation runs.
+
+To connect an org login as an admin:
+
+1. Open the org's **Settings**.
+2. Open **Agents**, after **Cloud computer**.
+3. Find Claude or Codex.
+4. Select **Connect**.
+5. Choose **API key** or **Own endpoint**.
+6. Enter the key and, for an endpoint, its address.
+7. Select **Connect**.
+
+Other members see this tab read-only.
+It shows the login's kind, the host of an endpoint, and **Use for every member**.
+Nobody sees the saved key or full endpoint address.
+The login stays when the admin who connected it leaves the org.
+
+Your usable personal login comes first for a new session.
+Without one, the new session uses the org login when available.
+**Use for every member** starts off.
+An admin can turn it on to give the org login priority for new sessions.
+If the org login cannot be used, your usable personal login serves instead.
+Older sessions keep their login when the switch changes.
+
+Automation runs follow the same rule for their owner.
+
+The message box names an org login, such as **Acme's login**.
+**Get started** shows **Ready** when the org login serves you.
+You can start without connecting your own login.
+You can connect a personal login later in **Account**.
+
+An admin uses **Replace** or **Remove** on the org's **Agents** tab to change or remove its login.
+The current login serves until its replacement saves.
+**Replace** keeps **Use for every member**, also when the login kind changes.
+The org login has no personal share switch.
+Each member can send messages in sessions on it.
 
 ## Connect Claude
 
 1. Open **Account**.
-2. Open **General**.
-3. Find Claude under **Agents**.
+2. Open **Agents**.
+3. Find Claude.
 4. Select **Connect**.
 5. Choose **Subscription token** or **API key**.
 6. Paste the token or key into its field.
@@ -50,8 +97,8 @@ Conductive keeps the stored login hidden in Account.
 ## Connect Codex
 
 1. Open **Account**.
-2. Open **General**.
-3. Find Codex under **Agents**.
+2. Open **Agents**.
+3. Find Codex.
 4. Select **Connect**.
 
 ### Use a ChatGPT plan
@@ -89,27 +136,115 @@ The form has a link to create a key with OpenAI.
 The row shows **Connected** after either connection succeeds.
 
 Choose a model for the connected agent when you send a message.
-The message box asks you to connect the agent if its login is missing.
+The message box asks you to connect only when no usable personal or org login serves the agent.
+
+## Connect an own endpoint
+
+Connect the endpoint separately for each agent that will use it.
+The endpoint must support the API and key format of that agent:
+
+| Agent | Required API | Key format | Example endpoint |
+| --- | --- | --- | --- |
+| Claude | Anthropic Messages API | `x-api-key` header | `https://gateway.example.com` |
+| Codex | OpenAI Responses API | Bearer token | `https://gateway.example.com/v1` |
+
+1. Open **Account**.
+2. Open **Agents**.
+3. Find the agent.
+4. Select **Connect**.
+5. Choose **Own endpoint**.
+6. Enter the address in **Endpoint**.
+7. Paste the endpoint's key into **API key**.
+8. Read the address hint.
+9. Select **Connect**.
+
+Use a public `https://` address with a host name.
+The address must have no user name or password.
+An IP address alone does not work as the host.
+A host name that points to your public IP address works when the server has a certificate for that name.
+For example, the free name `<IP address>.sslip.io` points to that IP address.
+
+The hint shows the request address from the address you type.
+For Claude, Conductive drops a final `/v1` before saving the address.
+The hint also shows the saved Claude address when its format changes.
+Conductive adds routes such as `/v1/messages` for Claude.
+For Codex, it adds `/responses` to the saved address.
+The saved Codex address can differ from the hint after Conductive checks the model list.
+
+After you connect, the account page shows **Connected** and **Own endpoint**, with the host below the agent.
+It includes the port when the port is not the default.
+Conductive keeps the address and key encrypted.
+Your browser gets neither the saved key nor the full saved address back.
+
+The endpoint gets the messages, files, and command results of each turn on the login, whoever sent the message.
+Its owner is responsible for the endpoint and its terms.
+Claude asks for a one-hour prompt cache on every turn with an own endpoint login.
+Check the endpoint's support and charges for that cache.
+A turn with **Fast** on also asks the endpoint for fast output.
+If the endpoint refuses it, the turn fails with the endpoint's cause.
+Turn **Fast** off in that session to continue.
+
+### Keep the model list current
+
+Conductive reads the endpoint's model list with its key when you save the login.
+For Codex, it first reads `<address>/models` at the address you type.
+If that read fails, it also tries `<address>/v1/models` unless the address already ends with `/v1`.
+It makes no second read if the endpoint gives no HTTP response.
+If only the second read works, Conductive saves the address with `/v1` added.
+
+The account page then shows this note under the Codex row:
+
+> Conductive added /v1 to the address, because the endpoint lists its models there.
+
+The note stays until you reload the page.
+A new save or **Remove** also clears it.
+
+When that list omits an app model, the account page names the missing models, their IDs, and the last successful read.
+Select **Refresh** there to read the list again.
+Conductive also reads the list in the background when a turn on the login starts, at most once in 10 minutes.
+Refresh and background reads keep the saved address.
+
+For Claude and Codex, a failed model list read during a save or **Refresh** shows this warning under the agent's row:
+
+> Conductive couldn't read the model list of this endpoint. Check the address and the key.
+
+Select **Refresh** beside the warning to try again.
+A successful **Refresh**, a new save, **Remove**, or a page reload clears the warning.
+A failed background read shows no warning.
+
+Your model pickers hide app models that the last successful list does not name.
+A failed read keeps the last successful list.
+Before the first successful read, your pickers show all app models for the agent.
+They also show all app models for that agent when the list names none of them.
+An existing session keeps its current model.
+Other members' pickers in sessions on your personal endpoint still show all app models.
+In a session on an org endpoint, every member's picker follows that endpoint's model list.
+This includes new workspaces, sessions, and automations that use the org login.
+Only an admin sees the org endpoint's model list and **Refresh** on the org's **Agents** tab.
+Your choices remain the models that Conductive offers.
 
 ## Choose who can use your login
 
-Each session uses the login of the member who started it.
-Other members can spend that login when you let them use it.
+Each session keeps its starter's personal login or the org login.
+This share setting applies only to your personal login.
+Other members can spend it in sessions that you start on it when you allow them.
 
 In **Account**, find **Let other members use this login** under the connected agent.
 The switch saves each change at once.
 
 | Setting | What another member's message does in your session |
 | --- | --- |
-| On | Uses your login and connected account |
-| Off | Starts a new session on that member's own login |
+| On | Uses your login and its connected account or endpoint |
+| Off | Starts a new session on that member's personal or org login under the rule above |
 
 Sharing starts off for a new Claude subscription token or ChatGPT sign-in.
-It starts on for a new API key.
+It starts on for a new API key or own endpoint login.
 The share switch stays available for a ChatGPT plan.
 Only its owner may use a ChatGPT plan under OpenAI's terms.
+An endpoint can use personal subscriptions that other members then spend.
+Turn sharing off if their terms do not allow that use.
 
-A new session on another member's login has no copy of your conversation.
+A new session on a personal or org login has no copy of your conversation.
 The earlier session keeps its history.
 
 Share a login only when the provider's terms allow that use.
@@ -134,6 +269,8 @@ Removing it from Conductive does not revoke a copy held elsewhere.
 
 **Connected** confirms that Conductive saved the login.
 The first agent request can still report an authentication error.
+For an org login, ask an admin to check the login on the org's **Agents** tab.
+The steps below manage your personal login in **Account**.
 
 Conductive shows **Signed out** in place of **Connected** when OpenAI no longer accepts your ChatGPT sign-in.
 This also applies after Conductive renewed it.
@@ -142,11 +279,15 @@ The row shows the cause, such as **ChatGPT access expired.**
 Select **Sign in again**.
 Then complete the [ChatGPT sign-in steps](/docs/agent-logins#use-a-chatgpt-plan) again.
 
+If the error says the agent software cannot use ChatGPT sign-in, ask an admin to run **Build computer**.
+After it succeeds, create a new workspace.
+You can also connect an OpenAI API key.
+
 Check the error from the provider.
 Make sure you connected the account you want to use.
 Note your choice for **Let other members use this login** before removing the login.
 Remove the saved login if you need to replace it.
-Then connect the correct account.
+Then connect the correct token, key, or endpoint.
 
 Check **Let other members use this login** after connecting.
 Set the switch to your preferred choice if needed.
@@ -158,33 +299,30 @@ If a share-setting change fails, the switch returns to its saved value.
 ## Understand access to credentials
 
 Conductive stores agent logins encrypted.
+It keeps these logins outside cloud computers.
 
-A newer cloud computer starts from a shared setup that requires Conductive to keep agent logins outside the computer.
-Its model requests and answers pass through Conductive on Cloudflare.
-Conductive adds the session starter's login before sending each request to Anthropic or OpenAI.
-Each turn there gets a temporary credential called a turn token.
-Through Conductive, it can use the login of the member who started the session.
+Model requests and answers pass through Conductive on Cloudflare.
+Conductive adds the session's personal or org login before sending each request to Anthropic, OpenAI, or the chosen endpoint.
+Each turn gets a temporary credential called a turn token.
+Code and members with terminal access can read or copy that credential.
 
-Programs and members with terminal access can read or copy that token.
-A copy can spend the login while the turn runs, including from outside the computer.
+They can use it only through Conductive on the session's login while the turn runs.
+A copied token also works from outside the computer during that turn.
 A copied token cannot start a new model request after the turn ends.
 A program that keeps running can read tokens of later turns, including turns in other members' sessions.
 Your ChatGPT sign-in never enters a cloud computer.
-An older cloud computer cannot run Codex with ChatGPT.
 
-An older cloud computer starts from an earlier setup that still permits software to receive the session starter's agent login itself.
-Programs and members with terminal access can read or copy that login during a turn.
-A copied login can remain usable after the turn ends.
-If a login is exposed, revoke it with its provider.
+An own endpoint's address and key never reach a cloud computer.
+Each turn needs supported agent software.
+If Conductive reports unsupported agent software, ask an admin to run **Build computer**.
+After it succeeds, create a new workspace.
+
+The share switch does not hide turn tokens from code or members with terminal access.
+Older agent software could expose the saved login itself.
+Updating or resuming that computer does not revoke a login that someone copied earlier.
+If a login was exposed, revoke it with its provider.
 Removing it from Conductive does not revoke a copy held elsewhere.
 
-Ask an org admin to select **Build computer** in **Settings**, under **Cloud computer**.
-After the build succeeds, create a new workspace to get the current protection.
-Stopping or resuming an older computer does not remove its login exposure risk.
-Installing newer software in that computer does not remove that risk either.
-A new workspace does not revoke logins already copied from an older computer.
-
-The share switch does not hide either kind of credential from programs or members with terminal access.
 Work in an org with people you trust with your agent and GitHub logins.
 
 - [Understand sessions and chat](/docs/sessions-and-chat)

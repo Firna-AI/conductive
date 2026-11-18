@@ -2,7 +2,9 @@
 
 This doc holds the requirements and the decisions in force for the life of a
 workspace. It covers the create, the start steps, the time limits, the
-states, the stop and resume, the archive, the restore, and Continue of a workspace.
+states, the stop and resume, the restart of the software, the archive, the
+restore, the removal from the list after 14 days, and Continue of a
+workspace.
 It belongs to [Workspaces and sandboxes](workspaces-and-sandboxes.md),
 which covers the provider, the org image, and the startup script. The
 terms are those of the
@@ -34,8 +36,20 @@ keeps them after the merge.
   [The branch of a pull request run](base-branches.md#the-branch-of-a-pull-request-run)
   gives its steps.
 - A resume shows that the files come back as the user left them.
-- The chat history shows at once while a sandbox starts. The files and the
-  tools wait until the sandbox is ready.
+- The chat history shows at once while a sandbox starts. The tools wait
+  until the sandbox is ready.
+- All files and Changes show the lists that the workspace saved while a
+  sandbox starts. A list without a saved copy, such as at the first start
+  of a new workspace, shows that it waits for the sandbox in its place.
+- A file or diff tab keeps the file that it shows while the sandbox
+  starts. A tab without content shows that it waits for the sandbox, as
+  [Files and changes](workspace-tools.md#files-and-changes) says.
+- Reason: the files of a stopped sandbox do not change, so the saved lists
+  are the latest ones. Cal asked for them during each resume on
+  13 November 2026. A wait in place of the saved lists was rejected,
+  because the lists can still be read. A notice that the lists are a saved
+  copy was rejected, because the copy is the latest one and the header
+  already shows Starting.
 
 ## Time limits of builds and starts
 
@@ -61,7 +75,7 @@ keeps them after the merge.
   other error. So a failed create keeps its workspace in the error state,
   as [Create a workspace](create-a-workspace.md#a-failed-first-start) says.
   A failed resume shows the error state, as
-  [Stop and resume](#stop-and-resume) says. After a failed restart near day
+  [Stop and resume](stop-and-resume.md) says. After a failed restart near day
   14, the app stops the sandbox again. The workspace stays stopped, or
   stays archived.
 - Each such failed build, create, or resume says that it passed its time
@@ -78,7 +92,8 @@ keeps them after the merge.
   mark shape, so no state there depends on colour alone. Reason: they also
   show the state of the cloud computer. So the header can show ready beside
   a bar with failed checks.
-- Archived workspaces sit in the Archived group at the end of the list.
+- An archived workspace sits in the Archived group at the end of the list
+  until its Restore ends, as [Archive](#archive) says.
 
 ### The list mark
 
@@ -86,87 +101,26 @@ keeps them after the merge.
 
 ## Stop and resume
 
-- A sandbox stops after 30 minutes without user activity on its workspace
-  and without a running agent turn (decisions 11 and 29).
-- Activity is input in the tabs of the workspace, such as typing, clicks,
-  and scrolling. Terminal input and requests to a port preview are
-  activity too.
-- An open tab alone is not activity. An open connection is not activity
-  either, such as the live reload of a dev server.
-- Reason: a forgotten tab must not keep a sandbox running, and a stop must
-  not cut off real work.
-- A stop ends every process in the sandbox. Its files and its agent
-  sessions stay.
-- Opening a stopped workspace resumes its sandbox. A workspace whose owner
-  is suspended does not start, as
-  [Operator actions](operator-actions.md#starts-stops-and-builds) says.
-- When a sandbox stops while its workspace is open, the tab shows the
-  stopped state with Resume (decision 11).
-- A resume at once when the tab shows again was rejected. Resume avoids a
-  start that the user did not ask for.
-- Opening a file tab or a diff tab also resumes the sandbox, in the same
-  cases as opening the workspace (decision 247). A click on a file, on its
-  tab, or on a link to it opens the tab. A move back or forward to its
-  address opens it too.
-- Reason: the tab can show its file only from a running sandbox, so the
-  open asks for the start. A tab that showed the stopped state, or an error
-  with Try again, until a member pressed Resume was rejected, because the
-  open of the tab already asks for the file.
-- A message from `send_message` or `create_session` of the agent tools
-  also starts the sandbox (decision 260). It does so in the same cases as
-  an open, and with the same checks. These cases are a stopped workspace
-  and a workspace whose later start failed, such as a failed resume.
-- A failed first start keeps waiting for Try again, as
-  [A failed first start](create-a-workspace.md#a-failed-first-start)
-  says. An empty session from the agent tools starts nothing.
-- Reason: every member can already start each workspace of the org with an
-  open. A delegated task then runs while no member watches.
-- A message that waits until a member opens its workspace was rejected.
-  Its task could wait for hours, and the agent that sent it would not learn
-  why.
-- A refusal of such a message was rejected, because it adds a refusal, and
-  the agent must then ask a member to open the workspace.
-- Each such start counts toward the starts that the orgs of its provider
-  account share, as [The provider](workspaces-and-sandboxes.md#the-provider)
-  says.
-- While the sandbox is stopped, the chat history shows, and the stopped
-  state takes the place of the composer.
-- A start that fails shows the error state with Try again. The chat history
-  stays.
-- On Boat, near day 14 of a stop, the app starts the sandbox briefly and
-  stops it again, so that Boat keeps its disk (decision 43). A workspace
-  whose owner is suspended gets no such restart, as
-  [Starts, stops, and builds](operator-actions.md#starts-stops-and-builds)
-  says (decision 125).
-- Reason: Boat can delete the disk of a sandbox that is stopped for more
-  than 14 days, and a resume then fails.
-- Each such restart uses a start and some minutes of the app's Boat
-  account.
-- A sandbox on E2B gets no such restart. Reason: E2B keeps the disk of a
-  stopped sandbox with no time limit.
-- An archived workspace gets this restart only when Boat's 14 days end
-  before the app deletes its sandbox, as [Archive](#archive) says. So a
-  sandbox that Archive stopped gets none.
-- The restart of an archived sandbox gets none of the secrets of its
-  workspace and its org, and it runs no startup script. It only resumes the
-  sandbox and stops it again.
-- Reason: Archive revokes the workspace token, and an archived workspace
-  has no tools.
-- After a [Restore](#restore), a workspace on Boat gets this restart again,
-  near day 14 of its last stop. When that time has passed, the restart runs at
-  once.
-- An automatic Archive near day 14 was rejected, because the delete 14 days
-  after an Archive loses unpushed work. A copy of the disk in the app's own
-  storage was rejected, because the app would then hold a copy of each
-  user's code.
+- [Stop and resume](stop-and-resume.md) holds the requirements of the stop
+  of a sandbox, its resume, and its restart near day 14 of a stop.
+
+## Restart the software
+
+- [Restart the software](restart-the-software.md) holds the requirements
+  of Restart in the workspace header: the states that offer it, what it
+  restarts, the download of the newest release, who may restart, and a
+  failed restart.
 
 ## Archive
 
 - Archive keeps the sandbox of a workspace for 14 days, and stops it at
-  once when it runs (decision 1 of PR #138). The chat stays read-only in
-  the Archived group (decision 16).
+  once when it runs (decision 1 of PR #138). The chat stays read-only
+  (decision 16).
 - Archive runs no check of the work in the sandbox and asks no question.
   It works in each state of the workspace. It ends a start that runs.
+- An Archive of a parent workspace archives none of its sub-workspaces.
+  Its live sub-workspaces keep working, and they move up in the list, as
+  [An archived parent](sub-workspaces.md#an-archived-parent) says.
 - Archive revokes the workspace token. After a Restore, the next resume
   gives the sandbox a new token, as
   [Workspace tokens and runners](operator-actions.md#workspace-tokens-and-runners)
@@ -176,17 +130,24 @@ keeps them after the merge.
 - A check for work that is not committed or not pushed was rejected,
   because it needs a running sandbox. The Archive of a stopped workspace
   would then wait for a start.
-- After Archive, a toast names the workspace and offers Restore.
-- The bar of an archived workspace gives the day of the Archive. Until
-  Restore ends, the bar also gives the last day of Restore, with Restore.
+- After Archive, a toast names the workspace, gives the day when it leaves
+  the list, and offers Restore.
+- The bar of an archived workspace gives the day of the Archive and the
+  day when the workspace leaves the list. Until Restore ends, the bar
+  offers Restore until that day.
+- The bar gives that day also when it offers no Restore, such as in a
+  suspended org or without a kept sandbox. Reason: a workspace never
+  leaves the list without a notice.
 - Restore ends 14 days after the Archive. The app then deletes the
-  sandbox, with its files and its agent sessions. The chat stays read-only
-  in the Archived group.
+  sandbox, with its files and its agent sessions. The workspace leaves the
+  Archived group and the list, as
+  [Removed workspaces](#removed-workspaces) says (decision 518).
 - The end of Restore does not wait for the delete. While the delete still
   retries, the sandbox can still exist, but the workspace offers no
   Restore. Reason: the last day of Restore on the bar stays true.
 - The bar says that the cloud computer is deleted only after the delete.
-  Before that, it gives the day when Restore ended.
+  Before that, the bar of a removed workspace says that the cloud computer
+  is being deleted.
 - A sandbox that the app never deletes was rejected, because each archived
   workspace then uses about two starts a month for its restarts.
 - A saved snapshot at Archive was rejected, because the stopped sandbox
@@ -216,6 +177,10 @@ keeps them after the merge.
   workspace, as [Actions](command-palette-actions.md#actions) says.
 - Restore puts the workspace back in its section, at its place in the
   list.
+- A Restore of a parent workspace puts its live sub-workspaces back under
+  its row. A restored sub-workspace shows under its parent, or under the
+  nearest live workspace above it, as
+  [The place of a row](sub-workspaces.md#the-place-of-a-row) says.
 - The workspace comes back stopped, also when it had the error state at
   the Archive. Restore starts no sandbox.
 - Reason: a resume already gives a new workspace token and fresh env vars,
@@ -225,8 +190,8 @@ keeps them after the merge.
   with Resume. A later open of the workspace resumes its sandbox, as for
   each stopped workspace.
 - A repeat of a Restore changes nothing.
-- After its 14 days, an archived workspace offers no Restore, as
-  [Archive](#archive) says.
+- After its 14 days, an archived workspace is removed and offers no
+  Restore, as [Removed workspaces](#removed-workspaces) says.
 - An archived workspace without a kept sandbox offers no Restore either.
   Reason: nothing is left to bring back.
 - The app refuses a Restore after the 14 days, or without a kept sandbox,
@@ -237,6 +202,79 @@ keeps them after the merge.
   history.
 - [Orgs and members](orgs-and-members.md#members-and-roles) says who may
   restore a workspace.
+
+## Removed workspaces
+
+- An archived workspace is removed when its Restore ends, 14 days after
+  the Archive (decision 518). It then leaves the workspace list, the count
+  of the Archived group, and each group of the command palette.
+- Reason: the Archived group then does not grow with no end, and no data
+  is lost.
+- The app deletes only the sandbox of a removed workspace, as
+  [Archive](#archive) says. It keeps all the other data: the record of the
+  workspace, the chat history of its sessions, and the record of each file
+  attached to its messages. They stay until the org is deleted, as
+  [Delete org](delete-org.md) says.
+- The removal deletes no attached file. The app deletes its stored copy of
+  each file after the sandbox has it, as
+  [The stored copy](attachment-transfers.md#the-stored-copy) says. So a
+  file that reached the sandbox goes with the sandbox at the end of the
+  14 days.
+- A delete of the chat and the files, at the end of the 14 days or later,
+  was rejected (decision 518). An org setting for the days in the list was
+  left out, because the list follows the end of Restore.
+- A removed workspace keeps the state archived. So each rule of an
+  archived workspace holds for it, unless a rule says otherwise for a
+  removed workspace.
+- Every archived workspace is removed at the end of its 14 days, also in a
+  suspended org and without a kept sandbox. Reason: the removal loses no
+  data, so no case needs an exception.
+- The removal does not wait for the delete of the sandbox, as the end of
+  Restore does not.
+- An open list leaves the workspace out from the end of its Restore, also
+  without a reload.
+- No action puts a removed workspace back in the list.
+- Only a direct link opens a removed workspace (decision 519). A workspace
+  link, its chip in a chat, a session link, and the run row of an
+  automation still open its read-only chat.
+- The last workspace of an org counts as a direct link (decision 522). So
+  the tile of the org, Switch to org, and the Switch to rows of the
+  palette still open a removed workspace that the person opened last, as
+  [Opening an org](org-rail-order.md#opening-an-org) says.
+- Reason: a link names the workspace by its ID, and the chat of the
+  workspace stays. The last workspace names it in the same way, and its
+  page says Removed.
+- Opening the list of the org in place of a removed last workspace was
+  rejected (decision 522), and so was forgetting the last workspace at
+  Archive. Both change the memory of the org for little gain.
+- While a removed workspace is open, no row of the list is selected, and
+  the Archived group does not open for it.
+- The agent tools read a removed workspace by its ID. Their workspace list
+  leaves it out unless the call asks for it, as
+  [List the workspaces](workspace-calls.md#list-the-workspaces) says.
+- A link that shows only that the workspace was removed, with agent tools
+  that act as if it does not exist, was rejected (decision 519). A link in
+  a chat would then lead nowhere.
+- A Removed view or filter in the list was rejected too, because the list
+  then keeps the old archives that the removal takes out. A group of
+  removed workspaces in the search of the palette was left out, as
+  [Tabs and groups](command-palette.md#tabs-and-groups) says.
+- The bar of a removed workspace has the title "Removed on" and the day of
+  the removal. It says that the workspace left the list, and that the chat
+  is read-only. It gives the state of the cloud computer, as
+  [Archive](#archive) says.
+- The file and tool panels of a removed workspace have the title Removed.
+- The header and the chips of a removed workspace keep the word and the
+  mark of Archived. Reason: its state stays archived, also in the agent
+  tools.
+- The app says that the workspace is removed, and never that it is
+  deleted (decision 520). Only its cloud computer is deleted. Reason: the
+  app keeps the data, and "deleted" can read as a promise that the data is
+  gone.
+- "Deleted" with a note on the Privacy page was rejected for that reason.
+  So was "deleted" with a real delete that an admin asks for. The title
+  "Archived on" with a line on the day when the workspace left the list
+  was rejected, because a reader can miss the change of state.
 
 ## Continue
 

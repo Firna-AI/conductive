@@ -2,16 +2,14 @@ import { afterEach, beforeAll, expect, it } from 'vitest'
 
 import { deleteOrgPath } from '../../src/shared/orgs'
 import { outerWorkerBundle } from '../chat/integration/outer-runtime.test-support'
-import {
-  OUTER_ORG,
-  OUTER_SOFTWARE,
-} from '../chat/integration/outer-seed.test-support'
+import { OUTER_ORG } from '../chat/integration/outer-seed.test-support'
 import {
   featureFixture,
   featureState,
   type FeatureFixture,
 } from './fixture.test-support'
 import { CLAUDE } from '../chat/harness.test-support'
+import { TERMINALS_KEY } from '../terminal/list-store'
 
 let bundle: string
 let fixture: FeatureFixture | undefined
@@ -24,10 +22,7 @@ afterEach(async () => {
 
 it('purges a hidden failed-create draft and its retained cleanup sandbox with the org', async () => {
   const active = (fixture = await featureFixture(bundle, {
-    configuration: {
-      CONDUCTIVE_RUNNER_ARCHIVE_URL: OUTER_SOFTWARE.url,
-      CONDUCTIVE_RUNNER_ARCHIVE_SHA256: OUTER_SOFTWARE.sha256,
-    },
+    configuration: {},
   }))
   await active.env.DB.batch([
     active.env.DB.prepare(
@@ -38,6 +33,7 @@ it('purges a hidden failed-create draft and its retained cleanup sandbox with th
     ).bind(OUTER_ORG),
   ])
   await active.actor('hidden-failure').seedFeatureState({
+    [TERMINALS_KEY]: [{ id: 'workspace', number: 1 }],
     ...Object.fromEntries(
       Array.from({ length: 40 }, (_, index) => [
         `extension:${index}`,

@@ -1,10 +1,14 @@
 import {
   changeFile,
+  emptyIntake,
+  keptUpload,
+  noRefusals,
   runFileJob,
   runFileQueue,
   splitPick,
   uploadingFile,
   type DraftFile,
+  type IntakeRefusals,
 } from '../../app/draft-files'
 import { sessionState } from './chat-snapshot'
 import type { ChatContext } from './context'
@@ -24,27 +28,30 @@ function fileOf(
 }
 
 /**
- * Uploads one file of a draft to the workspace. Its progress and its
- * outcome land on the file in the draft, also after the draft moved to
- * another session. Detachment and a stop of the chat abort the request, and a
- * reply that comes later changes nothing.
+ * Uploads one file of a draft to the workspace. It resumes the kept upload
+ * of the file, if any. Its progress and its outcome land on the file in the
+ * draft, also after the draft moved to another session. Detachment and a
+ * stop of the chat abort the request, and a reply that comes later changes
+ * nothing.
  */
 async function upload(
   context: ChatContext,
   draftId: string,
-  item: { id: string; file: File },
+  item: DraftFile,
   job: AbortController,
 ): Promise<void> {
   try {
     await runFileJob({
       id: item.id,
       file: item.file,
+      resume: keptUpload(item),
       live: () =>
         context.live() &&
         context.uploads.get(item.id) === job &&
         !job.signal.aborted &&
         fileOf(context, draftId, item.id) !== undefined,
       signal: job.signal,
+      delay: context.delay,
       change: (change) =>
         changeDraft(context, draftId, (draft) => ({
           ...draft,
@@ -62,18 +69,20 @@ async function upload(
  * size limit never uploads: its name goes to the notice of the draft, which
  * the next pick replaces. Each other file shows at once and uploads, one
  * after another. Returns their IDs immediately. Send waits until each is ready.
- * Folder names are refusal data only, including an intake with no files.
+ * The refusals of a drop go to the notices too, also with no files.
  */
 export function attachFiles(
   context: ChatContext,
   sessionId: string,
   files: readonly File[],
-  folders: readonly string[] = [],
+  refusals: IntakeRefusals = noRefusals,
 ): string[] {
-  if ((files.length === 0 && folders.length === 0) || !context.live()) return []
+  if (emptyIntake(files, refusals) || !context.live()) return []
   const draftId = draftIdOf(context, sessionId)
-  const { uploads, refused, refusedFolders } = splitPick(files, folders)
-  const added = uploads.map((file) => uploadingFile(context.newFileId(), file))
+  const { uploads, refused, refusedFolders } = splitPick(files, refusals)
+  const added = uploads.map((file) =>
+    uploadingFile(context.newFileId(), file, null),
+  )
   const queued = added.map((item) => reserveUpload(context, draftId, item))
   changeDraft(context, draftId, (draft) => ({
     ...draft,
@@ -104,8 +113,9 @@ export function resumeFiles(
 
 /**
  * Try again uploads the kept `File` of a failed file again, with the same
- * ID. It works for a failed upload and for a file that the server no longer
- * has, such as one of an expired draft.
+ * ID. It resumes the kept upload of the file, so only the parts with no
+ * receipt go. A file whose upload ended, or that the server no longer has,
+ * such as one of an expired draft, uploads as a new upload.
  */
 export async function retryFile(
   context: ChatContext,
@@ -119,7 +129,7 @@ export async function retryFile(
   changeDraft(context, draftId, (draft) => ({
     ...draft,
     files: changeFile(draft.files, fileId, () =>
-      uploadingFile(fileId, item.file),
+      uploadingFile(fileId, item.file, item.upload),
     ),
     sendId: null,
   }))

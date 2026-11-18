@@ -1,12 +1,17 @@
 {
   "order": [
+    "agents",
     "preferences",
     "shortcuts",
+    "stats",
     "setup",
     "connect-claude",
     "connect-codex",
     "codex-token",
     "share-not-saved",
-    "invites"
+    "own-endpoint",
+    "endpoint-models",
+    "invites",
+    "deleted-orgs"
   ]
 }

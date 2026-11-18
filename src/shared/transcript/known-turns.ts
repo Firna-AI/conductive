@@ -1,4 +1,5 @@
-import type { AgentChatEvent, RunnerEventRefused } from '../chat-events'
+import type { AgentChatEvent } from '../generated/AgentChatEvent'
+import type { RunnerEventRefused } from '../chat-events'
 import type { Transcript, TranscriptItem } from './transcript'
 
 /** A turn of the session that an accepted event named. */
@@ -111,6 +112,7 @@ export function turnOf(
     case 'lost':
       return item.marker.turnId
     case 'continued':
+    case 'repository-changed':
       return null
     default:
       return item.turnId

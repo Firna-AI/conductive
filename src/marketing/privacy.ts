@@ -17,14 +17,14 @@ import { privacyUsesSection } from './privacy-uses'
  * guidance that the README names. The facts come from the architecture
  * and the protocol docs. Both legal pages share the operator details and
  * contact address. The section on what the product uses, and why, is in
- * `privacy-uses.ts`. Its Keys and logins item defines the newer and older
- * cloud computers described in `privacy-recipients.ts`.
+ * `privacy-uses.ts`. The recipients of that data are in
+ * `privacy-recipients.ts`.
  */
 export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
   description: `The privacy notice of ${productName}.`,
   lead: text`This notice says which personal data ${productName} uses, why
-  it uses it, and who gets it. Effective date: 11 November 2026.`,
+  it uses it, and who gets it. Effective date: 18 November 2026.`,
   sections: [
     {
       title: 'Who is responsible',
@@ -71,11 +71,14 @@ export const privacyDocument: LegalDocument = {
             approve transfers to countries in the European Economic Area.
             Other provider operations can involve processing outside that
             area.`,
-          text`Anthropic and OpenAI process agent requests under the
-            agreement for the connected account that the session uses.
+          text`For a Claude subscription, ChatGPT plan, or provider API key, Anthropic or OpenAI processes agent requests under
+            the agreement for the connected account that the session uses.
             Their published privacy and data processing terms describe
             adequacy approvals, standard contractual clauses, and the UK
             Addendum where they apply.`,
+          text`For an own endpoint login, the chosen endpoint processes
+            agent requests where its owner runs it. Its terms and privacy
+            notice govern that processing.`,
         ),
         paragraph`For copies of the published safeguards named above,
           contact ${mailLink(legalAddress)}.`,
@@ -91,27 +94,53 @@ export const privacyDocument: LegalDocument = {
           Its disk keeps your code, your files, your agent sessions, and each
           secret value that a script or an agent wrote there. ${productName}
           then deletes the cloud computer, unless a member restores the
-          workspace before then.`,
-        paragraph`${productName} keeps each file that you send with a message
-          until it deletes the workspace of the message. It deletes an unsent
-          file 7 days after you upload it.`,
+          workspace before then. At the end of the 14 days, the workspace
+          leaves the Archived group and the command palette.`,
+        paragraph`Removing a workspace from the list keeps its chat history
+          until the org is deleted. A direct link or a chat link still opens
+          its read-only chat.`,
+        paragraph`${productName} keeps each attached file until the cloud
+          computer of its workspace has it and its first start succeeds.
+          It then deletes its own copy. The file stays in the cloud computer.
+          The message keeps the file's name, type, size, and path.
+          ${productName} deletes an unsent file 7 days after you upload it.
+          A large text that you paste into a message becomes such a file,
+          and it uploads before you send it.`,
         paragraph`An account that waits for app access stays until you ask
           for its deletion, as every other account does.`,
-        paragraph`Account records, the latest Terms acceptance, and
-          suspension records do not automatically expire when you stop
-          using ${productName}. Workspace chat history and Mac command records
-          stay while their org exists, including while a cloud computer is
-          stopped. When ${productName} passes on model requests and their
-          answers, it keeps no copy of them.`,
-        paragraph`A connected agent login stays until you remove or replace
-          it. Panel widths stay in your browser until you clear its saved
-          data. The providers above can keep their own records under their
+        paragraph`Account records, the latest Terms acceptance, the time of
+          your last activity, and suspension records do not automatically expire when you stop
+          using ${productName}. Workspace chat history, Mac command records,
+          and secret request records stay while their org exists, including
+          while a cloud computer is stopped or a workspace is removed. When
+          ${productName} passes on model requests and their answers, it keeps
+          no copy of them.`,
+        paragraph`A secret in the Secrets settings of an org stays until a
+          member who may delete it deletes it. A value that a member gives
+          an agent for 15 minutes stays for 15 minutes. A value for a
+          workspace stays until the workspace is archived.`,
+        paragraph`${productName} keeps each reveal record while its org
+          exists, also after the secret is deleted. Each record keeps the
+          secret ID and name, the admin, and the time. The records go when
+          ${productName} deletes the org.`,
+        paragraph`A personal agent login stays until you remove or replace
+          it. An org login stays until an admin removes or replaces it, or
+          the org is deleted. It stays when the admin who connected it
+          leaves. Panel sizes and the last workspace of each org stay in
+          your browser until you clear its saved data. The providers above
+          can keep their own records under their
           terms and privacy notices.`,
         paragraph`The team keeps each feedback email in its inbox while it
           helps to improve ${productName}. It deletes the email when it no
           longer helps, or when the sender asks. ${productName} keeps no copy
-          of feedback in its own storage. The app keeps an unsent feedback
-          draft only in the memory of its open tab.`,
+          of your feedback message or screenshots in its own storage. The
+          app keeps an unsent feedback draft only in the memory of its open
+          tab.`,
+        paragraph`Feedback send records normally stay for about 24 hours.
+          A late retry whose delivery remains unconfirmed can extend this
+          to about 25 hours. Scheduled cleanup removes them after these
+          periods. Cleanup delays can keep them longer. Account deletion
+          also deletes these records.`,
         paragraph`To request deletion of your personal data, write to
           ${mailLink(legalAddress)}. Deletion rights depend on applicable
           law and can have exceptions.`,
@@ -121,19 +150,36 @@ export const privacyDocument: LegalDocument = {
       title: 'Security',
       blocks: [
         list(
-          text`${productName} stores each env var value and agent login
-            encrypted.`,
+          text`${productName} stores each env var value, the value of each
+            secret in the Secrets settings, and each personal or org agent
+            login encrypted. An own endpoint login includes its address and
+            key. Only its host, with any non-default port, stays in plain text.`,
           text`It does not send the keys of its cloud computer providers to
             your browser or into a cloud computer.`,
           text`The settings never return a stored env var value or agent login
-            to your browser.`,
+            to your browser. For an own endpoint login, your browser gets
+            only its host and any non-default port, without the full address
+            or key.`,
+          text`An admin of an active org can reveal the value of one secret in its
+            Secrets settings at a time, also of a secret that another member
+            added. ${productName} records each reveal with the admin and the
+            time, and every member sees the last reveal of the current
+            value. A member who is not an admin never gets a secret value back.`,
+          text`An agent can ask to run one command with a secret in the
+            Secrets settings. The command gets the value. The agent gets
+            the secret's name and environment variable name, without the
+            value. ${productName} hides each exact copy of the value in the
+            output of the command and in the text of the chat. It does not
+            hide a changed or encoded value, or a value in a picture that an
+            agent answer shows.`,
           text`An env var is secret until an admin clears its mark. Before
-            ${productName} puts agent output in the chat history or on a
-            screen, it hides each exact copy of a secret value in it. It also
-            hides such a copy in each start log that it shows, and in the
-            names and folders of the servers that it lists. It does not hide
-            a changed or encoded value. A change of the mark applies at
-            the next start of a cloud computer.`,
+            ${productName} puts the text of agent output in the chat history
+            or on a screen, it hides each exact copy of a secret value in it.
+            It also hides such a copy in each start log that it shows, and in
+            the names and folders of the servers that it lists. It does not
+            hide a changed or encoded value, or a value in a picture that an
+            agent answer shows. A change of the mark applies at the next start
+            of a cloud computer.`,
           text`${productName} keeps the real path of each file, because it
             needs that path to open the file. It also keeps the real name of
             the default branch of each repository, and of the base branch of
@@ -147,6 +193,10 @@ export const privacyDocument: LegalDocument = {
             env var value in the cloud computers. Secret values can also stay
             on the disk of a cloud computer, for example in its agent sessions
             and its agent output.`,
+          text`While a command runs with a secret from the Secrets settings,
+            its value is in the cloud computer. Programs there, and each
+            member with a terminal, can read it then. The command can also
+            write it to a file on the disk of the cloud computer.`,
         ),
       ],
     },

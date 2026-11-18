@@ -1,5 +1,7 @@
 import { join } from 'node:path'
 
+import { buildWorkerLibrary } from './test-bundles'
+
 declare module 'vitest' {
   interface ProvidedContext {
     nativeWorkspaceBundle?: string
@@ -17,29 +19,10 @@ export async function nativeWorkspaceBundle(): Promise<string> {
   return (standaloneBundle ??= buildNativeWorkspaceBundle())
 }
 
-export async function buildNativeWorkspaceBundle(): Promise<string> {
-  const { build } = await import('vite')
-  const bundle = await build({
-    configFile: false,
-    logLevel: 'silent',
-    build: {
-      write: false,
-      minify: false,
-      target: 'es2022',
-      lib: {
-        entry: join(import.meta.dirname, 'native-workspace-entry.ts'),
-        formats: ['es'],
-      },
-      rolldownOptions: { external: ['cloudflare:workers'] },
-    },
-  })
-  const outputs = (Array.isArray(bundle) ? bundle : [bundle]).flatMap(
-    (result) => ('output' in result ? result.output : []),
+// The global setup builds it again for each watch rerun, so it skips the
+// cache of `workerLibraryBundle`, which lives for the whole process.
+export function buildNativeWorkspaceBundle(): Promise<string> {
+  return buildWorkerLibrary(
+    join(import.meta.dirname, 'native-workspace-entry.ts'),
   )
-  const entry = outputs.find(
-    (output) => output.type === 'chunk' && output.isEntry,
-  )
-  if (!entry || entry.type !== 'chunk')
-    throw new Error('The native workspace bundle is missing.')
-  return entry.code
 }

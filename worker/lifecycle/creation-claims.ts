@@ -1,8 +1,9 @@
+import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
 import { requireActiveOrg } from '../data/user-access'
-import type { AgentChoice } from '../../src/shared/agents'
 import type { User } from '../../src/shared/api'
 import type { WorkspaceStartJob } from './start-types'
 import { HttpError } from '../http'
+import { readCreationCapabilities } from '../secrets/capabilities-input'
 import { leaseStatement, planStatement } from './creation-plan-statements'
 import { readRepositories } from './settings-data'
 import { capturedRepositoryLocations } from './repository-locations'
@@ -98,9 +99,11 @@ export async function claimCreation(
 }
 
 interface PlanRow {
+  capabilitiesJson: string | null
   repositoryId: string
   ownerUserId: string
   sectionId: string | null
+  parentId: string | null
   sessionId: string
   turnId: string
   city: string
@@ -121,6 +124,7 @@ interface PlanRow {
   agent: AgentChoice['agent']
   model: string
   effort: AgentChoice['effort']
+  fast: number
   attachmentIds: string
   createdAt: number
 }
@@ -131,21 +135,30 @@ export async function recordedCreationJob(
   id: string,
   text: string,
 ): Promise<WorkspaceStartJob | null> {
-  const plan = await db
+  const reading = db
     .prepare(
       `SELECT p.repository_id AS repositoryId, p.owner_user_id AS ownerUserId,
-    p.section_id AS sectionId, p.session_id AS sessionId, p.turn_id AS turnId, p.city, p.name, p.first_session_title AS firstSessionTitle, p.branch,
+    p.section_id AS sectionId, p.parent_workspace_id AS parentId, p.session_id AS sessionId, p.turn_id AS turnId, p.city, p.name, p.first_session_title AS firstSessionTitle, p.branch,
     p.start_attempt AS attempt, p.startup_script AS startupScript, p.environment_ciphertext AS environmentCiphertext,
     p.image_name AS imageName, p.provider_account AS providerAccount,
-    p.default_branch AS defaultBranch, p.base_branch AS baseBranch, p.start_sha AS startSha, p.agent, p.model, p.effort,
+    p.default_branch AS defaultBranch, p.base_branch AS baseBranch, p.start_sha AS startSha, p.agent, p.model, p.effort, p.fast,
     p.repositories_json AS repositoriesJson, p.repository_locations_json AS repositoryLocationsJson, p.message_text AS messageText,
-    p.attachment_ids_json AS attachmentIds, a.created_at AS createdAt
+    p.attachment_ids_json AS attachmentIds, a.created_at AS createdAt, p.capabilities_json AS capabilitiesJson
     FROM workspace_creation_plans p JOIN workspace_creation_attempts a ON a.workspace_id = p.workspace_id
     WHERE p.workspace_id = ? AND a.org_id = ? AND a.sender_user_id = ? AND a.first_message_id = ?`,
     )
     .bind(id, key.orgId, key.senderUserId, key.messageId)
     .first<PlanRow>()
+  // The sender loads with the plan, so the create waits for one trip.
+  const [plan, sender] = await Promise.all([
+    reading,
+    findCreationUser(db, key.senderUserId),
+  ])
   if (!plan) return null
+  const owner =
+    plan.ownerUserId === key.senderUserId
+      ? sender
+      : await findCreationUser(db, plan.ownerUserId)
   const raw: unknown = JSON.parse(plan.attachmentIds)
   if (!Array.isArray(raw))
     throw new Error('Invalid creation attachment metadata')
@@ -178,10 +191,16 @@ export async function recordedCreationJob(
     stdoutOffset: 0,
     stderrOffset: 0,
     creation: {
-      user: await creationUser(db, plan.ownerUserId),
-      sender: await creationUser(db, key.senderUserId),
+      capabilities: readCreationCapabilities(
+        plan.capabilitiesJson === null
+          ? undefined
+          : JSON.parse(plan.capabilitiesJson),
+      ),
+      user: availableUser(owner),
+      sender: availableUser(sender),
       repositoryId: plan.repositoryId,
       sectionId: plan.sectionId ?? undefined,
+      parentId: plan.parentId ?? undefined,
       sessionId: plan.sessionId,
       firstSessionTitle: plan.firstSessionTitle ?? undefined,
       city: plan.city,
@@ -192,19 +211,27 @@ export async function recordedCreationJob(
         id: key.messageId,
         text: plan.messageText ?? text,
         attachmentIds,
-        choice: { agent: plan.agent, model: plan.model, effort: plan.effort },
+        choice: {
+          agent: plan.agent,
+          model: plan.model,
+          effort: plan.effort,
+          fast: plan.fast === 1,
+        },
       },
     },
   }
 }
 
-async function creationUser(db: D1Database, id: string): Promise<User> {
-  const user = await db
+function findCreationUser(db: D1Database, id: string): Promise<User | null> {
+  return db
     .prepare(
       'SELECT id, github_id AS githubId, github_login AS githubLogin, display_name AS displayName, avatar_url AS avatarUrl FROM users WHERE id = ?',
     )
     .bind(id)
     .first<User>()
+}
+
+function availableUser(user: User | null): User {
   if (!user)
     throw new HttpError(
       404,

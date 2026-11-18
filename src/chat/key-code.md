@@ -10,11 +10,15 @@ is relative to `src/chat/`, the folder of this guide.
   through `useWorkspaceStore`.
 - `state/controller.ts`: `ChatController`, the public boundary of the chat
   state and its actions, with `show` and `hide` for a kept chat.
+  `state/chat-runs.ts`: `ChatRuns`, which the controller extends: the
+  store of the snapshot, the context of each run, and `start`, `stop`,
+  `show`, and `hide`.
 - `state/controller-context.ts`: the context of one controller run. It
   holds the local IDs of drafts and files, the upload generations, the
   devices, and the event stream. Each draft ID holds the run.
 - `state/tab-order.ts`: the pure row order, the places of the open
-  sessions, and the move before or after a neighbour.
+  sessions, and the move before or after a neighbour, which keeps a
+  temporary tab whose place it changes.
 - `components/SessionTabs.tsx`: the tab row, with the session tabs of
   `components/SessionTab.tsx` and the tabs of `renderTab`.
   `components/tab-row.ts`: `RenderTab`, `TabDraw`, and `rowOf`, the tabs of
@@ -25,28 +29,48 @@ is relative to `src/chat/`, the folder of this guide.
   move, and the status. `components/TabDragParts.tsx`: the drop line and
   the lifted tab.
 - `components/useTabMenu.ts` and `components/TabMenu.tsx`: the tab menu,
-  its items with the mark of each item that changes the workspace, the
-  items of a read-only row, the long press that opens that row's menu, and
-  its drawing at a point or in a sheet.
-  `components/useTabMoves.ts`: the moves of the row, the focus after a move
-  from the menu, and the words of the status.
+  the long press that opens the menu of a read-only row, and its drawing
+  at a point or in a sheet. `components/tab-menu-items.ts`: the groups of
+  its items, with Copy path of the host, the mark of each item that
+  changes the workspace, and the items of a read-only row.
+  `components/useTabMoves.ts`: the moves of the row and Keep open, the
+  focus after a move or a keep from the menu, and the words of the status.
 - `components/TranscriptCopy.tsx`: `useTranscriptCopy`, the copy of a
   transcript from the tab menu with the toast of its result, and
   `ChatToasts`, the toasts of the host, else the chat's own.
+  `components/session-link-copy.ts`: `useSessionLinkCopy`, Copy link of
+  the tab menu, which copies the link of a session with the origin of the
+  link of the workspace, and the toast of its result.
 - `components/row-scroll.ts`: the scroll of a full row, its fades, and the
   scroll of a drag near an end. `components/row-reveal.ts`: the place of a
   tab in the row, and the scroll that brings tabs into view.
   `components/tab-nodes.ts`: the elements of the tabs, which the drag, the
   scroll, and the menu share.
 - `components/SessionChat.tsx`: the chat of the open session, and
-  `ChatHost`, the start steps and the sandbox bar that the app can draw.
+  `ChatHost`, the start steps, the sandbox bar, and the tools of the
+  composer that the app can give.
 - `components/Composer.tsx`: the message box and its controls, with the
   steering prompt that [Messages](../../docs/protocol/messages-and-attachments.md#messages)
   states. It gives its field the `files` of the draft, and it holds the
   handle of the field. So a pick puts the chips of its files at the caret.
   Its whole box takes a drop of files. `components/SessionChat.tsx` gives
-  the folder names of a drop to `controller.attachFiles`, and keeps one
+  the zips and the refused folders of a drop to `controller.attachFiles`,
+  and keeps one
   source for each `Draft.id`, in `useDraftFiles`.
+- `components/ComposerTools.tsx`: `ComposerTool`, a tool of the host, such
+  as Capabilities, and `ToolButton`, its icon with its label as a native
+  tooltip, whose control opens above the icon on a computer. A second
+  press, a press outside, Escape, and the key of the command palette close
+  it.
+- `components/ComposerMenu.tsx`: `ComposerStart`, the start of the bar of
+  every composer. A computer shows the attach button and the icon of each
+  tool. A phone shows one + button, "More options", whose menu holds
+  Attach files and a row for each tool. A tool then opens its control as a
+  sheet, and the focus goes back to the + button when the sheet closes
+  (secrets decision 16 G).
+- `components/ComposerButtons.tsx`: `StopButton`, Stop with its word and
+  its key on a computer, and only its icon on a phone, where its spoken
+  name stays "Stop" (secrets decision 16 G).
 - `components/composer-drop.ts`: `useComposerDrop`, the drop of files on a
   message box, which the chat and both New workspace composers share.
   [The message field](message-field.md) gives its rules.
@@ -62,27 +86,43 @@ is relative to `src/chat/`, the folder of this guide.
 - `links/`: `workspace-links.ts`, the link syntax, the reader of the
   links of a message field, and `linkTarget`, with the session of a
   session link. Its `sessionTarget` gives the same target for a session
-  that the chat names by its IDs. `chat-parts.ts` is the one tokenizer of
-  sent messages and answers. In it, each mention of a file of the message is an
+  that the chat names by its IDs. `chat-parts.ts` is the one reading of
+  sent messages and answers, over the tokens of `chat-tokens.ts`. In it,
+  each mention of a file of the message is an
   `AttachmentPart`, also when the tree holds that path, and also without a
   tree. Its `filesWithoutChip` gives the files of a message that no part
-  shows as a chip. `LinksContext.tsx` gives the workspaces that chips find
+  shows as a chip. `link-parts.ts` gives the `LinkPart` of a web link with
+  its words, and the `CodePart` of code that holds one address alone.
+  `LinksContext.tsx` gives the workspaces that chips find
   the open of a chip, and the origin of the chat's workspace link.
   `LinkedText.tsx` holds `useChatParts` and
   `ChatText`. `useChatParts` reads the parts of a text with the workspaces
-  and the tree of the chat, and the files of a sent message. `ChatText`
-  draws the parts with their workspace, session, and file chips, and each
-  `AttachmentPart` as the mockups' `SentFileChip`.
+  and the tree of the chat, the files of a sent message, and the web links
+  of `useTextLinks` in `../shell/ui/text-links.tsx`. `ChatText`
+  draws the parts with their workspace and session chips, and their
+  links through `WebLinkText.tsx`. `FileChips.tsx` draws the file chips,
+  and each `AttachmentPart` as the mockups' `SentFileChip`.
   `SessionLinkText` draws a session that the chat names by its IDs, such
   as the session whose agent stopped a turn, with the same session chip.
   [Chips of attached files](../../docs/protocol/file-mentions.md#chips-of-attached-files)
   states the rules of that chip. The chip opens the file tab of its copy
   through `openFile` and `href` of `ChatMentions`. It opens nothing when
   `ChatText` gets no `opens`, or in a chat without `ChatMentions`.
-  `LinkedText` reads and draws a text in one step. `mention-copy.ts` gives
-  the copy of chat text with the mention of each chip that has a
-  `data-mention` mark: each file chip and each `SentFileChip`. It leaves
-  out text that the browser leaves out of a copy.
+  `AnswerText` reads and draws the text of an answer in one step. With
+  `pictures`, the ID of the agent message, it draws each part of a
+  Markdown image of a picture file with `FilePicture.tsx`. That part
+  draws the mockups' `AnswerPicture`, and `picture-read.ts` reads and
+  decodes its file, as
+  [Pictures in answers](agent-text.md#pictures-in-answers) says.
+  `mention-copy.ts` makes
+  the browser's own copy of chat text give the text of each chip that has
+  a `data-mention` mark: each file chip, each `SentFileChip`, and each
+  picture of an answer, with the box of its label. Each such
+  chip holds its copy text in a `ChipCopyText`, which shows only while the
+  root of the page has `COPYING_CLASS`. The style sheet of `ChipCopyText`
+  gives that class, so the class name has one source. The copy sets the class, moves an
+  edge of the selection inside a chip to the edge of the chip, and the
+  next animation frame removes the class before the page paints.
   `chipOf` in `LinksContext.tsx` gives what a chip shows of its workspace.
 - `links/session-links.ts`: `useLinkedSession`, the session that a chip
   finds: a live session of the chat's workspace, or one of the one read of
@@ -92,6 +132,9 @@ is relative to `src/chat/`, the folder of this guide.
 - `mentions/`: `mention-rows.ts` gives the entries that the list offers and
   their order. `MentionsContext.tsx` gives the files that the chat gets and
   the tree that the list and the chips find, with one value for each tree.
+  Its `useFilesMentionTree` gives that tree to a part outside the chat,
+  such as Add to chat of the Files panel, and `MentionTarget` names a file
+  or a folder of a mention.
   `MentionIcon.tsx` gives the icon of All files for an entry.
   [`mention-text.ts`](../shared/mention-text.ts) in the shared contracts
   owns the text of a mention, which the chat shares with the Worker.
@@ -110,6 +153,8 @@ is relative to `src/chat/`, the folder of this guide.
   `holderOf` finds the session that holds a draft now. `afterSend`,
   `keepFiles`, and `endDraftFiles` take files off a draft with their
   marks, as [Attached files of a draft](draft-files.md) says.
+  `withEndedDraftFiles` does it for each draft when `ChatController.stop`
+  runs.
 - `state/message-actions.ts`: `setDraftText`, which makes the files of a
   draft follow the marks of each new text, and `sendDraft`, the send of a
   draft. It also holds Try again of a failed turn, Stop, and Resume.
@@ -118,6 +163,13 @@ is relative to `src/chat/`, the folder of this guide.
 - `state/prompt-actions.ts`: `sendPrompt`, a fixed prompt to the session of
   the chat, which changes no draft, as
   [Fixed prompts](loads-and-sends.md#fixed-prompts) says.
+- `state/mention-actions.ts`: `addToChat`, which shows the session of the
+  chat, or starts a new one, and asks its message field for the chip of a
+  file or a folder, and `takeMention`, which ends the request, as
+  [Add to chat](loads-and-sends.md#add-to-chat) says.
+  `components/composer-requests.ts`: the requests that parts outside the
+  composer make of its field, `useRequestedFocus` and
+  `useRequestedMention`, with `ComposerFocus`.
 - `state/attachment-actions.ts`: attach and Try again for the files of a
   draft. `attachFiles` gives the IDs of a pick at once, and queues its
   uploads. It puts the names that it refuses in the draft, as
@@ -125,7 +177,8 @@ is relative to `src/chat/`, the folder of this guide.
   says. `resumeFiles` starts again the uploads that a new text brings
   back, such as after undo, and `retryFile` is Try again. Each upload goes
   through the app's `uploadAttachment`, and it ends on its draft after a
-  move. It stops when its chip leaves the text, and when the chat stops.
+  move. A new try resumes the kept upload of the file. It stops when its
+  chip leaves the text, and when the chat stops.
 - `state/draft-file-source.ts`: `draftFileSource`, the `FieldFiles` of one
   draft identity, behind `ChatController.draftFiles`. It reads the session
   that holds the draft at each call, and gives its attached and detached
@@ -133,8 +186,8 @@ is relative to `src/chat/`, the folder of this guide.
 - `components/AttachmentChips.tsx`: `SentFiles`, `OversizeNotice`, and
   `FolderNotice`. `SentFiles` lists under a sent message the files without
   a chip in its text. `OversizeNotice` is the notice of the files of a pick
-  or a drop over the size limit. `FolderNotice` is the notice of the one
-  folder that `noticedFolder` gives. Both use the words of the mockups'
+  or a drop over the size limit, also a zip of a folder. `FolderNotice` is
+  the notice of the one unreadable folder that `noticedFolder` gives. Both use the words of the mockups'
   `attachmentCopy.ts`. A file of a draft is a chip in the message field,
   which `components/chip-field/attached-file-chip.tsx` draws.
 - `state/archive-view.ts`: the tabs and the session history of a
@@ -149,7 +202,11 @@ is relative to `src/chat/`, the folder of this guide.
 - `state/workspace-records.ts`: the order of the workspace record and its
   start steps and saved error by event number.
 - `state/session-login.ts`: whose login a message uses, from the session
-  record and the reader, and the login label in the composer.
+  record, the reader, and the default logins of the account: the login of
+  the session, a member's or the org's, or the login of a new linked
+  session. It also gives the login label in the composer, and the models
+  that the picker of the composer offers. `state/blockers.ts` gives the
+  Connect notice when no login serves the message.
 - `state/linked-replies.ts`: the message and the focus of a reply that names
   a linked session.
 - `components/SourceLine.tsx`: the line that links a linked session to its
@@ -161,7 +218,11 @@ is relative to `src/chat/`, the folder of this guide.
   without one, or "Stopped from" and the chip of the stopping session,
   then the notes of the turn. `components/TurnEnd.tsx` draws the
   end of a finished turn: the line of its end reason, from the mockups'
-  `EndReasonLine.tsx`, above its duration and its files. `UserBubble` reads
+  `EndReasonLine.tsx`, above its duration and its files, and the note of a
+  fast turn at standard speed, from the mockups' `StandardSpeedNote.tsx`,
+  beside its duration. The mockups' `TurnFileList.tsx` limits the files
+  that show before its Show more button, with the app's chips. `UserBubble`
+  reads
   the parts of a sent message once, with `useChatParts`. It draws them with
   `ChatText`, and it lists under the message only the files that no part
   shows as a chip. It sets `opens` only when the message state is `sent`.
@@ -174,14 +235,20 @@ is relative to `src/chat/`, the folder of this guide.
   with the text that an underline turns into a heading.
   `components/AgentText.tsx`: `AgentText`, which draws them, with the
   heading style that the file preview shares, and `AgentBlocks`, which the
-  message line shares. Their text draws through `LinkedText` of `links/`.
+  message line shares. Their text draws through `AnswerText` of `links/`.
 - `components/ToolGroup.tsx`: a run of tool calls, with `FoldLine` and
   `CallLine`, which the work fold shares.
 - `components/reading-place.ts`: the keeper of the reader's place, which
   `ChatPane` gives through `ChatKeeper`. While the reader is scrolled up, it
   keeps the top row in view in place for every change of size of the
   transcript. When that row folds away, the fold that took it keeps its
-  place.
+  place. A new message that the user sends from the chat, which shows as a
+  pending message of the session, takes the chat to its bottom. At each
+  note it writes the place of the shown session, and a new keeper shows the
+  place that the session kept.
+- `components/chat-place.ts`: the place of a session tab, at the bottom or
+  at a row by its `data-row` key, which `TranscriptView` gives each row.
+  `ChatController.places` keeps the place of each session tab.
 - `components/useFold.ts`: `useFold` opens and closes a fold on a click on
   its line, and gives the line to the keeper, also at the bottom of the
   chat, so the line keeps its place.
@@ -197,14 +264,24 @@ is relative to `src/chat/`, the folder of this guide.
 - `api/client.ts` and `api/read-*.ts`: the chat routes, through the shared
   route builders and the app's `ApiClient`, and the readers of their
   responses. `api/read-chat.ts` copies a known `endReason` of a turn end,
-  and drops an unknown value. `api/read-changed-file.ts` reads the changed
+  and drops an unknown value. It keeps a speed that `readTurnSpeed` reads,
+  and drops any other value. `api/read-changed-file.ts` reads the changed
   files of a turn end, with their real paths and display labels.
+  `api/read-view.ts` reads the saved view of the view route, with each
+  Preview tab at its place in the row and the shown terminal.
 - `components/`: the tabs, the chat, the composer, the model picker, and the
   overlays. `ui/`: interactive buttons, menus, sheets, and dialogs.
+  `ui/near-view.ts`: `useNearView`, which says when an element comes near
+  the view of the chat, and `NearViewRoot`, the scroll box that `ChatPane`
+  gives as the view. The pictures of answers start their reads with it.
 - `components/send-key.ts`: `useSendKey`, the send key that the composer
   shares with the page and the dialog of New workspace in the app shell.
 - `device/`: the Mac commands. Their [README](device/README.md) names
   their key code.
+- `secrets/`: the secret requests, their answers, the runs, and the line of
+  a late answer. Their [README](secrets/README.md) names their key code.
+- `components/WaitingRequests.tsx`: the region just above the composer of
+  the Mac commands and the secret requests that wait, the oldest first.
 - `dev/`: the development page, its fake writes, its scripted agent, its
   Mac, the `loss` scenario in `dev/dev-loss.ts`, and the `starter` option
   in `dev/dev-logins.ts`. `dev/dev-answers.ts` holds the plans and the

@@ -46,6 +46,17 @@ export class PrivatePorts {
     return this.resolve(target, true, userId)
   }
 
+  /** True when the relay of this target resolved before, so `get` makes no provider call. */
+  isReady(target: WorkspaceTarget): boolean {
+    const existing = this.cache.get(this.key(target))
+    return (
+      existing !== undefined &&
+      !existing.pending &&
+      existing.sandboxId === target.sandboxId &&
+      existing.providerAccount === target.providerAccount
+    )
+  }
+
   get(target: WorkspaceTarget): Promise<PrivatePort> {
     return this.resolve(target)
   }

@@ -131,6 +131,7 @@ describe('a read-only chat', () => {
         keyReachesBrowser: false,
         menus: 1,
         items: [
+          { name: 'Copy link', off: false },
           { name: 'Copy concise transcript', off: false },
           { name: 'Copy full transcript', off: false },
         ],
@@ -254,7 +255,7 @@ describe('a read-only chat', () => {
       close: false,
       tab: true,
       composer: false,
-      overlay: { kind: 'close', sessionId: FAKE_IDS.session },
+      overlay: { kind: 'close', sessionIds: [FAKE_IDS.session] },
       notice: null,
     })
     await press(byRole('button', 'Session history'))

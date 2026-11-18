@@ -1,4 +1,4 @@
-import type { RoutineRunTrigger } from '../../src/shared/routines'
+import type { AutomationRunTrigger } from '../../src/shared/automations'
 import { HttpError, isRecord } from '../http'
 
 export interface GitHubPullRequestEvent {
@@ -10,7 +10,7 @@ export interface GitHubPullRequestEvent {
   senderId: number
   authorLogin?: string
   senderLogin?: string
-  trigger: Extract<RoutineRunTrigger, { kind: 'pull-request' }>
+  trigger: Extract<AutomationRunTrigger, { kind: 'pull-request' }>
 }
 
 export interface WebhookRoute {

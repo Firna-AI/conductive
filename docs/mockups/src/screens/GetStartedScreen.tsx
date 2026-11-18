@@ -5,10 +5,10 @@ import { ScreenLink } from '../components/common/ScreenLink'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import type { RailState } from '../components/layout/OrgRail'
 import { Page } from '../components/layout/Page'
+import { DeletedOrgsSection } from '../components/settings/DeletedOrgsSection'
 import { people } from '../fixtures/members'
 import { orgs } from '../fixtures/orgs'
 import { type FirstBuildState, firstBuildStates } from '../fixtures/computer'
-import { newOrg } from '../fixtures/repositories'
 import { paths } from '../paths'
 import { getStartedCopy as copy } from './getStartedCopy'
 import {
@@ -19,13 +19,15 @@ import {
   InstallStep,
   isPast,
   OrgStep,
+  setupOrgOf,
+  type GetStartedPerson,
 } from './getStartedSteps'
 import styles from './GetStartedScreen.module.css'
 
 export const getStartedSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['step', 'agent', 'person', 'firstBuild'],
+  required: ['step', 'agent', 'person', 'firstBuild', 'deletedOrgs'],
   properties: {
     /**
      * The next of the first two steps: install the GitHub App, or create
@@ -33,8 +35,10 @@ export const getStartedSchema = {
      */
     step: { enum: getStartedSteps },
     /**
-     * Whether an agent is connected. A login belongs to the person, so it
-     * stays after a leave of the last org.
+     * Whether an agent is connected. A personal login belongs to the
+     * person, so it stays after a leave of the last org. `org` has no login
+     * of the person, and the org login of their org for Claude, so the step
+     * is done (decision 4 of the org logins plan).
      */
     agent: { enum: agentStates },
     /** The person signed in, with the GitHub App installation that they reach. */
@@ -45,6 +49,11 @@ export const getStartedSchema = {
      * says that the org is ready only after it succeeded.
      */
     firstBuild: { enum: firstBuildStates },
+    /**
+     * The orgs of the person that an admin deleted: none, so the page shows
+     * no Deleted orgs list, or Acme Labs, which the person can restore.
+     */
+    deletedOrgs: { enum: ['none', 'restorable'] },
   },
 } as const
 
@@ -59,6 +68,7 @@ export const getStartedFirstRun: GetStartedState = {
   agent: 'none',
   person: 'cal',
   firstBuild: 'running',
+  deletedOrgs: 'none',
 }
 
 /** The words of the finish in each state of the first build. */
@@ -75,14 +85,15 @@ const finishes: Readonly<Record<FirstBuildState, (org: string) => string>> = {
  * ready. After a failed build or with no build, the action of the org step
  * is the main action.
  */
-function Finish(props: { build: FirstBuildState }) {
+function Finish(props: { build: FirstBuildState; person: GetStartedPerson }) {
   const fix = props.build === 'failed' || props.build === 'none'
+  const org = setupOrgOf[props.person]
   return (
     <div className={styles.finish}>
-      <p className={styles.finishText}>{finishes[props.build](newOrg.name)}</p>
-      <ScreenLink asChild to={paths.newOrg}>
+      <p className={styles.finishText}>{finishes[props.build](org.name)}</p>
+      <ScreenLink asChild to={org.list}>
         <ActionButton icon={ArrowRight} tone={fix ? 'secondary' : 'primary'}>
-          {copy.open(newOrg.name)}
+          {copy.open(org.name)}
         </ActionButton>
       </ScreenLink>
     </div>
@@ -93,7 +104,9 @@ function Finish(props: { build: FirstBuildState }) {
  * The first run after the GitHub sign-in, and the page of a person with no
  * org. The person installs the GitHub App on the account that owns their
  * repositories, creates an org, and connects Claude or Codex. The rail shows
- * the org once it exists.
+ * the org once it exists. While the person has a deleted org, the Deleted
+ * orgs list with Restore comes before the steps, because a phone has no
+ * other way from this page to the Account page.
  */
 export function GetStartedScreen(props: {
   state: GetStartedState
@@ -108,25 +121,35 @@ export function GetStartedScreen(props: {
       viewport={props.viewport}
     >
       <p className={styles.intro}>{copy.intro(person.name)}</p>
+      <DeletedOrgsSection
+        restoredTo={paths.shell}
+        state={props.state.deletedOrgs}
+      />
       <ol className={styles.steps}>
         <li>
           <InstallStep person={props.state.person} step={step} />
         </li>
         <li>
-          <OrgStep build={firstBuild} step={step} />
+          <OrgStep build={firstBuild} person={props.state.person} step={step} />
         </li>
         <li>
-          <AgentStep agent={agent} build={firstBuild} step={step} />
+          <AgentStep
+            agent={agent}
+            build={firstBuild}
+            person={props.state.person}
+            step={step}
+          />
         </li>
       </ol>
-      {step === 'done' && agent === 'connected' ? (
-        <Finish build={firstBuild} />
+      {step === 'done' && agent !== 'none' ? (
+        <Finish build={firstBuild} person={props.state.person} />
       ) : null}
     </Page>
   )
   if (props.viewport === 'mobile') return <MobileFrame>{page}</MobileFrame>
+  const setupOrg = orgs[setupOrgOf[props.state.person].key]
   const rail: RailState = {
-    orgs: isPast(step, 'org') ? [orgs.firna] : [],
+    orgs: isPast(step, 'org') ? [setupOrg] : [],
     current: undefined,
     firstRun: step === 'install',
     person,

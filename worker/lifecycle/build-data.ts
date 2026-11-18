@@ -130,18 +130,26 @@ export async function assignBuildSandbox(
     .run()
 }
 
+export function buildSnapshotStatement(
+  db: D1Database,
+  buildId: string,
+  snapshotName: string,
+  providerAccount: string,
+): D1PreparedStatement {
+  return db
+    .prepare(
+      'UPDATE image_builds SET snapshot_name = ?, provider_account = ? WHERE id = ?',
+    )
+    .bind(snapshotName, providerAccount, buildId)
+}
+
 export async function assignBuildSnapshot(
   db: D1Database,
   buildId: string,
   snapshotName: string,
   providerAccount: string,
 ): Promise<void> {
-  await db
-    .prepare(
-      'UPDATE image_builds SET snapshot_name = ?, provider_account = ? WHERE id = ?',
-    )
-    .bind(snapshotName, providerAccount, buildId)
-    .run()
+  await buildSnapshotStatement(db, buildId, snapshotName, providerAccount).run()
 }
 
 export async function saveBuildOutput(

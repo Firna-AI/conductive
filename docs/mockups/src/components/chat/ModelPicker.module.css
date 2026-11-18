@@ -1,7 +1,7 @@
 /*
  * In a narrow bar, the picker gives up width with its neighbours. Its text
- * then gives way with an ellipsis: the effort first, then the model. The
- * chevron stays.
+ * then gives way with an ellipsis: the effort and Fast first, then the
+ * model. The chevron stays.
  */
 .anchor {
   display: flex;
@@ -25,16 +25,24 @@
   font-weight: 500;
 }
 
-.effort {
-  flex-shrink: 1000;
+/*
+ * Fast follows the effort while fast mode is on, in the same style. Their
+ * shrink factor is so large that the model takes no share of the shrink
+ * while they still have width, so the model never ends with an ellipsis
+ * before they are gone.
+ */
+.effort,
+.fast {
+  flex-shrink: 100000;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   color: var(--ui-muted);
 }
 
-/* The space before the effort is part of it, so it goes with the effort. */
-.effort::before {
+/* The space before each part is part of it, so it goes with that part. */
+.effort::before,
+.fast::before {
   content: '';
   padding-left: 6px;
 }

@@ -33,27 +33,44 @@ state the requirements.
 - After a text-only turn, each unanswered message moves to a new turn. So
   one message can come first in a `message` command, then in a new `turn`
   command with a new command ID.
-- A `turn` command carries a credential of the session starter, whoever
-  sent the message. Its shape follows the protocol version of the
-  connection's `hello`:
-  - Version 1: each `turn` and `message` command carries the real agent
-    login. The runner keeps the login of the first command of a turn for
-    the whole turn.
-  - Version 2: the `turn` command carries a turn token, with the agent and
-    the login kind. A `message` command carries no credential. The
-    workspace makes the token after it stores the turn as running.
+- The workspace accepts only a `hello` with `RUNNER_PROTOCOL_VERSION`, as
+  [Runner versions](../../../../docs/protocol/version-pins.md#runner-versions)
+  says. Another version gets no `welcome` and no command.
+- A `turn` command carries a turn token for the login of the session
+  starter, whoever sent the message, with the agent and the login kind. A
+  `message` command carries no credential. The workspace makes the token
+  after it stores the turn as running. No command carries a real login.
 - `hello.loginKinds` advertises supported logins. An absent list keeps
-  Claude tokens, Claude API keys, and Codex API keys. Version 2 requires
-  an advertised Codex `token` kind for ChatGPT. Version 1 cannot add it.
+  Claude tokens, Claude API keys, and Codex API keys. ChatGPT requires an
+  advertised Codex `token` kind.
 - The Worker checks the login kind before each turn or later message.
   An unsupported login gets no command. Its turn ends once with recovery
-  steps. The version 1 wire login type cannot hold a ChatGPT sign-in.
+  steps.
 - Each `turn` and `message` command also carries the current workspace
   branch and target branch in `branches`, as
   [History and event order](../../history.md) says.
+- `hello.repositoryFolder` names the folder of a runner that accepts
+  `repository.move`. An absent or malformed folder keeps the runner from
+  each move. Such a runner gets each command as before.
+- At each `hello` of such a runner, the Worker compares its folder with the
+  record folder: the folder of the workspace's repository in the stored
+  folders of the workspace. When the runner is in the stored folder of
+  another repository, as after a repository change, the Worker sends one
+  `repository.move` with the record folder and the branches right after the
+  `welcome`, also before `runner.ready`, and holds each
+  `turn` and `message`. The next `hello` with the record folder ends the
+  hold. A workspace without stored folders gets no move. A runner in a
+  folder outside the stored folders also gets no move and no `repository`,
+  because only older start variables give such a folder.
+- A `repository.move.refused` reply keeps the runner in its folder. Each
+  held turn then fails with `workspace_repository_unavailable`. A new
+  `hello` checks the folders again.
+- Each `turn` and `message` to such a runner carries the current repository
+  in `repository`, with its full name and its folder, for the repository
+  line of [Agent input](../../../../runner/agent-input.md#the-repository-line).
 - No stored command holds a login or a turn token. Each send adds the
-  credential again. A resent version 2 `turn` command carries the same
-  token, also after a failed send or a restart of the workspace object.
+  credential again. A resent `turn` command carries the same token, also
+  after a failed send or a restart of the workspace object.
 - An interrupt for a turn that the runner does not run still gets
   `turn.completed` with state `stopped`.
 - A new stream gets each command other than `report.refresh` only after its

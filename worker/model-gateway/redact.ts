@@ -4,10 +4,18 @@ const replacement = encoder.encode('[redacted]')
 /** Keep only a possible split credential. Other error bytes retain their encoding. */
 export function redactErrorBody(
   source: ReadableStream<Uint8Array>,
-  secret: string,
+  ...secrets: string[]
 ): ReadableStream<Uint8Array> {
-  const patterns = [...new Set([secret, JSON.stringify(secret).slice(1, -1)])]
+  const patterns = [
+    ...new Set(
+      secrets.flatMap((secret) => [
+        secret,
+        JSON.stringify(secret).slice(1, -1),
+      ]),
+    ),
+  ]
     .filter(Boolean)
+    .sort((a, b) => b.length - a.length)
     .map((value) => encoder.encode(value))
   if (!patterns.length) return source
   const longest = Math.max(...patterns.map((value) => value.length))

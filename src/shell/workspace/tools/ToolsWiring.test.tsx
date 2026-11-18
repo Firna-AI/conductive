@@ -3,10 +3,10 @@
 import { describe, expect, test, vi } from 'vitest'
 import { requestLines } from '../../../app/test-kit'
 import { routes } from '../../../app/router'
-import { readView } from '../../../chat/api/read-responses'
+import { readView } from '../../../chat/api/read-view'
 import { desktopPath } from '../../../shared/desktop'
 import { previewsPath } from '../../../shared/previews'
-import { terminalPaths } from '../../../shared/terminal'
+import { FIRST_TERMINAL_ID, terminalPaths } from '../../../shared/terminal'
 import {
   workspaceViewPath,
   type WorkspaceViewResponse,
@@ -14,10 +14,12 @@ import {
 import { byLabel, byRole, queryByRole } from '../../../test-support/dom-queries'
 import { FakeApiServer } from '../../../test-support/fake-api'
 import { FAKE_IDS, FAKE_TIME } from '../../../test-support/fixtures/core'
+import { toolFixtures } from '../../../test-support/fixtures/tools'
 import { workspaceFixtures } from '../../../test-support/fixtures/workspaces'
 import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
+  waitFor,
 } from '../../../test-support/mount'
 import { nextEnvelope } from '../../../test-support/recorded-repairs'
 import { click, settle } from '../../test-mount'
@@ -29,12 +31,14 @@ import {
   openTab,
   socketsOf,
 } from '../wiring-test-kit'
-import { toolHref, type ToolKey } from './tool-address'
+import { previewPortHref, toolHref, type ToolKey } from './tool-address'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
 const { org, workspace: id, preview } = FAKE_IDS
 const previewHref = toolHref(org, id, 'preview', preview)
+/** The socket of Terminal 1, which each new workspace has. */
+const firstSocket = terminalPaths.terminalSocket(org, id, FIRST_TERMINAL_ID)
 
 /** The tool of a saved view, read as the reply of the view route. */
 const toolOf = (body: unknown) => readView({ view: body }).tool
@@ -57,11 +61,12 @@ describe('the tools in the workspace', () => {
     const from = server.requests.length
 
     expect(opened.map(({ path, protocol }) => [path, protocol])).toEqual([
-      [terminalPaths.socket(org, id), 'tty'],
+      [firstSocket, 'tty'],
     ])
     click(linkTo(toolsPanel(view), toolHref(org, id, 'preview')))
     await settle()
-    expect(currents(toolsPanel(view), previewHref)).toEqual(['page'])
+    // On desktop the tool lists the ports, also the port of an open preview.
+    expect(queryByRole('button', 'Port 3000', toolsPanel(view))).not.toBeNull()
     click(linkTo(toolsPanel(view), toolHref(org, id, 'terminal')))
     await settle()
 
@@ -76,6 +81,29 @@ describe('the tools in the workspace', () => {
       from,
     )
     expect(saved.map(toolOf)).toEqual(['preview', 'terminal'])
+  })
+
+  test('on desktop, keep the page of a Preview tab while the chat shows, and show the same page again', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer()
+    const tab = previewPortHref(org, id, 3000)
+    const { view, navigation } = await openTab(server, tab)
+    const frameOf = () =>
+      view.querySelector('iframe[title="Preview of port 3000"]')
+
+    const frame = await waitFor(frameOf, 'the page of the Preview tab')
+    // The page shows in the centre, not in the tools panel.
+    expect(toolsPanel(view).contains(frame)).toBe(false)
+    navigation.push(routes.workspace(org, id))
+    await settle()
+    expect(frame.closest('[hidden]')).not.toBeNull()
+    click(linkTo(byLabel('Sessions and files', view), tab))
+    await settle()
+
+    // The same frame shows again, so its page did not load again.
+    expect(frameOf()).toBe(frame)
+    expect(frame.closest('[hidden]')).toBeNull()
+    expect(frame.isConnected).toBe(true)
   })
 
   test('keep the tool tabs around a stopped sandbox on desktop, and mount no tool', async () => {
@@ -139,9 +167,7 @@ describe('the tools in the workspace', () => {
 
       expect(currents(view, toolHref(org, id, 'terminal'))).toEqual(['page'])
       expect(linksTo(view, toolHref(org, id, 'desktop'))).toEqual([])
-      expect(opened.map(({ path }) => path)).toEqual([
-        terminalPaths.socket(org, id),
-      ])
+      expect(opened.map(({ path }) => path)).toEqual([firstSocket])
       const desktopReads = requestLines(server).filter(
         (line) => line === `GET ${desktopPath(org, id)}`,
       )
@@ -186,5 +212,62 @@ describe('the tools in the workspace', () => {
     expect(currents(view, previewHref)).toEqual(['page'])
     const saved = await bodiesOf(server, 'PUT', workspaceViewPath(org, id), 0)
     expect(saved.map(toolOf)).toEqual(['preview'])
+  })
+
+  // The list of the fake API holds the preview of port 3000 only.
+  test('on desktop, a port address opens the preview of its port in its Preview tab, keeps its address, and saves the tab', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer()
+    const opened = {
+      ...toolFixtures().preview.preview,
+      id: 'preview-8080',
+      port: 8080,
+    }
+    server.json('POST', previewsPath(org, id), { preview: opened }, 201)
+    const here = previewPortHref(org, id, 8080)
+    const { view, navigation } = await openTab(server, here)
+    const frame = await waitFor(
+      () => view.querySelector('iframe[title^="Preview of port"]'),
+      'a preview frame',
+    )
+
+    expect(frame.getAttribute('title')).toBe('Preview of port 8080')
+    expect(navigation.href()).toBe(here)
+    expect(currents(byLabel('Sessions and files', view), here)).toEqual([
+      'page',
+    ])
+    const opens = await bodiesOf(server, 'POST', previewsPath(org, id), 0)
+    expect(opens).toEqual([{ port: 8080 }])
+    const saved = await bodiesOf(server, 'PUT', workspaceViewPath(org, id), 0)
+    expect(readView({ view: saved.at(-1) }).activeTab).toEqual({
+      kind: 'preview',
+      port: 8080,
+    })
+  })
+
+  test('on a phone, a port address opens the preview of its port, and the address of the preview takes its place', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer()
+    const opened = {
+      ...toolFixtures().preview.preview,
+      id: 'preview-8080',
+      port: 8080,
+    }
+    server.json('POST', previewsPath(org, id), { preview: opened }, 201)
+    const here = previewPortHref(org, id, 8080)
+    const { view, navigation } = await openTab(server, here, {
+      viewport: 'phone',
+    })
+    const frame = await waitFor(
+      () => view.querySelector('iframe[title^="Preview of port"]'),
+      'a preview frame',
+    )
+
+    expect(frame.getAttribute('title')).toBe('Preview of port 8080')
+    expect(navigation.history).toEqual([
+      toolHref(org, id, 'preview', opened.id),
+    ])
+    const opens = await bodiesOf(server, 'POST', previewsPath(org, id), 0)
+    expect(opens).toEqual([{ port: 8080 }])
   })
 })

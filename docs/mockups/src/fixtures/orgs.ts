@@ -1,3 +1,5 @@
+import type { OrgColor } from '../design/orgColors'
+
 /**
  * The orgs of the user, and the account that every org shares: the GitHub
  * sign-in, the GitHub App, and the agent connections.
@@ -12,6 +14,8 @@ export type Org = {
   name: string
   /** Up to two letters, which the rail shows. */
   initials: string
+  /** The colour of the tile of the open org. Absent means Blue. */
+  color?: OrgColor
 }
 
 export const orgs: Readonly<Record<OrgKey, Org>> = {
@@ -50,6 +54,12 @@ export const orgList: readonly Org[] = [orgs.acme, orgs.futex, orgs.firna]
 /** The orgs of the user after Create org made Acme Labs. */
 export const orgListWithLabs: readonly Org[] = [...orgList, orgs.labs]
 
+/**
+ * The orgs of the user after Cal moved Firna to the top of the rail, as
+ * `app/orgs/reorder/moved` shows. Each person keeps their own order.
+ */
+export const movedOrgList: readonly Org[] = [orgs.firna, orgs.acme, orgs.futex]
+
 /** The person signed in to the app, who signs in with GitHub only. */
 export const account = {
   name: 'Cal',
@@ -82,6 +92,15 @@ export const memberInstallation = installations[0]
  */
 export const deletedOrg = {
   org: 'acme',
+  deletes: '12 November',
+} as const satisfies { org: OrgKey; deletes: string }
+
+/**
+ * The deleted org that the Account page lists for its admin: Acme Labs,
+ * which the rail no longer shows.
+ */
+export const accountDeletedOrg = {
+  org: 'labs',
   deletes: '12 November',
 } as const satisfies { org: OrgKey; deletes: string }
 

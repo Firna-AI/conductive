@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { sessionPaths, sessionsPath } from '../../shared/sessions'
-import type { WorkspaceTab } from '../../shared/workspace-view'
+import type { TemporaryTab, WorkspaceTab } from '../../shared/workspace-view'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import {
   choice,
@@ -30,9 +30,36 @@ describe('the chat tab order', () => {
     expect(await chat.savedView()).toEqual({
       tabs: [second, file, first],
       activeTab: second,
+      temporaryTab: null,
       fileList: 'changes',
       tool: 'terminal',
     })
+  })
+
+  it('keeps the temporary tab in the save of a move that changes its place, and keeps the mark when another tab moves or its place stays', async () => {
+    const mark: TemporaryTab = { kind: 'file', path: 'src/app.ts' }
+    const chat = tabChat([first, file, second], { temporaryTab: mark })
+    await chat.controller.start()
+    chat.controller.moveTab(first, { after: file })
+    await chat.savedView()
+    chat.controller.moveTab(file, { before: first })
+    chat.controller.moveTab(file, { after: first })
+    await chat.savedView()
+
+    const view = {
+      tabs: [file, first, second],
+      activeTab: first,
+      temporaryTab: mark,
+      fileList: 'changes',
+      tool: 'terminal',
+      previewTabs: [],
+      activePreview: null,
+    }
+    const saved = chat.writes().map((request) => request.clone().json())
+    expect(await Promise.all(saved)).toEqual([
+      view,
+      { ...view, tabs: [first, file, second], temporaryTab: null },
+    ])
   })
 
   it('moves a session beside its visible neighbour without moving hidden file tabs', async () => {

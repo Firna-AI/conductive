@@ -1,13 +1,15 @@
-import type { MessageSender, SendMessageRequest } from '../../shared/messages'
+import type { Workspace } from '../../shared/generated/Workspace'
+import type { MessageSender } from '../../shared/generated/MessageSender'
+import type { SendMessageRequest } from '../../shared/messages'
 import {
   workspacesPath,
   type CreateWorkspaceResponse,
-  type Workspace,
 } from '../../shared/workspaces'
 import { maybeText, nested, record, text, texts } from '../api/parse'
 import { readChoice } from '../api/read-core'
 import { defaultSection } from '../sections'
 import { requireOrg, requireWorkspace, type DevBackend } from './backend'
+import { createdCapabilities } from './capability-routes'
 import { ID, json, requiredText, RouteError, type Route } from './router'
 import { routes } from '../router'
 import { FAKE_ORIGIN } from '../../test-support/fixtures/core'
@@ -60,7 +62,7 @@ export interface WorkspaceRequest {
   first: SendMessageRequest
   /**
    * A first start that fails keeps its workspace in the error state, as
-   * the Worker keeps the workspace of a routine run.
+   * the Worker keeps the workspace of an automation run.
    */
   keepFailedStart?: boolean
 }
@@ -127,6 +129,7 @@ export function startWorkspace(
     orgId: org.org.id,
     repositoryId,
     sectionId: section?.id ?? '',
+    parentId: null,
     owner,
     name: null,
     branch,
@@ -165,18 +168,27 @@ export function startWorkspace(
   }
 }
 
-/** Create workspace, from the first message of the user. */
+/**
+ * Create workspace, from the first message of the user, with the choices of
+ * its Capabilities control.
+ */
 function createWorkspace(
   backend: DevBackend,
   org: OrgState,
   body: unknown,
 ): Response {
   const fields = record(body)
+  const capabilities = createdCapabilities(
+    backend.state,
+    org.org.id,
+    fields.capabilities,
+  )
   const created = startWorkspace(backend, org, {
     repositoryId: requiredText(fields, 'repositoryId'),
     sectionId: maybeText(fields, 'sectionId'),
     first: readFirstMessage(fields.firstMessage),
   })
+  capabilities.keep(created.workspace.id)
   return json(created satisfies CreateWorkspaceResponse, 201)
 }
 

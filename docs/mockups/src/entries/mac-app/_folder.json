@@ -6,6 +6,7 @@
     "commands",
     "requests",
     "stop",
+    "extend",
     "this-mac",
     "shortcuts",
     "command-palette"

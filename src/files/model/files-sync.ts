@@ -1,9 +1,7 @@
-import type {
-  ChangesResponse,
-  FileEvent,
-  FileTreeDelta,
-  FileTreeResponse,
-} from '../../shared/files'
+import type { ChangesResponse } from '../../shared/generated/ChangesResponse'
+import type { FileTreeDelta } from '../../shared/generated/FileTreeDelta'
+import type { FileTreeResponse } from '../../shared/generated/FileTreeResponse'
+import type { FileEvent } from '../../shared/files'
 import { applyTreeDelta, treeFromSnapshot, type FileTree } from './tree-model'
 
 /**
@@ -163,4 +161,21 @@ export function syncEvent(sync: FilesSync, event: FileEvent): SyncStep {
         allTouched: sync.changes === null,
       }
   }
+}
+
+/**
+ * The lists after a repository change moved the workspace to another
+ * folder, as the workspace marks its stored lists: the tree stays with the
+ * unavailable mark, so its revision still takes the updates that follow,
+ * and the changes go. The next full tree of the stream clears the mark, and
+ * the next changes report of the stream gives the new list. Any file may
+ * have changed.
+ */
+export function syncMoved(sync: FilesSync): SyncStep {
+  return unknownPaths({
+    ...sync,
+    treeUnavailable: sync.tree !== null || sync.treeUnavailable,
+    changes: null,
+    changesFromStream: false,
+  })
 }

@@ -4,6 +4,8 @@ import { NewWorkspaceDialog } from '../components/new-workspace/NewWorkspaceDial
 import { ChooseRepositoriesNotice } from '../components/new-workspace/notices'
 import { formWait } from '../components/new-workspace/waitingRepository'
 import { newOrg } from '../fixtures/repositories'
+import type { MenuEntry } from '../components/common/Menu'
+import { paths } from '../paths'
 import { defaultSection, sections } from '../fixtures/sections'
 import {
   NewWorkspaceScreen,
@@ -12,8 +14,10 @@ import {
 } from './NewWorkspaceScreen'
 import { FirstBuildNotice } from './firstBuildNotice'
 import { NewOrgEmpty } from './listParts'
+import { newWorkspaceCapabilities } from './newWorkspaceCapabilities'
 import { pageOrg, railOf, sidebarOf } from './newWorkspacePageParts'
 import {
+  formLoginLabel,
   formNotices,
   hasWords,
   newWorkspaceDraft,
@@ -34,7 +38,9 @@ export const newWorkspaceDialogSchema = {
     'login',
     'repositories',
     'repositoryMenu',
+    'sectionMenu',
     'waitingBuild',
+    'capabilities',
     'result',
     'org',
     'firstBuild',
@@ -43,6 +49,8 @@ export const newWorkspaceDialogSchema = {
   properties: {
     ...newWorkspaceFormProperties,
     org: { enum: ['active', 'new'] },
+    /** The menu of the sections, where the new workspace goes. */
+    sectionMenu: { enum: ['closed', 'open'] },
     firstBuild: newWorkspaceSchema.properties.firstBuild,
     viewer: newWorkspaceSchema.properties.viewer,
     /**
@@ -65,12 +73,21 @@ export const emptyDialog: NewWorkspaceDialogState = {
   login: 'connected',
   repositories: 'chosen',
   repositoryMenu: 'closed',
+  sectionMenu: 'closed',
   waitingBuild: 'building',
+  capabilities: 'closed',
   result: 'form',
   org: 'active',
   firstBuild: 'succeeded',
   viewer: 'admin',
 }
+
+/** The sections of the org in the order of the list, with General checked. */
+const sectionMenu: MenuEntry[] = Object.values(sections).map((section) => ({
+  kind: 'item',
+  label: section.name,
+  checked: section.key === defaultSection,
+}))
 
 /**
  * New workspace as a dialog over the ready workspace, for a user who chose
@@ -125,11 +142,20 @@ export function NewWorkspaceDialogScreen(props: {
   const dialog = (
     <NewWorkspaceDialog
       attachments={draft.files}
+      capabilities={newWorkspaceCapabilities(
+        state,
+        'desktop',
+        // Firna has no secrets yet, which the page of a phone shows.
+        state.org === 'new' ? undefined : paths.dialogCapabilities,
+      )}
       caret={ownDraft ? undefined : draft.caret}
       choice={page.choice}
       drop={state.files === 'drop-over'}
+      login={formLoginLabel(state)}
       notices={notices}
       place={`${org.name} · ${sections[defaultSection].name}`}
+      section={sections[defaultSection].name}
+      sectionMenu={state.sectionMenu === 'open' ? sectionMenu : undefined}
       placeholder={taskPlaceholder}
       ready={hasWords(draft.text) && !waits(state) && !building && !waiting}
       repository={chosen ? page.repository.name : undefined}
@@ -152,10 +178,11 @@ export function NewWorkspaceDialogScreen(props: {
       </AppFrame>
     )
   }
+  // The workspace behind the dialog is the one of the person signed in.
   return (
     <WorkspaceScreen
       overlay={dialog}
-      state={readyWorkspace}
+      state={{ ...readyWorkspace, viewer: state.viewer }}
       viewport="desktop"
     />
   )

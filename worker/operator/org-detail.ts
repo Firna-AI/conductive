@@ -25,6 +25,7 @@ interface MemberRow extends Omit<OperatorOrgMember, 'suspended'> {
 export async function readOperatorOrg(
   db: D1Database,
   orgId: string,
+  now: number,
 ): Promise<OperatorOrgDetail> {
   const [header, counts, members] = await db.batch<
     OrgHeader | OperatorWorkspaceStates | MemberRow
@@ -44,9 +45,9 @@ export async function readOperatorOrg(
       .bind(orgId),
     db
       .prepare(
-        `SELECT ${workspaceStateCounts} FROM workspaces w WHERE w.org_id = ?`,
+        `SELECT ${workspaceStateCounts('?2')} FROM workspaces w WHERE w.org_id = ?1`,
       )
-      .bind(orgId),
+      .bind(orgId, now),
     db
       .prepare(
         `SELECT u.github_id AS githubId, u.github_login AS login,

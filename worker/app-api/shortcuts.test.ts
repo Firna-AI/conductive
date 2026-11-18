@@ -14,6 +14,7 @@ beforeEach(async () => {
     agent: 'claude',
     model: 'test-claude',
     effort: 'high',
+    fast: false,
   })
 })
 afterAll(async () => harness.dispose())

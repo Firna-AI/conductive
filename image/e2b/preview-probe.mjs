@@ -68,3 +68,4 @@ await writeFile(
   JSON.stringify({ ipv4: ports[0], ipv6: ports[1], network: ports[2] }),
 )
 await rename(temporary, join(directory, 'ports.json'))
+process.stdout.write('ready\n')

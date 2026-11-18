@@ -1,5 +1,6 @@
+import type { DeviceCommandRecord } from '../../shared/generated/DeviceCommandRecord'
 import { Laptop } from 'lucide-react'
-import type { DeviceCommandRecord } from '../../shared/device'
+
 import card from '../../../docs/mockups/src/components/chat/MacCommand.module.css'
 import {
   commandCopy,
@@ -9,6 +10,7 @@ import {
   outputOf,
   stateNote,
 } from '../../shared/transcript/command-words'
+import { CommandOutput } from './CommandOutput'
 import { CommandLine, CommandStatus } from './CommandParts'
 import { LiteralText } from './LiteralText'
 
@@ -16,7 +18,8 @@ import { LiteralText } from './LiteralText'
  * A command that the agent asked to run on the Mac of the sender (decision
  * 62), at its place in the chat once it has its answer: the name of the
  * Mac, the state, the command, its folder and time limit, and the output
- * once it ran. A line says what happened when the state needs it.
+ * once it ran, cut short with Show all when it is long. A line says what
+ * happened when the state needs it.
  */
 export function CommandCard(props: {
   request: DeviceCommandRecord
@@ -41,7 +44,7 @@ export function CommandCard(props: {
         {commandCopy.upTo} {limitLabel(request.timeoutSeconds)}
       </span>
       {commandRan(request) && output !== null ? (
-        <pre className={card.output}>{output}</pre>
+        <CommandOutput text={output} />
       ) : null}
       {commandRan(request) && output === null ? (
         <span className={card.note}>{commandCopy.empty}</span>

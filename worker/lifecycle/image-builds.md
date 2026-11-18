@@ -31,11 +31,12 @@ Suspended orgs get no disk retention restart, including after an owner change.
 
 ## Runner version
 
-- A full build records the Worker's runner protocol version.
-  A refresh copies the version of the image that it refreshes.
+- Each full build and refresh records the Worker's runner protocol version.
+  Both install the newest sandbox release.
 - Each new computer allocation stores the runner version of its image snapshot before the provider call.
   This includes a first start, Try again, and a restored allocation.
   A missing image version counts as version 1.
+  The chat backend still accepts only the supported runner version, whatever this pin, as [Runner versions](../../docs/protocol/version-pins.md#runner-versions) says.
 
 ## Build jobs
 
@@ -44,6 +45,8 @@ refresh for an org admin and returns its ID. A request during a job gets
 its ID and schedules it again. Each alarm advances the job one step with
 `advanceBuildStep` in [`image-build-steps.ts`](image-build-steps.ts).
 Software and install commands run detached and stream their output.
+The software release includes the workspace CLI and MCP server.
+Builds need no separate tool source installation.
 D1 stores the step, output offsets, and log. Each row holds at most
 256 KiB of UTF-8 text, split between complete characters.
 
@@ -86,16 +89,24 @@ D1 keeps at most 4 MiB of each build log: the first and the last output.
 A write that passes that budget removes whole rows from the middle.
 The line `[N output bytes omitted]` takes their place in the event order.
 
+Each step writes a heading line to the log: the repository copies, the
+software command, and the install script. The snapshot step writes
+`SNAPSHOT_START_LOG` from [`build-command-data.ts`](build-command-data.ts)
+in the same D1 batch as the new snapshot name, before the provider call.
+It writes `SNAPSHOT_DONE_LOG` in the same batch as the change to the
+`publish` phase. So a retry or a replayed save repeats neither line.
+
 - A build loads the chosen repositories, installs the image software, runs
   the install script with Bash, and saves a snapshot. A first build that
   pins a matching ready software image of its own account starts from it
-  and skips the software step. A first build in an account with no such
-  image, such as `e2b`, installs the software on the provider base of that
-  account. Admission records the pin in the job insert. The pin stays
+  and still installs the newest release. A first build in an account with
+  no such image, such as `e2b`, installs the software on the provider base
+  of that account. Admission records the pin in the job insert. The pin stays
   until the job reaches `done`, including its cleanup. The
   [software image backend](../software-image/README.md) owns these images.
-  A refresh only loads
-  the repositories of the current image again, and saves a snapshot.
+  A refresh loads the repositories of the current image again, installs
+  the newest release, clears its command journal, and saves a snapshot.
+  It does not run the org install script.
 - The org image changes only when the new snapshot is ready. Each job
   deletes every live ledger computer of that org and build, and keeps its history and log.
   A failed Delete keeps cleanup scheduled until each computer is removed.
@@ -113,80 +124,35 @@ The line `[N output bytes omitted]` takes their place in the event order.
   `withImageSourceCleanup(env, fetch, hooks)` from `image-sources/members.ts`,
   as the [source loader](repository-layout.md#the-source-loader) says.
 
+## The software step
+
+`buildSoftwareCommand` in [`build-software.ts`](build-software.ts) composes
+the software command of a build or refresh. It reads the newest release.
+It also reads the apt part version that the source image of the build
+holds. For an org image, that version is `image_build_jobs.packages_version`
+of the succeeded build that saved the image. For a pinned software image,
+it is `software_images.packages_version`. The base image holds none.
+
+When that version equals `imagePackagesVersion()` from
+[`image-packages.ts`](image-packages.ts), the command runs the apt part only
+when the sandbox lacks a package or the ttyd service is not masked.
+Otherwise it runs the apt part. A NULL version, as in a row from before the
+column, also runs it. Either way the command installs the newest release, as
+[Installation](../../image/install.md) says. `recordSoftwarePackages` in
+[`build-command-data.ts`](build-command-data.ts) stores the current version
+before each start of the software command, so a succeeded build records the
+apt part that its image holds. A repeated start reaches the command of the
+first start, as the command journal says. So when two starts carry
+different versions, the job keeps an empty version, and the next build from
+its image runs the apt part.
+`buildSource` gives the source image of a build. The sandbox request uses
+it too, so the version and the snapshot always come from the same image.
+
 ## Provider retries
 
-Builds, refreshes, and workspace starts share one saved policy for a
-transient Boat error. `transientProviderError` in
-[`provider-retry.ts`](provider-retry.ts) decides which errors are
-transient. Other errors keep their existing handling.
-
-- The first transient error in an unfinished step opens a retry window of
-  10 minutes, `PROVIDER_RETRY_WINDOW_MS`. A completed step resets it. A
-  successful sandbox read or deadline update does not reset it.
-- The first retry waits 1 second. Each later retry waits twice as long, up
-  to 60 seconds. A retry never comes before the `Retry-After` of the error,
-  and never after the end of the window. The next alarm comes at that time.
-- When no retry fits in the rest of the window, or the window ends before
-  a pending retry runs, the existing failure and cleanup handling runs. For
-  an image job, that cleanup also revokes any source token, as the
-  [source loader](repository-layout.md#the-source-loader) says.
-- When a step runs without an error but does not finish, it clears only
-  the pending wait. The next alarm then comes after 1 second. So a healthy
-  command can run past the age of the window. A later fault in the same
-  step still uses the first window.
-- The window does not limit a whole job or a healthy command.
-- The whole-job deadline takes precedence over a retry wait. The limits
-  are in [Time limits of builds and starts](../../docs/protocol/workspace-life.md#time-limits-of-builds-and-starts).
-- Cancellation and terminal cleanup do not wait for a pending retry.
-- A source command start never retries. It fails closed, as the source
-  loader says.
-- Workspace allocation uses the retry handling in [`start-allocation.ts`](start-allocation.ts).
-
-An image job keeps this state in the nullable
-`image_builds.provider_retry_json` column of migration
-`202611070007_lifecycle_provider_retry.sql`. A start
-keeps the same state in its saved start job. So the window survives a
-restart of the object. Each completed build or source phase clears the
-state in the same D1 batch as the phase change. A start changes only its
-retry state in a storage transaction, so a cancellation and the saved
-output offsets stay.
-
-`nextProviderRetry` computes each wait.
-[`image-retry-data.ts`](image-retry-data.ts) reads and writes the state of
-an image job, and `completeBuildPhase` in
-[`build-phase-data.ts`](build-phase-data.ts) completes a build phase.
-`retryStartError` in [`start-provider-retry.ts`](start-provider-retry.ts)
-and `retry` in [`start-storage.ts`](start-storage.ts) do the same for a
-start.
-
-[`job-time-limit.ts`](job-time-limit.ts) supplies the job limits. An image
-job uses its saved `started_at` value. A start saves one absolute deadline
-beside its retry state. A phase change clears retry state and keeps the
-job deadline. The image and workspace alarm schedulers cap their next
-retry at that deadline. Terminal cleanup keeps its own retries after the
-job fails.
-
-A failed image job keeps the `allocating` phase when a dispatched request
-has no confirmed sandbox ID. The existing build row owns that cleanup.
-[`cleanupBuild`](build-execution.ts) recovers the saved request with
-[`recoverImageBuildForCleanup`](image-allocation.ts), through a client of
-the job's provider account in the `'cleanup'` mode. The helper saves a
-recovered ID with that account before cleanup deletes the sandbox. Only
-finished cleanup writes `done`.
-
-A Boat client ignores the mode and replays the saved request unchanged. An
-E2B client only finds the identity of the earlier request, with no create,
-connect, or guest setup. A certified absence saves no ID, and the computer
-ledger marks the allocation rejected. An unknown E2B result stays pending
-for a later cleanup attempt. A definite refusal of the first dispatch needs
-no allocation recovery. A refused replay after an uncertain dispatch keeps
-the saved ownership.
-
-An old start without a saved deadline uses its saved creation time or
-lifecycle start time. The start coordinator saves the restored deadline
-before it advances the job. A timed-out start with an unresolved
-allocation moves its encrypted request to a separate cleanup job, as
-[`retryAllocationCleanup`](start-allocation-cleanup.ts) handles.
+[Provider retries](provider-retries.md) gives the retry policy of builds,
+refreshes, and starts after a transient provider error, the saved retry
+state, the job limits, and the cleanup of an unresolved allocation.
 
 ## Refresh timers
 
@@ -199,6 +165,22 @@ verified GitHub webhook receiver may call it. The
 [GitHub backend](../github/README.md) owns that receiver. The image
 coordinator starts the daily refresh by itself.
 A daily refresh sets the saved daily deadline 24 hours after its start.
+
+`imageHoldsOldValues` in
+[`org-image-refresh-data.ts`](org-image-refresh-data.ts) is true when the
+published image holds a repository name or default branch that differs from
+the saved one, and the newest build succeeded. `readImageSchedule` then makes
+the next alarm due at once, and `runImageAlarm` and `refreshImagesForPush`
+start a build in place of a refresh. So a build follows each job or failed
+start that leaves old values in the image. The check reads no GitHub data,
+so it cannot find a change whose webhook never saved it.
+`wakeImagesForRepositoryChange` in
+[`repository-change-builds.ts`](repository-change-builds.ts) wakes the
+coordinator of each such org after the GitHub webhook receiver saves a
+repository change. It reads the software release only when an org needs a
+wake.
+[Repository changes on GitHub](../../docs/protocol/repository-changes-on-github.md)
+states the rules.
 
 Both refreshes start with the first admin who is not suspended, from
 `firstActiveOrgAdmin` in [`settings-data.ts`](settings-data.ts). An org
@@ -239,10 +221,16 @@ states the rule.
   reads the build state and its log in one D1 batch.
 - [`image-timers.ts`](image-timers.ts): `refreshImagesForPush` and
   `runImageAlarm`.
+- [`repository-change-builds.ts`](repository-change-builds.ts):
+  `wakeImagesForRepositoryChange`, the wake-up after a repository change on
+  GitHub.
 - [`image-coordinator.ts`](image-coordinator.ts): `ImageCoordinator`.
 - [Software images](../software-image/README.md): the shared software builds and their cleanup.
-- [`image-software.ts`](image-software.ts): the runner archive check and
-  install/start commands.
+- [`image-software.ts`](image-software.ts): the release install and workspace startup commands.
+- [`build-software.ts`](build-software.ts): the software command of a build, with the source image and its apt part version.
+- [`image-packages.ts`](image-packages.ts): the apt part, its version, and the check that skips it.
+- [`software-release.ts`](software-release.ts): release metadata lookup and validation.
+- [`software-bootstrap.ts`](software-bootstrap.ts): verified downloads and startup activation locking.
 - [`image-runtime.ts`](image-runtime.ts): `IMAGE_NODE_RUNTIME`, the pinned
   private Node of the org image, and its paths. The
   [runtime guide](../../image/runtime.md#update-the-node-release) says how to

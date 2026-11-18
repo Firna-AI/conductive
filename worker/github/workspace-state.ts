@@ -11,6 +11,7 @@ import type {
 export class WorkspaceGitHubState {
   private pending: Promise<unknown> = Promise.resolve()
   private readonly port: GitHubStatePort
+  private readonly shared = new Map<string, Promise<GitHubSnapshot | null>>()
 
   constructor(port: GitHubStatePort) {
     this.port = port
@@ -72,6 +73,28 @@ export class WorkspaceGitHubState {
       return snapshot
     })
     this.pending = result.catch(() => undefined)
+    return result
+  }
+
+  /**
+   * Runs `read`, or joins the read of the same key that has not ended. The
+   * queue runs one refresh at a time, and the next one starts only after
+   * the shared read ends. So no other state commits between the start of a
+   * shared read and its end, and a joined reply is as new as each state that
+   * committed before the join.
+   */
+  share(
+    key: string,
+    read: () => Promise<GitHubSnapshot | null>,
+  ): Promise<GitHubSnapshot | null> {
+    const running = this.shared.get(key)
+    if (running) return running
+    const result = read()
+    this.shared.set(key, result)
+    const end = () => {
+      if (this.shared.get(key) === result) this.shared.delete(key)
+    }
+    result.then(end, end)
     return result
   }
 

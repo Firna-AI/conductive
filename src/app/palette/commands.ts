@@ -3,6 +3,10 @@ import {
   sendFeedbackWords,
 } from '../../../docs/mockups/src/components/feedback/feedbackCopy'
 import {
+  mergeLatestCommandLabel,
+  mergeLatestWords,
+} from '../../../docs/mockups/src/components/workspace/mergeLatestCopy'
+import {
   shortcutDigits,
   type ShortcutCommandId,
 } from '../../shared/shortcut-commands'
@@ -18,6 +22,7 @@ export interface CommandText {
 /**
  * The actions that a part of the page offers while it shows, in the order
  * of the palette: the open workspace, the workspace list, and the window.
+ * The tools of the open workspace offer New terminal after the Go to rows.
  */
 export const offeredActionIds = [
   'new-session',
@@ -28,6 +33,8 @@ export const offeredActionIds = [
   'go-to-terminal',
   'go-to-preview',
   'go-to-desktop',
+  'new-terminal',
+  'merge-latest',
   'archive-workspace',
   'restore-workspace',
   'new-section',
@@ -55,6 +62,9 @@ export const actionTexts: Readonly<
   'go-to-terminal': { label: 'Go to Terminal', words: [] },
   'go-to-preview': { label: 'Go to Preview', words: ['port'] },
   'go-to-desktop': { label: 'Go to Desktop', words: [] },
+  'new-terminal': { label: 'New terminal', words: ['shell', 'tab'] },
+  // The row names the target branch, as `mergeLatestLabel` gives it.
+  'merge-latest': { label: mergeLatestCommandLabel, words: mergeLatestWords },
   'archive-workspace': { label: 'Archive workspace', words: [] },
   'restore-workspace': { label: 'Restore workspace', words: ['unarchive'] },
   'new-workspace': { label: 'New workspace', words: ['create', 'task'] },
@@ -87,6 +97,8 @@ export const actionCommands: Readonly<
   'go-to-terminal': 'go-to-terminal',
   'go-to-preview': 'go-to-preview',
   'go-to-desktop': null,
+  'new-terminal': 'new-terminal',
+  'merge-latest': 'merge-latest',
   'archive-workspace': 'archive-workspace',
   'restore-workspace': 'restore-workspace',
   'new-section': 'new-section',
@@ -119,26 +131,36 @@ export const orgSettings: readonly (CommandText & { tab: SettingsTab })[] = [
     label: 'Cloud computer',
     words: ['install', 'startup script', 'env', 'build', 'sandbox'],
   },
+  {
+    tab: 'agents',
+    label: 'Agents',
+    words: ['claude', 'codex', 'org login', 'api key', 'endpoint'],
+  },
+  {
+    tab: 'secrets',
+    label: 'Secrets',
+    words: ['reveal', 'approve', 'token', 'password'],
+  },
   { tab: 'members', label: 'Members', words: ['invite', 'admin', 'role'] },
 ]
 
 /**
  * The rows of the Account group of the Settings tab, in the order of the
  * Account page: tab by tab, and in each tab in the order of its sections.
- * So This Mac, which only the Mac app shows, follows Sign-in on the General
- * tab, and the Keyboard shortcuts tab ends the list. A section that the
- * page adds or moves takes the same place here.
+ * So the Keyboard shortcuts tab follows New workspaces, and the This Mac
+ * tab, which only the Mac app shows, ends the list. A section that the page
+ * adds or moves takes the same place here.
  */
 export const accountSettingIds = [
   'sign-in',
-  'this-mac',
   'github',
   'agents',
   'new-workspaces',
   'keyboard-shortcuts',
+  'this-mac',
 ] as const
 
-/** A section of the Account page, or its Keyboard shortcuts tab. */
+/** A section of the Account page, or its Keyboard shortcuts or This Mac tab. */
 export type AccountSettingId = (typeof accountSettingIds)[number]
 
 export const accountSettings: Readonly<Record<AccountSettingId, CommandText>> =

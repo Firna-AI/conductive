@@ -1,9 +1,10 @@
+import type { TranscriptDetail } from '../../shared/generated/TranscriptDetail'
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import type { ApiClient } from '../../app/api/client'
 import { readWorkspaces } from '../../app/api/read-workspaces'
-import { uploadAttachment } from '../../app/attachment-upload'
-import type { UploadHooks } from '../../app/draft-files'
+import { uploadAttachment, type UploadHooks } from '../../app/attachment-upload'
 import { ACCOUNT_PATHS } from '../../shared/account'
-import { MODELS_PATH, type AgentChoice } from '../../shared/agents'
+import { MODELS_PATH } from '../../shared/agents'
 import { orgPath, type EmptyRequest } from '../../shared/api'
 import { chatHistoryPath } from '../../shared/events'
 import { membersPath } from '../../shared/members'
@@ -19,12 +20,13 @@ import {
   type CreateSessionRequest,
   type InterruptRequest,
   type RenameSessionRequest,
-  type TranscriptDetail,
 } from '../../shared/sessions'
 import {
   workspaceViewPath,
   type UpdateWorkspaceViewRequest,
+  type WorkspaceView,
 } from '../../shared/workspace-view'
+import { viewToWire } from '../../shared/workspace-view-wire'
 import {
   workspacePath,
   workspacePaths,
@@ -41,10 +43,9 @@ import {
   readSessionResponse,
   readSessions,
   readTranscript,
-  readView,
-  readViewReply,
 } from './read-responses'
-import { readStoredEvents, readWorkspaceResponse } from './read-workspace'
+import { readView, readViewReply } from './read-view'
+import { readNewestStoredEvents, readWorkspaceResponse } from './read-workspace'
 
 export interface WorkspaceTarget {
   orgId: string
@@ -88,19 +89,24 @@ export function createChatApi(client: ApiClient, target: WorkspaceTarget) {
       ),
     sessions: () => client.get(sessionsPath(orgId, workspaceId), readSessions),
     /**
-     * One page of the stored history of one session. A later page names the
+     * One newest-first page of a session's history. A later page names the
      * cutoff of the first page, so all pages hold the state through it.
      */
-    history: (sessionId: string, after = 0, through?: number) =>
+    history: (sessionId: string, before?: number, through?: number) =>
       client.get(
-        chatHistoryPath(orgId, workspaceId, sessionId, after, through),
-        readStoredEvents,
+        chatHistoryPath(orgId, workspaceId, sessionId, before, through),
+        readNewestStoredEvents,
       ),
-    /** The saved view, with the routine of a run workspace. */
+    /** The saved view, with the automation of a run workspace. */
     view: () =>
       client.get(workspaceViewPath(orgId, workspaceId), readViewReply),
-    saveView: (view: UpdateWorkspaceViewRequest) =>
-      client.send('PUT', workspaceViewPath(orgId, workspaceId), view, readView),
+    saveView: (view: WorkspaceView) =>
+      client.send(
+        'PUT',
+        workspaceViewPath(orgId, workspaceId),
+        viewToWire(view) satisfies UpdateWorkspaceViewRequest,
+        readView,
+      ),
     models: () => client.get(MODELS_PATH, readModels),
     account: () => client.get(ACCOUNT_PATHS.account, readAccount),
     org: () => client.get(orgPath(orgId), readOrg),

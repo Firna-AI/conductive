@@ -1,3 +1,5 @@
+import type { DeviceCommandRecord } from '../../shared/generated/DeviceCommandRecord'
+import type { DevicePairing } from '../../shared/generated/DevicePairing'
 import { safariOutput } from '../../../docs/mockups/src/fixtures/mac'
 import {
   DEVICE_CURRENT_PATH,
@@ -5,8 +7,6 @@ import {
   deviceApprovalPath,
   deviceCommandsPath,
   type DeviceApprovalAction,
-  type DeviceCommandRecord,
-  type DevicePairing,
   type DeviceSettings,
   type DeviceSettingsOutcome,
 } from '../../shared/device'
@@ -26,6 +26,7 @@ const readAction = oneOf<DeviceApprovalAction>({
   allow: true,
   'always-allow': true,
   'allow-workspace-15-minutes': true,
+  'allow-workspace-until-stop': true,
 })
 
 /**
@@ -166,22 +167,37 @@ function answer(
       alwaysAllowedCommands: [...commands, request.command],
     }
   }
-  if (action === 'allow-workspace-15-minutes') {
+  if (
+    action === 'allow-workspace-15-minutes' ||
+    action === 'allow-workspace-until-stop'
+  ) {
     const others = mac.settings.workspaceWindows.filter(
       (grant) => grant.workspaceId !== request.workspaceId,
     )
-    const expiresAt = backend.clock.now() + 15 * 60_000
-    mac.settings = {
-      ...mac.settings,
-      workspaceWindows: [
-        ...others,
-        {
-          workspaceId: request.workspaceId,
-          workspaceName: request.workspaceName,
-          expiresAt,
-        },
-      ],
-    }
+    const current = mac.settings.workspaceWindows.find(
+      (grant) => grant.workspaceId === request.workspaceId,
+    )
+    // As on the Mac, the 15 minutes never shorten a grant until Stop.
+    const keeps =
+      action === 'allow-workspace-15-minutes' &&
+      current !== undefined &&
+      (current.expiresAt === null || current.expiresAt > backend.clock.now())
+    const expiresAt =
+      action === 'allow-workspace-until-stop'
+        ? null
+        : backend.clock.now() + 15 * 60_000
+    if (!keeps)
+      mac.settings = {
+        ...mac.settings,
+        workspaceWindows: [
+          ...others,
+          {
+            workspaceId: request.workspaceId,
+            workspaceName: request.workspaceName,
+            expiresAt,
+          },
+        ],
+      }
   }
   update(backend, request.requestId, {
     state: 'running',

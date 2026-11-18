@@ -24,7 +24,16 @@ export function deviceClock(fixture: DeviceFixture) {
     expect(response.status).toBe(200)
     return deviceObject(await response.json())
   }
+  // workerd ends the TCP connection of a socket that the server closed only
+  // when it evicts the idle object, about 10 seconds later. An eviction keeps
+  // open sockets open, so a socket that the server did not close stays open.
+  const evict = () =>
+    fixture.runtime.unsafeEvictDurableObject('device-tests', 'Workspace', {
+      name: broker,
+      webSockets: 'hibernate',
+    })
   return {
+    evict,
     set: async (now: number) => {
       await request('clock', WID, { now })
       await request('clock', broker, { now })
@@ -34,14 +43,7 @@ export function deviceClock(fixture: DeviceFixture) {
     ready: (target = broker) => request('ready', target),
     hibernate: async (whileAsleep?: () => Promise<void>) => {
       const before = await request('ready', broker)
-      await fixture.runtime.unsafeEvictDurableObject(
-        'device-tests',
-        'Workspace',
-        {
-          name: broker,
-          webSockets: 'hibernate',
-        },
-      )
+      await evict()
       await whileAsleep?.()
       const after = await request('ready', broker)
       expect(after.instance).not.toBe(before.instance)

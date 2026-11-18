@@ -1,7 +1,7 @@
+import type { DeviceCommandRecord } from '../../../src/shared/generated/DeviceCommandRecord.js'
+import type { DevicePairing } from '../../../src/shared/generated/DevicePairing.js'
 import type {
-  DeviceCommandRecord,
   DeviceCommandRef,
-  DevicePairing,
   DeviceToWorker,
   WorkerToDevice,
 } from '../../../src/shared/device.ts'
@@ -146,6 +146,11 @@ export function createDeviceSession(dependencies: SessionDependencies) {
             dependencies.permissions.allowCommand(entry.request.command)
           if (message.action === 'allow-workspace-15-minutes')
             dependencies.permissions.allowWorkspace(
+              entry.request.workspaceId,
+              entry.request.workspaceName,
+            )
+          if (message.action === 'allow-workspace-until-stop')
+            dependencies.permissions.allowWorkspaceUntilStop(
               entry.request.workspaceId,
               entry.request.workspaceName,
             )

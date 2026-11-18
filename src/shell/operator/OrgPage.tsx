@@ -122,9 +122,8 @@ function OrgDetails(props: {
         />
       </Section>
       <WorkspaceStates
-        builds={org.running.builds}
+        builds={{ count: org.running.builds, page: 'org' }}
         counts={org.workspaceStates}
-        page="org"
       />
       <Section
         description={counted(org.members.length, 'member', 'members')}

@@ -4,8 +4,10 @@
     "org-created",
     "preparing",
     "connected",
+    "org-login",
     "build-failed",
     "no-build",
-    "no-org"
+    "no-org",
+    "deleted-orgs"
   ]
 }

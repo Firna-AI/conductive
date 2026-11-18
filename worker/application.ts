@@ -4,7 +4,7 @@ import {
   GITHUB_INSTALL_PATH,
   GITHUB_SETUP_PATH,
 } from '../src/shared/github-setup'
-import { HEALTH_PATH, type HealthResponse } from '../src/shared/health'
+import { HEALTH_PATH } from '../src/shared/health'
 import { SITE_FOLDER } from '../src/shared/site-build'
 import type { AppDependencies, AppEnv } from './env'
 import { githubInstallResponse, githubSetupResponse } from './github-setup'
@@ -26,10 +26,7 @@ import { isDeviceAppPath, isDeviceMachinePath } from './devices/paths'
 import { routeMacCommand } from './tools/mac-command'
 import { appOrigin } from './security/app-origin'
 import { handleGitCredential } from './lifecycle/machine'
-import {
-  handleImageSourceCredential,
-  IMAGE_SOURCE_CREDENTIAL_PATH,
-} from './lifecycle/image-sources/credential'
+import { routeMachineGrant } from './machine-grants'
 import { imageRuntime, workspaceRuntime } from './lifecycle/runtime'
 import { repairLifecycleAlarms } from './lifecycle/repair'
 import { repairSoftwareImages } from './software-image/repair'
@@ -52,7 +49,8 @@ import { routePreview, routeWorkspaceFeatures } from './features/router'
 import { productionAgentTools } from './tools/composition'
 import { isAgentToolPath } from './tools/lists'
 import { productionGitHubWebhook } from './github/composition'
-import { appFrameSources, runnerSoftware } from './configuration'
+import { appFrameSources } from './configuration'
+import { latestSoftwareRelease } from './lifecycle/software-release'
 import { appSiteResponse } from './marketing/assets'
 import { retryApprovalEmails } from './operator/approval-email'
 import { freshCodexLogin } from './codex-auth/renew'
@@ -61,8 +59,12 @@ import { failCodexAccessToken } from './codex-auth/failure'
 import { waitForCodexRotation } from './codex-auth/rotation'
 import { cleanupCodexDevices } from './codex-auth/device-store'
 import { warnWorker } from './warnings'
-import { routineRunRuntime } from './routines/run-runtime'
-import { scanRoutineSchedules } from './routines/schedule-scan'
+import { automationRunRuntime } from './automations/run-runtime'
+import { scanAutomationSchedules } from './automations/schedule-scan'
+import { healthResponse } from './health-response'
+import { isSecretMachinePath } from './secrets/routes'
+import { routeSecretTool } from './tools/secrets'
+import { cleanupFeedbackSends } from './app-api/feedback-quota-data'
 
 export function createApp(overrides: Partial<AppDependencies> = {}) {
   const dependencies: AppDependencies = {
@@ -137,6 +139,8 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
           return respond(await routeMacCommand(request, env))
         }
         if (surface === 'machine') {
+          if (isSecretMachinePath(path))
+            return respond(await routeSecretTool(request, env))
           if (path === SOFTWARE_IMAGE_PATH)
             return respond(
               await handleSoftwareImage(request, env, dependencies),
@@ -167,8 +171,8 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
             )
             return respond(await handleGitCredential(request, runtime))
           }
-          if (path === IMAGE_SOURCE_CREDENTIAL_PATH)
-            return respond(await handleImageSourceCredential(request, env))
+          const grant = routeMachineGrant(request, env)
+          if (grant) return respond(await grant)
           const gatewayEnv = env
           const gatewayResponse = await routeModelGateway(request, {
             codexTasks,
@@ -176,6 +180,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
               gatewayEnv,
               chatGptEgress(gatewayEnv, dependencies),
             ),
+            previewDomain: gatewayEnv.PREVIEW_DOMAIN,
             workspaceAllowed: (id) =>
               gatewayWorkspaceAllowed(gatewayEnv.DB, id),
             codexLogin: (userId, failed) =>
@@ -228,8 +233,8 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
         const chatResponse = await routeChat(
           request,
           env,
-          dependencies.now,
-          dependencies.randomToken,
+          dependencies,
+          execution,
         )
         if (chatResponse) return respond(chatResponse)
         const featureResponse = await routeWorkspaceFeatures(
@@ -250,7 +255,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
           ),
         )
       } catch (error) {
-        const response = errorResponse(error)
+        const response = errorResponse(error, request)
         if (path === API_PATHS.githubCallback) {
           response.headers.append('Set-Cookie', cookie(OAUTH_COOKIE, '', 0))
         }
@@ -262,10 +267,11 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
     fetch: requestBodyEntry(application.fetch),
     async scheduled(event: ScheduledController, env: AppEnv): Promise<void> {
       if (event.cron === '* * * * *') {
-        await scanRoutineSchedules(routineRunRuntime(env, dependencies))
+        await scanAutomationSchedules(automationRunRuntime(env, dependencies))
         return
       }
       if (event.cron !== '*/15 * * * *') return
+      await cleanupFeedbackSends(env.DB, dependencies.now())
       await cleanupCodexDevices(env.DB, dependencies.now())
       await cleanupDeletedOrgs(
         env,
@@ -275,7 +281,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
       await repairLifecycleAlarms(
         workspaceRuntime(env, dependencies),
         imageRuntime(env, dependencies),
-        () => runnerSoftware(env),
+        () => latestSoftwareRelease(env, dependencies.fetch),
       )
       try {
         await repairSoftwareImages({ env, dependencies })
@@ -290,10 +296,4 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
       }
     },
   }
-}
-
-function healthResponse(): Response {
-  return privateResponse(
-    Response.json({ status: 'ok' } satisfies HealthResponse),
-  )
 }

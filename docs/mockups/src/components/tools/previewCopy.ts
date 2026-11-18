@@ -6,9 +6,9 @@
  * null when the report has none.
  */
 
-import type { ListeningPort } from '../../../../../src/shared/ports'
-
 /** The most characters that a tab shows of a name, "…" included. */
+
+import type { ListeningPort } from '../../../../../src/shared/generated/ListeningPort'
 const tabNameLength = 10
 
 /** A name as a tab shows it: at most 10 characters, or 9 and "…". */
@@ -49,4 +49,14 @@ export const portFormCopy = {
   listLabel: 'Servers in this sandbox',
   otherPort: 'Other port',
   open: 'Open preview',
+} as const
+
+/**
+ * The words of the page that shows while a preview opens, in a frame or in
+ * a browser tab. The server sends this page, so it reads the same words.
+ */
+export const previewOpeningCopy = {
+  opening: 'Opening preview',
+  failedTitle: 'Preview not available',
+  failedBody: 'Open it again from the workspace.',
 } as const

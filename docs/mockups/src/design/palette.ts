@@ -17,6 +17,12 @@ type AppColors = {
   composer: string
   /** A selected row or tab. */
   selected: string
+  /**
+   * The row of a menu under the pointer or with the focus. It stands out
+   * from the `composer` fill of the menu, which `soft` does not in the dark
+   * scheme.
+   */
+  menuHover: string
   link: string
   success: string
   successSoft: string
@@ -102,6 +108,7 @@ export const darkPalette: Palette = {
   bubble: '#1a1d21',
   composer: '#121417',
   selected: '#1c2025',
+  menuHover: '#23272d',
   link: '#5cc8ff',
   success: '#4ade80',
   successSoft: '#0e2117',
@@ -169,6 +176,7 @@ export const lightPalette: Palette = {
   bubble: '#edf0f4',
   composer: '#ffffff',
   selected: '#e3e8ee',
+  menuHover: '#eceff2',
   link: '#0a6fa8',
   success: '#1d7f45',
   successSoft: '#ecf7f0',

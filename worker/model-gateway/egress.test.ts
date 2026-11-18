@@ -18,6 +18,42 @@ function recorder() {
 }
 
 describe('chatGptEgress', () => {
+  it('sends chatgpt.com requests through the egress binding, with no secret', async () => {
+    const { requests, dependencies } = recorder()
+    const bound: Request[] = []
+    const egress = chatGptEgress(
+      {
+        CHATGPT_EGRESS: {
+          fetch: async (request) => {
+            bound.push(request)
+            return new Response(await request.text())
+          },
+        },
+        CHATGPT_EGRESS_URL: 'https://egress.example.test',
+        CHATGPT_EGRESS_SECRET: secret,
+      },
+      dependencies,
+    )
+    const response = await egress.fetch(
+      new Request('https://chatgpt.com/backend-api/codex/responses?x=1', {
+        method: 'POST',
+        headers: { authorization: 'Bearer upstream' },
+        body: 'payload',
+      }),
+    )
+    expect(await response.text()).toBe('payload')
+    expect(requests).toEqual([])
+    const [sent] = bound
+    const url = new URL(sent.url)
+    expect(`${url.pathname}${url.search}`).toBe(
+      '/backend-api/codex/responses?x=1',
+    )
+    expect(sent.method).toBe('POST')
+    expect(sent.headers.get(EGRESS_ORIGIN_HEADER)).toBe('https://chatgpt.com')
+    expect(sent.headers.has(EGRESS_SECRET_HEADER)).toBe(false)
+    expect(sent.headers.get('authorization')).toBe('Bearer upstream')
+  })
+
   it('sends chatgpt.com requests through the proxy with the secret', async () => {
     const { requests, dependencies } = recorder()
     const egress = chatGptEgress(

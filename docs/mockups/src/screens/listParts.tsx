@@ -5,7 +5,7 @@ import a11y from '../components/common/a11y.module.css'
 import { EmptyState } from '../components/common/EmptyState'
 import { LoadFailure } from '../components/common/LoadFailure'
 import { AppFrame } from '../components/layout/AppFrame'
-import { acmeRail } from '../components/layout/OrgRail'
+import { acmeRail, type RailState } from '../components/layout/OrgRail'
 import responsive from '../components/layout/responsive.module.css'
 import { OrgTile } from '../components/orgs/OrgTile'
 import {
@@ -26,7 +26,7 @@ import {
 import { Sidebar } from '../components/workspaces/Sidebar'
 import {
   NewWorkspaceLink,
-  RoutinesLink,
+  AutomationsLink,
   SearchLink,
   SettingsLink,
 } from '../components/workspaces/SidebarLinks'
@@ -77,7 +77,7 @@ export function ListHeader(props: {
 /**
  * The workspace list as a page: on a phone, and in a narrow window. A
  * suspended org shows its notice first, and no New workspace and no
- * section menus, because nothing in it can change. Its Routines link
+ * section menus, because nothing in it can change. Its Automations link
  * stays. Search opens the command palette. Its key shows only in a
  * desktop window. A list that did not load shows its failure in place of
  * the sections.
@@ -117,8 +117,8 @@ export function HomeList(props: {
           {suspended ? null : (
             <NewWorkspaceLink to={props.newWorkspaceTo} variant="page" />
           )}
-          <RoutinesLink
-            to={suspended ? paths.suspendedRoutines : undefined}
+          <AutomationsLink
+            to={suspended ? paths.suspendedAutomations : undefined}
             variant="page"
           />
           <SearchLink
@@ -150,19 +150,22 @@ export function HomeList(props: {
 /**
  * The list of a suspended org on desktop. The main area shows the notice
  * of the org in place of New workspace. A narrow window shows the list as
- * a page, with the notice at its top. Its rows have no menu. `focus` names
- * the row whose hover the view draws.
+ * a page, with the notice at its top. The menu of each row holds only Copy
+ * link. `focus` names the row whose menu or hover the view draws. `rail` is
+ * the rail before the org shows as suspended in it, such as a rail in the
+ * middle of a reorder.
  */
 export function SuspendedList(props: {
   viewer: Membership
   focus?: RowFocus
   sections?: readonly SidebarSection[]
+  rail?: RailState
 }) {
   const org = orgs[suspendedOrg]
   const sections = props.sections ?? suspendedSections()
   return (
     <AppFrame
-      rail={{ ...acmeRail, suspended: suspendedOrg }}
+      rail={{ ...(props.rail ?? acmeRail), suspended: suspendedOrg }}
       sidebar={
         <Sidebar
           focus={props.focus}

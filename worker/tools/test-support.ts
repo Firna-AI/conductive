@@ -1,11 +1,10 @@
 import { vi } from 'vitest'
+import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
 import { routes } from '../../src/app/router'
-
-import { MACHINE_PATHS } from '../../src/shared/agent-tools'
+import { MACHINE_PATHS, TOOL_TURN_HEADER } from '../../src/shared/agent-tools'
 import { sessionLink } from '../../src/shared/session-link'
-import type { AgentChoice, AgentModel } from '../../src/shared/agents'
-import { createWorkspaceToolClient } from '../../tools/client'
-import { TOOL_ENV, TOOL_TURN_HEADER } from '../../tools/context'
+import { WORKSPACE_RESTORE_MS } from '../../src/shared/workspaces'
+import type { AgentModel } from '../../src/shared/generated/AgentModel'
 import { requestBodyEntry } from '../http/request-body'
 import { hash } from '../security/crypto'
 import { TEST_TIME, type TestHarness } from '../test-support/harness'
@@ -17,12 +16,13 @@ import type {
 } from './services'
 
 export const TOOL_TEST_ORIGIN = 'https://machine.conductive.test'
-export const TOOL_TEST_TOKEN = 'workspace-token-for-tools-tests'
+const TOOL_TEST_TOKEN = 'workspace-token-for-tools-tests'
 export const TOOL_TEST_TURN = 'turn-from-teammate'
 export const OWNER_CHOICE = {
   agent: 'codex',
   model: 'owner-default-model',
   effort: 'high',
+  fast: false,
 } satisfies AgentChoice
 
 export async function toolFixture(harness: TestHarness) {
@@ -158,7 +158,8 @@ export async function toolFixture(harness: TestHarness) {
       link: `${harness.env.APP_ORIGIN}${routes.workspace(input.orgId, 'created-workspace')}`,
       orgId: input.orgId,
       repositoryId: input.repositoryId,
-      sectionId: input.sectionId,
+      sectionId: input.sectionId ?? 'general-a',
+      parentId: input.parentId ?? null,
       owner: input.owner,
       name: 'Berlin',
       branch: `${input.owner.githubLogin}/berlin-ij90`,
@@ -197,21 +198,11 @@ export async function toolFixture(harness: TestHarness) {
     writeSession: vi.fn<AgentToolServices['writeSession']>(),
   }
   const env = { ...harness.env, MACHINE_ORIGIN: TOOL_TEST_ORIGIN }
-  const entry = requestBodyEntry(createAgentToolsHandler(env, services))
-  const handler = (request: Request) => entry(request, env)
-  const requests: Request[] = []
-  const send = async (request: Request) => {
-    requests.push(request.clone())
-    return handler(request)
-  }
-  const client = createWorkspaceToolClient(
-    {
-      machineOrigin: TOOL_TEST_ORIGIN,
-      workspaceToken: TOOL_TEST_TOKEN,
-      turnId: TOOL_TEST_TURN,
-    },
-    send,
+  let now = TEST_TIME
+  const entry = requestBodyEntry(
+    createAgentToolsHandler(env, services, () => now),
   )
+  const handler = (request: Request) => entry(request, env)
   const request = (
     init: RequestInit = {},
     url = `${TOOL_TEST_ORIGIN}${MACHINE_PATHS.workspaces}`,
@@ -227,34 +218,26 @@ export async function toolFixture(harness: TestHarness) {
   }
   const create = (body: unknown, headers?: HeadersInit) =>
     request({ method: 'POST', body: JSON.stringify(body), headers })
-  return { db, handler, client, send, request, create, requests, services }
-}
-
-export type ToolFixture = Awaited<ReturnType<typeof toolFixture>>
-
-export function toolOutput() {
-  const stdout: string[] = []
-  const stderr: string[] = []
   return {
-    stdout,
-    stderr,
-    output: {
-      stdout: (text: string) => {
-        stdout.push(text)
-      },
-      stderr: (text: string) => {
-        stderr.push(text)
-      },
+    db,
+    request,
+    create,
+    services,
+    setTime: (at: number) => {
+      now = at
     },
   }
 }
 
-export const TOOL_TEST_ENVIRONMENT = {
-  [TOOL_ENV.machineOrigin]: TOOL_TEST_ORIGIN,
-  [TOOL_ENV.workspaceToken]: TOOL_TEST_TOKEN,
-  [TOOL_ENV.turnId]: TOOL_TEST_TURN,
+export async function seedRemovedWorkspace(db: D1Database) {
+  await db
+    .prepare(
+      `INSERT INTO workspaces
+       (id, org_id, repository_id, owner_user_id, section_id, name, branch, state, archived_at, created_at, updated_at)
+       VALUES ('removed-workspace', 'org-a', 'repo-a', 'owner', 'general-a', 'Madrid', 'owner-login/madrid-kl12', 'archived', ?, ?, ?)`,
+    )
+    .bind(TEST_TIME - WORKSPACE_RESTORE_MS, TEST_TIME + 3, TEST_TIME + 3)
+    .run()
 }
 
-export async function* inputLines(lines: readonly string[] = []) {
-  for (const line of lines) yield line
-}
+export type ToolFixture = Awaited<ReturnType<typeof toolFixture>>

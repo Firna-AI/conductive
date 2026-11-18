@@ -1,9 +1,7 @@
-import {
-  RUNNER_SUPPORTED_LOGIN_KINDS,
-  type RunnerLoginKind,
-  type RunnerProtocolVersion,
-} from '../../src/shared/runner'
+import type { RunnerLoginKind } from '../../src/shared/generated/RunnerLoginKind'
+import { RUNNER_SUPPORTED_LOGIN_KINDS } from '../../src/shared/runner'
 import { isRecord } from '../http'
+import { warningProcessStartId } from '../warning-values'
 import type { ChatData, ChatStorage, RunnerWorkspaceRecord } from './types'
 
 const KEY = 'native:runner:current'
@@ -14,8 +12,10 @@ export interface StoredRunnerConnection {
   generation: number
   workspace: RunnerWorkspaceRecord
   streamId: string | null
-  protocolVersion: RunnerProtocolVersion | null
+  processStartId: string | null
+  protocolVersion: number | null
   loginKinds?: readonly RunnerLoginKind[]
+  repositoryFolder?: string
   ready: boolean
   checkAt: number
 }
@@ -57,8 +57,13 @@ function readConnection(value: unknown): StoredRunnerConnection {
     !(
       value.protocolVersion === undefined ||
       value.protocolVersion === null ||
-      value.protocolVersion === 1 ||
-      value.protocolVersion === 2
+      (typeof value.protocolVersion === 'number' &&
+        Number.isSafeInteger(value.protocolVersion) &&
+        value.protocolVersion > 0)
+    ) ||
+    !(
+      value.repositoryFolder === undefined ||
+      typeof value.repositoryFolder === 'string'
     ) ||
     typeof value.ready !== 'boolean' ||
     typeof value.checkAt !== 'number' ||
@@ -75,15 +80,14 @@ function readConnection(value: unknown): StoredRunnerConnection {
       archivedAt: value.workspace.archivedAt,
     },
     streamId: value.streamId,
-    protocolVersion:
-      value.protocolVersion === undefined
-        ? value.streamId === null
-          ? null
-          : 1
-        : value.protocolVersion,
+    processStartId: warningProcessStartId(value.processStartId),
+    protocolVersion: value.protocolVersion ?? null,
     ...(value.loginKinds === undefined
       ? {}
       : { loginKinds: readLoginKinds(value.loginKinds) }),
+    ...(value.repositoryFolder === undefined
+      ? {}
+      : { repositoryFolder: value.repositoryFolder }),
     ready: value.ready,
     checkAt: value.checkAt,
   }

@@ -1,15 +1,24 @@
+import type { Workspace } from '../shared/generated/Workspace'
 import {
   useCallback,
   useEffect,
   useSyncExternalStore,
   type ReactNode,
 } from 'react'
-import type { Agent } from '../shared/agents'
+import type { Agent } from '../shared/generated/Agent'
 import type { WorkspaceView } from '../shared/workspace-view'
-import type { Workspace } from '../shared/workspaces'
+
 import { TouchScreen } from '../../docs/mockups/src/components/common/touch'
+import { useFollowTabs } from '../app/tab-places'
+import {
+  ChatDropAreaProvider,
+  useChatDropArea,
+} from './components/chat-drop-area'
 import { ChatOverlays, historyEntries } from './components/ChatOverlays'
+import type { ComposerFocus } from './components/composer-requests'
 import { SessionChat, type ChatHost } from './components/SessionChat'
+import { CodeCopyProvider, useCodeCopyAction } from './components/code-copy'
+import { useSessionLinkCopy } from './components/session-link-copy'
 import { SessionTabs } from './components/SessionTabs'
 import { useTabKeys } from './components/tab-keys'
 import { rowOf, shownTab, type RenderTab } from './components/tab-row'
@@ -20,11 +29,13 @@ import { useMentionCopy } from './links/mention-copy'
 import { MentionsProvider, type ChatMentions } from './mentions/MentionsContext'
 import { endedAt, historySessions, tabSessions } from './state/archive-view'
 import {
+  isRunning,
   sessionState,
   type ChatSnapshot,
   type Overlay,
 } from './state/chat-snapshot'
 import type { ChatController } from './state/controller'
+import { withoutTabs } from './state/tab-order'
 import { browserCopy, type CopyServices } from './transcript-copy'
 import { systemClock, useNow, type Clock } from './ui/clock'
 import { useChatController, type ChatConnection } from './useChatController'
@@ -32,7 +43,7 @@ import styles from './WorkspaceChat.module.css'
 
 /** How the chat shows, and what it tells the app. */
 export interface ChatViewProps {
-  /** The phone layout takes 44 px touch targets and sheets for menus. */
+  /** The phone layout takes 40 px touch targets and sheets for menus. */
   viewport: 'desktop' | 'mobile'
   /** The time source for durations and relative times. */
   clock?: Clock
@@ -44,8 +55,8 @@ export interface ChatViewProps {
    */
   copy?: CopyServices
   /**
-   * Names and draws a file or diff tab of the saved view at its place in the
-   * tab row, as `RenderTab` says. Without it, the row shows only the session
+   * Names and draws a file, diff, or Preview tab of the saved view at its
+   * place in the tab row, as `RenderTab` says. Without it, the row shows only the session
    * tabs, as on a phone.
    */
   renderTab?: RenderTab
@@ -55,6 +66,12 @@ export interface ChatViewProps {
    * tab shows as the current one.
    */
   content?: ReactNode
+  /**
+   * Parts that the app keeps mounted under the chat or the `content`, such
+   * as the pages of the Preview tabs, which stay loaded while another tab
+   * shows. The app hides each part that does not show.
+   */
+  kept?: ReactNode
   /** The workspace record, its state, and the title from its first message. */
   onWorkspaceChange?: (workspace: Workspace) => void
   /** The open tabs, as the chat saves them through the view route. */
@@ -84,6 +101,11 @@ export interface ChatViewProps {
    * without it.
    */
   readOnly?: boolean
+  /**
+   * The composer takes the focus when it shows, as after a click on the
+   * workspace in the sidebar. `ComposerFocus` gives the rules.
+   */
+  composerFocus?: ComposerFocus | null
 }
 
 export interface WorkspaceChatProps extends ChatConnection, ChatViewProps {}
@@ -104,7 +126,11 @@ function permittedOverlay(overlay: Overlay, readOnly: boolean): Overlay {
   return readOnly && overlay.kind !== 'history' ? { kind: 'none' } : overlay
 }
 
-/** The session tabs, the chat of the open session, and the overlays. */
+/**
+ * The session tabs, the chat of the open session, and the overlays. The
+ * whole column is the drop area of the message box, so a drop of files
+ * anywhere on the chat attaches them, as `useChatDropArea` says.
+ */
 function ChatBody(
   props: ChatViewProps & { controller: ChatController; snapshot: ChatSnapshot },
 ) {
@@ -122,10 +148,23 @@ function ChatBody(
     overlay.kind === 'history'
   const now = useNow(props.clock ?? systemClock, ticking)
   const links = useChatLinksOf(controller, snapshot, props.onOpenPage)
-  const copy = useTranscriptCopy(controller, props.copy ?? browserCopy)
+  const copyServices = props.copy ?? browserCopy
+  const copy = useTranscriptCopy(controller, copyServices)
+  const copyLink = useSessionLinkCopy(
+    controller.target,
+    links.origin,
+    copyServices,
+  )
+  const copyCode = useCodeCopyAction(copyServices)
   useMentionCopy()
   useReport(snapshot.workspace, props.onWorkspaceChange)
   useReport(snapshot.view, props.onViewChange)
+  useFollowTabs(
+    controller.places,
+    snapshot.load.state === 'ready'
+      ? tabSessions(snapshot).map((session) => session.id)
+      : null,
+  )
   const reopen = useCallback(
     (sessionId: string) => void controller.reopen(sessionId),
     [controller],
@@ -140,18 +179,24 @@ function ChatBody(
     snapshot.view,
     tabSessions(snapshot),
     shownTab(snapshot.view, active, content !== null),
+    (sessionId) => isRunning(snapshot, sessionId),
     props.renderTab,
   )
   useTabKeys({ tabs, controller, history, copy })
+  const drops = useChatDropArea()
   const body = (
-    <>
+    <ChatDropAreaProvider value={drops.slot}>
       <SessionTabs
         historyEntries={history}
         historyOpen={overlay.kind === 'history'}
         mobile={mobile}
         onCancelRename={controller.dismissOverlay}
         onClose={controller.requestClose}
+        onCloseTabs={(closed) =>
+          controller.updateView((view) => withoutTabs(view, closed))
+        }
         onCopy={copy}
+        onCopyLink={copyLink}
         onMove={controller.moveTab}
         onNew={() => void controller.newSession()}
         onRename={(id, title) => void controller.rename(id, title)}
@@ -163,17 +208,21 @@ function ChatBody(
         tabs={tabs}
       />
       {content ?? (
-        <SessionChat
-          controller={controller}
-          host={props.host}
-          mobile={mobile}
-          now={now}
-          onConnectAgent={props.onConnectAgent}
-          onOpenDiff={props.onOpenDiff}
-          readOnly={readOnly}
-          snapshot={snapshot}
-        />
+        <CodeCopyProvider value={copyCode}>
+          <SessionChat
+            composerFocus={props.composerFocus}
+            controller={controller}
+            host={props.host}
+            mobile={mobile}
+            now={now}
+            onConnectAgent={props.onConnectAgent}
+            onOpenDiff={props.onOpenDiff}
+            readOnly={readOnly}
+            snapshot={snapshot}
+          />
+        </CodeCopyProvider>
       )}
+      {props.kept}
       <ChatOverlays
         history={history}
         mobile={mobile}
@@ -182,23 +231,27 @@ function ChatBody(
         overlay={overlay}
         sessions={snapshot.sessions}
       />
-    </>
+    </ChatDropAreaProvider>
   )
   const mentions = props.mentions ?? null
   if (!mobile) {
     return (
       <LinksProvider value={links}>
-        <MentionsProvider value={mentions}>
-          <div className={styles.column}>{body}</div>
+        <MentionsProvider root={snapshot.repositoryFolder} value={mentions}>
+          <div className={styles.column} {...drops.handlers}>
+            {body}
+          </div>
         </MentionsProvider>
       </LinksProvider>
     )
   }
   return (
     <LinksProvider value={links}>
-      <MentionsProvider value={mentions}>
+      <MentionsProvider root={snapshot.repositoryFolder} value={mentions}>
         <TouchScreen>
-          <div className={styles.phone}>{body}</div>
+          <div className={styles.phone} {...drops.handlers}>
+            {body}
+          </div>
         </TouchScreen>
       </MentionsProvider>
     </LinksProvider>

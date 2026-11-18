@@ -1,4 +1,4 @@
-import type { RunnerLoginKind } from '../../src/shared/runner'
+import type { AgentLoginKind } from '../chat/login-kind'
 import { base64Url } from '../security/crypto'
 
 export interface TurnTokenState {
@@ -16,9 +16,9 @@ export interface TurnTokenRoute {
 const encoder = new TextEncoder()
 const decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true })
 
-function nativeTokenPrefix(login: RunnerLoginKind): string {
+function nativeTokenPrefix(login: AgentLoginKind): string {
   if (login.agent === 'codex') return 'sk-'
-  return login.kind === 'api-key' ? 'sk-ant-api-' : 'sk-ant-oat01-'
+  return login.kind === 'token' ? 'sk-ant-oat01-' : 'sk-ant-api-'
 }
 
 function tokenPrefix(token: string): string {
@@ -31,7 +31,7 @@ function tokenPrefix(token: string): string {
 
 export function turnTokenMatchesKind(
   token: string,
-  login: RunnerLoginKind,
+  login: AgentLoginKind,
 ): boolean {
   return tokenPrefix(token) === nativeTokenPrefix(login)
 }
@@ -123,7 +123,7 @@ export async function deriveTurnToken(
   route: TurnTokenRoute,
   state: TurnTokenState,
   secret: string,
-  login: RunnerLoginKind,
+  login: AgentLoginKind,
 ): Promise<string> {
   const prefix = nativeTokenPrefix(login)
   const signature = await crypto.subtle.sign(

@@ -1,5 +1,6 @@
 import { copyText } from '../clipboard'
 import { FakeApiServer } from '../../test-support/fake-api'
+import { devOrgOrderRoute } from '../../test-support/dev-org-order-route'
 import { FAKE_TIME } from '../../test-support/fixtures/core'
 import { API_PATHS } from '../../shared/api'
 import { createApiClient } from '../api/client'
@@ -26,13 +27,18 @@ import { feedbackRoutes } from './feedback-routes'
 import { APP_VERSION } from '../version'
 import { operatorRoutes } from './operator-routes'
 import { readDevOptions } from './options'
+import { orgLoginRoutes } from './org-login-routes'
 import { orgRoutes } from './org-routes'
-import { routineRoutes } from './routine-routes'
+import { automationRoutes } from './automation-routes'
 import { devFileTransport } from './progress-fixture'
 import { routeFetch, RouteError, type Route } from './router'
 import { runRoutes } from './run-routes'
+import { secretRequestRoutes } from './secret-request-routes'
+import { seedSecretRequests } from './secret-request-seed'
+import { secretRoutes } from './secret-routes'
 import { sectionRoutes } from './section-routes'
 import { seedState } from './seed'
+import { sessionLoginRoutes } from './session-login-routes'
 import { settingsRoutes } from './settings-routes'
 import { admitOpenSignup, waitlistRoutes } from './waitlist-routes'
 import { workspaceRoutes } from './workspace-routes'
@@ -47,11 +53,20 @@ import { workspaceRoutes } from './workspace-routes'
  */
 export function createFakeServices(search: string): AppServices {
   const options = readDevOptions(search)
-  const server = new FakeApiServer(options.server)
+  const state = seedState(options)
+  const workspaceStates = new Map(
+    state.orgs.flatMap((org) =>
+      org.workspaces.map(
+        (workspace) => [workspace.id, workspace.state] as const,
+      ),
+    ),
+  )
+  const server = new FakeApiServer({ ...options.server, workspaceStates })
   const offset = FAKE_TIME - Date.now()
   const now = () => Date.now() + offset
   const newId = () => crypto.randomUUID()
-  const backend = createBackend(seedState(options), server.events, now, newId)
+  const backend = createBackend(state, server.events, now, newId)
+  seedSecretRequests(backend, server.events, options.secrets)
   const signedOut: Route[] = options.signedOut
     ? [
         {
@@ -65,9 +80,11 @@ export function createFakeServices(search: string): AppServices {
     : []
   const routes = [
     ...signedOut,
+    ...sessionLoginRoutes(options.sessionLogin, server.fetch, state),
     ...waitlistRoutes(backend),
     ...feedbackRoutes(backend, options),
     ...accountRoutes(backend),
+    devOrgOrderRoute(backend),
     ...orgRoutes(backend),
     ...sectionRoutes(backend),
     ...workspaceRoutes(backend),
@@ -75,8 +92,11 @@ export function createFakeServices(search: string): AppServices {
     ...attachmentRoutes(backend, options.upload),
     ...attachmentFileRoutes(backend),
     ...settingsRoutes(backend),
+    ...orgLoginRoutes(backend),
+    ...secretRoutes(backend),
+    ...secretRequestRoutes(backend),
     ...buildRoutes(backend),
-    ...routineRoutes(backend),
+    ...automationRoutes(backend),
     ...runRoutes(backend),
     ...operatorRoutes(backend),
   ]

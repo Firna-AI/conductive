@@ -73,6 +73,38 @@ a.chip:hover {
   line-height: 1.4;
 }
 
+/*
+ * A fast turn that ran at standard speed: its note beside the duration, and
+ * the files under the note, 6 px apart, as two lines of chips are.
+ */
+.facts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+
+/*
+ * The note of the speed: muted text with the gauge icon. One line has the
+ * height of a chip, as the files that the cloud computer could not read
+ * have. A narrow chat wraps it, and the icon stays on its first line.
+ */
+.speed {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+  padding: 3px 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 18px;
+}
+
+.speed .icon {
+  margin-top: 3px;
+}
+
 /* The files past the list: plain text in the row of the chips. */
 .more {
   display: inline-flex;
@@ -84,4 +116,35 @@ a.chip:hover {
   color: var(--ui-muted);
   font-size: var(--ui-text-sm);
   white-space: nowrap;
+}
+
+/*
+ * The button that shows the chips past the limit of the row. It keeps the
+ * height of a chip, and the touch size on a phone, as the row of chips does.
+ */
+.showMore {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  min-height: var(--ui-touch-min);
+  margin: 0;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: var(--ui-radius-md);
+  background: none;
+  color: var(--ui-ink2);
+  font: inherit;
+  font-size: var(--ui-text-sm);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.showMore:hover {
+  background: var(--ui-soft);
+}
+
+.showMore:focus-visible {
+  outline: 2px solid var(--ui-primary);
+  outline-offset: -2px;
 }

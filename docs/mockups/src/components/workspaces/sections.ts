@@ -5,11 +5,9 @@ import {
   type Section,
   type SectionKey,
 } from '../../fixtures/sections'
-import {
-  archivedWorkspaceList,
-  keptArchives,
-} from '../../fixtures/archivedWorkspaces'
-import type { GitHubSummary } from '../../fixtures/pullRequests'
+import { archivedWorkspaceList } from '../../fixtures/archivedWorkspaces'
+import type { GitHubSummary } from '../../../../../src/shared/generated/GitHubSummary'
+import type { TreeLines } from '../../../../../src/shared/workspace-tree-lines'
 import {
   checkoutAutocomplete,
   workspaceList,
@@ -17,6 +15,7 @@ import {
   type Workspace,
 } from '../../fixtures/workspaces'
 import { paths } from '../../paths'
+import type { RowIndent } from './trees'
 
 export type WorkspaceRow = {
   workspace: Workspace
@@ -31,6 +30,10 @@ export type WorkspaceRow = {
    * its row offers Restore, except in a suspended org.
    */
   restoreOpen?: boolean
+  /** The steps of its indent under the rows of its tree. Without it, 0. */
+  indent?: RowIndent
+  /** The guide lines of the row in its tree. Without them, none. */
+  lines?: TreeLines
 }
 
 export type SidebarSection = {
@@ -58,13 +61,29 @@ export type ListMenu = { section: SectionKey }
 
 /**
  * A workspace that the user drags to another section: the list lifts its
- * row, and a line shows where it lands, before the row at `index`.
+ * row, and a line shows where it lands, before the top-level row at
+ * `index`. The index counts the top-level rows of the section without the
+ * dragged one. Only a top-level row drags, and its tree moves with it.
  */
-export type ListDrag = {
+type WorkspaceDrag = {
+  kind: 'workspace'
   workspace: string
   section: SectionKey
   index: number
 }
+
+/**
+ * A section that the user drags to another place in the list: the list
+ * lifts its header, and a line shows where it lands, before the section at
+ * `index`. The index counts the sections without the dragged one.
+ */
+type SectionDrag = {
+  kind: 'section'
+  section: SectionKey
+  index: number
+}
+
+export type ListDrag = WorkspaceDrag | SectionDrag
 
 function linkFor(key: string, open: boolean): string | undefined {
   if (key === 'checkout-autocomplete') return open ? paths.app : paths.starting
@@ -183,10 +202,26 @@ export function suspendedSections(open?: Workspace): SidebarSection[] {
   }))
 }
 
-/** The sections of a list and the rows of its open Archived group. */
+/** The sections of a list and the rows of its Archived group. */
 export type ArchivedList = {
   sections: SidebarSection[]
   archived: WorkspaceRow[]
+}
+
+/**
+ * The rows of the Archived group: the archived workspaces of the last 14
+ * days, the last archived first. The app keeps the cloud computer of each,
+ * so each row offers Restore. A workspace whose 14 days ended is removed:
+ * the group, its count, and the palette leave it out.
+ */
+export function archivedRows(): WorkspaceRow[] {
+  return archivedWorkspaceList.map((workspace) => ({
+    workspace,
+    status: 'archived',
+    github: workspace.github,
+    selected: false,
+    restoreOpen: true,
+  }))
 }
 
 /**
@@ -226,6 +261,22 @@ export function archivedSections(
 }
 
 /**
+ * The list beside a removed workspace, which a link opened. Its 14 days
+ * ended, so neither a section nor the Archived group holds it, and no row
+ * is selected. The Archived group holds the archived workspaces of the last
+ * 14 days.
+ */
+export function removedSections(
+  open: Workspace,
+  suspended = false,
+): ArchivedList {
+  return {
+    sections: sectionsWithout(open.key, suspended),
+    archived: archivedRows(),
+  }
+}
+
+/**
  * The list of Acme after the archive of Checkout address autocomplete, with
  * the Archived group open and no workspace open. The last archived workspace
  * comes first and opens its archived screen.
@@ -239,15 +290,8 @@ export function archivedGroup(): ArchivedList {
     to: paths.archive,
     restoreOpen: true,
   }
-  const older = archivedWorkspaceList.map((workspace): WorkspaceRow => ({
-    workspace,
-    status: 'archived',
-    github: workspace.github,
-    selected: false,
-    restoreOpen: keptArchives.has(workspace.key),
-  }))
   return {
     sections: sectionsWithout(checkoutAutocomplete.key, false),
-    archived: [last, ...older],
+    archived: [last, ...archivedRows()],
   }
 }

@@ -2,12 +2,8 @@ import { useCallback, useMemo } from 'react'
 import type { Readable } from '../app/store'
 import { useWorkspaceStore } from '../app/workspace-store'
 import type { WorkspaceTarget } from './githubClient'
-import {
-  GitHubStore,
-  type GitHubFeed,
-  type GitHubSource,
-  type GitHubState,
-} from './githubStore'
+import type { GitHubSource } from './githubSource'
+import { GitHubStore, type GitHubFeed, type GitHubState } from './githubStore'
 
 function createStore(target: WorkspaceTarget): GitHubStore {
   return new GitHubStore(target)

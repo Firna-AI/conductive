@@ -4,6 +4,7 @@ export const API_PATHS = {
   signOut: '/api/auth/logout',
   session: '/api/session',
   orgs: '/api/orgs',
+  orgOrder: '/api/org-order',
 } as const
 
 export function orgPath(orgId: string): string {
@@ -30,6 +31,7 @@ export interface ApiErrorBody {
   error: {
     code: string
     message: string
+    retryAt?: number
     details?: {
       login: string
       triggerIndex: number
@@ -37,9 +39,6 @@ export interface ApiErrorBody {
     }
   }
 }
-
-/** Wire dates are Unix milliseconds. IDs and model names are opaque strings. */
-export type Timestamp = number
 
 /** Writes with no fields still send an empty JSON object through the app gate. */
 export type EmptyRequest = Record<string, never>

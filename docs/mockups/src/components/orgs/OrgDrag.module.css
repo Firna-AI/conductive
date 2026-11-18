@@ -1,0 +1,119 @@
+/*
+ * A drag of an org, on the rail and in the org switcher of a phone, as in
+ * the tab row and the workspace list. A faint copy stays at the place of
+ * the org, a line marks where it lands, and the org lifts as a raised card
+ * under the pointer or the finger. The line takes no space, so no org
+ * moves during the drag, and it is an insertion mark, not the edge of a box.
+ */
+
+/*
+ * The rail puts a gap of 6px between two tiles. The line sits in the middle
+ * of that gap, and its margins take back the gap that it adds.
+ */
+.railDrop {
+  position: relative;
+  align-self: stretch;
+  height: 0;
+  margin: -3px 0;
+}
+
+/* The rows of the org switcher touch, so the line needs no margin. */
+.sheetDrop {
+  position: relative;
+  height: 0;
+}
+
+.line {
+  display: block;
+  position: absolute;
+  top: -1px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--ui-primary);
+}
+
+.railDrop .line {
+  right: 0;
+  left: 0;
+}
+
+.sheetDrop .line {
+  right: 12px;
+  left: 12px;
+}
+
+/*
+ * The body of a sheet clips what overflows it. So a line above the first
+ * row draws just inside the list, with its whole end.
+ */
+.sheetDrop:first-child {
+  top: 4px;
+}
+
+.lineEnd {
+  position: absolute;
+  top: -3px;
+  width: 8px;
+  height: 8px;
+  border: 2px solid var(--ui-primary);
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.railDrop .lineEnd {
+  left: -4px;
+  background: var(--ui-rail);
+}
+
+.sheetDrop .lineEnd {
+  left: -6px;
+  background: var(--ui-composer);
+}
+
+/* Where the org was while the drag lasts. */
+.placeholder {
+  opacity: 0.35;
+}
+
+/*
+ * A view runs no script, so it draws the lifted org under the pointer, just
+ * below the line and to its right, as a raised card with a full outline.
+ * The app draws it above the page.
+ */
+.lifted {
+  position: absolute;
+  z-index: 10;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-composer);
+  box-shadow: 0 8px 22px var(--ui-shadow);
+  box-sizing: border-box;
+  cursor: grabbing;
+  transform: rotate(-1.5deg);
+}
+
+/*
+ * A tile of the rail, as large as the link of a tile. It hangs over the
+ * edge of the rail, so the initials of the tile below the line still show.
+ */
+.liftedTile {
+  display: flex;
+  top: 6px;
+  left: 24px;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+}
+
+/*
+ * A row of the org switcher. It starts to the right of the square of the
+ * row below the line, so that square still shows, and it stays inside the
+ * body, which clips it.
+ */
+.liftedRow {
+  display: block;
+  top: 6px;
+  right: 2px;
+  left: 44px;
+}

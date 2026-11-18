@@ -8,7 +8,8 @@ import { githubPaths } from '../shared/github'
 import { FakeApiServer } from '../test-support/fake-api'
 import { toolFixtures } from '../test-support/fixtures/tools'
 import type { WorkspaceTarget } from './githubClient'
-import type { GitHubFeed, GitHubSource, GitHubState } from './githubStore'
+import type { GitHubSource } from './githubSource'
+import type { GitHubFeed, GitHubState } from './githubStore'
 import {
   githubEvent,
   heldReplies,

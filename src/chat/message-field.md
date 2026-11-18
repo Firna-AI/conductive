@@ -46,7 +46,8 @@ that those chips show, from the attach to the send.
   drag is the drag of Lexical.
 - The Attach files button of each composer opens the file picker. Attach a
   smaller file, in the notice of a file over the size limit, opens it too.
-  Attach files, in the notice of a dropped folder, opens it too.
+  Attach files, in the notice of a dropped folder that could not be read,
+  opens it too.
   A pick attaches its files, which gives their IDs at once, as
   [The attach](draft-files.md#the-attach) says. In the same change event,
   the composer puts their chips into the field with
@@ -102,6 +103,15 @@ that those chips show, from the attach to the send.
   another draft, or when the draft no longer holds one of its files, a
   paste takes the plain text, as the next rule says. The name of an absent
   file then stays text.
+- With `files` and `onAttach`, a large paste of other plain text becomes
+  an attached file, as
+  [Large pastes](../../docs/protocol/message-attachments.md#large-pastes)
+  says. `pasted-text.ts` holds the limits and the name of the file.
+  `ClipboardPlugin` calls `onAttach` with the file, as a pick of the
+  composer attaches its files, and puts the chip of each returned ID in
+  place of the selection. Each composer of a chat gives `onAttach`, with
+  the same attach as its pick. A refused file gives no ID, and the text
+  stays as it was.
 - With `files`, a paste of other plain text is literal text, so it never
   makes a mark. Each mention of the copy path of a ready file of the draft
   becomes the chip of that file, also when its chip left the text. A
@@ -120,27 +130,41 @@ that those chips show, from the attach to the send.
   state, and the field draws the drop caret under a pointer over the text.
   The drop state follows the elements that the drag entered and has not
   left, so a move from the text to the bar keeps it.
+- In the chat of a workspace, the whole column is the drop area of the
+  box, through `useChatDropArea` of `components/chat-drop-area.ts`. The
+  column gives each drag event to the box that it holds, so a drop on the
+  tabs or the transcript works as a drop on the bar. The box then spreads
+  no handlers of its own, so each event reaches it once. A drag event from
+  a portal, such as the menu of a tab, reaches the column through React
+  but is not on its element, so the column leaves it to the guard. While
+  no box shows, the column takes no drag.
   [Drops](../../docs/protocol/message-attachments.md#drops) states the
   requirements.
 - At the drop, `droppedItems` of [`file-drags.ts`](../app/file-drags.ts)
-  splits the items. An item whose entry is a directory is a folder. Each
-  other item of kind file is a file, also an empty one. The composer
-  attaches the files with the folder names, also for a drop of folders
-  alone. Then `insertFiles(ids, point)` puts the chips at the place under
-  the pointer, else at the caret, else at the end. The box cancels each
-  event of a drag of files, so the browser opens no file and inserts no
-  path.
+  gives the items in their order. An item whose entry is a directory is a
+  folder. Each other item of kind file is a file, also an empty one. A
+  drop without a folder attaches its files at once. A drop with a folder
+  first zips each folder with `intakeOf`, then attaches the files and the
+  zips in the order of the drop, with the refused folders, also for a drop
+  of folders alone. Then `insertFiles(ids, point)` puts the chips at the
+  place under the pointer, else at the caret, else at the end. The hook
+  stops the zips that run when the box leaves the page, and a drop whose
+  zips end after the composer stopped taking changes attaches nothing. The
+  box cancels each event of a drag of files, so the browser opens no file
+  and inserts no path.
 - The chat box takes a drop whenever its composer shows, also while a
   message sends or a file uploads, because its field takes changes then.
   The New workspace page and dialog take no drop while a create runs, and
   the dialog of a suspended org takes none. Such a box offers no drop, so
   the pointer shows that a drop does nothing. Its drop state and its drop
   caret go as soon as it stops taking changes, also during a hover.
-  Outside each box, `useFileDropGuard` of the app makes a drop of files do
+  Outside each box and its drop area, `useFileDropGuard` of the app makes a drop of files do
   nothing, as [Composition](../app/README.md#composition) says.
 - `FieldHandle` gives `focus()`, `insertFiles(ids, point?)`,
-  `showDropCaret(point)`, and `clearDropCaret()`. A `FieldPoint` is a point
-  of the page, from `clientX` and `clientY` of a pointer event.
+  `insertMention(target, focus)`, `showDropCaret(point)`, and
+  `clearDropCaret()`.
+  A `FieldPoint` is a point of the page, from `clientX` and `clientY` of a
+  pointer event.
   `insertFiles` puts a chip for each file of `ids` that `files()` gives.
   The chips go to the place under the point over the text, else to the
   caret, else to the end. They go in order, each with a space after it, as
@@ -149,6 +173,21 @@ that those chips show, from the attach to the send.
   takes the focus. A caret that selects text keeps the text, and the chips
   go to its focus. A field without the focus keeps its caret for
   `insertFiles`. A field that takes no change puts no chip.
+- `insertMention(target, focus)` puts the chip of a file or a folder, for
+  Add to chat, as a pick from the list of `@` puts it: at the caret, else
+  at the end, with a space after it unless a space or a line break follows,
+  as one step of undo. A field that mounts again has no caret, so the chip
+  goes to the end. The draft gets the mention from `onChangeText`, as for
+  each edit, so the undo history stays. With `focus`, the field takes the
+  focus, and the caret stands after the chip. Without it, a field without
+  the focus keeps no caret, and the caret of the page leaves it. Else a
+  later change of the editor would put the caret of the page into the
+  field, such as when its root attaches again in the strict mode of React,
+  and Chrome then gives the field the focus. A later focus puts the caret
+  at the end. An entry that the list of `@` does not offer gets no chip,
+  and neither does a field that takes no change or no mention. The composer
+  of the chat calls it for the request of `addToChat`, as
+  [Add to chat](loads-and-sends.md#add-to-chat) says.
 - `showDropCaret` draws the drop caret at the place under the point over
   the text, and hides it elsewhere. The drop caret is a layer over the
   text, and it never moves the caret or the selection. `insertFiles` and
@@ -172,18 +211,24 @@ that those chips show, from the attach to the send.
   of undo. `field-text.ts` joins the parts of a text with the separator
   rule. `field-plugins.tsx` holds the value, Enter, editable, and
   reconcile plugins. `clipboard-plugins.tsx` holds the copy, the cut, the
-  paste, the drag, and the drop. `focus-plugins.tsx` holds `FieldHandle`,
+  paste, the drag, and the drop. `pasted-text.ts` decides which paste is
+  large and names its file. `focus-plugins.tsx` holds `FieldHandle`,
   `HandlePlugin`, and the plugin of the `caretAtEnd` option. At each focus
   without a press of the pointer, such as from Tab, that plugin puts the
-  caret back where it was, or at the end of a kept draft. The New
-  workspace page and dialog use that option.
+  caret back where it was, or at the end of a kept draft. The chat
+  composer and the New workspace page and dialog use that option.
 - In `components/chip-field/`, `attached-files.tsx` holds `FieldFiles`,
   its provider, and what a chip shows of a draft file.
   `attached-file-node.tsx` holds the node of an attached file, whose text
   is its mark, and `attached-file-chip.tsx` draws its live chip.
   `owned-files.ts` takes the chip of a file that leaves the draft out of
-  the text. `insert-files.ts` puts the chips of `insertFiles` in place.
+  the text. `insert-files.ts` puts the chips of `insertFiles` and
+  `insertMention` in place.
   `point-caret.ts` finds the caret and the box of the drop caret at a
   point. `drop-caret.tsx` draws the drop caret, and `drop-move.ts` puts
   the nodes of a drop in place. `field-focus.ts` and `use-latest.ts` hold
-  small helpers of the plugins.
+  small helpers of the plugins. `focusField` commits a waiting change
+  before it moves the focus. A waiting change that leaves the caret of the
+  page, such as a reconcile of the chips, then cannot take the caret of
+  the focus with it. `releasePageCaret` takes the caret of the page out of
+  a field without the focus, after `insertMention` without `focus`.

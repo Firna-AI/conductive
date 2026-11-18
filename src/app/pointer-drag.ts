@@ -105,7 +105,8 @@ export function isOwnPress(event: Event): boolean {
  *
  * `bind(item, from)` gives the handlers of the element where a drag starts.
  * `locate` finds the drop place at each move of the pointer, and `drop`
- * gets the drag at its release.
+ * gets the drag at its release. `cancel` does what Escape does, for an owner
+ * that takes Escape first, such as a sheet that holds the drag.
  */
 export function usePointerDrag<T, P>(options: PointerDragOptions<T, P>) {
   const [drag, setDrag] = useState<PointerDrag<T, P> | null>(null)
@@ -115,6 +116,7 @@ export function usePointerDrag<T, P>(options: PointerDragOptions<T, P>) {
   const clickWait = useRef<(() => void) | null>(null)
   const start = useRef<(press: Press<T, P>) => void>(() => undefined)
   const end = useRef<() => void>(() => undefined)
+  const cancel = useRef<() => void>(() => undefined)
   useEffect(() => {
     latest.current = options
   })
@@ -192,10 +194,7 @@ export function usePointerDrag<T, P>(options: PointerDragOptions<T, P>) {
       if (!Object.is(place, state.place)) show({ ...state, place })
     }
     function onKey(event: KeyboardEvent) {
-      if (event.key !== 'Escape' || !press.current) return
-      // The press stays until its release, so that the release selects nothing.
-      if (press.current.lifted) show(null)
-      else finish(false)
+      if (event.key === 'Escape') cancel.current()
     }
     function onUp(event: PointerEvent) {
       if (event.pointerId === press.current?.pointerId) finish(true)
@@ -234,6 +233,12 @@ export function usePointerDrag<T, P>(options: PointerDragOptions<T, P>) {
       if (next.touch) next.timer = setTimeout(() => lift(next), longPress)
     }
     end.current = () => finish(false)
+    cancel.current = () => {
+      if (!press.current) return
+      // The press stays until its release, so that the release selects nothing.
+      if (press.current.lifted) show(null)
+      else finish(false)
+    }
     return () => {
       finish(false)
       clickWait.current?.()
@@ -274,5 +279,5 @@ export function usePointerDrag<T, P>(options: PointerDragOptions<T, P>) {
     onDragStart: (event) => event.preventDefault(),
   })
 
-  return { drag, bind }
+  return { drag, bind, cancel: () => cancel.current() }
 }

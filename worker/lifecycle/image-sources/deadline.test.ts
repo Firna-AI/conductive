@@ -6,7 +6,6 @@ import { createHarness, type TestHarness } from '../../test-support/harness'
 import { advanceImageBuild } from '../image-builds'
 import { readBuild } from '../build-data'
 import { readOrgImage } from '../org-image-data'
-import { WORKSPACE_TOOLS_DIRECTORY } from '../../tools/image'
 import { nativeImageRuntime } from './image-runtime-test-support'
 import { localSourceFixture } from './local-source-test-support'
 import { readSourceJob } from './source-data'
@@ -61,6 +60,9 @@ it('returns each alarm while native Git runs and renews the builder before allow
     expect(fixture.provider.statusIds).toEqual([1, 2, 2])
     expect(fixture.access.requests.map((request) => request.method)).toEqual([
       'POST',
+      'GET',
+      'DELETE',
+      'POST',
     ])
     expect(boat.commands).toEqual([])
     release.resolve()
@@ -80,13 +82,11 @@ it('returns each alarm while native Git runs and renews the builder before allow
           ?.tokenCiphertext,
       ).toBeNull()
       order.push(
-        !detached && command.includes(WORKSPACE_TOOLS_DIRECTORY)
-          ? 'tools'
-          : !detached
-            ? 'cleanup'
-            : command.includes('/tmp/conductive-install.sh')
-              ? 'install'
-              : 'software',
+        !detached
+          ? 'cleanup'
+          : command.includes('/tmp/conductive-install.sh')
+            ? 'install'
+            : 'software',
       )
     }
     let complete = false
@@ -95,7 +95,7 @@ it('returns each alarm while native Git runs and renews the builder before allow
       complete = await advance()
     }
     expect(complete).toBe(true)
-    expect(order).toEqual(['tools', 'software', 'install', 'cleanup'])
+    expect(order).toEqual(['software', 'install', 'cleanup'])
     expect(
       (await readBuild(fixture.env.DB, fixture.org.id, fixture.input.buildId))
         .build.state,
@@ -104,7 +104,7 @@ it('returns each alarm while native Git runs and renews the builder before allow
       fixture.access.events.filter((event) =>
         ['claim', 'revoke', 'finalize'].includes(event),
       ),
-    ).toEqual(['claim', 'revoke', 'finalize'])
+    ).toEqual(['revoke', 'claim', 'revoke', 'finalize'])
   } finally {
     release.resolve()
     await fixture.dispose()

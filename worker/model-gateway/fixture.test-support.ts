@@ -1,6 +1,7 @@
-import type { AgentChoice } from '../../src/shared/agents'
+import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
+import type { RunnerProtocolVersion } from '../../src/shared/generated/RunnerProtocolVersion'
+import { agentLoginPath } from '../../src/shared/account'
 import type { ChatHistoryResponse } from '../chat/workspace-events'
-import type { RunnerProtocolVersion } from '../../src/shared/runner'
 import { RUNNER_SUPPORTED_LOGIN_KINDS } from '../../src/shared/runner'
 import {
   CLAUDE,
@@ -19,7 +20,10 @@ export async function runningGatewayTurn(
   choice: AgentChoice = CLAUDE,
   options: {
     protocolVersion?: RunnerProtocolVersion
-    kind?: 'api-key' | 'token'
+    kind?: 'api-key' | 'token' | 'endpoint'
+    secret?: string
+    endpoint?: string
+    saveEndpointLogin?: (cookie: string) => Promise<Response>
   } = {},
 ) {
   const fixture = await createChatFixture(harness)
@@ -29,6 +33,26 @@ export async function runningGatewayTurn(
     )
       .bind(options.kind, fixture.member.id, choice.agent)
       .run()
+  if (options.kind === 'endpoint') {
+    const saved = options.saveEndpointLogin
+      ? await options.saveEndpointLogin(fixture.memberCookie)
+      : await harness.request(
+          agentLoginPath(choice.agent),
+          fixture.memberCookie,
+          {
+            method: 'PUT',
+            body: JSON.stringify({
+              agent: choice.agent,
+              kind: 'endpoint',
+              endpoint: options.endpoint ?? gatewayOwnEndpoint,
+              secret:
+                options.secret ?? `secret-${fixture.member.id}-${choice.agent}`,
+            }),
+          },
+        )
+    if (saved.status !== 200)
+      throw new Error('The endpoint login was not saved.')
+  }
   if (options.kind === 'token' && choice.agent === 'codex')
     await fixture.env.DB.prepare(
       'UPDATE agent_logins SET ciphertext = ? WHERE user_id = ? AND agent = ?',
@@ -48,9 +72,7 @@ export async function runningGatewayTurn(
     new FakeRunner({
       workspaceId: WORKSPACE_ID,
       protocolVersion: options.protocolVersion,
-      ...(options.protocolVersion === 2
-        ? { loginKinds: RUNNER_SUPPORTED_LOGIN_KINDS }
-        : {}),
+      loginKinds: RUNNER_SUPPORTED_LOGIN_KINDS,
     }),
   )
   runner.emit({ type: 'runner.ready' })
@@ -106,3 +128,6 @@ export function turnEnds(history: ChatHistoryResponse) {
       (event.type === 'turn.failed' || event.type === 'turn.completed'),
   )
 }
+
+export const gatewayOwnEndpoint =
+  'https://proxy.example.test:8443/private/v1?key=value'

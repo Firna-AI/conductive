@@ -17,7 +17,7 @@ async function attached(hold = false, fail: boolean | 'missing' = false) {
   const uploads = controlledUploads()
   const chat = chatFor({
     conversation: 'history',
-    files: uploads.files,
+    uploads,
     hold: (request) => hold && request.url.endsWith('/messages'),
     answer: async (request) =>
       fail && request.url.endsWith('/messages')
@@ -38,7 +38,9 @@ async function attached(hold = false, fail: boolean | 'missing' = false) {
     session,
     `${fileMark('file-1')} ${fileMark('file-2')}`,
   )
+  await uploads.started(1)
   await uploads.finish(0, 'first', 'returned/first.txt')
+  await uploads.started(2)
   await uploads.finish(1, 'second', 'returned/second file.txt')
   return { ...chat, ...uploads }
 }
@@ -81,22 +83,28 @@ describe('sending draft marks', () => {
     })
   })
 
-  it('removes sent marks after an edit while preserving new text, new files and literal escapes', async () => {
+  it('clears the sent marks at Send, and keeps new text, new files, and literal escapes from during the send', async () => {
     const chat = await attached(true)
     const sending = chat.controller.send(session)
     await vi.waitFor(() => expect(chat.held).toHaveLength(1), {
       timeout: 10_000,
     })
+    expect(chat.draftOf(session)).toMatchObject({
+      text: '',
+      files: [],
+      detached: [],
+    })
     chat.controller.attachFiles(session, [note('new.txt')])
-    const newer = `${literalText('Next \uE000typed\uE001-\uE0020 ')}${fileMark('file-1')} ${fileMark('file-3')}`
+    const newer = `${literalText('Next \uE000typed\uE001-\uE0020 ')}${fileMark('file-3')}`
     chat.controller.setDraft(session, newer)
     chat.held.shift()?.()
     await sending
     expect(chat.draftOf(session)).toMatchObject({
-      text: `${literalText('Next \uE000typed\uE001-\uE0020 ')} ${fileMark('file-3')}`,
+      text: newer,
       files: [{ id: 'file-3', state: 'uploading' }],
       detached: [],
     })
+    await chat.started(3)
     await chat.finish(2, 'new')
   })
 
@@ -113,26 +121,22 @@ describe('sending draft marks', () => {
     ).toEqual(['@returned/first.txt @"returned/second file.txt"'])
   })
 
-  it('marks a sent file as expired even when its chip was detached during the send', async () => {
+  it('marks each sent file as expired when the Worker no longer has it, and gives back its chips', async () => {
     const chat = await attached(true, 'missing')
+    const before = chat.draftOf(session)?.text
     const sending = chat.controller.send(session)
     await vi.waitFor(() => expect(chat.held).toHaveLength(1), {
       timeout: 10_000,
     })
-    chat.controller.setDraft(session, fileMark('file-1'))
     chat.held.shift()?.()
     await sending
     expect(chat.draftOf(session)).toMatchObject({
-      files: [{ id: 'file-1', state: 'failed' }],
-      detached: [{ id: 'file-2', state: 'failed' }],
+      text: before,
+      files: [
+        { id: 'file-1', state: 'failed' },
+        { id: 'file-2', state: 'failed' },
+      ],
+      detached: [],
     })
-    chat.controller.setDraft(
-      session,
-      `${fileMark('file-2')} ${fileMark('file-1')}`,
-    )
-    expect(chat.draftOf(session)?.files.map(({ state }) => state)).toEqual([
-      'failed',
-      'failed',
-    ])
   })
 })

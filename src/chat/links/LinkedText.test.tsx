@@ -1,8 +1,9 @@
+import type { Workspace } from '../../shared/generated/Workspace'
 // @vitest-environment happy-dom
 
 import { describe, expect, test } from 'vitest'
 import { routes } from '../../app/router'
-import type { Workspace } from '../../shared/workspaces'
+
 import { accessibleName } from '../../test-support/dom-queries'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
@@ -30,7 +31,7 @@ describe('workspace chips in an answer of the agent', () => {
     ].join('\n')
     const { container } = await mount(
       <LinksProvider value={{ links: { orgId: org, workspaces: [linked] } }}>
-        <AgentText text={answer} />
+        <AgentText id="agent:1" text={answer} />
       </LinksProvider>,
     )
     const chips = Array.from(container.querySelectorAll('a'), (link) => ({

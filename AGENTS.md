@@ -9,7 +9,9 @@ lives in `docs/mockups/`, in TypeScript and React with `@firna/ui`. The root
 npm package holds the React and Vite web app under `src/` and the Cloudflare
 Worker with Durable Objects and D1 under `worker/`. The Mac app is a separate
 Electron package under `desktop/`. [desktop/README.md](desktop/README.md)
-gives its commands.
+gives its commands. The program `conductive` of each sandbox is Rust code in
+a Cargo workspace at the repository root. Its crates live under `crates/`,
+each with the prefix `cnd-`.
 
 This file holds the rules that are specific to this repository. The
 always-on rules and the detailed procedures live in the shared skills from
@@ -56,7 +58,8 @@ Run each command from the repository root, with Node 24 from `.nvmrc`.
   the web app and the local Worker at `http://127.0.0.1:5173`.
 - Build: `npm run build`. It checks the types, builds the marketing site
   into `public/_site/`, and builds the web app and the Worker into
-  `dist/`.
+  `dist/`. `npm run build:bundle` builds the same files without the
+  typecheck.
 - Marketing site: `npm run site:dev` serves the Astro pages of the site at
   `http://localhost:4321`, and it reloads them on each change.
   `npm run site:build` builds them into `public/_site/`, which Git
@@ -72,38 +75,65 @@ Run each command from the repository root, with Node 24 from `.nvmrc`.
   Then `astro check` checks the `.astro` files of the marketing site, with
   `tsconfig.site.json`.
   Use `npm run mockups:typecheck` for the mockups.
-- Early check: `npm run format:check`, `npm run lint`, and
-  `npm run file-length:check`. The last command rejects JavaScript,
-  TypeScript, and Astro files over 300 lines, including comments and blank
-  lines.
-- Complete gate: `npm run check`. It checks types, lint, format, file
-  length, tests, the app build, and the mockups. It also runs the typecheck
-  and the tests of the [agent runner](runner/README.md). It stops at its
-  first failed step. GitHub Actions runs it on pushes and pull requests. Run
-  `npm --prefix desktop ci` and `npm ci --prefix runner` once before the
-  gate, as CI does. These commands install the dependencies of the gate's
-  desktop and runner checks.
+- Early check: `npm run format:check` and `npm run lint`. Lint also
+  rejects JavaScript, TypeScript, and Astro files over 300 lines, including
+  comments and blank lines.
+- Complete gate: `npm run check`. It runs `npm run check:static`, then
+  `npm run test`. `npm run check:static` checks types, lint, format, file
+  length, the app build, and the mockups. It also runs the typecheck and
+  the tests of the [agent runner](runner/README.md). The gate stops at its
+  first failed step. Run `npm --prefix desktop ci` and
+  `npm ci --prefix runner` once before the gate, as CI does. These commands
+  install the dependencies of the gate's desktop and runner checks. The gate runs no
+  Rust check. Run the Rust checks below for each change to the Cargo
+  workspace.
 - Format: `npm run format`.
 - Mockup check: `npm run mockups:check`. It runs the typecheck, then the
   strict build into `mokly-static/`.
 - Mockup preview: `npm run mockups:serve`. It serves the catalogue at
   `http://127.0.0.1:4173`, and it watches the edits.
+- Shared runner types: `cargo run -p cnd-runner-interface --example export_bindings`.
+  It regenerates every runner and agent chat event type with `ts-rs`, then
+  formats `src/shared/generated/` with Prettier. Install the root npm
+  dependencies first.
+- Rust checks: `cargo fmt --all -- --check`,
+  `cargo clippy --workspace --all-targets -- -D warnings`, and
+  `cargo test --workspace`. `cargo test -p <crate>` runs the tests of one
+  crate. `cargo fmt --all` formats the Rust code.
+- Rust release build:
+  `cargo build --release --target x86_64-unknown-linux-musl -p cnd-cli`.
+  It builds `conductive` as a static Linux program for the sandboxes. Run
+  `rustup target add x86_64-unknown-linux-musl` once before it. On Ubuntu,
+  it also needs the `musl-tools` package.
 
 ## CI
 
-GitHub Actions runs `npm run check` from `.github/workflows/ci.yml` on each
-pull request, and on each push to `main` and to the primary branch of the
-plan. A push to another branch runs no CI until its pull request opens.
+GitHub Actions runs the complete gate from `.github/workflows/ci.yml` on
+each pull request, and on each push to `main` and to the primary branch of
+the plan. A push to another branch runs no CI until its pull request opens.
+The gate runs as parallel jobs. The job `Static checks` runs
+`npm run check:static`. Four `Tests` jobs each run one quarter of the
+Vitest files, with `vitest run --shard`. The job `Complete gate` passes
+only when every one of these jobs passed.
+The `Rust gate` job of the same workflow runs the Rust checks and the
+Rust release build of [Commands](#commands).
 
-The active `Protect main` ruleset requires a pull request with a green
-`Complete gate` check. An admin can bypass its rules only through a pull
-request. It requires no approval and does not require the branch to be up
-to date. It requires resolved review conversations, blocks force pushes,
-and restricts deletion of `main`.
+The active `Protect main` ruleset requires a pull request with green
+`Complete gate` and `Rust gate` checks. An admin can bypass its rules only
+through a pull request. It requires no approval and does not require the
+branch to be up to date. It requires resolved review conversations, blocks
+force pushes, and restricts deletion of `main`.
 
-`.github/workflows/deploy.yml` deploys each push to `main` to the test
+`.github/workflows/deploy.yml` deploys each push to `main` to the production
 deployment at `conductive.build`. It does not wait for CI, as
 [Automatic deploys](docs/automatic-deploys.md) says.
+
+The Linux jobs run on the GitHub-hosted `ubuntu-24.04` runner. The Apple
+silicon Mac jobs, the Mac app checks and the signing jobs, run on the
+[Blacksmith](https://docs.blacksmith.sh/blacksmith-runners/overview) runner
+`blacksmith-6vcpu-macos-15`. The Intel Mac check uses the GitHub-hosted
+`macos-15-intel` runner, because Blacksmith has no Intel Macs. Keep the
+Apple silicon Mac jobs on Blacksmith.
 
 - Agent merges: off
 
@@ -145,12 +175,17 @@ deployment at `conductive.build`. It does not wait for CI, as
   restate a fact in other words.
   [Website docs](docs/protocol/website-docs.md) gives the rules for the
   words of a guide.
-- The comparison page at `conductive.build/from-conductor` gives each
-  listed Conductor feature a status. Its rows live in
-  `src/marketing/from-conductor/`. When a change ships, starts, or drops a
-  listed feature, update the status of its row in the same change. The
-  claim rules are in
-  [Conductor comparison](docs/protocol/conductor-comparison.md#statuses).
+
+- Rust owns the runner messages and their dependent types in
+  `crates/cnd-runner-interface/`. `ts-rs` writes their TypeScript into
+  `src/shared/generated/`. Import each generated type directly. Commit
+  generated files. Never edit them by hand. Runtime constants and readers
+  stay in `src/shared/`. The `Rust gate` job runs the generator and fails
+  when `src/shared/generated/` then differs from Git.
+- Wire 64-bit integers use JSON numbers and TypeScript `number`. Values
+  must stay within JavaScript's safe integer range, from -(2^53 - 1) to
+  2^53 - 1. Counts are non-negative. Wire dates use Unix milliseconds.
+  Decimal measurements use JSON numbers. IDs and model names are strings.
 
 ## Product
 
@@ -168,7 +203,10 @@ deployment at `conductive.build`. It does not wait for CI, as
   sandboxes that the signed-in user may reach. The Worker calls only a
   fixed list of routes of each sandbox provider.
 - Secrets: a stored secret never goes back to the browser, and no secret
-  goes into a saved snapshot.
+  goes into a saved snapshot. The one exception is Reveal: an admin gets
+  the value of one secret of the Secrets tab at a time, and the app records
+  each reveal. The value of such a secret reaches a sandbox only for a run
+  that a grant allows, as [Secrets](docs/protocol/secrets.md) says.
 - Untrusted sandbox code: port previews stay on the preview domain, and the
   proxies forward only the allowed headers and cookies.
 - Chat events: a dropped connection loses no event, and no tab shows an
@@ -178,6 +216,12 @@ deployment at `conductive.build`. It does not wait for CI, as
 
 ## Status
 
-- This project is not in production.
-- Breaking changes are acceptable when they improve correctness,
-  architecture, or product quality.
+- This project is in production. Real users and their data use the
+  deployment at `conductive.build`.
+- Avoid breaking changes. A change that breaks stored data, the Worker
+  API, or the runner messages needs a migration or a compatible path.
+  Older copies of the Mac app and older runners in the sandboxes must keep
+  working. The previous Worker must keep working on the schema of each new
+  migration, as
+  [Keep the previous Worker working](migrations/README.md#keep-the-previous-worker-working)
+  says. Name each breaking change in the pull request description.

@@ -10,16 +10,15 @@ of the data that the screens read and write.
   that leaves stops the timer. Screens that show a part share its reads.
 - The timer is short while a row works, needs input, or starts, or while
   the checks of its pull request run. It is short too while the last run
-  of a routine waits, starts, works, or needs input, or while a build
+  of an automation waits, starts, works, or needs input, or while a build
   runs. Otherwise it is slow, so that changes from other tabs, other
   people, and GitHub show. Repositories and the members read at entry and
   at focus only. The waits are choices of the app, not product
   limits. `org-waits.ts` holds them.
 - A row that the list already has takes its GitHub state only from list
   reads while its branch stays the same. Each other record keeps that row's GitHub state: a read, a
-  Resume reply, a `workspace.updated` event, or a partial change of the
-  open workspace. So the open row shows a newer GitHub state at the
-  next list read, as every other row does.
+  Resume reply, or a `workspace.updated` event. So the open row shows a
+  newer GitHub state at the next list read, as every other row does.
 - A record for a new branch takes that branch's GitHub state. Continue clears it when it stores the branch, before its refresh.
 - A new row, such as a created workspace, takes the GitHub state of its
   record. Titles and read marks still change the row at once. The shared
@@ -33,25 +32,31 @@ of the data that the screens read and write.
   as events, then the waiting writes in the order that they went out. A
   read that started before a change keeps the change. A failed read keeps
   the value that shows. A part can name the errors that prove that its
-  value no longer exists, as the routine page does for `routine_not_found`.
+  value no longer exists, as the automation page does for `automation_not_found`.
   Such a read shows its error also over the value.
-- The routine page reads its routine when it mounts and at each return to
+- The org list reads only at the first load of the app. `OrgList` keeps the
+  list that the server confirmed, with the answers of create, rename,
+  delete, restore, accept, and leave, and over it the moves that wait for
+  their answer, in the order that they went out. A failed move goes back
+  alone. A saved move joins the confirmed list once each earlier move has
+  its answer, so a later new org goes after it, as on the server.
+- The automation page reads its automation when it mounts and at each return to
   the page. Each field that the owner did not change takes the field of the
-  newer routine, and an edited field keeps its edit. A save sends only the
+  newer automation, and an edited field keeps its edit. A save sends only the
   fields that the owner changed, so it keeps a turn-off that the app made
-  during the edit. Its answer is the whole routine, and the Routines list
+  during the edit. Its answer is the whole automation, and the Automations list
   takes it at once, with the last run that the list has. A delete takes
-  the routine out of the list, and a later visit of its address reads it
+  the automation out of the list, and a later visit of its address reads it
   again.
-- A read of the routine that gets `routine_not_found` shows that the
-  routine is not available, also in place of a routine that shows. Any
-  other failed read keeps the routine. The other requests of the page go
-  through one client of the routine: the reads of the runs, Show older
+- A read of the automation that gets `automation_not_found` shows that the
+  automation is not available, also in place of an automation that shows. Any
+  other failed read keeps the automation. The other requests of the page go
+  through one client of the automation: the reads of the runs, Show older
   runs, Save, Turn off, Run now, and Delete. When one of them gets
-  `routine_not_found`, the routine reads again, after the read that runs,
+  `automation_not_found`, the automation reads again, after the read that runs,
   if any, and that read decides. A write can get that refusal also while
-  the routine exists, so the refusal alone decides nothing.
-- The Runs list of the routine page shows a number of pages of 50 runs:
+  the automation exists, so the refusal alone decides nothing.
+- The Runs list of the automation page shows a number of pages of 50 runs:
   one at first, and one more after each Show older runs. It reads them
   when it shows, every 10 seconds while it shows, and at each return to
   the page. Each read gets that many pages from the newest run, one after
@@ -60,9 +65,9 @@ of the data that the screens read and write.
   rows move behind Show older runs. Show older runs reads the page after
   the oldest run that the list shows, and adds it at once. A read that
   started before keeps that page only while its own pages end at the same
-  run. Run now shows its run first at once, and the Routines list takes it
+  run. Run now shows its run first at once, and the Automations list takes it
   as the last run. A later read of the runs brings its next state.
-- The chat reads the routine of a run workspace, with the pull request of
+- The chat reads the automation of a run workspace, with the pull request of
   its run, with the saved view, at each load of the chat. The header shows
   them until the next load.
 - A list write shows its change at once, and a failure takes back that
@@ -70,13 +75,24 @@ of the data that the screens read and write.
   answer sets the section of the workspace, not its state. A workspace
   record from an event, an open, Archive, or Restore keeps the place of its
   row, because only a read of the list and a move change the place.
+- A partial change of the open workspace changes only its own field in
+  the list. A `workspace.title` event changes the name, a read mark clears
+  the unread state, and a `start.updated` event changes no field. So the
+  other fields of the row stay, such as a newer owner, branch, GitHub
+  state, or `updatedAt`. The list `Resource` keeps a name change and a read
+  mark under their own keys, apart from the key of the whole record. So
+  neither one replaces a whole record, such as one from a read, a Resume
+  reply, or a `workspace.updated` event.
 - A save can answer with the whole value, such as the repositories or
   computer settings. Its answer counts from its arrival. A read that
   started before it changes nothing.
-- The saves of one value go out one at a time. The next save starts after
-  the answer of the one before, because an answer carries no order of its
-  own. A failed save rejects only its own caller, and the next save goes.
-  List writes do not wait for each other.
+- The writes and saves of one value go out one at a time. The next one
+  starts after the answer of the one before, because an answer carries no
+  order of its own. So two quick list writes of one field, such as two
+  moves of a section or a collapse and then an open, reach the server in
+  the order that the page shows them. Each write still shows at once. A
+  failed write or save rejects only its own caller, and the next one goes.
+  A request that does not answer holds the later ones of its value.
 - A repository save adds or removes that repository only. It keeps the
   choices from other saves and other clients. The save queue keeps an add
   before a later remove of the same repository.
@@ -123,7 +139,9 @@ of the data that the screens read and write.
   never wait for them. A failed read shows on `/` with Try again and
   Continue to workspaces, and keeps the user signed in. Only Accept
   invitation joins an org. The joined org goes to the list of orgs and
-  opens, and Get started reads again. A sign-out, or a sign-in of another
+  opens, and Get started reads again. The account reads its logins once,
+  for the default logins of the joined org, as
+  [Login data](login-data.md#rules) says. A sign-out, or a sign-in of another
   person, forgets the invitations, and an answer for the person before
   changes nothing.
 - `AppModel.feedback` keeps the feedback draft, the reply read, and the
@@ -183,9 +201,28 @@ of the data that the screens read and write.
 - A suspended org takes no write except a leave. [A suspended
   org](suspended-org.md) gives how the app learns of it, from the org list
   or from an `org_suspended` refusal, and what its screens show.
+- The secrets of an org are one value of `OrgModel.secrets`, a
+  `SecretsModel`. The Secrets tab and the Capabilities control read them
+  each time that they show, and share the answer. A write shows its answer
+  in the list. The list never holds a value: a reveal gives its value to
+  its caller only, shows the record of the reveal at once, and reads the
+  list again for the record of the Worker.
+- The Capabilities of a workspace that exists are a
+  `WorkspaceCapabilitiesModel` of each open control, which reads them when
+  it opens. A change shows at once, and its answer is the whole value. A
+  failed change shows the saved value again, with a toast.
 - The settings of the cloud computer are one value of the org in
   `OrgModel`. Every opening of the Cloud computer tab shares them, so a
   save from a closed tab shows in the reopened tab.
+- The org logins are one value of the org in `OrgModel.agentLogins`. A
+  save, a change of the switch "Use for every member", and a Remove show
+  in the order of the writes, and a read that started before a write
+  answered never takes it back, as `Resource` says. A change of the switch
+  shows at once, and a failed save takes it back. The note and the warning
+  of the saves and of Refresh of an org endpoint stay only in the memory of
+  the page, so a reload removes them. The account does not take the
+  default logins that a read names, as [Login data](login-data.md#rules)
+  says.
 - The Cloud computer tab follows the builds while it shows. The builds,
   not the settings, say which saved changes the org image lacks, in
   `BuildsResponse.changes`. They read again while a build runs and at
@@ -205,38 +242,8 @@ of the data that the screens read and write.
   sends nothing. The Worker also serves an event stream of each build, as
   the [lifecycle routes](../../worker/lifecycle/README.md#browser-routes)
   say. The app does not read it.
-- Output that an open, visible workspace shows counts as read. The read
-  mark tells the Worker the last event number that the user saw.
-- Each kept `WorkspaceModel` owns one `WorkspaceReadMarks` for all its
-  visits. It follows two numbers, not the `unread` state of the workspace,
-  and a close keeps both. The shown number is `last` of the event stream: the
-  stream has applied the complete state through that number. The confirmed
-  number is the newest mark that the Worker accepted.
-- While the shown number is above the confirmed number,
-  `WorkspaceReadMarks` sends a mark through the shown number. One request
-  runs at a time. When the shown number rises meanwhile, the next request
-  takes the new number, after a short wait. A failed request tries again
-  after a longer wait. An open sends a mark that is still due, also without
-  a new event.
-- An `unread` detail becomes `ready` when the confirmed number reaches the
-  shown number, and the shown number reaches the event number of the
-  detail. A read or a Resume reply gives the detail its event number, and
-  so does each stream event that changes it. So after a return, a read can
-  show `unread` at a number that the stream has not reached. That detail
-  stays `unread` until the stream reaches its number and a mark covers it.
-  The list row changes with the detail.
-- While the model is closed, the page is hidden, or the workspace is
-  archived, `WorkspaceReadMarks` sends no new mark and keeps no timer. When
-  the page shows again, the mark goes through the current shown number. A
-  page without the focus still shows its output, so the focus does not
-  count.
-- An archived detail stops the marks until a Restore shows, also while the
-  history replays records from before the archive. After a Restore, the
-  next mark covers the output that came while the workspace was archived.
-  A replay in pages moves `last` only after its final page, so a mark never
-  passes output that a later page holds.
-- Known limit: a request that never answers holds back each later mark,
-  because the API client has no timeout.
+- [Read marks](read-marks.md) gives the rules of the read marks of an
+  open workspace.
 - The chat, the GitHub views, the terminal tool, the preview tool, the
   workspace screen, the Files part, and the files development pages keep
   one store for each workspace through `useWorkspaceStore`. The hook makes
@@ -262,6 +269,12 @@ of the data that the screens read and write.
   - After the replay, the newest live event.
 - A live event during an unfinished replay moves no number. The store holds
   that event until the final page.
+- `WorkspaceStream.subscribe` gives each event of the workspace once, in
+  order, both from the replay and live. It also tells a replayed event
+  from a live one. Its optional `replayEnded` runs after the final page of
+  each replay, before the live events that waited for it. A part
+  that keeps only the newest state of a kind, such as the GitHub state of
+  the pull request bar, uses it to skip the old states of a replay.
 - `WorkspaceStream.reconnects` counts the replays that end after a dropped
   connection or a gap. A part that keeps its own reads, such as the
   member's GitHub access of the pull request bar, reads again at each new

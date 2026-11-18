@@ -9,8 +9,13 @@ DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
   rustc cargo sudo unzip util-linux xz-utils
 
 . "$base_scripts/runtime-settings.sh"
-sh "$base_scripts/install-runtime.sh" \
-  "$base_node_url" "$base_node_sha256" "$base_node_directory"
+base_node_stage=$(mktemp -d)
+trap 'rm -rf "$base_node_stage"' EXIT
+curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' \
+  --output "$base_node_stage/node.tar.gz" "$base_node_url"
+printf '%s  %s\n' "$base_node_sha256" "$base_node_stage/node.tar.gz" | sha256sum --check --status
+install -d -m 755 "$base_node_directory"
+tar -xzf "$base_node_stage/node.tar.gz" -C "$base_node_directory" --strip-components=1
 for base_command in node npm npx; do
   ln -sf "$base_node_directory/bin/$base_command" "/usr/local/bin/$base_command"
 done

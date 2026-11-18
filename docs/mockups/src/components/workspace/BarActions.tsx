@@ -4,6 +4,7 @@ import {
   Clock,
   GitBranchPlus,
   GitMerge,
+  GitPullRequestArrow,
 } from 'lucide-react'
 import { pullRequest } from '../../fixtures/pullRequests'
 import { repositories } from '../../fixtures/repositories'
@@ -15,6 +16,7 @@ import { ScreenLink } from '../common/ScreenLink'
 import { ShortcutTip } from '../common/ShortcutTip'
 import { TintedTheme, type ButtonTint } from '../common/tint'
 import {
+  agentActionCommand,
   agentActionLabels,
   barLabels,
   barMessageText,
@@ -29,12 +31,14 @@ import styles from './BarActions.module.css'
 
 /**
  * One button of the bar. An agent action sends its fixed prompt, Merge
- * merges as the viewer, Continue moves the workspace to a new branch, and
+ * merges as the viewer, Ready for review marks a draft ready as the
+ * viewer, Continue moves the workspace to a new branch, and
  * Archive archives the workspace at once. Each one leads to the screen that
  * follows. The main action takes the tint of the bar, outside its link,
  * because the link of the mockups needs the button as its own child. On
  * desktop, the tooltip of a button that takes a click names the key of its
- * command, such as "Create PR (⇧⌘P)".
+ * command, such as "Create PR (⇧⌘P)". Each button without a tint takes the
+ * outline tone, so the colour of the bar shows through it.
  */
 function BarButton(props: {
   action: BarAction
@@ -43,12 +47,12 @@ function BarButton(props: {
 }) {
   const { action, tint } = props
   // Only a tint fills the main action. A bar without one shows the outline.
-  const tone = tint ? 'primary' : 'secondary'
+  const tone = tint ? 'primary' : 'outline'
   switch (action.kind) {
     case 'agent':
       return (
         <ShortcutTip
-          command={action.action}
+          command={agentActionCommand(action.action)}
           label={agentActionLabels[action.action]}
         >
           <TintedTheme tint={tint}>
@@ -71,6 +75,28 @@ function BarButton(props: {
             <ScreenLink asChild to={barPaths.merging}>
               <ActionButton busy={action.busy} icon={GitMerge} tone={tone}>
                 {action.busy ? barLabels.merging : mergeLabels[action.method]}
+              </ActionButton>
+            </ScreenLink>
+          </TintedTheme>
+        </ShortcutTip>
+      )
+    case 'ready':
+      return (
+        <ShortcutTip
+          command="mark-ready-for-review"
+          label={barLabels.readyForReview}
+          off={action.busy}
+        >
+          <TintedTheme tint={tint}>
+            <ScreenLink asChild to={barPaths.markingReady}>
+              <ActionButton
+                busy={action.busy}
+                icon={GitPullRequestArrow}
+                tone={tone}
+              >
+                {action.busy
+                  ? barLabels.markingReady
+                  : barLabels.readyForReview}
               </ActionButton>
             </ScreenLink>
           </TintedTheme>
@@ -118,12 +144,12 @@ function BarButton(props: {
           off={action.busy || action.disabled}
         >
           {action.disabled ? (
-            <ActionButton disabled icon={Archive}>
+            <ActionButton disabled icon={Archive} tone="outline">
               {barLabels.archive}
             </ActionButton>
           ) : (
             <ScreenLink asChild to={paths.justArchived}>
-              <ActionButton busy={action.busy} icon={Archive}>
+              <ActionButton busy={action.busy} icon={Archive} tone="outline">
                 {barLabels.archive}
               </ActionButton>
             </ScreenLink>
@@ -171,7 +197,7 @@ export function BarMessage(props: {
       <span className={styles.text}>
         {barMessageText(props.kind, branches)}
       </span>
-      {props.kind === 'merge-refused' ? (
+      {props.kind === 'merge-refused' || props.kind === 'ready-refused' ? (
         <GitHubLink href={pullRequest.url} label={barLabels.openOnGitHub} />
       ) : null}
     </div>

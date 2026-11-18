@@ -1,3 +1,5 @@
+import type { DeviceCommandRecord } from '../../../src/shared/generated/DeviceCommandRecord.js'
+import type { DevicePairing } from '../../../src/shared/generated/DevicePairing.js'
 import {
   DEVICE_FRAME_LIMIT_BYTES,
   DEVICE_HEARTBEAT_MS,
@@ -5,8 +7,6 @@ import {
 } from '../../../src/shared/device.ts'
 import type {
   DeviceApprovalAction,
-  DeviceCommandRecord,
-  DevicePairing,
   DeviceSettingsAction,
   WorkerToDevice,
 } from '../../../src/shared/device.ts'
@@ -28,7 +28,8 @@ function approval(value: unknown): value is DeviceApprovalAction {
     value === 'deny' ||
     value === 'allow' ||
     value === 'always-allow' ||
-    value === 'allow-workspace-15-minutes'
+    value === 'allow-workspace-15-minutes' ||
+    value === 'allow-workspace-until-stop'
   )
 }
 function operation(value: unknown): value is DeviceSettingsAction {
@@ -37,7 +38,10 @@ function operation(value: unknown): value is DeviceSettingsAction {
     (value.action === 'read' ||
       (value.action === 'remove-command' &&
         typeof value.command === 'string') ||
-      (value.action === 'stop-workspace' && text(value.workspaceId)))
+      ((value.action === 'stop-workspace' ||
+        value.action === 'extend-workspace' ||
+        value.action === 'keep-workspace') &&
+        text(value.workspaceId)))
   )
 }
 function request(value: unknown): value is DeviceCommandRecord {

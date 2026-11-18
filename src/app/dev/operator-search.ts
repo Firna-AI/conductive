@@ -14,6 +14,7 @@ import {
 } from '../../test-support/fixtures/operator-access'
 import {
   orgRow,
+  sampleComputerId,
   sampleUserDetail,
   userRow,
   type OperatorRecords,
@@ -45,7 +46,8 @@ function matchOf(orgId: string, search: string): OperatorOrgMatch | null {
   if (orgId === search) return 'org-id'
   const sample = sampleOrgs.find((item) => item.id === orgId)
   if (!sample) return null
-  if (sample.computers.includes(search)) return 'cloud-computer-id'
+  if (sample.computers.includes(search) || sampleComputerId(sample) === search)
+    return 'cloud-computer-id'
   const hostname = hostnameOf(search)
   if (hostname && sample.previews.includes(hostname)) return 'preview-address'
   return null

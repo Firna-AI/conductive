@@ -51,10 +51,34 @@ const consoleLog: Attachment = {
   path: '.context/attachments/b81e4a6c03f7d29e5c1a8b4f6d2e07a9/checkout-console.log',
 }
 
+/**
+ * The zip of the dropped folder `checkout-screens`. The browser zips a
+ * dropped folder, so it uploads as one file.
+ */
+const folderZip: Attachment = {
+  id: 'folder-zip',
+  name: 'checkout-screens.zip',
+  kind: 'file',
+  sizeBytes: 1_846_272,
+  path: '.context/attachments/9c4e7a1d2b6f08e35a7c9d1e4b2f6a80/checkout-screens.zip',
+}
+
 /** The copy of the screenshot, which a press on its sent chip opens. */
 export const screenshotCopy = screenshot
 
 export const draftAttachments: readonly Attachment[] = [screenshot, consoleLog]
+
+/**
+ * The files of the sent message once the cloud computer has them and the
+ * app deleted its stored copies. Each later try of the message uses the
+ * copies in the cloud computer. The file tab of a copy that is gone says
+ * that the file moved or was deleted, so the chip of the screenshot opens
+ * no drawn tab.
+ */
+export const transferredAttachments: readonly Attachment[] = [
+  { ...screenshot, tab: undefined },
+  consoleLog,
+]
 
 /**
  * The screenshot uploads, and the browser measured 64% of it as sent. The
@@ -83,11 +107,21 @@ export const failedAttachments: readonly Attachment[] = [
 /** A screen recording over the size limit, which the app does not attach. */
 export const largeRecording = {
   name: 'checkout-recording.mov',
-  sizeBytes: 49_912_218,
+  sizeBytes: 1_386_217_472,
 } as const
 
-/** A folder of screenshots that a drop holds, which the app does not attach. */
+/** A folder of screenshots that a drop holds, which the browser zips. */
 export const droppedFolder = 'checkout-screens'
+
+/**
+ * Just after a drop of the screenshot and the folder: both upload, and
+ * neither has a measurement yet.
+ */
+export const droppedFolderAttachments: readonly Attachment[] = [
+  { ...screenshot, state: 'uploading' },
+  { ...folderZip, state: 'uploading' },
+  consoleLog,
+]
 
 /** The words of the message around the places of the screenshot and the log. */
 const overlapWords = {
@@ -129,6 +163,16 @@ export const beforeDrop = {
 /** After the drop, the caret stands after the new chip and its space. */
 export const afterDropCaret =
   overlapWords.start.length + fileMark(screenshot.id).length + 1
+
+/** The draft after the drop of the screenshot and the folder together. */
+export const folderDropDraft = overlapText(
+  `${fileMark(screenshot.id)} ${fileMark(folderZip.id)} `,
+  fileMark(consoleLog.id),
+)
+
+/** After that drop, the caret stands after the zip and its space. */
+export const afterFolderDropCaret =
+  afterDropCaret + fileMark(folderZip.id).length + 1
 
 /**
  * A message from before the files had a place in its text. Its text holds

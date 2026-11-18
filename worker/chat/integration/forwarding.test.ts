@@ -81,12 +81,13 @@ it('forwards encoded workspace chat writes with their unread body and authentica
     session: { id: sessionId, title: 'Outer Worker session' },
   })
   const history = await fixture.request(
-    chatHistoryPath(OUTER_ORG, OUTER_WORKSPACE, sessionId, 1),
+    chatHistoryPath(OUTER_ORG, OUTER_WORKSPACE, sessionId),
   )
   expect(history.status).toBe(200)
   expect(await history.json()).toMatchObject({
     throughEventNumber: 4,
     events: [
+      { eventNumber: 1, event: { type: 'session.updated' } },
       {
         eventNumber: 2,
         event: {

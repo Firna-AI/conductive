@@ -16,8 +16,7 @@ export interface AppEnv {
   CONDUCTIVE_TITLE_MODEL?: string
   CONDUCTIVE_MODELS?: string
   CONDUCTIVE_DEFAULT_CHOICE?: string
-  CONDUCTIVE_RUNNER_ARCHIVE_URL?: string
-  CONDUCTIVE_RUNNER_ARCHIVE_SHA256?: string
+  CONDUCTIVE_RELEASE_SERVER?: string
   CF_VERSION_METADATA?: WorkerVersionMetadata
   CONDUCTIVE_DEPLOY_TOKEN_SHA256?: string
   GITHUB_APP_PRIVATE_KEY?: string
@@ -33,7 +32,9 @@ export interface AppEnv {
   RESEND_API_KEY?: string
   FEEDBACK_EMAIL?: string
   OPERATOR_GITHUB_IDS?: string
-  /** Optional proxy outside Cloudflare for chatgpt.com requests. */
+  /** The egress Worker that sends the chatgpt.com requests of the gateway. */
+  CHATGPT_EGRESS?: { fetch(request: Request): Promise<Response> }
+  /** A fallback egress proxy for a deployment without the egress Worker. */
   CHATGPT_EGRESS_URL?: string
   CHATGPT_EGRESS_SECRET?: string
 }

@@ -1,7 +1,8 @@
+import type { Session } from '../../shared/generated/Session'
 import { describe, expect, it, vi } from 'vitest'
-import type { AgentChoice } from '../../shared/agents'
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import { chatHistoryPath } from '../../shared/events'
-import type { Session } from '../../shared/sessions'
+
 import { sessionsPath } from '../../shared/sessions'
 import { FAKE_IDS, FAKE_TIME, fakeUser } from '../../test-support/fixtures/core'
 import { senderSnapshot } from '../../test-support/fixtures/workspaces'
@@ -10,7 +11,12 @@ import { chatFor, shown } from './test-kit'
 
 const org = FAKE_IDS.org
 const ws = FAKE_IDS.workspace
-const opus: AgentChoice = { agent: 'claude', model: 'Opus 5.5', effort: 'high' }
+const opus: AgentChoice = {
+  agent: 'claude',
+  model: 'Opus 5.5',
+  effort: 'high',
+  fast: false,
+}
 const recordedHistory = [
   'user: Add address autocomplete to the checkout form. Keep the manual fields as a fallback.',
   'agent: The checkout form now suggests addresses. Manual entry still works.',
@@ -38,7 +44,7 @@ function record(id: string, closedAt: number | null): Session {
 }
 
 describe('session history', () => {
-  it('shows the workspace and the composer while the history of the shown session loads, and opens the stream after it', async () => {
+  it('shows the workspace and the composer, then starts live events after the newest page while earlier history waits', async () => {
     const chat = chatFor({
       conversation: 'history',
       hold: (request) =>
@@ -46,7 +52,13 @@ describe('session history', () => {
     })
     const events = recordedChatEvents('history', ws, 'autocomplete')
     chat.server.json('GET', chatHistoryPath(org, ws, 'autocomplete'), {
-      events,
+      events: events.filter(({ eventNumber }) => eventNumber >= 8),
+      throughEventNumber: 11,
+      hasMore: true,
+      nextBeforeEventNumber: 8,
+    })
+    chat.server.json('GET', chatHistoryPath(org, ws, 'autocomplete', 8, 11), {
+      events: events.filter(({ eventNumber }) => eventNumber < 8),
       throughEventNumber: 11,
     })
     const loaded = chat.controller.start()
@@ -56,11 +68,24 @@ describe('session history', () => {
     expect(loading.workspace).not.toBeNull()
     expect(loading.sessionStates.autocomplete.hydration).toBe('loading')
     expect(chat.after).toEqual([])
-    chat.held[0]()
+    const complete = chat.controller.loadHistory('autocomplete')
+    chat.held.splice(0, 1)[0]()
     await loaded
     expect(chat.after).toEqual([11])
+    expect(shown(chat.controller, 'autocomplete')).toEqual([
+      recordedHistory[1],
+      recordedHistory[3],
+    ])
+    expect(
+      chat.controller.getSnapshot().sessionStates.autocomplete.hydration,
+    ).toBe('loading')
+    expect(chat.requests('GET', sessionsPath(org, ws))).toHaveLength(2)
+    await vi.waitFor(() => expect(chat.held).toHaveLength(1), shortly)
+    chat.held.splice(0, 1)[0]()
+    await complete
     const state = chat.controller.getSnapshot().sessionStates.autocomplete
     expect(state.hydration).toBe('ready')
+    expect(shown(chat.controller, 'autocomplete')).toEqual(recordedHistory)
   })
 
   it('loads the stored history of the session that a close from another tab shows', async () => {
@@ -73,6 +98,12 @@ describe('session history', () => {
     })
     expect(chat.controller.getSnapshot().activeSessionId).toBe('debounce')
     expect(chat.histories('debounce')).toBe(1)
+    const history = chat.server.requests
+      .map((request) => new URL(request.url))
+      .find((url) => url.searchParams.get('sessionId') === 'debounce')
+    expect(Object.fromEntries(history?.searchParams ?? [])).toEqual({
+      sessionId: 'debounce',
+    })
     await vi.waitFor(
       () => expect(shown(chat.controller, 'debounce')).toEqual(recordedHistory),
       shortly,
@@ -148,7 +179,7 @@ describe('session history', () => {
     expect(shown(chat.controller, 'debounce')).toEqual(recordedHistory)
   })
 
-  it('reads the history of a session page by page, after the progress of each page, with the cutoff of the first page', async () => {
+  it('reads a later shown session newest first, before each cursor, with the cutoff of the first page', async () => {
     const chat = chatFor({ conversation: 'history' })
     const events = recordedChatEvents('history', ws, 'debounce')
     const page = (numbers: readonly number[], next?: number) => ({
@@ -156,23 +187,23 @@ describe('session history', () => {
       throughEventNumber: 9,
       ...(next === undefined
         ? {}
-        : { hasMore: true, nextAfterEventNumber: next }),
+        : { hasMore: true, nextBeforeEventNumber: next }),
     })
     // The pages leave out the running state of the tool, which its end replaces.
     chat.server.json(
       'GET',
       chatHistoryPath(org, ws, 'debounce'),
-      page([1, 2, 3, 4, 5], 6),
+      page([8, 9], 8),
     )
     chat.server.json(
       'GET',
-      chatHistoryPath(org, ws, 'debounce', 6, 9),
+      chatHistoryPath(org, ws, 'debounce', 8, 9),
       page([7], 7),
     )
     chat.server.json(
       'GET',
       chatHistoryPath(org, ws, 'debounce', 7, 9),
-      page([8, 9]),
+      page([1, 2, 3, 4, 5]),
     )
     await chat.controller.start()
     await chat.controller.select('debounce')
@@ -181,24 +212,24 @@ describe('session history', () => {
       .map((request) => new URL(request.url))
       .filter((url) => url.searchParams.get('sessionId') === 'debounce')
       .map((url) => [
-        url.searchParams.get('after'),
+        url.searchParams.get('before'),
         url.searchParams.get('through'),
       ])
     expect(reads).toEqual([
-      ['0', null],
-      ['6', '9'],
+      [null, null],
+      ['8', '9'],
       ['7', '9'],
     ])
     const state = chat.controller.getSnapshot().sessionStates.debounce
     expect(state.hydration).toBe('ready')
   })
 
-  it('fails a history whose page does not move the read on, and asks for no more pages', async () => {
+  it('fails a history whose page does not move the read back, and asks for no more pages', async () => {
     const stuck = {
       events: [],
       throughEventNumber: 9,
       hasMore: true,
-      nextAfterEventNumber: 4,
+      nextBeforeEventNumber: 4,
     }
     let reads = 0
     const chat = chatFor({

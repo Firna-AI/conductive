@@ -1,8 +1,6 @@
 import environmentSource from './environment.py?raw'
-import {
-  PREVIEW_INGRESS_PATH,
-  type PreviewIngressIdentity,
-} from '../../../src/shared/preview-ingress'
+import type { PreviewIngressIdentity } from '../../../src/shared/generated/PreviewIngressIdentity'
+import { PREVIEW_INGRESS_PATH } from '../../../src/shared/preview-ingress'
 import { shellArgument } from '../../terminal/privileged'
 import { ResponseBudget } from './budgets'
 import type { E2bContext } from './context'

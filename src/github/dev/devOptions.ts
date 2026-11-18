@@ -18,7 +18,12 @@ export const bannerStates: readonly BannerState[] = [
 ]
 export const schemes = ['dark', 'light'] as const
 export const viewers = ['owner', 'admin', 'member'] as const
-export const modes: readonly GitHubMode[] = ['normal', 'slow', 'error']
+export const modes: readonly GitHubMode[] = [
+  'normal',
+  'slow',
+  'stored',
+  'error',
+]
 export const turns = ['none', 'running'] as const
 
 export interface DevOptions {

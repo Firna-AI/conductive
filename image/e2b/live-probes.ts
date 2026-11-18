@@ -1,8 +1,9 @@
+import type { E2bLiveSandbox } from './live-provider'
+import type { SandboxProvider } from '../../worker/sandbox/provider'
 import source from './runtime-probe.py?raw'
 
 import { PREVIEW_INGRESS_PATH } from '../../src/shared/preview-ingress'
 import { E2bControl } from '../../worker/sandbox/e2b/control'
-import type { SandboxProvider } from '../../worker/sandbox/provider'
 import type { HttpFetch } from '../../worker/env'
 import { shellQuote } from '../../worker/lifecycle/commands'
 import { CheckError, object, until } from '../live-input'
@@ -10,7 +11,7 @@ import { command, probeDirectory, requireFlags, upload } from './live-command'
 import type { E2bLiveConfiguration } from './live-input'
 
 export async function probe(
-  provider: SandboxProvider,
+  provider: E2bLiveSandbox,
   id: string,
   mode: string,
   arguments_: readonly string[] = [],
@@ -34,7 +35,7 @@ export async function probe(
   )
 }
 
-export async function checkBoot(provider: SandboxProvider, id: string) {
+export async function checkBoot(provider: E2bLiveSandbox, id: string) {
   return until(async () => {
     const value = await probe(provider, id, 'boot')
     return value.systemd === true &&
@@ -46,7 +47,7 @@ export async function checkBoot(provider: SandboxProvider, id: string) {
 }
 
 export async function checkEnvironment(
-  provider: SandboxProvider,
+  provider: E2bLiveSandbox,
   id: string,
   expected: string,
 ) {

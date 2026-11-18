@@ -9,6 +9,7 @@ import { useStore, valueOf } from '../../app/store'
 import type { User } from '../../shared/api'
 import type { GetStartedResponse } from '../../shared/onboarding'
 import type { OrgSummary } from '../../shared/orgs'
+import { DeletedOrgsSection } from '../account/DeletedOrgsSection'
 import { useApp, useOrgModel } from '../context'
 import { Page } from '../layout/Page'
 import { ActionButton } from '../ui/actions'
@@ -87,14 +88,18 @@ function Steps(props: { response: GetStartedResponse }) {
  * done step loads it again. The org step and the agent step follow the org
  * list and the account. The org step and the finish also show the first
  * build of the org, from its builds. The words are the mockup's, from one
- * copy module.
+ * copy module. While the user has a deleted org, Deleted orgs comes before
+ * the steps, because a phone has no other way from here to the Account
+ * page. Restore there opens the org.
  */
 export function GetStartedScreen(props: { user: User }) {
   const app = useApp()
+  const go = useGo()
   const response = useStore(app.getStarted)
   return (
     <Page subtitle={`@${props.user.githubLogin}`} title={copy.title}>
       <p className={styles.intro}>{copy.intro(personName(props.user))}</p>
+      <DeletedOrgsSection onRestored={(org) => go(routes.org(org.id))} />
       {response ? <Steps response={response} /> : null}
     </Page>
   )

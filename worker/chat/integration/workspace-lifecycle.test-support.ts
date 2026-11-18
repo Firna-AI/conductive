@@ -1,6 +1,3 @@
-import { mkdir, mkdtemp } from 'node:fs/promises'
-import { resolve } from 'node:path'
-
 import type { Workspace } from '../../workspace'
 import type { FirstWorkspaceMessage } from '../../lifecycle/workspace-runtime'
 import { CLAUDE } from '../harness.test-support'
@@ -8,13 +5,7 @@ import { createOuterRuntime } from './outer-runtime.test-support'
 import { OUTER_ORG, OUTER_WORKSPACE } from './outer-seed.test-support'
 
 export async function createLifecycleChatFixture(bundle: string) {
-  const directory = resolve(
-    '.context/boat-native-remote-workspaces/8i/completion/runtime',
-  )
-  await mkdir(directory, { recursive: true })
-  const fixture = await createOuterRuntime(bundle, {
-    persistencePath: await mkdtemp(`${directory}/case-`),
-  })
+  const fixture = await createOuterRuntime(bundle)
   await fixture.env.DB.batch([
     fixture.env.DB.prepare(
       `INSERT INTO workspace_runtime

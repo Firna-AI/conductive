@@ -13,8 +13,6 @@ It sends `X-Boat-Org` with the organization ID of its account on every
 API request, `BOAT_ORG_ID` for `boat`. A change of the active Boat organization
 of the key's user then moves no work of the app.
 It forwards no browser cookie.
-File writes also send a signed PUT to the exact address that the fixed
-upload-grant route returns. That transfer sends no provider credential or org header.
 
 `BoatClient.privatePort(sandboxId, port, mode)` calls only the fixed host
 route. It requires explicit localhost or network mode and private access.
@@ -109,7 +107,7 @@ Make the organization and the key once, in the Boat dashboard:
    actions, and add these actions:
    `sandbox.create`, `sandbox.read`, `sandbox.update`, `sandbox.stop`,
    `sandbox.resume`, `sandbox.fork`, `sandbox.delete`, `exec`,
-   `snapshot.read`, `snapshot.write`, `file.read`, `file.write`, `host`, and `desktop`.
+   `snapshot.read`, `snapshot.write`, `file.read`, `host`, and `desktop`.
 4. Limit the key to one environment. Give it a lifetime of 365 days, and
    plan its replacement before that date.
 
@@ -157,19 +155,29 @@ command and file fallback rules.
 
 ## File reads
 
+`SandboxProvider.fileInfo(sandboxId, path)` reads metadata without file content.
+It returns the validated absolute path, byte size, and directory flag.
+Attachment delivery uses this method to check files that the cloud computer already received.
+On Boat, it uses the existing fixed `GET /sandboxes/{id}/files/info` route.
+The Boat adapter preserves typed provider errors, including 404 `not_found` and 503 `unavailable`.
+On E2B, it uses envd Stat, with the same path, size, and type checks, and typed provider errors.
+It returns directory metadata without a read of file content.
+
 The [Boat file reader](boat-transport.md#file-reads) returns bytes or the reported size above the caller's limit.
 The [E2B file reader](e2b/README.md#commands-and-files) uses Stat and bounded binary download, then returns base64.
 Both preserve the caller's decoded byte limit and exact size result.
 
-## File writes
+## Attachment downloads
 
-`SandboxProvider.writeFile(sandboxId, path, body, sizeBytes)` is an internal streamed write.
-The caller authorizes the workspace and its actual sandbox before calling it.
-Each adapter creates missing parent folders.
-It replaces an existing file only after the upload completes.
-The [Boat file writer](boat-transport.md#file-writes) streams bytes through a signed upload grant.
-The [E2B file writer](e2b/README.md#commands-and-files) stages a protected file beside the destination, then replaces the destination atomically.
-It streams counted octets to the fixed envd route, and validates the reply path and complete input consumption without buffering the file.
+Attached files reach the sandbox through detached commands.
+The cloud computer downloads each file from a one-use route on the machine host.
+The command checks its size before an atomic move to the repository path.
+The provider needs `exec` for these commands.
+[Chat attachment delivery](../chat/attachments.md#dispatch) owns the download tokens, access checks, command, and polling.
+
+The shared `SandboxProvider` interface has no file write.
+The E2B client keeps its own atomic streamed writer for its provider and live operations, as
+[Commands and files](e2b/README.md#commands-and-files) says.
 
 ## Development
 
@@ -219,7 +227,7 @@ The Boat-specific create test keeps the exact two-request idempotency assertion.
 
 ### Key Code
 
-- [provider.ts](provider.ts) defines the server's sandbox and file read/write interface, with `PrivatePort` and `PortCredential`.
+- [provider.ts](provider.ts) defines the server's sandbox and file read interface, with `PrivatePort` and `PortCredential`.
 - [The E2B client](e2b/README.md#key-code) owns envd, commands, protected env setup, identity-only cleanup, and private ports.
 - [boat.ts](boat.ts) forwards provider operations to the Boat helpers. It builds the Boat port credential.
 - [provider-contract.test.ts](provider-contract.test.ts) runs the [provider contract suite](#provider-contract-suite) with the Boat driver, `createBoatContractFixture` in [boat-contract.test-support.ts](boat-contract.test-support.ts). Its port case checks the Boat port credential that `privatePort` returns.
@@ -233,11 +241,8 @@ The Boat-specific create test keeps the exact two-request idempotency assertion.
 - [transport-error-body.test.ts](transport-error-body.test.ts) checks the shared error budget and provider error mapping.
 - [file-response.ts](file-response.ts) calculates the file content budget.
 - [The shared readers](../http/bounded-body.ts) collect bounded bytes and decode and parse complete JSON bodies.
-- [file-read.ts](file-read.ts) parses file replies and runs the metadata fallback.
+- [file-read.ts](file-read.ts) validates file metadata, parses file content replies, and runs the metadata fallback.
 - [file-read.test.ts](file-read.test.ts) checks size results and safe errors from the metadata fallback.
-- [file-write.ts](file-write.ts) validates upload grants and runs the internal file write.
-- [file-write-body.ts](file-write-body.ts) counts streamed bytes without buffering the file.
-- [file-write.test.ts](file-write.test.ts), [file-write-failure.test.ts](file-write-failure.test.ts), and [file-write-response.test.ts](file-write-response.test.ts) check bytes, path binding, credential separation, safe failures, and response budgets.
 
 See the [access requirements](../../docs/protocol/isolation.md#orgs-and-workspaces),
 the [rules of the app's Boat key](../../docs/protocol/isolation.md#the-apps-boat-key),

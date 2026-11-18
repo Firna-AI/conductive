@@ -1,12 +1,27 @@
 # Port previews
 
-The Preview tool shows the web servers of a workspace's cloud computer. Each
-preview shows in a frame, with an "Open" link to a new tab. The workspace
-screen shows the tool in the tools panel of the right column, and on a phone
-as the Preview page, as
-[the tools part](../shell/workspace/README.md#the-tools-part) says.
+The Preview tool shows the web servers of a workspace's cloud computer. On
+a phone, `PreviewTool` is the Preview page: each preview shows in a frame,
+with an "Open" link to a new tab. On desktop, `PreviewPanel` is the Preview
+tool of the tools panel: the list of ports, with no bar and no frame. The
+page of each port then shows in its Preview tab of the centre row, which
+the workspace screen draws, as
+[Preview tabs](../shell/workspace/tools-part.md#preview-tabs) says.
 
-## Behaviour
+## The desktop tool
+
+- `PreviewPanel` shows the port form at all times, with no "+" (decision
+  290). It lists each server of the report, then each port with a Preview
+  tab or an open preview that the report does not name, as `Port 8080`.
+  `panelPortList` gives that list.
+- A click on a port, or a typed port, calls `onShow`. The shell then shows
+  the Preview tab of the port, or opens one. The row of `current`, the port
+  of the shown tab, is the current one, with `aria-current`.
+- Nothing in the tool ends a preview (decision 292).
+- `previewOfPort` gives the preview that a tab of a port shows: the oldest
+  open preview of the port.
+
+## The phone page
 
 - The tool lists the open previews from the API. It keeps the latest
   `ports.updated` report of the workspace events, with the servers that
@@ -22,6 +37,17 @@ as the Preview page, as
   when each reported server has a tab, the form shows the field alone.
 - Open preview sends the port as JSON. A port that is open already shows its
   preview, with no request.
+- An address of the tool can name a port, such as the link of a local
+  address in chat text. The tool waits for the list and for an open that
+  runs. A port that is open already then shows its preview, with no
+  request. Otherwise the tool sends the open request of a typed port, and
+  the form shows while it runs. Each address of a port sends at most one
+  request.
+- Then the address of the preview takes the place of the address of the
+  port, with no new history entry, so Back does not open the port again. A
+  failed open shows its message in the form, and the address of the tool
+  takes the place of the address of the port. A move to another address
+  before the answer keeps that address.
 - A tab shows the port and the name of its server, cut to 10 characters,
   from the latest report. Its tooltip and its accessible name give the whole
   name and the folder. A port that the report does not name shows `Port`
@@ -67,27 +93,57 @@ as the Preview page, as
 ```tsx
 <PreviewTool
   now={now}
-  route={{ previewId, href: previewHref, navigate: goToPreview }}
+  route={{
+    previewId,
+    port,
+    href: previewHref,
+    navigate: goToPreview,
+    replace: replaceAddress,
+  }}
+  store={keptPreviews}
   touch={phone}
   workspace={{ orgId, workspaceId, fetch, subscribe }}
+/>
+
+<PreviewPanel
+  current={shownPort}
+  dispatch={keptPreviews.dispatch}
+  now={now}
+  onShow={showPort}
+  state={snapshot}
+  tabPorts={tabPorts}
 />
 ```
 
 - `now` gives the time for the age of the notice of a failed repair. Keep
   it stable. The shell gives the clock of the app, and the default is the
   clock of the browser.
-
 - `route` comes from the app shell, which owns the addresses. `previewId` is
-  the preview that the current address names. `href` gives the address of a
-  tab, and `navigate` goes there without a page load. When the address names
-  no preview, or one that is gone, the first tab shows.
+  the preview that the current address names, and `port` is the port that
+  it names. `href` gives the address of a tab, and `navigate` goes there
+  without a page load. `replace` puts the address of a preview, or of the
+  tool for null, in place of the current address, with no new history
+  entry. When the address names no preview, or one that is gone, the first
+  tab shows.
+- `store` is optional. The shell gives the previews store that it keeps
+  and connects for the workspace, which the Preview tabs read too. The tool
+  then connects nothing. Without it, the tool makes and connects its own.
 - `workspace` and `touch` are the same as for the
   [terminal](../terminal/README.md#mount-the-tool). `workspace.subscribe` is
   required.
+- `PreviewPanel` reads the snapshot of that store. `tabPorts` are the ports
+  of the Preview tabs of the saved view, and `onShow` shows the tab of a
+  port.
 
 ## Key code
 
-- `PreviewTool.tsx`: the tool, its states, and the route seam.
+- `PreviewTool.tsx`: the phone page, its states, and the route seam.
+- `PreviewPanel.tsx`: the desktop tool, the list of ports.
+- `previewActions.ts`: the preview in the frame, the open, the close, and
+  the tabs, and the open of the port of the address with its move of the
+  address.
+- `addressPort.ts`: `useAddressPort`, which opens the port of each address
+  once.
 - `PreviewToolbar.tsx`: the link tabs and the actions of a preview.
 - `PreviewFrame.tsx`: the frame, its sandbox flags, and the new tab link.
 - `PreviewOpenForm.tsx`: the port form, its list states, and its field.
@@ -95,11 +151,12 @@ as the Preview page, as
 - `PortsNotice.tsx`: the notice of a failed repair of the list.
 - `previewsState.ts`: the list, its revoked previews, the selection, the
   latest port report, and the time of a failed repair. `portFormList`
-  gives what the form lists. The reducer takes the tool's actions and the
+  gives what the form of a phone lists, and `panelPortList` what the
+  desktop tool lists. `previewOfPort` gives the oldest preview of a port. The reducer takes the tool's actions and the
   events.
 - `previewsStore.ts`: the tool store, and the action of a failed repair.
 - `previewsApi.ts`: list, open, and close requests.
 
-See [Port previews](../../docs/protocol/workspace-tools.md#port-previews),
+See [Port previews](../../docs/protocol/port-previews.md),
 [Listening ports](../../docs/protocol/agent-runner.md#listening-ports),
 and [Access and security](../../docs/protocol/terminal-previews-and-desktop.md#port-previews).

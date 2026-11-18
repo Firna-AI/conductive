@@ -35,6 +35,11 @@
   font-weight: var(--ui-weight-strong);
 }
 
+/* A grant until Stop has no clock, so its words use the text font. */
+.open {
+  font-family: inherit;
+}
+
 /*
  * The result of a Stop. The bar grows for the cause that the Mac gave, and
  * its tint follows the result.

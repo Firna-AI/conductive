@@ -1,18 +1,11 @@
-import type { WorkspaceToolSource } from '../../tools/image-manifest'
-import {
-  installImageSoftware,
-  type ImageSoftwareArtifact,
-} from '../lifecycle/image-software'
-import { privilegedCommand } from '../terminal/privileged'
-import { workspaceToolsCommand } from '../tools/image'
-import { WORKSPACE_TOOL_SOURCES } from '../tools/image-assets'
+import { installImageSoftware } from '../lifecycle/image-software'
+import type { SoftwareRelease } from '../lifecycle/software-release'
 import { sha256Hex } from './digest'
 
 export async function softwareVersion(
-  artifact: ImageSoftwareArtifact,
-  sources: readonly WorkspaceToolSource[] = WORKSPACE_TOOL_SOURCES,
+  artifact: SoftwareRelease,
 ): Promise<string> {
   return sha256Hex(
-    `${privilegedCommand(workspaceToolsCommand(sources))}\n${installImageSoftware(artifact)}`,
+    [artifact.version, installImageSoftware(artifact)].join('\n'),
   )
 }

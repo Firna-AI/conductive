@@ -8,11 +8,16 @@ This file holds the release part of the [Mac app README](README.md).
 
 ## Signed release packages
 
-The `package:release` command signs both architectures with a Developer ID
-Application identity. It enables Hardened Runtime with only the JIT entitlement
+The `package:release` command signs the Mac packages with a Developer ID
+Application identity. A `--arm64` or `--x64` flag selects one architecture.
+Without a flag, the command packages both. It enables Hardened Runtime with only the JIT entitlement
 that Electron needs. It notarizes and staples the app before ZIP packaging.
 It also signs, notarizes, and staples each DMG.
 It fails when a credential is missing or an app has the wrong Apple team.
+Each step that waits for Apple has a time limit of 20 minutes: the electron-builder step, which signs and notarizes the apps, and the submission of each DMG.
+`desktop/scripts/release-retry.ts` stops a step that runs out of time and starts it once more.
+A second time-out fails the command.
+A rejection by Apple or a cancellation fails it at once.
 It checks each app with `codesign --verify --deep --strict`, `stapler validate`,
 and Gatekeeper. It checks each finished DMG as well.
 
@@ -48,8 +53,10 @@ The command restores the prior Keychain search list and removes temporary
 credentials when it ends.
 Ctrl+C and SIGTERM cancel the active tool before credential cleanup.
 
-The signing job of the release workflow runs the three commands above.
-It uses the `desktop-release` GitHub environment of `Firna-AI/conductive`.
+The release workflow has two signing jobs, one for each architecture.
+Each job runs the three commands above, and passes its architecture flag to `package:release`.
+Only the arm64 job runs the packaged tests, because the test runs only the package of the runner's architecture, and the runner is an Apple silicon Mac.
+Each signing job uses the `desktop-release` GitHub environment of `Firna-AI/conductive`.
 That environment admits only the `main` branch, so no run of a tag or of another branch gets its secrets.
 The rule is a GitHub setting, not a file in this repository.
 In GitHub, open Settings, Environments, `desktop-release`.
@@ -60,7 +67,7 @@ Its five secrets have the names in the table above, except that the public
 
 The release workflow explicitly passes `CSC_LINK`, `CSC_KEY_PASSWORD`,
 `APPLE_API_KEY`, `APPLE_API_KEY_ID`, and `APPLE_API_ISSUER` to the reusable signing workflow.
-The signing job receives their values from the protected `desktop-release` environment.
+The signing jobs receive their values from the protected `desktop-release` environment.
 [GitHub's reusable workflow guide](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows#using-inputs-and-secrets-in-a-reusable-workflow)
 explains why the caller must pass environment secrets too.
 
@@ -70,8 +77,9 @@ For a key file, pipe `openssl base64 -A -in FILE` into that command.
 Use `gh variable set` for the Apple team ID.
 Never commit keys, export passwords, or decoded credentials.
 
-The signing job uploads `desktop-signed-packages` and
-`desktop-release-evidence` as Actions artifacts for 14 days.
+Each signing job uploads `desktop-signed-packages-<architecture>` and
+`desktop-release-evidence-<architecture>` as Actions artifacts for 14 days.
+`<architecture>` is `arm64` or `x64`.
 An `always()` step also removes temporary signing credentials after a failure
 or cancellation.
 
@@ -84,9 +92,18 @@ Installed copies update themselves from these releases.
 `.github/workflows/release.yml` holds the whole release.
 The reusable workflow `desktop-mac-checks.yml` holds the Mac checks, and `desktop-sign.yml` holds the signing steps.
 The Desktop workflow and the release workflow run the same Mac checks.
+The `architectures` input of `desktop-mac-checks.yml` selects the Apple silicon checks, the Intel checks, or both.
 `desktop/scripts/publish.ts` checks the files and publishes the draft.
 It takes the file names from `latest-mac.yml` and from the signed files, so it holds no copy of the package naming rule.
 `desktop/scripts/verify-release-tag.ts` checks the release tag.
+
+The Linux release jobs run on the GitHub-hosted `ubuntu-24.04` runner.
+The signing jobs and the Apple silicon Mac checks run on the [Blacksmith](https://docs.blacksmith.sh/blacksmith-runners/overview) runner `blacksmith-6vcpu-macos-15`.
+Blacksmith has no Intel Macs, so the Intel Mac checks use the GitHub-hosted `macos-15-intel` runner.
+The Blacksmith GitHub App must have access to this repository.
+Without it, the Blacksmith jobs wait in the queue and never start.
+To change the size of a Mac runner, change the `blacksmith-` label in the workflow file.
+
 A release happens in these steps:
 
 1. On each push to `main`, release-please keeps one release pull request up to date.
@@ -96,10 +113,15 @@ A release happens in these steps:
 2. Merge the release pull request.
    release-please then creates the tag `vX.Y.Z` on the merge commit, and a draft GitHub release.
    This merge commit is the release commit.
-3. The release workflow runs the Mac checks.
+3. The release workflow runs the Apple silicon Mac checks.
    Its `verify-tag` job then checks that `refs/tags/vX.Y.Z` points to the release commit.
-   Its signing job then builds both architectures with the updater on, signs and notarizes them, and runs the packaged tests.
-4. The publish job uploads the files to the draft.
+   Its two signing jobs then run at the same time, one for each architecture.
+   Each builds its architecture with the updater on, and signs and notarizes it.
+   The arm64 job also runs the packaged tests.
+   Apple takes minutes to notarize each package, so two parallel jobs take about half the time of one job for both.
+   The Intel Mac checks run at the same time as these jobs, because they take the longest.
+4. When the Intel Mac checks and both signing jobs pass, the publish job uploads the files to the draft.
+   It first joins the files of the two signing jobs, as the next paragraphs say.
    It publishes the draft only after GitHub lists every file with its full size.
 
 The publish job uploads the two ZIP files, their block maps, the two DMG files, and `latest-mac.yml`.
@@ -109,17 +131,23 @@ The ZIP files and their block maps keep the versioned names from `artifactName` 
 `latest-mac.yml` keeps its name.
 Ad-hoc packages also keep the names from `artifactName`.
 electron-builder writes the packages, their block maps, and `latest-mac.yml`.
-The signing job then staples each DMG.
+Each signing job then staples its DMG.
 Stapling changes the DMG after electron-builder records its size and hash.
 So `dmg.writeUpdateInfo: false` in `electron-builder.yml` leaves the DMG files out of `latest-mac.yml`.
 For the same reason, the publish job uploads no DMG block map.
 Risk: electron-builder marks `dmg.writeUpdateInfo` as private, so an upgrade can change it.
 
+Each signing job packages one architecture, so its `latest-mac.yml` lists only its own ZIP file.
+`desktop/scripts/merge-release.ts` in the publish job then puts the files of both jobs together in `desktop/dist/release`.
+It joins the two `latest-mac.yml` files into one that lists both ZIP files.
+The x64 file stays the main entry, first in `files` and in `path` and `sha512`, as one electron-builder run for both architectures writes it.
+
 When a run fails, the draft stays.
 A re-run of the failed jobs replaces the files of the draft.
 A re-run uses the same release commit, so it repeats a failure that the publish code itself causes.
 Then fix that code on `main`.
-To publish the signed files of the failed run by hand, download its `desktop-signed-packages` artifact into `desktop/dist/release`.
+To publish the signed files of the failed run by hand, download its `desktop-signed-packages-x64` artifact into `desktop/dist/signed/x64`, and its `desktop-signed-packages-arm64` artifact into `desktop/dist/signed/arm64`.
+Run `node desktop/scripts/merge-release.ts`, with an empty `desktop/dist/release`.
 Then run `RELEASE_TAG=vX.Y.Z RELEASE_VERSION=X.Y.Z node desktop/scripts/publish.ts` from the fixed checkout, with a GitHub login that can write releases.
 Otherwise, delete the draft, and the next release carries the fix.
 The publish job never changes or deletes a published release.
@@ -150,11 +178,11 @@ The tag check makes sure that this commit is the release commit.
 So a re-run or a manual run for an older draft publishes that release, and a newer published release stays the latest.
 
 The publish job runs on Linux with the built-in `GITHUB_TOKEN` and `contents: write`.
-It downloads the signed files, uploads them with `gh`, and publishes the draft with `gh api`.
+It downloads the signed files, joins them, uploads them with `gh`, and publishes the draft with `gh api`.
 It runs no `npm ci` and no build, so no dependency script runs beside a token that can write releases.
-The signing job keeps a read-only token.
+The signing jobs keep a read-only token.
 
-**Run workflow** on the release workflow, from `main`, runs the Mac checks and the signing job.
+**Run workflow** on the release workflow, from `main`, runs the Mac checks and the signing jobs.
 That run keeps the updater off and publishes nothing.
 Use it to test signing.
 
@@ -193,7 +221,7 @@ GitHub redirects the old name to the new one.
 Never create a repository with the old name in the Firna-AI organization.
 That stops the redirect, and copies that run those releases stop updating.
 `CONDUCTIVE_DESKTOP_UPDATES=enabled` at build time turns the updater on.
-Only the signing job of a release sets it.
+Only the signing jobs of a release set it.
 Manual signing runs, pull request builds, and local builds keep the updater off.
 An unpackaged app never starts the updater.
 In a build with the updater off, Help → Check for updates is disabled.

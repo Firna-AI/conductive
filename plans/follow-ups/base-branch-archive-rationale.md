@@ -11,7 +11,7 @@
 - **Terms:**
   - **Base branch:** The branch from which a workspace starts its own branch.
   - **Archive:** The action that stops a workspace computer and retains it for a 14-day Restore window.
-- **Background:** Pull request routine workspaces have a recorded base branch. The base-branch protocol describes their Git behavior.
+- **Background:** Pull request automation workspaces have a recorded base branch. The base-branch protocol describes their Git behavior.
 - **Problem:** The page says that an Archive check excludes pull request commits from unpushed work. Archive now performs no Git work check.
 - **Impact if no action:** Readers can infer a work check that the app does not run.
 - **Root question:** How should the base-branch page describe current Archive behavior?

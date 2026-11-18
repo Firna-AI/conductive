@@ -59,6 +59,16 @@ function archivedReply(workspaceId: string, restoreUntil: number | null) {
   return { ...detail, workspace: archived }
 }
 
+/** Whether the list shows a row for the workspace. */
+function listed(workspaceId: string): boolean {
+  try {
+    rowLink(workspaceId)
+    return true
+  } catch {
+    return false
+  }
+}
+
 /** The names of the dialogs that show. */
 function dialogs(): string[] {
   return Array.from(
@@ -135,12 +145,13 @@ describe('Archive from a workspace row', () => {
         inCheckout: false,
         history: [open],
         header: 'Checkout address autocomplete',
-        toast: 'Apple Pay button is archived.Restore',
+        toast:
+          'Apple Pay button is archived.It leaves the list on 29 January.Restore',
       },
     })
   })
 
-  test('Archive of the open row during its first read, by its shortcut or its menu, sends one request, its toast brings the workspace back, and the end of the read resumes nothing', async () => {
+  test('Archive of the open row during its first read, by its shortcut, sends one request, moves the row to the Archived group at once, its toast brings the workspace back, and the end of the read resumes nothing', async () => {
     // The spinner of the first read stays on its first frame.
     holdAnimationFrames()
     const server = new FakeApiServer({ workspaceState: 'stopped' })
@@ -155,13 +166,11 @@ describe('Archive from a workspace row', () => {
     held.holdAnswer('POST', archivePath)
     click(archiveShortcut(workspace))
     await settle()
-    // While the Archive runs, its button is busy, and the menu sends nothing.
-    const busy = archiveShortcut(workspace).getAttribute('aria-busy')
-    rightClick(rowLink(workspace), { clientX: 120, clientY: 400 })
-    click(menuItem('Archive'))
-    await settle()
+    // While the Archive runs, its row already shows in the Archived group.
     const during = {
       dialogs: dialogs(),
+      archived: queryByRole('region', 'Archived')?.textContent ?? null,
+      listed: listed(workspace),
       writes: requestsFor(server, workspace).filter((line) =>
         line.startsWith('POST'),
       ),
@@ -181,7 +190,6 @@ describe('Archive from a workspace row', () => {
 
     expect({
       loading,
-      busy,
       during,
       after: {
         dialogs: dialogs(),
@@ -193,8 +201,12 @@ describe('Archive from a workspace row', () => {
       ),
     }).toEqual({
       loading: true,
-      busy: 'true',
-      during: { dialogs: [], writes: [`POST ${archivePath}`] },
+      during: {
+        dialogs: [],
+        archived: 'Archived1',
+        listed: false,
+        writes: [`POST ${archivePath}`],
+      },
       after: {
         dialogs: [],
         header: 'Checkout address autocomplete',
@@ -207,7 +219,7 @@ describe('Archive from a workspace row', () => {
     })
   })
 
-  test('the toast of an Archive offers Restore only while the workspace can come back', async () => {
+  test('the toast of an Archive gives the day when the workspace leaves the list, and offers Restore only while the workspace can come back', async () => {
     const server = new FakeApiServer()
     // A failed first start leaves no cloud computer to keep, and a repeated
     // Archive can give a Restore that already ended.
@@ -230,8 +242,8 @@ describe('Archive from a workspace row', () => {
       byToast('Apple Pay button is archived.').textContent,
       byToast('Pricing page copy is archived.').textContent,
     ]).toEqual([
-      'Apple Pay button is archived.',
-      'Pricing page copy is archived.',
+      'Apple Pay button is archived.It leaves the list on 29 January.',
+      'Pricing page copy is archived.It leaves the list on 29 January.',
     ])
   })
 })

@@ -2,9 +2,9 @@
 
 This guide belongs to [Web app: data and composition](README.md). It
 gives the rules of the screens of the app shell: the account and Get
-started, sign-in, invitations, orgs, panels and layers, the focus, saved
-drafts, New workspace as a page or a dialog, and
-[the waitlist](#the-waitlist).
+started, sign-in, invitations, orgs, panels and layers, the trees of the
+workspace list, the focus, saved drafts, New workspace as a page or a
+dialog, and [the waitlist](#the-waitlist).
 [Command palette and keys](palette-and-keys.md) gives the rules of the
 command palette and of the keyboard shortcuts.
 [Feedback](palette-screens.md) gives the rules of the Feedback dialog that
@@ -16,10 +16,14 @@ the Help row of the command palette opens.
 - Get started has three steps: the GitHub App, an org, and Claude or
   Codex. A reply of the API names only these steps.
 - Only the GitHub App step comes from that reply. The org step and the org
-  of Get started follow the org list, also a deleted org, as the address
-  `/` does. The agent step follows the logins of the account. So a leave of
+  of Get started follow the orgs that are not deleted, as the address `/`
+  does. A person whose orgs are all deleted gets Create org again, and
+  Get started lists those orgs with Restore before its steps. The agent step follows the logins of the account, and the org
+  logins that the account names as default logins of the orgs of the
+  person (org login decision 4). So a leave of
   the last org offers Create org again, and a connect on Account completes
-  its step at once. `setupSteps` in `setup-steps.ts` derives them, and each
+  its step at once. An accepted invitation to an org whose org login
+  serves the person completes it after one read of the account. `setupSteps` in `setup-steps.ts` derives them, and each
   screen reads them through `AppModel.getStarted`.
 - Once the org exists, the org step shows its cloud computer from the
   builds of the org, as
@@ -37,46 +41,19 @@ the Help row of the command palette opens.
   carries the current revision of the Terms, as
   [Terms consent](../../worker/security/README.md#terms-consent) says.
   `../shell/auth/SignInScreen.test.tsx` checks that address.
+- The sign-in screen also takes the place of every screen when the API
+  refuses any request with `sign_in_required` while the app is open. The
+  client of `AppModel` reports each such refusal, as `watchSession` in
+  `boot.ts` says, also the replies of its fetch. Every org client and
+  feature client sends through it. A refusal with another code, such as
+  `github_reconnect_required`, keeps the screen.
 - The address `/` shows the invitations of the user first, in the frame of
   the app: each org with its invited email and Accept invitation, then
   Continue to workspaces. Without invitations, or after Continue to
   workspaces, it opens Get started or the org of Get started. The
   `?invite=` link of an invitation email leads there.
-- The account has three tabs, General, Preferences, and Keyboard
-  shortcuts, as the org settings have tabs. Each tab is a link with its
-  own address. General holds the sign-in, This Mac, GitHub, and the
-  agents. The `?connect=` address of an agent opens its Connect form on
-  General. Preferences holds the New workspaces section: Model and effort,
-  and
-  [the choice of how New workspace opens](../../docs/protocol/create-a-workspace.md#the-preference).
-  On a phone, a tab that does not fit moves to a second line.
-- Keyboard shortcuts lists the keys of each command, and saves each change
-  at once through `AccountModel.saveShortcuts`, as
-  [the Keyboard shortcuts tab](../shell/account/shortcuts/README.md) says.
-  The keys and every hint of the app use the saved changes at once.
-- The account of the Mac app shows This Mac after the sign-in section. A
-  browser shows none and asks no Mac.
-- Each connected login of the account shows its share switch, "Let other
-  members use this login", and Get started shows none. The switch saves
-  at once through `AccountModel.setNoReuse`. While it saves, it shows the
-  new value and takes no other change. A failed save shows its cause under
-  the switch until the next change, and the switch shows the saved value.
-  A share reply that a later save or remove of the same login overtook does
-  not show, so a removed login stays removed.
-- The Codex form offers API key, selected first, then ChatGPT plan.
-  ChatGPT plan asks the Worker for a code. The form shows the code with
-  the link to the page of OpenAI. It asks the Worker for the state of the
-  sign-in after each wait that the Worker gives. The sign-in ends when it
-  connects, when the code expires, or when the Worker refuses it. An
-  expired code and a refused sign-in offer a new code.
-- Cancel, the other kind in the switch, and leaving the page stop the
-  sign-in. A poll that gets no answer, or a failure of the server, waits
-  and asks again while the code works.
-- A login that the app can no longer use, such as a ChatGPT sign-in that
-  OpenAI did not renew, shows Signed out, its cause, and Sign in again.
-  Sign in again and the `?connect=` address open its form with its kind.
-  The composers and Get started count such a login as missing, so their
-  Connect notice leads to that form.
+- [Account and agent screens](account-screens.md) describes the account tabs,
+  keyboard shortcuts, sharing, own endpoint model lists, and the ChatGPT sign-in.
 - Create org asks for the name and the initials, and lists the
   repositories that the person and the GitHub App both reach, from
   `AccountModel.repositories`, before the org exists. The create sends the
@@ -90,6 +67,18 @@ the Help row of the command palette opens.
   says.
 - The rail, the org switcher, and General show the saved initials of an
   org. An org without them shows the initials of its name.
+- The tile of the open org shows the colour of the org in its initials
+  and its outline. An org without a colour, or with a colour that this
+  copy of the app does not know, shows Blue. An admin picks the colour on
+  General, and a choice saves at once. A failed save shows a toast and the
+  saved colour again.
+- The rail and the org switcher show the orgs in the person's own order.
+  The person moves an org tile by drag, by its tile menu with Move up and
+  Move down, or by Alt and Up or Down on a focused tile. On a phone, a
+  long press lifts an org in the org switcher. A move shows at once, and a
+  failed save takes back only that move, with a toast. A suspended org
+  moves like any other. A deleted org has no tile, as
+  [Org rail order](../../docs/protocol/org-rail-order.md) says.
 - A suspended org shows its notice, and no action that it refuses, as
   [A suspended org](suspended-org.md) says.
 - Only an operator gets the operator section, from the rail and the org
@@ -151,6 +140,39 @@ the Help row of the command palette opens.
   and the keys of the workspace list.
 - [Feedback](palette-screens.md) gives the rules of the Feedback dialog
   that the Help row of the palette opens, with its screenshots.
+- The workspace list shows each live sub-workspace nested under the row of
+  its parent, in the sidebar and on the list page, as
+  [The list](../../docs/protocol/sub-workspaces.md#the-list) says.
+  `groupWorkspaces` in `sections.ts` places the rows of each section with
+  `placeWorkspaces`, the shared rule of the Worker, so a row whose parent
+  is archived shows under the nearest live row above it. Each row that the
+  list shows above a row in its tree indents it by one step, through the
+  classes `.nested` and `.indent1` to `.indent3` of the mockups. The guide
+  lines join the rows of a tree as in a file tree, as
+  [the design](../../docs/mockups/design.md) says. A stub runs down from
+  the mark of a row with nested rows, and a connector runs to the mark of
+  each nested row. A line ends at its last nested row. An outer line runs
+  through a row only while its row has a nested row further down.
+  `treeRows` in `list-trees.ts` gives each row its lines from `treeLines`,
+  a shared helper. The mockups use the same helper, and their
+  `guideClasses` gives the classes of the lines. A collapsed section
+  counts its nested rows too. The Archived group and the command palette
+  stay flat.
+- Only a top-level row moves, and it takes its whole tree: by a drag, by a
+  long press on a phone, by Alt with Up or Down, and by Move to section.
+  The lifted row shows the count of the nested rows that move with it,
+  the tree stays faint in its place, and the drop line falls only between
+  two trees. The place of a move counts the top-level rows of the section
+  without the moved one, as the Worker counts them. A move shows the tree
+  at its new place at once. A nested row has no drag, no move by keys, and
+  no Move to section, and a long press on it does nothing, as
+  [Moves](../../docs/protocol/sub-workspaces.md#moves) says.
+- An Archive of a workspace gives each live workspace that showed under
+  its row the section and the place of the archived workspace, in the
+  list of the app as in the Worker (`replaceWorkspace` in
+  `list-trees.ts`). So these rows stay where they showed: while the
+  Archive runs, after its reply, after an event of the archived record,
+  and after the next read of the list.
 - A move of a workspace row by keys keeps the focus on the row. The list
   gives back only a lost focus, as a layer does: when a render takes the
   focused row out of the page and the focus falls to the page, the
@@ -163,7 +185,7 @@ the Help row of the command palette opens.
   changes, a draft that the user did not change takes the new value, and
   an edited draft stays. A draft that equals the one that went out for a
   save takes the value of the answer. A failed save keeps the draft.
-- A form with several fields, such as the routine page, applies these
+- A form with several fields, such as the automation page, applies these
   rules to each field on its own (`eachField`). A field that the user did
   not change takes the field of the newer saved value, and an edited field
   keeps its edit. So a save sends only the fields that the user changed,
@@ -184,9 +206,10 @@ the Help row of the command palette opens.
   says. Each of its places opens it through `useNewWorkspace`: the row at
   the top of the list, the button of the main area of an org, the item in
   the menu of a section, and the command palette. The dialog opens on a
-  computer when the user chose it. The place opens the page on a phone,
-  without that choice, while the account loads, and while a New workspace
-  form shows. A New workspace form marks itself with `useShownForm`. The
+  computer when the account's view is the dialog. The server gives the
+  dialog to an account without a saved view. The place opens the page on
+  a phone, when the account's view is the page, while the account loads,
+  and while a New workspace form shows. A New workspace form marks itself with `useShownForm`. The
   row stays a link, so a click with a modifier key opens the page in a
   new tab.
 - Every desktop frame hosts the dialog, over the whole frame
@@ -205,6 +228,10 @@ the Help row of the command palette opens.
   with no section, as the row does, so General keeps one draft. A create that the server accepts opens the new workspace, also
   when the dialog closed while the create ran. A failed create request
   keeps the dialog open with Try again.
+- The section of a draft is its key, and a pick of the Section menu of
+  the dialog (`NewWorkspaceModel.setSection`) wins over it. The pick stays
+  in the draft of the key, so the page of that key names the picked
+  section too. A send ends the pick.
 - The message field of the dialog takes the focus as the dialog opens.
   When the dialog closes and the address stays, the focus goes back to
   the control that opened it. When the address changes, such as after
@@ -222,7 +249,8 @@ the Help row of the command palette opens.
 - New workspace sends and uploads one at a time: the create waits for the
   files, and the paperclip is off while the create runs. Send, Create, Try
   again, and Enter read one readiness: the text outside the chips of its
-  files, the files of its chips, the agent login, the image of the org, the
+  files, the files of its chips, a login that serves the agent in the org,
+  the own login or the org login, the image of the org, the
   repository and its build, the model, and an org that is not suspended.
   In a suspended org, the refused bar takes the place of the composer of
   the dialog, as on the page.
@@ -271,6 +299,30 @@ the Help row of the command palette opens.
   files of the draft follow its marks, and a create that succeeds or a
   sign-out ends them, as
   [Attached files of a draft](../chat/draft-files.md) says.
+- The page and the dialog have the Capabilities icon, the Blocks icon with
+  its label as a native tooltip (secrets decision 6 G). On a computer the
+  page and the dialog show it after the attach button. Its control opens
+  above the icon. On a phone, one + button, "More options",
+  holds Attach files and Capabilities, which opens the control as a sheet
+  (secrets decision 16 G). The control lists the secrets of the org, which
+  it reads each time that it opens, with a checkbox that pre-approves each
+  one for the new workspace, and the switch of Mac access, off by default.
+  A secret for all agents stays checked and off. The draft keeps the
+  choices, the create sends them, and a create that succeeds ends them, so
+  the next draft starts again from the defaults. The create leaves out
+  each pre-approved secret that the last read no longer lists, and a
+  refusal of a missing secret reads the secrets again for Try again.
+- The Secrets tab of the org settings follows the Agents tab (secrets
+  decisions 2, 3, and 6). Its rights come from `secretRights` in
+  `permissions.ts`: every member adds secrets, a member replaces and
+  deletes only the secrets that the member added, and an admin replaces
+  and deletes each one, switches the mark for all agents, and reveals one
+  value at a time. A suspended org shows the tab with no action. The list
+  shows each value as dots, and the reader of the list keeps no value from
+  a reply. A revealed value shows on its own line with Copy and Hide, and
+  a new reveal, a Replace of its value, and its Delete hide it. Replace
+  sends only the fields that changed, and an empty new value keeps the
+  stored value. Delete asks first.
 - A create request that fails keeps the message in the form, with "The
   workspace wasn't created". Try again sends the same message ID. A failed
   first start keeps its workspace instead, as
@@ -312,8 +364,8 @@ the requirements. The mockups `app/sign-in/waitlist`, `app/sign-in/join`,
   the code no more.
 - For a person with app access, a join link uses no code, and `/` opens as
   usual.
-- The Account page ends with the invite code of the user, after the model
-  of new workspaces: the invite link with Copy, the code, and the invites
+- The General tab of the Account page ends with the invite code of the
+  user: the invite link with Copy, the code, and the invites
   left. It has the states of the pause, of every invite used, and of a code
   that an operator turned off. During [open sign-up](../../docs/protocol/sign-ups.md#open-sign-up),
   it shows the open sign-up notice while invites remain. The pause wins.

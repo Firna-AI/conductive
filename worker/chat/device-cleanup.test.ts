@@ -1,5 +1,4 @@
-import type { InlineConfig } from 'vite'
-import { afterEach, beforeEach, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, expect, it } from 'vitest'
 
 import { chatHistoryPath } from '../../src/shared/events'
 import { readDeviceRecord } from '../../src/shared/device-read'
@@ -20,30 +19,11 @@ import { array } from './agent-events'
 import { CLAUDE } from './harness.test-support'
 import { record, string } from './inputs'
 
-vi.mock('vite', async (importOriginal) => {
-  const vite = await importOriginal<typeof import('vite')>()
-  return {
-    ...vite,
-    build: (config: InlineConfig = {}) => {
-      const library = config.build?.lib
-      if (!library) throw new Error('The device test library is missing.')
-      return vite.build({
-        ...config,
-        build: {
-          ...config.build,
-          lib: {
-            ...library,
-            entry: 'worker/chat/device-cleanup-worker.test-support.ts',
-          },
-        },
-      })
-    },
-  }
-})
-
 let fixture: DeviceFixture
 beforeEach(async () => {
-  fixture = await deviceFixture()
+  fixture = await deviceFixture({
+    entry: 'worker/chat/device-cleanup-worker.test-support.ts',
+  })
 })
 afterEach(async () => {
   await fixture?.dispose()

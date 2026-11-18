@@ -1,10 +1,10 @@
+import type { DeviceCommandInput } from './generated/DeviceCommandInput.js'
+import type { DeviceCommandRecord } from './generated/DeviceCommandRecord.js'
+import type { DeviceCommandResult } from './generated/DeviceCommandResult.js'
+import type { DeviceCommandState } from './generated/DeviceCommandState.js'
+import type { DevicePairing } from './generated/DevicePairing.js'
 import {
   DEVICE_OUTPUT_LIMIT_BYTES,
-  type DeviceCommandInput,
-  type DeviceCommandRecord,
-  type DeviceCommandResult,
-  type DeviceCommandState,
-  type DevicePairing,
   type DeviceSettings,
   type DeviceSettingsOutcome,
   type DeviceSettingsResponse,
@@ -98,7 +98,8 @@ export function readDeviceSettings(value: unknown): DeviceSettings {
       return {
         workspaceId: deviceRequired(window.workspaceId),
         workspaceName: nullableText(window.workspaceName),
-        expiresAt: deviceNumber(window.expiresAt),
+        expiresAt:
+          window.expiresAt === null ? null : deviceNumber(window.expiresAt),
       }
     }),
   }

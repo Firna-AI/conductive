@@ -1,5 +1,6 @@
 /*
- * The list mark: the GitHub state of the pull request in one colour.
+ * The list mark: the GitHub state of the pull request in one colour, or
+ * blue while the agent needs input.
  * `MarkGrid.module.css` gives the grid and the shape of each cell.
  * `--mark-off` is the opacity of a cell that is not lit, and `--mark-rest`
  * the opacity of a cell of the ring between two passes of the light. The
@@ -12,20 +13,31 @@
   --mark-head: currentColor;
 }
 
-.checksFailed {
+/* Each GitHub state takes the tone of the pull request bar. */
+.danger {
   color: var(--ui-rose);
 }
 
-.checksRunning {
+.warning {
   color: var(--ui-amber);
 }
 
-.checksPassed {
+.success {
   color: var(--ui-success);
 }
 
 .merged {
   color: var(--ui-list-merged);
+}
+
+/*
+ * Running checks and a draft: grey cells, lit brighter than a mark without
+ * a GitHub state. A grey light is too dim to see, so the light of running
+ * checks runs in the colour of the text.
+ */
+.neutral {
+  --mark-head: var(--ui-ink);
+  color: var(--ui-muted);
 }
 
 /*
@@ -39,6 +51,15 @@
   --mark-rest: 0.45;
   --mark-head: var(--ui-ink);
   color: var(--ui-muted);
+}
+
+/*
+ * The agent needs input: the accent blue, whatever the GitHub state, so
+ * that a workspace that waits for the user stands out from the colours of
+ * the GitHub states.
+ */
+.input {
+  color: var(--ui-primary);
 }
 
 /* An archived workspace: every cell faint, whatever its GitHub state. */
@@ -72,7 +93,7 @@
   }
 }
 
-/* The whole grid dims, then lights again. */
+/* The whole blue grid of an agent that needs input dims, then lights again. */
 @keyframes pulse {
   0%,
   100% {

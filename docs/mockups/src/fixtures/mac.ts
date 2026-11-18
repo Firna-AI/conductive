@@ -1,4 +1,5 @@
 import type { PersonKey } from './members'
+import { checkoutAutocomplete, savedCarts } from './workspaces'
 
 /**
  * The Mac of the person signed in. The Mac app registers it as a device
@@ -23,8 +24,13 @@ export type MacCommandRequest = {
   longerBecause?: string
 }
 
-/** What happened to a command on the Mac, as the chat shows it. */
-export type MacCommandState = 'waiting' | 'denied' | 'done' | 'unavailable'
+/**
+ * What happened to a command on the Mac, as the chat shows it.
+ * `mac-access-off` is a request that the workspace refused, because a
+ * member turned Mac access off in its Capabilities (secrets decision 8).
+ */
+export type MacCommandState =
+  'waiting' | 'denied' | 'done' | 'unavailable' | 'mac-access-off'
 
 export const safariTest: MacCommandRequest = {
   command: 'npm run test:safari -- checkout',
@@ -103,19 +109,73 @@ export const waitingWithScript: readonly MacCommandRequest[] = [
 /** The output of the Safari test, which goes back to the agent. */
 export const safariOutput = [
   '> storefront@2.4.0 test:safari',
+  '> playwright test --project=webkit checkout',
+  '',
+  'Running 12 tests using 4 workers',
+  '',
   '✓ checkout › suggests addresses (2.4s)',
   '✓ checkout › fills the address fields (1.9s)',
-  '2 passed (14.2s)',
+  '✓ checkout › keeps the address after a reload (1.2s)',
+  '✓ checkout › shows the delivery dates (0.8s)',
+  '✓ checkout › applies a discount code (1.1s)',
+  '✓ checkout › rejects an expired discount code (0.9s)',
+  '✓ checkout › totals the basket with tax (0.7s)',
+  '✓ checkout › pays with a saved card (2.2s)',
+  '✓ checkout › asks again after a declined card (1.6s)',
+  '✓ checkout › sends the receipt (1.0s)',
+  '✓ checkout › opens the order page (0.6s)',
+  '',
+  '12 passed (14.2s)',
 ].join('\n')
 
 /** How long the Safari test ran on the Mac. */
 export const safariDuration = '16s'
 
+/** A page, packed and encoded, that the long command unpacks. */
+const packedPage = [
+  'H4sICB3p9GoCA2dyaWQxMS1tYWMuaHRtbACtXNty27gZvs9ToNqLtJ2I5lEk5cNMVtnUns3BG2/dmb2DSEjCmiJYELSs9extH6CP2CfpD5KgLFrORPk5mrENkPzw4cd/BCif',
+  'doWjKzUOrs40z9JRvPl+YjlI2gzml6crZmiJFlRWTJ1PqrUYhzBtVJtM3bx6u+Pc/EwLvkfPF9O50KmTI6h53RN5ZLnU/vPV3ORbh83PFWrqTOx7eLhdMX4cqWmrl235jS5W0pR5en',
+  '0BzuBDztNRCbk9IeFD5/gdCFyNV7QNc+20w9UiTdjWhQZG5fbUrH1m9c378m1FORX9qBev3l9ybJ7pnhCySdWsddvSpqX45JJvjgtaJpqmhMfhk15WWR0O11k7OFU/xinXLJEcZFPY',
+  'fxqnf/5ylKieNy78feqVHyxHSfAieVqWhY0YeM5UxvG8lOa8WU+5sCqrG8fszw9XdJi6s',
+].join('')
+
+/**
+ * A long always-allowed command: a script that unpacks a page into a new
+ * folder and opens it. This Mac shows its first three lines.
+ */
+export const longAllowed = `set -e; T=$(mktemp -d); echo '${packedPage}' | base64 -d | gunzip > "$T/grid.html"; open "$T/grid.html"`
+
 /** The commands that always run on this Mac without asking. */
-export const alwaysAllowed = ['git status', 'npm run lint', 'sw_vers'] as const
+export const alwaysAllowed = [
+  'git status',
+  longAllowed,
+  'npm run lint',
+  'sw_vers',
+] as const
 
 /** The time left in the window that allows every command, as mm:ss. */
 export const allowAllLeft = '14:32'
+
+/**
+ * The time left just after a done Extend, which sets the end of the window
+ * to 15 minutes from the time of the Mac.
+ */
+export const extendedLeft = '15:00'
+
+/** What a grant until Stop shows in place of the time left. */
+export const untilStop = 'Until you stop'
+
+/**
+ * The workspaces whose commands all run on this Mac without asking: one
+ * with the time left of its 15 minutes, and one until the user stops it.
+ */
+export const allowedWorkspaces: readonly {
+  name: string
+  left: string | null
+}[] = [
+  { name: checkoutAutocomplete.name, left: allowAllLeft },
+  { name: savedCarts.name, left: null },
+]
 
 /** The always-allowed command that the change states of This Mac remove. */
 export const removedCommand = 'npm run lint'

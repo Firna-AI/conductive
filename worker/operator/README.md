@@ -13,7 +13,7 @@ points.
 
 ## Overview
 
-The [overview guide](overview.md) gives the route, access check, counts, and response.
+The [overview guide](overview.md) gives the route, access check, counts, long runs, and response.
 
 ## Orgs and users
 
@@ -170,7 +170,7 @@ The [operator test guide](tests.md) gives the commands and native provider setup
 - [`user-access-data.ts`](user-access-data.ts): user grant sources, email state, and referral recipients.
 - [`org-directory.ts`](org-directory.ts) and [`user-directory.ts`](user-directory.ts): list queries and cursors.
 - [`org-detail.ts`](org-detail.ts) and [`user-detail.ts`](user-detail.ts): page queries and reply mapping.
-- [`workspace-counts.ts`](workspace-counts.ts): the state buckets shared by the overview and org page.
+- [`workspace-counts.ts`](workspace-counts.ts): the five state counts shared by the overview, the org page, and the account stats, with removal computed at the read time. `archived` counts every archived workspace, removed ones included, and `removed` counts the removed ones again. Each of the three replies sends both, and the app takes `removed` out of Archived. It also holds the 7-day and 30-day windows and daily counts of the overview and the account stats.
 - [`lift.ts`](lift.ts): the lifts and the checks of affected workspaces.
 - [`repair.ts`](../lifecycle/repair.ts): bounded Cron repair of overdue disk and image alarms.
 - [`events-data.ts`](events-data.ts): the shared atomic writer for suspension state, events, and access revocations.
@@ -208,7 +208,8 @@ The [operator test guide](tests.md) gives the commands and native provider setup
 
 ### Related Docs
 
-- [Operator section](../../docs/protocol/operator-section.md): access, overview numbers, and directory pages.
+- [Operator section](../../docs/protocol/operator-section.md): access and directory pages.
+- [Operator Overview](../../docs/protocol/operator-overview.md): overview numbers and long runs.
 - [Waitlist](../../docs/protocol/waitlist.md) and [codes](../../docs/protocol/waitlist-codes.md): app access and email rules.
 - [Sign-ups](../../docs/protocol/sign-ups.md): the pause of sign-ups and the waitlist switch.
 - [Operator actions](../../docs/protocol/operator-actions.md): the

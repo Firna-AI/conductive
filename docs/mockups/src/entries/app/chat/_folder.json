@@ -6,10 +6,13 @@
     "tables",
     "lists",
     "headings",
+    "links",
     "lost-data",
     "lost-updates",
     "unavailable-files",
     "background-limit",
-    "masked-paths"
+    "standard-speed",
+    "masked-paths",
+    "endpoint-models"
   ]
 }

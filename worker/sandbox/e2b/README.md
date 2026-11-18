@@ -105,7 +105,12 @@ Malformed final status fails safely.
 Public file reads use Stat, bounded binary download, and base64 output.
 The caller supplies the backend limit, normally 5 MiB.
 Content overflow rechecks metadata for the exact size result.
-A public file write first creates the missing parent folders as `user`.
+`fileInfo` uses Stat, with the same path, size, and type checks and typed
+provider errors. It returns directory metadata without a read of file
+content.
+The shared `SandboxProvider` interface has no file write. The client keeps
+its own file write for its provider and live operations.
+That write first creates the missing parent folders as `user`.
 It stages a mode 600 file beside the destination, as `user`.
 It streams the octets to that file through the low-level `uploadFile`, with the exact byte count and a reply path check.
 Then `os.replace` moves the staged file over the destination.
@@ -129,10 +134,10 @@ The shared HTTP preview relay has a separate exact-host check.
 Bootstrap writes root-owned `/run/conductive-preview/ingress.json` on tmpfs.
 It contains the validated sandbox ID, configured domain, and per-target alias record.
 After TCP ensure, the adapter atomically registers the actual shared-relay alias before returning its descriptor.
-The runner reads current bounded metadata for every request.
+The [Rust preview relay](../../../crates/cnd-relay/README.md) reads current bounded metadata for every request.
 It accepts only the exact sandbox, domain, and registered outer port.
 It rejects a target that loops through the outer alias or internal relay port.
-The runner removes provider credentials before forwarding HTTP and WebSocket traffic to the app.
+The relay removes provider credentials before forwarding HTTP and WebSocket traffic to the app.
 
 ## Response budgets
 
@@ -163,4 +168,5 @@ Real E2B boot, tmpfs, private ingress, and filesystem-only snapshot checks need 
 - [commands.ts](commands.ts), [command-status.ts](command-status.ts), and [command-supervisor.py](command-supervisor.py) own job lifetime and byte offsets.
 - [environment.ts](environment.ts) and [environment.py](environment.py) stage protected env files and preview metadata.
 - [files.ts](files.ts) and [file-content.ts](file-content.ts) own bounded file transfers.
+- [file-write-body.ts](file-write-body.ts) counts the streamed octets of a file write.
 - [ports.ts](ports.ts) owns private port credentials and TCP alias registration.

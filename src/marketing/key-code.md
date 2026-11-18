@@ -38,14 +38,7 @@ Each path is relative to `src/marketing/` unless the link names another folder.
 - `styles/docs-nav.css`, `docs-contents.css`, `docs-prose.css`, and
   `docs-code.css`: the guide lists, the contents and cards, the body, and
   the code colours.
-- `pages/from-conductor.astro`, `from-conductor/`, `styles/comparison.css`,
-  and `styles/comparison-table.css`: the comparison page, the one source of
-  its rows, and its styles. [Its key code](comparison.md#key-code) names
-  each module and part.
-- `components/StatusMark.astro`, `DueDay.astro`, `CopyText.astro`, and
-  `ClosingCall.astro`: a status as its icon and word, a due day or "No date
-  yet", a sentence of shared copy as markup, and the last call to action of
-  a page.
+- `components/ClosingCall.astro`: the last call to action of a page.
 - `features.ts`: the words that the site and the mockups share: the hero
   sentence and the footer tagline, the features, the Mac app section with
   its downloads, and the smaller features.
@@ -61,9 +54,10 @@ Each path is relative to `src/marketing/` unless the link names another folder.
 - `links.ts`: the source repository address, the Mac app download
   addresses, `docsPath` for the docs, site paths, the section that the
   header marks, and `pageHrefs` for links from another origin.
-- `terms.ts`, `terms-org.ts`, `privacy.ts`, `privacy-uses.ts`,
-  `privacy-recipients.ts`, and `legal-text.ts`: legal pages, the "Working
-  in an org" section of the Terms, the "What Conductive uses, and why" and
+- `terms.ts`, `terms-work.ts`, `terms-org.ts`, `privacy.ts`,
+  `privacy-uses.ts`, `privacy-recipients.ts`, and `legal-text.ts`: legal
+  pages, the "Your work" and "Working in an org" sections of the Terms,
+  the "What Conductive uses, and why" and
   "Who gets your data" sections of the Privacy page, and the shared text
   model, titles, contact addresses, and sign-in agreement.
 - `request-values.ts`: built-page markers, local Astro preview values,
@@ -75,8 +69,7 @@ Each path is relative to `src/marketing/` unless the link names another folder.
   icon, marker, and file-list names and types.
 - `tokens.ts`, `styles/`: design tokens from the mockups and bundled CSS.
 - `icon-shapes.ts`: the lucide icons of the home page features, the
-  actions, such as the Mac app downloads, the comparison page, and the
-  docs, as shapes for the Astro pages.
+  actions, such as the Mac app downloads, and the docs, as shapes for the Astro pages.
 - `picture-urls.ts`, `picture-styles.ts`: picture file addresses, media
   queries, frame classes, and picture-size CSS.
 - [`marketingPictureList.ts`](../../docs/mockups/src/screens/marketingPictureList.ts):
@@ -94,5 +87,4 @@ Each path is relative to `src/marketing/` unless the link names another folder.
 - `picture-page.test.ts`: the animation reset before each capture.
 - [`worker/marketing/built-site.test.ts`](../../worker/marketing/built-site.test.ts):
   real builds served through the Worker, including their policy, their
-  files, the public guides, and the comparison page with its two entry
-  links.
+  files, and the public guides.

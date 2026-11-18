@@ -1,16 +1,21 @@
-import type { Timestamp } from './api'
+import type { GitHubSummary } from './generated/GitHubSummary'
+import type { Timestamp } from './generated/Timestamp'
 import { workspacePath } from './workspaces'
 
 export const githubPaths = {
   banner: (orgId: string, id: string) => `${workspacePath(orgId, id)}/github`,
   checks: (orgId: string, id: string) =>
     `${workspacePath(orgId, id)}/github/checks`,
+  stored: (orgId: string, id: string) =>
+    `${workspacePath(orgId, id)}/github/stored`,
   capabilities: (orgId: string, id: string) =>
     `${workspacePath(orgId, id)}/github/capabilities`,
   merge: (orgId: string, id: string) =>
     `${workspacePath(orgId, id)}/github/merge`,
   mergeResult: (orgId: string, id: string, mergeId: string) =>
     `${workspacePath(orgId, id)}/github/merge/${encodeURIComponent(mergeId)}`,
+  ready: (orgId: string, id: string) =>
+    `${workspacePath(orgId, id)}/github/ready`,
 } as const
 
 export interface PullRequest {
@@ -30,6 +35,13 @@ export interface GitHubMergeRequest {
 }
 export type GitHubMergeResponse =
   { state: 'pending'; mergeId: string } | { state: 'merged' }
+/** Ready for review of the draft pull request that the bar shows. */
+export interface GitHubReadyRequest {
+  pullNumber: number
+}
+export interface GitHubReadyResponse {
+  state: 'ready'
+}
 export type BannerState =
   | 'none'
   | 'no-commits'
@@ -82,15 +94,16 @@ export interface GitHubCheck {
   durationMs: number | null
 }
 
-export type GitHubSummary =
-  'checks-running' | 'checks-failed' | 'checks-passed' | 'merged'
+/** The checks of a pull request, as one value. */
+export type ChecksSummary = 'checks-running' | 'checks-failed' | 'checks-passed'
 
-export function githubSummary(
-  banner: GitHubBanner,
+/**
+ * The checks as one value, or null without a check: a failure wins over a
+ * check that runs. Checks passed means that each check counts as passed.
+ */
+export function checksSummary(
   checks: readonly GitHubCheck[],
-): GitHubSummary | null {
-  if (banner.state === 'merged') return 'merged'
-  if (banner.pullRequest === null || banner.state === 'closed') return null
+): ChecksSummary | null {
   if (
     checks.some((check) =>
       ['failed', 'cancelled', 'timed-out', 'action-required'].includes(
@@ -108,6 +121,13 @@ export function githubSummary(
   return checks.length > 0 ? 'checks-passed' : null
 }
 
+export function githubSummary(banner: GitHubBanner): GitHubSummary | null {
+  const { state } = banner
+  return state === 'none' || state === 'no-commits' || state === 'closed'
+    ? null
+    : state
+}
+
 export interface GitHubBannerResponse {
   banner: GitHubBanner
 }
@@ -115,4 +135,11 @@ export interface GitHubChecksResponse {
   state: 'waiting-for-pull-request' | 'available'
   /** Preserve GitHub's order. */
   checks: readonly GitHubCheck[]
+}
+/**
+ * The last GitHub state that the Worker stored for the workspace branch,
+ * without a GitHub read. Null before the first read of the branch.
+ */
+export interface GitHubStoredResponse {
+  state: { banner: GitHubBanner; checks: GitHubChecksResponse } | null
 }

@@ -1,13 +1,10 @@
+import type { WorkspaceState } from '../../shared/generated/WorkspaceState'
 import { describe, expect, it } from 'vitest'
+import type { WorkspaceStart } from '../../shared/generated/WorkspaceStart'
 import { fileMark } from '../../app/draft-marks'
 import { pickChatFiles } from './draft-files.test-support'
 import { sessionPaths } from '../../shared/sessions'
-import {
-  workspacePath,
-  type WorkspaceResponse,
-  type WorkspaceStart,
-  type WorkspaceState,
-} from '../../shared/workspaces'
+import { workspacePath, type WorkspaceResponse } from '../../shared/workspaces'
 import type { RecordedChatScenario } from '../../test-support/recorded-chat'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
@@ -175,6 +172,7 @@ describe('messages while the sandbox of a workspace is not ready', () => {
       sessionId: first,
       title: "Your message didn't send",
       message: 'Reopen the session to send a message.',
+      messageId: 'client-1',
     })
 
     await chat.controller.send(first)

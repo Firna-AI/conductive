@@ -1,7 +1,8 @@
 # Members backend
 
 This area implements org roles, invitations, workspace responsibility, and
-Delete org. It uses the fixed browser contracts in
+Delete org. It also saves each person's org rail order.
+It uses the fixed browser contracts in
 [shared types](../../src/shared/README.md).
 The main Worker dispatches these handlers after `membersGate`.
 Its production hooks use the real workspace and image coordinator objects.
@@ -21,10 +22,19 @@ An unmatched route returns `null` for the next handler.
 Keep the existing private response headers and error handler around dispatch.
 
 The routes use paths from `src/shared/members.ts` and `orgs.ts`.
-`membersRoute` alone serves the org list and one org.
+`membersRoute` alone serves the org list, one org, and org moves.
+`PUT /api/org-order` takes `{ orgId, index }` and returns 204 without a body.
+The index counts the other visible orgs from zero. An index past the end moves to the end.
+Invalid fields return 400 `invalid_input`. An unseen org returns 404 `org_not_found`.
+The route uses the normal request gate but needs no active org.
+Each person can move a suspended org or a deleted org that they still see.
+The move changes only that person's visible memberships.
+The org list returns saved places first, then unset places, with join time and org ID as ties.
+New memberships keep an unset place and go at the end.
+[Org rail order](../../docs/protocol/org-rail-order.md) states the requirements.
 Org creation stays with `featureShellRoute` of the [app API](../app-api/README.md).
 The routes also serve member lists, invitation creation and cancellation, role changes,
-removal, leave, workspace reassignment, org rename, Delete, and Restore.
+removal, leave, workspace reassignment, org rename and colour, Delete, and Restore.
 Shared-settings persistence remains with the settings backend.
 That backend must call `assertCanChangeSharedSettings` before writes.
 It must also include `activeAdminPredicate` in its D1 mutation.
@@ -40,7 +50,8 @@ A refused Boat key is such a failure, and so is an unknown provider account. The
 `ignoreAlreadyRemoved` counts only a provider `not_found` as already removed. So the journal keeps each resource of an unknown account.
 
 A suspended org stays visible to its members.
-Every member write except voluntary Leave uses the shared active-org check and SQL predicate.
+Every write in the org except voluntary Leave uses the shared active-org check and SQL predicate.
+The person's org rail order spans orgs and uses no active-org check.
 The Leave recipient and last-active-admin rules remain in force.
 Pending invitation lists omit suspended orgs, and acceptance preserves their invitations and memberships.
 Org suspension also blocks a pending Restore activation and disk retention restart.
@@ -163,10 +174,12 @@ provider kinds, and Restore timers.
 [Invitations](invitations.md) gives the email of an invitation, the match
 of verified emails at each sign-in, and the explicit acceptance.
 
-Call `workspaceCreator` when the lifecycle creates a workspace.
-Store its ID in `owner_user_id` in the creation transaction.
+The lifecycle stores the ID of the member who creates a workspace in
+`owner_user_id`, in the creation transaction.
 Reassignment changes the owner and update time only.
-Each session keeps the agent login of its starter.
+Each session keeps its fixed personal or org agent login.
+An org session serves current members after its starter leaves.
+A personal session still needs its login owner to remain a member.
 
 `activeAdminMemberPredicate(alias)` in [`active-admin.ts`](../data/active-admin.ts) is the one SQL rule of an active admin: the admin role, and a user whose account is not suspended.
 It accepts only the trusted aliases `m`, `access_member`, `org_members`, `remaining`, and `candidate`.
@@ -176,7 +189,7 @@ It accepts only the trusted aliases `m`, `access_member`, `org_members`, `remain
   Otherwise it fails with 409 `last_admin`, which asks to make another member whose account is not suspended an admin.
 - A leave gives the workspaces to the earliest active admin, else to the earliest member who is not suspended, else to the earliest admin.
   A removal gives them to the admin who removes the member.
-- The same leave or removal batch moves the member's routines in that org to that recipient.
+- The same leave or removal batch moves the member's automations in that org to that recipient.
   It turns them off with `owner_left`, clears their next time, and keeps the departing member's name.
 - A reassignment checks its recipient in the same write. A suspended recipient gets 409 `owner_suspended`, and nothing changes.
 - `firstOrgAdmin` and the account-deletion guard of `account.ts` do not use the rule. So that guard still counts every admin.
@@ -204,6 +217,8 @@ The harness uses Wrangler's migration SQL splitter to keep trigger bodies intact
 - [creation-checkpoint.ts](creation-checkpoint.ts) requeues a retained create only after current access and token checks. A create without a sandbox also needs its image pin, with the same image name and provider account. A create with a retained sandbox takes the account of the workspace record.
 - `gate.ts` extends the request gate for deleted-org access and shared writes.
 - `route.ts` defines HTTP dispatch and the required integration hooks.
+- [org-data.ts](org-data.ts) supplies `visibleOrgs`, the atomic `moveOrg` write for each person's rail order, and `updateOrg`, which saves the name, the initials, and the colour of an org.
+- [org-update.ts](org-update.ts) reads the PATCH of an org. A colour can come without the name, and a colour that is not a preset is refused.
 - `membership.ts` manages roles, removal, leave, and the last-admin rule.
 - `errors.ts` defines `lastActiveAdminError` and `suspendedOwnerRecipientError`.
 - [`active-admin.ts`](../data/active-admin.ts) defines `activeAdminMemberPredicate`, the shared SQL rule of an active admin.

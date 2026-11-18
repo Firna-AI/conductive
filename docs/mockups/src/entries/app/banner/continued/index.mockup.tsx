@@ -8,9 +8,9 @@ import {
 export const continued = defineScreen({
   title: 'After Continue',
   description:
-    'The workspace is on its new branch, calummoore/porto-3f8d, from the latest main. The bar starts again at the state without a pull request: the new branch has no commit yet. The session keeps its chat, and a note at the place of Continue names who pressed it, the new branch, and its base.',
+    'The workspace is on its new branch, calummoore/checkout-address-autocomplete-v2-3f8d, from the latest main. The bar starts again at the state without a pull request: the new branch has no commit yet. The session keeps its chat, and a note at the place of Continue names who pressed it, the new branch, and its base.',
   rationale:
-    'Each session shows the note, so every member sees why the branch changed. The new branch follows the rule of a new workspace: the GitHub login of the workspace owner, a city name, and four random characters. The workspace keeps its name. The merged pull request belongs to the old branch, which stays on GitHub.',
+    'Each session shows the note, so every member sees why the branch changed. The workspace keeps its name. The user chose option B of branch-name decision 3 on 16 November 2026, with a version: the new branch has the GitHub login of the workspace owner, the workspace name, the task number such as v2, and four random characters. The merged pull request belongs to the old branch, which stays on GitHub.',
   relatedDocs: [],
   propSchema: workspaceStateSchema,
   props: {

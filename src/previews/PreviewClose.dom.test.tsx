@@ -1,7 +1,8 @@
+import type { Preview } from '../shared/generated/Preview'
 // @vitest-environment happy-dom
 import { describe, expect, it, vi } from 'vitest'
 import { ToolEvents } from '../shell/workspace/tools/tool-events'
-import { previewPath, previewsPath, type Preview } from '../shared/previews'
+import { previewPath, previewsPath } from '../shared/previews'
 import {
   byRole,
   queryByLabel,
@@ -53,7 +54,13 @@ describe('the Close button of a preview tab', () => {
     await mount(
       <PreviewTool
         now={() => FAKE_TIME}
-        route={{ previewId: null, href: (id) => `#${id}`, navigate: vi.fn() }}
+        route={{
+          previewId: null,
+          port: null,
+          href: (id) => `#${id}`,
+          navigate: vi.fn(),
+          replace: vi.fn(),
+        }}
         touch={false}
         workspace={{
           orgId: org,

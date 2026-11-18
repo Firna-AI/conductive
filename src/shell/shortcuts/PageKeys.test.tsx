@@ -1,12 +1,13 @@
 // @vitest-environment happy-dom
 
+import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 import { routes } from '../../app/router'
 import { Store } from '../../app/store'
 import type { ShortcutCommandId } from '../../shared/shortcut-commands'
 import { queryByLabel, queryByRole } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
-import { FAKE_IDS } from '../../test-support/fixtures/core'
+import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
@@ -78,6 +79,25 @@ describe('the keys of the commands of a page', () => {
     expect(steps).toEqual({
       first: { prevented: true, at: routes.org(org) },
       second: { prevented: true, at: routes.org('futex') },
+    })
+  })
+
+  test('the rail and its keys leave out a deleted org', async () => {
+    const { app, navigation } = await openPaletteTab(routes.account())
+    const acme = app.orgs.get().find((item) => item.id === org)
+    if (!acme) throw new Error('The app has no Acme.')
+    act(() => {
+      app.putOrg({
+        ...acme,
+        deletion: { deletedAt: FAKE_TIME, deletesAt: FAKE_TIME + 1 },
+      })
+    })
+    await settle()
+    const key = pressHintKey(app, 'org-1', document.body)
+    await settle()
+    expect({ prevented: key.defaultPrevented, at: navigation.href() }).toEqual({
+      prevented: true,
+      at: routes.org('futex'),
     })
   })
 

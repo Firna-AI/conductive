@@ -22,6 +22,14 @@ function changed(
     }
   }
   const workspaceId = text(operation.workspaceId)
+  if (operation.action === 'keep-workspace') {
+    return {
+      ...settings,
+      workspaceWindows: settings.workspaceWindows.map((item) =>
+        item.workspaceId === workspaceId ? { ...item, expiresAt: null } : item,
+      ),
+    }
+  }
   return {
     ...settings,
     workspaceWindows: settings.workspaceWindows.filter(
@@ -60,9 +68,15 @@ export function changeMacSettings(
     'done-not-saved': { status: 'done-not-saved', message: notSavedMessage },
     failed: { status: 'failed', message: failedMessage },
   }
-  const outcome = outcomes[mac.outcome]
+  const operation = record(body.operation)
+  // The Mac never saves a grant until Stop, so a Keep is never "not saved".
+  const keep = operation.action === 'keep-workspace'
+  const outcome =
+    keep && mac.outcome === 'done-not-saved'
+      ? outcomes.done
+      : outcomes[mac.outcome]
   if (outcome.status !== 'failed') {
-    mac.settings = changed(mac.settings, record(body.operation))
+    mac.settings = changed(mac.settings, operation)
   }
   publish()
   return Response.json({ ...mac.pairing, settings: mac.settings, outcome })

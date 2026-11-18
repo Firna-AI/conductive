@@ -5,7 +5,9 @@ import {
   FileCode,
   FileDiff,
   FileText,
+  Globe,
   MessageSquare,
+  SquareTerminal,
   X,
 } from 'lucide-react'
 import { Menu, type MenuEntry } from '../common/Menu'
@@ -14,14 +16,18 @@ import { IconButton } from '../common/actions'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
 import { RenameField } from './RenameField'
+import { SessionTabIcon } from './SessionTabIcon'
 import tabDrag from './TabDrag.module.css'
 import styles from './WorkspaceTabs.module.css'
 
 /**
  * The kind of a tab, which sets its icon: a session, or the icon that All
- * files gives a code file, a Markdown file, or another file, or a diff.
+ * files gives a code file, a Markdown file, or another file, or a diff, or
+ * a terminal of the Terminal tool, or the one Preview tab of the centre
+ * row (decision 288).
  */
-export type TabKind = 'session' | 'code' | 'markdown' | 'file' | 'diff'
+export type TabKind =
+  'session' | 'code' | 'markdown' | 'file' | 'diff' | 'terminal' | 'preview'
 
 export type WorkspaceTab = {
   key: string
@@ -30,6 +36,18 @@ export type WorkspaceTab = {
   /** The screen that the tab shows, when the mockups draw it. */
   to?: string
   selected: boolean
+  running?: boolean
+  /**
+   * The temporary tab, from decision 284: the next press on a file or a
+   * diff replaces its file. Only its title changes, in italics.
+   */
+  temporary?: boolean
+  /**
+   * The label of the file can hide a secret value: it holds "[redacted]",
+   * or the app does not know the name of the file yet. Its menu then
+   * leaves out Copy path.
+   */
+  hidesPath?: boolean
 }
 
 /** The open menu of a tab: beside it, or in a sheet that the screen draws. */
@@ -41,14 +59,32 @@ const icons: Readonly<Record<TabKind, LucideIcon>> = {
   markdown: FileText,
   file: File,
   diff: FileDiff,
+  terminal: SquareTerminal,
+  preview: Globe,
 }
 
+/**
+ * The icon and the title of a tab, in the row and on the lifted copy of a
+ * drag. The title of the temporary tab shows in italics, and a screen
+ * reader hears "temporary" after it, because the italics carry the state
+ * only for the eye. The tab menu and the move messages keep the title.
+ */
 function TabContent(props: { tab: WorkspaceTab }) {
-  const Icon = icons[props.tab.kind]
+  const { tab } = props
+  const Icon = icons[tab.kind]
   return (
     <>
-      <Icon aria-hidden className={styles.icon} size={13} />
-      <span className={styles.title}>{props.tab.title}</span>
+      {tab.kind === 'session' ? (
+        <SessionTabIcon running={tab.running ?? false} />
+      ) : (
+        <Icon aria-hidden className={styles.icon} size={13} />
+      )}
+      <span
+        className={classes(styles.title, tab.temporary && styles.temporary)}
+      >
+        {tab.title}
+      </span>
+      {tab.temporary ? <span className={a11y.hidden}>, temporary</span> : null}
     </>
   )
 }
@@ -71,18 +107,25 @@ function TabLabel(props: { tab: WorkspaceTab; children: ReactNode }) {
 /**
  * One tab of the row: its icon, its title, and its close button. While a
  * drag lasts, the dragged tab stays at its place as a faint copy, which
- * links nowhere. A tab with an open menu shows the menu below it. A tab
+ * links nowhere. The temporary tab keeps its italics in both copies of a
+ * drag. A tab with an open menu shows the menu below it. A tab
  * that renames its session shows the rename field in place of its label
  * and its close button. The field marks the tab, so the tab keeps a fill
- * only when it is the shown tab.
+ * only when it is the shown tab. A tab that cannot close, such as the last
+ * terminal of a workspace, has no close button. `closeTo` is the screen
+ * that the close button opens, such as the question before the close.
  */
 export function TabItem(props: {
   tab: WorkspaceTab
   placeholder?: boolean
   menu?: OpenTabMenu
   renaming?: boolean
+  closable?: boolean
+  closeTo?: string
 }) {
   const { tab, menu } = props
+  const closable = props.closable ?? true
+  const close = <IconButton icon={X} label={`Close ${tab.title}`} quiet />
   if (props.renaming) {
     return (
       <li
@@ -104,6 +147,7 @@ export function TabItem(props: {
         tab.selected && styles.selected,
         props.placeholder && tabDrag.placeholder,
         menu && styles.menuOpen,
+        !closable && styles.kept,
       )}
     >
       {props.placeholder ? (
@@ -111,9 +155,17 @@ export function TabItem(props: {
       ) : (
         <TabLabel tab={tab}>{content}</TabLabel>
       )}
-      <span className={styles.close}>
-        <IconButton icon={X} label={`Close ${tab.title}`} quiet />
-      </span>
+      {closable ? (
+        <span className={styles.close}>
+          {props.closeTo ? (
+            <ScreenLink asChild to={props.closeTo}>
+              {close}
+            </ScreenLink>
+          ) : (
+            close
+          )}
+        </span>
+      ) : null}
       {menu?.anchored ? (
         <Menu
           entries={menu.entries}

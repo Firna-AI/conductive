@@ -5,6 +5,9 @@ It implements the [agent-tool requirements](../../docs/protocol/agent-tools.md).
 It uses the existing [shared contracts](../../src/shared/README.md) and D1 tables.
 The [workspace name migration](../../migrations/202611081300_workspace_creation_name.sql) keeps an agent's chosen name through creation retries.
 The [first session title migration](../../migrations/202611111230_workspace_first_session_title.sql) keeps a requested first session title in the same way.
+The [parent migration](../../migrations/202611161700_workspace_parents.sql) keeps the parent link in the workspace and its creation plan.
+[Sub-workspaces](../../docs/protocol/sub-workspaces.md) gives the nesting rules.
+[Parent changes](../../docs/protocol/parent-changes.md) gives the move targets and refusals.
 [Workspace calls](workspaces.md) gives the get, rename, move, and archive routes, the list options, and the replay of a create.
 [Session management calls](sessions.md) gives the session get, rename, close, and stop routes, the message get, and the session list paging.
 [Section and preview calls](sections-and-previews.md) gives the section create and delete routes, and the preview list, open, and close routes.
@@ -15,6 +18,12 @@ The real application dispatches those paths before the machine stub.
 The object resolves the stored active sender and selects that sender's connected Mac.
 Command reads use the returned `requestKey` in the URL.
 The raw request ID stays in retry input and device messages.
+The [secret request feature](../secrets/README.md#workspace-tool-routes)
+uses the same machine entry point. `secrets.ts` forwards only
+`GET /v1/tools/secrets` and `POST /v1/tools/secrets/run` to the token's
+workspace object. The list needs only the token. A run needs the stored
+running turn. The feature README gives the command, grant, pending-result,
+browser-answer, and event contracts for the workspace tools.
 The create handler, the session writes, the workspace rename and move routes, and the Mac command handler use `readJsonObject` from the [shared request reader](../http/README.md#json-request-objects).
 The entry owns the 1,000,000-byte cap, and the reader owns the media type policy.
 The entry preserves HTTP 413, and the handler preserves HTTP 415.
@@ -22,7 +31,8 @@ Direct handler tests also use the shared entry policy before dispatch.
 
 ## Handler
 
-`createAgentToolsHandler` takes the database, the machine origin, the app origin, and `AgentToolServices`.
+`createAgentToolsHandler` takes the database, the machine origin, the app origin, `AgentToolServices`, and an injected clock.
+Workspace lists and details use that clock to compute removal at the time of the read.
 It accepts GET and POST at `MACHINE_PATHS.workspaces`, which is `/v1/tools/workspaces`, on that origin only.
 It also accepts GET at `/v1/tools/repositories`, `/v1/tools/sections`, and `/v1/tools/models`.
 It accepts the section writes and the preview routes, as [Routes](sections-and-previews.md#routes) says.
@@ -38,10 +48,11 @@ Its current owner must still belong to that org.
 The token must not be revoked.
 The handler grants no access to other routes, methods, hosts, or sockets.
 
-GET returns the number, web link, name, branch, state, and owner of every workspace in the calling org.
+GET returns the number, web link, name, branch, state, parent ID, and owner of every workspace in the calling org that is not removed.
 The owner gives `id`, `githubLogin`, and `displayName`, with no avatar.
 The link uses the configured app origin, not the machine request origin.
 It includes other owners' workspaces and archived workspaces.
+A [removed workspace](../../docs/protocol/workspace-life.md#removed-workspaces) shows only with the `removed` option.
 Its optional filters and paging follow [Workspace lists](workspaces.md#workspace-lists).
 The repository list reads the calling org's newest good image, in GitHub name order.
 `current` marks the calling workspace's repository.
@@ -49,7 +60,9 @@ Without a good image, it returns HTTP 409 `image_required`.
 The section list reads every section of that org in sidebar order.
 `default` marks the default section.
 The model list reads the configured models in their configured order.
-`defaultChoice` holds the owner's saved choice, else the app default, else `null`.
+Each model includes a boolean `fast` mark.
+`defaultChoice` holds the owner's saved model and effort, else the app default, else `null`.
+Its fast mode is always off.
 An unavailable model list returns HTTP 503 `models_unavailable`.
 All four lists need only the workspace token. They need no active turn.
 
@@ -61,7 +74,7 @@ The reserved workspace path value `current` resolves to the calling workspace fr
 No new sandbox credential supplies that ID.
 The handler and the real target object both check the target's org and the org's active state.
 The object also checks its exact workspace identity before it reads chat storage.
-An archived target remains readable. The caller's own token still needs its normal live-workspace access.
+An archived target remains readable, also after its removal. The caller's own token still needs its normal live-workspace access.
 
 The session list includes closed sessions, in creation order with ID as the tie breaker.
 Its optional `limit` and `offset` follow [Session list paging](sessions.md#session-list-paging).
@@ -91,7 +104,10 @@ Session create and send require an active stored calling turn and its current or
 The stored turn gives the sender and the sending session. Input supplies neither identity.
 The real object repeats the target org, active org, archived-workspace, member, and exact-object checks inside the chat queue.
 `create_session` uses the sender's saved model choice, then the configured app choice.
-Workspace creation keeps its owner's default choice.
+Workspace creation keeps its owner's default model and effort.
+Workspace and session creates run fast only with explicit `fast: true`, for a marked model.
+A session send without `fast` keeps the session's fast mode.
+[Fast mode](../../docs/protocol/fast-mode.md#agent-tools) gives the rules.
 Rename, close, and stop use the same stored turn and queue checks, without admission or resume, as [Queued management](sessions.md#queued-management) says.
 
 `ToolSessionWrite` carries the trusted caller and typed request to the object's `writeAgentSession` RPC.
@@ -119,6 +135,11 @@ Provider startup remains with the lifecycle alarm.
 ## Workspace creation
 
 POST binds the repository and section to the calling org.
+An optional `parentId` names a workspace of that org, including an archived workspace or one of another repository.
+The parent check runs after creation replay and before a new create.
+The Worker counts stored parent links, including archived ancestors, against `MAX_WORKSPACE_DEPTH` in [workspace-tree.ts](../../src/shared/workspace-tree.ts).
+The workspace insert reads the parent's section in its own statement.
+A different requested section gives a notice in the saved admission and the create reply.
 It inherits the calling workspace's current owner.
 It preserves the first message text.
 It cleans an optional name with `sessionTitleFrom` in the [shared title helper](../../src/shared/session-title.ts).
@@ -127,7 +148,7 @@ It cuts at 60 Unicode code points, at a whole word when possible.
 It keeps each underscore, and it does not use `modelTitleFrom`, the title model rule that changes underscores to spaces.
 The tool description and the CLI help ask the agent to avoid underscores unless the user asks for them, as [Names from the workspace tools](../../docs/protocol/tool-names.md) says.
 A blank result counts as no name, and the app shows "Untitled".
-The create answer gives the stored name and the first session's absolute `sessionLink`. The branch and stored city keep the city.
+The create answer gives the stored name and the first session's absolute `sessionLink`. The branch takes the name in place of the city, as [The branch and the name](../../docs/protocol/create-a-workspace.md#the-branch-and-the-name) says. The stored city stays.
 The tools preserve string names, including blank names, and ignore names of other types.
 An optional `firstSessionTitle` and an optional `requestId` follow [Creation replay and first title](workspaces.md#creation-replay-and-first-title).
 A repeat with the same request ID resolves before the default lookup below.
@@ -146,7 +167,7 @@ It never uses the workspace owner as a substitute sender.
 
 `createWorkspace` receives one `ToolWorkspaceCreation` value.
 The value keeps the inherited owner separate from the first message sender.
-It also carries the stable first-message ID and the optional first session title.
+It also carries the stable first-message ID, the optional first session title, and the optional parent ID.
 The lifecycle service must keep the first message durably and start it at once.
 It must use the latest good org image.
 It must use the sender's agent login.
@@ -157,39 +178,16 @@ The create call reports that failure, as
 An org suspension refuses the shared workspace token rule before agent tool calls.
 The same rule prevents Mac commands and their later approvals and results.
 
-## Image installer
+## Release tools
 
-`workspaceToolsCommand` builds the install command from source assets.
-`installWorkspaceTools` runs that command with an authorized image callback.
-The software image version hashes that same command with its privilege wrapper.
-The [asset module](image-assets.ts) exports `WORKSPACE_TOOL_SOURCES`.
-Static Vite `?raw` imports embed the allowed sources in the Worker bundle.
-The asset module has no runtime filesystem dependency.
-The callback can bind `SandboxProvider.runCommand` to the image-build sandbox.
-The installer returns only after the command succeeds.
-A failed or timed-out command throws a fixed error.
-The builder must stop the build before it saves a snapshot when installation fails.
-
-The installer also accepts an optional root folder.
-The root folder defaults to `/`.
-Each path that the installer writes starts with the root folder.
-The launcher's program, secrets, and Node paths also start with the root folder.
-A test can pass a temporary folder.
-Image builds must use the default root.
-The default root gives the production paths in [Image assets](../../tools/README.md#image-assets).
-
-The installer writes only program source and the launcher.
-It writes no credentials into the image.
-The launcher starts Node only by the full path from [`imageNodeExecutable`](../lifecycle/image-runtime.ts).
-That path names the private Node that each image build installs, as [The private Node runtime](../../image/runtime.md) says.
-The launcher reports an error when no executable file is at that path.
-It never uses `PATH` or a system Node folder.
-It removes `NODE_OPTIONS` after it reads the rooted secrets file and before it starts Node.
-The installer adds no Node runtime.
+The [Rust tools crate](../../crates/cnd-tools/README.md) supplies the CLI and MCP server.
+The sandbox release includes both in its `conductive` program.
+The [system installer](../../image/install-system.sh) links
+`/usr/local/bin/conductive` to `/opt/conductive/current/conductive`.
+Image builds install this release through the normal software step.
+They write no separate tool source files or launcher.
 `WORKSPACE_TOOLS_MCP` supplies the executable and arguments for agent registration.
 The runner supplies credentials and active turn context at runtime.
-The installed launcher preserves explicitly supplied origin, workspace token, and turn ID while it loads the saved env file.
-Only an absent runtime value falls back to that file.
 
 ## Production composition
 
@@ -204,8 +202,7 @@ Session gets, message gets, and session management call the target object's RPCs
 [section-composition.ts](section-composition.ts) runs the app's section action as the sender.
 Preview calls reach the target object's `agentPreviewCall` with the app origin.
 
-Each org build that needs the software step calls `installWorkspaceTools` with `WORKSPACE_TOOL_SOURCES`
-before it installs the rest of the image software.
+Each org build installs the newest sandbox release through the software step.
 The two runner providers register [`WORKSPACE_TOOLS_MCP`](../../src/shared/agent-tools.ts) beside `computer`.
 The [runner](../../runner/README.md) supplies the machine origin, workspace token,
 and active turn ID at runtime. The image stores no such credential.
@@ -217,10 +214,13 @@ No git credential endpoint is implemented here.
 
 Run `npm run test -- worker/tools` from the repository root.
 The handler tests use the existing real local D1 harness.
-The CLI and MCP tests call `runToolProcess` and reach this handler.
+The tests call the HTTP routes directly and need no Rust toolchain.
+[handler.command-inputs.test.ts](handler.command-inputs.test.ts) checks workspace creation and resource replies.
+[handler.resource-reads.test.ts](handler.resource-reads.test.ts) checks token-only resource lists.
+[handler.management.test.ts](handler.management.test.ts) checks management route inputs and replies.
 Workspace handler tests inject the lifecycle and active-turn services.
-Session CLI and MCP tests use production composition, native chat storage, and a stored calling turn.
-Their request bridge lives in [session-test-support.ts](session-test-support.ts).
+[sessions.test.ts](sessions.test.ts) uses production composition, native chat storage, and a stored calling turn.
+CLI parsing, reply validation, and MCP protocol tests live in the Rust tools crate.
 The production services live in [composition.ts](composition.ts).
 The real-object route tests live in [worker/features](../features/).
 [Tests](workspaces.md#tests) lists the tests of the workspace calls, and [Tests](sessions.md#tests) those of session management.
@@ -229,21 +229,26 @@ The real-object route tests live in [worker/features](../features/).
 ## Key code
 
 - [handler.ts](handler.ts) owns the public machine handler and token gate.
-- [create.ts](create.ts) builds the stable first-message ID and tries a replay. It then resolves the owner, sender, section, and model choice.
+- [input.ts](input.ts) narrows workspace creation inputs and stored model choices.
+- [workspace-replies.ts](workspace-replies.ts) narrows the created workspace reply and stored sender fields.
+- [create.ts](create.ts) builds the stable first-message ID and tries a replay. It then checks the parent and depth, and resolves the owner, sender, section, and model choice.
 - [lists.ts](lists.ts) reads the four lists and resolves the listed default choice.
 - [store.ts](store.ts) reads the token's workspace, members, owner defaults, sections, and repository admission in D1.
 - [workspace-routes.ts](workspace-routes.ts) matches the workspace routes and runs their reads and writes.
+- [workspace-move-input.ts](workspace-move-input.ts) reads a move's optional section and parent target.
 - [workspace-input.ts](workspace-input.ts) reads the options of the workspace list.
-- [workspace-data.ts](workspace-data.ts) queries the workspace list and the details of one workspace.
+- [workspace-data.ts](workspace-data.ts) queries the workspace list with its default removal filter and builds details with the removal time.
+- [workspace-parent-data.ts](workspace-parent-data.ts) reads a parent's stored depth within its org.
+- [workspace-tree.ts](../../src/shared/workspace-tree.ts) places live rows with their shown section, parent, and depth.
 - [workspace-write-composition.ts](workspace-write-composition.ts) runs a rename, a move, or an archive as the sender.
 - [workspace-create-composition.ts](workspace-create-composition.ts) completes a create and its replay.
-- [agent-workspaces.ts](../../src/shared/agent-workspaces.ts) holds the workspace request and reply types and their paths.
+- [agent-workspaces.ts](../../src/shared/agent-workspaces.ts) holds the workspace path builders.
 - [services.ts](services.ts) defines the lifecycle and active-turn integration boundary.
 - [session-routes.ts](session-routes.ts) parses the machine session routes and read query options, and sends management to `manageSession`.
 - [session-page.ts](session-page.ts) reads the session list `limit` and `offset`.
 - [session-summary.ts](session-summary.ts) builds one session entry and its state.
 - [session-read-workspace.ts](session-read-workspace.ts) holds the trusted session list, get, message, and transcript read RPCs.
-- [agent-sessions.ts](../../src/shared/agent-sessions.ts) holds the session request and reply types and the transcript byte budget.
+- [agent-sessions.ts](../../src/shared/agent-sessions.ts) holds the transcript byte budget.
 - [session-input.ts](session-input.ts) narrows session create and send inputs while preserving message text.
 - [session-write-composition.ts](session-write-composition.ts) preserves admission while applying the normal open/resume policy.
 - [message-text.ts](message-text.ts) builds the canonical sending-session footer and selects title input.
@@ -251,7 +256,6 @@ The real-object route tests live in [worker/features](../features/).
 - [session-access.ts](session-access.ts) reads a target workspace inside the calling org, including archives.
 - [section-routes.ts](section-routes.ts) and [preview-routes.ts](preview-routes.ts) match the section and preview routes and read their inputs.
 - [section-composition.ts](section-composition.ts) calls the app's `featureSectionWrite` as the sender and shapes its reply.
-- [agent-sections.ts](../../src/shared/agent-sections.ts) and [agent-previews.ts](../../src/shared/agent-previews.ts) hold the section and preview reply types and paths.
-- [image.ts](image.ts) installs the CLI and MCP source into the image.
-- [image-assets.ts](image-assets.ts) embeds the allowed sources as Worker-safe text assets.
+- [agent-sections.ts](../../src/shared/agent-sections.ts) and [agent-previews.ts](../../src/shared/agent-previews.ts) hold the section and preview paths.
+- [Rust tool contracts](../../crates/cnd-runner-interface/src/tools/mod.rs) own the request and reply types. The generator writes their TypeScript under `src/shared/generated/`.
 - [Sandbox tools](../../tools/README.md) describe the commands and runtime environment.

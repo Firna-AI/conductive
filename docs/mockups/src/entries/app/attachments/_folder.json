@@ -1,1 +1,3 @@
-{ "order": ["drop", "failed", "too-large", "sent", "open", "queued"] }
+{
+  "order": ["drop", "failed", "too-large", "sent", "open", "queued", "missing"]
+}

@@ -1,14 +1,13 @@
-import type { Timestamp } from './api'
+import type { Workspace } from './generated/Workspace'
+import type { Timestamp } from './generated/Timestamp'
+import type { WorkspaceStart } from './generated/WorkspaceStart'
 import type { ChatEvent } from './chat-events'
 import type { FileEvent } from './files'
 import type { GitHubBanner, GitHubChecksResponse } from './github'
 import type { PortsUpdated } from './ports'
-import {
-  workspacePath,
-  type Workspace,
-  type WorkspaceResponse,
-  type WorkspaceStart,
-} from './workspaces'
+import type { SecretWorkspaceEvent } from './secret-requests'
+import type { TerminalEntry } from './terminal'
+import { workspacePath, type WorkspaceResponse } from './workspaces'
 
 export function workspaceEventsPath(
   orgId: string,
@@ -21,13 +20,12 @@ export function chatHistoryPath(
   orgId: string,
   workspaceId: string,
   sessionId: string,
-  afterEventNumber = 0,
+  beforeEventNumber?: number,
   throughEventNumber?: number,
 ): string {
-  const query = new URLSearchParams({
-    sessionId,
-    after: String(afterEventNumber),
-  })
+  const query = new URLSearchParams({ sessionId })
+  if (beforeEventNumber !== undefined)
+    query.set('before', String(beforeEventNumber))
   if (throughEventNumber !== undefined)
     query.set('through', String(throughEventNumber))
   return `${workspacePath(orgId, workspaceId)}/history?${query}`
@@ -35,6 +33,7 @@ export function chatHistoryPath(
 
 export type WorkspaceEvent =
   | ChatEvent
+  | SecretWorkspaceEvent
   | FileEvent
   | PortsUpdated
   | {
@@ -53,6 +52,15 @@ export type WorkspaceEvent =
       checks: GitHubChecksResponse
     }
   | { type: 'preview.revoked'; previewId: string }
+  | {
+      type: 'terminals.updated'
+      terminals: readonly TerminalEntry[]
+      /**
+       * Whether the terminal service opens several shells, after a Restart
+       * that changed it. Older events and other changes leave it out.
+       */
+      several?: boolean
+    }
 
 /** The workspace assigns contiguous event numbers, starting at 1. */
 export interface WorkspaceEventEnvelope {
@@ -74,6 +82,13 @@ export type ChatHistoryResponse = ChatHistoryPage &
   (
     | { hasMore: true; nextAfterEventNumber: number }
     | { hasMore?: never; nextAfterEventNumber?: never }
+  )
+
+export type NewestChatHistoryResponse = ChatHistoryPage & {
+  nextAfterEventNumber?: never
+} & (
+    | { hasMore: true; nextBeforeEventNumber: number }
+    | { hasMore?: never; nextBeforeEventNumber?: never }
   )
 
 export type WorkspaceSocketMessage =

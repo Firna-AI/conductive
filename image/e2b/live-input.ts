@@ -1,7 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { resolve, sep } from 'node:path'
 
-import { readImageSoftware } from '../../worker/lifecycle/image-software'
 import { CheckError } from '../live-input'
 
 type LiveEnvironment = Readonly<Record<string, string | undefined>>
@@ -11,8 +10,6 @@ export const e2bRequiredInputs = [
   'LIVE_E2B_DOMAIN',
   'LIVE_E2B_TEMPLATE_ID',
   'LIVE_E2B_STATE_KEY',
-  'LIVE_RUNNER_ARCHIVE_URL',
-  'LIVE_RUNNER_ARCHIVE_SHA256',
 ] as const
 
 function required(environment: LiveEnvironment, key: string): string {
@@ -56,10 +53,7 @@ export function e2bConfiguration(environment: LiveEnvironment, root: string) {
       root,
       environment.LIVE_OUTPUT ?? `.context/e2b-backup-provider/${runId}`,
     ),
-    software: readImageSoftware({
-      url: required(environment, 'LIVE_RUNNER_ARCHIVE_URL'),
-      sha256: required(environment, 'LIVE_RUNNER_ARCHIVE_SHA256'),
-    }),
+    releaseServer: environment.LIVE_CONDUCTIVE_RELEASE_SERVER,
   }
 }
 

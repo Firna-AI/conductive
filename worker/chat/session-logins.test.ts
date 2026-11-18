@@ -4,6 +4,7 @@ import { createHarness, type TestHarness } from '../test-support/harness'
 import { createChatFixture, WORKSPACE_ID } from './harness.test-support'
 import { liveSessions } from './retry.test-support'
 import { messageCommands } from './turn-lifecycle.test-support'
+import { expectGatewayLogin } from './runner-credential.test-support'
 describe('session starter logins', () => {
   let harness: TestHarness
   beforeAll(async () => {
@@ -34,16 +35,23 @@ describe('session starter logins', () => {
     const initial = messageCommands(runner, 'first')[0]
     if (initial?.type !== 'turn') throw new Error('The turn is missing.')
     expect(initial.message.sender.id).toBe(fixture.member.id)
-    if (!initial.login) throw new Error('The version 1 turn has no login.')
-    expect(initial.login.secret).toBe(`secret-${fixture.owner.id}-claude`)
+    await expectGatewayLogin(
+      fixture,
+      initial,
+      `secret-${fixture.owner.id}-claude`,
+    )
     await fixture.send(session.id, 'steer', fixture.memberCookie)
     const steer = messageCommands(runner, 'steer')[0]
     expect(steer).toMatchObject({
       type: 'message',
       turnId: initial.turnId,
-      login: { secret: `secret-${fixture.owner.id}-claude` },
       message: { sender: { id: fixture.member.id } },
     })
+    await expectGatewayLogin(
+      fixture,
+      steer,
+      `secret-${fixture.owner.id}-claude`,
+    )
     runner.emit({
       type: 'turn.completed',
       sessionId: session.id,
@@ -59,8 +67,12 @@ describe('session starter logins', () => {
     expect(messageCommands(runner, 'next')[0]).toMatchObject({
       type: 'turn',
       sessionId: session.id,
-      login: { secret: `secret-${fixture.owner.id}-claude` },
     })
+    await expectGatewayLogin(
+      fixture,
+      messageCommands(runner, 'next')[0],
+      `secret-${fixture.owner.id}-claude`,
+    )
     expect(memberTab.messages).toEqual(ownerTab.messages)
     expect(JSON.stringify(ownerTab.messages)).not.toContain('secret-')
     await ownerTab.close()

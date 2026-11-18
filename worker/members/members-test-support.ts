@@ -1,6 +1,7 @@
+import type { Workspace } from '../../src/shared/generated/Workspace'
 import { API_PATHS, type Org, type User } from '../../src/shared/api'
 import { workspaceLink } from '../data/workspace-link'
-import type { Workspace } from '../../src/shared/workspaces'
+
 import { workspaceRestoreUntil } from '../../src/shared/workspaces'
 import type { AppDependencies } from '../env'
 import { errorResponse, HttpError, privateResponse } from '../http'
@@ -17,7 +18,7 @@ import { seedAppAccess } from '../test-support/app-access'
 import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import { membersSeed } from './fixture-data.test-support'
 import { maintainDisksForTests } from './maintenance-test-support'
-import { workspaceCreator } from './ownership'
+import { requireMember } from './membership'
 import { membersRoute, type MembersHooks } from './route'
 
 export function membersClient(harness: TestHarness) {
@@ -153,7 +154,9 @@ export async function seedWorkspace(
   sandboxId: string | null = `sandbox-${id}`,
 ) {
   const db = harness.env.DB
-  const creator = await workspaceCreator(db, org.id, owner.id)
+  // Only the membership row: a migration test seeds at an older schema,
+  // which can lack org columns that the full org read selects.
+  const { user: creator } = await requireMember(db, org.id, owner.id)
   await db.batch([
     db
       .prepare(
@@ -194,7 +197,7 @@ async function readWorkspace(
   id: string,
 ): Promise<Workspace> {
   const row = await harness.env.DB.prepare(
-    `SELECT w.id, w.number, w.org_id AS orgId, w.repository_id AS repositoryId, w.section_id AS sectionId,
+    `SELECT w.id, w.number, w.org_id AS orgId, w.repository_id AS repositoryId, w.section_id AS sectionId, w.parent_workspace_id AS parentId,
      ${workspaceNameColumn('w')}, w.branch, w.state, w.github_summary AS github, w.created_at AS createdAt, w.updated_at AS updatedAt,
      w.archived_at AS archivedAt, w.sandbox_id AS sandboxId, u.id AS userId, u.github_login AS githubLogin,
      u.display_name AS displayName, u.avatar_url AS avatarUrl
@@ -223,6 +226,7 @@ async function readWorkspace(
     orgId: row.orgId,
     repositoryId: row.repositoryId,
     sectionId: row.sectionId,
+    parentId: row.parentId,
     name: row.name,
     branch: row.branch,
     state: row.state,
@@ -231,7 +235,12 @@ async function readWorkspace(
     updatedAt: row.updatedAt,
     archivedAt: row.archivedAt,
     restoreUntil: workspaceRestoreUntil(row.archivedAt, row.sandboxId),
-    choice: { agent: 'codex', model: 'test-model', effort: 'medium' },
+    choice: {
+      agent: 'codex',
+      model: 'test-model',
+      effort: 'medium',
+      fast: false,
+    },
     owner: {
       id: row.userId,
       githubLogin: row.githubLogin,

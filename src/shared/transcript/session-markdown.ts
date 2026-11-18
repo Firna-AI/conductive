@@ -1,13 +1,17 @@
-import {
-  effortLabels,
-  modelLabel,
-  type AgentChoice,
-  type AgentModel,
-} from '../agents'
-import type { DeviceCommandRecord } from '../device'
+import type { AgentModel } from '../generated/AgentModel'
+import type { DeviceCommandRecord } from '../generated/DeviceCommandRecord'
+import type { Session } from '../generated/Session'
+import type { TranscriptDetail } from '../generated/TranscriptDetail'
+import type { Workspace } from '../generated/Workspace'
+import type { AgentChoice } from '../generated/AgentChoice'
+import { effortLabels, modelLabel } from '../agents'
+
 import { nameLabel } from '../name-label'
-import type { Session, TranscriptDetail } from '../sessions'
-import type { Workspace } from '../workspaces'
+import {
+  SecretRequestTranscript,
+  type SecretTranscriptContent,
+} from '../secret-request-transcript'
+
 import { placeCommands } from './command-placement'
 import { turnOf } from './known-turns'
 import {
@@ -52,6 +56,7 @@ function copiedTime(timestamp: number): string {
 
 /** One session's stored history, folded with the same rules as browser chat. */
 export class SessionMarkdown {
+  private readonly secrets = new SecretRequestTranscript()
   private readonly document: TranscriptDocument
   private readonly log = new SessionLog()
   private readonly choices = new Map<
@@ -65,6 +70,7 @@ export class SessionMarkdown {
   }
 
   merge(events: readonly SessionEnvelopeInput[]): void {
+    this.secrets.merge(this.document.session.id, events)
     const own = chatEventsOf(this.document.session.id, events)
     this.log.merge(own)
     for (const { event, eventNumber } of own) {
@@ -103,11 +109,17 @@ export class SessionMarkdown {
       this.log.times,
       own.filter((request) => request.state !== 'waiting'),
     )
-    const inserts = placed.map(({ request, after }) => ({
+    const inserts: import('./transcript-entries').TranscriptInsert<
+      DeviceCommandRecord | SecretTranscriptContent
+    >[] = placed.map(({ request, after }) => ({
       key: `command:${request.requestId}`,
       after,
       content: request,
     }))
+    inserts.push(...this.secrets.inserts(transcript.items, this.log.times))
+    const insertMarkdown = (
+      content: DeviceCommandRecord | SecretTranscriptContent,
+    ) => ('markdown' in content ? content.markdown : commandMarkdown(content))
     const blocks = [
       `# ${plainText(nameLabel(session.title))}`,
       `W-${workspace.number} · ${plainText(nameLabel(workspace.name))} · ${workspace.link}\n${copiedTime(this.document.copiedAt)}`,
@@ -139,8 +151,10 @@ export class SessionMarkdown {
         continue
       }
       if (entry.kind === 'item') {
-        // The note of a Continue belongs to no turn, so it has no heading.
-        if (entry.item.kind !== 'continued') {
+        // The note of a Continue or of a repository change belongs to no
+        // turn, so it has no heading.
+        const { kind } = entry.item
+        if (kind !== 'continued' && kind !== 'repository-changed') {
           heading(turnOf(transcript, entry.item))
         }
         blocks.push(
@@ -153,7 +167,7 @@ export class SessionMarkdown {
         )
       } else if (entry.kind === 'insert') {
         heading(entry.insert.content.turnId)
-        blocks.push(commandMarkdown(entry.insert.content))
+        blocks.push(insertMarkdown(entry.insert.content))
       } else if (entry.kind === 'tools') {
         const first = transcript.items.find((item) => item.id === entry.id)
         heading(first ? turnOf(transcript, first) : null)
@@ -182,7 +196,7 @@ export class SessionMarkdown {
                     readers,
                     this.document.linkContext,
                   )
-                : commandMarkdown(step.insert.content),
+                : insertMarkdown(step.insert.content),
             ),
           )
         }

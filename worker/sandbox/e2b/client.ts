@@ -19,7 +19,7 @@ import {
 import { deleteSnapshot, getSnapshot, saveSnapshot } from './snapshots'
 import { runSupervised, startCommand, getCommandStatus } from './commands'
 import { writeEnvironment } from './environment'
-import { readFile, writeFile } from './files'
+import { fileInfo, readFile, writeFile } from './files'
 import { privatePort } from './ports'
 import { createSandbox } from './allocation'
 import { cleanupAllocation } from './allocation-cleanup'
@@ -103,6 +103,10 @@ export class E2bClient implements SandboxProvider {
   }
   desktop: SandboxProvider['desktop'] = async () => unsupported()
   fork: SandboxProvider['fork'] = async () => unsupported()
+  async fileInfo(sandboxId: string, path: string) {
+    this.requireActive()
+    return fileInfo(this.context, sandboxId, path)
+  }
   async readFile(sandboxId: string, path: string, maxBytes: number) {
     this.requireActive()
     return readFile(this.context, sandboxId, path, maxBytes)

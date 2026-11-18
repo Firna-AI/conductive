@@ -1,15 +1,22 @@
-import type { GitHubSummary } from '../../fixtures/pullRequests'
+import type { GitHubSummary } from '../../../../../src/shared/generated/GitHubSummary'
 import type { ActivityStatus } from '../../fixtures/workspaces'
 import { classes } from '../common/classes'
 import { MarkGrid, ring, ringDelay, type MarkCell } from './MarkGrid'
 import styles from './WorkspaceMark.module.css'
 
-/** The colour of each GitHub state. */
+/**
+ * The colour of each GitHub state: the tone of the pull request bar in the
+ * same state.
+ */
 const colours: Readonly<Record<GitHubSummary, string>> = {
-  'checks-failed': styles.checksFailed,
-  'checks-running': styles.checksRunning,
-  'checks-passed': styles.checksPassed,
+  'checks-running': styles.neutral,
+  'checks-failed': styles.danger,
+  'ready-to-merge': styles.success,
   merged: styles.merged,
+  conflict: styles.warning,
+  'changes-requested': styles.warning,
+  draft: styles.neutral,
+  blocked: styles.warning,
 }
 
 /** The middle column, which stays lit without motion while the agent asks. */
@@ -17,11 +24,14 @@ const column: readonly number[] = [1, 4, 7]
 
 /**
  * The colour of the mark: the colour of the GitHub state, or dim grey
- * without one. An archived workspace keeps a faint mark without colour, so
- * that its chip shows the archive.
+ * without one. While the agent needs input, the mark is blue whatever the
+ * GitHub state, so that a workspace that waits for the user stands out. An
+ * archived workspace keeps a faint mark without colour, so that its chip
+ * shows the archive.
  */
 function toneOf(github: GitHubSummary | null, status: ActivityStatus) {
   if (status === 'archived') return styles.archived
+  if (status === 'input') return styles.input
   return github === null ? styles.none : colours[github]
 }
 
@@ -40,7 +50,7 @@ function chases(github: GitHubSummary | null, status: ActivityStatus) {
 /**
  * How one cell looks. While the agent works or the checks run, a light
  * runs around the ring and the centre stays dim. While the agent needs
- * input, the whole grid pulses. Without motion, the ring of a working
+ * input, the whole grid pulses in blue. Without motion, the ring of a working
  * agent or the middle column stays lit, and running checks light the whole
  * grid. Every other state is still: lit in the colour of the GitHub state,
  * or dim.
@@ -87,12 +97,15 @@ function cellOf(
 
 /**
  * The mark of a workspace in the list, the command palette, and chips: the
- * GitHub state of its pull request in one colour, on the grid of
- * `StatusGlyph`. Red is failed checks, amber running checks, green passed
- * checks, and purple a merge. A mark without a GitHub state is dim grey.
- * A light runs around the ring while the agent works or the checks run,
- * and the mark pulses while the agent needs input. Every other mark is
- * still. It imports no fixture value, so the app uses it too.
+ * GitHub state of its pull request in the colour of its pull request bar,
+ * on the grid of `StatusGlyph`. Red is failed checks, green ready to merge,
+ * purple a merge, and amber a merge conflict, requested changes, or a
+ * block. Running checks and a draft are grey. A mark without a GitHub state
+ * is dim grey.
+ * A light runs around the ring while the agent works or the checks run.
+ * While the agent needs input, the mark turns blue and pulses, whatever the
+ * GitHub state. Every other mark is still. It imports no fixture value, so
+ * the app uses it too.
  */
 export function WorkspaceMark(props: {
   github: GitHubSummary | null

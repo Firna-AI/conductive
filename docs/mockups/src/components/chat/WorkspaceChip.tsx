@@ -1,10 +1,14 @@
 import type { ReactNode } from 'react'
-import type { GitHubSummary } from '../../fixtures/pullRequests'
+import type { GitHubSummary } from '../../../../../src/shared/generated/GitHubSummary'
 import type { ActivityStatus } from '../../fixtures/workspaces'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
-import { activityPresentation, listMarkLabel } from '../workspaces/status'
+import { listMarkLabel } from '../workspaces/status'
 import { WorkspaceMark } from '../workspaces/WorkspaceMark'
+import {
+  WorkspaceName,
+  type EmphasisClasses,
+} from '../workspaces/WorkspaceName'
 import {
   ChipEndRemove,
   ChipIconCell,
@@ -13,6 +17,13 @@ import {
 } from './ChipRemove'
 import base from './InlineChip.module.css'
 import styles from './WorkspaceChip.module.css'
+
+/**
+ * The look of the name of a chip: the strong weight for unread output. In
+ * every other state the name keeps the weight of the chip, and no colour of
+ * the state.
+ */
+const nameEmphasis: EmphasisClasses = { strong: styles.strong }
 
 /** The workspace state and the link name that a chip shows. */
 export type ChipWorkspace = {
@@ -55,11 +66,11 @@ export function useChipClass(removal: ChipRemoval | undefined): string {
 /**
  * A workspace in a line of text: a small rounded pill with the list mark
  * of the workspace, its label in a muted colour, and its current name. A
- * narrow line cuts the name short. The name is bold while the workspace has
- * output that the reader has not read, as in the list. Screen readers also
- * hear the GitHub state and the state of the workspace. The chip takes the
- * height of the line around it, so it sits in a message, an answer, or a
- * message box and keeps the height of the line.
+ * narrow line cuts the name short. `WorkspaceName` makes the name bold while
+ * the workspace has output that the reader has not read, as in the list.
+ * Screen readers also hear the GitHub state and the state of the workspace.
+ * The chip takes the height of the line around it, so it sits in a message,
+ * an answer, or a message box and keeps the height of the line.
  *
  * In a sent message or an answer, `opener` makes the chip the element that
  * opens its workspace, such as a link. A chip in a message box has none: it
@@ -78,7 +89,6 @@ export function WorkspaceChip(props: {
   const { removal } = props
   const className = useChipClass(removal)
   const mark = <WorkspaceMark github={github} status={status} />
-  const unread = activityPresentation[status].emphasis === 'strong'
   const chip: ChipOpener = {
     className,
     title: name,
@@ -87,9 +97,13 @@ export function WorkspaceChip(props: {
         {removal ? <ChipIconCell icon={mark} removal={removal} /> : mark}
         <span className={classes(base.text, styles.text)}>
           <span className={styles.label}>{label}</span> {props.beforeName}
-          <span className={classes(base.name, unread && styles.strong)}>
+          <WorkspaceName
+            className={base.name}
+            emphasis={nameEmphasis}
+            status={status}
+          >
             {name}
-          </span>
+          </WorkspaceName>
         </span>
         <span className={a11y.hidden}>, {listMarkLabel(github, status)}</span>
         {removal ? <ChipEndRemove removal={removal} /> : null}

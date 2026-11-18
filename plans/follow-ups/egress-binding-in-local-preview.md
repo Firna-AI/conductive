@@ -1,0 +1,34 @@
+# Local Worker sends ChatGPT requests to a missing egress Worker
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-12, from branch `calummoore/untitled-v6`, review finding 3.
+- **Location:** `wrangler.jsonc` (the `services` entry `CHATGPT_EGRESS`), `worker/model-gateway/egress.ts` (the function `egressRoute`), `worker/chatgpt-egress/index.ts` (the fetch handler).
+- **Reason:** only developers who point real cloud computers at a local Worker meet it, and a Rare Medium product bug waits for a later branch under the fix rule.
+
+- **Terms:**
+  - **Model gateway:** the routes of the main Worker that add the agent login of a turn to each model request of an agent and forward it.
+  - **Egress Worker:** the Worker `conductive-chatgpt-egress` in `worker/chatgpt-egress/`. It owns a Cloudflare container that sends the `chatgpt.com` requests of the gateway to OpenAI, because OpenAI refuses them from a Worker.
+  - **Service binding `CHATGPT_EGRESS`:** the entry in `wrangler.jsonc` through which the main Worker calls the egress Worker.
+- **Background:**
+  - `worker/model-gateway/egress.ts` sends each `chatgpt.com` request through the binding when it exists. Without it, it uses the fallback proxy of `CHATGPT_EGRESS_URL` and `CHATGPT_EGRESS_SECRET`, and without those it calls `chatgpt.com` directly.
+  - `npm run dev` serves the in-browser fake API, as `src/main.tsx` shows, so it starts no real turn. `npm run preview` runs the built app and the local Worker, and reads the built Wrangler config, which holds the binding.
+  - Locally, no egress Worker runs. The dev registry of Miniflare answers a call to the missing Worker with HTTP 503.
+- **Problem:** A local Worker in `npm run preview` sends each ChatGPT-plan request to the missing egress Worker and gets HTTP 503, also when the developer set the fallback proxy. Before the egress Worker existed, a local Worker sent these requests through the proxy or directly, and OpenAI accepted them from a developer's computer.
+- **Impact if no action:** A developer who points real cloud computers at a local Worker cannot run a Codex turn on a ChatGPT plan.
+- **Root question:** Which ChatGPT path does a local Worker use when no egress Worker runs beside it?
+- **Options:**
+  - **D.** Change no code. In the root README and the egress README, say that a local Worker answers each ChatGPT request with HTTP 503, and that ChatGPT-plan turns are checked on the test deployment. Cost: it gives up the local proxy and direct paths. Effort: Small.
+  - **E.** The egress Worker answers a ready route itself, with no container. The gateway calls that route before it uses the binding, and keeps a good answer for the life of the Worker instance. Without a good answer, it logs a warning and uses the proxy or the direct path. Cost: one more call for each new Worker instance, a second route, and tests of the three paths. Risk: a failed ready call in production sends requests directly to OpenAI, which refuses them. Effort: Medium.
+  - **F.** Move the binding into a Wrangler environment that only the deploy build selects, through `CLOUDFLARE_ENV` in `.github/workflows/deploy.yml`. Then no local build has the binding. Cost: an environment inherits no binding and no `vars`, so the file must repeat each one. Risk: a build or a manual deploy without the variable ships no binding, and production ChatGPT requests then skip the egress container. Effort: Medium.
+  - **G.** An npm script starts a stand-in Worker with `wrangler dev`, with the name `conductive-chatgpt-egress` and no container, beside `npm run preview`. It sends each request from the developer's computer. Cost: a second process and a second copy of the allow list and the header rules. Effort: Medium.
+- **Left out:**
+  - Change nothing: a developer gets HTTP 503 with no way out.
+  - Use the proxy before the binding when both exist: it fails without proxy settings, and it reverses the user decision of 12 November 2026 to keep the binding first and the address path as a fallback.
+  - A `devOnly` auxiliary Worker in `vite.config.ts`: `vite preview` runs only built Workers.
+  - A gateway check for the 503 text of the dev registry: the gateway never replays a model upload, so the first upload still fails.
+  - Dropping the binding in the Vite config customizer: `vite preview` skips the customizer, so it fixes only `vite dev`, which runs no real turn.
+- **Wider fix:** F. It keeps each binding that only a deployment has out of every local build. Its deploy risk keeps it below E.
+- **Previous examples:** None found.
+- **Recommendation:** E. It keeps the local proxy and direct paths in `npm run preview`, and production keeps the binding. F best protects the codebase.
+- **Action:** fix after merge, apply E.

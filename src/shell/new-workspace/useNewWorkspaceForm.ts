@@ -1,11 +1,15 @@
+import type { AgentModel } from '../../shared/generated/AgentModel'
 import { useEffect, type ReactNode } from 'react'
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
+import type { SessionLogin } from '../../../docs/mockups/src/components/chat/SessionLogin'
+import { newSessionLogin } from '../../app/default-logins'
 import {
   draftReady,
   firstReadyRepository,
   type CreateState,
   type Draft,
-  type NewWorkspaceModel,
-} from '../../app/new-workspace-model'
+} from '../../app/new-workspace-draft'
+import type { NewWorkspaceModel } from '../../app/new-workspace-model'
 import { mayChangeSettings } from '../../app/permissions'
 import {
   waitingRepositoriesOf,
@@ -13,10 +17,10 @@ import {
 } from '../../app/repository-changes'
 import { routes } from '../../app/router'
 import { useStore, valueOf } from '../../app/store'
-import type { AgentChoice, AgentModel } from '../../shared/agents'
+
 import type { Repository } from '../../shared/org-settings'
 import type { OrgSummary } from '../../shared/orgs'
-import { useApp, useOrgAccess, useOrgModel } from '../context'
+import { useApp, useOfferedModels, useOrgAccess, useOrgModel } from '../context'
 import { useGo } from '../ui/AppLink'
 import {
   createFailure,
@@ -39,6 +43,18 @@ export interface NewWorkspaceForm {
   /** The chosen repositories that wait for a build, which the menu shows off. */
   waiting: WaitingRepositories
   choice: AgentChoice | undefined
+  /**
+   * The login of the first message when it is not the own login of the
+   * person: the org login, such as "Acme's login", which the server names
+   * as the default login (org login decisions 4, 6 A, and 7 B). A label
+   * after the model picker names it.
+   */
+  login: SessionLogin | undefined
+  /**
+   * The models that the picker offers: the models of the app without those
+   * that the list of the login of their agent does not name, with the model
+   * of the form kept.
+   */
   models: readonly AgentModel[]
   /** The notice of a failed create, with Try again, or `null`. */
   failure: ReactNode
@@ -90,7 +106,14 @@ export function useNewWorkspaceForm(
     draft.repository?.id ?? firstReadyRepository(repositories ?? [], builds)?.id
   const repository = repositories?.find((item) => item.id === repositoryId)
   const choice = draft.choice ?? account?.defaultChoice
-  const notice = useBlockingNotice(choice, models, open)
+  const offered = useOfferedModels(choice, org.id)
+  const notice = useBlockingNotice(org.id, choice, models, open)
+  const login =
+    account &&
+    choice &&
+    newSessionLogin(account, org.id, choice.agent) === 'org'
+      ? { owner: org.name }
+      : undefined
   // The first build and a waiting repository never show together: the
   // Worker lists no waiting repository before the first good build.
   const buildNotice =
@@ -125,7 +148,8 @@ export function useNewWorkspaceForm(
     repository,
     waiting,
     choice,
-    models,
+    login,
+    models: offered,
     failure: createFailure(create, defaults !== null, send),
     buildNotice,
     notice,

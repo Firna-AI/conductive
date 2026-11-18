@@ -1,6 +1,7 @@
 import { CircleAlert } from 'lucide-react'
-import type { UserMessage } from '../../shared/messages'
+import type { UserMessage } from '../../shared/generated/UserMessage'
 import { ContinuedLine } from '../../../docs/mockups/src/components/chat/ContinuedLine'
+import { RepositoryChangedLine } from '../../../docs/mockups/src/components/chat/RepositoryChangedLine'
 import {
   StopLine,
   type StopSource,
@@ -16,6 +17,7 @@ import {
   continuedBy,
   filesUnread,
   omittedFiles,
+  standardSpeedOf,
   stoppedAttribution,
   stoppedNotes,
   turnCopy,
@@ -37,7 +39,9 @@ import { TurnEnd } from './TurnEnd'
  * message went out to the agent. The files that no chip shows stay under
  * the message.
  */
-export function UserBubble(props: { message: UserMessage }) {
+export function UserBubble(props: {
+  message: Pick<UserMessage, 'text' | 'attachments' | 'state'>
+}) {
   const { message } = props
   const parts = useChatParts(message.text, {
     mentions: true,
@@ -93,7 +97,7 @@ export function ItemView(props: {
     case 'user':
       return <UserBubble message={item.message} />
     case 'agent':
-      return <AgentText text={item.text} />
+      return <AgentText id={item.id} text={item.text} />
     case 'turn-end':
       return (
         <TurnEnd
@@ -107,6 +111,7 @@ export function ItemView(props: {
           }
           omittedFiles={omittedFiles(props.transcript, item.turnId)}
           onOpenDiff={actions.onOpenDiff}
+          standardSpeed={standardSpeedOf(props.transcript, item.turnId)}
         />
       )
     case 'stopped':
@@ -142,6 +147,14 @@ export function ItemView(props: {
         <ContinuedLine
           base={item.baseBranch}
           branch={item.branch}
+          who={continuedBy(item.member, props.readers)}
+        />
+      )
+    case 'repository-changed':
+      return (
+        <RepositoryChangedLine
+          branch={item.branch}
+          repository={item.repository.fullName}
           who={continuedBy(item.member, props.readers)}
         />
       )

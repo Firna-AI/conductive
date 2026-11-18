@@ -8,8 +8,12 @@ import type {
 } from '../../../src/shared/device.ts'
 import type { DeviceClock } from './clock.js'
 import type { DeviceFiles } from './files.js'
+import {
+  permissionFileText,
+  readPermissionFile,
+  WINDOW_MS,
+} from './permission-file.js'
 
-const WINDOW_MS = 15 * 60 * 1000
 const ALWAYS_ALLOWED_COMMANDS_LIMIT_BYTES = 900_000
 
 export class AlwaysAllowLimitError extends Error {
@@ -28,42 +32,34 @@ interface PermissionDependencies {
   warn(): void
 }
 
-function isWindow(value: unknown): value is DeviceWorkspaceWindow {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'workspaceId' in value &&
-    typeof value.workspaceId === 'string' &&
-    'workspaceName' in value &&
-    (value.workspaceName === null || typeof value.workspaceName === 'string') &&
-    'expiresAt' in value &&
-    typeof value.expiresAt === 'number' &&
-    Number.isFinite(value.expiresAt)
-  )
-}
-
-/** Each authenticated account has separate permissions on this Mac. */
+/**
+ * Each authenticated account has separate permissions on this Mac. The
+ * store saves the always-allowed commands and the 15 minutes of each
+ * workspace. It keeps a grant until Stop only in memory, so the end of the
+ * app run, or `endUntilStop` at a sign-out, ends it.
+ */
 export function createPermissionStore(dependencies: PermissionDependencies) {
   const { files, clock } = dependencies
   const name = `permissions-${createHash('sha256').update(dependencies.userId).digest('hex')}.json`
   let commands = new Set<string>()
   let windows = new Map<string, DeviceWorkspaceWindow>()
+  /** The workspaces whose grant the permission file holds. */
+  let filed = new Set<string>()
   const timers = new Map<string, () => void>()
   let readState: 'pending' | 'loaded' | 'changed' = 'pending'
+  const runs = (window: DeviceWorkspaceWindow | undefined) =>
+    window !== undefined &&
+    (window.expiresAt === null || window.expiresAt > clock.now())
   const save = (
     nextCommands: Set<string>,
     nextWindows: Map<string, DeviceWorkspaceWindow>,
   ) => {
-    files.write(
-      name,
-      JSON.stringify({
-        alwaysAllowedCommands: [...nextCommands],
-        workspaceWindows: [...nextWindows.values()],
-      }),
-    )
+    const file = permissionFileText(nextCommands, nextWindows)
+    files.write(name, file.text)
     readState = 'changed'
     commands = nextCommands
     windows = nextWindows
+    filed = file.filed
   }
   const saveRevocation = (): DeviceSettingsOutcome => {
     try {
@@ -78,14 +74,20 @@ export function createPermissionStore(dependencies: PermissionDependencies) {
       }
     }
   }
-  const stopWorkspace = (workspaceId: string): DeviceSettingsOutcome => {
-    readState = 'changed'
-    windows.delete(workspaceId)
+  const cancelTimer = (workspaceId: string) => {
     timers.get(workspaceId)?.()
     timers.delete(workspaceId)
-    return saveRevocation()
+  }
+  const stopWorkspace = (workspaceId: string): DeviceSettingsOutcome => {
+    // An unread file can still hold a grant of this workspace.
+    const saved = readState === 'pending' || filed.has(workspaceId)
+    readState = 'changed'
+    windows.delete(workspaceId)
+    cancelTimer(workspaceId)
+    return saved ? saveRevocation() : { status: 'done' }
   }
   const schedule = (window: DeviceWorkspaceWindow) => {
+    if (window.expiresAt === null) return
     timers.set(
       window.workspaceId,
       clock.after(window.expiresAt - clock.now(), () => {
@@ -94,35 +96,42 @@ export function createPermissionStore(dependencies: PermissionDependencies) {
       }),
     )
   }
+  /**
+   * Makes the grant of a workspace last until Stop, in memory. When the
+   * file holds 15 minutes of the workspace, the store saves the file
+   * without them. A failed save keeps only the rest of those 15 minutes in
+   * the file, which the user already gave.
+   */
+  const untilStop = (workspaceId: string, workspaceName: string | null) => {
+    cancelTimer(workspaceId)
+    const next = new Map(windows)
+    next.set(workspaceId, { workspaceId, workspaceName, expiresAt: null })
+    windows = next
+    if (!filed.has(workspaceId)) return
+    try {
+      save(commands, next)
+    } catch {
+      dependencies.warn()
+    }
+  }
   const retryRead = () => {
     if (readState !== 'pending') return
     try {
       const contents = files.read(name)
       if (contents !== undefined) {
-        const value: unknown = JSON.parse(contents)
-        if (
-          typeof value !== 'object' ||
-          value === null ||
-          !('alwaysAllowedCommands' in value) ||
-          !Array.isArray(value.alwaysAllowedCommands) ||
-          !value.alwaysAllowedCommands.every(
-            (command: unknown) => typeof command === 'string',
-          ) ||
-          !('workspaceWindows' in value) ||
-          !Array.isArray(value.workspaceWindows) ||
-          !value.workspaceWindows.every(isWindow)
+        const file = readPermissionFile(contents, clock.now())
+        // A grant until Stop that this run gave stays.
+        const untilStop = [...windows].filter(
+          ([, window]) => window.expiresAt === null,
         )
-          throw new Error('Invalid local permissions')
-        commands = new Set(value.alwaysAllowedCommands)
-        windows = new Map(
-          value.workspaceWindows
-            .filter(
-              (window) =>
-                window.expiresAt > clock.now() &&
-                window.expiresAt <= clock.now() + WINDOW_MS,
-            )
-            .map((window) => [window.workspaceId, window]),
-        )
+        commands = file.commands
+        windows = new Map([
+          ...file.windows.map(
+            (window) => [window.workspaceId, window] as const,
+          ),
+          ...untilStop,
+        ])
+        filed = new Set(file.windows.map((window) => window.workspaceId))
       }
       readState = 'loaded'
       windows.forEach(schedule)
@@ -134,10 +143,7 @@ export function createPermissionStore(dependencies: PermissionDependencies) {
   return {
     retryRead,
     permits(command: string, workspaceId: string): boolean {
-      return (
-        commands.has(command) ||
-        (windows.get(workspaceId)?.expiresAt ?? 0) > clock.now()
-      )
+      return commands.has(command) || runs(windows.get(workspaceId))
     },
     allowCommand(command: string): void {
       const nextCommands = new Set([...commands, command])
@@ -153,24 +159,86 @@ export function createPermissionStore(dependencies: PermissionDependencies) {
       commands.delete(command)
       return saveRevocation()
     },
+    /** Gives the 15 minutes, and saves them. A grant that runs stays. */
     allowWorkspace(workspaceId: string, workspaceName: string | null): void {
-      if ((windows.get(workspaceId)?.expiresAt ?? 0) > clock.now()) return
+      if (runs(windows.get(workspaceId))) return
       const window = {
         workspaceId,
         workspaceName,
         expiresAt: clock.now() + WINDOW_MS,
       }
       save(commands, new Map([...windows, [workspaceId, window]]))
-      timers.get(workspaceId)?.()
+      cancelTimer(workspaceId)
       schedule(window)
     },
+    /**
+     * Gives a grant until Stop, only in memory. It replaces running 15
+     * minutes of the workspace, because the user chose the longer grant.
+     */
+    allowWorkspaceUntilStop(
+      workspaceId: string,
+      workspaceName: string | null,
+    ): void {
+      if (windows.get(workspaceId)?.expiresAt === null) return
+      untilStop(workspaceId, workspaceName)
+    },
+    /**
+     * Turns the running 15 minutes of a workspace into a grant until Stop,
+     * as Keep until I stop in the bar asks.
+     */
+    keepWorkspace(workspaceId: string): DeviceSettingsOutcome {
+      const window = windows.get(workspaceId)
+      if (window === undefined || !runs(window))
+        return {
+          status: 'failed',
+          message:
+            'These 15 minutes already ended. The next command asks first.',
+        }
+      if (window.expiresAt !== null)
+        untilStop(workspaceId, window.workspaceName)
+      return { status: 'done' }
+    },
     stopWorkspace,
+    extendWorkspace(workspaceId: string): DeviceSettingsOutcome {
+      const now = clock.now()
+      const current = windows.get(workspaceId)
+      if (current?.expiresAt === null)
+        return {
+          status: 'failed',
+          message: 'This workspace already allows all commands until you stop.',
+        }
+      if (!current || current.expiresAt <= now)
+        return {
+          status: 'failed',
+          message:
+            'The 15 minutes already ended. Approve a request again to allow all commands.',
+        }
+      const window = { ...current, expiresAt: now + WINDOW_MS }
+      try {
+        save(commands, new Map([...windows, [workspaceId, window]]))
+      } catch {
+        dependencies.warn()
+        return {
+          status: 'failed',
+          message: 'The Mac could not extend the 15 minutes. Try again.',
+        }
+      }
+      cancelTimer(workspaceId)
+      schedule(window)
+      return { status: 'done' }
+    },
+    /** Ends every grant until Stop, such as after a sign-out. */
+    endUntilStop(): void {
+      windows = new Map(
+        [...windows].filter(([, window]) => window.expiresAt !== null),
+      )
+    },
     settings(): DeviceSettings {
       return {
         deviceName: dependencies.deviceName,
         alwaysAllowedCommands: [...commands],
         workspaceWindows: [...windows.values()]
-          .filter((window) => window.expiresAt > clock.now())
+          .filter(runs)
           .map((window) => ({ ...window })),
       }
     },

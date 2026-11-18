@@ -6,20 +6,20 @@ import paletteStyles from '../../../docs/mockups/src/components/palette/CommandP
 import { routes } from '../../app/router'
 import { requestLines } from '../../app/test-kit'
 import { workspacePaths } from '../../shared/workspaces'
-import { accessibleName, byLabel, byRole } from '../../test-support/dom-queries'
+import { byRole } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
 } from '../../test-support/mount'
-import { serveSuspendedAcme } from '../../test-support/suspended-org'
 import { pressCommand } from '../shortcuts/shortcut-test-kit'
 import { click, press, settle, typeText } from '../test-mount'
 import {
   groupLabels,
   highlighted,
   openPaletteTab,
+  optionNames,
   options,
   palette,
   searchField,
@@ -38,11 +38,6 @@ function openedWorkspaces(): string[] {
   )
 }
 
-/** The names of the options, as a screen reader reads them. */
-function optionNames(): string[] {
-  return options().map(accessibleName)
-}
-
 /** The first two texts of each option, in the order that the row shows them. */
 function rowStarts(): string[][] {
   return options().map((option) =>
@@ -51,13 +46,6 @@ function rowStarts(): string[][] {
       .slice(0, 2),
   )
 }
-
-// The app hides Desktop, so the palette offers no Go to Desktop.
-const goTo = ['All files', 'Changes', 'Checks', 'Terminal', 'Preview'].map(
-  (tab) => `Go to ${tab}`,
-)
-
-const otherOrgs = ['Create org', 'Switch to Futex', 'Switch to Firna']
 
 /** Chooses an item of a filter menu of the open palette. */
 function chooseFilter(button: string, item: string) {
@@ -94,10 +82,10 @@ describe('the rows of the command palette', () => {
     })
   })
 
-  test('a row closes the palette before it runs, so Archive and Restore act at once with no question, and the field of a new section takes the focus', async () => {
+  test('a row closes the palette before it runs, so Archive and Restore act at once with no question, and the name field of the New section dialog takes the focus', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer()
-    const { view, navigation } = await openPaletteTab(
+    const { navigation } = await openPaletteTab(
       routes.workspace(org, workspace),
       { server },
     )
@@ -125,21 +113,22 @@ describe('the rows of the command palette', () => {
     typeText(searchField(), 'new section')
     press(searchField(), 'Enter')
     await settle()
-    const field = byLabel(
-      'Name of the new section',
-      byLabel('Workspaces', view),
+    const dialog = document.querySelector<HTMLElement>(
+      '[role="dialog"][aria-label="New section"]',
     )
+    const field = byRole('textbox', 'Name', dialog ?? document)
     expect({
       archive,
       restore,
       section: {
         open: palette() !== null,
+        dialog: dialog !== null,
         focus: field.contains(document.activeElement),
       },
     }).toEqual({
       archive: { open: false, dialog: false, writes: lifecycle.slice(0, 1) },
       restore: { open: false, dialog: false, writes: lifecycle },
-      section: { open: false, focus: true },
+      section: { open: false, dialog: true, focus: true },
     })
   })
 
@@ -152,7 +141,9 @@ describe('the rows of the command palette', () => {
       groups: groupLabels(),
       starts: rowStarts(),
       strong: options().map((row) =>
-        row.classList.contains(paletteStyles.strong),
+        row
+          .querySelector(`:scope > .${paletteStyles.label}`)
+          ?.classList.contains(paletteStyles.strong),
       ),
     }
     typeText(searchField(), 'storefront')
@@ -215,56 +206,19 @@ describe('the rows of the command palette', () => {
         names: [
           'Fix flaky cart testacme/storefront3m, Checks running, Working',
           'Apple Pay buttonacme/storefront5m, Checks failed, Ready',
-          'Upgrade to Next.js 16acme/storefront7m, Ready',
+          'Upgrade to Next.js 16acme/storefront7m, Merge conflict, Ready',
           'Checkout address autocompleteacme/storefrontnow, Archived',
         ],
       },
       kept: { text: 'storefront', groups: ['Checkout', 'Infra'] },
       sections: ['General', 'Checkout', 'Infra'],
       billing: ['invoice-fonts', 'webhook-retries', 'retry-queue'],
-      archivedBilling: 'Archived workspaces of acme/billing-service show here',
+      archivedBilling:
+        'Archived workspaces of acme/billing-service show here for 14 days',
       archived: { groups: ['Archived'], opens: [workspace] },
       focusBack: true,
       noMatch:
         'Nothing matches “refund”Try a workspace name, a branch, or a repository.',
-    })
-  })
-
-  test.each([
-    {
-      who: 'a member gets no Archive for the workspace of another person',
-      server: () => new FakeApiServer({ role: 'member' }),
-      groups: ['Checkout address autocomplete', 'Acme', 'Orgs', 'Help'],
-      rows: [
-        'New session',
-        'Session history',
-        ...goTo,
-        'New workspace',
-        'New section',
-        ...otherOrgs,
-        'Send feedback',
-      ],
-    },
-    {
-      who: 'a suspended org offers nothing that changes it',
-      server: () => {
-        const server = new FakeApiServer()
-        serveSuspendedAcme(server)
-        return server
-      },
-      groups: ['Checkout address autocomplete', 'Orgs', 'Help'],
-      rows: ['Session history', ...goTo, ...otherOrgs, 'Send feedback'],
-    },
-  ])('on the Actions tab, $who', async ({ server, groups, rows }) => {
-    holdAnimationFrames()
-    await openPaletteTab(routes.workspace(org, workspace), {
-      server: server(),
-    })
-    pressCommand('command-palette', 'other', document.body)
-    click(byRole('tab', 'Actions'))
-    expect({ groups: groupLabels(), rows: optionNames() }).toEqual({
-      groups,
-      rows,
     })
   })
 

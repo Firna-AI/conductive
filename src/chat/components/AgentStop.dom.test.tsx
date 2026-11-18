@@ -1,3 +1,4 @@
+import type { Workspace } from '../../shared/generated/Workspace'
 // @vitest-environment happy-dom
 
 import { act } from 'react'
@@ -6,7 +7,7 @@ import { routes } from '../../app/router'
 import type { WorkspaceEvent } from '../../shared/events'
 import { sessionLink } from '../../shared/session-link'
 import { sessionsPath } from '../../shared/sessions'
-import type { Workspace } from '../../shared/workspaces'
+
 import { FAKE_IDS, FAKE_ORIGIN } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { holdAnimationFrames, mount, waitFor } from '../../test-support/mount'
@@ -114,7 +115,7 @@ describe('the line of a stop by an agent', () => {
       () => stopLines(container).length === 4,
       'the lines of the four stopped turns',
     )
-    const ownChip = `W-${listed(own).number} Session Debounce the address lookups to 250 ms, Checks passed, Ready`
+    const ownChip = `W-${listed(own).number} Session Debounce the address lookups to 250 ms, Ready to merge, Ready`
     const otherChip = `W-${other.number} ${other.name}, Checks running, Working`
     const unknown = sessionLink(FAKE_ORIGIN, org, 'gone', 'old')
     // The read of the other workspace waits, so its sessions keep the chip

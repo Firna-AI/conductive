@@ -1,10 +1,14 @@
 # GitHub tokens
 
 This doc states how a cloud computer gets GitHub access, who its commits
-name as their author, and how the Worker acts on GitHub as a member.
+name as their author, and how the Worker acts on GitHub as a member. It
+also states which GitHub tokens an image job uses to copy the
+repositories. An image job is a build or a refresh of the org image.
 [Access and security](access-and-security.md) states the shared access
 rules. A decision number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says.
+[Decision numbers](../architecture.md#decision-numbers) says. A parallel
+copy decision number names a decision of the change that copies the
+repositories of an image job in parallel.
 
 ## Git and the GitHub CLI
 
@@ -20,11 +24,13 @@ rules. A decision number names a dated record, as
 - In an agent turn, Git and `gh` use the token of the person who sent that
   turn. Pushes and pull requests show as that person, as decision 50 requires.
 - Outside an agent turn, `gh` uses the workspace owner's GitHub account.
-  The terminal is shared, so this account is the same for each connection.
+  The members share the terminals, so this account is the same in each
+  terminal and for each connection.
 - A supplied turn ID must name a current turn. An unknown or ended turn
   never falls back to the workspace owner.
-- A trusted Continue job is the one other case. Its fetch gets the token
-  of the member who pressed Continue, as [Continue](#continue) says.
+- A trusted Continue job and a trusted repository change job are the
+  other cases. Each fetch gets the token of the member who pressed the
+  action, as [Continue](#continue) says.
 - Each command that an agent runs in a turn has the ID of that turn. This
   holds also in a shell that loads the sandbox's own variables again, such
   as the login shell in which Codex runs each command.
@@ -62,12 +68,11 @@ rules. A decision number names a dated record, as
 - In an agent turn, the author is the sender of the turn, the member whose
   message started the turn. A message that another member sends during the
   turn does not change the author.
-- A sandbox keeps the agent runner of its org image, also after a resume.
-  In a sandbox whose runner gives an agent no turn author, the commits of
-  each agent turn name the workspace owner. The member starts a new
-  workspace after an admin runs Build computer to get the turn sender as
-  the author.
-- Outside an agent turn, such as in the shared terminal or in the startup
+- In a sandbox whose runner gives an agent no turn author, the commits of
+  each agent turn name the workspace owner. An update of the sandbox
+  software gives such a sandbox a newer runner at a later start, as
+  [Updates](sandbox-software.md#updates) says.
+- Outside an agent turn, such as in the shared terminals or in the startup
   script, the author is the workspace owner.
 - The author of the first commit that the app pushes to an empty
   repository is the sender of the turn that creates the workspace.
@@ -130,15 +135,38 @@ rules. A decision number names a dated record, as
   build sandbox, as decision 90 requires. Each copy uses its own GitHub App
   installation token, which can only read the contents of that one
   repository.
-- The Worker gives the token only to the Git command of that copy. The
-  Worker and Git do not write it to command text, command history, a
+- The copies of one image job run in parallel. Each copy has its own token
+  and its own one-use build grant.
+- The Git commands of an image job copy and check out its repositories.
+  These commands run at the same time only when they fit together in a
+  memory budget. The budget comes from the size of each repository that
+  GitHub reports and from the free memory of the build sandbox (parallel
+  copy decision 1). So a large repository copies alone. Many small
+  repositories copy together.
+- These ways were rejected (parallel copy decision 1):
+  - All copies at once, and a fixed number of copies or Git commands at
+    once in place of the budget. Only the budget lets a large repository
+    copy alone and many small ones copy together.
+  - One sandbox command for all copies. Each token then lives from the
+    start of that command until the slowest copy ends.
+- To read the size of each repository, the Worker uses installation tokens
+  that can only read metadata. Each token covers the repositories of the
+  job in one installation, at most 500 of them. When an installation has
+  more than 500 repositories of the job, each further batch of at most 500
+  gets its own token. Each metadata token stays in the Worker and never
+  reaches the build sandbox. The Worker revokes every metadata token before
+  the first copy starts.
+- The Worker gives each clone token only to the Git command of its copy.
+  The Worker and Git do not write it to command text, command history, a
   remote URL, a Git config, a file, or a saved snapshot.
 - The Git command gets the token with a one-use build grant. The grant
   works once, and only for its own build and repository.
-- The Worker revokes the token as soon as the Git command ends, also when
-  the command fails. The build goes on only after GitHub confirms the
-  revocation. The build starts no checkout, software step, install script,
-  snapshot, or other repository code before that.
+- The Worker revokes each clone token as soon as its Git command ends, also
+  when the command fails. A failed copy fails the job. The Worker then
+  revokes each token of the job that still works.
+- The job goes on only after GitHub confirms the revocation of every token
+  of the job. Before that, the job starts no checkout, software step,
+  install script, snapshot, or other repository code.
 - Risk: a later build and a refresh start from the last org image. A
   program with root access that an earlier install left in that image can
   read the clone token of a later copy. That token can only read its own
@@ -195,6 +223,11 @@ rules. A decision number names a dated record, as
   in a suspended org, and in an archived workspace.
 - No GitHub error text reaches the browser. The Worker gives each refusal
   of GitHub as an error code of the app.
+- The Worker also marks a draft ready for review with the GitHub token of
+  the member who clicks Ready for review, as
+  [Ready for review](github-banner.md#ready-for-review) says. The same
+  access rule, refusals, and error codes of the app apply. The user chose
+  this on 17 November 2026.
 
 ## Continue
 
@@ -210,6 +243,9 @@ rules. A decision number names a dated record, as
 - Every member may press Continue (decision 224). So the token of a member
   who is not the owner reaches the sandbox of the owner for the fetch, as
   it does for a message of that member.
+- A [repository change](repository-change.md) fetches the latest default
+  branch of the new repository in the same way, with the token of the
+  member who changes the repository.
 - These ways were rejected (decision 226):
   - The token of the workspace owner, through the mode that `gh` uses
     outside a turn. It works only in a workspace from a newer org image.

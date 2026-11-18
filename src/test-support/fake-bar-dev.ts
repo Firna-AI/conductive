@@ -1,3 +1,5 @@
+import type { MessageSender } from '../shared/generated/MessageSender'
+import type { UserMessage } from '../shared/generated/UserMessage'
 import type { FetchLike } from '../app/api/client'
 import { flag, record, text } from '../app/api/parse'
 import { readOrderedWorkspaceResponse } from '../app/api/read-workspaces'
@@ -6,7 +8,6 @@ import { readSessions } from '../chat/api/read-responses'
 import type { WorkspaceEvent } from '../shared/events'
 import { filePaths } from '../shared/files'
 import { githubPaths, type GitHubMergeMethod } from '../shared/github'
-import type { MessageSender, UserMessage } from '../shared/messages'
 import { sessionsPath } from '../shared/sessions'
 import { workspacePath, workspacePaths } from '../shared/workspaces'
 import type { FakeApiServer } from './fake-api'
@@ -25,6 +26,7 @@ import {
   type FakeMergeEnd,
   type FakeWork,
 } from './fake-bar'
+import { serveReady, type FakeReadyEnd } from './fake-ready'
 import { FAKE_IDS, FAKE_ORIGIN } from './fixtures/core'
 import { toolFixtures } from './fixtures/tools'
 import { nextEnvelope } from './recorded-repairs'
@@ -34,6 +36,7 @@ export interface BarScenario {
   access: FakeAccess
   method: GitHubMergeMethod | 'none'
   merge: FakeMergeEnd
+  ready: FakeReadyEnd
   work: FakeWork
   continue: FakeContinueEnd
 }
@@ -45,6 +48,7 @@ export const scenarioValues: {
   access: ['write', 'read', 'unknown'],
   method: ['squash', 'merge', 'rebase', 'none'],
   merge: ['merged', 'moved-head', 'no-right', 'refused', 'unavailable'],
+  ready: ['ready', 'no-right', 'pull-changed', 'refused'],
   work: ['none', 'files', 'restored', 'commits', 'legacy'],
   continue: ['continued', 'question', 'clash', 'stopped', 'turn'],
 }
@@ -64,6 +68,7 @@ export function readScenario(query: URLSearchParams): BarScenario {
     access: pick(access, query.get('access')),
     method: pick(method, query.get('method')),
     merge: pick(merge, query.get('merge')),
+    ready: pick(scenarioValues.ready, query.get('ready')),
     work: pick(work, query.get('work')),
     continue: pick(scenarioValues.continue, query.get('continue')),
   }
@@ -72,7 +77,7 @@ export function readScenario(query: URLSearchParams): BarScenario {
 const org = FAKE_IDS.org
 const id = FAKE_IDS.workspace
 
-async function read<T>(
+export async function read<T>(
   server: FakeApiServer,
   path: string,
   reader: (value: unknown) => T,
@@ -82,14 +87,14 @@ async function read<T>(
 }
 
 /** The JSON body of a request, as the Worker reads it. */
-function bodyOf(init: RequestInit | undefined) {
+export function bodyOf(init: RequestInit | undefined) {
   return record(JSON.parse(String(init?.body)), 'request')
 }
 
 /**
  * A fetch over the fake server that answers the bar actions of a scenario
  * as the Worker does with its state. A completed merge publishes the merged
- * state, a Continue publishes the workspace on its new branch with a note
+ * state, Ready for review publishes Ready to merge, a Continue publishes the workspace on its new branch with a note
  * in each session, and a message shows the text that it sent. Every other
  * request gets the recorded reply. Development only.
  */
@@ -105,6 +110,7 @@ export function scenarioFetch(
     scenario.method === 'none' ? null : scenario.method,
   )
   serveMerge(server, scenario.merge)
+  serveReady(server, scenario.ready)
   serveWork(server, scenario.work)
   serveContinue(server, scenario.continue)
   let continues = scenario.continue === 'continued'
@@ -114,9 +120,12 @@ export function scenarioFetch(
     if (event.type !== 'github.updated') return
     server.json('GET', githubPaths.banner(org, id), { banner: event.banner })
     server.json('GET', githubPaths.checks(org, id), event.checks)
+    server.json('GET', githubPaths.stored(org, id), {
+      state: { banner: event.banner, checks: event.checks },
+    })
   }
-  const publishMerge = () => {
-    const merged = toolFixtures('merged')
+  const publish = (state: 'merged' | 'ready-to-merge') => {
+    const merged = toolFixtures(state)
     const event: WorkspaceEvent = {
       type: 'github.updated',
       banner: merged.banner.banner,
@@ -203,7 +212,10 @@ export function scenarioFetch(
       method === 'GET' &&
       pathname === githubPaths.mergeResult(org, id, `merge-${id}`)
     ) {
-      if (scenario.merge === 'merged') publishMerge()
+      if (scenario.merge === 'merged') publish('merged')
+    }
+    if (method === 'POST' && pathname === githubPaths.ready(org, id)) {
+      if (scenario.ready === 'ready') publish('ready-to-merge')
     }
     if (method === 'POST' && pathname === workspacePaths.continue(org, id)) {
       const body = bodyOf(init)

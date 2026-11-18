@@ -61,7 +61,7 @@ Its `url` is the authorizer address, with the hostname and a new grant only in
 the fragment. Its `expiresAt` ends that grant. The Mac app fetches it with its
 own session and the desktop Origin. It then opens `url` in the default browser.
 
-The launch page has a nonce-based CSP. Its `form-action` allows only the
+The launch page has a nonce-based CSP for its script and its style. Its `form-action` allows only the
 authorizer and the exact preview origin, because a browser can also check the
 303 target. Its `frame-ancestors` allows only `APP_ORIGIN` and the desktop
 origin. It sends `Referrer-Policy: origin`, because a form POST under
@@ -89,12 +89,21 @@ bodies get the same 404 as an invalid grant. Header mode cancels any body
 without reading or buffering it.
 
 A GET of the exact authorizer address without a query serves the authorizer
-page for a browser launch. Its CSP allows only its nonce script and requests
-to its own origin. Its `frame-ancestors 'none'` keeps it at the browser's top
+page for a browser launch. Its CSP allows only its nonce script and style and
+requests to its own origin. Its `frame-ancestors 'none'` keeps it at the browser's top
 level. Its script removes the fragment from the address before any request.
 It then sends the header mode POST. It follows only the clean address of the
 same preview hostname. On a failure, it asks the user to open the preview
 again from the workspace.
+
+The launch page and the authorizer page share one look from
+[opening-page.ts](opening-page.ts): the logo tile, a turning ring, and
+"Opening preview", in the colours of the app and the scheme of the system.
+`app/tools/preview-opening` of the mockups draws it. The page is one small
+file. Its style and its drawings are inline, and it loads no font, image,
+or script file. So each CSP adds only a `style-src` with the page nonce.
+The words come from `previewOpeningCopy` in the mockups, so the mockup and
+the page read the same.
 
 The `authorize` hostname never serves sandbox content. So no service worker of
 a previewed app can see a grant.
@@ -133,6 +142,11 @@ a check leaves its grant unused. Keep each new check before the redemption.
 The proxy reads only the cookie of the requested preview ID. A duplicate of
 that cookie counts as no cookie. The proxy checks the D1 record and the cookie
 before any sandbox call. A leaked hostname alone gets a 404.
+The outer route keeps the workspace of each found hostname in memory for up to
+5 minutes, and never past its expiry, with `previewHostnames` from
+[hostname-cache.ts](hostname-cache.ts). It keeps at most 1,000 hostnames and
+never an unknown one. A revoked hostname that stays there still gets its 404
+from the workspace object.
 `readPreviewAccess` in [viewer-access.ts](viewer-access.ts) reads the preview and
 the access of the cookie's viewer together, in one D1 read. It uses the
 `preview` kind of the [shared connection reader](../security/README.md#open-connections).
@@ -156,9 +170,11 @@ Marked errors keep the descriptor, including 401, 403, and the relay's 502 for a
 The response header allowlist removes the mark before the browser gets the answer.
 
 When the relay socket unit is missing or inactive, the open and the proxy refuse with
-409 `preview_relay_unavailable`. The message says:
-"Previews need newer cloud computer software. Start a new workspace after an admin runs Build computer."
-The image build installs the relay. An existing workspace keeps its image's software.
+409 `preview_relay_unavailable`.
+Image builds install the relay through the newest release.
+Existing workspaces download release updates in the background.
+A later runner start applies each complete update.
+A workspace without the program receives a background bootstrap at its next normal start.
 systemd holds the relay port in the socket unit while the service restarts.
 The Worker checks the socket state, so a service restart does not trigger the software refusal.
 
@@ -195,14 +211,23 @@ live connections so these hooks also cancel its fetches, HTTP streams, and
 sockets.
 The confirmed-stop chat transaction then sends `ports.updated` with a null
 list, even when the workspace had no preview to revoke.
-Each data batch waits for a D1 check that starts after the data arrives.
-This also blocks data after another instance revokes the preview, or after
-the owner of the workspace is suspended.
-Each check reads the access of its viewer session again, with no cached grant.
+The registry keeps one scope for each viewer session of a preview. Each request
+joins its scope before its access read, so a revocation during the read also ends it.
+`AuthorizationBatch` in [authorization.ts](authorization.ts) shares each D1 read
+among the checks that wait for it. A successful read also covers each check of the
+scope that starts within `PREVIEW_ACCESS_WINDOW_MS`, 1 second, after the read started.
+Each data batch waits for such a check. So data after another instance revokes the
+preview, or after the owner of the workspace is suspended, stops within that window.
+Close, workspace revocation, and expiry close the scope at once, also inside the window.
+A relay lookup that called the provider ends the window, so the next check reads again.
+Each read binds the scope to its sandbox. A read that finds another sandbox or
+provider account ends each connection that reached the old one.
 A denied viewer loses only the connections of that viewer session. Other
 viewers of the same preview keep theirs.
 The request and response streams read only when their consumer requests data.
-They read one chunk at a time. No cached authorization or time window permits data.
+They read one chunk at a time.
+Tests set `previewAccessWindowMs` to 0, so each check reads again, except in
+[window.test.ts](window.test.ts).
 A chunk of a byte stream, such as a fetch body, holds the data that waits, up to 256 KB.
 So one check covers it. The default reader of a Workers fetch body gives 4 KB at most.
 Completed HTTP connections release their registry entries.
@@ -210,11 +235,11 @@ Completed HTTP connections release their registry entries.
 A preview socket uses `bridgeSocket` with an outbound socket to the sandbox.
 An open preview socket or HTTP stream keeps its workspace object active, as [Work that keeps the object active](../README.md#work-that-keeps-the-object-active) says.
 
-Set `dependencies.onActivity` to report each input to the input owner of the
-workspace, as [Input activity](../lifecycle/README.md#input-activity) says.
-That call returns at once. The proxy writes no D1 activity time. Each preview
-HTTP request and WebSocket handshake counts. Socket frames and idle
-connections do not count.
+The proxy reports no activity of the workspace. No preview request, socket
+handshake, socket frame, or idle connection keeps a sandbox running
+(decision 293), as
+[Stop and resume](../../docs/protocol/workspace-life.md#stop-and-resume)
+says.
 
 The header allowlists live in `headers.ts`. The cookie allowlist filters
 request and response cookies. It accepts valid app cookie names. It excludes
@@ -237,6 +262,17 @@ A quote can hide the directives after it from the browser, so the proxy's direct
 The reply keeps the server's `Expires`, `Date`, and `Age`.
 A 304 without `Cache-Control` gets none, so the browser keeps the rules of its stored reply.
 The outer Worker keeps these rules, because it answers the preview host with `previewResponse` from [http.ts](../http.ts).
+
+`ServerTiming` in [server-timing.ts](../server-timing.ts) records the steps of each proxied request.
+A reply that passes every check gets `Server-Timing` with `access`, `relay`, `check`,
+`upstream`, and `check-after`. The outer route in [router.ts](../features/router.ts)
+puts `lookup` and `workspace` first, only when the reply already has the header.
+A cached lookup and a check inside the access window show a duration of 0.
+So a refused request gets no timings. `workspace` holds the whole trip to the
+workspace object, so it includes the later steps. The body checks come after
+the headers, so the header leaves them out. The allowlist drops the previewed
+server's own `Server-Timing`.
+[Port previews](../../docs/protocol/terminal-previews-and-desktop.md#port-previews) states the requirement.
 [Port previews](../../docs/protocol/terminal-previews-and-desktop.md#port-previews) states the requirement.
 
 An org suspension blocks preview creation and launch with 403 `org_suspended`.
@@ -252,9 +288,13 @@ The shared sandbox predicate refuses old grants, cookies, and each stream batch 
 - [launch.ts](launch.ts) builds the launch replies and the authorizer page response, and handles both authorizer POST modes.
 - [launch-document.ts](launch-document.ts) builds the launch page markup and its CSP.
 - [browser-launch.ts](browser-launch.ts) builds the authorizer page for a browser launch.
+- [opening-page.ts](opening-page.ts) builds the shared look of both pages: the tile, the ring, the status, and the failure.
 - [preview-launch-path.ts](../security/preview-launch-path.ts) matches the exact launch path for the gate and the Mac app.
 - [credentials.ts](credentials.ts) issues grants with `launchGrant`, redeems each grant once with `redeemLaunchGrant`, and checks the credential cookies. Each one seals a `PreviewViewer`.
 - [proxy.ts](proxy.ts) routes the authorizer page and POST, checks the credential cookie, and owns the request flow.
+- [server-timing.ts](../server-timing.ts) records the duration of each step for the `Server-Timing` header.
+- [hostname-cache.ts](hostname-cache.ts) keeps the workspace of each found preview hostname for the outer route.
+- [authorization.ts](authorization.ts) shares each access read and holds the 1-second access window.
 - [registry.ts](registry.ts) scopes HTTP and socket cancellation by workspace, preview, and viewer session.
 - [viewer-access.ts](viewer-access.ts) exports `readPreviewAccess`, the one D1 read of a preview and its viewer.
 - [connection.ts](connection.ts) wraps both HTTP directions with authorization and backpressure.

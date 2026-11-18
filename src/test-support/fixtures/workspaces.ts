@@ -1,22 +1,28 @@
+import type { GitHubSummary } from '../../shared/generated/GitHubSummary'
+import type { Workspace } from '../../shared/generated/Workspace'
+import type { WorkspaceState } from '../../shared/generated/WorkspaceState'
+import type { MessageSender } from '../../shared/generated/MessageSender'
+import type { UserMessage } from '../../shared/generated/UserMessage'
 import { defaultChoice } from '../../../docs/mockups/src/fixtures/agents'
 import {
   closedSessions,
   workspaceSessions,
 } from '../../../docs/mockups/src/fixtures/sessions'
-import { workspaceList } from '../../../docs/mockups/src/fixtures/workspaces'
+import {
+  workspaceList,
+  type Workspace as MockupWorkspace,
+} from '../../../docs/mockups/src/fixtures/workspaces'
 import type { User } from '../../shared/api'
-import type { GitHubSummary } from '../../shared/github'
-import type { MessageSender, UserMessage } from '../../shared/messages'
+
 import type { SessionsResponse } from '../../shared/sessions'
 import type { WorkspaceViewResponse } from '../../shared/workspace-view'
 import type {
   CreateWorkspaceResponse,
   OrderedWorkspaceResponse,
-  Workspace,
-  WorkspaceState,
   WorkspacesResponse,
 } from '../../shared/workspaces'
 import { FAKE_IDS, FAKE_ORIGIN, FAKE_TIME, fakeUser, fakeUsers } from './core'
+import { removedWorkspace } from './removed-workspace'
 import { routes } from '../../app/router'
 
 /**
@@ -32,44 +38,71 @@ const personNamed = (key: string): User =>
   fakeUsers.find((user) => user.id === key) ?? fakeUser
 
 /**
+ * The record of a workspace of the mockups in Acme, as the API gives it,
+ * top-level, made and last changed at `times`.
+ */
+export function workspaceRecord(
+  workspace: MockupWorkspace,
+  times: Pick<Workspace, 'createdAt' | 'updatedAt'>,
+): Workspace {
+  return {
+    id: workspace.key,
+    number: workspace.number,
+    link: new URL(routes.workspace(FAKE_IDS.org, workspace.key), FAKE_ORIGIN)
+      .href,
+    orgId: FAKE_IDS.org,
+    repositoryId: workspace.repository,
+    sectionId: workspace.section,
+    parentId: null,
+    owner: personNamed(workspace.owner),
+    name: workspace.name,
+    branch: workspace.branch,
+    choice: { ...workspace.choice, fast: workspace.choice.fast ?? false },
+    state: workspace.status,
+    github: workspace.github,
+    ...times,
+    restoreUntil: null,
+    archivedAt: null,
+  }
+}
+
+/** The repository of the open workspace, which names its folder. */
+function openRepository(): string {
+  const open = workspaceList.find(
+    (workspace) => workspace.key === FAKE_IDS.workspace,
+  )
+  return open?.repository ?? 'repository'
+}
+
+/**
  * The workspaces of Acme, with `checkout-autocomplete` in `state`. Each
  * workspace has the GitHub state of its mockup workspace, unless `github`
- * gives the one of `checkout-autocomplete`, also `null`.
+ * gives the one of `checkout-autocomplete`, also `null`. The list ends
+ * with a removed workspace, which the Worker also sends, and which the
+ * workspace list leaves out.
  */
 export function workspaceFixtures(
   state: WorkspaceState = 'ready',
   github?: GitHubSummary | null,
 ) {
-  const workspaces: WorkspacesResponse = {
-    workspaces: workspaceList.map((workspace, index) => {
-      const open = workspace.key === FAKE_IDS.workspace
-      const archived = open && state === 'archived'
-      return {
-        id: workspace.key,
-        number: workspace.number,
-        link: new URL(
-          routes.workspace(FAKE_IDS.org, workspace.key),
-          FAKE_ORIGIN,
-        ).href,
-        orgId: FAKE_IDS.org,
-        repositoryId: workspace.repository,
-        sectionId: workspace.section,
-        owner:
-          fakeUsers.find((user) => user.id === workspace.owner) ?? fakeUser,
-        name: workspace.name,
-        branch: workspace.branch,
-        choice: workspace.choice,
-        state: open ? state : workspace.status,
-        github: open && github !== undefined ? github : workspace.github,
+  const listed = workspaceList.map((workspace, index): Workspace => {
+    const open = workspace.key === FAKE_IDS.workspace
+    const archived = open && state === 'archived'
+    return {
+      ...workspaceRecord(workspace, {
         createdAt: FAKE_TIME - (index + 1) * 86_400_000,
         // Archive raises the time of the record to its own time, as the
-        // Worker does, so the archived record is newer than each record of
-        // the workspace from before the Archive.
+        // Worker does, so the archived record is newer than each record
+        // of the workspace from before the Archive.
         updatedAt: archived ? FAKE_TIME : FAKE_TIME - index * 60_000,
-        restoreUntil: null,
-        archivedAt: archived ? FAKE_TIME : null,
-      }
-    }),
+      }),
+      state: open ? state : workspace.status,
+      github: open && github !== undefined ? github : workspace.github,
+      archivedAt: archived ? FAKE_TIME : null,
+    }
+  })
+  const workspaces: WorkspacesResponse = {
+    workspaces: [...listed, removedWorkspace()],
   }
   const workspace = workspaces.workspaces.find(
     (item) => item.id === FAKE_IDS.workspace,
@@ -112,7 +145,7 @@ export function workspaceFixtures(
       id: session.key,
       workspaceId: workspace.id,
       title: session.title,
-      choice: defaultChoice,
+      choice: { ...defaultChoice, fast: defaultChoice.fast ?? false },
       createdAt: FAKE_TIME - (index + 1) * 60_000,
       closedAt: null,
       activeTurnId: state === 'working' ? 'turn-1' : null,
@@ -129,8 +162,13 @@ export function workspaceFixtures(
       title: session.title,
       choice:
         session.agent === 'codex'
-          ? { agent: 'codex', model: 'GPT-6.1 Sol', effort: 'medium' }
-          : defaultChoice,
+          ? {
+              agent: 'codex',
+              model: 'GPT-6.1 Sol',
+              effort: 'medium',
+              fast: false,
+            }
+          : { ...defaultChoice, fast: defaultChoice.fast ?? false },
       createdAt: FAKE_TIME - (index + 2) * 86_400_000,
       closedAt: FAKE_TIME - (index + 1) * 86_400_000,
       activeTurnId: null,
@@ -149,7 +187,7 @@ export function workspaceFixtures(
     sender: fakeUser,
     text: 'Add address autocomplete to the checkout form. Keep the manual fields as a fallback.',
     attachments: [],
-    choice: defaultChoice,
+    choice: { ...defaultChoice, fast: defaultChoice.fast ?? false },
     createdAt: FAKE_TIME,
     state: 'sent',
   }
@@ -201,8 +239,10 @@ export function workspaceFixtures(
       })),
       activeTab: { kind: 'session', sessionId: FAKE_IDS.session },
       fileList: 'changes',
+      temporaryTab: null,
       tool: 'terminal',
     },
+    repositoryFolder: `/home/user/code/${openRepository()}`,
   }
   return { workspaces, detail, sessions, message, created, view }
 }

@@ -1,20 +1,41 @@
 import type { ComponentProps } from 'react'
-import type {
-  AgentsSection,
-  OpenAgentForm,
-} from '../components/settings/AccountSections'
+import type { AgentsSection } from '../components/settings/AccountSections'
+import type { OpenAgentForm } from '../components/settings/AgentList'
 import type { UnusableLogin } from '../components/settings/LoginNotUsable'
 import { agentKeys, type AgentKey } from '../fixtures/agents'
 import {
   accountLogins,
+  addedV1Logins,
   codexUnusableCause,
+  endpointLogins,
+  keptListLogins,
+  readFailedLogins,
+  unlistedModelLogins,
   type AgentLogins,
-  type LoginKind,
+  type AgentLogin,
 } from '../fixtures/logins'
+import { acmeLoginUse } from '../fixtures/orgLogins'
 import { paths } from '../paths'
 import type { AccountState } from './accountState'
 
 type FormKey = Exclude<AccountState['form'], 'none'>
+
+/**
+ * The logins of each state of the own endpoint, all on Cal's proxy. The
+ * agent of an open form has no login, as `loginsFor` says.
+ */
+const ownEndpointLogins: Readonly<
+  Record<Exclude<AccountState['ownEndpoint'], 'none'>, AgentLogins>
+> = {
+  form: endpointLogins,
+  typed: endpointLogins,
+  refused: endpointLogins,
+  connected: endpointLogins,
+  unlisted: unlistedModelLogins,
+  'v1-added': addedV1Logins,
+  'read-failed': readFailedLogins,
+  'read-failed-unlisted': keptListLogins,
+}
 
 /**
  * The agent of each form and the kind that its switch selects, and where
@@ -26,19 +47,19 @@ const openForms: Readonly<Record<FormKey, OpenAgentForm>> = {
   claude: {
     agent: 'claude',
     kind: 'token',
-    connectTo: paths.account,
+    connectTo: paths.accountAgents,
     cancel: true,
   },
   'claude-api-key': {
     agent: 'claude',
     kind: 'api-key',
-    connectTo: paths.account,
+    connectTo: paths.accountAgents,
     cancel: true,
   },
   codex: {
     agent: 'codex',
     kind: 'api-key',
-    connectTo: paths.account,
+    connectTo: paths.accountAgents,
     cancel: true,
   },
   'codex-token': {
@@ -62,18 +83,31 @@ function signingInAgain(state: AccountState): boolean {
 /**
  * The logins of the agents in a state. The agent of the form has no login,
  * except a Codex login that the app can no longer use, which stays in its
- * row while the form is open.
+ * row while the form is open. While the org login of Acme serves Cal
+ * because he has no Claude login, Claude has none.
  */
 function loginsFor(state: AccountState): AgentLogins {
-  const logins: Partial<Record<AgentKey, LoginKind>> = {}
+  const logins: Partial<Record<AgentKey, AgentLogin>> = {}
   if (state.connections === 'not-connected') return logins
-  const kinds = { ...accountLogins, codex: state.codexLogin }
+  const kinds: AgentLogins =
+    state.ownEndpoint === 'none'
+      ? {
+          ...accountLogins,
+          codex:
+            state.codexLogin === 'endpoint'
+              ? endpointLogins.codex
+              : { kind: state.codexLogin },
+        }
+      : ownEndpointLogins[state.ownEndpoint]
   const formAgent =
     state.form === 'none' || signingInAgain(state)
       ? null
       : openForms[state.form].agent
+  const noOwn = state.orgLogin === 'no-own-login' ? 'claude' : null
   for (const key of agentKeys) {
-    if (key !== formAgent) logins[key] = kinds[key]
+    if (key !== formAgent && key !== noOwn && kinds[key]) {
+      logins[key] = kinds[key]
+    }
   }
   return logins
 }
@@ -86,6 +120,21 @@ function loginsFor(state: AccountState): AgentLogins {
 function formFor(state: AccountState): OpenAgentForm | undefined {
   if (state.form === 'none') return undefined
   const form = { ...openForms[state.form], signIn: state.codexSignIn }
+  const endpoint =
+    state.ownEndpoint === 'form'
+      ? 'empty'
+      : state.ownEndpoint === 'typed'
+        ? 'typed'
+        : state.ownEndpoint === 'refused'
+          ? 'refused'
+          : null
+  if (endpoint)
+    return {
+      ...form,
+      kind: 'endpoint',
+      endpoint,
+      connectTo: paths.ownEndpointConnected,
+    }
   if (state.form !== 'codex-token' || !signingInAgain(state)) return form
   return { ...form, connectTo: paths.codexSignInAgainCode }
 }
@@ -105,6 +154,8 @@ function unusableFor(state: AccountState): UnusableLogin | undefined {
  * step of its ChatGPT sign-in, the connected logins, the share setting
  * that the app did not save, and a Codex login that the app can no longer
  * use, whose Sign in again opens the ChatGPT sign-in form under its row.
+ * While the org login of Acme serves the new sessions of Cal, a line under
+ * Claude names it.
  */
 export function agentsFor(
   state: AccountState,
@@ -114,5 +165,6 @@ export function agentsFor(
     logins: loginsFor(state),
     shares: { notSaved: state.shareChange === 'not-saved' ? 'claude' : null },
     unusable: unusableFor(state),
+    orgLogins: state.orgLogin === 'none' ? undefined : acmeLoginUse(),
   }
 }

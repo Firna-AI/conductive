@@ -1,15 +1,28 @@
 import { isRecord } from '../../http'
 import { BodyBudgetExceeded } from '../../http/bounded-body'
 import { ProviderError } from '../errors'
-import { fileWriteBody } from '../file-write-body'
+import { fileWriteBody } from './file-write-body'
 import type { SandboxFileRead } from '../provider'
 import { CONTROL_BUDGET, ResponseBudget } from './budgets'
 import type { E2bContext } from './context'
 import { envdSession, type EnvdSession } from './envd'
 import { invalidResponse } from './errors'
-import { base64, statFile } from './file-content'
+import { base64, readFileInfo, statFile } from './file-content'
 import fileWriteSource from './file-write.py?raw'
 import { executePython } from './process'
+
+export async function fileInfo(
+  context: E2bContext,
+  sandboxId: string,
+  path: string,
+) {
+  return readFileInfo(
+    await envdSession(context, sandboxId),
+    path,
+    new ResponseBudget('sandbox'),
+    'user',
+  )
+}
 
 export async function readFile(
   context: E2bContext,

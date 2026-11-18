@@ -7,11 +7,11 @@ import {
   type RefObject,
 } from 'react'
 import { useMenuLayer } from '../../shell/ui/layers'
+import { PopoverSurface, type MenuAlign } from '../../shell/ui/PopoverSurface'
 import type { ButtonHandle } from './actions'
 import { useViewport } from './controls'
 import { MenuPanel, type MenuChoice } from './MenuPanel'
 import { requestClose } from './modal'
-import { PopoverSurface, type MenuAlign } from './PopoverSurface'
 import { Sheet } from './Sheet'
 import styles from './ChoiceMenu.module.css'
 
@@ -148,7 +148,13 @@ export function ChoiceMenu<T extends string>(props: {
           },
         })}
         {open && !mobile ? (
-          <PopoverSurface align={props.align} anchor={anchor} wide={props.wide}>
+          <PopoverSurface
+            align={props.align}
+            anchor={anchor}
+            className={
+              props.wide ? `${styles.menu} ${styles.wide}` : styles.menu
+            }
+          >
             {panel}
           </PopoverSurface>
         ) : null}

@@ -1,11 +1,14 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import { fileMark } from '../../app/draft-marks'
 import { pickChatFiles } from './draft-files.test-support'
 import { readyIds } from '../../app/draft-files'
-import type { AgentChoice } from '../../shared/agents'
 import { chatHistoryPath } from '../../shared/events'
-import { filePaths } from '../../shared/files'
+import {
+  attachmentUploadCompletePath,
+  attachmentUploadStartPath,
+} from '../../shared/messages'
 import { retryMessagePath, sessionPaths } from '../../shared/sessions'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
@@ -102,9 +105,10 @@ describe('a reply that names a linked session', () => {
     chat.controller.setDraft(first, words)
     await chat.controller.send(first)
     expect(snapshot(chat).notice?.title).toBe("Your message didn't send")
-    // The Worker took the message before its reply got lost.
-    streamLinked(chat)
+    // The Worker took the message before its reply got lost. A send again
+    // before the stream shows it keeps the same ID.
     await chat.controller.send(first)
+    streamLinked(chat)
     const bodies = await chat.bodies(
       'POST',
       sessionPaths.messages(org, ws, first),
@@ -175,10 +179,13 @@ const codex: AgentChoice = {
   agent: 'codex',
   model: 'GPT-6.1 Sol',
   effort: 'medium',
+  fast: false,
 }
+const target = { type: 'workspace', workspaceId: ws } as const
+/** The start call of an upload, which comes before its parts. */
 const isUpload = (request: Request) =>
   request.method === 'POST' &&
-  new URL(request.url).pathname === filePaths.attachments(org, ws)
+  new URL(request.url).pathname === attachmentUploadStartPath(org, target)
 const isRetry = (request: Request) =>
   request.method === 'POST' && request.url.endsWith('/retry')
 
@@ -186,7 +193,7 @@ const isRetry = (request: Request) =>
 function attachThatWaits(chat: Chat) {
   chat.server.json(
     'POST',
-    filePaths.attachments(org, ws),
+    attachmentUploadCompletePath(org, target, FAKE_IDS.upload),
     {
       attachment: {
         id: 'late-file',
@@ -247,12 +254,15 @@ describe('the draft when a reply opens a linked session', () => {
     chat.held.splice(0, 1)[0]()
     await retrying
     expect(snapshot(chat).activeSessionId).toBe(first)
-    expect(chat.draftOf(first)?.text).toBe(words)
+    expect(chat.draftOf(first)?.text).toBe('')
     expect(chat.draftOf(first)?.sending).toBe(true)
+    expect(pendingIn(chat, first)).toEqual([words])
     expect(snapshot(chat).sessions.map((item) => item.id)).toContain(LINKED)
     chat.held.splice(0, 1)[0]()
     await sending
     expect(snapshot(chat).activeSessionId).toBe(LINKED)
+    expect(pendingIn(chat, first)).toEqual([])
+    expect(pendingIn(chat, LINKED).at(-1)).toBe(words)
   })
 
   it('keeps both drafts, and the source shown, when the linked session already holds unfinished work', async () => {

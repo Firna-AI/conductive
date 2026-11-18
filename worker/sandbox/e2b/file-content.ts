@@ -1,6 +1,7 @@
 import { isRecord } from '../../http'
 import { BodyBudgetExceeded } from '../../http/bounded-body'
 import { ProviderError } from '../errors'
+import type { SandboxFileInfo } from '../provider'
 import { CONTROL_BUDGET, ResponseBudget } from './budgets'
 import { EnvdSession } from './envd'
 import { invalidResponse } from './errors'
@@ -11,6 +12,17 @@ export async function statFile(
   budget: ResponseBudget,
   user: 'user' | 'root' = 'root',
 ): Promise<number> {
+  const info = await readFileInfo(session, path, budget, user)
+  if (info.isDirectory) throw new ProviderError('invalid_request', 400)
+  return info.sizeBytes
+}
+
+export async function readFileInfo(
+  session: EnvdSession,
+  path: string,
+  budget: ResponseBudget,
+  user: 'user' | 'root' = 'root',
+): Promise<SandboxFileInfo> {
   const value = await session.json({ operation: 'stat', path }, budget, {
     body: { path },
     user,
@@ -18,15 +30,14 @@ export async function statFile(
   if (!isRecord(value) || !isRecord(value.entry) || value.entry.path !== path)
     return invalidResponse()
   const entry = value.entry
-  if (entry.type === 'FILE_TYPE_DIRECTORY' || entry.type === 2)
-    throw new ProviderError('invalid_request', 400)
-  if (entry.type !== 'FILE_TYPE_FILE' && entry.type !== 1)
+  const isDirectory = entry.type === 'FILE_TYPE_DIRECTORY' || entry.type === 2
+  if (!isDirectory && entry.type !== 'FILE_TYPE_FILE' && entry.type !== 1)
     return invalidResponse()
   const raw = entry.size ?? 0
   const size = typeof raw === 'string' && /^\d+$/.test(raw) ? Number(raw) : raw
   if (typeof size !== 'number' || !Number.isSafeInteger(size) || size < 0)
     return invalidResponse()
-  return size
+  return { path, sizeBytes: size, isDirectory }
 }
 
 export async function jsonFile(

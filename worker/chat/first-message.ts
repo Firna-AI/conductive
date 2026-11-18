@@ -1,7 +1,8 @@
+import type { UserMessage } from '../../src/shared/generated/UserMessage'
 import type { User } from '../../src/shared/api'
-import type { UserMessage } from '../../src/shared/messages'
 import type { AppEnv } from '../env'
 import { sessionTitleFrom } from '../../src/shared/session-title'
+import { SessionLogins } from './session-login'
 import { HttpError } from '../http'
 import type { FirstWorkspaceMessage } from '../lifecycle/workspace-runtime'
 import { acceptMessage, existingMessage } from './messages'
@@ -18,6 +19,7 @@ interface FirstMessageIdentity extends User {
   agent: string
   model: string
   effort: string
+  fast: number
 }
 
 export function firstMessageIdentity(
@@ -29,7 +31,7 @@ export function firstMessageIdentity(
     u.display_name AS displayName, u.avatar_url AS avatarUrl,
     w.archived_at AS archivedAt,
     r.org_id AS orgId, r.session_id AS sessionId, r.first_turn_id AS turnId,
-    r.first_message_id AS messageId, r.agent, r.model, r.effort
+    r.first_message_id AS messageId, r.agent, r.model, r.effort, r.fast
     FROM workspace_runtime r JOIN workspaces w ON w.id = r.workspace_id
     JOIN orgs o ON o.id = w.org_id
     JOIN users u ON u.id = r.created_by_user_id
@@ -52,7 +54,8 @@ export function requireFirstMessage(
     identity.messageId !== first.request.id ||
     identity.agent !== first.request.choice.agent ||
     identity.model !== first.request.choice.model ||
-    identity.effort !== first.request.choice.effort
+    identity.effort !== first.request.choice.effort ||
+    (identity.fast === 1) !== (first.request.choice.fast ?? false)
   )
     throw new HttpError(
       404,
@@ -75,6 +78,13 @@ export async function admitFirstMessage(
   dependencies: ChatDependencies,
   archived: boolean,
 ): Promise<UserMessage> {
+  first = {
+    ...first,
+    request: {
+      ...first.request,
+      choice: dependencies.normalizeChoice(first.request.choice),
+    },
+  }
   const existing = await existingMessage(
     transaction,
     first.sessionId,
@@ -105,11 +115,12 @@ export async function admitFirstMessage(
       'message_id_conflict',
       'Send the changed message with a new message ID.',
     )
-  const login = await dependencies.resolveLogin(
+  const resolved = await SessionLogins.resolve(
+    dependencies,
     sender.id,
     first.request.choice.agent,
   )
-  if (!login || login.agent !== first.request.choice.agent)
+  if (!resolved)
     throw new HttpError(
       409,
       'agent_login_required',
@@ -132,6 +143,8 @@ export async function admitFirstMessage(
     first.sessionId,
     sender,
     dependencies,
+    null,
+    resolved.owner,
   )
   const title =
     first.firstSessionTitle === undefined

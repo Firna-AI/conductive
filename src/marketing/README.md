@@ -2,8 +2,8 @@
 
 The marketing site is the public site at the root of the product domain,
 `conductive.build`. It has the home page, the public docs, the Terms page,
-and the Privacy page. It also has the Conductor comparison page,
-[the pricing page](pricing-page.md), and a page for an unknown address.
+and the Privacy page. It also has [the pricing page](pricing-page.md) and
+a page for an unknown address.
 Visitors need no sign-in. The pages run no
 script and set no cookie. Every sign-in link leads to the app, on the
 `app.` host.
@@ -46,11 +46,9 @@ The marketing mockups are the visual spec:
 [`LegalScreen.tsx`](../../docs/mockups/src/screens/LegalScreen.tsx),
 [`NotFoundScreen.tsx`](../../docs/mockups/src/screens/NotFoundScreen.tsx),
 [`DocsScreen.tsx`](../../docs/mockups/src/screens/DocsScreen.tsx),
-[`FromConductorScreen.tsx`](../../docs/mockups/src/screens/FromConductorScreen.tsx),
 [`PricingScreen.tsx`](../../docs/mockups/src/screens/PricingScreen.tsx),
 and the parts in
-[`components/marketing/`](../../docs/mockups/src/components/marketing/),
-[`components/parity/`](../../docs/mockups/src/components/parity/), and
+[`components/marketing/`](../../docs/mockups/src/components/marketing/) and
 [`components/pricing/`](../../docs/mockups/src/components/pricing/).
 The [brand folder](../../docs/brand/README.md) gives the logo files. The
 site uses the lockups and favicons from that folder unchanged. The header
@@ -174,19 +172,6 @@ the old words is not enough, because a guide can restate a fact in other
 words. This rule is separate from the rule for the legal pages above, and
 both apply.
 
-## The comparison page
-
-The page at `/from-conductor` shows people who move from Conductor the
-status in Conductive of each Conductor feature, local and cloud.
-[Conductor comparison](../../docs/protocol/conductor-comparison.md)
-states its requirements. The link above the home headline and the "From
-Conductor" link in the Product column of the footer lead to it. Its last
-call to action has the sentence and the two actions of the home page.
-
-[The comparison page](comparison.md) gives the one source of its rows, the
-steps to change a row and keep it true, and its key code.
-[AGENTS.md](../../AGENTS.md) says when a change must update a row.
-
 ## Development
 
 The pages are in `pages/`, with layouts in `layouts/` and parts in
@@ -194,9 +179,13 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
 before the Worker serves them.
 
 - Run the site tests with `npm run test -- worker/marketing src/marketing`.
-  The built-site test clears Astro's content cache and builds once in a
-  temporary folder, so Markdown hooks always use current source. The
-  capture tests use fake pages and a fake browser, so they need no Chrome.
+  The built-site test clears Astro's content cache so Markdown hooks use
+  current source. It builds once into a new
+  `node_modules/.cache/conductive-site-<suffix>` folder, which Git and the
+  checks ignore. The folder stays on the checkout's mount so Astro can
+  rename built assets. The test removes its folder after success or
+  failure. The capture tests use fake pages and a fake browser, so they
+  need no Chrome.
 - Work on the pages with `npm run site:dev`. It serves them at
   `http://localhost:4321` and reloads them after edits. Sign-in links lead
   to the app of `npm run dev`. The footer shows the current year.

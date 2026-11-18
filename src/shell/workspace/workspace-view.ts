@@ -77,3 +77,8 @@ export class WorkspaceView
     }
   }
 }
+
+/** Shows the kept parts of the workspace while the screen shows it. */
+export function connectView(view: WorkspaceView): () => void {
+  return view.connect()
+}

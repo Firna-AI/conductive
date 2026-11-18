@@ -31,8 +31,8 @@ whoever owns or started it (decision 129).
   previews, the terminals, and the desktops of the org end.
 - Nobody can create, resume, or start a workspace of the org. No build and
   no image refresh of the org runs, by hand or automatically.
-- No routine of the org starts a run, as
-  [Suspensions and deleted orgs](routines.md#suspensions-and-deleted-orgs)
+- No automation of the org starts a run, as
+  [Suspensions and deleted orgs](automations.md#suspensions-and-deleted-orgs)
   says.
 - A start of a workspace of the org that waits or runs stops before its
   next step.
@@ -54,11 +54,16 @@ whoever owns or started it (decision 129).
   keeps their sign-in sessions in the browser and in the Mac app.
 - Each member keeps their account and their other orgs. The org
   suspension changes nothing in another org.
-- The org suspension takes away no access to read. Members can still open
-  the org and its workspaces, also archived ones, and read the chat
-  history of each workspace.
-- Members can also read the routines of the org and their runs. The
-  routine pages show no actions.
+- Members keep read access, except for the
+  [sandbox access](operator-actions.md#sandbox-access) above and
+  [Reveal](secrets.md#reveal). Members can still open the org and its
+  workspaces, also archived ones, and read the chat history of each
+  workspace.
+- The Worker refuses Reveal with `org_suspended` through the write gate
+  of other changes (secrets decision 14 B). Reason: each reveal writes a
+  record.
+- Members can also read the automations of the org and their runs. The
+  automation pages show no actions.
 - The org and each of its workspaces show a notice. It says that the org
   is suspended, and it gives the address for abuse reports.
 - While the org is suspended, no member can change anything in it, and
@@ -66,6 +71,13 @@ whoever owns or started it (decision 129).
   the org alone.
 - Each other change that a member asks for gets the `org_suspended`
   refusal.
+- Each member's own order of the org rail is not a change in the org
+  (decision 516 A). So each member can still move the org in their rail,
+  as [Org rail order](org-rail-order.md#a-suspended-or-deleted-org) says.
+- Reason: that order spans all the orgs of the member, and other members
+  see no change. An order inside the org, such as the tab order of a
+  workspace, still does not change, as
+  [The tab row](agents-and-sessions.md#the-tab-row) says.
 - The rules of a leave in
   [Owners and admins](operator-actions.md#owners-and-admins) still hold
   (decision 123). No member can become an admin while the org is

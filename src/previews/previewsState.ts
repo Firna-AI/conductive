@@ -1,6 +1,7 @@
+import type { Preview } from '../shared/generated/Preview'
+import type { ListeningPort } from '../shared/generated/ListeningPort'
 import type { WorkspaceEvent } from '../shared/events'
-import type { ListeningPort } from '../shared/ports'
-import type { Preview } from '../shared/previews'
+
 import type { ToolError } from '../terminal/tool-parts/request'
 
 export interface PreviewsState {
@@ -91,6 +92,47 @@ export function portFormList(
   const open = new Set(visible.map((preview) => preview.port))
   const servers = state.ports.filter((server) => !open.has(server.port))
   return servers.length === 0 ? { kind: 'field' } : { kind: 'servers', servers }
+}
+
+/**
+ * The open preview that a Preview tab of a port shows: the oldest one, as
+ * its earliest end gives it. A port can have two open previews, such as one
+ * that an agent opened.
+ */
+export function previewOfPort(
+  visible: readonly Preview[],
+  port: number,
+): Preview | null {
+  let oldest: Preview | null = null
+  for (const preview of visible) {
+    if (preview.port !== port) continue
+    if (oldest === null || preview.expiresAt < oldest.expiresAt) {
+      oldest = preview
+    }
+  }
+  return oldest
+}
+
+/**
+ * The list of the tool on desktop: each server of the report, then each
+ * port with a Preview tab or an open preview that the report does not name,
+ * in the order of their ports. Such a port has no name and no folder, so
+ * its row shows the port alone.
+ */
+export function panelPortList(
+  state: PreviewsState,
+  visible: readonly Preview[],
+  tabPorts: readonly number[],
+): PortFormList {
+  const reported = state.ports ?? []
+  const named = new Set(reported.map((server) => server.port))
+  const others = [...new Set([...tabPorts, ...visible.map((p) => p.port)])]
+    .filter((port) => !named.has(port))
+    .sort((left, right) => left - right)
+    .map((port): ListeningPort => ({ port, name: null, folder: null }))
+  const servers = [...reported, ...others]
+  if (servers.length > 0) return { kind: 'servers', servers }
+  return state.ports === null ? { kind: 'field' } : { kind: 'empty' }
 }
 
 function without<T>(set: ReadonlySet<T>, value: T): ReadonlySet<T> {

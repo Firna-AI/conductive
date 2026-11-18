@@ -3,7 +3,6 @@ import { expect, it } from 'vitest'
 import type { CreateWorkspaceRequest } from '../../src/shared/workspaces'
 import { workspacesPath } from '../../src/shared/workspaces'
 import { setupBackendTests } from './backend-test-hooks'
-import { SOFTWARE } from './backend-test-support'
 import { handleLifecycleRequest, type LifecycleBrowserOptions } from './browser'
 import { FIRST_MESSAGE } from './durable-test-support'
 import type { FirstWorkspaceMessage } from './workspace-runtime'
@@ -21,7 +20,6 @@ it('retries a completed create with the admitted first message after initial cha
   }
   const received: FirstWorkspaceMessage[] = []
   const options: LifecycleBrowserOptions = {
-    software: SOFTWARE,
     waitUntil: (work) => {
       void work.catch(() => {})
     },
@@ -72,7 +70,12 @@ it('retries a completed create with the admitted first message after initial cha
     id: original.id,
     text: 'Changed retry instructions.',
     attachmentIds: ['attachment-edited'],
-    choice: { agent: 'claude', model: 'claude-sonnet-4-6', effort: 'medium' },
+    choice: {
+      agent: 'claude',
+      model: 'claude-sonnet-4-6',
+      effort: 'medium',
+      fast: false,
+    },
   }
   const response = await fixture.run(create)
   expect(response?.status).toBe(201)

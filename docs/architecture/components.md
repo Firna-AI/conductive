@@ -3,11 +3,13 @@
 This page describes each component of Conductive, its responsibilities, and
 its boundaries. It uses the terms of the
 [architecture doc](../architecture.md#terms). The [flows page](flows.md)
-describes how the components work together. A decision number names a dated
-record, as [Decision numbers](../architecture.md#decision-numbers) says. An
-e2b decision number names a decision of the change that adds E2B as the second
-[sandbox provider](../protocol/workspaces-and-sandboxes.md#the-provider), as that
-doc says.
+describes how the components work together. A decision number names a
+dated record, as [Decision numbers](../architecture.md#decision-numbers)
+says. A large-upload decision number names a decision of the change that
+lets a message carry files of up to 1 GB. An e2b decision number names a
+decision of the change that adds E2B as the second
+[sandbox provider](../protocol/workspaces-and-sandboxes.md#the-provider), as
+that doc says.
 
 ## Marketing site
 
@@ -17,7 +19,7 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 
 - A React app, built with Vite, that uses the `@firna/ui` components.
 - It lives on `app.conductive.build`, behind the GitHub sign-in.
-- It shows the orgs, the workspaces, the routines, the chat, the files, the tools, and
+- It shows the orgs, the workspaces, the automations, the chat, the files, the tools, and
   the org settings. It follows the phone and the desktop layouts of the
   [mockups](../mockups/README.md) (decision 15).
 - For an operator, it also shows the operator section at `/operator`. The
@@ -27,8 +29,12 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   the weights of new orgs.
   [Operator section](../protocol/operator-section.md) states its rules.
 - Tabs are links, so each tool and each file view has its own address.
-- The browser stores only the panel widths. All other state comes from
-  the Worker. A tab keeps the chats that it showed in memory, as
+- The browser stores only the panel sizes and the last workspaces. The
+  panel sizes are the widths of the sidebar and the right column, and the
+  split of the right column. The last workspaces are the address of the
+  last workspace page of each org, as
+  [Opening an org](../protocol/org-rail-order.md#opening-an-org) says. All
+  other state comes from the Worker. A tab keeps the chats that it showed in memory, as
   [Chat and events](../protocol/chat-and-events.md#events) says.
 
 ## Mac app
@@ -47,8 +53,12 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 - It runs the model gateway. The gateway takes the model requests of the
   agent programs in a sandbox, with the
   [turn token](../protocol/model-gateway.md#terms) of their turn. It adds the
-  agent login of the turn, and forwards each request to Anthropic or
-  OpenAI. [Model gateway](../protocol/model-gateway.md) states its rules.
+  agent login of the turn, and forwards each request to Anthropic, to
+  OpenAI, or to the endpoint of an own endpoint login, as
+  [External services](#external-services) says.
+  [Model gateway](../protocol/model-gateway.md) states its rules.
+  It sends the requests of a ChatGPT sign-in through the
+  [ChatGPT egress Worker](#chatgpt-egress-worker).
 - It reaches each provider through its own provider client, for Boat and
   for E2B. It calls only a fixed list of routes of each provider.
 - It calls each sandbox and each saved snapshot through the client of its
@@ -59,20 +69,37 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 - It runs one gate for each hostname before every route and every
   WebSocket upgrade. [Access and security](../protocol/access-and-security.md)
   states the gates.
-- It writes to GitHub only as a member. A merge from the pull request bar
-  uses the GitHub token of the member who clicks, as
+- It writes to GitHub only as a member. A merge and Ready for review from
+  the pull request bar use the GitHub token of the member who clicks, as
   [Merge as the member](../protocol/github-tokens.md#merge-as-the-member)
   says.
+- It keeps the secrets of each org and their grants. It returns the value
+  of a secret only to a run of the agent tools that a grant allows, and to
+  an admin who reveals it, as [Secrets](../protocol/secrets.md) says.
 
 - Two Cron Triggers run the timed work. One runs every 15 minutes for
   deleted orgs, lifecycle repairs, and pending approval emails. One runs
-  every minute for due routine runs and runs that stayed queued.
+  every minute for due automation runs and runs that stayed queued.
+
+## ChatGPT egress Worker
+
+- A second Cloudflare Worker owns the egress container. It has no route
+  and no public address. Only the Worker reaches it, through a service
+  binding.
+- The egress container sends the ChatGPT requests of the model gateway to
+  OpenAI, because OpenAI refuses them from a Worker.
+  [Requests and answers](../protocol/model-gateway.md#requests-and-answers)
+  states its rules.
+- It sees a ChatGPT login only in transit and keeps no copy.
+- Each push to `main` that changes its code deploys it, before the
+  Worker, as [Automatic deploys](../automatic-deploys.md) says.
 
 ## D1
 
 - D1 holds the records of the app: users, orgs, members, sections,
-  repositories, workspaces, routines and their runs, settings, the active preview hostnames, and the
-  records of attached files. D1 also holds app access, codes and their uses,
+  repositories, workspaces, automations and their runs, settings, the active preview hostnames, the
+  records of attached files, and the records of the secrets, their grants,
+  and their reveals. D1 also holds app access, codes and their uses,
   the sign-up pause, the waitlist switch, and the state of approval emails.
 - D1 also holds the provider account of each org, and the weights of new
   orgs with the record of each change.
@@ -89,6 +116,10 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   Boat's machines and E2B's EU cluster.
 - It holds the open tabs, the connection of the agent runner, and the
   messages that wait for the sandbox.
+- It holds the secret requests of its workspace until their end, and each
+  temporary value, encrypted, for its time. It hides each exact copy of
+  each value that a run used, as
+  [Secret requests](../protocol/secret-requests.md) says.
 - It gives each turn its turn token. For each model request, it tells the
   model gateway whether the token still works and which login the turn
   uses.
@@ -99,12 +130,12 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   refreshes, from the banner state that it holds at that moment. So a
   replay of an older GitHub delivery cannot write an older state.
 - A failed copy fails the refresh, so that a retry copies it again.
-- It runs the trusted jobs of its sandbox: the fetch of a create, and the
-  branch change of Continue.
+- It runs the trusted jobs of its sandbox: the fetch of a create, the
+  branch change of Continue, and the repository change.
 - For each start, it keeps the provider account with the org image and the
   sandbox. So the start continues after a restart.
 - Its storage keeps the chat history, so a stopped or archived workspace
-  still shows its chat.
+  still shows its chat, also after it leaves the list.
 - It revokes the preview hostnames of its workspace.
 
 ## Attachment storage
@@ -115,14 +146,16 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   [Access and security](../protocol/isolation.md#orgs-and-workspaces)
   says.
 - Only the Worker reads and writes the bucket. The browser sends each file
-  as raw bytes in one request, and the Worker streams it into the bucket
-  (decision 144).
-- Before the agent runner gets a message, the Worker copies the files of
-  the message into the sandbox. On Boat, it uses an upload address that
-  Boat gives for each file. On E2B, it uses a fixed file route of the
-  sandbox.
-- [Chat and events](../protocol/messages-and-attachments.md#attachments) states how
-  long a file stays.
+  in raw parts, and the Worker streams each part into the bucket
+  (large-upload decision 1).
+- Before the agent runner gets a message, the sandbox downloads each new
+  file of the message from a route of the Worker, with a one-use token
+  (large-upload decisions 2 and 5). The Worker starts that download
+  through the provider of the sandbox.
+- Once the sandbox has a file, the Worker deletes its bytes from the
+  bucket, and D1 keeps its record (large-upload decision 3).
+- [Attachment transfers](../protocol/attachment-transfers.md#the-stored-copy)
+  states how long the bucket keeps a file.
 
 ## Sandbox providers
 
@@ -153,67 +186,32 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 
 ## Sandbox software
 
-Every org image holds the app's own sandbox software:
-
-- the agent runner, a Node program that runs as an always-on service
-- the terminal service, on a private port
-- the preview relay, on a private port
-- the agent tools: an MCP server and a CLI that create, list, and change
-  the workspaces of the org, start, read, message, close, and stop its
-  sessions, change its sections, open port previews, and ask for Mac
-  commands
-- a git credential helper that gets a fresh GitHub token for each git
-  operation
-
-The Worker builds one software image for each version of this software,
-in the `boat` account, when the deploy run asks. The software image holds
-the base image and this software, and no org data. A build of an org on
-`boat` without an org image starts from it, so that build installs none of
-this software. A first build of an org on another account, such as `e2b`,
-starts from the base image of that account, and installs this software.
-
-The agent runner runs Claude through the Claude Agent SDK, with the agent
-program that the SDK bundles at its own version. A pinned version guards
-against a change in how the agent program reads its credential and its
-model address. The runner runs Codex through the Codex SDK or the Codex
-App Server (decision 36).
-
-The runner finds the listening ports in the sandbox itself, with no Boat
-call (decision 220).
-
-A runner of protocol version 2 or later makes both agent programs send
-their model requests to the [model gateway](../protocol/model-gateway.md). It
-gives each agent program the turn token of its turn, and no agent login. A
-settings file in the repository can send the requests of Claude to another
-address, as
-[How the agents reach the gateway](../protocol/model-gateway.md#how-the-agents-reach-the-gateway)
-says. A runner of protocol version 1 gives the agent programs the agent
-login itself. Each sandbox keeps the runner of the org image that it starts
-from.
-
-The preview relay forwards each preview request to a local port of the
-sandbox. The previewed server then gets its local address as `Host`
-(decision 218).
-[Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md#port-previews)
-states the rules of the relay.
-
-The Worker gives each sandbox the commit author of its workspace owner.
-The agent runner gives each agent the commit author of the sender of its
-turn. [Commit author](../protocol/github-tokens.md#commit-author) states
-the rules.
+The [sandbox software page](sandbox-software.md) describes the app's own
+software in each sandbox: its two programs, its releases and updates, and
+the software image.
 
 ## External services
 
 - **GitHub App:** one app gives the sign-in, the repository access, and the
   webhooks of every org.
-- **Anthropic and OpenAI:** the model use of each turn bills to the own
-  Claude or OpenAI account of the starter of its session. With a runner of
-  protocol version 2 or later, the model requests of a turn reach them
+- **Anthropic and OpenAI:** the model use of each turn on a subscription
+  token or an API key bills to the Claude or OpenAI account of the login
+  of its session. That is the account of its starter, or the account of
+  the org for an org login. The model requests of a turn reach them
   through the model gateway of the Worker. A settings file in the
   repository can send the requests of Claude to another address instead.
-  The gateway keeps no copy of a request or an answer. With a runner of
-  version 1, the agent programs send their model requests from the sandbox
-  to the provider.
+  The gateway keeps no copy of a request or an answer.
+- **Own endpoints:** an own endpoint is a gateway or a proxy that a user
+  chose, such as a proxy that pools subscriptions. A member can connect
+  one as a personal login of Claude or of Codex. An admin can connect one
+  as the org login of an agent. For each turn on such a login, the model
+  gateway forwards the model requests of the turn to the endpoint, with
+  the saved key. So the endpoint gets the messages, the files, and the
+  command results of those turns. No sandbox gets the address or the key.
+  [Own endpoint logins](../protocol/own-endpoint-logins.md),
+  [Org logins](../protocol/org-logins.md), and
+  [Own endpoints](../protocol/model-gateway-requests.md#own-endpoints)
+  state the rules.
 - **Workers AI:** the Cloudflare model service writes a title for a
   workspace that has no name, from its first message. Its use bills to the
   Cloudflare account of the app (decision 184).

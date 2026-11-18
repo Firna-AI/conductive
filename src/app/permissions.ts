@@ -1,6 +1,9 @@
+import type { Workspace } from '../shared/generated/Workspace'
 import type { OrgRole, User } from '../shared/api'
 import type { OrgSummary } from '../shared/orgs'
-import type { Workspace } from '../shared/workspaces'
+import type { OrgSecret } from '../shared/secrets'
+
+import type { Readable } from './store'
 
 /**
  * Whether the operator suspended an org: its summary says so, or the API
@@ -12,6 +15,29 @@ export function isSuspended(
   refused: ReadonlySet<string>,
 ): boolean {
   return org.suspension !== undefined || refused.has(org.id)
+}
+
+/**
+ * Whether an org is suspended, from its summary in `orgs` or from a
+ * refusal of the API in `refused`, as a value to follow.
+ */
+export function suspendedOrg(
+  orgId: string,
+  orgs: Readable<readonly OrgSummary[]>,
+  refused: Readable<ReadonlySet<string>>,
+): Readable<boolean> {
+  return {
+    get: () => {
+      const org = orgs.get().find((item) => item.id === orgId)
+      return org !== undefined && isSuspended(org, refused.get())
+    },
+    subscribe: (listener) => {
+      const stops = [orgs.subscribe(listener), refused.subscribe(listener)]
+      return () => {
+        for (const stop of stops) stop()
+      }
+    },
+  }
 }
 
 /**
@@ -63,4 +89,40 @@ export function mayRestore(
     !ended &&
     !access.suspended
   )
+}
+
+/** What the person signed in may do with one secret of the Secrets tab. */
+export interface SecretRights {
+  /** Reveal its value, which the app records. */
+  reveal: boolean
+  /** Set or clear the mark for all agents. */
+  mark: boolean
+  /** Replace its description or its value, and delete it. */
+  change: boolean
+}
+
+/**
+ * The rights of secrets decisions 2 and 3. A member replaces and deletes
+ * only the secrets that the member added. An admin replaces and deletes
+ * each secret, sets the mark for all agents, and reveals a value. Nothing
+ * in a suspended org changes, and nobody reveals there (secrets decision
+ * 14 B).
+ */
+export function secretRights(
+  access: OrgAccess,
+  secret: Pick<OrgSecret, 'createdByUserId'>,
+  viewer: Pick<User, 'id'>,
+): SecretRights {
+  if (access.suspended) return { reveal: false, mark: false, change: false }
+  const admin = access.role === 'admin'
+  return {
+    reveal: admin,
+    mark: admin,
+    change: admin || secret.createdByUserId === viewer.id,
+  }
+}
+
+/** Every member adds secrets, except in a suspended org. */
+export function mayAddSecret(access: OrgAccess): boolean {
+  return !access.suspended
 }

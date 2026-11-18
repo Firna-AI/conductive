@@ -41,13 +41,15 @@ Both searches treat `%`, `_`, and backslash as literal name text.
 Each D1 query binds its input values.
 
 Org entries give `id`, `providerAccount`, `name`, `initials`, `createdAt`, `members`, `workspaces`, `running`, `status`, and `match`.
-The workspace count includes archived workspaces.
+The workspace count includes every workspace, also archived and removed workspaces.
 Running counts only workspaces, not builds.
 Status is `deleted`, `suspended`, or `active`, in that priority.
 Match is `org-id`, `cloud-computer-id`, or `preview-address` for a resource match.
 Match is null for a name match or no search.
 
-User entries give `githubId`, `login`, `name`, `joinedAt`, `orgs`, `workspaces`, and `status`.
+User entries give `githubId`, `login`, `name`, `joinedAt`, `lastActiveAt`, `orgs`, `workspaces`, and `status`.
+`lastActiveAt` is `users.last_active_at`, or null when the user has no recorded action.
+[`data/user-activity.ts`](../data/user-activity.ts) writes it, as [the Worker README](../README.md#last-active-time) says.
 User status is `active` or `suspended`.
 Both user entries and user pages also include `OperatorUserAccess` from
 [`operator-waitlist.ts`](../../src/shared/operator-waitlist.ts).
@@ -73,10 +75,12 @@ It also gives `suspension` and `deletion`, each null when absent.
 The deletion gives `deletedAt` and `purgeAt`.
 The purge time is null when no time is stored.
 
-The state buckets match the overview.
+The five state counts match the overview: Running, Stopped, Failed, Archived, and Removed.
+The reply counts removed workspaces in `archived` too, so that an older app adds up. The app subtracts `removed` from it.
 Running separates workspaces from unfinished builds and refreshes.
 
-The user page gives their identity, name, join time, and owned workspace counts.
+The user page gives their identity, name, join time, last active time, and owned workspace counts.
+Its `email` gives the primary verified email, or null without one.
 Its `workspaces` gives `total` and `running`.
 Its `orgs` gives each org's identity, initials, and the user's role.
 It also gives the suspension, or null.
@@ -89,4 +93,5 @@ All times use Unix milliseconds.
 
 An unknown org gets 404 `org_not_found`.
 An unknown or non-numeric GitHub ID gets 404 `user_not_found`.
-These reads return no chat, file, env value, agent login, or email address.
+These reads return no chat, file, env value, or agent login.
+Only the `email` of the user page holds an email address.

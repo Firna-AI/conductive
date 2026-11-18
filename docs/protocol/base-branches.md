@@ -27,6 +27,10 @@ says.
   of the workspace, as
   [The base and the new branch](continue.md#the-base-and-the-new-branch)
   says (decision 223).
+- A repository change makes the latest default branch of the new
+  repository the base branch of the workspace, as
+  [The base and the new branch](repository-change.md#the-base-and-the-new-branch)
+  says.
 - Changes and each diff compare the branch with its base branch, from the
   merge base of the two.
 - Reason: the base branch can move while a workspace works. A plain

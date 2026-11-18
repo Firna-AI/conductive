@@ -1,9 +1,10 @@
+import type { Preview } from '../shared/generated/Preview'
 // @vitest-environment happy-dom
 import { describe, expect, it, vi } from 'vitest'
 import { WorkspaceStream } from '../app/events'
 import { ManualDelay, RecordingEvents } from '../app/test-kit'
 import { ToolEvents } from '../shell/workspace/tools/tool-events'
-import { previewsPath, type Preview } from '../shared/previews'
+import { previewsPath } from '../shared/previews'
 import {
   accessibleName,
   byLabel,
@@ -83,7 +84,13 @@ async function mountTool(fetch: ApiFetch, tools: ToolEvents) {
   await mount(
     <PreviewTool
       now={() => FAKE_TIME}
-      route={{ previewId: null, href: (id) => `#${id}`, navigate }}
+      route={{
+        previewId: null,
+        port: null,
+        href: (id) => `#${id}`,
+        navigate,
+        replace: vi.fn(),
+      }}
       touch={false}
       workspace={{ orgId: org, workspaceId, fetch, subscribe: tools.subscribe }}
     />,

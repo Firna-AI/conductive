@@ -61,10 +61,12 @@ describe('ThisMacSection', () => {
         byLabel('Always allowed commands').querySelectorAll('code'),
         (code) => code.textContent,
       )
-    expect(commands()).toEqual(['git status', 'npm run lint', 'sw_vers'])
+    expect(commands()).toEqual(settings.alwaysAllowedCommands)
     expect(queryByText('14:32 left')).not.toBeNull()
 
-    const kept = ['git status', 'sw_vers']
+    const kept = settings.alwaysAllowedCommands.filter(
+      (command) => command !== 'npm run lint',
+    )
     server.json(
       'POST',
       DEVICE_SETTINGS_PATH,
@@ -89,9 +91,7 @@ describe('ThisMacSection', () => {
     await press(byRole('button', 'Stop Checkout address autocomplete'))
     await waitFor(
       () =>
-        queryByText(
-          'Allow all commands for 15 minutes in a request adds its workspace here.',
-        ),
+        queryByText('Allow all commands in a request adds its workspace here.'),
       'the list without the stopped 15 minutes',
     )
     expect(await changes(server)).toEqual([

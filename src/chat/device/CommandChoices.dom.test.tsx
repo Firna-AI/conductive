@@ -46,6 +46,10 @@ describe('CommandChoices', () => {
         name: 'Allow all commands for 15 minutes',
         scope: 'Every command from this workspace, on this Mac',
       },
+      {
+        name: 'Allow all commands until I stop',
+        scope: 'Every command from this workspace, on this Mac, until you stop',
+      },
     ])
     expect(document.activeElement).toBe(byRole('menuitem', 'Always allow'))
     await pressKey('ArrowDown')
@@ -53,13 +57,28 @@ describe('CommandChoices', () => {
       byRole('menuitem', 'Allow all commands for 15 minutes'),
     )
 
-    await press(byRole('menuitem', 'Allow all commands for 15 minutes'))
-    expect(answers).toEqual(['allow-workspace-15-minutes'])
-    expect(queryByRole('menu', 'More ways to allow')).toBeNull()
+    await pressKey('ArrowDown')
+    expect(document.activeElement).toBe(
+      byRole('menuitem', 'Allow all commands until I stop'),
+    )
+
+    // Each row sends its own action, and closes the menu.
+    const sends = [
+      ['Always allow', 'always-allow'],
+      ['Allow all commands for 15 minutes', 'allow-workspace-15-minutes'],
+      ['Allow all commands until I stop', 'allow-workspace-until-stop'],
+    ] as const
+    for (const [index, [name, action]] of sends.entries()) {
+      if (index > 0) await press(byRole('button', 'More ways to allow'))
+      await press(byRole('menuitem', name))
+      expect(answers.at(-1), name).toBe(action)
+      expect(queryByRole('menu', 'More ways to allow')).toBeNull()
+    }
+    expect(answers).toHaveLength(sends.length)
 
     await view.rerender(
       <CommandChoices
-        answering="allow-workspace-15-minutes"
+        answering="allow-workspace-until-stop"
         onAnswer={answer}
       />,
     )

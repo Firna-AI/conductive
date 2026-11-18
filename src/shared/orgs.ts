@@ -1,8 +1,16 @@
-import { orgPath, type Org, type Timestamp } from './api'
+import type { Timestamp } from './generated/Timestamp'
+import { orgPath, type Org } from './api'
+import type { OrgColor } from './org-colors'
 
 export interface OrgSummary extends Org {
   /** Custom initials shown in the rail. Older replies may omit them. */
   initials?: string
+  /**
+   * The preset key of the colour of the org, absent until an admin picks
+   * one. A key that `ORG_COLORS` does not hold reads as the default, so it
+   * stays a string.
+   */
+  color?: string
   suspension?: { suspendedAt: Timestamp }
   /** Absent for an active org. Only its admins can see a deleted org. */
   deletion?: { deletedAt: Timestamp; deletesAt: Timestamp }
@@ -11,6 +19,28 @@ export interface OrgSummary extends Org {
 export interface OrgsResponse {
   orgs: readonly OrgSummary[]
 }
+export interface MoveOrgRequest {
+  orgId: string
+  /** Zero-based index among the other visible orgs. */
+  index: number
+}
+
+export function readMoveOrgRequest(value: unknown): MoveOrgRequest | null {
+  if (typeof value !== 'object' || value === null || Array.isArray(value))
+    return null
+  if (
+    !('orgId' in value) ||
+    typeof value.orgId !== 'string' ||
+    !value.orgId.trim() ||
+    !('index' in value) ||
+    typeof value.index !== 'number' ||
+    !Number.isInteger(value.index) ||
+    value.index < 0
+  )
+    return null
+  return { orgId: value.orgId.trim(), index: value.index }
+}
+
 export interface OrgResponse {
   org: OrgSummary
 }
@@ -25,6 +55,10 @@ export type CreateOrgResponse = OrgResponse
 export interface RenameOrgRequest {
   name: string
   initials?: string
+}
+/** A PATCH of the org with its colour alone. The name stays. */
+export interface OrgColorRequest {
+  color: OrgColor
 }
 export interface DeleteOrgRequest {
   name: string

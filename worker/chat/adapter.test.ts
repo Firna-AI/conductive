@@ -6,7 +6,10 @@ import { sessionsPath, sessionPaths } from '../../src/shared/sessions'
 import { TEST_ORIGIN } from '../test-support/harness'
 import { createAdapterRuntime } from './adapter-runtime.test-support'
 import { closeSockets, SocketInbox } from './adapter-sockets.test-support'
-import { closeBrowserPeers } from './browser-native.test-support'
+import {
+  browserControls,
+  closeBrowserPeers,
+} from './browser-native.test-support'
 import { verifyBrowserWake } from './browser-wake.test-support'
 import { verifyAdapterRestart } from './adapter-restart.test-support'
 import {
@@ -73,14 +76,14 @@ it('serves the actual Durable Object with SQLite storage and authenticated WebSo
     runner.send(
       JSON.stringify({
         type: 'hello',
-        protocolVersion: 1,
+        protocolVersion: 2,
         workspaceId: WORKSPACE_ID,
         streamId: 'adapter-stream',
       }),
     )
     expect(await runnerInbox.next()).toEqual({
       type: 'welcome',
-      protocolVersion: 1,
+      protocolVersion: 2,
       streamId: 'adapter-stream',
       confirmedThrough: 0,
     })
@@ -103,8 +106,14 @@ it('serves the actual Durable Object with SQLite storage and authenticated WebSo
       type: 'turn',
       sessionId,
       message: { sender: { id: 'owner' } },
-      login: { secret: 'adapter-secret' },
+      credential: { token: expect.stringMatching(/^sk-/) },
     })
+    expect(turn).not.toHaveProperty('login')
+    expect(
+      await browserControls(runtime, headers).request('turn-token', {
+        token: string(record(turn.credential).token),
+      }),
+    ).toMatchObject({ ok: true, login: { secret: 'adapter-secret' } })
     expect(await browserInbox.next()).toMatchObject({
       type: 'event',
       envelope: { eventNumber: 4, event: { type: 'message.sent' } },

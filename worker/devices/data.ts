@@ -1,4 +1,6 @@
-import type { Workspace, WorkspaceState } from '../../src/shared/workspaces'
+import type { Workspace } from '../../src/shared/generated/Workspace'
+import type { WorkspaceState } from '../../src/shared/generated/WorkspaceState'
+
 import { HttpError } from '../http'
 import { workspaceNameColumn } from '../data/workspace-name'
 
@@ -25,6 +27,7 @@ export interface WorkspaceRow {
   orgId: string
   repositoryId: string
   sectionId: string
+  parentId: string | null
   name: string | null
   branch: string
   state: WorkspaceState
@@ -43,7 +46,7 @@ export function readDeviceWorkspace(db: D1Database, workspaceId: string) {
   return db
     .prepare(
       `SELECT w.id, w.number, w.org_id AS orgId, w.repository_id AS repositoryId,
-    COALESCE(w.section_id, s.id) AS sectionId, ${workspaceNameColumn('w')}, w.branch, w.state,
+    COALESCE(w.section_id, s.id) AS sectionId, w.parent_workspace_id AS parentId, ${workspaceNameColumn('w')}, w.branch, w.state,
     w.github_summary AS github,
     w.created_at AS createdAt, w.updated_at AS updatedAt, w.archived_at AS archivedAt,
     w.sandbox_id AS sandboxId,

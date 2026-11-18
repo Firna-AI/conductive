@@ -1,4 +1,5 @@
-import type { ChangesResponse, FileTreeResponse } from '../../src/shared/files'
+import type { ChangesResponse } from '../../src/shared/generated/ChangesResponse'
+import type { FileTreeResponse } from '../../src/shared/generated/FileTreeResponse'
 import { isRecord } from '../http'
 import { invalidFileResponse } from './errors'
 import { natural, parseChanges, parseTree } from './parsers'
@@ -146,4 +147,20 @@ export async function saveFiles(
     ...counts,
   }
   await storage.write(updates, removals)
+}
+
+/**
+ * After a repository change, the stored reports are of the old folder. The
+ * tree keeps its entries and its revision with the unavailable mark, so a
+ * later delta still applies, and the next complete tree clears the mark.
+ * The changes go, so the Changes API waits for the report of the new folder.
+ */
+export async function markFilesMoved(storage: FilesStorage): Promise<void> {
+  const state = await loadFiles(storage)
+  if (!state.tree && !state.changes) return
+  await saveFiles(storage, {
+    ...state,
+    tree: state.tree && { ...state.tree, unavailable: true },
+    changes: null,
+  })
 }

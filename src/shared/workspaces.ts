@@ -1,9 +1,22 @@
-import type { AgentChoice } from './agents'
-import { orgPath, type Timestamp } from './api'
-import type { GitHubSummary } from './github'
-import type { MessageSender, SendMessageRequest, UserMessage } from './messages'
+import type { Workspace } from './generated/Workspace'
+
+import type { UserMessage } from './generated/UserMessage'
+import type { WorkspaceStart } from './generated/WorkspaceStart'
+import { orgPath } from './api'
+
+import type { SendMessageRequest } from './messages'
+import type { WorkspaceCapabilities } from './secrets'
 
 export const WORKSPACE_RESTORE_MS = 14 * 24 * 60 * 60 * 1_000
+
+export function workspaceRemovedAt(
+  archivedAt: number | null,
+  now: number,
+): number | null {
+  if (archivedAt === null) return null
+  const removedAt = archivedAt + WORKSPACE_RESTORE_MS
+  return removedAt <= now ? removedAt : null
+}
 
 export function workspaceRestoreUntil(
   archivedAt: number | null,
@@ -30,52 +43,13 @@ export const workspacePaths = {
     `${workspacePath(orgId, id)}/continue`,
   continueResult: (orgId: string, id: string, continueId: string) =>
     `${workspacePath(orgId, id)}/continue/${encodeURIComponent(continueId)}`,
+  repository: (orgId: string, id: string) =>
+    `${workspacePath(orgId, id)}/repository`,
+  repositoryResult: (orgId: string, id: string, changeId: string) =>
+    `${workspacePath(orgId, id)}/repository/${encodeURIComponent(changeId)}`,
   restore: (orgId: string, id: string) => `${workspacePath(orgId, id)}/restore`,
+  restart: (orgId: string, id: string) => `${workspacePath(orgId, id)}/restart`,
 } as const
-
-/** `input`: the agent waits for the user, such as for a command approval. */
-export type WorkspaceState =
-  | 'working'
-  | 'input'
-  | 'unread'
-  | 'ready'
-  | 'starting'
-  | 'stopped'
-  | 'error'
-  | 'archived'
-
-export interface Workspace {
-  id: string
-  number: number
-  link: string
-  orgId: string
-  repositoryId: string
-  sectionId: string
-  owner: MessageSender
-  name: string | null
-  branch: string
-  choice: AgentChoice
-  state: WorkspaceState
-  github: GitHubSummary | null
-  createdAt: Timestamp
-  updatedAt: Timestamp
-  archivedAt: Timestamp | null
-  restoreUntil: Timestamp | null
-}
-
-export interface StartStep {
-  id: string
-  label: string
-  state: 'running' | 'completed' | 'failed'
-  startedAt: Timestamp
-  completedAt: Timestamp | null
-}
-
-export interface WorkspaceStart {
-  kind: 'create' | 'resume'
-  startedAt: Timestamp
-  steps: readonly StartStep[]
-}
 
 export interface WorkspaceResponse {
   workspace: Workspace
@@ -92,6 +66,7 @@ export interface WorkspacesResponse {
 export interface CreateWorkspaceRequest {
   repositoryId: string
   sectionId?: string
+  capabilities?: WorkspaceCapabilities
   firstMessage: SendMessageRequest
 }
 export interface CreateWorkspaceResponse extends WorkspaceResponse {
@@ -117,3 +92,49 @@ export type ContinueWorkspaceResponse =
       localWork: LocalWork
     }
   | { state: 'continued'; workspace: Workspace; eventNumber: number }
+
+/** A repository change moves the workspace to another repository of its org. */
+export interface ChangeRepositoryRequest {
+  /** The repository and the branch that the caller shows. */
+  expectedRepositoryId: string
+  expectedBranch: string
+  /** The new repository. */
+  repositoryId: string
+  /** Change repository in the question: go on with the listed work. */
+  allowWork?: boolean
+}
+
+/** The work of the question before a repository change. */
+export interface RepositoryChangeWork {
+  /** The local work in the old folder, as Continue counts it. */
+  localWork: LocalWork
+  /** The open pull request of the old branch. */
+  pullRequest: { number: number; url: string } | null
+  /** The pushed commits of the old branch that its base branch does not hold. */
+  pushedCommits: number
+  /** The changed files of the new folder, which move to the new branch. */
+  carriedFiles: readonly string[]
+}
+
+export type ChangeRepositoryResponse =
+  | { state: 'pending'; changeId: string }
+  | {
+      state: 'confirmation-required'
+      /** The new repository. */
+      repository: { id: string; fullName: string }
+      /** The old branch, which stays with the old repository. */
+      branch: string
+      /** The latest default branch of the new repository. */
+      baseBranch: string
+      work: RepositoryChangeWork
+    }
+  | { state: 'changed'; workspace: Workspace; eventNumber: number }
+
+/**
+ * The reply of Restart: whether the cloud computer downloaded the newest
+ * software before the restart. When the check failed, the restart used the
+ * installed software.
+ */
+export interface RestartWorkspaceResponse {
+  updateCheck: 'ok' | 'failed'
+}

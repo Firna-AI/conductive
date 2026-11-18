@@ -4,17 +4,9 @@ import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { paletteViews } from '../components/palette/paletteViews'
 import type { RailState } from '../components/layout/OrgRail'
 import responsive from '../components/layout/responsive.module.css'
-import {
-  archivedGroup,
-  newOrgSections,
-  suspendedSections,
-  workspaceSections,
-  type SidebarSection,
-} from '../components/workspaces/sections'
+import { newOrgSections } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
-import { viewerMembership } from '../fixtures/members'
 import { deletedOrg, orgList, orgs, suspendedOrg } from '../fixtures/orgs'
-import { checkoutAutocomplete } from '../fixtures/workspaces'
 import {
   ChooseWorkspace,
   DeletedOrg,
@@ -32,14 +24,14 @@ import {
   newOrgs,
 } from './listStates'
 import {
-  isWorkspaceMenuState,
-  workspaceMenuStates,
-} from './workspaceMenuStates'
-import {
-  generalOnlySections,
-  menuListView,
-  type MenuListView,
-} from './workspaceMenuView'
+  archivedGroupView,
+  listViewer as viewer,
+  sectionsOf,
+  stateView,
+} from './listViews'
+import { orderRail, orgOrderStates } from './orgOrderStates'
+import { subWorkspaceStates } from './subWorkspaceStates'
+import { workspaceMenuStates } from './workspaceMenuStates'
 import styles from './WorkspaceListScreen.module.css'
 
 export const workspaceListSchema = {
@@ -68,15 +60,17 @@ export const workspaceListSchema = {
       ],
     },
     /**
-     * The menu of a section, a workspace dragged, the org switcher, or
-     * the org switcher of an operator, which adds Operator. Or a state of
-     * the menu of a workspace row, which the lists of Acme draw.
+     * The menu of a section, a workspace dragged, a section dragged, the
+     * org switcher, or the org switcher of an operator, which adds
+     * Operator. Or a state of the menu of a workspace row, which the lists
+     * of Acme draw.
      */
     menu: {
       enum: [
         'none',
         'section',
         'drag',
+        'drag-section',
         'orgs',
         'operator',
         ...workspaceMenuStates,
@@ -84,45 +78,21 @@ export const workspaceListSchema = {
     },
     /** The command palette, closed or open on one of its views. */
     palette: { enum: paletteViews },
+    /**
+     * The reorder of the orgs in the rail, and in the org switcher of a
+     * phone, as `orgOrderStates` says. Without it, the orgs keep their
+     * saved order.
+     */
+    orgOrder: { enum: orgOrderStates },
+    /**
+     * The sub-workspaces of Acme, nested under their parents, as
+     * `subWorkspaceStates` says. Without it, every row is top-level.
+     */
+    subWorkspaces: { enum: subWorkspaceStates },
   },
 } as const
 
 export type WorkspaceListState = SchemaProps<typeof workspaceListSchema>
-
-/** Cal, an admin of each org, who looks at the lists of these views. */
-const viewer = viewerMembership('admin')
-
-/** The sections of a list before any state changes them. */
-function sectionsOf(list: WorkspaceListState['list']): SidebarSection[] {
-  if (list === 'general-only') return generalOnlySections()
-  if (list === 'suspended') return suspendedSections()
-  if (list === 'archived') return archivedGroup().sections
-  return newOrgs[list] ? newOrgSections() : workspaceSections()
-}
-
-/**
- * The open Archived group of the `archived` list, with the pointer over
- * the row of the last archived workspace, whose Restore covers its time.
- * A phone draws no hover, because it has no pointer.
- */
-function archivedGroupView(): Pick<MenuListView, 'archived' | 'focus'> {
-  return {
-    archived: archivedGroup().archived,
-    focus: { workspace: checkoutAutocomplete.key, drawing: { kind: 'hover' } },
-  }
-}
-
-/** The list and what lies over it, in a state of the menu of a row. */
-function rowMenuView(
-  state: WorkspaceListState,
-  viewport: Viewport,
-): MenuListView | undefined {
-  const { list, menu } = state
-  if (!isWorkspaceMenuState(menu)) return undefined
-  if (list !== 'workspaces' && list !== 'general-only' && list !== 'suspended')
-    return undefined
-  return menuListView(menu, list, viewport)
-}
 
 function MobileList(props: { state: WorkspaceListState; overlay?: ReactNode }) {
   const { list, menu, palette } = props.state
@@ -138,7 +108,7 @@ function MobileList(props: { state: WorkspaceListState; overlay?: ReactNode }) {
       </MobileFrame>
     )
   }
-  const view = rowMenuView(props.state, 'mobile')
+  const view = stateView(props.state, 'mobile')
   const sections = view?.sections ?? sectionsOf(list)
   if (list === 'suspended') {
     // A suspended org has no section menus, so only the org switcher opens.
@@ -152,7 +122,7 @@ function MobileList(props: { state: WorkspaceListState; overlay?: ReactNode }) {
           suspended
           viewer={view?.viewer ?? viewer}
         />
-        {menu === 'orgs' ? listSheet(menu) : null}
+        {menu === 'orgs' ? listSheet(menu, props.state.orgOrder) : null}
       </MobileFrame>
     )
   }
@@ -163,7 +133,7 @@ function MobileList(props: { state: WorkspaceListState; overlay?: ReactNode }) {
       <HomeList
         archived={view?.archived ?? group?.archived}
         archivedCollapsed={view?.archivedCollapsed}
-        drag={listDrag(menu)}
+        drag={view?.drag ?? listDrag(menu)}
         failed={list === 'failed'}
         focus={view?.focus ?? group?.focus}
         menu={listMenu(menu)}
@@ -173,7 +143,8 @@ function MobileList(props: { state: WorkspaceListState; overlay?: ReactNode }) {
         sections={sections}
         viewer={view?.viewer ?? viewer}
       />
-      {props.overlay ?? (view ? view.over : listSheet(menu))}
+      {props.overlay ??
+        (view ? view.over : listSheet(menu, props.state.orgOrder))}
     </MobileFrame>
   )
 }
@@ -191,25 +162,25 @@ export function WorkspaceListScreen(props: {
   viewport: Viewport
   overlay?: ReactNode
 }) {
-  const { list, menu, palette } = props.state
+  const { list, menu, palette, orgOrder } = props.state
   if (props.viewport === 'mobile') {
     return <MobileList overlay={props.overlay} state={props.state} />
   }
-  const view = rowMenuView(props.state, props.viewport)
+  const view = stateView(props.state, props.viewport)
   if (list === 'suspended') {
     return (
       <SuspendedList
         focus={view?.focus}
+        rail={orderRail(orgOrder)}
         sections={view?.sections}
         viewer={view?.viewer ?? viewer}
       />
     )
   }
   if (list === 'deleted' || list === 'deleted-suspended') {
+    // The rail leaves out a deleted org, so no tile is current.
     const rail: RailState = {
-      orgs: orgList,
-      current: deletedOrg.org,
-      deleted: deletedOrg.org,
+      orgs: orgList.filter((org) => org.key !== deletedOrg.org),
     }
     return (
       <AppFrame rail={rail}>
@@ -240,7 +211,7 @@ export function WorkspaceListScreen(props: {
   const listed = {
     archived: view?.archived ?? group?.archived,
     archivedCollapsed: view?.archivedCollapsed,
-    drag: listDrag(menu),
+    drag: view?.drag ?? listDrag(menu),
     failed: list === 'failed',
     menu: listMenu(menu),
     focus: view?.focus ?? group?.focus,
@@ -253,7 +224,7 @@ export function WorkspaceListScreen(props: {
       overlay={
         props.overlay ?? listPalette(palette, props.viewport) ?? view?.over
       }
-      rail={view?.rail ?? listRail(menu)}
+      rail={view?.rail ?? listRail(menu, orgOrder)}
       sidebar={<Sidebar {...listed} />}
     >
       <div className={`${responsive.wideOnly} ${styles.choose}`}>

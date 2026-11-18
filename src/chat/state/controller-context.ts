@@ -1,15 +1,18 @@
 import type { ApiClient } from '../../app/api/client'
+import type { Delay } from '../../app/events'
 import { createChatApi, type WorkspaceTarget } from '../api/client'
 import type { StreamEnvelope } from '../api/read-workspace'
 import { DeviceReads, refreshDevices } from '../device/device-actions'
 import { createDeviceApi } from '../device/device-api'
+import { createSecretApi } from '../secrets/secret-actions'
 import { SessionReads } from '../links/session-reads'
 import {
+  browserTimers,
   WorkspaceStream,
   type StreamTimers,
   type SubscribeToWorkspace,
 } from '../stream/workspace-stream'
-import type { ChatStore } from './chat-snapshot'
+import type { ChatStore } from './chat-store'
 import { applyEnvelopes } from './apply-events'
 import { isArchived, reloadView } from './archive-view'
 import { viewWriter, type ChatContext } from './context'
@@ -29,6 +32,21 @@ export interface ChatContextOptions {
    * workspace list itself.
    */
   sources?: ChatSources
+}
+
+/** A delay over the timers of the chat, so the waits of uploads use them too. */
+function timerDelay(timers: StreamTimers): Delay {
+  return (ms, run) => {
+    // A cancelled wait never runs, also when its timer is already due.
+    let live = true
+    const handle = timers.set(() => {
+      if (live) void run()
+    }, ms)
+    return () => {
+      live = false
+      timers.clear(handle)
+    }
+  }
 }
 
 /** The Worker records a change of the workspace with each change of a Mac command. */
@@ -66,6 +84,7 @@ export function createChatContext(
       return `file-${files}`
     },
     uploads: new Map(),
+    delay: timerDelay(timers ?? browserTimers),
     saveView: viewWriter((view) => api.saveView(view)),
     live,
     owned: options.sources !== undefined,
@@ -73,6 +92,7 @@ export function createChatContext(
       api: createDeviceApi(options.client),
       reads: new DeviceReads(),
     },
+    secrets: createSecretApi(options.client),
     sessionReads: new SessionReads((workspaceId) =>
       createChatApi(options.client, { ...target, workspaceId }).sessions(),
     ),

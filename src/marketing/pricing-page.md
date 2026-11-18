@@ -32,9 +32,7 @@ a requirement of [Pricing](../../docs/protocol/pricing.md).
 2. Change the plan in `pricing.ts`. The page and the mockup follow it.
 3. Read the legal pages and the public guides for each sentence that
    restates the change, as [Legal pages](README.md#legal-pages) and
-   [Public docs](README.md#public-docs) say. Read the notes of the
-   Plans and pricing rows of [the comparison page](comparison.md) too,
-   because a note names the coming plans.
+   [Public docs](README.md#public-docs) say.
 4. Check the page and the mockup at 320 px and at a desktop width, in both
    colour schemes.
 

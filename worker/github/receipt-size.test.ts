@@ -1,6 +1,6 @@
 import { expect, it, vi } from 'vitest'
 
-import { MemoryWorkspace } from './memory-workspace'
+import { nativeGitHubStore } from './state-fixture.test-support'
 import { sqliteSnapshot } from './sqlite-fixtures.test-support'
 
 it('commits and replays a delivery whose check list fits once but exceeds the receipt limit twice', async () => {
@@ -23,27 +23,26 @@ it('commits and replays a delivery whose check list fits once but exceeds the re
     limit,
   )
 
-  const memory = new MemoryWorkspace('workspace-1')
-  memory.valueByteLimit = limit
+  const native = await nativeGitHubStore()
   const read = vi.fn(async () => snapshot)
   const authorize = async () => undefined
   await expect(
-    memory.state.refresh(read, authorize, { deliveryId: 'large' }),
+    native.state.refresh(read, authorize, { deliveryId: 'large' }),
   ).resolves.toEqual(snapshot)
-  expect(memory.values.get('github:delivery:large')).toEqual({
+  expect(await native.storage.get('github:delivery:large')).toEqual({
     snapshot,
     envelope: identity,
   })
-  expect(memory.events).toEqual([{ ...identity, event }])
-  expect(memory.published).toEqual([{ ...identity, event }])
+  expect((await native.inspect()).events).toEqual([{ ...identity, event }])
+  expect((await native.inspect()).published).toEqual([{ ...identity, event }])
 
-  memory.restart()
+  await native.restart()
   await expect(
-    memory.state.refresh(read, authorize, { deliveryId: 'large' }),
+    native.state.refresh(read, authorize, { deliveryId: 'large' }),
   ).resolves.toEqual(snapshot)
   expect(read).toHaveBeenCalledTimes(1)
-  expect(memory.events).toEqual([{ ...identity, event }])
-  expect(memory.published).toEqual([
+  expect((await native.inspect()).events).toEqual([{ ...identity, event }])
+  expect((await native.inspect()).published).toEqual([
     { ...identity, event },
     { ...identity, event },
   ])

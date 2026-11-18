@@ -3,6 +3,8 @@ import type { LucideIcon } from 'lucide-react'
 import { Check, ChevronRight } from 'lucide-react'
 import a11y from './a11y.module.css'
 import { classes } from './classes'
+import { KeyChips, type Shortcut } from './KeyChips'
+import { SwitchPicture } from './SwitchPicture'
 import styles from './Menu.module.css'
 
 type MenuItem = {
@@ -13,6 +15,11 @@ type MenuItem = {
   mark?: ReactNode
   /** Muted text after the label, such as the time of a session. */
   detail?: string
+  /**
+   * Muted words that follow the label in its line, such as the effort of
+   * a favourite after its model.
+   */
+  muted?: string
   /** An icon at the end of the row, such as the arrow that reopens. */
   trailingIcon?: LucideIcon
   /**
@@ -40,6 +47,13 @@ export type MenuEntry =
   | { kind: 'label'; label: string }
   /** A short line that explains the choices, under them. */
   | { kind: 'note'; text: string }
+  /**
+   * A setting that is on or off, with a switch at the end of its row.
+   * `shortcut` is the key of the command that changes the setting, which
+   * stands before the switch where the key runs, as a palette row ends with
+   * the key of its command.
+   */
+  | { kind: 'switch'; label: string; on: boolean; shortcut?: Shortcut }
   | { kind: 'divider' }
 
 /**
@@ -78,7 +92,12 @@ function Item(props: { entry: MenuItem }) {
       role={choice ? 'menuitemradio' : 'menuitem'}
     >
       {lead}
-      <span className={styles.label}>{entry.label}</span>
+      <span className={styles.label}>
+        {entry.label}
+        {entry.muted ? (
+          <span className={styles.muted}> {entry.muted}</span>
+        ) : null}
+      </span>
       {entry.detail ? (
         <span className={styles.detail}>{entry.detail}</span>
       ) : null}
@@ -119,7 +138,9 @@ export function Menu(props: {
       {props.entries.map((entry, index) => {
         switch (entry.kind) {
           case 'item':
-            return <Item entry={entry} key={entry.label} />
+            return (
+              <Item entry={entry} key={`${entry.label} ${entry.muted ?? ''}`} />
+            )
           case 'label':
             return (
               <div className={styles.group} key={entry.label} role="none">
@@ -131,6 +152,23 @@ export function Menu(props: {
               <p className={styles.note} key={`note-${index}`} role="none">
                 {entry.text}
               </p>
+            )
+          case 'switch':
+            return (
+              <div
+                aria-checked={entry.on}
+                className={styles.item}
+                key={entry.label}
+                role="menuitemcheckbox"
+              >
+                <span className={styles.label}>{entry.label}</span>
+                {entry.shortcut ? (
+                  <span className={styles.keys}>
+                    <KeyChips shortcut={entry.shortcut} />
+                  </span>
+                ) : null}
+                <SwitchPicture on={entry.on} />
+              </div>
             )
           case 'divider':
             return <hr className={styles.divider} key={`divider-${index}`} />

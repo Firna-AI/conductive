@@ -4,17 +4,22 @@ import {
   agentLoginPath,
   type AccountResponse,
   type SaveAgentLoginResponse,
-  type SaveAgentLoginRequest,
   type SetNewWorkspaceViewResponse,
 } from '../../src/shared/account'
 import { MODELS_PATH } from '../../src/shared/agents'
+import {
+  ENDPOINT_ADDRESS_ERROR,
+  readEndpointAddress,
+} from '../../src/shared/endpoint-address'
 import { GET_STARTED_PATH } from '../../src/shared/onboarding'
 import { ShortcutContractError } from '../../src/shared/shortcut-key'
 import { readSaveShortcutsRequest } from '../../src/shared/shortcut-read'
 import type { SaveShortcutsRequest } from '../../src/shared/shortcuts'
 import { choice, invalidInput } from '../chat/inputs'
+import { agentLoginKind } from '../chat/login-kind'
 import { loginSecret, agentLoginContext } from '../chat/queries'
 import type { AppDependencies, AppEnv } from '../env'
+import { readEndpointModelsForSave } from '../model-gateway/endpoint-model-save'
 import { HttpError, requiredString } from '../http'
 import { isOperator } from '../operator/access'
 import { encrypt } from '../security/crypto'
@@ -29,9 +34,16 @@ import {
   saveAccountNewWorkspaceView,
   updateAccountLoginReuse,
 } from './account-data'
+import { readDefaultAgentLogins } from './default-agent-logins'
+import { readAccountStats } from './account-stats'
+import { endpointModelsRoute } from './endpoint-models'
 import { githubInstallUrl } from './feature-github'
 import { getStartedData } from './get-started-data'
-import { configuredDefaultChoice, configuredModels } from './models'
+import {
+  configuredDefaultChoice,
+  configuredModels,
+  modelChoice,
+} from './models'
 import { accountShortcuts, saveAccountShortcuts } from './shortcuts-data'
 
 export async function bootRoute(
@@ -55,15 +67,23 @@ export async function bootRoute(
         defaultChoice:
           (await accountDefault(env.DB, userId)) ??
           configuredDefaultChoice(env),
-        agentLogins: await accountLogins(env.DB, userId),
+        agentLogins: await accountLogins(env.DB, userId, () =>
+          configuredModels(env),
+        ),
+        defaultLogins: await readDefaultAgentLogins(env, userId),
         newWorkspaceView: await accountNewWorkspaceView(env.DB, userId),
         shortcuts: await accountShortcuts(env.DB, userId),
         githubAppUrl: githubInstallUrl(env),
       } satisfies AccountResponse)
     }
+    if (path === ACCOUNT_PATHS.stats) {
+      return Response.json(
+        await readAccountStats(env.DB, userId, dependencies.now()),
+      )
+    }
   }
   if (path === ACCOUNT_PATHS.defaultModel && request.method === 'PUT') {
-    const selected = choice(context.body?.choice)
+    const selected = modelChoice(env, choice(context.body?.choice))
     await saveAccountDefault(env.DB, userId, selected, dependencies.now())
     return Response.json({ choice: selected })
   }
@@ -73,6 +93,13 @@ export async function bootRoute(
     await saveAccountNewWorkspaceView(env.DB, userId, view, dependencies.now())
     return Response.json({ view } satisfies SetNewWorkspaceViewResponse)
   }
+  const refreshed = await endpointModelsRoute(
+    request,
+    env,
+    context,
+    dependencies,
+  )
+  if (refreshed) return refreshed
   if (path === ACCOUNT_PATHS.shortcuts && request.method === 'PUT') {
     let update: SaveShortcutsRequest
     try {
@@ -100,6 +127,7 @@ export async function bootRoute(
         userId,
         agent,
         context.body.noReuse,
+        () => configuredModels(env),
       ),
     )
   }
@@ -107,13 +135,41 @@ export async function bootRoute(
   const body = context.body
   if (
     body?.agent !== agent ||
-    (body.kind !== 'api-key' && body.kind !== 'token') ||
+    typeof body.kind !== 'string' ||
     (agent === 'codex' && body.kind === 'token')
   )
     return invalidInput()
-  const kind: SaveAgentLoginRequest['kind'] = body.kind
+  const loginKind = agentLoginKind(agent, body.kind)
+  if (!loginKind) return invalidInput()
+  const address =
+    loginKind.kind === 'endpoint'
+      ? readEndpointAddress(body.endpoint, agent, {
+          refusedDomains: env.PREVIEW_DOMAIN ? [env.PREVIEW_DOMAIN] : [],
+        })
+      : null
+  const publicLogin = (() => {
+    if (loginKind.kind !== 'endpoint') return loginKind
+    if (!address) {
+      throw new HttpError(
+        400,
+        ENDPOINT_ADDRESS_ERROR.code,
+        ENDPOINT_ADDRESS_ERROR.message,
+      )
+    }
+    return { ...loginKind, host: address.host }
+  })()
+  const secret = loginSecret(requiredString(body.secret))
+  const modelRead = address
+    ? await readEndpointModelsForSave(
+        { agent, kind: 'endpoint', endpoint: address.endpoint, secret },
+        dependencies.fetch,
+        env.PREVIEW_DOMAIN ? [env.PREVIEW_DOMAIN] : [],
+      )
+    : null
   const ciphertext = await encrypt(
-    loginSecret(requiredString(body.secret)),
+    modelRead
+      ? JSON.stringify({ endpoint: modelRead.endpoint, secret })
+      : secret,
     agentLoginContext(userId, agent),
     env.BOAT_KEY_ENCRYPTION_KEY,
   )
@@ -122,16 +178,23 @@ export async function bootRoute(
     env.DB,
     userId,
     agent,
-    kind,
+    loginKind.kind,
     ciphertext,
     updatedAt,
+    address?.origin ?? null,
+    modelRead ? { ids: modelRead.ids, attemptedAt: updatedAt } : null,
   )
   const login: SaveAgentLoginResponse = {
-    agent,
+    ...publicLogin,
     connected: true,
-    kind,
     noReuse,
     updatedAt,
+    ...(modelRead
+      ? {
+          endpointV1Added: modelRead.endpointV1Added,
+          modelListReadFailed: modelRead.ids === null,
+        }
+      : {}),
   }
   return Response.json(login)
 }

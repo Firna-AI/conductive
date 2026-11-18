@@ -7,6 +7,10 @@ The runtime also constructs the production workspace object with native SQLite.
 `native-workspace-entry.ts` adds test controls around the production constructor.
 Initial actor options reach that constructor before it captures optional dependencies.
 The registered object still extends the production `Workspace`.
+The entry also wraps the real browser publisher of the object.
+`takePublications()` returns the events that the publisher sent.
+`failPublication(message)` makes each publication of events throw that message, until a call with `null`.
+The `github` value of the entry runs the GitHub state calls that [GitHub verification](../github/verification.md#native-workspace-harness) describes.
 `native-warnings.ts` observes native warnings without replacing product warning rules.
 The reverse callback bridge keeps transaction reads on native storage.
 Native peers keep synchronous send faults inside the runtime.
@@ -20,6 +24,19 @@ Production request timeouts stay unchanged.
 The root Vitest setup builds one current Worker bundle for each run and watch rerun.
 Native fixtures read that bundle from the provided test context.
 Standalone callers build on demand and reuse that bundle only within their process.
+
+The same setup prepares one folder for each run and watch rerun, and deletes it at the end:
+
+- It splits each migration once, so test processes do not import Wrangler.
+- It applies all migrations once to a template D1 database.
+  Each test runtime starts from a copy of that template and does not apply the migrations again.
+  Every runtime names its database `TEST_D1_ID`, because Miniflare names the database file after that id.
+  A runtime with `migrationsBefore` and the migration tests still apply the migrations themselves.
+- It holds the other test Worker bundles.
+  `workerLibraryBundle` in [test-bundles.ts](test-bundles.ts) saves each bundle in that folder.
+  A process that needs a bundle before its file exists builds it. Later processes read the file.
+
+Without the global setup, `migratedStorage` builds one template for its process, and each bundle helper builds its bundle itself.
 
 `createChatFixture` in [`harness.test-support.ts`](../chat/harness.test-support.ts) connects its fake runner and browser tabs through `nativeChatTransport` in [`native-transport.test-support.ts`](../chat/native-transport.test-support.ts).
 Its `drain` waits for batched runner input, connection closes, queued chat work, and sends to the fake runner or a browser tab.
@@ -48,6 +65,10 @@ the `primary` flag beside `verified`.
 They accept only the fixed model POST routes on their provider origins.
 Tests inject their `fetch` methods through the Worker's fetch dependency.
 They open no external connection and need no provider account.
+The gateway HTTP fixture also configures `FakeModelUpstream` for an own endpoint.
+It keeps the same request capture and response factories on that origin.
+`FakeModelUpstream` accepts an optional `GET` method for endpoint discovery tests.
+Its default stays `POST` for model requests.
 Each fake records requests without cloning or teeing their bodies.
 Its default reply reads the upload once and records its text in `bodies`.
 Set `response` to supply a fresh response after that read.
@@ -55,7 +76,7 @@ Queue `responseFactories` to control upload reads, early replies, failures, or o
 Each factory owns the request body read and returns a fresh response.
 The gateway tests use these factories to observe cancellation on the original stream.
 
-Every harness uses `applyMigrations(db)` from [migrations.ts](migrations.ts).
+A harness that does not start from the template uses `applyMigrations(db)` from [migrations.ts](migrations.ts).
 It applies migrations in filename order with Wrangler's SQL splitter.
 The splitter keeps each trigger body in one statement.
 The optional `before` filename stops before that migration.
@@ -110,36 +131,24 @@ The harness reset clears factories.
 The runner boundary uses plain TypeScript types.
 Tests need no Cloudflare Durable Object or real WebSocket.
 
-[runnerHarness](../../runner/test-support/harness.ts) connects a `Runner` to `FakeDurableObjectEndpoint`.
 [connectFilesRunner](../files/test-support/runner.ts) connects `FakeRunner` to a backend handler.
+`FakeRunnerConnection` adapts the handler to the connector. Its constructor
+receives runner messages. Its `reply` method sends workspace messages.
 
-The runner implementation injects `endpoint.connect` as its `RunnerConnector`.
-A backend test uses `FakeRunner` with its own connector.
-`FakeRunnerConnection` adapts that backend's message handler into the connector.
-Its constructor receives runner messages. Its `reply` method sends workspace messages.
-
-`runner.commands` records turn, steer, interrupt, model, file read, and diff commands.
-`runner.emit` sends numbered events. `runner.reply` sends a file or diff result.
-`runner.pendingEvents` shows the unconfirmed outbox.
-Close a connection explicitly to test a drop. Reconnect the same runner to keep its outbox.
-Set `endpoint.confirmEvents = false` to retain unconfirmed events.
-`runner.sendEnvelope` can inject duplicates and gaps.
-The endpoint stores each event once and confirms only contiguous event numbers.
-It requests a resend when a number is missing.
-It joins valid runner file parts before it emits a complete browser file event.
-It preserves the current-branch commit count and the raw status count, and the absence of each in older reports.
-Pending parts stay on the endpoint across reconnects.
-Set `refuseEvent` to return `too_large`, `invalid`, or `turn_not_active`.
-The endpoint stores one workspace refusal marker and confirms that event number.
-An accepted event remains in `runnerEvents`. A refused event has only its marker.
-These fakes do not implement production byte checks, event validation, or turn state.
-File read and diff results go to `endpoint.fileResponses`, outside chat history.
+`runner.commands` records turns, messages, interrupts, model changes,
+repository moves, file reads, and diffs. `runner.emit` sends numbered events.
+`runner.reply` sends file replies and move refusals. The `repositoryFolder`
+option names the folder in `hello`, as a runner that can move does.
+Reconnect the same fake runner to keep its outbox.
+`runner.sendEnvelope` injects duplicates and gaps. Tests of the production
+workspace object check validation, ordering, storage, replay, and masking.
+Rust tests own the runner's transport, saved state, and report assembly.
 
 Use [recorded file events and replies](../../src/test-support/recorded-files.ts)
 for the runner's file reports.
 `recordedRunnerFileEvents` has four complete reports, with full reports as part 1 of 1.
 It keeps the current file tests' order and ends the tree at revision 2.
-`recordedMultipartRunnerFileEvents` has eight events for the fake endpoint and future part joining.
+`recordedMultipartRunnerFileEvents` has eight events for multipart assembly checks.
 It includes two-part trees and changes and consecutive tree deltas at revisions 2 and 3.
 Both samples include file creation, a rename, a removal, and dirty branch work.
 Read replies also cover file content, a diff, and a size error.
@@ -185,14 +194,16 @@ A callback counts as complete only after the `waitUntil` work that it starts end
   Its HTTP requests provide a fake execution context for credential task ownership.
 - [native-close.test-support.ts](native-close.test-support.ts): `NativeCloseProbe`, the close-first control of the native browser, runner, and Mac fixture entries.
 - [app-access.ts](app-access.ts) grants fixture access for users created directly in D1.
-- `native-global-setup.ts` builds and provides the current native bundle before tests and watch reruns.
+- `native-global-setup.ts` builds and provides the current native bundle, the split migrations, the migrated template, and the bundle folder before tests and watch reruns.
 - `native-chat-record-controls.ts` reads history and file projections inside the native object and calls its real chat writer.
-- `native-attachment-controls.ts` runs streaming attachment storage and reads real R2 byte samples inside the runtime.
-- `migrations.ts` applies migrations for every test harness.
+- `attachment-upload.ts` prepares attachment fixtures through the production multipart start and complete operations with Node-compatible R2 part writes.
+- `migrations.ts` splits the migrations and applies them for a harness without the template.
+- [migrated-storage.ts](migrated-storage.ts) builds the migrated template database and copies it into the storage folder of a new runtime.
+- [test-bundles.ts](test-bundles.ts) builds every test Worker bundle with one Vite configuration and saves it for the run. Its `buildWorkerLibrary` also builds the native bundle.
 - [fake-e2b.ts](fake-e2b.ts) supplies E2B lifecycle, snapshot, failure, and lost-reply behavior.
 - `fake-boat.ts` supplies provider replies, fresh streaming response factories, and added organizations with their own keys.
 - `fake-github.ts` supplies sign-in replies and an empty installation list for an account without the GitHub App.
-- Its `accounts` map supplies GitHub user lookups for routine author filters, with 404 for an unknown login.
+- Its `accounts` map supplies GitHub user lookups for automation author filters, with 404 for an unknown login.
 - `fake-anthropic.ts` supplies the Messages and token-count upstream.
 - `fake-openai.ts` supplies the Responses upstream.
 - `fake-model-upstream.ts` records model requests and supplies fresh response factories.
@@ -202,6 +213,7 @@ A callback counts as complete only after the `waitUntil` work that it starts end
 - `fake-runner-files.ts` joins valid file report parts for the endpoint.
 - `runner-connection.ts` supplies the in-memory socket.
 - `process-environment.ts` builds an isolated environment for a Node child process in a test.
+- [attachment-command.ts](attachment-command.ts) fakes detached attachment commands and their status replies. It reads the generated destination and bearer token, calls an injected download route, and records exact copied bytes.
 - `attachments.ts`: `fakeAttachments(ids)`, the attachment metadata of the lifecycle fixtures. Each file gets the `path` of the shared builder in `src/shared/attachment-paths.ts`, as an upload reply and an admitted message give it.
 
 See [the browser fakes](../../src/test-support/README.md),

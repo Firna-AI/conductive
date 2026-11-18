@@ -1,13 +1,9 @@
-import { useId } from 'react'
-import { Switch } from '@firna/ui/switch'
-import { CircleAlert } from 'lucide-react'
-import { useControlSizes } from '../common/touch'
-import styles from './LoginShare.module.css'
+import { SettingSwitch } from './SettingSwitch'
 
 /** What a message of another member in a session of the owner does. */
 const hints = {
   shared: 'Their messages in your sessions use this login.',
-  kept: 'Their messages in your sessions start a new session on their own login.',
+  kept: 'Their messages in your sessions start a new session.',
 } as const
 
 /**
@@ -28,31 +24,15 @@ export function LoginShare(props: {
   saving?: boolean
   error?: string | null
 }) {
-  const labelId = useId()
-  const { field } = useControlSizes()
   return (
-    <div className={styles.share}>
-      <div className={styles.text}>
-        <span className={styles.label} id={labelId}>
-          Let other members use this login
-        </span>
-        <span className={styles.hint}>
-          {props.shared ? hints.shared : hints.kept}
-        </span>
-        {props.error ? (
-          <span className={styles.error} role="alert">
-            <CircleAlert aria-hidden className={styles.icon} size={13} />
-            <span>Not saved. {props.error}</span>
-          </span>
-        ) : null}
-      </div>
-      <Switch
-        aria-labelledby={`${props.nameId} ${labelId}`}
-        disabled={props.saving}
-        onValueChange={props.onChange}
-        size={field}
-        value={props.shared}
-      />
-    </div>
+    <SettingSwitch
+      error={props.error}
+      hint={props.shared ? hints.shared : hints.kept}
+      label="Let other members use this login"
+      nameId={props.nameId}
+      onChange={props.onChange}
+      saving={props.saving}
+      value={props.shared}
+    />
   )
 }

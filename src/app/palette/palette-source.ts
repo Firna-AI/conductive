@@ -45,6 +45,11 @@ export interface PaletteBase {
   openWorkspaceId: string | null
   /** Where Create org leads, as the org rail says. */
   createOrgHref: string
+  /**
+   * Where the Switch to row of an org leads, as its tile in the org rail
+   * does: the last workspace of the org, or else its list page.
+   */
+  orgHref: (orgId: string) => string
   /** What the parts of the page offer. */
   offers: readonly PaletteOffer[]
   /** The window is the Mac app, whose Account page has This Mac. */
@@ -55,6 +60,11 @@ export interface PaletteBase {
 export interface PaletteSource extends PaletteBase {
   /** The sections and the workspaces of the org, as they load. */
   list: Loadable<ListData>
+  /**
+   * The time of the list, as `useListTime` says. A workspace whose Restore
+   * ended by then is removed, so no group of the palette shows it.
+   */
+  listTime: number
   /** The repositories of the org, with their names, as they load. */
   repositories: Loadable<readonly Repository[]>
 }

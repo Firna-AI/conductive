@@ -11,7 +11,9 @@ import { useControlSizes } from '../common/touch'
 
 /**
  * An admin confirms Delete org by typing the name of the org. The dialog
- * says what happens at once, and the date when everything is deleted.
+ * says what happens at once, the date when everything is deleted, and
+ * where an admin restores the org. Delete org then opens the next org that
+ * is not deleted, which the mockups do not draw.
  */
 export function DeleteOrgDialog(props: { viewport: Viewport }) {
   const { field } = useControlSizes()
@@ -23,11 +25,9 @@ export function DeleteOrgDialog(props: { viewport: Viewport }) {
           <ScreenLink asChild to={paths.orgSettings}>
             <ActionButton>Cancel</ActionButton>
           </ScreenLink>
-          <ScreenLink asChild to={paths.deletedOrg}>
-            <ActionButton icon={Trash2} tone="danger">
-              Delete org
-            </ActionButton>
-          </ScreenLink>
+          <ActionButton icon={Trash2} tone="danger">
+            Delete org
+          </ActionButton>
         </>
       }
       title={`Delete ${org.name}?`}
@@ -36,7 +36,7 @@ export function DeleteOrgDialog(props: { viewport: Viewport }) {
       <DialogText>
         Every cloud computer of {org.name} stops now, and its members can no
         longer open it. Everything is deleted on {deletedOrg.deletes}, unless an
-        admin restores {org.name} before then.
+        admin restores {org.name} from Account settings before then.
       </DialogText>
       <Input
         label={`Type ${org.name} to confirm`}

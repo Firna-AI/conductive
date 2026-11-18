@@ -1,4 +1,4 @@
-import type { AgentChatEvent } from '../../src/shared/chat-events'
+import type { AgentChatEvent } from '../../src/shared/generated/AgentChatEvent'
 import { HttpError } from '../http'
 import { markSent } from './messages'
 import { readRunnerEventIdentity } from './runner-event-identity'
@@ -27,6 +27,12 @@ export async function prepareAgentEvent(
     )
   }
   const { session, turn } = target
+  if (event.type === 'turn.completed' && !event.speed && turn.olderRunner) {
+    event = {
+      ...event,
+      speed: { state: 'standard', cause: 'older_runner' },
+    }
+  }
   let acknowledged: readonly string[] = []
   if (event.type === 'turn.started') {
     sameAgent(session, event.choice)
@@ -51,7 +57,25 @@ export async function prepareAgentEvent(
         'The message is not available.',
       )
     }
+    if (event.error.code === 'agent_model_unavailable' && turn.endpointModel) {
+      const message =
+        session.choice.agent === 'codex'
+          ? await transaction.message(event.retryMessageId)
+          : undefined
+      const model =
+        message?.sessionId === turn.sessionId
+          ? message.choice.model
+          : turn.endpointModel
+      event = {
+        ...event,
+        error: {
+          code: event.error.code,
+          message: `The endpoint of this login does not serve ${model}. Choose another model.`,
+        },
+      }
+    }
   }
+  let olderRunner = false
   for (const messageId of acknowledged) {
     const message = turn.messageIds.includes(messageId)
       ? await transaction.message(messageId)
@@ -63,6 +87,12 @@ export async function prepareAgentEvent(
         'The message is not available.',
       )
     }
+    if (
+      event.type === 'turn.started' &&
+      !event.choice.fast &&
+      message.choice.fast
+    )
+      olderRunner = true
   }
   return async () => {
     if (target.ended) {
@@ -82,6 +112,7 @@ export async function prepareAgentEvent(
       await transaction.emit(event, occurredAt, true)
       return
     }
+    if (olderRunner) turn.olderRunner = true
     turn.started = true
     if (event.type === 'turn.started') turn.startedAt = event.startedAt
     if (event.type === 'turn.started' && turn.state !== 'stopping')

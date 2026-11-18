@@ -46,6 +46,15 @@ a.row:hover {
   background: var(--ui-soft);
 }
 
+/*
+ * The row of an open menu keeps the fill of a hover, as a tab with an open
+ * menu does, also under the sheet of a phone. The row of the open diff
+ * keeps its own fill.
+ */
+.menuOpen {
+  background: var(--ui-soft);
+}
+
 .open,
 a.open:hover {
   background: var(--ui-selected);

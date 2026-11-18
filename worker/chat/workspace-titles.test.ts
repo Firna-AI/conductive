@@ -33,9 +33,12 @@ it.each(['failed', 'empty'] as const)(
   'keeps names empty after a %s answer and asks again on the next accepted text',
   async (failure) => {
     const run = vi.fn<TitleModelCall>()
-    if (failure === 'failed')
-      run.mockRejectedValueOnce(new Error('private answer'))
-    else run.mockResolvedValueOnce({ response: 'Title: ""' })
+    // The first request tries the model three times.
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      if (failure === 'failed')
+        run.mockRejectedValueOnce(new Error('private answer'))
+      else run.mockResolvedValueOnce({ response: 'Title: ""' })
+    }
     run.mockResolvedValue({ response: 'Fix chat titles' })
     const { fixture, first, acceptFirst, drain } = await createTitleFixture(
       harness,
@@ -63,16 +66,17 @@ it.each(['failed', 'empty'] as const)(
     expect((await sessionRecord(fixture, first.sessionId)).title).toBe(
       'Fix chat titles',
     )
-    expect(run).toHaveBeenCalledTimes(2)
+    expect(run).toHaveBeenCalledTimes(4)
     expect(
       run.mock.calls.map(([, input]) => input.messages?.[1].content),
-    ).toEqual([
-      'Task message as a JSON string:\n"Fix the workspace title"',
-      'Task message as a JSON string:\n"Fix the workspace title"',
-    ])
+    ).toEqual(
+      Array<string>(4).fill(
+        'Task message as a JSON string:\n"Fix the workspace title"',
+      ),
+    )
     await fixture.send(first.sessionId, 'after-title')
     await drain()
-    expect(run).toHaveBeenCalledTimes(2)
+    expect(run).toHaveBeenCalledTimes(4)
   },
 )
 
@@ -123,23 +127,31 @@ it('asks nothing for an attachment-only first message and titles from the next a
   )
   expect(run).toHaveBeenCalledTimes(1)
   expect(run.mock.calls[0][1].messages?.[1].content).toBe(
-    'Task message as a JSON string:\n"Inspect login.png with @src/login.ts"',
+    'Task message as a JSON string:\n"Inspect with @src/login.ts"',
   )
 })
 
-it('requests a workspace title with its attached-file names and unchanged typed mentions', async () => {
+it('requests a workspace title with attached-file names, without image names, and with unchanged typed mentions', async () => {
   const run = vi
     .fn<TitleModelCall>()
-    .mockResolvedValue({ response: 'Inspect login screenshot' })
+    .mockResolvedValue({ response: 'Inspect login crash' })
   const { first, acceptFirst, drain } = await createTitleFixture(harness, run, {
     resolveAttachments: async () => ({
       attachments: [
         {
           id: 'screenshot',
-          name: 'Login screen.png',
-          path: '.context/attachments/image/Login-screen.png',
+          name: 'Screenshot 2026-11-16 at 10.23.45.png',
+          path: '.context/attachments/image/Screenshot.png',
           kind: 'image',
           mediaType: 'image/png',
+          sizeBytes: 100,
+        },
+        {
+          id: 'log',
+          name: 'crash report.log',
+          path: '.context/attachments/log/crash-report.log',
+          kind: 'file',
+          mediaType: 'text/plain',
           sizeBytes: 100,
         },
       ],
@@ -147,13 +159,13 @@ it('requests a workspace title with its attached-file names and unchanged typed 
     }),
   })
   first.request.text =
-    'Inspect @.context/attachments/image/Login-screen.png with @src/login.ts'
-  first.request.attachmentIds = ['screenshot']
+    'Inspect @.context/attachments/image/Screenshot.png and @.context/attachments/log/crash-report.log with @src/login.ts'
+  first.request.attachmentIds = ['screenshot', 'log']
   await acceptFirst()
   await drain()
   expect(run.mock.calls.length).toBe(1)
   expect(run.mock.calls[0][1].messages?.[1].content).toBe(
-    'Task message as a JSON string:\n"Inspect Login screen.png with @src/login.ts"',
+    'Task message as a JSON string:\n"Inspect and crash report.log with @src/login.ts"',
   )
 })
 

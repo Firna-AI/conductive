@@ -25,6 +25,8 @@ The assembly state holds the stored report parts and the revision progress of th
 Both use storage keys that start with `files:`.
 Keep one instance active in an object.
 An unavailable-tree event marks the stored tree and keeps its entries and revision.
+`markFilesMoved` in [storage.ts](storage.ts) gives the same mark after a [repository change](../lifecycle/repository-change.md#publication), in its publication transaction, and drops the stored changes of the old folder.
+So the Changes API returns `file_unavailable` until the runner reports the new folder, and the next complete tree clears the mark.
 Before any complete tree, the marked tree has revision zero and no cached entries.
 Only a complete snapshot clears the mark.
 A delta or an incomplete report keeps it.

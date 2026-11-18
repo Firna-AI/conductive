@@ -9,6 +9,7 @@ import type { MdBlock, MdListItem } from './markdown-blocks'
 import type { MarkdownDocument, MarkdownParser } from './markdown-document'
 import type { MdInline } from './markdown-inline'
 import { textChunks } from './text-chunks'
+import { useKeptScroll } from '../ui/kept-scroll'
 import { parseInWorker, type WorkerParse } from './worker-parse'
 import styles from './MarkdownView.module.css'
 
@@ -105,11 +106,13 @@ function Blocks(props: { blocks: readonly ParsedBlock[] }) {
 /**
  * One parsed document. A new render of the same document, as after Copy,
  * renders and splits the text of no block again. The headings take the
- * heading style that the chat shares, with the margins of the preview.
+ * heading style that the chat shares, with the margins of the preview. A
+ * file tab keeps its scroll offset.
  */
 const Document = memo(function Document(props: { document: MarkdownDocument }) {
+  const box = useKeptScroll('preview')
   return (
-    <div className={styles.scroll}>
+    <div className={styles.scroll} ref={box}>
       <article className={classes(styles.doc, headingStyles.headings)}>
         <Blocks blocks={props.document.blocks} />
       </article>
@@ -160,9 +163,11 @@ function ParsedInWorker(props: { text: string }) {
 /**
  * A Markdown file, rendered as formatted text. It builds React elements
  * only: HTML in the file shows as text, and only http, https, and mailto
- * links work. A link opens in a new tab and sends no referrer. A module
- * worker parses the text, so a long or crafted file never blocks the page.
- * `parser` parses on the calling thread instead, for a static render.
+ * links work. Each link opens through the link opener of the screen: a
+ * link to a page of the app opens in the app, and every other link opens a
+ * new tab that gets no referrer. A module worker parses the text, so a long
+ * or crafted file never blocks the page. `parser` parses on the calling
+ * thread instead, for a static render.
  */
 export function MarkdownView(props: { text: string; parser?: MarkdownParser }) {
   return props.parser ? (

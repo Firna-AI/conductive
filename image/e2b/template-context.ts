@@ -8,7 +8,6 @@ const sources: Readonly<Record<string, string>> = {
   Dockerfile: 'image/e2b/Dockerfile',
   'install-base.sh': 'image/e2b/install-base.sh',
   'install-tools.sh': 'image/e2b/install-tools.sh',
-  'install-runtime.sh': 'image/install-runtime.sh',
   'port-relay.py': 'image/e2b/port-relay.py',
   'port-relay.service': 'image/e2b/port-relay.service',
 }
@@ -28,7 +27,7 @@ export async function templateContext(root: string): Promise<string> {
     [
       `base_node_url=${shellQuote(IMAGE_NODE_RUNTIME.url)}`,
       `base_node_sha256=${shellQuote(IMAGE_NODE_RUNTIME.sha256)}`,
-      `base_node_directory=${shellQuote(IMAGE_NODE_RUNTIME.directory)}`,
+      `base_node_directory=${shellQuote(`/opt/conductive-e2b/node/${IMAGE_NODE_RUNTIME.version}`)}`,
       '',
     ].join('\n'),
     { mode: 0o600 },

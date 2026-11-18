@@ -1,4 +1,3 @@
-import type { Delay } from '../app/events'
 import type {
   WorkspaceEventEnvelope,
   WorkspaceSocketMessage,
@@ -7,38 +6,11 @@ import { sameGitHubState } from '../shared/github-state'
 import {
   GitHubLoadError,
   loadGitHubSnapshot,
-  type FetchLike,
+  loadStoredSnapshot,
   type GitHubSnapshot,
   type WorkspaceTarget,
 } from './githubClient'
-
-/**
- * The event stream of one workspace after `afterEventNumber`. It sends the
- * stored history first, in one or more `history` pages, then live events.
- * The pages of one replay share one cutoff, and a page can leave out event
- * numbers. A page with more to come has `hasMore` and `nextAfterEventNumber`.
- * The returned function ends the subscription.
- * @public The workspace GitHub adapter imports this subscription boundary.
- */
-export type SubscribeToWorkspace = (
-  afterEventNumber: number,
-  listener: (message: WorkspaceSocketMessage) => void,
-) => () => void
-
-export interface GitHubSource {
-  fetch: FetchLike
-  subscribe: SubscribeToWorkspace
-  /** Runs the next fresh read later: `AppServices.delay` in the app. */
-  delay: Delay
-}
-
-/**
- * The wait before the next fresh read of an open workspace, in ms. GitHub
- * events keep the state current, so these reads only catch a change that no
- * webhook names. Each read costs GitHub API calls in every open tab, so the
- * wait is long. It is a choice of the app, not a product limit.
- */
-const freshReadWait = 300_000
+import { freshReadWait, type GitHubSource } from './githubSource'
 
 export type GitHubState =
   | { status: 'loading' }
@@ -90,6 +62,8 @@ export class GitHubStore {
   /** Whether the shown state came from a read, not from the stream. */
   private shownFromRead = false
   private running: Read | null = null
+  /** Cancels the read of the stored state, while it runs. */
+  private storedRead: AbortController | null = null
   /** Cancels the timer of the next fresh read, while one waits. */
   private cancelTimer: (() => void) | null = null
 
@@ -119,13 +93,38 @@ export class GitHubStore {
     this.waiting = []
     const unsubscribe = source.subscribe(this.lastEventNumber, this.receive)
     void this.load()
+    if (this.state.status === 'loading') void this.readStored(source)
     return () => {
       unsubscribe()
       if (this.source !== source) return
       this.source = null
       this.cancelRead()
+      this.storedRead?.abort()
+      this.storedRead = null
       this.stopTimer()
     }
+  }
+
+  /**
+   * Shows the state that the Worker stored, while the first fresh read asks
+   * GitHub, so the views do not wait for GitHub. It shows only while the
+   * views load: a fresh reply, a history, or a live event is at least as
+   * new. A failure changes nothing, because the fresh read still runs.
+   */
+  private readStored(source: GitHubSource): Promise<void> {
+    const controller = new AbortController()
+    this.storedRead = controller
+    return loadStoredSnapshot(source.fetch, this.target, controller.signal)
+      .then(
+        (stored) => {
+          if (this.storedRead !== controller || !stored) return
+          if (this.state.status === 'loading') this.show(stored, false)
+        },
+        () => undefined,
+      )
+      .finally(() => {
+        if (this.storedRead === controller) this.storedRead = null
+      })
   }
 
   /** Reads the banner and the checks. It settles after the reply is handled. */

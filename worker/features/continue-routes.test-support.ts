@@ -6,7 +6,6 @@ import { record } from '../chat/inputs'
 import { OUTER_MACHINE_ORIGIN } from '../chat/integration/outer-runtime.test-support'
 import {
   OUTER_ORG,
-  OUTER_SOFTWARE,
   OUTER_WORKSPACE,
 } from '../chat/integration/outer-seed.test-support'
 import { repositoryPull } from '../github/fake-pull'
@@ -18,11 +17,11 @@ import { featureFixture, featureState } from './fixture.test-support'
 export async function continueRoutesFixture(bundle: string) {
   const { privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 })
   const reference: { api?: RepositoryGitHub } = {}
+  /** Other repositories of the fake GitHub, read by their full name. */
+  const others: RepositoryGitHub[] = []
   const secret = 'continue-webhook-secret'
   const fixture = await featureFixture(bundle, {
     configuration: {
-      CONDUCTIVE_RUNNER_ARCHIVE_URL: OUTER_SOFTWARE.url,
-      CONDUCTIVE_RUNNER_ARCHIVE_SHA256: OUTER_SOFTWARE.sha256,
       GITHUB_APP_PRIVATE_KEY: privateKey
         .export({ type: 'pkcs1', format: 'pem' })
         .toString(),
@@ -32,9 +31,18 @@ export async function continueRoutesFixture(bundle: string) {
       const path = new URL(request.url).pathname
       if (path === '/app/installations/1/access_tokens')
         return Promise.resolve(Response.json({ token: 'server-read-token' }))
-      return path === '/graphql' && reference.api
-        ? reference.api.fetch(request)
-        : fallback(request)
+      if (path !== '/graphql' || !reference.api) return fallback(request)
+      const api = reference.api
+      return request
+        .clone()
+        .json()
+        .then((body) => {
+          const variables = record(record(body).variables ?? {})
+          const name = `${String(variables.owner)}/${String(variables.name)}`
+          return (others.find((other) => other.fullName === name) ?? api).fetch(
+            request,
+          )
+        })
     },
   })
   const api = new RepositoryGitHub(fixture.github)
@@ -116,10 +124,14 @@ export async function continueRoutesFixture(bundle: string) {
         },
       },
     )
-  const webhook = (branch: string, delivery: string) => {
+  const webhook = (
+    branch: string,
+    delivery: string,
+    repositoryId = 186853002,
+  ) => {
     const body = JSON.stringify({
       ref: `refs/heads/${branch}`,
-      repository: { id: 186853002 },
+      repository: { id: repositoryId },
       installation: { id: 1 },
     })
     return fixture.runtime.dispatchFetch(
@@ -138,6 +150,7 @@ export async function continueRoutesFixture(bundle: string) {
   return {
     ...fixture,
     api,
+    others,
     firstSession,
     state,
     drive,

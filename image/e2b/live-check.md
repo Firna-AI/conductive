@@ -8,17 +8,16 @@ It creates no app user, org, workspace, GitHub token, or agent session.
 ## Prepare without credentials
 
 Run from the repository root with Node 24 and the existing root and runner
-packages installed. Build the current runner bundles first:
+packages installed:
 
 ```sh
-npm --prefix runner run build
 node image/live-check.mjs --provider=e2b --help
 node image/live-check.mjs --provider=e2b --prepare
 ```
 
-The bundle check includes `relay.mjs`, the shared HTTP preview relay.
-`--prepare` checks the bundle files, provider migration, and script imports.
-It uses no provider, image, sandbox, or agent.
+`--prepare` checks the shipped runtime and preview probes, the provider
+migration, and the script imports. It needs no runner bundle.
+It uses no credential, provider, image, sandbox, or agent.
 Preparation does not prove a real template or runtime check.
 
 The default live-check mode still uses Boat and retains its chat and
@@ -36,8 +35,6 @@ Put no credential in a saved command, file, `.env`, or `.dev.vars`.
 | `LIVE_E2B_DOMAIN` | The routing domain of that project. |
 | `LIVE_E2B_TEMPLATE_ID` | The actual ID printed by the template builder. |
 | `LIVE_E2B_STATE_KEY` | A stable 32-byte random encryption key, encoded as Base64. Keep it in memory and reuse it for the same state directory. |
-| `LIVE_RUNNER_ARCHIVE_URL` | The public HTTPS URL of the current packaged runner archive. |
-| `LIVE_RUNNER_ARCHIVE_SHA256` | The digest of that exact archive. It must include `runner/relay.mjs`. |
 
 Optional inputs:
 
@@ -45,6 +42,7 @@ Optional inputs:
 | --- | --- |
 | `LIVE_E2B_STATE_DIR` | Persistent provider state under `.context/`. Default: `.context/e2b-backup-provider/live-state`. Use a separate directory for each project. |
 | `LIVE_OUTPUT` | A report directory under `.context/`. The default has a fresh run ID. |
+| `LIVE_CONDUCTIVE_RELEASE_SERVER` | Another release server. The default is `https://runner.conductive.build`. The check reads the newest release from it. |
 
 No app cookie, private repository, or agent login is needed.
 Use a project with the EU region and filesystem-only support enabled.
@@ -61,7 +59,9 @@ node image/live-check.mjs --provider=e2b
 
 1. Create a clean sandbox from the configured template.
 2. Check Ubuntu, the base tools, Node 24, Python 3.12, and a disposable Docker container.
-3. Install the production workspace tools, runner, terminal, and HTTP preview relay.
+3. Install the newest release with the production installer. Check its
+   `conductive` program, its completion marker, and its SDK helper under
+   `/opt/conductive/current`.
 4. Run a harmless install script and write public disk and runtime markers.
 5. Save filesystem-only image A and delete the first build sandbox.
 6. Close the local D1 runtime and reopen its persistent path with the same key.
@@ -105,8 +105,9 @@ Network mode must reach the network-bound server directly.
 After the pause, the shared HTTP relay must reject the old ingress alias
 before the adapter registers a fresh one.
 
-The shared HTTP relay, socket, runner archive, and installers come from
-their production sources. The script does not maintain copies of them.
+The shared HTTP relay, its socket, the release, and the installers come
+from their production sources. The script does not maintain copies of them.
+The probes run with the release's Node, `/opt/conductive/current/node/bin/node`.
 
 ## State, output, and cleanup
 

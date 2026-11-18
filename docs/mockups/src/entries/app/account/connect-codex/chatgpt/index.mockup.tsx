@@ -1,7 +1,7 @@
 import { defineScreen } from '@mokly/mokly'
 import { AccountScreen } from '../../../../../screens/AccountScreen'
 import {
-  accountGeneral,
+  accountAgents,
   accountSchema,
 } from '../../../../../screens/accountState'
 
@@ -13,7 +13,7 @@ export const connectCodexChatGpt = defineScreen({
     'The user chose option A of decision 175 on 10 November 2026: a device code sign-in that the app runs, in place of the access token of decision 170. It works with each ChatGPT plan, also Plus and Pro, once the setting is on, so the words name the setting before the start. The user chose on 11 November 2026 to link to the setting, so the user finds it in one step, and confirmed its address. chatGptSignInCopy.ts holds the address in one place. The switch names the plan, because Codex then runs on it. The app keeps the sign-in encrypted and renews it, so the user signs in once. The sign-in has no secret field, so the form has no hint that the app tests the login.',
   relatedDocs: [],
   propSchema: accountSchema,
-  props: { ...accountGeneral, form: 'codex-token' },
+  props: { ...accountAgents, form: 'codex-token' },
   render: (props, context) => (
     <AccountScreen state={props} viewport={context.viewport} />
   ),
@@ -24,7 +24,7 @@ export const connectCodexChatGpt = defineScreen({
       description:
         'The user pressed Get a code. The form gives the link to auth.openai.com/codex/device, where the user signs in to ChatGPT and enters the code. Then come the one-time code in large type, the warning never to share it and to enter only a code that this page shows, and that it expires in 15 minutes. A line with a spinner says that the page waits for the sign-in, and Cancel ends it. Once the user enters the code, the form closes, and the row shows Codex connected, as app/account/codex-token shows.',
       rationale:
-        'OpenAI warns that device codes are a common target of phishing, so the words say never to share the code. An attacker can also send a code to enter, so the words say to enter only a code that this page shows, as the user chose on 10 November 2026. The address shows in full, so the user sees that the page is of OpenAI, and can type it on another device. A code works for 15 minutes, the time that the pinned Codex 0.167.0 waits. The page finds the sign-in by itself, so the form has no button to press after it.',
+        'OpenAI warns that device codes are a common target of phishing, so the words say never to share the code. An attacker can also send a code to enter, so the words say to enter only a code that this page shows, as the user chose on 10 November 2026. The address shows in full, so the user sees that the page is of OpenAI, and can type it on another device. A code works for 15 minutes, the time that the pinned Codex 0.170.0 waits. The page finds the sign-in by itself, so the form has no button to press after it.',
       props: { codexSignIn: 'code' },
     },
     {

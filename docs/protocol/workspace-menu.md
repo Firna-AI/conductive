@@ -1,15 +1,19 @@
 # Workspace menu
 
 This doc holds the requirements and the decisions in force for the menu
-of a workspace row. The menu moves, reassigns, renames, and archives the
-workspace of its row. It belongs to
+of a workspace row, which the header of the open workspace also opens.
+The menu moves, reassigns, renames, and archives the
+workspace of its row, and it copies the link of that workspace. It belongs
+to
 [Workspaces and sandboxes](workspaces-and-sandboxes.md). The terms are
 those of the [architecture doc](../architecture.md#terms). A decision
 number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. The
 [mockup catalogue](../mockups/catalogue.md) draws the menu at
 `app/workspace-menu`, on desktop and on a phone, and in the flow
-`user-flows/archive-from-list`.
+`user-flows/archive-from-list`. It draws the menu of a nested row at
+`app/sub-workspaces/menu`, and the menu of the header at
+`app/workspace-menu/header`.
 
 ## The menu
 
@@ -17,18 +21,21 @@ number names a dated record, as
   person can use, as [Who sees each action](#who-sees-each-action) says.
   This holds in the sidebar and on the list page, in the desktop layout
   and in the phone layout.
-- This includes routine run workspaces, as
-  [A run is a workspace](routine-runs.md#a-run-is-a-workspace) says.
-- The menu holds Move to section, Reassign to, Rename, and Archive, in
-  that order.
-- Copy link and other actions, such as Pin and Mark as unread, were
-  rejected for the menu, because the user chose these four actions.
-- The workspace header keeps Copy link, as
-  [Copy link](workspace-links.md#copy-link) says.
-- Each action changes the workspace of its row, also while another
-  workspace is open.
-- Each action changes only its own part of the workspace: the section,
-  the owner, the name, or the archive state.
+- This includes automation run workspaces, as
+  [A run is a workspace](automation-runs.md#a-run-is-a-workspace) says.
+- The header of the open workspace has the same menu, as
+  [The menu in the header](#the-menu-in-the-header) says.
+- The menu holds Move to section, Reassign to, Rename, Copy link, and
+  Archive, in that order. A line comes before Archive.
+- On 9 November 2026 the user chose the four actions that change the
+  workspace. On 12 November 2026 the user added Copy link, as
+  [Copy link](#copy-link) says.
+- Other actions, such as Pin and Mark as unread, were rejected for the
+  menu, because the user chose these five actions.
+- Each action other than Copy link changes the workspace of its row, also
+  while another workspace is open.
+- Each such action changes only its own part of the workspace: the
+  section, the owner, the name, or the archive state.
 - Archive can also advance the activity time, as [Archive](#archive) says.
 - The reply to an action does not bring back an older value of another
   part, such as an older state of the workspace.
@@ -44,7 +51,8 @@ number names a dated record, as
   the menu opens as a sheet.
 - No row has a button for the menu, on any screen. A touch screen gets
   no other way to open it. A long press of a finger still only lifts the
-  row for a drag.
+  row for a drag. On a nested row, it does nothing, as
+  [Moves](sub-workspaces.md#moves) says.
 - Reason: the user asked for no such button, for the Archive shortcut as
   it was, and for a right click that opens the menu. A More button on
   each row, or only on touch screens, was rejected for that reason.
@@ -73,32 +81,81 @@ number names a dated record, as
   [Sections](orgs-and-members.md#sections) says.
 - The app adds no keys that run an action of the menu directly.
 
+## The menu in the header
+
+- The name of the open workspace in its header is a button. A press on it
+  opens the menu of its row below the name. In the phone layout, the menu
+  opens as a sheet. A second press on the name closes the menu.
+- The name shows no caret. It looks like the name, and only a hover or a
+  press shows that it is a button.
+- The user asked on 17 November 2026 for the menu in the header, and then
+  chose a press on the name.
+- A right click on the header bar was rejected. In the Mac app the bar
+  moves the window, so macOS takes its presses and the page never hears a
+  right click there. The name is a button, so it takes its press in the
+  Mac app too, as [the Mac app](desktop-app.md) says of the controls of a
+  top bar.
+- A right click on the header opens the menu of the browser, as before.
+- The menu has the same actions, for the same people, as the menu of the
+  row, as [Who sees each action](#who-sees-each-action) says. It shows
+  only when the list of the org has loaded and shows the workspace,
+  because the list gives the section and the tree of the workspace.
+  Otherwise the name is plain text.
+- Each action works as in the menu of the row, with one exception: Rename
+  puts its field in the header, in place of the name, as
+  [Rename](#rename) says.
+- The rules of [Opening and closing](#opening-and-closing) hold for the
+  menu in the header too. When the menu closes, the focus goes back to the
+  name.
+- The name takes the focus as other buttons do. Enter or Space on it opens
+  the menu.
+
 ## Who sees each action
 
 - The menu shows only the actions that the person can use. An action that
   the person cannot use does not show.
+- Every member sees Copy link on every row, also an archived row and a
+  row of a suspended org. Reason: a copy changes nothing, as for the copy
+  items of the
+  [tab menu of a read-only workspace](agents-and-sessions.md#the-tab-row).
+- So every row has a menu.
 - Every member sees Move to section and Rename on a workspace that is not
   archived, as [Members and roles](orgs-and-members.md#members-and-roles)
   says.
 - Only an admin sees Reassign to.
 - Only the workspace owner and the admins see Archive.
-- On an archived workspace, the menu of an admin holds only Reassign to.
-  Other members get no menu on an archived row.
+- On an archived workspace, the menu of an admin holds only Reassign to
+  and Copy link. The menu of another member holds only Copy link.
 - The menu offers no Restore. Every member restores an archived row with
   its Restore shortcut, the bar, the toast after Archive, or the palette,
   as [Restore](workspace-life.md#restore) says.
 - Restore in the menu was rejected, because these four ways already reach
   every member.
-- In a suspended org, no row has a menu, because nothing in the org can
-  change, as
+- In a suspended org, the menu of each row holds only Copy link, because
+  nothing in the org can change, as
   [What members of a suspended org keep](operator-actions.md#what-members-of-a-suspended-org-keep)
   says.
 - Move to section shows only when the org has more than one section.
-- The app leaves the right click of a row without an action to the
-  browser.
+- A nested row has no Move to section, as [Moves](sub-workspaces.md#moves)
+  says.
 - A change of the role, the workspace, or the org can take an action away
   while the menu is open. The menu then drops that action and its choices.
-  When no action remains, the menu closes.
+  Copy link stays, so the menu stays open.
+
+## Copy link
+
+- Copy link copies the link of the workspace of its row. It is the link
+  that the Copy link button of the workspace header copies, as
+  [Copy link](workspace-links.md#copy-link) says. The copy holds no path
+  of a tab.
+- Copy link works also in the Mac app.
+- The menu closes at the press. After the copy, a toast says "Link
+  copied".
+- When the copy fails, the toast says "The link didn't copy. Try again."
+- Reason: the menu is closed, so a toast gives the result. The words are
+  those of the note under the button of the header.
+- Copy link sends no request. It does not open the workspace, start its
+  cloud computer, or mark its output as read.
 
 ## Move to section
 
@@ -111,6 +168,8 @@ number names a dated record, as
   sheet, under the name of the workspace.
 - A choice of another section moves the workspace to the top of that
   section. A choice of the section of the workspace changes nothing.
+- The move also moves each workspace nested under the row, as
+  [Moves](sub-workspaces.md#moves) says.
 - When the move fails, the row goes back to its place, and a toast names
   the failure.
 
@@ -131,6 +190,16 @@ number names a dated record, as
 
 - Rename puts a field in the row, in place of the name and the time. The
   field holds the name, and the name is selected.
+- Rename in the menu of the header puts the field in the header, in place
+  of the name. The field works as the field of the row.
+- A double click on a row of the sidebar also opens this field, when the
+  menu of the row offers Rename. A double click with a modifier key does
+  not. The user asked for it on 12 November 2026.
+- The first click of the double click opens the workspace, as a click
+  does. The second click does not open it again, so the history gets one
+  entry. The field then opens in the row.
+- On the list page, the first click replaces the list with the
+  workspace. So a double click there opens the workspace and no field.
 - For a workspace without a name, the field is empty.
 - Enter saves the name. A move of the focus out of the field saves it too.
   Escape closes the field and keeps the old name.
@@ -143,7 +212,8 @@ number names a dated record, as
   replaces it, as
   [Workspace and session names](agents-and-sessions.md#workspace-and-session-names)
   says.
-- Rename keeps the branch, as
+- Rename changes the branch only before the start creates the branch in
+  the sandbox. After that, Rename keeps the branch, as
   [The branch and the name](create-a-workspace.md#the-branch-and-the-name)
   says.
 
@@ -158,8 +228,12 @@ number names a dated record, as
   write. One action archives the workspace once, also for the open
   workspace while it loads.
 - Archive does not open the workspace, and it starts no cloud computer.
-- While the write runs, the app shows that the Archive is pending. When the
-  write fails, the row stays in its section, and a toast names the failure.
+- Archive shows as done at once, before its write gets a reply: the row
+  moves to the Archived group, and the open workspace shows as archived.
+  No control shows a busy state for it.
+- When the write fails, the row goes back to its section, the open
+  workspace shows as it was before, and a toast names the failure.
+- The toast after a done Archive comes with the reply of its write.
 - After the archive, the current page stays, and the row moves to the
   Archived group. The toast after Archive offers Restore, as
   [Restore](workspace-life.md#restore) says.

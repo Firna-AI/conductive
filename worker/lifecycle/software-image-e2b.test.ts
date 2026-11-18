@@ -24,7 +24,11 @@ it.each(['other-account', 'same-account'] as const)(
         templateId: 'e2b-own-template',
       },
     })
-    runtime.dependencies.fetch = server.fetch
+    const fetch = runtime.dependencies.fetch
+    runtime.dependencies.fetch = (request) =>
+      new URL(request.url).hostname.endsWith(server.domain)
+        ? server.fetch(request)
+        : fetch(request)
     await runtime.env.DB.batch([
       runtime.env.DB.prepare(
         'UPDATE orgs SET provider_account = ? WHERE id = ?',
@@ -74,7 +78,7 @@ it.each(['other-account', 'same-account'] as const)(
     })
     await advanceImageBuild(images, org.id, id)
     expect((await readBuildJob(runtime.env.DB, org.id, id)).phase).toBe(
-      ownImage === null ? 'software' : 'install',
+      'software',
     )
   },
 )

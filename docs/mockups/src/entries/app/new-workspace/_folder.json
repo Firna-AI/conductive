@@ -4,6 +4,8 @@
     "waiting-repository",
     "not-created",
     "files",
+    "capabilities",
+    "fast",
     "dialog",
     "workspace-link",
     "creating",

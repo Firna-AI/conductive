@@ -45,7 +45,14 @@ test('closes the owner menu when a press moves focus into a preview frame', asyn
         body: '<button>Preview action</button>',
       }),
     )
-    const path = routes.workspace(FAKE_IDS.org, FAKE_IDS.workspace, 'preview')
+    // On desktop the page of a port shows in its Preview tab of the centre.
+    const path = routes.workspace(
+      FAKE_IDS.org,
+      FAKE_IDS.workspace,
+      'preview',
+      'port',
+      String(portPreview.port),
+    )
     await page.goto(new URL(path, origin).href)
     const previewAction = page
       .getByTitle(`Preview of port ${portPreview.port}`, { exact: true })

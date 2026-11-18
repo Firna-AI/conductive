@@ -5,7 +5,9 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from 'react'
-import type { FileEntry } from '../../shared/files'
+import type { FileEntry } from '../../shared/generated/FileEntry'
+import type { LineRange } from '../../shared/line-target'
+import type { ChatPictures } from '../../files/page/picture-reads'
 import { mentionable } from './mention-rows'
 
 /**
@@ -33,12 +35,26 @@ interface MentionFiles {
  */
 export interface ChatMentions {
   files: MentionFiles
-  /** Opens a file, as a press on the file in All files does. */
-  openFile: (path: string) => void
+  /** Reads pictures only while the sandbox runs. Never starts or resumes it. */
+  pictures?: ChatPictures
+  /**
+   * Opens a file, as a press on the file in All files does. With `lines`,
+   * the file opens as text with the lines in view and marked.
+   */
+  openFile: (path: string, lines?: LineRange) => void
   /** Shows All files with the folder open. */
   showFolder: (path: string) => void
   /** The address of the page that a chip opens, for a link. */
-  href: (entry: FileEntry) => string
+  href: (entry: FileEntry, lines?: LineRange) => string
+}
+
+/**
+ * A file or a folder of the tree, as a mention names it: its path inside
+ * the repository, without the final `/` of a folder.
+ */
+export interface MentionTarget {
+  path: string
+  folder: boolean
 }
 
 /**
@@ -77,16 +93,33 @@ function treeOf(snapshot: MentionFilesSnapshot): MentionTree {
 
 const MentionsContext = createContext<ChatMentions | null>(null)
 
-/** Gives the composer and the messages inside it the files of the workspace. */
+const FolderContext = createContext<string | null>(null)
+
+/**
+ * Gives the composer and the messages inside it the files of the workspace,
+ * and `root`, the folder of its repository in the cloud computer, when the
+ * chat knows it.
+ */
 export function MentionsProvider(props: {
   value: ChatMentions | null
+  root?: string | null
   children: ReactNode
 }) {
   return (
     <MentionsContext.Provider value={props.value}>
-      {props.children}
+      <FolderContext.Provider value={props.root ?? null}>
+        {props.children}
+      </FolderContext.Provider>
     </MentionsContext.Provider>
   )
+}
+
+/**
+ * The folder of the repository in the cloud computer, or null. An answer
+ * reads a path under it as a file of the tree.
+ */
+export function useRepositoryFolder(): string | null {
+  return useContext(FolderContext)
 }
 
 /** The mentions of the chat, or null where no file can be mentioned. */
@@ -99,18 +132,28 @@ function followNothing(): () => void {
 }
 
 /**
+ * The tree of `files` as the list of `@` finds it, or null without files.
+ * The value changes only when the tree changes, as `treeOf` says. A part
+ * outside the chat reads it too, such as the row menu of the Files panel.
+ */
+export function useFilesMentionTree(
+  files: MentionFiles | null,
+): MentionTree | null {
+  const read = useCallback(
+    () => (files ? treeOf(files.getSnapshot()) : null),
+    [files],
+  )
+  return useSyncExternalStore(files?.subscribe ?? followNothing, read, read)
+}
+
+/**
  * The tree that the chat follows now, or null without mentions. A reader
  * that `follows` nothing, such as an answer, gets null and follows no
  * change.
  */
 export function useMentionTree(follows = true): MentionTree | null {
   const mentions = useChatMentions()
-  const files = follows ? (mentions?.files ?? null) : null
-  const read = useCallback(
-    () => (files ? treeOf(files.getSnapshot()) : null),
-    [files],
-  )
-  return useSyncExternalStore(files?.subscribe ?? followNothing, read, read)
+  return useFilesMentionTree(follows ? (mentions?.files ?? null) : null)
 }
 
 /**

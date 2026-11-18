@@ -4,27 +4,21 @@ This page belongs to the [agent runner](README.md). It gives the facts of
 this implementation about agent logins and turn tokens.
 [How the agents reach the gateway](../docs/protocol/model-gateway.md#how-the-agents-reach-the-gateway)
 states the requirements.
-[A sandbox with a version pin of 2 or later](../docs/protocol/isolation.md#a-sandbox-with-a-version-pin-of-2-or-later)
+[Turn tokens in a sandbox](../docs/protocol/isolation.md#turn-tokens-in-a-sandbox)
 states the accepted risks.
 
 An agent login is the Claude subscription token, ChatGPT sign-in, or
-API key of the member who started a session. This runner speaks
-runner protocol version 2, so no runner command gives it an agent login.
-Each `turn` command carries a turn token in place of the login. The
-[model gateway](../worker/model-gateway/README.md) of the Worker adds the
-login to each model request. Only the [measure tool](#the-measure-tool)
-uses a real login, which a developer gives it.
-
-An older org image can hold a runner of protocol version 1. Such a runner
-gets a supported agent login itself with each turn, as
-[A sandbox with a version pin of 1](../docs/protocol/isolation.md#a-sandbox-with-a-version-pin-of-1)
-says.
+API key of the member who started a session. No runner command gives the
+runner an agent login. Each `turn` command carries a turn token in place
+of the login. The [model gateway](../worker/model-gateway/README.md) of
+the Worker adds the login to each model request. Only the
+[measure tool](#the-measure-tool) uses a real login, which a developer
+gives it.
 
 The runner's `hello.loginKinds` lists Claude tokens, Claude API keys,
-Codex API keys, and Codex ChatGPT sign-ins. An older `hello` without this
-list supports the first three kinds only. Version 1 cannot add ChatGPT
-support through that list. The Worker checks each turn and later message
-before it builds a command. An unsupported login ends the turn with a
+Codex API keys, and Codex ChatGPT sign-ins. A `hello` without this list
+supports the first three kinds only. The Worker checks each turn and later
+message before it builds a command. An unsupported login ends the turn with a
 cause. Reconnect cannot send that turn again.
 
 ## The turn token
@@ -34,9 +28,9 @@ cause. Reconnect cannot send that turn again.
   command carries no credential. A Codex `token` credential also holds
   public account identity: the account ID, email, plan type, and user ID.
 - The runner closes its connection with code 1002 when a command lacks a
-  field that it needs, or has an invalid one. An example is a version 1
-  `turn` command, which has a `login` and no `credential`. A `welcome` of
-  another protocol version also closes the connection.
+  field that it needs, or has an invalid one. An example is a `turn`
+  command with no `credential`. A `welcome` of another protocol version
+  also closes the connection.
 - The parser ignores other fields. It keeps only the fields that it reads.
 - The runner starts each turn with the token of its `turn` command. That
   token stays for the whole turn, also when a model change starts a new
@@ -60,11 +54,26 @@ cause. Reconnect cannot send that turn again.
   [Model requests](../worker/model-gateway/README.md#model-requests) says
   how the gateway reads that prefix.
 - The output filter keeps the token of each `turn` command, so that it can
-  replace that token with `[redacted]` in displayed text. It keeps the
-  tokens in memory until the runner process ends.
+  replace that token, and each run of at least 21 consecutive characters
+  of it, with `[redacted]` in displayed text. It keeps the tokens in memory
+  until the runner process ends.
 - The state file holds no turn token. No token goes in an agent's arguments.
   Claude reads its token from a credentials file, as [Claude](#claude) says.
   A Codex ChatGPT turn reads its token from a temporary login file.
+
+## The helper boundary
+
+The Rust helper driver sends start options through a private stdin pipe.
+The helper keeps no state file and logs no request bytes.
+Agent output returns through stdout as typed JSON lines.
+Warnings pass through a token filter before local logging.
+The runner's existing output filter masks event text before storage or sending.
+
+Closing the helper cancels pending setup and closes the agent.
+The helper removes temporary credentials after agent exit.
+The runner waits for both agent cleanup and helper exit.
+A failed helper process fails pending requests and the active turn.
+The next runner start removes stale credential files.
 
 ## The agent environment
 
@@ -81,7 +90,7 @@ cause. Reconnect cannot send that turn again.
   [Workspace tools](agent-tools.md#workspace-tools) says. That context holds
   no agent login and no turn token.
 - The Claude adapter adds the two profile variables that [Claude](#claude)
-  names. For a subscription turn, it also adds the variable that
+  names. For a subscription or own endpoint turn, it also adds the variable that
   [The prompt cache of Claude](#the-prompt-cache-of-claude) names.
 - A Codex ChatGPT turn sets `CODEX_HOME` to its private session home.
   That value holds no token. The real ChatGPT sign-in stays in the Worker.
@@ -138,10 +147,10 @@ cause. Reconnect cannot send that turn again.
   then find the profile pair while the turn runs.
 - The Claude route of the gateway refuses the requests of such a program.
   They lack the markers of the `claude` program, as
-  [Requests and answers](../docs/protocol/model-gateway.md#requests-and-answers)
+  [Requests and answers](../docs/protocol/model-gateway-requests.md#requests-and-answers)
   says.
 - This route belongs to the `claude` program 2.1.318 that Claude Agent SDK
-  0.3.318 installs. `package.json` pins that SDK version. Check the route
+  0.3.318 installs. `sdk-helper/package.json` pins that SDK version. Check the route
   again at each update of the SDK.
 
 ## The prompt cache of Claude
@@ -153,13 +162,17 @@ cause. Reconnect cannot send that turn again.
 - So for a turn whose credential has the login kind `token`, the Claude
   adapter adds `CLAUDE_CODE_PROMPT_CACHE_TTL=1h` to the agent
   environment. That login kind is a Claude subscription token.
+- The adapter also adds that variable when the gateway credential has
+  `promptCacheTtl: '1h'`. The Worker adds this field only for a Claude own
+  endpoint turn, which keeps the login kind `api-key`.
+  The parser ignores unknown values and keeps the turn valid.
 - With that variable, the program sends `"ttl": "1h"` and the
   `extended-cache-ttl-2025-04-11` value of `anthropic-beta` on its main
   requests.
 - The variable holds also during paid extra usage, when Anthropic bills
   the use beyond the limits of the subscription. In native mode, the
   program asks for about 5 minutes then.
-- A turn with the login kind `api-key` gets no such variable, so it keeps
+- An API-key turn without that field gets no such variable, so it keeps
   the default of about 5 minutes. The [measure tool](#the-measure-tool)
   gets none either, because in native mode the program picks its own
   cache time.
@@ -181,7 +194,7 @@ Both modes use the gateway.
 
 ## The measure tool
 
-The [measure tool](scripts/README.md) sends one prompt with a login that a
+The [measure tool](sdk-helper/scripts/README.md) sends one prompt with a login that a
 developer gives it. It uses the native credential mode of the adapters,
 with the login in place of a turn token. The runner never uses this mode,
 because no runner command carries a login.
@@ -217,7 +230,7 @@ because no runner command carries a login.
   Claude or Codex ChatGPT turn. Each file holds only a turn token.
 - A copy of a turn token works only as
   [The turn token](../docs/protocol/model-gateway.md#the-turn-token) says.
-  [A sandbox with a version pin of 2 or later](../docs/protocol/isolation.md#a-sandbox-with-a-version-pin-of-2-or-later)
+  [Turn tokens in a sandbox](../docs/protocol/isolation.md#turn-tokens-in-a-sandbox)
   states these accepted risks.
 - The descriptor pipe of the measure tool stops only the automatic copy of
   the developer login into new processes. A process of the same user can
@@ -225,70 +238,32 @@ because no runner command carries a login.
 
 ## Tests
 
-- `src/commands.test.ts` checks that the runner accepts only a version 2
-  `welcome`. It also checks the credential of a `turn` command, and a
-  `message` command without a credential.
-- The same test checks the refusal of a credential of another agent or of
-  an unknown kind, and of a `turn` command that has only a `login`.
-- `src/providers/claude-profile.test.ts` checks the paths, the modes, and
-  the content of the profile pair. It checks one name for each session,
-  and the removal of the file of one session.
-- The same test checks the removal of old credentials files before the
-  first connection. It also checks that a reconnect keeps a live file.
-- `src/providers/claude-login.test.ts` gives the Claude adapter a fake SDK
-  query and a fake child process. It checks the two profile variables. It
-  also checks that the start of the program has no flag settings, gateway
-  address, token, project key, or descriptor.
-- The same test checks the cache variable for a subscription token, and
-  no cache variable for an API key. A copy of the variable that the
-  runner inherited changes neither result.
-- The same test checks that the credentials file goes after a close, a
-  failed start, and an abort. It also checks that a cancel during the
-  write of the profile pair removes the token before the close ends.
-- `src/providers/claude-native.test.ts` runs the pinned Claude SDK with a
-  fake child process, for both login kinds of the native mode. It checks
-  the descriptor variable and the bytes on the pipe. It also checks that
-  the program gets no cache variable.
-- With a fake SDK query, the same test checks the close of the pipe and the
-  program after a pipe error, a failed SDK setup, and an exit of the child.
-- `src/providers/codex-login.test.ts` checks the gateway address in the
-  model provider and the turn token in the login request. It checks that
-  this request comes before `thread/start` and `thread/resume`, and that a
-  refused login opens no thread.
-- These tests use fake tokens, fake logins, and no real agent program. So
-  they do not show that a real agent program reaches the gateway, or that
-  a real login works through it. They also do not show the cache time that
-  the real program asks for.
+The [Rust command tests](../crates/cnd-runner/src/json/_tests_/command_tests.rs)
+check typed credentials, public ChatGPT claims, author tolerance, and cache values.
+The [helper process tests](../crates/cnd-runner/tests/engine/helper_process_tests.rs)
+check correlated pipe requests and process exit.
+The [engine tests](../crates/cnd-runner/tests/engine/)
+check credential continuity and helper cleanup before completion.
+The [filter tests](../crates/cnd-runner/src/filter/_tests_/)
+check split tokens before event storage.
+
+Helper tests stay under `sdk-helper/src/providers/`.
+They check Claude profile files, cache settings, native descriptor pipes,
+Codex private login, temporary ChatGPT files, and cleanup after cancellation.
+These fake SDK checks prove no real login or model request.
 
 ## Key code
 
-- `src/commands.ts`: `parseWorkspaceMessage`, which reads the version 2
-  commands and the credential of each `turn` command.
-- `src/engine-session.ts`: `startProvider`, which gives each adapter the
-  gateway address of its agent and the turn token.
-- `src/providers/types.ts`: `ProviderOptions`, with the `gateway` and
-  `native` credential modes.
-- `src/providers/environment.ts`: `providerEnvironment`, the environment of
-  each agent program.
-- `src/providers/claude-profile.ts`: `writeClaudeProfile`, the profile pair
-  of a session, and `clearClaudeCredentials`, the removal of old
-  credentials files.
-- `src/providers/claude.ts`: the Claude adapter. It gives the SDK the agent
-  environment with the profile variables and the cache variable, and the
-  custom spawn.
-- `src/providers/claude-process.ts`: `spawnClaudeProcess`, the child process
-  of the `claude` program, with the descriptor pipe of the native mode.
-- `src/providers/lifetime.ts`: `ProviderLifetime`, which runs the removal
-  of the credentials file after the children of the agent exit.
-- `src/providers/codex.ts`: the Codex adapter, its model provider settings,
-  and the login request.
-- `src/providers/codex-settings.ts`: API key and ChatGPT settings,
-  the gateway addresses, and the workspace address check.
-- `src/providers/codex-credentials.ts`: the temporary ChatGPT login file,
-  private session homes, shared conversation storage, and startup removal.
-- `src/runner.ts`: `Runner`, which gives each turn token to the output
-  filter, and removes stale Claude and Codex credentials before connecting.
-- `src/measure.ts`: the measure tool, with the native mode and the
-  provider addresses.
-- [`output-sanitizer.ts`](../src/shared/output-sanitizer.ts):
-  `OutputSanitizer`, which keeps each turn token for the output filter.
+- [commands.rs](../crates/cnd-runner/src/json/commands.rs) validates commands and tolerant credential metadata.
+- [provider.rs](../crates/cnd-runner/src/engine/provider.rs) pins the original turn credential and author in helper options.
+- [helper](../crates/cnd-runner/src/helper/) starts private pipes and clears stale credentials before the first connection.
+- [filter](../crates/cnd-runner/src/filter/) keeps workspace and historical turn tokens in memory.
+- [environment.ts](sdk-helper/src/providers/environment.ts) builds each agent environment.
+- [claude-profile.ts](sdk-helper/src/providers/claude-profile.ts) writes private Claude credentials and removes stale files.
+- [claude.ts](sdk-helper/src/providers/claude.ts) and
+  [claude-process.ts](sdk-helper/src/providers/claude-process.ts) start the pinned agent through the SDK.
+- [codex.ts](sdk-helper/src/providers/codex.ts),
+  [codex-settings.ts](sdk-helper/src/providers/codex-settings.ts), and
+  [codex-credentials.ts](sdk-helper/src/providers/codex-credentials.ts) own Codex login and temporary storage.
+- [lifetime.ts](sdk-helper/src/providers/lifetime.ts) removes credentials after child exit.
+- [measure.ts](sdk-helper/src/measure.ts) uses developer logins for measurements.

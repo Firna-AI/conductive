@@ -49,10 +49,11 @@ at `app/workspace-links/sent-by`.
 - Each reply gives the session link of each session that it names, as the
   workspace replies give workspace links. Reason: an agent can then point
   to a session that it started.
-- The reads also reach an archived workspace and a closed session, as a
-  copy of a transcript does. Each write refuses an archived workspace with
-  HTTP 409 and the error code `workspace_archived`. Reason: the chat of an
-  archived workspace is read-only.
+- The reads also reach an archived workspace, also a
+  [removed one](workspace-life.md#removed-workspaces), and a closed
+  session, as a copy of a transcript does. Each write refuses an archived
+  workspace with HTTP 409 and the error code `workspace_archived`.
+  Reason: the chat of an archived workspace is read-only.
 - `create_session` and `send_message` take an optional request ID. A
   repeat of such a write with the same request ID gives the result of the
   first write, as a repeated message of the app does.
@@ -87,7 +88,7 @@ at `app/workspace-links/sent-by`.
   requests of that turn belong to that member.
 - A tool message that joins a running turn keeps the stored sender of that
   turn. So it changes neither the GitHub token nor the Mac of that turn, as
-  [Access](agent-instructions.md#access) says for each message that joins
+  [Access](message-lines.md#access) says for each message that joins
   a turn.
 - An approval of each tool message by a member was rejected, because the
   delegated work would then stop while no member answers.
@@ -99,7 +100,7 @@ at `app/workspace-links/sent-by`.
 - Each entry gives these facts of its session:
   - the session ID and the session link
   - the title
-  - the agent, the model, and the effort
+  - the agent, the model, the effort, and fast mode
   - the starter
   - the state
   - whether the session is closed
@@ -142,15 +143,20 @@ at `app/workspace-links/sent-by`.
 
 ## Start a session
 
-- `create_session` takes the workspace, an optional model with its effort,
-  an optional title, an optional first message, and an optional request
-  ID.
+- `create_session` takes the workspace, an optional model with its effort
+  and its [fast mode](fast-mode.md), an optional title, an optional first
+  message, and an optional request ID.
 - The model chooses the agent of the session, as in a create call.
 - Without a model or an effort, the call uses the saved default of the
   sender. Without a saved default, it uses the default choice of the app.
-- Reason: the new session runs on the agent login of the sender, and "+"
-  also uses the own choice of the member.
-- The sender is the starter of the new session (decision 105).
+- Reason: the sender is the starter of the new session, and "+" also uses
+  the own choice of the member.
+- Fast mode is off unless the call turns it on, also with the saved
+  default. Reason: an agent then spends a login at the higher price of fast
+  mode only when its call asks for it.
+- The sender is the starter of the new session (decision 105). So the new
+  session takes the default login of the sender, as
+  [The default login](org-logins.md#the-default-login) says.
 - The title follows the name rule of a create call, as
   [Names from the workspace tools](tool-names.md) says. A title that is
   blank after the rule counts as no title.
@@ -164,16 +170,18 @@ at `app/workspace-links/sent-by`.
 ## Send a message
 
 - `send_message` takes the workspace, the session, the text, an optional
-  model with its effort, and an optional request ID.
+  model with its effort, an optional fast mode, and an optional request ID.
 - Without a model, the message keeps the current model and effort of the
   session. A model of the other agent gets the refusal of the session
   route, because a session keeps its agent.
+- Without fast mode in the call, the message keeps the fast mode of the
+  session. A model without fast mode turns it off, as in the model menu.
 - A tool message carries no files, so its text must hold more than white
   space. Reason: a file needs an upload from a device.
 - A tool message follows the rules of
   [Messages](messages-and-attachments.md#messages), as a message of its
   sender does. So it joins a running turn. It opens a new session when the
-  sender cannot use the login of the starter.
+  sender cannot use the login of the session.
 - A closed session gets HTTP 409 with the error code `session_closed`.
 - The reply gives the message, its turn, and the session that took it,
   with the link of that session.
@@ -202,10 +210,12 @@ at `app/workspace-links/sent-by`.
   Only the session link shows as a session chip, as
   [Session chips](workspace-links.md#session-chips) says.
 - The title request of a new workspace reads only the text before these
-  lines, as [Messages](messages-and-attachments.md#messages) says.
+  lines, as
+  [The title of a new workspace](workspace-and-session-names.md#the-title-of-a-new-workspace)
+  says.
 - Reason: members and agents see which session sent the message. The run
-  text of a routine also puts its facts after a `---` line, as
-  [The run text](routine-runs.md#the-run-text) says.
+  text of an automation also puts its facts after a `---` line, as
+  [The run text](automation-runs.md#the-run-text) says.
 - Risk: a member or an agent can type the same lines. So the lines inform
   the reader only, and no access depends on them.
 - No mark, and a mark in the sender line only, were rejected. A member
@@ -226,8 +236,8 @@ at `app/workspace-links/sent-by`.
 - A limit on the length of a chain of tool messages was rejected. A limit
   on the tool messages of a workspace in an hour was rejected too. Each
   adds a stored count and a refusal.
-- Risk: two agents that answer each other spend the agent logins of their
-  starters until a member stops one. They also spend the starts that the
+- Risk: two agents that answer each other spend the logins of their
+  sessions until a member stops one. They also spend the starts that the
   orgs of their provider account share.
 
 ## Tool descriptions

@@ -1,6 +1,7 @@
-import type { Session } from '../../src/shared/sessions'
+import type { Session } from '../../src/shared/generated/Session'
 
 type OptionalSessionFields =
+  | 'login'
   | 'startedBy'
   | 'sourceSessionId'
   | 'loginAvailable'
@@ -10,9 +11,18 @@ type OptionalSessionFields =
 export type StoredSession = Omit<Session, OptionalSessionFields> &
   Partial<Pick<Session, OptionalSessionFields>>
 
-export function normalizeSession(session: StoredSession): Session {
-  return {
+export function normalizeSession(
+  session: StoredSession,
+  hasMessages = Boolean(session.activeTurnId || session.retryMessageId),
+): Session {
+  const normalized: Session = {
     ...session,
+    ...(session.login
+      ? { login: session.login }
+      : hasMessages && session.startedBy
+        ? { login: { type: 'personal' as const, userId: session.startedBy.id } }
+        : {}),
+    choice: { ...session.choice, fast: session.choice.fast ?? false },
     activeTurnStartedAt: session.activeTurnId
       ? (session.activeTurnStartedAt ?? null)
       : null,
@@ -26,4 +36,6 @@ export function normalizeSession(session: StoredSession): Session {
       : false,
     loginShared: session.loginShared ?? true,
   }
+  if (normalized.login) delete normalized.defaultLogin
+  return normalized
 }

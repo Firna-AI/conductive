@@ -1,9 +1,10 @@
+import type { ListeningPort } from '../shared/generated/ListeningPort'
 import rows from '../../docs/mockups/src/components/tools/PortForm.module.css'
 import {
   portFormCopy,
   serverDescription,
 } from '../../docs/mockups/src/components/tools/previewCopy'
-import type { ListeningPort } from '../shared/ports'
+import { classes } from '../../docs/mockups/src/components/common/classes'
 import styles from './PreviewOpenForm.module.css'
 
 /**
@@ -11,12 +12,15 @@ import styles from './PreviewOpenForm.module.css'
  * its program name, and its folder, when the report has them. A folder that
  * does not fit keeps its end, after "…". The tooltip and the spoken name
  * give the whole of each. A click opens the preview of the port. The
- * buttons wait while a preview opens, as Open preview does.
+ * buttons wait while a preview opens, as Open preview does. `current` is
+ * the port whose Preview tab shows on desktop: its row shows as the current
+ * one.
  */
 export function ServerRows(props: {
   servers: readonly ListeningPort[]
   disabled: boolean
   onOpen: (port: number) => void
+  current?: number | null
 }) {
   return (
     <ul aria-label={portFormCopy.listLabel} className={rows.rows}>
@@ -25,8 +29,13 @@ export function ServerRows(props: {
         return (
           <li key={server.port}>
             <button
+              aria-current={server.port === props.current ? 'page' : undefined}
               aria-label={description}
-              className={`${rows.row} ${styles.row}`}
+              className={classes(
+                rows.row,
+                styles.row,
+                server.port === props.current && rows.current,
+              )}
               disabled={props.disabled}
               onClick={() => props.onOpen(server.port)}
               title={description}

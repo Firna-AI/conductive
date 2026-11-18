@@ -1,9 +1,11 @@
+import { modelChoice } from '../app-api/models'
 import type { AppEnv } from '../env'
 import { commitAuthor } from '../../src/shared/commit-author'
 import { readUser } from '../data/users'
 import { runnerTokenAllowed } from '../data/workspace-token-access'
 import { randomToken } from '../security/crypto'
 import { readConnectionAccess } from '../security/connection-access'
+import { resolveDefaultLogin } from './default-login'
 import { loginResolver } from './login-access'
 import {
   readLoginMetadata,
@@ -15,10 +17,12 @@ import { readRunnerProtocolVersion } from './runner-version-data'
 import type { ChatDependencies } from './types'
 import { resolveMessageAttachments } from './attachment-claims'
 import { prepareMessageAttachments } from './attachment-copy'
+import { finishAttachmentCopies } from './attachment-transfer-cleanup'
 import { attachmentWorkspace } from './attachment-claim-data'
 import { resolveAttachmentPaths } from './attachment-paths'
 import { filterRunnerOutput } from './runner-output'
-import { readRunnerBranches } from './branch-data'
+import { refreshEndpointModels } from '../model-gateway/endpoint-model-refresh'
+import { readRunnerBranches, readRunnerRepository } from './branch-data'
 
 /**
  * The default seams of `WorkspaceChat`. A feature owner replaces one with an
@@ -31,7 +35,21 @@ export function chatDependencies(
   overrides: Partial<ChatDependencies> = {},
 ): ChatDependencies {
   return {
+    normalizeChoice: (choice) => modelChoice(env, choice),
+    refreshEndpointModels: async (owner, agent) => {
+      await refreshEndpointModels(
+        env,
+        owner,
+        agent,
+        {
+          fetch: (request) => fetch(request),
+          now: overrides.now ?? Date.now,
+        },
+        { background: true },
+      )
+    },
     readBranches: (id) => readRunnerBranches(env.DB, id),
+    readRepository: (id) => readRunnerRepository(env.DB, id),
     readCommitAuthor: async (userId) => {
       const user = await readUser(env.DB, userId)
       return user ? commitAuthor(user) : null
@@ -49,11 +67,23 @@ export function chatDependencies(
       readConnectionAccess(env.DB, tabs, now),
     randomId: randomToken,
     randomConnectionId: randomToken,
+    refusedEndpointDomains: () =>
+      env.PREVIEW_DOMAIN ? [env.PREVIEW_DOMAIN] : [],
     readLoginMetadata: (targets) => {
       const id = workspaceId()
       return id === null
         ? Promise.resolve(new Map<string, SessionLoginMetadata>())
-        : readLoginMetadata(env.DB, id, targets)
+        : readLoginMetadata(env, id, targets)
+    },
+    readOrgName: (orgId) =>
+      env.DB.prepare('SELECT name FROM orgs WHERE id = ?')
+        .bind(orgId)
+        .first<string>('name'),
+    resolveDefaultLogin: (userId, agent, excluded) => {
+      const id = workspaceId()
+      return id === null
+        ? Promise.resolve(null)
+        : resolveDefaultLogin(env, { workspaceId: id }, userId, agent, excluded)
     },
     resolveAttachments: (userId, id, ids, messageId, usedIds) =>
       resolveMessageAttachments(
@@ -74,6 +104,8 @@ export function chatDependencies(
         attachments,
         sandboxId,
       ),
+    completeAttachments: (id, attachments, sandboxId) =>
+      finishAttachmentCopies(env, id, attachments, sandboxId),
     attachmentSandboxId: async (id, userId) =>
       (await attachmentWorkspace(env.DB, id, userId))?.sandboxId ?? null,
     resolveAttachmentPaths: (id, userId, attachments) =>
@@ -85,6 +117,7 @@ export function chatDependencies(
     runnerReady: async () => undefined,
     runnerHello: async () => undefined,
     runnerDisconnected: async () => undefined,
+    runnerUnsupported: async () => undefined,
     turnDispatching: async () => true,
     turnDispatchFailed: async () => undefined,
     turnEnded: async () => undefined,

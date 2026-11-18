@@ -1,11 +1,12 @@
+import type { RunnerReportKind } from '../../../shared/generated/RunnerReportKind'
 import { bannerStates } from '../../../../docs/mockups/src/fixtures/pullRequests'
 import type { FileListKind } from '../../../files/navigation'
 import type { BannerState } from '../../../shared/github'
-import type { RunnerReportKind } from '../../../shared/runner'
 import {
   readScenario,
   type BarScenario,
 } from '../../../test-support/fake-bar-dev'
+import type { FakeRepositoryEnd } from '../../../test-support/fake-repository-change'
 import type { ColorScheme } from '../../ui/ThemeRoot'
 import type { Viewport } from '../../ui/viewport'
 import type { PhoneView } from '../WorkspaceColumns'
@@ -28,6 +29,8 @@ import { firstStartStates, type FirstStartState } from './dev-first-start'
  * - `bar=<state>`: the GitHub state of the bar, with the app's own Files
  *   part. `turn=running`, `access`, `method`, `merge`, `work`, and
  *   `continue` choose how the actions of the bar end.
+ * - `repository=changed|question|clash|outdated`: the cloud computer holds
+ *   each chosen repository, and a repository change ends in that way.
  */
 export interface DevOptions {
   repair: readonly RunnerReportKind[]
@@ -39,6 +42,7 @@ export interface DevOptions {
   start: FirstStartState | null
   member: boolean
   bar: DevBar | null
+  repository: FakeRepositoryEnd | null
 }
 
 /** The GitHub state of the bar, a turn that runs, and the answers of its actions. */
@@ -87,6 +91,13 @@ export function readDevOptions(search: string): DevOptions {
     start: pick<FirstStartState>(query, 'start', firstStartStates) ?? null,
     member: query.get('viewer') === 'member',
     bar: readBar(query),
+    repository:
+      pick<FakeRepositoryEnd>(query, 'repository', [
+        'changed',
+        'question',
+        'clash',
+        'outdated',
+      ]) ?? null,
   }
 }
 

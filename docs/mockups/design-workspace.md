@@ -2,9 +2,10 @@
 
 This page belongs to [the design](design.md), which gives the style, the
 layouts, the design tokens, and the shared parts. This page gives the
-messages that wait for the sandbox and the tab row of the centre column.
-It also gives the number of a workspace with Copy link, and the bars of
-the cloud computer.
+messages that wait for the sandbox and the tab row of the centre column,
+with its temporary tab, and the menu of a row of the Files panel. It also
+gives the number of a workspace with Copy link, and the bars of the cloud
+computer.
 
 - While a sandbox starts, also for the first time, Send queues each
   message in the workspace, as `app/new-workspace/waiting` shows. A queued
@@ -22,13 +23,18 @@ the cloud computer.
   stands between two tabs and takes no space. When the tabs do not fit at
   their minimum width, the row scrolls sideways with no scrollbar, keeps the
   shown tab in view, and fades each end that clips tabs. A right click on a
-  tab opens its menu at the pointer: Rename session, a line, Copy concise
-  transcript and Copy full transcript, a line, then Move left and Move
-  right, from decisions 188 and 215. A file or diff tab has only the moves.
-  In a read-only workspace, the menu of a session tab holds only the two
-  copy items, and a file or diff tab opens no menu. A copy keeps the shown
-  tab, and a toast gives its result, as `app/transcripts` shows. The menu
-  is the one way to rename a session, so no tab shows a rename button.
+  tab opens its menu at the pointer: Rename session, a line, Copy link,
+  Copy concise transcript, and Copy full transcript, a line, Move left and
+  Move right, a line, then Close other tabs and Close tabs to the right,
+  from decisions 188 and 215. Copy link copies the link of the session. A
+  kept file or diff tab has Copy path, a line, the moves, a line, and the
+  two closes, from decision 3 B of the file row menu change. Copy path
+  copies the path of the file, as in the menu of its row. A tab whose label can hide a secret value
+  leaves it out. In a read-only workspace, the menu of a session tab holds
+  only the three copy items, and the menu of a file or diff tab only Copy
+  path. A copy keeps the shown tab, and a toast gives its result, as
+  `app/transcripts` shows. The menu is the one way to rename a session, so
+  no tab shows a rename button.
   Rename session opens a field in place of the title of that tab, also when
   the tab does not show. The field marks that tab, which takes no fill, so
   only the shown tab is filled. On a phone, a long press that ends without a
@@ -36,6 +42,54 @@ the cloud computer.
   and its tabs. `TabScroll.module.css` styles a full row, `TabDrag.module.css`
   a drag, and `TabRename.module.css` the rename field. The app shares these
   modules.
+- The temporary tab, from decisions 284 to 287, is the one file or diff tab
+  that the next press on a file or a diff replaces, as
+  `app/files/temporary` shows. A press on a row of All files or Changes, or
+  on a file chip, opens the file or the diff in the temporary tab. When the
+  row has no temporary tab, it opens at the end of the row. Otherwise the
+  press replaces its file in the same place, also when a later tab stands
+  after it. A press on a file that has a tab shows that tab. The title of
+  the temporary tab shows in italics, also on the lifted copy of a drag,
+  and nothing else on the tab changes. A screen reader hears its name, then
+  ", temporary". The tab menu and the move messages keep the plain name. A
+  double-click on the tab or on the row of its file keeps it as a normal
+  tab, with an upright title, in its place. Its tab menu leads with Keep
+  open, which keeps it too, then a line, Copy path, a line, and the moves.
+  Keep open has the icon of a bookmark with a check, because a pin names
+  the pinned tabs of a browser. A drag, Move left, or Move right that
+  changes its place keeps it. A drag that Escape cancels, or that ends in
+  the same place, keeps it temporary. A phone row shows no file tabs, so a
+  phone draws no temporary tab. `.temporary` of `WorkspaceTabs.module.css`
+  styles the title.
+- `FileTree` and `ChangeList` in `src/components/files/` draw the menu of
+  a row of All files and Changes, from the file row menu change, as
+  `app/files/menu` shows. A right click on a file or a folder row opens it
+  at the pointer, through `PointMenu` in `src/components/common/`, and
+  Shift+F10 and the Menu key open it below a focused row. A long press on
+  a phone opens it as a sheet with the name of the row as its title. The
+  menu holds Add to chat, a line, then Copy path, and no row has a button
+  for it. Copy path copies the path from the root of the repository, with
+  no final slash, and a toast gives its result, in the words of Copy link.
+  Add to chat puts the chip of the file or the folder in the message field
+  of the session tab that the member saw last, and shows that tab. On
+  desktop the field takes the focus, and on a phone no keyboard opens. Add
+  to chat shows only for a path that the list of `@` offers, while the
+  message field shows. So a deleted file of Changes, and a bar of the
+  cloud computer in place of the field, leave it out. A row whose label
+  hides a secret value opens no menu. A read-only workspace shows no rows.
+  The row of an open menu keeps the fill of a hover, as a tab with an open
+  menu does, also under the sheet of a phone. `FileRowMenu.tsx` beside the
+  lists gives the items and the sheet, and `rowMenuCopy.ts` gives the
+  words of the items and of the toast. Add to chat has the icon of the `@`
+  of a mention, because the speech bubble with a plus names New session.
+- `TerminalTabs` in `src/components/tools/` draws the terminals of a
+  workspace as a row of tabs above the shown terminal, with + at its end,
+  from decisions 1 to 3 of the terminal tabs change, as `app/tools` shows. Its tabs are
+  the tabs of the centre column. The titles differ only in their number, so
+  each tab keeps its whole title, and a row that does not fit scrolls. The
+  last terminal has no close button. At the limit of 10 the + is off, and a
+  line under the row says how to open another. `TerminalTool` beside it
+  adds the shown terminal and the Disconnected bar.
 - Each workspace has a number in its org, and `workspaceLabel` in
   `src/components/workspaces/label.ts` shows it as `W-395`. The number
   shows in the header, in chips, and in a row of the command palette
@@ -61,10 +115,13 @@ the cloud computer.
   cloud computer: stopped, error, archived, and refused. A refused start
   shows "The sandbox can't start" with the words of its cause and no
   action. The notice takes any refusal reason. An archived workspace
-  offers Restore until its last day, and the bar gives that day. After
-  it, the bar gives the day when Restore ended while a failed delete of
-  the cloud computer tries again, and it says that the cloud computer is
-  deleted only after the delete. `sandboxNoticeState.ts` beside it owns
+  offers Restore until its last day, and the bar gives that day and says
+  that the workspace leaves the list then. A bar without Restore gives
+  that day too. After it, the workspace is removed: the bar says "Removed
+  on" and the day, that the workspace left the list, and that the chat is
+  read-only. It says that the cloud computer is being deleted while a
+  failed delete tries again, and that it is deleted only after the
+  delete. Its panels say Removed. `sandboxNoticeState.ts` beside it owns
   the types of the bar and the panels, which the app imports too.
   - For a suspended workspace owner, the history, the tabs, the header, and
     the owner picker stay, as `app/shell/refused` and its `reassign`

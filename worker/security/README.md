@@ -35,6 +35,8 @@ The [Worker entry](../http/README.md#request-body-limit) owns the byte limit and
 A body error prevents route dispatch.
 
 For a [raw upload route](../http/README.md#raw-upload-routes), the gate reads no JSON.
+Only the two part PUT routes get this raw-body exception.
+The multipart start and complete POSTs remain JSON writes.
 After the session, org access, and org write checks, it calls `rawUploadLength(request, maxBytes)` from the route registry.
 That check needs the content type `application/octet-stream` and a valid `Content-Length` header.
 The gate puts the declared length in `RequestContext.rawUploadBytes`, and leaves the body unread for the route.
@@ -48,7 +50,8 @@ One D1 query checks a whole batch of identities.
 It returns one grant for each identity that still has access.
 The workspace Durable Object calls it for chat tabs.
 The Worker calls it for terminal sockets.
-The preview proxy calls it for each preview request and each batch of preview data.
+The preview proxy calls it for the checks of each preview viewer. One read covers that
+viewer's requests and data batches for 1 second, as the [preview backend](../previews/README.md) says.
 
 Each identity holds a session ID, a user ID, an org ID, and a workspace ID.
 Every identity passes only when all of these are true:

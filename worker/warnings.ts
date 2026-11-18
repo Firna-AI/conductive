@@ -1,5 +1,15 @@
-import { SIMPLE_WARNINGS, type WorkerWarning } from './warning-types'
-import type { ErrorSummary } from './warning-values'
+import { D1_ERROR_REASONS } from './d1-errors'
+import {
+  RUNNER_MESSAGE_STAGES,
+  SIMPLE_WARNINGS,
+  type RunnerWarningFields,
+  type WorkerWarning,
+} from './warning-types'
+import {
+  type ErrorSummary,
+  warningProtocolVersion,
+  warningTurnEndState,
+} from './warning-values'
 
 export type WarningRecord = ReturnType<typeof warningFields>
 
@@ -24,6 +34,38 @@ export function warnWorker(warning: WorkerWarning): void {
 
 function warningFields(warning: WorkerWarning) {
   switch (warning.kind) {
+    case 'runner_connected':
+    case 'runner_disconnected':
+      return {
+        kind: warning.kind,
+        message:
+          warning.kind === 'runner_connected'
+            ? 'The runner of a workspace connected.'
+            : 'The runner of a workspace disconnected.',
+        ...runnerFields(warning),
+      }
+    case 'turn_ended_without_stop_request':
+      return {
+        kind: warning.kind,
+        message: 'A turn ended without a Stop request.',
+        ...runnerFields(warning),
+        turnId: warning.turnId.text,
+        state: warningTurnEndState(warning.state),
+      }
+    case 'model_gateway_check_failed':
+      return {
+        kind: warning.kind,
+        message: 'A periodic model turn check failed.',
+        workspaceId: warning.workspaceId.text,
+        errorKind: warning.errorKind,
+      }
+    case 'model_gateway_answer_ended':
+      return {
+        kind: warning.kind,
+        message: 'The gateway ended a model answer.',
+        workspaceId: warning.workspaceId.text,
+        code: warning.code,
+      }
     case 'workspace_archive_failed':
       return {
         kind: warning.kind,
@@ -68,6 +110,17 @@ function warningFields(warning: WorkerWarning) {
         workspaceId: warning.workspaceId.text,
         error: errorFields(warning.error),
       }
+    case 'automation_report_failed':
+      return {
+        kind: warning.kind,
+        message:
+          warning.retry === 'alarm'
+            ? 'An automation run report failed again. The workspace alarm retries it.'
+            : 'An automation run report failed after a chat change. The workspace alarm retries it.',
+        workspaceId: warning.workspaceId.text,
+        retry: warning.retry === 'alarm' ? 'alarm' : 'scheduled',
+        error: errorFields(warning.error),
+      }
     case 'git_credential_failed':
       return {
         kind: warning.kind,
@@ -97,14 +150,40 @@ function warningFields(warning: WorkerWarning) {
         kind: warning.kind,
         message: 'The runner of a workspace closes after a failed message.',
         workspaceId: warning.workspaceId.text,
+        stage:
+          RUNNER_MESSAGE_STAGES.find((stage) => stage === warning.stage) ??
+          'unknown',
         error: errorFields(warning.error),
       }
     case 'runner_protocol_version_mismatch':
       return {
         kind: warning.kind,
         message:
-          'The runner closes because its protocol version does not meet the workspace version pin.',
+          'The runner closes because its protocol version is not supported or does not meet the workspace version pin.',
         workspaceId: warning.workspaceId.text,
+      }
+    case 'runner_repository_move_refused':
+      return {
+        kind: warning.kind,
+        message:
+          'The runner refused to move to the repository folder of its workspace.',
+        workspaceId: warning.workspaceId.text,
+        reason: warning.reason,
+      }
+    case 'repository_change_settle_failed':
+      return {
+        kind: warning.kind,
+        message:
+          'A step after a repository change failed: the second context copy or the terminal folder.',
+        workspaceId: warning.workspaceId.text,
+      }
+    case 'repository_change_ended':
+      return {
+        kind: warning.kind,
+        message:
+          'A repository change ended after the steps after its move failed for 10 minutes. The record keeps the old repository.',
+        workspaceId: warning.workspaceId.text,
+        phase: warning.phase,
       }
     case 'lifecycle_repair_limited':
       return {
@@ -112,6 +191,19 @@ function warningFields(warning: WorkerWarning) {
         message: 'Lifecycle repair limited its checks.',
         resource: warning.resource,
         limit: warning.limit,
+      }
+    case 'unexpected_error':
+      return {
+        kind: warning.kind,
+        message: 'A request failed with an unexpected error.',
+        errorName: warning.errorName,
+        knownText: warning.knownText,
+        retryable: warning.retryable,
+        overloaded: warning.overloaded,
+        durableObjectReset: warning.durableObjectReset,
+        method: warning.method,
+        route: warning.route,
+        frames: [...warning.frames],
       }
     case 'lifecycle_repair_pending':
       return {
@@ -122,6 +214,16 @@ function warningFields(warning: WorkerWarning) {
       }
     default:
       return { kind: warning.kind, message: SIMPLE_WARNINGS[warning.kind] }
+  }
+}
+
+function runnerFields(warning: RunnerWarningFields) {
+  return {
+    workspaceId: warning.workspaceId.text,
+    connectionId: warning.connectionId?.text ?? null,
+    streamId: warning.streamId?.text ?? null,
+    processStartId: warning.processStartId?.text ?? null,
+    protocolVersion: warningProtocolVersion(warning.protocolVersion),
   }
 }
 
@@ -142,6 +244,12 @@ function errorFields(error: ErrorSummary): ErrorSummary {
         state: error.state,
         exitCode: error.exitCode,
         timedOut: error.timedOut,
+      }
+    case 'd1':
+      return {
+        kind: error.kind,
+        reason:
+          D1_ERROR_REASONS.find((reason) => reason === error.reason) ?? 'other',
       }
     default:
       return { kind: error.kind }

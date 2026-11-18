@@ -65,7 +65,6 @@ export const shortcutCommands: readonly ShortcutCommand[] = [
     'palette',
     'Hide or show the sidebar',
     actionTexts['hide-sidebar'].words,
-    'mac-app',
   ),
   command(
     'toggle-right-column',
@@ -150,6 +149,7 @@ export const shortcutCommands: readonly ShortcutCommand[] = [
     agentActionLabels['resolve-conflicts'],
     ['merge', 'rebase', 'pull request'],
   ),
+  palette('merge-latest', 'Workspace'),
   command(
     'address-review',
     'Workspace',
@@ -163,6 +163,13 @@ export const shortcutCommands: readonly ShortcutCommand[] = [
     'workspace',
     agentActionLabels['commit-and-push'],
     ['git', 'save', 'publish'],
+  ),
+  command(
+    'mark-ready-for-review',
+    'Workspace',
+    'workspace',
+    'Mark PR ready for review',
+    ['draft', 'pull request', 'github'],
   ),
   command('merge-pull-request', 'Workspace', 'workspace', 'Merge PR', [
     'pull request',
@@ -187,12 +194,14 @@ export const shortcutCommands: readonly ShortcutCommand[] = [
   palette('go-to-checks', 'Workspace'),
   palette('go-to-terminal', 'Workspace'),
   palette('go-to-preview', 'Workspace'),
+  palette('new-terminal', 'Workspace'),
   palette('new-session', 'Chat'),
   palette('session-history', 'Chat'),
   command('focus-message', 'Chat', 'workspace', 'Focus the message field'),
   command('attach-files', 'Chat', 'workspace', 'Attach files', ['upload']),
   command('model-picker', 'Chat', 'workspace', 'Model picker'),
   command('next-effort', 'Chat', 'workspace', 'Next effort level'),
+  command('fast-mode', 'Chat', 'workspace', 'Fast mode'),
   command('stop-agent', 'Chat', 'workspace', 'Stop the agent', ['cancel']),
   command(
     'copy-concise-transcript',

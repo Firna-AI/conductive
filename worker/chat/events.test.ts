@@ -131,7 +131,7 @@ describe('workspace chat event delivery', () => {
     await fixture.connect(runner)
     expect(runner.received).toContainEqual({
       type: 'welcome',
-      protocolVersion: 1,
+      protocolVersion: 2,
       streamId: 'fake-stream-1',
       confirmedThrough: 3,
     })
@@ -218,7 +218,7 @@ describe('workspace chat event delivery', () => {
       name: 'After the snapshot',
     })
     const again = await fixture.fetch(
-      chatHistoryPath(fixture.org.id, WORKSPACE_ID, session.id, 0, 72),
+      chatHistoryPath(fixture.org.id, WORKSPACE_ID, session.id, undefined, 72),
     )
     expect(await again.json()).toEqual(page)
     await tab.close()

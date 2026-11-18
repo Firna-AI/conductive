@@ -1,16 +1,25 @@
+import type { AgentModel } from '../../shared/generated/AgentModel'
+import type { Session } from '../../shared/generated/Session'
+import type { Workspace } from '../../shared/generated/Workspace'
+import type { UserMessage } from '../../shared/generated/UserMessage'
+import type { WorkspaceStart } from '../../shared/generated/WorkspaceStart'
+import type { LoginObservation } from '../../app/login-observation'
+import type { MentionTarget } from '../mentions/MentionsContext'
 import type { DraftFile } from '../../app/draft-files'
-import type { AgentModel } from '../../shared/agents'
-import type { UserMessage } from '../../shared/messages'
-import type { Session } from '../../shared/sessions'
+
 import type { WorkspaceView } from '../../shared/workspace-view'
-import type { Workspace, WorkspaceStart } from '../../shared/workspaces'
+
 import type {
   AccountSummary,
   MemberSummary,
   OrgSummary,
-  RunRoutine,
 } from '../api/read-responses'
+import type { RunAutomation } from '../api/read-view'
 import { initialDevices, type DeviceSnapshot } from '../device/device-snapshot'
+import {
+  initialSecrets,
+  type SecretsSnapshot,
+} from '../secrets/secret-snapshot'
 import {
   emptyTranscript,
   type Transcript,
@@ -42,14 +51,28 @@ export interface Draft {
   sending: boolean
 }
 
+/**
+ * A message that the chat shows below the transcript until the stream shows
+ * it: a sent message from a reply, or a message whose send still waits for
+ * its reply, as `message-send.ts` says. A message whose send waits is
+ * `queued`, because it has not reached the agent.
+ */
+export type PendingMessage = Pick<
+  UserMessage,
+  'id' | 'text' | 'attachments' | 'state'
+>
+
 export interface SessionState {
   transcript: Transcript
   /** The time of the first event of each transcript item, by its ID. */
   times: ReadonlyMap<string, number>
   hydration: 'idle' | 'loading' | 'ready' | 'failed'
   draft: Draft
-  /** Sent messages that the stream has not shown yet. */
-  pending: readonly UserMessage[]
+  /**
+   * Messages that the stream has not shown yet: sent ones, and ones whose
+   * send waits for its reply.
+   */
+  pending: readonly PendingMessage[]
   stopping: boolean
   retrying: boolean
 }
@@ -57,7 +80,8 @@ export interface SessionState {
 export type Overlay =
   | { kind: 'none' }
   | { kind: 'history' }
-  | { kind: 'close'; sessionId: string }
+  /** The question before the tabs of running sessions close. */
+  | { kind: 'close'; sessionIds: readonly string[] }
   | { kind: 'rename'; sessionId: string }
 
 /** A failed action, shown above the composer until the user dismisses it. */
@@ -66,6 +90,21 @@ export interface ChatNotice {
   sessionId: string | null
   title: string
   message: string
+  /**
+   * The client ID of the message of a failed send. The notice goes when a
+   * transcript shows that message, as `withLateSends` says.
+   */
+  messageId?: string
+}
+
+/**
+ * A chip that Add to chat asks the message field of a session for, as
+ * `addToChat` says. The field of that session takes it once, when it shows.
+ * Each request is a new object.
+ */
+export interface MentionRequest {
+  sessionId: string
+  target: MentionTarget
 }
 
 type LoadState =
@@ -86,6 +125,8 @@ export interface ChatSnapshot {
   savedError: string | null
   org: OrgSummary | null
   account: AccountSummary | null
+  /** Whether a complete account reply is newer than an observed login fact. */
+  loginObservationCurrent?: (observation: LoginObservation) => boolean
   /** The members of the org, which name the member who stopped a turn. */
   members: readonly MemberSummary[]
   models: readonly AgentModel[]
@@ -101,17 +142,33 @@ export interface ChatSnapshot {
   archiveTabs: readonly string[] | null
   view: WorkspaceView | null
   /**
-   * The routine whose run made the workspace, from the read of the view.
+   * The automation whose run made the workspace, from the read of the view.
    * Null for a workspace that a person created, and until the view reads.
    */
-  routine: RunRoutine | null
+  automation: RunAutomation | null
+  /**
+   * The folder of the workspace repository in the cloud computer, from the
+   * read of the view. The chat reads a path under it as a file of the tree.
+   * Null until the view reads, and when the reply gives no folder.
+   */
+  repositoryFolder: string | null
+  /**
+   * The repositories that the cloud computer holds, by ID, from the read of
+   * the view, for the repository menu. Null until the view reads, and when
+   * the workspace has no record of its folders.
+   */
+  heldRepositoryIds: readonly string[] | null
   activeSessionId: string | null
   sessionStates: Readonly<Record<string, SessionState>>
   overlay: Overlay
   notice: ChatNotice | null
+  /** The chip that waits for the message field of its session, if any. */
+  mentionRequest: MentionRequest | null
   resuming: boolean
   /** The Mac commands of the workspace, as `device/device-snapshot.ts` says. */
   devices: DeviceSnapshot
+  /** The secret requests, runs, and late answers, as `SecretsSnapshot` says. */
+  secrets: SecretsSnapshot
 }
 
 /** A draft with nothing in it, and no work in flight. */
@@ -151,13 +208,17 @@ export const initialSnapshot: ChatSnapshot = {
   history: [],
   archiveTabs: null,
   view: null,
-  routine: null,
+  automation: null,
+  repositoryFolder: null,
+  heldRepositoryIds: null,
   activeSessionId: null,
   sessionStates: {},
   overlay: { kind: 'none' },
   notice: null,
+  mentionRequest: null,
   resuming: false,
   devices: initialDevices,
+  secrets: initialSecrets,
 }
 
 /**
@@ -173,6 +234,17 @@ export function sessionState(
       ...initialSession,
       draft: blankDraft(`draft:session:${snapshot.draftEpoch}:${sessionId}`),
     }
+  )
+}
+
+/**
+ * The session shows a message, sent or waiting for the stream. A model of
+ * the other agent stays in a session without one, as `chooseModel` says.
+ */
+export function hasMessages(state: SessionState): boolean {
+  return (
+    state.pending.length > 0 ||
+    state.transcript.items.some((item) => item.kind === 'user')
   )
 }
 
@@ -211,24 +283,4 @@ export function anyTurnRuns(snapshot: ChatSnapshot): boolean {
     records.some((session) => startedTurn(session) !== null) ||
     snapshot.sessions.some((session) => isRunning(snapshot, session.id))
   )
-}
-
-/** Holds the snapshot, and tells React when it changes. */
-export class ChatStore {
-  private snapshot: ChatSnapshot = initialSnapshot
-  private readonly listeners = new Set<() => void>()
-
-  get = (): ChatSnapshot => this.snapshot
-
-  update(change: (snapshot: ChatSnapshot) => ChatSnapshot): void {
-    const next = change(this.snapshot)
-    if (next === this.snapshot) return
-    this.snapshot = next
-    for (const listener of this.listeners) listener()
-  }
-
-  subscribe = (listener: () => void): (() => void) => {
-    this.listeners.add(listener)
-    return () => this.listeners.delete(listener)
-  }
 }

@@ -1,14 +1,15 @@
+import type { DeviceCommandRecord } from '../generated/DeviceCommandRecord'
+import type { ToolCall } from '../generated/ToolCall'
+import type { ChangedFile } from '../generated/ChangedFile'
+import type { UserMessage } from '../generated/UserMessage'
 import { sessionLink } from '../session-link'
-import type { ToolCall } from '../chat-events'
-import type { DeviceCommandRecord } from '../device'
-import type { ChangedFile } from '../files'
+
 import { endReasonText } from '../../../docs/mockups/src/components/chat/endReasonCopy'
 import {
   attachmentForMention,
   textWithAttachmentNames,
 } from '../attachment-mentions'
 import { mentionParts } from '../mention-text'
-import type { UserMessage } from '../messages'
 import {
   leftOutOfCall,
   leftOutOfRun,
@@ -17,6 +18,7 @@ import {
   turnFilesUnavailable,
 } from '../../../docs/mockups/src/components/chat/lostCopy'
 import { continuedNote } from '../../../docs/mockups/src/components/workspace/barCopy'
+import { repositoryChangedNote } from '../../../docs/mockups/src/components/workspace/repositoryMoveCopy'
 import {
   commandCopy,
   commandRan,
@@ -35,6 +37,7 @@ import {
   continuedBy,
   filesUnread,
   omittedFiles,
+  standardSpeedLine,
   stoppedSummary,
   stoppedAttribution,
   stoppedNotes,
@@ -116,8 +119,11 @@ export function itemMarkdown(
       ]
       const unread =
         item.files.length === 0 && filesUnread(transcript, item.turnId)
+      // The standard speed follows the duration, which it explains, as the
+      // note stands beside the duration in the chat.
+      const speed = standardSpeedLine(transcript, item.turnId)
       const summary = note(
-        `${turnCopy.finished} ${formatDuration(item.durationMs)}${files.length > 0 ? `. ${turnCopy.changedFiles}: ${files.join(' · ')}` : ''}${unread ? ` · ${turnFilesUnavailable}` : ''}`,
+        `${turnCopy.finished} ${formatDuration(item.durationMs)}${speed === undefined ? '' : ` · ${speed}`}${files.length > 0 ? `. ${turnCopy.changedFiles}: ${files.join(' · ')}` : ''}${unread ? ` · ${turnFilesUnavailable}` : ''}`,
       )
       return [
         ...(reason === undefined ? [] : [note(endReasonText(reason))]),
@@ -155,6 +161,15 @@ export function itemMarkdown(
         inlineCode(item.baseBranch),
       )
       return note(`${words.before}${inlineCode(item.branch)}${words.after}`)
+    }
+    case 'repository-changed': {
+      // The words of the note of the chat, with the names as code.
+      const words = repositoryChangedNote(
+        plainText(continuedBy(item.member, readers)),
+      )
+      return note(
+        `${words.before}${inlineCode(item.repository.fullName)}${words.between}${inlineCode(item.branch)}`,
+      )
     }
   }
 }

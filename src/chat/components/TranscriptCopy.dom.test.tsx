@@ -1,12 +1,10 @@
+import type { TranscriptDetail } from '../../shared/generated/TranscriptDetail'
 // @vitest-environment happy-dom
 import { act } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { testServices } from '../../app/test-kit'
 import { chatHistoryPath } from '../../shared/events'
-import {
-  sessionTranscriptPath,
-  type TranscriptDetail,
-} from '../../shared/sessions'
+import { sessionTranscriptPath } from '../../shared/sessions'
 import { byRole, queryByRole } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS, FAKE_ORIGIN } from '../../test-support/fixtures/core'
@@ -162,7 +160,7 @@ describe('a copy of a transcript', () => {
     })
   })
 
-  it('opens only the copy items of an archived workspace on a phone after a long press that lifts no tab, and copies the concise text with the shown tab kept', async () => {
+  it('opens only Copy link and the copy items of an archived workspace on a phone after a long press that lifts no tab, and copies the concise text with the shown tab kept', async () => {
     const server = new FakeApiServer({ workspaceState: 'archived' })
     const { copied, services } = clipboard(server)
     server.json('GET', transcriptPath('concise'), {
@@ -232,6 +230,7 @@ describe('a copy of a transcript', () => {
       release: { sheet: true, click: false },
       opened: {
         menu: [
+          { name: 'Copy link', off: false },
           { name: 'Copy concise transcript', off: false },
           { name: 'Copy full transcript', off: false },
         ],

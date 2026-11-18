@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 import { Button } from '@firna/ui/button'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
+import { actionStyle } from '../../../docs/mockups/src/components/common/outlineTone'
 import styles from '../../../docs/mockups/src/components/common/actions.module.css'
 import type { ShortcutCommandId } from '../../shared/shortcut-commands'
 import {
@@ -9,11 +10,16 @@ import {
   useShortcutHint,
 } from '../../shell/shortcuts/shortcut-hints'
 
-export type ActionTone = 'primary' | 'secondary' | 'plain' | 'danger'
+/**
+ * The tone of an action button. `outline` is the border and the label of
+ * `secondary` without its fill, for a button on a tinted bar.
+ */
+export type ActionTone =
+  'primary' | 'secondary' | 'outline' | 'plain' | 'danger'
 
 /**
  * A compact labelled button: a Firna button in the dense control size, with
- * the lighter label of the mockups. On a phone it is 44 px high. A button
+ * the lighter label of the mockups. On a phone it is 40 px high. A button
  * that runs a command of the keys names the key of that command in its
  * tooltip and to a screen reader.
  */
@@ -25,10 +31,13 @@ export function ActionButton(props: {
   tone?: ActionTone
   disabled?: boolean
   busy?: boolean
+  /** Whether the text that the button opens in place shows in full. */
+  expanded?: boolean
   /** The command of the keys that the button runs. */
   shortcut?: ShortcutCommandId
 }) {
   const control = useControlSizes()
+  const tone = props.tone ?? 'secondary'
   const hint = useShortcutHint(props.shortcut)
   const keyRef = useAriaShortcut(hint)
   const button = (
@@ -37,6 +46,7 @@ export function ActionButton(props: {
       busy={props.busy}
       buttonRef={props.shortcut === undefined ? undefined : keyRef}
       disabled={props.disabled}
+      expanded={props.expanded}
       icon={props.icon}
       labelStyle={{
         fontSize: control.labelSize,
@@ -46,8 +56,8 @@ export function ActionButton(props: {
       numberOfLines={1}
       onPress={props.onPress}
       size="sm"
-      style={{ height: control.height, paddingHorizontal: 10 }}
-      tone={props.tone ?? 'secondary'}
+      style={actionStyle(control.height, tone === 'outline')}
+      tone={tone === 'outline' ? 'secondary' : tone}
     >
       {props.children}
     </Button>
@@ -63,7 +73,7 @@ export function ActionButton(props: {
 /**
  * A compact icon-only button with a muted icon, for bars and toolbars. A
  * quiet button has a fainter, smaller icon, for actions on every tab. On a
- * phone its box is 44 px. A button that opens a menu says whether it is open.
+ * phone its box is 40 px. A button that opens a menu says whether it is open.
  * A button that runs a command of the keys names the key of that command in
  * its tooltip and to a screen reader.
  */

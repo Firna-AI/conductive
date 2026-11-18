@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import { fileMark } from '../../app/draft-marks'
 import { pickChatFiles } from './draft-files.test-support'
 import { readyIds } from '../../app/draft-files'
-import type { AgentChoice } from '../../shared/agents'
-import { filePaths } from '../../shared/files'
+import { attachmentUploadStartPath } from '../../shared/messages'
 import { sessionPaths } from '../../shared/sessions'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { record, text } from '../api/json'
@@ -16,12 +16,17 @@ const codex: AgentChoice = {
   agent: 'codex',
   model: 'GPT-6.1 Sol',
   effort: 'medium',
+  fast: false,
 }
 const shortly = { timeout: 10_000 }
 const file = () => new File(['png'], 'overlap.png', { type: 'image/png' })
+const startPath = attachmentUploadStartPath(org, {
+  type: 'workspace',
+  workspaceId: ws,
+})
+/** The start call of an upload, which comes before its parts. */
 const isUpload = (request: Request) =>
-  request.method === 'POST' &&
-  new URL(request.url).pathname === filePaths.attachments(org, ws)
+  request.method === 'POST' && new URL(request.url).pathname === startPath
 const isSend = (request: Request) =>
   request.method === 'POST' && request.url.endsWith('/messages')
 
@@ -98,7 +103,7 @@ describe('a draft that moves to another session', () => {
     const created = await opened(chat)
     chat.server.json(
       'POST',
-      filePaths.attachments(org, ws),
+      startPath,
       { error: { code: 'file_too_large', message: 'The file is too large.' } },
       413,
     )
@@ -121,21 +126,25 @@ describe('a draft that moves to another session', () => {
     })
   })
 
-  it('clears the sent text from the draft when the send ends after the draft moved', async () => {
+  it('keeps the text that the user types after a send, when the send ends after the draft moved', async () => {
     const chat = await chatWithCodex(isSend)
     chat.controller.setDraft(id, 'See the screenshot.')
     const sending = chat.controller.send(id)
     await vi.waitFor(() => expect(chat.held).toHaveLength(1), shortly)
+    expect(chat.draftOf(id)?.text).toBe('')
     await chat.controller.chooseModel(id, codex)
     const created = await opened(chat)
-    expect(chat.draftOf(created)?.text).toBe('See the screenshot.')
+    chat.controller.setDraft(created, 'And the empty state.')
     chat.held.splice(0, 1)[0]()
     await sending
-    expect(chat.draftOf(created)?.text).toBe('')
+    expect(chat.draftOf(created)).toMatchObject({
+      text: 'And the empty state.',
+      sending: false,
+    })
     expect(chat.draftOf(id)?.text).toBe('')
   })
 
-  it('keeps the text and file that the user changes while a send waits', async () => {
+  it('keeps a file that the user picks while a send waits, after the sent text cleared', async () => {
     const chat = chatFor({ conversation: 'history', hold: isSend })
     await chat.controller.start()
     chat.controller.setDraft(id, 'Check the postcode rules.')
@@ -144,9 +153,7 @@ describe('a draft that moves to another session', () => {
     await pickChatFiles(chat, id, [file()])
     chat.held.splice(0, 1)[0]()
     await sending
-    expect(chat.draftOf(id)?.text).toBe(
-      `Check the postcode rules. ${fileMark('file-1')} `,
-    )
+    expect(chat.draftOf(id)?.text).toBe(`${fileMark('file-1')} `)
     expect(readyIds(chat.draftOf(id)?.files ?? [])).toEqual(['attachment-1'])
   })
 })

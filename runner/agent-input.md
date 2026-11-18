@@ -14,9 +14,14 @@ the workspace repository. It keeps existing exclude rules and tracked
 files. It leaves a file or link named `.context` alone. A failed step
 warns and lets the runner continue.
 
+Each file report then adds the untracked files of `.context/` to the
+tree, also the files that Git ignores. `contextFolderFiles` lists them
+with `git ls-files --others` and no ignore rules. The changes report
+does not take them, so Changes leaves them out.
+
 [The context folder](../docs/protocol/repository-folders.md#the-context-folder)
-states its use and limits. A new org image build installs the runner with this
-startup step and the instruction text below.
+states its use and limits. The runner and its instruction text follow the
+[sandbox software update rules](../docs/protocol/sandbox-software.md#updates).
 
 ## Agent instructions
 
@@ -26,6 +31,22 @@ configuration. Claude gets its seven base rules and that text as
 text as `developerInstructions` on `thread/start` and `thread/resume`.
 The text names the context folder for notes, screenshots, and files for
 other sessions of the workspace.
+
+After the branch paragraphs, new instructions give the workspace ID and
+canonical link. They say whether the workspace is top-level or nested.
+For a sub-workspace, they give its depth and its direct parent's ID and
+link. The deepest depth comes from the Worker's environment, without a
+second runner constant.
+
+The text tells the agent to pass its workspace ID as `parentId` to
+`create_workspace`, below that limit. At the limit, it gives the parent's
+ID for a sibling and asks for a one-word group prefix, such as "Limits: ".
+It names `get_workspace` for parent and sub-workspace details, and
+`list_workspaces` with `parentId` for direct sub-workspaces.
+
+The runner validates the complete set of tree variables. Missing or
+malformed values produce one warning and omit all these paragraphs.
+The [configuration page](configuration.md) lists those variables.
 
 The runner saves the text of a session before its first agent start. Later
 starts reuse it exactly, also after a restart or a change of configuration
@@ -43,6 +64,10 @@ requirements.
 - An older saved session has no saved pair. The runner reads the pair from
   the `Workspace branch:` and `Target branch:` lines of its saved text, and
   leaves the text unchanged. When it cannot read both, the pair is unknown.
+- The runner also saves the repository folder that the text names, as
+  `instructionFolder`. An older saved session takes it from the
+  `Workspace repository folder:` line of its text. When the line is
+  missing, the folder is unknown.
 
 ## Messages and files
 
@@ -68,14 +93,43 @@ chat never shows the sender line.
 - The branch line exists only in the text that reaches the agent. The
   stored message, its events, and the titles from messages use only the
   text that the member wrote.
-- Each sandbox keeps the runner of the org image that it starts from. An
-  older runner reads no `branches`, so its sessions get no branch line.
+- Until an update applies, an older runner reads no `branches`, so its
+  sessions get no branch line. Existing sessions keep their saved instructions
+  after an update.
+
+### The repository line
+
+- The Worker sends the current repository in `repository`, with its full
+  name and its folder, only to a runner whose `hello` names its folder.
+- When that folder differs from the saved `instructionFolder` of the
+  session, a repository line follows the sender line:
+  `Current repository: "<owner/name>" in the folder "<folder>". The workspace now works in this folder. Its context folder is "<folder>/.context".`
+  Each value is a JSON string. A branch line can follow it.
+- A session whose saved folder is the current folder, or is unknown, gets
+  no repository line. A move back to that folder ends the line.
+- The repository line exists only in the text that reaches the agent, as
+  the branch line does.
+- [The repository line](../docs/protocol/message-lines.md#the-repository-line)
+  states these requirements.
+
+### Saved Claude sessions after a move
+
+Claude keeps each saved session in a project folder for its working folder,
+`projects/<folder>/<id>.jsonl`, with each character of the folder outside
+A-Z, a-z, and 0-9 as `-`. Before a resume, the helper looks for the session
+in the project folder of the current folder. When exactly one other project
+folder holds it, the helper moves the file and its `<id>/` folder there. A
+move keeps one copy, so a move back finds the newest turns. A missing or
+ambiguous session stays, and the resume reports its own failure. Codex
+needs no step: it keeps sessions by date and thread ID, and
+`thread/resume` takes the new `cwd`.
 
 A message with attached files adds one read instruction after the
 member's text, then one JSON line per file. Each line gives its original
 name, media type, copied absolute path, and `sizeBytes` from message
-metadata. Codex keeps each image input after its file line. Its read
-instruction mentions image input only when the message has an image.
+metadata. Codex keeps each image input right after its file line. When at
+least one image goes as image input, its read instruction adds: "Only an
+image that comes right after its file line is also in this message."
 A message without files gets no extra line.
 
 [Agent input](../worker/chat/attachments.md#agent-input) in the attachment
@@ -83,14 +137,11 @@ guide gives the exact instruction and the metadata source.
 
 ## Key code
 
-- `src/context-folder.ts`: `prepareContextFolder` adds the local exclude
-  rule and makes the context folders before startup reports.
-- `src/instructions.ts`: `agentInstructions`, with Claude's base rules.
-- `src/instruction-state.ts`: the built text with its branches, the parser
-  of saved branches, and the reader of the branches of older saved text.
-- `src/engine-input.ts`: the instructions and the saved pair of a session
-  at its first input.
-- `src/providers/message.ts`: `providerMessage`, the sender line and the
-  branch line.
-- `src/providers/instructions.test.ts` and `src/providers/branches.test.ts`:
-  the saved text, the sender line, and the branch line of both agents.
+- [setup.rs](../crates/cnd-runner/src/repository/setup.rs) prepares the context folder and local Git exclusion.
+- [instructions.rs](../crates/cnd-runner/src/engine/instructions.rs) builds session instructions and reads legacy branches.
+- [input.rs](../crates/cnd-runner/src/engine/input.rs) keeps session instructions and the turn's original context.
+- [message.ts](sdk-helper/src/providers/message.ts) formats sender lines, repository lines, branch lines, and attachments.
+- [claude-transcript.ts](sdk-helper/src/providers/claude-transcript.ts) moves a saved Claude session to the project folder of the current folder.
+- [instructions.test.ts](sdk-helper/src/providers/instructions.test.ts) and
+  [branches.test.ts](sdk-helper/src/providers/branches.test.ts) check the helper input text.
+- [context_tests.rs](../crates/cnd-runner/tests/repository/context_tests.rs) checks ordinary and linked Git worktrees.

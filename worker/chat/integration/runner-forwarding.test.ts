@@ -1,5 +1,6 @@
 import type { WebSocket } from 'miniflare'
 import { afterEach, beforeAll, expect, it } from 'vitest'
+import { expectSocketGatewayLogin } from '../runner-credential.test-support'
 
 import {
   chatHistoryPath,
@@ -83,7 +84,7 @@ it('dispatches a queued sender message and streams text and Stop through bearer-
   const runner = new OuterFakeRunner(runnerSocket)
   expect(await runner.inbox.next()).toEqual({
     type: 'welcome',
-    protocolVersion: 1,
+    protocolVersion: 2,
     streamId: 'outer-runner-stream',
     confirmedThrough: 0,
   })
@@ -98,8 +99,14 @@ it('dispatches a queued sender message and streams text and Stop through bearer-
     type: 'turn',
     sessionId,
     message: { id: 'runner-ask', state: 'sent', sender: { id: 'member' } },
-    login: { secret: 'outer-secret-owner' },
+    credential: { token: expect.stringMatching(/^sk-/) },
   })
+  await expectSocketGatewayLogin(
+    fixture.runtime,
+    OUTER_WORKSPACE,
+    turn,
+    'outer-secret-owner',
+  )
   const turnId = string(turn.turnId)
   expect(await browserInbox.next()).toMatchObject({
     type: 'event',
@@ -179,13 +186,17 @@ it('dispatches a queued sender message and streams text and Stop through bearer-
     },
   })
   const history = await fixture.request(
-    chatHistoryPath(OUTER_ORG, OUTER_WORKSPACE, sessionId, 4),
+    chatHistoryPath(OUTER_ORG, OUTER_WORKSPACE, sessionId),
   )
   expect(history.status).toBe(200)
   const stored: unknown = await history.json()
   expect(stored).toMatchObject({
     throughEventNumber: 8,
     events: [
+      { eventNumber: 1, event: { type: 'session.updated' } },
+      { eventNumber: 2, event: { type: 'message.accepted' } },
+      { eventNumber: 3, event: { type: 'session.updated' } },
+      { eventNumber: 4, event: { type: 'message.sent' } },
       {
         eventNumber: 5,
         event: { type: 'assistant.delta', text: 'Streamed through the Worker' },

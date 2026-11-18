@@ -1,5 +1,4 @@
 import type { WorkspaceView } from '../../shared/workspace-view'
-import { isRunning } from './chat-snapshot'
 import { showNotice, type ChatContext } from './context'
 import { hydrate } from './history'
 import { beginEdit, confirmRecord } from './session-records'
@@ -73,9 +72,13 @@ async function showIfOpen(context: ChatContext, sessionId: string) {
 
 /**
  * "+" starts a session on the same branch and cloud computer, with the
- * default model of the user's account.
+ * default model of the user's account. `opened` gets the ID of the new
+ * session just before the chat shows it, as Add to chat needs.
  */
-export async function newSession(context: ChatContext): Promise<void> {
+export async function newSession(
+  context: ChatContext,
+  opened?: (sessionId: string) => void,
+): Promise<void> {
   const snapshot = context.store.get()
   const shown = snapshot.sessions.find(
     (item) => item.id === snapshot.activeSessionId,
@@ -88,7 +91,9 @@ export async function newSession(context: ChatContext): Promise<void> {
   try {
     const { session, eventNumber } = await context.api.createSession(choice)
     confirmRecord(context, session, eventNumber)
-    if (context.live()) await showIfOpen(context, session.id)
+    if (!context.live()) return
+    opened?.(session.id)
+    await showIfOpen(context, session.id)
   } catch (error) {
     showNotice(context, null, "The new session didn't open", error)
   }
@@ -121,51 +126,6 @@ export async function renameSession(
     edit.fail()
     showNotice(context, sessionId, "The new name didn't save", error)
   }
-}
-
-async function closeSession(
-  context: ChatContext,
-  sessionId: string,
-  stopRunningTurn: boolean,
-): Promise<void> {
-  try {
-    const closed = await context.api.closeSession(sessionId, stopRunningTurn)
-    if (!context.live()) return
-    confirmRecord(context, closed.session, closed.eventNumber)
-    const { view, activeSessionId } = context.store.get()
-    if (view) context.saveView(view)
-    if (activeSessionId) await hydrate(context, activeSessionId)
-  } catch (error) {
-    showNotice(context, sessionId, "The session didn't close", error)
-  }
-}
-
-/**
- * Closing a tab moves its session to the history. A session whose turn runs
- * asks first, because closing stops the turn.
- */
-export async function requestClose(
-  context: ChatContext,
-  sessionId: string,
-): Promise<void> {
-  if (isRunning(context.store.get(), sessionId)) {
-    context.store.update((snapshot) => ({
-      ...snapshot,
-      overlay: { kind: 'close', sessionId },
-    }))
-    return
-  }
-  await closeSession(context, sessionId, false)
-}
-
-export async function confirmClose(context: ChatContext): Promise<void> {
-  const { overlay } = context.store.get()
-  if (overlay.kind !== 'close') return
-  context.store.update((snapshot) => ({
-    ...snapshot,
-    overlay: { kind: 'none' },
-  }))
-  await closeSession(context, overlay.sessionId, true)
 }
 
 /** Reopens a session of the history as a tab, with its chat. */

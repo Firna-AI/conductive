@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { sessionPaths } from '../../src/shared/sessions'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { createChatFixture, WORKSPACE_ID } from './harness.test-support'
+import { expectGatewayLogin } from './runner-credential.test-support'
 import {
   messageCommands,
   startTurn,
@@ -108,6 +109,12 @@ describe('messages after Stop', () => {
         const continuation = messageCommands(runner, beforeId)[1]
         if (continuation?.type !== 'turn')
           throw new Error('The unanswered message did not get a turn.')
+        expect(
+          await fixture.chat.store.read(
+            WORKSPACE_ID,
+            async (view) => (await view.turn(continuation.turnId))?.stopRequest,
+          ),
+        ).toBeNull()
         runner.emit(terminalEvent(continuation, 'finished'))
         await fixture.drain()
       }
@@ -117,16 +124,24 @@ describe('messages after Stop', () => {
         type: 'turn',
         sessionId: session.id,
         message: { id: afterId, sender: { id: fixture.member.id } },
-        login: { secret: `secret-${fixture.owner.id}-claude` },
       })
+      await expectGatewayLogin(
+        fixture,
+        next[0],
+        `secret-${fixture.owner.id}-claude`,
+      )
       expect(next[0]?.turnId, state).not.toBe(active.turnId)
       expect(messageCommands(runner, laterId), state).toMatchObject([
         {
           type: 'message',
           turnId: next[0]?.turnId,
-          login: { secret: `secret-${fixture.owner.id}-claude` },
         },
       ])
+      await expectGatewayLogin(
+        fixture,
+        messageCommands(runner, laterId)[0],
+        `secret-${fixture.owner.id}-claude`,
+      )
       expect(
         (await fixture.history(session.id)).events.filter(
           ({ event }) =>

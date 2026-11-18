@@ -4,11 +4,21 @@ import { EmptyState } from '../common/EmptyState'
 import { ScreenLink } from '../common/ScreenLink'
 import { ChangeIcon } from './ChangeIcon'
 import { DiffStat } from './DiffStat'
+import { RowMenuItem, type FileRowMenu } from './FileRowMenu'
 import { paths } from '../../paths'
 import { classes } from '../common/classes'
 import styles from './ChangeList.module.css'
 
-function Row(props: { file: ChangedFile; open: boolean; diffTo: string }) {
+/**
+ * One changed file. The row of the open diff is marked, and the row of an
+ * open menu keeps the fill of a hover, as a tab with an open menu does.
+ */
+function Row(props: {
+  file: ChangedFile
+  open: boolean
+  menuOpen: boolean
+  diffTo: string
+}) {
   const { file } = props
   const { folder, name } = splitPath(file.path)
   const content = (
@@ -21,11 +31,16 @@ function Row(props: { file: ChangedFile; open: boolean; diffTo: string }) {
       <ChangeIcon change={file.change} />
     </>
   )
-  if (!file.diff) return <div className={styles.row}>{content}</div>
+  const className = classes(
+    styles.row,
+    props.menuOpen && styles.menuOpen,
+    props.open && styles.open,
+  )
+  if (!file.diff) return <div className={className}>{content}</div>
   return (
     <ScreenLink
       aria-current={props.open ? 'page' : undefined}
-      className={classes(styles.row, props.open && styles.open)}
+      className={className}
       to={props.diffTo}
     >
       {content}
@@ -52,11 +67,13 @@ function Summary(props: { files: readonly ChangedFile[] }) {
  * The files that the workspace branch changes, against the default branch,
  * under a summary of the whole change. A file opens its diff as a tab, and
  * the row of the open diff is marked. `diffTo` is the page of that diff.
+ * `menu` is the open menu of a row, at the pointer or under a sheet.
  */
 export function ChangeList(props: {
   files: readonly ChangedFile[]
   diffOpen: boolean
   diffTo?: string
+  menu?: FileRowMenu
 }) {
   if (props.files.length === 0) {
     return (
@@ -72,15 +89,19 @@ export function ChangeList(props: {
       <Summary files={props.files} />
       <div className={styles.scroll} data-mokly-scroll="changes">
         <ul aria-label="Changed files" className={styles.list}>
-          {props.files.map((file) => (
-            <li key={file.path}>
-              <Row
-                diffTo={props.diffTo ?? paths.diff}
-                file={file}
-                open={props.diffOpen && file.diff === true}
-              />
-            </li>
-          ))}
+          {props.files.map((file) => {
+            const menu = props.menu?.path === file.path ? props.menu : undefined
+            return (
+              <RowMenuItem key={file.path} menu={menu}>
+                <Row
+                  diffTo={props.diffTo ?? paths.diff}
+                  file={file}
+                  menuOpen={menu !== undefined}
+                  open={props.diffOpen && file.diff === true}
+                />
+              </RowMenuItem>
+            )
+          })}
         </ul>
       </div>
     </>

@@ -20,7 +20,8 @@ const DESCRIPTION =
 /**
  * The Mac that the Mac app registers as a device (decision 62): its name,
  * its state, the commands that always run on it, each with Remove, and the
- * workspaces whose 15 minutes run, each with the time left and Stop. The
+ * workspaces whose grant runs, each with the time left of its 15 minutes
+ * or Until you stop, and Stop. The
  * Mac keeps these choices, and the section reads and changes them through
  * the Worker. The result of the last change of each control stays under
  * them until its next change, also while the Mac is away. Mount it only in

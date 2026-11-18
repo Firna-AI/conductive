@@ -2,15 +2,21 @@
 
 This doc holds the requirements and the decisions in force for the create
 of a workspace. It covers New workspace, as a page or as a dialog, the
-preference that chooses between them, the create, the branch, and a failed
-first start. It belongs to
+preference that chooses between them, its Capabilities icon, the create,
+the branch, and a failed first start. It belongs to
 [Workspaces and sandboxes](workspaces-and-sandboxes.md), which covers the
 provider, the org image, and the startup script.
+[New workspace notices](new-workspace-notices.md) covers the notices that
+keep Send and Create off.
 [Life of a workspace](workspace-life.md) covers the start steps and the
 rest of the life of a workspace. The terms are those of the
 [architecture doc](../architecture.md#terms). A
 decision number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says.
+[Decision numbers](../architecture.md#decision-numbers) says. A secrets
+decision number names a decision of the change that adds
+[secrets](secrets.md), as that doc says. A branch-name decision number
+names a decision of the change that names a branch after its workspace.
+The pull request of that change keeps its record.
 
 ## New workspace
 
@@ -21,19 +27,30 @@ decision number names a dated record, as
   ways.
 - [The message field](workspace-links.md#the-message-field) says how the
   message field of the page and of the dialog shows a workspace link.
+- The page and the dialog have a small Capabilities icon, with its label
+  on hover (secrets decision 6 G). Its control chooses the secrets that
+  the new workspace pre-approves, and its Mac access.
+  [Capabilities](secrets.md#capabilities) states the control.
 
 ### The preference
 
-- The Account page has three tabs, General, Preferences, and Keyboard
-  shortcuts, each with its own address. Preferences holds the New
-  workspaces section, with Model and effort and the choice of how New
-  workspace opens (decision 142 of PR #73). General holds the other
-  sections of the account.
+- The Account page has five tabs, General, Agents, Preferences, Keyboard
+  shortcuts, and Stats, each with its own address. Agents holds the logins
+  of Claude and Codex (the user asked on 13 November 2026). Preferences
+  holds the New workspaces section, with Model and effort and the choice
+  of how New workspace opens (decision 142 of PR #73). General holds the
+  other sections of the account.
   [Keyboard shortcuts: the settings tab](keyboard-shortcuts-tab.md) gives
-  the third tab.
+  the fourth tab. [Account stats](account-stats.md) gives the fifth tab.
+  The Mac app adds [This Mac](desktop-commands.md#saved-choices) as the
+  sixth tab.
 - Reason: all the settings of new workspaces then sit together. The
   section on General, with only the new choice on Preferences, was
   rejected, because the user then looks in two places.
+- Model and effort also saves fast mode, with the Fast switch of its menu.
+  New workspace starts from the saved choice with its fast mode, as
+  [Fast mode](fast-mode.md#saved-defaults-new-workspaces-and-automations)
+  says.
 - The choice offers the page and the dialog. Each change saves at once, as
   a change of Model and effort does.
 - When a save fails, the choice keeps the saved value, and an error shows
@@ -45,8 +62,12 @@ decision number names a dated record, as
   would surprise the user. A choice in the storage of the browser was
   rejected for that reason.
 - Without a saved choice, such as for a new account, New workspace opens
-  as the page. Reason: the user asked for the dialog as an option beside
-  the page.
+  as the dialog. The user asked for the dialog as the default for new
+  users on 12 November 2026.
+- Each account that existed before that change keeps the page, as its
+  saved choice. Reason: the user asked for the new default for new users
+  only. A default that also moved the existing accounts to the dialog was
+  rejected, because their New workspace would change without their choice.
 - A save of the choice saves no model. A user who never chose Model and
   effort keeps the default model and effort of the app.
 - An open app uses a choice that the user saved in another browser or in
@@ -64,10 +85,10 @@ decision number names a dated record, as
 - The dialog has no address. The address of New workspace always shows
   the page.
 - Reason: links, a reload, and a new tab then keep working.
-- On a computer, with the dialog chosen, New workspace opens the dialog
-  from each of its places: the row at the top of the list, the button of
-  an org without workspaces, the item in the menu of a section, and the
-  command palette.
+- On a computer, when the choice is the dialog, New workspace opens the
+  dialog from each of its places: the row at the top of the list, the
+  button of an org without workspaces, the item in the menu of a section,
+  and the command palette.
 - A click with a modifier key on the row at the top of the list opens the
   page in a new tab, as a click on a link does.
 - While the screen shows a New workspace form, New workspace opens the
@@ -79,9 +100,18 @@ decision number names a dated record, as
 ### The dialog
 
 - The dialog holds the parts of the page: the repository picker, the
-  message and its files, and the model picker.
+  message and its files, the model picker, and the Capabilities icon.
 - The dialog always names the org and the section of the new workspace,
   also General.
+- The org and the section are a menu of the sections of the org, in the
+  order of the list, with the current section checked. A pick puts the
+  new workspace in that section. The menu has no Archived item, because
+  Archived is a group of the list and not a section. The user asked for
+  the menu on 12 November 2026.
+- The pick belongs to the draft. So a close keeps it with the message,
+  and the page of the same org and section names the picked section. A
+  create ends the pick, so the next draft starts in the section that
+  opened it.
 - The button of the dialog is Create. The button of the page is Send,
   because the page looks like the chat that it becomes.
 - The dialog shows the notices of the page: the first build, a waiting
@@ -134,80 +164,14 @@ decision number names a dated record, as
 
 ### Before the first good build
 
-- A new workspace needs a good org image, because it starts from the org
-  image (decision 13). While the org has no good image, such as during its
-  [first build](org-image.md#the-first-build), New workspace
-  shows a notice over the composer. Send and Create then stay off
-  (decision 150 of PR #92).
-- The notice shows the state of the newest build of the org:
-  - While a build runs, it says that the cloud computer is being prepared,
-    with the time since the build began.
-  - After a failed build, it says that the cloud computer did not build.
-  - With no build, it says that the cloud computer needs a build.
-- In each state, an admin gets a link to the Cloud computer tab. After a
-  failed build or with no build, the tab offers Try again or Build
-  computer.
-- While a build runs, the admin can set up the cloud computer on that tab,
-  such as its install script. Such a change needs no Build computer, as
-  [The first build](org-image.md#the-first-build) says. A link only after a
-  failed build or with no build was rejected for that reason.
-- A member who is not an admin gets no link. After a failed build or with
-  no build, the notice says that an admin can build. Reason: only an admin
-  builds and changes the settings of the cloud computer (decision 57).
-- When a build succeeds, the notice goes, and Send and Create turn on.
-- Once the org has a good image, New workspace shows no such notice, also
-  during a later build or after a failed later build. New workspaces then
-  start from the last good image (decision 9).
-- A create that comes while the org has no good image, such as from an old
-  tab, gets a refusal. While a build runs, the refusal says that the cloud
-  computer is still being prepared. Otherwise, it says that the cloud
-  computer needs a build. The composer keeps the message.
-- Reason: the user learns the state before the send, in place of a refused
-  create. A create that waits for the first build was left out for now
-  (decision 152 of PR #92). Such a wait changes the start limit and the path that
-  creates every workspace.
+- [Before the first good build](new-workspace-notices.md#before-the-first-good-build)
+  states the notice of New workspace while the org has no good image.
 
 ### Waiting repositories
 
-- The repository picker lists each chosen repository, on the page and in
-  the dialog (decision 240). A removed repository is not in the list.
-- A [waiting repository](org-image.md#repository-changes) is off in the
-  list, with a note that says when it is ready. The note follows the
-  states of [The repository notice](org-image.md#the-repository-notice).
-- Reason: the person learns of the wait before the send. A change of only
-  the words of the refusal was rejected for that reason.
-- The form picks the first ready repository. A kept draft keeps its
-  repository, also when it waits. Reason: the form keeps the choice of the
-  person.
-- While the repository of the form waits, Send and Create stay off. A
-  notice over the composer says when the repository is ready, and whether
-  the person can choose another repository that is ready.
-- In each state, an admin gets a link in that notice to the Cloud computer
-  tab, as in the notice of the first build. When no build runs, the tab
-  offers Try again or Build computer.
-- While a build runs, the notice shows that build, and the admin can
-  follow it on that tab. Such a build adds a repository, or an admin
-  started it. A refresh never counts as a build that runs, as
-  [The repository notice](org-image.md#the-repository-notice) says. While
-  only a refresh runs, the notice follows its other states.
-- Reason: the link then follows one rule in both notices. A notice with no
-  link during a build was rejected for that reason.
-- A member who is not an admin gets no link. When an admin can act, the
-  notice tells the member so. Reason: only an admin builds (decision 57).
-- When a build that holds the repository succeeds, the repository turns
-  on in the picker. Its notice goes, and Send and Create turn on.
-- A create in a waiting repository, such as from an old tab, gets a
-  refusal that says that the repository is ready after the next build. A
-  create in another repository that the org image lacks gets a refusal
-  that says that the repository is not available.
-- Both refusals have HTTP 404 and the code `repository_not_found`. The
-  composer keeps the message.
-- A create that waits for the build of its repository was rejected.
-  Reason: such a wait changes the start limit and the path that creates
-  every workspace, as for decision 152.
-- A start that clones a waiting repository after the start from the org
-  image was rejected, because the install script never prepares that
-  repository.
+- [Waiting repositories](new-workspace-notices.md#waiting-repositories)
+  states the picker and the notice of a repository that waits for its
+  build.
 
 ## The create
 
@@ -220,6 +184,10 @@ decision number names a dated record, as
 - Reason: the new workspace then follows its start steps on its own
   events, as a resume does. A stream of the progress in the create request
   was rejected, because it is a larger build.
+- The create takes the choices of the Capabilities control with the first
+  message: the pre-approved secrets and Mac access. Without a choice, the
+  new workspace pre-approves no secret, and its Mac access is off
+  (secrets decision 18 A).
 
 ## The branch and the name
 
@@ -247,20 +215,52 @@ decision number names a dated record, as
 - The branch name starts with the GitHub login that the workspace owner has
   at the create (decision 53).
 - A city name and four random characters follow, such as
-  `calummoore/lisbon-7k2q`. The branch keeps the city name when the
-  workspace gets a name.
+  `calummoore/lisbon-7k2q`. This is the placeholder branch.
 - Reason: a GitHub login is unique, so the branches of each person stay
   together. A first name was rejected, because two people can share one.
+- When the workspace gets a name before the start creates the branch in
+  the sandbox, the branch takes the name (branch-name decision 1 A). The
+  name can be the automatic title, a name from Rename, or a name from a
+  create call. The branch keeps its GitHub login and its four random
+  characters, such as `calummoore/saved-carts-7k2q` (branch-name decision
+  2 A).
+- After the start creates the branch, a new name never changes the
+  branch.
+- Reason: the branch then gets a name that says what the work is, with no
+  Git rename, no GitHub rename, and no change under a running agent. A
+  rename of an existing branch was rejected. It must wait for each turn,
+  and GitHub closes an open pull request when its head branch gets a new
+  name.
+- A title that comes after the start created the branch names only the
+  workspace. The branch keeps the city name. This happens when the model
+  is slow or fails, or when the first message has no text.
+- Reason: the start does not wait for the title.
+- The name part of the branch has only the letters `a` to `z`, the digits,
+  and single hyphens. The app removes accents and makes letters
+  lowercase. Each other run of characters becomes one hyphen. The part
+  has no hyphen at its start or at its end, and at most 40 characters. A
+  longer part ends at its last hyphen within the limit.
+- When no letter or digit remains, the branch keeps the city name.
+- Reason: Git limits the characters of a branch name, and a short name
+  fits the pull request bar.
+- Two workspaces with the same name get two branches, because the random
+  characters differ.
+- Reason: the app finds the pull request of a workspace and routes its
+  GitHub events by the name of its branch. A clean name with a check for a
+  clash was rejected. It needs a read from GitHub, and two creates can
+  race.
+- A workspace keeps its branch from before branch-name decision 1.
 - The new branch of [Continue](continue.md#the-base-and-the-new-branch)
-  follows the same rule, with the GitHub login that the workspace owner has
-  at the Continue.
+  starts with the GitHub login that the workspace owner has at the
+  Continue. It takes the workspace name and a version, as that section
+  says.
 - A new workspace has no name, and the app shows "Untitled" in its place,
   as [Workspace and session names](agents-and-sessions.md#workspace-and-session-names)
   says (decision 182).
 - A create call of an agent can give the workspace a name, as
   [Create and list calls](agent-tools.md#create-and-list-calls) says.
-- [Messages](messages-and-attachments.md#messages) says how a title from
-  the first message then names the workspace.
+- [The title of a new workspace](workspace-and-session-names.md#the-title-of-a-new-workspace)
+  says how a title from the first message then names the workspace.
 
 ## A failed first start
 
@@ -279,5 +279,5 @@ decision number names a dated record, as
   good org image, with the current startup script and env vars.
 - When that sandbox is ready, the agent gets the queued messages, as
   [Messages](messages-and-attachments.md#messages) says.
-- A routine run keeps its failed workspace and its cause, as
-  [Failed runs](routine-runs.md#failed-runs) says (decision 512 B).
+- An automation run keeps its failed workspace and its cause, as
+  [Failed runs](automation-runs.md#failed-runs) says (decision 512 B).

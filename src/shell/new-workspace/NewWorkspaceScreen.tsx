@@ -3,11 +3,12 @@ import { FolderGit2, Sparkles } from 'lucide-react'
 import chat from '../../../docs/mockups/src/components/chat/ChatPane.module.css'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/screens/NewWorkspaceScreen.module.css'
-import { currentBuild } from '../../app/org-model'
+import { currentBuild } from '../../app/current-build'
 import { routes } from '../../app/router'
 import { useStore, valueOf } from '../../app/store'
 import { whenOf, type When } from '../../app/time'
 import type { OrgSummary } from '../../shared/orgs'
+import { draftCapabilities } from '../capabilities/DraftCapabilities'
 import { useApp, useOrgAccess, useOrgModel } from '../context'
 import { Page } from '../layout/Page'
 import { ActionButton } from '../ui/actions'
@@ -113,7 +114,9 @@ export function NewWorkspaceScreen(props: {
   const phone = useViewport() === 'phone'
   const { suspended } = useOrgAccess(org)
   useShownForm()
-  const section = sections?.find((item) => item.id === props.sectionId)
+  // The page shares its draft with the dialog, which can pick a section.
+  const sectionId = form.draft.sectionId ?? props.sectionId
+  const section = sections?.find((item) => item.id === sectionId)
   return (
     <Page
       back={{ label: 'Workspaces', to: routes.org(org.id) }}
@@ -145,10 +148,12 @@ export function NewWorkspaceScreen(props: {
               <OrgLinks orgId={org.id}>
                 <Composer
                   choice={form.choice}
+                  login={form.login}
                   model={model}
                   models={form.models}
                   ready={form.ready}
                   send={form.send}
+                  tools={[draftCapabilities(org, model)]}
                 />
               </OrgLinks>
             </>

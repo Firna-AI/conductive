@@ -51,22 +51,3 @@ Otherwise, the read fails with a safe error:
 The [Files backend](../files/README.md) checks decoded byte counts and converts file content for browser responses.
 Provider failures use safe typed errors.
 Upstream error messages never reach the browser.
-
-## File writes
-
-`SandboxProvider.writeFile(sandboxId, path, body, sizeBytes)` is an internal streamed write.
-The caller authorizes the workspace and its actual sandbox before calling it.
-The adapter obtains a grant through `POST /sandboxes/{id}/files/upload-url`.
-It requires `file.upload_url`, method `PUT`, the exact requested canonical path,
-a future expiry, and an HTTPS address without user information.
-The [upload URL reference](https://docs.boat.dev/api/reference/agent/create-upload-url)
-defines the grant and permits files of any size.
-
-The adapter streams the body to that exact address with `application/octet-stream`.
-It follows no redirect and sends no cookie, Authorization, or `X-Boat-Org` header.
-It forwards each byte without encoding or a complete file buffer.
-It counts bytes against `sizeBytes` and requires the stream to finish before success.
-An incomplete source, a byte-count mismatch, or a failed transfer gives a safe typed error.
-The transfer uses the same 65 second request timeout as file reads.
-The adapter keeps the signed address out of its return value and errors.
-It does not copy transfer error text or codes.

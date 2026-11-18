@@ -76,10 +76,11 @@ These rules hold for each workspace that the suspended user owns.
   the rule fails or the check fails.
 - The agent tools, the git credential route, and the requests for Mac
   commands use the same rule.
-- The workspace uses no agent login of a suspended starter, and the
-  session record shows that the login cannot be used.
-  [Messages](messages-and-attachments.md#messages) states what a message of another
-  member does when the login of the starter cannot be used.
+- The workspace uses no personal login of a suspended starter, and the
+  session record shows that the login cannot be used. A session on the org
+  login does not depend on its starter.
+  [Messages](messages-and-attachments.md#messages) states what a message
+  does when the login of its session cannot be used.
 - A message of a suspended sender never reaches the agent. A suspended
   sender gets no Mac command.
 - The suspension revokes no workspace token of a workspace that another

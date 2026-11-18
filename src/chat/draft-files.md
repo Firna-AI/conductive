@@ -36,8 +36,10 @@ marks of a draft text.
   the draft, and it does nothing in a read-only workspace. In New
   workspace, it runs `NewWorkspaceModel.retryFile`, which does nothing
   while a create runs. Try again uploads the kept `File` of a failed
-  attached file again, with the same ID. A detached file that failed stays
-  failed until its chip comes back.
+  attached file again, with the same ID. It resumes the kept upload of the
+  file, so it sends only the parts that the Worker did not confirm, as
+  [Uploads](#uploads) says. A detached file that failed stays failed until
+  its chip comes back.
 
 ## The attach
 
@@ -46,7 +48,9 @@ marks of a draft text.
   or drop. Each gives the IDs of the new files at once, while their uploads
   run. These are the local IDs of `DraftFile.id`, not the attachment IDs of
   the upload replies. The field writes them in its marks, through
-  `FieldHandle.insertFiles`.
+  `FieldHandle.insertFiles`. A large paste in the field calls the same
+  attach through `onAttach` of the field, and the field writes the mark of
+  its file itself, as [The message field](message-field.md) says.
 - `files` holds only files. A file with no bytes is a file, and it
   uploads. `folders` is optional. It holds the names of the folders that
   the caller found, apart from its files. The state never takes a `File`
@@ -70,16 +74,26 @@ marks of a draft text.
 [Drops](../../docs/protocol/message-attachments.md#drops) states what the
 composer shows for a folder and for a file over the size limit.
 
+- A drop zips each dropped folder before the attach, through `intakeOf` of
+  `../app/file-drags.ts` and `zipFolder` of `../app/folder-zip.ts`. The
+  zip comes to the attach as a file. The zip moves its compressed bytes
+  into a blob each time 8 MiB of them wait, so the page never holds the
+  whole zip, which can have up to 1 GB. The drop gives the names of the other
+  folders in `IntakeRefusals` of `../app/draft-files.ts`: `tooLarge` names
+  each zip over the size limit, and `folders` names each folder that the
+  browser could not read.
 - The draft keeps the names that its last attach refused, in two lists.
-  `refused` holds the names of the files over the size limit, and
-  `refusedFolders` holds the names of the folders. Each list keeps the
-  order of its names. `splitPick` of `../app/draft-files.ts` makes both
-  lists for both owners. It copies the folder names, so a later change of
-  the caller's list changes nothing.
-- Each attach with a file or a folder replaces both lists. So a pick
-  clears the folders of an earlier attach, and an attach of folders alone
-  clears the earlier files over the size limit. An attach with no file and
-  no folder, such as a cancelled pick, changes nothing.
+  `refused` holds the names of the files and the zips over the size limit,
+  and `refusedFolders` holds the names of the folders that could not be
+  read. Each list keeps the order of its names, and the zips follow the
+  files. `splitPick` of `../app/draft-files.ts` makes both lists for both
+  owners. It copies the names, so a later change of the caller's lists
+  changes nothing.
+- Each attach with a file or a refused name replaces both lists. So a pick
+  clears the folders of an earlier attach, and an attach of refused
+  folders alone clears the earlier files over the size limit. An attach
+  with no file and no refused name, such as a cancelled pick, changes
+  nothing.
 - An upload, Try again, a detach, and undo keep both lists. A draft that
   moves to a new session keeps them.
 - The notice of the draft names the files of `refused`, through
@@ -97,8 +111,8 @@ composer shows for a folder and for a file over the size limit.
   with empty lists.
 - `ChatController.stop`, also at a sign-out, clears both lists of each
   draft. New workspace clears them when the life of the person who is
-  signed in ends. This holds also after an attach of folders alone, which
-  starts no upload.
+  signed in ends. This holds also after an attach of refused folders
+  alone, which starts no upload.
 
 ## Marks and files
 
@@ -113,7 +127,8 @@ composer shows for a folder and for a file over the size limit.
 - A detached file whose mark comes back, such as from undo or from a paste
   of its copy, is attached again. A ready file comes back as it was, with
   its attachment and its path, and it uploads nothing. A file whose upload
-  stopped uploads again from the start. A failed file comes back failed.
+  stopped starts again from its kept upload, so it sends only the parts
+  with no receipt. A failed file comes back failed.
 
 ## Uploads
 
@@ -128,10 +143,40 @@ composer shows for a folder and for a file over the size limit.
   nothing. This holds also for a queued upload that starts after its
   generation ended. `runFileJob` checks the generation before the request
   and at each report.
+- The end of a generation ends the upload job of its file at once, so the
+  queue of the pick starts the next file. A part request and a wait before
+  a retry stop. The start call and the complete call do not stop, because
+  they do not take the signal: each goes on, and its late answer changes
+  nothing.
 - An upload changes its file only while the file is attached. In the
   chat, it finds its draft by the draft ID, so its progress and its outcome
   land on the draft also after a move. New workspace also checks the
   message ID of the draft and the life of the person who is signed in.
+- Each file uploads in parts through `uploadAttachment` of
+  [`attachment-upload.ts`](../app/attachment-upload.ts), as
+  [Attachment uploads](../../docs/protocol/attachment-uploads.md) says:
+  the start call, each part in its order as a slice of the `File`, and the
+  complete call. Also a small or an empty file has one part.
+- A file that uploads or failed keeps its upload in `DraftFile.upload`:
+  the upload ID, the part size, the part count, and the receipt of each
+  part that the Worker confirmed. The upload gives each change through
+  `keep`, also when the file moved with its draft. Try again and undo
+  resume this upload.
+- The progress of a file counts the bytes of the confirmed parts and the
+  measured bytes of the part that goes now. A part that goes again counts
+  from its start again.
+- A part that got no answer, a server error, or a broken body goes again
+  alone, up to three times. It waits 1, 2, and 4 seconds before these
+  retries, on the timer of its owner: `ChatContext.delay` over the timers
+  of the chat, or the `delay` of the app services in New workspace. A
+  Remove during a wait stops the upload at once. Another refusal of a part
+  fails the file at once. The start call and the complete call do not go
+  again.
+- After an error that ends the upload, the file keeps no upload, so Try
+  again starts a new one. Such errors are a lost upload
+  (`attachment_not_found`), a part that does not fit the upload, and a
+  complete call that the Worker ended or refused. A try that finds its
+  kept upload gone starts a new upload at once.
 
 ## The send
 
@@ -146,17 +191,18 @@ composer shows for a folder and for a file over the size limit.
   attachment IDs of the files in the same order.
 - In the chat, a message can hold only chips. New workspace needs words
   outside the chips of its files: `withoutMarks(text).trim() !== ''`.
-- Send keeps the draft text that it took, as the field wrote it, with its
-  marks and its escapes. After a send that succeeds, the draft text clears
-  when it is still that text. A text that the member changed during the
-  send stays, without the marks of the sent files and of the detached
-  files. A file that the member added during the send stays, with its
-  mark, for the next message. The send also ends the detached files.
-  `afterSend` of `state/drafts.ts` applies this in the chat.
-- A send that fails keeps the text with its marks, and the files. When the
-  Worker no longer has a sent file, each sent file turns failed, attached
-  or detached, through `failSentDraft`. So undo cannot bring back such a
-  file as ready. Try again uploads its kept `File`.
+- In the chat, Send clears the draft text, its files, and its detached
+  files at once, through `startSend` of `state/drafts.ts`. The message
+  shows in the chat while its send waits. Text and files that the member
+  adds during the send stay for the next message, also after a send that
+  succeeds, through `afterSend`.
+- A send that fails gives back the draft text that Send took, as the field
+  wrote it, with its marks and its escapes, and its attached and detached
+  files, through `failSend`. They go before the text and the files that the
+  member added during the send. When the Worker no longer has a sent file,
+  each sent file turns failed, attached or detached, through
+  `failSentDraft`. So undo cannot bring back such a file as ready. Try
+  again uploads its kept `File` as a new upload.
 - A create of New workspace that succeeds ends the upload generations. It
   starts a new draft with a new message ID, which keeps the model choice
   and a picked repository. A text that changed during the create stays,

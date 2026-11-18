@@ -10,7 +10,8 @@ continues.
 offers Create PR, which asks the agent to open the pull request.
 Each state shows one main action, from decisions 220 to 228. The number of
 a pull request opens it on GitHub. The agent gets a fixed prompt for each
-step that changes code, and the app merges, continues, and archives. On a
+step that changes code, and the app merges, marks a draft ready for
+review, continues, and archives. On a
 phone the row opens the Checks tab, whose top holds the actions, and the
 link to GitHub of a pull request. The `localWork`, `access`, `appAction`, and `branch`
 states of the workspace screen draw them. The child pages:
@@ -22,8 +23,10 @@ states of the workspace screen draw them. The child pages:
   merge, every member sees Continue, and the owner and the admins also see
   Archive.
 - `app/banner/blocked` has a merge conflict with Resolve conflicts,
-  requested changes with Address review, a draft, a pull request closed
-  without a merge, and Blocked. A conflict, requested changes, and Blocked
+  requested changes with Address review, a draft with Ready for review,
+  Ready for review while it runs, its refusals for a missing right,
+  another pull request, and another reason, a pull request closed without
+  a merge, and Blocked. A conflict, requested changes, and Blocked
   tint the bar amber.
 - `app/banner/no-commits` has a branch without commits, whose bar offers no
   Create PR, as in `app/new-workspace/creating` and `first-turn`.
@@ -34,7 +37,8 @@ states of the workspace screen draw them. The child pages:
   Ready to merge for a member with read access, without Merge.
 - `app/banner/local-work` has Commit and push in the place of Merge, Fix
   checks, Resolve conflicts, and Address review, and in a state without an
-  action of its own.
+  action of its own. Its `commits` variant has only commits that are not
+  pushed, so the bar offers Push.
 - `app/banner/sent` has the message of each agent action in the chat, as a
   message of the member who clicked, while the agent works on it.
 - `app/banner/continue` has the question of Continue with local work, the
@@ -46,9 +50,9 @@ states of the workspace screen draw them. The child pages:
   member.
 
 On each page, the row of the workspace in the list shows the GitHub state
-of the bar: amber while checks run, red after a failed check, green after
-passed checks, and purple after the merge. A conflict, requested changes,
-a draft, and a block keep the green of the passed checks. A branch without
+of the bar, in the tone of the bar: grey while checks run and for a draft,
+red after a failed check, green when ready to merge, purple after the
+merge, and amber for a conflict, requested changes, and a block. A branch without
 a pull request or without commits, and a pull request closed without a
 merge, show the dim mark.
 

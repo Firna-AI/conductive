@@ -8,6 +8,12 @@ import {
   recordDelivery,
   repositoryWorkspaces,
 } from './data'
+import {
+  handleRepositoryChange,
+  repositoryChange,
+  type RepositoryChangeDependencies,
+} from './repository-change'
+import { checkRepositoryValues } from './repository-values-check'
 import { webhookRoute, type GitHubPullRequestEvent } from './webhook-routing'
 
 export const GITHUB_WEBHOOK_BODY_BYTES = 26 * 1024 * 1024
@@ -30,6 +36,8 @@ export interface GitHubWebhookDependencies {
     installationId: number,
     branch: string,
   ) => Promise<void>
+  /** Without it, the handler ignores repository changes. */
+  repositoryChange?: RepositoryChangeDependencies
 }
 
 async function authenticatedBody(
@@ -116,10 +124,33 @@ export async function handleGitHubWebhook(
         'The GitHub webhook is not valid.',
       )
     }
+    const change = repositoryChange(event, value)
+    if (change) {
+      await handleRepositoryChange(
+        env.DB,
+        change,
+        deliveryId,
+        dependencies.now,
+        dependencies.repositoryChange,
+      )
+      return new Response(null, { status: 204 })
+    }
     const route = webhookRoute(event, value)
     if (route === null || (await isProcessed(env.DB, deliveryId)))
       return new Response(null, { status: 204 })
     await recordDelivery(env.DB, deliveryId, dependencies.now())
+    // The pull request runs, the workspace lookup, and the push refresh below
+    // match saved rows by the install of the event. So the repair of a missed
+    // move or rename runs first, and this webhook reaches the repaired rows.
+    await checkRepositoryValues(
+      env.DB,
+      {
+        repositoryId: route.repositoryId,
+        installationId: route.installationId,
+      },
+      value,
+      dependencies.repositoryChange,
+    )
     let pullRequestFailure: { error: unknown } | undefined
     try {
       if (route.pullRequest)
@@ -166,6 +197,6 @@ export async function handleGitHubWebhook(
     await completeDelivery(env.DB, deliveryId, dependencies.now())
     return new Response(null, { status: 204 })
   } catch (error) {
-    return privateResponse(errorResponse(error))
+    return privateResponse(errorResponse(error, request))
   }
 }

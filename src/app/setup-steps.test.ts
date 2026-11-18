@@ -3,6 +3,7 @@ import type { AccountResponse } from '../shared/account'
 import type { GetStartedResponse } from '../shared/onboarding'
 import type { OrgSummary } from '../shared/orgs'
 import { coreFixtures, FAKE_TIME } from '../test-support/fixtures/core'
+import { accountWithDefaults } from './default-logins.test-support'
 import { setupSteps } from './setup-steps'
 import { Store } from './store'
 
@@ -67,7 +68,7 @@ function shown(
 }
 
 describe('setupSteps', () => {
-  test('the org step follows the org list, also a deleted org, the agent step follows the logins that can run turns, only the GitHub App step comes from the API, and nothing shows before the account loads', () => {
+  test('the org step follows the orgs that are not deleted, the agent step follows the logins that can run turns, only the GitHub App step comes from the API, and nothing shows before the account loads', () => {
     expect({
       inUse: shown(reply('acme', true, true, true), [acme], connected),
       leftLastOrg: shown(reply('acme', true, true, true), [], connected),
@@ -95,13 +96,25 @@ describe('setupSteps', () => {
       inUse: reply('acme', true, true, true),
       leftLastOrg: reply(null, true, false, true),
       deletedFirst: reply('acme', true, true, true),
-      deletedOnly: reply('labs', true, true, true),
+      deletedOnly: reply(null, true, false, true),
       connectedElsewhere: reply('acme', true, true, true),
       noLogin: reply('acme', true, true, false),
       signedOut: reply('acme', true, true, false),
       noApp: reply('acme', false, true, true),
       loading: null,
       accountLoading: null,
+    })
+  })
+
+  test('the agent step is complete with only an org login that the server names as a default login, and not after the person leaves that org', () => {
+    const orgOnly = accountWithDefaults('admin', { claude: 'org', codex: null })
+    const futex: OrgSummary = { id: 'futex', name: 'Futex', role: 'member' }
+    expect({
+      orgLogin: shown(reply('acme', true, true, false), [acme], orgOnly),
+      leftAcme: shown(reply('futex', true, true, true), [futex], orgOnly),
+    }).toEqual({
+      orgLogin: reply('acme', true, true, true),
+      leftAcme: reply('futex', true, true, false),
     })
   })
 

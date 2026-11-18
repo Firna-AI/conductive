@@ -1,3 +1,4 @@
+import type { E2bLiveSandbox } from './live-provider'
 import { PREVIEW_INGRESS_PATH } from '../../src/shared/preview-ingress'
 import { shellQuote } from '../../worker/lifecycle/commands'
 import { installImageSoftware } from '../../worker/lifecycle/image-software'
@@ -5,10 +6,7 @@ import {
   readSavedScript,
   savedScriptCommand,
 } from '../../worker/lifecycle/saved-script'
-import type { SandboxProvider } from '../../worker/sandbox/provider'
-import { privilegedCommand } from '../../worker/terminal/privileged'
-import { installWorkspaceTools } from '../../worker/tools/image'
-import { WORKSPACE_TOOL_SOURCES } from '../../worker/tools/image-assets'
+import type { SoftwareRelease } from '../../worker/lifecycle/software-release'
 import {
   command,
   probeDirectory,
@@ -16,14 +14,13 @@ import {
   ready,
   requireFlags,
 } from './live-command'
-import type { E2bLiveConfiguration } from './live-input'
 import { probe } from './live-probes'
 import { CheckError } from '../live-input'
 
 export async function installProbeImage(
-  provider: SandboxProvider,
+  provider: E2bLiveSandbox,
   id: string,
-  config: E2bLiveConfiguration,
+  software: SoftwareRelease,
   phase: 'first' | 'second',
 ) {
   await command(
@@ -31,17 +28,14 @@ export async function installProbeImage(
     id,
     `sudo -n install -d -m 700 -o user -g user ${probeDirectory}\nmkdir -p ${probeRepository}\ngit init -q ${probeRepository}`,
   )
-  await installWorkspaceTools(WORKSPACE_TOOL_SOURCES, (source) =>
-    provider.runCommand(id, privilegedCommand(source)),
-  )
-  await command(provider, id, installImageSoftware(config.software))
+  await command(provider, id, installImageSoftware(software))
   await command(
     provider,
     id,
     savedScriptCommand(
       `${probeDirectory}/install.sh`,
       readSavedScript(
-        `set -eu\ntest -d ${shellQuote(probeRepository)}\ntest -f /opt/conductive/software/runner/relay.mjs\n`,
+        `set -eu\ntest -d ${shellQuote(probeRepository)}\ntest -x /opt/conductive/current/conductive\ntest -f /opt/conductive/current/complete\ntest -f /opt/conductive/current/sdk-helper/sdk-helper.mjs\n`,
       ),
       ['set -a', '. /run/ascii-secrets/env.sh', 'set +a'],
     ),
@@ -57,7 +51,7 @@ export async function installProbeImage(
   return facts
 }
 
-export async function checkFirstRestore(provider: SandboxProvider, id: string) {
+export async function checkFirstRestore(provider: E2bLiveSandbox, id: string) {
   await command(
     provider,
     id,
@@ -66,7 +60,7 @@ export async function checkFirstRestore(provider: SandboxProvider, id: string) {
   return { firstDiskSurvives: true, firstRuntimeGone: true }
 }
 
-export async function checkResume(provider: SandboxProvider, id: string) {
+export async function checkResume(provider: E2bLiveSandbox, id: string) {
   const started = await provider.startCommand(
     id,
     "exec /usr/bin/python3 -c 'import signal;signal.pause()'",

@@ -1,9 +1,9 @@
-import type { RunnerLogin } from '../../src/shared/runner'
+import type { AgentLogin } from '../chat/login-kind'
 
 export type TurnTokenCheck =
   | {
       ok: true
-      login: RunnerLogin
+      login: AgentLogin
       loginOwnerId?: string
       codexRecoveryClaimed?: boolean
       codexRecoveryPending?: boolean

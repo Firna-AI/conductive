@@ -3,13 +3,23 @@
   display: block;
 }
 
+/*
+ * `--row-pad` is the padding at each side of the row. `--row-step` is one
+ * step of the indent of a nested row, and `--row-guide` the middle of the
+ * cells of the mark of a top-level row, where the guide lines of
+ * `GuideLines.module.css` start.
+ */
 .row {
+  --row-pad: 10px;
+  --row-step: 12px;
+  --row-guide: 15px;
+
   display: flex;
   align-items: center;
   gap: 9px;
   height: var(--ui-row-height);
   min-height: var(--ui-touch-min);
-  padding: 0 10px;
+  padding: 0 var(--row-pad);
   border-radius: var(--ui-radius-md);
   color: var(--ui-ink2);
   font-size: var(--ui-text-md);
@@ -21,10 +31,14 @@
   background: var(--ui-soft);
 }
 
+/* The taller rows of the list page take a wider step. */
 .page {
+  --row-pad: 12px;
+  --row-step: 16px;
+  --row-guide: 17px;
+
   gap: 11px;
   height: calc(var(--ui-row-height) + 14px);
-  padding: 0 12px;
   font-size: var(--ui-text-lg);
 }
 
@@ -41,6 +55,11 @@
   white-space: nowrap;
 }
 
+/*
+ * The look of the name of a row in each state, which `WorkspaceName`
+ * chooses. The name of a selected row takes the ink colour, but a stopped
+ * or archived name stays muted.
+ */
 .strong {
   color: var(--ui-ink);
   font-weight: var(--ui-weight-strong);
@@ -77,14 +96,21 @@
   transform: translateY(-50%);
 }
 
-.archivable:hover .time {
-  visibility: hidden;
-}
+/*
+ * Only a pointer that can hover reveals the action. On a touch screen, iOS
+ * Safari takes the first tap on a row whose hover shows or hides content as
+ * a hover, so the person would tap twice to open the workspace.
+ */
+@media (hover: hover) {
+  .archivable:hover .time {
+    visibility: hidden;
+  }
 
-.archivable:hover .archive {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
+  .archivable:hover .archive {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
 }
 
 /* A row whose Archive or Restore runs keeps its busy action over its time. */
@@ -135,4 +161,52 @@
 /* Where the row was while the drag lasts. */
 .placeholder {
   opacity: 0.35;
+}
+
+/*
+ * A nested row: a sub-workspace that the list shows under another row of
+ * its tree. Each step of its indent moves the content of the row to the
+ * right, and the fill of a hover or a selection still spans the row. The
+ * step classes give the number of steps. `GuideLines.module.css` draws the
+ * lines of the tree from the same steps.
+ */
+.indent1 {
+  --row-indent: 1;
+}
+
+.indent2 {
+  --row-indent: 2;
+}
+
+.indent3 {
+  --row-indent: 3;
+}
+
+.nested {
+  padding-left: calc(var(--row-pad) + var(--row-indent) * var(--row-step));
+}
+
+/*
+ * The lifted row of a tree stands for the whole tree. In place of its time
+ * it shows how many nested rows move with it, and the edge of a second card
+ * under it shows that it carries more than one row.
+ */
+.liftedTree {
+  box-shadow:
+    0 4px 0 -1px var(--ui-composer),
+    0 4px 0 0 var(--ui-border2),
+    0 8px 22px var(--ui-shadow);
+}
+
+.moving {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The count of a lifted tree takes the strong weight of an unread name. */
+.strong + .moving {
+  font-weight: var(--ui-weight-strong);
 }

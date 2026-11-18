@@ -13,10 +13,8 @@ bucket name in `wrangler.jsonc` name the production database and bucket.
 Local commands, such as `npm run db:migrate` and `npm run dev`, use only
 the local storage.
 
-This local setup creates no Cloudflare resources and deploys nothing. The
-`Deploy` workflow in GitHub Actions deploys each push to `main`, as
-[Automatic deploys](automatic-deploys.md) says. Put local secrets in
-`.dev.vars`, which Git ignores.
+This local setup creates no Cloudflare resources and deploys nothing. Put
+local secrets in `.dev.vars`, which Git ignores.
 
 ## The app origin
 

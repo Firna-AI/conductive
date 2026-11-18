@@ -12,9 +12,10 @@ Members can use the files and tools of workspaces that are not archived.
 Their terminal access can reach credentials available on a workspace's cloud computer.
 
 Work in an org with people you trust with your code, agent logins, and GitHub access.
-The agent login's share setting controls whose messages spend that login.
+A personal agent login's share setting controls whose messages spend that login.
 It does not hide credentials available to code or terminal users on the same computer.
 It does not stop them from using those credentials.
+Each member can spend the org login in sessions on it.
 
 GitHub sign-in and app access come before ordinary product access.
 A workspace link or invite code does not grant membership of an org.
@@ -28,18 +29,22 @@ A session is one conversation in a workspace.
 Its starter is the member who began it.
 A turn is one period of work by its agent.
 Its sender is the person whose message started that turn.
+A turn that a late answer to a secret request starts keeps the sender of the turn that asked.
 
 | Action | Account or person it uses |
 | --- | --- |
-| Agent model use | The session starter's connected agent account |
+| Agent model use | The session's personal or org login, including a chosen endpoint |
 | Git and GitHub CLI in a turn | The turn sender's GitHub account |
-| GitHub commands in the shared Terminal | The workspace owner's GitHub account |
+| GitHub commands in any workspace terminal | The workspace owner's GitHub account |
 | GitHub CLI outside a turn | The workspace owner's GitHub account |
 | Merge from the pull request bar | The GitHub account of the member who selects Merge |
+| Ready for review from the pull request bar | The GitHub account of the member who selects Ready for review |
 | Continue's repository fetch | The GitHub account of the member who selects Continue |
+| A repository change's fetch | The GitHub account of the member who changes the repository |
 | Commit in an agent turn | The turn sender, as author and committer |
 | Commit outside a turn, including Terminal and scripts | The workspace owner by default, as author and committer |
 | A request to run a Mac command | The turn sender's connected Mac |
+| An answer to a request for a secret | Any member who sees the session |
 | Session created through agent tools | The calling turn's sender, as the session starter |
 | Message sent through agent tools | The calling turn's sender, under the receiving session's login rules |
 | Other changes through workspace tools | The calling turn's sender, under that member's app rights |
@@ -47,17 +52,30 @@ Its sender is the person whose message started that turn.
 In a workspace with older cloud computer software, agent commits name the workspace owner.
 [Apply setup changes](/docs/cloud-computer#apply-setup-changes) says how to get newer software.
 
-Other members' messages can spend a session starter's account while that person shares the login.
-Without sharing, another member's message starts a new session on their own login.
+Each session keeps its starter's personal login or the org login.
+Other members' messages use a personal login while its owner shares it.
+Each member can send messages on a session's org login.
+
+If you cannot use the session's login, your message starts a new session when another usable login serves you.
+This happens when its login is unavailable or another member does not share their personal login.
+It uses your usable personal login, or else the org login.
+An admin can give the org login priority for new sessions with **Use for every member**.
+Older sessions keep their login when that switch changes.
+
+Automation runs follow the same rule for their owner, with that owner's GitHub account.
+Any member who can send in a session can still change its model, effort, and **Fast** setting.
+That choice applies to every member's messages on the session's login.
 The agent can identify the member who sent each message.
 Another member's message during a turn does not change its GitHub account, commit author, or receiving Mac.
 
-Every member using a workspace's Terminal uses the same owner identity for GitHub commands.
+Every member using a workspace terminal uses the same owner identity for GitHub commands.
 GitHub access can include repositories outside the Conductive org.
 It reaches repositories that both the GitHub account and the GitHub App can reach.
 
 GitHub checks the clicking member's access and branch rules for a merge.
+GitHub also checks the clicking member's access for Ready for review.
 Every org member can Continue after a merge, but their GitHub account needs repository read access for its fetch.
+Every org member can also change a workspace's repository, and their GitHub account needs read access to the new repository for its fetch.
 
 ## Understand what agents can reach
 
@@ -73,7 +91,11 @@ The workspace tools can list workspaces and usable repositories, sections, and m
 They can also list sessions and previews.
 They can read details of a workspace, session, or message, and read transcripts across the org.
 This includes workspaces that members created themselves.
-Agents can read archived workspaces and closed sessions, but cannot send messages to them.
+They can also list each org secret's name, description, and environment variable name, without its value.
+Agents can read archived and removed workspaces by ID.
+Workspace lists leave out removed workspaces unless the agent asks for them.
+Agents can also read closed sessions.
+They cannot send messages to archived or removed workspaces or closed sessions.
 The tools reach only the org of the calling workspace.
 
 A workspace token is a credential that lets programs use these tools.
@@ -92,14 +114,15 @@ The tools can:
 - Send messages to sessions.
 - Create and delete sections.
 - Open and close private previews.
+- Run a command with a secret that the session may use, or ask members to allow it.
 
 An agent can archive the workspace where it runs, which ends its turn.
-Tool messages follow the receiving session's login-sharing rules.
+Tool messages follow the receiving session's login rules.
 These workspace actions need no separate approval screen.
 Previews that agents open need sign-in and workspace access.
 
-A routine can start agent work from a pull request.
-Comments and reviews on that pull request can steer these reads and changes across the org, with the routine owner's rights.
+An automation can start agent work from a pull request.
+Comments and reviews on that pull request can steer these reads and changes across the org, with the automation owner's rights.
 Conductive sets no limit on the number of sessions or messages that agents create.
 Agents that keep replying to each other can spend logins and keep computers running.
 Use **Stop** in each affected session to end its turn.
@@ -108,24 +131,41 @@ Use **Stop** in each affected session to end its turn.
 
 ## Protect agent and GitHub logins
 
-Conductive stores your connected agent login encrypted.
-Account shows its status and kind without returning the stored value.
+Conductive stores personal and org agent logins encrypted.
+**Account** shows personal logins.
+The org's **Agents** tab in **Settings** shows org logins.
+Only an admin can connect, replace, or remove an org login.
+Other members see its kind and settings read-only.
+Neither page returns a saved key or login.
+For an own endpoint, Conductive encrypts the address and key and keeps the host in plain text.
+The login's page shows the host, including any non-default port.
+Your browser gets neither the saved key nor the full saved address back.
 
-A newer cloud computer starts from a shared setup that requires Conductive to keep agent logins outside the computer.
-Its model requests and answers pass through Conductive on Cloudflare.
-Conductive adds the session starter's login before sending each request to Anthropic or OpenAI.
+Conductive keeps agent logins outside cloud computers.
+Model requests and answers pass through Conductive on Cloudflare.
+Conductive adds the session's personal or org login before sending each request to Anthropic, OpenAI, or the chosen endpoint.
 
-Each turn there gets a temporary credential called a turn token.
+A chosen endpoint gets the messages, files, and command results of each turn on its login, whoever sent the message.
+It processes them where its owner runs it.
+An admin who connects an org endpoint chooses that server for the members whose sessions use it.
+This includes automation runs that no person watches.
+A personal own endpoint login starts with sharing on.
+Its owner can turn sharing off in **Account**.
+
+Each turn gets a temporary credential called a turn token.
 It gives no copy of the stored login.
 A program or member with terminal access can read or copy it.
 
-That token can use the session starter's login through Conductive while the turn runs.
+That token can use the session's personal or org login through Conductive while the turn runs.
 It also works from outside the cloud computer during that turn.
 
 After **Stop**, the token can start no new request.
-Any request that still runs ends within 30 seconds after the turn ends.
-Changing or removing the session starter's login ends the turn at its next model request.
-The same happens if that member loses org access.
+A request that still runs ends at the first turn check that answers after the turn ends.
+Conductive checks the turn every 15 seconds.
+While no check answers, the request can run to the end of its answer.
+Changing or removing the session's login ends the turn at its next model request.
+A turn on a personal login also ends there if its owner loses org access.
+A session on the org login can continue after its starter leaves the org.
 A program that keeps running can read or copy the tokens of later turns, including turns in other members' sessions.
 Agent settings in the repository can send model requests, with their content and their turn token, to another address.
 
@@ -134,28 +174,25 @@ Conductive keeps no copy of a model request or answer as it passes them on.
 It writes no body or header value from those requests or answers to its logs.
 The normal chat history and Mac command records still stay on the service.
 
-An older cloud computer starts from an earlier setup that still permits software to receive the session starter's agent login itself.
-A program or member with terminal access can read or copy that login during a turn.
-A copied login can remain usable after the turn ends.
-If a login is exposed, revoke it with its provider.
-Removing a login from Account does not revoke a copy held elsewhere.
+An own endpoint's address and key never reach a cloud computer.
+Each turn needs supported agent software.
+If Conductive reports unsupported agent software, ask an admin to run **Build computer**.
+After it succeeds, create a new workspace.
 
 Your ChatGPT sign-in stays outside the cloud computer.
 Conductive renews that sign-in for you.
-Your ChatGPT email, account ID, and plan can reach the cloud computer.
-An older cloud computer cannot run Codex with ChatGPT, so your ChatGPT sign-in never reaches it.
+Your ChatGPT email, account ID, and ChatGPT workspace name can reach the cloud computer.
+ChatGPT sign-in needs agent software that supports its temporary credentials.
+If its turn cannot start, follow the [ChatGPT recovery steps](/docs/agent-logins#recover-from-a-login-error).
 
-Ask an org admin to select **Build computer** in **Settings**, under **Cloud computer**.
-After the build succeeds, create a new workspace to get the current protection.
-Stopping or resuming an older computer does not remove its login exposure risk.
-Installing newer software in that computer does not remove that risk either.
-A new workspace does not revoke logins already copied from an older computer.
-
-Agent settings in the repository can send an older computer's model requests and agent login to another address.
+Older agent software could expose the saved login itself.
+Updating or resuming that computer does not revoke a login that someone copied earlier.
+If a login was exposed, revoke it with its provider.
+Removing a login from Account does not revoke a copy held elsewhere.
 
 Code on the computer can also obtain the GitHub credential available to that workspace.
 This includes the workspace owner's GitHub credential outside a running agent turn.
-Continue also brings the clicking member's GitHub token into the cloud computer while it fetches the latest default branch.
+Continue and a repository change also bring the member's GitHub token into the cloud computer while they fetch the latest default branch.
 Code or members with terminal access can read that token during the fetch.
 
 Removing a member ends their ordinary access to the org.
@@ -169,13 +206,14 @@ If you suspect exposure, stop the agent's turn.
 Use the provider's controls to revoke exposed logins or tokens.
 Archive stops its cloud computer and ends that workspace's connection access.
 It also revokes that workspace's token, including copies used to read other chats.
-Conductive keeps the computer and its files for 14 days.
+The cloud computer keeps its disk files for 14 days.
 Those files can still hold copied credentials during that window.
 Restore leaves the computer stopped.
 Its next resume gives it a new workspace token.
 Archive and Restore do not revoke logins or GitHub tokens already copied elsewhere.
 
 - [Replace an agent login](/docs/agent-logins#replace-or-remove-a-login)
+- [Manage an org login](/docs/agent-logins#use-an-org-login)
 - [Archive a workspace](/docs/workspaces#archive-a-workspace)
 - [Build the current computer setup](/docs/cloud-computer#apply-setup-changes)
 
@@ -207,10 +245,42 @@ Values and marks changed in settings apply at the computer's next start.
 Earlier chat and logs keep their text.
 
 Changed or encoded values can still appear.
-File content, diff content, downloaded files, and Terminal do not hide secret values.
+File content, pictures in agent replies, diff content, downloaded files, and Terminal do not hide secret values.
 Some displayed path labels hide values, but the browser still receives real file paths.
 
 - [Set environment variables](/docs/cloud-computer#set-environment-variables)
+
+## Understand secrets
+
+Conductive stores the value of each secret encrypted.
+Every member sees each secret's name and description, and who added it.
+Values show as dots.
+An admin can reveal one value at a time, also of a secret that another member added.
+Every member sees who revealed a value last, and when.
+
+An agent can ask to run one command with a secret.
+The command gets the value.
+The agent gets the secret's name and environment variable name, without the value.
+Each session needs a member's approval, unless the secret is for **All agents** or pre-approved in the workspace's **Capabilities**.
+Any member who sees the session can allow the request.
+The approval lasts for that session.
+Every member can remove approvals in **Capabilities**.
+
+A request waits 90 seconds for an answer.
+After that, it stays in the chat, and a later **Allow** tells the agent in a new turn.
+An **Allow** also allows each other open request of the same secrets that its approval covers, so you answer once.
+An automation run follows the same rules.
+Text in a pull request can steer its agent to use the secrets that need no new approval.
+
+While a command runs with a secret, its value is on the cloud computer.
+Programs and members with terminal access can read it then.
+A command can also write it to a file.
+During a turn, a program on the computer can run its own command with each secret that the session may use.
+Conductive hides exact copies of a value in the command's output and in the text of the chat.
+Pictures in agent replies do not hide values.
+Changed or encoded values can still appear, also to the agent and its model provider.
+
+- [Add secrets for agents](/docs/cloud-computer#add-secrets-for-agents)
 
 ## Understand previews and Mac commands
 
@@ -222,8 +292,14 @@ Your browser can still keep the preview files that it loaded, as the preview app
 
 Mac commands run locally with the Mac user's permissions.
 Only the connected Mac that receives a request can approve it.
+**Mac access** starts off in each new workspace, also in one that an agent or an automation creates.
+While it is off, the agents of that workspace cannot ask for Mac commands.
+Any member can turn it on or off in a workspace's **Capabilities**.
 **Always allow** covers the exact command text in any requested folder on that Mac.
-Timed permission covers every command from one workspace for 15 minutes.
+Workspace permission covers every command from one workspace for 15 minutes, or until you stop it.
+Permission until you stop also ends when you quit the Mac app or sign out.
+While the 15 minutes run, the workspace bar offers **Extend**, **Keep until I stop**, and **Stop**.
+**Extend** resets their time left to 15 minutes from now.
 
 Use **Remove** or **Stop** in **This Mac** to change those saved permissions.
 Keep the app open and retry if a permission change takes effect but cannot save.
@@ -243,7 +319,10 @@ Restore returns the workspace stopped.
 
 Restore ends after 14 days.
 Conductive then deletes the computer and its files.
-Its chat remains read-only after deletion.
+The workspace leaves **Archived**, the command palette, and the workspace counts of the org.
+A direct link or a chat link still opens its read-only chat.
+The bar says **Removed on** followed by the removal date.
+Conductive keeps its chat history until the org is deleted.
 
 Deleting an org stops its computers and starts a seven-day restore window.
 After that window, deletion removes its data and computers.

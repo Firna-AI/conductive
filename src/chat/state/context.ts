@@ -1,13 +1,23 @@
 import { ApiError } from '../../app/api/client'
+import type { Delay } from '../../app/events'
 import type { WorkspaceView } from '../../shared/workspace-view'
 import type { ChatApi, WorkspaceTarget } from '../api/client'
 import type { DeviceChannel } from '../device/device-actions'
+import type { SecretApi } from '../secrets/secret-actions'
 import type { SessionReads } from '../links/session-reads'
 import type { WorkspaceStream } from '../stream/workspace-stream'
-import { withSession, type ChatSnapshot, type ChatStore } from './chat-snapshot'
+import { withSession, type ChatSnapshot } from './chat-snapshot'
+import type { ChatStore } from './chat-store'
+import { withLateSends } from './late-sends'
 import type { PendingMove } from './model-moves'
 import type { PendingEdit } from './session-records'
 import type { Transcript } from '../../shared/transcript/transcript'
+
+/** The newest page and the complete history of one shared session load. */
+export interface HistoryLoad {
+  readonly newest: Promise<number | null>
+  readonly complete: Promise<number | null>
+}
 
 /** What the chat's actions share: the API, the store, the logs, and the stream. */
 export interface ChatContext {
@@ -16,8 +26,8 @@ export interface ChatContext {
   readonly store: ChatStore
   readonly stream: WorkspaceStream
   /** The running history load of each session, so that loads are shared. */
-  readonly loading: Map<string, Promise<number | null>>
-  /** The rename and model edits that wait for their replies, by session. */
+  readonly loading: Map<string, HistoryLoad>
+  /** The rename, model, and close edits that wait for their replies, by session. */
   readonly edits: Map<string, readonly PendingEdit[]>
   /**
    * The event number of the workspace record that shows, so an older reply
@@ -44,6 +54,11 @@ export interface ChatContext {
    * and a stop of the chat aborts each one.
    */
   readonly uploads: Map<string, AbortController>
+  /**
+   * The timer of the waits before a failed part of an upload goes again: the
+   * timers of the chat, which a test gives as manual timers.
+   */
+  readonly delay: Delay
   readonly saveView: (view: WorkspaceView) => void
   /** The chat is still open. A response that arrives later changes nothing. */
   readonly live: () => boolean
@@ -54,6 +69,8 @@ export interface ChatContext {
   readonly owned: boolean
   /** The routes of Mac commands, and the number of their latest read. */
   readonly devices: DeviceChannel
+  /** The route of the answers to secret requests. */
+  readonly secrets: SecretApi
   /**
    * The one read of the sessions of each other workspace that a session
    * link names, for this run, as `SessionReads` says.
@@ -95,7 +112,9 @@ export function showNotice(
 }
 
 /**
- * Shows a new transcript, and drops sent messages that it now holds. A Stop
+ * Shows a new transcript, and drops sent messages that it now holds. A
+ * message whose send failed but that the transcript holds did send, so its
+ * notice and its copy in a draft go, as `withLateSends` says. A Stop
  * that waits belongs to its turn, so it ends when that turn no longer runs,
  * also when another turn runs now.
  */
@@ -110,7 +129,7 @@ export function withTranscript(
       item.kind === 'user' ? [item.message.id] : [],
     ),
   )
-  return withSession(snapshot, sessionId, (state) => {
+  const next = withSession(snapshot, sessionId, (state) => {
     const running = transcript.turn?.turnId
     const same =
       running !== undefined && running === state.transcript.turn?.turnId
@@ -122,6 +141,7 @@ export function withTranscript(
       stopping: same ? state.stopping : false,
     }
   })
+  return withLateSends(next, shown)
 }
 
 /** Saves the view one request at a time. A newer view replaces one that waits. */

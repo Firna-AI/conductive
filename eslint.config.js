@@ -29,4 +29,49 @@ export default defineConfig([
     },
   },
   astro.configs.recommended,
+  {
+    // Keep each JavaScript, TypeScript, and Astro file short. Blank lines
+    // and comments count.
+    rules: {
+      'max-lines': ['error', 300],
+    },
+  },
+  {
+    files: [
+      'worker/app-api/feature-workspaces-data.ts',
+      'worker/app-api/workspace-parent-change-data.ts',
+      'worker/app-api/feature-sections-data.ts',
+      'worker/automations/automation-write-data.ts',
+    ],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            'CallExpression[callee.type="MemberExpression"][callee.computed=false][callee.property.name=/^(prepare|batch|run)$/]',
+          message:
+            'Use guardedStatement, guardedBatch, guardedRun, or shellRead from shell-guard.ts.',
+        },
+        {
+          selector:
+            'CallExpression[callee.type="MemberExpression"][callee.computed=true][callee.property.value=/^(prepare|batch|run)$/]',
+          message:
+            'Use guardedStatement, guardedBatch, guardedRun, or shellRead from shell-guard.ts.',
+        },
+      ],
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['**/feature-shell-access', '**/shell-guard'],
+              importNames: ['activeShellMemberPredicate'],
+              message:
+                'Use guardedStatement from shell-guard.ts for shell access checks.',
+            },
+          ],
+        },
+      ],
+    },
+  },
 ])

@@ -41,6 +41,8 @@ function DevFiles(props: {
       navigate: (target) => {
         if (target.kind === 'list') setList(target.list)
       },
+      // The page opens no tab, so it has no tab to keep.
+      keep: () => {},
     }),
     [],
   )

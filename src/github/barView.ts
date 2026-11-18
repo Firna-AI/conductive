@@ -1,3 +1,4 @@
+import type { ChangesResponse } from '../shared/generated/ChangesResponse'
 import type { ButtonTint } from '../../docs/mockups/src/components/common/tint'
 import {
   barLabels,
@@ -9,8 +10,8 @@ import {
   type BarAction,
   type BarFacts,
   type BarModel,
+  type LocalWorkKind,
 } from '../../docs/mockups/src/components/workspace/barModel'
-import type { ChangesResponse } from '../shared/files'
 import type { GitHubBanner, GitHubCapabilities } from '../shared/github'
 import { bannerStatus } from './bannerStatus'
 import { failingChecks } from './barPrompts'
@@ -23,9 +24,10 @@ export type CapabilityState =
   | { status: 'failed' }
 
 /** The local work of the sandbox, or unknown while no changes report shows. */
-export type LocalWork = 'yes' | 'no' | 'unknown'
+export type LocalWork = LocalWorkKind | 'unknown'
 
 type MergeRefusal = 'merge-moved-head' | 'merge-no-right' | 'merge-refused'
+type ReadyRefusal = 'ready-no-right' | 'ready-pull-changed' | 'ready-refused'
 
 /** An action of the app that the bar shows: a run, or how it ended. */
 export type BarOutcome =
@@ -33,6 +35,10 @@ export type BarOutcome =
   | { kind: 'merge-refused'; reason: MergeRefusal }
   /** A merge that ended without a refusal of GitHub, with the app's words. */
   | { kind: 'merge-failed'; message: string }
+  | { kind: 'marking-ready' }
+  | { kind: 'ready-refused'; reason: ReadyRefusal }
+  /** Ready for review that ended without a known refusal, with its words. */
+  | { kind: 'ready-failed'; message: string }
   | { kind: 'continuing' }
   /** The Worker refused Continue because a turn runs. */
   | { kind: 'continue-waits' }
@@ -101,14 +107,16 @@ function positive(count: number | undefined): boolean {
  * out, such as a file that an edit took back to its base content. The raw
  * count of the runner holds such files. An older runner sends no raw count.
  * Then only its listed files show the files that are not committed. The
- * unpushed commits that a report counts are local work too.
+ * unpushed commits that a report counts are local work too: without changed
+ * files, they are the only work, and the bar asks for a push.
  */
 export function localWorkOf(changes: ChangesResponse | null): LocalWork {
   if (changes === null) return 'unknown'
   const files =
     positive(changes.uncommittedFileCount) ||
     changes.files.some((file) => file.uncommitted)
-  return files || positive(changes.unpushedCommits) ? 'yes' : 'no'
+  if (files) return 'changes'
+  return positive(changes.unpushedCommits) ? 'commits' : 'none'
 }
 
 /**
@@ -133,15 +141,26 @@ function accessOf(state: CapabilityState): {
   }
 }
 
+/**
+ * Whether the member gets the agent actions: with write access, or when
+ * the access read failed. A read that has not answered offers none.
+ */
+export function offersAgentActions(state: CapabilityState): boolean {
+  return accessOf(state).access !== 'read'
+}
+
 function appActionOf(outcome: BarOutcome | null): BarFacts['appAction'] {
   switch (outcome?.kind) {
     case 'merging':
+    case 'marking-ready':
     case 'continuing':
     case 'continue-failed':
       return outcome.kind
     case 'merge-refused':
+    case 'ready-refused':
       return outcome.reason
     case 'merge-failed':
+    case 'ready-failed':
     case 'continue-waits':
     case undefined:
       return 'none'
@@ -176,6 +195,7 @@ function messageOf(
         ? { text: outcome.message, tone: 'danger', href: null }
         : null
     case 'merge-refused':
+    case 'ready-refused':
       return {
         text: barMessageText(model.message, branches),
         tone: 'danger',
@@ -183,6 +203,8 @@ function messageOf(
       }
     case 'merge-moved-head':
     case 'merge-no-right':
+    case 'ready-no-right':
+    case 'ready-pull-changed':
       return {
         text: barMessageText(model.message, branches),
         tone: 'danger',
@@ -195,6 +217,9 @@ function messageOf(
     return waits
   }
   if (banner.state === 'ready-to-merge' && outcome?.kind === 'merge-failed') {
+    return { text: outcome.message, tone: 'danger', href: url }
+  }
+  if (banner.state === 'draft' && outcome?.kind === 'ready-failed') {
     return { text: outcome.message, tone: 'danger', href: url }
   }
   return null
@@ -212,7 +237,7 @@ export function barViewOf(input: BarInput): BarView {
   const { access, method } = accessOf(input.capabilities)
   const model = barModel({
     banner: banner.state,
-    localWork: input.localWork === 'yes',
+    localWork: input.localWork === 'unknown' ? 'none' : input.localWork,
     access,
     method: input.localWork === 'unknown' ? null : method,
     appAction: appActionOf(outcome),

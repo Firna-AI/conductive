@@ -144,7 +144,9 @@ export class Workspace extends ProductionWorkspace {
     if (url.pathname !== '/__test/browser') return super.fetch(request)
     const input = record(await readJsonObject(request))
     const action = string(input.action)
-    if (action === 'suspension-entered') {
+    if (action === 'turn-token') {
+      return Response.json(await this.checkTurnToken(string(input.token)))
+    } else if (action === 'suspension-entered') {
       return Response.json(await this.suspension.wait())
     } else if (action === 'arm-due') {
       const scheduled = await this.ctx.storage.getAlarm()

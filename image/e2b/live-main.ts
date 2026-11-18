@@ -18,6 +18,7 @@ import {
 } from './live-probes'
 import { openLiveProvider, type LiveProvider } from './live-provider'
 import { LiveResources } from './live-resources'
+import { latestSoftwareRelease } from '../../worker/lifecycle/software-release'
 
 export async function e2bLiveMain(
   root: string,
@@ -25,19 +26,18 @@ export async function e2bLiveMain(
 ): Promise<void> {
   if (arguments_.includes('--help')) {
     process.stdout.write(
-      `Usage: node image/live-check.mjs --provider=e2b [--prepare]\nRequired: ${e2bRequiredInputs.join(', ')}\nOptional: LIVE_E2B_STATE_DIR, LIVE_OUTPUT. Keep state under .context/ and use the same state key when reopening it.\nThis mode builds two clean disposable images and checks a probe sandbox. It runs no agent or app workspace.\n--prepare uses no credential or provider. Real checks require EU and filesystem-only project support.\n`,
+      `Usage: node image/live-check.mjs --provider=e2b [--prepare]\nRequired: ${e2bRequiredInputs.join(', ')}\nOptional: LIVE_E2B_STATE_DIR, LIVE_OUTPUT, LIVE_CONDUCTIVE_RELEASE_SERVER. Keep state under .context/ and use the same state key when reopening it.\nThis mode builds two clean disposable images with the current sandbox release and checks a probe sandbox. It runs no agent or app workspace.\n--prepare uses no credential or provider. Real checks require EU and filesystem-only project support.\n`,
     )
     return
   }
-  await Promise.all(
-    ['runner', 'relay', 'measure', 'compare'].map((name) =>
-      access(join(root, 'dist/runner', `${name}.mjs`)),
-    ),
-  )
+  await Promise.all([
+    access(join(root, 'image/e2b/runtime-probe.py')),
+    access(join(root, 'image/e2b/preview-probe.mjs')),
+  ])
   if (arguments_.includes('--prepare')) {
     await access(join(root, 'migrations/202611101110_e2b_provider_state.sql'))
     process.stdout.write(
-      'E2B preparation passed. Runner and preview relay bundles, provider migration, and script dependencies are available.\nNo real sandbox, image, provider, or agent was used.\n',
+      'E2B preparation passed. Runtime probes, provider migration, and script dependencies are available.\nNo real sandbox, image, provider, or agent was used.\n',
     )
     return
   }
@@ -61,6 +61,10 @@ export async function e2bLiveMain(
     templateId: config.templateId,
   }
   try {
+    const software = await latestSoftwareRelease(
+      { CONDUCTIVE_RELEASE_SERVER: config.releaseServer },
+      (request) => fetch(request),
+    )
     session = await openLiveProvider(root, config.stateDirectory, options)
     const first = await resources.create(session.provider, 'first')
     const base = await probe(session.provider, first, 'base')
@@ -75,7 +79,7 @@ export async function e2bLiveMain(
     report.first = await installProbeImage(
       session.provider,
       first,
-      config,
+      software,
       'first',
     )
     const imageA = await resources.snapshot(session.provider, first, 'image-a')
@@ -88,7 +92,7 @@ export async function e2bLiveMain(
     report.second = await installProbeImage(
       session.provider,
       second,
-      config,
+      software,
       'second',
     )
     const imageB = await resources.snapshot(session.provider, second, 'image-b')

@@ -1,4 +1,5 @@
 import { act } from 'react'
+import type { Agent } from '../../shared/generated/Agent'
 import { chatGptSignInCopy as copy } from '../../../docs/mockups/src/components/settings/chatGptSignInCopy'
 import type { AppModel } from '../../app/app-model'
 import type { ManualDelay } from '../../app/test-kit'
@@ -9,7 +10,6 @@ import {
   type PollCodexDeviceResponse,
   type StartCodexDeviceResponse,
 } from '../../shared/account'
-import type { Agent } from '../../shared/agents'
 import {
   byRole,
   queryByRole,
@@ -54,7 +54,7 @@ export const chatGptLogin = {
 
 /** The row of a Codex login on the ChatGPT plan that other members do not use. */
 export const chatGptRow =
-  'Codex Connected ChatGPT plan Remove Let other members use this login Their messages in your sessions start a new session on their own login.'
+  'Codex Connected ChatGPT plan Remove Let other members use this login Their messages in your sessions start a new session.'
 
 /**
  * Serves the account of the fixtures, a Claude token and a Codex API key,
@@ -121,7 +121,7 @@ export async function openAccount(
   const app = await startedApp(server, services)
   const view = mountScreen(
     app,
-    <AccountScreen connect={connect} tab="general" user={fakeUser} />,
+    <AccountScreen connect={connect} tab="agents" user={fakeUser} />,
   )
   return { app, view }
 }
@@ -177,7 +177,7 @@ export function settingsLink(view: HTMLElement): (string | null)[] | null {
 
 /** The text of the Codex form while it shows `userCode` and waits. */
 export function codeShown(userCode: string): string {
-  return `Codex API key ChatGPT plan ${copy.steps.before} auth.openai.com/codex/device ${copy.steps.after} ${userCode} ${copy.keep} ${copy.waiting} Cancel`
+  return `Codex API key ChatGPT plan Own endpoint ${copy.steps.before} auth.openai.com/codex/device ${copy.steps.after} ${userCode} ${copy.keep} ${copy.waiting} Cancel`
 }
 
 /** Runs the timer of the next poll, and lets its answer show. */

@@ -2,18 +2,23 @@ import type { AttachmentUploadTarget } from '../shared/messages'
 import type { ApiClient } from './api/client'
 import { uploadAttachment } from './attachment-upload'
 import type { Lifetime } from './creations'
+import type { Delay } from './events'
 import {
   changeFile,
+  emptyIntake,
   hasFile,
+  keptUpload,
+  noRefusals,
   runFileJob,
   runFileQueue,
   splitPick,
   uploadingFile,
   stopFile,
   type DraftFile,
+  type IntakeRefusals,
 } from './draft-files'
 import { reconcileFiles, withoutFileMarks } from './draft-file-state'
-import type { Draft } from './new-workspace-model'
+import type { Draft } from './new-workspace-draft'
 import type { Store } from './store'
 
 /** What the uploads of a New workspace draft take from its form. */
@@ -24,6 +29,8 @@ interface DraftUploadsHost {
   readonly newId: () => string
   /** The life of the creates of the person who is signed in now. */
   readonly lifetime: () => Lifetime
+  /** The timer of the waits before a failed part goes again. */
+  readonly delay: Delay
 }
 
 /**
@@ -49,13 +56,18 @@ export class DraftUploads {
    * uploads, and its name goes to the notice, which the next pick replaces.
    * Each other file shows at once and uploads, one after another. The new
    * IDs return immediately so the field can insert the chips in this event.
-   * Folder names stay refusal data and start no upload.
+   * The refusals of a drop go to the notices too and start no upload.
    */
-  attach(files: readonly File[], folders: readonly string[] = []): string[] {
-    if (files.length === 0 && folders.length === 0) return []
+  attach(
+    files: readonly File[],
+    refusals: IntakeRefusals = noRefusals,
+  ): string[] {
+    if (emptyIntake(files, refusals)) return []
     const life = this.follow()
-    const { uploads, refused, refusedFolders } = splitPick(files, folders)
-    const added = uploads.map((file) => uploadingFile(this.host.newId(), file))
+    const { uploads, refused, refusedFolders } = splitPick(files, refusals)
+    const added = uploads.map((file) =>
+      uploadingFile(this.host.newId(), file, null),
+    )
     const queued = added.map((item) => this.reserve(life, item))
     this.host.draft.change((draft) => ({
       ...draft,
@@ -99,7 +111,10 @@ export class DraftUploads {
     return () => this.upload(life, item, job, messageId)
   }
 
-  /** Try again uploads the kept `File` of a failed file again. */
+  /**
+   * Try again uploads the kept `File` of a failed file again. It resumes
+   * the kept upload of the file, so only the parts with no receipt go.
+   */
   async retry(fileId: string): Promise<void> {
     const item = this.host.draft.get().files.find(({ id }) => id === fileId)
     if (item?.state !== 'failed') return
@@ -108,7 +123,7 @@ export class DraftUploads {
     this.host.draft.change((draft) => ({
       ...draft,
       files: changeFile(draft.files, fileId, () =>
-        uploadingFile(fileId, item.file),
+        uploadingFile(fileId, item.file, item.upload),
       ),
     }))
     await start()
@@ -142,7 +157,7 @@ export class DraftUploads {
 
   private async upload(
     life: Lifetime,
-    item: { id: string; file: File },
+    item: DraftFile,
     job: AbortController,
     messageId: string,
   ): Promise<void> {
@@ -155,6 +170,7 @@ export class DraftUploads {
       await runFileJob({
         id: item.id,
         file: item.file,
+        resume: keptUpload(item),
         live: () =>
           life.live &&
           !job.signal.aborted &&
@@ -162,6 +178,7 @@ export class DraftUploads {
           draft.get().messageId === messageId &&
           hasFile(draft.get().files, item.id),
         signal: job.signal,
+        delay: this.host.delay,
         change: (change) =>
           draft.change((current) => ({
             ...current,

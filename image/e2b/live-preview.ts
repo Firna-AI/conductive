@@ -1,3 +1,4 @@
+import type { E2bLiveSandbox } from './live-provider'
 import WebSocket from 'ws'
 import source from './preview-probe.mjs?raw'
 import { E2B_PRIVATE_HEADER_NAMES } from '../../src/shared/preview-ingress'
@@ -7,12 +8,8 @@ import {
   PREVIEW_RELAY_PORT,
   PREVIEW_RELAY_PORT_HEADER,
 } from '../../src/shared/previews'
-import { imageNodeExecutable } from '../../worker/lifecycle/image-runtime'
 import { shellQuote } from '../../worker/lifecycle/commands'
-import type {
-  PrivatePort,
-  SandboxProvider,
-} from '../../worker/sandbox/provider'
+import type { PrivatePort } from '../../worker/sandbox/provider'
 import { readBoundedJson } from '../../worker/http/bounded-body'
 import { CheckError, integer, object } from '../live-input'
 import { command, jsonFile, probeDirectory, upload } from './live-command'
@@ -120,7 +117,7 @@ async function websocketProbe(
 }
 
 export async function checkPreview(
-  provider: SandboxProvider,
+  provider: E2bLiveSandbox,
   id: string,
   requests: PreviewRequests = previewRequests,
 ) {
@@ -136,7 +133,7 @@ export async function checkPreview(
   await upload(provider, id, 'preview-probe.mjs', source)
   await provider.startCommand(
     id,
-    `${shellQuote(imageNodeExecutable())} ${probeDirectory}/preview-probe.mjs ${probeDirectory} ${shellQuote(JSON.stringify(sensitive))}`,
+    `/opt/conductive/current/node/bin/node ${probeDirectory}/preview-probe.mjs ${probeDirectory} ${shellQuote(JSON.stringify(sensitive))}`,
   )
   const ports = await jsonFile(provider, id, `${probeDirectory}/ports.json`)
   const ipv4 = integer(ports.ipv4),
@@ -173,7 +170,7 @@ export async function checkPreview(
 }
 
 export async function checkOldAlias(
-  provider: SandboxProvider,
+  provider: E2bLiveSandbox,
   id: string,
   domain: string,
   oldPort: number,
@@ -183,7 +180,7 @@ export async function checkOldAlias(
   await command(
     provider,
     id,
-    `${shellQuote(imageNodeExecutable())} -e ${shellQuote(script)}`,
+    `/opt/conductive/current/node/bin/node -e ${shellQuote(script)}`,
   )
   return { oldAliasRejected: true }
 }

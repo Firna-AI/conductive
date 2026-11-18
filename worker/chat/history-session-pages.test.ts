@@ -24,47 +24,47 @@ async function pagesOf(events: readonly WorkspaceEvent[]) {
     () => undefined,
   )
   const pages = new HistoryPages(storage)
-  return (limits: PageLimits, after: number, through: number) =>
-    pages.read(after, through, { sessionId: 'session', limits })
+  return (limits: PageLimits, before: number | undefined, through: number) =>
+    pages.readNewest(before, through, { sessionId: 'session', limits })
 }
 
-it('ends a session page once its events reach the byte limit', async () => {
-  // Each envelope with 400 characters of text takes 589 JSON bytes, so the
+it('ends a newest-first session page once its events reach the UTF-8 byte limit', async () => {
+  // Each envelope with 100 emoji takes 589 JSON bytes, so the
   // second event passes the limit of 1,000 bytes.
-  const text = 'x'.repeat(400)
+  const text = '🙂'.repeat(100)
   const read = await pagesOf(
     Array.from({ length: 3 }, (_, index) => answer(`answer-${index}`, text)),
   )
   const limits = { scan: 2_048, bytes: 1_000 }
-  const first = await read(limits, 0, 3)
-  expect(first.events.map((envelope) => envelope.eventNumber)).toEqual([1, 2])
-  expect(first).toMatchObject({ hasMore: true, nextAfterEventNumber: 2 })
+  const first = await read(limits, undefined, 3)
+  expect(first.events.map((envelope) => envelope.eventNumber)).toEqual([2, 3])
+  expect(first).toMatchObject({ hasMore: true, nextBeforeEventNumber: 2 })
   const second = await read(limits, 2, 3)
-  expect(second.events.map((envelope) => envelope.eventNumber)).toEqual([3])
+  expect(second.events.map((envelope) => envelope.eventNumber)).toEqual([1])
   expect(second).not.toHaveProperty('hasMore')
 })
 
-it('ends a session page at the scan limit and goes on after it', async () => {
+it('ends a newest-first session page at the scan limit and goes on before it', async () => {
   const read = await pagesOf([
+    answer('late'),
     ...Array.from({ length: 64 }, (_, index): WorkspaceEvent => ({
       type: 'workspace.title',
       name: `${index}`,
     })),
-    answer('late'),
   ])
   const limits = { scan: 64, bytes: 4_194_304 }
-  expect(await read(limits, 0, 65)).toEqual({
+  expect(await read(limits, undefined, 65)).toEqual({
     throughEventNumber: 65,
     events: [],
     hasMore: true,
-    nextAfterEventNumber: 64,
+    nextBeforeEventNumber: 2,
   })
-  expect(await read(limits, 64, 65)).toEqual({
+  expect(await read(limits, 2, 65)).toEqual({
     throughEventNumber: 65,
     events: [
       {
         workspaceId: 'workspace',
-        eventNumber: 65,
+        eventNumber: 1,
         occurredAt: 25,
         event: answer('late'),
       },

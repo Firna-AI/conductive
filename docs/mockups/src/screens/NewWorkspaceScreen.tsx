@@ -12,8 +12,13 @@ import { memberViewer, you } from '../fixtures/members'
 import type { ShortcutChanges } from '../fixtures/shortcutChanges'
 import { paths } from '../paths'
 import { FirstBuildNotice } from './firstBuildNotice'
+import {
+  newWorkspaceCapabilities,
+  newWorkspaceCapabilitiesSheet,
+} from './newWorkspaceCapabilities'
 import { pageOrg, railOf, sidebarOf } from './newWorkspacePageParts'
 import {
+  formLoginLabel,
   formNotices,
   hasWords,
   newWorkspaceDraft,
@@ -34,10 +39,12 @@ export const newWorkspaceSchema = {
     'repositories',
     'repositoryMenu',
     'waitingBuild',
+    'capabilities',
     'result',
     'org',
     'firstBuild',
     'viewer',
+    'modelMenu',
   ],
   properties: {
     ...newWorkspaceFormProperties,
@@ -49,6 +56,8 @@ export const newWorkspaceSchema = {
     firstBuild: { enum: firstBuildStates },
     /** Only an admin gets the link to the Cloud computer tab. */
     viewer: { enum: ['admin', 'member'] },
+    /** The menu of the model picker: closed, or open with fast mode on. */
+    modelMenu: { enum: ['closed', 'open-fast'] },
   },
 } as const
 
@@ -62,10 +71,12 @@ export const newWorkspaceForm: NewWorkspaceState = {
   repositories: 'chosen',
   repositoryMenu: 'closed',
   waitingBuild: 'building',
+  capabilities: 'closed',
   result: 'form',
   org: 'active',
   firstBuild: 'succeeded',
   viewer: 'admin',
+  modelMenu: 'closed',
 }
 
 /**
@@ -114,26 +125,41 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
   // of Firna and of a linked task leads nowhere.
   const created =
     state.files === 'ready' ? paths.attachmentsQueued : paths.creating
+  const fastMenu = state.modelMenu === 'open-fast'
   return (
     <ChatPane
       composer={{
         attachments: draft.files,
+        capabilities: newWorkspaceCapabilities(
+          state,
+          props.viewport,
+          state.org === 'new'
+            ? paths.newWorkspaceNoSecrets
+            : paths.newWorkspaceCapabilities,
+        ),
+        // The menu of a phone: Firna has no page with it open.
+        menu: {
+          open: state.capabilities === 'menu',
+          to: state.org === 'new' ? undefined : paths.newWorkspaceMenu,
+        },
         attachTo:
           state.files === 'none' && !failed && !linked && state.org !== 'new'
             ? paths.newWorkspaceFiles
             : undefined,
         blocked: building || waiting || waits(state),
         caret: text === draft.text ? draft.caret : undefined,
-        choice: page.choice,
+        choice: fastMenu ? { ...page.choice, fast: true } : page.choice,
         draft: text,
         // A phone shows a pick at the caret in place of the drag.
         drop: state.files === 'drop-over' && props.viewport === 'desktop',
+        picker: fastMenu,
         placeholder: taskPlaceholder,
         running: false,
         sendTo:
           failed || linked || waiting || state.org === 'new' || !hasWords(text)
             ? undefined
             : created,
+        sessionLogin: formLoginLabel(state),
       }}
       empty={
         suspended ? undefined : (
@@ -204,6 +230,9 @@ export function NewWorkspaceScreen(props: {
       <MobileFrame>
         {page}
         {sheet}
+        {state.org === 'suspended'
+          ? null
+          : newWorkspaceCapabilitiesSheet(state)}
       </MobileFrame>
     )
   }

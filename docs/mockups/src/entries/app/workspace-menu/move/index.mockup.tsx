@@ -21,7 +21,7 @@ export const workspaceMenuMove = defineScreen({
       slug: 'general-only',
       title: 'Only General',
       description:
-        'Acme after an admin deleted Checkout and Infra, which moved their workspaces to General. With one section, the menu of Apple Pay button has no Move to section: Reassign to, Rename, a line, then Archive.',
+        'Acme after an admin deleted Checkout and Infra, which moved their workspaces to General. With one section, the menu of Apple Pay button has no Move to section: Reassign to, Rename, Copy link, a line, then Archive.',
       rationale:
         'A move needs another section, and the menu hides an action that the person cannot use. A new org also starts with General only.',
       props: { list: 'general-only', menu: 'workspace' },

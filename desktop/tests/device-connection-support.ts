@@ -49,6 +49,7 @@ export function connectionFixture() {
     return socket
   })
   const session = vi.fn(() => ({ receive, dispose }))
+  const signedOut = vi.fn()
   const connection = createDeviceConnection({
     deviceId: 'local-device',
     clock: time.clock,
@@ -56,6 +57,7 @@ export function connectionFixture() {
     authenticate,
     connect,
     session,
+    signedOut,
     warn,
   })
   return {
@@ -67,6 +69,7 @@ export function connectionFixture() {
     events,
     sockets,
     session,
+    signedOut,
     receive,
     dispose,
     warn,

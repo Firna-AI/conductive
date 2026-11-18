@@ -1,7 +1,6 @@
 import { PREVIEW_RELAY_MARK_HEADER } from '../../src/shared/previews'
 import { createHarness, TEST_ORIGIN, TEST_TIME } from '../test-support/harness'
 import type { ProxySocket, SocketRuntime } from './types'
-import { toolsActivity } from './activity.test-support'
 import { relayResponse } from './relay.test-support'
 import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 
@@ -94,7 +93,6 @@ export async function createToolsHarness() {
   core.env.BOAT_API_KEY = 'boat-test-key'
   core.boat.apiKey = 'boat-test-key'
   let now = TEST_TIME
-  let activity = toolsActivity(core.env.DB, () => now)
   let desktopSequence = 0
   let terminalSequence = 0
   let relaySocketActive = true
@@ -119,8 +117,9 @@ export async function createToolsHarness() {
     },
   }
   const dependencies = {
-    onActivity: (id: string, at: number) => activity.record(id, at),
     now: () => now,
+    // Each check reads again, as after the access window ends. window.test.ts covers the window.
+    previewAccessWindowMs: 0,
     sockets,
     fetch: async (request: Request) => {
       requests.push(request.clone())
@@ -218,7 +217,6 @@ export async function createToolsHarness() {
   return {
     ...core,
     dependencies,
-    activity: () => activity.settled(),
     requests,
     serverSockets,
     upstreamSockets,
@@ -233,8 +231,6 @@ export async function createToolsHarness() {
       response = factory
     },
     resetTools: async () => {
-      await activity.settled()
-      activity = toolsActivity(core.env.DB, () => now)
       await core.reset()
       now = TEST_TIME
       requests.length = 0

@@ -3,7 +3,7 @@ import type { AppEnv } from '../env'
 import { runnerTokenAllowed } from '../data/workspace-token-access'
 import { readConnectionAccess } from '../security/connection-access'
 import { readLoginMetadata } from '../chat/login-availability'
-import { readAgentLogin } from '../chat/queries'
+import { readSessionLogin } from '../chat/queries'
 import { resolveMessageAttachments } from '../chat/attachment-claims'
 import { prepareMessageAttachments } from '../chat/attachment-copy'
 import { attachmentWorkspace } from '../chat/attachment-claim-data'
@@ -74,12 +74,12 @@ export function nativeChatResolvers(
       ...args: Parameters<ChatDependencies['readLoginMetadata']>
     ) =>
       callbacks.readLoginMetadata?.(...args) ??
-      readLoginMetadata(env.DB, workspaceId() ?? '', ...args),
+      readLoginMetadata(env, workspaceId() ?? '', ...args),
     resolveLogin: (...args: Parameters<ChatDependencies['resolveLogin']>) =>
       callbacks.resolveLogin?.(...args) ??
       (args[0] === null
         ? Promise.resolve(null)
-        : readAgentLogin(env, args[0], args[1])),
+        : readSessionLogin(env, args[0], args[1])),
     filterRunnerOutput: (
       ...args: Parameters<ChatDependencies['filterRunnerOutput']>
     ) =>

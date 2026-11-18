@@ -8,6 +8,7 @@ import type {
 import type { MessageHeading } from '../../fixtures/headingConversations'
 import type { MessageList } from '../../fixtures/listConversations'
 import { classes } from '../common/classes'
+import markdown from '../files/MarkdownView.module.css'
 import { AgentBlocks } from './AgentBlocks'
 import { MessageText } from './MessageText'
 import styles from './ToolGroup.module.css'
@@ -32,7 +33,7 @@ function TableText(props: { table: MessageTable }) {
   return cells.map((cell, index) => (
     <Fragment key={index}>
       {index > 0 ? ' · ' : null}
-      <MessageText strong text={cell} />
+      <MessageText answer text={cell} />
     </Fragment>
   ))
 }
@@ -40,10 +41,11 @@ function TableText(props: { table: MessageTable }) {
 /**
  * A list of a message line, with the lists under its items. Each item of a
  * numbered list writes its number, because a browser numbers a list item
- * of spans by the items of the list of the fold.
+ * of spans by the items of the list of the fold. An open line shows the
+ * pictures of its items.
  */
-function LineList(props: { list: MessageList }) {
-  const { list } = props
+function LineList(props: { list: MessageList; open: boolean }) {
+  const { list, open } = props
   return (
     <span className={classes(styles.bullets, list.numbered && styles.numbered)}>
       {list.items.map((item, index) => (
@@ -53,8 +55,8 @@ function LineList(props: { list: MessageList }) {
               <span className={styles.number}>{index + 1}.</span>{' '}
             </>
           ) : null}
-          <MessageText strong text={item.text} />{' '}
-          {item.list ? <LineList list={item.list} /> : null}
+          <MessageText answer pictures={open} text={item.text} />{' '}
+          {item.list ? <LineList list={item.list} open={open} /> : null}
         </span>
       ))}
     </span>
@@ -73,26 +75,41 @@ function LineHeading(props: { heading: MessageHeading }) {
   if (text.trim() === '') return null
   return (
     <span className={styles.heading}>
-      <MessageText strong text={text} />{' '}
+      <MessageText answer text={text} />{' '}
     </span>
   )
 }
 
 /**
- * A block of a message line: a paragraph, a heading, a list, or a table as
- * text.
+ * A block of a message line: a paragraph, a heading, a list, a table as
+ * text, or a code block. A code block takes the look of an answer's code
+ * block only while the line is open, so the closed line shows its text in
+ * the line. In the same way, the Markdown image of a picture file shows as
+ * its picture only while the line is open, and the closed line shows its
+ * link (screenshot decision 2).
  */
-function LineBlock(props: { block: AgentBlock }) {
-  const { block } = props
+function LineBlock(props: { block: AgentBlock; open: boolean }) {
+  const { block, open } = props
   if (typeof block === 'string') {
     return (
       <span className={styles.paragraph}>
-        <MessageText strong text={block} />{' '}
+        <MessageText answer pictures={open} text={block} />{' '}
       </span>
     )
   }
   if (block.kind === 'heading') return <LineHeading heading={block} />
-  if (block.kind === 'list') return <LineList list={block} />
+  if (block.kind === 'list') return <LineList list={block} open={open} />
+  if (block.kind === 'code') {
+    return (
+      <>
+        <span
+          className={classes(styles.paragraph, props.open && markdown.block)}
+        >
+          {block.text}
+        </span>{' '}
+      </>
+    )
+  }
   return (
     <>
       <TableText table={block} />{' '}
@@ -120,12 +137,12 @@ export function MessageLine(props: { message: AgentItem; open: boolean }) {
         <MessageSquareText aria-hidden className={styles.icon} size={13} />
         <span className={styles.messageText}>
           {lead.map((block, index) => (
-            <LineBlock block={block} key={index} />
+            <LineBlock block={block} key={index} open={props.open} />
           ))}
           {table ? (
             <span className={styles.preview}>
               {rest.map((block, index) => (
-                <LineBlock block={block} key={index} />
+                <LineBlock block={block} key={index} open={props.open} />
               ))}
             </span>
           ) : null}
@@ -133,7 +150,7 @@ export function MessageLine(props: { message: AgentItem; open: boolean }) {
       </summary>
       {table ? (
         <div className={styles.messageBody}>
-          <AgentBlocks blocks={rest} />
+          <AgentBlocks blocks={rest} pictures />
         </div>
       ) : null}
     </details>

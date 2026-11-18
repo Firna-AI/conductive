@@ -1,7 +1,6 @@
 // @vitest-environment happy-dom
-import { act, useState } from 'react'
+import { act } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createApiClient } from '../../app/api/client'
 import { DEVICE_CURRENT_PATH, DEVICE_SETTINGS_PATH } from '../../shared/device'
 import {
   byRole,
@@ -23,13 +22,10 @@ import {
   press,
   waitFor,
 } from '../../test-support/mount'
-import type { Clock } from '../ui/clock'
-import { AllowAllBar } from './AllowAllBar'
-import { useMacSettings, type MacSettingsController } from './mac-settings'
+import { Bar, BAR } from './allow-all-bar-test-kit'
+import type { MacSettingsController } from './mac-settings'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
-
-const BAR = 'Commands that run without asking'
 
 afterEach(() => {
   vi.useRealTimers()
@@ -40,29 +36,6 @@ const tick = () =>
   act(async () => {
     vi.advanceTimersByTime(1_000)
   })
-
-/**
- * The bar with the settings controller of the window, as the app gives it.
- * `found` gets the controller, which reads the settings again as the app
- * does after an answer.
- */
-function Bar(props: {
-  fetch: FakeApiServer['fetch']
-  clock: Clock
-  found?: (controller: MacSettingsController) => void
-}) {
-  const [client] = useState(() => createApiClient(props.fetch))
-  const { controller, state } = useMacSettings(client)
-  props.found?.(controller)
-  return (
-    <AllowAllBar
-      clock={props.clock}
-      controller={controller}
-      state={state}
-      workspaceId={FAKE_IDS.workspace}
-    />
-  )
-}
 
 describe('AllowAllBar', () => {
   it('counts down the 15 minutes of the workspace from the end time of the Mac, and goes when they end', async () => {

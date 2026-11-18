@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { AgentChoice } from '../../shared/agents'
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import { chatHistoryPath } from '../../shared/events'
 import { sessionsPath } from '../../shared/sessions'
 import {
@@ -12,13 +12,18 @@ import { chatFor, newSessionRecord } from './test-kit'
 const org = FAKE_IDS.org
 const ws = FAKE_IDS.workspace
 const id = 'debounce'
-const opus: AgentChoice = { agent: 'claude', model: 'Opus 5.5', effort: 'high' }
+const opus: AgentChoice = {
+  agent: 'claude',
+  model: 'Opus 5.5',
+  effort: 'high',
+  fast: false,
+}
 
 describe('session records from stored history', () => {
   it('keeps current tabs and selection while first-load history brings an older close and reopen', async () => {
     const first = newSessionRecord(FAKE_IDS.session, opus)
     const second = newSessionRecord(id, opus)
-    const nextPage = chatHistoryPath(org, ws, first.id, 31, 40)
+    const nextPage = chatHistoryPath(org, ws, first.id, 33, 40)
     const chat = chatFor({
       conversation: 'history',
       hold: (request) =>
@@ -31,11 +36,12 @@ describe('session records from stored history', () => {
       ],
       activeTab: { kind: 'session', sessionId: first.id },
       fileList: 'changes',
+      temporaryTab: null,
       tool: 'terminal',
     }
     chat.server.json('GET', workspaceViewPath(org, ws), { view })
     chat.server.json('GET', sessionsPath(org, ws), {
-      eventNumber: 40,
+      eventNumber: 30,
       sessions: [first, second],
       history: [],
     })
@@ -49,22 +55,30 @@ describe('session records from stored history', () => {
       },
     })
     chat.server.json('GET', chatHistoryPath(org, ws, first.id), {
-      events: [envelope(31, FAKE_TIME)],
+      events: [envelope(33, null)],
       throughEventNumber: 40,
       hasMore: true,
-      nextAfterEventNumber: 31,
+      nextBeforeEventNumber: 33,
     })
     chat.server.json('GET', nextPage, {
-      events: [envelope(33, null)],
+      events: [envelope(29, null), envelope(31, FAKE_TIME)],
       throughEventNumber: 40,
     })
     const loading = chat.controller.start()
+    await loading
+    const history = chat.server.requests
+      .map((request) => new URL(request.url))
+      .find((url) => url.searchParams.get('sessionId') === first.id)
+    expect(Object.fromEntries(history?.searchParams ?? [])).toEqual({
+      sessionId: first.id,
+    })
     await vi.waitFor(() => expect(chat.held).toHaveLength(1), {
       timeout: 10_000,
     })
     const duringHistory = chat.controller.getSnapshot()
+    const complete = chat.controller.loadHistory(first.id)
     chat.held.splice(0, 1)[0]()
-    await loading
+    await complete
     const snapshot = chat.controller.getSnapshot()
     expect(duringHistory.view).toEqual(view)
     expect(duringHistory.sessions.map((session) => session.id)).toEqual([
@@ -134,7 +148,7 @@ describe('session records from stored history', () => {
         events: [envelope],
         throughEventNumber: eventNumber + 1,
         ...(hydration === 'failed'
-          ? { hasMore: true, nextAfterEventNumber: eventNumber }
+          ? { hasMore: true, nextBeforeEventNumber: eventNumber }
           : {}),
       })
       chat.server.json(

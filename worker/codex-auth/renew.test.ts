@@ -20,6 +20,7 @@ beforeEach(async () => {
     agent: 'codex',
     model: 'test-codex',
     effort: 'high',
+    fast: false,
   })
 })
 afterAll(async () => harness.dispose())

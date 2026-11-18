@@ -30,7 +30,7 @@ at `app/tabs` and `app/transcripts`.
 - The tab menu of each session tab holds two copy items: Copy concise
   transcript and Copy full transcript (decision 215).
   [The tab row](agents-and-sessions.md#the-tab-row) gives their place in
-  the menu.
+  the menu, after Copy link, which copies the link of the session.
 - Each item copies the transcript of the session of its tab (decision
   213). A member can then paste it into another agent, a document, or a
   pull request.
@@ -186,6 +186,9 @@ at `app/tabs` and `app/transcripts`.
   the verb of the chat, the target as code, and the detail of the call.
 - Each Mac command in a copy gives its command, its Mac, its state, and
   its output in a code block.
+- Each secret request and each result of a run with secrets in a copy
+  gives what its card shows, with no value and no output, as
+  [What the chat shows](secret-requests.md#what-the-chat-shows) says.
 - Each piece of inline code and each code block takes a fence of backticks
   that is longer than each run of backticks in its text. Reason: the code
   then stays whole when the text shows as Markdown.

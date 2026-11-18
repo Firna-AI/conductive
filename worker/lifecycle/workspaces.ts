@@ -1,6 +1,6 @@
 import { requireActiveOrg } from '../data/user-access'
 import type { User } from '../../src/shared/api'
-import { requireOrgMember } from './access'
+import { requireOrgMember, settleInOrder } from './access'
 import {
   existingCreation,
   claimCreation,
@@ -10,6 +10,7 @@ import {
   type CreationClaim,
 } from './creation-claims'
 import { markCreationFailed } from './creation-attempt-data'
+import { requireCreationParent } from './creation-parent'
 import {
   prepareCreationRequest,
   type WorkspaceCreationBase,
@@ -31,15 +32,20 @@ export async function createWorkspace(
   sender: User = user,
   base?: WorkspaceCreationBase,
 ): Promise<ProvisionedWorkspace> {
-  await requireActiveOrg(runtime.env.DB, orgId)
-  await requireOrgMember(runtime.env.DB, orgId, user.id)
-  await requireOrgMember(runtime.env.DB, orgId, sender.id)
   const key: CreationKey = {
     orgId,
     senderUserId: sender.id,
     messageId: input.firstMessage.id,
   }
-  const existing = await existingCreation(runtime.env.DB, key)
+  const db = runtime.env.DB
+  const reading = existingCreation(db, key)
+  await settleInOrder([
+    requireActiveOrg(db, orgId),
+    requireOrgMember(db, orgId, user.id),
+    ...(sender.id === user.id ? [] : [requireOrgMember(db, orgId, sender.id)]),
+    reading,
+  ])
+  const existing = await reading
   if (existing?.state === 'succeeded')
     return provisionedResponse(runtime, orgId, existing.id)
   if (existing) {
@@ -51,6 +57,7 @@ export async function createWorkspace(
       await markCreationFailed(runtime.env.DB, existing.id, result.error)
     else return joinCreation(runtime, key, existing, user, sender, input, base)
   }
+  await requireCreationParent(runtime, orgId, input.parentId)
   const candidate = await prepareCreationRequest(
     runtime,
     orgId,
@@ -79,6 +86,7 @@ export async function replayCreation(
   const job = await recordedCreationJob(runtime.env.DB, key, existing.id, '')
   if (!job) return null
   const endpoint = runtime.workspace(existing.id)
+  await requireCreationParent(runtime, key.orgId, job.creation?.parentId)
   await endpoint.queueLifecycleStart(job)
   const result = await endpoint.waitCreationAdmission()
   if (!result.ok) throw workspaceStartFailure(result.error)
@@ -122,6 +130,7 @@ async function joinCreation(
   }
   if (!job) throw new Error('Missing recorded creation plan')
   const endpoint = runtime.workspace(claim.id)
+  await requireCreationParent(runtime, key.orgId, job.creation?.parentId)
   await endpoint.queueLifecycleStart(job)
   const result = await endpoint.waitCreationAdmission()
   if (!result.ok) throw workspaceStartFailure(result.error)

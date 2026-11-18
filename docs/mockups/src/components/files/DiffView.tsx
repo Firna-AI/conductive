@@ -1,4 +1,5 @@
 import type { DiffHunkStart, DiffLine } from '../../fixtures/fileContents'
+import { CodeTokens } from './CodeView'
 import styles from './code.module.css'
 
 type Hunk = { start: DiffHunkStart; lines: readonly DiffLine[] }
@@ -11,7 +12,7 @@ const lineClass = {
   removed: styles.removed,
 } as const
 
-/** A unified diff with old and new line numbers. */
+/** A unified diff with old and new line numbers and syntax colours. */
 export function DiffView(props: { hunks: readonly Hunk[] }) {
   const rows = props.hunks.flatMap((hunk) => {
     let oldLine = hunk.start.old
@@ -39,7 +40,9 @@ export function DiffView(props: { hunks: readonly Hunk[] }) {
               <span className={styles.number}>{row.old}</span>
               <span className={styles.number}>{row.new}</span>
               <span className={styles.sign}>{signs[row.line.kind]}</span>
-              <span className={styles.text}>{row.line.text}</span>
+              <span className={styles.text}>
+                <CodeTokens line={row.line.text} />
+              </span>
             </div>
           ),
         )}

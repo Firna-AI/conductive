@@ -5,6 +5,7 @@ import {
   operatorOverviewPath,
   operatorUserPath,
   orgSuspensionPath,
+  userSuspensionPath,
 } from '../../shared/operator'
 import {
   operatorApprovalPath,
@@ -37,6 +38,49 @@ describe('the operator routes of the dev fake', () => {
       overview: await send('GET', operatorOverviewPath()),
       providers: await send('GET', operatorProvidersPath()),
     }).toEqual({ overview: refused, providers: refused })
+  })
+
+  test('returns long runs with fixed start times and current org and owner statuses', async () => {
+    let now = FAKE_TIME + 60_000
+    const { send } = devFetch('?operator=1', () => now)
+    const first = await send('GET', operatorOverviewPath())
+    expect(first.body).toMatchObject({
+      longRuns: expect.arrayContaining([
+        expect.objectContaining({
+          orgId: SAMPLE_IDS.deletedOrg,
+          orgStatus: 'deleted',
+        }),
+        expect.objectContaining({
+          orgId: SAMPLE_IDS.suspendedOrg,
+          orgStatus: 'suspended',
+          ownerGithubId: SAMPLE_IDS.suspendedUser,
+          ownerStatus: 'suspended',
+          runningSince: FAKE_TIME - 8 * 3_600_000,
+        }),
+        expect.objectContaining({
+          orgId: FAKE_IDS.org,
+          cloudComputerId: null,
+          state: 'starting',
+          runningSince: FAKE_TIME - 41_000,
+        }),
+      ]),
+    })
+    await send('DELETE', orgSuspensionPath(SAMPLE_IDS.suspendedOrg))
+    await send('DELETE', userSuspensionPath(SAMPLE_IDS.suspendedUser))
+    now += 60_000
+    const refreshed = await send('GET', operatorOverviewPath())
+    expect(refreshed.body).toMatchObject({
+      readAt: FAKE_TIME + 120_000,
+      longRuns: expect.arrayContaining([
+        expect.objectContaining({
+          orgId: SAMPLE_IDS.suspendedOrg,
+          orgStatus: 'active',
+          ownerGithubId: SAMPLE_IDS.suspendedUser,
+          ownerStatus: 'active',
+          runningSince: FAKE_TIME - 8 * 3_600_000,
+        }),
+      ]),
+    })
   })
 
   test('find an org by a preview address, and suspend and lift it with the time and the operator', async () => {

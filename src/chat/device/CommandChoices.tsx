@@ -20,7 +20,8 @@ import local from './device.module.css'
 /**
  * The other ways to allow a command, each with what it covers (decision
  * 62). Always allow covers the exact command text on this Mac. The 15
- * minutes cover every command from this workspace on this Mac.
+ * minutes cover every command from this workspace on this Mac, and so does
+ * the choice until the user stops it (Mac until-stop decision 0).
  */
 const choices = [
   {
@@ -32,6 +33,11 @@ const choices = [
     action: 'allow-workspace-15-minutes',
     label: 'Allow all commands for 15 minutes',
     scope: 'Every command from this workspace, on this Mac',
+  },
+  {
+    action: 'allow-workspace-until-stop',
+    label: 'Allow all commands until I stop',
+    scope: 'Every command from this workspace, on this Mac, until you stop',
   },
 ] as const satisfies readonly {
   action: DeviceApprovalAction

@@ -4,10 +4,17 @@ import type { WorkspaceView } from '../../../shared/workspace-view'
 /** A tool of the tools panel, as the workspace view names it. */
 export type ToolKey = WorkspaceView['tool']
 
-/** The tool that an address shows, and the preview that it names. */
+/**
+ * The tool that an address shows, and the preview, the port of the sandbox,
+ * or the terminal that it names. An address names at most one of them.
+ */
 export interface ToolPlace {
   tool: ToolKey
   previewId: string | null
+  /** A port of the sandbox, which the Preview tool opens. */
+  port: number | null
+  /** A terminal, which the Terminal tool shows. */
+  terminalId: string | null
 }
 
 /**
@@ -42,20 +49,59 @@ const toolTabs: readonly { tool: ToolKey; label: string }[] = [
 export const offeredToolTabs = toolTabs.filter((tab) => toolOffered(tab.tool))
 
 /**
+ * The segment before the port in the address of the Preview tool with a
+ * port. A preview ID with a segment after it names no preview, so no older
+ * address changes its meaning.
+ */
+const portSegment = 'port'
+
+/**
+ * The port of an address: a whole number from 1 to 65535, with no sign and
+ * no leading zero, as the builder writes it. Another value is null.
+ */
+function addressPort(segment: string): number | null {
+  if (!/^[1-9]\d{0,4}$/.test(segment)) return null
+  const port = Number(segment)
+  return port <= 65535 ? port : null
+}
+
+/**
  * The tool of the address after the workspace, or null for the chat, the
- * files, or another address: `terminal`, `preview`, `preview/<previewId>`,
- * or `desktop`.
+ * files, or another address: `terminal`, `terminal/<terminalId>`,
+ * `preview`, `preview/<previewId>`, `preview/port/<port>`, or `desktop`.
+ * Another address under `terminal` or `preview` shows its tool with no
+ * terminal, no preview, and no port.
  */
 export function toolPlace(view: readonly string[]): ToolPlace | null {
-  const [area, previewId, ...rest] = view
-  if (area === 'terminal' || area === 'desktop') {
-    return { tool: area, previewId: null }
-  }
+  const [area, second, third, ...rest] = view
+  const only = second !== undefined && third === undefined ? second : null
+  const none = { previewId: null, port: null, terminalId: null }
+  if (area === 'terminal') return { ...none, tool: area, terminalId: only }
+  if (area === 'desktop') return { ...none, tool: area }
   if (area !== 'preview') return null
-  return {
-    tool: 'preview',
-    previewId: previewId !== undefined && rest.length === 0 ? previewId : null,
+  if (second === portSegment && third !== undefined && rest.length === 0) {
+    return { ...none, tool: 'preview', port: addressPort(third) }
   }
+  return { ...none, tool: 'preview', previewId: only }
+}
+
+/**
+ * The tool that the address names for the tools panel, or null. On desktop
+ * an address of a preview or of a port names a Preview tab of the centre,
+ * not a tool: the panel keeps its saved tool, and a click on a tool tab
+ * keeps the address of that Preview tab. On a phone each such address is
+ * the Preview page.
+ */
+export function panelToolPlace(
+  view: readonly string[],
+  desktop: boolean,
+): ToolPlace | null {
+  const place = toolPlace(view)
+  const centre =
+    desktop &&
+    place?.tool === 'preview' &&
+    (place.port !== null || place.previewId !== null)
+  return centre ? null : place
 }
 
 /** The address of a tool, or of one preview of the Preview tool. */
@@ -68,4 +114,32 @@ export function toolHref(
   return previewId === undefined
     ? routes.workspace(orgId, workspaceId, tool)
     : routes.workspace(orgId, workspaceId, tool, previewId)
+}
+
+/** The address of the Terminal tool with one of its terminals. */
+export function terminalHref(
+  orgId: string,
+  workspaceId: string,
+  terminalId: string,
+): string {
+  return routes.workspace(orgId, workspaceId, 'terminal', terminalId)
+}
+
+/**
+ * The address of the Preview tool with a port of the sandbox, such as for
+ * a local address in chat text. The tool shows the open preview of the
+ * port, or opens one, then puts the address of that preview in its place.
+ */
+export function previewPortHref(
+  orgId: string,
+  workspaceId: string,
+  port: number,
+): string {
+  return routes.workspace(
+    orgId,
+    workspaceId,
+    'preview',
+    portSegment,
+    String(port),
+  )
 }

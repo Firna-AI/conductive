@@ -1,18 +1,18 @@
-# History pages can still change the saved tabs
+# Paged socket history can still change saved tabs
 
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-09, from PR #58, branch `conductor/boat-native-remote-workspaces-milestone-8q`, round 2, finding 3, with the rules of its check.
-- **Location:** `src/chat/state/history.ts:31` and `src/chat/state/session-records.ts:179`.
+- **Location:** `src/chat/stream/workspace-stream.ts:172` and `src/chat/state/session-records.ts:179`.
 - **Reason:** the problem needs unusual concurrent timing, and the fix costs the same after the merge.
 
 - **Terms:**
   - **Record owner:** the one operation under `src/chat/state/` that writes and publishes the session records of a chat.
   - **History cutoff:** the event number up to which a history load reads the past events of a session.
-- **Background:** The app reads the session list and the saved view before it loads history. Each history page publishes session records through the record owner.
-- **Problem:** Start with the saved tabs `[autocomplete, debounce]`, with `autocomplete` selected, and a session list at event 30. History closes `autocomplete` at event 31, and the next page reopens it at event 33, with the cutoff at 40. After the final list at 40, the selection becomes `debounce`, the order reverses, and the saved view leaves out `autocomplete`.
-- **Impact if no action:** A passing state of the history changes the conversation that the user sees, and the final list read does not restore it.
-- **Root question:** How does a complete history read keep the saved selection when the final session state is open?
+- **Background:** The app reads the session list and the saved view before it loads history. Each socket history page publishes session records through the record owner. The session history load now reads newest first and merges earlier pages once. Each earlier page holds only older records, so that load has no passing tab states. The paged replay of the events socket still publishes forward pages separately.
+- **Problem:** The fault remains in the paged replay of the events socket. Its original session history reproduction started with the saved tabs `[autocomplete, debounce]`, with `autocomplete` selected, and a session list at event 30. History closed `autocomplete` at event 31, and the next page reopened it at event 33, with the cutoff at 40. After the final list at 40, the selection became `debounce`, the order reversed, and the saved view left out `autocomplete`. The socket replay can still publish the same passing close and reopen.
+- **Impact if no action:** A passing state of the socket replay changes the conversation that the user sees, and a later current list read does not restore it.
+- **Root question:** How does a complete paged socket replay keep the saved selection when the final session state is open?
 - **Options:**
   - **A.** Hold the tab placement until the history load succeeds or fails, and keep the page content incremental. It fixes only the history caller. Effort: Small.
   - **B.** Give the history replay and the stream replay one record-owner operation that controls the tab placement across pages, and publish the final placement when the replay ends. Effort: Medium.

@@ -1,10 +1,14 @@
-/* The name of an org shows beside its tile while the pointer or focus is on it. */
+/*
+ * The name of an org shows beside its tile while the pointer is on it, or
+ * while the keyboard focus is on it. A click also gives the link the focus,
+ * but not the visible focus, so the name goes when the pointer leaves.
+ */
 .railHint {
   display: none;
 }
 
 .railItem:hover .railHint,
-.railItem:focus-within .railHint {
+.railItem:has(:focus-visible) .railHint {
   display: block;
 }
 

@@ -68,6 +68,7 @@ export function setupShellListTests() {
   })
   return () => ({
     db: harness.env.DB,
+    env: harness.env,
     orgId,
     repositoryId,
     generalId,

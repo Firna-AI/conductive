@@ -1,3 +1,4 @@
+import type { Workspace } from '../../shared/generated/Workspace'
 import { useRef, useState } from 'react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import menuStyles from '../../../docs/mockups/src/components/common/Menu.module.css'
@@ -8,7 +9,7 @@ import type {
 import { OwnerChoices, useOwnerChoices } from '../../members/OwnerChoices'
 import { nameLabel } from '../../shared/name-label'
 import type { Section } from '../../shared/sections'
-import type { Workspace } from '../../shared/workspaces'
+
 import { useMembersApi } from '../settings/members-api'
 import type { MenuEntry } from '../ui/Menu'
 import { MenuList } from '../ui/MenuList'
@@ -20,6 +21,8 @@ import type { MenuOpening } from './row-menu'
 export interface RowActions {
   move: (workspace: Workspace, sectionId: string) => void
   rename: (workspace: Workspace) => void
+  /** Copies the link of the workspace, during the press of its item. */
+  copyLink: (workspace: Workspace) => void
   archive: (workspace: Workspace) => void
   /** The owner changed. The workspace is the API's answer. */
   reassigned: (workspace: Workspace) => void
@@ -48,9 +51,10 @@ function sectionEntries(
 /**
  * The open menu of one workspace row, with the actions of `items`: at its
  * point on desktop, with the sections and the members beside it, or in a
- * phone sheet whose choices take the place of the actions. Each action
- * changes the workspace of the row. While a change of the owner runs, the
- * menu refuses to close, so its result or its error shows in it.
+ * phone sheet whose choices take the place of the actions. Copy link copies
+ * the link of the workspace, and each other action changes the workspace of
+ * the row. While a change of the owner runs, the menu refuses to close, so
+ * its result or its error shows in it.
  */
 export function RowMenu(props: {
   workspace: Workspace

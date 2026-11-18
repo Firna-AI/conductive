@@ -1,25 +1,26 @@
-import type { Agent, AgentChoice, Effort } from '../../shared/agents'
-import type {
-  ChatEvent,
-  RunnerEventRefused,
-  ToolCall,
-} from '../../shared/chat-events'
-import type {
-  Attachment,
-  MessageDraft,
-  MessageSender,
-  UserMessage,
-} from '../../shared/messages'
-import type { Session } from '../../shared/sessions'
+import type { Session } from '../../shared/generated/Session'
+import type { SessionLogin } from '../../shared/generated/SessionLogin'
+import type { Agent } from '../../shared/generated/Agent'
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
+import type { Effort } from '../../shared/generated/Effort'
+import type { ToolCall } from '../../shared/generated/ToolCall'
+import type { Attachment } from '../../shared/generated/Attachment'
+import type { MessageSender } from '../../shared/generated/MessageSender'
+import type { UserMessage } from '../../shared/generated/UserMessage'
+import type { ChatEvent, RunnerEventRefused } from '../../shared/chat-events'
+import type { MessageDraft } from '../../shared/messages'
+
+import { readTurnSpeed } from '../../shared/chat-events'
 import { readStopRequester } from './read-stop'
 import { readChangedFile } from './read-changed-file'
-import { readContinued } from './read-continued'
+import { readContinued, readRepositoryChanged } from './read-continued'
 import {
   count,
   flag,
   list,
   nullable,
   oneOf,
+  optional,
   record,
   text,
   UnreadableResponse,
@@ -33,6 +34,7 @@ export const readEffort = oneOf<Effort>({
   high: true,
   xhigh: true,
   max: true,
+  ultra: true,
 })
 const readToolKind = oneOf<ToolCall['kind']>({
   read: true,
@@ -82,6 +84,7 @@ export function readChoice(value: unknown): AgentChoice {
     agent: readAgent(source.agent),
     model: text(source.model),
     effort: readEffort(source.effort),
+    fast: source.fast === true,
   }
 }
 
@@ -131,8 +134,26 @@ export function readDraft(value: unknown): MessageDraft {
   }
 }
 
+const readLoginType = oneOf<SessionLogin['type']>({ personal: true, org: true })
+
+/** The owner of the login of a session: a member, or the org. */
+export function readSessionLogin(value: unknown): SessionLogin {
+  const source = record(value, 'session login')
+  return readLoginType(source.type) === 'org'
+    ? { type: 'org', orgId: text(source.orgId) }
+    : { type: 'personal', userId: text(source.userId) }
+}
+
+/**
+ * A session record. An empty session and an older record have no `login`,
+ * so the record then has none either. An empty session names the default
+ * login of its starter as `defaultLogin`, which its first message takes,
+ * while a login serves that starter. An older record names none.
+ */
 export function readSession(value: unknown): Session {
   const source = record(value, 'session')
+  const login = optional(nullable(readSessionLogin))(source.login)
+  const defaultLogin = optional(nullable(readSessionLogin))(source.defaultLogin)
   return {
     id: text(source.id),
     workspaceId: text(source.workspaceId),
@@ -144,6 +165,8 @@ export function readSession(value: unknown): Session {
     activeTurnStartedAt: nullable(count)(source.activeTurnStartedAt),
     retryMessageId: nullable(text)(source.retryMessageId),
     startedBy: nullable(readSender)(source.startedBy),
+    ...(login === undefined ? {} : { login }),
+    ...(defaultLogin === undefined ? {} : { defaultLogin }),
     sourceSessionId: nullable(text)(source.sourceSessionId),
     loginAvailable: flag(source.loginAvailable),
     loginShared: flag(source.loginShared),
@@ -172,6 +195,8 @@ export function readChatEvent(source: Record<string, unknown>): ChatEvent {
   switch (source.type) {
     case 'workspace.continued':
       return readContinued(source)
+    case 'workspace.repository-changed':
+      return readRepositoryChanged(source)
     case 'message.accepted':
       return { type: source.type, message: readUserMessage(source.message) }
     case 'message.sent':
@@ -235,7 +260,9 @@ export function readChatEvent(source: Record<string, unknown>): ChatEvent {
       }
     case 'tool.updated':
       return { ...turn, type: source.type, tool: readTool(source.tool) }
-    case 'turn.completed':
+    case 'turn.completed': {
+      // An end with no speed, or with a speed that it cannot read, has none.
+      const speed = readTurnSpeed(source.speed)
       return {
         ...turn,
         type: source.type,
@@ -244,12 +271,14 @@ export function readChatEvent(source: Record<string, unknown>): ChatEvent {
         ...(source.endReason === 'background_work_limit'
           ? { endReason: source.endReason }
           : {}),
+        ...(speed === undefined ? {} : { speed }),
         files: list(readChangedFile)(source.files),
         // Only the value true marks files that the runner could not read.
         ...(source.filesUnavailable === true ? { filesUnavailable: true } : {}),
         omittedFileCount: safeCount(source.omittedFileCount),
         userMessageIds: list(text)(source.userMessageIds),
       }
+    }
     case 'turn.failed':
       return {
         ...turn,

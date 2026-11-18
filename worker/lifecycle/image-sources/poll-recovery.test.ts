@@ -11,7 +11,6 @@ import {
 import { readBuildJob } from '../build-data'
 import { advanceImageBuild } from '../image-builds'
 import { heldOperation } from '../../test-support/held-operation'
-import { WORKSPACE_TOOLS_DIRECTORY } from '../../tools/image'
 import { nativeImageRuntime } from './image-runtime-test-support'
 import { localSourceFixture } from './local-source-test-support'
 import { INSTALLATION_TOKEN } from './native-github-test-support'
@@ -79,7 +78,7 @@ it('keeps a native source fetch after a temporary status error and resumes witho
     expect(completeAfterFailure).toBe(false)
     expect(boat.deletedIds).toEqual([])
     expect(fixture.provider.commands).toHaveLength(2)
-    expect(fixture.access.activeTokens).toEqual([`${INSTALLATION_TOKEN}_1`])
+    expect(fixture.access.activeTokens).toEqual([`${INSTALLATION_TOKEN}_2`])
     fixture.provider.beforeStatus = undefined
     runtime.dependencies.now = () => TEST_TIME + 1_000
     const order: string[] = []
@@ -90,13 +89,11 @@ it('keeps a native source fetch after a temporary status error and resumes witho
           ?.tokenCiphertext,
       ).toBeNull()
       order.push(
-        !detached && command.includes(WORKSPACE_TOOLS_DIRECTORY)
-          ? 'tools'
-          : !detached
-            ? 'cleanup'
-            : command.includes('/tmp/conductive-install.sh')
-              ? 'install'
-              : 'software',
+        !detached
+          ? 'cleanup'
+          : command.includes('/tmp/conductive-install.sh')
+            ? 'install'
+            : 'software',
       )
     }
     claim.release()
@@ -119,14 +116,17 @@ it('keeps a native source fetch after a temporary status error and resumes witho
     expect(fixture.provider.statusIds).toEqual([1, 2, 2, 3])
     expect(fixture.access.requests.map((request) => request.method)).toEqual([
       'POST',
+      'GET',
+      'DELETE',
+      'POST',
       'DELETE',
     ])
     expect(
       fixture.access.events.filter((event) =>
         ['mint', 'claim', 'revoke', 'finalize'].includes(event),
       ),
-    ).toEqual(['mint', 'claim', 'revoke', 'finalize'])
-    expect(order).toEqual(['tools', 'software', 'install', 'cleanup'])
+    ).toEqual(['mint', 'revoke', 'mint', 'claim', 'revoke', 'finalize'])
+    expect(order).toEqual(['software', 'install', 'cleanup'])
   } finally {
     claim.release()
     await fixture.dispose()

@@ -1,5 +1,6 @@
 import type { CreateWorkspaceRequest } from '../../src/shared/workspaces'
 import { HttpError, isRecord } from '../http'
+import { readCreationCapabilities } from '../secrets/capabilities-input'
 
 export function createWorkspaceInput(value: unknown): CreateWorkspaceRequest {
   if (
@@ -33,7 +34,8 @@ export function createWorkspaceInput(value: unknown): CreateWorkspaceRequest {
     effort !== 'medium' &&
     effort !== 'high' &&
     effort !== 'xhigh' &&
-    effort !== 'max'
+    effort !== 'max' &&
+    effort !== 'ultra'
   )
     throw invalid()
   if (value.sectionId !== undefined && typeof value.sectionId !== 'string')
@@ -41,11 +43,17 @@ export function createWorkspaceInput(value: unknown): CreateWorkspaceRequest {
   return {
     repositoryId: value.repositoryId,
     sectionId: value.sectionId,
+    capabilities: readCreationCapabilities(value.capabilities),
     firstMessage: {
       id: message.id,
       text: message.text,
       attachmentIds,
-      choice: { agent: choice.agent, model: choice.model, effort },
+      choice: {
+        agent: choice.agent,
+        model: choice.model,
+        effort,
+        fast: choice.fast === true,
+      },
     },
   }
 }

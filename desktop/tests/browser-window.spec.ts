@@ -7,7 +7,7 @@ import {
   workspaceTitle,
 } from './window-shell.js'
 
-test('the browser entry renders the workspace without desktop window controls', async () => {
+test('the browser entry renders the workspace without desktop window controls, with its sidebar toggle in the sidebar', async () => {
   await withBrowserEntry(
     'browser-window',
     { width: 1296, height: 812 },
@@ -25,9 +25,15 @@ test('the browser entry renders the workspace without desktop window controls', 
       ).toHaveCount(0)
       // The native reserve is decorative and has no accessible name.
       await expect(page.locator('[data-desktop-window-space]')).toHaveCount(0)
+      // The browser keeps its sidebar toggle beside the Settings cog.
       await expect(
         page.getByRole('button', { name: 'Hide the sidebar', exact: true }),
-      ).toHaveCount(0)
+      ).toHaveCount(1)
+      await expect(
+        page
+          .getByRole('complementary', { name: 'Workspaces', exact: true })
+          .getByRole('button', { name: 'Hide the sidebar', exact: true }),
+      ).toHaveCount(1)
       await expect(
         page.getByRole('button', { name: 'Back', exact: true }),
       ).toHaveCount(0)

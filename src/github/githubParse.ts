@@ -4,6 +4,7 @@ import type {
   GitHubBannerResponse,
   GitHubCheck,
   GitHubChecksResponse,
+  GitHubStoredResponse,
   PullRequest,
 } from '../shared/github'
 
@@ -172,6 +173,16 @@ export function readChecksResponse(body: unknown): GitHubChecksResponse | null {
     checks.push(check)
   }
   return { state, checks }
+}
+
+/** Narrows a stored reply. A state of null is valid: none is stored yet. */
+export function readStoredResponse(body: unknown): GitHubStoredResponse | null {
+  if (!isRecord(body) || !Object.hasOwn(body, 'state')) return null
+  if (body.state === null) return { state: null }
+  if (!isRecord(body.state)) return null
+  const banner = readBanner(body.state.banner)
+  const checks = readChecksResponse(body.state.checks)
+  return banner && checks ? { state: { banner, checks } } : null
 }
 
 /** The text of an API error reply, which the Worker writes for users. */
