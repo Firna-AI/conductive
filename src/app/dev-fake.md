@@ -189,7 +189,7 @@ option overrides this default, including queued chats that show no spinner.
   value. A member changes only the own secrets, and only an admin sets the
   mark for all agents or reveals a value, which the fake records. A Replace
   of the value ends the record of the last reveal, and a Delete ends each
-  grant of the secret. A suspended org refuses each write, also a reveal.
+  grant of the secret and leaves the chosen secrets of each automation. A suspended org refuses each write, also a reveal.
   `dev/capability-routes.ts` serves the Capabilities of each workspace:
   `checkout-autocomplete` pre-approves FIGMA_TOKEN and has two approvals of
   its sessions, and a create keeps the choices of its control. The fake

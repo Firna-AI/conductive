@@ -1,11 +1,13 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { automationPaths } from '../../shared/automations'
+import { secretPath } from '../../shared/secrets'
 import { workspaceViewPath } from '../../shared/workspace-view'
 import { readViewReply } from '../../chat/api/read-view'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FakeWorkspaceEvents } from '../../test-support/fake-events'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { createApiClient } from '../api/client'
+import { ignore } from '../api/parse'
 import {
   readAutomationRunResponse,
   readAutomationRunsResponse,
@@ -14,6 +16,7 @@ import { createBackend, guardScope } from './backend'
 import { readDevOptions } from './options'
 import { routeFetch } from './router'
 import { runRoutes } from './run-routes'
+import { secretRoutes } from './secret-routes'
 import { orgSecretsOf } from './secret-store'
 import { seedState } from './seed'
 
@@ -34,7 +37,7 @@ function setup(search = '') {
   )
   const api = createApiClient(
     routeFetch(
-      runRoutes(backend),
+      [...runRoutes(backend), ...secretRoutes(backend)],
       (path, method) => guardScope(backend.state, path, method),
       new FakeApiServer().fetch,
     ),
@@ -152,6 +155,29 @@ describe('the runs of the dev fake', () => {
       preapproved: grants?.preapprovedSecretIds,
       macAccess: grants?.macAccess,
     }).toEqual({ preapproved: ['figma-token'], macAccess: false })
+  })
+
+  test('Run now goes on without a chosen secret that was deleted', async () => {
+    const { api, acme, backend } = setup()
+    acme.automations = acme.automations.map((automation) =>
+      automation.id === 'error-triage'
+        ? {
+            ...automation,
+            capabilities: {
+              preapprovedSecretIds: ['figma-token', 'vercel-token'],
+            },
+          }
+        : automation,
+    )
+    await api.send('DELETE', secretPath(orgId, 'figma-token'), {}, ignore)
+    const run = await runNow(api, 'error-triage', 'request-deleted')
+    const grants = orgSecretsOf(backend.state, orgId).capabilities.get(
+      run.workspaceId ?? '',
+    )
+    expect({
+      state: run.state,
+      preapproved: grants?.preapprovedSecretIds,
+    }).toEqual({ state: 'starting', preapproved: ['vercel-token'] })
   })
 
   test('Run now refuses another owner and an automation of pull requests, fails without an agent login, and keeps the workspace of a start that failed', async () => {
