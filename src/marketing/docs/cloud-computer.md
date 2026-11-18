@@ -66,6 +66,10 @@ Existing workspaces keep their old folders.
 If a build is running, the new build starts after it.
 If the last build failed, the change waits for **Try again**.
 
+When a repository moves to another owner on GitHub, Conductive follows the move like a new name.
+It does so only when the org already has another repository of the new owner.
+Otherwise, builds fail until an admin removes the repository in **Edit** and adds it again.
+
 A removed repository stays in the setup until the next build.
 To apply a removal, select **Build computer** under **Cloud computer**.
 Existing workspaces keep the repositories and folders from the setup they started with.

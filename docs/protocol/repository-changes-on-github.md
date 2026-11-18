@@ -1,7 +1,7 @@
 # Repository changes on GitHub
 
 This doc holds the requirements and the decisions in force for a change of
-a repository on GitHub: a new name or a new default branch. It belongs to
+a repository on GitHub: a new name, a new owner, or a new default branch. It belongs to
 [GitHub banner](github-banner.md), which covers the GitHub App and its
 webhooks. The [org image](org-image.md) and the
 [repository folders](repository-folders.md) give the rules of builds and
@@ -47,6 +47,26 @@ folders that this doc uses. The terms are those of the
   webhook again by itself. An owner of the GitHub App can send it again
   from the settings of the app.
 
+## A move to another owner
+
+- GitHub can move a repository to another account. The repository then
+  gets a new owner in its name, and the install of the GitHub App of the
+  new owner reaches it. GitHub sends the `transferred` repository webhook
+  only to that install.
+- The Worker handles this webhook as a rename. It also saves the new
+  install for the repository, so that builds and pull request updates use
+  it. The user chose this on 18 November 2026.
+- The Worker does so only in an org that already uses the new install for
+  another repository. Each other org keeps the old values, and its builds
+  fail until an admin chooses the repository again in Settings.
+- Reason: an org must not reach a repository through an install that no
+  admin of the org chose. An admin chooses an install when the admin
+  chooses one of its repositories in Settings.
+- A move to the new install in each org that saves the repository was
+  rejected, for the same reason.
+- Without this rule, a move kept the old install. That install no longer
+  reaches the repository, so each build of the org failed.
+
 ## A missed repository webhook
 
 - Push, pull request, check, and status webhooks also carry the name and
@@ -54,6 +74,11 @@ folders that this doc uses. The terms are those of the
   values, the Worker reads GitHub, saves the current values, and checks the
   org images, as for a repository webhook. The user chose this on
   18 November 2026.
+- These webhooks also name the install that sent them. When it differs
+  from the saved install, the repository moved, and the Worker follows
+  the move as [A move to another owner](#a-move-to-another-owner) says.
+  It does so before it finds the workspaces of the webhook, so that the
+  workspaces of the repository get the pull request updates.
 - Reason: a repository webhook can fail, or never arrive. The next webhook
   of the repository then repairs the saved values, and webhooks stay the
   only trigger.
