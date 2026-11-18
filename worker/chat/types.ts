@@ -134,6 +134,7 @@ export interface ActiveRunner {
   processStartId: string | null
   protocolVersion: RunnerProtocolVersion | null
   loginKinds?: readonly RunnerLoginKind[]
+  fileServer?: boolean
   ready: boolean
 }
 

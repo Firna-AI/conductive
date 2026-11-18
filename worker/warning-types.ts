@@ -14,6 +14,8 @@ import type { GatewayRefusal } from './model-gateway/errors'
 import type { UnexpectedErrorFields } from './unexpected-error'
 
 export const SIMPLE_WARNINGS = {
+  runner_file_server_invalid:
+    'A runner hello had an invalid file server announcement. It counts as no file server.',
   workspace_alarm_failed:
     'Workspace alarm work failed. Its durable deadline will retry.',
   terminal_restart_refresh_failed:

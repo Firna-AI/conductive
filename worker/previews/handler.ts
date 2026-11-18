@@ -69,6 +69,20 @@ export function createPreviewHandler(
             ? previewNativeLaunch(env, row, viewer, now, path)
             : previewLaunchPage(env, row, viewer, now, path)
         }
+        if (request.method === 'POST' && tail === 'files') {
+          const result = await actions.openFiles(
+            target,
+            context.user.id,
+            env.APP_ORIGIN,
+            now,
+          )
+          return privateResponse(
+            Response.json(
+              { preview: result.preview } satisfies PreviewResponse,
+              { status: result.created ? 201 : 200 },
+            ),
+          )
+        }
         if (request.method === 'POST' && tail === null) {
           return privateResponse(
             Response.json(

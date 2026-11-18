@@ -24,6 +24,25 @@ The wildcard also covers `authorize`. A preview label is 32 hex characters,
 so it never matches `authorize`.
 
 Each hostname holds 128 random bits. D1 stores its workspace, port, and expiry.
+Port 0 identifies the workspace's files preview. No port preview can use
+port 0. `POST` of `filesPreviewPath(orgId, workspaceId)` opens it with
+HTTP 201, or returns its active row with HTTP 200. Both replies use
+`PreviewResponse`. The insert checks for an active files row in the same
+SQL statement, so concurrent opens keep one row without a schema change.
+
+The files open uses the running-computer checks of a port open. It then
+checks `ToolDependencies.fileServerAvailable` before checking the relay.
+The workspace composition reads this capability from its connected runner.
+No announcement gives HTTP 409 `file_server_unavailable` with the Restart
+message. An inactive relay still gives `preview_relay_unavailable`.
+
+The app and agent lists exclude port 0. Their close action finds no such
+preview and leaves both its row and its streams active. Workspace revocation
+and expiry still end it and publish `preview.revoked`. Operator hostname
+searches, suspension, org deletion, and sandbox accounting include it.
+[HTML file preview](../../docs/protocol/html-file-preview.md#the-files-preview)
+states these requirements.
+
 The server keeps one private relay descriptor in memory for each workspace,
 provider account, and sandbox. Each descriptor holds the private origin
 and the [port credential](../sandbox/README.md#port-credentials) that the
@@ -198,6 +217,11 @@ Each HTTP request and WebSocket upgrade goes to that port's Boat address.
 The path and query stay, except for reserved port credentials.
 The Worker sets `X-Conductive-Preview-Port` to the previewed port.
 The header allowlist drops any value that the browser sends for this header.
+For a files preview, the target port is `PREVIEW_FILE_SERVER_PORT`, 7683.
+The proxy adds `X-Conductive-Files: 1` after the browser header allowlist.
+That allowlist never includes the files mark, even for a port preview of
+7683. Origin and redirect rewrites use 7683 too. A files WebSocket upgrade
+gets the unknown-preview 404 before any relay or sandbox call.
 The relay sends the previewed server `Host: localhost:<port>`.
 A server with a local Host check needs no change to its repository.
 
@@ -299,6 +323,7 @@ The shared sandbox predicate refuses old grants, cookies, and each stream batch 
 - [revocation-events.ts](revocation-events.ts) stores each publication marker with its common-stream event.
 - [handler.ts](handler.ts) exports the API, launch, proxy, revocation, and expiry entry points.
 - [actions.ts](actions.ts) holds `PreviewActions`, the list, open, and close that the API handler and the agent calls share.
+- [files-store.ts](files-store.ts) reads the active files preview after an atomic insert finds an existing one.
 - [access.ts](access.ts) reads the workspace target, checks a running computer, and holds `toolFailure`, the fixed reply of a provider failure.
 - [launch.ts](launch.ts) builds the launch replies and the authorizer page response, and handles both authorizer POST modes.
 - [launch-document.ts](launch-document.ts) builds the launch page markup and its CSP.

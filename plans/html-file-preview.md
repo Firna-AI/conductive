@@ -629,21 +629,21 @@ out of the lists of port previews.
 - [x] Add the shared constants and the path helper of the files preview
       to `src/shared/previews.ts`, before this milestone and Milestone 6
       start.
-- [ ] Keep the file server field of the `hello` with the runner
+- [x] Keep the file server field of the `hello` with the runner
       connection in the workspace object.
-- [ ] Add the app route that opens or returns the files preview, with its
+- [x] Add the app route that opens or returns the files preview, with its
       409 replies. Add its path and its reply type to
       `src/shared/previews.ts`.
-- [ ] Send each request of a files preview to port 7683, with the files
+- [x] Send each request of a files preview to port 7683, with the files
       mark. Make sure that the request allowlist never forwards a files
       mark from a browser.
-- [ ] Leave the files preview out of the app list and of the agent preview
+- [x] Leave the files preview out of the app list and of the agent preview
       calls.
-- [ ] Check each other place that shows a preview by its port, such as
+- [x] Check each other place that shows a preview by its port, such as
       the operator views.
-- [ ] Add tests: the open, the reuse of an active files preview, the 409
+- [x] Add tests: the open, the reuse of an active files preview, the 409
       replies, the proxy port, and the lists.
-- [ ] Update the preview backend README.
+- [x] Update the preview backend README.
 
 ## Milestone 6: The HTML preview in the file tab
 

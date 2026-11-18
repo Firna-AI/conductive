@@ -116,6 +116,7 @@ export class RunnerChannel {
       active.processStartId = message.processStartId
       active.protocolVersion = welcome.protocolVersion
       active.loginKinds = message.loginKinds
+      active.fileServer = message.fileServer
       active.ready = welcome.ready
       await this.connections.persist(active)
       this.connections.reportConnected(active)

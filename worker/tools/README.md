@@ -201,6 +201,9 @@ It waits for creation to finish before it returns the workspace and session.
 Session gets, message gets, and session management call the target object's RPCs with the app origin.
 [section-composition.ts](section-composition.ts) runs the app's section action as the sender.
 Preview calls reach the target object's `agentPreviewCall` with the app origin.
+They list and close only port previews. The files preview of HTML tabs
+uses port 0 internally, and stays outside these calls, as the
+[preview call boundary](sections-and-previews.md#previews) says.
 
 Each org build installs the newest sandbox release through the software step.
 The two runner providers register [`WORKSPACE_TOOLS_MCP`](../../src/shared/agent-tools.ts) beside `computer`.
