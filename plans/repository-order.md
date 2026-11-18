@@ -216,9 +216,17 @@ Each call is mine, on 18 November 2026.
 - The move route is `PUT` on the path of the repository with
   `/position`, with the body `{ "index": n }`. The index counts the chosen
   repositories without the moved one, as a section move does. The answer
-  is the repository list, with the chosen repositories first in the
-  repository order, then the others by name. Reason: it follows the
-  section move, and the list answer matches Add and Remove.
+  is `{ "order": [...] }`, the IDs of the chosen repositories in the saved
+  order, from stored data only. The client puts its list in that order.
+  Reason: no call to GitHub can then fail a move that saved. Review
+  finding 1 of 18 November 2026 changed this call. The first version
+  answered with the whole list, which needs GitHub.
+- Every list that moves by a drag, a menu, and keys uses one hook,
+  `src/shell/ui/useListOrder.ts`, so a drop says the new place too. The
+  rail turns that off, because its protocol says nothing after a drop.
+  Review finding 2 of 18 November 2026 added this call.
+- The migration has no permanent test, as the `testing` skill says. Its
+  one-time proof is in `.context/repository-order/migration-proof.txt`.
 - The Edit list sorts by name in the client, with
   `compareRepositoryNames`. The mockup of Edit sorts by name too.
 - The tab text gives the rule of decision 1 F in two sentences: "New

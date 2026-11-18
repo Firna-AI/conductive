@@ -137,8 +137,6 @@ adds this order. The pull request of that change keeps its record.
 - Create org saves its chosen repositories in the order of their names.
 - A member sees an order that an admin changed at the next read of the
   list, as for a section move.
-- Until an admin moves a repository, the order is the order of the
-  names.
 
 ## Get started
 
