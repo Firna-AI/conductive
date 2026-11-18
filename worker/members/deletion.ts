@@ -63,6 +63,18 @@ export async function stopDeletedOrg(
   dependencies: AppDependencies,
   hooks: Pick<MembersHooks, 'suspendOrg'>,
 ) {
+  await suspendDeletedOrg(env, orgId, token, suspended, dependencies, hooks)
+  await stopDeletedOrgResources(env, orgId, token, dependencies)
+}
+
+export async function suspendDeletedOrg(
+  env: AppEnv,
+  orgId: string,
+  token: string,
+  suspended: boolean,
+  dependencies: AppDependencies,
+  hooks: Pick<MembersHooks, 'suspendOrg'>,
+) {
   if (!suspended) {
     const workspaceIds = await orgWorkspaceIds(env.DB, orgId)
     const completed = await runLifecycleHook(
@@ -83,6 +95,14 @@ export async function stopDeletedOrg(
     )
       throw cleanupBusy()
   }
+}
+
+export async function stopDeletedOrgResources(
+  env: AppEnv,
+  orgId: string,
+  token: string,
+  dependencies: AppDependencies,
+) {
   const resources = (await cleanupResources(env.DB, orgId)).filter(
     (resource) =>
       resource.kind === 'sandbox' &&
