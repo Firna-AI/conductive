@@ -1,10 +1,20 @@
 import {
+  compareRepositoryNames,
   orgSettingsPaths,
   repositoryPath,
+  repositoryPositionPath,
   type OrgSettingsResponse,
   type RepositoriesResponse,
+  type Repository,
 } from '../../shared/org-settings'
-import { choice, items, record, text, type JsonObject } from '../api/parse'
+import {
+  choice,
+  count,
+  items,
+  record,
+  text,
+  type JsonObject,
+} from '../api/parse'
 import { requireOrg, type DevBackend } from './backend'
 import { startBuild } from './build-routes'
 import {
@@ -95,9 +105,62 @@ function updateSettings(
 }
 
 /**
- * Chooses a repository of the org, or removes it. A removal turns off each
- * automation in the repository with the reason that its page shows, as the
- * Worker does.
+ * The repositories in the order of the Worker: the chosen ones first, in
+ * the repository order of the org, which is their order in the list, then
+ * the others in the name order.
+ */
+function inRepositoryOrder(
+  repositories: readonly Repository[],
+): readonly Repository[] {
+  return [
+    ...repositories.filter((repository) => repository.selected),
+    ...repositories
+      .filter((repository) => !repository.selected)
+      .sort(compareRepositoryNames),
+  ]
+}
+
+function repositoriesReply(org: OrgState): Response {
+  return json({
+    repositories: inRepositoryOrder(org.repositories),
+  } satisfies RepositoriesResponse)
+}
+
+/**
+ * Moves a chosen repository to `index` of the repository order, which
+ * counts the chosen repositories without the moved one. A repository that
+ * is not chosen moves nothing. A move starts no build.
+ */
+function moveRepository(
+  org: OrgState,
+  repositoryId: string,
+  body: unknown,
+): Response {
+  const index = count(record(body), 'index')
+  const ordered = inRepositoryOrder(org.repositories)
+  const moved = ordered.find(
+    (repository) => repository.id === repositoryId && repository.selected,
+  )
+  if (moved) {
+    const chosen = ordered.filter(
+      (repository) => repository.selected && repository !== moved,
+    )
+    const at = Math.min(Math.max(0, Math.round(index)), chosen.length)
+    org.repositories = [
+      ...chosen.slice(0, at),
+      moved,
+      ...chosen.slice(at),
+      ...ordered.filter((repository) => !repository.selected),
+    ]
+  }
+  return repositoriesReply(org)
+}
+
+/**
+ * Chooses a repository of the org, or removes it. A newly chosen
+ * repository goes to the end of the repository order. A removal turns off
+ * each automation in the repository with the reason that its page shows,
+ * as the Worker does.
  */
 function setRepository(
   backend: DevBackend,
@@ -110,9 +173,16 @@ function setRepository(
     (repository) =>
       repository.id === repositoryId && repository.selected !== selected,
   )
-  org.repositories = org.repositories.map((repository) =>
+  const updated = org.repositories.map((repository) =>
     repository.id === repositoryId ? { ...repository, selected } : repository,
   )
+  org.repositories =
+    changed && selected
+      ? [
+          ...updated.filter((repository) => repository.id !== repositoryId),
+          ...updated.filter((repository) => repository.id === repositoryId),
+        ]
+      : updated
   if (!selected) {
     org.automations = org.automations.map((automation) =>
       automation.repositoryId === repositoryId
@@ -128,7 +198,7 @@ function setRepository(
   }
   if (changed) org.settingsRevision += 1
   if (changed && selected) startBuild(backend, org)
-  return json({ repositories: org.repositories } satisfies RepositoriesResponse)
+  return repositoriesReply(org)
 }
 
 /** The repositories, and the scripts and env vars of an org. */
@@ -138,10 +208,13 @@ export function settingsRoutes(backend: DevBackend): Route[] {
     {
       method: 'GET',
       path: orgSettingsPaths.repositories(ID.org),
-      answer: ({ params }) =>
-        json({
-          repositories: orgOf(params).repositories,
-        } satisfies RepositoriesResponse),
+      answer: ({ params }) => repositoriesReply(orgOf(params)),
+    },
+    {
+      method: 'PUT',
+      path: repositoryPositionPath(ID.org, ID.repository),
+      answer: ({ params, body }) =>
+        moveRepository(orgOf(params), params.repository, body),
     },
     {
       method: 'PUT',

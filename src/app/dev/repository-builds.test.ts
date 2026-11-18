@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 
-import { orgSettingsPaths, repositoryPath } from '../../shared/org-settings'
+import {
+  orgSettingsPaths,
+  repositoryPath,
+  repositoryPositionPath,
+  type Repository,
+} from '../../shared/org-settings'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_TIME } from '../../test-support/fixtures/core'
 import { createApiClient } from '../api/client'
@@ -153,4 +158,30 @@ it('keeps waiting changes after a failed build and starts a new build when a rep
     addedRepositories: [],
     removedRepositories: [],
   })
+})
+
+it('adds a repository again at the end of the order and moves a chosen one without a build', async () => {
+  const { api, org, removed, save } = setup()
+  const chosen = (repositories: readonly Repository[]) =>
+    repositories
+      .filter((repository) => repository.selected)
+      .map((repository) => repository.id)
+  const before = chosen(org.repositories)
+  expect(before[0]).toBe(removed.id)
+  expect(before.length).toBeGreaterThan(1)
+  await save(removed.id, false)
+  expect(chosen(await save(removed.id, true))).toEqual([
+    ...before.slice(1),
+    removed.id,
+  ])
+  await vi.advanceTimersByTimeAsync(6_000)
+  const builds = org.builds.length
+  const moved = await api.send(
+    'PUT',
+    repositoryPositionPath(org.org.id, removed.id),
+    { index: 0 },
+    readRepositories,
+  )
+  expect(chosen(moved)).toEqual(before)
+  expect(org.builds).toHaveLength(builds)
 })

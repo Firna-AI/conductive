@@ -9,10 +9,11 @@ import type {
   GetStartedResponse,
   GetStartedStep,
 } from '../../shared/onboarding'
-import type {
-  BuildResponse,
-  OrgSettings,
-  Repository,
+import {
+  compareRepositoryNames,
+  type BuildResponse,
+  type OrgSettings,
+  type Repository,
 } from '../../shared/org-settings'
 import type { OrgAgentLoginStatus } from '../../shared/org-agent-logins'
 import type { OrgSummary } from '../../shared/orgs'
@@ -109,23 +110,35 @@ export interface DevState {
 /**
  * The repositories of a new org: every repository of the account catalogue,
  * which the person and the GitHub App both reach, with the chosen GitHub
- * IDs added.
+ * IDs added. The chosen ones come first, in the name order, as Create org
+ * of the Worker orders them.
  */
 function catalogueOf(
   orgId: string,
   chosen: readonly number[],
 ): readonly Repository[] {
   const taken: string[] = []
-  return coreFixtures().githubRepositories.repositories.map((repository) => {
-    const id = uniqueId(repository.fullName.split('/').at(-1) ?? 'repo', taken)
-    taken.push(id)
-    return {
-      ...repository,
-      id,
-      orgId,
-      selected: chosen.includes(repository.githubId),
-    }
-  })
+  const catalogue = coreFixtures().githubRepositories.repositories.map(
+    (repository): Repository => {
+      const id = uniqueId(
+        repository.fullName.split('/').at(-1) ?? 'repo',
+        taken,
+      )
+      taken.push(id)
+      return {
+        ...repository,
+        id,
+        orgId,
+        selected: chosen.includes(repository.githubId),
+      }
+    },
+  )
+  return [
+    ...catalogue
+      .filter((repository) => repository.selected)
+      .sort(compareRepositoryNames),
+    ...catalogue.filter((repository) => !repository.selected),
+  ]
 }
 
 /**

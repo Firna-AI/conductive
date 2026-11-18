@@ -10,6 +10,10 @@ import { previewToolMethods } from './preview-routes'
 import { listToolWorkspaces } from './workspace-data'
 import { workspaceToolMethods } from './workspace-routes'
 import { workspaceListInput } from './workspace-input'
+import {
+  chosenRepositoryIds,
+  compareInRepositoryOrder,
+} from '../data/repository-order'
 import { HttpError } from '../http'
 import { readImageRepositories } from '../lifecycle/published-image-data'
 import type { AgentToolServices } from './services'
@@ -29,10 +33,6 @@ export function isAgentToolPath(path: string): boolean {
       MACHINE_PATHS.models,
     ].some((toolPath) => toolPath === path)
   )
-}
-
-function compareText(a: string, b: string): number {
-  return a < b ? -1 : a > b ? 1 : 0
 }
 
 async function defaultChoice(
@@ -72,10 +72,7 @@ export async function listFromTool(
     case MACHINE_PATHS.repositories: {
       const repositories = await readImageRepositories(db, caller.orgId)
       repositories.sort(
-        (a, b) =>
-          compareText(a.fullName.toLowerCase(), b.fullName.toLowerCase()) ||
-          compareText(a.fullName, b.fullName) ||
-          compareText(a.id, b.id),
+        compareInRepositoryOrder(await chosenRepositoryIds(db, caller.orgId)),
       )
       return {
         repositories: repositories.map(({ id, fullName, defaultBranch }) => ({

@@ -89,7 +89,8 @@ describe('org forms', () => {
         initials: 'AL',
         role: 'admin',
       },
-      chosen: ['acme/mobile-app', 'acme/data-pipeline'],
+      // Create org orders the chosen repositories by name.
+      chosen: ['acme/data-pipeline', 'acme/mobile-app'],
       catalogue: 9,
       renamed: {
         id: 'acme-labs',

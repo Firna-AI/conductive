@@ -26,6 +26,16 @@ export function repositoryPath(orgId: string, repositoryId: string): string {
   return `${orgSettingsPaths.repositories(orgId)}/${encodeURIComponent(repositoryId)}`
 }
 
+export const REPOSITORY_POSITION_SUFFIX = '/position'
+
+/** The move of a chosen repository in the repository order of the org. */
+export function repositoryPositionPath(
+  orgId: string,
+  repositoryId: string,
+): string {
+  return `${repositoryPath(orgId, repositoryId)}${REPOSITORY_POSITION_SUFFIX}`
+}
+
 export function buildPath(orgId: string, buildId: string): string {
   return `${orgSettingsPaths.builds(orgId)}/${encodeURIComponent(buildId)}`
 }
@@ -43,6 +53,35 @@ export interface Repository {
   installationId: number
   selected: boolean
 }
+
+/**
+ * A move of a chosen repository. `index` counts the chosen repositories
+ * without the moved one. The reply is a `RepositoriesResponse`.
+ */
+export interface MoveRepositoryRequest {
+  index: number
+}
+
+function compareText(a: string, b: string): number {
+  return a < b ? -1 : a > b ? 1 : 0
+}
+
+/**
+ * The name order of repositories: the lower-case GitHub name, then the
+ * exact name, then the ID. GitHub names hold only ASCII characters, so
+ * this order matches SQLite `lower` and its binary text order.
+ */
+export function compareRepositoryNames(
+  a: Pick<Repository, 'id' | 'fullName'>,
+  b: Pick<Repository, 'id' | 'fullName'>,
+): number {
+  return (
+    compareText(a.fullName.toLowerCase(), b.fullName.toLowerCase()) ||
+    compareText(a.fullName, b.fullName) ||
+    compareText(a.id, b.id)
+  )
+}
+
 export interface RepositoriesResponse {
   repositories: readonly Repository[]
 }
