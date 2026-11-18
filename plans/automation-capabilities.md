@@ -304,26 +304,28 @@ Depends on: 1
 
 Depends on: 2
 
-- [ ] Add the migration `automation_secret_preapprovals`, with its entry
+- [x] Add the migration `automation_secret_preapprovals`, with its entry
       in `migrations/README.md`. Check that the previous Worker keeps
       working on the new schema.
-- [ ] Add `AutomationCapabilities` and the `capabilities` field to
+- [x] Add `AutomationCapabilities` and the `capabilities` field to
       `src/shared/automations.ts`.
-- [ ] Read and write the list in `worker/automations/` with each
+- [x] Read and write the list in `worker/automations/` with each
       automation: the read, the create, the update, and the reply.
-- [ ] Pass the list to the create in `worker/automations/run-starter.ts`,
+- [x] Pass the list to the create in `worker/automations/run-starter.ts`,
       with `macAccess: false`. Read it right before the create, and keep
       only the IDs that name a secret of the org. The create refuses a
       missing secret with `secret_not_found`
       (`worker/lifecycle/create-request.ts:40`). So when a secret goes
       between the read and the create, read the list again and create
       once more.
-- [ ] Tests: save and read the list, keep it on an update without it, drop
+- [x] Tests: save and read the list, keep it on an update without it, drop
       an unknown ID, copy it into the run workspace, go on after a deleted
       secret, end the choice when the secret is deleted, and refuse a
       change by a member who is not the owner.
-- [ ] Update the automations of the dev fake in
-      `src/app/dev/automation-records.ts`.
+- [x] Update the automations of the dev fake in
+      `src/app/dev/automation-routes.ts`.
+
+Implementation and check evidence: `.context/automation-capabilities/m3-report.md`.
 
 ## Milestone 4: Automation page
 

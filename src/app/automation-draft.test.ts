@@ -20,6 +20,7 @@ const saved: Automation = {
   sectionId: 'infra',
   prompt: 'Read the errors of the last hour.',
   choice: { agent: 'claude', model: 'Opus 5.5', effort: 'high', fast: false },
+  capabilities: { preapprovedSecretIds: [] },
   active: false,
   inactiveReason: 'failed_runs',
   failedRunsInARow: 3,

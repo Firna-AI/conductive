@@ -166,6 +166,8 @@ The batch-limit test passes 2 for each limit and checks the stored operation cou
 - [route.ts](route.ts) dispatches the record routes and enforces ownership.
 - [prepare-automation.ts](prepare-automation.ts) validates a save and prepares its stored record.
 - [automation-data.ts](automation-data.ts) reads automations and checks their repository and section.
+- [automation-capabilities-data.ts](automation-capabilities-data.ts) reads chosen secret IDs within their org.
+- [automation-capability-statements.ts](automation-capability-statements.ts) saves choices in the automation write batch, with the same access and reference checks.
 - [automation-response.ts](automation-response.ts) adds the resolved public login owner to each record reply.
 - [automation-write-data.ts](automation-write-data.ts) guards mutations with current membership and ownership.
   It uses `guardedStatement` and `guardedRun` from
