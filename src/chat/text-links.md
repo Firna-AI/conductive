@@ -36,10 +36,11 @@ which shows its Markdown as typed.
 - `answerParts` reads each bare address in the text nodes of the tree with
   `bareAddressAt`. Before marks pair, the parser keeps each bare address as
   plain text, with the existing trailing-mark boundaries.
-- `src/markdown/markdown-destination.ts` supplies `readInlineTarget`. It
+- `src/markdown/markdown-destination.ts` holds `readInlineTarget`. It
   reads the target of an inline link after its `(`: the spaces and line
   breaks around the address, the address, an optional link title, and the
-  `)`. Sent messages, the message field, and the mockups share it, with its address boundaries, its escape decoding, and its
+  `)`. Sent messages, the message field, and the mockups share it through
+  `lineTargets`, with its address boundaries, its escape decoding, and its
   length limits.
 - Sent messages, the message field, and the mockups read each target
   through `lineTargets` of the same module. It keeps each Markdown link on

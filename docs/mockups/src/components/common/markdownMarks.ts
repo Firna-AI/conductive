@@ -8,7 +8,7 @@
  */
 
 /** What a pair of marks makes of the text between them. */
-export type Mark = 'strong' | 'emphasis' | 'strike'
+type Mark = 'strong' | 'emphasis' | 'strike'
 
 /**
  * A piece of inline text before its marks pair: text, a line break, or a

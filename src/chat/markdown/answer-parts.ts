@@ -23,7 +23,7 @@ import type {
 import { addPart, textParts } from './answer-text'
 
 /** A web link of an agent message, with its words. */
-export interface AnswerLink {
+interface AnswerLink {
   kind: 'link'
   link: WebLink
   words: readonly AnswerPart[]
@@ -33,7 +33,7 @@ export interface AnswerLink {
  * A Markdown link or image of an agent message whose target is an entry
  * of the tree. It shows as a link with its label, which opens the file.
  */
-export interface FileLinkPart extends FileTarget {
+interface FileLinkPart extends FileTarget {
   kind: 'file-link'
   label: readonly AnswerPart[]
 }

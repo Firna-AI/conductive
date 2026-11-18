@@ -72,7 +72,7 @@ function wordsOf(parts: readonly AnswerPart[]): string {
  * the kind of its address and its words, a file with its source, and a
  * link to a file with its label. Lines show only when the part has them.
  */
-export function shapeOf(part: AnswerPart): unknown {
+function shapeOf(part: AnswerPart): unknown {
   switch (part.kind) {
     case 'text':
       return { text: part.text }

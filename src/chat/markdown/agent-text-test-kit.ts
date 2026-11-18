@@ -18,7 +18,7 @@ const markTags: Readonly<Record<InlineMark, string>> = {
  * `<br>`, a link as `{` and `}` around its typed text, and an image as
  * `{img alt -> address}`.
  */
-export function shortText(text: InlineText): string {
+function shortText(text: InlineText): string {
   return text
     .map((node) => {
       switch (node.kind) {
