@@ -7,6 +7,10 @@ The runtime also constructs the production workspace object with native SQLite.
 `native-workspace-entry.ts` adds test controls around the production constructor.
 Initial actor options reach that constructor before it captures optional dependencies.
 The registered object still extends the production `Workspace`.
+The entry also wraps the real browser publisher of the object.
+`takePublications()` returns the events that the publisher sent.
+`failPublication(message)` makes each publication of events throw that message, until a call with `null`.
+The `github` value of the entry runs the GitHub state calls that [GitHub verification](../github/verification.md#native-workspace-harness) describes.
 `native-warnings.ts` observes native warnings without replacing product warning rules.
 The reverse callback bridge keeps transaction reads on native storage.
 Native peers keep synchronous send faults inside the runtime.

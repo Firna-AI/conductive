@@ -12,7 +12,6 @@ beforeAll(async () => {
 })
 beforeEach(async () => {
   await fixture.harness.reset()
-  fixture.jobs.clear()
 })
 afterAll(async () => {
   await fixture.base.dispose()
@@ -129,5 +128,5 @@ it('rechecks revoked access after capability reads and before post-merge publica
       )
     ).status,
   ).toBe(409)
-  expect(fixture.harness.memory('workspace-1').published).toEqual([])
+  expect((await fixture.harness.inspect('workspace-1')).published).toEqual([])
 })
