@@ -96,11 +96,13 @@
   margin-top: 8px;
 }
 
+/* The screen keeps its own alignment, not the centred text of the hero. */
 .heroPicture {
   display: flex;
   justify-content: center;
   width: 100%;
   margin-top: 48px;
+  text-align: start;
 }
 
 /* The smaller features: one line of headline, then small tiles. */
