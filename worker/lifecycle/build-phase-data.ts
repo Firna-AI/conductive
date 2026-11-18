@@ -1,4 +1,4 @@
-import type { BuildPhase } from './build-data'
+import { buildPhaseStatement, type BuildPhase } from './build-data'
 import { buildLogStatements } from './build-log-statements'
 import { buildPhaseStepStatements } from './build-step-data'
 import { clearImageRetryStatement } from './image-retry-data'
@@ -15,11 +15,7 @@ export async function completeBuildPhase(
   log?: string,
 ): Promise<void> {
   await db.batch([
-    db
-      .prepare(
-        'UPDATE image_build_jobs SET phase = ?, process_id = NULL, stdout_offset = 0, stderr_offset = 0 WHERE build_id = ?',
-      )
-      .bind(phase, buildId),
+    buildPhaseStatement(db, buildId, phase),
     clearImageRetryStatement(db, buildId),
     ...(log ? buildLogStatements(db, buildId, log, now) : []),
     ...buildPhaseStepStatements(db, buildId, phase, now),
@@ -33,11 +29,7 @@ export async function beginBuildAllocation(
   now: number,
 ): Promise<void> {
   await db.batch([
-    db
-      .prepare(
-        'UPDATE image_build_jobs SET phase = ?, process_id = NULL, stdout_offset = 0, stderr_offset = 0 WHERE build_id = ?',
-      )
-      .bind('allocating', buildId),
+    buildPhaseStatement(db, buildId, 'allocating'),
     ...buildPhaseStepStatements(db, buildId, 'allocating', now),
   ])
 }

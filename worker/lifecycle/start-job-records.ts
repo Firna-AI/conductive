@@ -95,6 +95,9 @@ export class StartJobRecords {
       const at = this.now()
       const meta: StartRecordMeta = { ...recordJob(job), beganAt: at, runs: 0 }
       await this.storage.transaction(async (transaction) => {
+        const replaced = await readStartRecordMeta(transaction)
+        if (replaced && replaced.jobId !== meta.jobId)
+          await closeOpenSteps(transaction, replaced.jobId, at, 'failed')
         await transaction.put('startRecordMeta', START_RECORD_META_KEY, meta)
         await patchSteps(transaction, meta, [
           openStep(`phase:${job.phase}`, at),
@@ -109,7 +112,7 @@ export class StartJobRecords {
     after: WorkspaceStartJob,
   ): Promise<void> {
     if (
-      before.attempt !== after.attempt ||
+      recordJobId(before) !== recordJobId(after) ||
       before.phase === after.phase ||
       [before, after].some((job) => job.cancelled || job.failure)
     )
@@ -117,7 +120,7 @@ export class StartJobRecords {
     return recordSafely(undefined, async () => {
       await this.saveMarks()
       await this.patch(
-        after.attempt,
+        recordJobId(after),
         phasePatches(before.phase, after.phase, this.now()),
       )
     })
@@ -131,7 +134,7 @@ export class StartJobRecords {
       const state = await this.storage.get('lifecycle', LIFECYCLE_STATE_KEY)
       await this.storage.transaction(async (transaction) => {
         const meta = await readStartRecordMeta(transaction)
-        if (meta?.jobId !== job.attempt) return
+        if (meta?.jobId !== recordJobId(job)) return
         const steps = startStepPatches(state?.start ?? null, meta)
         await patchSteps(transaction, meta, steps)
         await closeOpenSteps(transaction, meta.jobId, at, outcome)
@@ -145,7 +148,8 @@ export class StartJobRecords {
     const run = await recordSafely(undefined, async () => {
       const job = await this.storage.get('job', START_JOB_KEY)
       const meta = await readStartRecordMeta(this.storage)
-      if (!job || job.cancelled || meta?.jobId !== job.attempt) return undefined
+      if (!job || job.cancelled || meta?.jobId !== recordJobId(job))
+        return undefined
       const { jobId, jobKind, orgId, workspaceId } = meta
       const open: OpenRun = {
         job: { jobId, jobKind, orgId, workspaceId },
@@ -200,6 +204,12 @@ export class StartJobRecords {
         })
       }
       if (await this.storage.get('job', START_JOB_KEY)) return
+      // A suspension deletes the job with no job end, so its steps close here.
+      await this.storage.transaction(async (transaction) => {
+        const meta = await readStartRecordMeta(transaction)
+        if (meta)
+          await closeOpenSteps(transaction, meta.jobId, endedAt, 'failed')
+      })
       await sendRestStartRecords(this.storage, this.db)
       if (await readStartRecordMeta(this.storage))
         await this.storage.delete(START_RECORD_META_KEY)
@@ -223,9 +233,19 @@ export class StartJobRecords {
   }
 }
 
+/**
+ * Each try of a start gets its own records. A continued create keeps its
+ * attempt and gets a new command attempt, as its command journal does.
+ */
+function recordJobId(
+  job: Pick<WorkspaceStartJob, 'attempt' | 'commandAttempt'>,
+): string {
+  return job.commandAttempt ?? job.attempt
+}
+
 function recordJob(job: WorkspaceStartJob): StartRecordJob {
   return {
-    jobId: job.attempt,
+    jobId: recordJobId(job),
     jobKind: job.kind,
     orgId: job.orgId,
     workspaceId: job.workspaceId,

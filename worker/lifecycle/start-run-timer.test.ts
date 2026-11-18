@@ -89,7 +89,7 @@ class FakeDatabase implements D1Database {
   }
 }
 
-it('counts the D1 calls of the open run, passes original statements to a batch, and names the slowest call', async () => {
+it('counts the D1 calls of the open run, gives a batch views of the real statements, and names the slowest call', async () => {
   const clock = manualClock(1_000)
   const timer = new StartRunTimer(clock.now)
   const fake = new FakeDatabase(clock)

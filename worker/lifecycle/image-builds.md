@@ -147,7 +147,7 @@ phase change that it measures: `beginBuildAllocation` and
   gets no step.
 - A repeated phase change opens no second row and moves no begin.
 
-
+## The software step
 
 `buildSoftwareCommand` in [`build-software.ts`](build-software.ts) composes
 the software command of a build or refresh. It reads the newest release.

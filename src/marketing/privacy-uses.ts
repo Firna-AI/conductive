@@ -166,7 +166,7 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         message text, file contents, or connection close reasons.
         ${productName} also records when each step of a cloud computer
         build and of a workspace start begins and ends, with the IDs of the
-        org, the workspace, and the build, and the time of its calls to
+        org, the workspace, and the build or the start, and the time of its calls to
         other services. The team uses these records to make builds and
         starts faster. They hold no names of repositories or branches, and
         no message text, file contents, or secret values.`,

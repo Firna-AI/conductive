@@ -22,14 +22,21 @@ function recordsFixture(name: string) {
   )
   const clock = { at: TEST_TIME }
   let loseTransaction = false
-  const storage: WorkspaceStorage = {
-    ...native,
-    transaction: (operation) => {
-      if (!loseTransaction) return native.transaction(operation)
-      loseTransaction = false
-      return Promise.reject(new Error('The storage write was lost.'))
+  const broken = { all: false }
+  const refuse = () => Promise.reject(new Error('The storage is down.'))
+  const storage: WorkspaceStorage = new Proxy(native, {
+    get: (target, key) => {
+      if (broken.all && ['get', 'put', 'delete', 'list'].includes(String(key)))
+        return refuse
+      if (key !== 'transaction') return Reflect.get(target, key)
+      return (operation: Parameters<WorkspaceStorage['transaction']>[0]) => {
+        if (broken.all) return refuse()
+        if (!loseTransaction) return target.transaction(operation)
+        loseTransaction = false
+        return Promise.reject(new Error('The storage write was lost.'))
+      }
     },
-  }
+  })
   const job: WorkspaceStartJob = {
     providerAccount: 'boat',
     workspaceId: 'record-workspace',
@@ -70,17 +77,20 @@ function recordsFixture(name: string) {
     loseNextTransaction: () => {
       loseTransaction = true
     },
+    breakStorage: () => {
+      broken.all = true
+    },
     write: async (records: readonly D1PreparedStatement[]) => {
       if (records.length) await db.batch([...records])
     },
-    steps: async () =>
+    steps: async (jobId = job.attempt) =>
       (
         await db
           .prepare(
             `SELECT step, started_at AS startedAt, ended_at AS endedAt, outcome
              FROM job_steps WHERE job_id = ? ORDER BY started_at, step`,
           )
-          .bind(job.attempt)
+          .bind(jobId)
           .all()
       ).results,
   }
@@ -163,4 +173,72 @@ it('sends at most 50 rows in one batch', async () => {
       .bind(job.attempt)
       .first('count'),
   ).toBe(60)
+})
+
+it('lets every start hook finish and still saves the shown state when the record storage fails', async () => {
+  const { records, job, state, breakStorage } = recordsFixture('record-down')
+  breakStorage()
+  await expect(records.jobBegan(job)).resolves.toBeUndefined()
+  await expect(
+    records.phaseChanged(job, { ...job, phase: 'ready' }),
+  ).resolves.toBeUndefined()
+  const run = await records.begin(TEST_TIME)
+  await expect(run.end()).resolves.toBeUndefined()
+  await expect(records.jobEnded(job, 'failed')).resolves.toBeUndefined()
+  const writes: number[] = []
+  await records.send(state, async (statements) => {
+    writes.push(statements.length)
+  })
+
+  expect(writes).toEqual([0])
+})
+
+it('gives a continued create its own records and closes the steps of the try that it replaces', async () => {
+  const { records, clock, job, state, storage, write, steps } =
+    recordsFixture('record-continued')
+  const create: WorkspaceStartJob = { ...job, kind: 'resume' }
+  await records.jobBegan(create)
+  clock.at = TEST_TIME + 5
+  const continued = { ...create, commandAttempt: 'record-attempt:restore:1' }
+  await storage.put('job', START_JOB_KEY, serializeStartJob(continued))
+  await records.jobBegan(continued)
+  await (await records.begin(TEST_TIME + 5)).end()
+  await records.send(state, write)
+
+  expect(await steps()).toEqual([
+    {
+      step: 'phase:machine',
+      startedAt: TEST_TIME,
+      endedAt: TEST_TIME + 5,
+      outcome: 'failed',
+    },
+  ])
+  expect(await steps('record-attempt:restore:1')).toEqual([
+    {
+      step: 'phase:machine',
+      startedAt: TEST_TIME + 5,
+      endedAt: null,
+      outcome: null,
+    },
+  ])
+})
+
+it('closes the open steps as failed when the start job goes without an end', async () => {
+  const { records, clock, job, storage, steps } =
+    recordsFixture('record-suspended')
+  await storage.put('job', START_JOB_KEY, serializeStartJob(job))
+  await records.jobBegan(job)
+  const run = await records.begin(TEST_TIME)
+  await storage.delete(START_JOB_KEY)
+  clock.at = TEST_TIME + 7
+  await run.end()
+
+  expect(await steps()).toEqual([
+    {
+      step: 'phase:machine',
+      startedAt: TEST_TIME,
+      endedAt: TEST_TIME + 7,
+      outcome: 'failed',
+    },
+  ])
 })
