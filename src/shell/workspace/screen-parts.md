@@ -77,6 +77,13 @@ says.
   shows the right column on desktop, or the Files tab on a phone.
 - An archived workspace shows no file tabs and no file page, and its chat
   gets no files.
+- A record of the workspace with another repository closes each file and
+  diff tab of the view, because its path belongs to the old folder, as
+  [After the change](../../../docs/protocol/repository-change.md#after-the-change)
+  says. The chat then shows the chat of its session, and it saves the
+  view. `LeaveMovedFiles` of `files/moved-files.tsx` replaces a file or
+  diff address with the chat on desktop, and with the Files tab on a
+  phone.
 - The screen gives each of its parts one link opener, `WorkspaceLinks` of
   `link-opening.tsx`, through `LinkOpeningProvider` of
   `../ui/text-links.tsx`. So the links of chat text open as
@@ -211,6 +218,10 @@ Each folder of a path is a part of the address. Another address under
 - A Restore moves no address, so it starts nothing, also while the address
   names a file or diff tab. The next visit that opens a tab resumes the
   sandbox.
+- After a repository change, the kept files mark the tree as unavailable,
+  drop the changes, and read the changes again, as
+  [Store rules](../../files/store.md) says. The reports of the new folder
+  then replace both lists.
 - The kept files, Copy, and Download use the services of the org, as
   [the Files screens](../../files/README.md#integration) say.
 - The tabs of All files, Changes, and Checks name the keys of Go to All

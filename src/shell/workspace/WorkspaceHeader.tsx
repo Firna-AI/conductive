@@ -1,16 +1,13 @@
 import type { Workspace } from '../../shared/generated/Workspace'
-import { useEffect, type ReactNode } from 'react'
-import { ChevronLeft, FolderGit2 } from 'lucide-react'
+import type { ReactNode } from 'react'
+import { ChevronLeft } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import owner from '../../../docs/mockups/src/components/workspace/OwnerPicker.module.css'
 import { NameMenuButton } from '../../../docs/mockups/src/components/workspace/NameMenuButton'
 import styles from '../../../docs/mockups/src/components/workspace/WorkspaceHeader.module.css'
 import { personName } from '../../app/people'
 import { routes } from '../../app/router'
-import { useStore, valueOf } from '../../app/store'
 import { nameLabel } from '../../shared/name-label'
-
-import { useOrgModel } from '../context'
 import { useMacBar } from '../mac/mac-app'
 import { IconButton } from '../ui/actions'
 import { useGo } from '../ui/AppLink'
@@ -20,6 +17,7 @@ import ui from '../ui/ui.module.css'
 import { CopyLink } from './CopyLink'
 import { HeaderState } from './HeaderState'
 import type { WorkspaceContext } from './features'
+import { RepositoryControl } from './repository/RepositoryControl'
 import { RightColumnToggle } from './WorkspaceColumns'
 import { RunLine } from './RunLine'
 import { useRunAutomation } from './saved-view'
@@ -46,7 +44,8 @@ function Owner(props: { workspace: Workspace; compact: boolean }) {
  * of the workspace. On desktop it follows the name, and the repository
  * takes the room that the other parts leave. On a phone it leads
  * the line under the name. The list groups workspaces by section, so the
- * header names the repository. On desktop the header ends with the toggle
+ * header names the repository. The repository opens the menu that moves
+ * the workspace to another repository, as `RepositoryControl` says. On desktop the header ends with the toggle
  * of the right column. A run workspace links to its automation below it.
  * While the open of the workspace resumes its sandbox, the state shows
  * Starting at once, before the Resume reply. While the software runs, the
@@ -61,16 +60,13 @@ export function WorkspaceHeader(props: {
   ownerControl?: ReactNode
 }) {
   const { workspace, org } = props.context
-  const model = useOrgModel(org.id)
-  const repositories = valueOf(useStore(model.repositories))
   const go = useGo()
   const bar = useMacBar()
   const automation = useRunAutomation(props.context.savedView)
   const menu = useHeaderMenu(props.context)
-  useEffect(() => model.watch('repositories'), [model])
-  const repository =
-    repositories?.find((item) => item.id === workspace.repositoryId)
-      ?.fullName ?? workspace.repositoryId
+  const repository = (
+    <RepositoryControl context={props.context} key={workspace.id} />
+  )
   const name = nameLabel(workspace.name)
   const phone = props.context.viewport === 'phone'
   const state = props.context.resumingAtOpen ? 'starting' : workspace.state
@@ -112,7 +108,7 @@ export function WorkspaceHeader(props: {
         {title}
         <span className={styles.line}>
           {copyLink}
-          <span className={styles.branch}>{repository}</span>
+          {repository}
         </span>
       </div>
       {ownerView}
@@ -122,12 +118,7 @@ export function WorkspaceHeader(props: {
     <header className={classes(styles.bar, bar)}>
       {title}
       {copyLink}
-      <span className={styles.metas}>
-        <span className={styles.meta}>
-          <FolderGit2 aria-hidden className={styles.icon} size={13} />
-          <span className={styles.branch}>{repository}</span>
-        </span>
-      </span>
+      <span className={styles.metas}>{repository}</span>
       {ownerView}
       {stateView}
       <RightColumnToggle />

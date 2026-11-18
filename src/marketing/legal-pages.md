@@ -20,10 +20,11 @@ which sends the emails, from
 
 The words of the legal pages, of the page for an unknown address, and of
 the sign-in agreement are text without markup. `terms.ts` with
-`terms-service.ts` and `terms-org.ts`, `privacy.ts` with `privacy-uses.ts` and
-`privacy-recipients.ts`, and `legal-text.ts` hold them. `terms.ts` takes
-its "The service" section from `terms-service.ts` and its "Working in an
-org" section from `terms-org.ts`. `privacy.ts` takes
+`terms-service.ts`, `terms-work.ts`, and `terms-org.ts`, `privacy.ts` with
+`privacy-uses.ts` and `privacy-recipients.ts`, and `legal-text.ts` hold them.
+`terms.ts` takes its "The service" section from `terms-service.ts`, its
+"Your work" section from `terms-work.ts`, and its "Working in an org"
+section from `terms-org.ts`. `privacy.ts` takes
 its "What Conductive uses, and why" section from `privacy-uses.ts`, and
 its "Who gets your data" section from `privacy-recipients.ts`.
 `layouts/LegalPage.astro` and `components/RunningText.astro` build their

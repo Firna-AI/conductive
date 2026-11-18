@@ -12,7 +12,7 @@ import {
   type StreamTimers,
   type SubscribeToWorkspace,
 } from '../stream/workspace-stream'
-import type { ChatStore } from './chat-snapshot'
+import type { ChatStore } from './chat-store'
 import { applyEnvelopes } from './apply-events'
 import { isArchived, reloadView } from './archive-view'
 import { viewWriter, type ChatContext } from './context'

@@ -11,16 +11,19 @@ use tokio::task::JoinSet;
 use crate::clock::Clock;
 use crate::error::Result;
 use crate::link::ports::{LinkUpdate, RunnerLink};
+use crate::relocation::{RepositoryFolders, RepositoryTarget, check_move, requested_move};
 use crate::state::store::EventStore;
 use crate::update::{IdleUpdate, ReleaseReadiness};
 
 /// Why the runner completed its normal shutdown path.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum RunExit {
     /// A shutdown signal or a closed shutdown channel stopped the runner.
     Shutdown,
     /// Idle work and local release readiness permit an in-place release change.
     Swap,
+    /// A repository move names another folder, and no turn runs.
+    Relocate(RepositoryTarget),
 }
 
 /// File and turn owners receive commands without blocking socket confirmations.
@@ -37,6 +40,10 @@ pub trait CommandHandler: Send + Sync {
     fn command(&self, command: RunnerCommand) -> Result<()>;
     /// Report active turns, queued work, unfinished accepted turns, and report requests.
     async fn busy(&self) -> Result<bool>;
+    /// Report agent work only. A repository move waits for it, but not for reports.
+    async fn working(&self) -> Result<bool> {
+        self.busy().await
+    }
     /// End accepted live turns before the final persist and socket close.
     async fn shutdown(&self) -> Result<()>;
 }
@@ -55,6 +62,7 @@ pub struct RunnerCore {
     clock: Arc<dyn Clock>,
     handler: Arc<dyn CommandHandler>,
     releases: Arc<dyn ReleaseReadiness>,
+    folders: Option<RepositoryFolders>,
 }
 
 impl RunnerCore {
@@ -72,7 +80,14 @@ impl RunnerCore {
             clock,
             handler,
             releases,
+            folders: None,
         }
+    }
+
+    /// Accept repository moves to these folders. Without them, each move is refused.
+    pub fn with_folders(mut self, folders: RepositoryFolders) -> Self {
+        self.folders = Some(folders);
+        self
     }
 
     async fn connected(
@@ -80,15 +95,26 @@ impl RunnerCore {
         shutdown: &mut watch::Receiver<bool>,
         jobs: &mut JoinSet<(u64, Result<()>)>,
         round: u64,
-    ) -> bool {
+    ) -> Option<RunExit> {
         let mut step = self.link.step();
         let mut check = self.clock.update_delay();
         let mut idle = IdleUpdate::default();
         let mut welcomed = false;
+        let mut relocation: Option<RepositoryTarget> = None;
         loop {
+            if let Some(target) = relocation.take() {
+                match self.handler.working().await {
+                    Ok(false) => return Some(RunExit::Relocate(target)),
+                    Ok(true) => relocation = Some(target),
+                    Err(_) => {
+                        tracing::warn!("The runner could not check its turns before a move.");
+                        relocation = Some(target);
+                    }
+                }
+            }
             tokio::select! {
                 biased;
-                _ = async { let _ = shutdown.wait_for(|stopped| *stopped).await; } => return false,
+                _ = async { let _ = shutdown.wait_for(|stopped| *stopped).await; } => return None,
                 finished = jobs.join_next(), if !jobs.is_empty() => {
                     match finished {
                         Some(Ok((job_round, Err(_)))) => {
@@ -96,7 +122,7 @@ impl RunnerCore {
                             if job_round == round {
                                 drop(step);
                                 let _ = self.link.close().await;
-                                return false;
+                                return None;
                             }
                         },
                         Some(Err(_)) => tracing::warn!("The runner command task could not finish."),
@@ -112,10 +138,14 @@ impl RunnerCore {
                         },
                         Ok(LinkUpdate::Command(command)) => {
                             idle.reset();
-                            if self.handler.command(*command).is_err() { tracing::warn!("The runner command could not finish."); }
+                            if let Some(request) = requested_move(&command) {
+                                if let Some(target) = check_move(self.folders.as_ref(), self.link.as_ref(), request).await {
+                                    relocation = Some(target);
+                                }
+                            } else if self.handler.command(*command).is_err() { tracing::warn!("The runner command could not finish."); }
                         },
                         Ok(LinkUpdate::Progress) => {},
-                        Ok(LinkUpdate::Disconnected) | Err(_) => return false,
+                        Ok(LinkUpdate::Disconnected) | Err(_) => return None,
                     }
                     step = self.link.step();
                 },
@@ -126,7 +156,7 @@ impl RunnerCore {
                         continue;
                     }
                     match self.check_update(&mut idle).await {
-                        Ok(true) => return true,
+                        Ok(true) => return Some(RunExit::Swap),
                         Ok(false) => {},
                         Err(error) => {
                             idle.reset();
@@ -134,6 +164,7 @@ impl RunnerCore {
                         }
                     }
                 },
+                _ = self.clock.move_delay(), if relocation.is_some() => {},
             }
         }
     }
@@ -166,9 +197,11 @@ impl Runner for RunnerCore {
                 _ = async { let _ = shutdown.wait_for(|stopped| *stopped).await; } => break,
                 connected = self.link.connect() => connected,
             };
-            if connected.is_ok() && self.connected(&mut shutdown, &mut jobs, round).await {
+            if connected.is_ok()
+                && let Some(ended) = self.connected(&mut shutdown, &mut jobs, round).await
+            {
                 swap_close = self.link.close().await;
-                exit = RunExit::Swap;
+                exit = ended;
                 break;
             }
             if *shutdown.borrow() || shutdown.has_changed().is_err() {

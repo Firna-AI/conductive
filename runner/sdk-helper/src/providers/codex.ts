@@ -1,4 +1,3 @@
-import type { RunnerBranches } from '../generated/RunnerBranches'
 import {
   WORKSPACE_TOOLS_MCP,
   TOOL_ENV,
@@ -20,13 +19,13 @@ import { readComputerServer } from './computer-mcp'
 import { prepareProviderHome } from './environment'
 import { failureCause } from './failure'
 import { ProviderLifetime } from './lifetime'
-import { providerMessage } from './message'
+import { providerMessage, type FixedContext } from './message'
 import { startProcess, type StartProcess } from './process'
 import { JsonRpc } from './rpc'
 import type { ProviderFactory } from './types'
 import type { ProviderInput } from '../generated/ProviderInput'
 
-function input(command: ProviderInput, branches?: RunnerBranches | null) {
+function input(command: ProviderInput, fixed: FixedContext) {
   const images = command.attachments.filter((attachment) => {
     const metadata = command.message.attachments.find(
       (item) => item.id === attachment.attachmentId,
@@ -39,7 +38,7 @@ function input(command: ProviderInput, branches?: RunnerBranches | null) {
   return [
     {
       type: 'text',
-      text: providerMessage(command.message, command.branches, branches),
+      text: providerMessage(command, fixed),
       text_elements: [],
     },
     ...(command.attachments.length
@@ -243,7 +242,7 @@ export function createCodexFactory(
                 threadId: thread,
                 expectedTurnId: activeTurn,
                 clientUserMessageId: command.message.id,
-                input: input(command, options.instructionBranches),
+                input: input(command, options),
               })
             } catch (error) {
               userIds = before
@@ -257,7 +256,7 @@ export function createCodexFactory(
             const result = object(
               await rpc.request('turn/start', {
                 threadId: thread,
-                input: input(command, options.instructionBranches),
+                input: input(command, options),
                 clientUserMessageId: command.message.id,
                 model: choice.model,
                 effort: choice.effort === 'none' ? 'none' : choice.effort,

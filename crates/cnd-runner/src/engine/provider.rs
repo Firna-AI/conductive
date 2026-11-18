@@ -93,6 +93,7 @@ impl Session {
             conversation_id: saved.provider_session_id.clone(),
             instructions: saved.instructions.clone().unwrap_or_default(),
             instruction_branches: saved.instruction_branches.clone().flatten(),
+            instruction_folder: saved.instruction_folder.clone(),
             tools: WorkspaceToolContext {
                 machine_origin: origin.origin().ascii_serialization(),
                 workspace_token: self

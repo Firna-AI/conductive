@@ -55,6 +55,10 @@ export type HelperOptions = {
    */
   instructionBranches?: RunnerBranches | null
   /**
+   * Repository folder named by the saved instructions, when known.
+   */
+  instructionFolder?: string | null
+  /**
    * Workspace MCP context.
    */
   tools: WorkspaceToolContext

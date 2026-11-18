@@ -13,6 +13,7 @@ pub mod limits;
 pub mod link;
 mod port_limits;
 pub mod ports;
+pub mod relocation;
 pub mod reports;
 pub mod repository;
 pub mod runtime;

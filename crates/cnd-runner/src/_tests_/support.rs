@@ -66,5 +66,6 @@ pub(crate) fn session() -> SavedSession {
         provider_session_id: Some("conversation".into()),
         instructions: Some("saved instructions".into()),
         instruction_branches: Some(None),
+        instruction_folder: None,
     }
 }

@@ -32,11 +32,13 @@ how a screen is built, and links to the other pages.
 | `app/secret-requests` | A request for secrets above the composer, two secrets, a mixed request, a temporary request with its sheet on a phone, the results in the chat, and a request that outlived its tool call or ended with no answer |
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
+| `app/repository-change` | The repository menu of the header, the question before a change, the change that runs, a change that stopped, and the workspace after it |
 | `app/restart`       | The menu of the header state with Restart, the question while an agent works, Starting after Restart, a failed update check, and a failed restart |
 | `app/archive`       | An archived workspace with Restore, the toast after Archive, the Archived group, the restored workspace, an archive without a kept cloud computer, and a workspace that left the list after its 14 days |
 | `app/composer`      | Two uploaded files in a sentence, then the picker, a missing agent, another member's login, a login that is not shared, and the org login |
 | `app/capabilities`  | The Capabilities control of a workspace, with the approvals of its sessions and its values, and Mac access off |
 | `app/fast-mode`     | The Fast switch of the model menu on and off, with its key, the trigger with Fast, and a model without fast mode |
+| `app/model-favourites` | The model menu with five favourites, its All models submenu, a changed effort, and the favourites in Preferences |
 | `app/attachments`   | A file that uploads in the text, then a drop, a failed upload, a file over 1 GB, sent files, the file tab of a sent screenshot, a first message with files, and a file that is no longer in the cloud computer |
 | `app/workspace-links` | Chips in a message and an answer, then Copy link and its failure, a pasted link, a link of another org, session chips, and messages that an agent sent |
 | `app/file-mentions` | The list of `@` with a query, then the list without one, its other states, the file chips of the composer and of a sent message, and the file chips of an answer |
@@ -383,6 +385,17 @@ no collapse control. `subWorkspaces` of the list states, from
 child pages of `app/command-palette` and of `app/feedback`, and the flow
 that sends feedback.
 
+`app/model-favourites` draws the model menu with favourites, which the user
+chose on 16 November 2026. The menu lists up to five favourites first, each
+as its model with its effort and Fast in the muted colour. All models opens
+a submenu with every model. The efforts and the Fast switch follow. Its
+`all-models` variant opens the submenu, its `changed` variant shows the menu
+after a change of the effort, and its `preferences` variant shows the
+Favourites section of Preferences. The page draws its menu through the
+`picker` prop of `WorkspaceScreen` and its section through the `content`
+prop of `AccountScreen`. The other pages of the model picker still show
+the menu of today.
+
 The catalogue draws the Keyboard shortcuts tab in the Mac app and in a
 browser, from decisions 190 to 196. The pages of
 `app/account` and `mac-app/this-mac` show it as the fourth tab of the
@@ -491,6 +504,20 @@ list on that day. Its child pages:
   same workspace on that day, while a failed delete of its cloud computer
   tries again. The flow `user-flows/open-a-removed-workspace` goes from the
   chip to this page.
+
+`app/repository-change` draws the repository change of Checkout address
+autocomplete, from repository change decisions 1 to 4. Its canonical
+screen has the open repository menu of the header, with the repositories
+that the org chose. Its saved states:
+
+- `app/repository-change/question` has the question before the change,
+  with the work that stays with the old repository and the work that
+  moves to the new branch.
+- `app/repository-change/changing` has the change that runs, with a
+  spinner in the repository button.
+- `app/repository-change/failed` has the toast of a change that stopped.
+- `app/repository-change/changed` has the workspace on its new branch,
+  with the note of the change in the chat.
 
 [Chat and automations](catalogue-chat-and-automations.md) gives those catalogue
 pages, their child pages, and their related flows.

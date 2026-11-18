@@ -121,14 +121,14 @@ it('replays an older delivery event without replacing the newer workspace summar
   })
   expect(harness.api.requests).toHaveLength(reads)
   expect(
-    harness
-      .memory(fixture.workspace.id)
-      .events.map((event) => event.eventNumber),
+    (await harness.inspect(fixture.workspace.id)).events.map(
+      (event) => event.eventNumber,
+    ),
   ).toEqual([1, 2])
   expect(
-    harness
-      .memory(fixture.workspace.id)
-      .published.map((event) => event.eventNumber),
+    (await harness.inspect(fixture.workspace.id)).published.map(
+      (event) => event.eventNumber,
+    ),
   ).toEqual([1, 2, 1])
   const branch = 'owner/continued'
   await harness.env.DB.prepare(
@@ -168,9 +168,9 @@ it('repairs a missing summary on an unchanged read and skips a matching copy', a
     ).run()
   }
   expect(
-    harness
-      .memory(fixture.workspace.id)
-      .events.map((event) => event.eventNumber),
+    (await harness.inspect(fixture.workspace.id)).events.map(
+      (event) => event.eventNumber,
+    ),
   ).toEqual([1])
 })
 
@@ -191,7 +191,7 @@ it('fails a refresh on a failed copy and retries its receipt without a fresh eve
     error: { code: 'internal_error' },
   })
   const reads = harness.api.requests.length
-  harness.memory(fixture.workspace.id).restart()
+  await harness.restart(fixture.workspace.id)
   expect(
     (await harness.webhook('status', recordedStatus, 'copy-failure')).status,
   ).toBe(204)
@@ -200,13 +200,13 @@ it('fails a refresh on a failed copy and retries its receipt without a fresh eve
   })
   expect(harness.api.requests).toHaveLength(reads)
   expect(
-    harness
-      .memory(fixture.workspace.id)
-      .events.map((event) => event.eventNumber),
+    (await harness.inspect(fixture.workspace.id)).events.map(
+      (event) => event.eventNumber,
+    ),
   ).toEqual([1])
   expect(
-    harness
-      .memory(fixture.workspace.id)
-      .published.map((event) => event.eventNumber),
+    (await harness.inspect(fixture.workspace.id)).published.map(
+      (event) => event.eventNumber,
+    ),
   ).toEqual([1, 1])
 })

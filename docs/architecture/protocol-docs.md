@@ -35,6 +35,9 @@ This page lists each protocol doc and what it covers.
       newest release before it.
   - [Continue](../protocol/continue.md): the next task of a workspace after a
     merge, on a new branch with the same sandbox and sessions.
+  - [Repository change](../protocol/repository-change.md): the move of a
+    workspace to another repository of its org, on a new branch with the
+    same sandbox and sessions.
   - [Workspace menu](../protocol/workspace-menu.md): the menu of a workspace
     row, which moves, reassigns, renames, and archives the workspace.
   - [Sub-workspaces](../protocol/sub-workspaces.md): the parent link, when
@@ -239,11 +242,10 @@ This page lists each protocol doc and what it covers.
   Worker as a member, and the GitHub tokens that an image job uses to copy
   the repositories.
 - [Agent instructions](../protocol/agent-instructions.md): the text that each
-  agent session gets, and the sender line and the branch line of each
-  message.
-  - [Agent instructions: the sender line](../protocol/agent-instructions-sender-line.md):
-    the sender line of each message, and the access of a turn, which does
-    not depend on that line.
+  agent session gets.
+  - [Message lines](../protocol/message-lines.md): the sender line, the
+    repository line, and the branch line of each message, and the access
+    of a turn, which does not depend on the sender line.
   - [Base prompts](../protocol/base-prompts.md): the base prompt of Claude
     agents and the base instructions of Codex agents.
   - [Agent instructions: how each agent gets them](../protocol/agent-instructions-delivery.md):

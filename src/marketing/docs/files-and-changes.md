@@ -153,6 +153,7 @@ A workspace you create uses the repository's default branch.
 A run for an opened or pushed pull request uses that pull request's head branch.
 A run for a merged pull request uses that pull request's base branch.
 After **Continue**, the workspace's base branch is the repository's latest default branch.
+After a repository change, it is the latest default branch of the new repository.
 The comparison starts at the common commit of the workspace branch and its base branch.
 Newer commits on the base branch therefore stay out of **Changes**.
 

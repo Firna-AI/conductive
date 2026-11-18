@@ -48,10 +48,14 @@ async function readers(event: string, payload: unknown, deliveryId: string) {
 
 it('reads only the workspaces that a push can change, from their stored state', async () => {
   const { workspace, second } = await seedTwo()
-  expect(harness.memory(workspace.id).values.get('github:state')).toMatchObject(
-    { banner: { baseBranch: 'main', pullRequest: { number: 2 } } },
-  )
-  expect(harness.memory(second.id).values.get('github:state')).toMatchObject({
+  expect(
+    (await harness.inspect(workspace.id)).records.get('github:state'),
+  ).toMatchObject({
+    banner: { baseBranch: 'main', pullRequest: { number: 2 } },
+  })
+  expect(
+    (await harness.inspect(second.id)).records.get('github:state'),
+  ).toMatchObject({
     banner: { pullRequest: null },
   })
   const push = (ref: string) => ({ ...recordedPush, ref: `refs/heads/${ref}` })
@@ -60,8 +64,8 @@ it('reads only the workspaces that a push can change, from their stored state', 
     second.id,
   ])
   expect(await readers('push', push('main'), 'main')).toEqual([workspace.id])
-  expect(harness.memory(workspace.id).scheduled).toHaveLength(1)
-  expect(harness.memory(second.id).scheduled).toEqual([])
+  expect((await harness.inspect(workspace.id)).scheduled).toHaveLength(1)
+  expect((await harness.inspect(second.id)).scheduled).toEqual([])
 })
 
 it('skips a merged pull request when its base moves', async () => {

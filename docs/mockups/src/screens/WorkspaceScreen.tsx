@@ -32,8 +32,8 @@ import { centreOf } from './workspaceCentre'
 import { placeLostUpdate } from './lostUpdates'
 import { changedWorkspaces, chatWorkspacesOf } from './orgWorkspaces'
 import { viewerOf } from './sessionStarter'
+import { barOf, headerMenusOf, placeOf } from './workspaceBar'
 import { headerMenuOf } from './workspaceHeaderMenu'
-import { barOf, branchOf } from './workspaceBar'
 import {
   FilesContent,
   startingLogFor,
@@ -76,14 +76,16 @@ const raisedSplit = 35
  * The toast of the state lies over everything. `shortcuts` holds the
  * person's changes to the shortcuts. With them, the palette rows show their
  * keys, and the Search row shows the person's key of the palette.
+ * `picker` takes the place of the model picker of the message box.
  */
 export function WorkspaceScreen(props: {
   state: WorkspaceState
   viewport: Viewport
   overlay?: ReactNode
   shortcuts?: ShortcutChanges
+  picker?: ReactNode
 }) {
-  const { viewport } = props
+  const { viewport, picker: pickerPart } = props
   const mac = useMacApp()
   const state = drawnState(props.state)
   const suspended = state.org === 'suspended'
@@ -98,7 +100,7 @@ export function WorkspaceScreen(props: {
     ...record,
     owner,
     name: workspaceName(state, record),
-    branch: branchOf(state, record),
+    ...placeOf(state, record),
     github: bannerSummary(state.banner),
   }
   const status = activityOf(state)
@@ -120,7 +122,7 @@ export function WorkspaceScreen(props: {
   const chat = (
     <ChatWorkspaces rows={rows}>
       <ChatPane
-        composer={composerFor(state, workspace, viewport)}
+        composer={{ ...composerFor(state, workspace, viewport), pickerPart }}
         empty={
           <EmptyState
             body={`The agent works on ${workspace.branch}, on the same cloud computer as the other sessions.`}
@@ -153,16 +155,15 @@ export function WorkspaceScreen(props: {
       canRestart={!readOnly}
       copy={state.copyLink === 'none' ? undefined : state.copyLink}
       name={workspace.name}
+      {...headerMenusOf(state)}
       menu={
         state.overlay === 'workspace-menu' && viewport === 'desktop'
           ? headerMenuOf(state, workspace.owner)
           : undefined
       }
-      ownerOpen={state.overlay === 'reassign'}
       renaming={state.overlay === 'header-rename'}
       run={open.run}
       rightHidden={rightHidden}
-      stateOpen={state.overlay === 'restart'}
       status={status}
       viewport={viewport}
       workspace={workspace}

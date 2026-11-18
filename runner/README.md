@@ -20,6 +20,15 @@ The `hello` advertises every login kind that this runner can run.
 The Worker checks that list before dispatching a turn or message.
 A login kind that a runner does not advertise gets no command, and the turn fails with recovery steps.
 
+The `hello` also names the repository folder of the runner, as
+`repositoryFolder`. Only such a runner gets `repository.move`, because an
+older runner closes its socket on an unknown command. The runner then moves
+to that folder in the same process, after its turns end, and sends a new
+`hello`. It refuses a folder that is not a repository folder of the sandbox.
+[Agent input](agent-input.md#the-repository-line) gives the repository line
+of each later message. The [runner library](../crates/cnd-runner/README.md)
+gives the move.
+
 The service runs `/opt/conductive/current/conductive runner`.
 The [Rust runner library](../crates/cnd-runner/README.md) owns the connection,
 saved state, turns, reports, and output filter. Its [SDK helper](sdk-helper/README.md)

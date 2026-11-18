@@ -16,6 +16,10 @@ import {
 import type { WorkspaceSocketMessage } from '../../../shared/events'
 import { FakeApiServer } from '../../../test-support/fake-api'
 import { scenarioFetch } from '../../../test-support/fake-bar-dev'
+import {
+  repositoryFetch,
+  serveHeld,
+} from '../../../test-support/fake-repository-change'
 import { fetchFiles } from '../../../test-support/fake-files'
 import {
   FAKE_IDS,
@@ -50,15 +54,18 @@ const server = new FakeApiServer(
 )
 storeFailedRepairs(server.events, options.repair, now())
 if (bar && options.member) server.signIn(fakeUsers[1])
+const member = senderSnapshot(options.member ? fakeUsers[1] : fakeUser)
 // The actions of the bar answer as the Worker does, with its state.
-const fetch = bar
-  ? scenarioFetch(
-      server,
-      bar.scenario,
-      senderSnapshot(options.member ? fakeUsers[1] : fakeUser),
-      now,
-    )
+const barFetch = bar
+  ? scenarioFetch(server, bar.scenario, member, now)
   : server.fetch
+// A repository change answers as the Worker does, over each chosen folder.
+if (options.repository) {
+  serveHeld(server, ['storefront', 'billing-service', 'marketing-site'])
+}
+const fetch = options.repository
+  ? repositoryFetch(server, options.repository, member, now, barFetch)
+  : barFetch
 // A first-start state opens the new workspace of the create flow instead.
 const workspaceId = options.start
   ? seedFirstStart(server, options.start, options.member)

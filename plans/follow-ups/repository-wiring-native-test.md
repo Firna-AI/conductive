@@ -19,9 +19,9 @@
 - **Root question:** How does the gate catch a break in the production connection from a verified webhook to the GitHub read, the guarded save, and the coordinator wake?
 - **Options:**
   - **A.** Add one native case with its own `featureFixture` in `worker/features/github-routes.test.ts`. Send a signed `repository` event with the `renamed` action through the machine route. Give the payload a name that differs from the saved name and from the fake GitHub reply. In the `outbound` hook, answer the token request, `GET /repositories/186853002` twice, and `DELETE /installation/token`. Advance only the `org-image:chat-org` alarm. Assert the saved values, and the repositories of the new build through `readBuildJob`. Remove `read`, then `changed`, from the composition, and see the case fail on an assertion each time. Do not use a push to the default branch, because its own push refresh then starts the build and hides a removed wake. Effort: Small.
-  - **B.** Make the production route and the native objects the default path of the shared GitHub test harness, as `plans/follow-ups/github-tests-on-real-object.md` proposes. Effort: Large.
+  - **B.** Make the production route and the native objects the default path of the shared GitHub test harness, as [the GitHub tests item at commit `9983ba58b`](https://github.com/Firna-AI/remote-code/blob/9983ba58be06f4a082bc34a806d507b5853c73a0/plans/follow-ups/github-tests-on-real-object.md) proposes. Effort: Large.
 - **Left out:** A unit test of the composition with `vi.mock` shows only that callbacks reach the handler. A production warning finds the break only after the deploy.
-- **Wider fix:** B, already recorded in `plans/follow-ups/github-tests-on-real-object.md`.
+- **Wider fix:** B, already recorded in [the GitHub tests item at commit `9983ba58b`](https://github.com/Firna-AI/remote-code/blob/9983ba58be06f4a082bc34a806d507b5853c73a0/plans/follow-ups/github-tests-on-real-object.md).
 - **Previous examples:** `plans/follow-ups/terminal-links-wiring-test.md` records another missing wiring test.
 - **Related:** `plans/follow-ups/repository-check-before-branch-routing.md`: after its fix, a tag push with changed values can serve as the event of this case.
 - **Recommendation:** A. One native case proves the whole connection.
