@@ -63,6 +63,18 @@ examples.
     the paths of the user's app. A preview request that fails before the
     proxy, such as when a deploy restarts the workspace object, still
     logs the route words of its path, with each other segment as `*`.
+- `wrangler.jsonc` turns on the compatibility flag `enable_request_signal`
+  with the compatibility date `2026-11-06`. With this flag, the `signal`
+  of an incoming request fires its `abort` event when the client
+  disconnects, as
+  [Cloudflare's flag reference](https://developers.cloudflare.com/workers/configuration/compatibility-flags/#enable-requestsignal-for-incoming-requests)
+  says. The model gateway uses this event to cancel the request to the
+  upstream when the agent program closes its connection, as
+  [Streams](protocol/model-gateway-requests.md#streams) requires. The flag
+  applies to every incoming request of the Worker, also to each request
+  that reaches a workspace Durable Object. It does not turn on
+  `request_signal_passthrough`. So forwarding a request by itself does not
+  pass its incoming signal to a subrequest.
 - Set each secret with `npx wrangler secret put <NAME>`. The command asks
   for the value. Never put a secret in `wrangler.jsonc` or in Git.
 - The Worker reads each variable as text. Write a JSON value as one

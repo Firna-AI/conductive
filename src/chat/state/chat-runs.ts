@@ -53,6 +53,7 @@ export class ChatRuns {
   private unwatch: (() => void) | null = null
   private unfollow: (() => void) | null = null
   private unlist: (() => void) | null = null
+  private readonly missingNotices = new Set<() => void>()
 
   constructor(options: ChatControllerOptions) {
     this.options = options
@@ -69,6 +70,17 @@ export class ChatRuns {
 
   readonly subscribe = (listener: () => void) => this.store.subscribe(listener)
   readonly getSnapshot = (): ChatSnapshot => this.store.get()
+
+  /** The notice owns its watch until its cleanup or the end of this run. */
+  readonly watchMissingLogin = (): (() => void) => {
+    const unwatch = this.options.sources?.watchMissingLogin?.()
+    const stop = () => {
+      if (!this.missingNotices.delete(stop)) return
+      unwatch?.()
+    }
+    this.missingNotices.add(stop)
+    return stop
+  }
 
   /** The reads of the sessions of linked workspaces for this load. */
   get sessionReads(): SessionReads {
@@ -95,6 +107,7 @@ export class ChatRuns {
 
   readonly stop = (): void => {
     this.run += 1
+    for (const stop of this.missingNotices) stop()
     this.context.sessionReads.close()
     for (const upload of this.context.uploads.values()) upload.abort()
     this.context.uploads.clear()

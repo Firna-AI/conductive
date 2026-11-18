@@ -255,7 +255,8 @@ background work, and the end of a fast turn that ran at standard speed.
 - `WorkspaceChip` in `src/components/chat/` draws a link to a workspace of
   the org as a chip in a line of text: a small rounded pill with the list
   mark of the workspace, `WorkspaceMark`, its label in a muted colour, and
-  its current name. The name of a workspace with unread output takes the
+  its current name. `WorkspaceName`, which [the marks](design-marks.md)
+  give, draws the name. The name of a workspace with unread output takes the
   strong weight of 600, as in the list, in place of the chip's 500. Its
   height is the height of the line less 2 px, so a line with a chip keeps
   its height. A chip is never wider than its line or than 22 times the
@@ -299,8 +300,9 @@ background work, and the end of a fast turn that ran at standard speed.
   the same place. Its title is the whole title of the session, and screen
   readers hear "Session" before it. It takes no fixtures, so the app can
   use it too.
-  It renders through `WorkspaceChip`, so both chip forms share the mark,
-  state words, removal cells, and bold unread title.
+  It renders through `WorkspaceChip`, which draws the title with
+  `WorkspaceName`, as it draws the name of a workspace. So both chip forms
+  share the mark, state words, removal cells, and bold unread title.
   - `MessageText` shows a session chip for a link to the address of a
     session that the chat read. `ChatWorkspaces` gives each linked
     workspace the sessions that the chat read when it loaded, open and
