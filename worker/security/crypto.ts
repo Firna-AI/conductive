@@ -4,7 +4,10 @@ const encoder = new TextEncoder()
 const decoder = new TextDecoder()
 
 export function base64Url(bytes: Uint8Array): string {
-  return btoa(String.fromCharCode(...bytes))
+  const parts: string[] = []
+  for (let index = 0; index < bytes.length; index += 16_384)
+    parts.push(String.fromCharCode(...bytes.subarray(index, index + 16_384)))
+  return btoa(parts.join(''))
     .replaceAll('+', '-')
     .replaceAll('/', '_')
     .replaceAll('=', '')

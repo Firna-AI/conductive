@@ -7,7 +7,7 @@ import {
 import type { FileEntry } from '../../../shared/generated/FileEntry'
 import { useNavigation } from '../../../app/navigation'
 import { routes } from '../../../app/router'
-import type { RenderTab, TabDraw } from '../../../chat/components/tab-row'
+import type { RenderedTab, TabDraw } from '../../../chat/components/tab-row'
 import type { ChatMentions } from '../../../chat/mentions/MentionsContext'
 import { tabHidesSecret, tabLabel } from '../../../files/model/file-labels'
 import type { WorkspaceFiles } from '../../../files/model/files-store'
@@ -126,7 +126,7 @@ function FileTab(props: {
 
 /** What the kept chat gets from the Files screens. */
 export interface ChatFiles {
-  renderTab?: RenderTab
+  renderTab?: (tab: FilesTab) => RenderedTab
   onOpenDiff?: (path: string) => void
   mentions?: ChatMentions
 }
@@ -186,8 +186,8 @@ function useMentions(
  * the tab hides a secret value or is not known yet. When the chat makes a
  * session active while `content` shows a file, the address goes back to the
  * chat. The chat reads the kept files for the list of `@` and the file
- * chips, also on a phone before a visit to Files: `KeptFilesConnection` of
- * the screen keeps them connected. A file or diff tab that leaves the saved
+ * chips, also on a phone before a visit to Files: `KeptConnections` of the
+ * screen keeps them connected. A file or diff tab that leaves the saved
  * view, such as one that the user closed, forgets its kept scroll offset.
  * An archived workspace has no files.
  */
@@ -198,7 +198,7 @@ export function useChatFiles(
   const navigation = useFilesNavigation(context)
   const view = useSavedView(context.savedView)
   const shown = content === null ? null : tabOf(filesPlace(context.view))
-  useLeaveForSession(context, shown !== null)
+  useLeaveForSession(context, content !== null)
   const archived = context.sandbox === 'archived'
   const tabs = !archived && context.viewport !== 'phone'
   const labelOf = useTabLabels(context, tabs)
@@ -210,7 +210,7 @@ export function useChatFiles(
   const mentions = useMentions(context, files, navigation)
   const copyPath = useCopyPath(context.org.id)
   if (archived) return {}
-  const renderTab: RenderTab = (tab) => {
+  const renderTab = (tab: FilesTab): RenderedTab => {
     const label = labelOf(tab)
     const temporary = isTemporaryTab(view, tab)
     const hides = tabHidesSecret(tab.path, label)

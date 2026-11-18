@@ -1,5 +1,6 @@
 import type { ChatEvent, RunnerEventRefused } from '../chat-events'
 import type { WorkspaceEvent } from '../events'
+import type { SecretWorkspaceEvent } from '../secret-requests'
 
 /**
  * An envelope from stored history or the parsed browser stream. Non-chat
@@ -8,7 +9,11 @@ import type { WorkspaceEvent } from '../events'
 export interface SessionEnvelopeInput {
   eventNumber: number
   occurredAt: number
-  event: ChatEvent | Pick<Exclude<WorkspaceEvent, ChatEvent>, 'type'> | null
+  event:
+    | ChatEvent
+    | SecretWorkspaceEvent
+    | Pick<Exclude<WorkspaceEvent, ChatEvent | SecretWorkspaceEvent>, 'type'>
+    | null
   late?: boolean
 }
 

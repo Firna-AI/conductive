@@ -29,8 +29,9 @@ import { sessionLinkDraft } from '../fixtures/sessionLinkConversations'
 import { workspaceLinkDraft } from '../fixtures/workspaceLinkConversations'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
-import { otherStarter, sessionLoginFor } from './sessionStarter'
-import { isNew } from './workspaceTabs'
+import { loginOwnerOf, otherStarter, sessionLoginFor } from './sessionStarter'
+import { workspaceCapabilities } from './workspaceCapabilities'
+import { isNew, noMessages } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
 
 const runningConversations = new Set([
@@ -47,6 +48,24 @@ const runningConversations = new Set([
   ...barRunningConversations,
   'sent-by',
   'sent-by-other',
+  'secret-waiting',
+  'secret-waiting-two',
+  'secret-running',
+  'secret-done',
+  'secret-denied',
+  'secret-pre-approved',
+  'secret-value',
+  'secret-late-ran',
+  'secret-temporary',
+  'secret-temporary-value',
+  'secret-temporary-workspace',
+  'secret-temporary-saved',
+  'secret-waiting-mixed',
+  'secret-waiting-mixed-value',
+  'secret-invalid-name',
+  'secret-mixed-invalid-name',
+  'secret-late-allowed',
+  'secret-late-given',
 ])
 
 type ComposerKey = WorkspaceState['composer']
@@ -146,8 +165,10 @@ export function isRunning(state: WorkspaceState): boolean {
  * asks for it. A new session starts empty. In a session with messages,
  * the picker marks the models of the other agent as opening a new session.
  * In a session of the viewer on an own endpoint, it leaves out the models
- * that the model list of the endpoint does not name. After a turn that the
- * endpoint did not serve, the session keeps the model of that turn.
+ * that the model list of the endpoint does not name. Every picker on the
+ * org login does the same with the list of the org endpoint (decision 3 A
+ * of the org logins plan). After a turn that the endpoint did not serve,
+ * the session keeps the model of that turn.
  * A message for an agent that is not connected waits, and Send is off.
  * The composer belongs to a session tab, where the key of Fast mode runs,
  * so the Fast row of the picker shows that key.
@@ -156,13 +177,15 @@ export function isRunning(state: WorkspaceState): boolean {
  * Try again or Remove. A file over the size limit stays out, and Send takes
  * the message with the files that the composer attached.
  *
- * A session runs on the login of its starter. When the starter is another
- * member, a label in the bar names that login, and the own login of the
- * viewer does not matter. When the login of that starter is not
- * available, or that starter keeps it for their own messages, Send opens a
- * new linked session on the own login of the viewer, and the bar has no
- * login label. Such a message does not steer a running turn of the
- * session, and Stop still ends that turn.
+ * A session runs on its login: the login of its starter, or the org login.
+ * When that login is not the own login of the viewer, a label in the bar
+ * names it, such as "Cal's login" or "Acme's login", and the own login of
+ * the viewer does not matter. When that login is not available, or its
+ * starter keeps it for their own messages, Send opens a new linked session
+ * on the default login of the viewer, and the bar has no login label. The
+ * org login has no share switch, so only its removal does that. Such a
+ * message does not steer a running turn of the session, and Stop still
+ * ends that turn.
  *
  * While the sandbox is not ready, Send queues the message in the
  * workspace, also during the first start and after a failed first start of
@@ -178,6 +201,9 @@ export function isRunning(state: WorkspaceState): boolean {
  * over the box, the desktop shows the drop state with the drop caret in the
  * text. A phone shows a pick at the caret in place of the drag, so it draws
  * only the caret, where the attach button puts the files.
+ *
+ * The Capabilities icon beside the attach button opens what the agents of
+ * the workspace can use. A phone holds both in the menu of one button.
  */
 export function composerFor(
   state: WorkspaceState,
@@ -185,13 +211,16 @@ export function composerFor(
   viewport: Viewport,
 ): ComposerState {
   const fresh = state.tab === 'new-session'
+  const org = state.login === 'org'
   const starter = otherStarter(state, workspace)
+  const owner = loginOwnerOf(state, workspace)
   const noLogin =
     state.composer === 'no-agent' || state.composer === 'no-starter-login'
-  const needsLogin = !fresh && noLogin && starter === undefined
+  const needsLogin = !fresh && noLogin && owner === undefined
   const linkedState =
-    state.composer === 'no-starter-login' || state.composer === 'not-shared'
-  const opensLinked = !fresh && linkedState && starter !== undefined
+    state.composer === 'no-starter-login' ||
+    (state.composer === 'not-shared' && !org)
+  const opensLinked = !fresh && linkedState && owner !== undefined
   const unlistedPicker = state.composer === 'picker-unlisted'
   const nextMessage = noLogin || linkedState || unlistedPicker
   const files = fresh ? undefined : composerFiles[state.composer]
@@ -231,18 +260,19 @@ export function composerFor(
     attachTo:
       files && state.composer === 'attachments' ? paths.attachments : undefined,
     picker: state.composer === 'picker' || unlistedPicker,
-    sessionAgent: fresh ? undefined : choice.agent,
+    // A session takes its agent at its first message.
+    sessionAgent: noMessages(state) ? undefined : choice.agent,
     fastKey: true,
-    // Only the pickers of the owner of the login follow its model list, and
-    // a session keeps its current model.
+    // The pickers of the owner of a personal login and every picker on the
+    // org login follow its model list, and a session keeps its model.
     hiddenModels:
-      unlistedPicker && starter === undefined
+      unlistedPicker && (org || starter === undefined)
         ? unlistedLabels.filter((label) => label !== choice.model)
         : undefined,
     sendTo,
     startsSession: opensLinked,
     blocked: needsLogin,
-    sessionLogin: sessionLoginFor(opensLinked ? undefined : starter),
+    sessionLogin: sessionLoginFor(opensLinked ? undefined : owner),
     mention: mention?.tree,
     drop:
       drop !== undefined &&
@@ -250,5 +280,7 @@ export function composerFor(
       viewport === 'desktop',
     caret: drop?.caret ?? addedCaret,
     pointer: !fresh && pointerStates.has(state.composer),
+    capabilities: workspaceCapabilities(state, viewport),
+    menu: { open: state.composer === 'menu', to: paths.capabilitiesMenu },
   }
 }

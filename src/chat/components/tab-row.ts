@@ -10,7 +10,7 @@ import { nameLabel } from '../../shared/name-label'
 import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import { rowTabs, tabKey } from '../state/tab-order'
 
-/** A file or diff tab of the saved view. The host of the chat draws it. */
+/** A file, diff, or Preview tab of the saved view. The host draws it. */
 type HostTab = Exclude<WorkspaceTab, { kind: 'session' }>
 
 /**
@@ -64,7 +64,7 @@ export type TabDraw =
  * is null for a tab whose label hides a secret value, or is not known yet,
  * whose menu has no Copy path.
  */
-interface RenderedTab {
+export interface RenderedTab {
   title: string
   draw: (draw: TabDraw) => ReactNode
   show: () => void

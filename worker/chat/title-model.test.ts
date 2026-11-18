@@ -68,14 +68,21 @@ it.each([
   },
   { name: 'an empty title', answer: async () => ({ response: 'Title: ""' }) },
   { name: 'a malformed answer', answer: async () => ({ response: 17 }) },
-])('keeps the city name and warns once after $name', async ({ answer }) => {
-  const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
-  expect(
-    await requestWorkspaceTitle('operator-model', answer, 'Fix the chat'),
-  ).toBeNull()
-  expect(warning).toHaveBeenCalledTimes(1)
-  expect(JSON.stringify(warning.mock.calls)).not.toContain('private message')
-})
+])(
+  'tries each attempt, keeps the city name, and warns once after $name',
+  async ({ answer }) => {
+    const warning = vi
+      .spyOn(console, 'warn')
+      .mockImplementation(() => undefined)
+    const run = vi.fn<TitleModelCall>(answer)
+    expect(
+      await requestWorkspaceTitle('operator-model', run, 'Fix the chat'),
+    ).toBeNull()
+    expect(run).toHaveBeenCalledTimes(3)
+    expect(warning).toHaveBeenCalledTimes(1)
+    expect(JSON.stringify(warning.mock.calls)).not.toContain('private message')
+  },
+)
 
 it.each(['model', 'binding'] as const)(
   'keeps the city name without a call when the %s is missing',
@@ -106,7 +113,39 @@ it('asks nothing and warns nothing for a message without text', async () => {
   expect(warning).not.toHaveBeenCalled()
 })
 
-it('aborts a title request at 15 seconds and keeps the city name', async () => {
+it('tries again after a failed attempt and warns nothing', async () => {
+  const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+  const run = vi
+    .fn<TitleModelCall>()
+    .mockRejectedValueOnce(new Error('upstream'))
+    .mockResolvedValueOnce({ response: '' })
+    .mockResolvedValueOnce({ response: 'Fix the chat' })
+  expect(
+    await requestWorkspaceTitle('operator-model', run, 'Fix the chat'),
+  ).toBe('Fix the chat')
+  expect(run).toHaveBeenCalledTimes(3)
+  expect(warning).not.toHaveBeenCalled()
+})
+
+it('aborts a late attempt at 45 seconds and takes the next answer', async () => {
+  vi.useFakeTimers({ now: 0 })
+  const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+  const run = vi
+    .fn<TitleModelCall>()
+    .mockImplementationOnce(() => new Promise(() => undefined))
+    .mockResolvedValueOnce({ response: 'Fix the chat' })
+  const request = requestWorkspaceTitle('operator-model', run, 'Fix the chat')
+  await vi.advanceTimersByTimeAsync(44_999)
+  expect(run).toHaveBeenCalledTimes(1)
+  expect(run.mock.calls[0][2].signal.aborted).toBe(false)
+  await vi.advanceTimersByTimeAsync(1)
+  expect(await request).toBe('Fix the chat')
+  expect(run.mock.calls[0][2].signal.aborted).toBe(true)
+  expect(run.mock.calls[1][2].signal.aborted).toBe(false)
+  expect(warning).not.toHaveBeenCalled()
+})
+
+it('aborts each late attempt and keeps the city name', async () => {
   vi.useFakeTimers({ now: 0 })
   const warning = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
   const run = vi.fn<TitleModelCall>(() => new Promise(() => undefined))
@@ -119,10 +158,15 @@ it('aborts a title request at 15 seconds and keeps the city name', async () => {
     finished = true
     return result
   })
-  await vi.advanceTimersByTimeAsync(14999)
-  expect(finished).toBe(false)
-  await vi.advanceTimersByTimeAsync(1)
+  for (const [attempt, at] of [44_999, 89_999, 134_999].entries()) {
+    await vi.advanceTimersByTimeAsync(at - Date.now())
+    expect(run).toHaveBeenCalledTimes(attempt + 1)
+    expect(run.mock.calls[attempt][2].signal.aborted).toBe(false)
+    expect(finished).toBe(false)
+    await vi.advanceTimersByTimeAsync(1)
+    expect(run.mock.calls[attempt][2].signal.aborted).toBe(true)
+  }
   expect(await request).toBeNull()
-  expect(run.mock.calls[0][2].signal.aborted).toBe(true)
+  expect(run).toHaveBeenCalledTimes(3)
   expect(warning).toHaveBeenCalledTimes(1)
 })

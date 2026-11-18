@@ -9,6 +9,7 @@ export interface TranscriptInsert<Content> {
   /** The ID of the item that the part follows, or null when it comes first. */
   after: string | null
   content: Content
+  unfolded?: true
 }
 
 /** A step of a work fold: an item of the work, or an insert that follows one. */
@@ -93,7 +94,8 @@ export function groupEntries<Content>(
       if (fold !== last) entries.push(fold)
       fold.steps.push({ kind: 'item', item: work })
       for (const insert of insertsAfter(item.id)) {
-        fold.steps.push({ kind: 'insert', insert })
+        if (insert.unfolded) entries.push({ kind: 'insert', insert })
+        else fold.steps.push({ kind: 'insert', insert })
       }
       continue
     }

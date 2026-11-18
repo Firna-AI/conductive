@@ -24,6 +24,7 @@ pub(super) fn configured(http: Unimock, runtime: Unimock, turn: Option<&str>) ->
         )?,
         Arc::new(http),
         Arc::new(runtime),
+        Arc::new(Unimock::new(())),
     ))
 }
 
@@ -67,6 +68,7 @@ pub(super) fn workspace() -> Value {
 
 pub(super) fn listed_workspaces() -> Value {
     let mut item = workspace();
+    item["parentId"] = json!(null);
     item["owner"] = json!({"id":"owner", "githubLogin":"member", "displayName":null});
     json!({"workspaces":[item]})
 }

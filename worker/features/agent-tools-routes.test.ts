@@ -110,6 +110,7 @@ it('uses the active stored sender and inherited owner when a machine tool create
     repositoryId: OUTER_REPOSITORY,
     firstMessage: 'Keep this delegated task',
     name: requestedName,
+    parentId: OTHER_WORKSPACE,
   }
   const request = (callingTurn: string) =>
     active.runtime.dispatchFetch(
@@ -173,6 +174,7 @@ it('uses the active stored sender and inherited owner when a machine tool create
     number: 3,
     link: `${active.env.APP_ORIGIN}${routes.workspace(OUTER_ORG, newId)}`,
     owner: { id: 'owner' },
+    parentId: OTHER_WORKSPACE,
     choice: CLAUDE,
   })
   expect(
@@ -184,10 +186,10 @@ it('uses the active stored sender and inherited owner when a machine tool create
   ).toBe('member')
   expect(
     await active.env.DB.prepare(
-      'SELECT created_by_workspace_id AS parent FROM workspaces WHERE id = ?',
+      'SELECT created_by_workspace_id AS creator FROM workspaces WHERE id = ?',
     )
       .bind(newId)
-      .first('parent'),
+      .first('creator'),
   ).toBe(OUTER_WORKSPACE)
   const history = record(
     await (
@@ -219,6 +221,7 @@ it('uses the active stored sender and inherited owner when a machine tool create
       expect.objectContaining({
         id: newId,
         number: 3,
+        parentId: OTHER_WORKSPACE,
         link: `${active.env.APP_ORIGIN}${routes.workspace(OUTER_ORG, newId)}`,
       }),
     ]),

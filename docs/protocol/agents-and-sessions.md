@@ -2,17 +2,18 @@
 
 This doc holds the requirements and the decisions in force for the agents
 and the sessions of a workspace. It covers the agents and their logins,
-their efforts, the names of the agents in the product, the sessions and
-their links, and the names of workspaces and sessions. It belongs to
-[Chat and events](chat-and-events.md). The terms are those of the
-[architecture doc](../architecture.md#terms). A decision number names a
-dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says. A title image decision number names a decision of the change that
-leaves the names of attached images out of titles, as
-[Messages and attachments](messages-and-attachments.md) says. A file row
-menu decision number names a decision of the change that adds the menu of
-the rows of All files and Changes, as [File row menu](file-row-menu.md)
-says.
+their efforts, the names of the agents in the product, and the sessions
+and their links. Linked pages cover [the tab row](tab-row.md) and
+[the names of workspaces and sessions](workspace-and-session-names.md).
+It belongs to [Chat and events](chat-and-events.md). The terms are those
+of the [architecture doc](../architecture.md#terms). A decision number
+names a dated record, as
+[Decision numbers](../architecture.md#decision-numbers) says. A title
+image decision number names a decision of the change that leaves the
+names of attached images out of titles, as
+[Workspace and session names](workspace-and-session-names.md) says. An
+org login decision number names a decision of the change that adds the
+org logins, as [Tokens and secrets](tokens-and-secrets.md) says.
 
 ## Agents
 
@@ -28,9 +29,14 @@ says.
   SDK when that SDK can interrupt a turn and stream partial text. Otherwise
   Codex runs through the Codex App Server.
 - Every member of the org can send messages in each of its workspaces.
-- Each session runs on the agent login of its starter, the member who
-  started the session (decision 105). The starter of a session never
-  changes, so a session never moves to the login of another member.
+- Each session runs on one agent login, the login of the session: the
+  personal login of its starter, or the org login of its org (decision
+  105, org login decision 1 B). The starter is the member who started the
+  session.
+- A session takes the default login of its starter when it accepts its
+  first message, as [The default login](org-logins.md#the-default-login)
+  says. The starter of a session never changes. Its login never changes
+  after its first message, so a session never moves to another login.
 - A member starts a session in one of these ways:
   - with "+"
   - with a model of the other agent, in a session that has a message
@@ -42,20 +48,26 @@ says.
 - An automation run starts the first session of its workspace in the name of
   the automation owner, as
   [A run acts as its owner](automation-runs.md#a-run-acts-as-its-owner) says.
-- The session record names its starter in `startedBy`. A session without a
-  known starter has no login that can be used.
-- While the starter shares the login, the messages of the other members
-  run on it too. So the other members spend the login of the starter
-  (decision 116).
+- The session record names its starter in `startedBy`, and its login in
+  `login`: a member or the org. A stored session with messages but no
+  login runs on the personal login of its starter. A session without a
+  login and without a known starter has no login that can be used.
+- While the starter shares a personal login, the messages of the other
+  members run on it too. So the other members spend the login of the
+  starter (decision 116). The messages of each member of the org run on
+  the org login of a session.
 - Reason: each change of login rewrites the prompt cache of the
   conversation. A login for each sender was rejected for that reason.
 - The login of the workspace owner for all sessions was rejected. Reason:
-  each member who starts a session spends their own login.
+  each member who starts a session spends their default login, not a login
+  of the workspace owner.
 - [Access and security](isolation.md#agent-logins-in-a-sandbox)
-  states how a turn uses a login, its share setting, and its risk.
+  states how a turn uses a login, and its risk.
+  [The share setting](share-setting.md) states the share setting of a
+  personal login.
 - A session keeps its memory across a stop and a resume of the sandbox.
-- A Codex session keeps its conversation when its starter changes between
-  an OpenAI API key and a ChatGPT sign-in.
+- A Codex session keeps its conversation when the kind of its login
+  changes, such as from an OpenAI API key to a ChatGPT sign-in.
 - When Codex refuses to resume because the saved model provider differs
   from the current provider or is no longer configured, the session
   continues in a fork.
@@ -106,8 +118,8 @@ says.
 - A `create_session` call of the agent tools can give a new session a
   title, as [Start a session](session-calls.md#start-a-session) says.
 - When the workspace takes a title as its name, as
-  [Messages](messages-and-attachments.md#messages) says, the first session takes the
-  title too (decision 181).
+  [The title of a new workspace](workspace-and-session-names.md#the-title-of-a-new-workspace)
+  says, the first session takes the title too (decision 181).
 - Each other session takes its title from the first message with text that
   the workspace accepts in that session (decision 181). The title is the
   first line with text of that message.
@@ -120,7 +132,9 @@ says.
   that reason.
 - In a title from a message, each mention of an attached image goes out,
   with no name (title image decision 2 A). The workspace title follows the
-  same rule, as [Messages](messages-and-attachments.md#messages) says.
+  same rule, as
+  [The title of a new workspace](workspace-and-session-names.md#the-title-of-a-new-workspace)
+  says.
   Reason: image names such as "Screenshot 2026-11-16 at 10.23.45.png" do
   not name the task. Different rules for the two titles were rejected,
   because an image name is just as poor in a session title.
@@ -131,7 +145,7 @@ says.
   word that fits the limit. When the first word does not fit, the app cuts
   the line at the limit.
 - The user renames a session from its tab menu, as
-  [The tab row](#the-tab-row) says.
+  [The tab row](tab-row.md) says.
 - Reason: the first session does the task of the workspace, and each other
   session does the task of its own first message. A title request for each
   session was rejected, because the first message names that task with no
@@ -165,142 +179,9 @@ says.
 
 ### The tab row
 
-- The tab row of the centre column shows the session tabs and the file and
-  diff tabs in one order (decision 186).
-- Each member has their own order in each workspace. The order stays after
-  a reload. The other devices of that member load the same order.
-- A new tab of any kind opens at the end of the row. This holds also for a
-  session that the history reopens, and for a new
-  [temporary tab](temporary-tabs.md).
-- A press that replaces the file or the diff of the temporary tab leaves
-  the tab in its place. This holds also when later tabs stand after it. A
-  keep does not move the tab either.
-- The user can drag any tab to any place in the row.
-- A row that keeps the sessions and the files in two groups was rejected,
-  because a file could then never go before a session.
-- A drag does not change the shown tab. Escape cancels a drag and keeps the
-  order.
-- On a phone, the row shows only the session tabs. A long press lifts a
-  tab there.
-- A move on a phone changes only the place of the moved session tab. Each
-  file tab keeps its place.
-- When the tabs do not fit at their minimum width, the row scrolls
-  sideways (decision 187).
-- The row scrolls a tab into view when the tab opens, when it becomes the
-  shown tab, and after it moves.
-- When the row gets narrower, it scrolls the shown tab back into view.
-- A tab that opens without showing, such as a session that another member
-  starts, does not push the shown tab out of view.
-- A vertical turn of the mouse wheel over the row scrolls the row sideways.
-  A sideways swipe, on a trackpad or with a finger, also scrolls it.
-- A fade marks each end of the row that clips tabs.
-- During a drag, the pointer near an end of the row scrolls the row, so a
-  drop can reach every place.
-- A menu of the hidden tabs was rejected, because the shown tab and the
-  drop places could still hide. A row that wraps onto more lines was
-  rejected, because the chat would move down when a tab opens.
-- Each tab of the row keeps the reader's place while another tab or another
-  workspace shows. A session tab keeps the row that the user read, as
-  [The scroll of the chat](chat-and-events.md#the-scroll-of-the-chat)
-  says. A file or diff tab keeps its scroll offset, one for each of its
-  views, such as the code and the preview of a Markdown file. A reload
-  forgets the places. The user chose this on 13 November 2026.
-- A tab that closes forgets its place, also when another member closes its
-  session. When it opens again, a session tab shows the bottom, and a file
-  or diff tab shows the top. The user chose this on 13 November 2026.
-- A right click on a tab opens its tab menu (decision 188).
-- On a focused tab, Shift and F10, or the Menu key, also opens the tab
-  menu. This holds on every system.
-- On a phone, a long press that ends without a move opens the tab menu as
-  a sheet.
-- The tab menu of a session tab holds four groups, with a line between
-  them: Rename session, then Copy link, Copy concise transcript, and Copy
-  full transcript, then Move left and Move right, then Close other tabs and
-  Close tabs to the right. The tab menu of a kept file or diff tab holds
-  three groups, with a line between them: Copy path, then Move left and
-  Move right, then Close other tabs and Close tabs to the right.
-- Copy link copies the link of the session of its tab, as
-  [Session links](#session-links) says. The user added it on 12 November
-  2026.
-- The tab menu of the temporary tab holds four groups, with a line between
-  them: Keep open (decision 286 B), then Copy path, then Move left and
-  Move right, then Close other tabs and Close tabs to the right.
-- Reason: the tab menu groups its items by kind (decision 188). Copy path
-  comes after Keep open and before the moves, as the copy items of a
-  session tab come after Rename session and before the moves.
-- [Session transcripts](session-transcripts.md) states what each copy item
-  copies (decisions 213 and 215).
-- [Copy path](file-row-menu.md#copy-path) states what the Copy path item
-  copies, and the tabs that leave it out (file row menu decision 3 B).
-- Reason: a member can copy the path of the open file from its tab, with
-  no need to find its row. Copy path only on the rows, a Copy path button
-  in the header of the file, and a Copy path command in the command palette
-  were not chosen.
-- Move left and Move right move the tab one place in the row. On the first
-  tab, Move left is off. On the last tab, Move right is off.
-- Close other tabs closes each tab of the row but the tab, of each kind,
-  as the same item of a browser does. When the row holds only the tab, it
-  is off. The user asked for it on 16 November 2026.
-- Close tabs to the right closes each tab after the tab in the row, of
-  each kind, as the same item of a browser does. On the last tab, it is
-  off. The user asked for it on 16 November 2026.
-- When the shown tab is among the closed tabs, the tab of the menu shows
-  first, as in a browser. Each session tab closes as its Close does, so
-  its session moves to the history for every member.
-- On a phone, the row shows only the session tabs, so Close other tabs
-  and Close tabs to the right close only session tabs. Each file tab
-  stays.
-- After a move from the tab menu, a screen reader user hears the name of
-  the tab and its new place, such as "Address autocomplete moves to place
-  2 of 4". The focus then goes back to the tab.
-- Keep open keeps the temporary tab, and the tab stays in its place. The
-  focus then goes back to the tab. A screen reader user hears that the tab
-  stays open, such as "README.md stays open".
-- [Keep a tab](temporary-tabs.md#keep-a-tab) says why the menu holds Keep
-  open.
-- A move of the temporary tab to another place keeps it (decision
-  287 B). A move of another tab leaves it temporary. This holds for a drag, Move left, and Move right. A drag that
-  Escape cancels, or that ends in the same place, leaves the tab temporary.
-- Reason: a move shows that the user wants the file at that place. A
-  temporary tab that stays temporary after a move was rejected. The next
-  press would then replace the file at that place.
-- A drag that keeps the tab while Move left and Move right do not was
-  rejected. Two ways to make one move would then act differently.
-- Rename session opens a field for the title in that tab. The shown tab
-  does not change.
-- In the app, the tab menu is the one way to rename a session. A Rename
-  button on the shown session tab was rejected, because the tab menu
-  already holds Rename session. An agent can also rename a session, as
-  [Rename a session](session-management.md#rename-a-session) says.
-- Keys that move a tab were rejected, because the user chose the menu. Alt
-  with Left or Right also goes Back and Forward in browsers on Windows and
-  Linux.
-- A read-only workspace, such as an archived workspace or a workspace of a
-  suspended org, moves no tab.
-- The tab menu of a read-only workspace leaves out each item that changes
-  the workspace, and keeps each item that changes nothing (decision 214).
-  So the tab menu of a session tab there holds only Copy link, Copy
-  concise transcript, and Copy full transcript. It leaves out Close tabs to
-  the right. The tab menu of a file or diff tab there holds only Copy path
-  (file row menu decision 3 B).
-- A file or diff tab there without Copy path, such as a tab whose label
-  hides a secret value, has no item. So it opens no tab menu, and the
-  browser shows its own.
-- Reason: a read-only workspace accepts no change, but a member can still
-  copy there, as
-  [Read-only workspaces](session-transcripts.md#read-only-workspaces)
-  says. The rule also covers each item that the menu gets later.
-- So a read-only workspace also leaves out Keep open. The tab menu of the
-  temporary tab there holds only Copy path, and only a double-click keeps
-  a tab (decision 286 B).
-- The tab menu opens there in the same ways as in other workspaces. A long
-  press on a phone opens it, but lifts no tab.
-- An item that the place of a tab rules out, such as Move left on the
-  first tab, still shows, but off. An item that a read-only workspace
-  leaves out does not show.
-- The usual tab menu with Rename session, Move left, and Move right off was
-  rejected for a read-only workspace, because these rows never turn on
-  there.
+[The tab row](tab-row.md) holds the requirements of the order of the tabs,
+their moves, the scroll of the row, the place that each tab keeps, and the
+tab menu.
 
 ### Session links
 

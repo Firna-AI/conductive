@@ -66,7 +66,8 @@ page.
 - [Terminal contracts](terminal.ts) own the port shared with the listener exclusion.
 - [Restore marker](restore-marker.ts) names the file that the Worker writes at the end of the disk restore. The terminal and the agent runner read it.
 - [Commit author](commit-author.ts) builds a GitHub user's commit author and its four Git variables.
-- [Org contracts](orgs.ts) carry custom initials and GitHub repository choices for org creation, and the request reader for org moves.
+- [Org contracts](orgs.ts) carry custom initials, the colour of the org, and GitHub repository choices for org creation, and the request reader for org moves.
+- [Org colours](org-colors.ts) list the preset keys of an org colour, with Blue as the default for an org without one or with an unknown key.
 - [Member contracts](members.ts) name each invitation by its email. Each member keeps the `User` with their GitHub login. `PendingOrgInvite` adds the org ID and name, for the invitations that the signed-in user can accept.
 - [Account contracts](account.ts) include the repository list available before an org exists.
   An own endpoint write carries its endpoint and key.
@@ -93,7 +94,7 @@ page.
 - [Operator waitlist contracts](operator-waitlist.ts) define approval results, email states, code management, pause and switch changes, and user access details.
 - [GitHub setup](github-setup.ts) names the address where GitHub returns after an install, and the `state` values of the install link.
 - [Workspace contracts](workspaces.ts) give `workspacePaths.continue` and `workspacePaths.continueResult`. `ContinueWorkspaceRequest` sends the `expectedBranch` that the caller shows, and an optional `allowLocalWork`. `ContinueWorkspaceResponse` is a pending job with its `continueId`, a `confirmation-required` reply with the `branch`, the `baseBranch`, and the `LocalWork` that the check of Continue found, or a `continued` reply with the `workspace` and its `eventNumber`. [Continue routes](../../worker/lifecycle/continue-routes.md) gives the routes and the errors.
-- [GitHub contracts](github.ts) give the five `githubPaths` routes of a workspace: the banner and checks reads, the member capability, the merge start, and the merge result. `PullRequest.headSha` is the head commit that the banner shows, and `GitHubMergeRequest` sends it back with the merge method. `GitHubCapabilities` gives `canWrite` and the `mergeMethod` that the member may use, or null. `GitHubMergeResponse` is a pending app job with its `mergeId`, or a completed merge. These member replies never become workspace events. [Member merges](../../worker/github/merges.md) gives the replies and the error codes.
+- [GitHub contracts](github.ts) give the seven `githubPaths` routes of a workspace: the banner, checks, and stored reads, the member capability, the merge start, the merge result, and Ready for review. `PullRequest.headSha` is the head commit that the banner shows, and `GitHubMergeRequest` sends it back with the merge method. `GitHubCapabilities` gives `canWrite` and the `mergeMethod` that the member may use, or null. `GitHubMergeResponse` is a pending app job with its `mergeId`, or a completed merge. `GitHubReadyRequest` sends the `pullNumber` that the bar shows, and `GitHubReadyResponse` says that the pull request is ready. These member replies never become workspace events. [Member merges](../../worker/github/merges.md) gives the replies and the error codes.
 - `githubSummary` in [GitHub contracts](github.ts) maps the banner state to the list mark, and `checksSummary` gives the checks state that the bar uses. [The summary reader](github-read.ts) reads `Workspace.github`.
 - [Org settings](org-settings.ts) carry the base image software for the Cloud computer tab.
 - [Feedback contracts](feedback.ts) define the feedback path, its request and reply, and its byte limits.
@@ -104,7 +105,8 @@ page.
   Run history returns up to 50 runs and a `nextCursor` for `automationPaths.runs`.
   Each run carries its own `agent` and `owner`, independent of later automation edits or owner moves.
   An unknown historical agent or owner is null.
-  Removed workspaces have a null run workspace ID, while first-turn failures keep their workspace link.
+  A run has a null workspace ID when its workspace record is absent.
+  Archived and removed workspaces keep their links, as do first-turn failures.
   A pull request trigger can carry `skipLogin`, the account login of an author or sender skip.
   Older runs and skips without an account omit it.
 - [Workspace views](workspace-view.ts) add the automation ID and name of a run, or null, in backend replies.

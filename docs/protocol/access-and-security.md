@@ -18,6 +18,9 @@ These docs belong to this doc:
 - [Tokens and secrets](tokens-and-secrets.md): the workspace token, the
   GitHub tokens, the secrets that users enter, and the agent logins that
   users connect.
+  - [Secrets](secrets.md) and [Secret requests](secret-requests.md): the
+    secrets that agents use in one command after a member allows it, and
+    Capabilities with Mac access.
 - [Terminal, previews, and desktop](terminal-previews-and-desktop.md): the
   security of the terminal, the port previews, the proxies, and the
   desktop.
@@ -220,8 +223,10 @@ Later screens add the frame and connection sources that they need.
 ## Agent logins in a sandbox
 
 - [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
-  states how a turn uses a login, its share setting, and its risk. It
-  also states the turn tokens and their risks.
+  states how a turn uses a login, and its risk. It also states the turn
+  tokens and their risks.
+- [The share setting](share-setting.md) states the share setting of a
+  personal login.
 
 ## GitHub tokens
 

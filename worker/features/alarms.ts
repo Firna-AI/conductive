@@ -4,13 +4,15 @@ export type AlarmSource =
   | 'lifecycle'
   | `lifecycle:${'start' | 'publication' | 'changed' | 'cleanup' | 'access' | 'image' | 'run' | 'archive' | 'computer-stops'}`
   | 'devices'
+  | 'secrets'
   | 'previews'
   | 'github'
   | 'continue'
+  | 'automation-report'
   | 'browser'
   | 'runner'
 
-const SECURITY_SOURCES = new Set(['devices', 'browser', 'runner'])
+const SECURITY_SOURCES = new Set(['devices', 'secrets', 'browser', 'runner'])
 const DEFERRED_UNTIL = 'security:regular-alarms-deferred-until'
 
 export interface AlarmTransaction {

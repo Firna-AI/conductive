@@ -13,6 +13,7 @@ import type {
   OperatorSuspension,
   OperatorUserDetail,
   OperatorUserSummary,
+  OperatorWorkspaceStates,
 } from '../../shared/operator'
 import { FAKE_TIME, fakeUser } from './core'
 import {
@@ -100,7 +101,7 @@ export function sampleOrgDetail(
     initials: org.initials,
     createdAt: daysBefore(now, org.createdDaysAgo),
     repositories: org.repositories,
-    workspaceStates: org.states,
+    workspaceStates: wireStates(org.states),
     running: { workspaces: org.states.running, builds: org.builds },
     members: Object.entries(org.members).map(([login, role]) => {
       const { githubId, name } = sampleUser(login)
@@ -136,6 +137,15 @@ export function sampleUserDetail(
     }),
     suspension: records.userSuspensions.get(user.githubId) ?? null,
   }
+}
+
+/**
+ * The state counts of a Worker reply, from the counts that a page shows.
+ * The reply counts the removed workspaces in `archived` too, so that an
+ * older app adds up, and the app takes them out again.
+ */
+function wireStates(states: OperatorWorkspaceStates): OperatorWorkspaceStates {
+  return { ...states, archived: states.archived + states.removed }
 }
 
 function totalOf(org: OperatorOrgDetail): number {
@@ -215,7 +225,7 @@ export function operatorOverview(
     orgs: operatorTotals.orgs,
     workspaces: operatorTotals.workspaces,
     running: { ...runningComputers },
-    workspaceStates: { ...workspaceStates },
+    workspaceStates: wireStates(workspaceStates),
     newWorkspacesByDay: dated(newWorkspacesByDay),
     newUsersByDay: dated(newUsersByDay),
     largestOrgs: largest.map((org) => ({

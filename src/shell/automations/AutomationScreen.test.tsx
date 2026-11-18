@@ -1,11 +1,14 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test, vi } from 'vitest'
+import { accountWithDefaults } from '../../app/default-logins.test-support'
 import { routes } from '../../app/router'
+import { ACCOUNT_PATHS } from '../../shared/account'
 import {
   automationPath,
   automationsPath,
   type Automation,
+  type AutomationResponse,
   type AutomationsResponse,
 } from '../../shared/automations'
 import {
@@ -97,6 +100,23 @@ describe('the automation page', () => {
     })
   })
 
+  test("a new automation of a member whose default login is the org login names that login and the member's GitHub access under the prompt", async () => {
+    const server = new FakeApiServer({ role: 'member' })
+    server.json(
+      'GET',
+      ACCOUNT_PATHS.account,
+      accountWithDefaults('member', { claude: 'org', codex: null }),
+    )
+    const { view } = await openApp(server, routes.newAutomation(org))
+    await waitFor(
+      () => queryByRole('textbox', 'Prompt', view),
+      'the prompt of the new automation',
+    )
+    expect(page(view)).toContain(
+      "Runs use Acme's Claude login and your GitHub access.",
+    )
+  })
+
   test('a member reads the automation without fields and without actions', async () => {
     const { view } = await openApp(
       new FakeApiServer({ role: 'member' }),
@@ -117,6 +137,42 @@ describe('the automation page', () => {
       actions: [],
     })
   })
+
+  test.each([
+    {
+      runs: 'the org login',
+      runLogin: { type: 'org', orgId: org },
+      line: "Runs use Acme's Claude login and Cal's GitHub access.",
+    },
+    {
+      runs: 'the own login of the owner',
+      runLogin: { type: 'personal', userId: fixture('review-prs').owner.id },
+      line: "Runs use Cal's Claude login and GitHub access.",
+    },
+    {
+      runs: 'no login',
+      runLogin: null,
+      line: "Runs use Cal's Claude login and GitHub access.",
+    },
+  ] as const)(
+    'a member reads the login of the runs that the server names, with $runs',
+    async ({ runLogin, line }) => {
+      const server = new FakeApiServer({ role: 'member' })
+      server.json('GET', automationPath(org, 'review-prs'), {
+        automation: fixture('review-prs'),
+        runLogin,
+      } satisfies AutomationResponse)
+      const { view } = await openApp(
+        server,
+        routes.automation(org, 'review-prs'),
+      )
+      await waitFor(
+        () => queryByText('Only Cal can change this automation.', view),
+        'the automation as a member reads it',
+      )
+      expect(page(view).split('High ').at(-1)).toBe(line)
+    },
+  )
 
   test("an admin reads another member's automation, and turns it off", async () => {
     const server = new FakeApiServer()

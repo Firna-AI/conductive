@@ -13,7 +13,7 @@ import {
   type MembersFailures,
   type MembersStore,
 } from './membersStore'
-import { personName } from './people'
+import { countOwners, personName } from './people'
 import { RemoveMemberDialog } from './RemoveMemberDialog'
 import { useMountedRef } from './useMounted'
 import { ViewportScope, type Viewport } from './ui/controls'
@@ -57,6 +57,8 @@ function failureTitle(data: MembersData, failure: MembersFailure): string {
 function ReadyMembers(props: {
   store: MembersStore
   data: MembersData
+  /** The workspaces of each member that the list shows, by user ID. */
+  owned: Readonly<Record<string, number>>
   pending: readonly string[]
   failures: MembersFailures
   viewerId: string
@@ -89,7 +91,7 @@ function ReadyMembers(props: {
         onCancelInvite={(invite) => void store.cancelInvite(invite.id)}
         onChangeRole={(userId, role) => void store.changeRole(userId, role)}
         onRemove={props.onRemove}
-        owned={props.data.owned}
+        owned={props.owned}
         pending={props.pending}
         viewerId={props.viewerId}
       />
@@ -104,7 +106,11 @@ export type MembersTabProps = {
   /** The user ID of the signed-in person. */
   viewerId: string
   viewport: Viewport
-  /** The time now, in Unix milliseconds, for the age of each invite. */
+  /**
+   * The time now, in Unix milliseconds, for the age of each invite. The
+   * count of workspaces of each member leaves out the workspaces that were
+   * removed from the list by then.
+   */
   now: number
   /** A member left the org. Their workspaces now belong to the viewer. */
   onMemberRemoved?: (member: OrgMember) => void
@@ -148,6 +154,11 @@ function OrgMembersTab(props: MembersTabProps) {
   const removing =
     ready?.data.members.find((member) => member.user.id === ready.removing) ??
     null
+  // Each count matches the rows of the list, so a removed workspace counts
+  // in none, also in the question of Remove member.
+  const owned: Readonly<Record<string, number>> = ready
+    ? countOwners(ready.data.workspaces, props.now)
+    : {}
 
   async function confirmRemove(member: OrgMember) {
     const removed = await store.remove(member.user.id)
@@ -175,6 +186,7 @@ function OrgMembersTab(props: MembersTabProps) {
             failures={ready.failures}
             now={props.now}
             onRemove={(member) => store.openRemoval(member.user.id)}
+            owned={owned}
             pending={ready.pending}
             store={store}
             viewerId={props.viewerId}
@@ -192,7 +204,7 @@ function OrgMembersTab(props: MembersTabProps) {
           onCancel={() => store.closeRemoval(removing.user.id)}
           onConfirm={() => void confirmRemove(removing)}
           orgName={props.org.name}
-          owned={ready.data.owned[removing.user.id] ?? 0}
+          owned={owned[removing.user.id] ?? 0}
         />
       ) : null}
     </ViewportScope>

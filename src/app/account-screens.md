@@ -75,9 +75,16 @@ agent login forms, and model lists in the web app.
   a read that failed or worked, it keeps the keyboard focus.
 - The model pickers of the person follow these lists: the default model of
   Preferences, New workspace, the automation editor, and the composer of a
-  message on the person's own login. Each picker keeps the model that it
-  shows. `offeredModels` in `endpoint-models.ts` holds the rule, and
-  `useOfferedModels` in `../shell/context.ts` gives it to the shell.
+  message on the person's own login. New workspace and the automation
+  editor follow, for each agent, the list of the login that a new session
+  of the person takes in the org. That is the last list of the org
+  endpoint while the server names the org login as the default login, as
+  [Own endpoint logins](../../docs/protocol/own-endpoint-logins.md) says
+  for org login decision 3 A. The composer follows the list of the login
+  of each message, as [Sessions, logins, and drafts](../chat/sessions.md)
+  says. Each picker keeps the model that it shows. `offeredModels` in
+  `endpoint-models.ts` holds the rule, and `useOfferedModels` in
+  `../shell/context.ts` gives it to the shell, with the lists of an org.
 - The Codex form offers API key, selected first, then ChatGPT plan and Own endpoint.
   ChatGPT plan asks the Worker for a code. The form shows the code with
   the link to the page of OpenAI. It asks the Worker for the state of the
@@ -92,3 +99,55 @@ agent login forms, and model lists in the web app.
   Sign in again and the `?connect=` address open its form with its kind.
   The composers and Get started count such a login as missing, so their
   Connect notice leads to that form.
+- The composers, New workspace, and the agent step of Get started show no
+  Connect notice when the org login serves the person, as
+  [The default login](../../docs/protocol/org-logins.md#the-default-login)
+  says. New workspace then names the org login after the model picker,
+  such as "Acme's login". The line under the prompt of an automation of
+  the person names it too, such as "Runs use Acme's Claude login and your
+  GitHub access." Each member who reads the automation of another member
+  reads the login of its runs that the reply of the automation names, such
+  as "Runs use Acme's Claude login and Cal's GitHub access.". When the
+  reply names none, the line names the owner. `loginOwnerName` in
+  `login-owner.ts` names the owner of the login, as it does for the label
+  of the composer.
+- Under each agent, the account and Get started name each org whose org
+  login the new sessions of the person take, such as "Your new sessions in
+  Acme use Acme's login.", also under an own login. The words come from
+  `OrgLoginLines.tsx` of the mockups. With only an org login, the agent
+  step of Get started says Ready, with the words of `getStartedCopy.ts`
+  that name the org login.
+- After each change of a login of an agent, an own login or an org login,
+  the screens show the default logins that the server names after the
+  change, because the account reads them again. An org that joins the
+  orgs of the person, such as after an accepted invitation, reads the
+  account once too. [Login data](login-data.md#rules) gives the rules.
+
+## The Agents tab of the org settings
+
+- The Agents tab of the org settings, at `/orgs/:orgId/settings/agents`,
+  follows Cloud computer. It shows the org login of each agent, as
+  [The Agents tab](../../docs/protocol/org-logins.md#the-agents-tab)
+  says. It reads the logins while it shows, again at each return to the
+  page, and once a minute while an org endpoint is connected. Its words
+  come from `orgAgentsCopy.ts` of the mockups.
+- An admin uses the parts of the account. `AgentConnectForm` with `org`
+  offers only API key and Own endpoint, and its words ask for a key of
+  the account of the org. Replace opens that form under the login, on the
+  kind of the login, and its main button says Replace. Remove asks no
+  question first.
+- `EndpointDetails` with `org` shows the note and the warning of the
+  saves and of Refresh of an org endpoint in this page, which
+  `OrgAgentLogins` keeps as the account keeps its own. Its line of the
+  models names the model pickers on the login. The answer of a save
+  holds the model list, so only Refresh reads the logins again.
+- The switch "Use for every member" saves at once. While it saves, it
+  shows the new value and takes no other change. A failed save shows its
+  cause under the hint until the next change, and the switch shows the
+  saved value.
+- A member who is not an admin, and each person in a suspended org, get
+  the tab with no action, form, switch, note, warning, or model list. Each
+  org login shows its kind, the host of an own endpoint, and the hint of
+  the value of its switch. An agent without an org login says Not
+  connected. Only a member gets the sentence that only an admin can change
+  the logins, because the notice of a suspended org says why.

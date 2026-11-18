@@ -21,7 +21,9 @@ on one fake stream. `components/SessionLogin.test.tsx` renders the login
 label and its notices. `components/ComposerModels.dom.test.tsx` opens the
 model picker of a reader whose own endpoint list leaves models out, in the
 reader's own session, in the session of another member, and before a
-message that starts a linked session. `components/ModelPicker.dom.test.tsx`
+message that starts a linked session. In an empty session of another
+member, it checks that the label and the picker follow the default login
+that the record names, the org login. `components/ModelPicker.dom.test.tsx`
 checks the New session mark of each model of the other agent, and the Fast
 row of the model picker: the keys reach it, a change of it sends a choice
 that differs only in fast and keeps the menu open, the trigger names Fast,
@@ -374,6 +376,9 @@ files and Changes stay as they were. A queued message gets its copy only
 after Resume gives it to the agent. `../app/dev/attachment-files.test.ts`
 checks the same store in the fake of the app. `../app/dev/attachment-test-kit.ts`
 holds the helpers of both tests.
+
+The tests of the secret requests are in the
+[README of the secret requests](secrets/README.md#tests).
 
 `components/ReadOnlyChat.dom.test.tsx` checks the read-only behavior of both hosts.
 A right click and Shift and F10 open a tab menu with only the copy items, with no line.

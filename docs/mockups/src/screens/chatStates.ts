@@ -1,19 +1,27 @@
 /**
  * The tab of the centre column: the first session, a new session, the
  * linked session that a member's message opened from the first session,
- * the second session, or a file, a Markdown preview, a diff, or a file
+ * the second session, an empty session that another member started, or a
+ * file, a Markdown preview, a diff, or a file
  * whose name the app does not know, such as a file that moved.
  * `code-lines` is the code file at the lines that a chip of an answer
  * names, with the lines in view and marked. An image of
  * the branch shows as its picture, or with the state of an image that the
  * browser cannot draw. `attachment` is the copy of an attached screenshot,
  * which a press on its sent chip opens. A phone shows a file in Files.
+ *
+ * `preview` shows the page of port 3000 in its Preview tab, beside the
+ * Preview tab of port 6006 (decision 291). `preview-behind` shows the first
+ * session, and both Preview tabs stay in the row with their pages loaded.
+ * A phone row shows no Preview tab, so a phone shows the page on its
+ * Preview page.
  */
 export const tabStates = [
   'session',
   'new-session',
   'linked-session',
   'later-session',
+  'started-session',
   'code',
   'code-lines',
   'markdown',
@@ -22,6 +30,8 @@ export const tabStates = [
   'image',
   'image-not-drawn',
   'attachment',
+  'preview',
+  'preview-behind',
 ] as const
 
 /**
@@ -71,6 +81,13 @@ export const temporaryTabStates = [
  * place after the drop, and a drop with a folder, which the box does not
  * attach. A phone shows a pick at the caret in place of the drag: the caret
  * where the pick goes, then the picked file at the caret.
+ *
+ * The `capabilities` states open the Capabilities control of the icon
+ * beside the attach button (secrets decision 8): with Mac access on, and
+ * after a member turned it off. A computer draws it above the icon, and a
+ * phone as a sheet. `menu` opens the menu of the one button of a phone,
+ * which holds Attach files and Capabilities (secrets decision 16 G). A
+ * computer has no such menu, so it draws the composer as it is.
  */
 export const composerStates = [
   'empty',
@@ -100,4 +117,7 @@ export const composerStates = [
   'dropped',
   'dropped-folder',
   'unreadable-folder',
+  'capabilities',
+  'capabilities-mac-off',
+  'menu',
 ] as const

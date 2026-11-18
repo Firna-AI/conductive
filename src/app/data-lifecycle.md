@@ -132,7 +132,9 @@ of the data that the screens read and write.
   never wait for them. A failed read shows on `/` with Try again and
   Continue to workspaces, and keeps the user signed in. Only Accept
   invitation joins an org. The joined org goes to the list of orgs and
-  opens, and Get started reads again. A sign-out, or a sign-in of another
+  opens, and Get started reads again. The account reads its logins once,
+  for the default logins of the joined org, as
+  [Login data](login-data.md#rules) says. A sign-out, or a sign-in of another
   person, forgets the invitations, and an answer for the person before
   changes nothing.
 - `AppModel.feedback` keeps the feedback draft, the reply read, and the
@@ -192,9 +194,28 @@ of the data that the screens read and write.
 - A suspended org takes no write except a leave. [A suspended
   org](suspended-org.md) gives how the app learns of it, from the org list
   or from an `org_suspended` refusal, and what its screens show.
+- The secrets of an org are one value of `OrgModel.secrets`, a
+  `SecretsModel`. The Secrets tab and the Capabilities control read them
+  each time that they show, and share the answer. A write shows its answer
+  in the list. The list never holds a value: a reveal gives its value to
+  its caller only, shows the record of the reveal at once, and reads the
+  list again for the record of the Worker.
+- The Capabilities of a workspace that exists are a
+  `WorkspaceCapabilitiesModel` of each open control, which reads them when
+  it opens. A change shows at once, and its answer is the whole value. A
+  failed change shows the saved value again, with a toast.
 - The settings of the cloud computer are one value of the org in
   `OrgModel`. Every opening of the Cloud computer tab shares them, so a
   save from a closed tab shows in the reopened tab.
+- The org logins are one value of the org in `OrgModel.agentLogins`. A
+  save, a change of the switch "Use for every member", and a Remove show
+  in the order of the writes, and a read that started before a write
+  answered never takes it back, as `Resource` says. A change of the switch
+  shows at once, and a failed save takes it back. The note and the warning
+  of the saves and of Refresh of an org endpoint stay only in the memory of
+  the page, so a reload removes them. The account does not take the
+  default logins that a read names, as [Login data](login-data.md#rules)
+  says.
 - The Cloud computer tab follows the builds while it shows. The builds,
   not the settings, say which saved changes the org image lacks, in
   `BuildsResponse.changes`. They read again while a build runs and at

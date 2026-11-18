@@ -16,6 +16,14 @@ An update can send only the fields that changed.
 A disable-only update sends `{ "active": false }` and needs no GitHub read.
 The list includes each automation's latest run with its current state, or null.
 
+Each detail, create, or update reply includes `AutomationResponse.runLogin`.
+It names the owner's current default login for the saved agent, through `resolveDefaultLogin`.
+It is null when no login serves that owner.
+Every reader gets the same owner, independently of their own default login.
+`publicLoginOwner` also serves empty-session metadata and returns only an owner type and ID.
+The value has no credential, endpoint host, or full address.
+The automation owner still supplies GitHub access.
+
 `POST` of `automationPaths.runNow` takes a `RunAutomationRequest` with the page's request ID.
 Only the owner can use it, also while the automation is off.
 An automation whose triggers are all pull request triggers refuses Run now.
@@ -54,9 +62,13 @@ View writes cannot change these saved run facts.
 It checks the current owner membership, the owner and org suspension, and org deletion inside SQL.
 Scheduled and pull request runs also need an active automation.
 `startAutomationRun` checks access again before a new create and skips a queued run that cannot start.
-It checks the owner's agent login and fresh GitHub access before the create.
-The first session uses the owner's own login, independent of its share setting.
+It checks the owner's default agent login and fresh GitHub access before the create.
+The shared resolver chooses the usable personal or org login.
+The org's preference switch controls their order.
+The first session fixes that login at its first accepted message.
+The personal share setting does not restrict the owner's own run.
 The runner gets only a turn token for that login through the model gateway.
+GitHub access and Mac commands still act as the owner.
 It calls the existing workspace create and first-message admission paths.
 It does not wait for cloud computer startup.
 A repeat with a creation attempt uses its original sender and bypasses the automation access and login checks.
@@ -132,7 +144,11 @@ The batch-limit test passes 2 for each limit and checks the stored operation cou
 - [route.ts](route.ts) dispatches the record routes and enforces ownership.
 - [prepare-automation.ts](prepare-automation.ts) validates a save and prepares its stored record.
 - [automation-data.ts](automation-data.ts) reads automations and checks their repository and section.
+- [automation-response.ts](automation-response.ts) adds the resolved public login owner to each record reply.
 - [automation-write-data.ts](automation-write-data.ts) guards mutations with current membership and ownership.
+  It uses `guardedStatement` and `guardedRun` from
+  [shell-guard.ts](../app-api/shell-guard.ts) for the shared member check.
+  Its numbered bindings also retain the ownership and reference checks.
 - [schedules.ts](schedules.ts) validates schedules and computes their next time through `croner`.
 - [schedule-scan.ts](schedule-scan.ts) starts due schedules and retries old queued runs through the shared starter.
 - [schedule-scan-data.ts](schedule-scan-data.ts) reads bounded scan batches and claims due times with their run rows atomically.

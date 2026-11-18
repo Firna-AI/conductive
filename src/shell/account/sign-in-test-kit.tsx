@@ -54,7 +54,7 @@ export const chatGptLogin = {
 
 /** The row of a Codex login on the ChatGPT plan that other members do not use. */
 export const chatGptRow =
-  'Codex Connected ChatGPT plan Remove Let other members use this login Their messages in your sessions start a new session on their own login.'
+  'Codex Connected ChatGPT plan Remove Let other members use this login Their messages in your sessions start a new session.'
 
 /**
  * Serves the account of the fixtures, a Claude token and a Codex API key,

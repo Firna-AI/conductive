@@ -1,6 +1,8 @@
 import type { RunnerEventEnvelope } from '../../src/shared/generated/RunnerEventEnvelope'
+import type { RunnerHello } from '../../src/shared/generated/RunnerHello'
 import type { RunnerLoginKind } from '../../src/shared/generated/RunnerLoginKind'
 import { RUNNER_SUPPORTED_LOGIN_KINDS } from '../../src/shared/runner'
+import { warningProcessStartId } from '../warning-values'
 import { parseAgentEvent } from './agent-events'
 import { counter, identifier, invalidInput, number, record } from './inputs'
 import { parseOtherEvent } from './other-events'
@@ -19,12 +21,12 @@ export interface IncomingRunnerEnvelope {
   raw: unknown
 }
 
-export interface IncomingRunnerHello {
-  type: 'hello'
+export type IncomingRunnerHello = Omit<
+  RunnerHello,
+  'protocolVersion' | 'processStartId'
+> & {
   protocolVersion: number
-  workspaceId: string
-  streamId: string
-  loginKinds?: readonly RunnerLoginKind[]
+  processStartId: Exclude<RunnerHello['processStartId'], undefined> | null
 }
 
 /** Validate identity before payload checks, so duplicates and gaps remain harmless. */
@@ -44,6 +46,7 @@ export function parseRunnerTransport(
       protocolVersion,
       workspaceId: identifier(input.workspaceId),
       streamId: identifier(input.streamId),
+      processStartId: warningProcessStartId(input.processStartId),
       ...(input.loginKinds === undefined
         ? {}
         : { loginKinds: parseLoginKinds(input.loginKinds) }),

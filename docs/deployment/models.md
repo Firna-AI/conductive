@@ -75,12 +75,13 @@ The shape of the two values, with placeholders in place of real values:
   The tool model list also reads the app default when the calling
   workspace's owner has no saved default. For that list, a missing or
   invalid app default gives a null default choice instead of an error.
-  [Models](../protocol/workspace-calls.md#models) states the tool list.
+  [Models](../protocol/create-call-lists.md#models) states the tool list.
 
 ## The title model
 
 `CONDUCTIVE_TITLE_MODEL` names the model that writes a title for a workspace
-that has no name, as [Messages](../protocol/messages-and-attachments.md#messages)
+that has no name, as
+[The title of a new workspace](../protocol/workspace-and-session-names.md#the-title-of-a-new-workspace)
 says. It is operator data. The Worker has no built-in title model.
 
 - The value is the model ID of a text generation model of Workers AI, the

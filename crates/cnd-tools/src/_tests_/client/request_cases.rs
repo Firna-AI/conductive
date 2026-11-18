@@ -43,6 +43,13 @@ fn write(name: Name, fields: Value, path: &'static [&'static str], body: Value) 
 
 pub(super) fn cases() -> Result<Vec<Case>> {
     Ok(vec![
+        read(Name::ListSecrets, json!({}), &["secrets"], json!({}))?,
+        write(
+            Name::RunWithSecrets,
+            json!({"names":["TOKEN"],"command":"deploy","reason":"Use deployment credentials"}),
+            &["secrets", "run"],
+            json!({"names":["TOKEN"],"command":"deploy","reason":"Use deployment credentials"}),
+        )?,
         write(
             Name::RunMacCommand,
             json!({"command":"pwd","folder":"/tmp","reason":"Check folder"}),
@@ -60,9 +67,9 @@ pub(super) fn cases() -> Result<Vec<Case>> {
         read(
             Name::ListWorkspaces,
             json!({"ownerId":"member","state":"ready","repositoryId":"repository","query":"Par",
-            "updatedSince":-1,"archived":false,"limit":1,"offset":0}),
+            "updatedSince":-1,"archived":false,"removed":false,"limit":1,"offset":0}),
             &["workspaces"],
-            json!({"ownerId":"member","state":"ready","repositoryId":"repository","query":"Par","updatedSince":"-1","archived":"false","limit":"1","offset":"0"}),
+            json!({"ownerId":"member","state":"ready","repositoryId":"repository","query":"Par","updatedSince":"-1","archived":"false","removed":"false","limit":"1","offset":"0"}),
         )?,
         read(
             Name::GetWorkspace,

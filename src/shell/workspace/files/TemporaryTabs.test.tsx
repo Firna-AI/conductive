@@ -20,7 +20,7 @@ import {
 } from '../../../test-support/mount'
 import { serveSuspendedAcme } from '../../../test-support/suspended-org'
 import { click, settle } from '../../test-mount'
-import { bodiesOf } from '../kept-test-kit'
+import { savedViewsOf } from '../kept-test-kit'
 import { linkTo, openTab, tabNames } from '../wiring-test-kit'
 import { filesHref } from './files-address'
 
@@ -45,8 +45,8 @@ const page: FilesTab = {
 }
 
 /** The views that the tab saved, from the request with index `from` on. */
-function savedViews(server: FakeApiServer, from: number): Promise<unknown[]> {
-  return bodiesOf(server, 'PUT', workspaceViewPath(org, id), from)
+function savedViews(server: FakeApiServer, from: number) {
+  return savedViewsOf(server, from)
 }
 
 /** The temporary mark of a saved view, or "none" for a body without one. */

@@ -1,8 +1,9 @@
 # Terminal
 
-The Terminal tool shows a shell in the cloud computer of a workspace. It uses
-xterm.js. The workspace screen shows it in the tools panel of the right
-column, and on a phone as the Terminal page, as
+The Terminal tool shows the terminals of a workspace, each a shell in the
+cloud computer, with a row of terminal tabs. It uses xterm.js. The
+workspace screen shows it in the tools panel of the right column, and on a
+phone as the Terminal page, as
 [the tools part](../shell/workspace/README.md#the-tools-part) says.
 
 This folder also holds the parts that the three tools share, in
@@ -19,6 +20,11 @@ change can move the shared parts to the app's shared components.
   tool whose read still runs starts a new read too. An answer to an older
   read can't bring back a wait.
 - A failed or malformed answer shows an error with Try again.
+- The row of terminal tabs, the open and the close of a terminal, and the
+  terminal that shows follow [Terminal tabs](terminal-tabs.md).
+
+### The screen
+
 - The screen uses the Graphite tokens: the surface, the ink, the monospace
   font at 12px, lines 1.6 times the font size apart, and the status colours
   for the ANSI colours. It follows a change of the colour scheme.
@@ -86,26 +92,43 @@ change can move the shared parts to the app's shared components.
 ```tsx
 <TerminalTool
   connect={connectTerminal}
+  route={terminalRoute}
   touch={phone}
   workspace={{ orgId, workspaceId, fetch, subscribe }}
 />
 ```
 
-- `connect` opens the decoded transport of a ready terminal. The shell
-  gives `createTerminalConnector` of `src/app/terminal-transport.ts` over
-  `openSocket` of the app's event source. It opens `socketPath` on the
-  Worker of the app, also in the Mac app, and decodes the ttyd protocol into
-  the `TerminalTransport` of the
-  [shared contracts](../shared/README.md). Keep the function stable. A
-  transport that closes, or a `connect` that throws, shows Disconnected with
-  Reconnect. A source without `openSocket`, as in the development fake,
-  throws. The transport takes text only. The rules for the binary mouse
+- `connect` takes the `socketPath` of one terminal, from its entry in the
+  list, and opens its decoded transport. The shell gives
+  `createTerminalConnector` of `src/app/terminal-transport.ts` over
+  `openSocket` of the app's event source, with the fixed `tty`
+  subprotocol. It opens `socketPath` on the Worker of the app, also in the
+  Mac app, and decodes the ttyd protocol into the `TerminalTransport` of the
+  [shared contracts](../shared/README.md). Keep the function stable. The
+  transport says how it ended: `closed` for a close of the server, and
+  `lost` for a drop with no close frame, code 1006, or code 1001 or 1012.
+  A lost connection connects again once by itself, as `retries` of
+  `terminalRetry.ts` says. A close of the server, a failed try, and a
+  `connect` that throws show Disconnected with Reconnect. Each new
+  connection of a terminal writes on the same xterm.js screen, which keeps
+  the old output until the new connection shows its own, as
+  `screenConnection.ts` says. A source without `openSocket`, as in the
+  development fake, throws. The transport takes text only. The rules for the binary mouse
   reports of xterm.js are under Behaviour.
+- `route` is the `TerminalRoute` of `terminalRoute.ts`: `terminalId`, the
+  terminal of the address, `saved`, the terminal of the saved view, `href`,
+  the address of a tab, and `show`, which shows a terminal. `show` takes
+  `push` for a press on a tab and for a new terminal, and `replace` for a
+  terminal in the place of a closed one, or for the terminal of the
+  address that the saved view lacks. The owner saves the terminal and
+  moves the address, as
+  [the tools part](../shell/workspace/tools-part.md) says.
+  Keep the object stable while it names the same terminals.
 - `links` is optional. It gives the app origin with the page check of the
   router, and the `open` of each `TerminalLink`: a local address with its
   port, an app page, or a web link. Without it, no link opens and no hint
   shows. The workspace screen gives it, as
-  [the tools part](../shell/workspace/screen-parts.md#the-tools-part)
+  [the tools part](../shell/workspace/tools-part.md)
   says.
 - `onActivity` is optional. It runs for each input of the user: keys, text,
   paste, and mouse reports. It does not run for the replies of xterm.js.
@@ -118,13 +141,18 @@ change can move the shared parts to the app's shared components.
   It delivers the events of the workspace in order. Keep both stable.
 - `touch` selects the phone layout: 40px controls and the key row.
 - `focusRequest` is optional. A new request moves the keyboard focus to
-  the xterm.js screen. A request waits until the screen exists, also
-  across the mount and the connection of the terminal. The screen takes it
-  only while the focus is still on the element of the request, `from`, or
-  on no element. Then it calls `onFocusDone`, and the owner clears the
-  request. So a reconnect does not take the focus again. In StrictMode,
-  the second screen takes the request too, because the request still
-  holds until the owner clears it.
+  the xterm.js screen of the shown terminal. A hidden terminal never takes
+  it. A request waits until that screen exists, also across the read of
+  the terminals, the mount, and the connection of the terminal. The screen
+  takes it only while the focus is still on the element of the request,
+  `from`, or on no element. Then it calls `onFocusDone`, and the owner
+  clears the request. So a reconnect does not take the focus again. In
+  StrictMode, the second screen takes the request too, because the request
+  still holds until the owner clears it.
+- `focusOnShow` is optional. A click on a tab and the + call it at the
+  press, and call its result once their terminal shows, so the owner asks
+  for the focus with the element of the press. Without it, as on a phone,
+  these controls move no focus.
 - `screenRef` is optional. It gets the element of the xterm.js screen,
   without the key row and the buttons of the tool, such as Reconnect. The
   workspace screen marks this element for the shortcut layer, so only the
@@ -132,57 +160,23 @@ change can move the shared parts to the app's shared components.
   [Where a key goes](../../docs/protocol/keyboard-shortcuts.md#where-a-key-goes)
   says.
 - The tool needs the Graphite tokens as `--ui-*` variables and the Firna
-  theme provider, as the mockup renderer gives them.
+  theme provider, as the mockup renderer gives them. The tabs also need
+  the toasts of the app, a `ToastProvider` of `@firna/ui/toast`, and the
+  `OverlayHost` of `src/shell/ui/Overlay.tsx`, where the close question
+  opens. The `ThemeRoot` and the frame of the app give both.
 - Keep the tool mounted while another tool shows, if the shell must keep the
-  connection. An unmounted tool closes its connection.
+  connections. An unmounted tool closes its connections.
+- An owner that runs the + from outside the tool keeps the terminals
+  itself: `useTerminals(workspace, route)` gives the state of the tool, its
+  actions, and `canOpen`, while the + takes a press. `TerminalToolView`
+  takes them in place of `workspace`. The workspace screen does this for
+  New terminal of the command palette, through `actions.openThen`.
 
 ## Workspace events
 
-The Terminal and Preview tools read their data and the events of their
-workspace through a tool store, `ToolStore` in `tool-parts/`. The Desktop
-tool reads no events.
-
-- The store is plain TypeScript. It holds the state of one tool of one
-  workspace, and gives each action to the tool's reducer. React reads it
-  with `useSyncExternalStore`, through `ToolStore.subscribe` and
-  `getSnapshot`.
-- `TerminalToolBody` and `PreviewToolBody` get their stores through
-  `useWorkspaceStore` of [the web app](../app/README.md#data-lifecycle).
-  The stable `create` is the factory of the tool: `createTerminalStore` in
-  `terminalStore.ts`, or `createPreviewsStore` in
-  `../previews/previewsStore.ts`. The stable `connect` calls
-  `ToolStore.connect` with the `fetch` and `subscribe` of the workspace.
-  Another workspace gets another store.
-- The hook connects the store after the render, and stops it at unmount.
-  The connection subscribes to `workspace.subscribe`, then reads the data
-  that the state needs. The stop ends that subscription and aborts a read
-  that has no answer. A late answer of that read changes nothing. A render
-  starts no read and no subscription.
-- The store passes each event of its own workspace to the reducer, as the
-  `WorkspaceEvent` itself, in the order of the subscription. It drops the
-  events of other workspaces. The tool's own actions, such as a request
-  result, go to the same reducer.
-- A tool whose definition has `fromEnvelope` gets the action that it gives
-  for each envelope, in place of the event. So a tool can read the time of
-  an event, as the Preview tool does for a failed repair of its list.
-- A subscription can deliver its stored history at once, inside the
-  subscribe call. The store is already connected then, so the reducer gets
-  each event of that history.
-- The state gives the number of the read that it needs. An action or an
-  event that changes the number, such as Try again, starts a new read and
-  aborts the older one. The store checks the read one microtask after a
-  change. So a burst of changes, such as a stored history, starts one read.
-  An answer counts only while the state still needs its read.
-- In React's StrictMode, the hook connects, stops, and connects again. The
-  second subscription can deliver the history again, and the reducers
-  accept a repeated event.
-- A new `workspace.subscribe` or `workspace.fetch` makes the hook stop the
-  store and connect it again. The store keeps its state, such as the
-  revoked previews, and takes events only from the new subscription. It
-  reads again only with a new `fetch`, or when the stop ended a read before
-  its answer.
-- The state stays the same object until an action or an event changes it,
-  so React renders only after a change.
+[Workspace events](workspace-events.md) gives how the Terminal and Preview
+tools read their data and the events of their workspace, through a tool
+store.
 
 ## Development page
 
@@ -198,14 +192,26 @@ After the [Get started](../../README.md#get-started) setup:
 
 The address holds the settings: `tool` (`terminal`, `preview`, `desktop`),
 `state`, `layout` (`panel`, `phone`), `scheme` (`dark`, `light`), `workspace`,
-`preview`, and `ports`. `ports` chooses the stored report of the listening
+`preview`, `terminal`, and `ports`. `ports` chooses the stored report of the listening
 ports: `servers`, `empty`, `unknown`, or `failed`, which adds a failed repair
 3 minutes before the fake time of the Preview tool. The panel layout has the
 440 × 389 size of the tools in the right column. The phone layout has the 390 × 636 size of a tool page on a
-phone. The page lists each request and each call of the terminal transport.
+phone. The page lists each request and each call of the terminal transport,
+with the terminal of its socket.
+
+The terminal states `several`, `limit`, and `failing` start with 3, 10, and
+3 terminals. In `failing`, each open and close of a terminal fails, as when
+the sandbox does not answer. `older` has the software of a sandbox that
+opens one shell. `terminal` names the shown terminal, as the address
+`terminal/<terminalId>` does in the app, and a press on a tab moves it. The
+page keeps the saved terminal itself. Each terminal has its own echo
+terminal, which prints its ID after the log of the mockup. The page shows
+the toasts of the app, and the close question opens over the page, or as a
+sheet in the phone frame.
 
 The buttons send fake events: revoke a preview, start the sandbox, end the
-terminal connection, and change the workspace. In the `late` state, the
+connection of the shown terminal, open a terminal and close the shown one
+as another member does, and change the workspace. In the `late` state, the
 terminal reads that start before the sandbox runs wait for Answer held
 reads. Three buttons make the shell ask for the cursor position, turn on
 focus reports, and turn on mouse reports, as tmux does. Print 300 lines
@@ -217,10 +223,25 @@ each link that opens, in place of opening it.
 
 ## Key code
 
-- `TerminalTool.tsx`: the tool and its states.
+- `TerminalTool.tsx`: the tool and its states, and `TerminalToolView`, the
+  tool over the terminals of its owner. `useTerminals.ts`: those terminals.
+- `OpenTerminals.tsx`: the ready tool: the row of tabs, a pane for each
+  terminal that the user showed, with its Disconnected bar, and the close
+  question.
+- `TerminalTabs.tsx`: the row of terminal tabs, the +, and the line at the
+  limit. `CloseTerminalQuestion.tsx`: the question before a close.
 - `terminalStore.ts`: `createTerminalStore`, which makes the tool store of
-  one workspace, with its reducer and its read of the terminal state.
+  one workspace, with its reducer, its read of the terminal state, and the
+  event number of each list event.
 - `terminalReadiness.ts`: the states of the tool, its reads, and its events.
+- `readyTerminals.ts`: the list of a ready tool and the event number of
+  that list, what it keeps for each terminal, the writes that run, and the
+  place of a shown terminal that closed. It takes only a newer list, as
+  [Terminal tabs](terminal-tabs.md) says.
+- `terminalRoute.ts`: `TerminalRoute`, and `shownTerminal`, which picks the
+  shown terminal from the route and the list.
+- `useTerminalActions.ts`: the open, also from outside the tool, and the
+  close, and their failure toasts. `terminalCopy.ts`: the words of the tabs.
 - `TerminalScreen.tsx`: the xterm.js screen, its fit, and the key row.
 - `xtermScreen.ts`: splits the data of xterm.js into the user's input and
   its own replies.
@@ -239,7 +260,8 @@ each link that opens, in place of opening it.
 - `sharedSize.ts`: the font that fits a shared size into the panel.
 - `terminalKeys.ts`: the bytes of the key row and of Ctrl with a key.
 - `terminalTheme.ts`: the colours and the type of the screen from the tokens.
-- `terminalApi.ts`: reads the terminal state.
+- `terminalApi.ts`: reads the terminal state and its list, and opens and
+  closes a terminal.
 - `tool-parts/request.ts`: JSON requests, response parsers, and errors.
 - `tool-parts/workspace.ts`: the workspace of a tool, its required event
   subscription, and the filter of its workspace's events.
@@ -248,8 +270,10 @@ each link that opens, in place of opening it.
 - `tool-parts/ToolRoot.tsx`, `ToolButtons.tsx`, `ToolStates.tsx`: the
   dense and touch controls, and the waiting and message states.
 - `dev/tools.html`: the development page. `dev/devTerminal.ts` holds its
-  echo terminal and its held reads.
+  echo terminal and its held reads. `dev/devTerminals.ts` opens and closes
+  terminals as another member does, and `dev/devRoute.ts` gives the route
+  of the Terminal tool on the page.
 
 See [the previews](../previews/README.md), [the desktop](../desktop/README.md),
-[Workspaces and sandboxes](../../docs/protocol/workspace-tools.md#terminal),
+[Terminal](../../docs/protocol/terminal.md),
 and [Access and security](../../docs/protocol/terminal-previews-and-desktop.md#terminal).

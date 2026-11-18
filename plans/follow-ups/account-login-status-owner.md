@@ -2,27 +2,80 @@
 
 - **Severity:** Medium. **Likelihood:** Common. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Fix after merge.
-- **Added:** 2026-11-10, the wider fix of finding 2 of review round 1 on branch `calummoore/openai-subscription-token-support` (pull request #177).
-- **Location:** `src/app/account-model.ts`, `src/app/app-model.ts` (`openApp`), `src/shell/account/AgentList.tsx`, `src/shell/new-workspace/notices.tsx`, `src/chat/state/blockers.ts`, and `src/app/setup-steps.ts`.
-- **Reason:** the direct fix reads the login status when the account controls open, and a shared owner reaches the account lifecycle of every view, beyond the files of that branch.
+- **Added:** 2026-11-10, the wider fix of finding 2 of review round 1 on branch `calummoore/openai-subscription-token-support` (pull request #177). Updated 2026-11-17 with finding 7 of review round 3 on branch `calummoore/delft-zjk2` (pull request #427), which found the stale default login.
+- **Location:** `src/app/account-model.ts`, `src/app/account-login-reads.ts:38-44` and `:127-148`, `src/app/agent-logins.ts:82-91`, `src/app/default-logins.ts:74-82`, `src/app/app-model.ts` (`openApp`), `src/shell/account/AgentList.tsx:138-140`, `src/shell/new-workspace/notices.tsx:114`, `src/shell/automations/AutomationEditor.tsx:78`, `src/chat/state/session-login.ts:91-105` and `:178-183`, `src/chat/state/blockers.ts:22-30`, `src/chat/state/apply-events.ts`, and `src/app/setup-steps.ts:31`.
+- **Reason:** A shared owner reaches the account lifecycle of every view, beyond the files of the branches that found each case.
 
 - **Terms:**
   - **AccountModel:** the browser state in `src/app/account-model.ts` that holds the account settings and the status of each agent login.
-  - **Login change counter:** the counter in `AccountModel` that each local change of a login raises, so that a reply that started before the change is not applied.
+  - **AccountLoginReads:** the one owner of the account reads of `AccountModel` after the app opens, in `src/app/account-login-reads.ts`.
+  - **Org login:** the agent credential that an admin connects for the members of one org, beside the personal login that each member connects.
+  - **Default login:** the login that a new session of a member takes for one agent in one org, which the server names in each account reply.
+  - **Session record:** the chat record of a session, whose `loginAvailable` says whether its fixed login can serve and whose `defaultLogin` exists only before the first message.
 - **Background:**
-  - The Worker renews a Codex ChatGPT sign-in alone. When OpenAI refuses a renewal, the Worker saves a cause on the login, and the account page shows "Signed out" and "Sign in again".
-  - The browser reads the account once, when the app opens. The direct fix of that branch reads the logins again when the account controls open, and applies a reply only for an agent whose login did not change while the read ran.
-  - New workspace, the chat composer, and Get started read the same login status through one rule, `loginUsable`, but no shared owner refreshes it.
-- **Problem:** Each view reads its own copy of the login status, and only the account controls refresh it.
-- **Impact if no action:** After a refused renewal, New workspace and the chat composer still treat the login as usable until the account page opens or the app reloads. Each new view that reads the status must add its own refresh and its own ordering check.
-- **Root question:** How does every view of an open tab show a login status that the server changed?
+  - The Worker renews a Codex ChatGPT sign-in alone. When OpenAI refuses a renewal, `worker/codex-auth/renew.ts` saves a cause on the login, and the account page shows "Signed out" and "Sign in again".
+  - A personal login that the app can no longer use counts as none. "The default login" in `docs/protocol/org-logins.md` gives a ChatGPT sign-in after a refused renewal as the example.
+  - For a member whom the org login serves, the same section forbids a Connect notice. That holds for the composer, the New workspace form, the automation form, and the agent tools.
+  - It also says that the screens show the default login that the server names. They do not work it out.
+  - `docs/protocol/messages-and-attachments.md` says that the composer shows the missing-login notice, with Connect, before the send. It shows it only when no personal login and no org login serve.
+  - The browser reads the account when the app opens, in `openApp` of `src/app/app-model.ts`. The direct fix of pull request #177 reads the logins again when the account controls open.
+  - That read applies a reply only for an agent whose login did not change while the read ran. `AgentLogins.mark()` in `src/app/agent-logins.ts` holds this rule. Only a complete account reply changes the login data.
+  - AccountLoginReads now owns every read after the app opens. It reads the whole account at each open of the Agents list, at each focus, and when a hidden page shows again.
+  - It also reads after each change of a login, and when an org joins the orgs of the person.
+  - It also reads every 60 seconds while the page shows and a model list can change. That holds for a personal endpoint login, or for an org login that `orgLoginsInUse` in `src/app/default-logins.ts` counts.
+  - `modelListWait` in `src/app/endpoint-models.ts` gives that wait. A hidden page stops the timer. `src/app/login-data.md` describes these reads.
+  - The Worker picks the default login in `defaultLogin` of `worker/chat/default-login.ts`. It takes the org login while its switch "Use for every member" is on, then a usable personal login, then a usable org login.
+  - New workspace, the chat composer, the automation form, and Get started decide from the cached account. They use `loginUsable` in `src/app/api/read-core.ts` and `newSessionLogin` in `src/app/default-logins.ts`.
+  - The workspace chats of the app read the account store through `ChatSources` in `src/chat/state/sources.ts`. They send no account read of their own.
+  - The Worker checks the login of a session before a rename, Stop, close, reopen, or model change, in `worker/chat/http-routes.ts:120`. It also checks at each send.
+  - It also checks at each subscription of a tab to a workspace that is not archived, also at a reconnect, in `worker/chat/browser-subscription.ts:28`.
+  - `worker/chat/session-login.ts` sends a changed result as a `session.updated` record. `src/chat/state/apply-events.ts` applies the record and reads no account.
+  - The Worker side of the org fallback works. When the login of a session cannot serve, `worker/chat/send-message.ts` resolves the default login of the sender. It then starts a new session on the org login, linked to the old session.
+  - A stale-usable status: after a refused renewal, the cached account still says that the personal login serves. New workspace and the chat composer still treat the login as usable.
+  - A send in the composer then starts the linked session with no notice before the send. When no org login serves, the Worker refuses the message with `agent_login_required`.
+  - A stale default after a refused renewal: a member has a personal Codex ChatGPT sign-in, and the org login of Codex is an API key. The switch is off, so the cached default names the personal login.
+  - A later login check, such as a rename or the subscription of another tab, sends the session record with `loginAvailable: false`. The cached default still names the personal login.
+  - `newLogin(reader, agent, 'own')` in `src/chat/state/session-login.ts` then skips the own login and returns null, because the cached default is not the org login.
+  - The composer shows Connect, and `sendBlock` in `src/chat/state/blockers.ts` turns Send off. The Worker would send the message on the org API key.
+  - A stale default after an admin connects an org login: the personal login already failed, and the composer shows the missing-login notice. An admin then connects an org login.
+  - No session record changes and no timer read runs in that case, so the notice stays.
+  - The timer covers neither stale default. A personal subscription login with an unused org API key keeps no timer.
+  - A focus return, a hidden page that shows again, or an open of the Agents list repairs both stale defaults. The Connect button opens the Agents list, and the list reads the account.
+  - `src/chat/components/OrgSessionLogin.test.tsx` covers the org fallback only with an account that already names the org default.
+- **Problem:** Each view decides from the cached account, and no view can ask AccountLoginReads for a read when it meets a newer state. A stale-usable status lets the views treat a failed login as usable. A stale default shows Connect and turns Send off, although the org login serves the member.
+- **Impact if no action:** After a refused renewal, the views treat the failed login as usable, or block a member whom the org login serves, until the next read. Each new view that reads the status must add its own refresh and its own ordering check.
+- **Root question:** How does every view of an open tab show a login status and a default login that the server changed?
 - **Options:**
-  - **A.** Keep the read when the account controls open. Effort: Small.
+  - **A.** Keep the read when the account controls open, with the current reads at page returns and on the timer. It leaves both stale states until one of those reads, and a Connect notice that the org login rules forbid. Effort: Small.
   - **B.** Give `AccountModel` one watched status source for the account page, Get started, and the composers. It refreshes at each view that needs the status, and it keeps newer local changes when a read finishes. Effort: Medium.
+    - AccountLoginReads is the place for that source. Give it two inputs from the views, so that it also keeps the default logins current.
+    - The first input is a newer login observation from every view. One example is a session record whose `loginAvailable` says that a login cannot serve.
+    - The cached account still names that login as usable or as the default. The owner then reads once. A read that started before the observation does not count for it.
+    - The second input is a shown missing-login notice. The composer tells the owner while its notice shows. The New workspace form and the automation form can use the same input later.
+    - The owner reads once when the notice appears, and keeps its 60-second timer due while a notice shows on a visible page.
+    - The notice input also covers an org login that an admin connects while the notice shows, within one timer period. The notice can show for the time of one read.
+    - Keep the current reads and the current timer rule for a personal endpoint and an org login in use.
+    - Keep the rule that only complete account replies change the login data, through `AgentLogins.mark()`.
+    - Add a regression test for a stale personal default with a usable org fallback. Add one for an org login that an admin connects while the notice shows.
+    - Update the reads in `src/app/login-data.md`.
+    - Cost: one account read for each appearance of a notice, and one read each minute while a notice stays on a visible page.
   - **C.** Send the login changes of an account to its browsers through an event stream. It adds a boundary contract. Effort: Large.
-- **Left out:** Reload instructions: they leave the recovery controls out of reach during normal use.
-- **Wider fix:** B. One owner keeps the status and the ordering rule for every view.
-- **Previous examples:** Commit `6c3a1f31` added a refresh after the return from the GitHub App installation. `plans/follow-ups/get-started-reply-order.md` records the related order of the Get started replies.
+    - The Worker must send each change of a personal login, an org login, or its switch to each signed-in browser.
+    - A push on the existing workspace stream is a variant of C. It needs the same fan-out of login changes, and it reaches only open chats.
+  - **D.** Name the starter's current fallback owner in the session record of a fixed personal session whose login cannot serve. It changes a generated type and a protocol rule, so it needs the approval of the user. Effort: Medium.
+    - The Worker takes the owner from the same `readLoginAccess` row with `defaultLogin(entry, session.login)`, as it does for an empty session.
+    - The composer of the starter uses it as the target of the linked session. It never writes the owner to the account store.
+    - It needs no extra request and has no reply-order race.
+    - It changes the generated `Session` type, and the rule that `defaultLogin` is absent after the first message. `docs/protocol/messages-and-attachments.md` and "The default login" of `docs/protocol/org-logins.md` state that rule.
+    - An org login that an admin connects shows only at the next login check of the session.
+- **Left out:**
+  - Reload instructions: they leave the recovery controls out of reach during normal use.
+  - One account read in the composer when a newer session record contradicts the cached personal default: it covers one trigger in one view. B covers it with every view and both triggers.
+  - Assume an org fallback from the old account reply: that reply does not show that the org login still serves. The screens must show the default login that the server names.
+  - Poll only: a poll still leaves the composer blocked between reads.
+  - No pre-send block, with Connect only after a refusal of the Worker: the notice must show before the send.
+- **Wider fix:** B. One owner keeps the status, the default logins, and the ordering rule for every view.
+- **Previous examples:** Commit `6c3a1f31` added a refresh after the return from the GitHub App installation. `plans/follow-ups/get-started-reply-order.md` records the related order of the Get started replies. Commit `a852c33c7` of pull request #427 fixed another stale default login, after an org joins the orgs of the person. Commit `a3c64ffda` of the same pull request made each login write come from a complete account reply.
 - **Related:** `plans/follow-ups/sign-in-poll-order.md` changes the same replies of `AccountModel`. B can order its poll replies too.
-- **Recommendation:** B. It gives each view the current status, and one place keeps newer local changes.
-- **Action:** fix after merge, apply B.
+- **Recommendation:** B. It gives each view the current status and default login, and one place keeps newer local changes.
+- **Action:** fix after merge, apply B, because the org agent logins branch already used both of its review fix rounds.

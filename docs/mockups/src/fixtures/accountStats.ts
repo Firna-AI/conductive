@@ -21,12 +21,19 @@ function lastThirtyDays(counts: readonly number[]): readonly DailyCount[] {
  * The numbers of the Stats tab of Cal's account: two orgs, the workspaces
  * that Cal owns, and the runs of Cal's automations. The last 7 days of the
  * new workspaces add up to the 7 new workspaces of the week. The states add
- * up to the 64 workspaces.
+ * up to the 64 workspaces. Cal archived 49 of them: 9 in the last 14 days,
+ * which the list still holds, and 40 that left it.
  */
 export const accountStats: AccountStatsNumbers = {
   orgs: 2,
   workspaces: { total: 64, lastWeek: 7 },
-  workspaceStates: { running: 3, stopped: 11, failed: 1, archived: 49 },
+  workspaceStates: {
+    running: 3,
+    stopped: 11,
+    failed: 1,
+    archived: 9,
+    removed: 40,
+  },
   automations: 3,
   newWorkspacesByDay: lastThirtyDays([
     1, 0, 2, 3, 1, 2, 0, 0, 3, 2, 4, 1, 2, 0, 0, 2, 3, 1, 2, 1, 0, 0, 2, 1, 3,
@@ -45,7 +52,13 @@ export const accountStats: AccountStatsNumbers = {
 export const emptyAccountStats: AccountStatsNumbers = {
   orgs: 1,
   workspaces: { total: 0, lastWeek: 0 },
-  workspaceStates: { running: 0, stopped: 0, failed: 0, archived: 0 },
+  workspaceStates: {
+    running: 0,
+    stopped: 0,
+    failed: 0,
+    archived: 0,
+    removed: 0,
+  },
   automations: 0,
   newWorkspacesByDay: lastThirtyDays(Array.from({ length: 30 }, () => 0)),
   automationRunsByDay: lastThirtyDays(Array.from({ length: 30 }, () => 0)),

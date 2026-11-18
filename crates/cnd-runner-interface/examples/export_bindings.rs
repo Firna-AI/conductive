@@ -83,6 +83,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     workspaces::WorkspaceStart::export_all(&cfg)?;
     tools::device::DeviceCommandInput::export_all(&cfg)?;
     tools::device::DeviceCommandResponse::export_all(&cfg)?;
+    tools::secrets::ListSecretsResponse::export_all(&cfg)?;
+    tools::secrets::RunWithSecretsRequest::export_all(&cfg)?;
+    tools::secrets::RunWithSecretsResponse::export_all(&cfg)?;
+    tools::secret_results::RunWithSecretsResult::export_all(&cfg)?;
+    tools::secret_results::ListSecretsResult::export_all(&cfg)?;
     tools::previews::OpenPreviewRequest::export_all(&cfg)?;
     tools::previews::AgentListPreviewsResponse::export_all(&cfg)?;
     tools::previews::AgentOpenPreviewResponse::export_all(&cfg)?;
@@ -93,6 +98,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     tools::resources::AgentCreateSectionRequest::export_all(&cfg)?;
     tools::resources::AgentCreateSectionResponse::export_all(&cfg)?;
     tools::resources::AgentDeleteSectionResponse::export_all(&cfg)?;
+    tools::session_types::DefaultAgentLogin::export_all(&cfg)?;
     tools::sessions::AgentCreateSessionRequest::export_all(&cfg)?;
     tools::sessions::AgentSendMessageRequest::export_all(&cfg)?;
     tools::sessions::AgentSessionAccepted::export_all(&cfg)?;

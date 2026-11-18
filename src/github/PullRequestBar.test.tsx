@@ -109,7 +109,7 @@ it('links the number of the pull request to GitHub in each state, in place of a 
       links: github,
       buttons: ['Address review'],
     },
-    { state: 'draft', links: github, buttons: [] },
+    { state: 'draft', links: github, buttons: ['Ready for review'] },
     { state: 'closed', links: github, buttons: [] },
     { state: 'blocked', links: github, buttons: [] },
   ])

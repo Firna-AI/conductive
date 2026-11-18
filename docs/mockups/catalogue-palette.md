@@ -9,9 +9,10 @@ list of Acme. Send feedback comes last among its actions. Its child pages:
 
 - `app/command-palette/workspaces` has the Workspaces tab. Its
   `repository` variant has the menu of the repository filter, and its
-  `archived` variant has the archived workspaces. Its `empty` variant has
-  the Archived filter of `acme/marketing-site`, which holds no archived
-  workspace, and the line that says where they show. Its `unavailable`
+  `archived` variant has the archived workspaces of the last 14 days, as
+  the Archived group has them. Its `empty` variant has the Archived filter
+  of `acme/marketing-site`, which holds no archived workspace, and the
+  line that says where they show and for how long. Its `unavailable`
   variant has a workspace list that did not load: the notice with Try
   again fills the tab.
 - `app/command-palette/actions` has the Actions tab over the list. The
@@ -19,8 +20,11 @@ list of Acme. Send feedback comes last among its actions. Its child pages:
   the tab over an open workspace, whose actions come first.
   Its `archived` variant has the tab over an archived workspace, as Priya,
   a member who is not an admin, sees it: Session history and Restore workspace.
-- `app/command-palette/settings` has the Settings tab. Its Account group
-  ends with Keyboard shortcuts, which opens `app/account/shortcuts`.
+- `app/command-palette/settings` has the Settings tab. The group of the
+  settings of Acme lists its six tabs, with Agents and Secrets after Cloud
+  computer.
+  Its Account group ends with Keyboard shortcuts, which opens
+  `app/account/shortcuts`.
 - `app/command-palette/search` has a search that finds a workspace and an
   archived one. Its states are child pages, which kept the paths of its
   saved states, so the page shows only its canonical screen:

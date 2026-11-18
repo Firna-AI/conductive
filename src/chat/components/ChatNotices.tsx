@@ -38,20 +38,22 @@ export function BlockNotice(props: {
 }
 
 /**
- * The notice over the composer when the login of the starter is not
- * available, or the starter keeps it for their own messages, so the message
- * starts a new session on the reader's own login. An older record names no
- * starter, so the notice names nobody.
+ * The notice over the composer when the login of the session is not
+ * available, or its owner keeps it for their own messages, so the message
+ * starts a new session on the default login of the reader. `owner` names
+ * the owner of the login of the session: another member, or the org. It is
+ * null for the reader's own login and for an older record that names no
+ * starter, so the notice then names nobody.
  */
 export function LinkedSessionNotice(props: {
   agent: Agent
-  starter: string | null
+  owner: string | null
   reason: LinkedReason
 }) {
   const agent = agentNames[props.agent]
   return (
     <Notice
-      body={linkedReasonText(props.reason, props.starter, agent)}
+      body={linkedReasonText(props.reason, props.owner, agent)}
       icon={MessageSquarePlus}
       title={linkedTitle}
     />
