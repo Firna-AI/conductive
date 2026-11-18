@@ -14,6 +14,8 @@ The Worker, web app, Mac app, and SDK helper import its generated TypeScript.
 
 The crate provides handshake messages, commands, numbered events, confirmations,
 resend requests, file results, and temporary turn credentials.
+`runner_repository` holds the repository move, its refusal reply, and the
+current repository of each turn and message.
 The workspace tools provide workspace, session, message, repository, section,
 model, preview, Mac command, and secret requests and replies. Their replies preserve
 accepted message and turn pairs, resume errors, and transcript positions.
@@ -55,6 +57,7 @@ let hello = RunnerHello::Hello {
     stream_id: "stream-1".into(),
     login_kinds: None,
     process_start_id: None,
+    repository_folder: Some("/home/user/code/storefront".into()),
 };
 ```
 

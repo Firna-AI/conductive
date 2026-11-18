@@ -5,15 +5,18 @@
  *   node main.ts <tmux> <socket> <repository> [session]
  *
  * It attaches to the tmux session in control mode, and creates the session
- * with a login Bash in the repository folder when it does not exist. It
+ * with a login Bash in the repository folder when it does not exist. After
+ * a repository change, the folder file names the folder of the new session,
+ * as `terminalFolder` says. It
  * exits with code 3 when tmux exits before the bridge attached, so the
  * launcher can run the plain tmux client.
  */
 import { spawn, spawnSync } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
-import { unlinkSync, writeFileSync } from 'node:fs'
+import { readFileSync, statSync, unlinkSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { Bridge } from './bridge.ts'
+import { TERMINAL_FOLDER_FILE, terminalFolder } from './folder.ts'
 import { EXIT_BEFORE_HELLO } from './links.ts'
 
 const [tmuxPath, socket, repository, session = 'workspace'] =
@@ -30,6 +33,24 @@ if (
   process.exit(2)
 }
 
+const folder = terminalFolder(
+  repository,
+  () => {
+    try {
+      return readFileSync(TERMINAL_FOLDER_FILE, 'utf8')
+    } catch {
+      return null
+    }
+  },
+  (path) => {
+    try {
+      return statSync(path).isDirectory()
+    } catch {
+      return false
+    }
+  },
+)
+
 const child = spawn(
   tmuxPath,
   [
@@ -42,7 +63,7 @@ const child = spawn(
     '-s',
     session,
     '-c',
-    repository,
+    folder,
     '-f',
     'ignore-size',
     '/bin/bash',

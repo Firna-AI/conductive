@@ -99,15 +99,23 @@ first.
   or refusal marker of each runner event. An accepted connection has the
   protocol version `RUNNER_PROTOCOL_VERSION`, and its `welcome` repeats
   that version. It also keeps `hello.loginKinds` for the connection's
-  dispatch checks, and `hello.processStartId` for its warnings.
+  dispatch checks, `hello.processStartId` for its warnings, and
+  `hello.repositoryFolder` for the folder check.
+- `runner-repository-move.ts`: `RepositoryMoves` compares the runner folder
+  with the record folder from `branch-data.ts`. It sends one
+  `repository.move` to each capable connection in the stored folder of
+  another repository, and holds turns until the folders match. A
+  refused move fails the held turns. `RunnerChannel.checkRepository` runs
+  the same check for the connected runner with no turn, after a
+  [repository change](../lifecycle/repository-change.md#publication).
 - `runner-connections.ts` and `runner-connection-store.ts`:
   `RunnerConnections`, the native acceptance, restore, close, and idle
   alarm of the current runner, and the chunked durable record of a
   physical runner socket. That record keeps the protocol version, the
-  process-start ID, and the login kinds declared in `hello`. A record
-  without login kinds keeps that list absent, as its `hello` did. So after
-  a wake, the runner keeps its login support and its process-start ID
-  with no second `hello` or `welcome`. A restore retires
+  process-start ID, the login kinds, and the repository folder declared
+  in `hello`. A record without login kinds keeps that list absent, as its
+  `hello` did. So after a wake, the runner keeps its login support and its
+  process-start ID with no second `hello` or `welcome`. A restore retires
   a record of an unsupported version, or with a stream and no version.
 - `runner-output.ts` and `runner-output-state.ts`: the filter from the
   actual start capture, and its encrypted state. Each runner stream keeps

@@ -6,6 +6,10 @@ import { HttpError } from '../http'
 import { repositoryLocation } from './repository-locations'
 import { workspaceRepositoryLocations } from './repository-location-data'
 import { readWorkspace } from './workspace-data'
+import {
+  pendingRepositoryChange,
+  repositoryChangeBusy,
+} from './repository-change-types'
 import { workspaceBranch } from './workspace-branch'
 import {
   CONTINUE_JOB_KEY,
@@ -44,6 +48,8 @@ export async function reserveContinue(
       return existing
     throw continueBusy()
   }
+  if (await pendingRepositoryChange(options.storage))
+    throw repositoryChangeBusy()
   if (binding.branch !== request.expectedBranch)
     throw new HttpError(
       409,

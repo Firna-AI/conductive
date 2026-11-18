@@ -6,7 +6,8 @@ import type { AccountResponse } from '../../shared/account'
 import type { MembersResponse } from '../../shared/members'
 import type { OrgSummary } from '../../shared/orgs'
 
-import type { ChatSnapshot, ChatStore } from './chat-snapshot'
+import type { ChatSnapshot } from './chat-snapshot'
+import type { ChatStore } from './chat-store'
 
 /**
  * The inputs of a chat that app models own, for a chat that the app keeps

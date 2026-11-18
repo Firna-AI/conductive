@@ -216,7 +216,12 @@ text. These parts read and draw them:
   change.
 - The folder of the repository comes from the read of the saved view, in
   `ChatSnapshot.repositoryFolder`. `WorkspaceChat` gives it to
-  `MentionsProvider`, and `useRepositoryFolder` reads it.
+  `MentionsProvider`, and `useRepositoryFolder` reads it. A record of the
+  workspace with another repository clears the folder, and
+  `afterRepositoryMove` in `state/workspace-records.ts` reads the view
+  again for the folder of the new repository. The chat drops a reply that
+  comes after a later change. After a failed read, the chat has no folder
+  until the next change or load, so no path of the old folder is a chip.
 - The chip of a file with lines shows them after its name, and its press
   calls `openFile` with the lines. The shell opens the file tab as text at
   the lines.

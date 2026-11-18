@@ -88,7 +88,7 @@ at `app/workspace-links/sent-by`.
   requests of that turn belong to that member.
 - A tool message that joins a running turn keeps the stored sender of that
   turn. So it changes neither the GitHub token nor the Mac of that turn, as
-  [Access](agent-instructions.md#access) says for each message that joins
+  [Access](message-lines.md#access) says for each message that joins
   a turn.
 - An approval of each tool message by a member was rejected, because the
   delegated work would then stop while no member answers.

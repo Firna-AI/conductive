@@ -96,9 +96,9 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         the value of each secret, also of a secret that you added.
         A member with a terminal in a cloud computer can read
         the GitHub token of a turn that runs there. They can also read the
-        value of a secret while a command runs with it there. During Continue, they
-        can also read the GitHub token of the member who clicked, while the
-        branch fetch runs. Outside an agent turn,
+        value of a secret while a command runs with it there. During Continue
+        or a repository change, they can also read the GitHub token of the
+        member who started it, while the branch fetch runs. Outside an agent turn,
         the GitHub CLI uses the workspace owner's account. Each member with
         a terminal can get that owner's GitHub token without a running
         turn.`,

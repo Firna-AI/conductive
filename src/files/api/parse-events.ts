@@ -65,14 +65,29 @@ function parseFailedRepair(envelope: JsonObject): FailedFileRepair | null {
 }
 
 /**
+ * The repository that a `workspace.updated` event names, or null for any
+ * other event. A new repository means that the lists are of the old folder.
+ */
+function parseRepositoryId(value: unknown): string | null {
+  if (!isObject(value) || value.type !== 'workspace.updated') return null
+  const workspace = value.workspace
+  if (!isObject(workspace)) return null
+  const id = workspace.repositoryId
+  return typeof id === 'string' && id !== '' ? id : null
+}
+
+/**
  * One numbered event of the workspace. Every event keeps its number, so the
  * reader can find duplicates and gaps. Only file events keep their content,
- * and a marker keeps only the failed repair of a file list.
+ * a marker keeps only the failed repair of a file list, and a record of the
+ * workspace keeps only its repository.
  */
 export interface StreamEnvelope {
   eventNumber: number
   event: FileEvent | null
   failedRepair: FailedFileRepair | null
+  /** The repository of a `workspace.updated` event, or null. */
+  repositoryId: string | null
 }
 
 export type StreamMessage =
@@ -94,6 +109,7 @@ function parseEnvelope(value: unknown): StreamEnvelope | null {
     eventNumber,
     event: parseFileEvent(value.event),
     failedRepair: parseFailedRepair(value),
+    repositoryId: parseRepositoryId(value.event),
   }
 }
 

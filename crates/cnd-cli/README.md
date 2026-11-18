@@ -62,6 +62,14 @@ ID stays the same. Each process attempts only
 one idle update. A reconnect after that attempt disables further idle updates
 until the next service start. Failed activation after a state change, or failed
 execution, exits for the service's existing restart and rollback path.
+
+A relocation result points the configuration at the folder and branches of
+the `repository.move` command. The runner then starts fresh handlers in the
+same process, with no update attempt. Each round gives its helper the
+`CONDUCTIVE_REPOSITORY`, `CONDUCTIVE_REPOSITORY_DIR`,
+`CONDUCTIVE_DEFAULT_BRANCH`, and `CONDUCTIVE_WORKSPACE_BRANCH` values of
+its configuration, so agent commands get the new folder. A later process
+start reads the start variables again.
 A shutdown received during activation prevents execution of the new release.
 Development builds disable idle swaps.
 

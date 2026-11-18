@@ -14,6 +14,10 @@ import { requireOrgMember } from './access'
 import { continueBusy } from './continue-admission'
 import { pendingContinue, type ContinueOptions } from './continue-types'
 import {
+  pendingRepositoryChange,
+  repositoryChangeBusy,
+} from './repository-change-types'
+import {
   failedRestartLifecycle,
   restartingLifecycle,
   workspaceNotRunning,
@@ -66,6 +70,8 @@ export async function changeRestart(
   if (step === 'fail')
     return controller.changeLifecycle((state) => failedRestartLifecycle(state))
   if (await pendingContinue(workspace.storage)) throw continueBusy()
+  if (await pendingRepositoryChange(workspace.storage))
+    throw repositoryChangeBusy()
   await controller.changeLifecycle((state) =>
     restartingLifecycle(state, workspaceId, now),
   )

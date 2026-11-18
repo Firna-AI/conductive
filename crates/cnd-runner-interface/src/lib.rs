@@ -16,6 +16,7 @@ pub mod runner_commands;
 pub mod runner_credentials;
 pub mod runner_files;
 pub mod runner_handshake;
+pub mod runner_repository;
 pub mod sdk_helper;
 pub mod sdk_helper_options;
 pub mod tools;

@@ -15,6 +15,11 @@ type MenuItem = {
   mark?: ReactNode
   /** Muted text after the label, such as the time of a session. */
   detail?: string
+  /**
+   * Muted words that follow the label in its line, such as the effort of
+   * a favourite after its model.
+   */
+  muted?: string
   /** An icon at the end of the row, such as the arrow that reopens. */
   trailingIcon?: LucideIcon
   /**
@@ -87,7 +92,12 @@ function Item(props: { entry: MenuItem }) {
       role={choice ? 'menuitemradio' : 'menuitem'}
     >
       {lead}
-      <span className={styles.label}>{entry.label}</span>
+      <span className={styles.label}>
+        {entry.label}
+        {entry.muted ? (
+          <span className={styles.muted}> {entry.muted}</span>
+        ) : null}
+      </span>
       {entry.detail ? (
         <span className={styles.detail}>{entry.detail}</span>
       ) : null}
@@ -128,7 +138,9 @@ export function Menu(props: {
       {props.entries.map((entry, index) => {
         switch (entry.kind) {
           case 'item':
-            return <Item entry={entry} key={entry.label} />
+            return (
+              <Item entry={entry} key={`${entry.label} ${entry.muted ?? ''}`} />
+            )
           case 'label':
             return (
               <div className={styles.group} key={entry.label} role="none">

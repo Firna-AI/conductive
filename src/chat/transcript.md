@@ -85,6 +85,9 @@ again. Its [key code](#key-code) names the shared transcript modules.
   The line names the member who pressed Continue, "You" to that member, the new branch, and its base, with `ContinuedLine` of the mockups.
   The item takes its ID from the new branch, so a repeat of the note replaces it. It belongs to no turn, so it never folds into work.
   A closed session gets the note in its stored history, so a session that opens later shows it.
+- Each `workspace.repository-changed` event of a session becomes one `repository-changed` item in the same way.
+  The line names the member who changed the repository, "You" to that member, the new repository, and the new branch, with `RepositoryChangedLine` of the mockups.
+  The item takes its ID from the new repository and the new branch. A copy of the session gives the note with no heading.
 - Ordered history folding preserves these fields and lines across completion and failure events.
 
 ## Key code

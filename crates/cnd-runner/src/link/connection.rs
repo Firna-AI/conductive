@@ -1,11 +1,11 @@
 //! Stateful runner link consumed through RunnerLink.
 
+use std::path::Path;
 use std::sync::Arc;
 
 use async_trait::async_trait;
 use cnd_runner_interface::runner::RunnerEvent;
 use cnd_runner_interface::runner_credentials::{LoginKind, RunnerLoginKind};
-use cnd_runner_interface::runner_files::RunnerFileResponse;
 use cnd_runner_interface::runner_handshake::{
     RunnerEventEnvelope, RunnerHello, RunnerProtocolVersion, RunnerToWorkspace,
 };
@@ -37,6 +37,7 @@ pub struct SavedRunnerLink {
     pub(super) connection: Mutex<Connection>,
     connecting: Mutex<()>,
     pub(super) messages: Mutex<()>,
+    repository_folder: Option<String>,
 }
 
 impl SavedRunnerLink {
@@ -63,7 +64,14 @@ impl SavedRunnerLink {
             }),
             connecting: Mutex::new(()),
             messages: Mutex::new(()),
+            repository_folder: None,
         }
+    }
+
+    /// Name the repository folder in hello. The Worker then may send repository.move.
+    pub fn with_repository_folder(mut self, folder: &Path) -> Self {
+        self.repository_folder = Some(folder.to_string_lossy().into_owned());
+        self
     }
 
     pub(super) async fn disconnect(&self, generation: u64) {
@@ -143,6 +151,7 @@ impl RunnerLink for SavedRunnerLink {
                     kind: LoginKind::ApiKey,
                 },
             ]),
+            repository_folder: self.repository_folder.clone(),
         };
         if let Err(error) = socket.send(&RunnerToWorkspace::RunnerHello(hello)).await {
             self.disconnect(generation).await;
@@ -177,9 +186,8 @@ impl RunnerLink for SavedRunnerLink {
         Ok(())
     }
 
-    async fn reply(&self, response: RunnerFileResponse) -> Result<()> {
-        self.send(RunnerToWorkspace::RunnerFileResponse(response))
-            .await;
+    async fn reply(&self, response: RunnerToWorkspace) -> Result<()> {
+        self.send(response).await;
         Ok(())
     }
 

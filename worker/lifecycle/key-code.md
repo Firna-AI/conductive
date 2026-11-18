@@ -203,6 +203,11 @@ points of each part.
   and branch commands of a create.
 - [Continue](continue.md#key-code): the Continue entries, the shared
   local-work check, and the branch name of a create and of Continue.
+- [Repository change](repository-change.md): the job of a repository
+  change in `repository-change*.ts`, and `workspace-jobs.ts`, which owns
+  both jobs. `recordedRepositoryLocations` and `heldRepositoryIds` in
+  [`repository-location-data.ts`](repository-location-data.ts) read the
+  folder record, or null for a workspace without one.
 - [`tokens.ts`](tokens.ts): the encrypted workspace token and
   `authenticateWorkspaceToken`.
 - [`runtime.ts`](runtime.ts): `LifecycleEnvironment`, `workspaceRuntime`,

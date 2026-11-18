@@ -116,6 +116,13 @@ export interface ViewReply {
    * reply gives none or gives a folder that is not absolute.
    */
   repositoryFolder: string | null
+  /**
+   * The repositories that the cloud computer holds, by ID, for the
+   * repository menu. Null when the reply gives none, or when the workspace
+   * has no record of its folders: the menu then lists only the current
+   * repository.
+   */
+  heldRepositoryIds: readonly string[] | null
 }
 
 function readPullRequest(value: unknown): RunAutomation['pullRequest'] {
@@ -141,11 +148,23 @@ function readFolder(value: unknown): string | null {
   return /^\/[^\r\n]*[^/\r\n]$/u.test(value) ? value : null
 }
 
+/**
+ * The IDs of the repositories that the cloud computer holds. A value that
+ * is not a list of IDs reads as null, so the menu lists only the current
+ * repository, and the view still reads.
+ */
+function readHeld(value: unknown): readonly string[] | null {
+  if (!Array.isArray(value)) return null
+  const ids: unknown[] = value
+  return ids.every((id): id is string => typeof id === 'string') ? ids : null
+}
+
 export function readViewReply(value: unknown): ViewReply {
   const reply = record(value, 'view response')
   return {
     view: readView(value),
     automation: optional(nullable(readRunAutomation))(reply.automation) ?? null,
     repositoryFolder: readFolder(reply.repositoryFolder),
+    heldRepositoryIds: readHeld(reply.heldRepositoryIds),
   }
 }
