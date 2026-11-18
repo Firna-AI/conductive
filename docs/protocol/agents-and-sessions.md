@@ -92,6 +92,18 @@ org logins, as [Tokens and secrets](tokens-and-secrets.md) says.
   on a model without a level, Claude runs a lower level without a sign.
   It also ignores Ultracode on a model without it, and then runs Ultra as
   Max.
+- A new Codex model can need a newer Codex program than a cloud computer
+  runs. Until that computer installs its software update, an OpenAI API
+  key or an own endpoint login can run the model at a lower effort and at
+  standard speed, with no sign in the chat (older software decision 1,
+  2026-11-18). A ChatGPT sign-in keeps the chosen effort and speed, because
+  Codex then reads the model list of OpenAI.
+- Reason: the gap lasts minutes on a running computer, and about one turn
+  on a computer that starts again after a stop. A check of the runner's
+  Codex version before each turn was rejected for now, because it adds a
+  turn refusal. A note at the end of the turn, a wait for the update, and
+  a refusal in the model gateway were rejected for the same release, for
+  their cost.
 
 ## Names in the product
 
