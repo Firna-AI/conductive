@@ -100,7 +100,8 @@ each feature.
   as [Sandbox software](protocol/sandbox-software.md) says.
 - **Agent runner:** the part of the sandbox software that runs the agents.
   It runs them through the agent SDKs, and it reports the files, the
-  changes, and the listening ports of its workspace.
+  changes, and the listening ports of its workspace. Its file server
+  serves the files of the repository for the preview of an HTML file.
 - **Session:** one agent conversation in a workspace. It shows as a tab.
 - **Turn:** the work of the agent on a message, from the message to the
   end of the agent's reply. A Claude turn stays open after that reply
@@ -150,7 +151,7 @@ programs in each sandbox, their releases, and their updates.
 | `conductive.build`        | The marketing site, with the public docs and the pricing, Terms, and Privacy pages                                                         |
 | `app.conductive.build`    | The web app, the API, the chat sockets, and the terminal                                                                                   |
 | `api.conductive.build`    | The GitHub webhooks, the agent tools, the runner, the credential helper, the model gateway, the software image route of the deploy run, and the attachment downloads |
-| `*.conductive.page`       | One random hostname for each open port preview, one level deep                                                                             |
+| `*.conductive.page`       | One random hostname for each open port preview and for the files preview of each workspace, one level deep                                 |
 | `runner.conductive.build` | The public files of each [release](protocol/sandbox-software.md#releases) of the sandbox software, from an R2 bucket                       |
 
 `api.conductive.build` is the hostname for machines. Each of its routes has

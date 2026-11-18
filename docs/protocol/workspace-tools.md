@@ -24,7 +24,8 @@ makes each web address of chat text a link, as
 - A file opens in a tab of the centre column. A press on a file opens it in
   the temporary tab, as [Temporary tabs](temporary-tabs.md) says.
 - Markdown shows rendered, with a switch to its source. Code shows with line
-  numbers and syntax colours.
+  numbers and syntax colours. An HTML file shows as a page, with a switch to
+  its source, as [HTML file preview](html-file-preview.md) says.
 - A file tab can open at a line or a range of lines, such as from a file
   chip of an answer with a line target, as
   [Line targets](file-mentions.md#line-targets) says (answer chip

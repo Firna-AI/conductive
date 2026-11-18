@@ -69,6 +69,9 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 - A preview frame loads its preview hostname. The Worker proxies the
   request to the private preview relay of the sandbox. The relay forwards
   it to the previewed server with its local address as `Host`.
+- The frame of an HTML file tab loads the files preview of its workspace
+  in the same way. The relay forwards each of its requests to the file
+  server of the agent runner, which reads the files of the repository.
 - The Worker asks Boat for a short-lived desktop URL, and the browser
   shows Boat's desktop stream.
 

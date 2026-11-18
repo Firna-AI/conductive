@@ -442,6 +442,41 @@ them:
   and a file tab already reads again when the state of the cloud computer
   leaves its place. A new event for the file server was not chosen,
   because the open route already answers the current state.
+
+The documentation milestone raised eight questions on 18 November 2026. I
+settled them under the decision test, because existing rules settle them
+or one option is clearly best:
+
+- The frame of an HTML tab stays loaded while another tab shows, as the
+  page of a Preview tab does. Reason: the app cannot read or set the
+  scroll place of a page from another site.
+- When the workspace leaves Starting, such as after a Restart or a resume,
+  each HTML tab in Preview opens the files preview again, also a tab that
+  kept its page. Reload is a show, as for a Preview tab. Reason: a stop
+  ends the files preview, and the kept page then belongs to an ended one.
+- The content type table matches each extension in any case, as the term
+  HTML file does.
+- One notice serves each runner that announced no file server, also a
+  runner that is away for a moment or whose port another program holds.
+  Reason: both cases are rare, and the next show opens the preview again.
+- A launch address whose path is not valid gets HTTP 400 `invalid_input`
+  and no grant, as a file read refuses such a path.
+- A `fileServer` value of another type counts as no file server. The
+  Worker logs a warning and does not refuse the hello. Reason: graceful
+  handling, and a feature flag must not stop the agents.
+- No close ends the files preview: the close route of the app and the
+  close call of an agent change nothing for it. Reason: no screen offers a
+  close, and on desktop no control ends a preview (decision 292).
+- The file server answers 403 to a foreign `Host`, as the preview relay
+  does, and 404 to a segment that is not valid percent-encoding or not
+  UTF-8.
+
+The documentation milestone moved the grant rules of
+`docs/protocol/terminal-previews-and-desktop.md` to the new page
+`docs/protocol/preview-grants.md`, the rules of the file server to
+`docs/protocol/file-server.md`, and the workspace part of the protocol
+docs index to `docs/architecture/protocol-docs-workspaces.md`. Reason:
+each doc stays under the length target of about 250 lines.
 - A file whose label hides a secret value offers no Preview, and its tab
   shows Source. Reason: the address of the page holds the real path, and
   Open shows that address.
@@ -511,27 +546,27 @@ Depends on: 1
 The protocol docs state the requirements of the HTML preview, the files
 preview, and the launch path, with decisions 1 and 2.
 
-- [ ] Add `docs/protocol/html-file-preview.md` with the requirements of
+- [x] Add `docs/protocol/html-file-preview.md` with the requirements of
       the HTML tab, the file server, and the files preview, with option D
       of decision 2 and option A of decision 3. Say that an address that starts with
       `/` names a file from the top of the repository. Link the page from
       [Files and changes](../docs/protocol/workspace-tools.md#files-and-changes).
       Reason: `workspace-tools.md` has 243 lines, near the target of 250.
-- [ ] Change the authorizer rule of
+- [x] Change the authorizer rule of
       `docs/protocol/terminal-previews-and-desktop.md` to option A of
       decision 3: it sends the browser to the path that the launch names,
       on the hostname of the redeemed preview.
-- [ ] State in `docs/protocol/port-previews.md` that the files preview is
+- [x] State in `docs/protocol/port-previews.md` that the files preview is
       no port preview: it has no Preview tab, and the tool does not list
       it.
-- [ ] State the new `hello` field in `docs/protocol/agent-runner.md`.
-- [ ] Add the file server to `docs/architecture/sandbox-software.md`.
-- [ ] Read the Terms page and the Privacy page in full. Update each
+- [x] State the new `hello` field in `docs/protocol/agent-runner.md`.
+- [x] Add the file server to `docs/architecture/sandbox-software.md`.
+- [x] Read the Terms page and the Privacy page in full. Update each
       sentence that restates a changed fact.
-- [ ] Read each public guide in `src/marketing/docs/` in full. Update
+- [x] Read each public guide in `src/marketing/docs/` in full. Update
       `files-and-changes.md` for the HTML preview, and each other sentence
       that restates a changed fact, such as in `security.md`.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
 
 ## Milestone 3: The file server of the runner
 
