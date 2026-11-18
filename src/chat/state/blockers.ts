@@ -1,21 +1,21 @@
-import { loginUsable } from '../../app/api/read-core'
-import type { Agent } from '../../shared/agents'
+import type { Agent } from '../../shared/generated/Agent'
 import type { ChatSnapshot } from './chat-snapshot'
-import { sessionLoginOf } from './session-login'
+import { loginReader, sessionLoginOf } from './session-login'
 
 /**
- * Why a message waits: the login that the message needs is missing. While
- * the account is unknown, nothing blocks.
+ * Why a message waits: no login serves it. While the account is unknown,
+ * nothing blocks.
  *
- * A message in the reader's own session needs that session's login, and the
+ * A message that joins the session needs the login of the session, and the
  * session record says whether it works, because the account can be older.
- * A message in the session of another member, whose login works, needs no
- * login of the reader. A message that starts a linked session needs a login
- * of the reader that the account names and that the app can still use. A
- * loaded account without an entry for the agent has no login for it.
+ * A message that starts a linked session, and the first message of the
+ * reader's own session, need a default login of the reader: the reader's
+ * own login that the app can still use, or the org login that the server
+ * names (org login decision 4). A message on the login of another member,
+ * or on the org login of the session, needs no login of the reader.
  */
 export interface SendBlock {
-  /** The agent of the chosen model, which has no login. */
+  /** The agent of the chosen model, which no login serves. */
   agent: Agent
 }
 
@@ -25,12 +25,6 @@ export function sendBlock(
 ): SendBlock | null {
   const session = snapshot.sessions.find((item) => item.id === sessionId)
   if (!session || !snapshot.account) return null
-  const { agent } = session.choice
-  const view = sessionLoginOf(session, snapshot.account.user.id)
-  if (view === null || view.kind === 'member') return null
-  if (view.kind === 'own') return view.available ? null : { agent }
-  const login = snapshot.account.agentLogins.find(
-    (item) => item.agent === agent,
-  )
-  return loginUsable(login) ? null : { agent }
+  const view = sessionLoginOf(session, loginReader(snapshot))
+  return view?.kind === 'missing' ? { agent: session.choice.agent } : null
 }

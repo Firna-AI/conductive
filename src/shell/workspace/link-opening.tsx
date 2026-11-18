@@ -1,0 +1,61 @@
+import { useContext, useMemo, type ReactNode } from 'react'
+import { useNavigation } from '../../app/navigation'
+import { parseRoute } from '../../app/router'
+import { useServices } from '../../app/services'
+import { PanelContext } from '../layout/panels'
+import { LinkOpeningProvider, type LinkOpening } from '../ui/text-links'
+import type { WorkspaceContext } from './features'
+import { previewPortHref } from './tools/tool-address'
+
+/** Whether the router reads a page of the app at an address. */
+function isAppPage(url: URL): boolean {
+  return parseRoute(url.pathname, url.search).screen !== 'not-found'
+}
+
+/**
+ * How the links of untrusted text open in the screen of a workspace. An
+ * address at the origin of the app host that names a page of the app opens
+ * that page in the same window, as an `AppLink` does. A local
+ * address opens the preview of its port: on desktop in the Preview tab of
+ * the port, with the right column shown, and on a phone on the page of the
+ * Preview tool. A read-only workspace, such as an
+ * archived one, runs no server, so a local address stays text there.
+ */
+function useLinkOpening(context: WorkspaceContext): LinkOpening {
+  const { appOrigin } = useServices()
+  const navigation = useNavigation()
+  const panels = useContext(PanelContext)
+  const { org, workspace, readOnly } = context
+  const phone = context.viewport === 'phone'
+  return useMemo(() => {
+    const href = (port: number) => previewPortHref(org.id, workspace.id, port)
+    return {
+      appOrigin,
+      isAppPage,
+      ports: readOnly
+        ? null
+        : {
+            href,
+            open: (port) => {
+              if (!phone) panels?.rightShown.set(true)
+              navigation.push(href(port))
+            },
+          },
+    }
+  }, [appOrigin, navigation, panels, org.id, workspace.id, readOnly, phone])
+}
+
+/**
+ * Opens the links of untrusted text in each part of the screen of a
+ * workspace as `useLinkOpening` says: the chat, and the file preview in
+ * the centre of a desktop and in the Files tab of a phone.
+ */
+export function WorkspaceLinks(props: {
+  context: WorkspaceContext
+  children: ReactNode
+}) {
+  const opening = useLinkOpening(props.context)
+  return (
+    <LinkOpeningProvider value={opening}>{props.children}</LinkOpeningProvider>
+  )
+}

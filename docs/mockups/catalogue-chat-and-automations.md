@@ -1,0 +1,157 @@
+# Chat and automations
+
+This page belongs to [the catalogue](catalogue.md). It gives the child
+pages of the chat and of automations.
+
+`app/chat` shows a finished turn, whose work folds into one line. Its child
+pages: `app/chat/turns` has the running turn, steer, interrupt, and a
+failure, which moved from `app/chat/running`, `steer`, `interrupted`, and
+`failed` and declare `movedFrom`. `app/chat/agent-stops` draws a turn that
+the agent of another session stopped with a workspace tool, from decision
+279. Its line says "Stopped from" and shows the session chip of that
+session, for a session of the same workspace and, in `other-workspace`, of
+another workspace. `app/chat/work` draws the work of ended
+turns, from decisions 150 and 151: the open work of the finished turn with
+one message open, a turn with a message that the user sent during it, whose
+two parts each fold their own work, a turn whose open work holds a Mac
+command card and a lost line at their place, and a turn whose open work
+holds two messages with tables, one closed and one open. The `fold` state
+opens the folds. `app/chat/tables` draws tables in replies: the resources
+of the cloud computer, a short row whose last cell spans the missing
+columns, a wide table that scrolls sideways inside the reply, and the
+reply while the agent writes it, before its separator row arrives and
+after its table appears. `app/chat/lists` draws a reply with a numbered
+list of choices, each with its options in a list under its text, as the
+user chose on 10 November 2026, and an open message line in the work of a
+turn with a plan whose steps sit under each item. `app/chat/headings`
+draws headings in a reply, as the user chose on 11 November 2026: a review
+with a title at level 1, the section Needs your answer at level 2, a
+heading at level 3 for each choice with its bold fields under it, and a
+heading at level 4 inside the first choice. Its `work` variant has the
+open work of a turn: a closed message line that shows its heading as text
+in the line, and an open message line that shows its heading on its own
+line, in the weight of a heading.
+
+`app/chat/links` draws the links of chat text, as the user chose on 10
+November 2026 with D of chat link decision 1, C of chat link decision 2,
+and B of chat link decision 3. Its canonical screen has an answer with the
+bare address of #482, a Markdown link in bold that shows as its label, and
+an address alone in code, which is a link inside its code box. Its
+variants:
+
+- `label-address` has two Markdown links whose labels read as addresses,
+  so each shows its real address in place of its label.
+- `local-address` has the address of the dev server,
+  `http://localhost:3000`. A press opens the port preview of port 3000 at
+  `app/tools/preview`. The flow `user-flows/open-a-local-server` goes from
+  this answer to that preview.
+- `sent` has a message of Cal with a bare address and a Markdown link,
+  which shows as typed.
+- `work` has the open work of a turn: a closed message line that starts
+  with a label link, and an open message line whose long address breaks to
+  fit the line.
+
+`app/chat/lost-data` draws the data that the
+chat does not have, from decision 76: tool output and turn files that the
+runner left out, and the lines of runner events that the workspace
+refused. Its long turn shows 8 files, or 5 on a phone, then a
+"Show N more" button. The count of the files that the runner left out
+shows after that button opens the list.
+`app/chat/lost-updates` draws a failed repair, from decision 96. After a
+refused update that belongs to no session, such as a file update, the
+workspace asks for a fresh full report, and nothing shows. Only when that
+report is lost too does a notice name the data that stays unavailable,
+beside that data: under the file lists for a file list, and under the
+header for other data, such as the workspace name. The `failed-repair`
+value of the `lostUpdate` state draws it. The only other notice for a lost
+update is the one of the list of servers, under the port form of the
+Preview tool, as `app/tools/preview-repair` shows.
+`app/chat/unavailable-files` draws the files that the cloud computer
+could not read: a finished turn and a stopped turn
+without their changed files, All files with its saved list under a notice,
+and a new workspace with no list. The `tree` state draws the two states of
+All files.
+`app/chat/endpoint-models` shows option G of decision 10 of the own
+endpoint plan, which Cal chose on 10 November 2026: the pickers of the
+owner of a login hide each model that its endpoint does not list. In a
+session of Cal, the picker shows the models of the app without Fable 5.1,
+because the model list of Cal's proxy does not name it. Its `not-served`
+variant has a stopped turn on Fable 5.1, which the session kept as its
+model, and the notice names the model ID and no host. Its `member`
+variant has the same notice as Priya sees it. Its `org` variant has the
+open picker of Priya in a session on the org login of Acme, without Fable
+5.1, because the model list of the gateway of Acme does not name it, from
+decision 3 A of the org logins plan of 16 November 2026.
+
+`app/chat/background-limit` draws a turn that waited for the background
+work of its agent, a watch of the checks of pull request #482. The checks
+still ran at the time limit, so the turn ends as finished, with
+"Background work stopped at the time limit" above its duration and its
+files. Its `waiting` variant draws the same turn before the limit, which
+shows as any running turn.
+
+`app/chat/standard-speed` draws a fast turn that ran at standard speed,
+from fast mode decision 257. Fast is on in the trigger. Claude reached its
+fast limit, so the end line shows the duration, then "Standard speed · Fast
+limit reached", with the files of the turn under that note. Its
+`older-software` variant has a cloud computer with older software, which
+ignores fast mode, so the note says "Standard speed · Older cloud computer
+software". Its `stopped` variant has a stopped turn, whose line ends with
+the same words after a dot. A fast turn at fast speed ends as any turn
+does, as `app/fast-mode/trigger` shows.
+
+`app/automations` lists the automations of Acme, which the Automations link below
+New workspace opens. Its child pages:
+
+- `app/automations/empty` has an org without automations.
+- `app/automations/automation` has the owner's view of a saved automation. Its
+  child pages: `new` has a new automation, whose `org-login` variant has a
+  new automation of Priya whose runs use the org login of Acme, from decision
+  5 A of the org logins plan, and whose `org-models` variant has its open
+  model picker without Fable 5.1, from decision 3 A. `member` has the view
+  of a member, whose `org-login` variant has the runs of Cal on the org
+  login of Acme: "Runs use Acme's Claude login and Cal's GitHub access.",
+  `admin` the view of an admin with Turn off and Delete, `owner-left` an
+  automation that moved, turned off, to Cal, the admin who got the
+  workspaces of a member who left, `turned-off` an automation that turned
+  off after three runs in a row failed, and `delete` the question that
+  Delete asks first, because a deleted automation cannot come back. The first
+  four were saved states of the page. They moved into their own folders
+  and kept their paths, so the page shows only its canonical screen.
+  `unavailable` has the page of an automation that the org no longer has,
+  because it was deleted or the address is wrong, with Open Automations.
+  `not-loaded` has the page after the read of the automation failed, with
+  the load failure of the other lists of the app and Try again. The
+  `read` state of the automation screen draws both. `repository-removed` has
+  an automation that turned off when an admin removed its repository from the
+  chosen repositories of Acme. While Acme does not choose that repository,
+  the notice names it, for Cal and, in the `member` variant, for Priya.
+  The `chosen-again` and `chosen-again-member` variants have the automation
+  after an admin chose the repository again: it stays off until Cal turns
+  it on, and the notice names no repository, because the page cannot tell
+  that repository from another one that Cal saved.
+- `app/automations/triggers` has the open Add trigger menu. Its child page
+  `app/automations/triggers/schedules` has the Hourly, Daily, and Weekly
+  editors with the time zone, and a custom cron that the form refuses.
+  Its child page `app/automations/triggers/author-filter` has the author
+  filter of a pull request trigger: Author is with the entry Members of
+  Acme and a bot, the suggestions that offer that entry, and a login that
+  the save refused.
+- `app/automations/runs` has the newest 50 runs, in each state of their
+  workspaces, with Show older runs at the end. Its variants have a failed
+  run for each cause, skipped runs, and, as `saved` and `run-now`, the
+  automation of the flow before and after Run now. In `failed`, a run that a
+  check failed has no workspace, and a run whose first start or first
+  turn failed opens its workspace. A phone shows a saved automation in two
+  tabs, Automation and Runs. These pages open on the Runs tab, except
+  `saved`.
+- `app/automations/run-workspace` has the workspace of a pull request run,
+  its start, and the workspace of a run of Run now. Its `start-failed`
+  and `turn-failed` variants have the workspaces of the two failed runs
+  of `app/automations/runs/failed` that kept their workspaces: a first start
+  that failed, with Try again in the bar, and a first turn that failed,
+  with Try again in the chat. It draws the workspace screen with its `run`
+  state, which no other workspace page sets. The base branch of a pull
+  request run is the head branch of its pull request, so its bar names
+  that branch, and Changes lists only the work of the run. The run of Run
+  now keeps `main`.

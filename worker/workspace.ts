@@ -15,20 +15,21 @@ import {
 import type { WorkspaceDisk } from './members/maintenance-contract'
 import type { ImageCoordinatorState } from './lifecycle/image-timers'
 import type { GitHubRefresh, GitHubWorkspace } from './github/contracts'
-import { handleGitHubRead } from './github/app-handler'
 import { hostSurface } from './hosts'
-import { readWorkspace, workspaceRecord } from './lifecycle/workspace-data'
+import { workspaceUpdate } from './chat/workspace-update'
 import { featureResult } from './features/result'
 import { archiveWorkspace } from './lifecycle/archive-workspace'
 import { continueBusy } from './lifecycle/continue-admission'
 import type { WorkspaceContinue } from './lifecycle/continue'
 import { createWorkspaceContinue } from './lifecycle/continue-composition'
 import { pendingContinue } from './lifecycle/continue-types'
+import { changeRestart, type RestartStep } from './lifecycle/software-restart'
 import type { User } from '../src/shared/api'
 import type { ContinueWorkspaceRequest } from '../src/shared/workspaces'
 import { resumeCreationCheckpoint } from './members/creation-checkpoint'
 import type { ConnectionScheduler } from './security/connection-access'
 import { WorkspaceAlarmRunner } from './features/workspace-alarm'
+import { retryAutomationReport } from './chat/automation-run'
 
 export class Workspace extends AgentSessionWorkspace {
   private readonly features: WorkspaceFeatures
@@ -63,13 +64,13 @@ export class Workspace extends AgentSessionWorkspace {
         await this.integration.storage.put('previews:workspace-id', workspaceId)
         await this.integration.alarms.set('previews', at)
       },
-      (id, at) => this.activity.record(id, at),
       (id, ids, queueOwned) =>
         queueOwned
           ? this.chat.commitPreviewRevocations(id, ids)
           : this.chat.runLifecycle(() =>
               this.chat.commitPreviewRevocations(id, ids),
             ),
+      this.chat,
     )
     this.integration.onStopped((id) => this.features.revokeWorkspace(id, true))
     this.github = new WorkspaceGitHub(
@@ -103,11 +104,14 @@ export class Workspace extends AgentSessionWorkspace {
       browsers: this.chat.browsers,
       runner: this.chat.runner.connections,
       devices: this.devices,
+      secrets: this.integration.secrets,
       members: this.members,
       github: this.github,
       continuation: this.continuation,
       features: this.features,
       lifecycle: () => this.alarmLifecycle(),
+      automationReport: () =>
+        retryAutomationReport(env.DB, this.chat.store, now),
     })
   }
 
@@ -126,6 +130,7 @@ export class Workspace extends AgentSessionWorkspace {
     return featureResult(async () => {
       await this.continuation.cancel()
       await this.members.suspend(ownership, workspaceId)
+      await this.integration.secrets.reconcile()
       this.controller.cancelLifecycleWaiters()
       await this.integration.reconcileStopped()
     })
@@ -181,13 +186,10 @@ export class Workspace extends AgentSessionWorkspace {
   ): Promise<void> {
     if (!this.env.WORKSPACES.idFromName(workspaceId).equals(this.ctx.id)) return
     await this.chat.runLifecycle(async () => {
-      const workspace = workspaceRecord(
-        await readWorkspace(this.env.DB, orgId, workspaceId),
+      await this.chat.commitWorkspaceEvent(
+        workspaceId,
+        await workspaceUpdate(this.env.DB, orgId, workspaceId),
       )
-      await this.chat.commitWorkspaceEvent(workspaceId, {
-        type: 'workspace.updated',
-        workspace,
-      })
     })
   }
 
@@ -204,14 +206,8 @@ export class Workspace extends AgentSessionWorkspace {
       return this.features.previews.proxy(request)
     const feature = await this.features.fetch(request)
     if (feature) return feature
-    if (/\/github(?:\/checks|\/stored)?$/.test(new URL(request.url).pathname))
-      return handleGitHubRead(request, this.env, {
-        now: this.now,
-        refresh: (workspace, signal) => this.github.refresh(workspace, signal),
-        stored: (workspace) => this.github.stored(workspace),
-      })
-    if (/\/github\/.*$/.test(new URL(request.url).pathname))
-      return this.github.fetch(request)
+    const github = await this.github.route(request)
+    if (github) return github
     return this.fetchChat(request)
   }
 
@@ -252,6 +248,16 @@ export class Workspace extends AgentSessionWorkspace {
       this.run(() =>
         this.controller.restoreWorkspace(orgId, workspaceId, userId, origin),
       ),
+    )
+  }
+
+  softwareRestart(workspaceId: string, step: RestartStep) {
+    return featureResult(() =>
+      typeof step === 'string'
+        ? this.run(() =>
+            changeRestart(this.integration, workspaceId, step, this.now()),
+          )
+        : this.features.refreshTerminal(step.terminal),
     )
   }
 

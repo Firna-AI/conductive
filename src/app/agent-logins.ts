@@ -1,14 +1,29 @@
+import type { Agent } from '../shared/generated/Agent'
 import type { AccountResponse, AgentLoginStatus } from '../shared/account'
-import type { Agent } from '../shared/agents'
 import type { Store } from './store'
 
 /**
+ * What a read of the account gives the logins: the own logins of the
+ * person, and the default login of each org and agent that the server
+ * names. An older reply names no default login.
+ */
+export type LoginRead = Pick<AccountResponse, 'agentLogins' | 'defaultLogins'>
+
+const byAgent = (a: { agent: Agent }, b: { agent: Agent }) =>
+  a.agent.localeCompare(b.agent)
+
+/**
  * The agent logins in the account store, and the order of the changes that
- * show there. Each local change of a login counts one up: a save, a remove,
- * a connected sign-in, and a share change, at its start and when its reply
- * shows. A share reply and a read show a login only while no later change
- * of that login came first, so a removed login stays removed, and a read
- * never takes back a local change.
+ * show there. Only a reply of the account holds the logins and the default
+ * logins of every org, so only such a reply writes them. Each local change
+ * of a login counts one up: a save, a remove, a connected sign-in, a share
+ * change, a change of an org login, and an org that joins the orgs of the
+ * person, at its start and when its reply shows. A share reply and a read
+ * show a login only while no later change of that login came first, so a
+ * removed login stays removed, and a read never takes back a local change.
+ * The default logins of an agent follow the same rule, because each change
+ * of a login of that agent can change them. So each change reads the
+ * account again, as `AccountLoginWrites` says.
  */
 export class AgentLogins {
   /** The number of the last change of each agent login. */
@@ -29,6 +44,14 @@ export class AgentLogins {
     )
   }
 
+  /**
+   * Whether the account names the default logins, which an older reply of
+   * the account does not.
+   */
+  namesDefaults(): boolean {
+    return this.account.get()?.defaultLogins !== undefined
+  }
+
   /** Counts a change of the login of `agent`, and gives its number. */
   change(agent: Agent): number {
     const change = (this.changes.get(agent) ?? 0) + 1
@@ -39,7 +62,7 @@ export class AgentLogins {
   /** Shows a login that a write gave, as a change of its own. */
   put(login: AgentLoginStatus): void {
     this.change(login.agent)
-    this.show(login)
+    this.show({ agentLogins: [login] }, () => true)
   }
 
   /**
@@ -51,31 +74,47 @@ export class AgentLogins {
   }
 
   /**
-   * Marks the changes before a read. The result shows each login of the
-   * answer whose agent had no change after the mark.
+   * Marks the changes before a read of the account. The result shows each
+   * login of the answer whose agent had no change after the mark, and the
+   * default logins of that agent when the answer names them. `only` limits
+   * the result to one agent, for a read after a change of its login.
    */
-  mark(): (logins: readonly AgentLoginStatus[]) => void {
+  mark(): (read: LoginRead, only?: Agent) => void {
     const marked = new Map(this.changes)
-    return (logins) => {
-      for (const login of logins) {
-        if (this.changes.get(login.agent) === marked.get(login.agent)) {
-          this.show(login)
-        }
-      }
-    }
+    return (read, only) =>
+      this.show(
+        read,
+        (agent) =>
+          (only === undefined || agent === only) &&
+          this.changes.get(agent) === marked.get(agent),
+      )
   }
 
-  private show(login: AgentLoginStatus): void {
+  /**
+   * Shows the logins of `read` whose agent `shown` takes, and the default
+   * logins of those agents in place of the ones that show.
+   */
+  private show(read: LoginRead, shown: (agent: Agent) => boolean): void {
     const account = this.account.get()
     if (!account) return
-    const others = account.agentLogins.filter(
-      (item) => item.agent !== login.agent,
-    )
-    this.account.set({
+    const logins = read.agentLogins.filter((login) => shown(login.agent))
+    const defaults = read.defaultLogins?.filter((entry) => shown(entry.agent))
+    if (logins.length === 0 && !defaults?.length) return
+    const next: AccountResponse = {
       ...account,
-      agentLogins: [...others, login].sort((a, b) =>
-        a.agent.localeCompare(b.agent),
-      ),
-    })
+      agentLogins: [
+        ...account.agentLogins.filter(
+          (item) => !logins.some((login) => login.agent === item.agent),
+        ),
+        ...logins,
+      ].sort(byAgent),
+    }
+    if (defaults) {
+      next.defaultLogins = [
+        ...(account.defaultLogins ?? []).filter((entry) => !shown(entry.agent)),
+        ...defaults,
+      ]
+    }
+    this.account.set(next)
   }
 }

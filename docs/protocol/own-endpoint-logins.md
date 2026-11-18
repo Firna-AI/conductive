@@ -3,8 +3,9 @@
 This doc holds the requirements and the decisions in force for the own
 endpoint logins. It covers what such a login holds, the API that its
 endpoint must serve, and the model list of the endpoint. It also covers
-how the app keeps the key and the address, and which addresses the app
-accepts. It belongs to [Tokens and secrets](tokens-and-secrets.md).
+how the app keeps the key and the address, which addresses the app
+accepts, and the address that a Codex save stores. It belongs to
+[Tokens and secrets](tokens-and-secrets.md).
 [Agent logins](tokens-and-secrets.md#agent-logins) covers the other kinds
 of login, and the rules for every agent login. The terms are those of the
 [architecture doc](../architecture.md#terms).
@@ -14,52 +15,104 @@ A decision number names a dated record, as
 decision number names a decision of the change that adds the
 [model gateway](model-gateway.md), as that doc says. An own endpoint
 decision number names a decision of the change that adds the own endpoint
-logins, as [Tokens and secrets](tokens-and-secrets.md) says.
+logins, and an org login decision number names a decision of the change
+that adds the org logins, as [Tokens and secrets](tokens-and-secrets.md)
+says. A Codex base decision number, such as Codex base decision 1, names
+the dated record of one decision of the change that saves a Codex endpoint
+with its `/v1` base. Its plan keeps these records while the change is
+open. Its pull request keeps them after the merge.
+
+## The login and its endpoint
 
 - An own endpoint login holds the address of a gateway or a proxy that the
-  user chose, and its key (own endpoint decision 1). Each agent has its own
-  login. So a user who sends both agents to one proxy connects it once for
-  each agent.
+  user who connects it chose, and its key (own endpoint decision 1). Each
+  agent has its own login. So a user who sends both agents to one proxy
+  connects it once for each agent.
 - A manual mode, where the scripts and the env vars of the org set up the
   agent programs, was rejected. Reason: only an admin could change it, and
   each process on the cloud computers of the org would get the key.
-- An endpoint that an admin sets for the whole org was rejected, because
-  each agent login belongs to one user (decisions 21 and 105).
+- An admin can also connect an own endpoint as the org login of an agent,
+  as [Org logins](org-logins.md) says (org login decision 1 B). Each rule
+  of this doc holds for it too.
 - A Claude endpoint must serve the Anthropic Messages API, and accept the
   key in the `x-api-key` header. A Codex endpoint must serve the OpenAI
   Responses API, and accept the key as a bearer token in the
   `Authorization` header.
 - The [model gateway](model-gateway-requests.md#own-endpoints) sends each
   model request of a turn on the login to the endpoint, with the key.
+
+## The model list
+
 - The Worker also reads the model list of the endpoint, with the key: at
-  the save, when the owner presses Refresh on the account page, and in the
-  background when a turn on the login starts, at most once in 10 minutes
-  (own endpoint decision 10). It makes no other call to the endpoint.
-- The pickers of the owner hide each model of the app that the last list
-  that the Worker could read does not name. Before the first such list,
-  and when a list names no model of the app for an agent, the pickers show
-  every model of the app for that agent. A failed read keeps the last
-  list. The picker of a session keeps its current model.
+  the save, at a press of Refresh, and in the background when a turn on
+  the login starts, at most once in 10 minutes (own endpoint decision 10).
+  A Codex save can make a second read, as
+  [The address of a Codex save](#the-address-of-a-codex-save) says. The
+  Worker makes no other call to the endpoint.
+- The owner of a personal endpoint presses Refresh on the account page.
+  For an org endpoint, an admin presses Refresh on the Agents tab of the
+  org settings.
+- A read fails when it gets no model list that the app can read, such as
+  after HTTP 404 or when the endpoint does not answer. A read that fails
+  never fails the save.
+- The pickers of the owner of a personal endpoint hide each model of the
+  app that the last list that the Worker could read does not name. Before
+  the first such list, and when a list names no model of the app for an
+  agent, the pickers show every model of the app for that agent. A failed
+  read keeps the last list. The picker of a session keeps its current
+  model.
+- On an org endpoint, each picker of a session or a new session on the org
+  login follows the last list of the org endpoint in the same way (org
+  login decision 3 A). This holds for every member. It holds also for the
+  picker of a new workspace, and of an automation whose runs take the org
+  login.
 - The account page names each model of the app that the list does not
-  name, with its model ID and the time of the last read.
+  name, with its model ID and the time when the Worker read that list. For
+  an org endpoint, the Agents tab names them to an admin in the same way.
 - Reason: a model that the endpoint does not serve fails in its turn. A
   mark that only warns was rejected, because the owner chose to see only
   models that the endpoint lists. Risk: a gateway can serve a model that
-  its list does not name, and the owner's pickers then hide that model.
-- The pickers of other members show every model of the app. A turn on a
-  model that the endpoint does not serve fails with a cause that names the
-  model ID, and no host (own endpoint decision 5).
+  its list does not name, and these pickers then hide that model.
+- In a session on the personal endpoint of another member, the pickers of
+  the other members show every model of the app. A turn on a model that
+  the endpoint does not serve fails with a cause that names the model ID,
+  and no host (own endpoint decision 5).
 - Risk: a turn with fast mode on asks the endpoint for fast mode too. An
   endpoint that refuses it fails each such turn on the login, as
   [The requests of the agents](fast-mode.md#the-requests-of-the-agents)
   says.
+- When a save or a Refresh reads no model list, the account page shows a
+  warning under the login, with Refresh (Codex base decision 1). The
+  warning says "Conductive couldn't read the model list of this endpoint.
+  Check the address and the key."
+- The warning shows for both agents, because a failed read means the same
+  for each.
+- The warning stays until the next save, a Refresh that reads a list, a
+  Remove of the login, or a reload of the page.
+- The responses of the save and of Refresh say whether they read a model
+  list.
+- The app stores no mark of a failed read, so a failed read in the
+  background shows nothing. A stored mark was rejected. Reason: an
+  endpoint that serves its API but no model list would then keep a warning
+  that no Refresh can remove.
+- Risk: such an endpoint still shows the warning after each save and each
+  Refresh, although its turns work.
+- Cost: a key that stops working after the save shows no warning on the
+  account page. Its turns fail with their own cause.
+
+## The key and the address
+
 - The key and the full address are write-only, as the other logins are.
   The browser gets back only the host of the address, with its port when
   the port is not the default. The account page shows that host with the
-  login.
+  login. The Agents tab of the org settings shows the host of an org
+  endpoint in the same way.
 - The app stores the key and the address encrypted. It keeps only the host
   and the port in plain text, so that it can show them. Reason: the path or
   the query of an address can hold a secret.
+
+## The address rule
+
 - One rule decides which addresses the app accepts (own endpoint decision
   9). The connect form, the save, the dispatch of a turn, and the gateway
   use the same rule.
@@ -91,8 +144,11 @@ logins, as [Tokens and secrets](tokens-and-secrets.md) says.
   `/v1/messages`. A Codex request goes to the address with `/responses`
   added. So a Codex address names the base of that API, such as
   `https://proxy.example.com/v1`.
-- The form shows the address as the app saves it. The save refuses each
-  other address with HTTP 400 and the error code `invalid_endpoint`.
+- The form shows the address as the app saves it. The one exception is a
+  Codex save that adds `/v1` after its reads of the model list, as
+  [The address of a Codex save](#the-address-of-a-codex-save) says. The
+  save refuses each address that the rule refuses with HTTP 400 and the
+  error code `invalid_endpoint`.
 - Reason: the gateway in the Worker calls the endpoint. It sends a login
   only to an https address with a public host (gateway decision 8), and
   never to the app itself or to a preview. So the app saves no address that
@@ -100,3 +156,64 @@ logins, as [Tokens and secrets](tokens-and-secrets.md) says.
 - `http://` to a loopback address, for a proxy on the cloud computer, was
   rejected. Reason: the Worker cannot reach an address in a cloud
   computer.
+
+## The address of a Codex save
+
+- A Codex save first reads the model list at the address with `/models`
+  added.
+- When that read fails and the path does not end with `/v1`, the save
+  reads the model list at the address with `/v1/models` added. It skips
+  this second read when the first read gets no HTTP answer.
+- When the second read gives a model list, the save stores the address
+  with `/v1` added to its path (Codex base decision 1). The address keeps
+  its query. Otherwise the save stores the address as the rule gives it.
+- Reason: a proxy can serve the Responses API only under `/v1`. A Codex
+  login without `/v1` then fails each turn with HTTP 404.
+- Reason to skip the second read: an endpoint that does not answer then
+  holds the save for the time limit of one read, not of two.
+- The save makes at most two reads. The list of the read that worked
+  becomes the model list of the login, so the save makes no third read.
+- Refresh and the background read never change the saved address. So a
+  Codex login whose saved address serves no model list keeps that address
+  until its owner removes the login and connects it again.
+- A Refresh that also makes the second read and saves the `/v1` address
+  was rejected, because Refresh would then write the encrypted login
+  again.
+- A Claude save makes one read and never adds `/v1`, because the rule
+  already drops a final `/v1` of a Claude address.
+- Always adding `/v1` to a Codex address was rejected, because a gateway
+  whose API base has no `/v1` would then fail each turn. Adding `/v1` only
+  to an address with no path was rejected too, because an API at the root
+  could then not connect.
+- A warning that only suggests the `/v1` address was rejected, because
+  the owner would then have to save again. A hint of the form that asks
+  for `/v1`, with no read, was rejected, because that guess would nag a
+  gateway with another base.
+- A test request to the Responses API at the save was rejected. Reason: it
+  is a new kind of call to the endpoint, and proxies answer an empty
+  request in different ways.
+- A second request of the gateway to the address with `/v1`, after HTTP
+  404, was rejected. Reason: the gateway would have to keep each request
+  body, and the owner would get no message.
+- Risk: an endpoint can list its models at the typed address, but serve
+  the Responses API only under `/v1`. It then gets no second read and no
+  warning, and its turns fail with HTTP 404.
+- After a save that added `/v1`, the account page shows a note under the
+  Codex login: "Conductive added /v1 to the address, because the endpoint
+  lists its models there." Reason: the account shows only the host, so
+  the owner must learn that the saved address differs from the typed one.
+- The note names the model list, not the API, because the reads prove
+  only where the endpoint lists its models.
+- The note stays until the next save, a Remove of the login, or a reload
+  of the page.
+- The response of the save says whether the app added `/v1`. It never
+  holds the address, as [The key and the address](#the-key-and-the-address)
+  says.
+- The agent step of Get started shows the note and the warning too.
+  Reason: an owner who connects an agent there needs them as much.
+- For an org endpoint, the Agents tab of the org settings shows the
+  warning, with Refresh, and the note to an admin. It shows them as the
+  account page shows them to the owner. A member who is not an admin sees
+  neither.
+  Reason: each rule of an own endpoint holds for an org endpoint, and only
+  an admin sees the model list and Refresh of an org endpoint.

@@ -30,6 +30,8 @@ import {
 } from './workspace-callbacks'
 import { QueueGenerations } from './queue-generation'
 import { unsupportedRunnerReason } from './runner-unsupported'
+import { SecretRuntime } from '../secrets/runtime'
+import { projectInputState } from '../secrets/workspace-runtime'
 
 export type WorkspaceCompositionEnv = LifecycleEnvironment
 export type WorkspaceChatResolvers = Partial<
@@ -101,6 +103,7 @@ export function createWorkspaceIntegration(
       waitUntil: (promise) => context.waitUntil(promise),
       browserAlarm: (at) => alarms.set('browser', at),
       runnerAlarm: (at) => alarms.set('runner', at),
+      automationReportAlarm: (at) => alarms.set('automation-report', at, true),
       runnerAttached: (_workspaceId, connectionId, send) => {
         files.runner.attach(connectionId, (command) => {
           context.waitUntil(
@@ -130,7 +133,9 @@ export function createWorkspaceIntegration(
                 callbackPublisher(publish),
               )
             } finally {
-              context.waitUntil(devices.reconcile())
+              context.waitUntil(
+                Promise.all([devices.reconcile(), secrets.reconcile()]),
+              )
             }
           },
           receiveFileResult: async (value, connectionId) => {
@@ -189,26 +194,18 @@ export function createWorkspaceIntegration(
     { context, sockets, autoResponseAt: resolvers.socketAutoResponseAt },
     (when) => alarms.set('devices', when),
     now,
-    async (request, at, publish) => {
-      const session = await chat.store.read(request.workspaceId, (view) =>
-        view.session(request.sessionId),
-      )
-      try {
-        return await controller.projectDeviceState(
-          request.workspaceId,
-          session?.choice,
-          at,
-          callbackPublisher(publish),
-        )
-      } catch (error) {
-        if (
-          error instanceof HttpError &&
-          error.status === 404 &&
-          error.code === 'workspace_not_found'
-        )
-          return true
-        throw error
-      }
+    (request, at, publish) =>
+      projectInputState(chat, controller, request, at, publish),
+  )
+  const secrets = new SecretRuntime(
+    env,
+    storage,
+    chat,
+    matches,
+    now,
+    (at) => alarms.set('secrets', at),
+    async (request, publish) => {
+      await projectInputState(chat, controller, request, now(), publish)
     },
   )
   const platform = nativeWorkspacePlatform(
@@ -228,7 +225,8 @@ export function createWorkspaceIntegration(
       assertStartActive: (turn) =>
         assertReceiverActive(storage, generations.forTurn(turn)),
       hasOutsideTurns: () => chat.store.hasOutsideTurns,
-      deviceWaiting: (id) => devices.waiting(id),
+      deviceWaiting: async (id) =>
+        (await devices.waiting(id)) || (await secrets.waiting(id)),
       stopping: async (id) => {
         for (const hook of stoppedHooks) await hook(id)
       },
@@ -244,7 +242,10 @@ export function createWorkspaceIntegration(
             })),
           }
         }),
-      chatRecovered: () => context.waitUntil(devices.reconcile()),
+      chatRecovered: () =>
+        context.waitUntil(
+          Promise.all([devices.reconcile(), secrets.reconcile()]),
+        ),
       admitFirstMessage: async (input) => {
         const identity = await firstMessageIdentity(env, input.workspaceId)
         if (
@@ -269,7 +270,9 @@ export function createWorkspaceIntegration(
       stopped: async (id) => {
         for (const hook of stoppedHooks) await hook(id)
         await chat.stopWorkspace(id)
-        context.waitUntil(devices.reconcile())
+        context.waitUntil(
+          Promise.all([devices.reconcile(), secrets.reconcile()]),
+        )
       },
     },
   )
@@ -277,12 +280,15 @@ export function createWorkspaceIntegration(
     storage,
     chat,
     devices,
+    secrets,
     controller,
     files,
     alarms,
     sockets,
     withGeneration: generations.withGeneration,
-    reconcileStopped: () => devices.reconcile(),
+    reconcileStopped: async () => {
+      await Promise.all([devices.reconcile(), secrets.reconcile()])
+    },
     onStopped: (hook: (id: string) => Promise<void>) => stoppedHooks.push(hook),
   }
 }

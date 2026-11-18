@@ -1,3 +1,5 @@
+import type { OrgColor } from '../design/orgColors'
+
 /**
  * The orgs of the user, and the account that every org shares: the GitHub
  * sign-in, the GitHub App, and the agent connections.
@@ -12,6 +14,8 @@ export type Org = {
   name: string
   /** Up to two letters, which the rail shows. */
   initials: string
+  /** The colour of the tile of the open org. Absent means Blue. */
+  color?: OrgColor
 }
 
 export const orgs: Readonly<Record<OrgKey, Org>> = {

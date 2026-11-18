@@ -61,6 +61,9 @@ A turn is one period of work by an agent.
 An agent can ask to run a command on the Mac of the person who started its current turn.
 Your Mac must be awake with Conductive open and signed in.
 Its connection must show as available.
+The workspace must also have **Mac access** on in its **Capabilities**.
+It starts off in each new workspace, also in one that an agent or an automation creates.
+Any member can turn it on or off.
 
 The request appears above the session's message box.
 It shows the exact command and time limit.

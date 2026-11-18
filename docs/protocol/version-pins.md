@@ -4,7 +4,8 @@ This page belongs to [Isolation of orgs and sandboxes](isolation.md). It
 states which runner protocol version a workspace accepts, the version pin
 of a workspace, and the risks of the turn token in a sandbox.
 [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox) states
-the share setting and the other login rules. The terms are those of the
+the other login rules, and [The share setting](share-setting.md) states
+the share setting of a personal login. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A gateway decision number names a decision of the change that adds
@@ -33,8 +34,9 @@ the [model gateway](model-gateway.md), as that doc says.
   also fails at once with the same cause. It fails in the same way as
   after any other error.
 - These failures do not mark the login of a session as unusable.
-- Reason: each new cloud computer starts with the runner of its org image,
-  and only a build installs the newest runner.
+- Reason: a new cloud computer from a rebuilt org image starts with the
+  newest runner at once. Existing computers follow the
+  [sandbox software update rules](sandbox-software.md#updates).
 - The refusal of a runner above version 2 changes no turn and no start.
   Reason: only a later release of the app accepts such a runner, so the
   cause above does not help.
@@ -47,9 +49,9 @@ the [model gateway](model-gateway.md), as that doc says.
 - The version pin of a workspace is the lowest runner protocol version
   that it accepts. The version pin of a sandbox is the version pin of its
   workspace.
-- Each build of the org image records the runner protocol version that it
-  installs. A refresh keeps the version of the image that it refreshes,
-  because a refresh keeps the installed runner.
+- Each build and each refresh of the org image records the runner protocol
+  version that it installs. A refresh also installs the newest release, as
+  [Installs in a build](sandbox-software.md#installs-in-a-build) says.
 - Each cloud computer of a workspace takes the runner version of the org
   image that it starts from as the version pin of the workspace, before it
   can connect. So a Try again that starts a new cloud computer from a
@@ -90,10 +92,10 @@ the [model gateway](model-gateway.md), as that doc says.
   while the turn runs (decision 175).
 - The email, account ID, and ChatGPT workspace name of the signed-in account also reach
   the sandbox. A process or member with a terminal can read them.
-- Such a process or member can spend the login of the starter through the
+- Such a process or member can spend the login of the session through the
   gateway while the turn runs. A copy of the token works in the same way
   outside the sandbox. A request that still runs at the end of the turn
-  stops within 30 seconds, as
+  stops at the first turn check that answers after the end, as
   [Streams](model-gateway-requests.md#streams) says.
 - The token works only on the model routes of the gateway.
   [The turn token](model-gateway.md#the-turn-token) states when it works.
@@ -105,7 +107,7 @@ the [model gateway](model-gateway.md), as that doc says.
   that file (gateway decision 11).
 - Risk: a process that keeps running in the sandbox can also get the turn
   token of each later turn while that turn runs. This holds also for the
-  turns of other starters. Examples of such a process are a server that a
+  turns on other logins. Examples of such a process are a server that a
   tool started, and a program that the startup script started. It can
   read each token from the runner, or from the file of Claude, while that
   turn runs.

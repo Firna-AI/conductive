@@ -1,3 +1,4 @@
+import type { Workspace } from '../../shared/generated/Workspace'
 // @vitest-environment happy-dom
 
 import { act } from 'react'
@@ -5,7 +6,7 @@ import { describe, expect, test, vi } from 'vitest'
 import { routes } from '../../app/router'
 import { rightClick } from '../../chat/components/tab-row-test-kit'
 import { sectionsPath } from '../../shared/sections'
-import { workspacesPath, type Workspace } from '../../shared/workspaces'
+import { workspacesPath } from '../../shared/workspaces'
 import { byRole } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import {
@@ -124,6 +125,27 @@ describe('the actions of a workspace menu', () => {
       },
       generalOnly: ['Rename', 'Copy link', 'Archive'],
       archived: ['Copy link'],
+    })
+  })
+
+  test('a nested row offers no Move to section, and the top-level row of its tree does', async () => {
+    const server = new FakeApiServer({ subWorkspaces: true })
+    await openPaletteTab(open, { server })
+    expect({
+      nested: itemsOf('places-client', 'Places API client'),
+      topLevel: itemsOf(
+        'checkout-autocomplete',
+        'Checkout address autocomplete',
+      ),
+    }).toEqual({
+      nested: ['Reassign to >', 'Rename', 'Copy link', 'Archive'],
+      topLevel: [
+        'Move to section >',
+        'Reassign to >',
+        'Rename',
+        'Copy link',
+        'Archive',
+      ],
     })
   })
 })

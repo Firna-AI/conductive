@@ -1,6 +1,6 @@
-import type { AgentChoice } from '../../src/shared/agents'
+import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
+import type { RunnerProtocolVersion } from '../../src/shared/generated/RunnerProtocolVersion'
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
-import type { RunnerProtocolVersion } from '../../src/shared/runner'
 import {
   CLAUDE,
   MACHINE_ORIGIN,
@@ -46,7 +46,11 @@ export async function gatewayHttp(
     beforeFailure?: () => Promise<void>
     tasks?: CodexTaskOwner
   } = {},
-  endpointLogin: { secret?: string; endpoint?: string } = {},
+  endpointLogin: {
+    secret?: string
+    endpoint?: string
+    saveEndpointLogin?: (cookie: string) => Promise<Response>
+  } = {},
 ) {
   const turn = await runningGatewayTurn(harness, choice, {
     kind,
@@ -131,7 +135,10 @@ export async function gatewayHttp(
         ),
       workspace(id) {
         workspaceCalls.push(id)
-        return endpoint
+        return {
+          checkTurnToken: (token, claim) =>
+            endpoint.checkTurnToken(token, claim),
+        }
       },
     })
     return response ?? new Response(null, { status: 404 })

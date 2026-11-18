@@ -6,9 +6,9 @@ settings the Worker gives to each workspace sandbox.
 [Architecture](architecture.md) describes the Worker and its hostnames.
 The [Worker README](../worker/README.md#routes) lists the routes that the
 Worker serves now. [Automatic deploys](automatic-deploys.md) says how each
-push to `main` deploys the test deployment. Two linked pages hold the
+push to `main` deploys the production deployment. Two linked pages hold the
 [model inputs](deployment/models.md) and the
-[runner archive and software image](deployment/runner-archive.md).
+[Conductive releases and software image](deployment/runner-archive.md).
 
 Each input names the routes that read it. A route that does not read an
 input works without it. Keep secrets out of the repository and out of
@@ -44,9 +44,25 @@ examples.
     the failures of the programs in the sandboxes become issues too.
   - Issues sends no alert by itself. An automation in the dashboard sends
     an issue to a chat, an incident tool, a webhook, or a coding agent.
-  - Issues shows no cause for an unexpected error that the Worker
-    catches. The reply is then `500 internal_error`, and the Worker logs
-    no error line.
+  - The reply to an unexpected error that the Worker catches is
+    `500 internal_error`, so Issues shows the reply but not its cause.
+  - An error of a Durable Object that restarted, such as for a deploy,
+    gets `503 server_restarted` instead, as
+    [Effects on open pages](automatic-deploys.md#effects-on-open-pages)
+    says.
+- For each unexpected error, also a restart of a Durable Object, the
+  Worker logs the `unexpected_error` warning. It is a warning line, so it
+  shows in Workers Logs and not in Issues. Filter on
+  `kind = unexpected_error`.
+  - It holds the error name, a fixed kind for a known Cloudflare text,
+    such as `code_updated` for a restart, the Cloudflare flags, the
+    method, the route words, and the code places of the stack.
+  - It holds no error message, so that no secret or request body reaches
+    the log.
+  - An error of the preview proxy logs no route, because its paths are
+    the paths of the user's app. A preview request that fails before the
+    proxy, such as when a deploy restarts the workspace object, still
+    logs the route words of its path, with each other segment as `*`.
 - Set each secret with `npx wrangler secret put <NAME>`. The command asks
   for the value. Never put a secret in `wrangler.jsonc` or in Git.
 - The Worker reads each variable as text. Write a JSON value as one
@@ -81,8 +97,7 @@ examples.
 | `CONDUCTIVE_MODELS` | [Model configuration dependencies](deployment/models.md#configuration-failures) | The JSON model list, as [Models](deployment/models.md#models) says. |
 | `CONDUCTIVE_DEFAULT_CHOICE` | [Default choice dependencies](deployment/models.md#configuration-failures) | The JSON default choice, as [Models](deployment/models.md#models) says. |
 | `CONDUCTIVE_TITLE_MODEL` | The title of a workspace that has no name | Optional. The Workers AI model ID of the title model, as [The title model](deployment/models.md#the-title-model) says. Without it, the app shows "Untitled" until a name is set. It is not a secret. |
-| `CONDUCTIVE_RUNNER_ARCHIVE_URL` | Image builds and refreshes | The public HTTPS URL of the runner archive. |
-| `CONDUCTIVE_RUNNER_ARCHIVE_SHA256` | Image builds and refreshes | The SHA-256 digest of that archive, as 64 hexadecimal characters. |
+| `CONDUCTIVE_RELEASE_SERVER` | Image builds, refreshes, and workspace bootstrap | Optional release base URL. The default is `https://runner.conductive.build`. |
 | `CONDUCTIVE_DEPLOY_TOKEN_SHA256` | The software image route of the deploy run | The SHA-256 digest of the deploy token of the deploy run that made the Worker version, as 64 hexadecimal characters. Each deploy from `main` sets it, as [The software image](deployment/runner-archive.md#the-software-image) says. It is not a secret. |
 | `CONDUCTIVE_FRAME_SOURCES` | The Desktop tab, through the content security policy of each page of the app | Optional. The trusted HTTPS origins of the desktop streams, separated by spaces, as [Frame sources](#frame-sources) says. It is not a secret. |
 | `OPERATOR_GITHUB_IDS` | The operator section and the suspension of users and orgs | Optional. The numeric GitHub user IDs of the operators, separated by commas. It is not a secret. Without it, each operator request gets `403 operator_required`, as the [operator area](../worker/operator/README.md#overview) says. |
@@ -91,10 +106,6 @@ examples.
   hostname. Each sandbox gets the value as `CONDUCTIVE_MACHINE_ORIGIN`. Both
   credential routes refuse every request without it, and a build cannot
   copy a repository.
-- The two runner archive variables are public metadata of the archive. They
-  hold no secret.
-  [The runner archive](deployment/runner-archive.md#the-runner-archive)
-  says how to supply them.
 
 ## Secrets
 
@@ -136,12 +147,13 @@ serves every org.
   no CORS rule. Only the Worker reads and writes the bucket, as
   [Orgs and workspaces](protocol/isolation.md#orgs-and-workspaces)
   says.
-- Add no lifecycle rule that deletes files by age. Such a rule would also
-  delete the files of sent messages, which stay until the app deletes their
-  workspace.
-- The copy of each file into a sandbox also needs the `file.write` action
-  on the Boat key, as [The app's Boat account](#the-apps-boat-account)
-  says.
+- Add no lifecycle rule that deletes files by age. The Worker keeps each
+  accepted file until its transfer and the cloud computer's first start
+  succeed. Then it deletes the stored bytes and keeps the file record.
+  An age rule could delete bytes that a failed first start still needs.
+- The cloud computer downloads each attached file with a detached command.
+  The Boat key needs `exec` for this transfer, as
+  [The app's Boat account](#the-apps-boat-account) says.
 - Local development and the Worker tests use local R2 storage. They need no
   Cloudflare account and no bucket.
 
@@ -177,21 +189,20 @@ their shape, the operations that need them, and their configuration failures.
 [The title model](deployment/models.md#the-title-model) gives the model
 that `CONDUCTIVE_TITLE_MODEL` names, and what happens without it.
 
-## The runner archive
+## Conductive release files
 
-[The runner archive](deployment/runner-archive.md#the-runner-archive) says
-how each image build gets the runner archive, and how to supply an archive
-by hand.
+[Conductive release files](deployment/runner-archive.md#conductive-release-files)
+gives the release server and parts.
 
-### The archive in each deploy
+### The release in each deploy
 
-[The archive in each deploy](deployment/runner-archive.md#the-archive-in-each-deploy)
-says how each deploy from `main` publishes the archive of its commit.
+[The release in each deploy](deployment/runner-archive.md#the-release-in-each-deploy)
+gives the public paths and publication order.
 
 ### The software image
 
-[The software image](deployment/runner-archive.md#the-software-image) says
-how each deploy from `main` builds the software image of its version.
+[The software image](deployment/runner-archive.md#the-software-image) describes
+the software image that each deploy builds.
 
 ## Frame sources
 
@@ -262,6 +273,6 @@ No org has a Boat key, and the Worker stores no Boat key in D1.
   says.
 - [The app's Boat account](../worker/sandbox/README.md#the-apps-boat-account)
   says how to make the organization and the key.
-- The key must also allow the `file.write` action. The Worker uses it to
-  copy each attached file into a sandbox. The primary orchestrator
-  supplies that action at the next deployment.
+- The key needs `exec` to start and read the detached attachment download
+  commands. The cloud computer uses a one-use token to read each file from
+  the machine host.

@@ -1,10 +1,11 @@
-import type { AgentModel } from '../shared/agents'
+import type { AgentModel } from '../shared/generated/AgentModel'
+
 import { API_PATHS, type User } from '../shared/api'
 import { GET_STARTED_PATH, type GetStartedResponse } from '../shared/onboarding'
+import type { OrgColor } from '../shared/org-colors'
 import {
   leaveOrgPath,
   type CreateOrgRequest,
-  type MoveOrgRequest,
   type OrgSummary,
   type RenameOrgRequest,
 } from '../shared/orgs'
@@ -15,12 +16,12 @@ import { readSession } from './api/read-waitlist'
 import { AccountModel } from './account-model'
 import type { ComposerFocusRequest } from './composer-focus'
 import { FeedbackModel } from './feedback-model'
-import { failedBoot, readShared, type Boot } from './boot'
+import { failedBoot, readShared, watchSession, type Boot } from './boot'
 import { InvitationsModel } from './invitations-model'
 import { LastWorkspaces } from './last-workspaces'
 import { OrgList } from './org-list'
 import { OrgModel } from './org-model'
-import { patchOrg, postOrg } from './org-writes'
+import { patchOrg, postOrg, putOrgOrder } from './org-writes'
 import { suspendedOrg } from './permissions'
 import type { AppServices } from './services'
 import { setupSteps } from './setup-steps'
@@ -84,9 +85,9 @@ export class AppModel {
   private admitting: Promise<void> | null = null
 
   constructor(services: AppServices) {
-    this.services = services
+    this.services = watchSession(services, () => this.endSession())
     this.lastWorkspaces = new LastWorkspaces(services.storage)
-    this.account = new AccountModel(services, this)
+    this.account = new AccountModel(this.services, this)
     this.feedback = new FeedbackModel(this)
     this.getStarted = setupSteps({
       server: this.setupReply,
@@ -184,6 +185,17 @@ export class AppModel {
     this.boot.set({ state: 'ready', user })
   }
 
+  /**
+   * The API refused a request because the sign-in session ended, such as
+   * after 7 days, a sign-out in another tab, or a suspension. The app shows
+   * the sign-in in place of every screen.
+   */
+  private endSession(): void {
+    if (this.boot.get().state !== 'signed-out') {
+      this.boot.set({ state: 'signed-out' })
+    }
+  }
+
   /** A load failed, while `from` is still the boot. */
   private fail(from: Boot, error: unknown): void {
     if (this.boot.get() === from) this.boot.set(failedBoot(error))
@@ -192,10 +204,15 @@ export class AppModel {
   org(orgId: string): OrgModel {
     let model = this.orgModels.get(orgId)
     if (!model) {
-      model = new OrgModel(this.services, orgId, {
-        suspended: suspendedOrg(orgId, this.orgs, this.refusedOrgs),
-        note: () => this.noteSuspended(orgId),
-      })
+      model = new OrgModel(
+        this.services,
+        orgId,
+        {
+          suspended: suspendedOrg(orgId, this.orgs, this.refusedOrgs),
+          note: () => this.noteSuspended(orgId),
+        },
+        (agent) => this.account.orgLoginChanged(agent),
+      )
       this.orgModels.set(orgId, model)
     }
     return model
@@ -246,9 +263,8 @@ export class AppModel {
    * shows at once. A failure takes back only this move, and throws.
    */
   moveOrg(orgId: string, index: number): Promise<void> {
-    const request: MoveOrgRequest = { orgId, index }
     return this.orgList.move(orgId, index, () =>
-      this.services.api.send('PUT', API_PATHS.orgOrder, request, ignore),
+      putOrgOrder(this.services.api, orgId, index),
     )
   }
 
@@ -265,6 +281,11 @@ export class AppModel {
   /** Saves the name and the initials of an org. */
   async renameOrg(orgId: string, request: RenameOrgRequest): Promise<void> {
     this.putOrg(await patchOrg(this.orgApi(orgId), orgId, request))
+  }
+
+  /** Saves the colour of an org, which the rail shows while it is open. */
+  async setOrgColor(orgId: string, color: OrgColor): Promise<void> {
+    this.putOrg(await patchOrg(this.orgApi(orgId), orgId, { color }))
   }
 
   /**

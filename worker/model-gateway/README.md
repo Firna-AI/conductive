@@ -6,7 +6,9 @@ Only a turn token authorizes a request.
 Before it obtains a workspace endpoint, the gateway checks in D1 that the workspace is live and its resources remain accessible.
 An unknown or unavailable workspace gets `turn_token_invalid` without a Durable Object call.
 The gateway calls `checkTurnToken` through the trusted workspace runtime before each upstream request.
-It replaces the token with the starter's real login.
+It replaces the token with the fixed personal or org login of the session.
+Both owners use the common access query in `worker/chat/login-access-data.ts`.
+An org session checks the current sender without checking its starter's membership.
 Runner delivery gives a token in each `turn` command. No runner command carries a real login.
 Own endpoint turns use the API-key credential mode with a turn token.
 Their real address and key stay in Worker-only `AgentLogin` values.
@@ -23,33 +25,8 @@ The [model gateway protocol](../../docs/protocol/model-gateway.md) states the re
 | `/v1/model/codex`, ChatGPT sign-in only | `GET /backend-api/wham/config/bundle`, `GET /backend-api/wham/accounts/check`, `GET /backend-api/codex/models` | `https://chatgpt.com` |
 | `/v1/model/codex`, ChatGPT sign-in only | `POST /backend-api/codex/responses` | The workspace's HTTPS backend origin, or `https://chatgpt.com` |
 
-An own endpoint login replaces the native upstream base in this table.
-[`readEndpointAddress`](../../src/shared/endpoint-address.ts) validates and builds that address at save, dispatch, and fetch time.
-It accepts only public HTTPS addresses with host names.
-It refuses every IPv4 and IPv6 address, credentials, internal names, and the app and preview domains.
-It normalizes the base path.
-The host check reads the product domain from `productDomain` in `docs/mockups/src/brand.ts`.
-The gateway runtime supplies `env.PREVIEW_DOMAIN` as an extra refused domain before each fetch.
-It preserves the endpoint query and appends the model request query.
-Claude drops a final `/v1` from the base before its route is added.
-Codex keeps its API base, including `/v1` when present.
-The builder also supports model-list addresses, but this gateway exposes no model-list route.
-
-The Worker reads an own endpoint's model list through
-[`endpoint-model-refresh.ts`](endpoint-model-refresh.ts).
-Save and account Refresh request a read immediately.
-Runner delivery schedules a background read after it sends a turn.
-[`endpoint-model-data.ts`](endpoint-model-data.ts) claims each attempt in D1.
-The claim limits background reads to once in ten minutes, including failed reads.
-[`endpoint-models.ts`](endpoint-models.ts) builds the agent's GET address and key headers.
-It follows no redirect and allows ten seconds and 1 MiB for the complete response.
-Claude requests `limit=1000` after the saved endpoint query.
-A Claude reply with `has_more: true` fails the read, so a partial list never replaces the cached list.
-It reads only `data[].id` and keeps no error body or diagnostic text.
-A failure keeps the previous IDs and successful read time.
-Writes check the login ciphertext and attempt ID, so an old response cannot replace a newer read or login.
-The account API compares those IDs with the app catalogue.
-No model discovery route becomes available to sandbox code.
+[Own endpoints](own-endpoints.md) describes address validation, model list reads,
+the save replies, and Refresh.
 
 Each fetch uses manual redirects.
 A connection failure returns `model_endpoint_unreachable` without the host.
@@ -158,12 +135,12 @@ A backend is `NO_CONSTRAINT` or an HTTPS origin with no credentials, path, query
 The Worker adds `x-openai-account-routing-override` for `us` and `us_cr`.
 The client cannot supply this header.
 Failed or invalid account discovery sends no model request.
-The same request lease covers discovery, upload, and the streamed answer.
+The same request lifetime covers discovery, upload, and the streamed answer.
 The Worker reads a fresh ChatGPT login before forwarding a request.
 It renews before expiry through [Codex authentication](../codex-auth/README.md).
 Each turn can claim one renewal after a 401, across metadata and model requests.
 Its workspace object saves the used and pending flags before renewal,
-in the same queue as token checks. Completion clears only the pending flag.
+in the chat queue, where each check with a claim runs. Completion clears only the pending flag.
 Concurrent requests, Codex resends, and object eviction keep the same bound.
 The required `CodexTaskOwner` registers credential work through the request's `execution.waitUntil`.
 The renewal service owns its shared renewal through commit and local cleanup.
@@ -201,15 +178,21 @@ That byte stays pending until another chunk passes or valid EOF arrives.
 An early upstream answer waits for the remaining upload to pass that reader.
 The remaining Codex bytes pass the same scan before an early answer can return.
 An overflow aborts the upstream request and returns the entry's shared 413 error.
-Each request gets a 30-second lease from its first turn check, before the upstream fetch.
-Checks start every 15 seconds while the upload, fetch, or answer runs.
-A passing check renews the lease to 30 seconds after that check started.
-A separate timer cancels the upload, fetch, and answer when the lease ends.
-A slow check cannot extend that deadline.
+Each request starts with a turn check that must pass within 30 seconds, before the upstream fetch.
+Otherwise the request returns `model_gateway_unavailable` with HTTP 503.
+After that, a check starts every 15 seconds while the upload, fetch, or answer runs.
+Only one check runs at a time. The next one starts 15 seconds after the previous one started, or at once after a longer check.
+A refusal cancels the upload, fetch, and answer.
+A late or failed check does not, and it logs `model_gateway_check_late` or `model_gateway_check_failed`.
 A refusal before the answer starts returns its stable error code.
+Each check, also each Codex credential check, gets a new Durable Object stub from `runtime.workspace`, because [a stub can stay broken](https://developers.cloudflare.com/durable-objects/best-practices/error-handling/) after an error.
 A client disconnect also cancels the upstream.
 It adds no model filter, rate limit, or answer size limit.
+A Worker warning records each check that throws and each request that the checks end.
+These warnings hold only the workspace ID and the error kind or end code.
+A late check logs only its fixed warning text.
 It writes no request body, answer body, or header value to logs.
+The [stream rules](../../docs/protocol/model-gateway-requests.md#streams) state these requirements.
 
 ## Development
 
@@ -226,6 +209,12 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
 - [route.ts](route.ts): `routeModelGateway` selects a route, checks the Claude markers, checks its turn, replaces authentication, and forwards one request.
 - [workspace-access.ts](workspace-access.ts): `gatewayWorkspaceAllowed` checks the workspace and resource predicates in D1 before object access.
 - [paths.ts](paths.ts): gateway base matching and the fixed model method and suffix list.
+- [endpoint-model-refresh.ts](endpoint-model-refresh.ts) and
+  [endpoint-model-data.ts](endpoint-model-data.ts): model discovery for a
+  personal owner string or an org owner `{ orgId }`. Claims keep the
+  ten-minute background limit. Saves compare ciphertext and attempt ID,
+  and leave the login version intact. Org reads also check active org
+  state. An admin Refresh supplies `adminId` for SQL role checks.
 - [codex-upstream.ts](codex-upstream.ts): ChatGPT metadata forwarding and model routing in the Worker.
 - [codex-request-auth.ts](codex-request-auth.ts): binds ChatGPT credential tasks to the active request and turn.
 - [codex-auth.ts](codex-auth.ts): fresh credentials, one 401 renewal, observation of concurrent rotation, and the redaction set for the request.
@@ -239,8 +228,8 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
 - [codex-body.ts](codex-body.ts): `CodexBodyScanner` checks the streamed JSON grammar and top-level `background` fields.
 - [json-tokens.ts](json-tokens.ts): `JsonTokens` reads JSON tokens and unescapes keys without keeping token text.
 - [json-stack.ts](json-stack.ts): `JsonStack` stores compact container states without a separate depth limit.
-- [request-lifetime.ts](request-lifetime.ts): `GatewayRequestLifetime` owns the lease, periodic checks, cancellation, and cleanup across every forwarding phase.
-- [stream.ts](stream.ts): answer forwarding under the request lease.
+- [request-lifetime.ts](request-lifetime.ts): `GatewayRequestLifetime` owns the start check, the periodic checks, cancellation, warnings, and cleanup across every forwarding phase.
+- [stream.ts](stream.ts): answer forwarding under the request lifetime.
 - [redact.ts](redact.ts): bounded carry bytes for credential removal from error bodies.
 - [errors.ts](errors.ts): stable gateway refusals in each provider's API shape.
 - [workspace.ts](workspace.ts): `WorkspaceTurnTokens.forRunningTurn` derives a stable token from the turn record.
@@ -248,7 +237,11 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
   Its caller holds the chat queue, as runner dispatch does.
   It fails the turn and gives no token when the login is missing or changed since the first token.
   It does the same for a login of another kind than the dispatch read.
-  `check` enters that queue and returns the current starter login or a stable refusal reason.
+  `check` returns the current session login or a stable refusal reason.
+  Replacement keeps that owner and fails the running turn with the changed-login cause.
+  A preference switch changes no credential version and ends no turn.
+  Without a claim, it first reads the turn, the session, and the login outside that queue, and returns when that read accepts the token.
+  Every other check enters the queue. Only the queued check refuses a token, fails a turn, or saves a claim.
   It refuses a token whose prefix does not match the login kind.
 - [token.ts](token.ts): `turnTokenRoute` reads the workspace and turn route.
   `deriveTurnToken` puts the prefix of the login kind before each token, and `turnTokenMatchesKind` checks that prefix.
@@ -257,8 +250,9 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
   Web Crypto verifies the signature in constant time.
   The turn keeps a random nonce and the login version for this derivation.
   Separate booleans record whether its Codex 401 recovery was used and remains pending.
-- [login.ts](login.ts): `gatewayLogin` checks starter access and reads the login row with its `updated_at` version.
+- [login.ts](login.ts): `gatewayLogin` checks the session owner's access and reads its login row with its `updated_at` version.
   It accepts native-provider and own endpoint login kinds.
+  An org owner accepts only an API key or endpoint and uses the org encryption context.
   `decryptGatewayLogin` releases the login only after the turn check accepts that version.
 - [types.ts](types.ts): `TurnTokenCheck` and `TurnTokenEndpoint` define the trusted check result and RPC method.
 - [../workspace-lifecycle.ts](../workspace-lifecycle.ts): `checkTurnToken` selects the workspace from stored chat metadata.
@@ -272,10 +266,11 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
 - [delivery-runtime.test.ts](delivery-runtime.test.ts): the same `turn` command after an eviction of the workspace object, with only the nonce and the login version in SQLite.
 - [../chat/gateway-dispatch.test.ts](../chat/gateway-dispatch.test.ts): a failed send keeps the token state, so the resend carries the same token before the waiting message.
 - [workspace.test.ts](workspace.test.ts) and [login.test.ts](login.test.ts): token lifetime, login changes, Stop across a disconnect, event order, late data, and retry.
+- [org-logins.test.ts](org-logins.test.ts): starter departure, switch stability, replacement failure, retry with the new key, and current-sender suspension.
 - [endpoint-login.test.ts](endpoint-login.test.ts): both agents' endpoint routes and authentication, credential-free runner commands, revalidation, redirects, and unreachable endpoints.
 - [endpoint-errors.test.ts](endpoint-errors.test.ts): split endpoint and key redaction in errors and allowed headers.
 - [endpoint-redaction.test.ts](endpoint-redaction.test.ts): unchanged protocol paths and redaction of saved path or query forms in both filters.
-- [lease.test.ts](lease.test.ts): late answer starts, held uploads, and lease expiry during a held check, with a manual clock.
+- [lease.test.ts](lease.test.ts): late answer starts, held uploads, a start check that does not return, and answers that keep streaming through late and failed checks, with a manual clock.
 - [codex-body.test.ts](codex-body.test.ts): HTTP refusals, upload cancellation, and unchanged accepted bytes through the fake OpenAI upstream.
 - [codex-token.test.ts](codex-token.test.ts): ChatGPT metadata, Worker routing, header filtering, route refusals, and failed discovery.
 - [codex-renew.test.ts](codex-renew.test.ts): body-less 401 replay, rotated-token redaction, single model forwarding with a retryable 502, and the per-turn renewal bound.

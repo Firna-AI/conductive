@@ -1,7 +1,8 @@
+import type { Workspace } from '../../shared/generated/Workspace'
 import { workspaceLabel } from '../../../docs/mockups/src/components/workspaces/label'
 import type { OrgSummary } from '../../shared/orgs'
 import type { ShortcutCommandId } from '../../shared/shortcut-commands'
-import type { Workspace } from '../../shared/workspaces'
+
 import { routes, type AccountTab, type SettingsTab } from '../router'
 import {
   accountSettingIds,
@@ -126,7 +127,7 @@ export function offeredRow(action: OfferedAction): CommandRow {
     kind: 'command',
     key: `action:${action.id}`,
     lead: { kind: 'action', id: action.id },
-    label: text.label,
+    label: action.label ?? text.label,
     words: text.words,
     href: action.href,
     run: action.run,

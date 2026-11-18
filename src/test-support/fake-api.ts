@@ -1,18 +1,17 @@
+import type { GitHubSummary } from '../shared/generated/GitHubSummary'
+import type { WorkspaceState } from '../shared/generated/WorkspaceState'
 import type { PathState } from '../../docs/mockups/src/fixtures/maskedFiles'
 import type { SessionResponse } from '../shared/account'
 import { API_PATHS, type OrgRole, type User } from '../shared/api'
 import { chatHistoryPath } from '../shared/events'
-import {
-  githubSummary,
-  type BannerState,
-  type GitHubSummary,
-} from '../shared/github'
-import type { WorkspaceState } from '../shared/workspaces'
+import { githubSummary, type BannerState } from '../shared/github'
+
 import { chatEventsOf } from '../shared/transcript/session-events'
 import type { FakeMethod, FakeRouteWriter } from './fake-api-routes'
 import { fakeCoreRoutes } from './fake-core-routes'
 import { fakeDeviceRoutes } from './fake-device-routes'
 import { FakeWorkspaceEvents } from './fake-events'
+import { FakeTerminalRoutes } from './fake-terminal-routes'
 import { fakeToolRoutes } from './fake-tool-routes'
 import { fakeWorkspaceRoutes } from './fake-workspace-routes'
 import { FAKE_IDS, FAKE_ORIGIN } from './fixtures/core'
@@ -22,6 +21,7 @@ import {
   withMaskedTurnFiles,
 } from './fixtures/masked-paths'
 import { toolFixtures } from './fixtures/tools'
+import { withSubWorkspaces } from './fixtures/sub-workspaces'
 import { workspaceFixtures } from './fixtures/workspaces'
 import { recordedChatEvents, type RecordedChatScenario } from './recorded-chat'
 import { recordedFileEvents } from './recorded-files'
@@ -29,6 +29,7 @@ import { recordedFileEvents } from './recorded-files'
 export interface FakeApiOptions {
   role?: OrgRole
   workspaceState?: WorkspaceState
+  workspaceStates?: ReadonlyMap<string, WorkspaceState>
   conversation?: RecordedChatScenario
   banner?: BannerState
   /**
@@ -46,6 +47,19 @@ export interface FakeApiOptions {
    * the labels of the mockups, to the file lists and to each finished turn.
    */
   paths?: PathState
+  /**
+   * `false` leaves the file reports out of the event history, as a new
+   * workspace whose runner has not reported its lists yet.
+   */
+  savedLists?: boolean
+  /** Older sandbox software can open only Terminal 1. */
+  terminalSeveral?: boolean
+  /**
+   * `true` adds the sub-workspaces of the mockups to the list of Acme,
+   * nested under Apple Pay button and Checkout address autocomplete, each
+   * with the recorded replies of every workspace of the list.
+   */
+  subWorkspaces?: boolean
 }
 
 /**
@@ -68,22 +82,24 @@ function routeKey(method: string, path: string): string {
 
 /**
  * Fetch-compatible, in-memory server for development and tests.
- * Writes return recorded replies, except org moves, which update the org list.
+ * Org moves and terminal writes keep their state. Other writes return recorded replies.
  * Override a reply with json(), empty(), or response() for the next screen state.
- * A file upload names its file in its query, so a reply for the path of an
- * upload route answers each file sent there.
  * This module is opt-in. The production Worker never imports it.
  */
 export class FakeApiServer implements FakeRouteWriter {
   readonly requests: Request[] = []
   readonly events: FakeWorkspaceEvents
+  readonly terminals: FakeTerminalRoutes
   private readonly replies = new Map<
     string,
     Response | Promise<Response> | ((request: Request) => Promise<Response>)
   >()
 
   constructor(options: FakeApiOptions = {}) {
-    const conversation = options.conversation ?? 'history'
+    const state =
+      options.workspaceStates?.get(FAKE_IDS.workspace) ?? options.workspaceState
+    const conversation =
+      options.conversation ?? (state === 'working' ? 'running' : 'history')
     const paths = options.paths ?? 'plain'
     const recorded = recordedChatEvents(conversation)
     const chat =
@@ -92,26 +108,39 @@ export class FakeApiServer implements FakeRouteWriter {
         : recorded
     this.events = new FakeWorkspaceEvents([
       ...chat,
-      ...recordedFileEvents(FAKE_IDS.workspace, chat.length + 1, paths),
+      ...(options.savedLists === false
+        ? []
+        : recordedFileEvents(FAKE_IDS.workspace, chat.length + 1, paths)),
     ])
     fakeCoreRoutes(this, options.role ?? 'admin')
+    const subWorkspaces = options.subWorkspaces ?? false
     fakeWorkspaceRoutes(
       this,
       options.workspaceState ?? 'ready',
-      conversation,
+      options.conversation,
       paths,
       fakeGitHubSummary(options),
+      options.workspaceStates,
+      subWorkspaces,
     )
     fakeToolRoutes(this, options.banner ?? 'ready-to-merge', paths)
     const { workspaces, created } = workspaceFixtures(options.workspaceState)
+    const listed = subWorkspaces
+      ? withSubWorkspaces(workspaces.workspaces)
+      : workspaces.workspaces
+    this.terminals = new FakeTerminalRoutes(
+      this.events,
+      [...listed, created.workspace].map((workspace) => ({
+        ...workspace,
+        state: options.workspaceStates?.get(workspace.id) ?? workspace.state,
+      })),
+      options.terminalSeveral ?? true,
+    )
     fakeDeviceRoutes(
       this,
       options.macCommands ?? 'none',
       options.onMac ?? false,
-      [
-        ...workspaces.workspaces.map((workspace) => workspace.id),
-        created.workspace.id,
-      ],
+      [...listed.map((workspace) => workspace.id), created.workspace.id],
     )
   }
 
@@ -161,9 +190,11 @@ export class FakeApiServer implements FakeRouteWriter {
     this.requests.push(request.clone())
     const url = new URL(request.url)
     const key = routeKey(request.method, request.url)
-    const response = await (this.replies.get(key) ?? this.uploadReply(request))
+    const response = await this.replies.get(key)
     if (typeof response === 'function') return response(request)
     if (response) return response.clone()
+    const terminal = this.terminals.fetch(request)
+    if (terminal) return terminal
     const historyPath = new URL(
       chatHistoryPath(FAKE_IDS.org, FAKE_IDS.workspace, FAKE_IDS.session),
       FAKE_ORIGIN,
@@ -174,12 +205,20 @@ export class FakeApiServer implements FakeRouteWriter {
         url.searchParams.get('through') ?? history.throughEventNumber,
       )
       const before = Number(url.searchParams.get('before') ?? through + 1)
-      const numbers = new Set(
-        chatEventsOf(
-          url.searchParams.get('sessionId') ?? '',
-          history.events,
-        ).map(({ eventNumber }) => eventNumber),
-      )
+      // A page holds the chat events of the session and each other event
+      // that names the session, such as a secret request, as the Worker's.
+      const sessionId = url.searchParams.get('sessionId') ?? ''
+      const numbers = new Set([
+        ...chatEventsOf(sessionId, history.events).map(
+          ({ eventNumber }) => eventNumber,
+        ),
+        ...history.events
+          .filter(
+            ({ event }) =>
+              'sessionId' in event && event.sessionId === sessionId,
+          )
+          .map(({ eventNumber }) => eventNumber),
+      ])
       return Response.json({
         events: history.events.filter(
           ({ eventNumber }) =>
@@ -199,20 +238,5 @@ export class FakeApiServer implements FakeRouteWriter {
       },
       { status: 404 },
     )
-  }
-
-  /** The reply for the path of a raw file upload, whatever file it names. */
-  private uploadReply(
-    request: Request,
-  ):
-    | Response
-    | Promise<Response>
-    | ((request: Request) => Promise<Response>)
-    | undefined {
-    if (request.headers.get('Content-Type') !== 'application/octet-stream') {
-      return undefined
-    }
-    const path = new URL(request.url).pathname
-    return this.replies.get(routeKey(request.method, path))
   }
 }

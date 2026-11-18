@@ -1,19 +1,28 @@
 # Orgs and members
 
 This doc holds the requirements and the decisions in force for orgs, their
-sections, and their members. It also covers the first run and the end of
-an org. A linked page covers [the order of the org rail](org-rail-order.md).
-The terms are those of the [architecture doc](../architecture.md#terms). A
-decision number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says.
+sections, and their members. Linked pages cover
+[the order of the org rail](org-rail-order.md), the first run in
+[Get started](get-started.md), and the end of an org in
+[Delete org](delete-org.md). The terms are those of the
+[architecture doc](../architecture.md#terms). A decision number names a
+dated record, as [Decision numbers](../architecture.md#decision-numbers)
+says. A secrets decision number names a decision of the change that adds
+[secrets](secrets.md), as that doc says. An org login decision number
+names a decision of the change that adds the org logins, as
+[Tokens and secrets](tokens-and-secrets.md) says.
 
 ## Orgs
 
 - An org owns its workspaces, its sections, its repositories, and the
   settings of its org image (decision 21).
-- An org also has members and [routines](routines.md).
-- All orgs share the app's GitHub App. The agent logins of a user serve all
-  of that user's orgs (decision 21).
+- An org also owns the org logins that its admins connect, at most one for
+  each agent, as [Org logins](org-logins.md) says (org login decision
+  1 B).
+- An org also has members and [automations](automations.md).
+- All orgs share the app's GitHub App. The personal logins of a user serve
+  all of that user's orgs (decision 21). An org login serves only the
+  members of its own org.
 - All orgs share the app's Boat account and its plan limits, as
   [The provider](workspaces-and-sandboxes.md#the-provider) says
   (decision 80). No org has a Boat key.
@@ -47,12 +56,30 @@ decision number names a dated record, as
   it gives no link when no account has the app, and it cannot install the
   app on another account.
 - The org rail and General settings show the saved initials.
-- Use of the product is free. The app and the site have no plans, no
-  prices, no billing, and no checkout. The app has no limits of its own on
-  workspaces, hours, or members.
-- Reason: on 13 November 2026, the user chose not to release Conductive
-  commercially. So the paid plans with included cloud hours, the billing,
-  and the pricing page were dropped.
+- Each org has a colour, which an admin picks on the General tab of its
+  settings (org colour decision 1 A of 17 November 2026). The choice is one
+  of eight presets: Blue, Teal, Green, Yellow, Orange, Red, Pink, and
+  Purple. A choice saves at once.
+- Only the tile of the open org shows the colour, in its initials and its
+  outline (org colour decision 2 A). The tiles of the other orgs stay
+  grey, so the colour also marks the open org.
+- An org without a chosen colour shows Blue (org colour decision 3 A). A
+  new org starts with Blue.
+- Each preset keeps its initials at a contrast of 4.5:1 or more on the
+  tile, in the light and the dark scheme.
+- Reason: a person in several orgs could miss which org was open, because
+  every open org showed the same blue. A colour that each person picks was
+  rejected, because teammates would then see different colours for one
+  org. A colour for the whole app was rejected, because red, amber, and
+  green already mean danger, warning, and success.
+- Use of the product is free until billing starts, as
+  [Before billing starts](pricing.md#before-billing-starts) says. Until
+  then, the app has no billing, and no limits of its own on workspaces,
+  hours, or members.
+- When billing starts, each org has a plan, and the org pays for its
+  members and its cloud hours (decision 250).
+  [The plans](pricing.md#the-plans) give the price, the hours, and the
+  limits of each plan.
 - A waitlist stands in front of the app (decision 160). Except during
   [open sign-up](sign-ups.md#open-sign-up), a new account waits for app
   access, as [Waitlist](waitlist.md) says (decision 230).
@@ -66,58 +93,28 @@ decision number names a dated record, as
 
 ## Get started
 
-- Get started is the only first run.
-- Get started opens only after app access. A person who waits sees the
-  [waitlist screen](waitlist.md#the-waitlist-screen) instead. Reason: the
-  steps of Get started need app access.
-- It has three steps, in this order (decisions 33 and 80):
-  1. Install the GitHub App.
-  2. Create the first org.
-  3. Connect Claude or Codex.
-- Get started asks for no Boat account and no Boat key.
-- [Chat and events](messages-and-attachments.md#messages) states the notice for a
-  missing agent login.
-- The second step, the org step, shows the cloud computer of the org once
-  the org exists (decision 150 of PR #92). Create org starts its first build, as
-  [The first build](org-image.md#the-first-build) says.
-- While the org has no good image, the org step shows the state of the
-  newest build of the org:
-  - While a build runs, the step says that the cloud computer is being
-    prepared, with the time since the build began.
-  - After a failed build, the step shows the failure with the message
-    that the app saved for the build. An admin gets Try again and a link
-    to the log of the build on the Cloud computer tab.
-  - With no build, such as after a first build that could not start, the
-    step says that the org has no build yet. An admin gets Build computer.
-- Once the org has a good image, the step says that the cloud computer is
-  ready. A later build does not change that, also when it fails
-  (decision 9).
-- A member who is not an admin sees each state with no action. Reason:
-  only an admin builds (decision 57).
-- The person can connect an agent while the build runs.
-- While the person has a deleted org, Get started lists it before the
-  steps, with Restore, as [Delete org](#delete-org) says.
-- When every step is done, Get started shows its finish: a line about the
-  org, and an Open button for the org, such as "Open Acme".
-- The Open button stays on in every state of the build (decision 150 of PR #92).
-  New workspace also shows the state of the build, as
-  [Create a workspace](workspaces-and-sandboxes.md#create-a-workspace)
-  says.
-- The finish says that the org is ready for a new workspace only once the
-  org has a good image. Before that, it says that the cloud computer of the
-  org is still being prepared, did not build, or needs a build.
-- Reason: the person sees the build where it starts. The person never
-  waits in Get started for the build, which can run for up to 60 minutes.
-  A fourth step for the build was rejected for that reason.
+- [Get started](get-started.md) holds the requirements of the first run:
+  its steps, the agent step, the state of the first build in its org step,
+  and its finish.
 
 ## Sections
 
 - Sections are groupings of workspaces that the people of the org define.
   A section is not tied to a repository.
+- A section can hold trees of workspaces. Each sub-workspace shows nested
+  under the row of its parent, as [The list](sub-workspaces.md#the-list)
+  says.
 - Each section collapses, and has a menu with New workspace, Rename section,
   Move section up, Move section down, New section, and Delete section, in
   that order. The first section has no Move section up, and the last
   section has no Move section down.
+- New section opens the New section dialog, which asks for the name of
+  the section. New section in the menu of a section puts the new section
+  directly below that section. New section in the command palette puts
+  it at the end of the list. When the section of the menu is gone at the
+  create, the new section goes at the end. Reason: the user asked on 16
+  November 2026 that a new section show where the user made it, because
+  a field at the end of the list was far from the menu.
 - The order of the sections is the same for each member of the org. A
   collapse is for the member only. Reason: a section is a grouping that
   the people of the org define, as its name is.
@@ -138,15 +135,32 @@ decision number names a dated record, as
   [Fixed keys](keyboard-shortcuts-fixed-keys.md#fixed-keys) gives the keys.
 - Move to section in the
   [menu of a workspace row](workspace-menu.md#move-to-section) moves it too.
+- Each of these moves of a row also moves each workspace nested under it.
+  A nested row has none of these moves, as
+  [Moves](sub-workspaces.md#moves) says.
 - Deleting a section moves its workspaces to General, also the archived
   ones. Reason: no workspace gets lost, and a Restore always has a section
   to go back to.
-- The app keeps the archived workspaces in the Archived group at the end
-  of the list. The users do not edit that group.
+- The app keeps each archived workspace in the Archived group at the end
+  of the list until its Restore ends (decision 518). The users do not edit
+  that group. [Removed workspaces](workspace-life.md#removed-workspaces)
+  says what happens then.
+- Each count of workspaces on the screens of an org leaves out the removed
+  workspaces. These are the count of the Archived group and the count of
+  each member on the Members tab. They are also the counts in the
+  questions of Remove member and Leave org.
+- Reason: a count then matches the rows in the list.
+- The page of an org with an empty list asks for a first workspace, also
+  when the org has removed workspaces.
 - A workspace row offers Archive only to its owner and the org's admins.
   Only hover reveals its archive icon over the time without moving the row
   content. Selection and keyboard focus alone keep the time visible.
   The workspace header has no archive control.
+- A touch screen without hover, such as a phone, never shows the Archive
+  or the Restore icon of a row. One tap on a row opens its workspace.
+  Reason: iOS Safari takes the first tap on an element whose hover shows
+  content as a hover, so a person had to tap twice. On 16 November 2026
+  the user chose this, although a phone then has no Archive in the list.
 - A row of the Archived group offers Restore in the same way, to every
   member, until Restore of its workspace ends, as
   [Restore](workspace-life.md#restore) says.
@@ -186,19 +200,37 @@ decision number names a dated record, as
 - Only an admin changes the repositories, the install script, the startup
   script, and the env vars (decision 57). Other members see them
   read-only.
-- Only an admin changes the org's name and initials. Other members see
-  them read-only.
+- Only an admin changes the org's name, initials, and colour. Other
+  members see them read-only.
+- Only an admin connects, replaces, or removes an org login, and changes
+  its switch "Use for every member" (org login decision 1 B). Other
+  members see the Agents tab read-only, as
+  [The Agents tab](org-logins.md#the-agents-tab) says.
 - Changes by every member were rejected, because a changed script reaches
   every new sandbox of the org and runs during other members' turns.
+- Every member adds [secrets](secrets.md) and uses each secret of the org.
+  A member replaces or deletes only the secrets that the member added
+  (secrets decision 3 B).
+- An admin replaces and deletes each secret. Only an admin sets the mark
+  for all agents and reveals a value (secrets decisions 2 A and 3 B).
+  [Rights](secrets.md#rights) gives the reasons.
+- Every member can see and change the Capabilities of each workspace: its
+  pre-approved secrets, its Mac access, and its other grants
+  (secrets decision 8 B).
+- Every member who sees a session can answer its secret requests
+  (secrets decision 4 B).
 - Every member of the org sees all of its workspaces (decision 39).
-- Every member also sees all of the routines of the org and their runs.
-  Only the owner of a routine changes it, as [Access](routines.md#access)
+- Every member also sees all of the automations of the org and their runs.
+  Only the owner of an automation changes it, as [Access](automations.md#access)
   says (decision 502 B).
 - Every member can send messages in every workspace of the org. Each
-  session runs on the agent login of its starter, as
-  [Agents and sessions](agents-and-sessions.md#agents) says.
+  session runs on its login: the personal login of its starter, or the
+  org login, as [Agents and sessions](agents-and-sessions.md#agents) says.
 - Every member can move a workspace to another section and rename it,
   while the workspace is not archived.
+- Every member of an org that is not suspended can restart the software of
+  a running workspace, as
+  [Restart the software](workspace-life.md#restart-the-software) says.
 - Every member can move a section to another place in the list, as each
   member can create, rename, and delete a section.
 - A member who is not an admin sees the Members tab and the owner of each
@@ -235,8 +267,10 @@ decision number names a dated record, as
   with Reassign to in the
   [menu of its row](workspace-menu.md#reassign-to).
 - The header of a workspace names its workspace owner.
-- Model use on an account of the app was rejected. Each session runs on
-  the own agent login of its starter.
+- A reassign changes no login. Each session keeps its login.
+- Model use on an account of the app was rejected. Each session runs on a
+  login that its starter or an admin of the org connected, as
+  [Agents and sessions](agents-and-sessions.md#agents) says.
 
 ## When a member leaves
 
@@ -248,8 +282,10 @@ decision number names a dated record, as
   states the choice when no such admin exists (decision 123).
 - Reason: each workspace keeps a person in the org who is responsible for
   it.
-- Their routines in the org move to the member who gets the workspaces,
-  turned off, as [When the owner leaves](routines.md#when-the-owner-leaves)
+- The [removed workspaces](workspace-life.md#removed-workspaces) of the
+  member move too, because the app keeps their data.
+- Their automations in the org move to the member who gets the workspaces,
+  turned off, as [When the owner leaves](automations.md#when-the-owner-leaves)
   says (decision 508 E).
 - The last admin can leave only after they make another member an admin,
   or by deleting the org (decision 55). This also holds when the last
@@ -262,54 +298,5 @@ decision number names a dated record, as
 
 ## Delete org
 
-- Delete org asks for the name of the org.
-- It stops every sandbox of the org and hides the org at once
-  (decision 30).
-- The app deletes everything of the org after 7 days, unless an admin
-  restores the org.
-- Reason: the work of every member stays safe for 7 days, and a stopped
-  sandbox costs no machine time.
-- A delete at once was rejected, because an admin could then delete the
-  unpushed work of a member.
-- The delete also removes the saved snapshots of the org, with the org
-  image.
-- A deleted org leaves the org rail at once. Its other members cannot
-  open it.
-- For 7 days, the General tab of the Account page lists the deleted org
-  for its admins, with Restore. The section shows only while the user has
-  a deleted org.
-- The address of a deleted org still opens its page, and that page also
-  offers Restore. So an old link to the org is not a dead end.
-- Reason: the faded tiles of deleted orgs stayed in the way after a
-  delete, as the user said on 12 November 2026. A faded tile in the rail
-  was the earlier rule. A new tab of the Account page was rejected,
-  because it is empty on most days.
-- Delete org then opens the next org that is not deleted, else Get
-  started. Its question says that an admin restores the org from Account
-  settings.
-- A person whose orgs are all deleted counts as a person without an org.
-  So the app opens Get started, as for a new person, and its org step
-  offers Create org.
-- While the person has a deleted org, Get started also lists it before
-  its steps, with Restore, as the Account page does. Restore there opens
-  the org. Without a deleted org, Get started shows no such list.
-- Reason: a phone shows Get started without the rail, so it has no other
-  way to the Account page. The user chose this on 13 November 2026.
-  Opening the page of a deleted org, as before, was rejected, because a
-  person who wants a new org then meets the deleted org first. A link to
-  the Account page on the phone layout of Get started was rejected,
-  because Restore then sits one page away from where the person lands.
-- A suspended deleted org offers no Restore, in the Account page or on
-  its page, because a suspended org refuses a restore.
-- Restore brings the org back as it was. Its workspaces start again when
-  they open. A workspace whose owner is suspended does not start, as
-  [Operator actions](operator-actions.md#starts-stops-and-builds) says.
-- The routines of a deleted org start no runs. After a Restore, each runs
-  once for the schedule times that it missed, as
-  [Suspensions and deleted orgs](routines.md#suspensions-and-deleted-orgs)
-  says.
-- An unfinished create continues when its workspace opens after Restore.
-  It then gets a new start limit of 20 minutes, the limit of each start in
-  [Time limits of builds and starts](workspace-life.md#time-limits-of-builds-and-starts).
-  The workspace keeps its original creation date.
-- Reason: the create makes no progress while its org is deleted.
+- [Delete org](delete-org.md) holds the requirements of Delete org, the
+  restore of a deleted org within 7 days, and the end of its data.

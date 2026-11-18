@@ -1,3 +1,4 @@
+import type { Workspace } from '../../shared/generated/Workspace'
 import { useState, type ReactNode } from 'react'
 import { useToast } from '@firna/ui/toast'
 import {
@@ -13,7 +14,7 @@ import type { SectionGroup } from '../../app/sections'
 import { useServices } from '../../app/services'
 import { useStore } from '../../app/store'
 import type { User } from '../../shared/api'
-import type { Workspace } from '../../shared/workspaces'
+
 import { useApp, useOrgModel } from '../context'
 import { useViewport } from '../ui/viewport'
 import { shownWorkspaces } from '../workspace/tab-memory'
@@ -36,6 +37,7 @@ const renames = (items: readonly WorkspaceMenuItem[]) =>
  * shortcut of each archived row. Each row gets only the actions that the
  * person can use. Every row offers Copy link, also an archived row and a
  * row of a read-only list, and a toast gives the result of its copy. A
+ * nested row offers no Move to section, because it moves with its tree. A
  * change of the role, the workspace, or the org drops an action that it
  * takes away. The shortcut and Archive in the menu run the one
  * flow of the workspace, which archives at once and offers Restore in its
@@ -80,11 +82,12 @@ export function useRowMenus(props: {
     setRenaming(null)
   }
 
-  const rows = [
-    ...groups.flatMap((group) => group.workspaces),
-    ...props.archived,
-  ]
+  const live = groups.flatMap((group) => group.rows)
+  const rows = [...live.map((row) => row.workspace), ...props.archived]
   const find = (id: string) => rows.find((row) => row.id === id)
+  const nested = new Set(
+    live.flatMap((row) => (row.parentId === null ? [] : [row.workspace.id])),
+  )
   const itemsOf = (workspace: Workspace): WorkspaceMenuItem[] =>
     workspaceMenuItems({
       admin: org?.role === 'admin',
@@ -94,6 +97,8 @@ export function useRowMenus(props: {
       // Without the org, the role is unknown, so the menu offers only the
       // action that changes nothing.
       readOnly: props.readOnly || !org,
+      // A nested row moves only with its tree, so it has no Move to section.
+      nested: nested.has(workspace.id),
     })
   const openRow = open ? find(open.workspaceId) : undefined
   const openItems = openRow ? itemsOf(openRow) : []
@@ -168,8 +173,7 @@ export function useRowMenus(props: {
     }
   }
   const sectionOf = (id: string) =>
-    groups.find((group) => group.workspaces.some((row) => row.id === id))
-      ?.section.id ?? null
+    live.find((row) => row.workspace.id === id)?.sectionId ?? null
   const layer = (
     <>
       {open && openRow && openItems.length > 0 ? (

@@ -75,10 +75,11 @@ These rules hold for each workspace that the suspended user owns.
   the rule fails or the check fails.
 - The agent tools, the git credential route, and the requests for Mac
   commands use the same rule.
-- The workspace uses no agent login of a suspended starter, and the
-  session record shows that the login cannot be used.
-  [Messages](messages-and-attachments.md#messages) states what a message of another
-  member does when the login of the starter cannot be used.
+- The workspace uses no personal login of a suspended starter, and the
+  session record shows that the login cannot be used. A session on the org
+  login does not depend on its starter.
+  [Messages](messages-and-attachments.md#messages) states what a message
+  does when the login of its session cannot be used.
 - A message of a suspended sender never reaches the agent. A suspended
   sender gets no Mac command.
 - The suspension revokes no workspace token of a workspace that another
@@ -128,8 +129,8 @@ whoever owns or started it (decision 129).
   terminals, and the desktops of the org end.
 - Nobody can create, resume, or start a workspace of the org. No build and
   no image refresh of the org runs, by hand or automatically.
-- No routine of the org starts a run, as
-  [Suspensions and deleted orgs](routines.md#suspensions-and-deleted-orgs)
+- No automation of the org starts a run, as
+  [Suspensions and deleted orgs](automations.md#suspensions-and-deleted-orgs)
   says.
 - A start of a workspace of the org that waits or runs stops before its
   next step.
@@ -150,11 +151,15 @@ whoever owns or started it (decision 129).
   keeps their sign-in sessions in the browser and in the Mac app.
 - Each member keeps their account and their other orgs. The org
   suspension changes nothing in another org.
-- The org suspension takes away no access to read. Members can still open
-  the org and its workspaces, also archived ones, and read the chat
-  history of each workspace.
-- Members can also read the routines of the org and their runs. The
-  routine pages show no actions.
+- Members keep read access, except for the sandbox access above and
+  [Reveal](secrets.md#reveal). Members can still open the org and its
+  workspaces, also archived ones, and read the chat history of each
+  workspace.
+- The Worker refuses Reveal with `org_suspended` through the write gate
+  of other changes (secrets decision 14 B). Reason: each reveal writes a
+  record.
+- Members can also read the automations of the org and their runs. The
+  automation pages show no actions.
 - The org and each of its workspaces show a notice. It says that the org
   is suspended, and it gives the address for abuse reports.
 - While the org is suspended, no member can change anything in it, and

@@ -1,5 +1,7 @@
-import type { DeviceCommandRecord } from '../../src/shared/device'
-import type { Workspace, WorkspaceState } from '../../src/shared/workspaces'
+import type { DeviceCommandRecord } from '../../src/shared/generated/DeviceCommandRecord'
+import type { Workspace } from '../../src/shared/generated/Workspace'
+import type { WorkspaceState } from '../../src/shared/generated/WorkspaceState'
+
 import { workspaceRestoreUntil } from '../../src/shared/workspaces'
 import type { WorkspaceChat } from '../chat/backend'
 import type { ChatStorage, ChatCallbackPublisher } from '../chat/types'
@@ -91,6 +93,7 @@ async function publishFallback(
     orgId: row.orgId,
     repositoryId: row.repositoryId,
     sectionId: row.sectionId,
+    parentId: row.parentId,
     owner: {
       id: row.ownerId,
       githubLogin: row.githubLogin,

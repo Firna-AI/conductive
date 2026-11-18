@@ -18,7 +18,7 @@ pull request bar, and the owner picker. A host can give its own parts, as
 - [The development fake](dev-fake.md) gives the query options of the dev
   wiring in `dev/`, such as `?operator=1`. It also covers its fake routes:
   the uploads and their copies, Create org, feedback, the operator
-  section, the waitlist, the routines, and the workspace numbers.
+  section, the waitlist, the automations, and the workspace numbers.
 - The workspace screen shows the real chat over the dev fake. The fake
   sends no chat event, so a sent message stays pending, and a new session
   adds no tab. It answers each chat write with a recorded reply and
@@ -36,8 +36,8 @@ pull request bar, and the owner picker. A host can give its own parts, as
   [chat development page](../chat/dev/README.md) has a fake with state for
   live events and writes.
 - The production build uses `live-services.ts`: the Worker on the origin of
-  the page, its event socket, and an `XMLHttpRequest` for each raw file
-  upload, which measures the bytes that the browser sent.
+  the page, its event socket, and an `XMLHttpRequest` for each raw part of
+  an upload, which measures the bytes that the browser sent.
 
 ## Composition
 
@@ -109,11 +109,16 @@ the invitations, the kept workspace models, the build log, the read marks,
 the workspace stores, the raw event streams of feature stores, and the
 feedback draft.
 
+For an existing workspace, `OrgModel.putWorkspace` keeps the listed parent,
+section, and order together. A record with a different parent requests a
+fresh list read through `Refresher.reread`, after any current read finishes.
+
 ## Screens
 
 [Screens](screens.md) gives the rules of the screens of the app shell:
 the account and Get started, sign-in, invitations, orgs, panels and
-layers, the focus, saved drafts, New workspace as a page or a dialog,
+layers, the trees of the workspace list, the focus, saved drafts, New
+workspace as a page or a dialog,
 with its attached files and the send key that every composer shares, and
 the waitlist.
 [Command palette and keys](palette-and-keys.md) gives the rules of the
@@ -132,7 +137,10 @@ the Help row of the palette opens.
 - A screen never sets a value of an org. The stores of `OrgModel` are
   read-only for screens, and writes go through the actions and models.
 - A secret goes out once, through `SecretForm`, and the field is empty after
-  the save. No answer brings a stored secret back.
+  the save. No answer brings a stored secret back, except Reveal on the
+  Secrets tab: an admin gets the value of one secret of the org, which the
+  Worker records. Only the row of that secret shows it, until Hide, another
+  reveal, a Replace of its value, or its Delete.
 - The browser keeps only the panel sizes (`panels.ts` and
   `column-split.ts`) and the last workspaces (`last-workspaces.ts`). The
   panel sizes are the widths of the sidebar and the right column, and the
@@ -158,6 +166,17 @@ the Help row of the palette opens.
 - A control that ends at a time, such as Restore until its last day, ends
   at that time through `usePassedDeadlines` in `deadlines.ts`, with the
   clock and the timers of `AppServices`, and with no other event.
+- An archived workspace leaves the list at the end of its Restore, 14 days
+  after its Archive, as
+  [Removed workspaces](../../docs/protocol/workspace-life.md#removed-workspaces)
+  says. The list of the org keeps it, so its links still resolve.
+  `groupWorkspaces` in `sections.ts` leaves it out of the sections, the
+  Archived group, the keys, and the groups of the palette, through
+  `isListed` in `workspace-removal.ts`. The counts of the org page, of
+  Leave org, and of the Members tab leave it out too. `useListTime` in
+  `deadlines.ts` renders each such screen again at that time, also without
+  a kept cloud computer. No code reads `restoreUntil` to find the removal,
+  because that value is null whenever no cloud computer is kept.
 - A read mark counts no generation, because one request serves every
   visit of its kept model. An answer after a close still sets the
   confirmed number, which a later open uses. While the model stays closed,
@@ -165,33 +184,9 @@ the Help row of the palette opens.
   open, it can schedule the next mark of the new visit.
 - One follower owns the requests and the timer of a build log. After it
   stops, an answer changes nothing and schedules nothing.
-- One ChatGPT sign-in of Codex owns its request for a code, its polls, and
-  its timer. Cancel, the other kind in the switch, and the end of its form
-  stop it. After that, an answer changes nothing and schedules nothing.
-  A connected answer applies the current login status that the Worker returns.
-- One rule, `loginUsable` in `api/read-core.ts`, says whether turns can
-  run on a login. A connected login with an `unusableCause` cannot. The
-  composers and Get started count such a login as missing.
-- Each open of the agent list, on the account and in Get started, reads
-  the logins again through `AccountModel.refreshLogins`. So a login that
-  the Worker stopped after the app opened shows Signed out. The Worker
-  gives the logins only in `GET /api/account`, and the read takes only
-  the logins of that answer.
-  `AgentLogins` in `agent-logins.ts` counts each local change of a login:
-  a save, a remove, a connected sign-in, and a share change, at its start
-  and when its reply shows. A read shows the login of an agent only while
-  that login had no change during the read. An open shares a read that
-  runs already, and a failed read keeps what shows.
-- `AccountLoginReads` in `account-login-reads.ts` shares those reads with
-  each return to the visible page. While the account has an own endpoint
-  login, it also reads once a minute while the page shows. Each read merges
-  only the logins, with the same guards against local changes. A read across
-  a new app start or a sign-out changes nothing. Polling stops without an
-  own endpoint login or while the app is not ready. A hidden page cancels
-  its timer. When the page shows again, the reader reads once and resumes
-  polling.
-  The same reader owns the reads after an endpoint save or Refresh.
-  Those reads use the caller's mark to preserve later login changes.
+- [Login data](login-data.md) gives the rules of the agent logins of the
+  account: the ChatGPT sign-in, the logins that can run turns, the default
+  logins that the server names, and the reads after each change.
 - Timers, the focus, the visibility, the input, and the keys of the page
   come from `AppServices` (`delay`, `onFocus`, `visible`, `onInput`, and
   `onKey`), so that no unit test runs a real timer or needs a browser
@@ -238,7 +233,7 @@ default. Later polls read the current login without saving it again, until the s
 The fake uses the shared device response types. It sends no request to OpenAI.
 
 Vitest runs in Node without a DOM. `test-kit.ts` gives services over the
-fake API, with raw file uploads through its fetch, requests or answers that
+fake API, with the raw parts of uploads through its fetch, requests or answers that
 wait for the test (also two at one path), a manual timer with the wait of
 each pending timer, which can run only the timers of one wait, a manual page
 focus, visibility, input, and keys, and a recording event source.
@@ -258,22 +253,40 @@ caret, also for files that hovered as it began, and takes no drop. Files
 over the card show its drop state, a dropped folder attaches as its zip,
 and a folder that cannot be read gets its notice in the dialog.
 `folder-zip.test.ts` zips a folder with nested, empty, and hidden entries,
-gives the name of a zip over the size limit and of a folder that cannot be
-read, and stops with its drop. `../App.dom.test.tsx` mounts `App` and checks the guard
+moves the compressed bytes into a blob each time that they reach the flush
+size, gives the name of a zip over the size limit and of a folder that
+cannot be read, and stops with its drop. `../App.dom.test.tsx` mounts `App` and checks the guard
 outside each box, the browser's own drag of text and links, and the copy
 offer of a box. It also checks that the Feedback dialog still takes a
 dropped screenshot.
+
+`attachment-upload.test.ts` checks the upload in parts of both composers
+over a fake Worker with small parts, from
+`attachment-upload.test-support.ts`. It checks the parts in their order
+with the progress of all parts, a part that goes again alone up to three
+times, the waits of 1, 2, and 4 seconds before these retries, a stop during
+a wait, a refusal that goes once, a resumed upload, a new upload when the
+kept one is gone, the end of an upload by its complete call, a draft file
+and an empty file, and a stop by the signal. `api/xhr-files.test.ts`
+checks the `PUT` of each part. `new-workspace-waits.test.ts` checks that
+New workspace waits on the timer of the app services, and that a Remove
+during the wait stops the upload.
 
 Run `npm run test -- src/app/dev/attachment-files.test.ts src/chat/dev/dev-attachment-files.test.ts`
 for the API tests of the uploaded bytes and their copies in both
 development fakes. `dev/attachment-test-kit.ts` gives them a stub
 `window`, fake timers, a sample image, and a check of the exact bytes.
 
+`dev/secret-request-routes.test.ts` answers the secret requests of the dev
+fake. A waiting request gives the workspace the state `input` until an
+Allow in time sends its run. A late Allow of a value sends the line of the
+app, and the value stays for the workspace until Remove.
+
 ## Key code
 
 [Key code](key-code.md) names the files, the types, and the functions to
 open first. It covers the dev fake, the API client, the clipboard, the
-models, the waitlist and its codes, the routines, and the workspace list.
+models, the waitlist and its codes, the automations, and the workspace list.
 It also covers the event streams, the drag, and the operator section.
 [Key code: drafts and attached files](key-code-drafts.md) covers the draft
 text, the attached files, and their uploads, which the chat and New
@@ -282,20 +295,6 @@ workspace share.
 covers the command palette, the layers, the frames, New workspace as a
 dialog, and feedback with its screenshots.
 
-- `api/read-core.ts`: `readLogin` reads own endpoint metadata for both agents.
-  It keeps the host, kind, share choice, update time, and optional `modelList`.
-  The list has missing app model IDs and the last successful read time.
-  `dev/agent-login-routes.ts` simulates save and Refresh as successful lists with no missing models.
-  It changes neither another login nor the secret-save time.
-  `dev/agent-login-routes.ts` uses the shared address rule and keeps no secret
-  or full endpoint in development state. Its save uses the same public HTTPS
-  address builder and agent-specific normalization as the Worker.
-  The builder requires a public host name and refuses every IPv4 and IPv6 address.
-  The builder reads the product domain from the shared brand source.
-  The fake needs no preview domain configuration.
-  `?login=endpoint` seeds shared
-  own endpoint logins for both agents. `dev/endpoint-logins.ts` seeds them,
-  with the model lists of `?modelList`.
 - `tab-places.ts`: `TabPlaces`, the places of the tabs of one workspace in
   memory, by tab and view, such as the reader's place in a session tab and
   the scroll offset of a file tab. `useFollowTabs` gives it each known list
@@ -303,8 +302,5 @@ dialog, and feedback with its screenshots.
   [tab row](../chat/tab-row.md) and the
   [Files README](../files/README.md#kept-scroll-offsets) say how the chat
   and the files use it.
-- `endpoint-models.ts`: the one rule of the model lists of own endpoints.
-  `unlistedModels` gives the app models that the last list of a login does
-  not name, for the account page. `offeredModels` gives the models that a
-  picker of the owner offers. Every picker of the owner calls it, as
-  [Screens](screens.md) says.
+- [Login data](login-data.md#key-code) names the files of the agent
+  logins, the default logins, and the model lists.

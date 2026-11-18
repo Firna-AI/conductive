@@ -1,8 +1,7 @@
-import {
-  RUNNER_SUPPORTED_LOGIN_KINDS,
-  type RunnerLoginKind,
-} from '../../src/shared/runner'
+import type { RunnerLoginKind } from '../../src/shared/generated/RunnerLoginKind'
+import { RUNNER_SUPPORTED_LOGIN_KINDS } from '../../src/shared/runner'
 import { isRecord } from '../http'
+import { warningProcessStartId } from '../warning-values'
 import type { ChatData, ChatStorage, RunnerWorkspaceRecord } from './types'
 
 const KEY = 'native:runner:current'
@@ -13,6 +12,7 @@ export interface StoredRunnerConnection {
   generation: number
   workspace: RunnerWorkspaceRecord
   streamId: string | null
+  processStartId: string | null
   protocolVersion: number | null
   loginKinds?: readonly RunnerLoginKind[]
   ready: boolean
@@ -75,6 +75,7 @@ function readConnection(value: unknown): StoredRunnerConnection {
       archivedAt: value.workspace.archivedAt,
     },
     streamId: value.streamId,
+    processStartId: warningProcessStartId(value.processStartId),
     protocolVersion: value.protocolVersion ?? null,
     ...(value.loginKinds === undefined
       ? {}

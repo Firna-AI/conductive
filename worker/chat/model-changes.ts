@@ -1,4 +1,5 @@
-import type { Session, ChangeModelResponse } from '../../src/shared/sessions'
+import type { Session } from '../../src/shared/generated/Session'
+import type { ChangeModelResponse } from '../../src/shared/sessions'
 import type { User } from '../../src/shared/api'
 import { HttpError } from '../http'
 import { choice, draft, identifier } from './inputs'
@@ -25,6 +26,10 @@ export async function changeModel(
   const otherAgent = next.agent !== session.choice.agent
   if (!otherAgent || !(await transaction.newestTurn(session.id))) {
     session.choice = next
+    if (otherAgent) {
+      delete session.login
+      delete session.defaultLogin
+    }
     if (otherAgent && session.startedBy)
       Object.assign(
         session,

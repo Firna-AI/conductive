@@ -1,4 +1,5 @@
-import type { Session, SessionsResponse } from '../../shared/sessions'
+import type { Session } from '../../shared/generated/Session'
+import type { SessionsResponse } from '../../shared/sessions'
 import type { ChatSnapshot } from './chat-snapshot'
 import { withTranscript, type ChatContext } from './context'
 import { applyMoves, claimMoves, saveMovedView } from './model-moves'
@@ -21,9 +22,10 @@ import { withSessionPlaces } from './tab-order'
  * so the newest number wins, whatever arrives first. The session log of
  * each session keeps its newest record, as `SessionLog.record` says.
  *
- * A rename or a model change of the same agent shows at once as a pending
- * edit over the newest record. A confirmed edit retires itself and older
- * edits of its field. A failed edit retires only itself. Other edits stay.
+ * A rename, a model change of the same agent, or a close shows at once as
+ * a pending edit over the newest record. A confirmed edit retires itself
+ * and older edits of its field. A failed edit retires only itself. Other
+ * edits stay.
  * The owner alone writes session logs and publishes their newest records.
  */
 
@@ -53,7 +55,7 @@ function logOf(
 
 /** A change of a session record that waits for its reply. */
 export interface PendingEdit {
-  readonly change: Partial<Pick<Session, 'title' | 'choice'>>
+  readonly change: Partial<Pick<Session, 'title' | 'choice' | 'closedAt'>>
 }
 
 /** The record of a session that the chat shows: the newest, with its edits. */
@@ -141,7 +143,12 @@ export function confirmSessions(
     // and drops the places of sessions that are not open.
     const view = withSessionPlaces(current.view, openRecords)
     const open = orderSessions(openRecords, view)
-    const shown = open.some((item) => item.id === current.activeSessionId)
+    // A local tab of a read-only workspace can show a closed session, as
+    // `showLocally` says. That session stays shown too.
+    const active = current.activeSessionId
+    const shown =
+      open.some((item) => item.id === active) ||
+      (active !== null && (current.archiveTabs ?? []).includes(active))
     let next: ChatSnapshot = {
       ...current,
       view,

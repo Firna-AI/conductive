@@ -3,7 +3,8 @@
 These parts show the GitHub state of a workspace branch: the pull request bar
 of the right column, the compact pull request row of a phone, and the Checks
 tab. The bar shows the main action of each state beside its links to
-GitHub: a fixed prompt for the agent, Merge, or Continue and Archive. On a
+GitHub: a fixed prompt for the agent, Merge, Ready for review, or Continue
+and Archive. On a
 phone, the actions top the Checks tab. [GitHub banner](../../docs/protocol/github-banner.md)
 states the requirements, and the mockups under `app/banner` draw them.
 [The actions of the bar](actions.md) gives their state and their rules.
@@ -46,9 +47,13 @@ const controls = useBarControls({ github, actions, localWork, turnRuns, readOnly
   a live event that comes before the final page, and applies it after that
   page. The fake API's `server.events.subscribe` has this shape. The
   workspace screen gives the GitHub events of the ordered stream of the
-  workspace, each checked with the readers of the replies, as live messages
-  with no history, because the store reads the current state when it
-  connects.
+  workspace, each checked with the readers of the replies. A new event goes
+  as a live message. The stream replays the stored history of the
+  workspace each time that it opens, and that history can hold many old
+  GitHub states. So only the newest replayed GitHub state goes to the
+  store, as one `history` message at the end of each replay. The bar then
+  never steps through the old states, and they never cancel the read of
+  the current state.
 - `delay` is `AppServices.delay`, the timer of the app. The store waits with
   it before each [backup read](#backup-reads). The development page gives
   `browserDelay`.
@@ -90,8 +95,8 @@ The app shell provides the rest of the design:
   `docs/mockups/src/theme.ts` makes them
 - a right column that is a size container (`container-type: inline-size`), so
   that a narrow column drops the detail and the link labels of the bar
-- `--ui-touch-min: 44px` on a phone, as the mockups set it. The phone row is
-  at least 44 px high also without it.
+- `--ui-touch-min: 40px` on a phone, as the mockups set it. The phone row is
+  at least 40 px high also without it.
 
 ## The action client
 

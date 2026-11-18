@@ -2,7 +2,7 @@ import { PREVIEW_RELAY_MARK_HEADER } from '../../src/shared/previews'
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
 import { ProviderError } from '../sandbox/errors'
-import { recordActivity, toolError } from './access'
+import { toolError } from './access'
 import type { PreviewConnection } from './connection'
 import { previewIdentity } from './credentials'
 import { portRequest, portResponseHeaders } from './headers'
@@ -13,7 +13,7 @@ import {
 } from './launch'
 import { PrivatePorts } from './ports'
 import { PreviewRegistry } from './registry'
-import { PreviewTiming, SERVER_TIMING_HEADER } from './timing'
+import { ServerTiming, SERVER_TIMING_HEADER } from '../server-timing'
 import { bridgeSocket } from './socket'
 import type { ToolDependencies } from './types'
 
@@ -47,7 +47,7 @@ export class PreviewProxy {
 
   async fetch(request: Request): Promise<Response> {
     let connection: PreviewConnection | null = null
-    const timing = new PreviewTiming()
+    const timing = new ServerTiming()
     try {
       const url = new URL(request.url)
       const suffix = this.env.PREVIEW_DOMAIN
@@ -100,7 +100,6 @@ export class PreviewProxy {
       const row = await timing.step('access', () => scope.access(active))
       const ready = this.ports.isReady(row)
       const port = await timing.step('relay', () => this.ports.get(row))
-      recordActivity(this.dependencies, row.workspaceId)
       // A relay lookup that called the provider can outlast a sandbox change, so it needs a new read.
       if (!ready) scope.refresh()
       await timing.step('check', active.authorize)

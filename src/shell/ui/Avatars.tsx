@@ -1,7 +1,9 @@
 import { Avatar } from '@firna/ui/avatar'
 import { useSharedUiTheme } from '@firna/ui/theme'
+import { orgTileTint } from '../../../docs/mockups/src/design/orgColors'
+import { orgColorOf } from '../../shared/org-colors'
+import type { MessageSender } from '../../shared/generated/MessageSender'
 import { orgInitials, personInitials } from '../../app/people'
-import type { MessageSender } from '../../shared/messages'
 import type { OrgSummary } from '../../shared/orgs'
 
 /** The initials that the rail shows: the saved ones, else from the name. */
@@ -11,16 +13,17 @@ export function tileInitials(org: Pick<OrgSummary, 'name' | 'initials'>) {
 
 /**
  * The initials of an org on a rounded square with a hairline outline. The
- * current org shows its initials and its outline in the accent colour. The
- * square is decorative: its link names the org.
+ * current org shows its initials and its outline in the colour of the org,
+ * Blue when it has none. The square is decorative: its link names the org.
  */
 export function OrgTile(props: {
-  org: Pick<OrgSummary, 'name' | 'initials'>
+  org: Pick<OrgSummary, 'name' | 'initials' | 'color'>
   size: number
   current?: boolean
 }) {
   const theme = useSharedUiTheme()
   const accent = props.current ?? false
+  const tint = orgTileTint(orgColorOf(props.org), theme)
   return (
     <Avatar
       decorative
@@ -28,11 +31,11 @@ export function OrgTile(props: {
       shape="square"
       size={props.size}
       style={{
-        borderColor: accent ? theme.colors.primaryBorder : theme.colors.border2,
+        borderColor: accent ? tint.border : theme.colors.border2,
         borderStyle: 'solid',
         borderWidth: 1,
       }}
-      textColor={accent ? theme.colors.primary : theme.colors.ink2}
+      textColor={accent ? tint.ink : theme.colors.ink2}
       tone="soft"
     />
   )

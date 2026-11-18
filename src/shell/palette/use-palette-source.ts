@@ -1,4 +1,6 @@
+import type { Workspace } from '../../shared/generated/Workspace'
 import { useEffect } from 'react'
+import { useListTime } from '../../app/deadlines'
 import { inFirstRun } from '../../app/get-started'
 import type { ListData } from '../../app/list-changes'
 import { useRoute } from '../../app/navigation'
@@ -14,11 +16,12 @@ import {
   loading,
   ready,
   useStore,
+  valueOf,
   type Loadable,
   type Readable,
 } from '../../app/store'
 import type { Section } from '../../shared/sections'
-import type { Workspace } from '../../shared/workspaces'
+
 import { useApp } from '../context'
 import { useMacApp } from '../mac/mac-app'
 import { useOrgEntry } from '../orgs/useOrgEntry'
@@ -92,11 +95,13 @@ export function usePaletteSource(): {
   const sections = useStore(model?.sections ?? nothing)
   const workspaces = useStore(model?.workspaces ?? nothing)
   const repositories = useStore(model?.repositories ?? nothing)
+  const listTime = useListTime(valueOf(workspaces) ?? [])
   useEffect(() => model?.watch('list', 'repositories'), [model])
   return {
     source: {
       ...base,
       list: listOf(sections, workspaces),
+      listTime,
       repositories,
     },
     retry: async (reads) => {

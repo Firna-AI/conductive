@@ -1,6 +1,7 @@
 # Chat backend tests
 
-The `attachment-*.test.ts` files use local R2 and D1 through the internal storage boundary.
+The `attachment-*.test.ts` files use local R2 and D1 through the production multipart storage operations.
+Their fixtures start an upload, write native or Node-compatible R2 parts, and complete it with its receipts.
 They cover exact bytes, ownership, expiry races, the shared copy owner and proof, path extensions, and Stop during a held transfer.
 `attachment-first-message.test.ts` admits a first-message file before a computer exists.
 It also covers the first-message file of a removed workspace: a new attempt can claim it, and it expires at its upload deadline.
@@ -20,18 +21,18 @@ The held owner writes to neither computer, the new computer gets its own copy, a
 After a restart on the old computer, which has no proof, the files copy there.
 `attachment-proof-recovery.test.ts` fails or interrupts the save of the shared proof after a continuation.
 It checks that the connection closes, and that the redelivery after a restart copies again only when no proof committed.
-`attachment-cancellation.test.ts` connects the real runner `AgentEngine` through `attachment-engine.test-support.ts`.
-It checks that a failed copy stops the running agent, and that Try again starts after the old agent process exits, with no Worker wait.
+`attachment-cancellation.test.ts` checks the Worker command order after a copy failure.
+It checks that cancellation precedes Try again without waiting for the old turn end.
+Rust engine tests check helper close order and the next turn inputs.
 It also checks that a restart sends the stored interrupts again, and that each late end removes only the interrupt of its turn.
 `integration/attachment-raw.test.ts` checks native fixed-length R2 writes, raw metadata and ownership, interrupted transfers, and desktop admission.
 `integration/attachment-cleanup.test.ts` runs the production scheduled handler through `/__test/scheduled`, with the native workspace object, D1, and R2.
 An expired claim without an accepted message loses its record and its object. An accepted file keeps both.
-`integration/failed-first-start-retry.test.ts` keeps the first-message file of a failed first start through the native `expireChatAttachment` RPC, a restart, and Try again in the same workspace.
+`integration/failed-first-start-retry.test.ts` keeps the first-message file of a failed first start through the native `expireChatAttachment` RPC, a restart, and Try again in the same workspace. After the good first start of the retry, it runs the transferred-bytes sweep and checks that the stored copy is gone while the record stays.
 Try again copies its exact bytes once, as [Outer Worker tests](integration/outer-worker-tests.md) says.
 The HTTP and security raw-upload tests check shared route budgets and admission before body reads.
-The 100 MB boundary case creates its unknown-length stream inside the native runtime.
-It reads the stored byte count and exact byte samples from real R2 there.
-This keeps large byte arrays out of the test bridge while retaining the exact maximum and first excess byte.
+`attachment-multipart-storage.test.ts` checks membership and suspension changes during completion before publication.
+`integration/attachment-multipart-start.test.ts` checks the 1 GB declared-size limit before storage starts.
 
 This guide belongs to the [chat backend](README.md). Run the tests from
 the repository root:
@@ -126,13 +127,23 @@ npm run typecheck
 - `retry.test.ts`, `retry-queue.test.ts`, and `retry-crash.test.ts` cover
   the newest failed turn: stale tabs, refused ends, waiting work, rollback,
   and commit crashes. `retry.test-support.ts` sends retries and reads the
-  session records.
+  session records. `retry-crash.test-support.ts` prepares the running turn
+  and checks its saved gateway before each commit-crash case.
 - `session-logins.test.ts`, `linked-sessions.test.ts`, `linked-retry.test.ts`,
   and `legacy-sessions.test.ts` test starters, linked sessions, and old data.
   `login-observation.test.ts` tests that an observed change stays after a
   refused Send, and that a repeated message ID observes nothing.
   `linked-retry.test.ts` also restarts after a crash at the acceptance of a
   linked Retry. It checks each stored record, and a stale Retry gets 409.
+- `org-logins.test.ts` covers first-message selection, current-member access
+  after the starter leaves, preference changes, personal fallback, and linked retries after removal.
+  It also checks unusable personal logins and the refused org endpoint cause.
+  `org-login-legacy.test.ts` checks stored sessions with and without messages,
+  and an empty session that changes its agent before admission.
+  `org-login.test-support.ts` saves org logins through the real API.
+- `empty-session-login.test.ts` checks another member's record read before the first accepted message.
+  It checks default-owner updates, secret and host privacy, and a starter who left or was suspended.
+  The last cases compare unavailable record metadata with the linked session that Send accepts.
 - `login-reuse.test.ts` tests a starter who does not share the login.
   Another member gets an empty linked session, and the first session keeps
   `loginAvailable: true` with `loginShared: false`. A queued message of
@@ -147,6 +158,8 @@ npm run typecheck
 - `turn-dispatch.test.ts` checks that a runner disconnect during the
   registration of a turn undoes that registration before any send.
 - [Gateway tests](../model-gateway/README.md) cover stable turn tokens, login changes, Stop, late events, and retry through chat.
+  `../model-gateway/org-logins.test.ts` checks org replacement, switch stability,
+  starter departure, retry with the new key, and current-sender suspension.
   [runtime.test.ts](../model-gateway/runtime.test.ts) evicts the production SQLite object after a saved gateway Stop.
   It checks the retained interrupt, one failure with its cause after duplicate runner ends, late changed files, and the Retry message.
   `integration/gateway-entry.test-support.ts` adds test-only token issuance and a fetch wrapper for the production workspace RPC.

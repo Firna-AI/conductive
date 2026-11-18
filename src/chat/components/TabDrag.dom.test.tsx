@@ -194,6 +194,8 @@ describe('a drag in the tab row', () => {
           { name: 'Copy full transcript', off: false },
           { name: 'Move left', off: false },
           { name: 'Move right', off: true },
+          { name: 'Close other tabs', off: false },
+          { name: 'Close tabs to the right', off: true },
         ],
       })
     } finally {

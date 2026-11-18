@@ -45,18 +45,20 @@ shows stopped. Its child pages:
 
 - `app/orgs/suspended/workspace` has a workspace with the refused bar of the
   org. Its `archived` variant has an archived workspace, with the notice of
-  the org above the archived bar and no Restore. Its `files` variant has
+  the org above the archived bar and no Restore. The bar still gives the
+  day when the workspace leaves the list. Its `files` variant has
   the Files tab of a phone, whose panel shows the words of the org.
 - `app/orgs/suspended/new-workspace` has the New workspace page, which an
   old tab can still open. The refused bar takes the place of the composer.
-- `app/orgs/suspended/settings` has the four tabs, read-only also for an
-  admin.
-- `app/orgs/suspended/routines` has the routines of the org under its
-  notice, without New routine, because a suspension takes away no read.
-  Its child page `app/orgs/suspended/routines/routine` has a routine
+- `app/orgs/suspended/settings` has the six tabs, read-only also for an
+  admin. Its child page `app/orgs/suspended/settings/agents` has the
+  Agents tab of the org logins.
+- `app/orgs/suspended/automations` has the automations of the org under its
+  notice, without New automation, because a suspension takes away no read.
+  Its child page `app/orgs/suspended/automations/automation` has an automation
   without Save, Run now, Delete, Turn off, or Add trigger. Its `runs`
   variant has the Runs tab of a phone, and its `unavailable` and
-  `not-loaded` variants have the page when it cannot show the routine.
+  `not-loaded` variants have the page when it cannot show the automation.
   The notice of the org stays at the top of each.
 - `app/orgs/suspended/leave` has Leave org for a member who is not an
   admin, and its `confirm` variant has the question before the leave. Acme
@@ -68,8 +70,20 @@ shows stopped. Its child pages:
 
 `app/operator` shows the Overview tab of the operator, the person who runs
 the app for everyone, from decision 142. It holds live counts across every
-org, as decision 144 chose for now. A line under the users counts the
-people on the waitlist, from decision 160. The Orgs and Users tabs come from
+org, as decision 144 chose for now. The workspaces by state count Removed
+apart from Archived: the archived workspaces whose 14 days ended, which
+left the list. The page of an org counts them in the same way. A line under the users counts the
+people on the waitlist, from decision 160. Long runs, under the workspaces
+by state, lists the 10 workspaces whose cloud computers have run the
+longest since their last start, from long runs decision 1. Each row gives
+the org, the owner with the workspace number, the cloud computer ID with
+Copy, the last activity, and the run length with the state mark under it.
+Copperline, a deleted org, and Hexwave, a suspended org whose 2 cloud
+computers still stop, show their mark under the name. The run of Lumen
+Works belongs to @pike-o, whom an operator suspended, so the Suspended
+mark shows under the login. A phone keeps the org, the run length, and
+the state mark. For a suspended owner, it adds the login and the mark
+under the org. The Orgs and Users tabs come from
 decision 147, and they find a suspended org or user. The Waitlist and
 Invite codes tabs come from decision 160. Its child pages:
 
@@ -86,9 +100,12 @@ Invite codes tabs come from decision 160. Its child pages:
   restore a suspended org, and that a lift leaves the org deleted.
 - `app/operator/users` has the Users tab: the newest users, with Waiting
   under a person on the waitlist, a search, and a search with no match.
-- `app/operator/user` has the page of a user, with the name, the age of
-  the GitHub account, how and when they got app access, their referral
-  code with Copy, Copy join link, and who used it, and Suspend user. Its
+  Its Last active column gives the time of the last new workspace or sent
+  message: the time of day for today, the day for another day, or Unknown.
+- `app/operator/user` has the page of a user, with the name, the email
+  address, the age of the GitHub account, the time of their last new
+  workspace or sent message, how and when they got app access, their
+  referral code with Copy, Copy join link, and who used it, and Suspend user. Its
   child pages are below.
 - `app/operator/waitlist` has the Waitlist tab: the people who wait, oldest
   first, a search, the question before Approve, the list after two
@@ -98,8 +115,14 @@ Invite codes tabs come from decision 160. Its child pages:
   and the invite codes with their uses and states.
   Each code has Copy, and a code that works also has Copy join link. Its
   child pages are below.
+- `app/operator/long-runs` has the Overview at a quiet moment, when 3
+  workspaces run. The newest started 41 seconds ago, and its cloud
+  computer does not exist yet, so its row shows a dash and no Copy. Its
+  `empty` variant has no running workspace while 2 builds run. The list
+  then says which workspaces show in it, not that nothing runs.
 - `app/operator/error` has the numbers that could not load, with Try
-  again. Its `loading` variant has the page while it reads the numbers.
+  again. Its `loading` variant has the page while it reads the numbers,
+  with placeholder rows for Long runs.
 
 The child pages of `app/operator/user` follow. The first two were variants
 of `app/operator/user` and kept their paths:

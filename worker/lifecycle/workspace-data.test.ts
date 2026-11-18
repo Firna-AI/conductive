@@ -5,6 +5,7 @@ import { shellWorkspaces } from '../app-api/shell-data'
 import {
   seedListWorkspaces,
   setupShellListTests,
+  beforeFirstListBatch,
 } from '../app-api/shell-list.test-support'
 import { TEST_TIME } from '../test-support/harness'
 import { FIRST_MESSAGE } from './durable-test-support'
@@ -73,6 +74,57 @@ it.each([
     (await shellWorkspaces(db, orgId, user.id)).find(({ id }) => id === 'n')
       ?.number,
   ).toBe(4)
+})
+
+it('reads the parent section in the insert when the parent moves during creation', async () => {
+  const fixture = fixtureForTest()
+  const { db, orgId, repositoryId, generalId, reviewId, laterId, user } =
+    fixture
+  await seedListWorkspaces(fixture, [
+    { id: 'parent', sectionId: generalId, position: 0 },
+  ])
+  await db.batch([
+    db
+      .prepare(
+        `INSERT INTO workspace_creation_attempts
+       (workspace_id, org_id, sender_user_id, first_message_id, created_at) VALUES ('child', ?, ?, ?, ?)`,
+      )
+      .bind(orgId, user.id, FIRST_MESSAGE.id, TEST_TIME),
+    db
+      .prepare(
+        "INSERT INTO image_leases (workspace_id, org_id, snapshot_name) VALUES ('child', ?, 'test-image')",
+      )
+      .bind(orgId),
+  ])
+  const racing = beforeFirstListBatch(db, async () => {
+    await db
+      .prepare("UPDATE workspaces SET section_id = ? WHERE id = 'parent'")
+      .bind(reviewId)
+      .run()
+  })
+  await insertWorkspace(racing.db, {
+    id: 'child',
+    orgId,
+    providerAccount: 'boat',
+    repositoryId,
+    sectionId: laterId,
+    parentId: 'parent',
+    user,
+    city: 'Lisbon',
+    branch: 'list-owner/child',
+    sessionId: 'child-session',
+    turnId: 'child-turn',
+    message: FIRST_MESSAGE,
+    now: TEST_TIME,
+  })
+  expect(
+    (await shellWorkspaces(db, orgId, user.id)).map(
+      ({ id, sectionId, parentId }) => ({ id, sectionId, parentId }),
+    ),
+  ).toEqual([
+    { id: 'child', sectionId: reviewId, parentId: 'parent' },
+    { id: 'parent', sectionId: reviewId, parentId: null },
+  ])
 })
 
 it('allocates distinct numbers during overlapping creates and never reuses a removed number', async () => {

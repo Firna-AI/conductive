@@ -1,3 +1,5 @@
+import type { Workspace } from '../../shared/generated/Workspace'
+import type { TreeLines } from '../../shared/workspace-tree-lines'
 import {
   useLayoutEffect,
   useRef,
@@ -11,21 +13,16 @@ import { Archive, ArchiveRestore } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { WorkspaceMark } from '../../../docs/mockups/src/components/workspaces/WorkspaceMark'
 import styles from '../../../docs/mockups/src/components/workspaces/WorkspaceRow.module.css'
-import {
-  activityPresentation,
-  listMarkLabel,
-} from '../../../docs/mockups/src/components/workspaces/status'
+import { activityPresentation } from '../../../docs/mockups/src/components/workspaces/status'
 import { routes } from '../../app/router'
 import { ownPress } from '../../app/pointer-drag'
-import { formatAgo } from '../../app/time'
-import { nameLabel } from '../../shared/name-label'
-import type { Workspace } from '../../shared/workspaces'
+
 import { useApp } from '../context'
 import { AppLink, isPlainClick } from '../ui/AppLink'
 import { IconButton } from '../ui/actions'
 import { opensMenu } from '../ui/menu-keys'
-import ui from '../ui/ui.module.css'
 import { belowRow, type RowMenu } from './row-menu'
+import { nestedClasses, RowContent } from './RowContent'
 import { WorkspaceNameField } from './WorkspaceNameField'
 import list from './list.module.css'
 
@@ -33,22 +30,6 @@ export type RowVariant = 'sidebar' | 'page'
 
 /** How a drag shows a row: under the pointer, or faint where it was. */
 export type RowDrag = 'lifted' | 'placeholder'
-
-function RowContent(props: { workspace: Workspace; now: number }) {
-  const { workspace } = props
-  return (
-    <>
-      <WorkspaceMark github={workspace.github} status={workspace.state} />
-      <span className={styles.name}>{nameLabel(workspace.name)}</span>
-      <span className={styles.time}>
-        {formatAgo(props.now, workspace.updatedAt)}
-      </span>
-      <span className={ui.hidden}>
-        , {listMarkLabel(workspace.github, workspace.state)}
-      </span>
-    </>
-  )
-}
 
 /** Gives the element to a ref of its owner. */
 function setRef<T>(ref: Ref<T> | undefined, value: T | null): void {
@@ -62,14 +43,17 @@ function setRef<T>(ref: Ref<T> | undefined, value: T | null): void {
  * state of its pull request in colour, and whether its agent works. Bold
  * alone marks unread output. Its shortcut, Archive or Restore on an
  * archived row, covers the time on hover only, and stays while it runs. A
- * drag lifts the row, and a faint copy stays where it was. With `menu`, a
- * right click or the menu keys open the menu of the row, which keeps the
- * fill of a hover while it is open. The row has no button for the menu. The
- * field of Rename takes the place of the name and the time. Rename in the
- * menu opens it, and so does a plain double click on a row whose menu
- * offers Rename. A plain click on a row of the sidebar asks the message
- * field of the workspace to take the focus when its chat shows, so the
- * person can type at once. The second click of a double click does not
+ * nested row indents by one step for each row that the list shows above it
+ * in its tree. A row of a tree draws the guide lines of `lines`, as a file
+ * tree does, and the fill of a hover or a selection still spans the whole
+ * row. A drag lifts the row, and a faint copy stays where it was. With
+ * `menu`, a right click or the menu keys open the menu of the row, which
+ * keeps the fill of a hover while it is open. The row has no button for the
+ * menu. The field of Rename takes the place of the name and the time.
+ * Rename in the menu opens it, and so does a plain double click on a row
+ * whose menu offers Rename. A plain click on a row of the sidebar asks the
+ * message field of the workspace to take the focus when its chat shows, so
+ * the person can type at once. The second click of a double click does not
  * open the workspace again.
  */
 export function WorkspaceRow({
@@ -81,7 +65,19 @@ export function WorkspaceRow({
   variant: RowVariant
   selected: boolean
   now: number
+  /**
+   * The number of rows that the list shows above the row in its tree. A
+   * top-level row has 0.
+   */
+  depth?: number
+  /** The guide lines of the row in its tree. A lifted row has none. */
+  lines?: TreeLines
   drag?: RowDrag
+  /**
+   * The nested rows that move with a lifted row of a tree. The lifted row
+   * shows their count in place of its time.
+   */
+  carried?: number
   /** The pointer handlers of a drag, and the keys that move the row. */
   bind?: HTMLAttributes<HTMLElement>
   onKeyDown?: (event: KeyboardEvent<HTMLElement>) => void
@@ -122,17 +118,21 @@ export function WorkspaceRow({
     }
   }, [renaming])
   const page = props.variant === 'page'
+  const nested = nestedClasses(props.depth ?? 0, props.lines)
+  const carried = props.drag === 'lifted' ? (props.carried ?? 0) : 0
   const className = classes(
     styles.row,
     page && styles.page,
     props.selected && styles.selected,
     styles[activityPresentation[workspace.state].emphasis],
     props.drag && styles[props.drag],
+    carried > 0 && styles.liftedTree,
+    nested,
   )
   if (props.drag === 'lifted') {
     return (
       <div className={className}>
-        <RowContent now={props.now} workspace={workspace} />
+        <RowContent carried={carried} now={props.now} workspace={workspace} />
       </div>
     )
   }
@@ -143,6 +143,7 @@ export function WorkspaceRow({
           styles.row,
           page && styles.page,
           props.selected && styles.selected,
+          nested,
         )}
       >
         <WorkspaceMark github={workspace.github} status={workspace.state} />
@@ -227,7 +228,7 @@ export function WorkspaceRow({
         }}
         to={routes.workspace(workspace.orgId, workspace.id)}
       >
-        <RowContent now={props.now} workspace={workspace} />
+        <RowContent carried={0} now={props.now} workspace={workspace} />
       </AppLink>
       {action ? (
         <span {...ownPress} className={styles.archive}>

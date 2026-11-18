@@ -61,7 +61,7 @@ const api = createMembersApi((input, init) => fetch(input, init))
 The host gives the components `SharedUiThemeProvider` from `@firna/ui/theme`
 and the `--ui-*` design tokens, as `dev/main.tsx` does with `themeFor` and
 `tokensCss` of the mockups. Each component takes `viewport: 'desktop' |
-'mobile'`. The phone layout uses 44 px controls and opens menus and
+'mobile'`. The phone layout uses 40 px controls and opens menus and
 questions as sheets. Each component shows its own loading and error states,
 with the message of the API.
 
@@ -77,7 +77,13 @@ with the message of the API.
 | `MemberComputerTab`     | The same tab, with its data loaded once from the API       | `api`, `org`, `viewport`, `now`, optional `timeZone`                                                                   |
 
 - `now` is the time in Unix milliseconds. It sets the age of each invite, the
-  times of the builds, and the date in the Delete org question.
+  times of the builds, and the date in the Delete org question. The
+  Members tab counts the workspaces of each member that the list shows at
+  that time, also in the question of Remove member. So the counts leave
+  out the workspaces that were removed from the list, as
+  [Removed workspaces](../../docs/protocol/workspace-life.md#removed-workspaces)
+  says. A removal still moves them to the admin, because the app keeps
+  their data.
 - `suspended` says that the operator suspended the org. Nothing in it
   changes, also for an admin, and the shell shows the notice of the org
   above the component. The component then shows no action, no invite, and
@@ -88,7 +94,8 @@ with the message of the API.
   is not deleted, else Get started. The Account page lists the org with
   Restore, and its address still opens `DeletedOrgPage`.
 - `onRestored` gets the active org of the API's answer, with its `initials`
-  when the answer has them. The shell shows it as an active org again. Its
+  and its colour when the answer has them. Delete and Restore read the org
+  with `readOrg` of the app, so they keep every field of the org record. The shell shows it as an active org again. Its
   workspaces start only when they open.
 - `onReassigned` gets the workspace of the API's answer. The header shows its
   new owner. The cloud computer keeps running. One exception: a workspace

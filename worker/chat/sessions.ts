@@ -1,7 +1,9 @@
+import type { SessionLogin } from '../../src/shared/generated/SessionLogin'
+import type { Session } from '../../src/shared/generated/Session'
+import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
+import type { MessageSender } from '../../src/shared/generated/MessageSender'
 import type { TurnStopRequester } from '../../src/shared/session-stop'
-import type { AgentChoice } from '../../src/shared/agents'
-import type { MessageSender } from '../../src/shared/messages'
-import type { Session } from '../../src/shared/sessions'
+
 import { HttpError } from '../http'
 import { SessionLogins } from './session-login'
 import type { ChatTransaction } from './store'
@@ -15,6 +17,7 @@ export async function createSession(
   startedBy: MessageSender,
   dependencies: ChatDependencies,
   sourceSessionId: string | null = null,
+  login?: SessionLogin,
 ): Promise<Session> {
   choice = dependencies.normalizeChoice(choice)
   const metadata = await SessionLogins.initial(
@@ -22,6 +25,7 @@ export async function createSession(
     id,
     startedBy.id,
     choice.agent,
+    login,
   )
   const session: Session = {
     id,
@@ -40,6 +44,7 @@ export async function createSession(
       avatarUrl: startedBy.avatarUrl,
     },
     sourceSessionId,
+    ...(login ? { login } : {}),
     ...metadata,
   }
   await transaction.saveSession(session)

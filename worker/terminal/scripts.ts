@@ -2,7 +2,13 @@ import {
   TERMINAL_RESTORE_MARKER,
   TERMINAL_RUNTIME,
 } from '../../src/shared/restore-marker'
-import { TERMINAL_PORT } from '../../src/shared/terminal'
+import {
+  FIRST_TERMINAL_ID,
+  TERMINAL_ID_PATTERN,
+  TERMINAL_PORT,
+} from '../../src/shared/terminal'
+import { TERMINAL_HISTORY_LINES } from '../../src/shared/terminal-bridge'
+import { BRIDGE_MAIN } from './bridge-files'
 import { shellArgument } from './privileged'
 
 export { TERMINAL_RESTORE_MARKER, TERMINAL_RUNTIME }
@@ -11,6 +17,11 @@ export { TERMINAL_RESTORE_MARKER, TERMINAL_RUNTIME }
  * binds the memory folder here, so the password stays out of the disk.
  */
 export const TERMINAL_RUNTIME_VIEW = '/home/user/.conductive-terminal'
+export const TERMINAL_ATTACH_PROGRAM =
+  '/opt/conductive/current/system/terminal-attach'
+export const TERMINAL_ATTACH_NAME = 'terminal-attach-v1'
+export const TERMINAL_SUPPORT_FILE = 'several'
+export const TERMINAL_EXECUTABLE = '/usr/bin/ttyd'
 
 export interface TerminalScriptOptions {
   runtimeDirectory: string
@@ -21,6 +32,8 @@ export interface TerminalScriptOptions {
   entropyCommand: readonly string[]
   terminalCommand: readonly string[]
   multiplexerCommand: readonly string[]
+  /** The private Node and the path of the bridge program. */
+  bridgeCommand: readonly string[]
 }
 
 /**
@@ -28,12 +41,19 @@ export interface TerminalScriptOptions {
  * Bash checks once, at the first prompt after the restore marker exists.
  * If the real folder differs from `$PWD`, it moves there and keeps `OLDPWD`.
  * The check flag stays local to this shell, so new shells check for themselves.
+ * Bash also appends each new history line to `$HISTFILE` before each prompt.
+ * Bash otherwise writes the file only at exit, during the shutdown at a stop,
+ * and a stop lost that write. See the terminal README. An empty
+ * or unset `HISTFILE` turns the append off, and a failed append stays silent.
+ * Keep the `HISTFILE` test: without `HISTFILE`, `history -a` appends to the
+ * readline file `~/.history` when that file exists.
  */
 export function terminalPromptCommand(
   restoreMarker = TERMINAL_RESTORE_MARKER,
 ): string {
   return `PS1=\${PS1//\\\\w/\\\\W}
-builtin test -n "\${__conductive_restore_checked-}" || ! builtin test -f ${shellArgument(restoreMarker)} || { __conductive_restore_checked=1; [ -z "\${PWD-}" ] || builtin test . -ef "$PWD" || { __conductive_oldpwd=\${OLDPWD-}; builtin cd -- "$PWD" 2>/dev/null && OLDPWD=$__conductive_oldpwd; unset __conductive_oldpwd; }; }`
+builtin test -n "\${__conductive_restore_checked-}" || ! builtin test -f ${shellArgument(restoreMarker)} || { __conductive_restore_checked=1; [ -z "\${PWD-}" ] || builtin test . -ef "$PWD" || { __conductive_oldpwd=\${OLDPWD-}; builtin cd -- "$PWD" 2>/dev/null && OLDPWD=$__conductive_oldpwd; unset __conductive_oldpwd; }; }
+builtin test -z "\${HISTFILE-}" || builtin history -a 2>/dev/null`
 }
 
 const terminalScriptDefaults: TerminalScriptOptions = {
@@ -43,8 +63,9 @@ const terminalScriptDefaults: TerminalScriptOptions = {
   owner: 'user',
   group: 'user',
   entropyCommand: ['od', '-An', '-v', '-N32', '-tx1', '/dev/urandom'],
-  terminalCommand: ['/usr/bin/ttyd'],
+  terminalCommand: [TERMINAL_EXECUTABLE],
   multiplexerCommand: ['/usr/bin/tmux'],
+  bridgeCommand: ['/opt/conductive/current/node/bin/node', BRIDGE_MAIN],
 }
 
 const validation = `valid_password() {
@@ -84,10 +105,50 @@ chmod 600 "$password_file"
 }
 
 /**
+ * The program that ttyd runs for each connection, with the repository path
+ * as its first argument. It runs the bridge with the private Node, without
+ * the Node variables of the workspace, which could load other code. When the
+ * private Node or the bridge is missing, or the bridge exits with code 3
+ * before it attached, it runs the plain tmux client.
+ */
+export function attachScript(
+  options: TerminalScriptOptions = terminalScriptDefaults,
+): string {
+  const [node = '', bridge = ''] = options.bridgeCommand
+  const [tmux = ''] = options.multiplexerCommand
+  const socket = shellArgument(`${options.runtimeDirectory}/tmux.sock`)
+  return `#!/bin/sh
+set -u
+[ "$#" -ge 1 ] || exit 2
+repository=$1
+shift
+session=${shellArgument(FIRST_TERMINAL_ID)}
+case "$#" in
+  0) ;;
+  1)
+    [ "\${#1}" -eq 32 ] || exit 2
+    printf '%s' "$1" | LC_ALL=C grep -Eq '^${TERMINAL_ID_PATTERN}$' || exit 2
+    session="terminal-$1"
+    ;;
+  *) exit 2 ;;
+esac
+node=${shellArgument(node)}
+bridge=${shellArgument(bridge)}
+if [ -x "$node" ] && [ -f "$bridge" ]; then
+  env -u NODE_OPTIONS -u NODE_PATH "$node" "$bridge" ${shellArgument(tmux)} ${socket} "$repository" "$session" && exit 0
+  status=$?
+  [ "$status" -eq 3 ] || exit "$status"
+fi
+exec ${options.multiplexerCommand.map(shellArgument).join(' ')} -N -S ${socket} new-session -A -s "$session" -c "$repository" /bin/bash -l
+`
+}
+
+/**
  * tmux gets the repository path, not the launcher's current folder. After a
  * start from a saved snapshot, the provider restores the disk in the
  * background. When the restore ends, the launcher's current folder can be an
  * old view of the disk at another path.
+ * ttyd captures the attach program here, so a later release cannot replace it.
  */
 export function launcherScript(
   options: TerminalScriptOptions = terminalScriptDefaults,
@@ -103,7 +164,7 @@ ${validation}
 valid_password || exit 1
 password=$(cat -- "$password_file")
 [ -n "$password" ] || exit 1
-exec ${options.terminalCommand.map(shellArgument).join(' ')} --interface 0.0.0.0 --port ${TERMINAL_PORT} --writable --credential "conductive:$password" ${options.multiplexerCommand.map(shellArgument).join(' ')} -N -S ${shellArgument(`${options.runtimeDirectory}/tmux.sock`)} new-session -A -s workspace -c "$CONDUCTIVE_REPOSITORY_DIR" /bin/bash -l
+exec ${options.terminalCommand.map(shellArgument).join(' ')} --interface 0.0.0.0 --port ${TERMINAL_PORT} --writable --credential "conductive:$password" --url-arg /bin/sh -c ${shellArgument(attachScript(options))} ${TERMINAL_ATTACH_NAME} "$CONDUCTIVE_REPOSITORY_DIR"
 `
 }
 
@@ -116,6 +177,6 @@ set -a
 . ${shellArgument(options.environmentFile)}
 set +a
 cd "$CONDUCTIVE_REPOSITORY_DIR"
-exec ${options.multiplexerCommand.map(shellArgument).join(' ')} -S ${shellArgument(`${options.runtimeDirectory}/tmux.sock`)} -f /dev/null start-server ';' set-option -s exit-empty off ';' set-option -g mouse on ';' set-environment -g PROMPT_COMMAND ${shellArgument(terminalPromptCommand(options.restoreMarker))}
+exec ${options.multiplexerCommand.map(shellArgument).join(' ')} -S ${shellArgument(`${options.runtimeDirectory}/tmux.sock`)} -f /dev/null start-server ';' set-option -s exit-empty off ';' set-option -g mouse on ';' set-option -g history-limit ${TERMINAL_HISTORY_LINES} ';' set-environment -g PROMPT_COMMAND ${shellArgument(terminalPromptCommand(options.restoreMarker))}
 `
 }

@@ -1,3 +1,4 @@
+import type { Workspace } from '../../src/shared/generated/Workspace'
 import { API_PATHS, orgPath } from '../../src/shared/api'
 import {
   invitePath,
@@ -12,7 +13,7 @@ import {
   readMoveOrgRequest,
   restoreOrgPath,
 } from '../../src/shared/orgs'
-import type { Workspace } from '../../src/shared/workspaces'
+
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError, requiredString } from '../http'
 import { createInvitationMailer, invitationLink } from '../invitation-mailer'
@@ -22,7 +23,8 @@ import { cancelOrgInvite, inviteOrgMember } from './invites'
 import type { LifecycleOwnership } from './lifecycle-contract'
 import type { OrgMaintenanceHooks } from './maintenance-contract'
 import { changeMemberRole, listMembers, removeOrgMember } from './membership'
-import { moveOrg, renameOrg, visibleOrgs } from './org-data'
+import { moveOrg, updateOrg, visibleOrgs } from './org-data'
+import { readOrgUpdate } from './org-update'
 import { reassignWorkspace } from './ownership'
 import { requireOrgAdmin, requireOrgMember } from './permissions'
 import { restoreOrg } from './restore'
@@ -80,17 +82,7 @@ export async function membersRoute(
       })
     if (request.method === 'PATCH') {
       await requireOrgAdmin(db, orgId, actorId)
-      if (
-        !(await renameOrg(
-          db,
-          orgId,
-          actorId,
-          requiredString(body?.name),
-          body?.initials === undefined
-            ? undefined
-            : requiredString(body.initials),
-        ))
-      ) {
+      if (!(await updateOrg(db, orgId, actorId, readOrgUpdate(body)))) {
         await requireOrgAdmin(db, orgId, actorId)
       }
       return Response.json({ org: await requireOrgMember(db, orgId, actorId) })

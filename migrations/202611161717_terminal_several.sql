@@ -1,0 +1,1 @@
+ALTER TABLE terminal_credentials ADD COLUMN several INTEGER NOT NULL DEFAULT 0;

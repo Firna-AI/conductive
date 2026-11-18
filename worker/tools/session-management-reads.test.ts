@@ -4,10 +4,13 @@ import {
   agentSessionsPath,
   agentSessionPath,
   agentMessagePath,
+  agentSessionTranscriptPath,
 } from '../../src/shared/agent-session-paths'
 import { DEVICE_TEST_NOW } from '../devices/clock.test-support'
 import { sessionLink } from '../../src/shared/session-link'
-import { listedSessions } from '../../tools/session-responses'
+import type { AgentListSessionsResponse } from '../../src/shared/generated/AgentListSessionsResponse'
+import type { AgentReadSessionResponse } from '../../src/shared/generated/AgentReadSessionResponse'
+import { WORKSPACE_RESTORE_MS } from '../../src/shared/workspaces'
 import {
   OTHER_WORKSPACE,
   OUTER_WORKSPACE,
@@ -46,9 +49,10 @@ it('pages all sessions in stable creation order with explicit bounds and more fl
   ] as const) {
     const response = await machineRead(active, path + query)
     expect(response.status).toBe(200)
-    const result = listedSessions(await response.json())
+    const result = record(await response.json())
+    if (!Array.isArray(result.sessions)) throw new Error('Missing sessions.')
     expect(
-      result.sessions.map(({ id }) => id),
+      result.sessions.map((session: unknown) => string(record(session).id)),
       query,
     ).toEqual(ids)
     expect(result.hasMore, query).toBe(more)
@@ -69,7 +73,7 @@ it('pages all sessions in stable creation order with explicit bounds and more fl
   }
 })
 
-it('gets exact session and stored-message facts across workspaces and permits archived reads', async () => {
+it('gets exact session and stored-message facts across workspaces and permits removed session reads', async () => {
   const active = (fixture = await agentWriteFixture(bundle))
   const createdResponse = await active.post(
     agentSessionsPath(OTHER_WORKSPACE),
@@ -130,14 +134,41 @@ it('gets exact session and stored-message facts across workspaces and permits ar
     expect(await missing.json()).toMatchObject({ error: { code } })
   }
   await active.env.DB.prepare(
-    "UPDATE workspaces SET archived_at = 1, state = 'archived' WHERE id = ?",
+    "UPDATE workspaces SET archived_at = ?, state = 'archived', sandbox_id = NULL WHERE id = ?",
   )
-    .bind(OTHER_WORKSPACE)
+    .bind(DEVICE_TEST_NOW - WORKSPACE_RESTORE_MS, OTHER_WORKSPACE)
     .run()
   expect(
     (await machineRead(active, agentSessionPath(OTHER_WORKSPACE, sessionId)))
       .status,
   ).toBe(200)
+  const listedResponse = await machineRead(
+    active,
+    agentSessionsPath(OTHER_WORKSPACE),
+  )
+  expect(listedResponse.status).toBe(200)
+  const listed = (await listedResponse.json()) as AgentListSessionsResponse
+  expect(listed.workspace).toMatchObject({
+    id: OTHER_WORKSPACE,
+    state: 'archived',
+  })
+  // Both sessions share the fixed clock, so their order follows their random IDs.
+  expect(listed.sessions.map(({ id }) => id).sort()).toEqual(
+    [sessionId, otherSessionId].sort(),
+  )
+  const transcriptResponse = await machineRead(
+    active,
+    agentSessionTranscriptPath(OTHER_WORKSPACE, sessionId),
+  )
+  expect(transcriptResponse.status).toBe(200)
+  const transcript =
+    (await transcriptResponse.json()) as AgentReadSessionResponse
+  expect(transcript.workspace).toMatchObject({
+    id: OTHER_WORKSPACE,
+    state: 'archived',
+  })
+  expect(transcript.session.id).toBe(sessionId)
+  expect(transcript.markdown).toContain('Read this stored task')
   expect(
     (
       await machineRead(

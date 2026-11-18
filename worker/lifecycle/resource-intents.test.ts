@@ -6,7 +6,8 @@ import { membersClient } from '../members/members-test-support'
 import { boatRoute } from '../sandbox/routes'
 import { setupBackendTests } from './backend-test-hooks'
 import { SOFTWARE } from './backend-test-support'
-import { readBuildHistory, readBuildJob } from './build-data'
+import { readBuild, readBuildHistory, readBuildJob } from './build-data'
+import { SNAPSHOT_DONE_LOG, SNAPSHOT_START_LOG } from './build-command-data'
 import { advanceImageBuild, startImageBuild } from './image-builds'
 import { finishImageBuild } from './image-test-support'
 import { buildSnapshotIntent } from './resource-intents'
@@ -35,6 +36,7 @@ it.each([
         name: savedImageName(buildId),
       })
       let intentAtSave: string | null = null
+      const fetch = images.dependencies.fetch
       images.dependencies = {
         ...images.dependencies,
         fetch: async (request) => {
@@ -56,7 +58,7 @@ it.each([
             await boat.fetch(request)
             throw new Error('Lost successful snapshot reply')
           }
-          return boat.fetch(request)
+          return fetch(request)
         },
       }
 
@@ -116,7 +118,11 @@ it('replays an undispatched snapshot intent and waits for a racing save before p
       job = await readBuildJob(runtime.env.DB, org.id, buildId)
     }
     expect(job.phase).toBe('snapshot')
-    const intent = buildSnapshotIntent(runtime.env.DB, job)
+    const intent = buildSnapshotIntent(
+      runtime.env.DB,
+      job,
+      images.dependencies.now(),
+    )
     await intent.persist(intent.input)
     const name = savedImageName(buildId)
     const save = boatRoute({ operation: 'saveSnapshot' })
@@ -133,6 +139,7 @@ it('replays an undispatched snapshot intent and waits for a racing save before p
     const replayedBodies: unknown[] = []
     const recordedNames: (string | null)[] = []
     let lookups = 0
+    const fetch = images.dependencies.fetch
     images.dependencies = {
       ...images.dependencies,
       fetch: async (request) => {
@@ -162,7 +169,7 @@ it('replays an undispatched snapshot intent and waits for a racing save before p
             { status: 409 },
           )
         }
-        return boat.fetch(request)
+        return fetch(request)
       },
     }
 
@@ -189,6 +196,12 @@ it('replays an undispatched snapshot intent and waits for a racing save before p
       snapshotName: name,
     })
     expect(operations).toEqual(['lookup', 'save', 'lookup'])
+    // The replayed save writes no second start line.
+    expect(
+      (await readBuild(runtime.env.DB, org.id, buildId)).log
+        .map((event) => event.text)
+        .filter((text) => text.includes('cloud computer image')),
+    ).toEqual([SNAPSHOT_START_LOG, SNAPSHOT_DONE_LOG])
     expect(await advanceImageBuild(images, org.id, buildId)).toBe(true)
     expect(await readBuildJob(runtime.env.DB, org.id, buildId)).toMatchObject({
       state: 'succeeded',

@@ -2,13 +2,15 @@ import { membersPath } from '../../src/shared/members'
 import { orgSettingsPaths } from '../../src/shared/org-settings'
 import { sectionsPath } from '../../src/shared/sections'
 import { workspaceViewPath } from '../../src/shared/workspace-view'
+import { viewReply, viewToWire } from '../../src/shared/workspace-view-wire'
 import { workspacePaths, workspacesPath } from '../../src/shared/workspaces'
 import { counter } from '../chat/inputs'
 import type { AppDependencies, AppEnv } from '../env'
+import { workspaceRepositoryFolder } from '../lifecycle/repository-location-data'
 import { readWorkspace, workspaceView } from '../lifecycle/workspace-data'
 import { listMembers } from '../members/membership'
 import type { RequestContext } from '../security/gate'
-import { workspaceRoutine } from '../routines/workspace-routine-data'
+import { workspaceAutomation } from '../automations/workspace-automation-data'
 import {
   saveWorkspaceReadMark,
   shellRepositories,
@@ -24,7 +26,8 @@ import {
 import {
   savedWorkspaceView,
   saveWorkspaceView,
-  workspaceViewInput,
+  keepsStoredPreviewTabs,
+  workspaceViewSave,
 } from './workspace-view'
 
 export async function shellRoute(
@@ -72,13 +75,20 @@ export async function shellRoute(
   const workspace = await readWorkspace(env.DB, orgId, workspaceId)
   if (path === viewPath && request.method === 'GET')
     return Response.json({
-      view: await savedWorkspaceView(env.DB, workspaceId, userId),
-      routine: await workspaceRoutine(env.DB, orgId, workspaceId),
+      view: viewReply(await savedWorkspaceView(env.DB, workspaceId, userId)),
+      automation: await workspaceAutomation(env.DB, orgId, workspaceId),
       baseBranch: workspace.baseBranch,
+      repositoryFolder: await workspaceRepositoryFolder(env.DB, workspace),
     })
   if (path === viewPath && request.method === 'PUT') {
     requireWritableWorkspace(workspace)
-    const view = workspaceViewInput(context.body)
+    // An older copy of the app saves no Preview tab, so its save keeps the
+    // stored ones.
+    const stored = keepsStoredPreviewTabs(context.body)
+      ? (viewToWire(await savedWorkspaceView(env.DB, workspaceId, userId))
+          .previewTabs ?? [])
+      : []
+    const view = workspaceViewSave(context.body, stored)
     await saveWorkspaceView(env.DB, {
       workspaceId,
       orgId,
@@ -87,8 +97,8 @@ export async function shellRoute(
       now: dependencies.now(),
     })
     return Response.json({
-      view,
-      routine: await workspaceRoutine(env.DB, orgId, workspaceId),
+      view: viewReply(view),
+      automation: await workspaceAutomation(env.DB, orgId, workspaceId),
       baseBranch: workspace.baseBranch,
     })
   }

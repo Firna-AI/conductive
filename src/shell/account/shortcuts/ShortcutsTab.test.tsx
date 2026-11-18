@@ -165,6 +165,8 @@ describe('the Keyboard shortcuts tab', () => {
             'Open the menu of a focused tab',
           ],
         ],
+        // New terminal has the words of its palette row: shell and tab.
+        ['Workspace', ['New terminal']],
         ['Chat', ['New session']],
         ['Menus and palette', ['Switch the palette tab']],
       ],

@@ -110,9 +110,12 @@ draws the temporary tab at `app/files/temporary`.
   way, and a press on the shown tab by habit would keep it.
 - A keep with Enter, on the tab or on a file row, was rejected. A screen
   reader in browse mode sends a click in place of Enter.
-- A command with its own key, and a menu on each file row, were not
-  chosen. A rule that gives each pointer gesture on a tab an item in the
-  tab menu was not chosen either.
+- A command with its own key, and a menu on each file row with an item
+  that opens the file as a kept tab, were not chosen. A rule that gives
+  each pointer gesture on a tab an item in the tab menu was not chosen
+  either.
+- The [row menu](file-row-menu.md#the-menu) of All files and Changes holds
+  no Keep open.
 - A move of the temporary tab to another place also keeps it, as
   [The tab row](agents-and-sessions.md#the-tab-row) says.
 - Nothing else keeps the tab. A switch between Preview and Source of a

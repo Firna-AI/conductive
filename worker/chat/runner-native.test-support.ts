@@ -1,8 +1,8 @@
 import type { Miniflare, WebSocket } from 'miniflare'
 import { expect } from 'vitest'
-
+import type { RunnerProtocolVersion } from '../../src/shared/generated/RunnerProtocolVersion'
+import type { RunnerHello } from '../../src/shared/generated/RunnerHello'
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
-import type { RunnerProtocolVersion } from '../../src/shared/runner'
 import { sessionsPath, sessionPaths } from '../../src/shared/sessions'
 import { TEST_ORIGIN } from '../test-support/harness'
 import { closeSockets } from './adapter-sockets.test-support'
@@ -69,6 +69,7 @@ export function runnerControls(
       streamId = 'native-runner',
       eventNumber = 0,
       protocolVersion: RunnerProtocolVersion = 2,
+      processStartId?: RunnerHello['processStartId'],
     ) => {
       const response = await runtime.dispatchFetch(
         `${MACHINE_ORIGIN}${MACHINE_PATHS.runner}`,
@@ -85,6 +86,7 @@ export function runnerControls(
         streamId,
         eventNumber,
         protocolVersion,
+        processStartId,
       })
       expect(await runner.inbox.next()).toEqual({
         type: 'welcome',

@@ -5,11 +5,8 @@ import { createToolsHarness, type ToolsHarness } from '../previews/test-support'
 import { decrypt } from '../security/crypto'
 import { TEST_TIME } from '../test-support/harness'
 import { createTerminalHandler } from './handler'
-import {
-  installTerminalService,
-  startWorkspaceTerminal,
-  terminalStartCommand,
-} from './service'
+import { WorkspaceTerminals } from './workspace'
+import { startWorkspaceTerminal, terminalStartCommand } from './service'
 
 let harness: ToolsHarness
 beforeAll(async () => {
@@ -22,29 +19,8 @@ afterAll(async () => {
   await harness.dispose()
 })
 
-it('installs an enabled ttyd service without an image password and caches a workspace secret from run storage', async () => {
+it('caches separate workspace secrets from run storage without exposing a password', async () => {
   const seed = await harness.seed()
-  const commands: string[] = []
-  await installTerminalService(
-    {
-      runCommand: async (_id, command) => {
-        commands.push(command)
-        return { exitCode: 0, stdout: '', stderr: '', timedOut: false }
-      },
-    },
-    'build-sandbox',
-  )
-  expect(commands).toHaveLength(1)
-  expect(commands[0].startsWith("sudo -n -- /bin/sh -c '")).toBe(true)
-  expect(commands[0]).toContain('systemctl enable conductive-terminal.service')
-  expect(commands[0]).toContain(
-    'ExecStartPre=+/usr/local/lib/conductive/terminal-password',
-  )
-  expect(commands[0]).toContain('--writable')
-  expect(commands[0]).toContain('User=user')
-  expect(commands[0]).toContain('WorkingDirectory=/home/user')
-  expect(commands[0]).toContain('--interface 0.0.0.0')
-  expect(commands[0]).toContain('--credential')
   await startWorkspaceTerminal(
     harness.env,
     seed.orgId,
@@ -64,7 +40,7 @@ it('installs an enabled ttyd service without an image password and caches a work
   )
   expect(command).toContain('systemctl start conductive-terminal.service')
   expect(command).not.toContain('/etc/conductive')
-  expect(commands[0]).not.toContain(row?.ciphertext)
+  expect(command).not.toContain(row?.ciphertext)
   await harness.env.DB.prepare(
     `INSERT INTO workspaces (id, org_id, repository_id, owner_user_id, name, branch,
      sandbox_id, state, created_at, updated_at)
@@ -79,7 +55,11 @@ it('installs an enabled ttyd service without an image password and caches a work
     'workspace-two',
     harness.dependencies,
   )
-  expect(harness.requests[1].url).not.toBe(harness.requests[0].url)
+  const passwordRequests = harness.requests.filter((request) =>
+    new URL(request.url).searchParams.get('path')?.endsWith('/password'),
+  )
+  expect(passwordRequests).toHaveLength(2)
+  expect(passwordRequests[1].url).not.toBe(passwordRequests[0].url)
   expect(
     await harness.env.DB.prepare(
       'SELECT COUNT(*) AS count FROM terminal_credentials',
@@ -95,23 +75,48 @@ it('returns ready, starting, and stopped terminal states without exposing a pass
     seed.workspaceId,
     harness.dependencies,
   )
-  const handler = createTerminalHandler(harness.env, harness.dependencies)
+  const startRequests = harness.requests.length
+  const handler = createTerminalHandler(
+    harness.env,
+    harness.dependencies,
+    new WorkspaceTerminals(harness.native.actor(seed.workspaceId).api.chat),
+  )
   const path = terminalPaths.connection(seed.orgId, seed.workspaceId)
   const ready = await handler.fetch(seed.request(path))
+  const terminals = [
+    {
+      id: 'workspace',
+      number: 1,
+      socketPath: terminalPaths.terminalSocket(
+        seed.orgId,
+        seed.workspaceId,
+        'workspace',
+      ),
+    },
+  ]
   expect(ready.status).toBe(200)
   expect(await ready.json()).toEqual({
     state: 'ready',
     protocol: 'tty',
     socketPath: terminalPaths.socket(seed.orgId, seed.workspaceId),
+    terminals,
+    several: false,
+    eventNumber: 0,
   })
   for (const state of ['starting', 'stopped']) {
     await harness.env.DB.prepare('UPDATE workspaces SET state = ? WHERE id = ?')
       .bind(state, seed.workspaceId)
       .run()
     const response = await handler.fetch(seed.request(path))
-    expect(await response.json()).toEqual({ state, socketPath: null })
+    expect(await response.json()).toEqual({
+      state,
+      socketPath: null,
+      terminals,
+      several: false,
+      eventNumber: 0,
+    })
   }
-  expect(harness.requests).toHaveLength(1)
+  expect(harness.requests).toHaveLength(startRequests)
 })
 
 it('authenticates the ttyd handshake and forwards automatic replies without reporting activity', async () => {
@@ -122,7 +127,11 @@ it('authenticates the ttyd handshake and forwards automatic replies without repo
     seed.workspaceId,
     harness.dependencies,
   )
-  const handler = createTerminalHandler(harness.env, harness.dependencies)
+  const handler = createTerminalHandler(
+    harness.env,
+    harness.dependencies,
+    new WorkspaceTerminals(harness.native.actor(seed.workspaceId).api.chat),
+  )
   const request = seed.request(
     terminalPaths.socket(seed.orgId, seed.workspaceId),
     {
@@ -138,7 +147,9 @@ it('authenticates the ttyd handshake and forwards automatic replies without repo
   expect(response.status).toBe(101)
   expect(response.headers.get('Sec-WebSocket-Protocol')).toBe('tty')
   expect(response.headers.get('Authorization')).toBe(null)
-  const upstreamRequest = harness.requests[2]
+  const upstreamRequest = harness.requests.filter(
+    (request) => request.headers.get('Upgrade') === 'websocket',
+  )[0]
   expect(upstreamRequest.url).toBe('https://sandbox-7681.on.boat.dev/ws')
   expect(upstreamRequest.headers.get('Cookie')).toBe(
     '_port_auth=server-port-token',
@@ -182,12 +193,10 @@ it('authenticates the ttyd handshake and forwards automatic replies without repo
   const reply = upstream.nextMessage()
   browser.emit('0\u001b[1;1R')
   expect(await reply).toBe('0\u001b[1;1R')
-  await harness.activity()
   expect(await harness.status()).toEqual({ activity: TEST_TIME })
   const input = upstream.nextMessage()
   browser.emit(Uint8Array.of(48, 108, 115, 13).buffer)
   expect(await input).toEqual(Uint8Array.of(48, 108, 115, 13).buffer)
-  await harness.activity()
   expect(await harness.status()).toEqual({ activity: TEST_TIME })
   browser.close(1000, 'closed')
   await upstream.end
@@ -196,12 +205,19 @@ it('authenticates the ttyd handshake and forwards automatic replies without repo
 
 it('rejects a ttyd socket without the tty protocol before contacting the sandbox', async () => {
   const seed = await harness.seed()
-  const handler = createTerminalHandler(harness.env, harness.dependencies)
-  const response = await handler.fetch(
-    seed.request(terminalPaths.socket(seed.orgId, seed.workspaceId), {
-      headers: { Upgrade: 'websocket' },
-    }),
+  const handler = createTerminalHandler(
+    harness.env,
+    harness.dependencies,
+    new WorkspaceTerminals(harness.native.actor(seed.workspaceId).api.chat),
   )
-  expect(response.status).toBe(400)
+  for (const path of [
+    terminalPaths.socket(seed.orgId, seed.workspaceId),
+    terminalPaths.terminalSocket(seed.orgId, seed.workspaceId, 'workspace'),
+  ]) {
+    const response = await handler.fetch(
+      seed.request(path, { headers: { Upgrade: 'websocket' } }),
+    )
+    expect(response.status).toBe(400)
+  }
   expect(harness.requests).toHaveLength(0)
 })

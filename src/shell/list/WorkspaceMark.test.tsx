@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, test } from 'vitest'
 import { WorkspaceMark } from '../../../docs/mockups/src/components/workspaces/WorkspaceMark'
 import styles from '../../../docs/mockups/src/components/workspaces/WorkspaceMark.module.css'
-import type { GitHubSummary } from '../../../docs/mockups/src/fixtures/pullRequests'
+import type { GitHubSummary } from '../../shared/generated/GitHubSummary'
 import type { ActivityStatus } from '../../../docs/mockups/src/fixtures/workspaces'
 
 /** The classes of the nine cells of a mark, row by row from the top left. */
@@ -47,6 +47,24 @@ describe('WorkspaceMark', () => {
     expect(count(cells, styles.pulse)).toBe(9)
     expect(count(cells, styles.chase)).toBe(0)
   })
+
+  test.each([null, 'checks-failed', 'ready-to-merge', 'merged'] as const)(
+    'turns blue while the agent needs input, whatever the GitHub state %s',
+    (github) => {
+      const html = renderToStaticMarkup(
+        <WorkspaceMark github={github} status="input" />,
+      )
+      expect(html).toContain(styles.input)
+      for (const tone of [
+        styles.none,
+        styles.danger,
+        styles.success,
+        styles.merged,
+      ]) {
+        expect(html).not.toContain(tone)
+      }
+    },
+  )
 
   test('keeps the mark still for other GitHub states and for an archive', () => {
     expect(count(cellClasses('ready-to-merge', 'ready'), styles.chase)).toBe(0)

@@ -1,4 +1,4 @@
-import { useCallback, type ReactNode } from 'react'
+import { useCallback, useState, type ReactNode } from 'react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { CircleAlert } from 'lucide-react'
@@ -6,7 +6,6 @@ import { EmptyState } from '../../../docs/mockups/src/components/common/EmptySta
 import { SuspendedOrgNotice } from '../../../docs/mockups/src/components/orgs/SuspendedOrgNotice'
 import body from '../../../docs/mockups/src/components/workspace/WorkspaceBody.module.css'
 import page from '../../../docs/mockups/src/screens/WorkspaceScreen.module.css'
-import { usePassedDeadlines } from '../../app/deadlines'
 import { mayArchive, mayRestore } from '../../app/permissions'
 import { useStore } from '../../app/store'
 import {
@@ -20,38 +19,35 @@ import { useApp, useOrgAccess } from '../context'
 import { ActionButton } from '../ui/actions'
 import { useAction } from '../ui/useAction'
 import { useViewport } from '../ui/viewport'
+import { useArchiveEnds } from './archive-ends'
 import { ChatArea } from './ChatArea'
-import { ContinueDialog } from './ContinueDialog'
 import { sandboxState, useFeatures, type WorkspaceContext } from './features'
-import { KeptFilesConnection } from './files/kept-files'
-import { ResumeOnTabOpen } from './files/tab-open-resume'
+import { KeptConnections } from './kept-connections'
 import { WorkspaceGitHub } from './github/WorkspaceGitHub'
 import { HeaderNoticeBars } from './HeaderNoticeBars'
+import { WorkspaceLinks } from './link-opening'
 import { archivedRestore, contentState, sandboxView } from './sandbox-view'
 import { SandboxPanel } from './SandboxNotice'
 import { MissingWorkspace, useRememberWorkspace } from './remember-workspace'
-import { OpenSessionAddress } from './session-address'
+import { useTabRestore } from './restore-tab'
+import { ScreenAddons } from './screen-addons'
 import { shownWorkspaces } from './tab-memory'
+import { TerminalFocus } from './tools/terminal-focus'
 import { ToolsPart } from './tools/ToolsPart'
 import { useArchiveActions } from './useArchiveActions'
 import { PhoneTabBar, phoneView, RightColumn } from './WorkspaceColumns'
 import { WorkspaceHeader } from './WorkspaceHeader'
 import { WorkspaceMacBar } from './WorkspaceMacBar'
-import { WorkspacePaletteActions } from './WorkspacePaletteActions'
-import type { WorkspaceView } from './workspace-view'
+import { connectView } from './workspace-view'
 import workspaceStyles from './workspace.module.css'
-
-/** Shows the kept parts of the workspace while the screen shows it. */
-function connectView(view: WorkspaceView): () => void {
-  return view.connect()
-}
 
 /**
  * An open workspace. On desktop the chat column sits beside the right column.
  * A phone shows one view at a time, with tabs to switch. The shell draws
  * the header, the start steps, and the states of the sandbox, and the chat
  * fills the centre. The app's own parts fill the files, the tools, the pull
- * request bar, and the owner picker, unless the host gives its own.
+ * request bar, and the owner picker, unless the host gives its own. The
+ * links of the chat and of the file preview open as `WorkspaceLinks` says.
  *
  * The tab keeps the model, the header notices, the chat, and the tool
  * events of each workspace that it showed. So a return draws the workspace
@@ -83,6 +79,8 @@ export function WorkspaceScreen(props: {
     { create, connect: connectView },
   )
   const { model, notices, chat, toolEvents } = shown
+  const [terminalFocus] = useState(() => new TerminalFocus())
+  const restore = useTabRestore()
   const startError = useStore(model.startError)
   const opened = useStore(model.opened)
   const features = useFeatures()
@@ -99,10 +97,9 @@ export function WorkspaceScreen(props: {
     },
     detail,
   )
-  // Restore ends at its last day while the page shows, with no other event.
-  const passed = usePassedDeadlines([
-    detail.state === 'ready' ? detail.value.workspace.restoreUntil : null,
-  ])
+  const { restoreEnded, removed } = useArchiveEnds(
+    detail.state === 'ready' ? detail.value.workspace : null,
+  )
   if (detail.state === 'loading') {
     return (
       <div className={workspaceStyles.center}>
@@ -139,7 +136,6 @@ export function WorkspaceScreen(props: {
   const { workspace, start, error } = detail.value
   const sandbox = sandboxState(workspace)
   const { suspended } = access
-  const restoreEnded = passed(workspace.restoreUntil)
   // A failed first start keeps the workspace, its chat, and its queue for
   // every member, with its saved cause and Try again. The open resumes a
   // stopped sandbox, so its bar waits until the open ends.
@@ -150,6 +146,7 @@ export function WorkspaceScreen(props: {
     savedError: error?.message ?? null,
     firstStart: failedFirstStart(workspace, start),
     restore: archivedRestore(workspace, suspended, restoreEnded),
+    removed,
     opened,
   })
   const context: WorkspaceContext = {
@@ -167,6 +164,7 @@ export function WorkspaceScreen(props: {
     savedView: chat,
     chat,
     toolEvents: toolEvents.subscribe,
+    terminalFocus,
     archive: mayArchive(access, workspace, props.viewer)
       ? () => lifecycle.archive(workspace)
       : null,
@@ -224,18 +222,13 @@ export function WorkspaceScreen(props: {
       ownerControl={features.owner?.(context)}
     />
   )
-  // Continue, palette actions, file tab resume, and the session address.
   const dialog = (
-    <>
-      <ContinueDialog />
-      <WorkspacePaletteActions chat={chat} context={context} />
-      <ResumeOnTabOpen context={context} />
-      <OpenSessionAddress
-        chat={chat}
-        context={context}
-        session={props.session}
-      />
-    </>
+    <ScreenAddons
+      chat={chat}
+      context={context}
+      restore={restore}
+      session={props.session}
+    />
   )
   if (phone) {
     const view = phoneView(props.view)
@@ -246,49 +239,53 @@ export function WorkspaceScreen(props: {
       tool: tools,
     }
     const screen = (
-      <div className={page.mobileBody}>
-        {header}
-        <HeaderNoticeBars notices={notices} />
-        {features.pullRequest?.(context)}
+      <WorkspaceLinks context={context}>
         <div className={page.mobileBody}>
-          {archived || view === 'chat'
-            ? content.chat
-            : view === 'files'
-              ? content.files
-              : content.tool}
+          {header}
+          <HeaderNoticeBars notices={notices} />
+          {features.pullRequest?.(context)}
+          <div className={page.mobileBody}>
+            {archived || view === 'chat'
+              ? content.chat
+              : view === 'files'
+                ? content.files
+                : content.tool}
+          </div>
+          {archived ? null : <PhoneTabBar context={context} />}
+          {dialog}
         </div>
-        {archived ? null : <PhoneTabBar context={context} />}
-        {dialog}
-      </div>
+      </WorkspaceLinks>
     )
     // An archived workspace on a phone shows only its chat: no pull request
     // row and no Checks, so it reads no GitHub state and no files.
     if (archived) return screen
     return (
-      <KeptFilesConnection context={context}>
+      <KeptConnections context={context}>
         <WorkspaceGitHub context={context}>{screen}</WorkspaceGitHub>
-      </KeptFilesConnection>
+      </KeptConnections>
     )
   }
   // The bar of the Mac app tops the main area, above the whole workspace.
   return (
-    <KeptFilesConnection context={context}>
+    <KeptConnections context={context}>
       <WorkspaceGitHub context={context}>
-        <WorkspaceMacBar context={context} />
-        <div className={body.body}>
-          <div className={body.chat}>
-            {header}
-            <HeaderNoticeBars notices={notices} />
-            {chatArea}
+        <WorkspaceLinks context={context}>
+          <WorkspaceMacBar context={context} />
+          <div className={body.body}>
+            <div className={body.chat}>
+              {header}
+              <HeaderNoticeBars notices={notices} />
+              {chatArea}
+            </div>
+            <RightColumn
+              files={files}
+              pullRequest={features.pullRequest?.(context)}
+              tools={sandbox === 'archived' ? undefined : tools}
+            />
+            {dialog}
           </div>
-          <RightColumn
-            files={files}
-            pullRequest={features.pullRequest?.(context)}
-            tools={sandbox === 'archived' ? undefined : tools}
-          />
-          {dialog}
-        </div>
+        </WorkspaceLinks>
       </WorkspaceGitHub>
-    </KeptFilesConnection>
+    </KeptConnections>
   )
 }

@@ -1,4 +1,4 @@
-/* The row keeps the mockup minimum and contains the phone's 44px targets. */
+/* The row keeps the mockup minimum and contains the phone's 40px targets. */
 .toolbar {
   display: flex;
   flex-shrink: 0;

@@ -14,7 +14,6 @@ import {
 } from '../../../chat/components/tab-row-test-kit'
 import type { FilesTab } from '../../../files/navigation'
 import { sessionsPath } from '../../../shared/sessions'
-import { workspaceViewPath } from '../../../shared/workspace-view'
 import { workspacePaths } from '../../../shared/workspaces'
 import {
   byLabel,
@@ -35,7 +34,7 @@ import {
 } from '../../../test-support/mount'
 import { serveSuspendedAcme } from '../../../test-support/suspended-org'
 import { click, settle } from '../../test-mount'
-import { bodiesOf } from '../kept-test-kit'
+import { savedViewsOf } from '../kept-test-kit'
 import { currents, linkTo, openTab } from '../wiring-test-kit'
 import { filesHref } from './files-address'
 
@@ -55,8 +54,8 @@ const fileTab: FilesTab = {
 const fileName = 'AddressForm.tsx'
 
 /** The views that the tab saved, from the request with index `from` on. */
-function savedViews(server: FakeApiServer, from: number): Promise<unknown[]> {
-  return bodiesOf(server, 'PUT', workspaceViewPath(org, id), from)
+function savedViews(server: FakeApiServer, from: number) {
+  return savedViewsOf(server, from)
 }
 
 describe('the Files screens in the workspace', () => {
@@ -149,7 +148,7 @@ describe('the Files screens in the workspace', () => {
     await pressKey('Escape')
 
     // The address opened the diff in the temporary tab, so its menu leads
-    // with Keep open.
+    // with Keep open. Its label hides a secret value, so it has no Copy path.
     expect({ ...shown, menu, moved, dragging }).toEqual({
       tab: 'seed-[redacted].sql',
       tooltip: 'scripts/seed-[redacted].sql',
@@ -159,6 +158,8 @@ describe('the Files screens in the workspace', () => {
         { name: 'Keep open', off: false },
         { name: 'Move left', off: false },
         { name: 'Move right', off: true },
+        { name: 'Close other tabs', off: false },
+        { name: 'Close tabs to the right', off: true },
       ],
       moved: 'seed-[redacted].sql changes moves to place 2 of 3',
       dragging: 'Moving seed-[redacted].sql changes to place 1 of 3',
@@ -227,7 +228,7 @@ describe('the Files screens in the workspace', () => {
     }).toEqual({ current: ['page'], saved: [] })
   })
 
-  test('keep the lists of a stopped sandbox, and show the sandbox in their place while it starts or the app refuses its start', async () => {
+  test('keep the saved lists while the sandbox is stopped or starts, and show the sandbox in their place when the app refuses its start', async () => {
     holdAnimationFrames()
     const here = routes.workspace(org, id)
     const refusedServer = new FakeApiServer({ workspaceState: 'stopped' })
@@ -251,10 +252,7 @@ describe('the Files screens in the workspace', () => {
     const lists = (view: HTMLElement) =>
       queryByLabel('Changed files', column(view))
     expect(lists(stopped.view)).not.toBeNull()
-    expect(lists(starting.view)).toBeNull()
-    expect(column(starting.view).textContent).toContain(
-      'Waiting for the sandbox',
-    )
+    expect(lists(starting.view)).not.toBeNull()
     expect(lists(refused.view)).toBeNull()
     expect(column(refused.view).textContent).toContain(
       "The sandbox can't start",

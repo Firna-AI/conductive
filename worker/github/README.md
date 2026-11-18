@@ -1,14 +1,14 @@
 # GitHub banner backend
 
 This module reads GitHub branch state for the shared banner and checks API.
-It also reads each member's merge access and runs direct merges as that member.
+It also reads each member's merge access, runs direct merges as that member, and marks a draft ready for review as that member.
 It also verifies GitHub App webhooks and finds their workspace targets.
 It stores its state and events in the [chat store](../chat/README.md) of the workspace Durable Object.
 It also keeps a copy of the GitHub summary of each workspace in D1, as [The summary copy](#the-summary-copy) says.
 The production Worker mounts the browser reads, the member merge routes, and the signed webhook route.
 The workspace object owns one state adapter and its durable retry requests.
 Verified default-branch pushes also notify image refresh.
-Verified pull request events also store [routine runs](../routines/README.md).
+Verified pull request events also store [automation runs](../automations/README.md).
 The run callback and banner refresh have separate error boundaries.
 The production composition starts stored runs through `waitUntil` after webhook handling.
 Without a request execution context, the minute scan recovers the queued runs.
@@ -27,13 +27,14 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
   Its stored route returns the last committed snapshot of the current branch, or null, without a GitHub read.
   It returns only the banner and the checks of that snapshot, and null for a snapshot of an earlier branch.
   The app shows it while the fresh read runs, as [State of a branch](../../docs/protocol/github-banner.md#state-of-a-branch) says.
-- [handleGitHubMerge](merge-handler.ts) serves the member capability, merge start, and merge result routes of `githubPaths`.
+- [handleGitHubMerge](merge-handler.ts) serves the member capability, merge start, merge result, and ready routes of `githubPaths`.
   It uses the existing app gate and keeps member capabilities out of workspace events.
   [GitHubMerge](merge.ts) derives the repository and pull request from the authorized workspace.
   It merges with the member's fresh GitHub token and rechecks access around each GitHub request.
   Its stored job binds an opaque app ID to the member and the workspace binding, without a token or error text.
   A completed merge refreshes the shared state through the existing queue and publisher.
   [Member merges](merges.md) gives the routes, replies, error codes, jobs, polling, and tests.
+  [markReady](ready.ts) marks the draft that the member saw ready for review, through the same member access as a merge.
 - [refreshWorkspace](refresh.ts) runs inside the target workspace Durable Object.
   It checks active org, installation, repository, branch, and optional user access before reading.
   It repeats the access check before storage and publication.
@@ -252,7 +253,7 @@ The retry of a committed delivery replays its receipt and copies again, without 
 ### Key Code
 
 - [Production composition](../features/github.ts) owns the state adapter and retry alarm, and the reads that Continue asks for.
-- [composition.ts](composition.ts) mounts verified webhooks, image refresh, and background routine starts.
+- [composition.ts](composition.ts) mounts verified webhooks, image refresh, and background automation starts.
 - [contracts.ts](contracts.ts) defines the server-side integration ports.
 - [webhook.ts](webhook.ts) verifies deliveries, stores pull request runs, and starts workspace refreshes.
 - [webhook-routing.ts](webhook-routing.ts) reads pull request facts, GitHub account IDs, and available author and sender logins after signature verification.

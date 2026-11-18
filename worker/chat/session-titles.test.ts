@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
-
-import type { Attachment, SendMessageResponse } from '../../src/shared/messages'
+import type { Attachment } from '../../src/shared/generated/Attachment'
+import type { SendMessageResponse } from '../../src/shared/messages'
 import { sessionPath, sessionPaths } from '../../src/shared/sessions'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { createFirstMessageFixture } from './first-message.test-support'
@@ -127,8 +127,8 @@ it('keeps an attachment-only session untitled until it accepts text', async () =
   )
   expect(nextResponse.status).toBe(202)
   const next: SendMessageResponse = await nextResponse.json()
-  expect(next.session.title).toBe('Explain screen.png with @src/login.ts')
+  expect(next.session.title).toBe('Explain with @src/login.ts')
   expect((await sessionRecord(fixture, later.id)).title).toBe(
-    'Explain screen.png with @src/login.ts',
+    'Explain with @src/login.ts',
   )
 })

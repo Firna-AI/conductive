@@ -23,7 +23,7 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the switch at
   higher price. Claude calls it fast mode. Codex calls it the Fast service
   tier.
 - **Choice:** the agent, the model, the effort, and the fast mode of a
-  message. A session, a saved default, and a routine each keep a choice.
+  message. A session, a saved default, and an automation each keep a choice.
 - **Fast turn:** a turn that runs with fast mode on.
 - **Fast fields:** the parts of a model request that ask the provider for
   fast mode.
@@ -91,9 +91,9 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the switch at
 - Any member who may send in a session may turn fast mode on or off, as for
   the model and the effort (fast mode decision 256).
 - Each message then runs with the fast mode of the session, also a message
-  of the starter. So the login of the starter pays the higher price for the
-  turns of each member who uses that login. This includes the turns of the
-  starter.
+  of the starter. So the login of the session pays the higher price for
+  the turns of each member who uses that login. This includes the turns of
+  the starter.
 - Reason: fast mode follows the rule of the model and the effort, and adds
   no restriction.
 - These ways were rejected (fast mode decision 256):
@@ -103,11 +103,12 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the switch at
     can read the conversation again without the prompt cache.
   - A second share setting on each login, for fast mode.
   - A switch that opens a new session on the own login of the member.
-- Risk: a member can make the starter pay the higher price for the
-  messages of the starter. This holds also while the starter does not share
-  the login. A costlier model or effort has the same risk.
+- Risk: a member can make the login of a session pay the higher price for
+  the messages of the starter. On a personal login, this holds also while
+  the starter does not share the login. On the org login, the org pays. A
+  costlier model or effort has the same risk.
 
-## Saved defaults, new workspaces, and routines
+## Saved defaults, new workspaces, and automations
 
 - The saved default of Preferences keeps fast mode with the model and the
   effort, as [The preference](create-a-workspace.md#the-preference) says.
@@ -117,9 +118,9 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the switch at
   fast mode in the saved default, was rejected for that reason (fast mode
   decision 255).
 - The default choice of the app has fast mode off.
-- A routine keeps fast mode in its choice, as
-  [A routine](routines.md#a-routine) says. Reason: each choice holds fast
-  mode, and a routine keeps a choice.
+- An automation keeps fast mode in its choice, as
+  [An automation](automations.md#an-automation) says. Reason: each choice holds fast
+  mode, and an automation keeps a choice.
 
 ## Agent tools
 

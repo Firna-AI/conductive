@@ -2,16 +2,27 @@ import type { BuildPhase } from './lifecycle/build-data'
 import type { RepairKind } from './lifecycle/repair-data'
 import type { WorkspaceStartJob } from './lifecycle/start-types'
 import type { WorkspaceArchiveState } from './lifecycle/archive-types'
-import type { ErrorSummary, WarningCode, WarningId } from './warning-values'
+import type {
+  ErrorSummary,
+  WarningCode,
+  WarningId,
+  WarningStreamId,
+  WarningTurnEndState,
+} from './warning-values'
+import type { GatewayCheckErrorKind } from './model-gateway/check-error'
+import type { GatewayRefusal } from './model-gateway/errors'
+import type { UnexpectedErrorFields } from './unexpected-error'
 
 export const SIMPLE_WARNINGS = {
   workspace_alarm_failed:
     'Workspace alarm work failed. Its durable deadline will retry.',
-  routine_schedule_failed:
-    'A routine schedule could not run. The next scan will try again.',
-  routine_queued_start_failed:
-    'A queued routine run could not start. The next scan will try again.',
-  routine_background_start_failed:
+  terminal_restart_refresh_failed:
+    'The terminal credentials and support could not be refreshed after Restart.',
+  automation_schedule_failed:
+    'An automation schedule could not run. The next scan will try again.',
+  automation_queued_start_failed:
+    'A queued automation run could not start. The next scan will try again.',
+  automation_background_start_failed:
     'A pull request run could not start in the background.',
   marketing_site_unavailable: 'The built marketing site is not available.',
   turn_speed_invalid:
@@ -38,15 +49,55 @@ export const SIMPLE_WARNINGS = {
   attachment_upload_cleanup_retry: 'An attachment upload cleanup will retry.',
   activity_timestamp_failed: 'Workspace activity timestamp could not be saved.',
   activity_update_failed: 'Workspace activity update failed.',
+  user_activity_failed: 'The last active time of a user could not be saved.',
   workspace_title_unconfigured:
     'The workspace title request was skipped: Workers AI is not configured.',
   shortcut_keys_skipped:
     'Some stored shortcut keys are no longer valid and were skipped.',
   shortcut_change_skipped: 'An unreadable stored shortcut change was skipped.',
+  model_gateway_check_late:
+    'A model turn check took longer than its interval. The answer keeps streaming.',
 } as const
+
+/** Where the handling of one runner message failed. */
+export const RUNNER_MESSAGE_STAGES = [
+  'parse',
+  'hello',
+  'file_result',
+  'event',
+  'after_commit',
+] as const
+
+export type RunnerMessageStage = (typeof RUNNER_MESSAGE_STAGES)[number]
+
+export interface RunnerWarningFields {
+  workspaceId: WarningId
+  connectionId: WarningId | null
+  streamId: WarningStreamId | null
+  processStartId: WarningStreamId | null
+  protocolVersion: number | null
+}
 
 /** Each kind permits only its fixed text and the safe values that it needs. */
 export type WorkerWarning =
+  | (RunnerWarningFields & {
+      kind: 'runner_connected' | 'runner_disconnected'
+    })
+  | (RunnerWarningFields & {
+      kind: 'turn_ended_without_stop_request'
+      turnId: WarningId
+      state: WarningTurnEndState
+    })
+  | {
+      kind: 'model_gateway_check_failed'
+      workspaceId: WarningId
+      errorKind: GatewayCheckErrorKind
+    }
+  | {
+      kind: 'model_gateway_answer_ended'
+      workspaceId: WarningId
+      code: GatewayRefusal | GatewayCheckErrorKind | 'lease_expired'
+    }
   | {
       kind: 'workspace_archive_failed'
       workspaceId: WarningId
@@ -73,8 +124,20 @@ export type WorkerWarning =
       cancelled: boolean
     }
   | {
-      kind: 'workspace_first_message_failed' | 'runner_message_failed'
+      kind: 'workspace_first_message_failed'
       workspaceId: WarningId
+      error: ErrorSummary
+    }
+  | {
+      kind: 'runner_message_failed'
+      workspaceId: WarningId
+      stage: RunnerMessageStage
+      error: ErrorSummary
+    }
+  | {
+      kind: 'automation_report_failed'
+      workspaceId: WarningId
+      retry: 'scheduled' | 'alarm'
       error: ErrorSummary
     }
   | {
@@ -100,6 +163,7 @@ export type WorkerWarning =
       resource: RepairKind
       limit: number
     }
+  | ({ kind: 'unexpected_error' } & UnexpectedErrorFields)
   | {
       kind: 'lifecycle_repair_pending'
       workspaces: number

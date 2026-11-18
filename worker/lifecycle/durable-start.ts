@@ -1,4 +1,5 @@
-import type { StartStep, WorkspaceStart } from '../../src/shared/workspaces'
+import type { StartStep } from '../../src/shared/generated/StartStep'
+import type { WorkspaceStart } from '../../src/shared/generated/WorkspaceStart'
 import { RESTORE_POLL_MS, type DurableLifecycleState } from './durable-types'
 
 export function withPreparedStart(
@@ -60,6 +61,7 @@ export function beginningLifecycleStart(
     restoreWatchAt: undefined,
     startStop: undefined,
     diskRetentionCommand: undefined,
+    softwareRestartAt: undefined,
   }
 }
 
@@ -82,6 +84,7 @@ export function readyLifecycle(
             ? state.state
             : 'ready',
     runnerConnected: true,
+    softwareRestartAt: undefined,
     error: null,
     stoppedAt: null,
     nextDiskKeepaliveAt: null,

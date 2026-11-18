@@ -3,25 +3,35 @@ import { conversations, type ChatItem } from '../fixtures/conversations'
 import { freshSessionPrompt } from '../fixtures/terminal'
 import { runWorkspaces, type RunWorkspaceKey } from '../fixtures/runWorkspaces'
 import type { StartingLog } from '../fixtures/starting'
+import { postcodeLookup } from '../fixtures/archivedWorkspaces'
 import {
-  openableWorkspaceRecords,
+  checkoutAutocomplete,
+  savedCarts,
+  type OpenableWorkspace,
   type Workspace,
 } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import type { WorkspaceState } from './workspaceState'
 
 /**
- * The routine page that the header of each run workspace links to. The
+ * The automation page that the header of each run workspace links to. The
  * failed runs link to the page whose Runs list shows them.
  */
-const routinePaths: Readonly<Record<RunWorkspaceKey, string>> = {
-  'pull-request': paths.routine,
-  'run-now': paths.routineRunNow,
-  'start-failed': paths.routineFailedRuns,
-  'turn-failed': paths.routineFailedRuns,
+const automationPaths: Readonly<Record<RunWorkspaceKey, string>> = {
+  'pull-request': paths.automation,
+  'run-now': paths.automationRunNow,
+  'start-failed': paths.automationFailedRuns,
+  'turn-failed': paths.automationFailedRuns,
 }
 
-/** The open workspace, its chat, and the routine of its run, if any. */
+/** The record of each workspace that a screen can show open. */
+const openableRecords: Readonly<Record<OpenableWorkspace, Workspace>> = {
+  'checkout-autocomplete': checkoutAutocomplete,
+  'saved-carts': savedCarts,
+  'postcode-lookup': postcodeLookup,
+}
+
+/** The open workspace, its chat, and the automation of its run, if any. */
 export type OpenWorkspace = {
   record: Workspace
   items: readonly ChatItem[]
@@ -36,7 +46,7 @@ export type OpenWorkspace = {
 export function openWorkspace(state: WorkspaceState): OpenWorkspace {
   if (state.run === undefined) {
     return {
-      record: openableWorkspaceRecords[state.workspace],
+      record: openableRecords[state.workspace],
       items: conversations[state.conversation],
     }
   }
@@ -44,7 +54,7 @@ export function openWorkspace(state: WorkspaceState): OpenWorkspace {
   return {
     record: run.workspace,
     items: state.conversation === 'queued' ? run.queued : run.firstTurn,
-    run: { ...run.origin, routineTo: routinePaths[state.run] },
+    run: { ...run.origin, automationTo: automationPaths[state.run] },
   }
 }
 

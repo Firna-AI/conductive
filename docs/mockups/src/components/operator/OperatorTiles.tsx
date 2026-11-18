@@ -1,9 +1,5 @@
 import { StatTile, StatTileRow } from '@firna/ui/chart'
-import {
-  operatorTotals,
-  runningComputers,
-  type WeeklyCount,
-} from '../../fixtures/operator'
+import { operatorTotals, type WeeklyCount } from '../../fixtures/operator'
 import { waitlistTotal } from '../../fixtures/operatorWaitlist'
 import { paths } from '../../paths'
 import { ScreenLink } from '../common/ScreenLink'
@@ -49,7 +45,9 @@ function UsersTile() {
  * computers that run now, for workspaces and for builds. The users also
  * count the people on the waitlist.
  */
-export function OperatorTiles() {
+export function OperatorTiles(props: {
+  running: { workspaces: number; builds: number }
+}) {
   return (
     <section aria-label="Totals" className={styles.band}>
       <StatTileRow>
@@ -59,7 +57,7 @@ export function OperatorTiles() {
         <StatTile
           label="Running now"
           style={tileStyle}
-          value={runningComputers.workspaces + runningComputers.builds}
+          value={props.running.workspaces + props.running.builds}
         />
       </StatTileRow>
     </section>

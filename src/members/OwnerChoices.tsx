@@ -1,6 +1,7 @@
+import type { Workspace } from '../shared/generated/Workspace'
 import { useCallback, useRef, useState } from 'react'
 import type { OrgMember } from '../shared/members'
-import type { Workspace } from '../shared/workspaces'
+
 import { errorMessage, type MembersApi } from './api/client'
 import { personName } from './people'
 import { useMountedRef } from './useMounted'
@@ -9,11 +10,11 @@ import { MenuPanel, type MenuChoice } from './ui/MenuPanel'
 import { PersonAvatar } from './ui/PersonAvatar'
 
 /**
- * Each session runs on the agent login of its starter, the member who
- * started it.
+ * A new owner moves no session to another login: each session keeps the
+ * login that it took at its first message, the personal login of a member
+ * or the org login.
  */
-const loginNote =
-  'Each session runs on the agent login of the member who started it.'
+const loginNote = 'Each session keeps its agent login.'
 
 type Members =
   | { status: 'loading' }

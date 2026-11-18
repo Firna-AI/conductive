@@ -19,16 +19,17 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 
 1. A tab sends a message to the Worker. The Durable Object forwards it to
    the agent runner, with the turn token of its turn and the current
-   branches of the workspace. The Worker first copies the files of the
-   message from the attachment storage into the sandbox. An action of the
-   pull request bar sends its fixed prompt in the same way.
+   branches of the workspace. The sandbox first downloads each new file of
+   the message from the attachment storage, through a route of the
+   Worker. An action of the pull request bar sends its fixed prompt in the
+   same way.
 2. The runner gives the message to the agent through the SDK. It numbers
    each agent event and sends it to the Durable Object.
 3. The agent sends each model request to the model gateway of the Worker,
    with the turn token. The gateway checks the token with the Durable
-   Object, adds the agent login of the starter, and streams the answer of
+   Object, adds the login of the session, and streams the answer of
    Anthropic or OpenAI back. For an own endpoint login, the gateway sends
-   the request with the key to the endpoint of the starter instead, as
+   the request with the key to the endpoint of that login instead, as
    [Own endpoints](../protocol/model-gateway-requests.md#own-endpoints)
    says. The requests of a ChatGPT sign-in pass through the egress container
    on their way to OpenAI. A settings file in the repository can send the requests of Claude
@@ -37,6 +38,28 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
    says.
 4. The Durable Object stores each event, confirms it to the runner, and
    pushes it to every open tab of the workspace.
+
+## A run with secrets
+
+1. In a turn, the agent runs a command with secrets through the agent
+   tools. The tool sends the names, the reason, the command text, and the
+   turn to the Worker, with the workspace token.
+2. The Worker finds the session of the turn. When grants cover each name,
+   it returns the values to the tool at once.
+3. Otherwise the Durable Object keeps a request and pushes it to every
+   open tab of the workspace. A member allows it in a browser or in the
+   Mac app, and the Worker returns the values to the tool.
+4. The tool starts the command with the values in its environment. It
+   hides each exact copy of a value in the output for the agent.
+5. The Durable Object shows the result in the chat with no value and no
+   output. It also hides each exact copy of each used value in later
+   events.
+6. When no member answers in 90 seconds, the call ends, and the request
+   stays in the chat. A later Allow starts a turn for the sender of the
+   turn that asked.
+
+[Secrets](../protocol/secrets.md) and
+[Secret requests](../protocol/secret-requests.md) state the rules.
 
 ## Terminal, previews, and desktop
 
@@ -55,8 +78,8 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
   routes each event to the workspace whose current branch it names.
 - A push to the default branch of a chosen repository can also start a
   refresh of the org image.
-- A pull request event can also start the runs of routines, as
-  [Routine runs](#routine-runs) says.
+- A pull request event can also start the runs of automations, as
+  [Automation runs](#automation-runs) says.
 
 ## Merge
 
@@ -82,29 +105,34 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 4. The Durable Object pushes the new state and the note of Continue to
    every open tab. Each later message carries the new branch to the agent.
 
-## Routine runs
+## Automation runs
 
 1. A trigger fires: the minute Cron Trigger finds a due schedule, a pull
    request webhook matches a trigger, or the owner uses Run now.
 2. The Worker stores the run in D1, once for each schedule time, delivery,
-   or Run now request. It checks the owner, the org, and the owner's
-   logins. A failed check creates no workspace.
+   or Run now request. It checks the owner, the org, the default login of
+   the owner, and the GitHub access of the owner. A failed check creates
+   no workspace.
 3. The Worker creates a workspace as the owner, with the run text as its
    first message. The workspace starts as in
    [Create a workspace](#create-a-workspace).
 4. The Durable Object of the workspace reports how the first turn ended,
    so that a failed first turn shows as a failed run.
 
-[Routines](../protocol/routines.md) and its linked pages state the rules.
+[Automations](../protocol/automations.md) and its linked pages state the rules.
 
 ## Stops
 
 - The Durable Object stops a sandbox when the stop rule of
-  [Stop and resume](../protocol/workspace-life.md#stop-and-resume) says
-  so.
+  [Stop and resume](../protocol/stop-and-resume.md) says so.
 - Near day 14 of a stop, the app starts the sandbox briefly and stops it
   again, so that Boat keeps its disk (decision 43).
 - Archive stops a running sandbox at once, and keeps the sandbox. The
   Durable Object deletes it 14 days after the Archive, unless a member
   restores the workspace first, as
   [Archive](../protocol/workspace-life.md#archive) says.
+- 14 days after the Archive, the workspace also leaves the lists of the
+  app and of the agent tools. D1, the Durable Object, and the attachment
+  storage keep its data, as
+  [Removed workspaces](../protocol/workspace-life.md#removed-workspaces)
+  says.

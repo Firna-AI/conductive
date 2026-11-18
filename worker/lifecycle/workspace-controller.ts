@@ -1,6 +1,7 @@
+import type { StartStep } from '../../src/shared/generated/StartStep'
+import type { WorkspaceStart } from '../../src/shared/generated/WorkspaceStart'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
-import type { StartStep, WorkspaceStart } from '../../src/shared/workspaces'
 import { requireWorkspaceOrg } from './access'
 import { runWorkspaceAlarm } from './workspace-alarm'
 import { WorkspaceEventJournal } from './durable-journal'
@@ -109,8 +110,8 @@ export function createWorkspaceController(
     waitCreationLifecycle() {
       return starts.waitCreation()
     },
-    waitCreationAdmission() {
-      return starts.waitAdmission()
+    waitCreationAdmission(timeoutMs) {
+      return starts.waitAdmission(timeoutMs)
     },
     readCreationLifecycleResult() {
       return starts.creationResult()
@@ -181,6 +182,7 @@ export function createWorkspaceController(
     ): Promise<boolean> {
       return (await accessStop.check(workspaceId, ownerUserId)) === true
     },
+    changeLifecycle: (change) => lifecycle.update(change),
     async reconcileLifecycleAccess(workspaceId: string): Promise<void> {
       await archive.repair(workspaceId)
       await accessStop.ownerChanged(workspaceId)

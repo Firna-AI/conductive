@@ -37,16 +37,17 @@ mount the chat.
 - Each tab shows the `title` of its session record. The backend provides
   the titles that the mockups show. The title from the first message names
   the workspace and its first session, as
-  [Messages](../../docs/protocol/messages-and-attachments.md#messages) says. Each
-  other session takes the first line of its first message with text as its
+  [The title of a new workspace](../../docs/protocol/workspace-and-session-names.md#the-title-of-a-new-workspace)
+  says. Each other session takes the first line of its first message with
+  text as its
   title, as [Sessions](../../docs/protocol/agents-and-sessions.md#sessions)
   says. A name that a member set never changes. The development page does
   the same.
 - The rename field of a session with no title starts empty, with
   "Untitled" as its hint, so the label never becomes the name of the
   session. An empty field keeps the old name.
-- `renderTab(tab)` renders a file or diff tab of the saved view, such as an
-  open file. Its `title` is the name of the tab, as a screen reader reads
+- `renderTab(tab)` renders a file, diff, or Preview tab of the saved view,
+  such as an open file or the page of a port. Its `title` is the name of the tab, as a screen reader reads
   it from the tab, with each secret value hidden, such as "app.ts changes"
   for a diff. The tab menu and the status of the row name the tab by it,
   and the chat takes no name from a path. Its `draw(draw)` draws the tab
@@ -67,8 +68,13 @@ mount the chat.
   its place, as a double-click on the tab does, for Keep open of its tab
   menu. The host gives `keep` only to the temporary tab of the saved view,
   and null to each kept tab, whose menu then has no Keep open. The chat
-  calls it and saves nothing of its own. The host gives the key of Close
-  tab to its shown tab itself, as the shell does in `FileTab`.
+  calls it and saves nothing of its own. Its `copyPath` copies the real
+  path of the file of the tab, for Copy path of its tab menu, also in a
+  read-only chat. The host gives null to a tab whose label hides a secret
+  value or is not known yet, whose menu then has no Copy path. The host
+  gives the key of Close tab to its shown tab itself, as the shell does in
+  `FileTab` and `PreviewTab`. A Preview tab has no path, so its
+  `copyPath` is null.
   Without `renderTab`, the row shows only the session tabs, as on a phone.
   `components/tab-row.ts` holds these types.
 - `onOpenDiff` gets the real path of a changed file of a finished turn. The
@@ -93,9 +99,22 @@ mount the chat.
   as for each link of the app.
   Without `onOpenPage`, a chip is a plain link. The app then shows the
   session of a session address with `ChatController.showAddress`.
+- The other links of sent messages and answers open through the link
+  opener of the app shell, `LinkOpeningProvider` of
+  `../shell/ui/text-links.tsx`, around the chat. It gives the origin of the
+  app host, the check for a page of the app, and the port previews of the
+  workspace, or none where no server runs. A link of the app opens its
+  page as an `AppLink` does, through the navigation of the app. The
+  workspace screen gives it, as
+  [The chat of the workspace](../shell/workspace/screen-parts.md#the-chat-of-the-workspace)
+  says. Without it, as on the development page, each link opens a new
+  tab.
 - `content` takes a page that the app shows in place of the chat of the
   open session, such as an open file. The session tabs and the overlays
   stay, and no session tab is the current one.
+- `kept` takes parts that the app keeps mounted under the chat or the
+  `content`, such as the pages of the Preview tabs, so a page stays loaded
+  while another tab shows. The app hides each part that does not show.
 - The controller's `updateView(change)` changes the saved view with a
   change of the app, such as an open file tab or the list of the Files
   panel. It saves through the same writer as the session tabs, so a later
@@ -108,13 +127,19 @@ mount the chat.
   `keepsComposer` keeps the composer under the bar, as after a failed first
   start. Without a host, the chat draws both from its own record of the
   workspace, with the message that the workspace saved for a failed start.
+  `host.tools` gives the tools of the composer, such as Capabilities, as
+  `ComposerTool` in `components/ComposerTools.tsx` says. A computer shows
+  the icon of each tool after the attach button, and a phone holds Attach
+  files and the tools in the menu of one + button. Without tools, the bar
+  keeps its attach button on a phone too.
 - `readOnly` says that the workspace takes no write, such as while its org
   is suspended. The app gives `WorkspaceContext.readOnly`. The chat then
   shows its history, as an archived workspace does, and the host's bar
   takes the place of the composer.
 - `composerFocus` asks the message field of the composer to take the focus
-  once, as `ComposerFocus` in `components/Composer.tsx` says. The app gives
-  it after a click on the workspace in the sidebar, from
+  once, as `ComposerFocus` in `components/composer-requests.ts` says. The
+  app gives it after a click on the workspace in the sidebar, and after
+  Add to chat of the Files panel on desktop, from
   `AppModel.composerFocus`. The request waits until the composer shows,
   such as after the first load of the chat. The field then takes the focus
   only while the focus is still on the element of the request, or on no
@@ -193,9 +218,11 @@ members, and the workspace list of the org from the models of the app.
   ends the subscriptions. `hide` and `show` keep them.
 - A chat without sources reads the four values at each load.
 - The workspace list gives the chips their workspaces, with the archived
-  ones. The chat watches it from `start` or `show` until `hide` or `stop`,
-  through `watchWorkspaces`, which the app connects to
-  `OrgModel.watch('list')`. So the chips stay current on a phone, where no
-  list is on the screen, and a hidden chat reads nothing. A chat without
-  sources reads the list itself while it shows, with the wait of a shown
-  list of the app, in `state/workspace-list.ts`.
+  ones, also the removed ones that left the list. So the chip of a removed
+  workspace still opens its read-only chat. The chat watches the list from
+  `start` or `show` until `hide` or `stop`, through `watchWorkspaces`,
+  which the app connects to `OrgModel.watch('list')`. So the chips stay
+  current on a phone, where no list is on the screen, and a hidden chat
+  reads nothing. A chat without sources reads the list itself while it
+  shows, with the wait of a shown list of the app, in
+  `state/workspace-list.ts`.

@@ -1,23 +1,19 @@
+import type { AgentModel } from '../../shared/generated/AgentModel'
+import type { Agent } from '../../shared/generated/Agent'
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
+import type { Effort } from '../../shared/generated/Effort'
+import type { MessageSender } from '../../shared/generated/MessageSender'
+import type { DefaultAgentLogin } from '../../shared/generated/DefaultAgentLogin'
+import type { SessionLogin } from '../../shared/generated/SessionLogin'
 import {
   NEW_WORKSPACE_VIEWS,
   type AccountResponse,
   type AgentLoginStatus,
-  type GitHubInstallation,
-  type GitHubInstallationsResponse,
-  type GitHubRepositoriesResponse,
-  type GitHubRepository,
-  type PollCodexDeviceResponse,
+  type EndpointModelList,
   type SetNewWorkspaceViewResponse,
-  type StartCodexDeviceResponse,
 } from '../../shared/account'
-import type {
-  Agent,
-  AgentChoice,
-  AgentModel,
-  Effort,
-} from '../../shared/agents'
+
 import type { OrgRole, User } from '../../shared/api'
-import type { MessageSender } from '../../shared/messages'
 import type { GetStartedResponse } from '../../shared/onboarding'
 import type { OrgSummary } from '../../shared/orgs'
 import type { Section } from '../../shared/sections'
@@ -33,6 +29,7 @@ import {
   record,
   text,
   texts,
+  type JsonObject,
 } from './parse'
 import { readShortcuts } from './read-shortcuts'
 
@@ -82,11 +79,14 @@ export function readOrg(value: unknown): OrgSummary {
     suspendedAt: count(record(item, 'suspension'), 'suspendedAt'),
   }))
   const initials = maybeText(org, 'initials')
+  // A colour key that this client does not know stays, and draws as Blue.
+  const color = maybeText(org, 'color')
   return {
     id: text(org, 'id'),
     name: text(org, 'name'),
     role: choice(org, 'role', ROLES),
     ...(initials === null ? {} : { initials }),
+    ...(color === null ? {} : { color }),
     ...(suspension === null ? {} : { suspension }),
     ...(deletion === null ? {} : { deletion }),
   }
@@ -127,6 +127,15 @@ export function readModel(value: unknown): AgentModel {
   }
 }
 
+/** The last model list of an own endpoint login that the Worker read. */
+export function readEndpointModelList(value: unknown): EndpointModelList {
+  const list = record(value, 'endpoint model list')
+  return {
+    missing: texts(list, 'missing'),
+    checkedAt: count(list, 'checkedAt'),
+  }
+}
+
 export function readLogin(value: unknown): AgentLoginStatus {
   const login = record(value, 'agent login')
   const agent = choice(login, 'agent', AGENTS)
@@ -141,15 +150,7 @@ export function readLogin(value: unknown): AgentLoginStatus {
       host: text(login, 'host'),
       ...(login.modelList === undefined
         ? {}
-        : {
-            modelList: nested(login, 'modelList', (value) => {
-              const list = record(value, 'endpoint model list')
-              return {
-                missing: texts(list, 'missing'),
-                checkedAt: count(list, 'checkedAt'),
-              }
-            }),
-          }),
+        : { modelList: nested(login, 'modelList', readEndpointModelList) }),
       noReuse,
       updatedAt,
     }
@@ -184,42 +185,54 @@ export function loginUsable(login: LoginUse | undefined): boolean {
   return login?.connected === true && login.unusableCause === undefined
 }
 
-/** The states of a ChatGPT sign-in of Codex, as a poll answers them. */
-const CODEX_DEVICE_STATES = [
-  'waiting',
-  'connected',
-  'expired',
-  'failed',
-] as const satisfies readonly PollCodexDeviceResponse['state'][]
+/**
+ * The owner of a login: a member, or the org, such as the login of a
+ * session or the login of the runs of an automation.
+ */
+export function readSessionLogin(value: unknown): SessionLogin {
+  const login = record(value, 'session login')
+  if (choice(login, 'type', ['personal', 'org']) === 'org') {
+    return { type: 'org', orgId: text(login, 'orgId') }
+  }
+  return { type: 'personal', userId: text(login, 'userId') }
+}
 
-/** A started ChatGPT sign-in: its handle, its code, and its times. */
-export function readCodexDeviceStart(value: unknown): StartCodexDeviceResponse {
-  const start = record(value, 'ChatGPT sign-in')
+/**
+ * The default login of the person for one org and one agent, as the
+ * resolver of the Worker names it, without a credential. Each model list
+ * is optional.
+ */
+function readDefaultLogin(value: unknown): DefaultAgentLogin {
+  const entry = record(value, 'default login')
+  const modelList = maybeNested(entry, 'modelList', readEndpointModelList)
+  const orgModelList = maybeNested(entry, 'orgModelList', readEndpointModelList)
   return {
-    handle: text(start, 'handle'),
-    userCode: text(start, 'userCode'),
-    verificationUrl: text(start, 'verificationUrl'),
-    expiresAt: count(start, 'expiresAt'),
-    pollIntervalMs: count(start, 'pollIntervalMs'),
+    orgId: text(entry, 'orgId'),
+    orgName: text(entry, 'orgName'),
+    agent: choice(entry, 'agent', AGENTS),
+    login: maybeNested(entry, 'login', readSessionLogin),
+    ...(modelList === null ? {} : { modelList }),
+    ...(orgModelList === null ? {} : { orgModelList }),
   }
 }
 
-/** The state of a ChatGPT sign-in, with the connected login at the end. */
-export function readCodexDevicePoll(value: unknown): PollCodexDeviceResponse {
-  const poll = record(value, 'ChatGPT sign-in')
-  const state = choice(poll, 'state', CODEX_DEVICE_STATES)
-  switch (state) {
-    case 'waiting':
-      return { state, pollIntervalMs: count(poll, 'pollIntervalMs') }
-    case 'connected':
-      return { state, login: nested(poll, 'login', readLogin) }
-    case 'expired':
-      return { state }
-    case 'failed':
-      return { state, cause: text(poll, 'cause') }
-  }
+/**
+ * The default logins that a reply names: the reply of the account, for each
+ * org of the person, or the reply of the org logins, for that org. An older
+ * reply has no `defaultLogins`, so it names no default login.
+ */
+export function readDefaultLogins(
+  reply: JsonObject,
+): Pick<AccountResponse, 'defaultLogins'> {
+  return reply.defaultLogins === undefined
+    ? {}
+    : { defaultLogins: items(reply, 'defaultLogins', readDefaultLogin) }
 }
 
+/**
+ * The account of the person signed in, with the default logins of each org
+ * of the person, as `readDefaultLogins` says.
+ */
 export function readAccount(value: unknown): AccountResponse {
   const account = record(value, 'account')
   return {
@@ -228,6 +241,7 @@ export function readAccount(value: unknown): AccountResponse {
     newWorkspaceView: choice(account, 'newWorkspaceView', NEW_WORKSPACE_VIEWS),
     shortcuts: nested(account, 'shortcuts', readShortcuts),
     agentLogins: items(account, 'agentLogins', readLogin),
+    ...readDefaultLogins(account),
     operator: flag(account, 'operator'),
     githubAppUrl: text(account, 'githubAppUrl'),
   }
@@ -237,43 +251,6 @@ export function readNewWorkspaceView(
   value: unknown,
 ): SetNewWorkspaceViewResponse {
   return { view: choice(record(value), 'view', NEW_WORKSPACE_VIEWS) }
-}
-
-function readInstallation(value: unknown): GitHubInstallation {
-  const installation = record(value, 'installation')
-  return {
-    id: count(installation, 'id'),
-    account: text(installation, 'account'),
-    repositoryCount: count(installation, 'repositoryCount'),
-    settingsUrl: text(installation, 'settingsUrl'),
-  }
-}
-
-export function readInstallations(value: unknown): GitHubInstallationsResponse {
-  const body = record(value, 'installations')
-  return {
-    installations: items(body, 'installations', readInstallation),
-    installUrl: text(body, 'installUrl'),
-  }
-}
-
-function readGitHubRepository(value: unknown): GitHubRepository {
-  const repository = record(value, 'repository')
-  return {
-    githubId: count(repository, 'githubId'),
-    fullName: text(repository, 'fullName'),
-    description: text(repository, 'description'),
-    defaultBranch: text(repository, 'defaultBranch'),
-    installationId: count(repository, 'installationId'),
-  }
-}
-
-/** The repositories that the person and the GitHub App both reach. */
-export function readGitHubRepositories(
-  value: unknown,
-): GitHubRepositoriesResponse {
-  const body = record(value, 'repositories')
-  return { repositories: items(body, 'repositories', readGitHubRepository) }
 }
 
 export function readGetStarted(value: unknown): GetStartedResponse {

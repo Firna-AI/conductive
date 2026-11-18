@@ -1,17 +1,16 @@
-import type { Agent, AgentChoice, Effort } from '../../shared/agents'
-import {
-  readTurnSpeed,
-  type ChatEvent,
-  type RunnerEventRefused,
-  type ToolCall,
-} from '../../shared/chat-events'
-import type {
-  Attachment,
-  MessageDraft,
-  MessageSender,
-  UserMessage,
-} from '../../shared/messages'
-import type { Session } from '../../shared/sessions'
+import type { Session } from '../../shared/generated/Session'
+import type { SessionLogin } from '../../shared/generated/SessionLogin'
+import type { Agent } from '../../shared/generated/Agent'
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
+import type { Effort } from '../../shared/generated/Effort'
+import type { ToolCall } from '../../shared/generated/ToolCall'
+import type { Attachment } from '../../shared/generated/Attachment'
+import type { MessageSender } from '../../shared/generated/MessageSender'
+import type { UserMessage } from '../../shared/generated/UserMessage'
+import type { ChatEvent, RunnerEventRefused } from '../../shared/chat-events'
+import type { MessageDraft } from '../../shared/messages'
+
+import { readTurnSpeed } from '../../shared/chat-events'
 import { readStopRequester } from './read-stop'
 import { readChangedFile } from './read-changed-file'
 import { readContinued } from './read-continued'
@@ -21,6 +20,7 @@ import {
   list,
   nullable,
   oneOf,
+  optional,
   record,
   text,
   UnreadableResponse,
@@ -134,8 +134,26 @@ export function readDraft(value: unknown): MessageDraft {
   }
 }
 
+const readLoginType = oneOf<SessionLogin['type']>({ personal: true, org: true })
+
+/** The owner of the login of a session: a member, or the org. */
+export function readSessionLogin(value: unknown): SessionLogin {
+  const source = record(value, 'session login')
+  return readLoginType(source.type) === 'org'
+    ? { type: 'org', orgId: text(source.orgId) }
+    : { type: 'personal', userId: text(source.userId) }
+}
+
+/**
+ * A session record. An empty session and an older record have no `login`,
+ * so the record then has none either. An empty session names the default
+ * login of its starter as `defaultLogin`, which its first message takes,
+ * while a login serves that starter. An older record names none.
+ */
 export function readSession(value: unknown): Session {
   const source = record(value, 'session')
+  const login = optional(nullable(readSessionLogin))(source.login)
+  const defaultLogin = optional(nullable(readSessionLogin))(source.defaultLogin)
   return {
     id: text(source.id),
     workspaceId: text(source.workspaceId),
@@ -147,6 +165,8 @@ export function readSession(value: unknown): Session {
     activeTurnStartedAt: nullable(count)(source.activeTurnStartedAt),
     retryMessageId: nullable(text)(source.retryMessageId),
     startedBy: nullable(readSender)(source.startedBy),
+    ...(login === undefined ? {} : { login }),
+    ...(defaultLogin === undefined ? {} : { defaultLogin }),
     sourceSessionId: nullable(text)(source.sourceSessionId),
     loginAvailable: flag(source.loginAvailable),
     loginShared: flag(source.loginShared),

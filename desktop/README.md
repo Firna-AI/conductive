@@ -19,7 +19,7 @@ The file flow adds no renderer bridge.
 
 The desktop entry supplies the configured Worker origin to the app's API and event services.
 API calls use `credentials: include`, so Chromium sends the HttpOnly desktop session cookie.
-File uploads go to the same origin as one raw `XMLHttpRequest` with credentials, so they send the same cookie and report their progress.
+File uploads go to the same origin in parts. Each part is one raw `XMLHttpRequest` `PUT` with credentials and no other header than `Content-Type`, so it sends the same cookie and reports its progress.
 Workspace sockets use the same Worker origin.
 The renderer keeps its normal `fetch` function and has no OS bridge.
 
@@ -169,6 +169,8 @@ It then follows the width of the rail and the sidebar.
 The sidebar does not show after the toggle hides it, in a window narrower than 900px, or on a page without one.
 Then the bar keeps its own width at the top left of the window.
 The top bar of the main area starts after the bar.
+While the sidebar is hidden, the tile of the current org opens the workspace list as a popover below the bar.
+The sidebar shows no second toggle beside the Settings cog in the Mac app.
 
 The app disables the toggle in a window narrower than 900px and on a page without a sidebar.
 Other pages without the org rail, such as sign-in, show the bar in a 34px strip.
@@ -242,7 +244,7 @@ Run it after the desktop build with `npm --prefix desktop run test:electron -- t
 Mac CI runs the source and packaged tests on an Apple silicon runner and on an Intel runner.
 [Releases](RELEASES.md#releases) names the runners.
 It runs them for each pull request, and for each push to `main` and to the primary branch of the plan.
-It builds DMG and ZIP files with publishing disabled.
+It builds DMG and ZIP files with publishing disabled, for the architecture of each runner.
 Mac jobs run only when changed files match these paths:
 
 - `desktop/**`
@@ -262,10 +264,12 @@ npm --prefix desktop run test:packaged
 
 `iconutil` compiles the unchanged [approved iconset](../docs/brand/conductive.iconset/).
 The build copies the [1024px PNG master](../docs/brand/conductive-icon-1024.png) unchanged for the Dock.
-electron-builder makes DMG and ZIP packages for both Mac architectures.
+The `package` command makes DMG and ZIP packages for the architecture of the Mac that runs it.
+The packaged tests run only that package.
+The `package:release` command makes the packages for both Mac architectures, or for the one that its `--arm64` or `--x64` flag names.
 The `package` command uses an ad-hoc signature.
 PR builds force this same ad-hoc signing mode without certificate credentials.
-The package command verifies both app bundles with `codesign --verify --deep --strict`.
+The package command verifies the app bundle with `codesign --verify --deep --strict`.
 It also requires `Signature=adhoc` in the signature display.
 CI logs and `.context/boat-native-remote-workspaces/desktop-signatures.json` keep the signature evidence.
 Generated bundles, icons, packages, and test output stay ignored.

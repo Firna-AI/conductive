@@ -4,7 +4,10 @@ import { Section, SectionText } from '../settings/Section'
 import { StatusGlyph } from '../workspaces/StatusGlyph'
 import styles from './WorkspaceStates.module.css'
 
-/** The name of each state, and the glyph that the header draws for it. */
+/**
+ * The name of each state, and the glyph that the header draws for it. A
+ * removed workspace stays archived, so its header draws the same glyph.
+ */
 const states: Readonly<
   Record<WorkspaceStateKey, { label: string; glyph: ActivityStatus }>
 > = {
@@ -12,6 +15,7 @@ const states: Readonly<
   stopped: { label: 'Stopped', glyph: 'stopped' },
   failed: { label: 'Failed', glyph: 'error' },
   archived: { label: 'Archived', glyph: 'archived' },
+  removed: { label: 'Removed', glyph: 'archived' },
 }
 
 const order: readonly WorkspaceStateKey[] = [
@@ -19,6 +23,7 @@ const order: readonly WorkspaceStateKey[] = [
   'stopped',
   'failed',
   'archived',
+  'removed',
 ]
 
 /** A share as a whole percent, or with one decimal below 1%. */
@@ -41,16 +46,21 @@ function buildsLine(builds: number, page: 'overview' | 'org'): string {
 }
 
 /**
- * The workspaces of every org, or of one org, in each state, with the
- * glyph of the state of the cloud computer that the header draws, so that
- * a state never depends on colour alone. A line under the list names the
- * running builds. It imports no fixture value, so the app uses it too.
+ * The workspaces of every org, of one org, or of one person, in each
+ * state, with the glyph of the state of the cloud computer that the header
+ * draws, so that a state never depends on colour alone. Removed comes after
+ * Archived, apart from it. A line under the list names the running builds,
+ * when the page counts builds. It imports no fixture value, so the app uses
+ * it too.
  */
 export function WorkspaceStates(props: {
   counts: StateCounts
-  builds: number
-  /** The overview of every org, or the page of one org. */
-  page: 'overview' | 'org'
+  /**
+   * The builds that run now, and the page that counts them: the overview
+   * of every org, or the page of one org. The Stats tab of the account
+   * counts no builds.
+   */
+  builds?: { count: number; page: 'overview' | 'org' }
 }) {
   const total = order.reduce((sum, key) => sum + props.counts[key], 0)
   return (
@@ -69,8 +79,10 @@ export function WorkspaceStates(props: {
           </li>
         ))}
       </ul>
-      {props.builds > 0 ? (
-        <SectionText muted>{buildsLine(props.builds, props.page)}</SectionText>
+      {props.builds && props.builds.count > 0 ? (
+        <SectionText muted>
+          {buildsLine(props.builds.count, props.builds.page)}
+        </SectionText>
       ) : null}
     </Section>
   )

@@ -5,14 +5,18 @@ export function readTerminalCredential(
   workspaceId: string,
   sandboxId: string | null,
   providerAccount: string,
-): Promise<{ ciphertext: string; providerAccount: string } | null> {
+): Promise<{
+  ciphertext: string
+  providerAccount: string
+  several: number
+} | null> {
   return db
     .prepare(
-      `SELECT ciphertext, provider_account AS providerAccount FROM terminal_credentials
+      `SELECT ciphertext, provider_account AS providerAccount, several FROM terminal_credentials
        WHERE workspace_id = ? AND sandbox_id = ? AND provider_account = ?`,
     )
     .bind(workspaceId, sandboxId, providerAccount)
-    .first<{ ciphertext: string; providerAccount: string }>()
+    .first<{ ciphertext: string; providerAccount: string; several: number }>()
 }
 
 export async function saveTerminalCredential(
@@ -20,20 +24,22 @@ export async function saveTerminalCredential(
   target: WorkspaceTarget,
   ciphertext: string,
   now: number,
+  several = false,
 ): Promise<boolean> {
   const result = await db
     .prepare(
-      `INSERT INTO terminal_credentials (workspace_id, ciphertext, updated_at, sandbox_id, provider_account)
-       SELECT w.id, ?, ?, w.sandbox_id, w.provider_account FROM workspaces w JOIN orgs o ON o.id = w.org_id
+      `INSERT INTO terminal_credentials (workspace_id, ciphertext, updated_at, several, sandbox_id, provider_account)
+       SELECT w.id, ?, ?, ?, w.sandbox_id, w.provider_account FROM workspaces w JOIN orgs o ON o.id = w.org_id
        WHERE w.id = ? AND w.org_id = ? AND w.sandbox_id = ? AND w.provider_account = ?
        AND w.archived_at IS NULL AND o.deleted_at IS NULL
        ON CONFLICT (workspace_id) DO UPDATE SET ciphertext = excluded.ciphertext,
        updated_at = excluded.updated_at, sandbox_id = excluded.sandbox_id,
-       provider_account = excluded.provider_account`,
+       provider_account = excluded.provider_account, several = excluded.several`,
     )
     .bind(
       ciphertext,
       now,
+      several ? 1 : 0,
       target.workspaceId,
       target.orgId,
       target.sandboxId,

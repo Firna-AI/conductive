@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { sessionPaths, sessionsPath } from '../../shared/sessions'
-import type {
-  TemporaryTab,
-  WorkspaceTab,
-  WorkspaceView,
-} from '../../shared/workspace-view'
+import type { TemporaryTab, WorkspaceTab } from '../../shared/workspace-view'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import {
   choice,
@@ -50,12 +46,14 @@ describe('the chat tab order', () => {
     chat.controller.moveTab(file, { after: first })
     await chat.savedView()
 
-    const view: WorkspaceView = {
+    const view = {
       tabs: [file, first, second],
       activeTab: first,
       temporaryTab: mark,
       fileList: 'changes',
       tool: 'terminal',
+      previewTabs: [],
+      activePreview: null,
     }
     const saved = chat.writes().map((request) => request.clone().json())
     expect(await Promise.all(saved)).toEqual([

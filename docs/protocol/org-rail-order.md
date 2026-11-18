@@ -4,12 +4,15 @@ This doc holds the requirements and the decisions in force for the order
 of the orgs in the org rail. Each person keeps their own order. It covers
 the drag, the tile menu, the keys, the long press on a phone, and the
 places that use the order. It also covers the page that opens when the
-person opens an org. It belongs to
+person opens an org, and the workspace list that the tile opens while the
+sidebar is hidden. It belongs to
 [Orgs and members](orgs-and-members.md), which covers orgs, their
 sections, and their members. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says. The [mockup catalogue](../mockups/catalogue.md) draws the order at
+says. A list popover decision, such as list popover decision 2 B, is a
+decision of the change that added the popover of a hidden sidebar. Its
+pull request keeps the record. The [mockup catalogue](../mockups/catalogue.md) draws the order at
 `app/orgs/reorder`, on desktop and on a phone.
 
 ## Terms
@@ -67,6 +70,10 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the order at
   opens the first org that is not deleted.
 - The app forgets a last workspace when its page shows that the
   workspace is not available.
+- An archived or a removed workspace stays the last workspace, as a
+  direct link does. Its page shows the archived or the removed bar, as
+  [Removed workspaces](workspace-life.md#removed-workspaces) says
+  (decision 522).
 - The org switcher of a phone opens the list page of the org. Reason: a
   phone has no sidebar, so the list is the way to move to a workspace.
 - The key of Workspace list still opens the list page of the org, as
@@ -74,6 +81,59 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the order at
 - A memory in the tab only was rejected, because a reload would forget the
   place. A memory on the server was rejected, because it needs a new API
   for a small gain.
+
+## The hidden sidebar
+
+- **Sidebar toggle:** the button that hides the sidebar of the org and
+  shows it again. In the browser it sits beside the Settings cog at the
+  top of the sidebar (list popover decision 4). In the Mac app it sits
+  beside the window buttons, as [Mac app](desktop-app.md#the-window)
+  says, and the sidebar shows no second toggle.
+- **List popover:** the whole sidebar of the current org, open over the
+  page beside the rail: the org name, Settings, New workspace,
+  Automations, Search, and the sections with their rows and menus (list
+  popover decision 3 A).
+- The command Hide or show the sidebar runs the toggle in every host, as
+  [Keyboard shortcuts: the keys](keyboard-shortcuts-keys.md#the-default-keys)
+  says (list popover decision 5 A). It runs where the sidebar can show.
+- A hidden sidebar stays hidden until the person shows it, or until the
+  page closes. The browser does not keep the choice.
+- On a page that has a sidebar and shows no workspace list, a click on the
+  tile of the current org opens the list popover (list popover decision
+  2 B, 16 November 2026). The sidebar shows no list when the toggle hid it,
+  and in a window narrower than 900 px.
+- In a window narrower than 900 px, the list page of an org shows the list
+  in its main area, so its tile opens no popover there. A wider list page
+  shows no list while the toggle hides the sidebar, so its tile opens the
+  popover.
+- Reason: since a tile opens the last workspace of its org, a click on the
+  tile of the current org opened the same workspace again. While the
+  sidebar was hidden, no click reached the list.
+- A tile of another org opens that org, as
+  [Opening an org](#opening-an-org) says. A second click on the tile then
+  opens its popover (list popover decision 1 B). Reason: a click on a tile
+  that leads to another org must keep leading there.
+- A click with a modifier key opens the org in a new tab, and Switch to
+  org 1 to 9 opens the org. Neither opens the popover.
+- A second click on the tile, Escape, a click outside the popover, and
+  each page, dialog, or palette that opens from it close the popover. A row
+  menu, a rename, and a drag in the popover keep it open.
+- Escape belongs first to the newest layer or field: a menu, a dialog, or
+  the palette over the popover closes first, and Escape in a rename field
+  of the popover cancels the rename. Escape while an input method composes
+  stays with the text.
+- The focus moves into the popover as it opens, to the row of the open
+  page, else to its first control. As the popover closes, the focus goes
+  back to the tile. A page that opens from it takes the focus instead, and
+  a click outside leaves the focus where the person clicked. After a
+  dialog or the palette that opened from the popover, the focus goes back
+  to the tile.
+- The popover holds the sidebar toggle in the browser, so the toggle there
+  shows the sidebar again. In a window narrower than 900 px the sidebar
+  cannot show, so the popover holds no toggle.
+- While the popover is open, its list offers the actions and the keys of
+  the list. While the sidebar is hidden and the popover is closed, the
+  list offers none of them, because no list shows.
 
 ## Drag
 

@@ -1,3 +1,4 @@
+import type { Workspace } from '../../shared/generated/Workspace'
 import type { AppModel } from '../../app/app-model'
 import type { ArchiveModel } from '../../app/archive-model'
 import type { OrgModel } from '../../app/org-model'
@@ -8,7 +9,11 @@ import { ChatController } from '../../chat/state/controller'
 import type { ChatSources } from '../../chat/state/sources'
 import type { SubscribeToWorkspace } from '../../chat/stream/workspace-stream'
 import type { WorkspaceFiles } from '../../files/model/files-store'
-import type { Workspace } from '../../shared/workspaces'
+import {
+  createPreviewsStore,
+  type PreviewsStore,
+} from '../../previews/previewsStore'
+
 import { createWorkspaceFiles } from './files/files-store'
 import { HeaderNotices } from './header-notices'
 import { ToolEvents } from './tools/tool-events'
@@ -74,6 +79,8 @@ export class ShownWorkspaces {
   private readonly kept = new Map<string, KeptWorkspace>()
   /** The kept files of each workspace, made when a Files part first shows. */
   private readonly keptFiles = new Map<string, WorkspaceFiles>()
+  /** The kept previews of each workspace, made at their first read. */
+  private readonly keptPreviews = new Map<string, PreviewsStore>()
 
   /**
    * `onShow` runs at the first show of each workspace, after its render. It
@@ -185,12 +192,28 @@ export class ShownWorkspaces {
     return files
   }
 
+  /**
+   * The kept previews of a workspace: the list, the revokes, and the report
+   * of the servers. The first call makes the store, which starts nothing.
+   * The workspace screen connects it, and the Preview tool and the Preview
+   * tabs read the same store.
+   */
+  previews(orgId: string, workspaceId: string): PreviewsStore {
+    const key = `${orgId}/${workspaceId}`
+    const known = this.keptPreviews.get(key)
+    if (known) return known
+    const previews = createPreviewsStore({ orgId, workspaceId })
+    this.keptPreviews.set(key, previews)
+    return previews
+  }
+
   /** Stops every kept workspace and forgets it, as at a sign-out. */
   clear(): void {
     for (const shown of this.kept.values()) stop(shown)
     this.kept.clear()
     for (const files of this.keptFiles.values()) files.stop()
     this.keptFiles.clear()
+    this.keptPreviews.clear()
   }
 }
 

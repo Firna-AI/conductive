@@ -2,6 +2,7 @@ import type { RunnerLifecycleEvent } from './runner-lifecycle'
 import { HttpError } from '../http'
 import { heldOperation } from '../test-support/held-operation'
 import { fakeAttachments } from '../test-support/attachments'
+import { readSessionLogin } from '../chat/queries'
 import type { TestHarness } from '../test-support/harness'
 import type { NativeWorkspaceOptions } from '../test-support/native-workspace-api'
 import type { NativeStorageHooks } from '../test-support/native-storage'
@@ -121,6 +122,21 @@ export function backendActor(
         delete hooks.beforeTransaction
         await native.configure(options)
         await gate.wait()
+      }
+      await native.configure(options)
+      return gate
+    },
+    holdFirstMessageLogin: async () => {
+      const gate = heldOperation()
+      const callbacks = options.callbacks
+      if (!callbacks) throw new Error('The chat callbacks are missing.')
+      callbacks.resolveLogin = async (owner, agent) => {
+        delete callbacks.resolveLogin
+        await native.configure(options)
+        await gate.wait()
+        return owner === null
+          ? null
+          : readSessionLogin(harness.env, owner, agent)
       }
       await native.configure(options)
       return gate

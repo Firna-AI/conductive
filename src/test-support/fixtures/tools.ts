@@ -1,3 +1,8 @@
+import type { ChangesResponse } from '../../shared/generated/ChangesResponse'
+import type { DiffResponse } from '../../shared/generated/DiffResponse'
+import type { FileEntry } from '../../shared/generated/FileEntry'
+import type { FileResponse } from '../../shared/generated/FileResponse'
+import type { FileTreeResponse } from '../../shared/generated/FileTreeResponse'
 import {
   filesFor,
   type PathState,
@@ -7,13 +12,6 @@ import {
   pullRequest,
 } from '../../../docs/mockups/src/fixtures/pullRequests'
 import type { DesktopResponse } from '../../shared/desktop'
-import type {
-  ChangesResponse,
-  DiffResponse,
-  FileEntry,
-  FileResponse,
-  FileTreeResponse,
-} from '../../shared/files'
 import type {
   BannerState,
   GitHubBannerResponse,
@@ -25,9 +23,9 @@ import {
   type PreviewResponse,
   type PreviewsResponse,
 } from '../../shared/previews'
-import { terminalPaths, type TerminalResponse } from '../../shared/terminal'
 import { FAKE_IDS, FAKE_ORIGIN, FAKE_TIME } from './core'
 import { withRealPath } from './masked-paths'
+import { fakeTerminalState } from './terminal'
 
 export const FAKE_FILE_PATH = 'src/app/checkout/AddressForm.tsx'
 export const FAKE_GITHUB_HEAD_SHA = 'a'.repeat(40)
@@ -150,11 +148,7 @@ export function toolFixtures(
     url: 'https://desktop.conductive.test/#fake-desktop-token',
     expiresAt: FAKE_TIME + 600_000,
   }
-  const terminal: TerminalResponse = {
-    state: 'ready',
-    socketPath: terminalPaths.socket(FAKE_IDS.org, FAKE_IDS.workspace),
-    protocol: 'tty',
-  }
+  const terminal = fakeTerminalState()
   return {
     files,
     content,

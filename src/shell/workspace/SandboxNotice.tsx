@@ -1,3 +1,4 @@
+import type { Workspace } from '../../shared/generated/Workspace'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { EmptyState } from '../../../docs/mockups/src/components/common/EmptyState'
@@ -11,10 +12,16 @@ import type {
 import type { ApiError } from '../../app/api/client'
 import { useServices } from '../../app/services'
 import { formatDay } from '../../app/time'
-import type { Workspace } from '../../shared/workspaces'
+import { WORKSPACE_RESTORE_MS } from '../../shared/workspaces'
 import { ActionButton } from '../ui/actions'
 import type { Action } from '../ui/useAction'
-import { barBody, keptBody, problemOf } from './notice-copy'
+import {
+  barBody,
+  keptBody,
+  leftTheList,
+  problemOf,
+  type Problem,
+} from './notice-copy'
 
 /**
  * The notice of a start in a suspended org. The org's metadata and the
@@ -49,14 +56,17 @@ export function refusedStart(
   return { problem: 'refused', reason: error.message }
 }
 
+/**
+ * The words of a notice. An archived workspace names the day of its
+ * Archive and the day 14 days later, when its Restore ends and it leaves
+ * the list. That day does not depend on a kept cloud computer.
+ */
 function useProblem(notice: SandboxNoticeState, workspace: Workspace) {
   const { timeZone } = useServices()
   const archivedAt = workspace.archivedAt ?? workspace.updatedAt
-  const { restoreUntil } = workspace
   return problemOf(notice, {
     archivedOn: formatDay(archivedAt, timeZone),
-    restoreUntil:
-      restoreUntil === null ? '' : formatDay(restoreUntil, timeZone),
+    removedOn: formatDay(archivedAt + WORKSPACE_RESTORE_MS, timeZone),
   })
 }
 
@@ -67,7 +77,7 @@ function useProblem(notice: SandboxNoticeState, workspace: Workspace) {
 export function RefusedBar(props: { reason: string }) {
   const problem = problemOf(
     { problem: 'refused', reason: props.reason },
-    { archivedOn: '', restoreUntil: '' },
+    { archivedOn: '', removedOn: '' },
   )
   return (
     <Notice
@@ -92,7 +102,8 @@ export interface BarAction {
  * because the start stays refused until its cause changes. A start that
  * failed shows the message that the workspace saved for it, such as its
  * time limit, before the body. An archived workspace offers Restore until
- * its last day, which the bar gives.
+ * its last day, and gives the day when it leaves the list. A removed
+ * workspace gives the day of its removal.
  */
 export function SandboxBar(props: {
   notice: SandboxNoticeState
@@ -131,7 +142,9 @@ export function SandboxBar(props: {
 /**
  * What a panel shows while the sandbox is not running. Desktop leaves the
  * action and the words of a refusal to the bar under the chat. A phone
- * shows the bar only on the Chat tab, so its panels show them too.
+ * shows the bar only on the Chat tab, so its panels show them too. The
+ * panel of an archived workspace has the title Archived, or Removed after
+ * the workspace left the list.
  */
 export function SandboxPanel(props: {
   state: SandboxPanelState
@@ -176,7 +189,13 @@ export function SandboxPanel(props: {
           : keptBody(state, problem.panelBody)
       }
       icon={problem.icon}
-      title={state.problem === 'archived' ? 'Archived' : problem.title}
+      title={panelTitle(state, problem)}
     />
   )
+}
+
+/** The title of a panel: the state of an archived workspace, in one word. */
+function panelTitle(state: SandboxNoticeState, problem: Problem): string {
+  if (state.problem !== 'archived') return problem.title
+  return leftTheList(state) ? 'Removed' : 'Archived'
 }

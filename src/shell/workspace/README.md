@@ -25,9 +25,31 @@ Archive shows as done before its reply: the row moves to the Archived
 group, and the open workspace shows as archived. A failed Archive brings
 both back and names the failure in a toast, as
 [Archive](../../../docs/protocol/workspace-menu.md#archive) says. The
-toast after the reply offers Restore. The archived bar, the row of the Archived group, and
+toast after the reply gives the day when the workspace leaves the list,
+and offers Restore. The archived bar, the row of the Archived group, and
 the palette offer Restore to each member until the last day, as
-[Restore](../../../docs/protocol/workspace-life.md#restore) says.
+[Restore](../../../docs/protocol/workspace-life.md#restore) says. On that
+day the workspace leaves the list. A link still opens its read-only chat,
+whose bar has the title "Removed on" and the day, as
+[Removed workspaces](../../../docs/protocol/workspace-life.md#removed-workspaces)
+says.
+
+The state in the header is a menu button while the software of the cloud
+computer runs: Ready, Working, Needs input, and Done, unread.
+[`HeaderState`](HeaderState.tsx) offers Restart there to each member of an
+org that is not suspended. It shows Starting from the press, asks first
+while an agent works, and names a failed update check or a failed restart
+in a toast, as
+[Restart the software](../../../docs/protocol/workspace-life.md#restart-the-software)
+says. The mockups are at `app/restart`.
+
+A press on the name in the header opens the workspace menu of the list
+for the open workspace, below the name.
+[`useHeaderMenu`](useHeaderMenu.tsx) reuses the menus of the list, so the
+two menus have the same actions for the same people. Rename puts its field
+in place of the name in the header, as
+[The menu in the header](../../../docs/protocol/workspace-menu.md#the-menu-in-the-header)
+says. The mockups are at `app/workspace-menu/header`.
 
 ## The kept workspace
 
@@ -47,8 +69,12 @@ of the shell, their addresses, and the saved view.
 
 ## The tools part
 
-[The tools part](screen-parts.md#the-tools-part) gives the Terminal and
-Preview tools of the shell, the hidden Desktop tool, and their addresses.
+[The tools part](tools-part.md) gives the Terminal and Preview tools of
+the shell, the hidden Desktop tool, their addresses, and the Preview tabs
+of the centre row. On desktop it keeps the terminals of the workspace
+while the sandbox runs, so the command palette offers New terminal after
+the Go to rows while the + of the terminal tabs takes a press. The row
+runs that +, as [New terminal](tools-part.md#new-terminal) says.
 
 ## The GitHub part
 
@@ -113,7 +139,7 @@ A new `create` makes a new view, so keep `app` and `viewer` stable.
   tab no longer keeps.
 
 The context of the features gives the kept chat as `savedView` and as
-`chat`, and the tool events as `toolEvents`. `KeptFilesConnection`
+`chat`, and the tool events as `toolEvents`. `KeptConnections`
 connects the kept files of the tab through `useWorkspaceStore`, as
 [the Files screens](../../files/README.md#integration) show, and the parts
 that show files read the same store.

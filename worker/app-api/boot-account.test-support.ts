@@ -1,5 +1,5 @@
 import { expect } from 'vitest'
-
+import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
 import {
   ACCOUNT_PATHS,
   type AccountResponse,
@@ -8,7 +8,6 @@ import {
   type SetDefaultModelRequest,
   type SetNewWorkspaceViewRequest,
 } from '../../src/shared/account'
-import type { AgentChoice } from '../../src/shared/agents'
 import { GET_STARTED_PATH } from '../../src/shared/onboarding'
 import type { SaveShortcutsRequest } from '../../src/shared/shortcuts'
 import { TERMS_VERSION } from '../../src/shared/terms'
@@ -127,6 +126,7 @@ export async function expectAccountState(
   profile: {
     githubLogin: string
     orgId: string | null
+    orgName?: string
     githubComplete: boolean
   },
 ): Promise<void> {
@@ -142,6 +142,17 @@ export async function expectAccountState(
   expect(body, `${profile.githubLogin} account`).toEqual({
     user,
     ...expectedAccount,
+    defaultLogins:
+      profile.orgId === null
+        ? []
+        : expected.agentLogins.map((login) => ({
+            orgId: profile.orgId,
+            orgName: profile.orgName,
+            agent: login.agent,
+            login: login.connected
+              ? { type: 'personal', userId: user.id }
+              : null,
+          })),
   })
   expect(account.defaultChoice, `${profile.githubLogin} default model`).toEqual(
     expected.defaultChoice,

@@ -1,47 +1,32 @@
+import type { WorkspaceRow } from './workspace-row'
+import type { Workspace } from '../../src/shared/generated/Workspace'
+import type { WorkspaceState } from '../../src/shared/generated/WorkspaceState'
+import type { WorkspaceStart } from '../../src/shared/generated/WorkspaceStart'
 import { activeOrgIdPredicate } from '../data/org-access'
 import { workspaceNameColumn } from '../data/workspace-name'
 import { presentWorkspace } from '../data/workspace-link'
 import { requireActiveOrg } from '../data/user-access'
 import type { User } from '../../src/shared/api'
 import type { SendMessageRequest } from '../../src/shared/messages'
-import type { Workspace, WorkspaceState } from '../../src/shared/workspaces'
+
 import { workspaceRestoreUntil } from '../../src/shared/workspaces'
 import { HttpError } from '../http'
 import { leasedImage, type LeasedImage } from './image-leases'
 import type { RepositoryLocation } from './repository-locations'
-
-export interface WorkspaceRow {
-  id: string
-  number: number
-  orgId: string
-  repositoryId: string
-  sectionId: string
-  ownerUserId: string
-  githubLogin: string
-  displayName: string | null
-  avatarUrl: string | null
-  name: string | null
-  branch: string
-  baseBranch?: string | null
-  sandboxId: string | null
-  providerAccount: string
-  state: WorkspaceState
-  github: Workspace['github']
-  createdAt: number
-  updatedAt: number
-  archivedAt: number | null
-  stoppedAt: number | null
-  nextDiskKeepaliveAt: number | null
-  agent: Workspace['choice']['agent']
-  model: string
-  effort: Workspace['choice']['effort']
-  fast: number
-  sessionId: string
-  firstTurnId: string
-}
+import {
+  NEW_WORKSPACE_CAPABILITIES,
+  type WorkspaceCapabilities,
+} from '../../src/shared/secrets'
+import { creationPreapprovals } from '../secrets/capabilities-writes'
+import {
+  parentDepthStatement,
+  requireWorkspaceParentDepth,
+  workspaceInsertStatement,
+  type WorkspaceParent,
+} from './workspace-insert-data'
 
 const columns = `w.id, w.number, w.org_id AS orgId, w.repository_id AS repositoryId,
-  w.section_id AS sectionId, w.owner_user_id AS ownerUserId,
+  w.section_id AS sectionId, w.parent_workspace_id AS parentId, w.owner_user_id AS ownerUserId,
   u.github_login AS githubLogin, u.display_name AS displayName, u.avatar_url AS avatarUrl,
   ${workspaceNameColumn('w')}, w.branch,
   COALESCE(w.base_branch, (SELECT default_branch FROM repositories WHERE id = w.repository_id AND org_id = w.org_id)) AS baseBranch,
@@ -49,7 +34,7 @@ const columns = `w.id, w.number, w.org_id AS orgId, w.repository_id AS repositor
   w.provider_account AS providerAccount, w.state, w.github_summary AS github,
   w.created_at AS createdAt, w.updated_at AS updatedAt, w.archived_at AS archivedAt,
   w.stopped_at AS stoppedAt, w.next_disk_keepalive_at AS nextDiskKeepaliveAt,
-  r.agent, r.model, r.effort, r.fast, r.session_id AS sessionId, r.first_turn_id AS firstTurnId`
+  w.task_number AS taskNumber, r.agent, r.model, r.effort, r.fast, r.session_id AS sessionId, r.first_turn_id AS firstTurnId`
 
 export async function readWorkspace(
   db: D1Database,
@@ -90,6 +75,7 @@ export function workspaceRecord(row: WorkspaceRow): Omit<Workspace, 'link'> {
     orgId: row.orgId,
     repositoryId: row.repositoryId,
     sectionId: row.sectionId,
+    parentId: row.parentId,
     owner: {
       id: row.ownerUserId,
       githubLogin: row.githubLogin,
@@ -121,6 +107,7 @@ export async function insertWorkspace(
     providerAccount: string
     repositoryId: string
     sectionId?: string
+    parentId?: string
     user: User
     senderUserId?: string
     city: string
@@ -132,8 +119,10 @@ export async function insertWorkspace(
     message: SendMessageRequest
     now: number
     repositoryLocations?: readonly RepositoryLocation[]
+    capabilities?: WorkspaceCapabilities
   },
 ): Promise<LeasedImage> {
+  const capabilities = input.capabilities ?? NEW_WORKSPACE_CAPABILITIES
   if (!input.sectionId) {
     await db
       .prepare(
@@ -155,33 +144,9 @@ export async function insertWorkspace(
       'section_not_found',
       'The section is not available.',
     )
-  await db.batch([
-    db
-      .prepare(
-        `INSERT INTO workspaces (id, org_id, repository_id, owner_user_id, section_id,
-       name, branch, base_branch, provider_account, state, created_at, updated_at, last_activity_at, position)
-       SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, 'starting', ?, ?, ?,
-         (SELECT COALESCE(MIN(position) - 1, 0) FROM workspaces
-          WHERE org_id = ? AND section_id = ? AND archived_at IS NULL AND state != 'archived')
-       WHERE ${activeOrgIdPredicate('?')}`,
-      )
-      .bind(
-        input.id,
-        input.orgId,
-        input.repositoryId,
-        input.user.id,
-        section.id,
-        input.name ?? '',
-        input.branch,
-        input.baseBranch ?? null,
-        input.providerAccount,
-        input.now,
-        input.now,
-        input.now,
-        input.orgId,
-        section.id,
-        input.orgId,
-      ),
+  const results = await db.batch<WorkspaceParent>([
+    parentDepthStatement(db, input.orgId, input.parentId),
+    workspaceInsertStatement(db, input, section.id, capabilities.macAccess),
     db
       .prepare(
         `INSERT INTO workspace_runtime (workspace_id, org_id, created_by_user_id, session_id, first_turn_id, agent, model, effort, fast, first_message_id, repository_locations_json)
@@ -203,8 +168,17 @@ export async function insertWorkspace(
           : null,
         input.id,
       ),
+    creationPreapprovals(db, {
+      orgId: input.orgId,
+      workspaceId: input.id,
+      secretIds: capabilities.preapprovedSecretIds,
+      userId: input.senderUserId ?? input.user.id,
+      now: input.now,
+    }),
   ])
   await requireActiveOrg(db, input.orgId)
+  if (input.parentId !== undefined)
+    requireWorkspaceParentDepth(results[0].results[0] ?? null)
   return leasedImage(db, input.orgId, input.id)
 }
 
@@ -246,6 +220,7 @@ export async function persistLifecycleState(
     workspaceId: string
     orgId: string
     state: WorkspaceState
+    start?: WorkspaceStart | null
     lastActivityAt: number
     stoppedAt: number | null
     nextDiskKeepaliveAt: number | null
@@ -255,13 +230,16 @@ export async function persistLifecycleState(
 ): Promise<void> {
   await db
     .prepare(
-      `UPDATE workspaces SET state = ?, last_activity_at = ?, stopped_at = ?,
+      `UPDATE workspaces SET state = ?, running_since = ?, last_activity_at = ?, stopped_at = ?,
      next_disk_keepalive_at = ?, last_error_code = ?, last_error_message = ?, updated_at = MAX(updated_at, ?)
      WHERE id = ? AND org_id = ? AND archived_at IS NULL AND state != 'archived'
        AND EXISTS (SELECT 1 FROM orgs WHERE orgs.id = workspaces.org_id AND orgs.deleted_at IS NULL)`,
     )
     .bind(
       input.state,
+      ['starting', 'ready', 'working', 'unread', 'input'].includes(input.state)
+        ? (input.start?.startedAt ?? null)
+        : null,
       input.lastActivityAt,
       input.stoppedAt,
       input.nextDiskKeepaliveAt,
@@ -285,15 +263,4 @@ export async function revokeWorkspacePreviews(
     )
     .bind(now, workspaceId)
     .run()
-}
-
-export function workspaceExists(
-  db: D1Database,
-  orgId: string,
-  workspaceId: string,
-): Promise<{ id: string } | null> {
-  return db
-    .prepare('SELECT id FROM workspaces WHERE org_id = ? AND id = ?')
-    .bind(orgId, workspaceId)
-    .first<{ id: string }>()
 }

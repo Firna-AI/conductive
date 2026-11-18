@@ -1,4 +1,5 @@
-import type { Session } from '../../shared/sessions'
+import type { Session } from '../../shared/generated/Session'
+
 import type {
   TemporaryTab,
   WorkspaceTab,
@@ -10,12 +11,17 @@ export type TabPlace = { before: WorkspaceTab } | { after: WorkspaceTab }
 /**
  * The key of a tab, or of the mark of the temporary tab. One file or diff
  * keeps its identity when its display mode changes, so the mark, which
- * names no mode, has the key of its tab.
+ * names no mode, has the key of its tab. A port has one Preview tab.
  */
 export function tabKey(tab: WorkspaceTab | TemporaryTab): string {
-  return tab.kind === 'session'
-    ? `session:${tab.sessionId}`
-    : `${tab.kind}:${tab.path}`
+  switch (tab.kind) {
+    case 'session':
+      return `session:${tab.sessionId}`
+    case 'preview':
+      return `preview:${tab.port}`
+    default:
+      return `${tab.kind}:${tab.path}`
+  }
 }
 
 /** The visible saved tabs, then the sessions that have no saved place. */
@@ -53,6 +59,26 @@ export function withSessionPlace(
   )
     return view
   return { ...view, tabs: [...view.tabs, { kind: 'session', sessionId }] }
+}
+
+/**
+ * Puts the tab of a session back at an index of the saved order, such as
+ * after a failed close. A view that holds the tab already stays the same.
+ */
+export function withSessionTabAt(
+  view: WorkspaceView,
+  sessionId: string,
+  index: number,
+): WorkspaceView {
+  if (
+    view.tabs.some(
+      (tab) => tab.kind === 'session' && tab.sessionId === sessionId,
+    )
+  )
+    return view
+  const tabs = [...view.tabs]
+  tabs.splice(Math.min(index, tabs.length), 0, { kind: 'session', sessionId })
+  return { ...view, tabs }
 }
 
 /** Keeps one place per open session, and appends missing places in creation order. */
@@ -115,4 +141,31 @@ export function moveTab(
   const mark = view.temporaryTab
   const kept = mark !== null && tabKey(mark) === key
   return { ...view, tabs, temporaryTab: kept ? null : mark }
+}
+
+/**
+ * The view without the given file and diff tabs, as Close other tabs and
+ * Close tabs to the right of the tab menu close them. A session tab closes
+ * through the server instead, so this keeps each session tab. A closed
+ * temporary tab loses its mark. A closed active tab leaves no active tab,
+ * so close it after the row shows another tab. A change that closes
+ * nothing gives the same view.
+ */
+export function withoutTabs(
+  view: WorkspaceView,
+  closed: readonly WorkspaceTab[],
+): WorkspaceView {
+  const keys = new Set(
+    closed.filter((tab) => tab.kind !== 'session').map(tabKey),
+  )
+  const tabs = view.tabs.filter((tab) => !keys.has(tabKey(tab)))
+  if (tabs.length === view.tabs.length) return view
+  const { activeTab, temporaryTab } = view
+  return {
+    ...view,
+    tabs,
+    activeTab: activeTab && keys.has(tabKey(activeTab)) ? null : activeTab,
+    temporaryTab:
+      temporaryTab && keys.has(tabKey(temporaryTab)) ? null : temporaryTab,
+  }
 }

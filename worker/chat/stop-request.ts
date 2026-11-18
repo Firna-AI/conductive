@@ -2,10 +2,11 @@ import type { TurnStopRequester } from '../../src/shared/session-stop'
 import type { ChatTransaction } from './store'
 import type { StoredTurn } from './types'
 
-async function firstStoredRequester(
+export async function firstStopRequester(
   transaction: ChatTransaction,
   turn: StoredTurn,
 ): Promise<TurnStopRequester | undefined> {
+  if (turn.stopRequest !== undefined) return turn.stopRequest ?? undefined
   if (turn.state === 'queued' || turn.state === 'running') return undefined
   let after = 0
   for (;;) {
@@ -30,7 +31,7 @@ export async function recordStopRequest(
   requester: TurnStopRequester,
 ): Promise<void> {
   turn.stopRequest ??=
-    (await firstStoredRequester(transaction, turn)) ?? requester
+    (await firstStopRequester(transaction, turn)) ?? requester
   await transaction.saveTurn(turn)
   await transaction.emit({
     type: 'turn.stop-requested',

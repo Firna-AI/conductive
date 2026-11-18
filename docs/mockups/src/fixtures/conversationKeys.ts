@@ -1,4 +1,6 @@
 import { barConversationKeys } from './barConversations'
+import { secretConversationKeys } from './secretConversations'
+import { secretValueConversationKeys } from './secretValueConversations'
 
 /**
  * The keys of the chat transcripts of `conversations.ts`, one for each
@@ -24,6 +26,7 @@ export const conversationKeys = [
   'mac-denied',
   'mac-done',
   'mac-unavailable',
+  'mac-access-off',
   'output-left-out',
   'output-left-out-running',
   'files-left-out',
@@ -40,6 +43,8 @@ export const conversationKeys = [
   'sent-files',
   'sent-files-listed',
   'queued-files',
+  'missing-file',
+  'missing-files',
   'link-sent',
   'link-answer',
   'other-org-link',
@@ -49,6 +54,7 @@ export const conversationKeys = [
   'steered',
   'mac-in-work',
   'mention-answer',
+  'file-answer',
   'table-resources',
   'table-header',
   'table-rows',
@@ -59,5 +65,13 @@ export const conversationKeys = [
   'nested-lists-in-work',
   'headings',
   'headings-in-work',
+  'postcode-history',
+  'chat-links',
+  'chat-link-labels',
+  'chat-link-local',
+  'chat-links-sent',
+  'chat-links-in-work',
   ...barConversationKeys,
+  ...secretConversationKeys,
+  ...secretValueConversationKeys,
 ] as const

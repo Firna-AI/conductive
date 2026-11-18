@@ -1,12 +1,12 @@
 /**
- * The run lists that the Runs list of a routine can show, newest first.
+ * The run lists that the Runs list of an automation can show, newest first.
  * A list holds at most the newest 50 runs, and offers older runs at its
  * end when they exist. Each run has the agent and the owner of its
- * routine, unless it names its own.
+ * automation, unless it names its own.
  */
 
 import { failedRuns, turnedOffRuns } from './failedRunLists'
-import { lena, routines, type PullRequestEvent } from './routines'
+import { lena, automations, type PullRequestEvent } from './automations'
 import {
   pr,
   runsOf,
@@ -14,15 +14,15 @@ import {
   type ListedRun,
   type Run,
   type RunTrigger,
-} from './routineRuns'
+} from './automationRuns'
 
 const weekly: RunTrigger = { kind: 'schedule', schedule: 'weekly' }
 const weekdays: RunTrigger = { kind: 'schedule', schedule: 'weekdays' }
 
-const review = routines['review-prs']
+const review = automations['review-prs']
 
 /**
- * The newest runs of the routine that reviews pull requests, in each state
+ * The newest runs of the automation that reviews pull requests, in each state
  * of a workspace.
  */
 const newestReviewRuns: readonly ListedRun[] = [
@@ -82,7 +82,7 @@ function daysAgo(days: number): string {
 }
 
 /**
- * The older runs of the same routine: a push and an open for each pull
+ * The older runs of the same automation: a push and an open for each pull
  * request, from #473 down, so that the list holds the newest 50 runs.
  */
 const olderReviewRuns: readonly ListedRun[] = Array.from(
@@ -146,7 +146,7 @@ export const runListKeys = [
 export type RunListKey = (typeof runListKeys)[number]
 
 export const runLists: Readonly<Record<RunListKey, readonly Run[]>> = {
-  /** The newest 50 runs of a pull request routine, which has older ones. */
+  /** The newest 50 runs of a pull request automation, which has older ones. */
   review: reviewRuns,
   /**
    * A failed run for each cause. A failed start and a failed first turn
@@ -182,16 +182,16 @@ export const runLists: Readonly<Record<RunListKey, readonly Run[]>> = {
       when: '2h',
     },
   ]),
-  weekly: runsOf(routines['dependency-updates'], [
+  weekly: runsOf(automations['dependency-updates'], [
     { key: 'weekly-3', trigger: weekly, state: 'ready', when: '3d' },
     { key: 'weekly-2', trigger: weekly, state: 'archived', when: '10d' },
     { key: 'weekly-1', trigger: weekly, state: 'archived', when: '17d' },
   ]),
   /**
-   * The runs of the routine that moved to Cal when Lena left Acme. They ran
+   * The runs of the automation that moved to Cal when Lena left Acme. They ran
    * as Lena, so they keep her as their owner.
    */
-  'owner-left': runsOf(routines['copy-review'], [
+  'owner-left': runsOf(automations['copy-review'], [
     {
       key: 'weekly-copy-2',
       trigger: weekly,
@@ -208,7 +208,7 @@ export const runLists: Readonly<Record<RunListKey, readonly Run[]>> = {
     },
   ]),
   none: [],
-  'run-now': runsOf(routines['morning-summary'], [
+  'run-now': runsOf(automations['morning-summary'], [
     {
       key: 'run-now',
       trigger: { kind: 'run-now' },
@@ -216,15 +216,15 @@ export const runLists: Readonly<Record<RunListKey, readonly Run[]>> = {
       when: 'now',
     },
   ]),
-  /** The runs of the review routine after the suspension of Acme. */
+  /** The runs of the review automation after the suspension of Acme. */
   suspended: reviewRuns.map(afterSuspension),
-  /** The failed runs that turned an hourly routine off. */
+  /** The failed runs that turned an hourly automation off. */
   'turned-off': turnedOffRuns,
   /**
-   * The runs of the routine that tests the refund tools, before an admin
+   * The runs of the automation that tests the refund tools, before an admin
    * removed its repository from the chosen repositories of Acme.
    */
-  'refund-tests': runsOf(routines['refund-tests'], [
+  'refund-tests': runsOf(automations['refund-tests'], [
     { key: 'refund-2', trigger: weekdays, state: 'stopped', when: '2d' },
     { key: 'refund-1', trigger: weekdays, state: 'archived', when: '3d' },
   ]),

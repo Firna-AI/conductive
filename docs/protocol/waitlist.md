@@ -173,8 +173,7 @@ screen of the waitlist, on desktop and on a phone.
 - When the send fails, the app sends the email again, with the same
   idempotency key, until Resend accepts it or 24 hours pass. Then the app
   stops.
-- Reason: the operator section shows no email address, so the operator
-  cannot tell the person in another way. Resend keeps an idempotency key
+- Reason: the app gives the operator no other way to tell the person. Resend keeps an idempotency key
   for 24 hours, so a later retry can send a second copy.
 - The person keeps app access, also when no email goes, and sees it at the
   next visit.

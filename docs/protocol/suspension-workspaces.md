@@ -32,8 +32,8 @@ and workspace owners. The terms come from the
   unpushed work of the members. An admin can assign the workspace to
   another member, as the refusal above says.
 - A suspended user can create no workspace and start no build.
-- The routines of a suspended user start no runs, as
-  [Suspensions and deleted orgs](routines.md#suspensions-and-deleted-orgs)
+- The automations of a suspended user start no runs, as
+  [Suspensions and deleted orgs](automations.md#suspensions-and-deleted-orgs)
   says.
 - Each unfinished build that the user started stops and fails. The app
   removes its build sandbox.
@@ -46,9 +46,9 @@ and workspace owners. The terms come from the
 These rules hold for each member, for each workspace whose owner or org
 is suspended.
 
-- No member can open a new preview, launch a preview, open a terminal, or
-  get a desktop address. The Worker refuses each before any call to Boat,
-  with the same reply as the refusal of a resume.
+- No member can open a new preview, launch a preview, open or close a
+  terminal, or get a desktop address. The Worker refuses each before any
+  call to Boat, with the same reply as the refusal of a resume.
 - Each request to a preview of the workspace gets the answer of an unknown
   preview, and the data of an open preview stops.
 - An open terminal socket closes within 30 seconds.
@@ -81,7 +81,7 @@ of a deleted org takes effect.
 - When the org has no active admin, the workspaces move to the earliest
   remaining member who is not suspended. Only when no such member remains
   do they move to the earliest admin.
-- The routines of the member who leaves move to the same member as the
+- The automations of the member who leaves move to the same member as the
   workspaces (decision 508 E).
 - For a leave and a change of role, the last-admin rule counts only
   active admins. An admin can leave the org, or lose the admin role, only
@@ -106,4 +106,4 @@ of a deleted org takes effect.
 - They can still open a workspace whose owner is suspended, and read its
   chat history, also when the workspace is archived.
 - They can still list and close the previews of that workspace, and read
-  the status of its terminal.
+  the status of its terminals.

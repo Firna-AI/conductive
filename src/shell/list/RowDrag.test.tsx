@@ -1,99 +1,27 @@
+import type { Workspace } from '../../shared/generated/Workspace'
 // @vitest-environment happy-dom
 
 import { act } from 'react'
 import { describe, expect, test } from 'vitest'
-import { routes } from '../../app/router'
 import { groupWorkspaces } from '../../app/sections'
 import { byRole } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
-import {
-  coreFixtures,
-  FAKE_IDS,
-  FAKE_TIME,
-} from '../../test-support/fixtures/core'
+import { coreFixtures, FAKE_TIME } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { mountScreen } from '../test-mount'
 import { startedApp } from '../test-render'
-import type { Workspace } from '../../shared/workspaces'
+
 import type { MenuAnchor } from '../ui/menu-place'
 import type { DropTarget } from './drop-target'
 import type { RowMenu } from './row-menu'
-import type { SectionActions } from './SectionHeader'
+import {
+  closedMenu,
+  layOut,
+  mouse,
+  noActions,
+  rowLink,
+} from './row-drag-test-kit'
 import { SectionList } from './SectionList'
-
-/** The menu of a row, closed. */
-const closedMenu: RowMenu = {
-  open: false,
-  show: () => {},
-  rename: null,
-  startRename: null,
-}
-
-const noActions: SectionActions = {
-  toggle: () => {},
-  rename: () => {},
-  moveTo: () => {},
-  newWorkspace: () => {},
-  newSection: () => {},
-  remove: () => {},
-}
-
-/** The link of the row of a workspace. */
-function rowLink(view: HTMLElement, workspaceId: string): HTMLElement {
-  const found = view.querySelector<HTMLElement>(
-    `a[href="${routes.workspace(FAKE_IDS.org, workspaceId)}"]`,
-  )
-  if (!found) throw new Error(`The list has no row for ${workspaceId}.`)
-  return found
-}
-
-/** Gives an element a box `height` px high, `top` px down the page. */
-function placeAt(element: Element | null, top: number, height: number) {
-  if (!element) throw new Error('The list has no element to place.')
-  const box = new DOMRect(0, top, 200, height)
-  Object.defineProperty(element, 'getBoundingClientRect', {
-    configurable: true,
-    value: () => box,
-  })
-}
-
-/**
- * Gives a section a box 100 px high from `top`, and each of its rows a box
- * 20 px high, in this order, from 20 px below the top of the section.
- */
-function layOut(
-  view: HTMLElement,
-  section: string,
-  top: number,
-  workspaceIds: readonly string[],
-) {
-  placeAt(view.querySelector(`section[aria-label="${section}"]`), top, 100)
-  workspaceIds.forEach((workspaceId, index) =>
-    placeAt(
-      rowLink(view, workspaceId).parentElement,
-      top + 20 + index * 20,
-      20,
-    ),
-  )
-}
-
-/** Sends a mouse event with the button down, unless `init` says otherwise. */
-function mouse(target: EventTarget, type: string, init: PointerEventInit) {
-  act(() => {
-    target.dispatchEvent(
-      new PointerEvent(type, {
-        bubbles: true,
-        cancelable: true,
-        pointerId: 1,
-        pointerType: 'mouse',
-        button: 0,
-        buttons: 1,
-        clientX: 100,
-        ...init,
-      }),
-    )
-  })
-}
 
 describe('the drag of a workspace row', () => {
   test('moves the workspace to the place under the pointer, keeps that place outside every section, and moves nothing when it ends at the own place of the row or starts on Archive', async () => {
@@ -101,6 +29,7 @@ describe('the drag of a workspace row', () => {
     const groups = groupWorkspaces(
       coreFixtures().sectionList.sections,
       workspaceFixtures().workspaces.workspaces,
+      FAKE_TIME,
     )
     const moves: { workspaceId: string; target: DropTarget }[] = []
     const view = mountScreen(
@@ -174,6 +103,7 @@ describe('the drag of a workspace row', () => {
     const groups = groupWorkspaces(
       coreFixtures().sectionList.sections,
       workspaceFixtures().workspaces.workspaces,
+      FAKE_TIME,
     )
     const shown: { workspaceId: string; anchor: MenuAnchor }[] = []
     const menus = (workspace: Workspace): RowMenu => ({

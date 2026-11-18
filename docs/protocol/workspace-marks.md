@@ -10,7 +10,8 @@ This page belongs to [Workspace life](workspace-life.md).
   request bar gives the same state. It is red when the checks failed,
   green when the pull request is ready to merge, and purple after the
   merge. It is amber for a merge conflict, changes requested, and a block.
-  It is grey while the checks run and for a draft.
+  It is grey while the checks run and for a draft. While the agent needs
+  input, the mark is blue instead, as a later item says.
 - Reason: the mark and the bar of one workspace must never disagree. Cal
   chose the colours of the bar on 13 November 2026.
 - Amber for running checks in the list was rejected. Amber would then mean
@@ -29,16 +30,24 @@ This page belongs to [Workspace life](workspace-life.md).
 - Reason: the pulse keeps needs input in the list, as decision 68 requires.
   A still middle column for needs input was rejected, because the user
   asked for a mark of one full colour.
+- While the agent needs input, the mark is blue, in the accent colour of
+  the app, whatever the GitHub state (the user's decision of 17 November
+  2026). Reason: the user must act, and a pulse in the colour of the
+  GitHub state did not stand out, mostly on a dim grey mark. The mark then
+  does not show the GitHub state, and the pull request bar of the
+  workspace still shows it.
+- A pulse in the colour of the GitHub state was rejected, because the user
+  asked for a blue mark when the workspace needs something from the user.
 - The light also runs around the ring while the checks run, also when the
   agent does not work (the user's decision of 11 November 2026). Reason:
   the light means that the workspace waits on something and the user does
   not need to act. While the agent needs input, the mark pulses, whatever
   the checks. An archived mark stays still.
 - With reduced motion, the ring stays lit while the agent works. The middle
-  column stays lit while the agent needs input. The other cells stay dim,
-  so the state of the agent stays visible without motion. While only the
-  checks run, every cell stays lit, so the mark does not read as an agent
-  that works.
+  column stays lit in blue while the agent needs input. The other cells
+  stay dim, so the state of the agent stays visible without motion. While
+  only the checks run, every cell stays lit, so the mark does not read as
+  an agent that works.
 - Bold text alone marks unread output. A green mark for unread output was
   rejected, because green means a pull request that is ready to merge.
 - An archived workspace shows a fainter grey mark, whatever its GitHub
@@ -46,6 +55,7 @@ This page belongs to [Workspace life](workspace-life.md).
   [Chips](workspace-links.md#chips) says.
 - In each place, screen readers hear the GitHub state in words before the
   state, such as "Checks failed, Working". Reason: only the colour shows
-  the GitHub state. For an archived workspace, they hear no GitHub state.
+  the GitHub state, and a blue mark that needs input does not show it. For
+  an archived workspace, they hear no GitHub state.
 - A change of the GitHub state does not change the activity time of the
   row.

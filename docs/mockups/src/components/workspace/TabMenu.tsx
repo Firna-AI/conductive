@@ -6,9 +6,11 @@ import {
   Copy,
   CopyPlus,
   Pencil,
+  X,
 } from 'lucide-react'
 import { Menu, type MenuEntry } from '../common/Menu'
 import { Sheet } from '../common/Sheet'
+import { copyPathItem } from '../files/rowMenuCopy'
 import { linkItem } from './linkCopy'
 import type { WorkspaceTab } from './TabItem'
 import { transcriptItems } from './transcriptCopy'
@@ -53,14 +55,25 @@ const keepOpen: TabMenuItem = {
 }
 
 /**
+ * Copies the path of the file of a file or diff tab, from the root of the
+ * repository, as the Copy path item of a row of the Files panel does
+ * (decision 3 B of the file row menu change). A copy changes nothing.
+ */
+const copyPath: TabMenuItem = { ...copyPathItem, changes: false }
+
+/**
  * The groups of the menu of a tab, before a read-only workspace leaves
  * items out: a session tab has Rename session, Copy link and its two
- * transcript copies, and the moves. The temporary tab has Keep open and the moves, and a kept file or
- * diff tab has only the moves.
+ * transcript copies, and the moves. A file or diff tab has Copy path and
+ * the moves, and the temporary tab leads with Keep open. A tab whose label
+ * can hide a secret value leaves out Copy path (decision 2 A of the file
+ * row menu change). Every tab ends with Close other tabs and Close tabs to
+ * the right.
  */
 function groupsOf(
   tab: WorkspaceTab,
   moves: readonly TabMenuItem[],
+  closes: readonly TabMenuItem[],
 ): readonly (readonly TabMenuItem[])[] {
   if (tab.kind === 'session') {
     return [
@@ -71,9 +84,11 @@ function groupsOf(
         { label: transcriptItems.full, icon: CopyPlus, changes: false },
       ],
       moves,
+      closes,
     ]
   }
-  return tab.temporary ? [[keepOpen], moves] : [moves]
+  const file = [tab.hidesPath ? [] : [copyPath], moves, closes]
+  return tab.temporary ? [[keepOpen], ...file] : file
 }
 
 /**
@@ -82,10 +97,13 @@ function groupsOf(
  * one way to rename a session. Its copy items follow: Copy link, which
  * copies the link of the session, the concise copy, with each fold of the
  * chat closed, and the full copy, with every fold open. The temporary tab
- * leads with Keep open. Every tab moves one place left or right. A move
- * that the place of the tab rules out keeps its place, off. A read-only
- * workspace leaves out each item that changes the workspace, so a session
- * tab keeps only its copy items, and a file or diff tab has no menu.
+ * leads with Keep open. A file or diff tab has Copy path, which copies the
+ * path of its file. Every tab moves one place left or right. As in a
+ * browser, Close other tabs closes every tab but it, and Close tabs to the
+ * right closes every tab after it. A move or a close that the place of the
+ * tab rules out keeps its place, off. A read-only workspace leaves out each
+ * item that changes the workspace, so a session tab keeps only its copy
+ * items, and a file or diff tab keeps only Copy path.
  */
 export function tabMenuOf(
   tabs: readonly WorkspaceTab[],
@@ -109,8 +127,22 @@ export function tabMenuOf(
       changes: true,
     },
   ]
+  const closes: TabMenuItem[] = [
+    {
+      label: 'Close other tabs',
+      icon: X,
+      disabled: tabs.length === 1,
+      changes: true,
+    },
+    {
+      label: 'Close tabs to the right',
+      icon: X,
+      disabled: index === tabs.length - 1,
+      changes: true,
+    },
+  ]
   return joined(
-    groupsOf(tab, moves).map((group) =>
+    groupsOf(tab, moves, closes).map((group) =>
       group.filter((item) => !readOnly || !item.changes),
     ),
   )
@@ -118,7 +150,8 @@ export function tabMenuOf(
 
 /**
  * The tab menu of a phone: a sheet with the title of the tab. A tab whose
- * menu has no item, such as a file tab of a read-only workspace, opens none.
+ * menu has no item, such as a file tab of a read-only workspace whose label
+ * can hide a secret value, opens none.
  */
 export function TabMenuSheet(props: {
   tabs: readonly WorkspaceTab[]

@@ -1,4 +1,5 @@
 import { act } from 'react'
+import type { Agent } from '../../shared/generated/Agent'
 import { chatGptSignInCopy as copy } from '../../../docs/mockups/src/components/settings/chatGptSignInCopy'
 import type { AppModel } from '../../app/app-model'
 import type { ManualDelay } from '../../app/test-kit'
@@ -9,7 +10,6 @@ import {
   type PollCodexDeviceResponse,
   type StartCodexDeviceResponse,
 } from '../../shared/account'
-import type { Agent } from '../../shared/agents'
 import {
   byRole,
   queryByRole,
@@ -54,7 +54,7 @@ export const chatGptLogin = {
 
 /** The row of a Codex login on the ChatGPT plan that other members do not use. */
 export const chatGptRow =
-  'Codex Connected ChatGPT plan Remove Let other members use this login Their messages in your sessions start a new session on their own login.'
+  'Codex Connected ChatGPT plan Remove Let other members use this login Their messages in your sessions start a new session.'
 
 /**
  * Serves the account of the fixtures, a Claude token and a Codex API key,

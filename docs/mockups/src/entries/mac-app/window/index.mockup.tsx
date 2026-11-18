@@ -42,5 +42,12 @@ export const macWindow = defineScreen({
         'The empty New workspace in full screen, without the window buttons.',
       props: { page: 'new-workspace', window: 'full-screen' },
     },
+    {
+      slug: 'sidebar-popover',
+      title: 'Sidebar hidden, list popover',
+      description:
+        'The user hid the sidebar with the toggle beside the window buttons. The window controls keep their width in the top left corner, and the top bar of the workspace starts after them. A click on the tile of the current org opens the workspace list as a popover below them. The Mac app shows no second toggle beside the cog.',
+      props: { sidebar: 'popover' },
+    },
   ],
 })

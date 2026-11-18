@@ -20,6 +20,7 @@ export const accountSchema = {
     'view',
     'save',
     'shareChange',
+    'orgLogin',
     'invites',
     'ownEndpoint',
     'openSignUp',
@@ -29,14 +30,15 @@ export const accountSchema = {
     'host',
     'modelMenu',
     'deletedOrgs',
+    'stats',
   ],
   properties: {
     /**
      * The tab: General, with the sign-in and GitHub, Agents, with the
-     * logins of Claude and Codex, Preferences, or Keyboard shortcuts. Each
-     * tab has its own address.
+     * logins of Claude and Codex, Preferences, Keyboard shortcuts, or Stats,
+     * with the person's own counts. Each tab has its own address.
      */
-    tab: { enum: ['general', 'agents', 'preferences', 'shortcuts'] },
+    tab: { enum: ['general', 'agents', 'preferences', 'shortcuts', 'stats'] },
     /** GitHub and the agents are connected, or not yet, as at the first run. */
     connections: { enum: ['connected', 'not-connected'] },
     /** The kind of the Codex login while Codex is connected. */
@@ -85,15 +87,36 @@ export const accountSchema = {
      */
     shareChange: { enum: ['none', 'not-saved'] },
     /**
+     * The org login that serves the new sessions of Cal in Acme, from
+     * decisions 4 and 7 B of the org logins plan: none, the Claude login of
+     * Acme while Cal has no Claude login of his own, or the same login with
+     * "Use for every member" on, which serves Cal also while he has one.
+     */
+    orgLogin: { enum: ['none', 'no-own-login', 'every-member'] },
+    /**
      * The own endpoint login: none, the open form on the own endpoint kind
      * with an empty address, with a typed address that the shared rule
      * changes before the save, or with an address that the rule refused, or
      * the logins after the connect. `unlisted` has those logins when the
-     * model list of the proxy lacks a Claude model of the app. Except for
-     * `none`, every connected login runs on Cal's proxy.
+     * model list of the proxy lacks a Claude model of the app. `v1-added`
+     * has them after a Codex save that added /v1 to the typed address, with
+     * the note. `read-failed` has them after the last read of each model
+     * list failed, and `read-failed-unlisted` also keeps a Claude list that
+     * lacks a Claude model of the app. Except for `none`, every connected
+     * login runs on Cal's proxy.
      */
     ownEndpoint: {
-      enum: ['none', 'form', 'typed', 'refused', 'connected', 'unlisted'],
+      enum: [
+        'none',
+        'form',
+        'typed',
+        'refused',
+        'connected',
+        'unlisted',
+        'v1-added',
+        'read-failed',
+        'read-failed-unlisted',
+      ],
     },
     /**
      * The change of a shortcut on Keyboard shortcuts, in progress or last:
@@ -134,6 +157,11 @@ export const accountSchema = {
      * Labs after the operator suspended it, or a Restore that failed.
      */
     deletedOrgs: { enum: deletedOrgStates },
+    /**
+     * The numbers of the Stats tab: shown, loading when the tab opens, failed
+     * to load, or shown for a new account with no workspace and no automation.
+     */
+    stats: { enum: ['ready', 'loading', 'failed', 'empty'] },
   },
 } as const
 
@@ -159,6 +187,7 @@ export const accountGeneral: AccountState = {
   view: 'page',
   save: 'saved',
   shareChange: 'none',
+  orgLogin: 'none',
   invites: 'left',
   ownEndpoint: 'none',
   openSignUp: 'off',
@@ -168,6 +197,7 @@ export const accountGeneral: AccountState = {
   host: 'chrome-mac',
   modelMenu: 'closed',
   deletedOrgs: 'none',
+  stats: 'ready',
 }
 
 /** The Agents tab of a connected account, in Chrome on a Mac. */
@@ -180,4 +210,10 @@ export const accountAgents: AccountState = {
 export const accountShortcuts: AccountState = {
   ...accountGeneral,
   tab: 'shortcuts',
+}
+
+/** The Stats tab of a connected account, in Chrome on a Mac. */
+export const accountStatsTab: AccountState = {
+  ...accountGeneral,
+  tab: 'stats',
 }

@@ -1,5 +1,7 @@
-import type { Session } from '../../src/shared/sessions'
+import type { Session } from '../../src/shared/generated/Session'
+
 import { continueUnanswered } from './continuation'
+import { firstStopRequester } from './stop-request'
 import type { ChatTransaction } from './store'
 import type { StoredTurn } from './types'
 
@@ -27,6 +29,10 @@ export class TurnCompletion {
     end: TurnEnd,
     occurredAt = this.transaction.now,
   ): Promise<void> {
+    const noStopRequest = await firstStopRequester(this.transaction, turn).then(
+      (requester) => requester === undefined,
+      () => false,
+    )
     turn.started ??= turn.state === 'running' || turn.state === 'stopping'
     if (turn.loginFailure) {
       const retryMessageId = turn.messageIds[0]
@@ -83,7 +89,11 @@ export class TurnCompletion {
       await this.unlink(turn.id, following)
     }
     await this.saveSession()
-    this.transaction.endedTurns.push({ turnId: turn.id, occurredAt })
+    this.transaction.endedTurns.push({
+      turnId: turn.id,
+      occurredAt,
+      ...(noStopRequest ? { stateWithoutStop: end.state } : {}),
+    })
   }
 
   async stopped(turn: StoredTurn): Promise<void> {

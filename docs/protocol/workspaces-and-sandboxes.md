@@ -1,7 +1,8 @@
 # Workspaces and sandboxes
 
 This doc holds the requirements and the decisions in force for workspaces
-and their sandboxes, and for the org image that every sandbox starts from.
+and their sandboxes, for the org image that every sandbox starts from, and
+for the app's own software in each sandbox.
 [Workspace tools](workspace-tools.md) covers the tools of a workspace. The
 terms are those of the [architecture doc](../architecture.md#terms). A
 decision number names a dated record, as
@@ -10,19 +11,24 @@ decision number names a dated record, as
 These docs belong to this doc:
 
 - [Org image](org-image.md): its builds, refreshes, and first build.
+- [Sandbox software](sandbox-software.md): the releases of the app's own
+  software, the updates of each sandbox, the install in a build, and the
+  software image.
 - [Create a workspace](create-a-workspace.md): New workspace as a page or
   as a dialog, the create, the branch, and a failed first start.
 - [Repository folders](repository-folders.md): the folder and the shell
   variable of each repository in a sandbox, and the context folder of each
   workspace.
 - [Life of a workspace](workspace-life.md): the start steps, the time
-  limits, the states, the stop and resume, the archive, the restore, and
-  Continue.
+  limits, the states, the stop and resume, the archive, the restore, the
+  removal from the list after 14 days, and Continue.
 - [Continue](continue.md): the next task of a workspace after a merge, on
   a new branch with the same sandbox and sessions.
 - [Workspace menu](workspace-menu.md): the menu of a workspace row, which
   moves, reassigns, renames, and archives the workspace, and copies its
   link.
+- [Sub-workspaces](sub-workspaces.md): the parent link of a workspace, the
+  depth limit, the nested rows of the list, and the moves of a tree.
 - [Tools of a workspace](workspace-tools.md): the files and changes, the
   terminal, the port previews, and the desktop.
 
@@ -68,8 +74,10 @@ These docs belong to this doc:
 - A sandbox with flushes was rejected, because its previews of dev servers
   were too slow. A wait for faster Boat storage was rejected, because its
   date is unknown.
-- The image build installs the rule. A sandbox from an older image keeps
-  its flushes until a new image build.
+- The rule is a part of each release of the sandbox software. So an update
+  brings it to an older sandbox, as
+  [Updates](sandbox-software.md#updates) says. Such a sandbox keeps its
+  flushes until a start after that update.
 
 ## The org image
 
@@ -78,6 +86,12 @@ These docs belong to this doc:
 ### The first build
 
 [The first build](org-image.md#the-first-build) holds the first and added builds of a new org.
+
+## Sandbox software
+
+[Sandbox software](sandbox-software.md) holds the releases of the app's
+own software in each sandbox, and the rules by which each sandbox checks
+for, downloads, and applies an update.
 
 ## Repository folders
 
@@ -158,7 +172,7 @@ These docs belong to this doc:
 
 - [Workspace menu](workspace-menu.md) holds the requirements of the menu
   of a workspace row: Move to section, Reassign to, Rename, Copy link, and
-  Archive.
+  Archive. The header of the open workspace opens the same menu.
 
 ## Tools of a workspace
 
@@ -172,8 +186,8 @@ These docs belong to this doc:
 
 ### Terminal
 
-- [Terminal](workspace-tools.md#terminal) holds the requirements of the
-  shell of a workspace.
+- [Terminal](terminal.md) holds the requirements of the terminals of a
+  workspace and their shells.
 
 ### Port previews
 
@@ -199,7 +213,7 @@ These docs belong to this doc:
 
 ## Stop and resume
 
-[Stop and resume](workspace-life.md#stop-and-resume) holds these workspace requirements.
+[Stop and resume](stop-and-resume.md) holds these workspace requirements.
 
 ## Archive
 

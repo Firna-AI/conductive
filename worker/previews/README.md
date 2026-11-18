@@ -61,7 +61,7 @@ Its `url` is the authorizer address, with the hostname and a new grant only in
 the fragment. Its `expiresAt` ends that grant. The Mac app fetches it with its
 own session and the desktop Origin. It then opens `url` in the default browser.
 
-The launch page has a nonce-based CSP. Its `form-action` allows only the
+The launch page has a nonce-based CSP for its script and its style. Its `form-action` allows only the
 authorizer and the exact preview origin, because a browser can also check the
 303 target. Its `frame-ancestors` allows only `APP_ORIGIN` and the desktop
 origin. It sends `Referrer-Policy: origin`, because a form POST under
@@ -89,12 +89,21 @@ bodies get the same 404 as an invalid grant. Header mode cancels any body
 without reading or buffering it.
 
 A GET of the exact authorizer address without a query serves the authorizer
-page for a browser launch. Its CSP allows only its nonce script and requests
-to its own origin. Its `frame-ancestors 'none'` keeps it at the browser's top
+page for a browser launch. Its CSP allows only its nonce script and style and
+requests to its own origin. Its `frame-ancestors 'none'` keeps it at the browser's top
 level. Its script removes the fragment from the address before any request.
 It then sends the header mode POST. It follows only the clean address of the
 same preview hostname. On a failure, it asks the user to open the preview
 again from the workspace.
+
+The launch page and the authorizer page share one look from
+[opening-page.ts](opening-page.ts): the logo tile, a turning ring, and
+"Opening preview", in the colours of the app and the scheme of the system.
+`app/tools/preview-opening` of the mockups draws it. The page is one small
+file. Its style and its drawings are inline, and it loads no font, image,
+or script file. So each CSP adds only a `style-src` with the page nonce.
+The words come from `previewOpeningCopy` in the mockups, so the mockup and
+the page read the same.
 
 The `authorize` hostname never serves sandbox content. So no service worker of
 a previewed app can see a grant.
@@ -161,9 +170,11 @@ Marked errors keep the descriptor, including 401, 403, and the relay's 502 for a
 The response header allowlist removes the mark before the browser gets the answer.
 
 When the relay socket unit is missing or inactive, the open and the proxy refuse with
-409 `preview_relay_unavailable`. The message says:
-"Previews need newer cloud computer software. Start a new workspace after an admin runs Build computer."
-The image build installs the relay. An existing workspace keeps its image's software.
+409 `preview_relay_unavailable`.
+Image builds install the relay through the newest release.
+Existing workspaces download release updates in the background.
+A later runner start applies each complete update.
+A workspace without the program receives a background bootstrap at its next normal start.
 systemd holds the relay port in the socket unit while the service restarts.
 The Worker checks the socket state, so a service restart does not trigger the software refusal.
 
@@ -224,11 +235,11 @@ Completed HTTP connections release their registry entries.
 A preview socket uses `bridgeSocket` with an outbound socket to the sandbox.
 An open preview socket or HTTP stream keeps its workspace object active, as [Work that keeps the object active](../README.md#work-that-keeps-the-object-active) says.
 
-Set `dependencies.onActivity` to report each input to the input owner of the
-workspace, as [Input activity](../lifecycle/README.md#input-activity) says.
-That call returns at once. The proxy writes no D1 activity time. Each preview
-HTTP request and WebSocket handshake counts. Socket frames and idle
-connections do not count.
+The proxy reports no activity of the workspace. No preview request, socket
+handshake, socket frame, or idle connection keeps a sandbox running
+(decision 293), as
+[Stop and resume](../../docs/protocol/workspace-life.md#stop-and-resume)
+says.
 
 The header allowlists live in `headers.ts`. The cookie allowlist filters
 request and response cookies. It accepts valid app cookie names. It excludes
@@ -252,7 +263,7 @@ The reply keeps the server's `Expires`, `Date`, and `Age`.
 A 304 without `Cache-Control` gets none, so the browser keeps the rules of its stored reply.
 The outer Worker keeps these rules, because it answers the preview host with `previewResponse` from [http.ts](../http.ts).
 
-`PreviewTiming` in [timing.ts](timing.ts) records the steps of each proxied request.
+`ServerTiming` in [server-timing.ts](../server-timing.ts) records the steps of each proxied request.
 A reply that passes every check gets `Server-Timing` with `access`, `relay`, `check`,
 `upstream`, and `check-after`. The outer route in [router.ts](../features/router.ts)
 puts `lookup` and `workspace` first, only when the reply already has the header.
@@ -277,10 +288,11 @@ The shared sandbox predicate refuses old grants, cookies, and each stream batch 
 - [launch.ts](launch.ts) builds the launch replies and the authorizer page response, and handles both authorizer POST modes.
 - [launch-document.ts](launch-document.ts) builds the launch page markup and its CSP.
 - [browser-launch.ts](browser-launch.ts) builds the authorizer page for a browser launch.
+- [opening-page.ts](opening-page.ts) builds the shared look of both pages: the tile, the ring, the status, and the failure.
 - [preview-launch-path.ts](../security/preview-launch-path.ts) matches the exact launch path for the gate and the Mac app.
 - [credentials.ts](credentials.ts) issues grants with `launchGrant`, redeems each grant once with `redeemLaunchGrant`, and checks the credential cookies. Each one seals a `PreviewViewer`.
 - [proxy.ts](proxy.ts) routes the authorizer page and POST, checks the credential cookie, and owns the request flow.
-- [timing.ts](timing.ts) records the duration of each step for the `Server-Timing` header.
+- [server-timing.ts](../server-timing.ts) records the duration of each step for the `Server-Timing` header.
 - [hostname-cache.ts](hostname-cache.ts) keeps the workspace of each found preview hostname for the outer route.
 - [authorization.ts](authorization.ts) shares each access read and holds the 1-second access window.
 - [registry.ts](registry.ts) scopes HTTP and socket cancellation by workspace, preview, and viewer session.

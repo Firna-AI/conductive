@@ -1,8 +1,9 @@
 import { DurableObject } from 'cloudflare:workers'
+import type { UserMessage } from '../src/shared/generated/UserMessage'
+import type { StartStep } from '../src/shared/generated/StartStep'
+import type { WorkspaceStart } from '../src/shared/generated/WorkspaceStart'
 import type { RunnerLifecycleEvent } from './lifecycle/runner-lifecycle'
-import type { UserMessage } from '../src/shared/messages'
 import type { ChatWorkspaceSummary } from './chat/workspace-summary'
-import type { StartStep, WorkspaceStart } from '../src/shared/workspaces'
 import { WorkspaceChat } from './chat/backend'
 import { runWorkspaceLifecycle } from './chat/lifecycle-queue'
 import type { QueueTurn } from './chat/queue-turn'
@@ -39,6 +40,7 @@ import { lifecycleDependencies } from './lifecycle/runtime'
 import type { ConnectionScheduler } from './security/connection-access'
 import type { ComputerIdentity } from './lifecycle/computer-ledger'
 import type { TurnTokenCheck } from './model-gateway/types'
+import { fetchWorkspaceFeatures } from './chat/fetch-workspace-features'
 
 export class WorkspaceLifecycle
   extends DurableObject<WorkspaceCompositionEnv>
@@ -148,8 +150,8 @@ export class WorkspaceLifecycle
       () => this.readLifecycleStartLog(),
     )
   }
-  async waitCreationAdmission() {
-    return this.controller.waitCreationAdmission()
+  async waitCreationAdmission(timeoutMs?: number) {
+    return this.controller.waitCreationAdmission(timeoutMs)
   }
   async readCreationLifecycleResult() {
     const result = await this.controller.readCreationLifecycleResult()
@@ -288,11 +290,6 @@ export class WorkspaceLifecycle
   }
 
   protected async fetchChat(request: Request): Promise<Response> {
-    const deviceResponse = await this.devices.fetch(request)
-    if (deviceResponse) return deviceResponse
-    const response = await this.chat.fetch(request)
-    if (request.method !== 'GET' && request.method !== 'HEAD')
-      this.context.waitUntil(this.devices.reconcile())
-    return response
+    return fetchWorkspaceFeatures(this.integration, this.context, request)
   }
 }

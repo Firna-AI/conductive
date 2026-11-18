@@ -126,6 +126,8 @@ export function boatContractReplies(
       return [commandStatus(reply.value)]
     case 'file':
       return [fileReply(reply.value, true)]
+    case 'file_info':
+      return [fileInfo(reply.path, reply.sizeBytes)]
     case 'large_file':
       return [
         new Response(`private ${secret} credential`, { status: 413 }),

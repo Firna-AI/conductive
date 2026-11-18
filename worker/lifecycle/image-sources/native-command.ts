@@ -20,8 +20,11 @@ export function sourceStagingDirectory(buildId: string, index: number): string {
 }
 
 /** Source output never enters provider or build logs. The environment starts empty. */
-export function isolatedSourceCommand(body: string): string {
-  return `/usr/bin/env -i PATH=/usr/bin:/bin HOME=/home/user LC_ALL=C TZ=UTC GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_TERMINAL_PROMPT=0 GIT_CEILING_DIRECTORIES=/home/user /bin/sh -c ${shellQuote(`set -eu\numask 077\n${body}`)} > /dev/null 2>&1`
+export function isolatedSourceCommand(
+  body: string,
+  memoryOutput = false,
+): string {
+  return `/usr/bin/env -i PATH=/usr/bin:/bin HOME=/home/user LC_ALL=C TZ=UTC GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null GIT_TERMINAL_PROMPT=0 GIT_CEILING_DIRECTORIES=/home/user /bin/sh -c ${shellQuote(`set -eu\numask 077\n${body}`)} ${memoryOutput ? '2>/dev/null' : '> /dev/null 2>&1'}`
 }
 
 /** A consumed grant can remain in command history. The GitHub token cannot. */

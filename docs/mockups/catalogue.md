@@ -7,67 +7,72 @@ how a screen is built, and links to the other pages.
 | ------------------- | ----------------------------------------------------------------------------- |
 | `marketing`         | The home page of the site: the app, its features, the Mac app downloads, and Sign up |
 | `marketing/docs`    | The overview of the public docs, then a guide, with its Docs menu or its contents open on a phone |
+| `marketing/pricing` | The pricing page: four plans with their prices and cloud hours, the tax line, and how cloud hours count |
 | `marketing/terms`   | The Terms of use, with the operator details, suspension, and abuse reports     |
 | `marketing/privacy` | The Privacy notice, with the operator details and legal contact address       |
 | `marketing/not-found` | The page of the site for an address that it does not have                   |
-| `marketing/from-conductor` | The page for people who move from Conductor, with no scope note: one table of Conductor features, local and cloud, with a merged cell for each area |
 | `marketing/pictures` | One capture page for each picture of the home page, without a frame         |
 | `app`               | A ready workspace: two sessions and a file tab, and a pull request to merge   |
-| `app/sign-in`       | GitHub sign-in with the agreement to the Terms, the page before GitHub, the waitlist, the sign-in of an invite link, and the invitations that wait after it. Get started, the only first run, in three steps, with the first build of the new org. The return page after a GitHub App install in the Mac app. |
+| `app/sign-in`       | GitHub sign-in with the agreement to the Terms, the page before GitHub, the waitlist, the sign-in of an invite link, and the invitations that wait after it. Get started, the only first run, in three steps, with the first build of the new org, and its agent step done by an org login. The return page after a GitHub App install in the Mac app. |
 | `app/shell`         | The workspace list, and the sandbox starting, also with a diff tab open, stopped, with an error, and with a refused start |
 | `app/sections`      | The menu of a section with its move items, a workspace dragged to another section, and a section dragged to another place |
 | `app/workspace-menu` | The menu of a workspace row from a right click: its section and owner choices, Rename, Copy link, Archive from the list with its toast and Restore, and the menus of each role |
+| `app/sub-workspaces` | Sub-workspaces under their parents: two trees in one section, one down to depth 3, then an archived parent, the drag of a tree, and the menu of a nested row |
 | `app/command-palette` | The command palette over the list, with the keys of a browser tab: the All tab, then the other tabs with the Help group, searches and their states, and a search by number |
 | `app/feedback`      | The Feedback dialog that Send feedback opens over the list, then its states, the toast after a send, and the files that it does not add |
 | `app/orgs`          | The org switcher of a phone, Create org, the first org, new orgs, deleted, suspended, and the order of the orgs |
-| `app/account`       | General with the GitHub sign-in, the GitHub App, and the invite code, then Agents with the agent logins and own endpoints, Preferences with the model, its menu with Fast on, and how New workspace opens, Keyboard shortcuts in a browser, the first run, the Connect forms with the ChatGPT sign-in of Codex, Codex on a ChatGPT plan and its sign-in that stopped working, and a share not saved |
-| `app/operator`      | The operator's Overview, Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, the waitlist switch, and where an operator opens the section |
+| `app/account`       | General with the GitHub sign-in, the GitHub App, and the invite code, then Agents with the agent logins, own endpoints, and the lines of an org login, Preferences with the model, its menu with Fast on, and how New workspace opens, Keyboard shortcuts in a browser, Stats with the person's own counts, the first run, the Connect forms with the ChatGPT sign-in of Codex, Codex on a ChatGPT plan and its sign-in that stopped working, and a share not saved |
+| `app/operator`      | The operator's Overview with the long runs of cloud computers, the Orgs, Users, Waitlist, and Invite codes tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, the waitlist switch, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, its other states, Merge, local work, the agent actions in the chat, and Continue |
-| `app/new-workspace` | An empty chat, the first build of a new org, a repository that waits for its build, its error, files on the first message, the model menu with Fast on, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
-| `app/routines` | The routines of the org, a routine, its triggers, its runs, and a run workspace |
-| `app/org-settings`  | General with Delete org, then Repositories and Cloud computer with the notice of a repository change, the first build of a new org, and Members |
-| `app/chat`          | A finished turn with its work folded, then running turns, turns that an agent stopped, open work, tables in replies, lists in replies, headings in replies, lost data, lost updates, unread files, the time limit of background work, and a fast turn at standard speed |
-| `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat            |
+| `app/new-workspace` | An empty chat, the first build of a new org, a repository that waits for its build, its error, files on the first message, the Capabilities control, the model menu with Fast on, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
+| `app/automations` | The automations of the org, an automation, its triggers, its runs, and a run workspace |
+| `app/org-settings`  | General with Delete org, the colour of the org in the rail, then Repositories and Cloud computer with the notice of a repository change, the first build of a new org, Agents with the org logins, Secrets with Reveal for an admin and the view of a member, and Members |
+| `app/chat`          | A finished turn with its work folded, then running turns, turns that an agent stopped, open work, tables in replies, lists in replies, headings in replies, links in chat text, lost data, lost updates, unread files, the time limit of background work, and a fast turn at standard speed |
+| `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat, and one that a workspace with Mac access off refused |
+| `app/secret-requests` | A request for secrets above the composer, two secrets, a mixed request, a temporary request with its sheet on a phone, the results in the chat, and a request that outlived its tool call or ended with no answer |
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
-| `app/archive`       | An archived workspace with Restore, the toast after Archive, the Archived group, the restored workspace, the end of Restore, and the bar after the delete |
-| `app/composer`      | Two uploaded files in a sentence, the picker, another member's login, and a missing agent |
+| `app/restart`       | The menu of the header state with Restart, the question while an agent works, Starting after Restart, a failed update check, and a failed restart |
+| `app/archive`       | An archived workspace with Restore, the toast after Archive, the Archived group, the restored workspace, an archive without a kept cloud computer, and a workspace that left the list after its 14 days |
+| `app/composer`      | Two uploaded files in a sentence, then the picker, a missing agent, another member's login, a login that is not shared, and the org login |
+| `app/capabilities`  | The Capabilities control of a workspace, with the approvals of its sessions and its values, and Mac access off |
 | `app/fast-mode`     | The Fast switch of the model menu on and off, with its key, the trigger with Fast, and a model without fast mode |
 | `app/model-favourites` | The model menu with five favourites, its All models submenu, a changed effort, and the favourites in Preferences |
-| `app/attachments`   | A file that uploads in the text, then a drop, a failed upload, a file over 100 MB, sent files, the file tab of a sent screenshot, and a first message with files |
+| `app/attachments`   | A file that uploads in the text, then a drop, a failed upload, a file over 1 GB, sent files, the file tab of a sent screenshot, a first message with files, and a file that is no longer in the cloud computer |
 | `app/workspace-links` | Chips in a message and an answer, then Copy link and its failure, a pasted link, a link of another org, session chips, and messages that an agent sent |
-| `app/file-mentions` | The list of `@` with a query, then the list without one, its other states, and the file chips of the composer and of a sent message |
-| `app/files`         | All files, Changes with its summary, a file, Markdown, diff, and image tab, and the temporary tab that the next press replaces |
+| `app/file-mentions` | The list of `@` with a query, then the list without one, its other states, the file chips of the composer and of a sent message, and the file chips of an answer |
+| `app/files`         | All files, Changes with its summary, a file, Markdown, diff, and image tab, the temporary tab that the next press replaces, the file tab at a line, and the menu of a row with Add to chat and Copy path |
 | `app/tabs`          | A dragged tab, the moved row, a full row, the tab menu, and the rename field  |
 | `app/transcripts`   | Copy a transcript from the tab menu: the toast after a copy, a failed copy, and the menu of an archived workspace |
-| `app/tools`         | The terminal tabs and their states, then the Preview tool with its detected servers and its failed list repair, and the hidden Desktop, kept for its return |
-| `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden    |
+| `app/tools`         | The terminal tabs and their states, a link in the terminal under the pointer and a size that another viewer set, then the Preview tool with its detected servers, the Preview tabs of the centre row, and its failed list repair, and the hidden Desktop, kept for its return |
+| `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden; the hidden sidebar, and its workspace list as a popover of the org tile |
 | `mac-app`           | The Mac app: its window, the waitlist, its device commands, This Mac, Keyboard shortcuts, and the palette with keys |
-| `user-flows`        | Sign up, sign up during open sign-up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, send feedback, archive one from its row, create an org, run a Mac command, create a routine, link a workspace, open a session link, merge and continue, mention a file, drop a file |
+| `user-flows`        | Sign up, sign up during open sign-up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, send feedback, archive one from its row, open a removed workspace, create an org, run a Mac command, answer a secret request later, create an automation, link a workspace, open a session link, open a terminal link, merge and continue, mention a file, open a file from an answer, drop a file, open a local server |
 
 A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `marketing/docs`, `app`,
-`app/sign-in`, `app/sign-in/get-started`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`, `app/workspace-menu`, `app/command-palette`, `app/command-palette/search`, `app/feedback`, `app/orgs`,
-`app/orgs/suspended`, `app/account`, `app/account/connect-codex`, `app/new-workspace`,
+`app/sign-in`, `app/sign-in/get-started`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`, `app/workspace-menu`, `app/sub-workspaces`, `app/command-palette`, `app/command-palette/search`, `app/feedback`, `app/orgs`,
+`app/orgs/suspended`, `app/account`, `app/account/connect-codex`, `app/composer`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings`,
-`app/org-settings/cloud-computer`, `app/operator`, `app/operator/user`, `app/operator/user/access`, `app/operator/codes`, `app/banner`, `app/chat`, `app/archive`, `app/workspace-links`, `app/routines`, `app/routines/routine`,
-`app/routines/triggers`, `app/orgs/suspended/routines`, `app/file-mentions`, `app/attachments`, `app/files`, `app/tools`, `app/account/shortcuts`, and `mac-app/shortcuts` do. `marketing/pictures` has no screen of its own. Each picture's capture
+`app/org-settings/cloud-computer`, `app/org-settings/agents`, `app/org-settings/secrets`, `app/secret-requests`, `app/secret-requests/temporary`, `app/secret-requests/late`, `app/operator`, `app/operator/user`, `app/operator/user/access`, `app/operator/codes`, `app/banner`, `app/chat`, `app/archive`, `app/workspace-links`, `app/automations`, `app/automations/automation`,
+`app/automations/triggers`, `app/orgs/suspended/automations`, `app/orgs/suspended/settings`, `app/file-mentions`, `app/attachments`, `app/files`, `app/files/menu`, `app/tools`, `app/account/shortcuts`, and `mac-app/shortcuts` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
-one screen. `marketing/from-conductor` has no screen of its own either. Its
-index document, `index.md`, gives the notes of the page and where its
-content comes from, and links to `marketing/from-conductor/one-table`,
-which links back to it. `app/org-settings/cloud-computer` and its building
+one screen. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating
-and update-failed states, and declare `movedFrom`. The states of `app/shell`,
+and update-failed states, and declare `movedFrom`. `app/archive/removed` moved
+from `app/archive/deleted`, and its `deleting` variant moved from
+`app/archive/restore-ended`, and both declare `movedFrom`. The states of `app/shell`,
 `app/account`, `app/sign-in/waitlist`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings/cloud-computer`,
-`app/operator/user/access`, `app/archive`, `app/command-palette/search`, `app/attachments`, and
-`app/files` moved into their own folders and kept their paths. Each page
+`app/operator/user/access`, `app/archive`, `app/command-palette/search`, `app/attachments`,
+`app/composer`, and `app/files` moved into their own folders and kept their paths. Each page
 shows only its canonical screen. `app/sign-in/get-started` moved into its
 own folder and
 kept its path. Its saved states `installed`, `org-created`, `connected`,
 and `no-org` moved into their own folders and kept their paths, so that
-the page shows only its canonical screen. Get started is the only first
+the page shows only its canonical screen. Its child page `org-login` has
+the agent step done by an org login, as
+[org logins](catalogue-org-logins.md) gives. Get started is the only first
 run, so the first run of `app/shell` and the not-connected state of
 `app/orgs/new` are gone, and their links lead to Get started. Its second
 step opens `app/orgs/new/first`, whose Create org and Cancel return to Get
@@ -153,12 +158,14 @@ Acme, which adds acme/admin-dashboard and removes acme/marketing-site:
   of the install script.
 
 `app/account` shows the General tab of the account: the sign-in, GitHub,
-and the invite code. Its four tabs are links, as the tabs of the org
+and the invite code. Its five tabs are links, as the tabs of the org
 settings are. Its child pages:
 
 - `app/account/agents` shows the Agents tab, with Claude connected by a
   subscription token and Codex by an API key. The user asked for this tab
-  on 13 November 2026.
+  on 13 November 2026. Its `org-login` and `every-member` variants have the
+  line of the org login of Acme under Claude, as
+  [org logins](catalogue-org-logins.md) gives.
 - `app/account/preferences` shows the Preferences tab, from decision 142
   of PR #73: the New workspaces section with Model and effort, and the
   choice of how New workspace opens on a computer, the page or a dialog.
@@ -197,6 +204,16 @@ settings are. Its child pages:
   has a Restore that failed, with the error under the row.
 - `app/account/shortcuts` shows the Keyboard shortcuts tab in a browser, as
   the keyboard shortcuts section below gives.
+- `app/account/stats` shows the Stats tab, after Keyboard shortcuts. The
+  user chose the tab and its counts on 16 November 2026. It holds the counts of the person signed in: the
+  workspaces that the person owns, the workspaces that run now, the
+  automations, and the orgs, then the workspaces by state, with Removed
+  after Archived from decision 521, and the new workspaces and the
+  automation runs of each UTC day of the last 30 days. Its
+  `loading` variant shows the first load, with placeholders. Its `failed`
+  variant shows a read that failed, with Try again and no number. Its
+  `empty` variant shows a new account with one org, whose other counts
+  are all zero.
 
 `app/account/own-endpoint` shows the form of Claude on the own endpoint
 kind, while Codex runs on an own endpoint. Its `typed` variant has a
@@ -211,7 +228,15 @@ owner of a login hide each model that its endpoint does not list. Both
 agents run on Cal's proxy, whose model list does not name Fable 5.1. The
 Claude row says that Fable 5.1 is hidden from Cal's model pickers, and
 why, with the model ID, the time of the last read of the list, and
-Refresh.
+Refresh. Its other states come from Codex base decision 1 C, which Cal
+chose on 13 November 2026:
+
+- `v1-added` has the note under the Codex row after a save that added
+  `/v1` to the typed address, because only that address lists the models.
+- `read-failed` has the warning under each row after a Refresh whose
+  model list read failed, each with Refresh.
+- `read-failed-unlisted` has the same warning above the models that the
+  last Claude list leaves out, with one Refresh beside the warning.
 
 `app/new-workspace/dialog` draws New workspace as a dialog over the ready
 workspace of `app`, for a new account or a user who chose the dialog.
@@ -225,7 +250,20 @@ pasted workspace link as a chip. The dialog uses the file chips of
 `app/new-workspace/files`. A phone always opens the page, so each phone
 view shows the New workspace page in the same state.
 `user-flows/create-workspace-dialog` goes from Preferences through the
-dialog to the new workspace.
+dialog to the new workspace. Its child page `org-login` has a draft on the
+org login, as [org logins](catalogue-org-logins.md) gives.
+
+`app/composer` shows a message with two uploaded files in a sentence. Its
+other states are child pages: `picker` has the open model picker,
+`no-agent` the notice of an agent that no login serves, `login` the label
+"Cal's login" in a session of Cal, and `not-shared` the notice of a message
+that starts a new session, because Cal keeps his login for his own
+messages. `org-login` has a session on the org login of Acme, with its
+variants, as [org logins](catalogue-org-logins.md) gives.
+
+[Org logins](catalogue-org-logins.md) gives `app/org-settings/agents` and
+its child pages, and the states of the account, Get started, the composer,
+New workspace, the chat, and automations that name the org login.
 
 `app/orgs/reorder` draws the order of the orgs that each person keeps,
 from decisions 515 C, 516 A, and 517 B of 11 November 2026. Its canonical
@@ -270,7 +308,9 @@ The user chose the four actions that change the workspace on 9 November
   the toast of the list that names the failure.
 - `app/workspace-menu/archive` has the list just after Archive from the
   menu, with no check and no question: the row in the collapsed Archived
-  group, and the toast with Restore. Its `stopped` variant archives a
+  group, whose count holds the three workspaces of the last 14 days, and
+  the toast with the day when the workspace leaves the list and Restore.
+  Its `stopped` variant archives a
   stopped workspace at once too. Its `restored` variant has the list after
   Restore from the toast, with the workspace back in its section, stopped.
   `user-flows/archive-from-list` goes from the list through the menu and
@@ -278,6 +318,34 @@ The user chose the four actions that change the workspace on 9 November
 - `app/workspace-menu/roles` has the menu of a member who is not an
   admin, then her own workspace, her archived row, whose menu has only
   Copy link, and a suspended org, whose menus have only Copy link.
+
+`app/sub-workspaces` draws sub-workspace decisions 1 C, 4 F, 5 C, and 6 A
+of 13 and 16 November 2026: the create call of an agent can name a
+parent, and the list shows the new workspace under the row of its parent,
+in the sidebar and on the list page of a phone. Its canonical screen has
+two trees in Checkout. The tree of Checkout address autocomplete goes down
+to Rate limits at depth 3, the deepest level. Rate limits: Load test is the
+sibling that the agent of Rate limits made under Places API client, with a
+prefix in its name. Each level indents the row by one step, a neutral
+guide line runs down from under the mark of each parent, and a tree has
+no collapse control. `subWorkspaces` of the list states, from
+`src/screens/subWorkspaceStates.ts`, draws the pages. Its child pages:
+
+- `app/sub-workspaces/archived-parent` has the list after Cal archived
+  Places API client, the middle row of the deepest tree, with the Archived
+  group open. Its two sub-workspaces show under Address search API, the
+  nearest live row above them, one step less indented than before.
+- `app/sub-workspaces/drag` has the drag of the tree of Apple Pay button
+  to General. The top-level row lifts with +2, the count of the rows that
+  move with it, the tree stays faint in Checkout, and the line falls
+  between two trees. Its `moved` variant has the list after the drop. Its
+  `between-trees` variant has the drag of the deepest tree, with the line
+  above the tree of Apple Pay button while the pointer is over its rows.
+- `app/sub-workspaces/menu` has the menu of Places API client, a nested
+  row, without Move to section. Its `member` variant has the menu of a
+  member on the same row, with Rename and Copy link. Its `top-level`
+  variant has the menu of the top-level row of the deepest tree, with Move
+  to section and its sections, which move the whole tree.
 
 [The command palette and feedback](catalogue-palette.md) gives the
 child pages of `app/command-palette` and of `app/feedback`, and the flow
@@ -297,7 +365,8 @@ the menu of today.
 The catalogue draws the Keyboard shortcuts tab in the Mac app and in a
 browser, from decisions 190 to 196. The pages of
 `app/account` and `mac-app/this-mac` show it as the fourth tab of the
-account. In the Mac app, the This Mac tab follows it. Fast mode decision
+account. The Stats tab follows it. In the Mac app, the This Mac tab comes
+after Stats. Fast mode decision
 258 adds Fast mode to the Chat group, after Next effort level, with ⇧⌘E on
 a Mac and Ctrl+Shift+E on Windows and Linux. On desktop, the Fast row of
 the model menu of a session shows the same key before its switch, as
@@ -375,24 +444,34 @@ workspace with its actions, its child pages, and the flow
 `user-flows/merge-and-continue`.
 
 `app/archive` draws Archive and Restore of Checkout address autocomplete,
-from decisions 1 and 2 of PR #138. Its canonical screen has the archived
-workspace, whose bar gives the last day of Restore, with Restore. Its child
-pages:
+from decisions 1 and 2 of PR #138, and the removal of an archived workspace
+after its 14 days, from decisions 518 D, 519 B, and 520 A of 13 November
+2026. Its canonical screen has the archived workspace, whose bar gives the
+last day of Restore, with Restore, and says that the workspace leaves the
+list on that day. Its child pages:
 
 - `app/archive/just-archived` has the workspace just after Archive from the
-  pull request bar, with the toast and its Restore. Archive on a row and in
-  the palette leads there too.
+  pull request bar, with the toast, the day when the workspace leaves the
+  list, and Restore. Archive on a row and in the palette leads there too.
 - `app/archive/group` has the list with the Archived group open, and
-  Restore on the hover of a row.
+  Restore on the hover of a row. The group holds only the workspaces of the
+  last 14 days, so it has no row for Postcode lookup for the shipping and
+  billing forms.
 - `app/archive/restored` has the workspace back in its section, stopped,
   where each Restore leads.
-- `app/archive/restore-ended` has the archived workspace after its last day
-  of Restore, while a failed delete of its cloud computer tries again. The
-  bar gives the day when Restore ended, and offers no Restore.
-- `app/archive/deleted` has the archived workspace after the app deleted
-  its cloud computer, with no Restore.
+- `app/archive/no-computer` has the archived workspace when the app keeps
+  no cloud computer for it, as after a failed first start. The bar offers
+  no Restore, and it still gives the day when the workspace leaves the
+  list.
+- `app/archive/removed` has Postcode lookup for the shipping and billing
+  forms, `W-372`, after its 14 days, as its chip in `app/workspace-links`
+  opens it. The list has no row for it, the bar gives the day of the
+  removal, and the cloud computer is deleted. Its `deleting` variant has the
+  same workspace on that day, while a failed delete of its cloud computer
+  tries again. The flow `user-flows/open-a-removed-workspace` goes from the
+  chip to this page.
 
-[Chat and routines](catalogue-chat-and-routines.md) gives those catalogue
+[Chat and automations](catalogue-chat-and-automations.md) gives those catalogue
 pages, their child pages, and their related flows.
 
 [Workspace links, file mentions, and tools](catalogue-workspace-tools.md)
@@ -400,3 +479,7 @@ gives those catalogue pages and their related flows.
 
 [Attachments and files](catalogue-attachments-and-files.md) gives the child
 pages of `app/attachments` and `app/files`, and their related flow.
+
+[Secrets and Capabilities](catalogue-secrets.md) gives the child pages of
+`app/org-settings/secrets` and `app/secret-requests`, the pages of the
+Capabilities control, and the flow `user-flows/secret-request`.

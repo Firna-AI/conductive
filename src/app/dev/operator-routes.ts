@@ -103,7 +103,7 @@ export function operatorRoutes(backend: DevBackend): Route[] {
         )
         const { userSuspensions } = records()
         const waiting = sampleWaitlist(records(), userSuspensions, BASE)
-        return json(operatorOverview(orgs, backend.now(), waiting.length))
+        return json(operatorOverview(orgs, backend.now(), waiting.length, BASE))
       },
     },
     {

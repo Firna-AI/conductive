@@ -18,11 +18,6 @@ Run the browser gate first, and pass its `RequestContext`. The handler
 returns `null` for every other route. `env` is a `LifecycleEnvironment`
 from [`runtime.ts`](runtime.ts). The caller gives these options:
 
-- `software`: the runner archive for each new build and refresh, as the
-  [image README](../../image/README.md#the-runner-archive) says.
-  `runnerSoftware` in [`configuration.ts`](../configuration.ts) reads it
-  from two Worker variables, as
-  [Deployment inputs](../../docs/deployment.md#the-runner-archive) says.
 - `acceptFirstMessage`: the hook of the chat backend. After the admission
   and for each repeat, it stores the queued first message of that admission
   and returns it. So it must be idempotent for the message and session IDs.
@@ -34,8 +29,8 @@ from [`runtime.ts`](runtime.ts). The caller gives these options:
   gives it its work, so the work continues when the browser closes.
 
 `chatLifecycleRoute` makes the runtime with `workspaceRuntime` and
-`imageRuntime`. It gives `software` as a getter, so only a build or a
-refresh reads the archive variables. It gives `acceptFirstMessage` to
+`imageRuntime`. A build or refresh reads the newest release through
+`latestSoftwareRelease`, as [release files](../../image/README.md#conductive-release-files) describes. It gives `acceptFirstMessage` to
 `acceptLifecycleFirstMessage` of the workspace object.
 
 For a read or a resume, the `projectWorkspace` of `chatLifecycleRoute`
@@ -54,6 +49,16 @@ and the stop cleanup of a failed resume.
   loaded. A change to the chosen repositories takes effect after the next
   successful build. A repeat of the same first message ID from the same
   sender returns the same admitted workspace, including after a failed start.
+- `createWorkspace` makes its access checks and its first read together,
+  and the first failed check in its list names the error.
+  `prepareCreationRequest` checks no access, so each caller checks first.
+  The route-wide membership check comes after the create, because the
+  create makes the same check.
+- The 201 reply of a create has a `Server-Timing` header with the
+  `create`, `message`, and `project` steps, in milliseconds.
+  `ServerTiming` in [server-timing.ts](../server-timing.ts) writes it.
+  [Step timing](../../docs/protocol/step-timing.md)
+  gives its requirements.
 - A failed admitted create keeps its workspace, chat, first message, and
   queued messages. Each current member can read the saved cause and history.
   Failure revokes the token and detaches the failed sandbox after saving cleanup ownership.
@@ -78,8 +83,8 @@ and the stop cleanup of a failed resume.
   The terminal setup and the password read then run again.
   Its finished fetch and branch steps stay complete.
   The branch step uses the branch when it already exists.
-- Browser input and preview requests reset the idle time, as
-  [Input activity](#input-activity) says. Browser input includes the keys
+- Browser input resets the idle time, as
+  [Input activity](#input-activity) says. Preview requests do not. Browser input includes the keys
   and the taps in the terminal.
 - The build log is a stream of server-sent events. It continues after the
   `Last-Event-ID` header or the `after` value, and it ends with a `build`
@@ -91,13 +96,52 @@ trusted `sender` as its last argument. The agent tools need it for a
 workspace that an agent creates. The `user` stays the owner, and the first
 turn and the branch step use the sender.
 
+## Restart
+
+`restartRoute` in [`../app-api/restart.ts`](../app-api/restart.ts) serves
+`POST` at `workspacePaths.restart`. It calls `restartWorkspaceSoftware` of
+[`software-restart.ts`](software-restart.ts), which does these steps:
+
+1. It runs the checks of a resume: an active org, a member, a workspace
+   that is not archived and has a sandbox, and an active owner.
+2. `softwareRestart(id, 'begin')` of the workspace object runs in its
+   lifecycle queue. It refuses a pending Continue. `restartingLifecycle`
+   of [`durable-restart.ts`](durable-restart.ts) refuses each state other
+   than ready, working, input, and unread with HTTP 409 and
+   `workspace_not_running`. Otherwise it shows Starting and stores
+   `softwareRestartAt`.
+3. Outside that queue, the route runs `UPDATE_CHECK_COMMAND` through the
+   Boat `command` route. It starts the unit of the periodic update check,
+   with a limit of 60 seconds. Its result is the `updateCheck` of the reply.
+4. It runs `RESTART_COMMAND`, which restarts the runner under the start
+   lock, so that its pre-start step applies a complete download, and then
+   the preview relay and ttyd. The ttyd command removes the old support
+   marker before the restart. It shares the bounded support probe of a
+   normal start and writes a marker only for confirmed support.
+   It never restarts the terminal shell server. A failed ttyd restart or
+   probe warns and leaves no marker, without failing the command.
+5. When that command fails, `softwareRestart(id, 'fail')` shows the error
+   state with `restart_failed`, and the route answers HTTP 502.
+6. After success, `softwareRestart` asks the workspace object to read the
+   terminal password and support again for the captured sandbox ID and
+   provider account. A failed read, including a missing support marker,
+   warns and keeps the cache, with no failure of Restart or terminal list
+   event. A changed support value commits one full-list
+   `terminals.updated` event with `several` through the list event path.
+   Unchanged support emits no event.
+
+`readyLifecycle` clears `softwareRestartAt` when the new runner is ready.
+A turn end keeps Starting meanwhile. The alarm ends a restart whose runner
+is not ready after `SOFTWARE_RESTART_LIMIT_MS` with the same error state.
+Try again then resumes the workspace. The start skips the provider resume
+of a running sandbox. The commands hold no user input.
+
 ## Input activity
 
 [Stop and resume](../../docs/protocol/workspace-life.md#stop-and-resume)
 says which input counts as activity. One `InputActivityOwner` in each
-workspace object receives the input times of the browser `activity` route
-and of previews. The preview handler reports each request through
-`ToolDependencies.onActivity(workspaceId, at)`. That call returns at once.
+workspace object receives the input times of the browser `activity` route.
+The preview proxy reports no input (decision 293).
 
 - The input listener of the app page hears the keys, the taps, and the
   scrolls in the terminal too, as the

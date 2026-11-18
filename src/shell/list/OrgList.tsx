@@ -1,56 +1,22 @@
-import { useEffect, useRef, useState } from 'react'
-import { InputFrame } from '@firna/ui/input'
+import { useEffect, useState } from 'react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import type { ApiError } from '../../app/api/client'
+import { useListTime } from '../../app/deadlines'
 import { groupWorkspaces, type SectionGroup } from '../../app/sections'
-import { useStore } from '../../app/store'
+import { useStore, valueOf } from '../../app/store'
 import { useNow } from '../../app/time'
 import type { User } from '../../shared/api'
 import { useOrgModel } from '../context'
 import { usePaletteOffer } from '../palette/palette-context'
 import { LoadFailure } from '../ui/LoadFailure'
 import ui from '../ui/ui.module.css'
+import { NewSectionDialog } from './NewSectionDialog'
 import type { SectionActions } from './SectionHeader'
 import { SectionList } from './SectionList'
 import { useListActions } from './useListActions'
 import { useRowMenus } from './useRowMenus'
 import type { RowVariant } from './WorkspaceRow'
-import list from './list.module.css'
-
-function NewSectionField(props: {
-  create: (name: string) => void
-  cancel: () => void
-}) {
-  const [name, setName] = useState('')
-  // Enter and the blur that follows both finish the field: only the first counts.
-  const finished = useRef(false)
-  const finish = () => {
-    if (finished.current) return
-    finished.current = true
-    if (name.trim() === '') props.cancel()
-    else props.create(name.trim())
-  }
-  return (
-    <div className={list.newSection}>
-      <InputFrame
-        accessibilityLabel="Name of the new section"
-        autoFocus
-        onBlur={finish}
-        onChangeText={setName}
-        onKeyPress={(event) => {
-          if (event.nativeEvent.key !== 'Escape') return
-          finished.current = true
-          props.cancel()
-        }}
-        onSubmitEditing={finish}
-        placeholder="Section name"
-        size="sm"
-        value={name}
-      />
-    </div>
-  )
-}
 
 /**
  * The collapse of each section in this view only, for a read-only list. A
@@ -80,7 +46,7 @@ function useLocalCollapse(actions: SectionActions) {
 
 /**
  * The workspaces of an org in their sections, as the sidebar and the list
- * page show them, with the field of a new section at the end. Each row has
+ * page show them, with the New section dialog while it is open. Each row has
  * the menu of the actions that `viewer` can use. `readOnly` shows them
  * without changes, for a suspended org, and each menu then holds only Copy
  * link. `offerActions` says that
@@ -101,20 +67,22 @@ export function OrgList(props: {
   const sections = useStore(org.sections)
   const workspaces = useStore(org.workspaces)
   const now = useNow(30_000)
+  // A removed workspace leaves the list at the end of its Restore.
+  const listTime = useListTime(valueOf(workspaces) ?? [])
   const { actions, move, adding, create, cancelAdding } = useListActions(org)
   const local = useLocalCollapse(actions)
   usePaletteOffer(
     props.offerActions && !readOnly
       ? {
           scope: { kind: 'org', orgId: props.orgId },
-          actions: [{ id: 'new-section', run: actions.newSection }],
+          actions: [{ id: 'new-section', run: () => actions.newSection() }],
         }
       : null,
   )
   useEffect(() => org.watch('list'), [org])
   const groups =
     sections.state === 'ready' && workspaces.state === 'ready'
-      ? groupWorkspaces(sections.value, workspaces.value)
+      ? groupWorkspaces(sections.value, workspaces.value, listTime)
       : { sections: [], archived: [] }
   const { menus, archiveAction, restoreAction, running, layer } = useRowMenus({
     orgId: props.orgId,
@@ -162,7 +130,7 @@ export function OrgList(props: {
         variant={props.variant}
       />
       {adding && !readOnly ? (
-        <NewSectionField cancel={cancelAdding} create={create} />
+        <NewSectionDialog close={cancelAdding} create={create} />
       ) : null}
       {layer}
     </>

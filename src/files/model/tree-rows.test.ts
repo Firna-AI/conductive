@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest'
-import type { FileEntry } from '../../shared/files'
+import type { FileEntry } from '../../shared/generated/FileEntry'
 import { toolFixtures } from '../../test-support/fixtures/tools'
 import { pathLabel } from './file-labels'
 import { applyTreeDelta, treeFromSnapshot } from './tree-model'
@@ -15,6 +15,7 @@ function visible(folders: ReadonlyMap<string, boolean>, open: string | null) {
 
 it('opens the folders that hold changes, with folders first and names in reading order', () => {
   expect(visible(new Map(), null)).toEqual([
+    '.context',
     '.github',
     'prisma',
     'public',
@@ -44,7 +45,13 @@ it('closes and opens folders as the user toggles them, and opens the folders of 
     ['.github', true],
   ])
   const rows = visible(folders, 'prisma/schema.prisma')
-  expect(rows.slice(0, 4)).toEqual(['.github', 'prisma', 'public', 'src'])
+  expect(rows.slice(0, 5)).toEqual([
+    '.context',
+    '.github',
+    'prisma',
+    'public',
+    'src',
+  ])
   expect(rows).not.toContain('  app')
   const withFile = treeRows(
     applyTreeDelta(tree, {
@@ -64,7 +71,8 @@ it('closes and opens folders as the user toggles them, and opens the folders of 
     folders,
     'prisma/schema.prisma',
   ).map((row) => row.entry.path)
-  expect(withFile.slice(0, 3)).toEqual([
+  expect(withFile.slice(0, 4)).toEqual([
+    '.context',
     '.github',
     'prisma',
     'prisma/schema.prisma',
@@ -220,4 +228,56 @@ it('keeps the label that the server gave each entry inside a moved folder until 
     ],
     rows: ['keys-[redacted]'],
   })
+})
+
+it('marks each row whose label hides a secret value: a masked file, a folder that the tree lacks and names from a masked label, and an entry of a moved folder until its update', () => {
+  const entry = (
+    path: string,
+    kind: FileEntry['kind'],
+    displayPath?: string,
+  ): FileEntry => ({
+    path,
+    ...(displayPath === undefined ? {} : { displayPath }),
+    name: (displayPath ?? path).slice(
+      (displayPath ?? path).lastIndexOf('/') + 1,
+    ),
+    kind,
+    change: null,
+  })
+  const base = treeFromSnapshot({
+    revision: 1,
+    entries: [
+      entry('keys-acme-7f3k/a.json', 'file', 'keys-[redacted]/a.json'),
+      entry('plain/b.json', 'file'),
+      entry('docs', 'directory'),
+      entry('docs/c.md', 'file'),
+    ],
+  })
+  // The server names the new folder, and its entry keeps its old label.
+  const { tree: moved } = applyTreeDelta(base, {
+    revision: 2,
+    changes: [
+      {
+        operation: 'move',
+        previousPath: 'docs',
+        entry: entry('guide', 'directory'),
+      },
+    ],
+  })
+  const open = new Map(
+    ['guide', 'keys-acme-7f3k', 'plain'].map((path) => [path, true]),
+  )
+  expect(
+    treeRows(moved, open, null).map((row) => [
+      `${'  '.repeat(row.depth)}${row.entry.name}`,
+      row.hidesSecret,
+    ]),
+  ).toEqual([
+    ['guide', false],
+    ['  c.md', true],
+    ['keys-[redacted]', true],
+    ['  a.json', true],
+    ['plain', false],
+    ['  b.json', false],
+  ])
 })

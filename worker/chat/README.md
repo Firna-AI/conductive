@@ -20,7 +20,7 @@ tokens. A failed renewal makes the login unavailable to chat dispatch.
 ## Entry points
 
 `Workspace` in [`worker/workspace.ts`](../workspace.ts) is the Durable
-Object class. Its `fetch` gives device paths to the device feature first.
+Object class. Its `fetch` gives secret and device paths to those features first.
 It gives each other request to `WorkspaceChat.fetch` in `backend.ts`,
 which serves these routes. The path helpers live in
 `src/shared/sessions.ts`, `src/shared/events.ts`, and
@@ -31,7 +31,7 @@ which serves these routes. The path helpers live in
 | `GET` sessions | `sessionsPath` | Lists the open sessions and the session history |
 | `POST` sessions | `sessionsPath` | Creates a session. The requester becomes its starter |
 | `PATCH` session | `sessionPath` | Renames a session |
-| `POST` messages | `sessionPaths.messages` | Accepts a message. During a running turn, the message joins that turn. When the starter's login cannot be used, or the starter does not share it with the sender, a new linked session takes it, as [Session logins](integration/README.md#session-logins) says |
+| `POST` messages | `sessionPaths.messages` | Accepts a message. During a running turn, the message joins that turn. When the session login cannot serve the sender, a linked session takes the sender's default login, as [Session logins](integration/README.md#session-logins) says |
 | `POST` retry | `retryMessagePath` | Sends the message that `Session.retryMessageId` names again, also to a new linked session. Each other message gets `409 retry_not_available`, as [Retries](#retries) says |
 | `POST` interrupt | `sessionPaths.interrupt` | Stops a turn |
 | `PUT` model | `sessionPaths.model` | Changes the model. A model of the other agent creates a session that the requester starts. A session with no turn yet keeps it and changes its agent |
@@ -46,6 +46,15 @@ workspace, as [the integration README](integration/README.md#the-outer-worker)
 says. `routeChat` in [`router.ts`](router.ts) forwards the browser routes.
 `routeRunner` forwards the runner socket of the machine hostname, by its
 bearer token.
+
+The [secret request feature](../secrets/README.md#browser-answers-and-events)
+adds browser list, answer, and temporary-value removal routes.
+`fetch-workspace-features.ts` composes their handling. `secret-notice.ts`
+admits a late answer as an app line in the original session. It starts
+for the original turn sender or joins that session's current turn.
+It sends no member message event and creates no linked session.
+Secret requests share this object's transaction, event sequence, needs
+input projection, turn-end callbacks, and lifecycle cleanup.
 
 Trusted Worker code can also call methods of `WorkspaceChat` that run no
 gate. [Trusted workspace calls](integration/README.md#trusted-workspace-calls)
@@ -73,9 +82,14 @@ says how the lifecycle and chat work together.
 
 A cross-agent model change uses the client's `newSessionId`, unless the
 session has no turn yet. Such a session changes its agent in place, checks
-the login of its starter for the new agent again, and ignores the field. A
+the default login for the new agent again, and ignores the field. It fixes
+its login only at the first accepted message. A
 repeated request gets the same session. An unrelated occupied ID is refused. A
 same-agent change ignores this field.
+
+An empty session's `defaultLogin` names its starter's current default owner for every reader.
+The metadata check treats the starter as the sender and uses the shared login access query.
+The first accepted message fixes `login` and clears `defaultLogin`.
 
 ## Session transcripts
 
@@ -125,12 +139,14 @@ all call `TurnLifecycle.stop` with a `TurnStopRequester` from
 - `recordStopRequest` in `stop-request.ts` emits `turn.stop-requested`
   before the stop saves its interrupt. So the event commits before the
   runner gets the interrupt.
-- `StoredTurn.stopRequest` keeps the first requester. A later request emits
-  its own event and leaves that field. The transcript fold keeps the first
-  request of each turn, so the chat and the copy name the first stopper.
-- An older turn record has no `stopRequest`. When such a turn is stopping
-  or has ended, the next request reads the session history for its first
-  request.
+- `StoredTurn.stopRequest` keeps the first requester. A new turn record
+  starts with `null`, which marks that no request has arrived. A later
+  request emits its own event and leaves that field. The transcript fold
+  keeps the first request of each turn, so the chat and the copy name the
+  first stopper.
+- An older turn record has no `stopRequest` field. When such a turn is
+  stopping or has ended, the next request reads the session history for its
+  first request.
 - The browser rename and the tool rename share `renameSession` in
   `session-management.ts`.
 - `readStopRequester` in `src/chat/api/read-stop.ts` reads both event forms
@@ -175,15 +191,24 @@ runner commands.
 [Retries](retries.md) gives the stored retry state, and the rules of the
 retry route for `Session.retryMessageId`.
 
-## Routine first turns
+## Runner warnings
+
+[Runner warnings](runner-warnings.md) gives the warning kinds and the
+fields for runner connections and for turn ends with no Stop request.
+
+## Automation first turns
 
 A run workspace reports the stored outcome of its first turn to its D1 run record.
 The report keeps the failure cause, including a login failure before dispatch.
-A finished first turn resets the routine's consecutive failure count.
+A finished first turn resets the automation's consecutive failure count.
 A failed first turn adds one failure and stays failed after an in-workspace retry.
 Later turns do not change that run outcome.
 Chat commits the turn before it reports the outcome.
-Each later chat change checks for an unreported outcome, including runner redelivery after a failed D1 write.
+Each later chat change checks for an unreported outcome.
+A failed report does not fail the chat change, so a D1 failure cannot stop the chat or close the runner.
+It logs `automation_report_failed` and stores the `automation-report` due time of the workspace alarm, 30 seconds later.
+The alarm retries the report until it succeeds, as [the object alarm scheduler](../lifecycle/alarm-scheduler.md) says.
+A chat without that alarm, as in some tests, gives the error to the caller, which sends the change again.
 
 ## Report repairs
 
@@ -209,11 +234,13 @@ npm run typecheck
 
 The shared chat and runner fixtures run the production workspace object in Miniflare with native SQLite.
 Their restart helpers evict the real object.
+The lifecycle fixture uses isolated temporary storage outside the repository.
+Restart keeps that storage, and disposal removes it.
 [Chat backend tests](tests.md) names the native controls and each group of tests.
 
 ## Seams for other milestones
 
-[Chat attachments](attachments.md) gives the internal storage boundary, acceptance proof, copy preparation and order, agent input, and cleanup integration.
+[Chat attachments](attachments.md) gives storage, message proofs, shared file transfers, the one-use machine download route, dispatch order, agent input, and cleanup.
 Attachment copies use the provider account of the workspace record.
 Each copy checks that account and the sandbox ID before each file and after the last file.
 
@@ -236,13 +263,21 @@ functions of the chat backend that a reader opens first.
 
 `sockets.ts` owns WebSocket upgrades and abstract browser connection setup.
 `queries.ts` decrypts native-provider and own endpoint logins inside the Worker.
+Its `AgentLoginOwner` is a personal user ID string or an org owner
+`{ orgId }`. The context and decrypt helpers accept both. Personal logins
+keep their existing encryption context, and org logins use a separate
+`org-agent-login` context.
 `login-kind.ts` owns the trusted `AgentLogin` union, separate from the native runner login types.
-`login-availability.ts` checks the plain `endpoint_origin` in its one metadata query.
+`login-access-data.ts` owns the access and metadata query for both login owners.
+`default-login.ts` owns the default order for sessions, account reads, tools, and automation runs.
+`login-availability.ts` checks the plain `endpoint_origin` through that query.
 It selects no ciphertext and decrypts no login.
 The shared builder refuses every IPv4 and IPv6 address, the product domain, and the configured `PREVIEW_DOMAIN`.
 Dispatch still decrypts and checks the full saved address before it sends a turn.
 `session-login.ts` treats a refused endpoint as an unusable login for linked-session admission and dispatch.
-Its failed-turn cause requires a public HTTPS endpoint with a host name, names the starter and agent, and points to the account page.
+Its failed-turn cause requires a public HTTPS endpoint with a host name and names the owner and agent.
+A personal endpoint cause points to the account page.
+An org endpoint cause points to the Agents tab of the org settings.
 Runner delivery maps a valid endpoint to an API-key turn-token credential.
 `runner-gateway-command.ts` adds `promptCacheTtl: '1h'` only for a Claude own endpoint turn.
 No endpoint address or key enters a runner command or chat record.
@@ -267,6 +302,7 @@ mode. `runner-delivery.ts` owns the prepared command's send.
 - [Chat and events: Messages](../../docs/protocol/messages-and-attachments.md#messages)
 - [Chat and events: Events](../../docs/protocol/chat-and-events.md#events)
 - [Agent runner: Lost workspace updates](../../docs/protocol/agent-runner.md#lost-workspace-updates)
+- [Agent runner: Runner warnings](../../docs/protocol/runner-warnings.md)
 - [Chat backend integration](integration/README.md)
 - [Report repairs](report-repairs.md)
 - [GitHub banner backend](../github/README.md)

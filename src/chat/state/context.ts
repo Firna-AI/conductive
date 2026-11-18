@@ -1,7 +1,9 @@
 import { ApiError } from '../../app/api/client'
+import type { Delay } from '../../app/events'
 import type { WorkspaceView } from '../../shared/workspace-view'
 import type { ChatApi, WorkspaceTarget } from '../api/client'
 import type { DeviceChannel } from '../device/device-actions'
+import type { SecretApi } from '../secrets/secret-actions'
 import type { SessionReads } from '../links/session-reads'
 import type { WorkspaceStream } from '../stream/workspace-stream'
 import { withSession, type ChatSnapshot, type ChatStore } from './chat-snapshot'
@@ -23,7 +25,7 @@ export interface ChatContext {
   readonly stream: WorkspaceStream
   /** The running history load of each session, so that loads are shared. */
   readonly loading: Map<string, HistoryLoad>
-  /** The rename and model edits that wait for their replies, by session. */
+  /** The rename, model, and close edits that wait for their replies, by session. */
   readonly edits: Map<string, readonly PendingEdit[]>
   /**
    * The event number of the workspace record that shows, so an older reply
@@ -50,6 +52,11 @@ export interface ChatContext {
    * and a stop of the chat aborts each one.
    */
   readonly uploads: Map<string, AbortController>
+  /**
+   * The timer of the waits before a failed part of an upload goes again: the
+   * timers of the chat, which a test gives as manual timers.
+   */
+  readonly delay: Delay
   readonly saveView: (view: WorkspaceView) => void
   /** The chat is still open. A response that arrives later changes nothing. */
   readonly live: () => boolean
@@ -60,6 +67,8 @@ export interface ChatContext {
   readonly owned: boolean
   /** The routes of Mac commands, and the number of their latest read. */
   readonly devices: DeviceChannel
+  /** The route of the answers to secret requests. */
+  readonly secrets: SecretApi
   /**
    * The one read of the sessions of each other workspace that a session
    * link names, for this run, as `SessionReads` says.

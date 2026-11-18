@@ -58,10 +58,10 @@ The shape of the two values, with placeholders in place of real values:
   for session transcript reads in the app and tools. It is also required
   when an operation checks a fast choice: saving a default, creating a
   workspace or session, sending or retrying a message, changing a session
-  choice, creating or updating a routine, and starting a fast routine run.
+  choice, creating or updating an automation, and starting a fast automation run.
   This includes tool writes and a tool send that keeps a session's fast
   choice. A missing or invalid value gives `503 models_unavailable`.
-  A routine run records `models_unavailable` as its failure cause.
+  An automation run records `models_unavailable` as its failure cause.
   A standard-speed choice needs no model list for its choice check.
   Account reads and login-status replies also try the list to show which
   app models an own endpoint lacks. A missing or invalid list omits that
@@ -75,12 +75,13 @@ The shape of the two values, with placeholders in place of real values:
   The tool model list also reads the app default when the calling
   workspace's owner has no saved default. For that list, a missing or
   invalid app default gives a null default choice instead of an error.
-  [Models](../protocol/workspace-calls.md#models) states the tool list.
+  [Models](../protocol/create-call-lists.md#models) states the tool list.
 
 ## The title model
 
 `CONDUCTIVE_TITLE_MODEL` names the model that writes a title for a workspace
-that has no name, as [Messages](../protocol/messages-and-attachments.md#messages)
+that has no name, as
+[The title of a new workspace](../protocol/workspace-and-session-names.md#the-title-of-a-new-workspace)
 says. It is operator data. The Worker has no built-in title model.
 
 - The value is the model ID of a text generation model of Workers AI, the

@@ -1,7 +1,8 @@
 import { expect, it } from 'vitest'
 
 import { COMMIT_AUTHOR_VARIABLES } from '../../src/shared/commit-author'
-import { TOOL_ENV } from '../../tools/context'
+import { TOOL_ENV } from '../../src/shared/agent-tools'
+import { workspaceLink } from '../data/workspace-link'
 import type { WorkspaceValues } from './platform-storage'
 import { isRecord } from '../http'
 import { TEST_TIME } from '../test-support/harness'
@@ -10,6 +11,8 @@ import { SOFTWARE } from './backend-test-support'
 import { seededCompletedWorkspace } from './backend-workspace.test-support'
 import { createCompletedWorkspace } from './completed-creation-test-support'
 import { readRetention } from './retention-data'
+import { parseOrgEnvironment } from './org-environment'
+import { sandboxEnvironment } from './sandbox-environment'
 import { FIRST_MESSAGE } from './durable-test-support'
 import { seedPublishedImage } from './published-image-test-support'
 import { workspaceEnvironmentSettings } from './settings-data'
@@ -23,6 +26,68 @@ import {
 } from './runner-environment-test-support'
 
 const backendFixture = setupBackendTests()
+
+it('gives stored tree context precedence over org variables for top-level and nested starts', async () => {
+  const fixture = await backendFixture()
+  const { runtime, org } = fixture
+  const { id } = await seededCompletedWorkspace(fixture)
+  const parent = await readWorkspace(runtime.env.DB, org.id, id)
+  const link = workspaceLink(runtime.env.APP_ORIGIN, org.id, id)
+  const input = {
+    environment: parseOrgEnvironment({
+      CONDUCTIVE_WORKSPACE_LINK: 'org-link',
+      CONDUCTIVE_WORKSPACE_DEPTH: '99',
+      CONDUCTIVE_WORKSPACE_MAX_DEPTH: '99',
+      CONDUCTIVE_PARENT_WORKSPACE_ID: 'org-parent',
+      CONDUCTIVE_PARENT_WORKSPACE_LINK: 'org-parent-link',
+    }),
+    locations: [
+      {
+        repositoryId: fixture.repositoryId,
+        directory: '/repo',
+        variable: 'CONDUCTIVE_REPOSITORY_PROJECT_DIR',
+      },
+    ],
+    defaultBranch: 'main',
+    diskKeepalive: false,
+  }
+  const top = await sandboxEnvironment(runtime.env, {
+    ...input,
+    workspace: parent,
+  })
+  expect.soft(top).toMatchObject({
+    CONDUCTIVE_WORKSPACE_LINK: link,
+    CONDUCTIVE_WORKSPACE_DEPTH: '0',
+    CONDUCTIVE_WORKSPACE_MAX_DEPTH: '3',
+  })
+  expect.soft(top).not.toHaveProperty('CONDUCTIVE_PARENT_WORKSPACE_ID')
+  expect.soft(top).not.toHaveProperty('CONDUCTIVE_PARENT_WORKSPACE_LINK')
+  await runtime.env.DB.batch([
+    runtime.env.DB.prepare(
+      `INSERT INTO workspaces (id, org_id, repository_id, owner_user_id, section_id, name, branch, state, created_at, updated_at)
+       SELECT 'parent-workspace', org_id, repository_id, owner_user_id, section_id, 'Parent', 'owner/parent', 'archived', created_at, updated_at
+       FROM workspaces WHERE id = ?`,
+    ).bind(id),
+    runtime.env.DB.prepare(
+      "UPDATE workspaces SET parent_workspace_id = 'parent-workspace' WHERE id = ?",
+    ).bind(id),
+  ])
+  const nested = await sandboxEnvironment(runtime.env, {
+    ...input,
+    workspace: await readWorkspace(runtime.env.DB, org.id, id),
+  })
+  expect(nested).toMatchObject({
+    CONDUCTIVE_WORKSPACE_LINK: link,
+    CONDUCTIVE_WORKSPACE_DEPTH: '1',
+    CONDUCTIVE_WORKSPACE_MAX_DEPTH: '3',
+    CONDUCTIVE_PARENT_WORKSPACE_ID: 'parent-workspace',
+    CONDUCTIVE_PARENT_WORKSPACE_LINK: workspaceLink(
+      runtime.env.APP_ORIGIN,
+      org.id,
+      'parent-workspace',
+    ),
+  })
+})
 
 /** The runner gives each agent process these values for its turn. */
 function turnValueNames(env: unknown): string[] {
@@ -109,10 +174,11 @@ it('captures fresh resume settings, preserves the ready computer capture, and pi
   const workspace = await readWorkspace(runtime.env.DB, org.id, id)
   const actor = platform.endpoint()
   const resumes: Request[] = []
+  const fetch = runtime.dependencies.fetch
   runtime.dependencies.fetch = async (request) => {
     if (new URL(request.url).pathname.endsWith('/resume'))
       resumes.push(request.clone())
-    return boat.fetch(request)
+    return fetch(request)
   }
   boat.statusChunkSize = 17
   await actor.lifecycleStopped()

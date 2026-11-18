@@ -1,6 +1,7 @@
+import type { Session } from '../../shared/generated/Session'
+import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import { createApiClient } from '../../app/api/client'
-import type { AgentChoice } from '../../shared/agents'
-import { sessionsPath, type Session } from '../../shared/sessions'
+import { sessionsPath } from '../../shared/sessions'
 import {
   workspaceViewPath,
   type TemporaryTab,
@@ -9,7 +10,7 @@ import {
 } from '../../shared/workspace-view'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { createChatApi } from '../api/client'
-import { readView } from '../api/read-responses'
+import { readView } from '../api/read-view'
 import { tabSessions } from './archive-view'
 import { rowTabs } from './tab-order'
 import { chatFor } from './test-kit'

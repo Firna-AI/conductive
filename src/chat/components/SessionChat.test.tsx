@@ -5,12 +5,14 @@ import { uploadingFile, type DraftFile } from '../../app/draft-files'
 import { fileMark } from '../../app/draft-marks'
 import { ACCOUNT_PATHS } from '../../shared/account'
 import { sessionPaths } from '../../shared/sessions'
+import { workspacePath } from '../../shared/workspaces'
 import {
   coreFixtures,
   FAKE_IDS,
   FAKE_TIME,
   fakeUser,
 } from '../../test-support/fixtures/core'
+import { REMOVED_ARCHIVED_AT } from '../../test-support/fixtures/removed-workspace'
 import {
   senderSnapshot,
   workspaceFixtures,
@@ -58,7 +60,7 @@ describe('SessionChat', () => {
     expect(markup()).toContain('placeholder="Message the agent"')
   })
 
-  it('shows a failed turn with its cause and Try again, and an archived chat read-only', async () => {
+  it('shows a failed turn with its cause and Try again, and an archived chat read-only, with the day when it leaves the list, or the day of its removal', async () => {
     const ready = await renderChat({ conversation: 'failed' })
     expect(ready.text()).toContain(
       'This turn stopped The agent is busy. Try again. Try again',
@@ -68,10 +70,23 @@ describe('SessionChat', () => {
       conversation: 'failed',
     })
     expect(archived.text()).toContain(
-      'Its cloud computer is deleted, and the chat is read-only.',
+      'Archived on 15 January Its cloud computer is deleted, and the chat is read-only. It leaves the list on 29 January.',
     )
     expect(archived.text()).not.toContain('Try again. Try again')
     expect(archived.markup()).not.toContain('placeholder="Message the agent"')
+    const removed = await renderChat({
+      workspaceState: 'archived',
+      setup: (server) => {
+        const { detail } = workspaceFixtures('archived')
+        server.json('GET', workspacePath(FAKE_IDS.org, FAKE_IDS.workspace), {
+          ...detail,
+          workspace: { ...detail.workspace, archivedAt: REMOVED_ARCHIVED_AT },
+        })
+      },
+    })
+    expect(removed.text()).toContain(
+      'Removed on 8 January It left the list. Its cloud computer is deleted, and the chat is read-only.',
+    )
   })
 
   it('shows thinking with the time since the turn started, and Stop beside Send', async () => {
@@ -163,6 +178,7 @@ describe('session parts', () => {
         mobile={false}
         onCancelRename={() => {}}
         onClose={() => {}}
+        onCloseTabs={() => {}}
         onCopy={() => {}}
         onMove={() => {}}
         onNew={() => {}}
@@ -178,6 +194,7 @@ describe('session parts', () => {
             id: 'a',
             title: 'Address autocomplete',
             name: 'Address autocomplete',
+            running: false,
             selected: true,
           },
         ]}
@@ -223,10 +240,10 @@ describe('session parts', () => {
     const file = new File(['png'], 'overlap.png', { type: 'image/png' })
     const off = /aria-label="Send" aria-disabled="true"/
     const error = new ApiError(502, 'upload_failed', 'The upload failed.')
-    expect(composer([uploadingFile('file-1', file)])).toMatch(off)
-    expect(composer([{ state: 'failed', id: 'file-1', file, error }])).toMatch(
-      off,
-    )
+    expect(composer([uploadingFile('file-1', file, null)])).toMatch(off)
+    expect(
+      composer([{ state: 'failed', id: 'file-1', file, error, upload: null }]),
+    ).toMatch(off)
     expect(composer([])).not.toMatch(off)
   })
 })

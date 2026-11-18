@@ -14,8 +14,10 @@ import type { CommandId } from './shortcutCommands'
  * with one key chosen by hand: Fix checks has Alt+Shift+X, the twin of ⌥⌘X,
  * because Firefox switches the text direction of a text field on
  * Ctrl+Shift+X. Fast mode decision 258 C of 12 November 2026 gives Fast mode
- * Ctrl+Shift+E by the same rule. Only the Mac app has the sidebar toggle,
- * Back, and Forward, so they have no key here.
+ * Ctrl+Shift+E by the same rule. Hide or show the sidebar runs in every
+ * host from decision 5 A of 16 November 2026, so it gets Ctrl+B and [ by
+ * the same rule. Only the Mac app has Back and Forward, so they have no key
+ * here.
  */
 export const windowsKeys: Readonly<Record<CommandId, readonly Shortcut[]>> = {
   'command-palette': ['Ctrl+K'],
@@ -23,7 +25,7 @@ export const windowsKeys: Readonly<Record<CommandId, readonly Shortcut[]>> = {
   'account-page': ['Ctrl+,'],
   'create-org': [],
   'send-feedback': ['Alt+Shift+F'],
-  'toggle-sidebar': [],
+  'toggle-sidebar': ['Ctrl+B', '['],
   'toggle-right-column': ['Alt+Shift+B', ']'],
   back: [],
   forward: [],
@@ -67,8 +69,10 @@ export const windowsKeys: Readonly<Record<CommandId, readonly Shortcut[]>> = {
   'create-pull-request': ['Ctrl+Shift+P', 'Alt+Shift+P'],
   'fix-checks': ['Alt+Shift+X'],
   'resolve-conflicts': [],
+  'merge-latest': [],
   'address-review': [],
   'commit-and-push': ['Ctrl+Shift+Y'],
+  'mark-ready-for-review': [],
   'merge-pull-request': ['Ctrl+Shift+M'],
   'continue-after-merge': [],
   'open-pull-request': ['Ctrl+Shift+G'],
@@ -77,6 +81,7 @@ export const windowsKeys: Readonly<Record<CommandId, readonly Shortcut[]>> = {
   'go-to-checks': [],
   'go-to-terminal': ['Ctrl+J'],
   'go-to-preview': [],
+  'new-terminal': [],
   'new-session': ['Ctrl+T', 'Alt+Shift+T'],
   'session-history': [],
   'focus-message': ['Ctrl+L', 'Ctrl+Shift+L'],

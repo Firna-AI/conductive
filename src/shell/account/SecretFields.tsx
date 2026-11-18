@@ -1,11 +1,11 @@
 import { Input } from '@firna/ui/input'
+import type { Agent } from '../../shared/generated/Agent'
 import { productName } from '../../../docs/mockups/src/brand'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import styles from '../../../docs/mockups/src/components/settings/AgentConnectForm.module.css'
 import type { ApiError } from '../../app/api/client'
 import type { SecretForm } from '../../app/secret-form'
 import { useStore } from '../../app/store'
-import type { Agent } from '../../shared/agents'
 import { ENDPOINT_ADDRESS_ERROR } from '../../shared/endpoint-address'
 import { ExternalLink } from '../ui/links'
 import { loginLabels, type LoginKind } from './labels'
@@ -41,12 +41,20 @@ function fieldOf(agent: Agent, kind: LoginKind) {
   return { label: loginLabels.claude.token, placeholder: 'Paste the token' }
 }
 
-/** What to paste for a token or an API key, and where the user gets it. */
-export function SecretText(props: { agent: Agent; kind: LoginKind }) {
+/**
+ * What to paste for a token or an API key, and where the user gets it. The
+ * key of an org login comes from the account of `org`, such as "Acme's".
+ */
+export function SecretText(props: {
+  agent: Agent
+  kind: LoginKind
+  org?: string
+}) {
+  const whose = props.org === undefined ? 'your' : `${props.org}'s`
   if (props.agent === 'codex') {
     return (
       <p className={styles.text}>
-        Paste an API key of your OpenAI account.{' '}
+        {`Paste an API key of ${whose} OpenAI account. `}
         <ExternalLink href={keyPages.openAi}>Make one on OpenAI</ExternalLink>
       </p>
     )
@@ -54,7 +62,7 @@ export function SecretText(props: { agent: Agent; kind: LoginKind }) {
   if (props.kind === 'api-key') {
     return (
       <p className={styles.text}>
-        Paste an API key of your Anthropic account.{' '}
+        {`Paste an API key of ${whose} Anthropic account. `}
         <ExternalLink href={keyPages.anthropic}>
           Make one on Anthropic
         </ExternalLink>

@@ -4,7 +4,7 @@ Conductive is a coding tool at `conductive.build`. Each workspace has its
 own cloud computer, a Boat sandbox, and one branch at a time. It can hold
 one task after another. Agents powered by Claude and Codex work only in
 the sandbox. The user follows them in the browser or in the Mac app, which
-shows the web app. Routines also start agents without a person, each run
+shows the web app. Automations also start agents without a person, each run
 in a new workspace. This doc describes the components, their
 responsibilities, and the boundaries between them. The
 [protocol docs](architecture/protocol-docs.md) hold the requirements of
@@ -43,6 +43,13 @@ each feature.
   at a time. After a merge, Continue moves it on to its next task.
 - **Workspace owner:** the person who is responsible for a workspace. It is
   the person who created the workspace, until an admin reassigns it.
+- **Sub-workspace:** a workspace nested under another workspace, its
+  parent workspace. An agent creates it under that parent, or moves it
+  there later. The workspace list shows it under the row of its parent, as
+  [Sub-workspaces](protocol/sub-workspaces.md) says.
+- **Parent workspace:** the workspace that a sub-workspace is nested
+  under. The docs also call it the parent. A workspace has at most one
+  parent workspace.
 - **Continue:** the action after a merge that moves a workspace to a new
   branch from the latest default branch. The workspace keeps its sandbox
   and its sessions.
@@ -50,8 +57,24 @@ each feature.
   have: changed files that are not committed, also untracked files, and
   commits that no remote branch holds.
 - **Sender:** the person who sent the message of a turn. The GitHub token
-  and the Mac requests of the turn belong to its sender. The agent login
-  belongs to the starter of the session, the member who started it.
+  and the Mac requests of the turn belong to its sender. The turn runs on
+  the login of its session, which can belong to another member or to the
+  org. A turn that a late answer to a secret request starts has the sender
+  of the turn that asked, as
+  [Late answers](protocol/secret-requests.md#late-answers) says.
+- **Starter:** the member who started a session. The starter of a session
+  never changes.
+- **Agent login:** the key, the token, the sign-in, or the own endpoint
+  that the turns of an agent run on. It is a personal login or an org
+  login.
+- **Personal login:** an agent login that a member connects on the account
+  page. It serves all of the orgs of that member.
+- **Org login:** an API key or an own endpoint that an admin connects for
+  one agent of an org. It serves the members of that org.
+- **Login of a session:** the agent login that each turn of a session runs
+  on: the personal login of its starter, or the org login.
+- **Default login:** the agent login that a new session of a member takes,
+  as [The default login](protocol/org-logins.md#the-default-login) says.
 - **Boat key:** the one key of the app's own Boat account, where every
   sandbox and every org image of every org runs. It is a Worker secret.
 - **Provider account:** an account with a sandbox provider. The Worker
@@ -61,7 +84,8 @@ each feature.
 - **Org image:** the saved snapshot that every new sandbox of an org starts
   from. It holds a prepared copy of each repository that the org chose
   when the build of the image began.
-- **Build:** a run of the install script on a copy of the org image. An org
+- **Build:** a run of the install script on a copy of the org image. A
+  build also installs the newest release of the sandbox software. An org
   without an org image builds on a copy of the software image. A build
   replaces the org image only when it succeeds.
 - **Software image:** the saved snapshot of the base image with the app's
@@ -70,9 +94,13 @@ each feature.
 - **Refresh:** an update of the org image that fetches the new commits of
   each repository that the org image holds. It does not run the install
   script.
-- **Agent runner:** our program in each sandbox. It runs the agents through
-  the agent SDKs, and it reports the files, the changes, and the listening
-  ports of its workspace.
+- **Sandbox software:** the app's own software in each sandbox. It is the
+  program `conductive` and the parts that the program installs. Each deploy
+  from `main` publishes a release of it. Each sandbox updates it by itself,
+  as [Sandbox software](protocol/sandbox-software.md) says.
+- **Agent runner:** the part of the sandbox software that runs the agents.
+  It runs them through the agent SDKs, and it reports the files, the
+  changes, and the listening ports of its workspace.
 - **Session:** one agent conversation in a workspace. It shows as a tab.
 - **Turn:** the work of the agent on a message, from the message to the
   end of the agent's reply. A Claude turn stays open after that reply
@@ -83,17 +111,27 @@ each feature.
   schedules. A wake-up is a prompt for the agent at a later time.
 - **Workspace token:** a secret of one workspace. Its sandbox uses the
   token to call the Worker.
+- **Secret:** a named value of an org that agents use in one command at a
+  time, after a member allows it. It is not an env var.
+  [Secrets](protocol/secrets.md) states the secrets.
 - **Preview hostname:** a random hostname on the preview domain. It shows
   one port of one sandbox.
 - **Start:** each create or resume of a sandbox, also the sandbox of a
   build, a refresh, or a software image build. The app's Boat account
   limits the starts of all orgs.
+- **Plan:** what an org pays for each month, with the cloud hours that it
+  includes: Free, Plus, Pro, or Ultra. [Pricing](protocol/pricing.md)
+  states the plans. Billing has not started, so no org has a plan yet.
+- **Cloud hour:** one hour of one cloud computer that runs. Each plan
+  includes a number of cloud hours each month.
 
-- **Routine:** a saved prompt of an org that runs an agent without a
+- **Automation:** a saved prompt of an org that runs an agent without a
   person. A schedule, a GitHub pull request event, or Run now starts each
   run. Each run creates a new workspace, the run workspace.
-- **Routine owner:** the member whose logins the runs of a routine use. It
-  is the member who created the routine, until that member leaves the org.
+- **Automation owner:** the member in whose name the runs of an automation
+  act. The runs use the GitHub access and the default login of that member.
+  It is the member who created the automation, until that member leaves the
+  org.
 - **Base branch:** the branch that the work of a workspace targets. Changes
   compares with it, and "Create PR" opens into it.
 
@@ -101,16 +139,19 @@ each feature.
 
 The [components page](architecture/components.md) describes each
 component and its responsibilities. It covers the apps, the Worker and
-its storage, Boat, the sandbox software, and the external services.
+its storage, Boat, the sandbox software, and the external services. The
+[sandbox software page](architecture/sandbox-software.md) describes the two
+programs in each sandbox, their releases, and their updates.
 
 ## Hostnames
 
-| Hostname               | What it serves                                                                                                                             |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `conductive.build`     | The marketing site, with the public docs and the Terms, Privacy, and comparison pages                                                      |
-| `app.conductive.build` | The web app, the API, the chat sockets, and the terminal                                                                                   |
-| `api.conductive.build` | The GitHub webhooks, the agent tools, the runner, the credential helper, the model gateway, and the software image route of the deploy run |
-| `*.conductive.page`    | One random hostname for each open port preview, one level deep                                                                             |
+| Hostname                  | What it serves                                                                                                                             |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `conductive.build`        | The marketing site, with the public docs and the pricing, Terms, and Privacy pages                                                         |
+| `app.conductive.build`    | The web app, the API, the chat sockets, and the terminal                                                                                   |
+| `api.conductive.build`    | The GitHub webhooks, the agent tools, the runner, the credential helper, the model gateway, the software image route of the deploy run, and the attachment downloads |
+| `*.conductive.page`       | One random hostname for each open port preview, one level deep                                                                             |
+| `runner.conductive.build` | The public files of each [release](protocol/sandbox-software.md#releases) of the sandbox software, from an R2 bucket                       |
 
 `api.conductive.build` is the hostname for machines. Each of its routes has
 a path under `/v1/` (decision 102). The preview domain, `conductive.page`,
@@ -120,8 +161,9 @@ the app (decision 6).
 ## Flows
 
 The [flows page](architecture/flows.md) describes how the components work
-together for a new workspace, chat, the terminal, previews, the desktop,
-GitHub events, a merge, Continue, routine runs, and stops.
+together for a new workspace, chat, a run with secrets, the terminal,
+previews, the desktop, GitHub events, a merge, Continue, automation runs, and
+stops.
 
 ## Where data lives
 
@@ -138,7 +180,7 @@ separate the orgs, the Boat key, the model gateway, and the sandboxes.
 A decision number, such as decision 36, names the dated record of one
 decision. The plan of the change that made the decision keeps the record
 while that change is open. The pull request of that change keeps the
-record after the merge. The decisions of routines use the numbers from
+record after the merge. The decisions of automations use the numbers from
 501, so that each number names one record.
 
 A decision of a later change carries the short name of that change, such

@@ -1,12 +1,14 @@
 import type { ChatItem, ToolCallItem } from '../../fixtures/conversations'
+import { isLateRequest } from './requests'
 
 /**
  * The work of a turn: its agent messages and its tool calls, with the Mac
- * command cards and the lost lines among them.
+ * command cards, the cards of runs with secrets, and the lost lines among
+ * them. A late request is not work, so it stays at its place.
  */
 export type WorkItem = Extract<
   ChatItem,
-  { kind: 'agent' | 'tool' | 'mac-command' | 'lost' }
+  { kind: 'agent' | 'tool' | 'mac-command' | 'secret-run' | 'lost' }
 >
 
 /** An item that the chat draws on its own: a tool call joins a run instead. */
@@ -46,6 +48,8 @@ function isWork(item: ChatItem): item is WorkItem {
     case 'tool':
     case 'mac-command':
       return true
+    case 'secret-run':
+      return !isLateRequest(item)
     case 'lost':
       return !isEnd(item) && item.reason !== 'turn_not_active'
     default:
@@ -55,10 +59,10 @@ function isWork(item: ChatItem): item is WorkItem {
 
 /**
  * The parts of each ended turn. The mockup items have no turn IDs, so the
- * items after a member message, up to an end, form one turn. A message
- * sent during the turn joins it and starts a new part. A linked line
- * starts no turn. A turn without an end, such as a running one, does not
- * fold.
+ * items after a member message, up to an end, form one turn. The line of
+ * a late Allow starts a turn too. A message sent during the turn joins it
+ * and starts a new part. A linked line starts no turn. A turn without an
+ * end, such as a running one, does not fold.
  */
 function endedParts(items: readonly ChatItem[]): ChatItem[][] {
   const ended: ChatItem[][] = []
@@ -66,6 +70,8 @@ function endedParts(items: readonly ChatItem[]): ChatItem[][] {
   for (const item of items) {
     if (item.kind === 'user') {
       parts = item.during && parts.length > 0 ? [...parts, []] : [[]]
+    } else if (item.kind === 'late-answer') {
+      parts = [[]]
     } else if (item.kind === 'linked') {
       parts = []
     } else {
@@ -101,8 +107,9 @@ function foldedRuns(part: readonly ChatItem[]): WorkItem[][] {
 
 /**
  * The IDs of the items of the running turn: the items after the member
- * message that started it, up to the working line. A message sent during
- * the turn joins it. No turn runs when the chat has no working line.
+ * message or the late Allow that started it, up to the working line. A
+ * message sent during the turn joins it. No turn runs when the chat has
+ * no working line.
  */
 function runningItems(items: readonly ChatItem[]): Set<string> {
   const working = items.findIndex((item) => item.kind === 'working')
@@ -110,7 +117,9 @@ function runningItems(items: readonly ChatItem[]): Set<string> {
   const start = items.findLastIndex(
     (item, index) =>
       index < working &&
-      ((item.kind === 'user' && !item.during) || isEnd(item)),
+      ((item.kind === 'user' && !item.during) ||
+        item.kind === 'late-answer' ||
+        isEnd(item)),
   )
   return new Set(items.slice(start + 1, working).map((item) => item.id))
 }

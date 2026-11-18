@@ -1,12 +1,13 @@
+import type { Workspace } from '../shared/generated/Workspace'
 import {
   useCallback,
   useEffect,
   useSyncExternalStore,
   type ReactNode,
 } from 'react'
-import type { Agent } from '../shared/agents'
+import type { Agent } from '../shared/generated/Agent'
 import type { WorkspaceView } from '../shared/workspace-view'
-import type { Workspace } from '../shared/workspaces'
+
 import { TouchScreen } from '../../docs/mockups/src/components/common/touch'
 import { useFollowTabs } from '../app/tab-places'
 import {
@@ -14,7 +15,7 @@ import {
   useChatDropArea,
 } from './components/chat-drop-area'
 import { ChatOverlays, historyEntries } from './components/ChatOverlays'
-import type { ComposerFocus } from './components/Composer'
+import type { ComposerFocus } from './components/composer-requests'
 import { SessionChat, type ChatHost } from './components/SessionChat'
 import { CodeCopyProvider, useCodeCopyAction } from './components/code-copy'
 import { useSessionLinkCopy } from './components/session-link-copy'
@@ -28,11 +29,13 @@ import { useMentionCopy } from './links/mention-copy'
 import { MentionsProvider, type ChatMentions } from './mentions/MentionsContext'
 import { endedAt, historySessions, tabSessions } from './state/archive-view'
 import {
+  isRunning,
   sessionState,
   type ChatSnapshot,
   type Overlay,
 } from './state/chat-snapshot'
 import type { ChatController } from './state/controller'
+import { withoutTabs } from './state/tab-order'
 import { browserCopy, type CopyServices } from './transcript-copy'
 import { systemClock, useNow, type Clock } from './ui/clock'
 import { useChatController, type ChatConnection } from './useChatController'
@@ -40,7 +43,7 @@ import styles from './WorkspaceChat.module.css'
 
 /** How the chat shows, and what it tells the app. */
 export interface ChatViewProps {
-  /** The phone layout takes 44 px touch targets and sheets for menus. */
+  /** The phone layout takes 40 px touch targets and sheets for menus. */
   viewport: 'desktop' | 'mobile'
   /** The time source for durations and relative times. */
   clock?: Clock
@@ -52,8 +55,8 @@ export interface ChatViewProps {
    */
   copy?: CopyServices
   /**
-   * Names and draws a file or diff tab of the saved view at its place in the
-   * tab row, as `RenderTab` says. Without it, the row shows only the session
+   * Names and draws a file, diff, or Preview tab of the saved view at its
+   * place in the tab row, as `RenderTab` says. Without it, the row shows only the session
    * tabs, as on a phone.
    */
   renderTab?: RenderTab
@@ -63,6 +66,12 @@ export interface ChatViewProps {
    * tab shows as the current one.
    */
   content?: ReactNode
+  /**
+   * Parts that the app keeps mounted under the chat or the `content`, such
+   * as the pages of the Preview tabs, which stay loaded while another tab
+   * shows. The app hides each part that does not show.
+   */
+  kept?: ReactNode
   /** The workspace record, its state, and the title from its first message. */
   onWorkspaceChange?: (workspace: Workspace) => void
   /** The open tabs, as the chat saves them through the view route. */
@@ -170,6 +179,7 @@ function ChatBody(
     snapshot.view,
     tabSessions(snapshot),
     shownTab(snapshot.view, active, content !== null),
+    (sessionId) => isRunning(snapshot, sessionId),
     props.renderTab,
   )
   useTabKeys({ tabs, controller, history, copy })
@@ -182,6 +192,9 @@ function ChatBody(
         mobile={mobile}
         onCancelRename={controller.dismissOverlay}
         onClose={controller.requestClose}
+        onCloseTabs={(closed) =>
+          controller.updateView((view) => withoutTabs(view, closed))
+        }
         onCopy={copy}
         onCopyLink={copyLink}
         onMove={controller.moveTab}
@@ -209,6 +222,7 @@ function ChatBody(
           />
         </CodeCopyProvider>
       )}
+      {props.kept}
       <ChatOverlays
         history={history}
         mobile={mobile}
@@ -223,7 +237,7 @@ function ChatBody(
   if (!mobile) {
     return (
       <LinksProvider value={links}>
-        <MentionsProvider value={mentions}>
+        <MentionsProvider root={snapshot.repositoryFolder} value={mentions}>
           <div className={styles.column} {...drops.handlers}>
             {body}
           </div>
@@ -233,7 +247,7 @@ function ChatBody(
   }
   return (
     <LinksProvider value={links}>
-      <MentionsProvider value={mentions}>
+      <MentionsProvider root={snapshot.repositoryFolder} value={mentions}>
         <TouchScreen>
           <div className={styles.phone} {...drops.handlers}>
             {body}

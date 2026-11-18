@@ -13,6 +13,7 @@ import { shellArgument } from './privileged'
 import {
   credentialScript,
   launcherScript,
+  sessionServerScript,
   terminalPromptCommand,
 } from './scripts'
 import {
@@ -100,14 +101,25 @@ it('attaches each terminal connection to the workspace shell at the repository p
   await writeFile(
     fixture.terminal,
     `#!/bin/sh
-printf '%s\\0' "$@"
+printf '%s\\0' "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8"
+shift 8
+exec "$@"
 `,
   )
   expect((await runScript(credentialScript(fixture.options))).code).toBe(0)
   const result = await runScript(launcherScript(fixture.options))
   expect(result.code).toBe(0)
-  expect(result.stdout.split('\0').slice(7, -1)).toEqual([
-    fixture.multiplexer,
+  expect(result.stdout.split('\0').slice(0, -1)).toEqual([
+    '--interface',
+    '0.0.0.0',
+    '--port',
+    '7681',
+    '--writable',
+    '--credential',
+    `conductive:${'11'.repeat(32)}`,
+    '--url-arg',
+    fixture.repository,
+    'workspace environment',
     '-N',
     '-S',
     fixture.sessionSocket,
@@ -119,6 +131,43 @@ printf '%s\\0' "$@"
     fixture.repository,
     '/bin/bash',
     '-l',
+  ])
+})
+
+it('starts the workspace shell server with the repository environment and private socket', async () => {
+  const fixture = await scriptFixture()
+  const result = await runScript(sessionServerScript(fixture.options))
+  expect(result.code).toBe(0)
+  expect(result.stderr).toBe('')
+  expect(result.stdout).toContain(fixture.options.restoreMarker)
+  expect(result.stdout.split('\0').slice(0, -1)).toEqual([
+    fixture.repository,
+    'workspace environment',
+    '-S',
+    fixture.sessionSocket,
+    '-f',
+    '/dev/null',
+    'start-server',
+    ';',
+    'set-option',
+    '-s',
+    'exit-empty',
+    'off',
+    ';',
+    'set-option',
+    '-g',
+    'mouse',
+    'on',
+    ';',
+    'set-option',
+    '-g',
+    'history-limit',
+    '2000',
+    ';',
+    'set-environment',
+    '-g',
+    'PROMPT_COMMAND',
+    terminalPromptCommand(fixture.options.restoreMarker),
   ])
 })
 
@@ -155,4 +204,66 @@ it('waits for the restore marker before moving a running shell once and keeps OL
     `old file\nlive file\n${fixture.repository}\nlive file\n${fixture.repository}\n`,
   )
   expect(result.stderr).not.toContain('PROMPT_COMMAND')
+})
+
+it('appends each command to the history file before the next prompt and keeps the exit status', async () => {
+  const fixture = await scriptFixture()
+  const historyFile = `${fixture.root}/history`
+  const result = await runInteractiveBash(
+    [
+      'echo one',
+      'false',
+      'printf "status %s\\n" "$?"',
+      'cat -- "$HISTFILE"',
+      'kill -KILL "$$"',
+    ],
+    {
+      folder: fixture.repository,
+      home: fixture.root,
+      promptCommand: terminalPromptCommand(fixture.options.restoreMarker),
+      historyFile,
+    },
+  )
+  expect(result.stdout).toBe(
+    'one\nstatus 1\necho one\nfalse\nprintf "status %s\\n" "$?"\n',
+  )
+  expect(await readFile(historyFile, 'utf8')).toBe(
+    'echo one\nfalse\nprintf "status %s\\n" "$?"\ncat -- "$HISTFILE"\n',
+  )
+})
+
+it('appends no history without a history file and stays silent when the append fails', async () => {
+  const fixture = await scriptFixture()
+  for (const historyFile of ['', `${fixture.root}/missing/history`]) {
+    const result = await runInteractiveBash(['echo one', 'exit'], {
+      folder: fixture.repository,
+      home: fixture.root,
+      promptCommand: terminalPromptCommand(fixture.options.restoreMarker),
+      historyFile,
+    })
+    expect(result.code).toBe(0)
+    expect(result.stdout).toBe('one\n')
+    expect(result.stderr).not.toContain('history')
+  }
+  await expect(readdir(fixture.root)).resolves.not.toContain('.bash_history')
+})
+
+it('appends no history after the user unsets HISTFILE', async () => {
+  const fixture = await scriptFixture()
+  // Without HISTFILE, `history -a` falls back to the readline file ~/.history.
+  await writeFile(`${fixture.root}/.history`, '')
+  const result = await runInteractiveBash(
+    ['unset HISTFILE', 'echo one', 'exit'],
+    {
+      folder: fixture.repository,
+      home: fixture.root,
+      promptCommand: terminalPromptCommand(fixture.options.restoreMarker),
+      historyFile: `${fixture.root}/history`,
+    },
+  )
+  expect(result.code).toBe(0)
+  expect(result.stdout).toBe('one\n')
+  expect(await readFile(`${fixture.root}/.history`, 'utf8')).toBe('')
+  await expect(readdir(fixture.root)).resolves.not.toContain('history')
+  await expect(readdir(fixture.root)).resolves.not.toContain('.bash_history')
 })

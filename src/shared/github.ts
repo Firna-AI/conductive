@@ -1,4 +1,5 @@
-import type { Timestamp } from './api'
+import type { GitHubSummary } from './generated/GitHubSummary'
+import type { Timestamp } from './generated/Timestamp'
 import { workspacePath } from './workspaces'
 
 export const githubPaths = {
@@ -13,6 +14,8 @@ export const githubPaths = {
     `${workspacePath(orgId, id)}/github/merge`,
   mergeResult: (orgId: string, id: string, mergeId: string) =>
     `${workspacePath(orgId, id)}/github/merge/${encodeURIComponent(mergeId)}`,
+  ready: (orgId: string, id: string) =>
+    `${workspacePath(orgId, id)}/github/ready`,
 } as const
 
 export interface PullRequest {
@@ -32,6 +35,13 @@ export interface GitHubMergeRequest {
 }
 export type GitHubMergeResponse =
   { state: 'pending'; mergeId: string } | { state: 'merged' }
+/** Ready for review of the draft pull request that the bar shows. */
+export interface GitHubReadyRequest {
+  pullNumber: number
+}
+export interface GitHubReadyResponse {
+  state: 'ready'
+}
 export type BannerState =
   | 'none'
   | 'no-commits'
@@ -110,16 +120,6 @@ export function checksSummary(
     return 'checks-running'
   return checks.length > 0 ? 'checks-passed' : null
 }
-
-/**
- * The GitHub state of a workspace, which its list mark shows: the state of
- * the pull request bar of its branch. A branch without a pull request, and
- * a pull request closed without a merge, have none.
- */
-export type GitHubSummary = Exclude<
-  BannerState,
-  'none' | 'no-commits' | 'closed'
->
 
 export function githubSummary(banner: GitHubBanner): GitHubSummary | null {
   const { state } = banner

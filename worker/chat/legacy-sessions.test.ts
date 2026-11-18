@@ -1,5 +1,6 @@
+import type { Session } from '../../src/shared/generated/Session'
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
-import type { Session } from '../../src/shared/sessions'
+
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { isRecord } from '../http'
 import { createChatFixture, type ChatFixture } from './harness.test-support'
@@ -136,6 +137,7 @@ async function removeMetadata(
 ) {
   const without = (value: Record<string, unknown>) => {
     const result = { ...value }
+    delete result.login
     delete result.startedBy
     delete result.sourceSessionId
     delete result.loginAvailable

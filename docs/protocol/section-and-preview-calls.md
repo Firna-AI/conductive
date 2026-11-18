@@ -19,7 +19,7 @@ number names a dated record, as
 | Open a preview | `open_preview` | `conductive previews open` | `POST /v1/tools/workspaces/{workspaceId}/previews` | An active turn |
 | Close a preview | `close_preview` | `conductive previews close` | `POST /v1/tools/workspaces/{workspaceId}/previews/{previewId}/close` | An active turn |
 
-- [Sections](workspace-calls.md#sections) states the list of the sections.
+- [Sections](create-call-lists.md#sections) states the list of the sections.
 
 ## Sections
 
@@ -32,15 +32,15 @@ number names a dated record, as
   the start and at the end gets HTTP 400 with the error code
   `invalid_input`, as the section route of the app does.
 - The new section comes at the end of the sections of the org, as New
-  section in the app does.
+  section in the command palette of the app does.
 - The reply gives the new section with its ID and its name, as the section
   list gives them.
 - `delete_section` takes a section of the org. It makes the same change as
   Delete section in the app.
 - So each workspace of the section moves to the default section, also each
   archived one, as [Sections](orgs-and-members.md#sections) says. Each
-  routine of the section moves there too, as
-  [A routine](routines.md#a-routine) says.
+  automation of the section moves there too, as
+  [An automation](automations.md#an-automation) says.
 - The default section cannot be deleted. A delete of it changes nothing,
   as in the app.
 - An unknown section gets HTTP 404 with the error code

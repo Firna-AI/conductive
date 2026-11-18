@@ -3,10 +3,13 @@ import { attachmentPath } from '../shared/attachment-paths'
 import { pickWorkspaceFiles, unreadable } from './draft-files.test-support'
 import { mentionText } from '../shared/mention-text'
 import { fileMark } from './draft-marks'
-import { attachmentUploadPath } from '../shared/messages'
+import {
+  attachmentUploadPartPath,
+  attachmentUploadStartPath,
+} from '../shared/messages'
 import { workspacesPath } from '../shared/workspaces'
 import { FakeApiServer } from '../test-support/fake-api'
-import { sentFiles } from '../test-support/fake-files'
+import { sentParts } from '../test-support/fake-files'
 import { FAKE_IDS } from '../test-support/fixtures/core'
 import { OrgModel } from './org-model'
 import { valueOf } from './store'
@@ -14,10 +17,8 @@ import { HeldRequests, testServices } from './test-kit'
 
 const org = FAKE_IDS.org
 const createPath = workspacesPath(org)
-const uploadPath = attachmentUploadPath(org, {
-  type: 'new-workspace',
-  messageId: '',
-})
+const draftTarget = { type: 'new-workspace', messageId: '' } as const
+const startPath = attachmentUploadStartPath(org, draftTarget)
 const choice = {
   agent: 'codex',
   model: 'GPT-6.1 Sol',
@@ -63,21 +64,33 @@ describe('NewWorkspaceModel', () => {
     await pickWorkspaceFiles(draft, [
       new File(['Cart notes'], 'notes.txt', { type: 'text/plain' }),
     ])
-    // The raw file goes before the workspace exists, and names the message.
-    expect(await sentFiles(server.requests)).toEqual([
-      {
-        path: uploadPath,
-        query: {
+    // The file goes before the workspace exists, and its start names the
+    // message.
+    const starts = received(server, 'POST', startPath).map(
+      async (request): Promise<unknown> => request.clone().json(),
+    )
+    expect({
+      starts: await Promise.all(starts),
+      parts: await sentParts(server.requests),
+    }).toEqual({
+      starts: [
+        {
           name: 'notes.txt',
           mediaType: 'text/plain',
+          sizeBytes: 10,
           messageId: 'client-1',
         },
-        text: 'Cart notes',
-      },
-    ])
+      ],
+      parts: [
+        {
+          path: attachmentUploadPartPath(org, draftTarget, FAKE_IDS.upload, 1),
+          text: 'Cart notes',
+        },
+      ],
+    })
     server.json(
       'POST',
-      uploadPath,
+      startPath,
       { error: { code: 'too_large', message: 'The file is too large.' } },
       413,
     )
@@ -94,6 +107,7 @@ describe('NewWorkspaceModel', () => {
     expect(await server.requests.at(-1)?.json()).toEqual({
       repositoryId: 'billing-service',
       sectionId: 'checkout',
+      capabilities: { preapprovedSecretIds: [], macAccess: false },
       firstMessage: {
         id: 'client-1',
         text: `Let shoppers save their cart. ${mentionText(await attachmentPath({ id: 'draft-attachment-1', name: 'postcode-overlap.png' }), false)}  `,
@@ -193,11 +207,11 @@ describe('NewWorkspaceModel', () => {
     const draft = (await loaded(server, held)).newWorkspace(null)
     draft.setText('Fix the flaky cart test.')
     await draft.send(defaults)
-    held.hold('POST', uploadPath)
+    held.hold('POST', startPath)
     const uploading = pickWorkspaceFiles(draft, [notes()])
     await draft.send(defaults)
     const whileUploading = received(server, 'POST', createPath).length
-    held.release('POST', uploadPath)
+    held.release('POST', startPath)
     await uploading
     await draft.send(defaults)
     const creates = await Promise.all(
@@ -234,7 +248,7 @@ describe('NewWorkspaceModel', () => {
     held.release('POST', createPath)
     const created = await creating
     expect({
-      uploads: received(server, 'POST', uploadPath).length,
+      uploads: received(server, 'POST', startPath).length,
       created: created?.workspace.id,
       files: draft.draft.get().files,
       folders: draft.draft.get().refusedFolders,

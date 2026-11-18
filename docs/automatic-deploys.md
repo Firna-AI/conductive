@@ -1,11 +1,12 @@
 # Automatic deploys
 
-Each push to `main` deploys the test deployment at `conductive.build`. The
-GitHub Actions workflow `Deploy`, in `.github/workflows/deploy.yml`, runs
-the deploy. This guide gives its triggers, its GitHub settings, its
-Cloudflare token, and its steps. It also says how to recover from a failed
-deploy. [Deployment inputs](deployment.md) lists the bindings, the
-variables, and the secrets of the Worker.
+Each push to `main` deploys the production deployment at
+`conductive.build`. The GitHub Actions workflow `Deploy`, in
+`.github/workflows/deploy.yml`, runs the deploy. This guide gives its
+triggers, its GitHub settings, its Cloudflare token, and its steps. It
+also says how to recover from a failed deploy.
+[Deployment inputs](deployment.md) lists the bindings, the variables, and
+the secrets of the Worker.
 
 ## When it runs
 
@@ -71,7 +72,7 @@ account-owned token both work.
 | --- | --- | --- | --- |
 | Workers Scripts Edit | Account | The account of the Worker | `wrangler deploy`: the Worker, its assets, its cron trigger, its URL settings, and its custom domains |
 | D1 Edit | Account | The account of the Worker | The D1 migrations |
-| Workers R2 Storage Edit | Account | The account of the Worker | The upload of the runner archive |
+| Workers R2 Storage Edit | Account | The account of the Worker | The upload of Conductive release files |
 | Workers Routes Edit | Zone | `conductive.page` | The route `*.conductive.page/*` |
 | Zone Read | Zone | `conductive.page` | Wrangler finds the zone of that route by its name |
 | Containers Edit | Account | The account of the Worker | The image and the instances of the [ChatGPT egress Worker](../worker/chatgpt-egress/README.md) |
@@ -97,7 +98,7 @@ through the API. Give it the same permissions, with two changes:
   `conductive-runner`.
 
 The S3 key pair of the upload then reaches only that bucket.
-[The archive in each deploy](deployment/runner-archive.md#the-archive-in-each-deploy)
+[The release in each deploy](deployment/runner-archive.md#the-release-in-each-deploy)
 describes that upload. The API names each Edit permission with Write, as
 in `D1 Write`.
 
@@ -107,9 +108,10 @@ Each run takes these steps, in this order:
 
 1. It installs the packages with `npm ci` and `npm ci --prefix runner`.
 2. It builds the app with `npm run build`, which also runs the typecheck.
-3. It packages the runner archive.
-4. It publishes the archive when the archive is new, as
-   [The archive in each deploy](deployment/runner-archive.md#the-archive-in-each-deploy)
+3. It packages the system and SDK helper parts, and builds the musl program
+   with its version and three-part list embedded.
+4. It uploads each missing immutable release file and checks its public size, as
+   [The release in each deploy](deployment/runner-archive.md#the-release-in-each-deploy)
    says.
 5. It applies the D1 migrations with
    `npx wrangler d1 migrations apply DB --remote --config wrangler.jsonc`.
@@ -128,13 +130,14 @@ Each run takes these steps, in this order:
    - A failure of this deploy gives a warning and does not stop the run.
      The next run deploys the egress Worker again.
 7. It makes a new random deploy token, and deploys the Worker with
-   `npx wrangler deploy`. Two `--var` options set the runner variables to
-   the archive. A third sets the SHA-256 digest of the token. The deploy
+   `npx wrangler deploy`. A `--var` option sets the SHA-256 digest of the token. The deploy
    also publishes the model list and app default from `wrangler.jsonc`.
 8. It checks that `https://app.conductive.build/api/health` answers
    `{"status":"ok"}`. When that answer does not come within about a
    minute, the run fails.
-9. It asks the Worker for the
+9. It publishes the newest-version JSON only for a higher version. It reads
+   the current JSON directly from R2 and checks the public size after upload.
+10. It asks the Worker for the
    [software image](protocol/org-image.md#the-software-image) of the new
    version, with the deploy token, and waits for it for up to 15 minutes.
    The log of the run shows the output of the build. When the image of
@@ -145,8 +148,7 @@ Each run takes these steps, in this order:
 A failed step stops the run, except a failed deploy of the egress Worker.
 An app build error stops the run before it changes anything live.
 
-- The `--var` options set only `CONDUCTIVE_RUNNER_ARCHIVE_URL`,
-  `CONDUCTIVE_RUNNER_ARCHIVE_SHA256`, and `CONDUCTIVE_DEPLOY_TOKEN_SHA256`.
+- The `--var` option sets only `CONDUCTIVE_DEPLOY_TOKEN_SHA256`.
   The token itself stays in the deploy job. The values in `wrangler.jsonc`
   replace the corresponding Worker variables. This includes
   `CONDUCTIVE_MODELS` and `CONDUCTIVE_DEFAULT_CHOICE`, as
@@ -155,12 +157,34 @@ An app build error stops the run before it changes anything live.
   no secret.
 - The deploy tags the new Worker version with the short commit hash. So
   the Cloudflare dashboard shows which commit is live.
-- The summary of each run names the commit, the archive URL, whether the
-  run uploaded the archive, the result of the egress deploy, and the result
+- The summary of each run names the commit, the release version and publication result, the result of the egress deploy, and the result
   of the software image.
 - The health route reads no D1 data and gives no version. So the check
   proves only that the Worker answers. Wrangler names the deployed version
   in the log of the run.
+
+## Migrations and the previous Worker
+
+The previous Worker is the version that was live before the deploy. It runs
+on the new schema for some time in each deploy:
+
+- The run applies the D1 migrations before it uploads the new Worker. In
+  that time, only the previous Worker runs.
+- After the upload, Durable Objects that were already running keep the
+  previous Worker for minutes. In one measured deploy, this took about 5
+  minutes. In that time, the previous Worker and the new Worker run
+  together.
+- A failed upload leaves the previous Worker on the new schema until the
+  next deploy.
+- A rollback puts an older Worker on the new schema. A rollback to a
+  Worker that uses a name that a later migration renamed or dropped fails.
+
+So each migration keeps the previous Worker working. A rename or a drop
+takes two pull requests.
+[Keep the previous Worker working](../migrations/README.md#keep-the-previous-worker-working)
+gives the rule. A run of the migrations after the upload does not close
+this gap. The new Worker would then run on the old schema until the
+migrations end. That is the same gap in reverse.
 
 ## When a deploy fails
 
@@ -178,9 +202,10 @@ A failed run does not roll back.
   org without an org image then install the app's own software, until a
   later run makes the software image. Re-run all jobs or Re-run failed
   jobs tries again with a new deploy. The next push also tries again.
-- Between the migrations and the Worker upload, the old Worker runs on the
-  new schema. A failed upload leaves the old Worker on the new schema until
-  the next deploy.
+- A failed upload leaves the previous Worker on the new schema until the
+  next deploy, as
+  [Migrations and the previous Worker](#migrations-and-the-previous-worker)
+  says.
 - [`npx wrangler rollback`](https://developers.cloudflare.com/workers/configuration/versions-and-deployments/rollbacks/)
   restores an earlier version of the Worker. Without a version ID, it
   restores the version before the newest one.
@@ -195,10 +220,33 @@ A failed run does not roll back.
   D1 with Time Travel to a minute before the migration, together with a
   Worker rollback to a version from before it. That restore loses each D1
   write after that minute.
+- `migrations/202611161300_rename_routines_to_automations.sql` has the same
+  limit. It renames the `routines` and `routine_runs` tables to
+  `automations` and `automation_runs`, with no bridge for an older Worker.
+  A Worker version from before it reads the old tables, so every
+  automation request, schedule scan, and run report of that version fails.
+  That version looks up the automation run of the workspace after each
+  chat write. So each chat write of that version also fails after its
+  commit.
+  Recover in the same way: deploy a fix forward, or restore D1 with Time
+  Travel together with a Worker rollback.
 - [D1 Time Travel](https://developers.cloudflare.com/d1/reference/time-travel/)
   restores the database to an earlier minute. Run
   `npx wrangler d1 time-travel restore DB --timestamp=<time>`, with a Unix
   timestamp or an RFC 3339 time.
+
+## Effects on open pages
+
+- A deploy restarts the Durable Object of each workspace with the new
+  code. Cloudflare can restart an object some minutes after the deploy
+  ends. On 17 November 2026, one object restarted 5 minutes after the
+  deploy.
+- A request that runs in an object at its restart fails. The Worker
+  answers `503 server_restarted`, and the page shows "The server
+  restarted. Try again." A retry reaches the new object.
+- Each socket of the object drops. The chat event stream connects again
+  by itself. The terminal connects again once by itself, as
+  [Terminal](protocol/workspace-tools.md#terminal) says.
 
 ## Deploys from other branches
 

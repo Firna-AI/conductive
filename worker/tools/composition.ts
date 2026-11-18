@@ -84,5 +84,6 @@ export function productionAgentTools(
       replayWorkspaceCreation: (input) =>
         replayWorkspaceFromTool(env, dependencies, input),
     },
+    dependencies.now,
   )(request)
 }

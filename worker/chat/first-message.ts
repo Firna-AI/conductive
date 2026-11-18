@@ -1,7 +1,8 @@
+import type { UserMessage } from '../../src/shared/generated/UserMessage'
 import type { User } from '../../src/shared/api'
-import type { UserMessage } from '../../src/shared/messages'
 import type { AppEnv } from '../env'
 import { sessionTitleFrom } from '../../src/shared/session-title'
+import { SessionLogins } from './session-login'
 import { HttpError } from '../http'
 import type { FirstWorkspaceMessage } from '../lifecycle/workspace-runtime'
 import { acceptMessage, existingMessage } from './messages'
@@ -114,11 +115,12 @@ export async function admitFirstMessage(
       'message_id_conflict',
       'Send the changed message with a new message ID.',
     )
-  const login = await dependencies.resolveLogin(
+  const resolved = await SessionLogins.resolve(
+    dependencies,
     sender.id,
     first.request.choice.agent,
   )
-  if (!login || login.agent !== first.request.choice.agent)
+  if (!resolved)
     throw new HttpError(
       409,
       'agent_login_required',
@@ -141,6 +143,8 @@ export async function admitFirstMessage(
     first.sessionId,
     sender,
     dependencies,
+    null,
+    resolved.owner,
   )
   const title =
     first.firstSessionTitle === undefined

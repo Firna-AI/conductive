@@ -31,6 +31,8 @@ gives the create, read, resume, and activity routes of a workspace to
   the current turn, or of the member who pressed Continue during its fetch.
 - Continue a workspace on a new branch after its merge, with the same
   sandbox and sessions.
+- Restart the runner, preview relay, and terminal service of a running workspace, after
+  an update check, as [Restart](routes.md#restart) says.
 - Give the GitHub CLI the workspace owner's token outside an agent turn.
 
 ## Integration points
@@ -50,11 +52,20 @@ It sets the branch's `gh-merge-base` Git setting to the workspace base.
 Create, resume, and disk retention pass that base through `CONDUCTIVE_DEFAULT_BRANCH`.
 A null stored base uses the repository default branch.
 
+The browser create takes optional workspace capabilities.
+`request-parser.ts` reads the pre-approved secret IDs and Mac access.
+`create-request.ts` checks that the selected secrets belong to the org.
+`creation-plan-statements.ts` saves these choices, and `creation-claims.ts`
+reads them for each retry. `workspace-data.ts` writes Mac access and the
+pre-approvals with the workspace records in one D1 batch.
+An omitted choice gives no pre-approval and leaves Mac access off.
+The [secrets backend](../secrets/README.md) owns the capability data.
+
 ### Input activity
 
 [Input activity](routes.md#input-activity) gives how one
 `InputActivityOwner` in each workspace object takes the input of the
-browser and of previews. Terminal frames report no activity.
+browser. Previews and terminal frames report no activity.
 
 ### Machine route
 
@@ -86,6 +97,33 @@ provider retries, logs, snapshot leases, and refresh timers.
 The [software image area](../software-image/README.md) builds the shared
 image that a build of an org without an org image starts from.
 
+Org builds and refreshes install the newest sandbox release through `conductive`.
+A first build from a software image runs this step too.
+The step runs apt only when the source image lacks the current apt part or
+a package, or when its ttyd service is not masked, as
+[The software step](image-builds.md#the-software-step) says.
+An image that holds `conductive` updates through that program.
+Refreshes then snapshot without running the org install script.
+The Worker validates release metadata from `CONDUCTIVE_RELEASE_SERVER`,
+which defaults to `https://runner.conductive.build`.
+A failed build lookup fails the build. A failed startup lookup prints a warning.
+
+A normal workspace startup bootstraps a missing program in a detached root job.
+Downloads never hold the lock used by runner restarts.
+Activation shares `/run/conductive/bootstrap-activate.lock` with the restart.
+The first activation confirms its installation before it releases that lock.
+Restart applies a complete download in the runner's pre-start step under
+the same lock. It then restarts the relay and ttyd, with no restart of the
+terminal shell server. A terminal restart or support check failure warns
+and keeps Restart successful. The workspace object reads the terminal
+password and support again for the captured sandbox and provider account.
+A failed read keeps its cache. Changed support commits one terminal list
+event with the new value, through the workspace event sequence.
+The release program includes the workspace CLI and MCP server.
+Its system installer links `/usr/local/bin/conductive` to the active program.
+Disk retention starts do not bootstrap or restart the runner.
+[Installation](../../image/install.md) gives the command sequence and release layout.
+
 ## Settings
 
 [Lifecycle settings](settings.md) gives the environment inputs and captured secret values.
@@ -103,6 +141,16 @@ The [lifecycle test guide](tests.md) describes the native fixture, clocks, alarm
 
 D1 holds the workspace, token, build, and log records. The storage of each
 object holds the lifecycle state, the turn records, and the events.
+`WorkspaceStateProjection` passes the lifecycle start to `persistLifecycleState`
+in [`workspace-data.ts`](workspace-data.ts).
+The save copies `start.startedAt` into `workspaces.running_since` for starting,
+ready, working, unread, and input. A missing start writes null.
+Stopped, error, and archived states clear the time.
+Archive, Restore, and deleted-org stops also clear it in their direct D1 writes.
+A deleted-org disk restart saves its restart time.
+The [operator Overview](../operator/overview.md) reads this current run time without a provider call.
+The migration leaves existing times null until their next lifecycle save.
+The save runs within 5 minutes during a turn, and within 30 minutes otherwise.
 The computer ledger keeps allocation keys, orgs, owners or starters, and provider IDs with their [provider accounts](provider-accounts.md#the-computer-ledger).
 It keeps deleted computer IDs until their org is purged.
 Assigned identity writes also retain older IDs, including imports and repairs.
@@ -119,6 +167,10 @@ At the end of Restore, the delete goes through the ledger-aware cleanup of [`cle
 A confirmed missing archived disk uses that batch too.
 
 ### Key Code
+
+- [software-release.ts](software-release.ts): reads and validates the newest release JSON.
+- [software-bootstrap.ts](software-bootstrap.ts): verifies downloads and serializes first activation with runner restarts.
+- [software-restart.ts](software-restart.ts): checks for updates, restarts the running services, and asks the workspace object to refresh terminal support.
 
 [Key code](key-code.md) lists the entry points of the lifecycle code, and
 the guides that give the entry points of each part.

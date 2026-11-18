@@ -1,5 +1,4 @@
-import type { MessageSender } from '../shared/messages'
-
+import type { MessageSender } from '../shared/generated/MessageSender'
 type Person = Pick<MessageSender, 'displayName' | 'githubLogin'>
 
 function words(name: string): string[] {
@@ -37,4 +36,18 @@ export function orgInitials(name: string): string {
     .slice(0, 2)
     .join('')
     .toUpperCase()
+}
+
+/**
+ * A member as a sentence names them, such as "Added by you": "you" for the
+ * person signed in, else their name. A removed account has no name, so it
+ * reads "a former member".
+ */
+export function nameInSentence(
+  person: Person | null,
+  id: string,
+  viewerId: string,
+): string {
+  if (id === viewerId) return 'you'
+  return person ? personName(person) : 'a former member'
 }

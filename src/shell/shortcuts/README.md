@@ -87,7 +87,7 @@ useShortcutOffer('command-palette', ready ? toggle : null, controller)
 | Commands | Owner |
 | --- | --- |
 | Command palette | `PaletteProvider.tsx` |
-| Each command that the palette lists: New workspace, New section, Archive workspace, Restore workspace, the Go to rows, New session, Session history, Create org, Send feedback, Repositories settings, Keyboard shortcuts, and Hide or show the sidebar | `PaletteKeys.tsx` of the palette, from the rows of `listedCommands` |
+| Each command that the palette lists: New workspace, New section, Archive workspace, Restore workspace, the Go to rows, New terminal, Merge latest, New session, Session history, Create org, Send feedback, Repositories settings, Keyboard shortcuts, and Hide or show the sidebar | `PaletteKeys.tsx` of the palette, from the rows of `listedCommands` |
 | Switch to org 1 to 9 | `OrgRail.tsx`, while the rail shows, for each org that is not deleted by its place, also the org of the page |
 | Account page | `Signed` in `Shell.tsx`, on each page of the signed-in app |
 | Workspace list | `OrgRoutes.tsx`, on each page of an org that is not deleted |
@@ -135,8 +135,8 @@ return <TerminalTool screenRef={terminal} {...props} />
   of the mockups. Its option names the key in `aria-keyshortcuts`.
 - The Fast row of the model menu of a session shows the key of Fast mode
   between its label and its switch, in the same key chips, and names it in
-  `aria-keyshortcuts`. The menus of New workspace, Preferences, and a
-  routine show no key, because the key runs only where a session tab shows.
+  `aria-keyshortcuts`. The menus of New workspace, Preferences, and an
+  automation show no key, because the key runs only where a session tab shows.
 - The Search row shows the palette key, as ⌘K or Ctrl K.
 - A control that runs a command shows the key in its tooltip, such as
   "New session (⌥⌘T)", and names it in `aria-keyshortcuts`. The icon and

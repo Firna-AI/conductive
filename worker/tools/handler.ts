@@ -1,8 +1,5 @@
-import { MACHINE_PATHS } from '../../src/shared/agent-tools'
-import type { AgentCreateWorkspaceRequest } from '../../src/shared/agent-workspaces'
-import { TOOL_TURN_HEADER } from '../../tools/context'
-import { createWorkspaceInput, ToolInputError } from '../../tools/input'
-import { createdWorkspace } from '../../tools/responses'
+import type { AgentCreateWorkspaceRequest } from '../../src/shared/generated/AgentCreateWorkspaceRequest'
+import { MACHINE_PATHS, TOOL_TURN_HEADER } from '../../src/shared/agent-tools'
 import { errorResponse, HttpError, privateResponse } from '../http'
 import { readJsonObject } from '../http/json-body'
 import {
@@ -17,6 +14,8 @@ import {
   writePreviewFromTool,
 } from './preview-routes'
 import { createFromTool } from './create'
+import { createWorkspaceInput, ToolInputError } from './input'
+import { createdWorkspace } from './workspace-replies'
 import { isAgentToolPath, listFromTool } from './lists'
 import type { AgentToolServices } from './services'
 import { callingWorkspace } from './store'
@@ -36,6 +35,7 @@ export interface AgentToolsEnvironment {
 export function createAgentToolsHandler(
   env: AgentToolsEnvironment,
   services: AgentToolServices,
+  now: () => number,
 ) {
   return async (request: Request): Promise<Response> => {
     try {
@@ -87,6 +87,7 @@ export function createAgentToolsHandler(
           env.DB,
           caller,
           env.APP_ORIGIN,
+          now(),
         )
         if (workspace) return privateResponse(Response.json(workspace))
         const sessions = await readSessionsFromTool(
@@ -99,7 +100,14 @@ export function createAgentToolsHandler(
         if (sessions !== null) return privateResponse(Response.json(sessions))
         return privateResponse(
           Response.json(
-            await listFromTool(url, env.DB, caller, services, env.APP_ORIGIN),
+            await listFromTool(
+              url,
+              env.DB,
+              caller,
+              services,
+              env.APP_ORIGIN,
+              now(),
+            ),
           ),
         )
       }
@@ -127,6 +135,7 @@ export function createAgentToolsHandler(
         caller,
         services,
         env.APP_ORIGIN,
+        now(),
       )
       if (workspace) return privateResponse(workspace)
       const written = await writeSessionsFromTool(
@@ -163,7 +172,7 @@ export function createAgentToolsHandler(
         Response.json(createdWorkspace(result), { status: 201 }),
       )
     } catch (error) {
-      return privateResponse(errorResponse(error))
+      return privateResponse(errorResponse(error, request))
     }
   }
 }

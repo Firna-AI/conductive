@@ -1,7 +1,7 @@
+import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
+import type { RunnerProtocolVersion } from '../../src/shared/generated/RunnerProtocolVersion'
 import { agentLoginPath } from '../../src/shared/account'
-import type { AgentChoice } from '../../src/shared/agents'
 import type { ChatHistoryResponse } from '../chat/workspace-events'
-import type { RunnerProtocolVersion } from '../../src/shared/runner'
 import { RUNNER_SUPPORTED_LOGIN_KINDS } from '../../src/shared/runner'
 import {
   CLAUDE,
@@ -23,6 +23,7 @@ export async function runningGatewayTurn(
     kind?: 'api-key' | 'token' | 'endpoint'
     secret?: string
     endpoint?: string
+    saveEndpointLogin?: (cookie: string) => Promise<Response>
   } = {},
 ) {
   const fixture = await createChatFixture(harness)
@@ -33,20 +34,22 @@ export async function runningGatewayTurn(
       .bind(options.kind, fixture.member.id, choice.agent)
       .run()
   if (options.kind === 'endpoint') {
-    const saved = await harness.request(
-      agentLoginPath(choice.agent),
-      fixture.memberCookie,
-      {
-        method: 'PUT',
-        body: JSON.stringify({
-          agent: choice.agent,
-          kind: 'endpoint',
-          endpoint: options.endpoint ?? gatewayOwnEndpoint,
-          secret:
-            options.secret ?? `secret-${fixture.member.id}-${choice.agent}`,
-        }),
-      },
-    )
+    const saved = options.saveEndpointLogin
+      ? await options.saveEndpointLogin(fixture.memberCookie)
+      : await harness.request(
+          agentLoginPath(choice.agent),
+          fixture.memberCookie,
+          {
+            method: 'PUT',
+            body: JSON.stringify({
+              agent: choice.agent,
+              kind: 'endpoint',
+              endpoint: options.endpoint ?? gatewayOwnEndpoint,
+              secret:
+                options.secret ?? `secret-${fixture.member.id}-${choice.agent}`,
+            }),
+          },
+        )
     if (saved.status !== 200)
       throw new Error('The endpoint login was not saved.')
   }

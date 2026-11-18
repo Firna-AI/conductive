@@ -2,7 +2,7 @@
 
 This doc holds the requirements and the decisions in force for the runs
 that GitHub pull request events start. It belongs to
-[Routines](routines.md). [Routine runs](routine-runs.md) states the rules
+[Automations](automations.md). [Automation runs](automation-runs.md) states the rules
 of every run. [Base branches](base-branches.md) states the branch and the
 base branch of a pull request run. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
@@ -16,7 +16,7 @@ says.
   starts a run when a pull request merges.
 - In the GitHub webhook, these are the actions `opened`, `synchronize`, and
   `closed` with `merged` set to true. Other actions start no run.
-- An event can start a run of each routine that is on, has the repository
+- An event can start a run of each automation that is on, has the repository
   of the pull request, and has a matching trigger. The rules below decide
   whether it does.
 - The GitHub App sends the pull request webhooks, as
@@ -38,8 +38,9 @@ says.
   commits or merged the pull request.
 - So a bot, such as Dependabot, starts runs only when the owner names it in
   "Author is".
-- Reason: a run uses the owner's logins and the org's env vars. The author
-  can write instructions into the code or the text that the agent reads.
+- Reason: a run uses the owner's GitHub access, the owner's default login,
+  and the org's env vars. The author can write instructions into the code
+  or the text that the agent reads.
 - Each pull request trigger can have an author filter with two lists of
   GitHub accounts, "Author is" and "Author is not".
 - An event starts a run only when the author of its pull request passes the
@@ -68,26 +69,27 @@ says.
   gives no row, also when its author or sender is outside the org.
 - Runs for each pull request of the repository were rejected. A
   collaborator outside the org could then steer a run that uses the
-  owner's logins.
+  owner's GitHub access and default login.
 - Trust in the role that GitHub gives an author, such as a member of the
   GitHub organization, was rejected. It trusts accounts that no admin of
   the org invited.
 - Runs without the env vars and with a GitHub token that can only read were
-  rejected. Such a run still spends the owner's agent login, and needs a
-  new kind of start. [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
+  rejected. Such a run still spends the owner's default login, and needs
+  a new kind of start.
+  [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
   states what its sandbox can read.
 - A run that waits for the approval of the owner was rejected, because it
   needs a new run state.
-- [Risks that stay open](routines.md#risks-that-stay-open) states what this
+- [Risks that stay open](automations.md#risks-that-stay-open) states what this
   rule does not stop.
 
 ## Loops
 
-- A routine starts no run for a pull request whose head branch is the
+- An automation starts no run for a pull request whose head branch is the
   branch of one of its run workspaces.
 - Reason: a run that opens or pushes to its own pull request must not start
-  its routine again.
-- A routine ignores the events that its owner sends for a pull request,
+  its automation again.
+- An automation ignores the events that its owner sends for a pull request,
   while one of its runs for that pull request starts or works.
 - Reason: a run pushes with the owner's GitHub access. So its push to the
   pull request that started it has the owner as its sender.
@@ -101,7 +103,7 @@ says.
   request of the event, as
   [Banner states](github-banner.md#banner-states) says.
 - The run text names the pull request, as
-  [The run text](routine-runs.md#the-run-text) says.
+  [The run text](automation-runs.md#the-run-text) says.
 - The line under the header of the run workspace and the row of the run
   link to the pull request on GitHub. Reason: the members see which pull
   request started the run.
