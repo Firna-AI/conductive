@@ -193,6 +193,46 @@ My calls, on 18 November 2026:
   pull request trigger and at least one chosen secret. It says that text
   in a pull request can steer the agent to use these secrets.
 
+Design calls of the mockups, on 18 November 2026:
+
+- The Capabilities icon stands before the model picker in the bar of the
+  prompt box, as in a composer. Its control opens above the icon, from its
+  start. Reason: the order of the bar of a composer.
+- A phone keeps the icon in the bar of the prompt box, with no + menu. A
+  press opens the control as a sheet. Reason: the bar holds only the icon
+  and the model picker, so both fit at 360 px. A composer has the + menu
+  because its bar holds more (secrets decision 16 G).
+- The secrets part of an automation has its own hint: "Each run workspace
+  starts with the checked secrets pre-approved, so agents use them with no
+  question." Reason: a check acts on each later run workspace, not on a
+  workspace that exists.
+- A line under the prompt box names the chosen secrets, after the line of
+  the logins: "Runs can use FIGMA_TOKEN and VERCEL_TOKEN with no
+  question." It has the key icon, and each name is in the monospace font.
+  It hides while no secret is chosen. Every member sees it, also the
+  owner. It is the read-only view of each member who is not the owner.
+  Reason: the closed icon shows no choice, and the hint needs the names
+  that it means.
+- The line names only the chosen secrets, not the secrets for all agents.
+  Reason: it says what the automation adds, and decision 3 A shows the
+  hint for a chosen secret.
+- The pull request hint follows that line, with the warning icon: "Text in
+  a pull request, such as a comment, can steer the agent to use these
+  secrets." Every member sees it, not only the owner. For the owner it
+  follows the triggers of the form, also before Save. For each other
+  member it follows the saved triggers. Reason: decision 3 A says that the
+  page shows it, and an admin can turn the automation off.
+- A suspended org keeps the line of the secrets, and shows no hint, as
+  it shows no line of logins. Reason: the settings of a suspended org stay
+  readable ("an org suspension takes away no access to read" in
+  `docs/protocol/automations.md`), and no run starts.
+- The state `app/automations/automation/capabilities` uses Cal's
+  automation that reviews pull requests. It has pull request triggers, so
+  the same state shows the hint, and it needs no variant. In the fixtures,
+  that automation chooses FIGMA_TOKEN and VERCEL_TOKEN, and Priya's weekly
+  automation chooses VERCEL_TOKEN. So the canonical page, its child pages,
+  and the Runs pages show the lines too.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -201,22 +241,22 @@ Depends on: none
 
 The automation page gets the Capabilities control in its prompt box.
 
-- [ ] Add the Capabilities icon to the bar of the prompt box in
+- [x] Add the Capabilities icon to the bar of the prompt box in
       `docs/mockups/src/components/automations/PromptBox.tsx`, beside the
       model picker.
-- [ ] Add an automation intro to
+- [x] Add an automation intro to
       `docs/mockups/src/components/capabilities/capabilitiesCopy.ts`, and
       a secrets-only list of parts for an automation.
-- [ ] Add the state `app/automations/automation/capabilities`: the
+- [x] Add the state `app/automations/automation/capabilities`: the
       control open for the owner, with two secrets chosen, on a desktop
       and on a phone.
-- [ ] Show the chosen secrets read-only on the member view and the admin
+- [x] Show the chosen secrets read-only on the member view and the admin
       view of the automation page.
-- [ ] Show the pull request hint on the state with a pull request trigger
+- [x] Show the pull request hint on the state with a pull request trigger
       and a chosen secret.
-- [ ] Update `docs/mockups/catalogue.md` for the new state.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update `docs/mockups/catalogue.md` for the new state.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
 ## Milestone 2: Documentation and protocol
@@ -225,14 +265,17 @@ Depends on: 1
 
 - [ ] `docs/protocol/automations.md`: the chosen secrets of an
       automation, who sees and changes them, the pull request hint, the
-      owner move, and the new risk under Risks that stay open.
+      owner move, and the new risk under Risks that stay open. Add the
+      line under the prompt that names the chosen secrets, and say that
+      every member sees it and the hint, and that a suspended org keeps
+      the line and shows no hint, as the design calls of the mockups say.
 - [ ] `docs/protocol/automation-runs.md`: a run workspace starts with the
       chosen secrets as pre-approvals. Mac access stays off.
 - [ ] `docs/protocol/secrets.md`: the Grants rule and Turns that no
       person started. Remove the rejection of a picker on the automation
       form, and keep its reason in this plan.
 - [ ] `docs/protocol/capabilities.md`: the control on the automation page,
-      with its secrets part only.
+      with its secrets part only. Only the owner opens it.
 - [ ] Add the risk that the creator of a chosen secret, or an admin, can
       replace its value, and each later run then uses the new value.
 - [ ] Read `src/marketing/terms.ts` and `src/marketing/privacy.ts` in
@@ -278,9 +321,21 @@ Depends on: 1, 3
       Save turns on after a change and the update sends the field.
 - [ ] Add the Capabilities tool to the prompt box of
       `src/shell/automations/AutomationEditor.tsx`, as the mockup draws it.
-- [ ] Show the chosen secrets read-only in
-      `src/shell/automations/AutomationReader.tsx`.
-- [ ] Show the pull request hint.
+- [ ] Add a secrets-only list of parts to
+      `src/shell/capabilities/capability-parts.tsx`, with no grants and no
+      Mac part. Take the words from `capabilitiesIntro.automation` and
+      `secretsPartWords.automationHint`.
+- [ ] On a phone, keep the icon in the bar of the prompt box, and open the
+      control as a sheet. Today a tool opens its sheet only from the +
+      menu of a composer (`src/chat/components/ComposerMenu.tsx`).
+- [ ] Show the line of the chosen secrets under the prompt box, in the
+      editor and in `src/shell/automations/AutomationReader.tsx`, with
+      `runSecretsWords`. Keep it in a suspended org.
+- [ ] Show the pull request hint for every member, with
+      `hasPullRequestTrigger` of
+      `docs/mockups/src/components/automations/triggerCopy.ts`: the
+      triggers of the form for the owner, and the saved triggers for each
+      other member. Hide it in a suspended org.
 - [ ] Tests for the draft and the screens.
 - [ ] Check the page in a browser: choose a secret, save, reload, and
       Run now. Check that the run workspace shows the pre-approval.

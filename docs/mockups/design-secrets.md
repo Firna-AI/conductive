@@ -2,9 +2,10 @@
 
 This page belongs to [the design](design.md), which gives the style, the
 layouts, the design tokens, and the shared parts. This page gives the
-Secrets tab of the org settings, the Capabilities control of New workspace
-and of a workspace, and the requests and results of the secrets in the
-chat. They come from the secrets decisions of 13 November 2026.
+Secrets tab of the org settings, the Capabilities control of New workspace,
+of a workspace, and of an automation, and the requests and results of the
+secrets in the chat. They come from the secrets decisions of 13 November
+2026, and the automation capabilities decisions of 18 November 2026.
 [Secrets and Capabilities](catalogue-secrets.md) lists their pages.
 
 A secret is a named value of an org: its name, its description, its
@@ -70,6 +71,11 @@ one.
   spoken name Stop. So the model and the label of a login stay readable at
   360 px (secrets decision 16 G). Later tools of the composer join the
   menu.
+- On the automation page, the icon stands before the model picker in the
+  bar of the prompt box, from `PromptBox` in `src/components/automations/`.
+  Only the owner gets it. The bar has no attach button, so a phone keeps
+  the icon there, with no + menu, and a press opens the control as a
+  sheet.
 - `CapabilitiesPanel` draws the control: its title, a line about what it
   holds, then each part. A part has a title in the label font, a control
   at the end of the title, a hint, and its content. Secrets and Mac access
@@ -85,7 +91,23 @@ one.
   for this workspace, with who gave it. Each has Remove. `GrantList` draws
   them, and a group without grants hides.
 - The Mac access part is a switch at the end of its title, off by default.
-- `capabilitiesCopy.ts` holds the words of the control.
+- The control of an automation has the Secrets part only, from
+  `automationCapabilityParts`: no grants, and no Mac access part, because
+  run workspaces keep Mac access off (automation capabilities decision
+  2 A). Its line says what agents in each run can use, and its hint says
+  that each run workspace starts with the checked secrets pre-approved. A
+  check changes the form, so Save turns on.
+- Under the prompt box of an automation, a muted line with the key icon
+  names the chosen secrets for every member, each in the monospace font,
+  such as "Runs can use FIGMA_TOKEN and VERCEL_TOKEN with no question."
+  While the page shows a pull request trigger, also one that the owner
+  added before Save, a hint with the warning icon follows it: text in a
+  pull request, such as a comment, can steer the agent to use these
+  secrets. The lines follow the line of the logins of the runs. A
+  suspended org keeps the line of the secrets, because its settings stay
+  readable, and shows no hint, because no run starts.
+- `capabilitiesCopy.ts` holds the words of the control, and
+  `runSecretsWords` there holds the words of the lines under the prompt.
 
 ## Requests and results in the chat
 
