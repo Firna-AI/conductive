@@ -103,7 +103,7 @@ makes each web address of chat text a link, as
 - After a start from a saved snapshot, the runner watches the live
   repository folder again when the app sees the end of the restore, and it
   scans the repository once. It uses the same signal as the terminal, as
-  [The shell](terminal.md#the-shell) says.
+  [The shell](terminal-shell.md#the-shell) says.
 - Reason: a watch made before the restore ends stays on the old view of the
   disk, so the lists stop updating. A file that the provider writes inside
   the sandbox at the end of its restore was rejected, because the provider

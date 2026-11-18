@@ -45,7 +45,10 @@ This page lists each protocol doc and what it covers.
       place of the moved tree, and the refusals.
   - [Workspace tools](../protocol/workspace-tools.md)
     - [Terminal](../protocol/terminal.md): the terminals of a workspace
-      and their tabs, and the shell of each terminal.
+      and their tabs.
+      - [Terminal shell](../protocol/terminal-shell.md): the shell of each
+        terminal, its connection, its end, its command history, and what
+        an out-of-memory kill ends.
       - [Terminal screen](../protocol/terminal-screen.md): the screen of
         each terminal, its output history, its selection, its size, and its
         keys.
@@ -79,9 +82,9 @@ This page lists each protocol doc and what it covers.
     composer, the chips of files and folders, Add to chat, the sent chips
     of attached files, and the removal of each chip of the composer.
   - [Agent runner](../protocol/agent-runner.md): the connection of the runner,
-    its events and their limits, its turns, the background work of Claude
-    turns with its note and its time limit, its port reports, and the repair
-    of lost workspace updates.
+    its events and their limits, its turns, what an out-of-memory kill ends,
+    the background work of Claude turns with its note and its time limit,
+    its port reports, and the repair of lost workspace updates.
     - [Background work of Claude turns](../protocol/background-work.md):
       the wait of a Claude turn for background work, its note, and its time
       limit.
