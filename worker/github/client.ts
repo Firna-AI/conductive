@@ -62,6 +62,17 @@ export class GitHubReader {
       : text(object(repository.defaultBranchRef).name)
   }
 
+  /** The commits of the head that the base branch does not hold. */
+  async aheadBy(baseBranch: string, headSha: string): Promise<number> {
+    const repository = await this.repository(COMPARE, {
+      baseRef: `refs/heads/${baseBranch}`,
+      headRef: headSha,
+    })
+    if (repository.ref === null) return 0
+    const comparison = object(repository.ref).compare
+    return comparison === null ? 0 : integer(object(comparison).aheadBy)
+  }
+
   async read(branches?: GitHubBranchDependencies): Promise<GitHubSnapshot> {
     const lookup = branches ?? (await this.dependenciesForBranch())
     if (lookup.pullNumber === null) {

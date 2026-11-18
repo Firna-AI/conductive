@@ -28,6 +28,7 @@ repository selection, sections, and workspace metadata.
 The [invitation route](invitations.ts) serves the signed-in pending list and explicit acceptance.
 The [archive route](archive.ts) archives and restores a workspace through its workspace object, as [Archive](../../docs/protocol/workspace-life.md#archive) says.
 The [Continue route](continue.ts) starts a Continue job and reads its result in the real workspace object, as [Continue routes](../lifecycle/continue-routes.md) says.
+The [repository change route](repository-change.ts) starts a repository change and reads its result in the same way, as [Repository change](../lifecycle/repository-change.md#routes) says.
 `membersRoute` alone serves the org list and one org.
 It also serves Leave, org recovery, roles, invitations, and workspace ownership.
 Leave keeps the existing last-active-admin rule and native owner-change maintenance.
@@ -351,6 +352,9 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 - [`lifecycle.ts`](lifecycle.ts): the lifecycle routes and their options.
 - [`continue.ts`](continue.ts): `continueRoute`, which checks the Continue
   request body and gives the start and each poll to the workspace object.
+- [`repository-change.ts`](repository-change.ts): `repositoryChangeRoute`,
+  which checks the `ChangeRepositoryRequest` body and gives the start and
+  each poll to the workspace object.
 - [`feature-shell.ts`](feature-shell.ts): shell write dispatch after the
   request gate. [`feature-settings.ts`](feature-settings.ts) encrypts env
   values and their secret marks. Replies return names and marks only.

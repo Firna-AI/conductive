@@ -57,7 +57,9 @@ it('catches up from a push that names other repository values than the saved one
   expect(await saved()).toEqual(['Codertocat/Greetings@trunk'])
   expect(changed).toEqual([repository])
   expect(
-    harness.memory(workspace.id).events.map((envelope) => envelope.event.type),
+    (await harness.inspect(workspace.id)).events.map(
+      (envelope) => envelope.event.type,
+    ),
   ).toEqual(['github.updated'])
 })
 
@@ -93,6 +95,8 @@ it('completes the push and warns when the GitHub read fails', async () => {
   expect(await saved()).toEqual(['Codertocat/Hello-World@main'])
   expect(changed).toEqual([])
   expect(
-    harness.memory(workspace.id).events.map((envelope) => envelope.event.type),
+    (await harness.inspect(workspace.id)).events.map(
+      (envelope) => envelope.event.type,
+    ),
   ).toEqual(['github.updated'])
 })

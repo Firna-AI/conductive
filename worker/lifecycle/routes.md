@@ -105,7 +105,8 @@ turn and the branch step use the sender.
 1. It runs the checks of a resume: an active org, a member, a workspace
    that is not archived and has a sandbox, and an active owner.
 2. `softwareRestart(id, 'begin')` of the workspace object runs in its
-   lifecycle queue. It refuses a pending Continue. `restartingLifecycle`
+   lifecycle queue. It refuses a pending Continue and a pending
+   [repository change](repository-change.md#the-reservation). `restartingLifecycle`
    of [`durable-restart.ts`](durable-restart.ts) refuses each state other
    than ready, working, input, and unread with HTTP 409 and
    `workspace_not_running`. Otherwise it shows Starting and stores

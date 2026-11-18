@@ -29,12 +29,19 @@ export type IncomingRunnerHello = Omit<
   processStartId: Exclude<RunnerHello['processStartId'], undefined> | null
 }
 
+export interface IncomingRepositoryMoveRefused {
+  type: 'repository.move.refused'
+  commandId: string
+  reason: 'unknown_folder' | 'not_repository' | 'other'
+}
+
 /** Validate identity before payload checks, so duplicates and gaps remain harmless. */
 export function parseRunnerTransport(
   value: unknown,
 ):
   | IncomingRunnerHello
   | IncomingRunnerEnvelope
+  | IncomingRepositoryMoveRefused
   | { type: 'file.read.result'; value: unknown }
   | { type: 'file.diff.result'; value: unknown } {
   const input = record(value)
@@ -50,8 +57,20 @@ export function parseRunnerTransport(
       ...(input.loginKinds === undefined
         ? {}
         : { loginKinds: parseLoginKinds(input.loginKinds) }),
+      ...(repositoryFolder(input.repositoryFolder)
+        ? { repositoryFolder: input.repositoryFolder }
+        : {}),
     }
   }
+  if (input.type === 'repository.move.refused')
+    return {
+      type: input.type,
+      commandId: identifier(input.commandId),
+      reason:
+        input.reason === 'unknown_folder' || input.reason === 'not_repository'
+          ? input.reason
+          : 'other',
+    }
   if (input.type === 'file.read.result' || input.type === 'file.diff.result') {
     return { type: input.type, value }
   }
@@ -66,6 +85,13 @@ export function parseRunnerTransport(
     event: input.event,
     raw: value,
   }
+}
+
+/** A malformed folder only costs the moves, so the runner still connects. */
+function repositoryFolder(value: unknown): value is string {
+  return (
+    typeof value === 'string' && value.startsWith('/') && value.length <= 4096
+  )
 }
 
 function parseLoginKinds(value: unknown): readonly RunnerLoginKind[] {

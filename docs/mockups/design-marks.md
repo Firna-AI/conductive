@@ -2,13 +2,14 @@
 
 This page belongs to [the design](design.md), which gives the style, the
 layouts, the design tokens, and the shared parts. This page gives the list
-mark, the mark of the header, and the marks of automation runs. It also gives
-the mark of an agent. [The workspace](design-workspace.md) gives the label
-of a workspace number with Copy link.
+mark and the text beside it, the mark of the header, and the marks of
+automation runs. It also gives the mark of an agent.
+[The workspace](design-workspace.md) gives the label of a workspace number
+with Copy link.
 
 - `WorkspaceMark` in `src/components/workspaces/` draws the list mark of a
   workspace, which the list, the rows of the command palette, and the
-  workspace chips show. It is a 3 × 3 dot-matrix square in one colour for
+  workspace and session chips show. It is a 3 × 3 dot-matrix square in one colour for
   the GitHub state of the pull request, in the tone of the pull request
   bar: rose when checks failed, the success green when the pull request is
   ready to merge, the `listMerged` purple after the merge, and amber for a
@@ -26,9 +27,23 @@ of a workspace number with Copy link.
   `listMarkLabel` in `status.ts` beside it gives the words that screen
   readers hear, such as "Checks failed, Working". The mark imports no
   fixture value, so the app uses it too.
-- `StatusGlyph` beside it draws the state of the agent and the cloud
-  computer, as the header and the operator section show it, on the same
-  grid, from `MarkGrid`. Each state has its own shape, and working and
+  - `WorkspaceName` in `src/components/workspaces/` draws the text beside
+    the list mark: the name of a workspace, or the title of a session in a
+    session chip. It gives that text the emphasis of the state of the
+    workspace, such as bold text for unread output. It reads that emphasis
+    from `activityPresentation` in `status.ts`. The list, the rows of the
+    command palette, and the
+    [workspace and session chips](design-chat.md#workspace-session-and-file-chips)
+    use it. So one part chooses the emphasis in each of these places.
+  - Each place gives its own class for each emphasis that it shows, so it
+    keeps its own look. Each place must give the class of unread output,
+    because bold text alone marks unread output. The mark, the label of the
+    workspace number, the time, the words that screen readers hear, and the
+    Rename field stay with each place. `WorkspaceName` imports no fixture
+    value, so the app can use it too.
+- `StatusGlyph` beside `WorkspaceMark` draws the state of the agent and
+  the cloud computer, as the header and the operator section show it, on
+  the same grid, from `MarkGrid`. Each state has its own shape, and working and
   starting move with CSS. A finished turn is a full bright green square,
   and ready is one bright cell on a faint green grid. A workspace whose
   agent waits for the user shows Needs input: a middle column in the accent

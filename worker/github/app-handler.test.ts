@@ -50,9 +50,9 @@ it('reads current banner and checks on tab open while the workspace needs input'
   expect(head.status).toBe(200)
   expect(await head.text()).toBe('')
   expect(
-    harness
-      .memory('workspace-1')
-      .events.map((envelope) => envelope.eventNumber),
+    (await harness.inspect('workspace-1')).events.map(
+      (envelope) => envelope.eventNumber,
+    ),
   ).toEqual([1, 2])
   expect(
     harness.api.requests.every(
@@ -105,7 +105,7 @@ it('excludes unsigned users, foreign orgs, deleted orgs, and suspended installat
   expect((await harness.read(path, session)).status).toBe(404)
   expect(harness.tokens).toEqual([])
   expect(harness.api.requests).toEqual([])
-  expect(harness.states.size).toBe(0)
+  expect(harness.actors.size).toBe(0)
 })
 
 it('keeps upstream secrets and access revoked during reads out of responses and publication', async () => {
@@ -132,6 +132,6 @@ it('keeps upstream secrets and access revoked during reads out of responses and 
   }
   expect((await harness.read(path, session)).status).toBe(404)
   expect(harness.api.requests).toHaveLength(requestsBeforeRevocation + 1)
-  expect(harness.memory('workspace-1').events).toEqual([])
-  expect(harness.memory('workspace-1').published).toEqual([])
+  expect((await harness.inspect('workspace-1')).events).toEqual([])
+  expect((await harness.inspect('workspace-1')).published).toEqual([])
 })
