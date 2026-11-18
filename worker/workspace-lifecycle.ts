@@ -1,3 +1,4 @@
+import { rememberWorkerVersion } from './lifecycle/job-steps'
 import { DurableObject } from 'cloudflare:workers'
 import type { UserMessage } from '../src/shared/generated/UserMessage'
 import type { StartStep } from '../src/shared/generated/StartStep'
@@ -63,6 +64,7 @@ export class WorkspaceLifecycle
     activitySchedule?: ConnectionScheduler,
   ) {
     super(context, env)
+    rememberWorkerVersion(env)
     this.context = context
     this.activityNow = now
     const integration = createWorkspaceIntegration(context, env, now, resolvers)

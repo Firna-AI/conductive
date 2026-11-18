@@ -42,6 +42,8 @@ export const SIMPLE_WARNINGS = {
     'The retry of approval emails failed. It runs again at the next timer.',
   software_image_repair_failed:
     'Software image repair failed. It runs again at the next timer.',
+  job_record_cleanup_failed:
+    'The deletion of old job step records failed. It runs again at the next timer.',
   software_image_cleanup_failed:
     'Software image cleanup failed. It runs again at the next timer.',
   attachment_cleanup_retry: 'An attachment cleanup will retry.',

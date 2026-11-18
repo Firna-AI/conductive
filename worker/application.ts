@@ -64,6 +64,7 @@ import { scanAutomationSchedules } from './automations/schedule-scan'
 import { healthResponse } from './health-response'
 import { isSecretMachinePath } from './secrets/routes'
 import { routeSecretTool } from './tools/secrets'
+import { cleanupOldJobRecords } from './lifecycle/job-steps'
 
 export function createApp(overrides: Partial<AppDependencies> = {}) {
   const dependencies: AppDependencies = {
@@ -271,6 +272,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
       }
       if (event.cron !== '*/15 * * * *') return
       await cleanupCodexDevices(env.DB, dependencies.now())
+      await cleanupOldJobRecords(env.DB, dependencies.now())
       await cleanupDeletedOrgs(
         env,
         dependencies,

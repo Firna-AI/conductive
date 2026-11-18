@@ -98,14 +98,14 @@ Contract owners:
 
 Depends on: none
 
-- [ ] Add the job step records section to `docs/protocol/step-timing.md`.
-- [ ] Read both legal pages and every public guide in full. Update each
+- [x] Add the job step records section to `docs/protocol/step-timing.md`.
+- [x] Read both legal pages and every public guide in full. Update each
       sentence that the new record changes.
-- [ ] Add the migration with both tables and their indexes. Update
+- [x] Add the migration with both tables and their indexes. Update
       `migrations/README.md`.
-- [ ] Add the shared statements: open a step, close the open steps, and
+- [x] Add the shared statements: open a step, close the open steps, and
       insert a run row. Add the 90-day deletion to the 15-minute cron.
-- [ ] Add the tests of the statements and of the deletion.
+- [x] Add the tests of the statements and of the deletion.
 
 ## Milestone 2: Build and refresh steps
 
