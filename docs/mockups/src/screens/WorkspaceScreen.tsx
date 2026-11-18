@@ -76,14 +76,16 @@ const raisedSplit = 35
  * The toast of the state lies over everything. `shortcuts` holds the
  * person's changes to the shortcuts. With them, the palette rows show their
  * keys, and the Search row shows the person's key of the palette.
+ * `picker` takes the place of the model picker of the message box.
  */
 export function WorkspaceScreen(props: {
   state: WorkspaceState
   viewport: Viewport
   overlay?: ReactNode
   shortcuts?: ShortcutChanges
+  picker?: ReactNode
 }) {
-  const { viewport } = props
+  const { viewport, picker: pickerPart } = props
   const mac = useMacApp()
   const state = drawnState(props.state)
   const suspended = state.org === 'suspended'
@@ -120,7 +122,7 @@ export function WorkspaceScreen(props: {
   const chat = (
     <ChatWorkspaces rows={rows}>
       <ChatPane
-        composer={composerFor(state, workspace, viewport)}
+        composer={{ ...composerFor(state, workspace, viewport), pickerPart }}
         empty={
           <EmptyState
             body={`The agent works on ${workspace.branch}, on the same cloud computer as the other sessions.`}
