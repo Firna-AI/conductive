@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, type ReactNode } from 'react'
+import { useListTime } from '../../app/deadlines'
 import { groupWorkspaces } from '../../app/sections'
-import { useStore } from '../../app/store'
+import { useStore, valueOf } from '../../app/store'
 
 import { useOrgAccess, useOrgModel } from '../context'
 import { belowRow, type RowMenu } from '../list/row-menu'
@@ -21,8 +22,8 @@ function focusBack(node: HTMLElement | null): void {
  * and so does a close of the field of Rename that drops the focus. `rename`
  * is the field of Rename while it is open, which the header shows in place
  * of the name. The menu waits for the list of the org, which gives the
- * section and the tree of the workspace. Until then, `toggle` is null and
- * the name is plain text.
+ * section and the tree of the workspace, and for the list to show it.
+ * Otherwise `toggle` is null and the name is plain text.
  */
 export function useHeaderMenu(context: WorkspaceContext): {
   /** Opens the menu below the name, or closes it. Null without a menu. */
@@ -42,9 +43,12 @@ export function useHeaderMenu(context: WorkspaceContext): {
   const workspaces = useStore(model.workspaces)
   const { move } = useListActions(model)
   useEffect(() => model.watch('list'), [model])
+  // The list leaves out an archived workspace after its Restore ends, so the
+  // header offers its menu only while the list shows it.
+  const listTime = useListTime(valueOf(workspaces) ?? [])
   const groups =
     sections.state === 'ready' && workspaces.state === 'ready'
-      ? groupWorkspaces(sections.value, workspaces.value)
+      ? groupWorkspaces(sections.value, workspaces.value, listTime)
       : { sections: [], archived: [] }
   const { menus, layer } = useRowMenus({
     orgId: org.id,

@@ -98,9 +98,9 @@ number names a dated record, as
 - A right click on the header opens the menu of the browser, as before.
 - The menu has the same actions, for the same people, as the menu of the
   row, as [Who sees each action](#who-sees-each-action) says. It shows
-  only when the list of the org has loaded, because the list gives the
-  section and the tree of the workspace. Until then, the name is plain
-  text.
+  only when the list of the org has loaded and shows the workspace,
+  because the list gives the section and the tree of the workspace.
+  Otherwise the name is plain text.
 - Each action works as in the menu of the row, with one exception: Rename
   puts its field in the header, in place of the name, as
   [Rename](#rename) says.
