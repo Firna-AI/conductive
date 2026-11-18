@@ -140,7 +140,9 @@ export async function createNativeRuntime(
     const value: NativeActor = {
       ready,
       api,
-      rpc: bindings.WORKSPACES.getByName(name),
+      get rpc() {
+        return bindings.WORKSPACES.getByName(name)
+      },
       fetch: async (request) => {
         await ready
         const response = await runtime.dispatchFetch(request.url, {
