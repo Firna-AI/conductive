@@ -156,6 +156,9 @@ same program and selects `git-credential`.
 It runs
 `systemctl daemon-reload` and enables the runner, relay, terminal, and
 check timer. It changes no package, and it starts no stopped service.
+A changed start of a running unit, such as its commands, user, or
+environment, applies only at the next start of that unit. The reload
+applies a changed `OOMPolicy` of a running unit at once.
 Last, it restarts the relay when the relay runs, without waiting.
 Boat starts the relay at boot, before the runner pre-start step applies a
 release, so the relay otherwise keeps the release that was active at boot.
@@ -175,10 +178,9 @@ Relay and terminal restarts do not change the selected release.
 A running runner also runs apply itself, through `sudo -n`, when its
 workspace is idle and its own release is confirmed. It then executes the new
 `current/system/runner-start.sh` in the same process, as the
-[runner service guide](../runner/service/README.md) says. That guide also
-says when a changed runner unit applies. The apply runs the same system
-installer, which restarts no unit. So the relay and terminal keep their
-running release until they start again.
+[runner service guide](../runner/service/README.md) says. The apply runs
+the same system installer, which restarts no unit. So the relay and
+terminal keep their running release until they start again.
 The runner, relay, and terminal entry points use `current/system/`.
 The runner executes `/opt/conductive/current/conductive runner`. It resolves
 its private Node and SDK helper beside that executable. The relay executes

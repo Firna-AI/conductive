@@ -32,9 +32,8 @@ When `current` then names the newer release, it executes the new
 `/opt/conductive/current/system/runner-start.sh` in the same process.
 The service does not stop, so systemd stops no process of the service group.
 When `current` did not change, the runner warns and connects again on its release.
-A changed start of the runner unit, such as its commands, user, or environment,
-applies only at the next start of the service.
-A changed `OOMPolicy` applies at once, at the reload of the system installer.
+[Release installation](../../image/install.md#release-installation) says when a
+changed runner unit applies.
 
 A new runner confirms its release only after its first valid `welcome`.
 Its startup hook calls the resolved executable's `update started` through

@@ -15,7 +15,8 @@ the [model gateway](model-gateway.md), as that doc says. A background work
 decision number, such as background work decision 1, names a decision of
 the change that keeps a turn open for background work. An out-of-memory
 decision number, such as out-of-memory decision 1, names a decision of the
-change that keeps the runner running after an out-of-memory kill.
+change that keeps the runner and the terminal shells running after an
+out-of-memory kill.
 
 ## The agent runner
 
