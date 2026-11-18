@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Button } from '@firna/ui/button'
 import { ArrowUp, Paperclip, Square } from 'lucide-react'
 import type { AgentChoice, AgentKey } from '../../fixtures/agents'
@@ -90,6 +91,11 @@ export type ComposerState = {
    * of the text.
    */
   pointer?: boolean
+  /**
+   * A picker in place of the model picker, for a page that draws another
+   * menu of the model, such as `app/model-favourites`.
+   */
+  pickerPart?: ReactNode
 }
 
 /** The query of the list of `@`: the text after the last `@` of the draft. */
@@ -167,13 +173,15 @@ export function Composer(props: ComposerState & { lines?: number }) {
             ) : (
               attach
             )}
-            <ModelPicker
-              choice={props.choice}
-              fastKey={props.fastKey}
-              hiddenModels={props.hiddenModels}
-              open={props.picker}
-              sessionAgent={props.sessionAgent}
-            />
+            {props.pickerPart ?? (
+              <ModelPicker
+                choice={props.choice}
+                fastKey={props.fastKey}
+                hiddenModels={props.hiddenModels}
+                open={props.picker}
+                sessionAgent={props.sessionAgent}
+              />
+            )}
             {props.sessionLogin ? (
               <SessionLoginLabel {...props.sessionLogin} />
             ) : null}

@@ -33,6 +33,7 @@ how a screen is built, and links to the other pages.
 | `app/archive`       | An archived workspace with Restore, the toast after Archive, the Archived group, the restored workspace, the end of Restore, and the bar after the delete |
 | `app/composer`      | Two uploaded files in a sentence, the picker, another member's login, and a missing agent |
 | `app/fast-mode`     | The Fast switch of the model menu on and off, with its key, the trigger with Fast, and a model without fast mode |
+| `app/model-favourites` | The model menu with five favourites, its All models submenu, a changed effort, and the favourites in Preferences |
 | `app/attachments`   | A file that uploads in the text, then a drop, a failed upload, a file over 100 MB, sent files, the file tab of a sent screenshot, and a first message with files |
 | `app/workspace-links` | Chips in a message and an answer, then Copy link and its failure, a pasted link, a link of another org, session chips, and messages that an agent sent |
 | `app/file-mentions` | The list of `@` with a query, then the list without one, its other states, and the file chips of the composer and of a sent message |
@@ -281,6 +282,17 @@ The user chose the four actions that change the workspace on 9 November
 [The command palette and feedback](catalogue-palette.md) gives the
 child pages of `app/command-palette` and of `app/feedback`, and the flow
 that sends feedback.
+
+`app/model-favourites` draws the model menu with favourites, which the user
+chose on 16 November 2026. The menu lists up to five favourites first, each
+as its model with its effort and Fast in the muted colour. All models opens
+a submenu with every model. The efforts and the Fast switch follow. Its
+`all-models` variant opens the submenu, its `changed` variant shows the menu
+after a change of the effort, and its `preferences` variant shows the
+Favourites section of Preferences. The page draws its menu through the
+`picker` prop of `WorkspaceScreen` and its section through the `content`
+prop of `AccountScreen`. The other pages of the model picker still show
+the menu of today.
 
 The catalogue draws the Keyboard shortcuts tab in the Mac app and in a
 browser, from decisions 190 to 196. The pages of
