@@ -1,6 +1,7 @@
 import { CircleAlert } from 'lucide-react'
 import type { UserMessage } from '../../shared/generated/UserMessage'
 import { ContinuedLine } from '../../../docs/mockups/src/components/chat/ContinuedLine'
+import { RepositoryChangedLine } from '../../../docs/mockups/src/components/chat/RepositoryChangedLine'
 import {
   StopLine,
   type StopSource,
@@ -146,6 +147,14 @@ export function ItemView(props: {
         <ContinuedLine
           base={item.baseBranch}
           branch={item.branch}
+          who={continuedBy(item.member, props.readers)}
+        />
+      )
+    case 'repository-changed':
+      return (
+        <RepositoryChangedLine
+          branch={item.branch}
+          repository={item.repository.fullName}
           who={continuedBy(item.member, props.readers)}
         />
       )

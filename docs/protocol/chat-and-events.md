@@ -18,7 +18,8 @@ that keeps a turn open for background work, as
 - [Agents](agents-and-sessions.md#agents) says which agents the app
   offers, where they run, and whose agent login each session uses.
 - [Agent instructions](agent-instructions.md) states the text that each
-  session gets apart from the messages, and the sender line of each
+  session gets apart from the messages.
+  [Message lines](message-lines.md) states the sender line of each
   message.
 
 ## Names in the product
@@ -113,6 +114,10 @@ holds how an agent action of the pull request bar sends its fixed prompt.
 - After [Continue](continue.md), each session shows one note at its place,
   with the member who pressed Continue, the new branch, and its base. To
   that member it says "You". The note reaches no agent.
+- After a [repository change](repository-change.md), each session shows
+  one note at its place, with the member who changed the repository, the
+  new repository, and the new branch. To that member it says "You". The
+  note reaches no agent.
 - The chat hides the messages that the SDK adds on its own, such as
   "[Request interrupted by user]".
 - Each result of the agent shows with the messages that it answers. One

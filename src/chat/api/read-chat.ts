@@ -13,7 +13,7 @@ import type { MessageDraft } from '../../shared/messages'
 import { readTurnSpeed } from '../../shared/chat-events'
 import { readStopRequester } from './read-stop'
 import { readChangedFile } from './read-changed-file'
-import { readContinued } from './read-continued'
+import { readContinued, readRepositoryChanged } from './read-continued'
 import {
   count,
   flag,
@@ -195,6 +195,8 @@ export function readChatEvent(source: Record<string, unknown>): ChatEvent {
   switch (source.type) {
     case 'workspace.continued':
       return readContinued(source)
+    case 'workspace.repository-changed':
+      return readRepositoryChanged(source)
     case 'message.accepted':
       return { type: source.type, message: readUserMessage(source.message) }
     case 'message.sent':

@@ -182,9 +182,11 @@ npm run typecheck
   original tab sockets, with a production and a local origin, through a
   wake. Both tabs then get each new event in order, with the link of their
   own origin.
-- `createAdapterRuntime` can bundle another Durable Object entry, also for
-  another workspace ID. The [GitHub store tests](../github/README.md#verification)
-  use it to run `WorkspaceChat` with the GitHub state on SQLite.
+- `createAdapterRuntime` can bundle another Durable Object entry. Its
+  callers pass the browser, runner, or gateway entry.
+- The [GitHub store tests](../github/verification.md#native-workspace-harness)
+  use the production workspace object of the [shared test harness](../test-support/README.md).
+  They run the GitHub state on its `WorkspaceChat`, with native SQLite storage.
 - `browser-entry.test-support.ts` and `runner-entry.test-support.ts` extend
   the production `Workspace`. Each adds a stored fixture clock, controls
   that fail an access read or a lifecycle read or write, a random instance

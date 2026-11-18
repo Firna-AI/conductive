@@ -22,4 +22,4 @@
 - **Impact if no action:** Wrong metadata, missing parts, or a bad digest can fail new image builds despite a successful Worker deploy.
 - **Needs:** A successful release publish, access to its public metadata, and a test org in the deployed app.
 - **Done when:** A real image build installs the verified published release and an agent answers in a workspace on it. Then delete this item.
-- **Related:** `plans/follow-ups/first-automatic-deploys-check.md` checks publication and reuse first. `plans/follow-ups/provider-groundwork-deployed-smoke.md` also runs an image build and checks an agent answer.
+- **Related:** `plans/follow-ups/provider-groundwork-deployed-smoke.md` also runs an image build and checks an agent answer.
