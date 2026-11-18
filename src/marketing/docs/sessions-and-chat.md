@@ -46,6 +46,7 @@ On a phone, **Enter** adds a line.
 Your message appears in the chat at once.
 The chat scrolls down to it, also when you read an earlier part of the chat.
 If it cannot send, it goes back to the message box, and the chat shows the cause.
+If the message arrives later, the chat removes the cause and clears the message box, unless you changed the text.
 
 You can send a message while the workspace's computer starts.
 The chat shows the steps of that start.

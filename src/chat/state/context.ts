@@ -8,6 +8,7 @@ import type { SessionReads } from '../links/session-reads'
 import type { WorkspaceStream } from '../stream/workspace-stream'
 import { withSession, type ChatSnapshot } from './chat-snapshot'
 import type { ChatStore } from './chat-store'
+import { withLateSends } from './late-sends'
 import type { PendingMove } from './model-moves'
 import type { PendingEdit } from './session-records'
 import type { Transcript } from '../../shared/transcript/transcript'
@@ -111,7 +112,9 @@ export function showNotice(
 }
 
 /**
- * Shows a new transcript, and drops sent messages that it now holds. A Stop
+ * Shows a new transcript, and drops sent messages that it now holds. A
+ * message whose send failed but that the transcript holds did send, so its
+ * notice and its copy in a draft go, as `withLateSends` says. A Stop
  * that waits belongs to its turn, so it ends when that turn no longer runs,
  * also when another turn runs now.
  */
@@ -126,7 +129,7 @@ export function withTranscript(
       item.kind === 'user' ? [item.message.id] : [],
     ),
   )
-  return withSession(snapshot, sessionId, (state) => {
+  const next = withSession(snapshot, sessionId, (state) => {
     const running = transcript.turn?.turnId
     const same =
       running !== undefined && running === state.transcript.turn?.turnId
@@ -138,6 +141,7 @@ export function withTranscript(
       stopping: same ? state.stopping : false,
     }
   })
+  return withLateSends(next, shown)
 }
 
 /** Saves the view one request at a time. A newer view replaces one that waits. */
