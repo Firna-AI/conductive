@@ -1,9 +1,16 @@
 import { execFile } from 'node:child_process'
-import { mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
+import {
+  mkdtemp,
+  readFile,
+  readdir,
+  rm,
+  stat,
+  writeFile,
+} from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { promisify } from 'node:util'
-import { expect, it } from 'vitest'
+import { expect, it, vi } from 'vitest'
 import { attachmentPath } from '../../src/shared/attachment-paths'
 import { shellQuote } from '../lifecycle/commands'
 import { isolatedProcessEnvironment } from '../test-support/process-environment'
@@ -11,6 +18,18 @@ import { attachmentDownloadCommand } from './attachment-download-command'
 import { FILE_BYTES } from './attachment.test-support'
 
 const execute = promisify(execFile)
+
+/** Linux lists each process that waits for a `flock` with a `->` line. */
+async function lockWaiters(inode: number): Promise<number> {
+  const table = await readFile('/proc/locks', 'utf8')
+  return table
+    .split('\n')
+    .filter(
+      (line) =>
+        line.includes('-> FLOCK') &&
+        line.split(/\s+/)[6]?.endsWith(`:${inode}`),
+    ).length
+}
 
 it('lets a second command for the same file wait for the first, then leave the delivered file alone', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'attachment-overlap-'))
@@ -58,17 +77,37 @@ it('lets a second command for the same file wait for the first, then leave the d
       ],
       { env: isolatedProcessEnvironment({}) },
     )
+  let released = false
+  const releaseFirst = async () => {
+    released = true
+    await writeFile(release, 'go\n')
+  }
   try {
     const first = run()
     await readFile(entered)
-    const second = run()
-    await writeFile(release, 'go\n')
+    const folder = await stat(join(target, '..'))
+    let secondEnded = false
+    const second = run().finally(() => {
+      secondEnded = true
+    })
+    // Release the first download only when the second command waits for
+    // the lock. A second command that ends first fails the test.
+    await vi.waitFor(
+      async () => {
+        if (secondEnded) return
+        expect(await lockWaiters(folder.ino)).toBe(1)
+      },
+      { timeout: 10_000, interval: 20 },
+    )
+    expect(secondEnded).toBe(false)
+    await releaseFirst()
     await expect(first).resolves.toMatchObject({ stdout: '', stderr: '' })
     await expect(second).resolves.toMatchObject({ stdout: '', stderr: '' })
     expect(await readFile(calls, 'utf8')).toBe('call\n')
     expect(new Uint8Array(await readFile(target))).toEqual(FILE_BYTES)
     expect(await readdir(join(target, '..'))).toEqual(['a.dat'])
   } finally {
+    if (!released) await releaseFirst()
     await rm(directory, { recursive: true, force: true })
     await rm(tools, { recursive: true, force: true })
   }
