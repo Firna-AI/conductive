@@ -45,21 +45,17 @@ function DeleteSecretDialog(props: {
   }, `${secret.name} was not deleted`)
   return (
     <Dialog
-      actions={
-        <>
-          <ActionButton onPress={props.close}>
-            {secretsWords.cancel}
-          </ActionButton>
-          <ActionButton
-            busy={remove.pending}
-            icon={Trash2}
-            onPress={() => remove.run()}
-            tone="danger"
-          >
-            {secretsWords.delete}
-          </ActionButton>
-        </>
+      action={
+        <ActionButton
+          busy={remove.pending}
+          icon={Trash2}
+          onPress={() => remove.run()}
+          tone="danger"
+        >
+          {secretsWords.delete}
+        </ActionButton>
       }
+      busy={remove.pending}
       close={props.close}
       title={deleteTitle(secret.name)}
     >

@@ -142,19 +142,10 @@ export function FeedbackDialog() {
   }
   return (
     <Dialog
-      actions={
-        <>
-          <ActionButton disabled={sending} onPress={close}>
-            Cancel
-          </ActionButton>
-          <SendButton
-            phone={phone}
-            ready={ready}
-            send={send}
-            sending={sending}
-          />
-        </>
+      action={
+        <SendButton phone={phone} ready={ready} send={send} sending={sending} />
       }
+      busy={sending}
       close={close}
       initial={message}
       title={sendFeedbackLabel}

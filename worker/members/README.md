@@ -136,10 +136,19 @@ Restore makes no provider resume call. Old preview hostnames stay revoked.
 
 Schedule `cleanupDeletedOrgs` with all hooks except `readWorkspace`.
 It retries stops and controlled retention during the restore window.
+Before the deadline, each run first completes the suspension through `suspendOrg`, unless an earlier call completed it.
+A failed suspension ends the run of that org, and the org stays pending.
+The run then tries each independent step: the stops, the expired Archive deletes, retention, and the pending Org Restore handoff.
+Each failed step writes one fixed warning for that step, with no request, error, or secret data.
+After a failed step, the run still tries the later steps. Then it rethrows the first failure, so the org stays pending.
+So a failed stop or delete does not hold back retention or the handoff.
+Each step keeps its existing org and cleanup lease checks.
+Only the scheduled run isolates these steps.
+In the Delete and Restore routes, a failed stop ends the request before the next step.
 [`archive-cleanup.ts`](archive-cleanup.ts) deletes expired archived disks under the same cleanup lease.
 Its detach marks the exact ledger entry deleted in the same D1 batch.
 Each delete, with its provider lookup, fails alone: it writes the existing Archive warning and keeps its records for the next run.
-The run still tries the later deletes, retention, and the pending Org Restore handoff under their guards, then rethrows the first failure, so the org stays pending.
+The Archive delete step still tries the later deletes before it fails.
 A successful handoff rearms the native Archive alarm of each retained expired computer.
 Retention continues before each pending Restore handoff attempt.
 Choose a cleanup interval plus retry budget smaller than the lifecycle's
@@ -156,6 +165,7 @@ The ledger entries remain until the org purge removes them through the org refer
 Each journal resource holds its kind, its ID, and its provider account. So equal IDs in two accounts stay two resources.
 Each org image of `org_images` enters the journal with the provider account of its own record. The purge also deletes the `org_images` rows of the org.
 The result names purged orgs and orgs that need another attempt.
+The run also writes one fixed warning for each org that needs another attempt.
 D1 ownership records stay until every external cleanup succeeds.
 Attachment cleanup follows the same rule.
 Workspace purge removes its R2 files after the workspace receiver fence drains its work.
@@ -171,8 +181,9 @@ An expired lease permits a later attempt after a worker stops.
 The [disk retention guide](retention.md) describes the maintenance capability,
 provider kinds, and Restore timers.
 
-[Invitations](invitations.md) gives the email of an invitation, the match
-of verified emails at each sign-in, and the explicit acceptance.
+[Invitations](invitations.md) gives the email of an invitation and the
+diagnostics of a failed send. It also gives the match of verified emails
+at each sign-in and the explicit acceptance.
 
 The lifecycle stores the ID of the member who creates a workspace in
 `owner_user_id`, in the creation transaction.
@@ -235,7 +246,7 @@ The harness uses Wrangler's migration SQL splitter to keep trigger bodies intact
 - `restore.ts` implements the retryable Restore handoff.
 - `cleanup-lease.ts` scopes cleanup work and maps its failures to `org_cleanup_failed`.
 - `cleanup-provider.ts` exports `requireDeletedOrgCleanup`, the cleanup lease check before each provider call, and `ignoreAlreadyRemoved`.
-- `cleanup.ts` implements scheduled provider and data cleanup.
+- `cleanup.ts` implements scheduled provider and data cleanup, and runs each pre-purge step in isolation.
 - `account.ts` exposes the last-admin account-deletion guard.
 - `*-data.ts` owns the D1 queries and the guarded mutation predicates.
 

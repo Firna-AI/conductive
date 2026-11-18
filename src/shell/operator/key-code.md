@@ -37,7 +37,8 @@ this guide.
   `TargetPage.tsx`, and `TargetDialogs.tsx`: the pages, the app access of
   a user with each way in, also an open sign-up with its operator, the
   referral code of a user, Suspend with its offer, Lift, and their
-  questions. `useQuestion.ts`: a question that holds while its write runs.
+  questions. `useQuestion.ts`: the write of a question, which closes the
+  question after a write that worked.
   `CheckOption.tsx`: the checkbox of the offer.
 - `TargetParts.tsx` and `format.ts`: the rows of users and orgs, the links
   to a GitHub profile, and the formats of counts, days, and the age of a

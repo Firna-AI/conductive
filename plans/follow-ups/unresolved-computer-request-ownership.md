@@ -113,7 +113,11 @@
   - Its option C, one shared recovery queue, is the Delete org form of D. The purge step that I needs is the same work as its option B.
   - That item does not wait for this one.
   - `plans/follow-ups/archived-computer-certainty.md` reads the live ledger row of an unresolved request to decide whether a computer may still exist. A fix here must keep that meaning of a live row. Neither item waits for the other.
-  - `plans/follow-ups/pre-purge-step-failure-blocks-others.md`: its option E keeps the Archive owner running in the Delete org window, which overlaps the ownership design here. E should follow that design.
+  - The Delete org cleanup deletes each expired archived computer itself. An unapplied alternative moves that delete to the Archive owner. It overlaps the ownership design here, so it should follow that design.
+    - In the 7 days before the purge, the scheduled run of `cleanupDeletedOrgs` in `worker/members/cleanup.ts` deletes each expired archived computer. It uses `cleanupOrgArchives` in `worker/members/archive-cleanup.ts`, under the cleanup lease of the org.
+    - The alternative makes the Archive owner in `worker/lifecycle/archive-state.ts` the only deleter of an expired archived computer, also in those 7 days. Delete org then leaves the Archive alarm armed, fenced by the org lifecycle generation, and the org run does no Archive delete.
+    - It changes the `suspendOrg` contract in `worker/members/lifecycle-hooks.md` and the alarm suspension that `worker/members/README.md` describes. It also needs fencing between the workspace object, the cleanup lease, and the purge at day 7. Those need their own contract decisions. Its effort is Large.
+    - It is option E of an earlier follow-up item, at [this permalink](https://github.com/Firna-AI/conductive/blob/456e53237c38ff800dbf076fb004f36b5c287554/plans/follow-ups/pre-purge-step-failure-blocks-others.md?plain=1#L51-L55).
   - `plans/follow-ups/audit-cancelled-e2b-allocation-recovery.md` covers the same cleanup owners. A shared owner must preserve identity-only E2B recovery. Neither item waits for the other.
 - **Recommendation:** I. On 10 November 2026 the root changed the provisional D to I, the best structural option that is not blocked.
   - The options check showed that I keeps every current owner, adds the shared backup, and removes no functionality, so it needs no user decision.

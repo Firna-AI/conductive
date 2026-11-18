@@ -276,7 +276,9 @@ through them while the workspace loads.
 - An agent action sends its prompt through `WorkspaceContext.chat`. A prompt
   that did not go out shows the chat of its session, where the composer
   names the cause: the chat in place of a file on desktop, and the chat tab
-  on a phone.
+  on a phone. A failure that arrives after the screen closed, or after the
+  branch changed, keeps the view and selects no session, as
+  [Agent actions](../../github/actions.md#agent-actions) says.
 - `ContinueDialog` asks the question of Continue, after its check found
   local work. `LocalWorkList` of the mockups lists that work, as in the
   mockup of the question.

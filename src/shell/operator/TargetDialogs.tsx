@@ -38,22 +38,18 @@ export function SuspendDialog(props: {
   const suspend = useQuestion(props.suspend, props.close)
   return (
     <Dialog
-      actions={
-        <>
-          <ActionButton disabled={suspend.pending} onPress={suspend.dismiss}>
-            Cancel
-          </ActionButton>
-          <ActionButton
-            busy={suspend.pending}
-            icon={Ban}
-            onPress={() => suspend.run(referralCode !== undefined && disable)}
-            tone="danger"
-          >
-            {target.kind === 'user' ? 'Suspend user' : 'Suspend org'}
-          </ActionButton>
-        </>
+      action={
+        <ActionButton
+          busy={suspend.pending}
+          icon={Ban}
+          onPress={() => suspend.run(referralCode !== undefined && disable)}
+          tone="danger"
+        >
+          {target.kind === 'user' ? 'Suspend user' : 'Suspend org'}
+        </ActionButton>
       }
-      close={suspend.dismiss}
+      busy={suspend.pending}
+      close={props.close}
       title={`Suspend ${name}?`}
     >
       {props.self ? (
@@ -99,22 +95,18 @@ export function LiftDialog(props: {
   const lift = useQuestion(props.lift, props.close)
   return (
     <Dialog
-      actions={
-        <>
-          <ActionButton disabled={lift.pending} onPress={lift.dismiss}>
-            Cancel
-          </ActionButton>
-          <ActionButton
-            busy={lift.pending}
-            icon={LockOpen}
-            onPress={() => lift.run()}
-            tone="primary"
-          >
-            Lift suspension
-          </ActionButton>
-        </>
+      action={
+        <ActionButton
+          busy={lift.pending}
+          icon={LockOpen}
+          onPress={() => lift.run()}
+          tone="primary"
+        >
+          Lift suspension
+        </ActionButton>
       }
-      close={lift.dismiss}
+      busy={lift.pending}
+      close={props.close}
       title={`Lift the suspension of ${name}?`}
     >
       {liftQuestion(target).map((text) => (

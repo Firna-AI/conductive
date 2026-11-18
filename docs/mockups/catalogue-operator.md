@@ -64,6 +64,8 @@ shows stopped. Its child pages:
   admin, and its `confirm` variant has the question before the leave. Acme
   is the only org of that member, so Leave org opens
   `app/sign-in/get-started/no-org`: no org, and the agent still connected.
+  Its `leaving` variant has the question while the leave runs. A spinner
+  leads Leave org, and Cancel is off.
 - `app/orgs/suspended/deleted` has a deleted org that is also suspended:
   the notice of the org above the page of the deleted org, with its date,
   and no Restore.

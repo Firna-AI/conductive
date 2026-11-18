@@ -31,31 +31,24 @@ export function NewSectionDialog(props: {
     await props.create(value)
     props.close()
   })
-  const dismiss = () => {
-    if (!create.pending) props.close()
-  }
   const submit = () => {
     if (trimmed !== '') create.run(trimmed)
   }
   return (
     <Dialog
-      actions={
-        <>
-          <ActionButton disabled={create.pending} onPress={dismiss}>
-            Cancel
-          </ActionButton>
-          <ActionButton
-            busy={create.pending}
-            disabled={trimmed === ''}
-            icon={FolderPlus}
-            onPress={submit}
-            tone="primary"
-          >
-            {newSectionWords.create}
-          </ActionButton>
-        </>
+      action={
+        <ActionButton
+          busy={create.pending}
+          disabled={trimmed === ''}
+          icon={FolderPlus}
+          onPress={submit}
+          tone="primary"
+        >
+          {newSectionWords.create}
+        </ActionButton>
       }
-      close={dismiss}
+      busy={create.pending}
+      close={props.close}
       initial={input}
       title={newSectionWords.title}
     >

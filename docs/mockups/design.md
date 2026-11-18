@@ -215,6 +215,10 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - `ConfirmDialog` in `src/components/common/` asks before an action that a
   user cannot simply undo: a dialog over the dimmed app on desktop, and a
   sheet on a phone. The desktop dialog lies in the `overlay` of `AppFrame`.
+  A question that runs its own action stays open while the action runs. A
+  spinner then leads the confirming action, and Cancel is off, as
+  `app/orgs/suspended/leave/leaving` shows. Escape and a press outside then
+  do nothing, on desktop and in the sheet of a phone.
 - `ToastLayer` in `src/components/common/` draws a toast of Firna open
   where the app shows its toasts: at the bottom right of a desktop, and
   across the bottom of a phone. An action that a user can undo, such as
