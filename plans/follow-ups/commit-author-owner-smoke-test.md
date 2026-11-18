@@ -48,6 +48,19 @@
     without the turn variables `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`,
     `GIT_COMMITTER_NAME`, and `GIT_COMMITTER_EMAIL`. That shell is not the
     shared terminal.
+  - Commit [`ca44d3a0c`](https://github.com/Firna-AI/conductive/commit/ca44d3a0c0ebc7d3073b279d74a2c06d85f1b377),
+    which added the results above, proves that Git in W-363 takes the
+    author from the system settings:
+    - An agent of W-363 made it in a pseudo-terminal, with no author
+      option and no change to a Git setting.
+    - `env -u` removed `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`,
+      `GIT_COMMITTER_NAME`, `GIT_COMMITTER_EMAIL`, and `CONDUCTIVE_TURN_ID`
+      from the environment of `git commit`.
+    - After the push, `git log` and GitHub show `Cal` and the no-reply
+      address above as the author and the committer. GitHub links both
+      roles to `calummoore`.
+    - The commit did not use the shared terminal, and it did not follow a
+      known resume.
   - Not proven: a resume, a commit in the shared terminal, and an agent
     commit after a resume. No check above follows a known resume. The
     check had no signed-in app browser.
