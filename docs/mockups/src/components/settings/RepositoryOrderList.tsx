@@ -23,7 +23,7 @@ export const repositoryOrderStates = ['list', 'menu', 'drag', 'moved'] as const
 export type RepositoryOrderState = (typeof repositoryOrderStates)[number]
 
 /** The chosen repositories of the fixture, in the order of the state. */
-export function orderedRepositories(
+function orderedRepositories(
   repositories: readonly ReachableRepository[],
   state: RepositoryOrderState,
 ): ReachableRepository[] {

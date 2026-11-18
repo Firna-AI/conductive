@@ -7,7 +7,7 @@ import {
 import type { MenuEntry } from '../common/Menu'
 
 /** A move of the row menu of a chosen repository. */
-export type RepositoryMove = 'default' | 'up' | 'down'
+type RepositoryMove = 'default' | 'up' | 'down'
 
 /** One item of the row menu of a chosen repository. */
 export type RepositoryMenuItem = {

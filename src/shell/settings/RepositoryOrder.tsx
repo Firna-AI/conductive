@@ -28,7 +28,7 @@ interface Movable {
 }
 
 /** The Default label of the first chosen repository, for every person. */
-export function DefaultLabel() {
+function DefaultLabel() {
   return <span className={styles.label}>{defaultRepositoryLabel}</span>
 }
 

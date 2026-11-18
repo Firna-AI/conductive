@@ -330,14 +330,14 @@ Depends on: 1, 3
       tab of a member.
 - [x] Add component tests for the control and for the default of New
       workspace after a move.
-- [ ] Check the tab in a browser, on a computer and on a phone.
+- [x] Check the tab in a browser, on a computer and on a phone.
 
 ## Milestone 5: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
