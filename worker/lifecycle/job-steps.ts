@@ -9,11 +9,11 @@ import { warnWorker } from '../warnings'
  * change that it measures.
  */
 
-export type JobKind = 'build' | 'refresh' | 'create' | 'resume'
+type JobKind = 'build' | 'refresh' | 'create' | 'resume'
 export type JobOutcome = 'done' | 'failed'
 
 /** The cron deletes records after this many days. */
-export const JOB_RECORD_DAYS = 90
+const JOB_RECORD_DAYS = 90
 
 let workerVersion: string | null = null
 
