@@ -24,7 +24,8 @@ export const radii: Partial<SharedUiRadii> = {
  * section names, and times use the monospace font in capitals.
  */
 export const metrics = {
-  fontLabel: 'var(--ui-font-mono)',
+  /** The sans font draws ⌘ and ⇧ where the monospace fonts lack them. */
+  fontLabel: 'var(--ui-font-mono), var(--ui-font-sans)',
   textLabel: '10.5px',
   textXs: '11px',
   textSm: '12px',
