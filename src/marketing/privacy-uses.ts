@@ -181,7 +181,8 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         value or the output of the command.`,
       text`Your code: your repositories and files live in the cloud
         computers that ${productName} runs for your org. ${productName}
-        reads a file or a diff when you open it, to show it to you. The
+        reads a file or a diff when you open it, and a picture that an
+        agent answer shows, to show it to you. The
         agents send their model requests through ${productName} to
         Anthropic, OpenAI, or the chosen endpoint.
         Agent settings in the repository can send them to another address

@@ -98,7 +98,7 @@ yet.
   [Chat links](../../docs/protocol/chat-links.md) states the links of sent
   messages and answers, and
   [Workspace links](../../docs/protocol/workspace-links.md) states their
-  chips. [File mentions](../../docs/protocol/file-mentions.md#files-in-answers)
+  chips. [File mentions](../../docs/protocol/file-mentions-answers.md)
   states the file chips of answers. [Agent text](agent-text.md) gives the rules of the code that
   formats them: the links, the chips, and the heading, list, and table
   parts that the chat shares with the file preview and the mockups.

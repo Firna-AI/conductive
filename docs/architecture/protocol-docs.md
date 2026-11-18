@@ -75,6 +75,9 @@ This page lists each protocol doc and what it covers.
   - [File mentions](../protocol/file-mentions.md): the list of `@` in the
     composer, the chips of files and folders, Add to chat, the sent chips
     of attached files, and the removal of each chip of the composer.
+    - [File mentions: files in answers](../protocol/file-mentions-answers.md):
+      the file chips, the file links, and the pictures in the answers of
+      the agents, and their line targets.
   - [Agent runner](../protocol/agent-runner.md): the connection of the runner,
     its events and their limits, its turns, the background work of Claude
     turns with its note and its time limit, its port reports, and the repair

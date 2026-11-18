@@ -27,8 +27,8 @@ makes each web address of chat text a link, as
   numbers and syntax colours.
 - A file tab can open at a line or a range of lines, such as from a file
   chip of an answer with a line target, as
-  [Line targets](file-mentions.md#line-targets) says (answer chip
-  decision 2). The tab then shows the text of the file, also for a
+  [Line targets](file-mentions-answers.md#line-targets) says (answer
+  chip decision 2). The tab then shows the text of the file, also for a
   Markdown file. It scrolls the first line to the middle of the view, and
   marks each line of the range with a background colour.
 - The address of such a tab names the lines in its query, as

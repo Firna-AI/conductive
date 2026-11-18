@@ -74,8 +74,12 @@ These are my calls of 18 November 2026, under the decision test.
   for costs money, as [Stop and resume](../docs/protocol/stop-and-resume.md)
   says.
 - A read starts only when the picture comes near the view. At most two
-  reads run at one time. One open chat reads each path once. Reason: an
-  image can be up to 5 MiB, and a long chat can hold many.
+  reads run at one time. One open chat reads each path once for each
+  agent message. Reason: an image can be up to 5 MiB, and a long chat can
+  hold many. A newer answer reads a reused name again, because agents
+  often save each check under the same name. Changed on 18 November 2026
+  after Milestone 2 found that one read for each path showed an old
+  screenshot in a newer answer.
 - While the read runs, a box shows the label, with the size of the
   loading call below. When the read fails, the file passes the read
   limit, or the browser cannot draw the bytes, the image shows as the
@@ -120,7 +124,7 @@ under the decision test.
 Contract owners:
 
 - [Agent instructions](../docs/protocol/agent-instructions.md).
-- [File mentions](../docs/protocol/file-mentions.md#files-in-answers).
+- [File mentions: files in answers](../docs/protocol/file-mentions-answers.md).
 - [Chat Markdown](../docs/protocol/chat-markdown.md).
 - The [chat README](../src/chat/README.md).
 
@@ -157,18 +161,18 @@ a picture, on desktop and on a phone.
 
 Depends on: 1
 
-- [ ] In `docs/protocol/agent-instructions.md`, add the screenshot line to
+- [x] In `docs/protocol/agent-instructions.md`, add the screenshot line to
       the guidance, and replace the rule that the instructions do not ask
       the agent to show a screenshot in a reply.
-- [ ] In `docs/protocol/file-mentions.md`, under Files in answers, say
+- [x] In `docs/protocol/file-mentions.md`, under Files in answers, say
       that a Markdown image of a picture file shows as a picture, with the
       rules of the design calls.
-- [ ] In `docs/protocol/chat-markdown.md`, update the Markdown image rule.
-- [ ] Read the Terms page, `src/marketing/terms.ts`, the Privacy page,
+- [x] In `docs/protocol/chat-markdown.md`, update the Markdown image rule.
+- [x] Read the Terms page, `src/marketing/terms.ts`, the Privacy page,
       `src/marketing/privacy.ts`, and each public guide in
       `src/marketing/docs/` in full. Update each sentence that restates a
       changed fact.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
 
 ## Milestone 3: The screenshot line
 

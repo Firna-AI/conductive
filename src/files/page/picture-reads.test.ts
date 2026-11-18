@@ -130,3 +130,22 @@ it('fails a non-picture path without reading the file', async () => {
   })
   expect(readFile).toHaveBeenCalledTimes(0)
 })
+
+it('keeps one result for each path and message, so a newer answer reads again', async () => {
+  const { reader, paths, answer } = controlledPictures()
+  const older = reader.read('shot.png', readSignal(), 'answer-1')
+  answer(0)
+  await older
+  expect(await reader.read('shot.png', readSignal(), 'answer-1')).toEqual(
+    await older,
+  )
+  expect(paths()).toEqual(['shot.png'])
+
+  const newer = reader.read('shot.png', readSignal(), 'answer-2')
+  expect(paths()).toEqual(['shot.png', 'shot.png'])
+  answer(1)
+  expect(await newer).toEqual({
+    status: 'picture',
+    address: 'data:image/png;base64,AA==',
+  })
+})

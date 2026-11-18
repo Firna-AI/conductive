@@ -232,7 +232,7 @@ Values and marks changed in settings apply at the computer's next start.
 Earlier chat and logs keep their text.
 
 Changed or encoded values can still appear.
-File content, diff content, downloaded files, and Terminal do not hide secret values.
+File content, pictures in agent replies, diff content, downloaded files, and Terminal do not hide secret values.
 Some displayed path labels hide values, but the browser still receives real file paths.
 
 - [Set environment variables](/docs/cloud-computer#set-environment-variables)
@@ -263,7 +263,8 @@ While a command runs with a secret, its value is on the cloud computer.
 Programs and members with terminal access can read it then.
 A command can also write it to a file.
 During a turn, a program on the computer can run its own command with each secret that the session may use.
-Conductive hides exact copies of a value in the command's output and in the chat.
+Conductive hides exact copies of a value in the command's output and in the text of the chat.
+Pictures in agent replies do not hide values.
 Changed or encoded values can still appear, also to the agent and its model provider.
 
 - [Add secrets for agents](/docs/cloud-computer#add-secrets-for-agents)

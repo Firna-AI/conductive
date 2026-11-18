@@ -241,7 +241,7 @@ The answer stays visible beside it.
 
 ## Read replies and tables
 
-Agent replies can contain headings, paragraphs, lists, code, tables, and file chips.
+Agent replies can contain headings, paragraphs, lists, code, tables, file chips, and pictures.
 A wide table scrolls sideways inside the message.
 The text around it keeps the width of the chat.
 
@@ -251,6 +251,8 @@ Code that holds only the path of a file of the workspace also shows as a file ch
 Select a chip to open its file.
 A Markdown link or image to a file of the workspace shows as a link with its label.
 Select the link to open the file.
+While the cloud computer runs, an image of a PNG, JPEG, GIF, or WebP file, such as a screenshot that the agent took, shows as a small picture instead.
+Select the picture to open the file.
 A path can end with a line or a range of lines, such as `@src/app.ts:42` or `src/app.ts:42-50`.
 Its chip opens the file as text, with those lines in view and marked.
 To copy a code block, select **Copy code** in its top corner.
@@ -258,7 +260,7 @@ With a mouse, the button shows when you point at the block.
 **Code copied** confirms the copy.
 
 While a reply arrives, the chat shows its headings, text, and table rows as they arrive.
-In the folded work of a turn, open a message line to read its table.
+In the folded work of a turn, open a message line to read its table or see its pictures.
 
 ## Manage session tabs
 

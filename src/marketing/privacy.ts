@@ -24,7 +24,7 @@ export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
   description: `The privacy notice of ${productName}.`,
   lead: text`This notice says which personal data ${productName} uses, why
-  it uses it, and who gets it. Effective date: 17 November 2026.`,
+  it uses it, and who gets it. Effective date: 18 November 2026.`,
   sections: [
     {
       title: 'Who is responsible',
@@ -161,8 +161,9 @@ export const privacyDocument: LegalDocument = {
             Secrets settings. The command gets the value. The agent gets
             the secret's name and environment variable name, without the
             value. ${productName} hides each exact copy of the value in the
-            output of the command and in the chat. It does not hide a changed
-            or encoded value.`,
+            output of the command and in the text of the chat. It does not
+            hide a changed or encoded value, or a value in a picture that an
+            agent answer shows.`,
           text`An env var is secret until an admin clears its mark. Before
             ${productName} puts agent output in the chat history or on a
             screen, it hides each exact copy of a secret value in it. It also

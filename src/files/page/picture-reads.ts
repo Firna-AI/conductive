@@ -5,15 +5,24 @@ import { fileView, pictureType } from './file-view'
 export type PictureRead =
   { status: 'picture'; address: string } | { status: 'failed' }
 
-/** One chat's picture reads. Paths are real file paths from its tree. */
+/**
+ * One chat's picture reads. Paths are real file paths from its tree. The
+ * results are kept for each path and each `message`, such as the ID of an
+ * agent message, so that a newer answer reads a reused file name again.
+ */
 export interface ChatPictures {
-  read(path: string, signal: AbortSignal): Promise<PictureRead>
+  read(
+    path: string,
+    signal: AbortSignal,
+    message?: string,
+  ): Promise<PictureRead>
 }
 
 type PictureClient = Pick<FilesClient, 'readFile'>
 
 interface PendingPicture {
   path: string
+  key: string
   controller: AbortController
   started: boolean
   waiters: Set<(result: PictureRead) => void>
@@ -42,7 +51,7 @@ async function readPicture(
 
 /**
  * Reads at most two files at once, in queue order. Each started path keeps
- * its result, including a failure. Callers share a read but abort their own
+ * its result for its message, including a failure. Callers share a read but abort their own
  * wait. The last abort cancels the file read and keeps no result, so a later
  * caller reads the path again, such as after a switch of session tabs. The
  * cancelled read keeps its slot until it settles. A queued path with no
@@ -62,8 +71,8 @@ export function createPictureReads(client: PictureClient): ChatPictures {
       next.started = true
       running += 1
       void readPicture(client, next).then((result) => {
-        if (!next.controller.signal.aborted) results.set(next.path, result)
-        if (pending.get(next.path) === next) pending.delete(next.path)
+        if (!next.controller.signal.aborted) results.set(next.key, result)
+        if (pending.get(next.key) === next) pending.delete(next.key)
         running -= 1
         next.waiters.forEach((finish) => finish(result))
         startWaiting()
@@ -72,23 +81,23 @@ export function createPictureReads(client: PictureClient): ChatPictures {
   }
 
   return {
-    read(path, signal) {
+    read(path, signal, message) {
       if (signal.aborted) return Promise.resolve(failed)
-      const known = results.get(path)
+      if (!pictureType(path)) return Promise.resolve(failed)
+      // A path holds no NUL character, so the key names one pair.
+      const key = message === undefined ? path : `${message}\0${path}`
+      const known = results.get(key)
       if (known) return Promise.resolve(known)
-      if (!pictureType(path)) {
-        results.set(path, failed)
-        return Promise.resolve(failed)
-      }
-      let request = pending.get(path)
+      let request = pending.get(key)
       if (!request) {
         request = {
           path,
+          key,
           controller: new AbortController(),
           started: false,
           waiters: new Set(),
         }
-        pending.set(path, request)
+        pending.set(key, request)
         queue.push(request)
       }
       const waiting = request
@@ -102,10 +111,10 @@ export function createPictureReads(client: PictureClient): ChatPictures {
           finish(failed)
           if (waiting.waiters.size > 0) return
           if (waiting.started) {
-            pending.delete(path)
+            pending.delete(key)
             waiting.controller.abort()
           } else {
-            pending.delete(path)
+            pending.delete(key)
             queue.splice(queue.indexOf(waiting), 1)
           }
         }

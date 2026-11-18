@@ -7,7 +7,7 @@ and answers, and the file chips of answers.
 [Chat Markdown](../../docs/protocol/chat-markdown.md),
 [Chat tables](../../docs/protocol/chat-tables.md),
 [Workspace links](../../docs/protocol/workspace-links.md), and
-[File mentions](../../docs/protocol/file-mentions.md#files-in-answers)
+[File mentions](../../docs/protocol/file-mentions-answers.md)
 state the requirements.
 
 - `textBlocks` reads the whole text of a message at each update. So a live
