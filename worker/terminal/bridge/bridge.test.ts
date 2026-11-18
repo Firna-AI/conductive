@@ -18,7 +18,7 @@ afterEach(() => {
   server = null
 })
 
-/** A prompt line of the login Bash, which differs between machines. */
+/** The fixed short prompt of the isolated login Bash. */
 const prompt = /\$ $/m
 
 describe.skipIf(!runTmuxTests)('the terminal bridge with a real tmux', () => {
