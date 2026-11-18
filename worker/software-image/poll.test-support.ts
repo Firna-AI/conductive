@@ -6,8 +6,10 @@ import { sha256Hex } from './digest'
 import { SOFTWARE_IMAGE_PATH } from './route'
 import type { SoftwareImageRuntime } from './types'
 
-export async function softwareImagePoll(runtime: SoftwareImageRuntime) {
-  const token = 'deploy-poll-token'
+export async function softwareImagePoll(
+  runtime: SoftwareImageRuntime,
+  token = 'deploy-poll-token',
+) {
   const digest = await sha256Hex(token)
   const env: AppEnv = {
     ...runtime.env,
@@ -18,7 +20,10 @@ export async function softwareImagePoll(runtime: SoftwareImageRuntime) {
       tag: 'version',
     },
   }
-  const app = createApp(runtime.dependencies)
+  const app = createApp({
+    ...runtime.dependencies,
+    fetch: (request) => runtime.dependencies.fetch(request),
+  })
   const tasks = fakeCodexTasks()
   return {
     tasks,

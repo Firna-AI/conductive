@@ -5,6 +5,7 @@ import { boatRoute } from '../sandbox/routes'
 import { heldOperation } from '../test-support/held-operation'
 import { softwareImages } from './data'
 import { softwareImagePoll } from './poll.test-support'
+import { repairSoftwareImages } from './repair'
 
 const fixtureForTest = setupBackendTests()
 afterEach(() => vi.useRealTimers())
@@ -112,7 +113,7 @@ it('saves a late create reply without starting another provider call after yield
   }
 })
 
-it('leaves late command output unread so a later poll returns it once', async () => {
+it('keeps late command output pending so a later poll returns it once', async () => {
   const { images, boat } = fixtureForTest()
   boat.commandRunning = true
   const poll = await softwareImagePoll(images)
@@ -127,7 +128,8 @@ it('leaves late command output unread so a later poll returns it once', async ()
       await held.wait()
     }
   }
-  boat.commandOutput += 'late output\n'
+  const lateOutput = `late output\n${'😀'.repeat(40_000)}end!\n`
+  boat.commandOutput += lateOutput
   vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
   const pending = poll.request()
   try {
@@ -141,12 +143,21 @@ it('leaves late command output unread so a later poll returns it once', async ()
     held.release()
     await poll.tasks.drain()
     expect((await softwareImages(images.env.DB, 'boat'))[0]).toMatchObject({
-      stdoutOffset: 14,
-      output: 'installing...\n',
+      stdoutOffset: 80_031,
     })
     expect(await (await poll.request()).json()).toMatchObject({
       state: 'building',
-      output: 'late output\n',
+      output: lateOutput,
+    })
+    expect(await (await poll.request()).json()).toMatchObject({ output: '' })
+    boat.commandOutput += 'cron first\n'
+    await repairSoftwareImages(images)
+    boat.commandOutput += 'cron tail\n'
+    boat.commandRunning = false
+    await repairSoftwareImages(images)
+    expect(await (await poll.request()).json()).toMatchObject({
+      state: 'ready',
+      output: 'cron first\ncron tail\n',
     })
     expect(await (await poll.request()).json()).toMatchObject({ output: '' })
     expect(boat.starts).toHaveLength(1)

@@ -14,6 +14,7 @@ import type { SandboxProvider } from '../sandbox/provider'
 import { readSoftwareImage, saveSoftwareImage } from './data'
 import { keptOutput } from './output'
 import { SOFTWARE_IMAGE_FAILED } from './failure'
+import { saveSoftwareImageOperation } from './operation-data'
 import {
   allocateSoftwareImage,
   AttemptChanged,
@@ -25,7 +26,7 @@ export async function advanceSoftwareImageStep(
   runtime: SoftwareImageRuntime,
   provider: SandboxProvider,
   image: SoftwareImage,
-): Promise<{ wait?: boolean; output?: string }> {
+): Promise<{ wait?: boolean }> {
   const db = runtime.env.DB
   if (image.phase === 'create') {
     await saveSoftwareImage(db, image, { phase: 'allocating' })
@@ -39,11 +40,21 @@ export async function advanceSoftwareImageStep(
     return {}
   }
   if (!image.sandboxId) throw new Error('Missing software image sandbox')
-  const state = providerState((await provider.get(image.sandboxId)).state)
-  if (state === 'error' || state === 'stopped')
-    throw new Error('Software image sandbox did not start')
-  if (state !== 'ready') return { wait: true }
-  await provider.setAutoStop(image.sandboxId, 1800)
+  if (image.operation === null) {
+    const state = providerState((await provider.get(image.sandboxId)).state)
+    if (state === 'error' || state === 'stopped')
+      throw new Error('Software image sandbox did not start')
+    if (state !== 'ready') return { wait: true }
+    if (!(await saveSoftwareImageOperation(db, image, 'ready')))
+      throw new AttemptChanged()
+    return {}
+  }
+  if (image.operation === 'ready') {
+    await provider.setAutoStop(image.sandboxId, 1800)
+    if (!(await saveSoftwareImageOperation(db, image, 'auto-stop')))
+      throw new AttemptChanged()
+    return {}
+  }
   if (runtime.dependencies.now() >= image.startedAt + IMAGE_BUILD_TIME_LIMIT_MS)
     throw new JobTimeLimit('build')
   if (image.phase === 'software') {
@@ -76,30 +87,33 @@ export async function advanceSoftwareImageStep(
       image.processId,
       image,
     )
-    // A later poll must read any output that this response cannot return.
-    if (runtime.poll?.stopped()) return { wait: true }
     const output = status.stdout + status.stderr
     const waiting = status.more || status.running
     const failed =
       !waiting &&
       (status.state !== 'exited' || status.exitCode !== 0 || status.timedOut)
     if (
-      !(await saveSoftwareImage(db, image, {
-        stdoutOffset: status.stdoutNextOffset,
-        stderrOffset: status.stderrNextOffset,
-        output: keptOutput(image.output + output),
-        phase: waiting || failed ? 'software' : 'journal',
-        ...(failed
-          ? {
-              state: 'failed',
-              error: SOFTWARE_IMAGE_FAILED,
-              completedAt: runtime.dependencies.now(),
-            }
-          : {}),
-      }))
+      !(await saveSoftwareImage(
+        db,
+        image,
+        {
+          stdoutOffset: status.stdoutNextOffset,
+          stderrOffset: status.stderrNextOffset,
+          output: keptOutput(image.output + output),
+          phase: waiting || failed ? 'software' : 'journal',
+          ...(failed
+            ? {
+                state: 'failed',
+                error: SOFTWARE_IMAGE_FAILED,
+                completedAt: runtime.dependencies.now(),
+              }
+            : {}),
+        },
+        output,
+      ))
     )
       throw new AttemptChanged()
-    return { wait: waiting, output }
+    return { wait: waiting }
   }
   if (image.phase === 'journal') {
     await clearImageCommands(provider, image.sandboxId)
@@ -108,6 +122,7 @@ export async function advanceSoftwareImageStep(
   }
   if (image.phase === 'snapshot') {
     const snapshot = await snapshotSoftwareImage(db, provider, image)
+    if (!snapshot) return {}
     if (snapshot.status === 'failed')
       throw new Error('Software image save failed')
     const current = await readSoftwareImage(db, image.id)

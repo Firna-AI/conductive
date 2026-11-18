@@ -21,6 +21,7 @@ export interface SoftwareImage {
   state: SoftwareImageState
   phase: SoftwareImagePhase
   revision: number
+  operation: 'ready' | 'auto-stop' | 'snapshot-missing' | null
   sandboxId: string | null
   processId: number | null
   stdoutOffset: number
@@ -39,8 +40,9 @@ export interface SoftwareImageRuntime {
   dependencies: AppDependencies
   poll?: {
     stopped(): boolean
+    expired(): boolean
     checkpoint(image: SoftwareImage, output: string): void
-    output(output: string): void
+    output(parts: string[]): void
   }
 }
 

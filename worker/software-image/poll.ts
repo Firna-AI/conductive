@@ -3,6 +3,7 @@ import { errorResponse, HttpError, privateResponse } from '../http'
 import { ProviderError } from '../sandbox/errors'
 import { warnWorker } from '../warnings'
 import { softwareImageResult } from './result'
+import { softwareImageResponse } from './response'
 import type { SoftwareImageResult, SoftwareImageRuntime } from './types'
 
 /** Leave time for the reply before the deploy client's 30-second limit. */
@@ -18,6 +19,7 @@ export async function boundedSoftwareImagePoll(
 ): Promise<Response> {
   let stopped = false
   let checkpoint: SoftwareImageResult | undefined
+  const output: string[] = []
   const controller = new AbortController()
   const workTimer = setTimeout(() => controller.abort(), WORK_LIMIT_MS)
   const runtime: SoftwareImageRuntime = {
@@ -35,12 +37,11 @@ export async function boundedSoftwareImagePoll(
     },
     poll: {
       stopped: () => stopped,
-      checkpoint: (image, output) => {
-        checkpoint = softwareImageResult(image, output)
+      expired: () => controller.signal.aborted,
+      checkpoint: (image, text) => {
+        checkpoint = softwareImageResult(image, text)
       },
-      output: (output) => {
-        if (checkpoint) checkpoint = { ...checkpoint, output }
-      },
+      output: (parts) => output.push(...parts),
     },
   }
   let responseTimer: ReturnType<typeof setTimeout> | undefined
@@ -50,7 +51,7 @@ export async function boundedSoftwareImagePoll(
       resolve(
         privateResponse(
           checkpoint
-            ? Response.json(checkpoint)
+            ? softwareImageResponse(checkpoint, output)
             : errorResponse(
                 new HttpError(
                   503,
@@ -63,7 +64,7 @@ export async function boundedSoftwareImagePoll(
     }, RESPONSE_LIMIT_MS)
   })
   const work = run(runtime).then((result) =>
-    privateResponse(Response.json(result)),
+    softwareImageResponse(result, output),
   )
   const retained = work.then(
     () => clearTimeout(workTimer),
