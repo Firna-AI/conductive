@@ -75,8 +75,21 @@ it('waits longer after each refused archive restart, keeps Retry-After up to one
   await fixture.advanceTo(restart + 3_780_000, saved.id)
   expect(resumes).toBe(4)
   expect(fixture.boat.resumeIds).toEqual([saved.sandboxId])
-  const state =
-    await saved.actor.storage.get<WorkspaceArchiveState>(ARCHIVE_STATE_KEY)
-  expect(state).toMatchObject({ phase: 'wait' })
-  expect(state?.retry).toBeUndefined()
+  expect(
+    await saved.actor.storage.get<WorkspaceArchiveState>(ARCHIVE_STATE_KEY),
+  ).toMatchObject({ phase: 'wait' })
+
+  // The restart succeeded, so the refused stops start again at 30 seconds.
+  fixture.boat.failStop = true
+  const stopWaits = [
+    30_000, 60_000, 120_000, 240_000, 480_000, 960_000, 1_920_000, 3_600_000,
+    3_600_000,
+  ]
+  let at = restart + 3_785_000
+  for (const [index, wait] of stopWaits.entries()) {
+    await fixture.advanceTo(at, saved.id)
+    at += wait
+    expect(await retryAlarm(), `wait after refused stop ${index + 1}`).toBe(at)
+  }
+  expect(fixture.boat.stopIds).toHaveLength(stopWaits.length)
 })

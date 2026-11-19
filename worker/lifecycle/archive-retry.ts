@@ -12,7 +12,7 @@ const LONGEST_RETRY_MS = 3_600_000
  * Wait longer after each failure, and at least the provider's Retry-After.
  * A stuck sandbox then cannot use up the starts of the provider account.
  */
-export function nextArchiveRetry(
+function nextArchiveRetry(
   previous: ArchiveRetry | undefined,
   error: unknown,
   now: number,
