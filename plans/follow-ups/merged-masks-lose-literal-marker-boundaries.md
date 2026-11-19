@@ -43,4 +43,3 @@
 - **Related:** `plans/follow-ups/activate-symbolic-answer-state.md` activates the symbolic path where this defect occurs. It does not change the repair and does not wait for this Low bug. `plans/follow-ups/split-literal-marker-in-answers.md` owns a policy decision about split input. A here keeps the current whole-marker policy and does not answer that question. If the user instead chooses that item's option C, close this item without a separate repair.
 - **Recommendation:** A. It uses existing exact source evidence and needs no duplicate saved state.
 - **Action:** fix after merge, apply A, because the bug has likelihood Rare and its Small repair needs no saved-format change.
-
