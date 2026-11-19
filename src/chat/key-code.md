@@ -196,7 +196,9 @@ is relative to `src/chat/`, the folder of this guide.
   that first shows the new session. Its target becomes selected only while
   the source stays selected, as `showsSession` of `state/sessions.ts`
   checks. A newer session tab stays selected. A selected tab of any other
-  kind, such as a file, diff, or Preview tab, also stays selected.
+  kind, such as a file, diff, or Preview tab, also stays selected. A failed
+  close in `state/close-actions.ts` selects the restored tab again only
+  through the same check.
 - `state/session-records.ts`: the order of session records by event number,
   and the pending edits of a session. It publishes accepted records from
   replies, complete current lists, and event merges. `confirmSessions`
