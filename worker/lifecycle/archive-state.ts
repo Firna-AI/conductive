@@ -30,6 +30,7 @@ import {
 } from './archive-maintenance'
 import { releaseImageLease } from './image-leases'
 import { clearMissingArchiveDisk } from './archive-missing'
+import { scheduleArchiveRetry } from './archive-retry'
 
 export class WorkspaceArchive {
   private readonly context: ArchiveContext
@@ -225,6 +226,10 @@ export class WorkspaceArchive {
         await this.save(state)
         await writeArchiveDisk(env.DB, row, state.sandboxId, state.stoppedAt)
       }
+      if (state.retry) {
+        state = { ...state, retry: undefined }
+        await this.save(state)
+      }
       const workspace = workspaceRecord(
         await readWorkspace(env.DB, state.orgId, state.workspaceId),
       )
@@ -260,7 +265,7 @@ export class WorkspaceArchive {
         phase: state.phase,
         error: errorSummary(failure),
       })
-      await storage.setAlarm(dependencies.now() + 30_000)
+      await scheduleArchiveRetry(this.context, row, failure)
     }
   }
 }

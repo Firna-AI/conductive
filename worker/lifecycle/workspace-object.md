@@ -57,7 +57,10 @@ command start. For a workspace object, it:
 - runs the queued start of a create or a resume, one phase at a time
 - finishes Archive initialization and uncertain allocation recovery before normal start work,
   also after the Restore window, until the workspace row holds the recovered ID
-- stops and retains archived sandboxes, bridges an old disk without secrets, and deletes at the archive deadline
+- stops and retains archived sandboxes, bridges an old disk without secrets, and deletes at the archive deadline.
+  A failed Archive step tries again after 30 seconds, and each further failure doubles the wait, up to 1 hour.
+  The wait is at least the `Retry-After` of a Boat error, up to the same hour. The D1 repair time moves
+  with it, so the repair Cron Trigger does not wake the step early. A step that succeeds ends the wait.
 - clears Restore when the provider confirms that a retained computer is missing
 - repairs the running turns from the committed chat before its deadline
   and idle decisions, as
