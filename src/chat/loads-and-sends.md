@@ -60,6 +60,23 @@ of a draft.
   the workspace is read-only, and the server path otherwise. The controller
   reads `readOnly` at each action, because a suspension can start during a
   visit, and it sends no other write then.
+- The chat of a read-only workspace keeps one local close order. A local
+  close puts its session first in that order. A local reopen takes the
+  session out of the order, so a later close puts it first again. The
+  session history lists the sessions of that order first, and then the
+  other sessions by the stored end times that `endedAt` gives. Reopen
+  closed session runs the first row of the history. So the history lists
+  the session that closed last first, and Reopen closed session reopens
+  it, as [Sessions](../../docs/protocol/agents-and-sessions.md#sessions)
+  and
+  [Where a command runs](../../docs/protocol/keyboard-shortcuts.md#where-a-command-runs)
+  say.
+- The local order changes no time that a row of the history shows. So
+  the times of the rows can show out of order. The chat snapshot keeps the
+  local order in `archiveClosed`, beside `archiveTabs`, in memory only. A
+  reload or a [Restore](../../docs/protocol/workspace-life.md#restore)
+  clears it. A workspace that accepts writes keeps the stored close order,
+  with the closes of every member.
 - A read-only chat shows no composer, no +, no Try again, no drag of a
   tab, and no answer to a Mac command. The tab menu of a session tab holds
   only its three copy items, and the tab menu of a file or diff tab holds
@@ -180,9 +197,21 @@ says. `sendPrompt` of the controller, in
 - A session whose login is missing gets no request, and the outcome is
   `blocked`. A failed send shows the notice "Your message didn't send", as
   a send from the composer does. Without an open session, nothing sends.
-- A second try of the same prompt in the same session keeps the client ID
-  of the prompt that did not send, so a lost reply makes no second message.
-  The same prompt in another session is a new message.
+- The controller sends one prompt at a time. From the call until the send
+  of a prompt ends, another call of `sendPrompt` gets no request and
+  changes nothing in the chat. The bar keeps the view for that call, as
+  [Agent actions](../github/actions.md#agent-actions) says. The app keeps
+  the controller while it shows another page, as
+  [A chat that the app keeps](integration.md#a-chat-that-the-app-keeps)
+  says. So a call after the member leaves the workspace and returns also
+  gets no request while the send waits. A send from a composer still goes
+  while a prompt sends.
+- The prompt takes its client ID at the call, before its request goes out.
+  The controller keeps that ID for the session and the text while the send
+  waits. A sent prompt drops it, so the next send of the same prompt is a
+  new message. A failed send keeps it. So a second try of the same prompt
+  in the same session is the same message, and a lost reply makes no
+  second message. The same prompt in another session is a new message.
 - A reply that names a linked session shows the prompt there. No draft
   moves, and the tab moves only as for a draft that cannot move.
 - A read-only workspace sends nothing.

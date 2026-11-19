@@ -140,6 +140,13 @@ export interface ChatSnapshot {
    * open sessions.
    */
   archiveTabs: readonly string[] | null
+  /**
+   * The IDs of the sessions whose tabs closed in the browser only, the last
+   * closed first, as `archive-view.ts` says. A read-only chat lists them
+   * first in the session history, because their stored records keep no time
+   * of these closes.
+   */
+  archiveClosed: readonly string[]
   view: WorkspaceView | null
   /**
    * The automation whose run made the workspace, from the read of the view.
@@ -207,6 +214,7 @@ export const initialSnapshot: ChatSnapshot = {
   sessions: [],
   history: [],
   archiveTabs: null,
+  archiveClosed: [],
   view: null,
   automation: null,
   repositoryFolder: null,

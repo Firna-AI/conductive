@@ -180,6 +180,7 @@ pub(super) fn welcome() -> WorkspaceToRunner {
         protocol_version: RunnerProtocolVersion,
         stream_id: "stream".into(),
         confirmed_through: 0,
+        complete_tool_details: None,
     })
 }
 

@@ -35,8 +35,14 @@ The same setup prepares one folder for each run and watch rerun, and deletes it 
 - It holds the other test Worker bundles.
   `workerLibraryBundle` in [test-bundles.ts](test-bundles.ts) saves each bundle in that folder.
   A process that needs a bundle before its file exists builds it. Later processes read the file.
+- It holds the folders of the test fixtures.
+  `testDirectory` in [test-directory.ts](test-directory.ts) creates each folder, and its `remove()` deletes it.
+  `migratedStorage` copies the template into such a folder for a test runtime, unless its caller gives a folder.
+  Each fixture deletes its owned folder when it closes.
+  The end of the run deletes each folder that remains, such as the folder of a failed setup.
 
 Without the global setup, `migratedStorage` builds one template for its process, and each bundle helper builds its bundle itself.
+Without the global setup, `testDirectory` creates each fixture folder in the system temporary folder.
 
 `createChatFixture` in [`harness.test-support.ts`](../chat/harness.test-support.ts) connects its fake runner and browser tabs through `nativeChatTransport` in [`native-transport.test-support.ts`](../chat/native-transport.test-support.ts).
 Its `drain` waits for batched runner input, connection closes, queued chat work, and sends to the fake runner or a browser tab.
@@ -190,8 +196,12 @@ A callback counts as complete only after the `waitUntil` work that it starts end
   [session events](../../src/shared/transcript/session-events.ts) accept
   stored Worker envelopes and parsed browser envelopes.
 
-- `harness.ts` owns D1 setup and the HTTP test app.
+- `harness.ts` creates the native runtime, and owns the D1 row reset and the HTTP test app.
   Its HTTP requests provide a fake execution context for credential task ownership.
+- [native-runtime.ts](native-runtime.ts): `createNativeRuntime` creates the Miniflare runtime of `createHarness`, with local D1 and R2, the native workspace objects, and their fake outbound fetch path.
+  Its `actor(name)` gives the HTTP, lifecycle RPC, test controls, restart, and reset of one workspace object.
+- [native-workspace-entry.ts](native-workspace-entry.ts): `NativeWorkspace` extends the production `Workspace` with test controls.
+  Its default export is the Worker entry of the native bundle.
 - [native-close.test-support.ts](native-close.test-support.ts): `NativeCloseProbe`, the close-first control of the native browser, runner, and Mac fixture entries.
 - [app-access.ts](app-access.ts) grants fixture access for users created directly in D1.
 - `native-global-setup.ts` builds and provides the current native bundle, the split migrations, the migrated template, and the bundle folder before tests and watch reruns.
@@ -199,18 +209,19 @@ A callback counts as complete only after the `waitUntil` work that it starts end
 - `attachment-upload.ts` prepares attachment fixtures through the production multipart start and complete operations with Node-compatible R2 part writes.
 - `migrations.ts` splits the migrations and applies them for a harness without the template.
 - [migrated-storage.ts](migrated-storage.ts) builds the migrated template database and copies it into the storage folder of a new runtime.
+- [test-directory.ts](test-directory.ts): `testDirectory(prefix)` creates the folder of one test fixture, and its `remove()` deletes the folder.
+  `testSocketDirectory(candidate)` gives the folder of a tmux socket.
+  It uses a short folder under `/tmp` when the socket path in the candidate folder is too long for a Unix socket.
 - [test-bundles.ts](test-bundles.ts) builds every test Worker bundle with one Vite configuration and saves it for the run. Its `buildWorkerLibrary` also builds the native bundle.
 - [fake-e2b.ts](fake-e2b.ts) supplies E2B lifecycle, snapshot, failure, and lost-reply behavior.
 - `fake-boat.ts` supplies provider replies, fresh streaming response factories, and added organizations with their own keys.
 - `fake-github.ts` supplies sign-in replies and an empty installation list for an account without the GitHub App.
-- Its `accounts` map supplies GitHub user lookups for automation author filters, with 404 for an unknown login.
+  Its `accounts` map supplies GitHub user lookups for automation author filters, with 404 for an unknown login.
 - `fake-anthropic.ts` supplies the Messages and token-count upstream.
 - `fake-openai.ts` supplies the Responses upstream.
 - `fake-model-upstream.ts` records model requests and supplies fresh response factories.
 - `fake-site.ts` supplies built site files, the sign-in agreement, and the GitHub install return pages.
 - `fake-runner.ts` supplies the runner without an agent SDK.
-- `fake-durable-object.ts` supplies the workspace endpoint without Cloudflare.
-- `fake-runner-files.ts` joins valid file report parts for the endpoint.
 - `runner-connection.ts` supplies the in-memory socket.
 - `process-environment.ts` builds an isolated environment for a Node child process in a test.
 - [attachment-command.ts](attachment-command.ts) fakes detached attachment commands and their status replies. It reads the generated destination and bearer token, calls an injected download route, and records exact copied bytes.

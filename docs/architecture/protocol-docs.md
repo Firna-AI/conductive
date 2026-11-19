@@ -118,6 +118,12 @@ This page lists each protocol doc and what it covers.
       messages of other members can run on a personal login, its default,
       its checks, and its risks.
   - [Tokens and secrets](../protocol/tokens-and-secrets.md)
+    - [Tool detail secrets](../protocol/tool-detail-secrets.md): the filter
+      of secret values before the cut of a long tool detail, and the risk
+      of older runners and fallback connections.
+    - [Answer text secrets](../protocol/answer-text-secrets.md): the held
+      end of an unfinished answer, the saved state of its filter, and a
+      longer value that shows as two masks.
     - [Own endpoint logins](../protocol/own-endpoint-logins.md): the
       endpoint and the key of each agent, the model list of the endpoint,
       and the addresses that the app accepts.

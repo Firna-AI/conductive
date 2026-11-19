@@ -14,7 +14,8 @@ review, or Continue at a time. `useBarActions` in [useBarControls.ts](useBarCont
 it for each workspace through `useWorkspaceStore`, from a stable `ports`
 function. A new workspace, member, or branch gives a new `ports` function,
 and so a new store. The stop of the old store aborts its reads and its run,
-and drops its question, so nothing of the old branch stays.
+and drops its question. So no read, run, or question of the old branch
+stays.
 
 The ports are the action clients, the prompt send of the chat, the timer of
 the app, the GitHub state, a fresh GitHub read, and two numbers of the
@@ -108,7 +109,8 @@ checks in GitHub's order, and the reviewers.
 - A press sends the prompt through `sendPrompt` of the kept chat, to the
   session that the member saw last, as
   [the chat](../chat/loads-and-sends.md#fixed-prompts) says. A press while
-  a prompt sends does nothing.
+  a prompt sends does nothing. It sends no message, keeps the view, and
+  selects no session.
 - A prompt that did not go out shows the chat of its session, where the
   composer names the cause: a missing login, or a failed send. Without an
   open session, the chat shows. A sent prompt keeps the view.
@@ -123,6 +125,10 @@ checks in GitHub's order, and the reviewers.
   composer of the session still names the cause. A second try there keeps
   the client ID of the failed send. The draft, its uploads, and a message
   that the Worker accepted stay as they are.
+- The kept chat, not the store, holds the prompt that sends and its client
+  ID. A new store after a return or on a new branch uses the same kept
+  chat. So a press there does nothing while the prompt of an earlier press
+  still sends. The Worker gets one message.
 - Merge latest of the command palette sends its prompt through the same
   `sendPrompt` of the store, and its result follows the same rules.
   `offersAgentActions` of

@@ -44,6 +44,8 @@ Composition, terminals that keep the key, frames, blocked menus, and an
 active recorder still get their original event. The switch key itself passes.
 
 Each browser table also lists its tab and address keys by system.
+Chromium and Firefox digit keys include keypad forms, such as `Alt+Numpad1`.
+Safari's table keeps only the top-row `Meta` digits.
 A Linux tab leaves Alt+digit to the browser, so org hints have no key.
 Firefox on Linux keeps Ctrl+digit available for workspace commands.
 Installed apps leave no key to the browser.

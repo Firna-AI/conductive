@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-09, from `calummoore/box-auto-build-onboarding`, review finding 2.
-- **Location:** `worker/lifecycle/build-admission-data.ts:11`, `worker/lifecycle/image-build-failure.ts:24`, `worker/lifecycle/image-allocation.ts:6`, and `worker/lifecycle/image-maintenance-data.ts:1`.
+- **Location:** `worker/lifecycle/build-admission-data.ts:11`, `worker/lifecycle/image-build-failure.ts:26`, `worker/lifecycle/image-allocation.ts:6`, and `worker/lifecycle/image-maintenance-data.ts:1`.
 - **Reason:** The bug needs unusual scheduling failure and alarm timing, and its fix costs the same after the merge.
 
 - **Terms:**
@@ -37,6 +37,6 @@
 - **Left out:** A delay or a scheduling retry only reduces the race window. One batch for the failure writes still permits a later phase overwrite. Keeping every unscheduled build running loses the immediate retry for a build that no alarm owns.
 - **Wider fix:** B. Cleanup follows the saved build result instead of a list of phases.
 - **Previous examples:** Commit `43320068`, `fix(lifecycle): finish readiness and retain timeout cleanup`, retained ownership of unresolved allocations. `plans/follow-ups/org-deletion-lost-build-allocation.md` records a separate cleanup ownership failure.
-- **Related:** `plans/follow-ups/added-build-can-be-lost.md` changes the same cleanup query for a different cause. Apply its query edit against B's phase-independent selection. `plans/follow-ups/late-scheduling-failure-build-log.md` records a separate effect of a late failure writer.
+- **Related:** `plans/follow-ups/added-build-can-be-lost.md` changes the same cleanup query for a different cause. Apply its query edit against B's phase-independent selection. `failBuild` in `worker/lifecycle/build-data.ts` writes the failed state and the failure log line only when its call changes a running build to `failed`. So a late failure writer adds no log line. That guard does not cover the job phase writes of this item.
 - **Recommendation:** B. One query change covers every phase without new storage or a new provider route.
 - **Action:** fix after merge, apply B, because the timing is Rare and the fix is not harder after the merge.

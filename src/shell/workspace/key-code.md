@@ -179,6 +179,13 @@ this guide.
   phone on the chat tab.
   They also press the keys of the bar where it shows a button that takes a
   click, and where it does not.
+- `github/BarPromptReturn.test.tsx`: mounts the whole app on a phone over
+  the fake API, and presses Fix checks. The Worker accepts the prompt, and
+  the test holds its reply. The member leaves the workspace and returns
+  before the reply. A second press then sends nothing and keeps the page,
+  because the kept chat still holds the prompt. The Worker gets one
+  message, and its client ID stays the same after the reply. The draft
+  keeps its text and its file, and the file uploads once.
 - `tools/ToolsWiring.test.tsx` and `github/GitHubWiring.test.tsx`: mount
   the whole app over the fake API. They check the terminal socket across
   tool switches, the saved tool, the tabs and the state of a stopped

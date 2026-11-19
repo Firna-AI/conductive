@@ -9,6 +9,7 @@ import {
   type LinkOpening,
 } from '../../shell/ui/text-links'
 import { FAKE_IDS, FAKE_ORIGIN } from '../../test-support/fixtures/core'
+import { parseBlocks } from './markdown-blocks'
 import { parseMarkdown } from './markdown-document'
 import { MarkdownView } from './MarkdownView'
 
@@ -192,6 +193,19 @@ it('renders a table, a quote, a rule, and a task list', () => {
   expect(html.match(/type="checkbox"/g)).toHaveLength(2)
   expect(html).toContain('<input disabled="" type="checkbox" checked=""/>Done')
   expect(html).toContain('<input disabled="" type="checkbox"/>Open')
+  expect(parseBlocks('- [ ]\n\n  Continue.').blocks).toEqual([
+    {
+      kind: 'list',
+      ordered: false,
+      start: 1,
+      items: [
+        {
+          checked: false,
+          blocks: [{ kind: 'paragraph', text: 'Continue.' }],
+        },
+      ],
+    },
+  ])
 })
 
 it('shows quotes nested deeper than the limit as text, without a stack overflow', () => {

@@ -156,7 +156,9 @@ export async function createNativeRuntime(
             : request.body,
           duplex: 'half',
         })
-        return new Response(await response.arrayBuffer(), {
+        const body =
+          response.status === 204 ? null : await response.arrayBuffer()
+        return new Response(body, {
           status: response.status,
           headers: [...response.headers],
         })

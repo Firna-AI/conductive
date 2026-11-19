@@ -10,8 +10,10 @@ and answers, and the file chips and the pictures of answers.
 [File mentions](../../docs/protocol/file-mentions-answers.md)
 state the requirements.
 
-- `textBlocks` reads the whole text of a message at each update. So a live
-  message and the same message from the saved history show the same blocks.
+- `textBlocks` reads the whole text of a message at each change of the
+  text. So a live message and the same message from the saved history show
+  the same blocks. `AgentText` and `MessageLine` keep the blocks while the
+  text stays the same, so a render for another change reads no text again.
 - `textBlocks` checks for a code fence before it checks for a table, so a
   table in a code block stays code. A `table` block, `TextTable`, can start
   directly after a line of a paragraph or a list.
@@ -76,9 +78,10 @@ state the requirements.
 
 - `src/markdown/web-links.ts` reads web addresses for chat text, the
   message field, and the mockups. It imports no React or app module.
-  `bareAddressAt` reads a bare address with its balanced parentheses and
-  without trailing punctuation or marks. `webAddressParts` splits plain
-  text into addresses and text, with an optional Markdown label.
+  `bareAddressAt` reads a bare address without trailing punctuation or
+  marks. A `)` or a `]` at its end stays in only when it closes a `(`
+  or a `[` inside the address. `webAddressParts` splits plain text into
+  addresses and text, with an optional Markdown label.
 - `webLink` checks an address and gives its kind: an app page, a local
   server with its port, or another web page. The caller supplies the app
   origin and a page check built on `parseRoute`. `appAddress` joins the

@@ -24,7 +24,7 @@ export type WebLink =
 
 const barePattern = /https?:\/\/[^\s<>`]+/y
 const markdownLabel = /\[([^\]\n]*)\]\(/y
-const endMarks = new Set([...'.,;:!?\'"*_~]'])
+const endMarks = new Set([...'.,;:!?\'"*_~'])
 const localHosts = new Set(['localhost', '127.0.0.1', '[::1]', '0.0.0.0'])
 const invisible = /\p{Default_Ignorable_Code_Point}/gu
 
@@ -74,9 +74,11 @@ export function bareAddressAt(text: string, at: number): string | null {
   if (!found) return null
   let address = found
   let extraCloses = address.split(')').length - address.split('(').length
+  let extraBrackets = address.split(']').length - address.split('[').length
   while (address !== '') {
     const last = address.at(-1) ?? ''
     if (last === ')' && extraCloses > 0) extraCloses -= 1
+    else if (last === ']' && extraBrackets > 0) extraBrackets -= 1
     else if (!endMarks.has(last)) break
     address = address.slice(0, -1)
   }

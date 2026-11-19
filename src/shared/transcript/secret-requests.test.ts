@@ -1,4 +1,5 @@
 import { expect, it } from 'vitest'
+import type { Session } from '../generated/Session'
 import type { SecretRequest } from '../secret-requests'
 import { SessionMarkdown } from './session-markdown'
 import { markdownFixture } from './session-markdown.test-support'
@@ -110,7 +111,50 @@ it('copies an allowed run once, folds it with its turn, and keeps the late notic
 
 it('copies the login recovery line when a late answer cannot start a turn', () => {
   const { document } = markdownFixture()
-  const builder = new SessionMarkdown({ ...document, commands: [] })
+  const pending = request('TOKEN', 3_500)
+  const logins: Session['login'][] = [
+    undefined,
+    { type: 'personal', userId: pending.sender.id },
+  ]
+  for (const login of logins) {
+    const builder = new SessionMarkdown({
+      ...document,
+      session: { ...document.session, login },
+      commands: [],
+    })
+    builder.merge([
+      updated(
+        {
+          ...pending,
+          state: 'allowed',
+          answeredBy: pending.sender,
+          notice: { state: 'not-sent', reason: 'login-unavailable' },
+        },
+        101,
+      ),
+    ])
+    expect(builder.render('concise')).toContain(
+      'The session starter must connect the login again and send a message so the agent learns of this.',
+    )
+  }
+})
+
+it('names an admin reconnecting the saved org login in late-answer transcripts', () => {
+  const { document } = markdownFixture()
+  const orgDocument = {
+    ...document,
+    orgName: 'Acme [Ops]',
+    session: {
+      ...document.session,
+      choice: { ...document.session.choice, agent: 'claude' },
+      login: { type: 'org', orgId: document.linkContext.orgId },
+      loginAvailable: false,
+      activeTurnId: null,
+      activeTurnStartedAt: null,
+    } satisfies Session,
+    commands: [],
+  }
+  const builder = new SessionMarkdown(orgDocument)
   const pending = request('TOKEN', 3_500)
   builder.merge([
     updated(
@@ -123,7 +167,11 @@ it('copies the login recovery line when a late answer cannot start a turn', () =
       101,
     ),
   ])
-  expect(builder.render('concise')).toContain(
-    'The session starter must connect the login again and send a message so the agent learns of this.',
-  )
+  for (const detail of ['concise', 'full'] as const) {
+    const markdown = builder.render(detail)
+    expect(markdown).toContain(
+      "An admin must connect Acme \\[Ops\\]'s Claude login again. The agent learns of this at the next message in this session.",
+    )
+    expect(markdown).not.toContain('The session starter must connect')
+  }
 })

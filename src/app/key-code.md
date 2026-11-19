@@ -67,9 +67,16 @@ Each path is relative to `src/app/`, the folder of this page.
   with one error code, also the replies of its fetch.
 - `org-list.ts`: `OrgList`, the orgs of the person in their own order, as
   `AppModel.orgs` gives them: the list that the server confirmed, then the
-  moves that wait for their answer.
+  moves that wait for their answer. `OrgList.patch` takes from the answer
+  of a partial save only the fields of its request, as
+  [Data lifecycle](data-lifecycle.md) says.
+- [send-queue.ts](send-queue.ts): `SendQueue`, whose `run` sends the moves
+  of one `OrgList`, or the writes and saves of one `Resource`, one at a
+  time. Each request goes out after the answer of the one before.
 - `org-writes.ts`: the requests of `AppModel.createOrg`,
   `AppModel.renameOrg`, and `AppModel.setOrgColor`, which read the org record.
+  `saveOrgPatch` sends the partial save that `renameOrg` and `setOrgColor`
+  share, and gives its answer and its request to `OrgList.patch`.
   `putOrgOrder` saves the user's org order for `AppModel.moveOrg`.
 - `waitlist-model.ts`: `WaitlistModel`, the screen of a person who waits:
   the use of a code from the field or a join link, the invitations with

@@ -14,6 +14,7 @@ import { decodeBuildJob, type StoredBuildJob } from './build-job-codec'
 import type { ProviderRetryState } from './provider-retry'
 import type { SavedScript } from './saved-script'
 import { readBuildChanges } from './build-changes-data'
+import { writeBuildEnd } from './build-end-data'
 
 export type BuildPhase =
   | 'create'
@@ -185,14 +186,7 @@ export async function failBuild(
   message: string,
   now: number,
 ): Promise<void> {
-  await db.batch([
-    db
-      .prepare(
-        "UPDATE image_builds SET state = 'failed', completed_at = ?, error = ?, provider_retry_json = NULL WHERE id = ? AND state = 'running'",
-      )
-      .bind(now, message, buildId),
-    ...buildLogStatements(db, buildId, message, now),
-  ])
+  await writeBuildEnd(db, { state: 'failed', buildId, message }, now)
 }
 
 export async function readBuildHistory(

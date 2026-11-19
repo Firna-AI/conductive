@@ -66,7 +66,7 @@ export async function buildSessionTranscript(
   const document = await store.run(() =>
     store.read(workspaceId, async (view) => {
       const session = await sessionFor(view, sessionId)
-      const [name, members, commands, source] = await Promise.all([
+      const [names, members, commands, source] = await Promise.all([
         transcriptWorkspaceName(env.DB, workspaceId),
         orgMembers(env.DB, access.orgId),
         readDeviceCommands(storage),
@@ -76,12 +76,13 @@ export async function buildSessionTranscript(
       ])
       return {
         linkContext: { origin: access.origin, orgId: access.orgId },
+        orgName: names?.orgName ?? null,
         session,
         eventNumber: view.eventNumber,
         copiedAt: view.now,
         workspace: {
           number: access.number,
-          name: name?.name ?? null,
+          name: names?.name ?? null,
           link: workspaceLink(access.origin, access.orgId, workspaceId),
         },
         models: configuredModels(env),

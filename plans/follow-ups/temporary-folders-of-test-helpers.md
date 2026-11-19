@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-10, the wider fix of finding 1 of the review of pull request #130, branch `calummoore/mac-app-downloads-site`, round 4, option C of its check.
-- **Location:** `worker/marketing/built-site.test-support.ts`, and the helpers that call `mkdtemp(` in `worker/chat/integration/`, `worker/lifecycle/`, and `worker/terminal/scripts.test-support.ts`.
+- **Location:** `worker/marketing/built-site.test-support.ts`, `worker/test-support/test-directory.ts`, and the helpers that call `mkdtemp(` or `testDirectory(` in `worker/chat/integration/`, `worker/lifecycle/`, and `worker/terminal/scripts.test-support.ts`.
 - **Reason:** the wider fix changes many test helpers outside the diff of pull request #130, which fixed its own helper with a direct `finally`.
 
 - **Terms:**

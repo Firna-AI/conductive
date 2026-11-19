@@ -29,15 +29,25 @@ export function buildLogStatements(
   buildId: string,
   text: string,
   now: number,
+  onlyWhileRunning = false,
 ): D1PreparedStatement[] {
+  const condition = onlyWhileRunning
+    ? "HAVING EXISTS (SELECT 1 FROM image_builds WHERE id = ? AND state = 'running')"
+    : ''
   return [
     ...splitLog(text).map((chunk) =>
       db
         .prepare(
           `INSERT INTO image_build_logs (build_id, event_number, occurred_at, text)
-     SELECT ?, COALESCE(MAX(event_number), 0) + 1, ?, ? FROM image_build_logs WHERE build_id = ?`,
+     SELECT ?, COALESCE(MAX(event_number), 0) + 1, ?, ? FROM image_build_logs WHERE build_id = ? ${condition}`,
         )
-        .bind(buildId, now, chunk, buildId),
+        .bind(
+          buildId,
+          now,
+          chunk,
+          buildId,
+          ...(onlyWhileRunning ? [buildId] : []),
+        ),
     ),
     ...buildLogRetentionStatements(db, buildId, now),
   ]

@@ -169,6 +169,13 @@ chat in the whole app.
 The Mac commands have their own [tests](device/README.md#tests), and a
 check in the Mac app.
 
+The placement of the model menu needs a real browser. The Electron check
+[`chat-menu-clipping.spec.ts`](../../desktop/tests/chat-menu-clipping.spec.ts)
+builds the development page and opens the real Model and effort menu in a
+box that clips. It checks the choices outside the box, a pointer choice,
+the arrow keys, and the focus return after Escape. Run
+`npm --prefix desktop run test:electron -- tests/chat-menu-clipping.spec.ts`.
+
 ### Key code
 
 [Chat key code](key-code.md) names the files, the types, and the

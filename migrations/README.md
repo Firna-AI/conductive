@@ -300,6 +300,19 @@ starts of its software command carried different apt parts.
 [Image builds](../worker/lifecycle/image-builds.md#the-software-step) says
 how a build reads and writes it.
 
+`202611181709_software_image_poll_progress.sql` adds three tables for the
+deploy polls of a software image attempt. `software_image_operations`
+keeps the last finished call of an attempt before its main provider call,
+such as the readiness read, for one phase and revision.
+`software_image_output` keeps the build output that no deploy poll has
+taken yet. `software_image_deploys` links a deploy token digest to the
+attempt that its admission chose, until that deploy token expires. Each
+row references `software_images` with `ON DELETE CASCADE`, so deleting an
+attempt deletes its rows. The migration changes no existing table, column,
+or phase name, so the previous Worker keeps working.
+[Reply budget](../worker/software-image/README.md#reply-budget) says how
+the deploy polls use these tables.
+
 `202611101300_routines.sql` adds org-scoped automations and their run records.
 Automation owners reference users, so membership removal can transfer their records.
 Org deletion cascades to both tables.

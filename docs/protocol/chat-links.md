@@ -66,8 +66,9 @@ link.
 - A bare address is a web address with no Markdown around it. It shows as
   the text has it.
 - A bare address ends at a space or an angle bracket. Punctuation, quotes,
-  `*`, `_`, `~`, and `]` at its end stay out of it. A `)` at its end stays
-  in only when it closes a `(` inside the address, as on GitHub.
+  `*`, `_`, and `~` at its end stay out of it. A `)` or a `]` at its end
+  stays in only when it closes a `(` or a `[` inside the address. GitHub
+  uses the same rule for a `)`.
 - In an agent message, a Markdown link shows as its label, and its title
   gives its address (chat link decision 1 D). Reason: the text then reads
   as the agent meant it, with no raw brackets.

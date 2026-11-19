@@ -22,31 +22,39 @@ export type PromptOutcome = 'sent' | 'failed' | 'blocked' | 'unavailable'
  * keeps its text, files, identity, and send. A failure shows the notice of
  * the composer. A second try of the same prompt in the same session keeps
  * its client ID, and the same prompt in another session is a new message.
+ * The kept chat owns one pending prompt. Another call while it waits gets
+ * null, so the caller keeps its view and selects no session.
  */
 export async function sendPrompt(
   context: ChatContext,
   text: string,
-): Promise<PromptOutcome> {
+): Promise<PromptOutcome | null> {
+  const { prompts } = context
+  if (prompts.sending) return null
   const snapshot = context.store.get()
   const sessionId = snapshot.activeSessionId
   const session = snapshot.sessions.find((item) => item.id === sessionId)
   if (!session) return 'unavailable'
   if (sendBlock(snapshot, session.id)) return 'blocked'
-  // A failed prompt keeps its ID only for a second try in its own session.
   const key = JSON.stringify([session.id, text])
   const request: SendMessageRequest = {
-    id: context.prompts.get(key) ?? context.newId(),
+    id: prompts.ids.get(key) ?? context.newId(),
     text,
     attachmentIds: [],
     choice: session.choice,
   }
-  const posted = await postMessage(context, session.id, request, [])
-  if ('error' in posted) {
-    context.prompts.set(key, request.id)
-    showSendFailed(context, session.id, request.id, posted.error)
-    return 'failed'
+  prompts.sending = true
+  prompts.ids.set(key, request.id)
+  try {
+    const posted = await postMessage(context, session.id, request, [])
+    if ('error' in posted) {
+      showSendFailed(context, session.id, request.id, posted.error)
+      return 'failed'
+    }
+    prompts.ids.delete(key)
+    await showTarget(context, session.id, posted.target, null)
+    return 'sent'
+  } finally {
+    prompts.sending = false
   }
-  context.prompts.delete(key)
-  await showTarget(context, session.id, posted.target, null)
-  return 'sent'
 }

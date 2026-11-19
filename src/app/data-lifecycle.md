@@ -36,10 +36,27 @@ of the data that the screens read and write.
   Such a read shows its error also over the value.
 - The org list reads only at the first load of the app. `OrgList` keeps the
   list that the server confirmed, with the answers of create, rename,
-  delete, restore, accept, and leave, and over it the moves that wait for
-  their answer, in the order that they went out. A failed move goes back
-  alone. A saved move joins the confirmed list once each earlier move has
-  its answer, so a later new org goes after it, as on the server.
+  delete, restore, accept, and leave. Over that list, it keeps the moves
+  that wait for their answer, in the order that the person made them. A
+  failed move goes back alone. A saved move joins the confirmed list once
+  each earlier move has its answer. So a later new org goes after it, as on
+  the server.
+- The saves of the org moves go out one at a time, in their own queue. Each
+  save starts after the answer of the one before, as for the writes and
+  saves of one value. So two quick moves, such as two presses of Alt and Up,
+  reach the server in the order that the person made them. Each move still
+  shows at once, also while its save waits. A failed save rejects only its
+  own caller, and the next save goes. A save that does not answer holds the
+  later moves, but no write of another value.
+- The answer of a save of the name and the initials, or of the colour,
+  confirms only the fields of its request. Each such field takes its value
+  from the answer, such as the name that the server trimmed. A field of the
+  request that the answer leaves out goes away. Every other field keeps the
+  value that the list shows, so a late answer brings back no older value.
+  An answer for an org that the list does not have changes nothing.
+- The saves of the General tab go out at once. The answers of two saves of
+  one field could still arrive in the wrong order. So the Org and Colour
+  sections of the tab each take no second save while their own save runs.
 - The automation page reads its automation when it mounts and at each return to
   the page. Each field that the owner did not change takes the field of the
   newer automation, and an edited field keeps its edit. A save sends only the
