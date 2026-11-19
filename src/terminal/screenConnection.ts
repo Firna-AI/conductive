@@ -10,6 +10,7 @@ import { linkKey } from './terminalLinks'
 import { fittedFontSize } from './sharedSize'
 import { TerminalSession } from './terminalSession'
 import { cssTokens, monospaceFont, terminalFont } from './terminalTheme'
+import { keepColoursUntilOpen } from './xtermColours'
 import { watchLinks, type XtermLinks } from './xtermLinks'
 import { XtermScreen } from './xtermScreen'
 
@@ -45,8 +46,9 @@ function hasSize(host: HTMLElement): boolean {
  * output at once, and opens in `host` once the host has a size, because
  * xterm.js and the line height measure the font in the page. A host under
  * `display: none`, such as in a hidden column or behind another tool,
- * measures nothing, so the output waits in the buffer of xterm.js. A host
- * with a size opens and fits at once.
+ * measures nothing, so the output waits in the buffer of xterm.js. Its
+ * colour changes wait too, as `keepColoursUntilOpen` says. A host with a
+ * size opens and fits at once.
  */
 export function openScreen(
   host: HTMLElement,
@@ -70,6 +72,8 @@ export function openScreen(
     // The same history as tmux keeps, so a reload shows the same lines.
     scrollback: TERMINAL_HISTORY_LINES,
   })
+  // Before any output, which can come before the screen opens.
+  const applyColours = keepColoursUntilOpen(xterm)
   const fit = new FitAddon()
   xterm.loadAddon(fit)
   let outputLinks: XtermLinks | null = null
@@ -78,6 +82,7 @@ export function openScreen(
     if (!hasSize(host)) return false
     xterm.options = terminalFont(cssTokens(host), host)
     xterm.open(host)
+    applyColours()
     outputLinks = watchLinks(xterm, {
       links: options.links,
       linkKey: linkKey(navigator.platform),
