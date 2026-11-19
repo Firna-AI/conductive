@@ -31,10 +31,10 @@ export interface BarActionsPorts {
   github: ReturnType<typeof createGitHubActions>
   continues: ContinueActions
   /**
-   * The send of a fixed prompt to the session of the chat, which keeps the
-   * client ID of a prompt that did not send for a second try there.
+   * The kept chat sends one fixed prompt at a time. It returns null for a
+   * press while one sends, and keeps failed client IDs for another try.
    */
-  sendPrompt: (text: string) => Promise<PromptResult>
+  sendPrompt: (text: string) => Promise<PromptResult | null>
   delay: Delay
   /** The GitHub state of the bar. A new state ends the outcome that shows. */
   githubState: Readable<GitHubState>
