@@ -76,9 +76,10 @@ state the requirements.
 
 - `src/markdown/web-links.ts` reads web addresses for chat text, the
   message field, and the mockups. It imports no React or app module.
-  `bareAddressAt` reads a bare address with its balanced parentheses and
-  without trailing punctuation or marks. `webAddressParts` splits plain
-  text into addresses and text, with an optional Markdown label.
+  `bareAddressAt` reads a bare address without trailing punctuation or
+  marks. A `)` or a `]` at its end stays in only when it closes a `(`
+  or a `[` inside the address. `webAddressParts` splits plain text into
+  addresses and text, with an optional Markdown label.
 - `webLink` checks an address and gives its kind: an app page, a local
   server with its port, or another web page. The caller supplies the app
   origin and a page check built on `parseRoute`. `appAddress` joins the
