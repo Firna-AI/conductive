@@ -21,6 +21,12 @@ page.
 - [Agent tool runtime](agent-tools.ts) owns the machine paths, turn environment names, turn header, and workspace MCP registration.
 - [Agent words](agents.ts) supply the effort labels, model lookup, and model
   labels for the chat, the new-workspace picker, and the mockups.
+  `sameChoice` compares two choices with one equality for each field of
+  `AgentChoice`. The chat, the automation draft, and the Worker checks of a
+  repeated message or model change use it. The Worker checks first read a
+  stored choice without `fast` as off, as
+  [The models with fast mode](../../docs/protocol/fast-mode.md#the-models-with-fast-mode)
+  says.
 - [Duration](transcript/duration.ts) formats elapsed chat and command times.
   [Tool words](transcript/tool-words.ts) supply tool verbs, fold counts,
   and the rule that starts a run open.
