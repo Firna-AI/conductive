@@ -1,0 +1,35 @@
+# Archive work can call Boat before its saved wait
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-19, from finding 1 of round 1 of the review of the branch `calummoore/conductive-sandbox-loading-issue`, which a finding check confirmed the same day.
+- **Location:** `worker/lifecycle/archive-state.ts:55` (`WorkspaceArchive.repair`, which sets the archive alarm to now), `WorkspaceArchive.advance` in the same file, `worker/lifecycle/workspace-alarm.ts:40` and `:65` (the alarm runner runs archive work also when no alarm is due, or after an interrupted run), and `worker/lifecycle/archive-retry.ts` (the saved wait).
+- **Reason:** The fix rule sends a rare Medium product bug to a later branch, and the hotfix that found it had to ship fast.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Archive maintenance:** the work of the workspace Durable Object that keeps the Boat sandbox of an archived workspace for its 14-day Restore window. It restarts the sandbox once so that Boat keeps the disk, stops it, and deletes it at the end of the window.
+  - **Saved wait:** `retry` in the archive state, `{ failures, at }`. After a failed step, the next try waits 30 seconds, and each further failure doubles the wait, up to 1 hour. The wait is at least Boat's `Retry-After`, up to the same hour.
+  - **Access repair:** `WorkspaceArchive.repair`. An owner change (`worker/members/ownership.ts:33`, `worker/members/membership.ts:66`), a suspension lift (`worker/operator/lift.ts:34`), and the 15-minute repair Cron Trigger (`worker/lifecycle/repair.ts:40`) call it.
+- **Background:**
+  - On 2026-11-19, two archived workspaces sent a Boat resume every 30 seconds for more than 24 hours. Boat refused each one with `409 sandbox_stopping` and very likely counted each attempt as a start. The app's Boat account used up its starts, and every create and resume of every workspace then failed with `429`.
+  - The hotfix saves the wait in the archive state, in the archive alarm, and in `workspaces.next_disk_keepalive_at`, which the repair Cron Trigger reads. So the archive alarm and the Cron Trigger wait.
+  - `WorkspaceArchive.advance` does not read the saved wait. Any run that reaches it calls Boat at once.
+  - `WorkspaceArchive.repair` sets the archive alarm to now. A review reproduced a second resume one second after a refusal with `Retry-After: 3600`, through an owner change.
+  - The alarm runner also runs archive work when the alarm fires with no due owner, and after an interrupted run, such as a restart of the object by a deploy.
+  - The protocol says that each owner change makes the workspace check its stop and its restart at once (`docs/protocol/suspension-workspaces.md:18`). It also says that an overdue restart runs at once after a suspension lift, because lifts are rare (`docs/protocol/operator-actions.md:212`).
+- **Problem:** Archive work calls Boat before its saved wait ends when another run wakes it early.
+- **Impact if no action:** Each owner change, suspension lift, interrupted alarm run, or alarm with no due owner during a wait makes one more Boat call. A resume can count as a Boat start.
+- **Root question:** Which runs may make archive work call Boat before its saved wait ends?
+- **Options:**
+  - **A.** Keep the saved retry time in `WorkspaceArchive.repair`, so that it sets the alarm to `retry.at` instead of now. It fixes only the repair path. It delays the at-once check of an owner change and a lift, which changes the two protocol rules above. Effort: Small.
+  - **B.** Check the saved wait in `WorkspaceArchive.advance`. When the wait has not ended, set the alarm to `retry.at` and return. Exempt only the stop that Restore needs (`finishStop`). It also delays the at-once rules, so it changes the two protocol rules. Effort: Small.
+  - **D.** Apply B, and change `docs/protocol/suspension-workspaces.md` and `docs/protocol/operator-actions.md` so that a refused step waits for its saved time also after an owner change or a lift. Read both legal pages and each public guide in full, as the repository rules require. Effort: Medium.
+  - **E.** Check the saved wait in `WorkspaceArchive.advance`, as B does. Let `WorkspaceArchive.repair` give one attempt at once, for example by moving `retry.at` to now, so that the at-once rules stay. Exempt `finishStop` too. Extend `worker/lifecycle/archive-retry.test.ts`: during a saved wait, an owner change makes one attempt, and an alarm run with no due owner makes none. Effort: Small.
+  - **F.** Save a "no start before" time for each sandbox from each refused start and its `Retry-After`. Make each background create and resume check it before the call. It covers every task and every waker, and it overlaps `plans/follow-ups/background-boat-retry-wait.md`. Effort: Large.
+- **Left out:** Removing access repair, because owner changes and lost alarms need it. Ending retries for good, because the disk, the stop, and the deletion then do not finish. A repair that keeps any existing archive alarm, because it breaks the at-once restart after a lift past day 14.
+- **Wider fix:** E. The check lives in the one executor of archive work, so each new caller waits by default. The same problem at the other alarm sites belongs to `plans/follow-ups/background-boat-retry-wait.md`.
+- **Previous examples:** `worker/lifecycle/image-provider-retry.test.ts:29` forces an early image alarm and checks that no extra Boat request occurs. Commit `d5da3ba2` added that deadline check for builds.
+- **Related:** `plans/follow-ups/background-boat-retry-wait.md` gives the same wait to the other alarm sites, and each of them must also check its wait when another run wakes it early.
+- **Recommendation:** E. It stops every early background run and keeps the two at-once rules, so no requirement changes. The finding check recommended D, which also makes owner changes and lifts wait. Those actions are rare and come from people, so one extra attempt each does not justify a change of two protocol rules.
+- **Action:** fix after merge, apply E, because the defect is rare and Medium, and the fix rule sends it to a later branch.
