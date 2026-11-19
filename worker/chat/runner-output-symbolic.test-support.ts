@@ -1,6 +1,9 @@
 import { WORKSPACE_ID } from './harness.test-support'
 import { readOutputSnapshot } from './output-filter-records'
 import { captureEnvironment, outputFixture } from './runner-output.test-support'
+import { decrypt } from '../security/crypto'
+import { array } from './agent-events'
+import { record } from './inputs'
 
 export type AnswerFixture = Awaited<ReturnType<typeof outputFixture>>
 
@@ -21,6 +24,23 @@ export function answerState(f: AnswerFixture) {
       ),
     ),
   )
+}
+
+export function rawAnswerRow(f: AnswerFixture, streamId: string) {
+  return f.chat.store.read(WORKSPACE_ID, async (view) => {
+    const ciphertext = await view.output.read(streamId)
+    if (!ciphertext) throw new Error('Expected a saved answer row.')
+    const plaintext = await decrypt(
+      ciphertext,
+      JSON.stringify(['runner-output', WORKSPACE_ID, streamId]),
+      f.env.BOAT_KEY_ENCRYPTION_KEY,
+    )
+    return {
+      ciphertext,
+      plaintext,
+      entries: array(JSON.parse(plaintext), record),
+    }
+  })
 }
 
 export async function shownAnswer(f: AnswerFixture, messageId: string) {

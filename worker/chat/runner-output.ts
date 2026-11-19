@@ -1,10 +1,7 @@
 import type { RunnerEventEnvelope } from '../../src/shared/generated/RunnerEventEnvelope'
 import type { AgentChatEvent } from '../../src/shared/generated/AgentChatEvent'
 import { boundChatEvent } from '../../src/shared/event-limits'
-import {
-  OutputSanitizer,
-  type HeldOutput,
-} from '../../src/shared/output-sanitizer'
+import { OutputSanitizer } from '../../src/shared/output-sanitizer'
 import type { AppEnv } from '../env'
 import { runningOutputSecrets } from '../lifecycle/output-secrets'
 import type { ChatTransaction } from './store'
@@ -12,9 +9,8 @@ import type { RunnerWorkspaceRecord } from './types'
 import { displayPortReport } from './port-reports'
 import { agentOutputSecrets } from '../secrets/output-values'
 import { filterToolDetail } from './tool-detail-filter'
-import { readOutputSnapshot, saveOutputSnapshot } from './output-filter-records'
 import { prepareOutputState } from './output-filter-state'
-import { releasedOutput, unreleasedOutput } from './output-filter-snapshot'
+import { AnswerOutputRecords } from './output-answer-records'
 
 export interface FilteredRunnerOutput {
   events: RunnerEventEnvelope[]
@@ -46,37 +42,15 @@ export async function filterRunnerOutput(
       activeValues,
     )
   await transaction.output.saveTool(input.streamId, undefined)
-  const readStream = (streamId: string) =>
-    readOutputSnapshot(env, transaction, workspace.id, streamId)
-  const pending = await readStream(input.streamId)
-  const saved = await transaction.output.readContexts()
-  const contexts = await readOutputSnapshot(
-    env,
-    transaction,
-    workspace.id,
-    null,
-  )
-  const legacy: { streamId: string; snapshot: HeldOutput[] }[] = []
-  if (!saved) {
-    for (const streamId of await transaction.output.streams()) {
-      if (streamId === input.streamId) continue
-      const snapshot = await readStream(streamId)
-      if (
-        snapshot.some(
-          (held) => held.symbolic?.contexts.length || held.contexts?.length,
-        )
-      )
-        legacy.push({ streamId, snapshot })
-    }
-  }
+  const records = new AnswerOutputRecords(env, transaction, workspace.id)
+  await records.initialize(activeValues)
+  const pending = await records.pending(input.streamId)
+  const answers = records.affected(input.event, pending)
+  const contexts = await records.contexts(answers)
   const prepared = await prepareOutputState(
     env,
     workspace.id,
-    [
-      ...pending,
-      ...contexts,
-      ...legacy.flatMap(({ snapshot }) => releasedOutput(snapshot)),
-    ],
+    [...pending, ...contexts],
     activeValues,
   )
   const sanitizer = new OutputSanitizer(prepared.snapshot, prepared.matching)
@@ -90,20 +64,7 @@ export async function filterRunnerOutput(
   }))
   return {
     events,
-    save: async () => {
-      const snapshot = sanitizer.snapshot()
-      const saveStream = (streamId: string, held: HeldOutput[]) =>
-        saveOutputSnapshot(env, transaction, workspace.id, streamId, held)
-      await saveStream(input.streamId, unreleasedOutput(snapshot))
-      for (const { streamId, snapshot } of legacy)
-        await saveStream(streamId, unreleasedOutput(snapshot))
-      await saveOutputSnapshot(
-        env,
-        transaction,
-        workspace.id,
-        null,
-        releasedOutput(snapshot),
-      )
-    },
+    save: () =>
+      records.save(input.streamId, sanitizer.snapshot(), answers, activeValues),
   }
 }

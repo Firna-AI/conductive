@@ -120,18 +120,14 @@ first.
   a record of an unsupported version, or with a stream and no version.
 - `runner-output.ts` and `runner-output-state.ts`: the filter from the
   actual start capture, and its encrypted state. Each runner stream keeps
-  its held answer text. One workspace record keeps each shown answer end
-  that can still start a secret, so a new stream cannot complete such a
+  its held answer text. Each answer record keeps the shown ends of its
+  answer that can still start a secret, so a new stream cannot complete such a
   secret. That state, the filtered events, and the raw cursor of the
   stream commit in one transaction. The shared field policy keeps
   operational paths and masks display labels. It masks each complete port
   name and folder before the workspace display excerpt and the second parse.
-- `runner-output.ts` also moves the answer ends of older stream records
-  into the workspace record, at the first accepted receipt without that
-  record. Held text stays with its own stream, because the held text of
-  two streams has no order. A workspace record with no answer ends still
-  marks the move as done, so later receipts do not scan older stream
-  records again.
+- `output-answer-records.ts` and `output-answer-key.ts`: the answer records,
+  as [Key code: answer records](key-code-answer-records.md) says.
 - `output-filter-records.ts`, `output-filter-state.ts`, and
   `output-filter-snapshot.ts`: the saved answer state. `readOutputSnapshot`
   reads both formats. A symbolic record keeps the value list field, always

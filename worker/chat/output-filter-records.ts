@@ -106,16 +106,27 @@ export async function saveOutputSnapshot(
   workspaceId: string,
   streamId: string | null,
   snapshot: readonly HeldOutput[],
+  active: ReadonlySet<string>,
+  before: ReadonlySet<string>,
 ) {
-  const ciphertext = snapshot.length
+  const { snapshot: current } = await prepareOutputState(
+    env,
+    workspaceId,
+    snapshot,
+    active,
+    before,
+  )
+  const ciphertext = current.length
     ? await encrypt(
-        JSON.stringify(snapshot),
+        JSON.stringify(current),
         encryptionContext(workspaceId, streamId),
         env.BOAT_KEY_ENCRYPTION_KEY,
       )
     : undefined
   if (streamId === null) await view.output.saveContexts(ciphertext)
   else await view.output.save(streamId, ciphertext)
+  if (current.some((held) => !held.symbolic && held.contexts?.length))
+    await view.output.markLegacyContexts()
 }
 
 export async function pruneSavedOutputSecrets(
@@ -139,6 +150,14 @@ export async function pruneSavedOutputSecrets(
       before,
     )
     if (JSON.stringify(snapshot) !== JSON.stringify(current))
-      await saveOutputSnapshot(env, view, view.workspaceId, streamId, current)
+      await saveOutputSnapshot(
+        env,
+        view,
+        view.workspaceId,
+        streamId,
+        current,
+        active,
+        before,
+      )
   }
 }
