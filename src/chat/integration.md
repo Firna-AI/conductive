@@ -181,10 +181,12 @@ mount the chat.
 - `useChatController` gives the controller and its snapshot to an app that
   composes `SessionTabs` and `SessionChat` in its own layout. Such an app
   takes the tabs from `rowOf` with the sessions of `tabSessions` and the
-  shown tab of `shownTab`, and the session history from `historySessions`
-  with the times of `endedAt`, so an archived workspace navigates without a
-  write. It gives `SessionTabs` its `onCopy` from `useTranscriptCopy`, which
-  needs a toast provider above it, such as `ChatToasts`.
+  shown tab of `shownTab`, and the session history from `chatHistory`, so
+  an archived workspace navigates without a write. `chatHistory` puts the
+  local close order of a read-only workspace before the stored end times,
+  as [Read-only chats](loads-and-sends.md#read-only-chats) says. The app
+  gives `SessionTabs` its `onCopy` from `useTranscriptCopy`, which needs a
+  toast provider above it, such as `ChatToasts`.
 - `useChatController` makes the controller through the shared
   `useWorkspaceStore` hook of [the web app](../app/README.md). The hook
   starts the controller after the render. It stops the controller at

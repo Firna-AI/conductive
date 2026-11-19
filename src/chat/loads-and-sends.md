@@ -60,6 +60,23 @@ of a draft.
   the workspace is read-only, and the server path otherwise. The controller
   reads `readOnly` at each action, because a suspension can start during a
   visit, and it sends no other write then.
+- The chat of a read-only workspace keeps one local close order. A local
+  close puts its session first in that order. A local reopen takes the
+  session out of the order, so a later close puts it first again. The
+  session history lists the sessions of that order first, and then the
+  other sessions by the stored end times that `endedAt` gives. Reopen
+  closed session runs the first row of the history. So the history lists
+  the session that closed last first, and Reopen closed session reopens
+  it, as [Sessions](../../docs/protocol/agents-and-sessions.md#sessions)
+  and
+  [Where a command runs](../../docs/protocol/keyboard-shortcuts.md#where-a-command-runs)
+  say.
+- The local order changes no time that a row of the history shows. So
+  the times of the rows can show out of order. The chat snapshot keeps the
+  local order in `archiveClosed`, beside `archiveTabs`, in memory only. A
+  reload or a [Restore](../../docs/protocol/workspace-life.md#restore)
+  clears it. A workspace that accepts writes keeps the stored close order,
+  with the closes of every member.
 - A read-only chat shows no composer, no +, no Try again, no drag of a
   tab, and no answer to a Mac command. The tab menu of a session tab holds
   only its three copy items, and the tab menu of a file or diff tab holds
