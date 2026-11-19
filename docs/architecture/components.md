@@ -181,8 +181,8 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   system services, and starts those services again after each resume.
 - E2B runs in its EU cluster, in an E2B project that holds only the app's
   work. Each E2B sandbox has private traffic.
-- On E2B, the agents get no computer tools for now (e2b decision 216), and a
-  sandbox has no desktop stream.
+- On E2B, the template gives the agents the same computer tools as on
+  Boat (e2b decision 216). An E2B sandbox has no desktop stream.
 
 ## Sandbox software
 

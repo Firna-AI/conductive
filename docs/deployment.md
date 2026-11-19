@@ -264,9 +264,10 @@ of them comes from this guide: `CONDUCTIVE_MACHINE_ORIGIN` is
 The computer tools need no deployment input. On Boat, Boat writes the
 entry of the `computer` server into each sandbox at its start. It names a
 local server with no URL and no credential, and the runner reads it, as
-[What it does](../runner/README.md#what-it-does) says. A sandbox on E2B
-has no such entry, so its agents run without computer tools, as
-[Computer tools](protocol/agent-tools.md#computer-tools) says.
+[What it does](../runner/README.md#what-it-does) says. On E2B, the E2B
+template installs the Cua Driver and writes the same entry at each boot,
+as [Computer tools](protocol/agent-tools.md#computer-tools) says. An E2B
+org image gets the entry only from a template build that has it.
 
 `CONDUCTIVE_DEFAULT_BRANCH` needs no deployment input. A create or a resume
 gives the default branch of the repository of the workspace, from its

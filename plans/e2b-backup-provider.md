@@ -146,8 +146,13 @@ Does not apply, for the same reason as decision 219.
 
 - **Chosen:** A, by the user on 10 November 2026: E2B starts with no
   computer tools, and B, the Cua Driver in the E2B template, comes later.
-  The agent recommended B. `plans/follow-ups/second-provider-computer-tools.md`
-  now holds B as a post-merge task.
+  The agent recommended B.
+- **Changed:** to B, by the user on 19 November 2026, with the words "can
+  we just add the tooling into the base snapshot for e2b?". The E2B
+  template installs the computer tools, as Milestone 6a says. The pull
+  request of this plan deletes
+  `plans/follow-ups/second-provider-computer-tools.md` when the live probe
+  of Milestone 6a passes.
 
 ### Earlier decisions
 
@@ -230,6 +235,31 @@ These are agent calls of 10 November 2026. The user can change each one.
 - On E2B, `desktop` returns a typed error, because the app hides the Desktop
   tool. `fork` returns a typed error too, because no production code calls
   it. E2B leaves out the optional `hydrated` field.
+
+### Computer tools on E2B
+
+These are agent calls of 19 November 2026, for e2b decision 216 B.
+
+- The E2B template runs Xvfb on display `:0` at 1920 by 1080, with the
+  Openbox window manager. Reason: the Cua Driver's own CI runs on Xvfb and
+  Openbox, and Boat's tools act on display `:0` at that size.
+- The template installs Google Chrome from Google's signed apt repository.
+  Reason: Boat's computer tools use Chrome, and Ubuntu 24.04 ships Chromium
+  only as a snap, which does not run in the template.
+- The template installs the Cua Driver from the stable release
+  `cua-driver-rs-v0.54.0` of `trycua/cua`, as the Linux binary archive,
+  and checks its SHA-256 before it unpacks it. It installs no nightly build
+  and no AGPL extension, such as `cua-perception`.
+- Systemd services start the display, the window manager, and, when the
+  driver needs it on Linux, its daemon, at each boot.
+- At each boot, a service merges the entry `computer` into
+  `/home/user/.claude.json`, and it keeps every other entry. The entry runs
+  `cua-driver mcp` with `DISPLAY=:0`. Reason: Boat writes its entry at each
+  start too, and the agent program can rewrite the file.
+- `BASE_IMAGE`, the software list of the Cloud computer tab, stays the same,
+  because Boat's list does not name Chrome either.
+- An E2B org image gets the tools only from a template build that has them.
+  E2B has no real orgs yet, so no rollout step is needed.
 
 ### Weights and the operator's choice
 
@@ -560,6 +590,28 @@ The operator section and the create screen show what the mockups show.
 
 Evidence: `.context/e2b-backup-provider/milestone-8-report.md` and `m8/`.
 
+## Milestone 6a: Computer tools in the E2B template
+
+Depends on: 6
+
+The agents on E2B get the same computer tools as on Boat, as e2b decision
+216 B says.
+
+- [ ] Install Xvfb, Openbox, Google Chrome, and the pinned Cua Driver in the
+      E2B template, with a digest check of each download.
+- [ ] Start the display, the window manager, and the driver's services at
+      each boot. Merge the entry `computer` into `/home/user/.claude.json`
+      at each boot.
+- [ ] Add the new files to the explicit template inputs, and test them.
+- [ ] Add a probe to the E2B live check: the driver takes a screenshot of
+      `:0`, and Chrome opens a page. Needs: an E2B key.
+- [ ] Update "Computer tools" in `docs/protocol/agent-tools.md`, and
+      `image/e2b/README.md`.
+- [ ] Read both legal pages and each guide in `src/marketing/docs/` in
+      full. Update each sentence that restates the computer tools.
+- [ ] Delete `plans/follow-ups/second-provider-computer-tools.md` when the
+      live probe passes.
+
 ## Milestone 9: Live check through the app
 
 Depends on: 6, 8
@@ -574,7 +626,7 @@ The operator creates a workspace on each provider through the app.
 
 ## Milestone 10: Verification, commit, review, and pull request
 
-Depends on: 1, 2, 3, 4, 5, 6, 7, 8, 9
+Depends on: 1, 2, 3, 4, 5, 6, 6a, 7, 8, 9
 
 The complete change passes the gate and the review.
 
@@ -603,6 +655,8 @@ The complete change passes the gate and the review.
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
+- [ ] Run the targeted tests and the complete gate again after Milestone 6a.
+      Review its diff with the `implementation-review` skill.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [x] Open the pull request. Its description gives the decisions and the

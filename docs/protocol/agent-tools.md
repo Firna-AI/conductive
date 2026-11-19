@@ -234,9 +234,12 @@ turn (decision 62). The Mac app on that Mac asks that person first, as
 
 - On Boat, the agents keep Boat's computer tools: the MCP server
   `computer` that every Boat sandbox has (decision 36).
-- On E2B, the agents get no computer tools for now (e2b decision 216). They
-  keep the workspace tools. The Cua Driver in the E2B template was left
-  for later.
+- On E2B, the agents get the same computer tools (e2b decision 216, changed
+  to B on 19 November 2026). The E2B template installs the Cua Driver and
+  registers it as the MCP server `computer`. The tools act on display `:0`,
+  with Chrome, as on Boat.
+- An E2B org image has the tools only when it comes from a template build
+  that has them. Until then, its agents keep the workspace tools only.
 - The agent runner gives the computer tools to the agents when the
   sandbox has them.
 - The agents use the computer tools for browser work on the desktop of the

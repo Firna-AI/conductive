@@ -14,7 +14,8 @@ Both agents get the `computer` MCP server of the sandbox when it has one.
 On Boat, Boat writes its `mcpServers.computer` entry to
 `/home/user/.claude.json` at each sandbox start. The entry names a local
 stdio server that talks over a Unix socket, with no URL and no credential.
-A sandbox on E2B has no such entry for now.
+On E2B, the E2B template writes the same kind of entry at each boot, for
+the Cua Driver that it installs.
 
 The runner reads that entry again at each agent start. Claude gets it as
 it is, and Codex gets its command and arguments as a stdio server.
