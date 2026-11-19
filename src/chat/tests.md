@@ -78,6 +78,8 @@ and a chip in a heading, and that an empty heading draws nothing.
 `components/MessageLine.dom.test.tsx` renders a message line. A heading in
 a closed line is a span in the line, and the summary holds no heading
 element. A line whose table follows only empty headings keeps a name.
+When that line opens, its table shows the file chip of a mention. The
+hidden text that names the line holds the mention as text, with no link.
 `components/TableReply.dom.test.tsx` drives chat events. It checks a header
 row before its separator row, the rows and a partial row that arrive, and
 the same reply from the saved history.
@@ -280,7 +282,18 @@ real copy in Chrome was a manual check. `components/AttachmentChips.test.tsx` re
 files over the size limit, with one name or the count and the limit. It
 also renders the files under a sent message, with their sizes and no
 Remove.
-`links/AnswerText.dom.test.tsx` mounts answers with file chips.
+`links/AnswerText.dom.test.tsx` mounts answers with file chips through
+`AgentText`, which parses an answer again only when its text changes. One
+case holds the reply of the tree. Until the tree comes, a mention and a
+Markdown link of a file show as typed, and a path in code stays code.
+Then the tree loads with no change of the text. The mention and the path
+show as file chips, and the Markdown link shows as a file link.
+`chat-files-test-kit.ts` starts the real store of the Files screens,
+`WorkspaceFiles`, over the fake API, with the tree entries that a test
+gives. It can hold the reply of the tree until the test releases it.
+`links/AnswerText.dom.test.tsx`, `links/MessageFileChips.dom.test.tsx`,
+`components/SentFileChips.dom.test.tsx`, and
+`components/MessageLine.dom.test.tsx` take their files from it.
 `links/FilePicture.dom.test.tsx` mounts an answer with the Markdown image
 of a screenshot in the chat pane, with a fake picture reader. The box of
 the label shows, and the read starts for the message only when the box

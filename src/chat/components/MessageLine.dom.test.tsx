@@ -5,6 +5,7 @@ import toolGroup from '../../../docs/mockups/src/components/chat/ToolGroup.modul
 import a11y from '../../../docs/mockups/src/components/common/a11y.module.css'
 import { accessibleName } from '../../test-support/dom-queries'
 import { mount, press } from '../../test-support/mount'
+import { chatFiles } from '../chat-files-test-kit'
 import {
   MentionsProvider,
   type ChatMentions,
@@ -66,13 +67,9 @@ it('shows file chips in the open line, and none in its hidden copy', async () =>
     kind: 'file' as const,
     change: null,
   }
-  const snapshot = {
-    tree: { entries: new Map([[entry.path, entry]]) },
-    treeError: null,
-    treeUnavailable: false,
-  }
+  const { files } = await chatFiles([entry])
   const mentions: ChatMentions = {
-    files: { subscribe: () => () => undefined, getSnapshot: () => snapshot },
+    files,
     openFile: () => undefined,
     showFolder: () => undefined,
     href: (item) => `/files/${item.path}`,
