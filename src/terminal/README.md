@@ -142,7 +142,7 @@ change can move the shared parts to the app's shared components.
 - `touch` selects the phone layout: 40px controls and the key row.
 - `focusRequest` is optional. A new request moves the keyboard focus to
   the xterm.js screen of the shown terminal. A hidden terminal never takes
-  it. A request waits until that screen exists, also across the read of
+  it. A request waits until that screen opens, also across the read of
   the terminals, the mount, and the connection of the terminal. The screen
   takes it only while the focus is still on the element of the request,
   `from`, or on no element. Then it calls `onFocusDone`, and the owner
@@ -242,7 +242,13 @@ each link that opens, in place of opening it.
   shown terminal from the route and the list.
 - `useTerminalActions.ts`: the open, also from outside the tool, and the
   close, and their failure toasts. `terminalCopy.ts`: the words of the tabs.
-- `TerminalScreen.tsx`: the xterm.js screen, its fit, and the key row.
+- `TerminalScreen.tsx`: the xterm.js screen of one terminal, its
+  connections, its focus request, and the key row.
+- `screenConnection.ts`: `openScreen` makes the xterm.js screen of a
+  terminal, which outlives each connection. The screen opens in its box
+  once the box has a size. `connectScreen` connects one transport to the
+  screen. It fits the screen to its box, or shows the shared size of the
+  bridge.
 - `xtermScreen.ts`: splits the data of xterm.js into the user's input and
   its own replies.
 - `terminalLinks.ts`: the kind of a link of the terminal, from the shared

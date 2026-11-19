@@ -7,6 +7,7 @@ import {
   BRIDGE_MESSAGE_START,
   bridgeOutputMessage,
 } from '../shared/terminal-bridge'
+import { hiddenHost } from './hiddenHost.test-support'
 import { connectScreen, openScreen } from './screenConnection'
 
 /** A transport whose output and end the test gives. */
@@ -51,6 +52,43 @@ function text(xterm: Terminal): string {
 }
 
 afterEach(() => vi.useRealTimers())
+
+it('keeps the output of a connection that ended while the screen was hidden, and opens the screen with that output, fitted to the first size of its host', async () => {
+  const { column, host } = hiddenHost()
+  const parts = openScreen(
+    host,
+    {},
+    { links: () => undefined, hintClass: 'hint' },
+  )
+  const transport = new Controlled()
+  const connection = connectScreen(parts, host, transport, {
+    onClosed: () => undefined,
+    onControlChange: () => undefined,
+    onInput: () => undefined,
+  })
+  transport.emit('kept while hidden')
+  transport.end('lost')
+  connection.dispose()
+  await parsed(parts.xterm)
+  const openWhileHidden = parts.xterm.element !== undefined
+
+  column.hidden = false
+  // The observers of the host run in the microtask after the change.
+  await Promise.resolve()
+
+  expect({
+    openWhileHidden,
+    openInHost: parts.xterm.element?.parentElement === host,
+    text: text(parts.xterm),
+    size: { cols: parts.xterm.cols, rows: parts.xterm.rows },
+  }).toEqual({
+    openWhileHidden: false,
+    openInHost: true,
+    text: 'kept while hidden',
+    size: { cols: 42, rows: 19 },
+  })
+  parts.dispose()
+})
 
 it('keeps the output of an ended connection until a new connection shows its own, and reports the time since the first output', async () => {
   vi.useFakeTimers({ now: 0, toFake: ['Date'] })

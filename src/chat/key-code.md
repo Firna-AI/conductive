@@ -48,7 +48,10 @@ is relative to `src/chat/`, the folder of this guide.
   scroll, and the menu share.
 - `components/SessionChat.tsx`: the chat of the open session, and
   `ChatHost`, the start steps, the sandbox bar, and the tools of the
-  composer that the app can give.
+  composer that the app can give. `components/transcript-inputs.ts`:
+  `useTranscriptInputs`, the Mac commands and the secret requests of the
+  open session, and the inserts, the readers, and Try again that its
+  transcript gets. Each keeps its value while its data stays the same.
 - `components/Composer.tsx`: the message box and its controls, with the
   steering prompt that [Messages](../../docs/protocol/messages-and-attachments.md#messages)
   states. It gives its field the `files` of the draft, and it holds the
@@ -144,7 +147,7 @@ is relative to `src/chat/`, the folder of this guide.
   follows in place of its own reads.
 - [Transcript key code](transcript.md#key-code): the shared transcript
   modules, the turn words with the end reason of a turn, the work folds,
-  and the workspace stream.
+  and the workspace stream. It also names `TranscriptView` and its rows.
 - [`agents.ts`](../shared/agents.ts): the shared effort words and model
   labels of the pickers.
 - `state/history.ts`: the shared history load of each session, and the
@@ -194,9 +197,9 @@ is relative to `src/chat/`, the folder of this guide.
   read-only workspace, which change in the browser only.
 - `state/model-moves.ts`: the draft move of a model change, in the snapshot
   that first shows the new session. Its target becomes selected only while
-  the source stays selected. A newer session tab stays selected. A selected
-  tab of any other kind, such as a file, diff, or Preview tab, also stays
-  selected.
+  the source stays selected, as `showsSession` of `state/sessions.ts`
+  checks. A newer session tab stays selected. A selected tab of any other
+  kind, such as a file, diff, or Preview tab, also stays selected.
 - `state/session-records.ts`: the order of session records by event number,
   and the pending edits of a session. It publishes accepted records from
   replies, complete current lists, and event merges. `confirmSessions`
@@ -210,7 +213,8 @@ is relative to `src/chat/`, the folder of this guide.
   that the picker of the composer offers. `state/blockers.ts` gives the
   Connect notice when no login serves the message.
 - `state/linked-replies.ts`: the message and the focus of a reply that names
-  a linked session.
+  a linked session. It selects the linked session only through the same
+  check as a model move, also when no draft moves.
 - `components/SourceLine.tsx`: the line that links a linked session to its
   source.
 - `components/TranscriptItem.tsx` and `components/LostEventLine.tsx`: each
@@ -249,7 +253,8 @@ is relative to `src/chat/`, the folder of this guide.
   note it writes the place of the shown session, and a new keeper shows the
   place that the session kept.
 - `components/chat-place.ts`: the place of a session tab, at the bottom or
-  at a row by its `data-row` key, which `TranscriptView` gives each row.
+  at a row by its `data-row` key, which `components/transcript-rows.tsx`
+  gives each row.
   `ChatController.places` keeps the place of each session tab.
 - `components/useFold.ts`: `useFold` opens and closes a fold on a click on
   its line, and gives the line to the keeper, also at the bottom of the
