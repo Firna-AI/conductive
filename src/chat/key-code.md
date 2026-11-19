@@ -194,7 +194,9 @@ is relative to `src/chat/`, the folder of this guide.
   read-only workspace, which change in the browser only.
 - `state/model-moves.ts`: the draft move of a model change, in the snapshot
   that first shows the new session. Its target becomes selected only while
-  the source stays selected. A newer session, file, or diff tab stays selected.
+  the source stays selected. A newer session tab stays selected. A selected
+  tab of any other kind, such as a file, diff, or Preview tab, also stays
+  selected.
 - `state/session-records.ts`: the order of session records by event number,
   and the pending edits of a session. It publishes accepted records from
   replies, complete current lists, and event merges. `confirmSessions`
