@@ -14,4 +14,4 @@
 - **Impact if no action:** A rebuilt screen can use different colours from the live screen until the program sends its colour controls again.
 - **Needs:** Nothing for the reproduction. A behaviour decision may be needed after the evidence is complete.
 - **Done when:** The reproduction establishes the affected colour controls, and the approved behaviour has a tested implementation or an explicit decision to keep the current behaviour.
-- **Related:** `terminal-colours-before-first-show.md` covers colour controls that arrive live before the browser screen opens. Its fix cannot recover controls missing from the bridge rebuild. `terminal-bridge-cleared-background.md` covers erased cells trimmed from capture output, which is another cause of background-colour loss.
+- **Related:** `keepColoursUntilOpen` in `src/terminal/xtermColours.ts` fixes the loss of colour controls that arrive live before the browser screen first opens. That fix cannot recover controls missing from the bridge rebuild. `terminal-bridge-cleared-background.md` covers erased cells trimmed from capture output, which is another cause of background-colour loss.
