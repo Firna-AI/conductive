@@ -23,6 +23,6 @@
 - **Left out:** A unit test of the composition with `vi.mock` shows only that callbacks reach the handler. A production warning finds the break only after the deploy.
 - **Wider fix:** B, already recorded in [the GitHub tests item at commit `9983ba58b`](https://github.com/Firna-AI/remote-code/blob/9983ba58be06f4a082bc34a806d507b5853c73a0/plans/follow-ups/github-tests-on-real-object.md).
 - **Previous examples:** `plans/follow-ups/terminal-links-wiring-test.md` records another missing wiring test.
-- **Related:** `plans/follow-ups/repository-check-before-branch-routing.md`: after its fix, a tag push with changed values can serve as the event of this case.
+- **Related:** `worker/github/webhook.ts`: its handler also runs `checkRepositoryValues` for a tag push. So a tag push with changed repository values can serve as the event of this case.
 - **Recommendation:** A. One native case proves the whole connection.
 - **Action:** fix after merge, apply A, because the review found it after the two allowed fix rounds.

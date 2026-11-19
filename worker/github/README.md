@@ -27,8 +27,10 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
   [syncRepositoryValues](repository-sync.ts) saves them, with the install of the event, only while no other save came after the read, then reads GitHub again to confirm them.
   It then calls `repositoryChange.changed`, which in production runs [wakeImagesForRepositoryChange](../lifecycle/repository-change-builds.ts).
   A failed read leaves the delivery retryable. A failed wake only warns, because the image coordinator checks the saved values at each alarm.
-  [checkRepositoryValues](repository-values-check.ts) compares the repository name, default branch, and install of each other routed webhook with the saved values.
+  [checkRepositoryValues](repository-values-check.ts) compares the repository name, default branch, and install of each push, pull request, check, and status webhook with the saved values.
   When they differ, it runs the same read, guarded save, and wake. A failure there only warns, so the original event still completes.
+  The handler calls `checkRepositoryValues` before [webhookRoute](webhook-routing.ts) routes the event by branch, so a tag push and a pull request from a fork run it too.
+  `webhookRoute` still returns null for those events, so they start no workspace refresh, push image refresh, or automation run.
   [Repository changes on GitHub](../../docs/protocol/repository-changes-on-github.md) states the requirements.
 - [handleGitHubRead](app-handler.ts) accepts GET and HEAD for the banner and checks routes of `githubPaths`.
   It runs the existing app gate and checks the workspace's org before a read.
