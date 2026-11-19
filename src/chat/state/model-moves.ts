@@ -1,5 +1,6 @@
 import type { Session } from '../../shared/generated/Session'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
+import { sameChoice } from '../../shared/agents'
 import type { ChangeModelRequest } from '../../shared/sessions'
 import { sessionState, type ChatSnapshot } from './chat-snapshot'
 import type { ChatContext } from './context'
@@ -28,7 +29,7 @@ export interface PendingMove {
 }
 
 /**
- * The waiting change of a session to a model. A change waits from its
+ * The waiting change of a session to a choice. A change waits from its
  * request until its record shows or the server refuses it, also after a
  * failure with no answer.
  */
@@ -38,12 +39,8 @@ export function waitingMove(
   choice: AgentChoice,
 ): PendingMove | null {
   for (const move of context.moves.values()) {
-    const { agent, model, effort } = move.request.choice
-    const same =
-      agent === choice.agent &&
-      model === choice.model &&
-      effort === choice.effort
-    if (move.from === from && same) return move
+    if (move.from === from && sameChoice(move.request.choice, choice))
+      return move
   }
   return null
 }

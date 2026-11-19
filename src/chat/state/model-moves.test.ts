@@ -110,6 +110,34 @@ async function pickThatWaits() {
 }
 
 describe('a model change that opens a session', () => {
+  it('sends the new speed and session ID when fast changes after an unanswered move', async () => {
+    const fast: AgentChoice = { ...codex, fast: true }
+    const chat = chatFor({
+      conversation: 'history',
+      answer: async (request) => {
+        if (!isModel(request)) return null
+        throw new Error('The connection dropped.')
+      },
+    })
+    await chat.controller.start()
+    chat.controller.setDraft(id, 'Check the postcode rules.')
+    await chat.controller.chooseModel(id, codex)
+    await chat.controller.chooseModel(id, fast)
+
+    expect(await chat.bodies('PUT', sessionPaths.model(org, ws, id))).toEqual([
+      {
+        choice: codex,
+        draft: { text: 'Check the postcode rules.', attachmentIds: [] },
+        newSessionId: created,
+      },
+      {
+        choice: fast,
+        draft: { text: 'Check the postcode rules.', attachmentIds: [] },
+        newSessionId: 'client-2',
+      },
+    ])
+  })
+
   it.each<WorkspaceTab>([
     { kind: 'file', path: 'src/checkout.ts', mode: 'source' },
     { kind: 'preview', port: 3000 },
