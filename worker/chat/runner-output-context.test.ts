@@ -40,8 +40,9 @@ it('keeps a refused completion prefix encrypted and masks late text from a new s
     reason: 'invalid',
     ...f.context,
   })
+  const streamId = await answerOutputStream(f.env, WORKSPACE_ID, delta)
   const ciphertext = await f.chat.store.read(WORKSPACE_ID, (view) =>
-    view.output.read(answerOutputStream(delta)),
+    view.output.read(streamId),
   )
   const end = await f.emit({
     type: 'turn.completed',

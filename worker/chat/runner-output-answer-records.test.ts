@@ -24,6 +24,7 @@ it('updates only the named answer and preserves pending text when its stream ali
   await f.setEnvironment({ CONDUCTIVE_SYMBOLIC_ANSWER_STATE: 'true' })
   const first = { ...f.context, messageId: 'first-answer' }
   const second = { ...f.context, messageId: 'second-answer' }
+  const firstStream = await answerOutputStream(f.env, WORKSPACE_ID, first)
   const complete = {
     type: 'assistant.completed' as const,
     text: 'private-',
@@ -31,15 +32,19 @@ it('updates only the named answer and preserves pending text when its stream ali
   }
   await f.emit({ ...complete, ...first })
   const saved = await f.chat.store.read(WORKSPACE_ID, (view) =>
-    view.output.read(answerOutputStream(first)),
+    view.output.read(firstStream),
   )
   expect(saved, 'the answer has its own encrypted context').toEqual(
     expect.any(String),
   )
+  expect(JSON.stringify(f.runner.received)).not.toContain(firstStream)
+  expect(JSON.stringify(await f.history(f.context.sessionId))).not.toContain(
+    firstStream,
+  )
   await f.emit({ ...complete, ...second })
   expect(
     await f.chat.store.read(WORKSPACE_ID, (view) =>
-      view.output.read(answerOutputStream(first)),
+      view.output.read(firstStream),
     ),
     'an unrelated answer does not rewrite the saved context',
   ).toBe(saved)
@@ -49,7 +54,7 @@ it('updates only the named answer and preserves pending text when its stream ali
   const alias = await f.connect(
     new FakeRunner({
       workspaceId: WORKSPACE_ID,
-      streamId: answerOutputStream(first),
+      streamId: firstStream,
     }),
   )
   alias.emit({ type: 'assistant.delta', ...second, text: 'val' })
@@ -71,6 +76,7 @@ it('rebuilds an old workspace snapshot atomically even after the answer index wa
   const f = await outputFixture(harness, { TOKEN: 'private-value' })
   const first = { ...f.context, messageId: 'rebuild-first' }
   const second = { ...f.context, messageId: 'rebuild-second' }
+  const secondStream = await answerOutputStream(f.env, WORKSPACE_ID, second)
   for (const answer of [first, second])
     await f.emit({
       type: 'assistant.completed',
@@ -80,6 +86,7 @@ it('rebuilds an old workspace snapshot atomically even after the answer index wa
     })
   await f.changeWorkspace(WORKSPACE_ID, async (view) => {
     const contexts = []
+    const active = new Set(['private-value'])
     for (const stream of [null, ...(await view.output.streams())]) {
       const snapshot = await readOutputSnapshot(
         f.env,
@@ -95,9 +102,19 @@ it('rebuilds an old workspace snapshot atomically even after the answer index wa
           WORKSPACE_ID,
           stream,
           unreleasedOutput(snapshot),
+          active,
+          active,
         )
     }
-    await saveOutputSnapshot(f.env, view, WORKSPACE_ID, null, contexts)
+    await saveOutputSnapshot(
+      f.env,
+      view,
+      WORKSPACE_ID,
+      null,
+      contexts,
+      active,
+      active,
+    )
   })
   const oldState = await f.chat.store.read(WORKSPACE_ID, (view) =>
     view.output.readContexts(),
@@ -121,7 +138,7 @@ it('rebuilds an old workspace snapshot atomically even after the answer index wa
     'a previous Worker snapshot triggers index recovery',
   ).toBeUndefined()
   const savedSecond = await f.chat.store.read(WORKSPACE_ID, (view) =>
-    view.output.read(answerOutputStream(second)),
+    view.output.read(secondStream),
   )
   expect(savedSecond).toEqual(expect.any(String))
   await f.restart()
@@ -130,7 +147,7 @@ it('rebuilds an old workspace snapshot atomically even after the answer index wa
   await f.drain()
   expect(
     await f.chat.store.read(WORKSPACE_ID, (view) =>
-      view.output.read(answerOutputStream(second)),
+      view.output.read(secondStream),
     ),
   ).toBe(savedSecond)
   await f.emit({ type: 'assistant.delta', ...second, text: 'value!' })

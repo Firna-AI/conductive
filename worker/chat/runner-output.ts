@@ -64,6 +64,7 @@ export async function filterRunnerOutput(
   }))
   return {
     events,
-    save: () => records.save(input.streamId, sanitizer.snapshot(), answers),
+    save: () =>
+      records.save(input.streamId, sanitizer.snapshot(), answers, activeValues),
   }
 }

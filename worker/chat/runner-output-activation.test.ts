@@ -31,14 +31,16 @@ it('promotes all released contexts once on activation and again after a legacy r
         held.symbolic ? 'symbolic' : 'legacy',
       ])
       .sort(([left], [right]) => left.localeCompare(right))
-  const ciphertexts = (ids: string[]) =>
-    f.chat.store.read(WORKSPACE_ID, (view) =>
-      Promise.all(
-        ids.map((messageId) =>
-          view.output.read(answerOutputStream({ ...f.context, messageId })),
-        ),
+  const ciphertexts = async (ids: string[]) => {
+    const streams = await Promise.all(
+      ids.map((messageId) =>
+        answerOutputStream(f.env, WORKSPACE_ID, { ...f.context, messageId }),
       ),
     )
+    return f.chat.store.read(WORKSPACE_ID, (view) =>
+      Promise.all(streams.map((stream) => view.output.read(stream))),
+    )
+  }
   await complete('activation-first')
   await complete('activation-second')
   expect(await formats()).toEqual([

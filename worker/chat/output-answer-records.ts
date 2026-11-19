@@ -15,6 +15,7 @@ export class AnswerOutputRecords {
   private readonly view: ChatTransaction
   private readonly workspaceId: string
   private readonly snapshots = new Map<string, HeldOutput[]>()
+  private readonly answerStreams = new Map<string, Promise<string>>()
   private readonly changed = new Set<string>()
   private indexing = false
 
@@ -78,7 +79,7 @@ export class AnswerOutputRecords {
     const contexts: HeldOutput[] = []
     for (const answer of answers)
       contexts.push(
-        ...releasedOutput(await this.read(answerOutputStream(answer))),
+        ...releasedOutput(await this.read(await this.answerStream(answer))),
       )
     return contexts
   }
@@ -87,6 +88,7 @@ export class AnswerOutputRecords {
     stream: string,
     snapshot: readonly HeldOutput[],
     answers: readonly Answer[],
+    active: ReadonlySet<string>,
   ): Promise<void> {
     this.replace(stream, [
       ...unreleasedOutput(snapshot),
@@ -97,8 +99,10 @@ export class AnswerOutputRecords {
       await this.replaceAnswer(
         answer,
         released.filter(
-          (held) =>
-            answerOutputStream(held.event) === answerOutputStream(answer),
+          ({ event }) =>
+            event.sessionId === answer.sessionId &&
+            event.turnId === answer.turnId &&
+            event.messageId === answer.messageId,
         ),
       )
     for (const key of this.changed)
@@ -108,6 +112,8 @@ export class AnswerOutputRecords {
         this.workspaceId,
         key,
         this.snapshots.get(key) ?? [],
+        active,
+        active,
       )
     if (this.indexing) {
       await this.view.output.saveContexts(undefined)
@@ -144,10 +150,24 @@ export class AnswerOutputRecords {
   }
 
   private async replaceAnswer(answer: Answer, contexts: HeldOutput[]) {
-    const stream = answerOutputStream(answer)
+    const stream = await this.answerStream(answer)
     this.replace(stream, [
       ...unreleasedOutput(await this.read(stream)),
       ...contexts,
     ])
+  }
+
+  private answerStream(answer: Answer): Promise<string> {
+    const key = JSON.stringify([
+      answer.sessionId,
+      answer.turnId,
+      answer.messageId,
+    ])
+    let stream = this.answerStreams.get(key)
+    if (!stream) {
+      stream = answerOutputStream(this.env, this.workspaceId, answer)
+      this.answerStreams.set(key, stream)
+    }
+    return stream
   }
 }
