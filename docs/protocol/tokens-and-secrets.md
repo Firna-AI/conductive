@@ -91,7 +91,8 @@ that doc says.
   and the marks of the last start of the sandbox.
 - The Durable Object does this for each runner, also for an older runner
   from an org image or a saved disk. It also hides a copy that consecutive
-  text events of one answer split.
+  text events of one answer split, as
+  [Answer text secrets](answer-text-secrets.md) says.
 - Reason: an org image or a saved disk can hold an older runner. A filter
   of secret values in the runner was rejected, because an older runner
   does not have it.

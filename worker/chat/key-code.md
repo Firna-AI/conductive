@@ -132,6 +132,22 @@ first.
   two streams has no order. A workspace record with no answer ends still
   marks the move as done, so later receipts do not scan older stream
   records again.
+- `output-filter-records.ts`, `output-filter-state.ts`, and
+  `output-filter-snapshot.ts`: the saved answer state. `readOutputSnapshot`
+  reads both formats. A symbolic record keeps the value list field, always
+  empty. A rollback still needs a Worker that reads both formats, as the
+  [rollout](../../docs/protocol/answer-text-secrets.md#rollout) says. Each
+  receipt that reaches the answer filter and each cleanup runs
+  `prepareOutputState` first. It reads `CONDUCTIVE_SYMBOLIC_ANSWER_STATE`,
+  which `wrangler.jsonc` sets to
+  `"false"`. Only `"true"` turns it on. While it is off, no new or saved
+  answer becomes symbolic, and a symbolic answer stays symbolic. While it
+  is on, each answer becomes symbolic at its next write, and loses its lists.
+- `output-filter-identity.ts`: `outputCandidates` gives each value an
+  HMAC-SHA-256 identity under the app key, with the purpose, the workspace,
+  and the salt of the answer in its input. The salt and the identities stay
+  encrypted, and each write keeps only those of active values. The rollout
+  also gives the limit of records in the earlier format.
 - `tool-detail-input.ts`, `tool-detail-filter.ts`, and
   `tool-detail-records.ts`: the parse of each private `tool.detail.part`,
   `filterToolDetail`, and the encrypted header of the assembly of each

@@ -12,63 +12,14 @@ import type { RunnerWorkspaceRecord } from './types'
 import { displayPortReport } from './port-reports'
 import { agentOutputSecrets } from '../secrets/output-values'
 import { filterToolDetail } from './tool-detail-filter'
-import {
-  readOutputSnapshot,
-  saveOutputSnapshot,
-  retainActiveSecrets,
-} from './output-filter-records'
+import { readOutputSnapshot, saveOutputSnapshot } from './output-filter-records'
+import { prepareOutputState } from './output-filter-state'
+import { releasedOutput, unreleasedOutput } from './output-filter-snapshot'
 
 export interface FilteredRunnerOutput {
   events: RunnerEventEnvelope[]
   privateContext?: AgentChatEvent
   save(): Promise<void>
-}
-
-function unreleased(snapshot: readonly HeldOutput[]): HeldOutput[] {
-  return snapshot.flatMap(({ event, secrets }) =>
-    event.text ? [{ event, secrets }] : [],
-  )
-}
-
-function released(snapshot: readonly HeldOutput[]): HeldOutput[] {
-  return snapshot.flatMap(({ event, contexts }) =>
-    contexts?.length
-      ? [{ event: { ...event, text: '' }, secrets: [], contexts }]
-      : [],
-  )
-}
-
-function combine(snapshot: readonly HeldOutput[]): HeldOutput[] {
-  const answers = new Map<string, HeldOutput>()
-  for (const held of snapshot) {
-    const { event } = held
-    const key = JSON.stringify([event.sessionId, event.turnId, event.messageId])
-    const previous = answers.get(key)
-    const contexts = new Map<
-      string,
-      NonNullable<HeldOutput['contexts']>[number]
-    >()
-    for (const context of [
-      ...(previous?.contexts ?? []),
-      ...(held.contexts ?? []),
-    ]) {
-      contexts.set(context.text, {
-        text: context.text,
-        secrets: [
-          ...new Set([
-            ...(contexts.get(context.text)?.secrets ?? []),
-            ...context.secrets,
-          ]),
-        ],
-      })
-    }
-    answers.set(key, {
-      event: previous?.event ?? event,
-      secrets: [...new Set([...(previous?.secrets ?? []), ...held.secrets])],
-      contexts: [...contexts.values()],
-    })
-  }
-  return [...answers.values()]
 }
 
 /** Restore per-receipt state so a failed transaction cannot consume held text. */
@@ -110,20 +61,25 @@ export async function filterRunnerOutput(
     for (const streamId of await transaction.output.streams()) {
       if (streamId === input.streamId) continue
       const snapshot = await readStream(streamId)
-      if (snapshot.some((held) => held.contexts?.length))
+      if (
+        snapshot.some(
+          (held) => held.symbolic?.contexts.length || held.contexts?.length,
+        )
+      )
         legacy.push({ streamId, snapshot })
     }
   }
-  const sanitizer = new OutputSanitizer(
-    retainActiveSecrets(
-      combine([
-        ...pending,
-        ...contexts,
-        ...legacy.flatMap(({ snapshot }) => released(snapshot)),
-      ]),
-      activeValues,
-    ),
+  const prepared = await prepareOutputState(
+    env,
+    workspace.id,
+    [
+      ...pending,
+      ...contexts,
+      ...legacy.flatMap(({ snapshot }) => releasedOutput(snapshot)),
+    ],
+    activeValues,
   )
+  const sanitizer = new OutputSanitizer(prepared.snapshot, prepared.matching)
   for (const secret of activeValues) sanitizer.add(secret)
   const events = sanitizer.accept(input.event).map((event) => ({
     ...input,
@@ -138,15 +94,15 @@ export async function filterRunnerOutput(
       const snapshot = sanitizer.snapshot()
       const saveStream = (streamId: string, held: HeldOutput[]) =>
         saveOutputSnapshot(env, transaction, workspace.id, streamId, held)
-      await saveStream(input.streamId, unreleased(snapshot))
+      await saveStream(input.streamId, unreleasedOutput(snapshot))
       for (const { streamId, snapshot } of legacy)
-        await saveStream(streamId, unreleased(snapshot))
+        await saveStream(streamId, unreleasedOutput(snapshot))
       await saveOutputSnapshot(
         env,
         transaction,
         workspace.id,
         null,
-        released(snapshot),
+        releasedOutput(snapshot),
       )
     },
   }
