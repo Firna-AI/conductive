@@ -1,4 +1,8 @@
-import type { OrgSummary } from '../shared/orgs'
+import type {
+  OrgColorRequest,
+  OrgSummary,
+  RenameOrgRequest,
+} from '../shared/orgs'
 import { SendQueue } from './send-queue'
 import { Store, type Readable } from './store'
 
@@ -69,6 +73,27 @@ export class OrgList implements Readable<Orgs> {
     this.confirmed = known
       ? this.confirmed.map((item) => (item.id === org.id ? org : item))
       : [...this.confirmed, org]
+    this.show()
+  }
+
+  /** Applies only requested reply fields to an org that the list still has. */
+  patch(org: OrgSummary, request: RenameOrgRequest | OrgColorRequest): void {
+    this.confirmed = this.confirmed.map((current) => {
+      if (current.id !== org.id) return current
+      const next = { ...current }
+      if ('name' in request) {
+        next.name = org.name
+        if (request.initials !== undefined) {
+          if (org.initials === undefined) delete next.initials
+          else next.initials = org.initials
+        }
+      }
+      if ('color' in request) {
+        if (org.color === undefined) delete next.color
+        else next.color = org.color
+      }
+      return next
+    })
     this.show()
   }
 
