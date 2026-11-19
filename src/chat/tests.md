@@ -26,7 +26,11 @@ change in the same way, with its read from the stream and its copy.
 It checks the plain message of a refused retry in a tab that missed newer events.
 `state/linked-replies.test.tsx` drives replies of Send and Try again that
 name a linked session, in both orders, and two chats with different readers
-on one fake stream. `components/SessionLogin.test.tsx` renders the login
+on one fake stream. `state/linked-reply-selection.test.ts` checks that such
+a reply keeps a selected tab of another kind. A fixed prompt from a Preview
+tab keeps that tab and the session of the chat. A held Send whose draft
+cannot move, because the linked session holds a draft, keeps the file tab
+that the user chose during the send. `components/SessionLogin.test.tsx` renders the login
 label and its notices. `components/MissingLoginNotice.dom.test.tsx` mounts
 the chat and checks the watch of the notice of a missing login. The notice
 keeps one watch while it shows, also while the reader types. The watch ends

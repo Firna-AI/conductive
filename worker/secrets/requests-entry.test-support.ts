@@ -45,6 +45,10 @@ export class Workspace extends ProductionWorkspace {
     await this.integration.secrets.reconcile()
   }
 
+  enableSymbolicAnswers() {
+    this.env.CONDUCTIVE_SYMBOLIC_ANSWER_STATE = 'true'
+  }
+
   readStartAlarm() {
     return this.ctx.storage.getAlarm()
   }

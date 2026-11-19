@@ -10,8 +10,10 @@ and answers, and the file chips and the pictures of answers.
 [File mentions](../../docs/protocol/file-mentions-answers.md)
 state the requirements.
 
-- `textBlocks` reads the whole text of a message at each update. So a live
-  message and the same message from the saved history show the same blocks.
+- `textBlocks` reads the whole text of a message at each change of the
+  text. So a live message and the same message from the saved history show
+  the same blocks. `AgentText` and `MessageLine` keep the blocks while the
+  text stays the same, so a render for another change reads no text again.
 - `textBlocks` checks for a code fence before it checks for a table, so a
   table in a code block stays code. A `table` block, `TextTable`, can start
   directly after a line of a paragraph or a list.

@@ -14,7 +14,7 @@ import type { TranscriptInsert } from '../../shared/transcript/transcript-entrie
  * line shows.
  */
 export function sourceInsert(
-  snapshot: ChatSnapshot,
+  snapshot: Pick<ChatSnapshot, 'sessions' | 'history'>,
   session: Session | null,
   onOpen: (sessionId: string) => void,
 ): TranscriptInsert<ReactNode> | null {

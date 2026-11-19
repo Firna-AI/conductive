@@ -269,6 +269,8 @@ to a late request does.
   chat by mistake.
 - Risk: the filter hides only exact copies. A changed or encoded value
   still shows.
+- [Answer text secrets](answer-text-secrets.md) states how the end of an
+  unfinished answer keeps to the times above.
 
 ## The end of a request
 

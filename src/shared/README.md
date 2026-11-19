@@ -167,20 +167,39 @@ The backend sets the read limit. The sample limit in the fixtures is not product
 Read and diff results do not enter the stored chat event stream.
 
 `output-sanitizer.ts` holds possible secret suffixes across answer events.
+It keeps each answer in one of two saved formats.
+`output-sanitizer-legacy.ts` holds the earlier format, with raw held text and the secret values that still apply to it.
+`output-symbolic.ts` holds the symbolic format, which lists no value.
+The `OutputMatching` of the caller turns the symbolic format on for new answers.
+While it is off, a new answer uses the earlier format, and a saved symbolic answer stays symbolic.
 A completion or a turn end releases the held text of its answer.
-The filter then keeps an answer context: the shown answer end that can still start a secret.
+The filter then keeps an answer context for each released end that can still complete a secret.
 After a completion, it keeps the context of the earlier text and of the completion text.
 A refused completion leaves the earlier text on the screen.
 Later text of the same answer masks the part that completes a secret from a context.
 
+A symbolic answer erases each whole copy of a candidate value in its held text into a run.
+The saved text has `[redacted]` in place of each run, so an older reader sees a marker there.
+A value crosses a run only through an entry with its own identity, offset, and start.
+An entry also lets a complete shorter value match as a fallback when the longer value does not follow.
+A whole literal `[redacted]` keeps its precedence as one marker, as in the earlier format.
+An answer context keeps only an identity and the count of its matched characters.
+`secret-held.ts` and `secret-held-scan.ts` hold the runs, the entries, and their scanner.
+`secret-held-contexts.ts` derives continuation references from the logical source that the scanner released.
+The scanner returns them with its shown text, so a mask does not remove later matching.
+The caller gives candidates only for the values that are active now, so an ended value matches nothing.
+[Answer text secrets](../../docs/protocol/answer-text-secrets.md) states the requirements and the rollout.
+
 The filter does not cap the number of answer contexts.
-Its snapshot holds the held text, the answer contexts, and the secret values that still apply to them.
+Its snapshot holds each answer in its own format.
 A snapshot without answer contexts also stays valid.
 The Worker keeps the held text in the encrypted state of its runner stream.
 It keeps the answer contexts in one encrypted state of the workspace, which each runner stream uses.
 It saves both before it confirms the corresponding raw event.
 
-`secret-text.ts` holds the exact-copy scanner of that filter. The Worker's
+`secret-text.ts` holds the exact-copy scanner of the earlier format and of
+other runner text. Symbolic completion text uses the logical-source scanner.
+The Worker's
 tool-detail filter uses it for the target of a tool. The text of a private
 tool-detail source has its own [scanner](../../worker/chat/tool-detail-scan.ts).
 
