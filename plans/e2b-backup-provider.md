@@ -14,8 +14,9 @@ When an operator creates an org, the operator can choose its account
 instead. Only operators see that choice. Existing orgs stay on Boat.
 
 The change moves no org and no workspace between accounts, and it adds no
-automatic failover and no overflow by capacity. Agents on E2B get no
-computer tools for now (decision 216 A). The app hides the Desktop tool, so
+automatic failover and no overflow by capacity. The E2B template gives the
+agents the same computer tools as on Boat, as "Computer tools on E2B" in the
+Design section says (e2b decision 216 B). The app hides the Desktop tool, so
 E2B gets no desktop stream. E2B's terms bar giving its service to others
 without its written consent, so no real org runs on E2B before E2B
 confirms the use. The user sends that request to E2B now. The notes, the
@@ -151,8 +152,8 @@ Does not apply, for the same reason as decision 219.
   we just add the tooling into the base snapshot for e2b?". The E2B
   template installs the computer tools, as Milestone 6a says. The pull
   request of this plan deletes
-  `plans/follow-ups/second-provider-computer-tools.md` when the live probe
-  of Milestone 6a passes.
+  `plans/follow-ups/second-provider-computer-tools.md` when Milestone 9
+  shows an agent that uses the tools on E2B.
 
 ### Earlier decisions
 
@@ -210,10 +211,8 @@ These are agent calls of 10 November 2026. The user can change each one.
   software of `BASE_IMAGE` in `src/shared/base-image.ts`. Reason: the
   protocol gives one machine size, and the Cloud computer tab lists one
   base image.
-- The E2B template has no computer tools, as decision 216 A says. The
-  runner then warns that the computer tools are unavailable, and the agents
-  run without them, as the runner already does when a sandbox has no
-  `computer` entry.
+- Changed on 19 November 2026: the E2B template has the computer tools, as
+  "Computer tools on E2B" below says (e2b decision 216 B).
 - The deployment guide asks E2B support for three things: the EU cluster,
   filesystem-only pauses and snapshots, and a disk of 51 GB, as Boat's
   default size has. Reason: E2B refuses filesystem-only snapshots until
@@ -253,9 +252,14 @@ These are agent calls of 19 November 2026, for e2b decision 216 B.
 - Systemd services start the display, the window manager, and, when the
   driver needs it on Linux, its daemon, at each boot.
 - At each boot, a service merges the entry `computer` into
-  `/home/user/.claude.json`, and it keeps every other entry. The entry runs
-  `cua-driver mcp` with `DISPLAY=:0`. Reason: Boat writes its entry at each
-  start too, and the agent program can rewrite the file.
+  `/home/user/.claude.json`, and it keeps every other entry. Reason: Boat
+  writes its entry at each start too, and the agent program can rewrite the
+  file.
+- The entry starts the driver through `/usr/bin/env`, with `DISPLAY=:0` and
+  the desktop session's settings as arguments, and it has no `env` field.
+  Reason: every runner release passes `command` and `args` to both agents,
+  but released runners drop `env` for Codex, as finding 9 of review round 8
+  found. The runner now forwards `env` to Codex too.
 - `BASE_IMAGE`, the software list of the Cloud computer tab, stays the same,
   because Boat's list does not name Chrome either.
 - An E2B org image gets the tools only from a template build that has them.
@@ -643,8 +647,10 @@ Depends on: 6, 8
 The operator creates a workspace on each provider through the app.
 
 - [ ] As an operator, create a test org on `e2b`. Create a workspace, run a
-      chat turn, and open the terminal and a preview. Create a second test
-      org on `boat`, and create a workspace there. Save the output under
+      chat turn, and open the terminal and a preview. Ask a Claude session
+      and a Codex session each to open a page with the computer tools.
+      Create a second test org on `boat`, and create a workspace there.
+      Save the output under
       `.context/e2b-backup-provider/`. Needs: an E2B key, and
       filesystem-only snapshots turned on by E2B support.
 
