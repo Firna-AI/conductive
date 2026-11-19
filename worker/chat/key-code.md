@@ -140,7 +140,7 @@ first.
   receipt that reaches the answer filter and each cleanup runs
   `prepareOutputState` first. It reads `CONDUCTIVE_SYMBOLIC_ANSWER_STATE`,
   which `wrangler.jsonc` sets to
-  `"false"`. Only `"true"` turns it on. While it is off, no new or saved
+  `"true"`. Only `"true"` turns it on. While it is off, no new or saved
   answer becomes symbolic, and a symbolic answer stays symbolic. While it
   is on, each answer becomes symbolic at its next write, and loses its lists.
 - `output-filter-identity.ts`: `outputCandidates` gives each value an
