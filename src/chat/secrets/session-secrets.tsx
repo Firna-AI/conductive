@@ -6,9 +6,10 @@ import type {
 import { placeCommands } from '../../shared/transcript/command-placement'
 import type { TranscriptInsert } from '../../shared/transcript/transcript-entries'
 import type { ChatSnapshot, SessionState } from '../state/chat-snapshot'
+import { loginReader } from '../state/session-login'
 import { LateAnswerLine } from './LateAnswerLine'
 import { isOpen } from './secret-snapshot'
-import { lateAnswerParts } from './secret-words'
+import { keptLoginOwner, lateAnswerParts } from './secret-words'
 import { SecretRequestCard } from './SecretRequestCard'
 import { SecretRunCard } from './SecretRunCard'
 import { agentNames } from '../../shell/account/labels'
@@ -56,18 +57,24 @@ export function sessionSecrets(
   const session = [...snapshot.sessions, ...snapshot.history].find(
     (item) => item.id === sessionId,
   )
-  const starter = session
-    ? { person: session.startedBy, agent: agentNames[session.choice.agent] }
+  // The org as the session-login view names it, with the name of the cards
+  // when the chat does not know that name.
+  const orgName = loginReader(snapshot)?.orgName ?? org
+  const login = session
+    ? {
+        owner: keptLoginOwner(session, viewerId, orgName),
+        agent: agentNames[session.choice.agent],
+      }
     : null
   const card = (request: SecretRequest) => (
     <SecretRequestCard
       answering={answers[request.id] ?? null}
       choices={props.choices}
       key={`${request.id}:${isOpen(request) ? 'open' : 'ended'}`}
+      login={login}
       onAnswer={(answer) => props.onAnswer(request.id, answer)}
       org={org}
       request={request}
-      starter={starter}
       viewerId={viewerId}
     />
   )
