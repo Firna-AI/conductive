@@ -382,10 +382,11 @@ the model menu of a session shows the same key before its switch, as
     with the keys of decision 194 and the terminal line of Windows.
   - `app/account/shortcuts/linux` has a normal Chrome tab on Linux, with
     the keys of Windows and Linux. From decision 196, the app leaves
-    Ctrl+1 to Ctrl+9, Alt+1 to Alt+9, and Ctrl+L to Chrome, so Switch to
-    org 1 to 9 show only dimmed keys. Its `firefox` variant has a normal
-    Firefox tab on Linux, where the app leaves only Alt+1 to Alt+9 and
-    Ctrl+L to Firefox, so Ctrl+1 to Ctrl+9 are not dimmed.
+    Ctrl+1 to Ctrl+9, Alt+1 to Alt+9, their keypad forms, Ctrl+L, Alt+D,
+    and F6 to Chrome, so Switch to org 1 to 9 show only dimmed keys. Its
+    `firefox` variant has a normal Firefox tab on Linux, where the app
+    leaves only Alt+1 to Alt+9, their keypad forms, Ctrl+L, and Alt+D to
+    Firefox, so Ctrl+1 to Ctrl+9 are not dimmed.
   - `app/account/shortcuts/firefox` has a normal Firefox tab on a Mac,
     which keeps ⌥⌘↑, ⌥⌘↓, and ⇧⌘P and lets the page take ⇧⌘T.
   - `app/account/shortcuts/installed` has the installed app of Chrome on
