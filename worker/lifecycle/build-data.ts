@@ -185,13 +185,14 @@ export async function failBuild(
   message: string,
   now: number,
 ): Promise<void> {
+  // Check the running state before the final update in the same atomic batch.
   await db.batch([
+    ...buildLogStatements(db, buildId, message, now, true),
     db
       .prepare(
         "UPDATE image_builds SET state = 'failed', completed_at = ?, error = ?, provider_retry_json = NULL WHERE id = ? AND state = 'running'",
       )
       .bind(now, message, buildId),
-    ...buildLogStatements(db, buildId, message, now),
   ])
 }
 

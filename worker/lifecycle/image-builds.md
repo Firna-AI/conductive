@@ -96,6 +96,13 @@ in the same D1 batch as the new snapshot name, before the provider call.
 It writes `SNAPSHOT_DONE_LOG` in the same batch as the change to the
 `publish` phase. So a retry or a replayed save repeats neither line.
 
+`failBuild` in [`build-data.ts`](build-data.ts) saves the failed state,
+the failure message, and its log line in one D1 batch. Only the call that
+changes a `running` build to `failed` writes them. So a scheduling failure
+that arrives after an alarm failed the build changes neither the saved
+message nor the log. Other log writes do not check the build state. So
+output can still reach the log during cleanup.
+
 - A build loads the chosen repositories, installs the image software, runs
   the install script with Bash, and saves a snapshot. A first build that
   pins a matching ready software image starts from it and still installs
