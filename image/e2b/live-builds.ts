@@ -27,8 +27,9 @@ export async function installProbeImage(
     provider,
     id,
     `sudo -n install -d -m 700 -o user -g user ${probeDirectory}\nmkdir -p ${probeRepository}\ngit init -q ${probeRepository}`,
+    'probeFolder',
   )
-  await command(provider, id, installImageSoftware(software))
+  await command(provider, id, installImageSoftware(software), 'releaseInstall')
   await command(
     provider,
     id,
@@ -39,6 +40,7 @@ export async function installProbeImage(
       ),
       ['set -a', '. /run/ascii-secrets/env.sh', 'set +a'],
     ),
+    'releaseCheck',
   )
   const installed = await probe(provider, id, 'installed')
   const facts = requireFlags(installed, [

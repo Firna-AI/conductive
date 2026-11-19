@@ -1,10 +1,10 @@
 # The E2B restored-image computer probe fails sometimes
 
 - **Severity:** Medium. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-19, from the live E2B checks of Milestone 6a on branch `calummoore/e2b-backup-sandbox-provider`.
 - **Location:** `checkComputer` in `image/e2b/live-probes.ts`, and the page wait of `check_page` in `image/e2b/computer-probe.py:121`.
-- **Reason:** The failure did not repeat in four later attempts, and the probe hides its raw output, so the source is not proven.
+- **Reason:** The user chose option A on 19 November 2026, and asked to wait for the next failure when a few more runs show none. Three more runs showed none.
 
 - **Terms:**
   - **Live check:** `node image/live-check.mjs --provider=e2b`, a manual check against a real E2B project. CI does not run it.
@@ -17,6 +17,8 @@
   - Before the probe, the check waits until `conductive-e2b-computer-config.service` is active. Run 4 passed that wait, so the probe itself failed.
   - Two separate diagnostics restored an image without the release install, and the probe passed both times. A cold boot starts the computer services in about 5 seconds.
   - The probe waits at most 10 seconds for the test page's load signal. A restored image that also starts the release's services can be slower.
+  - On 19 November 2026, the user chose option A. Commit `b15c7fab` makes the probe print a fixed step name and an exception class on any failure, such as "The E2B computer probe failed at pageLoad (TimeoutError)." The 10-second page wait and the 30-second alarm of the whole probe stay the same.
+  - Three more runs then ran at the same time. The probe passed on the template in all three, and on the restored image in the one run that reached it. Two runs failed earlier, at the release install, with hidden output. Sequential runs never failed there, so running at the same time is the suspected trigger. The install commands now name their step too: `probeFolder`, `releaseInstall`, or `releaseCheck`.
 - **Problem:** The probe fails sometimes on a restored image, and the check cannot say which step failed.
 - **Impact if no action:** A real-provider run can fail for no product reason, and the next person cannot tell the cause.
 - **Root question:** How does the probe of a restored image pass every time it should, and say which step failed when it fails?
@@ -27,4 +29,4 @@
 - **Wider fix:** A. A named step turns each later failure of any probe step into evidence.
 - **Previous examples:** Milestone 6a's live runs found two other faults by their visible output: the ready check and the missing system D-Bus.
 - **Recommendation:** A. It finds the source first, and it adds no longer time limit.
-- **Action:** ask the user, because the source is not proven, and the testing rules send an unreproduced flake to the user.
+- **Action:** fix after merge, apply the step fix when a real run names the failed step, because no failure recurred in three more runs, as the user asked.

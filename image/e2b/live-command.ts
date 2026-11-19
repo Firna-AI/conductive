@@ -6,15 +6,21 @@ import { CheckError, object, until } from '../live-input'
 export const probeDirectory = '/run/conductive-e2b-live'
 export const probeRepository = '/home/user/conductive-e2b-live'
 
+/** A fixed name that a failed command may report, with no raw output. */
+type CommandStep = 'probeFolder' | 'releaseInstall' | 'releaseCheck'
+
 export async function command(
   provider: Pick<SandboxProvider, 'runCommand'>,
   id: string,
   source: string,
+  step?: CommandStep,
 ): Promise<string> {
   const result = await provider.runCommand(id, source)
   if (result.exitCode !== 0 || result.timedOut)
     throw new CheckError(
-      'An E2B image probe failed. Its raw output was suppressed.',
+      step
+        ? `An E2B image probe failed at ${step}. Its raw output was suppressed.`
+        : 'An E2B image probe failed. Its raw output was suppressed.',
     )
   return result.stdout
 }

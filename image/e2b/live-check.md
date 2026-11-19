@@ -115,6 +115,11 @@ argument before it fails. For example, it reports
 "The E2B computer probe failed at pageLoad (TimeoutError)."
 A successful probe must still pass all four flag checks.
 
+The three commands of each release install also name their step when they
+fail: `probeFolder`, `releaseInstall`, or `releaseCheck`. For example, the
+check reports "An E2B image probe failed at releaseInstall. Its raw output
+was suppressed." The command output stays hidden.
+
 The check requires 4 CPUs and 8192 MiB in the provider's sandbox detail.
 The provider's `diskSizeMB` field reports provisioned disk size in MiB.
 The check converts that value to bytes and requires the requested 51 GB.
