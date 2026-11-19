@@ -437,6 +437,12 @@ after Resume gives it to the agent. `../app/dev/attachment-files.test.ts`
 checks the same store in the fake of the app. `../app/dev/attachment-test-kit.ts`
 holds the helpers of both tests.
 
+`dev/dev-stream.test.ts` drives `DevStream` of the development page
+through the real `WorkspaceStream`, with fake timers. `DevStream` sends the
+second of two parts first. `WorkspaceStream` then connects again and gets
+both parts from the stored history. It delivers each part once and in
+order, also after the late copy of the first part.
+
 The tests of the secret requests are in the
 [README of the secret requests](secrets/README.md#tests).
 
