@@ -36,4 +36,3 @@ The xterm.js 6.0.0 built `lib/xterm.mjs` keeps the names `_handleColorEvent` and
 The bridge passes raw pane output to the browser. Thus OSC colour changes can reach xterm.js before open. After bridge hello, `TerminalSession` drops xterm.js replies because tmux answers programs. A late colour-query reply can reach the shell as input, so the deferred change replay must not replay pre-open queries.
 
 Before the line-spacing fix, `openScreen` opened at mount, including under a hidden ancestor. That created ThemeService before output arrived. The intended spacing fix keeps deferred open and the live connection. This follow-up must preserve both.
-

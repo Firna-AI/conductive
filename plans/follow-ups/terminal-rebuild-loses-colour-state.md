@@ -15,4 +15,3 @@
 - **Needs:** Nothing for the reproduction. A behaviour decision may be needed after the evidence is complete.
 - **Done when:** The reproduction establishes the affected colour controls, and the approved behaviour has a tested implementation or an explicit decision to keep the current behaviour.
 - **Related:** `terminal-colours-before-first-show.md` covers colour controls that arrive live before the browser screen opens. Its fix cannot recover controls missing from the bridge rebuild. `terminal-bridge-cleared-background.md` covers erased cells trimmed from capture output, which is another cause of background-colour loss.
-
