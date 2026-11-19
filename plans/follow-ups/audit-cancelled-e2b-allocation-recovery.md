@@ -65,7 +65,7 @@
   - Requirements in force:
     - `docs/protocol/suspension-workspaces.md:31-32`: a start that waits or runs stops before its next step.
     - `docs/protocol/suspension-workspaces.md:41-42` and `docs/protocol/operator-org-suspension.md:39-40`: each unfinished build stops and fails, and the app removes its build sandbox.
-    - The E2B design of 10 November 2026 gives allocation cleanup an identity-only E2B client. It never creates, connects, or bootstraps a sandbox. `plans/e2b-backup-provider.md:317-319` holds that rule while the plan exists.
+    - The E2B design of 10 November 2026 gives allocation cleanup an identity-only E2B client. It never creates, connects, or bootstraps a sandbox. "Identity-only cleanup" in `worker/sandbox/e2b/README.md` describes that client.
     - Allowed starts and builds keep active retries after a certified refusal, as `worker/sandbox/e2b/README.md:49-51` says. A capacity refusal is temporary.
     - Boat keeps its existing create replay, as `worker/sandbox/README.md:73` says.
   - Evidence and limits:
@@ -101,6 +101,6 @@
   - Derive the purpose from the ended job in `allocateWorkspace` and `allocateImageBuild`, or require it in the shared intent. Then a reused active client cannot select allocation.
   - Include `worker/software-image/cleanup.ts:22`. It takes the active default, but it runs only on the `boat` account today.
   - Include `image/e2b/live-provider.ts:19`. Its cleanup client uses the mode that B replaces.
-  - Update `worker/sandbox/README.md` and `worker/sandbox/e2b/README.md`. When `plans/e2b-backup-provider.md` still exists, update its cleanup-client rule too.
+  - Update `worker/sandbox/README.md` and `worker/sandbox/e2b/README.md`.
   - First reproduce both paths with the fake E2B server in `worker/test-support/fake-e2b.ts`. Record the provider calls for pending, ready, `retryable`, and never-sent requests. Keep one regression case for each affected caller. Use the existing recovery tests for the other claim states.
 - **Action:** fix after merge, apply B, because the bug is Rare, its harm is a temporary resource, and the fix reaches main's existing lifecycle recovery paths.

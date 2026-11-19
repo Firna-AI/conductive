@@ -155,6 +155,17 @@ Does not apply, for the same reason as decision 219.
   `plans/follow-ups/second-provider-computer-tools.md` when Milestone 9
   shows an agent that uses the tools on E2B.
 
+### e2b decision 223. Milestone 9 has no deployment to run on
+
+- **Root question:** Where does the first end-to-end check of E2B through
+  the app run?
+- **Options:** A, move Milestone 9 after the merge, with the E2B weight at
+  0%, so that only an operator can put a test org on E2B. B, a separate
+  test Worker before the merge. C, the local Worker behind a public tunnel.
+- **Chosen:** A, by the user on 19 November 2026, as recommended. Reason: a
+  local Worker at `127.0.0.1` is not reachable from E2B sandboxes, and each
+  push to `main` deploys to production.
+
 ### Earlier decisions
 
 The full record is in this plan at
@@ -625,9 +636,6 @@ The agents on E2B get the same computer tools as on Boat, as e2b decision
 - [x] Read both legal pages and each guide in `src/marketing/docs/` in
       full. Update each sentence that restates the computer tools. No
       sentence needed a change.
-- [ ] Delete `plans/follow-ups/second-provider-computer-tools.md` when
-      Milestone 9 shows an agent that uses the tools on E2B, as the item's
-      "Done when" asks.
 
 The driver runs as `cua-driver mcp`, with no daemon, as its Linux runtime
 guide says. A local Xvfb proof drove Chrome through the driver. The live
@@ -646,17 +654,12 @@ Depends on: 6, 8
 
 The operator creates a workspace on each provider through the app.
 
-- [ ] As an operator, create a test org on `e2b`. Create a workspace, run a
-      chat turn, and open the terminal and a preview. Ask a Claude session
-      and a Codex session each to open a page with the computer tools.
-      Create a second test org on `boat`, and create a workspace there.
-      Save the output under
-      `.context/e2b-backup-provider/`. Needs: an E2B key, and
-      filesystem-only snapshots turned on by E2B support.
+Moved after the merge by e2b decision 223, on 19 November 2026. Its task is
+the last one under "Post-merge follow-up".
 
 ## Milestone 10: Verification, commit, review, and pull request
 
-Depends on: 1, 2, 3, 4, 5, 6, 6a, 7, 8, 9
+Depends on: 1, 2, 3, 4, 5, 6, 6a, 7, 8
 
 The complete change passes the gate and the review.
 
@@ -711,5 +714,10 @@ and `merge-8-file-write-integration.md`. Final CI remains in progress.
 - [ ] Set the E2B account on the deployed Worker. Make the three requests to
       E2B support, and move the E2B project to Pro.
 - [ ] Keep every real org off E2B until E2B's written consent arrives.
-- [ ] On the deployed app, create a test org on `e2b` as an operator, and
-      create a workspace there.
+- [ ] On the deployed app, as an operator, create a test org on `e2b`.
+      Create a workspace, run a chat turn, and open the terminal and a
+      preview. Ask a Claude session and a Codex session each to open a page
+      with the computer tools. Create a second test org on `boat`, and
+      create a workspace there. Then delete
+      `plans/follow-ups/second-provider-computer-tools.md`, as its "Done
+      when" asks.
