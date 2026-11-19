@@ -1,0 +1,53 @@
+# Shell buttons need a focus default
+
+- **Severity:** Low. **Effort:** Large. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-18, from `calummoore/e2b-backup-sandbox-provider`, review finding 8, the checked wider focus class.
+- **Location:** `src/shell/ui/actions.tsx:50-123` (`ActionButton` and `keepFocus`) and `src/shell/ui/actions.tsx:125-188` (`IconButton`). `src/shell/ui/ui.module.css:27-33` (the wrapper style of `keepFocus`). `src/app/screens.md:199-203` (the Save focus rule). The known cases: `src/shell/operator/ProvidersTab.tsx:121-129`, `src/shell/ui/Dialog.tsx:45`, `src/shell/account/shortcuts/RowButtons.tsx:87-95`, `src/shell/settings/EnvVarsSection.tsx:75-81`, and `src/shell/ui/ModelPicker.tsx:113-133`.
+- **Reason:** A shared default sets the focus behaviour of buttons that no requirement covers, so the user must choose it.
+
+- **Terms:**
+  - **ActionButton:** The shared labelled button of the app shell, in `src/shell/ui/actions.tsx`. `IconButton` in the same file is its icon-only form.
+  - **keepFocus:** An opt-in prop of `ActionButton`. A button that turns off while it has the focus keeps the focus until the focus leaves.
+  - **Natively disabled:** A button with the HTML `disabled` attribute. A browser takes the focus away from such a button.
+  - **Firna Button:** The button of the `@firna/ui` design-system package, from the repository `futex-ai/ui`. The shared buttons of each app area draw it.
+- **Background:**
+  - A browser takes the focus from a natively disabled button. A keyboard or screen-reader user then loses their place on the page.
+  - The Save focus rule in `src/app/screens.md:199-203` says that Save keeps the focus when a save leaves nothing to save.
+  - While such a Save has the focus, it looks off, its wrapper says `aria-disabled`, and a press does nothing. When the focus leaves, Save is natively disabled.
+  - `keepFocus` gives this behaviour. The wrapper is a `span` with `display: contents`, in `src/shell/ui/ui.module.css:27-33`.
+  - Four Save buttons set `keepFocus`: `src/shell/settings/ScriptSection.tsx:41`, `src/shell/settings/GeneralTab.tsx:66`, `src/shell/automations/AutomationEditor.tsx:115`, and `src/shell/operator/ProvidersTab.tsx:124`.
+  - Each other shell `ActionButton` and each shell `IconButton` is natively disabled at once when it turns off. No requirement gives the focus behaviour of these buttons.
+  - The test at `src/shell/ui/actions.test.tsx:41` checks `keepFocus` itself. The tests at `src/shell/settings/saved-drafts.test.tsx:47` and `:110` check that the script and org-name Save buttons keep the focus.
+  - The chat, members, files, and GitHub areas have their own buttons: `src/chat/ui/actions.tsx`, `src/members/ui/actions.tsx`, `src/files/ui/actions.tsx`, and `src/github/ActionButton.tsx`. They draw the Firna Button too, and they have no `keepFocus`.
+- **Problem:** Each shell caller must remember `keepFocus`. A caller that forgets it loses the focus when its button turns off. These cases show the same class:
+  - Save weights on the operator Providers tab, in `src/shell/operator/ProvidersTab.tsx`, had no `keepFocus`. A successful save turned it off while it had the focus.
+  - A run in Chrome on 2026-11-18 showed the defect. Before the save, Save weights had the focus. After the save, it had no focus and was natively disabled. Branch `calummoore/e2b-backup-sandbox-provider` then added `keepFocus` to it, on 2026-11-18.
+  - Earlier, the script Save and the org-name Save lost the focus in the same way. Commit `aa6d2f9c` added `keepFocus` and set it on those two buttons.
+  - The shared Cancel of shell questions, at `src/shell/ui/Dialog.tsx:45`, has `disabled={busy}` and no `keepFocus`. A Cancel with the focus loses it when another button starts the write. No browser path that leaves the focus on Cancel is proven yet. `plans/follow-ups/shell-dialog-cancel-focus.md` holds this case.
+  - Replace in `src/shell/account/shortcuts/RowButtons.tsx:87-95` and the Delete `IconButton` in `src/shell/settings/EnvVarsSection.tsx:75-81` set `busy` and `disabled` on the pressed button. `plans/follow-ups/busy-buttons-lose-focus.md` holds them, together with the chat `ActionButton`.
+  - The trigger of the Model and effort picker, at `src/shell/ui/ModelPicker.tsx:113-133`, draws the Firna Button directly with `disabled={busy}`. `plans/follow-ups/busy-menu-escape-loses-focus.md` holds this case.
+- **Impact if no action:** Save weights now sets `keepFocus`, so its own defect is fixed. A later shell caller can forget the focus option again, and its user then loses their place.
+- **Root question:** What focus behaviour should shell buttons have when they turn off while they have the focus?
+- **Options:**
+  - **A.** Keep `keepFocus` opt-in. Fix each confirmed case through its own item and its current focus requirement. This keeps today's behaviour. Each new caller must still remember the prop. Effort: Small.
+  - **B.** Add a shared Save button that always sets `keepFocus`, and move the Save callers to it. Callers must still choose that button over `ActionButton`. Other buttons keep today's behaviour. Effort: Medium.
+  - **C.** Make `keepFocus` the default of the shell `ActionButton`. Include `IconButton` where the same rule applies. This sets behaviour for buttons whose requirements are silent. Effort: Large.
+    - On 2026-11-18, the shell `ActionButton` had 124 call sites in 79 files. The shell `IconButton` had 29 call sites in 21 files. Audit each call site.
+    - Check the layout of each call site with the extra wrapper.
+    - Update each test that reads the off state from the button only. The Providers test needed this change: `src/shell/operator/ProvidersTab.test.tsx` now also reads the wrapper's `aria-disabled`.
+    - C covers the shared Cancel, Replace, and the Delete `IconButton`. It does not cover the Model and effort trigger, or the chat, members, files, and GitHub buttons.
+  - **D.** Change the default of the Firna Button in `futex-ai/ui`, and release the package. Then update `@firna/ui` in `package.json`, which now pins version 4.0.0. This changes every app that uses Firna, and it covers every button above. Effort: Large.
+- **Left out:**
+  - A new lint or class test that requires `keepFocus`. It is weaker than a shared default, and it adds a gate.
+  - A focus move to another control after a button turns off. It does not keep the user's place. The Save focus rule keeps the focus on Save.
+  - A button that is never natively disabled, with `aria-disabled` only. `keepFocus` is better on every point. It also takes an off button out of the Tab order while the button does not have the focus.
+- **Wider fix:** C. A default removes the opt-in from each shell caller, so a new caller cannot forget it. B still needs each caller to choose the right button. D also covers the other areas, but it needs a package release.
+- **Previous examples:** Commit `aa6d2f9c`, which added `keepFocus` after the script and org-name Save buttons lost the focus. Save weights in `src/shell/operator/ProvidersTab.tsx`, fixed on 2026-11-18. The cases in `plans/follow-ups/busy-buttons-lose-focus.md`, `plans/follow-ups/shell-dialog-cancel-focus.md`, and `plans/follow-ups/busy-menu-escape-loses-focus.md`.
+- **Related:** Each linked item keeps its own fix, and none waits for this answer. This answer does not wait for them either.
+  - The Save weights fix is complete without this choice. This choice does not block the provider work of branch `calummoore/e2b-backup-sandbox-provider`.
+  - `plans/follow-ups/shell-dialog-cancel-focus.md`: the shared Cancel. C would give the shared Cancel the behaviour of that item's option B.
+  - `plans/follow-ups/busy-buttons-lose-focus.md`: the chat `ActionButton` and two shell callers. C covers the two shell callers. Only D covers the chat `ActionButton`.
+  - `plans/follow-ups/busy-menu-escape-loses-focus.md`: the trigger of a busy shell menu. Only D covers it, because the trigger draws the Firna Button directly.
+- **Recommendation:** C. A shared default stops another forgotten `keepFocus` across the shell. A keeps today's explicit behaviour, but each new caller must still remember the prop.
+- **Action:** ask the user, because C sets the focus behaviour of buttons that no requirement covers. Keep today's behaviour until the user chooses an option. The choice does not block the fixes of the single cases.

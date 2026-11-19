@@ -8,21 +8,23 @@ export async function insertShellOrg(
     name: string
     initials?: string
     userId: string
+    providerAccount: string
     repositories: readonly GitHubRepository[]
     now: number
   },
 ): Promise<boolean> {
-  const { id, name, initials, userId, repositories, now } = input
+  const { id, name, initials, userId, providerAccount, repositories, now } =
+    input
   const createdOrg =
     'EXISTS (SELECT 1 FROM orgs WHERE id = ? AND creator_user_id = ?)'
   const result = await db.batch([
     db
       .prepare(
-        `INSERT INTO orgs (id, name, initials, creator_user_id, created_at)
-       SELECT ?, ?, ?, ?, ? WHERE EXISTS (
+        `INSERT INTO orgs (id, name, initials, creator_user_id, created_at, provider_account)
+       SELECT ?, ?, ?, ?, ?, ? WHERE EXISTS (
          SELECT 1 FROM users WHERE id = ? AND suspended_at IS NULL)`,
       )
-      .bind(id, name, initials ?? null, userId, now, userId),
+      .bind(id, name, initials ?? null, userId, now, providerAccount, userId),
     db
       .prepare(
         `INSERT INTO org_members (org_id, user_id, role, joined_at)

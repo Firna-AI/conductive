@@ -9,13 +9,20 @@ first build starts from. It
 belongs to [Workspaces and sandboxes](workspaces-and-sandboxes.md). The
 terms are those of the [architecture doc](../architecture.md#terms). A
 decision number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says.
+[Decision numbers](../architecture.md#decision-numbers) says. An e2b
+decision number names a decision of the change that adds E2B as the second
+[sandbox provider](workspaces-and-sandboxes.md#the-provider), as that doc
+says.
 
 ## The org image
 
 - Each org has one org image (decision 13). The image holds a prepared
   copy of each repository that the org chose when the build of the image
   began.
+- The org image lives in the provider account of the org, as
+  [The account of an org](workspaces-and-sandboxes.md#the-account-of-an-org)
+  says. Every build and every refresh of the org runs in that account
+  (e2b decision 222).
 - One image for each repository was rejected, because each image costs
   its own saved snapshot and starts.
 - The Repositories tab of the org settings chooses the repositories
@@ -27,6 +34,9 @@ decision number names a dated record, as
 - Bash runs the install script.
 - The Cloud computer tab lists the operating system and software that the
   base image includes before the install script runs.
+- The base image holds the same operating system and software on each
+  provider. Reason: the Cloud computer tab lists one base image for every
+  org.
 - "Build computer" starts a build. A build runs the install script on a
   copy of the image, with every chosen repository cloned (decision 12).
 - An add of a repository also starts a build, as
@@ -91,9 +101,10 @@ decision number names a dated record, as
 - The first build is a normal build. The person who creates the org, its
   first admin, is the starter of that build. Its log and its result show
   on the Cloud computer tab, as for every build.
-- A build of an org without an org image starts from the software image.
-  It copies the repositories, installs the newest release of the sandbox
-  software, and runs the install script, as
+- A build of an org without an org image starts from the software image
+  of its account, when that account has a ready one. It copies the
+  repositories, installs the newest release of the sandbox software, and
+  runs the install script, as
   [The software image](sandbox-software.md#the-software-image) says.
 - When the first build cannot start, Create org still creates the org. An
   admin can then start a build on the Cloud computer tab, with Build

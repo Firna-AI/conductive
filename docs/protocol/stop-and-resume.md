@@ -77,8 +77,9 @@ says.
   why.
 - A refusal of such a message was rejected, because it adds a refusal, and
   the agent must then ask a member to open the workspace.
-- Each such start counts toward the starts that all orgs share, as
-  [The provider](workspaces-and-sandboxes.md#the-provider) says.
+- Each such start counts toward the starts that the orgs of its provider
+  account share, as [The provider](workspaces-and-sandboxes.md#the-provider)
+  says.
 - While the sandbox is stopped, the chat history shows, and the stopped
   state takes the place of the composer.
 - A start that fails shows the error state with Try again. The chat history
@@ -86,15 +87,17 @@ says.
 
 ## The restart near day 14
 
-- Near day 14 of a stop, the app starts the sandbox briefly and stops it
-  again, so that Boat keeps its disk (decision 43). A workspace whose owner
-  is suspended gets no such restart, as
+- On Boat, near day 14 of a stop, the app starts the sandbox briefly and
+  stops it again, so that Boat keeps its disk (decision 43). A workspace
+  whose owner is suspended gets no such restart, as
   [Starts, stops, and builds](operator-actions.md#starts-stops-and-builds)
   says (decision 125).
 - Reason: Boat can delete the disk of a sandbox that is stopped for more
   than 14 days, and a resume then fails.
 - Each such restart uses a start and some minutes of the app's Boat
   account.
+- A sandbox on E2B gets no such restart. Reason: E2B keeps the disk of a
+  stopped sandbox with no time limit.
 - An archived workspace gets this restart only when Boat's 14 days end
   before the app deletes its sandbox, as
   [Archive](workspace-life.md#archive) says. So a sandbox that Archive
@@ -104,9 +107,9 @@ says.
   sandbox and stops it again.
 - Reason: Archive revokes the workspace token, and an archived workspace
   has no tools.
-- After a [Restore](workspace-life.md#restore), the workspace gets this
-  restart again, near day 14 of its last stop. When that time has passed,
-  the restart runs at once.
+- After a [Restore](workspace-life.md#restore), a workspace on Boat gets
+  this restart again, near day 14 of its last stop. When that time has
+  passed, the restart runs at once.
 - An automatic Archive near day 14 was rejected, because the delete 14 days
   after an Archive loses unpushed work. A copy of the disk in the app's own
   storage was rejected, because the app would then hold a copy of each

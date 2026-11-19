@@ -63,9 +63,8 @@ of [the operator section](design-operator.md), and of
 
 [The catalogue](catalogue.md) lists each path of the catalogue and what it
 shows. It also gives the rules of the folder pages and the entries that
-moved. It gives the child pages of `marketing/docs`, `app/account`,
-`app/workspace-menu`, and `app/sub-workspaces`, the New workspace dialog,
-and the repositories that wait for a build. Its linked page,
+moved. It gives the child pages of `marketing/docs` and the New workspace
+dialog. Its linked page,
 [the waitlist, suspensions, and the operator](catalogue-operator.md), gives
 the pages of the waitlist, the child pages of `app/orgs/suspended`, and the
 operator section. Its linked page
@@ -78,6 +77,9 @@ page gives the child pages and flows of `app/workspace-links`,
 The [command palette and feedback](catalogue-palette.md) page gives the child
 pages of `app/command-palette` and `app/feedback`, the Feedback dialog,
 and the flow that sends feedback.
+The [keyboard shortcuts](catalogue-shortcuts.md) page gives the Keyboard
+shortcuts tab in a browser and in the Mac app, and the palette of the Mac
+app with its keys.
 The [attachments and files](catalogue-attachments-and-files.md) page
 gives the child pages of `app/attachments` and `app/files`, and the flow
 `user-flows/drop-a-file`. The [org logins](catalogue-org-logins.md) page
@@ -86,6 +88,12 @@ other pages that name the org login of an org. The
 [secrets and Capabilities](catalogue-secrets.md) page gives the Secrets tab
 of the org settings, the Capabilities pages, the child pages of
 `app/secret-requests`, and the flow `user-flows/secret-request`.
+The [account](catalogue-account.md) page gives the child pages of
+`app/account`. The
+[workspace menu and sub-workspaces](catalogue-workspace-list.md) page gives
+the child pages of `app/workspace-menu` and `app/sub-workspaces`. The
+[first build and waiting repositories](catalogue-org-builds.md) page gives
+the first build of a new org and the repositories that wait for a build.
 
 `app/attachments` shows each attached file as a chip at its place in the
 text of the message box. `app/attachments/drop` shows a drop of files into

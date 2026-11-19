@@ -8,7 +8,7 @@ import {
   userSuspended,
 } from '../data/user-access'
 import { orgProviderForAccount, providerForAccount } from '../sandbox/client'
-import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
+import { readOrgProviderAccount } from '../data/org-provider-account'
 import { latestSoftwareRelease } from './software-release'
 import { softwareVersion } from '../software-image/version'
 import type { SandboxProvider } from '../sandbox/provider'
@@ -56,7 +56,7 @@ interface ImageScheduler {
     software: ImageSoftwareArtifact,
     at: number,
     buildId: string | null,
-    providerAccount?: string,
+    providerAccount: string,
   ): Promise<void>
 }
 
@@ -88,11 +88,11 @@ export async function startImageBuild(
     software: ImageSoftwareArtifact
     dailyRefresh?: boolean
   },
-  providerAccount = DEFAULT_PROVIDER_ACCOUNT,
 ): Promise<string> {
   const { env, dependencies } = runtime
   await requireActiveOrg(env.DB, input.orgId)
   await requireOrgMember(env.DB, input.orgId, input.userId, true)
+  const providerAccount = await readOrgProviderAccount(env.DB, input.orgId)
   const software = readImageSoftware(input.software)
   const existing = await runningBuild(env.DB, input.orgId)
   if (existing) {

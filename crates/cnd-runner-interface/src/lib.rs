@@ -10,6 +10,7 @@ pub mod files;
 pub mod json;
 pub mod messages;
 pub mod ports;
+pub mod preview_ingress;
 pub mod provider_events;
 pub mod runner;
 pub mod runner_commands;

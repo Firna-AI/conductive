@@ -7,9 +7,9 @@ for an agent that is not connected. The [mockups README](README.md) gives
 the commands, the folder layout, how a screen is built, and links to the
 other pages.
 
-- The app runs every cloud computer in its own account. So no org has a
-  key for its cloud computers, and no screen asks for one or for another
-  account.
+- The app runs every cloud computer in an account of its own. So no org
+  has a key for its cloud computers, and no screen asks for one or for an
+  account of the person.
 - The account connects Claude with a subscription token from
   `claude setup-token` or an API key. It connects Codex with an OpenAI API
   key or with a device code sign-in to the ChatGPT plan of the member,

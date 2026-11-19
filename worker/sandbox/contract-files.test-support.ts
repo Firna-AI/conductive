@@ -10,14 +10,16 @@ export function registerFileContract(
   it('reads file metadata without content and refuses a different path', async () => {
     const fixture = createFixture()
     fixture.given({ kind: 'file_info', path, sizeBytes: 1_000_000_000 })
-    await expect(fixture.provider.fileInfo('bx_one', path)).resolves.toEqual({
+    await expect(
+      fixture.provider.fileInfo('sandbox-one', path),
+    ).resolves.toEqual({
       path,
       sizeBytes: 1_000_000_000,
       isDirectory: false,
     })
     fixture.given({ kind: 'file_info', path: '/home/user/other', sizeBytes: 2 })
     await expect(
-      fixture.provider.fileInfo('bx_one', path),
+      fixture.provider.fileInfo('sandbox-one', path),
     ).rejects.toMatchObject({
       kind: 'invalid_response',
       status: 502,
@@ -32,7 +34,7 @@ export function registerFileContract(
     ] as const) {
       fixture.given({ kind: 'failure', errorKind: kind })
       await expect(
-        fixture.provider.fileInfo('bx_one', path),
+        fixture.provider.fileInfo('sandbox-one', path),
       ).rejects.toMatchObject({
         kind,
         status,
@@ -43,38 +45,38 @@ export function registerFileContract(
 
   it('returns the reported file size above the caller limit', async () => {
     const fixture = createFixture()
-    fixture.given({ kind: 'large_file', path, sizeBytes: 6_291_456 })
+    await fixture.given({ kind: 'large_file', path, sizeBytes: 6_291_456 })
 
-    await expect(fixture.provider.readFile('bx_one', path, 3)).resolves.toEqual(
-      {
-        kind: 'too_large',
-        sizeBytes: 6_291_456,
-        limitBytes: 3,
-      },
-    )
+    await expect(
+      fixture.provider.readFile('sandbox-one', path, 3),
+    ).resolves.toEqual({
+      kind: 'too_large',
+      sizeBytes: 6_291_456,
+      limitBytes: 3,
+    })
   })
 
   it('returns the requested file path, byte size, encoding, and content', async () => {
     const fixture = createFixture()
-    fixture.given({
+    await fixture.given({
       kind: 'file',
       value: { path, sizeBytes: 2, encoding: 'base64', content: 'aGk=' },
     })
 
-    await expect(fixture.provider.readFile('bx_one', path, 3)).resolves.toEqual(
-      {
-        kind: 'file',
-        file: { path, sizeBytes: 2, encoding: 'base64', content: 'aGk=' },
-      },
-    )
+    await expect(
+      fixture.provider.readFile('sandbox-one', path, 3),
+    ).resolves.toEqual({
+      kind: 'file',
+      file: { path, sizeBytes: 2, encoding: 'base64', content: 'aGk=' },
+    })
   })
 
   it('refuses a file result for another path', async () => {
     const fixture = createFixture()
-    fixture.given({ kind: 'wrong_file', path })
+    await fixture.given({ kind: 'wrong_file', path })
 
     await expect(
-      fixture.provider.readFile('bx_one', path, 3),
+      fixture.provider.readFile('sandbox-one', path, 3),
     ).rejects.toMatchObject({
       kind: 'invalid_response',
     })

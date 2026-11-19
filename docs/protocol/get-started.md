@@ -25,7 +25,8 @@ adds the org logins, as [Tokens and secrets](tokens-and-secrets.md) says.
 - With only an org login, the step names that login. It says that the
   person can start now, and can connect their own login at any time in
   the account.
-- Get started asks for no Boat account and no Boat key.
+- Get started requires no personal account or key of a
+  [sandbox provider](workspaces-and-sandboxes.md#the-provider).
 - [Chat and events](messages-and-attachments.md#messages) states the notice for a
   missing agent login.
 - The second step, the org step, shows the cloud computer of the org once

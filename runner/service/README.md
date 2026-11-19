@@ -4,10 +4,17 @@ The [agent runner](../README.md) runs as an unprivileged systemd service.
 The [release installer](../../image/install.md#release-installation) installs
 its unit. Installation enables services and starts none.
 
+Boat restarts the enabled services after each resume and fork. On E2B,
+each create and each resume boots the sandbox from its disk, and systemd
+starts the enabled services. So the runner starts in each sandbox that
+starts from the org image.
+
 The unit is [conductive-runner.service](../../image/release/conductive-runner.service).
 It runs as `user`, after the network and the local update-apply unit.
 Its launcher is [runner-start.sh](../../image/runner-start.sh).
-The launcher loads `/run/ascii-secrets/env.sh` and checks the workspace-ready
+The launcher loads `/run/ascii-secrets/env.sh`, the file of the variables
+of the sandbox. Boat writes it on Boat, and the Worker writes it on E2B at
+each create and resume. The launcher then checks the workspace-ready
 marker, workspace identity, and disk-retention setting.
 It maps sandbox settings to the [runner configuration](../configuration.md).
 It then runs `/opt/conductive/current/conductive runner` in the repository folder.

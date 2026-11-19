@@ -83,7 +83,7 @@ it('keeps the failure and previous image when the first schedule fails during pu
       occurredAt: TEST_TIME + 10_000,
       text: 'The cloud computer build could not start. Try again.',
     })
-    expect(await readOrgImage(db, org.id)).toMatchObject({
+    expect(await readOrgImage(db, org.id, 'boat')).toMatchObject({
       imageName: 'last-good-image',
       imageBuildId: 'published-image',
     })
@@ -103,7 +103,7 @@ it('keeps the failure and previous image when the first schedule fails during pu
       occurredAt: TEST_TIME + 10_000,
       text: 'The cloud computer build could not start. Try again.',
     })
-    expect.soft(await readOrgImage(db, org.id)).toMatchObject({
+    expect.soft(await readOrgImage(db, org.id, 'boat')).toMatchObject({
       imageName: 'last-good-image',
       imageBuildId: 'published-image',
     })

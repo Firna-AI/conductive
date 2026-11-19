@@ -92,6 +92,7 @@ export type OperatorOrgMatch =
 
 export interface OperatorOrgSummary {
   id: string
+  providerAccount: string
   name: string
   initials: string | null
   createdAt: number
@@ -144,6 +145,7 @@ export interface OperatorOrgMember {
 
 export interface OperatorOrgDetail {
   id: string
+  providerAccount: string
   name: string
   initials: string | null
   createdAt: number

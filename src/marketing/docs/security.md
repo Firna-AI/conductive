@@ -185,6 +185,11 @@ Your ChatGPT email, account ID, and ChatGPT workspace name can reach the cloud c
 ChatGPT sign-in needs agent software that supports its temporary credentials.
 If its turn cannot start, follow the [ChatGPT recovery steps](/docs/agent-logins#recover-from-a-login-error).
 
+Older agent software could expose the saved login itself.
+Updating or resuming that computer does not revoke a login that someone copied earlier.
+If a login was exposed, revoke it with its provider.
+Removing a login from Account does not revoke a copy held elsewhere.
+
 Code on the computer can also obtain the GitHub credential available to that workspace.
 This includes the workspace owner's GitHub credential outside a running agent turn.
 Continue and a repository change also bring the member's GitHub token into the cloud computer while they fetch the latest default branch.
@@ -192,8 +197,10 @@ Code or members with terminal access can read that token during the fetch.
 
 Removing a member ends their ordinary access to the org.
 It does not guarantee that credentials they copied stop working.
-The computer also uses a credential for its connection to Conductive.
-A copy of that credential can still expose later turn credentials in another member's workspace.
+The computer also uses its workspace token for its connection to Conductive.
+Programs and members with terminal access can read or copy it.
+A copy can still expose later turn credentials and GitHub tokens in another member's workspace.
+This remains possible after removal or suspension.
 
 If you suspect exposure, stop the agent's turn.
 Use the provider's controls to revoke exposed logins or tokens.
@@ -201,10 +208,14 @@ Archive stops its cloud computer and ends that workspace's connection access.
 It also revokes that workspace's token, including copies used to read other chats.
 The cloud computer keeps its disk files for 14 days.
 Those files can still hold copied credentials during that window.
+Restore leaves the computer stopped.
+Its next resume gives it a new workspace token.
+Archive and Restore do not revoke logins or GitHub tokens already copied elsewhere.
 
 - [Replace an agent login](/docs/agent-logins#replace-or-remove-a-login)
 - [Manage an org login](/docs/agent-logins#use-an-org-login)
 - [Archive a workspace](/docs/workspaces#archive-a-workspace)
+- [Build the current computer setup](/docs/cloud-computer#apply-setup-changes)
 
 ## Understand environment values
 

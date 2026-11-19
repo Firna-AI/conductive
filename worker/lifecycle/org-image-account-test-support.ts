@@ -8,13 +8,13 @@ export async function seedSecondaryOrgImage(
   fixture: Awaited<ReturnType<typeof backendFixture>>,
 ): Promise<void> {
   fixture.boat.server.addAccount({ orgId: 'second-org', apiKey: 'boat-second' })
-  fixture.runtime.env.SANDBOX_PROVIDER_ACCOUNTS = {
+  fixture.runtime.env.SANDBOX_PROVIDER_ACCOUNTS = JSON.stringify({
     [SECONDARY_IMAGE_ACCOUNT]: {
       kind: 'boat',
       orgId: 'second-org',
       apiKey: 'boat-second',
     },
-  }
+  })
   await seedPublishedImage(fixture.runtime.env.DB, {
     orgId: fixture.org.id,
     buildId: 'secondary-image-build',

@@ -5,8 +5,9 @@ feature. The [architecture doc](../architecture.md) describes the components
 that meet them, and gives the terms and the meaning of a decision number.
 This page lists each protocol doc and what it covers.
 
-- [Workspaces and sandboxes](../protocol/workspaces-and-sandboxes.md): the org
-  image, the life of a workspace, and the disk flushes of a sandbox.
+- [Workspaces and sandboxes](../protocol/workspaces-and-sandboxes.md): the
+  providers, the account of each org, the org image, the life of a
+  workspace, and the disk flushes of a sandbox.
   - [Sandbox software](../protocol/sandbox-software.md): the releases of the
     app's own software, the updates of each sandbox, the install in a
     build, and the software image.
@@ -108,6 +109,8 @@ This page lists each protocol doc and what it covers.
 - [Access and security](../protocol/access-and-security.md): sign-in, the
   gates, the secrets, and the isolation of sandboxes and previews.
   - [Isolation of orgs and sandboxes](../protocol/isolation.md)
+    - [The app's provider keys](../protocol/provider-keys.md): the Boat key
+      and the E2B key.
     - [Version pins](../protocol/version-pins.md): the runner version that
       a workspace accepts, the version pin, and the risks of the turn
       token in a sandbox.
@@ -189,6 +192,9 @@ This page lists each protocol doc and what it covers.
     finish.
   - [Delete org](../protocol/delete-org.md): the end of an org, its restore
     within 7 days, and the delete of its data.
+  - [Sections](../protocol/sections.md): the sections of an org, the moves
+    of workspaces between them, the Archived group, and the rows of the
+    workspace list.
 - [Pricing](../protocol/pricing.md): the plans and their cloud hours, the
   extra hours, the seller and the tax, the pricing page, and the planned
   billing changes. Use is free until billing starts.
@@ -200,10 +206,15 @@ This page lists each protocol doc and what it covers.
 - [Operator actions](../protocol/operator-actions.md): the operator, the
   suspension of a user or an org, the lift of a suspension, and abuse
   reports.
+  - [Org suspension](../protocol/operator-org-suspension.md): the
+    suspension of an org, and what its members keep.
 - [Operator section](../protocol/operator-section.md): the pages of the
-  operator in the web app, their counts, and their searches.
+  operator in the web app, their counts, their searches, and the weights
+  of new orgs.
   - [Operator section: the Overview](../protocol/operator-overview.md): the
     live counts of the Overview, and the long runs of cloud computers.
+  - [Waitlist tabs of the operator section](../protocol/operator-waitlist-tabs.md):
+    the Waitlist tab, Approve, the Invite codes tab, and the pause.
 - [Command palette](../protocol/command-palette.md): the key and the search
   that finds the workspaces, the actions, and the settings.
 - [Command palette: empty and unavailable states](../protocol/command-palette-states.md):

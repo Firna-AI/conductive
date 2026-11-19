@@ -73,7 +73,7 @@ function publicationStatements(
             AND NOT EXISTS (SELECT 1 FROM json_each(image_build_jobs.repositories_json) repository
               WHERE json_extract(repository.value, '$.id') = r.id))
             AND (SELECT CASE WHEN id = ? THEN 'succeeded' ELSE state END
-              FROM image_builds WHERE org_id = ? AND kind = 'build'
+              FROM image_builds WHERE org_id = ? AND provider_account = ? AND kind = 'build'
               ORDER BY started_at DESC, id DESC LIMIT 1) = 'succeeded')
           THEN 'cleanup-build' ELSE 'cleanup' END,
           process_id = NULL WHERE build_id = ? AND ${publishingBuild}`,
@@ -86,6 +86,7 @@ function publicationStatements(
         job.orgId,
         job.buildId,
         job.orgId,
+        job.providerAccount,
         job.buildId,
         job.buildId,
       ),

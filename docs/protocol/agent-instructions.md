@@ -162,8 +162,8 @@ of agents as pictures in their answers, as
 - The instructions follow the naming rules of user-facing text, as
   [Names in the product](agents-and-sessions.md#names-in-the-product) and
   [The provider](workspaces-and-sandboxes.md#the-provider) say. So they
-  never name Boat, and they never use "Claude Code" as a name of the
-  product.
+  never name a sandbox provider, and they never use "Claude Code" as a
+  name of the product.
 - Reason: the agent can repeat the instructions in the chat.
 
 ### The branches

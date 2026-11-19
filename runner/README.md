@@ -1,7 +1,7 @@
 # Agent runner
 
 The agent runner is the program of Conductive in each cloud computer, a
-Boat sandbox. It runs the agents powered by Claude and Codex for one
+sandbox on Boat or E2B. It runs the agents powered by Claude and Codex for one
 workspace. It also reports the files and the changes of the workspace
 repository and the listening ports.
 
@@ -71,7 +71,9 @@ receipts, and the listening-port scan and scheduling boundaries.
 
 The [preview relay guide](preview-relay.md) gives what the relay does, its
 entry points, how it listens, its build, and its separate service with
-socket activation.
+socket activation. It also gives the private ingress checks, the HTTP and
+WebSocket forwarding, and the tests.
+The relay preserves `Host: localhost:<port>` for the previewed app.
 
 ## Commands
 
