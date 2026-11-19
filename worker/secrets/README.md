@@ -121,8 +121,10 @@ to name the member and says the command did not run.
 `{ state: "sent", turnId }`. A failed admission has
 `{ state: "not-sent", reason }`, where the reason is `login-not-shared`,
 `login-unavailable`, or `sender-unavailable`. The grant stays. The widget
-can explain how the next message, or restoring the starter's login,
-tells the agent. A late deny sends no notice.
+can explain how the next message, or restoring the login of the session,
+tells the agent. The session's `login` names who restores it: the starter
+for a personal login or a record without `login`, and an admin for the
+org login. A late deny sends no notice.
 
 The notice starts a turn for the sender of the turn that asked. It uses
 that sender's current login rules. It joins a running turn in the same

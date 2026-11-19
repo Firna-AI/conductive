@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import type { MessageSender } from '../../shared/generated/MessageSender'
 import { Ban, CircleCheck, CircleMinus, KeyRound, TimerOff } from 'lucide-react'
 import {
   notInOrg,
@@ -17,7 +16,7 @@ import { Answers, PhoneAnswers, ValueSheet } from './RequestAnswers'
 import { ClaimedCommand } from './SecretRunCard'
 import { isOpen, type AnswerKind } from './secret-snapshot'
 import { missingNames } from '../../shared/secret-late-answer'
-import { allowedLabel, endLine } from './secret-words'
+import { allowedLabel, endLine, type RecoveryLogin } from './secret-words'
 import {
   draftReady,
   emptyDraft,
@@ -102,8 +101,8 @@ export function SecretRequestCard(props: {
   request: SecretRequest
   viewerId: string | null
   org: string
-  /** The starter of the session and its agent, for a login that is gone. */
-  starter: { person: MessageSender | null; agent: string } | null
+  /** The login that the session keeps and its agent, for a login that is gone. */
+  login: RecoveryLogin | null
   choices: boolean
   answering: AnswerKind | null
   /**
@@ -122,7 +121,7 @@ export function SecretRequestCard(props: {
   const choices = props.choices && open
   const inline = choices && values && !phone
   const ready = !values || draftReady(request, draft)
-  const end = endLine(request, props.viewerId, props.org, props.starter)
+  const end = endLine(request, props.viewerId, props.org, props.login)
   const answer = {
     answering,
     deny: () => props.onAnswer(request.id, { kind: 'deny' }),
