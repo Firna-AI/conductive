@@ -65,6 +65,9 @@ Each path is relative to `src/app/`, the folder of this page.
 - `org-list.ts`: `OrgList`, the orgs of the person in their own order, as
   `AppModel.orgs` gives them: the list that the server confirmed, then the
   moves that wait for their answer.
+- [send-queue.ts](send-queue.ts): `SendQueue`, whose `run` sends the
+  requests of one `OrgList` or one `Resource` one at a time, each after the
+  answer of the one before.
 - `org-writes.ts`: the requests of `AppModel.createOrg`,
   `AppModel.renameOrg`, and `AppModel.setOrgColor`, which read the org record.
   `putOrgOrder` saves the user's org order for `AppModel.moveOrg`.

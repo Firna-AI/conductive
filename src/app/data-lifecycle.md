@@ -36,10 +36,18 @@ of the data that the screens read and write.
   Such a read shows its error also over the value.
 - The org list reads only at the first load of the app. `OrgList` keeps the
   list that the server confirmed, with the answers of create, rename,
-  delete, restore, accept, and leave, and over it the moves that wait for
-  their answer, in the order that they went out. A failed move goes back
-  alone. A saved move joins the confirmed list once each earlier move has
-  its answer, so a later new org goes after it, as on the server.
+  delete, restore, accept, and leave. Over that list, it keeps the moves
+  that wait for their answer, in the order that the person made them. A
+  failed move goes back alone. A saved move joins the confirmed list once
+  each earlier move has its answer. So a later new org goes after it, as on
+  the server.
+- The saves of the org moves go out one at a time, in their own queue. Each
+  save starts after the answer of the one before, as for the writes and
+  saves of one value. So two quick moves, such as two presses of Alt and Up,
+  reach the server in the order that the person made them. Each move still
+  shows at once, also while its save waits. A failed save rejects only its
+  own caller, and the next save goes. A save that does not answer holds the
+  later moves, but no write of another value.
 - The automation page reads its automation when it mounts and at each return to
   the page. Each field that the owner did not change takes the field of the
   newer automation, and an edited field keeps its edit. A save sends only the
