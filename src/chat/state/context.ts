@@ -40,11 +40,10 @@ export interface ChatContext {
   readonly moves: Map<string, PendingMove>
   readonly newId: () => string
   /**
-   * The client ID of each fixed prompt that did not send, by its session and
-   * its text. So a second try in that session is the same message, and the
-   * same prompt in another session is a new one.
+   * One fixed prompt sends at a time. Its client ID stays by session and
+   * text while it sends and after a failure, so a retry is the same message.
    */
-  readonly prompts: Map<string, string>
+  readonly prompts: { sending: boolean; ids: Map<string, string> }
   /** A new identity for a draft that a session starts after its draft moved. */
   readonly newDraftId: () => string
   /** A new local identity for a file of a draft, in this tab. */

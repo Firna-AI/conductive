@@ -10,7 +10,10 @@ composer, before newer text, when the Worker refuses it. It also shows a
 fixed prompt at once. `state/prompt-actions.test.ts` sends fixed prompts over the fake API. It
 checks the request and the unchanged draft, a send during a turn, a missing
 login, a linked session, and the client ID of a second try in the same and
-in another session. `components/ContinuedNote.test.tsx` folds the note of
+in another session. After the second try sends, the next send of the same
+prompt gets a new client ID. While one prompt waits, another prompt sends
+nothing, also in another session, and a send from the composer still goes.
+`components/ContinuedNote.test.tsx` folds the note of
 Continue once at its place, also after a repeat and in a new tab, in the
 history of a closed session, and draws "You" or the name of the member.
 `state/repository-folder.test.ts` checks that a record of another

@@ -52,8 +52,6 @@ export class BarActions {
    * a connection that ended stays ended.
    */
   private connection: AbortController | null = null
-  /** A prompt sends now, so a second press does nothing. */
-  private prompting = false
 
   constructor(ports: BarActionsPorts) {
     this.ports = ports
@@ -205,16 +203,10 @@ export class BarActions {
    * the chat still keeps its notice and the client ID of a failed send.
    */
   async sendPrompt(text: string): Promise<PromptResult | null> {
-    if (this.prompting) return null
-    this.prompting = true
     const connection = this.connection
-    try {
-      const result = await this.ports.sendPrompt(text)
-      const ended = connection === null || connection.signal.aborted
-      return ended ? null : result
-    } finally {
-      this.prompting = false
-    }
+    const result = await this.ports.sendPrompt(text)
+    const ended = connection === null || connection.signal.aborted
+    return ended ? null : result
   }
 
   private readCapabilities(): void {
