@@ -13,8 +13,8 @@ async function start(): Promise<Server> {
   return server
 }
 
-afterEach(() => {
-  server?.stop()
+afterEach(async () => {
+  await server?.stop()
   server = null
 })
 

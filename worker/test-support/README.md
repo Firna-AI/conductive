@@ -35,8 +35,14 @@ The same setup prepares one folder for each run and watch rerun, and deletes it 
 - It holds the other test Worker bundles.
   `workerLibraryBundle` in [test-bundles.ts](test-bundles.ts) saves each bundle in that folder.
   A process that needs a bundle before its file exists builds it. Later processes read the file.
+- It holds the folders of the test fixtures.
+  `testDirectory` in [test-directory.ts](test-directory.ts) creates each folder, and its `remove()` deletes it.
+  `migratedStorage` copies the template into such a folder for a test runtime, unless its caller gives a folder.
+  Each fixture deletes its owned folder when it closes.
+  The end of the run deletes each folder that remains, such as the folder of a failed setup.
 
 Without the global setup, `migratedStorage` builds one template for its process, and each bundle helper builds its bundle itself.
+Without the global setup, `testDirectory` creates each fixture folder in the system temporary folder.
 
 `createChatFixture` in [`harness.test-support.ts`](../chat/harness.test-support.ts) connects its fake runner and browser tabs through `nativeChatTransport` in [`native-transport.test-support.ts`](../chat/native-transport.test-support.ts).
 Its `drain` waits for batched runner input, connection closes, queued chat work, and sends to the fake runner or a browser tab.
@@ -193,6 +199,9 @@ A callback counts as complete only after the `waitUntil` work that it starts end
 - `attachment-upload.ts` prepares attachment fixtures through the production multipart start and complete operations with Node-compatible R2 part writes.
 - `migrations.ts` splits the migrations and applies them for a harness without the template.
 - [migrated-storage.ts](migrated-storage.ts) builds the migrated template database and copies it into the storage folder of a new runtime.
+- [test-directory.ts](test-directory.ts): `testDirectory(prefix)` creates the folder of one test fixture, and its `remove()` deletes the folder.
+  `testSocketDirectory(candidate)` gives the folder of a tmux socket.
+  It uses a short folder under `/tmp` when the socket path in the candidate folder is too long for a Unix socket.
 - [test-bundles.ts](test-bundles.ts) builds every test Worker bundle with one Vite configuration and saves it for the run. Its `buildWorkerLibrary` also builds the native bundle.
 - `fake-boat.ts` supplies provider replies, fresh streaming response factories, and added organizations with their own keys.
 - `fake-github.ts` supplies sign-in replies and an empty installation list for an account without the GitHub App.

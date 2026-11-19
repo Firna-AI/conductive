@@ -1,5 +1,3 @@
-import { mkdir, mkdtemp } from 'node:fs/promises'
-
 import type { WebSocket } from 'miniflare'
 import { afterEach, beforeAll, expect, it } from 'vitest'
 
@@ -63,12 +61,8 @@ afterEach(async () => {
 })
 
 it('retries the same failed workspace with a fresh token and dispatches every stored message once in order', async () => {
-  const directory = '.context/boat-native-remote-workspaces/8o/worker'
-  await mkdir(directory, { recursive: true })
   const transfer = firstStartAttachmentTransfer()
-  const active = (fixture = await createOuterRuntime(bundle, {
-    persistencePath: await mkdtemp(`${directory}/retry-runtime-`),
-  }))
+  const active = (fixture = await createOuterRuntime(bundle))
   transfer.connect(active)
   const saveSetup = async (script: string, value: string) => {
     const ciphertext = await encrypt(
