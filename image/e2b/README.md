@@ -40,6 +40,12 @@ It does not upload the repository or its secret files.
 It removes API URL and debug overrides from the CLI's child environment,
 so the selected domain controls its requests.
 
+The ready command checks that the relay service and Docker are active,
+and that the relay socket exists. E2B runs this fixed command as `user`.
+Each check uses passwordless `sudo -n`. The service checks need root to
+reach systemd's private socket without a system D-Bus. The socket check
+needs root to reach `/run/conductive-e2b`, whose mode is 0700.
+
 After the build, it reads the CLI's JSON template list and finds one
 matching template with 4 CPUs and 8192 MiB. It prints the actual template
 ID alone to stdout. It saves `build-result.json` beside the staged files,
@@ -110,7 +116,10 @@ They start again at every filesystem boot:
   with accessibility enabled and an empty page. Its disposable profile
   stays under `/run`, so a saved image keeps no browser process lock.
 - `conductive-e2b-computer-config.service` merges `mcpServers.computer`
-  into `/home/user/.claude.json` before envd and the runner start.
+  into `/home/user/.claude.json` before the runner starts.
+
+The computer services do not delay envd startup. The config service waits
+for the desktop, and only the runner waits for the config service.
 
 The config service runs as `user`. It creates a missing file with mode
 0600. It replaces only `computer` and keeps every other key and MCP server.

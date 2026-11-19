@@ -127,7 +127,7 @@ export async function buildTemplate(
       '--memory-mb',
       '8192',
       '--ready-cmd',
-      'systemctl is-active --quiet conductive-e2b-port-relay.service && test -S /run/conductive-e2b/relay.sock && systemctl is-active --quiet docker.service',
+      'sudo -n systemctl is-active --quiet conductive-e2b-port-relay.service && sudo -n test -S /run/conductive-e2b/relay.sock && sudo -n systemctl is-active --quiet docker.service',
     ],
     directory,
     environment,

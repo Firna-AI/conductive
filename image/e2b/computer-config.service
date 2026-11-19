@@ -2,7 +2,7 @@
 Description=Conductive computer MCP settings
 Requires=conductive-e2b-desktop.service
 After=conductive-e2b-desktop.service
-Before=envd.service conductive-runner.service
+Before=conductive-runner.service
 
 [Service]
 Type=oneshot
