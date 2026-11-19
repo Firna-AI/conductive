@@ -15,7 +15,7 @@
   - **Continuation reference:** A keyed candidate identity and matched character count that let later text complete an earlier secret match.
 - **Background:**
   - The symbolic answer filter is in `src/shared/output-symbolic.ts`. Its scanner and continuation helper live at the locations above.
-  - `CONDUCTIVE_SYMBOLIC_ANSWER_STATE` in `wrangler.jsonc` controls promotion to symbolic records. It starts false. Existing symbolic records keep that format while the control is off.
+  - `CONDUCTIVE_SYMBOLIC_ANSWER_STATE` in `wrangler.jsonc` controls promotion to symbolic records. It starts true. Existing symbolic records keep that format while the control is off.
   - `plans/follow-ups/activate-symbolic-answer-state.md` owns the later activation after the compatible reader deploys.
   - The filter must keep the existing whole-literal-marker behaviour. The separate split-marker policy decision stays open.
   - Synthetic active values: `[redacted]`, `X`, `[redacted]XY`, and `redacted]X-tail`.
