@@ -116,6 +116,14 @@ so its message line in the folded work shows the heading. With
 `answer=pictures`, the plan holds a screenshot. So its closed message line
 in the folded work shows the link, and the open line shows the picture.
 
+Send parts out of order starts a short turn in the first open session.
+The page sends the second part of its answer first, and the first part
+1.5 seconds later. As in the Worker, the page stores both parts before it
+sends either one. So the chat holds the second part, connects again, and
+gets the first part from the stored history. The answer then reads "The
+parts arrived out of order, and the chat kept their order." The late copy
+of the first part changes nothing, so each part shows once.
+
 The names follow the backend. A new workspace and each new session have no
 name, and show "Untitled". The page fills a name only while it is empty,
 and never in an archived workspace, so a name that the reader gave stays.

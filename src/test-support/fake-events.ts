@@ -34,7 +34,17 @@ export class FakeWorkspaceEvents {
 
   /** Tests can emit a duplicate or gap to exercise the screen's own reader. */
   emit(envelope: WorkspaceEventEnvelope): void {
+    this.store(envelope)
+    this.publish(envelope)
+  }
+
+  /** Stores an event without sending a live message. */
+  store(envelope: WorkspaceEventEnvelope): void {
     this.events.push(structuredClone(envelope))
+  }
+
+  /** Sends a live message without storing the event again. */
+  publish(envelope: WorkspaceEventEnvelope): void {
     for (const listener of this.listeners) {
       listener({ type: 'event', envelope: structuredClone(envelope) })
     }

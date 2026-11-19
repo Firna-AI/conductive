@@ -69,12 +69,14 @@ export class DevStream {
     if (this.sent) this.events.emit(this.sent)
   }
 
-  /** Sends the second event first, and the first one after a delay. */
+  /** Stores both events, then sends the second live before the delayed first. */
   emitOutOfOrder(first: WorkspaceEvent, second: WorkspaceEvent): number {
     const early = this.envelope(first)
     const late = this.envelope(second)
-    this.events.emit(late)
-    return window.setTimeout(() => this.events.emit(early), 1_500)
+    this.events.store(early)
+    this.events.store(late)
+    this.events.publish(late)
+    return window.setTimeout(() => this.events.publish(early), 1_500)
   }
 
   /** Drops every open connection, as a lost network does. */
