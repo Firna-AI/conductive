@@ -9,8 +9,8 @@ import type { TerminalLinks } from './terminalLinks'
 import { linkKey } from './terminalLinks'
 import { fittedFontSize } from './sharedSize'
 import { TerminalSession } from './terminalSession'
-import { cssTokens, terminalFont } from './terminalTheme'
-import { watchLinks } from './xtermLinks'
+import { cssTokens, monospaceFont, terminalFont } from './terminalTheme'
+import { watchLinks, type XtermLinks } from './xtermLinks'
 import { XtermScreen } from './xtermScreen'
 
 /**
@@ -23,24 +23,43 @@ export interface ScreenParts {
   readonly fit: FitAddon
   /** The font size of the theme, before a shared size makes it smaller. */
   readonly normalFont: number
+  /**
+   * Runs `listener` when the screen opens in its host after a wait for a
+   * size, before the `onOpen` of the owner. A screen that is open already
+   * never runs it. Returns the function that stops it.
+   */
+  whenOpen(listener: () => void): () => void
   dispose(): void
 }
 
 /** DECSTR, the soft reset of the terminal modes. */
 const SOFT_RESET = '\x1b[!p'
 
-function fitVisible(host: HTMLElement, fit: FitAddon): void {
-  if (host.clientWidth > 0 && host.clientHeight > 0) fit.fit()
+/** Whether the page lays out the host with a size. */
+function hasSize(host: HTMLElement): boolean {
+  return host.clientWidth > 0 && host.clientHeight > 0
 }
 
-/** Opens the xterm.js screen of a terminal in `host`. */
+/**
+ * Makes the xterm.js screen of a terminal for `host`. The screen takes
+ * output at once, and opens in `host` once the host has a size, because
+ * xterm.js and the line height measure the font in the page. A host under
+ * `display: none`, such as in a hidden column or behind another tool,
+ * measures nothing, so the output waits in the buffer of xterm.js. A host
+ * with a size opens and fits at once.
+ */
 export function openScreen(
   host: HTMLElement,
   theme: ITheme,
-  options: { links: () => TerminalLinks | undefined; hintClass: string },
+  options: {
+    links: () => TerminalLinks | undefined
+    hintClass: string
+    /** The screen opened in its host after a wait for a size. */
+    onOpen?: () => void
+  },
 ): ScreenParts {
   const xterm = new Terminal({
-    ...terminalFont(cssTokens(host), host),
+    ...monospaceFont(cssTokens(host)),
     theme,
     // Bold keeps its colour, as the bold prompt of the mockup does.
     drawBoldTextInBrightColors: false,
@@ -53,18 +72,48 @@ export function openScreen(
   })
   const fit = new FitAddon()
   xterm.loadAddon(fit)
-  xterm.open(host)
-  fitVisible(host, fit)
-  const outputLinks = watchLinks(xterm, {
-    links: options.links,
-    linkKey: linkKey(navigator.platform),
-    hintClass: options.hintClass,
-  })
+  let outputLinks: XtermLinks | null = null
+  const opening = new Set<() => void>()
+  const open = (): boolean => {
+    if (!hasSize(host)) return false
+    xterm.options = terminalFont(cssTokens(host), host)
+    xterm.open(host)
+    outputLinks = watchLinks(xterm, {
+      links: options.links,
+      linkKey: linkKey(navigator.platform),
+      hintClass: options.hintClass,
+    })
+    return true
+  }
+  let observer: ResizeObserver | null = null
+  // No connection exists yet, so this fit can't undo a shared size.
+  if (open()) fit.fit()
+  else {
+    observer = new ResizeObserver(() => {
+      if (xterm.element || !open()) return
+      observer?.disconnect()
+      // A live connection lays out: it fits, or takes its shared size.
+      // Without one, as after a connection that ended while hidden, the
+      // screen fits its host here.
+      if (opening.size === 0) fit.fit()
+      for (const listener of [...opening]) listener()
+      opening.clear()
+      options.onOpen?.()
+    })
+    observer.observe(host)
+  }
   return {
     xterm,
     fit,
     normalFont: xterm.options.fontSize ?? 12,
+    whenOpen(listener) {
+      if (xterm.element) return () => undefined
+      opening.add(listener)
+      return () => opening.delete(listener)
+    },
     dispose() {
+      observer?.disconnect()
+      opening.clear()
       outputLinks?.dispose()
       xterm.dispose()
     },
@@ -82,7 +131,7 @@ export interface ConnectionEvents {
  * Connects the screen to one transport. The screen keeps the output of an
  * earlier connection until this one shows its own, so a connection that
  * fails before its first output leaves that output to copy. It fits the
- * screen to its box and sends each new size.
+ * screen to its box and sends each new size, from the open of the screen.
  *
  * With the terminal bridge, all viewers share one size. The screen then
  * sends the size of its panel, counted at the normal font, and shows the
@@ -105,7 +154,7 @@ export function connectScreen(
   delete host.dataset.shared
   let shared: BridgeSize | null = null
   const layout = () => {
-    if (host.clientWidth <= 0 || host.clientHeight <= 0) return
+    if (!xterm.element || !hasSize(host)) return
     if (!shared) {
       fit.fit()
       return
@@ -146,6 +195,12 @@ export function connectScreen(
     },
   })
   session.start()
+  // A screen that opens later watches its element before it takes the
+  // focus, then lays out as at a resize.
+  const stopOpen = parts.whenOpen(() => {
+    screen.watchElement()
+    layout()
+  })
   const observer = new ResizeObserver(layout)
   observer.observe(host)
   let disposed = false
@@ -154,6 +209,7 @@ export function connectScreen(
     dispose() {
       if (disposed) return
       disposed = true
+      stopOpen()
       observer.disconnect()
       stopFirstOutput()
       session.dispose()

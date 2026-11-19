@@ -51,8 +51,9 @@ function subscribe(listeners: Set<Listener>, listener: Listener): IDisposable {
  * and mouse reports. A plain drag selects text also while a program has the
  * mouse. It reads the private messages of the terminal bridge, and keeps the
  * links that a program marks with OSC 8 as plain text unless links are
- * enabled. Create it after
- * `open()`, and write to xterm.js only through it.
+ * enabled. Create it before or after `open()`, and write to xterm.js only
+ * through it. The parser hooks work from the start. The focus, the paste,
+ * and the drags need the element of xterm.js, as `watchElement` says.
  */
 export class XtermScreen implements TerminalScreen {
   private readonly xterm: Terminal
@@ -68,6 +69,8 @@ export class XtermScreen implements TerminalScreen {
   private replying = false
   /** During the focus handler of xterm.js, while focus reports are on. */
   private focusing = false
+  /** Whether it watches the element of xterm.js, or no longer can. */
+  private elementWatch: 'waiting' | 'watched' | 'disposed' = 'waiting'
 
   constructor(xterm: Terminal, options?: { links: boolean }) {
     this.xterm = xterm
@@ -104,9 +107,22 @@ export class XtermScreen implements TerminalScreen {
         for (const listener of listeners) listener(data)
       }),
     )
-    this.watchFocus()
-    this.keepPlainDrags()
-    this.watchPastes()
+    this.watchElement()
+  }
+
+  /**
+   * Watches the focus, the paste, and the drags on the element of xterm.js,
+   * which exists from `open()`. The constructor runs it. After a later
+   * `open()`, run it before the screen takes the focus, so the screen marks
+   * a focus report. It watches once, and never after `dispose()`.
+   */
+  watchElement(): void {
+    const { element, textarea } = this.xterm
+    if (this.elementWatch !== 'waiting' || !element || !textarea) return
+    this.elementWatch = 'watched'
+    this.watchFocus(element, textarea)
+    this.keepPlainDrags(element)
+    this.watchPastes(element)
   }
 
   get cols(): number {
@@ -197,6 +213,7 @@ export class XtermScreen implements TerminalScreen {
   }
 
   dispose(): void {
+    this.elementWatch = 'disposed'
     for (const disposable of this.disposables.splice(0)) disposable.dispose()
   }
 
@@ -205,9 +222,10 @@ export class XtermScreen implements TerminalScreen {
    * capture listener on the terminal runs before them, and a listener that is
    * added after them on the text area runs after them.
    */
-  private watchFocus(): void {
-    const { element, textarea } = this.xterm
-    if (!element || !textarea) return
+  private watchFocus(
+    element: HTMLElement,
+    textarea: HTMLTextAreaElement,
+  ): void {
     const before = (event: FocusEvent) => {
       if (event.target === textarea) {
         this.focusing = this.xterm.modes.sendFocusMode
@@ -231,9 +249,7 @@ export class XtermScreen implements TerminalScreen {
   }
 
   /** A capture listener runs before the paste listener of xterm.js. */
-  private watchPastes(): void {
-    const { element } = this.xterm
-    if (!element) return
+  private watchPastes(element: HTMLElement): void {
     const paste = (event: ClipboardEvent) => {
       const text = event.clipboardData?.getData('text/plain') ?? ''
       if (!this.pasteHandler || !text || !this.pasteHandler(text)) return
@@ -251,9 +267,7 @@ export class XtermScreen implements TerminalScreen {
    * program still gets the wheel, the other buttons, and each press with a
    * modifier.
    */
-  private keepPlainDrags(): void {
-    const { element } = this.xterm
-    if (!element) return
+  private keepPlainDrags(element: HTMLElement): void {
     const stop = keepPlainPresses(
       element,
       () => this.xterm.modes.mouseTrackingMode !== 'none',
