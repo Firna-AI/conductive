@@ -1,0 +1,46 @@
+# Merged masks lose literal marker boundaries
+
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-19, from review round 2 of branch `calummoore/follow-up-held-answer-text-keeps-an-36oq`, finding 2.
+- **Location:** `src/shared/secret-held-scan.ts`, the `literalRun` check in `matchAt`; `src/shared/secret-held-contexts.ts`, literal-source shielding in `releasedContinuations`; `src/shared/secret-held.ts`, adjacent span merging in `eraseSecretSpans`.
+- **Reason:** The defect needs unusual active values. Its repair uses stored marker evidence, with no saved-format change.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Literal marker:** The source text `[redacted]`, which the answer filter treats as one unit when it arrives whole.
+  - **Erasure run:** A span whose whole secret copies were replaced by a safe mask in symbolic saved state.
+  - **Marker entry:** The identity `marker` and its logical offset, which attest that the source held the whole literal marker there.
+  - **Continuation reference:** A keyed candidate identity and matched character count that let later text complete an earlier secret match.
+- **Background:**
+  - The symbolic answer filter is in `src/shared/output-symbolic.ts`. Its scanner and continuation helper live at the locations above.
+  - `CONDUCTIVE_SYMBOLIC_ANSWER_STATE` in `wrangler.jsonc` controls promotion to symbolic records. It starts false. Existing symbolic records keep that format while the control is off.
+  - `plans/follow-ups/activate-symbolic-answer-state.md` owns the later activation after the compatible reader deploys.
+  - The filter must keep the existing whole-literal-marker behaviour. The separate split-marker policy decision stays open.
+  - Synthetic active values: `[redacted]`, `X`, `[redacted]XY`, and `redacted]X-tail`.
+  - Receive `assistant.delta` text `[redacted]X`. The longer value `[redacted]XY` makes the filter hold that end.
+  - Protection erases the complete marker value and the adjacent `X`. It merges the erasures into one logical run of length 11.
+  - Exact marker evidence at offset 0 survives in the run's match entries.
+  - The same merged-marker defect can occur in two deltas in one turn, without the turn-end event.
+  - Receive `turn.completed`, then late `assistant.delta` text `-tail!` for the same answer.
+  - The current symbolic output is `[redacted][redacted]!`. The prior filter gives `[redacted][redacted]-tail!`, with that later suffix visible.
+  - A static trace of the real scanner and helpers established this sequence. No runtime reproduction was run in the review or its check.
+- **Problem:** The scanner recognizes an erased whole literal marker only when one run starts there and has exactly the marker's length. Adjacent erasure merging breaks that test. The released continuation helper then accepts a start inside the literal marker.
+- **Impact if no action:** The symbolic path can hide part of an active value that starts inside a literal marker. This is false masking, with no secret disclosure.
+- **Root question:** How does the answer filter preserve a whole literal marker regardless of the shape of its erased source?
+- **Options:**
+  - **A.** Use existing exact marker entries as the source of literal boundaries. Let a complete literal marker bypass only the unknown-run-end check, while retaining full `secretAgrees` verification. The unknown text must have the exact marker identity at that offset. Keep every secret-candidate boundary check and longer complete secret precedence. This covers markers at the start of a merged run, inside it, or across its known and unknown edge. Add turn-end and same-turn sequences to the existing marker regression, with an inner-marker case and a positive longer-whole-match case. Effort: Small.
+  - **B.** Keep erasure runs separate at proved literal-marker boundaries. Preserve those boundaries through erasure, slicing, saving, and restoration. This changes several run helpers and does not repair already-merged records. Effort: Medium.
+  - **C.** Store explicit literal-source spans separately from erasure runs. Make scanning and continuation generation use them. This adds saved metadata and reader work. Effort: Medium.
+  - **D.** Drop whole-literal-marker precedence in symbolic scanning and continuations. Values that start inside a whole marker then match in every case. Change the marker expectations and README rule. This chooses option C of the open split-marker item and needs the user. Effort: Small.
+- **Left out:**
+  - Change nothing keeps the false masking.
+  - Changing the literal-marker policy remains option D for the separate user decision.
+  - Reconstruct hidden source text breaks the no-copy requirement. Exact marker evidence already gives the boundary without that text.
+- **Wider fix:** A. Existing source evidence survives merged erasures. Recognition and shielding can use it without depending on run shape.
+- **Previous examples:** `worker/chat/runner-output-symbolic.test.ts` covers a whole literal marker in one exact erasure run. `plans/follow-ups/split-literal-marker-in-answers.md` records a separate split-source boundary defect.
+- **Related:** `plans/follow-ups/activate-symbolic-answer-state.md` activates the symbolic path where this defect occurs. It does not change the repair and does not wait for this Low bug. `plans/follow-ups/split-literal-marker-in-answers.md` owns a policy decision about split input. A here keeps the current whole-marker policy and does not answer that question. If the user instead chooses that item's option C, close this item without a separate repair.
+- **Recommendation:** A. It uses existing exact source evidence and needs no duplicate saved state.
+- **Action:** fix after merge, apply A, because the bug has likelihood Rare and its Small repair needs no saved-format change.
+
