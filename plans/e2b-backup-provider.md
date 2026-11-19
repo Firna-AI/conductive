@@ -536,14 +536,23 @@ beside the client work. Real provider checks wait for the complete client.
       journal. Preserve pending unknown operations and tombstone proved
       no-resource outcomes. Verify provisioned disk size from provider
       metadata and report filesystem capacity separately.
-- [ ] In a live E2B sandbox, confirm that systemd starts the enabled
+- [x] In a live E2B sandbox, confirm that systemd starts the enabled
       services at boot, and that `/run` is not on the saved disk. Needs:
       an E2B key, and filesystem-only snapshots turned on by E2B support.
-- [ ] Run builds on E2B through the E2B client: the first from the template,
+- [x] Run builds on E2B through the E2B client: the first from the template,
       and a later one from the E2B org image. `install.sh` and the terminal
       install run unchanged. Save the output under
       `.context/e2b-backup-provider/`. Needs: an E2B key.
 - [x] Update `image/README.md`.
+
+Live evidence of 19 November 2026, in the Conductive E2B project on the
+default cluster `e2b.app`, with template `legx77llbioq1vfbvsck`:
+`.context/e2b-backup-provider/m6a-live/live-run-3/summary.json`. Both
+release installs, the save of a filesystem-only image, and the restore
+from it passed. Runtime markers under `/run` were gone after the restore.
+The check then stopped at its disk requirement: the project gives 15 GB,
+not 51 GB, until E2B support raises it. The project is not in the EU
+cluster yet.
 
 Template and relay evidence:
 `.context/e2b-backup-provider/milestone-6-template-report.md`.
@@ -605,18 +614,26 @@ The agents on E2B get the same computer tools as on Boat, as e2b decision
 - [x] Add the new files to the explicit template inputs, and test them.
 - [x] Add a probe to the E2B live check: the driver takes a screenshot of
       `:0`, and Chrome opens a page.
-- [ ] Build the template in the Conductive E2B project, and run the
+- [x] Build the template in the Conductive E2B project, and run the
       computer probe live. Needs: the key of that project.
 - [x] Update "Computer tools" in `docs/protocol/agent-tools.md`, and
       `image/e2b/README.md`.
 - [x] Read both legal pages and each guide in `src/marketing/docs/` in
       full. Update each sentence that restates the computer tools. No
       sentence needed a change.
-- [ ] Delete `plans/follow-ups/second-provider-computer-tools.md` when the
-      live probe passes.
+- [ ] Delete `plans/follow-ups/second-provider-computer-tools.md` when
+      Milestone 9 shows an agent that uses the tools on E2B, as the item's
+      "Done when" asks.
 
 The driver runs as `cua-driver mcp`, with no daemon, as its Linux runtime
-guide says. A local Xvfb proof drove Chrome through the driver.
+guide says. A local Xvfb proof drove Chrome through the driver. The live
+check of 19 November 2026 passed the computer probe on the template and on
+the restored image. Its probes of the second image and of a resume wait
+for the disk requirement. A cold boot from a filesystem-only image starts
+the computer services in about 5 seconds, and the runner orders after
+them. The real builds also found two template faults, now fixed: the
+ready check reached no systemd as `user`, and the template had no system
+D-Bus, which also gated port previews on E2B.
 Evidence: `.context/e2b-backup-provider/m6a-implementation-report.md`.
 
 ## Milestone 9: Live check through the app
