@@ -106,7 +106,11 @@ export function SecretRequestCard(props: {
   starter: { person: MessageSender | null; agent: string } | null
   choices: boolean
   answering: AnswerKind | null
-  onAnswer: (answer: AnswerSecretRequest) => void
+  /**
+   * Answers a request by its ID. So one function serves each card, and a card
+   * keeps the same props while its request stays the same.
+   */
+  onAnswer: (requestId: string, answer: AnswerSecretRequest) => void
 }) {
   const { request, answering } = props
   const phone = useTouch()
@@ -121,11 +125,11 @@ export function SecretRequestCard(props: {
   const end = endLine(request, props.viewerId, props.org, props.starter)
   const answer = {
     answering,
-    deny: () => props.onAnswer({ kind: 'deny' }),
+    deny: () => props.onAnswer(request.id, { kind: 'deny' }),
     allow: () => {
-      if (!values) return props.onAnswer({ kind: 'allow' })
+      if (!values) return props.onAnswer(request.id, { kind: 'allow' })
       setSheet(false)
-      props.onAnswer({
+      props.onAnswer(request.id, {
         kind: 'values',
         lifetime: draft.lifetime,
         values: Object.fromEntries(

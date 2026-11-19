@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import itemStyles from '../../../docs/mockups/src/components/chat/ChatItemView.module.css'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import headingStyles from '../../../docs/mockups/src/components/common/MarkdownHeadings.module.css'
@@ -114,15 +115,16 @@ export function AgentBlocks(props: {
  * code is a chip, and so is a Markdown link to a workspace, also with a bold
  * or code label. The Markdown image of a picture file in a paragraph or a
  * list item shows as its picture, read for the message with the ID `id`,
- * the ID of its item in the transcript.
+ * the ID of its item in the transcript. It parses the text again only when
+ * the text changes.
  */
 export function AgentText(props: { id: string; text: string }) {
+  const { id, text } = props
+  const blocks = useMemo(() => textBlocks(text), [text])
+  const pictures = useMemo(() => ({ message: id }), [id])
   return (
     <div className={classes(itemStyles.agent, headingStyles.headings)}>
-      <AgentBlocks
-        blocks={textBlocks(props.text)}
-        pictures={{ message: props.id }}
-      />
+      <AgentBlocks blocks={blocks} pictures={pictures} />
     </div>
   )
 }

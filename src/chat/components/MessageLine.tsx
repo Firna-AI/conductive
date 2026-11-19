@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
 import { MessageSquareText } from 'lucide-react'
 import styles from '../../../docs/mockups/src/components/chat/ToolGroup.module.css'
 import a11y from '../../../docs/mockups/src/components/common/a11y.module.css'
@@ -195,12 +195,14 @@ function holdsTable(block: TextBlock): boolean {
  * The closed line shows the Markdown image of a picture file as its link,
  * so the line stays one line. The open line shows its picture, read for
  * the message with the ID `id`, the ID of its item in the transcript. A
- * press on the picture opens the file, and the line stays open.
+ * press on the picture opens the file, and the line stays open. The line
+ * parses the text again only when the text changes, not when it opens.
  */
 export function MessageLine(props: { id: string; text: string }) {
   const [open, setOpen] = useState(false)
   const fold = useFold(open, setOpen)
-  const blocks = textBlocks(props.text)
+  const { text } = props
+  const blocks = useMemo(() => textBlocks(text), [text])
   const firstTable = blocks.findIndex(holdsTable)
   const split = open && firstTable >= 0
   const lead = split ? blocks.slice(0, firstTable) : blocks
