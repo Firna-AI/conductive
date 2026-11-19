@@ -135,6 +135,15 @@ question. `components/CloseQuestion.dom.test.tsx` checks the words of
 that question for one and for two running sessions, and
 `state/sessions.test.ts` drops a session that another member closes from
 the question.
+`state/close-actions.test.ts` closes a session tab while the test holds
+its request. The tab moves to the session history at once. An open record
+from the stream before the reply does not bring it back. A failed close
+puts the tab back at its place in the row. When the user chose no other
+tab during the close, the tab shows again with the notice
+"The session didn't close". Another session tab or a Preview tab that the
+user chose during the close stays selected. With the Preview tab, the
+failed close also keeps the session of the chat. In both cases, the notice
+goes to the chat, with no session.
 `components/TranscriptCopy.dom.test.tsx` copies the transcript of a tab
 that never showed, through the real controller, client, and menu, with
 the copy of the app's test services. Copy full transcript asks for the
