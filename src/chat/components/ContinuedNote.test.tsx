@@ -1,7 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { chatHistoryPath, type WorkspaceEvent } from '../../shared/events'
-import { emptyTranscript } from '../../shared/transcript/transcript'
 import {
   FAKE_IDS,
   FAKE_TIME,
@@ -96,7 +95,6 @@ describe('the note of Continue', () => {
               baseBranch: 'main',
             }}
             readers={{ viewerId, members: [] }}
-            transcript={emptyTranscript}
           />,
         ),
       ).trim()
