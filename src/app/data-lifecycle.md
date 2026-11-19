@@ -48,6 +48,15 @@ of the data that the screens read and write.
   shows at once, also while its save waits. A failed save rejects only its
   own caller, and the next save goes. A save that does not answer holds the
   later moves, but no write of another value.
+- The answer of a save of the name and the initials, or of the colour,
+  confirms only the fields of its request. Each such field takes its value
+  from the answer, such as the name that the server trimmed. A field of the
+  request that the answer leaves out goes away. Every other field keeps the
+  value that the list shows, so a late answer brings back no older value.
+  An answer for an org that the list does not have changes nothing.
+- The saves of the General tab go out at once. The answers of two saves of
+  one field could still arrive in the wrong order. So the Org and Colour
+  sections of the tab each take no second save while their own save runs.
 - The automation page reads its automation when it mounts and at each return to
   the page. Each field that the owner did not change takes the field of the
   newer automation, and an edited field keeps its edit. A save sends only the
