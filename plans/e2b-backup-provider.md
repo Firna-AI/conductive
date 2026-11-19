@@ -685,13 +685,19 @@ The complete change passes the gate and the review.
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
-- [ ] Run the targeted tests and the complete gate again after Milestone 6a.
+- [x] Run the targeted tests and the complete gate again after Milestone 6a.
       Review its diff with the `implementation-review` skill.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [x] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
+
+Milestone 6a: CI passed the complete gate and the Rust gate on `d98a7756`.
+Review rounds 8 and 9 are in the review folder: findings 9 and 10 are
+fixed, and round 9 found nothing. The restored-image computer probe failed
+once in five live runs, as `plans/follow-ups/e2b-restored-computer-probe-flake.md`
+says.
 
 Evidence: `.context/e2b-backup-provider/complete-gate-1.log` and
 `combined-smoke/result.json`. Real E2B checks above remain blocked.
