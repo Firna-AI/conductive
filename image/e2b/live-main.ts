@@ -75,6 +75,7 @@ export async function e2bLiveMain(
       'tools',
       'node24',
       'python312',
+      'systemBus',
       'dockerContainer',
     ])
     report.computer = await checkComputer(session.provider, first)

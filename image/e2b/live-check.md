@@ -59,7 +59,7 @@ node image/live-check.mjs --provider=e2b
 
 1. Create a clean sandbox from the configured template.
 2. Check Ubuntu, the base tools, Node 24, Python 3.12, a disposable Docker container,
-   and the computer tools.
+   the system message bus, and the computer tools.
 3. Install the newest release with the production installer. Check its
    `conductive` program, its completion marker, and its SDK helper under
    `/opt/conductive/current`.
@@ -95,6 +95,11 @@ The provider's `diskSizeMB` field reports provisioned disk size in MiB.
 The check converts that value to bytes and requires the requested 51 GB.
 It records formatted filesystem capacity separately as an observation.
 It requires systemd as PID 1 and tmpfs at `/run`.
+The base probe requires `systemBus`: `systemctl is-active --quiet dbus.socket`
+must succeed as `user`, without sudo. The boot probe checks that socket again
+after image restore and filesystem-only resume. Every service query in the
+runtime probe runs as `user` without sudo, including the enabled-service checks.
+This proves the read-only systemd path that the Worker uses for port previews.
 It checks the running display, window manager, Chrome, and computer-config
 services. It checks enabled services and verifies that runner and terminal stay
 gated without workspace credentials or ready markers.

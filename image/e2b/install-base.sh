@@ -4,7 +4,7 @@ set -eu
 base_scripts=$(dirname -- "$0")
 apt-get update
 DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-  bash build-essential ca-certificates clang curl docker.io gh git golang-go \
+  bash build-essential ca-certificates clang curl dbus docker.io gh git golang-go \
   iproute2 openjdk-21-jdk-headless procps python3 python3-pip python3-venv \
   rustc cargo sudo unzip util-linux xz-utils
 
@@ -31,5 +31,6 @@ install -m 644 "$base_scripts/port-relay.py" \
 install -m 644 "$base_scripts/port-relay.service" \
   /etc/systemd/system/conductive-e2b-port-relay.service
 systemctl daemon-reload
+systemctl add-wants sockets.target dbus.socket
 systemctl enable docker.service conductive-e2b-port-relay.service
-systemctl start docker.service conductive-e2b-port-relay.service
+systemctl start dbus.socket docker.service conductive-e2b-port-relay.service

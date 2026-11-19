@@ -30,6 +30,7 @@ def facts(mode):
             'tools': all(succeeds(command) for command in commands),
             'node24': subprocess.check_output(['node', '--version'], text=True).startswith('v24.'),
             'python312': sys.version_info[:2] == (3, 12),
+            'systemBus': service('dbus.socket'),
             'dockerContainer': succeeds(['sudo', '-n', 'docker', 'run', '--rm', 'hello-world']),
         }
     if mode == 'installed':
@@ -43,7 +44,7 @@ def facts(mode):
         return {
             'systemd': Path('/proc/1/comm').read_text().strip() == 'systemd',
             'runTmpfs': subprocess.check_output(['findmnt', '-n', '-o', 'FSTYPE', '-T', '/run'], text=True).strip() == 'tmpfs',
-            'servicesActive': all(service(name) for name in ['envd.service', 'docker.service', 'conductive-e2b-port-relay.service', 'conductive-preview-relay.socket', 'conductive-preview-relay.service', 'conductive-e2b-display.service', 'conductive-e2b-desktop.service', 'conductive-e2b-chrome.service', 'conductive-e2b-computer-config.service']),
+            'servicesActive': all(service(name) for name in ['dbus.socket', 'envd.service', 'docker.service', 'conductive-e2b-port-relay.service', 'conductive-preview-relay.socket', 'conductive-preview-relay.service', 'conductive-e2b-display.service', 'conductive-e2b-desktop.service', 'conductive-e2b-chrome.service', 'conductive-e2b-computer-config.service']),
         }
     if mode == 'mark':
         phase = sys.argv[2]

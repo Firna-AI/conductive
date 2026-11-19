@@ -42,9 +42,9 @@ so the selected domain controls its requests.
 
 The ready command checks that the relay service and Docker are active,
 and that the relay socket exists. E2B runs this fixed command as `user`.
-Each check uses passwordless `sudo -n`. The service checks need root to
-reach systemd's private socket without a system D-Bus. The socket check
-needs root to reach `/run/conductive-e2b`, whose mode is 0700.
+Each check uses passwordless `sudo -n`. The root checks can use systemd's
+private socket before the system bus is ready. The socket check needs root
+to reach `/run/conductive-e2b`, whose mode is 0700.
 
 After the build, it reads the CLI's JSON template list and finds one
 matching template with 4 CPUs and 8192 MiB. It prints the actual template
@@ -64,6 +64,16 @@ It does not set a total disk size.
 ## Software and pins
 
 `install-base.sh` installs the Ubuntu packages and enables Docker.
+It installs Ubuntu's [`dbus` package](https://packages.ubuntu.com/en/noble/dbus)
+for the system message bus. Its `dbus-system-bus-common` dependency supplies
+`dbus.socket`, and `dbus` supplies `dbus.service`.
+Both units have no `[Install]` section. The installer uses
+`systemctl add-wants sockets.target dbus.socket` to keep the socket in the
+boot dependencies. It starts the socket during the template build too.
+The socket activates the system bus at `/run/dbus/system_bus_socket`.
+Read-only `systemctl` queries then work as `user` without sudo after each
+filesystem boot. Commands that start, stop, or enable units still need root.
+
 It installs the base Node from the URL, digest, and version of
 [`IMAGE_NODE_RUNTIME`](../../worker/lifecycle/image-runtime.ts).
 It checks the digest of the archive before it unpacks it under
@@ -188,6 +198,9 @@ runtime state. The source under `/usr/local/lib` contains only code.
 [E2B image live check](live-check.md) gives the provider mode of the
 existing live entry. It uses persistent local D1 state and the real client.
 It builds clean disposable images and checks both preview relay layers.
+Its base probe requires an active `dbus.socket` through `systemctl` as
+`user`, without sudo. Its boot probe checks the same socket after image
+restore and filesystem-only resume. Its service queries also run without sudo.
 It checks the actual stdio computer server, a 1920 by 1080 screenshot, and
 a visible Chrome page before and after filesystem-only image restores and
 resume. These computer probes run only in a real E2B live check.
