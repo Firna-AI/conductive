@@ -4,7 +4,7 @@ import type { ChangeModelRequest } from '../../shared/sessions'
 import { sessionState, type ChatSnapshot } from './chat-snapshot'
 import type { ChatContext } from './context'
 import { moveDraft } from './drafts'
-import { viewShowing } from './sessions'
+import { showsSession, viewShowing } from './sessions'
 
 /**
  * A model change of the other agent, which opens a session under the ID that
@@ -90,10 +90,7 @@ export function applyMoves(
   let next = snapshot
   for (const move of moves) {
     next = moveDraft(next, move)
-    const activeTab = next.view?.activeTab ?? null
-    const showsNonSession = activeTab !== null && activeTab.kind !== 'session'
-    if (!move.open || next.activeSessionId !== move.from || showsNonSession)
-      continue
+    if (!move.open || !showsSession(next, move.from)) continue
     next = {
       ...next,
       activeSessionId: move.to,
