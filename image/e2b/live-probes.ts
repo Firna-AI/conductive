@@ -48,6 +48,24 @@ export async function checkBoot(provider: E2bLiveSandbox, id: string) {
 }
 
 export async function checkComputer(provider: E2bLiveSandbox, id: string) {
+  try {
+    await command(
+      provider,
+      id,
+      `timeout 60s bash -c ${shellQuote(`
+while true; do
+  state=$(systemctl is-active conductive-e2b-computer-config.service 2>/dev/null)
+  case "$state" in
+    active) exit 0 ;;
+    failed) exit 1 ;;
+  esac
+  sleep 0.2
+done
+`)}`,
+    )
+  } catch {
+    throw new CheckError('The E2B computer services did not start.')
+  }
   await upload(provider, id, 'computer-probe.py', computerSource)
   const value = object(
     JSON.parse(

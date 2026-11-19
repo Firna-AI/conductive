@@ -79,6 +79,14 @@ Git repository created only for this check.
 
 ## Runtime and ingress assertions
 
+Before each computer probe, the check polls
+`conductive-e2b-computer-config.service` as `user` without sudo.
+It waits up to 60 seconds for the service to become active before it uploads
+and runs the probe. A failed unit ends the wait at once.
+This covers the computer services that start after a filesystem boot.
+A failed wait reports "The E2B computer services did not start."
+It includes no raw command output.
+
 The computer probe reads `/home/user/.claude.json` and validates the actual
 `computer` entry as a stdio server. It checks its ownership, absolute driver
 path, MCP arguments, and display `:0`. It starts that exact MCP command and
