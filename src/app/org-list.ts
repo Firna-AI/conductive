@@ -1,9 +1,10 @@
 import type { OrgSummary } from '../shared/orgs'
+import { SendQueue } from './send-queue'
 import { Store, type Readable } from './store'
 
 type Orgs = readonly OrgSummary[]
 
-/** A move of one org that went out to the server. */
+/** A move of one org that waits to go out or for its answer. */
 interface OrgMove {
   orgId: string
   /** The place among the other orgs. */
@@ -28,10 +29,12 @@ function orgMoved(orgs: Orgs, move: Pick<OrgMove, 'orgId' | 'index'>): Orgs {
 /**
  * The orgs of the person in their own order, as the rail, the org switcher,
  * and the command palette show them: the list that the server confirmed,
- * then the moves that wait, in the order that they went out.
+ * then the moves that wait, in the order that the person made them.
  *
  * - A move shows at once. A failed move goes back alone, so the other moves
  *   and the confirmed changes stay.
+ * - Moves go out one at a time, each after the answer of the one before.
+ *   A failed move does not stop the next one.
  * - A saved move joins the confirmed list once each earlier move has its
  *   answer. So a later change, such as a new org at the end, goes after it,
  *   as on the server. The list reads only at the first load, so no read
@@ -41,6 +44,7 @@ export class OrgList implements Readable<Orgs> {
   private readonly shown = new Store<Orgs>([])
   private confirmed: Orgs = []
   private moves: OrgMove[] = []
+  private readonly sends = new SendQueue()
 
   get = (): Orgs => this.shown.get()
 
@@ -75,8 +79,9 @@ export class OrgList implements Readable<Orgs> {
   }
 
   /**
-   * Shows the move of an org to `index` among the other orgs while `save`
-   * runs. A failure takes back this move only, and throws.
+   * Shows the move of an org to `index` among the other orgs at once, and
+   * sends it after each earlier move has its answer. A failure takes back
+   * this move only, and throws.
    */
   async move(
     orgId: string,
@@ -87,7 +92,7 @@ export class OrgList implements Readable<Orgs> {
     this.moves = [...this.moves, move]
     this.show()
     try {
-      await save()
+      await this.sends.run(save)
       move.saved = true
     } catch (error) {
       this.moves = this.moves.filter((item) => item !== move)
