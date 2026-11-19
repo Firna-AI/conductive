@@ -119,7 +119,7 @@ export async function fetchSecretRequests(
           )),
         ])
         await view.output.maskTools(runtime.env, workspaceId, before, after)
-        await pruneSavedOutputSecrets(runtime.env, view, after)
+        await pruneSavedOutputSecrets(runtime.env, view, after, before)
       })
       return privateResponse(new Response(null, { status: 204 }))
     }
