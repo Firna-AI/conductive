@@ -36,8 +36,8 @@ gives the chips, which take the place of a link to a workspace of the org.
   `WebLinkText.tsx` beside it draws each link that is not a chip. Only
   `http` and `https` addresses are links.
   - A bare address shows as the text has it. Punctuation, quotes, `*`,
-    `_`, `~`, and `]` at its end stay out of it, and so does a `)` that
-    closes no `(` inside it.
+    `_`, and `~` at its end stay out of it. A `)` or a `]` at its end
+    stays in only when it closes a `(` or a `[` inside the address.
   - In an answer and in a message line of the work of a turn, a Markdown
     link shows as its label. Its link title, the text in quotes or in
     parentheses after its address, does not show. A label that reads as
