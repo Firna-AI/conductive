@@ -10,7 +10,8 @@ A disconnected file read uses the shared sandbox provider on the server.
 
 The workspace Durable Object owns one `WorkspaceFiles` over the chat storage.
 Production routes forward the original request to that object.
-Its handler preserves cancellation and reads the captured checkout folder from D1.
+Its handler gives each pending read the signal of the request that reaches the object.
+It reads the captured checkout folder from D1.
 
 ## Integration
 
@@ -139,8 +140,10 @@ Required options:
 - `fetch`: the server's provider transport.
 - `now`: the clock for the existing request gate.
 
+The outer Worker forwards the original request with `stub.fetch`.
+The runtime does not pass the signal of the outer request to the object, because `wrangler.jsonc` does not turn on `request_signal_passthrough`.
+No test or run shows that a browser disconnect ends a pending read.
 The production handler calls the local port inside the workspace object.
-The outer Worker forwards its request through `fetch`, with its cancellation signal.
 Its `read` and `diff` methods return `null` when the runner is disconnected.
 An adapter must preserve that result.
 It must carry request cancellation to the object or detach pending requests when its connection ends.
