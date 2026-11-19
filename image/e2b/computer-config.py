@@ -17,13 +17,14 @@ def configure(path):
             raise ValueError('The MCP settings are not an object.')
         servers['computer'] = {
             'type': 'stdio',
-            'command': '/usr/local/bin/cua-driver',
-            'args': ['mcp'],
-            'env': {
-                'DISPLAY': ':0',
-                'DBUS_SESSION_BUS_ADDRESS': 'unix:path=/run/conductive-e2b-desktop/bus',
-                'XDG_RUNTIME_DIR': '/run/conductive-e2b-desktop',
-            },
+            'command': '/usr/bin/env',
+            'args': [
+                'DISPLAY=:0',
+                'DBUS_SESSION_BUS_ADDRESS=unix:path=/run/conductive-e2b-desktop/bus',
+                'XDG_RUNTIME_DIR=/run/conductive-e2b-desktop',
+                '/usr/local/bin/cua-driver',
+                'mcp',
+            ],
         }
         with tempfile.NamedTemporaryFile(mode='w', dir=path.parent, delete=False) as output:
             temporary = Path(output.name)

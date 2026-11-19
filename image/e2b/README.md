@@ -134,9 +134,20 @@ for the desktop, and only the runner waits for the config service.
 The config service runs as `user`. It creates a missing file with mode
 0600. It replaces only `computer` and keeps every other key and MCP server.
 It warns and keeps the existing file when it cannot parse or write it.
-The entry uses `/usr/local/bin/cua-driver`, `args: ["mcp"]`, `DISPLAY=:0`,
-and the desktop session's D-Bus address. The runner reads it at each agent
-start and passes it to both agents.
+The entry starts `/usr/bin/env` with these arguments, in order:
+
+```text
+DISPLAY=:0
+DBUS_SESSION_BUS_ADDRESS=unix:path=/run/conductive-e2b-desktop/bus
+XDG_RUNTIME_DIR=/run/conductive-e2b-desktop
+/usr/local/bin/cua-driver
+mcp
+```
+
+The entry has no `env` field. The runner reads it at each agent start.
+Every published runner release passes its command and arguments to both
+agents. The launcher therefore supplies the desktop settings even when
+an older runner does not pass a server's `env` field to Codex.
 
 Linux `cua-driver mcp` owns its runtime, so the template starts no driver
 daemon. The pinned
@@ -203,7 +214,10 @@ Its base probe requires an active `dbus.socket` through `systemctl` as
 restore and filesystem-only resume. Its service queries also run without sudo.
 It checks the actual stdio computer server, a 1920 by 1080 screenshot, and
 a visible Chrome page before and after filesystem-only image restores and
-resume. These computer probes run only in a real E2B live check.
+resume. The computer process gets only the entry's command and arguments,
+with `HOME` and `PATH` as its initial environment. This checks the Codex
+launch path without adding the desktop settings from the probe process.
+These computer probes run only in a real E2B live check.
 Its help and prepare modes need no key. A real run needs the project
 inputs and support settings described in that guide.
 

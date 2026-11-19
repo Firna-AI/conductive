@@ -41,7 +41,7 @@ class Computer:
     def __init__(self, config):
         self.process = subprocess.Popen(
             [config['command'], *config.get('args', [])],
-            env={**os.environ, **config.get('env', {})},
+            env={'HOME': str(Path.home()), 'PATH': '/usr/local/bin:/usr/bin:/bin'},
             stdin=subprocess.PIPE, stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL, text=True, start_new_session=True,
         )
@@ -132,10 +132,17 @@ def main():
     config = json.loads(config_path.read_text())['mcpServers']['computer']
     if not is_stdio_server(config):
         raise ValueError('The computer entry is not a stdio server.')
-    if (config['command'] != '/usr/local/bin/cua-driver'
-            or config.get('args') != ['mcp'] or config.get('env', {}).get('DISPLAY') != ':0'):
+    expected_args = [
+        'DISPLAY=:0',
+        'DBUS_SESSION_BUS_ADDRESS=unix:path=/run/conductive-e2b-desktop/bus',
+        'XDG_RUNTIME_DIR=/run/conductive-e2b-desktop',
+        '/usr/local/bin/cua-driver',
+        'mcp',
+    ]
+    if (config['command'] != '/usr/bin/env' or config.get('args') != expected_args
+            or 'env' in config):
         raise ValueError('The computer entry does not use the installed driver on :0.')
-    environment = {**os.environ, **config['env']}
+    environment = {**os.environ, **dict(arg.split('=', 1) for arg in expected_args[:3])}
     computer = Computer(config)
     try:
         initialized = computer.request('initialize', {
