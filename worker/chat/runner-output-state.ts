@@ -11,6 +11,7 @@ const CHUNK_CHARACTERS = RUNNER_EVENT_MAX_BYTES / 16
 const CONTEXT_KEY = chatKey('output-context', 'workspace')
 const STREAM_PREFIX = chatKey('output-filter', '')
 const TOOL_PREFIX = chatKey('output-tool', '')
+type OutputContextFormat = 'legacy' | 'symbolic'
 
 /** Only encrypted filter state enters these transaction-owned records. */
 export class RunnerOutputState {
@@ -32,6 +33,21 @@ export class RunnerOutputState {
 
   saveContexts(ciphertext: string | undefined): Promise<void> {
     return this.saveAt(CONTEXT_KEY, ciphertext)
+  }
+
+  async contextIndexFormat(): Promise<OutputContextFormat | undefined> {
+    const value = await this.data.get(chatKey('output-context', 'indexed'))
+    if (value === 'symbolic') return value
+    return value === 'legacy' ? value : undefined
+  }
+
+  saveContextIndexFormat(format: OutputContextFormat): Promise<void> {
+    return this.data.put(chatKey('output-context', 'indexed'), format)
+  }
+
+  async markLegacyContexts(): Promise<void> {
+    if ((await this.contextIndexFormat()) === 'symbolic')
+      await this.saveContextIndexFormat('legacy')
   }
 
   async streams(): Promise<string[]> {

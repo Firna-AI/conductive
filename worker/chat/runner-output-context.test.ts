@@ -8,6 +8,7 @@ import { FakeRunner } from '../test-support/fake-runner'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { WORKSPACE_ID } from './harness.test-support'
 import { outputFixture } from './runner-output.test-support'
+import { answerOutputStream } from './output-answer-key'
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -40,7 +41,7 @@ it('keeps a refused completion prefix encrypted and masks late text from a new s
     ...f.context,
   })
   const ciphertext = await f.chat.store.read(WORKSPACE_ID, (view) =>
-    view.output.readContexts(),
+    view.output.read(answerOutputStream(delta)),
   )
   const end = await f.emit({
     type: 'turn.completed',

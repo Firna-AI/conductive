@@ -116,6 +116,8 @@ export async function saveOutputSnapshot(
     : undefined
   if (streamId === null) await view.output.saveContexts(ciphertext)
   else await view.output.save(streamId, ciphertext)
+  if (snapshot.some((held) => !held.symbolic && held.contexts?.length))
+    await view.output.markLegacyContexts()
 }
 
 export async function pruneSavedOutputSecrets(

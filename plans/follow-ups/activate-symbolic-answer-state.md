@@ -34,7 +34,7 @@
   - With the control off, the Worker puts no other state, new or saved, into the symbolic format. No Worker turns a hidden whole copy back into its text.
   - Until the switch deploys, the shorter-copy leak and the old values in saved lists stay in production, as they were before the change.
   - After the switch, a record in the earlier format keeps its value list until the Durable Object writes that record again.
-  - A receipt that reaches the answer filter writes its runner stream record and the workspace record of answer ends. Private tool-detail parts do not rewrite answer records. A cleanup of a temporary value can write any record.
+  - A receipt that reaches the answer filter updates the changed state of its runner stream and of the answers of its event. With the control on, the next such receipt converts all answer records to the symbolic format when one can still use the earlier format. Private tool-detail parts do not rewrite answer records. A cleanup of a temporary value can write any record.
   - So the record of an older runner stream can keep its list with no time limit. So can each record of a stopped, archived, or removed workspace.
   - The deletion of the org removes such a record. The user accepted this retention. This task makes no sweep over all workspaces.
 - **Task:**
@@ -64,7 +64,7 @@
   15. Run the complete gate: `npm ci`, `npm --prefix desktop ci`, `npm ci --prefix runner`, and then `npm run check`.
   16. Commit, push, and open the pull request. Its final head needs green `Complete gate` and `Rust gate` checks.
   17. Agent merges are off in `AGENTS.md`, so a member merges it. Its push to `main` then deploys it. Check that the job `Deploy` of a run that contains the switch succeeds, with the same commands.
-  18. Out of scope: a production setting, a secret, and a sweep over all workspaces. Also out of scope: the literal-marker rule of `plans/follow-ups/split-literal-marker-in-answers.md`, and the growth of answer ends of `plans/follow-ups/worker-output-contexts-grow-across-answers.md`.
+  18. Out of scope: a production setting, a secret, and a sweep over all workspaces. Also out of scope: the literal-marker rule of `plans/follow-ups/split-literal-marker-in-answers.md`, and the storage of answer ends, one record for each answer, in `worker/chat/output-answer-records.ts`.
 - **Impact if no action:** the rules of `docs/protocol/answer-text-secrets.md` never take effect in production. A whole copy of an ended secret value can still show in stored chat, and old org secret and env values stay in saved lists.
 - **Needs:** the merged change that adds the control, and a successful job `Deploy` of a Deploy run that contains it. Write access to the repository, and `gh` with read access to the Actions runs of `Firna-AI/conductive`. No production setting, no secret, and no other credential.
 - **Done when:** a merged pull request sets the control to true. Its targeted checks, the complete gate, and the `Complete gate` and `Rust gate` checks of its final head passed. The job `Deploy` of a Deploy run that contains it succeeded. The reader of both formats, the reads of the earlier format, and the rule for the control off are still in the code.

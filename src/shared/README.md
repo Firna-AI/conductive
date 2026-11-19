@@ -194,7 +194,7 @@ The filter does not cap the number of answer contexts.
 Its snapshot holds each answer in its own format.
 A snapshot without answer contexts also stays valid.
 The Worker keeps the held text in the encrypted state of its runner stream.
-It keeps the answer contexts in one encrypted state of the workspace, which each runner stream uses.
+It keeps the answer contexts of each answer in an encrypted state of that answer, which each runner stream uses.
 It saves both before it confirms the corresponding raw event.
 
 `secret-text.ts` holds the exact-copy scanner of the earlier format and of
