@@ -20,72 +20,6 @@ afterAll(async () => {
   await harness.dispose()
 })
 
-it('masks held whole copies after value changes and keeps exact longer and fallback matches', async () => {
-  const f = await outputFixture(harness, {})
-  await f.setEnvironment({ CONDUCTIVE_SYMBOLIC_ANSWER_STATE: 'true' })
-  for (const scenario of [
-    {
-      name: 'removed prefix',
-      before: ['short-token', 'short-token-longer'],
-      first: 'short-token',
-      after: ['short-token-longer'],
-      next: '!',
-      expected: '[redacted]!',
-    },
-    {
-      name: 'longer completion',
-      before: ['short-token', 'short-token-longer'],
-      first: 'short-token',
-      after: ['short-token-longer'],
-      next: '-longer!',
-      expected: '[redacted]!',
-    },
-    {
-      name: 'nested fallback',
-      before: ['short-token', 'db://user:short-token@host'],
-      first: 'db://user:short-token@ho',
-      after: ['db://user:short-token@host'],
-      next: 'me!',
-      expected: 'db://user:[redacted]@home!',
-    },
-    {
-      name: 'complete fallback',
-      before: ['🦀token', '🦀token-mid', '🦀token-mid-long'],
-      first: '🦀token-mid',
-      after: ['🦀token-mid', '🦀token-mid-long'],
-      next: '-x!',
-      expected: '[redacted]-x!',
-    },
-    {
-      name: 'exact identity',
-      before: ['short-token', 'short-token-longer'],
-      first: 'short-token',
-      after: ['zzzzzzzzzzz-longer'],
-      next: '-longer!',
-      expected: '[redacted]-longer!',
-    },
-  ]) {
-    await setAnswerValues(f, scenario.before)
-    const delta = {
-      type: 'assistant.delta' as const,
-      ...f.context,
-      messageId: scenario.name,
-    }
-    await f.emit({ ...delta, text: scenario.first })
-    const held = JSON.stringify(await answerState(f))
-    await setAnswerValues(f, scenario.after)
-    await f.emit({ ...delta, text: scenario.next })
-    expect(await shownAnswer(f, scenario.name), scenario.name).toBe(
-      scenario.expected,
-    )
-    for (const value of scenario.before)
-      expect(
-        held,
-        `${scenario.name}: saved state contains no whole value`,
-      ).not.toContain(value)
-  }
-})
-
 it('keeps symbolic contexts through OFF rollback, an unrelated event, restart, and cross-stream continuation', async () => {
   const f = await outputFixture(harness, { TOKEN: 'private-value' })
   await f.setEnvironment({ CONDUCTIVE_SYMBOLIC_ANSWER_STATE: 'true' })
@@ -160,6 +94,31 @@ it('keeps the existing complete and split literal marker output', async () => {
   await setAnswerValues(f, ['[redacted]-long'])
   await f.emit({ ...delta, messageId: 'held-marker', text: '!' })
   expect(await shownAnswer(f, 'held-marker')).toBe('[redacted]!')
+  await setAnswerValues(f, ['redacted]-tail'])
+  await f.emit({
+    ...delta,
+    messageId: 'literal-source-shield',
+    text: '[redacted]',
+  })
+  await f.emit({ ...delta, messageId: 'literal-source-shield', text: '-tail' })
+  expect(await shownAnswer(f, 'literal-source-shield')).toBe('[redacted]-tail')
+  await setAnswerValues(f, ['[redacted]', '[redacted]-long', 'redacted]-tail'])
+  await f.emit({
+    ...delta,
+    messageId: 'erased-literal-source',
+    text: '[redacted]',
+  })
+  await f.emit({
+    type: 'turn.completed',
+    ...f.context,
+    state: 'finished',
+    durationMs: 1,
+    files: [],
+    omittedFileCount: 0,
+    userMessageIds: [f.messageId],
+  })
+  await f.emit({ ...delta, messageId: 'erased-literal-source', text: '-tail' })
+  expect(await shownAnswer(f, 'erased-literal-source')).toBe('[redacted]-tail')
 })
 
 it('keeps an exact longer continuation after a whole shorter copy crosses a released context', async () => {

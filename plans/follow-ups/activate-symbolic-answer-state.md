@@ -56,8 +56,9 @@
       - Files for that check: `worker/chat/runner-output.test.ts`, `worker/chat/runner-output-context.test.ts`, `worker/chat/runner-output-legacy.test.ts`, `worker/chat/runner-output-durability.test.ts`, and `worker/secrets/output-filter.test.ts`. They run with the control off.
       - Rollback from on to off: save state with the control true, then go on with the control false. State that is already symbolic stays symbolic. No hidden whole copy shows or becomes text. A value that answer events or runner streams split stays hidden.
       - File for that check: `worker/chat/runner-output-symbolic.test.ts`.
+      - Released copies: a turn end or a refused completion releases a held mask. Its later exact longer continuation stays hidden, across a restart or another stream. Completion input keeps matching references from its own source. These cases run in `worker/chat/runner-output-symbolic-release.test.ts`.
       - Storage security with the control on: the decrypted saved state holds no synthetic secret value. No held end in it holds a whole copy of an active value. Each identity of a possible value is a keyed hash under the app key, with its own purpose. The identities and their salt stay inside the encrypted state.
-      - Files for that check: `worker/chat/runner-output-symbolic.test.ts`, `worker/chat/runner-output-symbolic-durability.test.ts`, and `worker/secrets/output-filter-symbolic.test.ts`.
+      - Files for that check: `worker/chat/runner-output-symbolic-held.test.ts`, `worker/chat/runner-output-symbolic-durability.test.ts`, and `worker/secrets/output-filter-symbolic.test.ts`.
       - The Worker tests do not read the `vars` of `wrangler.jsonc`. Each test that needs the control on sets it itself.
       - Also run each later test of the control. `git grep -lE 'CONDUCTIVE_SYMBOLIC_ANSWER_STATE|enableSymbolicAnswers' -- '*.test.ts'` finds them.
   15. Run the complete gate: `npm ci`, `npm --prefix desktop ci`, `npm ci --prefix runner`, and then `npm run check`.
