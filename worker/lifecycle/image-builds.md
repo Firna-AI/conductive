@@ -96,12 +96,21 @@ in the same D1 batch as the new snapshot name, before the provider call.
 It writes `SNAPSHOT_DONE_LOG` in the same batch as the change to the
 `publish` phase. So a retry or a replayed save repeats neither line.
 
-`failBuild` in [`build-data.ts`](build-data.ts) saves the failed state,
-the failure message, and its log line in one D1 batch. Only the call that
-changes a `running` build to `failed` writes them. So a scheduling failure
-that arrives after an alarm failed the build changes neither the saved
-message nor the log. Other log writes do not check the build state. So
-output can still reach the log during cleanup.
+`failBuild` in [`build-data.ts`](build-data.ts) and `publishBuild` in
+[`build-admission-data.ts`](build-admission-data.ts) end a build through
+one [shared writer](build-end-data.ts). A failure saves the failed state,
+the failure message, and its log line. A publication saves the succeeded
+state, the org image, and the `cleanup` or `cleanup-build` phase. The writer
+saves each end in one D1 batch. It saves an end only for the call that
+changes a `running` build to `failed` or `succeeded`. A publication also
+needs an active org.
+
+So a scheduling failure that arrives after an alarm ended the build does
+not change the state, the saved message, or the log. A publication that
+runs after a failure ended the build does not change the state, the org
+image, or the phase. Cleanup then deletes the snapshot of the failed
+build. Other log writes do not check the build state. So output can still
+reach the log during cleanup.
 
 - A build loads the chosen repositories, installs the image software, runs
   the install script with Bash, and saves a snapshot. A first build that
@@ -261,6 +270,8 @@ states the rule.
 ## Key code
 
 - [`build-admission-data.ts`](build-admission-data.ts): guarded image build admission and publication, with the installed runner version.
+- [`build-end-data.ts`](build-end-data.ts): the shared writer for failure
+  and publication, with the final state and its writes in one D1 batch.
 - [`build-changes-data.ts`](build-changes-data.ts): `readBuildChanges`, the
   saved install script change and the added and removed repositories in
   `BuildsResponse.changes`. It reads the script reference and the published
