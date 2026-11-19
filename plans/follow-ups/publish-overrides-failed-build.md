@@ -1,0 +1,44 @@
+# Publication can override a failed build
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-19, from `calummoore/follow-up-a-late-scheduling-failure-adds-8jpb`, a problem outside the scope of its failure log fix.
+- **Location:** `worker/lifecycle/build-admission-data.ts:139`, `worker/lifecycle/image-build-steps.ts:80`, `worker/lifecycle/image-builds.ts:191`, `worker/lifecycle/image-builds.ts:204`, `worker/lifecycle/image-build-failure.ts:26`, `worker/lifecycle/runtime.ts:49`, and `worker/lifecycle/build-data.ts:182`.
+- **Reason:** The race needs a first scheduling reply that stays pending until the build publishes, and its fix costs the same after the merge.
+
+- **Terms:**
+  - **Image build:** A job that prepares the saved cloud computer image of an org.
+  - **Image coordinator:** The org's Durable Object that advances image builds through alarms.
+  - **Publication:** The D1 batch of `publishBuild` that makes the snapshot of a build the org image and marks the build `succeeded`.
+  - **Transition ownership:** The rule that only the call that ends a running build writes the final state and the writes that belong to it.
+  - **Job phase:** The saved step of a build, such as `create`, `snapshot`, `publish`, or `cleanup`.
+- **Background:**
+  - `startImageBuild` in `worker/lifecycle/image-builds.ts` inserts a new build as `running`, then makes its first `scheduler.schedule` call. When that call rejects, it calls `failUnscheduledBuild` and rethrows the error.
+  - Callers outside the coordinator, such as API routes and the GitHub webhook receiver, get the scheduler from `imageRuntime` in `worker/lifecycle/runtime.ts`. Their first call is then the Durable Object call `scheduleImage`. No code sets a time limit on it.
+  - Each coordinator alarm runs `runImageAlarm` in `worker/lifecycle/image-timers.ts`. It finds the running build in D1 through `readImageSchedule` in `worker/lifecycle/image-schedule.ts` and advances it one step. So alarms can advance the new build while the first call is still pending.
+  - That alarm can be the one that the pending call saved, an alarm that was already set, or one that a later start request sets.
+  - `advanceImageBuild` in `worker/lifecycle/image-builds.ts` reads the job once. It then awaits D1 checks of the org, the starter, and the admin, and gets the provider client.
+  - `advanceBuildStep` in `worker/lifecycle/image-build-steps.ts` then awaits `requireActiveOrg`, `provider.get`, and `provider.setAutoStop`. Its `publish` branch awaits `requireActiveOrg` again, then calls `publishBuild`.
+  - `publishBuild` in `worker/lifecycle/build-admission-data.ts` runs one D1 batch. It writes the snapshot into `org_images`, sets the build `succeeded` with no error, and picks the `cleanup` or `cleanup-build` phase.
+  - The `org_images` write and the `succeeded` write check only that the org is active. They do not check that the build still runs.
+  - `failBuild` in `worker/lifecycle/build-data.ts` writes the failed state and its log line in one D1 batch, only when its call changes a running build to `failed`. So the failure path has transition ownership, and the publication does not.
+  - The org deletion writers in `worker/members/composition-data.ts` and `worker/members/deletion-data.ts` also end only a running build.
+  - Nobody reproduced this race. Only a read of the code shows it.
+- **Problem:**
+  - The race needs `failUnscheduledBuild` to commit after an alarm read the job at the `publish` step, and before that alarm's publication commits.
+  - So the first scheduling reply must stay pending through every step before `publish`. These steps are allocation, the repository copies, the software step, the install script of a build, and the snapshot.
+  - `failUnscheduledBuild` in `worker/lifecycle/image-build-failure.ts` calls `failBuild`, which wins the transition. It saves `failed`, the message "The cloud computer build could not start. Try again.", and the same text as a log line. `finishUnscheduledBuild` in `worker/lifecycle/build-admission-data.ts` then moves the job to `cleanup`.
+  - The publication then makes the snapshot the org image, sets `succeeded` with no error, and picks its own cleanup phase. The failure log line stays.
+  - The failure log guard of `failBuild` does not cause this override and does not change it.
+- **Impact if no action:** A succeeded build whose snapshot became the org image keeps a failure line in its log. A member can then follow a cause that did not end the build. Until the publication commits, the app reads the build as failed, and a start request in that time can start one more build.
+- **Root question:** How does each build keep one ending, so that its state, its log, and its org image come from the call that ended it?
+- **Options:** Each option includes a regression test. The test delivers a late scheduling failure while an alarm waits before its publication. It then reads the state, the log, and the org image.
+  - **A.** Make the publication apply only when its call changes the build from `running` to `succeeded`. Tie each side effect, such as the `org_images` write and the job phase choice, to that win in the same D1 batch. Other writers that end a build keep separate guards. A late failure then discards a finished snapshot, and an admin must select Try again. Effort: Small.
+  - **B.** Add one shared writer for the end of a build, and move `failBuild` and `publishBuild` to it. It commits the final state and each write that belongs to that end in one D1 batch. It writes only for the call that changes the build from `running`. The org deletion writers can use it too. A late failure still discards a finished snapshot. Effort: Medium.
+  - **C.** Let a scheduling failure end only a build that no alarm has claimed. The caller and the first alarm each make a guarded D1 claim of a job in `create`. When the alarm claims it first, the caller keeps the build and returns its ID. A finished build then publishes, with no false cause. This changes the rule in `worker/lifecycle/image-builds.md` that a new build whose first alarm cannot schedule fails at once. Other writers that end a build get no shared ownership. Effort: Medium.
+- **Left out:** Changing nothing fails the goal. Letting the publication win and deleting the failure line keeps two endings, and open log streams already showed that line. Hiding failure lines of succeeded builds keeps the stored state and log inconsistent. A state read just before `publishBuild` leaves a gap before the batch, so A is better on every point. A time limit on the first call only shortens the window. Routing the failure through the coordinator with a durable fallback reaches the result of C with more storage, so C is better on every point.
+- **Wider fix:** B. One shared writer gives every end of a build the same transition ownership, so no writer that ends a build can repeat the gap.
+- **Previous examples:** The log line of `failBuild` in `worker/lifecycle/build-data.ts` was written even when its call did not end the build. It now commits only with the call that changes a running build to `failed`. `plans/follow-ups/scheduling-failure-loses-build-cleanup.md` records alarm phase writes that also ignore which call ended the build.
+- **Related:** `plans/follow-ups/scheduling-failure-loses-build-cleanup.md` has the same cause: a first scheduling failure that ends a build that an alarm still advances. Its option E is option C of this item. Its recommended cleanup query fix does not fix this item. `plans/follow-ups/added-build-can-be-lost.md` changes the same publication. Each write that its option D adds needs the same transition ownership.
+- **Recommendation:** B. It closes this race and gives every writer that ends a build the same transition ownership.
+- **Action:** fix after merge, apply B, because the race is Rare and the fix is not harder after the merge.
