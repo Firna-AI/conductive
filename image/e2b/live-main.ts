@@ -78,7 +78,7 @@ export async function e2bLiveMain(
       'systemBus',
       'dockerContainer',
     ])
-    report.computer = await checkComputer(session.provider, first)
+    await checkComputerPhase(report, 'computer', session.provider, first)
     report.first = await installProbeImage(
       session.provider,
       first,
@@ -92,7 +92,12 @@ export async function e2bLiveMain(
     session = await openLiveProvider(root, config.stateDirectory, options)
     const second = await resources.create(session.provider, 'second', imageA)
     report.firstRestore = await checkFirstRestore(session.provider, second)
-    report.restoredComputer = await checkComputer(session.provider, second)
+    await checkComputerPhase(
+      report,
+      'restoredComputer',
+      session.provider,
+      second,
+    )
     report.second = await installProbeImage(
       session.provider,
       second,
@@ -104,7 +109,7 @@ export async function e2bLiveMain(
     const id = await resources.create(session.provider, 'probe', imageB)
     report.resources = await checkResources(session.provider, config, id)
     report.boot = await checkBoot(session.provider, id)
-    report.probeComputer = await checkComputer(session.provider, id)
+    await checkComputerPhase(report, 'probeComputer', session.provider, id)
     const markers = await probe(session.provider, id, 'markers')
     report.markers = requireFlags(markers, [
       'diskMarkers',
@@ -115,7 +120,7 @@ export async function e2bLiveMain(
     report.preview = preview
     report.resume = await checkResume(session.provider, id)
     report.resumedBoot = await checkBoot(session.provider, id)
-    report.resumedComputer = await checkComputer(session.provider, id)
+    await checkComputerPhase(report, 'resumedComputer', session.provider, id)
     report.oldAlias = await checkOldAlias(
       session.provider,
       id,
@@ -161,4 +166,16 @@ export async function e2bLiveMain(
     throw new CheckError(
       'E2B cleanup is incomplete. Read cleanupNeeded and keep the state directory.',
     )
+}
+
+/** Keep the safe facts of a failed computer probe in the report of its phase. */
+async function checkComputerPhase(
+  report: Record<string, unknown>,
+  name: string,
+  provider: Parameters<typeof checkComputer>[0],
+  id: string,
+): Promise<void> {
+  const phase: Record<string, unknown> = {}
+  report[name] = phase
+  report[name] = await checkComputer(provider, id, phase)
 }

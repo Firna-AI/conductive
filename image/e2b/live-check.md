@@ -94,9 +94,26 @@ negotiates the supported `2025-06-18` protocol. It opens a disposable local
 page in a separate Chrome profile on `:0` and waits for the page's load
 signal. Through MCP, `get_desktop_state` must return a native 1920 by 1080
 PNG and list that Chrome window as visible. The probe closes its own
-processes and removes its temporary profile. It records only boolean facts.
+processes and removes its temporary profile.
+A successful probe records only boolean facts.
 It runs on the template, both restored images, and after filesystem-only
 resume. Neither help nor prepare mode starts a computer probe.
+
+The page-load wait is 10 seconds. The whole probe has a 30-second alarm.
+An exception, including the alarm, makes the probe print one JSON object
+and exit with status 0 so that the checker can read it.
+The object keeps every known flag and sets each remaining flag to `false`.
+It adds `failedStep` and `failure` from fixed allowlists.
+The steps are `config`, `mcpStart`, `mcpInitialize`, `chromeStart`,
+`pageLoad`, `screenshot`, `windows`, and `cleanup`.
+An exception class outside the allowlist becomes `Error`.
+The probe prints no exception message, path, URL, or raw output.
+
+The checker validates both failure words before it uses them.
+It writes only the four boolean flags and those words to its phase-report
+argument before it fails. For example, it reports
+"The E2B computer probe failed at pageLoad (TimeoutError)."
+A successful probe must still pass all four flag checks.
 
 The check requires 4 CPUs and 8192 MiB in the provider's sandbox detail.
 The provider's `diskSizeMB` field reports provisioned disk size in MiB.
@@ -144,8 +161,9 @@ It adds no migration digest gate and never opens the deployed app's D1.
 The process must receive the same encryption key when it reopens that state.
 
 `resources.json` records safe allocation keys and resource identities.
-`summary.json` records selected assertion booleans and observed resource
-counts. Neither report stores raw provider output or credentials.
+`summary.json` records selected assertion booleans, safe computer failure
+words, and observed resource counts. Neither report stores raw provider
+output or credentials.
 The result identifies its scope as `e2b-image-runtime`.
 
 Cleanup runs after success and failure. An ambiguous create without an

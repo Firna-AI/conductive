@@ -47,7 +47,11 @@ export async function checkBoot(provider: E2bLiveSandbox, id: string) {
   }, 'the E2B boot services')
 }
 
-export async function checkComputer(provider: E2bLiveSandbox, id: string) {
+export async function checkComputer(
+  provider: E2bLiveSandbox,
+  id: string,
+  phaseReport: Record<string, unknown> = {},
+) {
   try {
     await command(
       provider,
@@ -76,12 +80,60 @@ done
       ),
     ),
   )
-  return requireFlags(value, [
+  const flagNames = [
     'computerStdio',
     'computerOwned',
     'computerScreenshot',
     'chromePage',
-  ])
+  ] as const
+  if ('failedStep' in value) {
+    const steps = new Set([
+      'config',
+      'mcpStart',
+      'mcpInitialize',
+      'chromeStart',
+      'pageLoad',
+      'screenshot',
+      'windows',
+      'cleanup',
+    ])
+    const failures = new Set([
+      'BrokenPipeError',
+      'FileNotFoundError',
+      'JSONDecodeError',
+      'KeyError',
+      'OSError',
+      'PermissionError',
+      'RuntimeError',
+      'StopIteration',
+      'TimeoutError',
+      'TimeoutExpired',
+      'TypeError',
+      'ValueError',
+      'Error',
+    ])
+    const { failedStep, failure } = value
+    if (
+      typeof failedStep !== 'string' ||
+      !steps.has(failedStep) ||
+      typeof failure !== 'string' ||
+      !failures.has(failure)
+    )
+      throw new CheckError(
+        'The E2B computer probe returned invalid failure details.',
+      )
+    Object.assign(
+      phaseReport,
+      Object.fromEntries(flagNames.map((name) => [name, value[name] === true])),
+      { failedStep, failure },
+    )
+    throw new CheckError(
+      `The E2B computer probe failed at ${failedStep} (${failure}).`,
+    )
+  }
+  const facts = requireFlags(value, flagNames)
+  Object.assign(phaseReport, facts)
+  return facts
 }
 
 export async function checkEnvironment(

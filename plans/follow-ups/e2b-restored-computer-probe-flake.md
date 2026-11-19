@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-19, from the live E2B checks of Milestone 6a on branch `calummoore/e2b-backup-sandbox-provider`.
-- **Location:** `checkComputer` in `image/e2b/live-probes.ts`, and the page wait of `check_page` in `image/e2b/computer-probe.py:103`.
+- **Location:** `checkComputer` in `image/e2b/live-probes.ts`, and the page wait of `check_page` in `image/e2b/computer-probe.py:121`.
 - **Reason:** The failure did not repeat in four later attempts, and the probe hides its raw output, so the source is not proven.
 
 - **Terms:**
