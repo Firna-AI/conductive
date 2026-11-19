@@ -597,20 +597,27 @@ Depends on: 6
 The agents on E2B get the same computer tools as on Boat, as e2b decision
 216 B says.
 
-- [ ] Install Xvfb, Openbox, Google Chrome, and the pinned Cua Driver in the
+- [x] Install Xvfb, Openbox, Google Chrome, and the pinned Cua Driver in the
       E2B template, with a digest check of each download.
-- [ ] Start the display, the window manager, and the driver's services at
+- [x] Start the display, the window manager, and the driver's services at
       each boot. Merge the entry `computer` into `/home/user/.claude.json`
       at each boot.
-- [ ] Add the new files to the explicit template inputs, and test them.
-- [ ] Add a probe to the E2B live check: the driver takes a screenshot of
-      `:0`, and Chrome opens a page. Needs: an E2B key.
-- [ ] Update "Computer tools" in `docs/protocol/agent-tools.md`, and
+- [x] Add the new files to the explicit template inputs, and test them.
+- [x] Add a probe to the E2B live check: the driver takes a screenshot of
+      `:0`, and Chrome opens a page.
+- [ ] Build the template in the Conductive E2B project, and run the
+      computer probe live. Needs: the key of that project.
+- [x] Update "Computer tools" in `docs/protocol/agent-tools.md`, and
       `image/e2b/README.md`.
-- [ ] Read both legal pages and each guide in `src/marketing/docs/` in
-      full. Update each sentence that restates the computer tools.
+- [x] Read both legal pages and each guide in `src/marketing/docs/` in
+      full. Update each sentence that restates the computer tools. No
+      sentence needed a change.
 - [ ] Delete `plans/follow-ups/second-provider-computer-tools.md` when the
       live probe passes.
+
+The driver runs as `cua-driver mcp`, with no daemon, as its Linux runtime
+guide says. A local Xvfb proof drove Chrome through the driver.
+Evidence: `.context/e2b-backup-provider/m6a-implementation-report.md`.
 
 ## Milestone 9: Live check through the app
 

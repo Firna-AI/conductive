@@ -15,7 +15,7 @@ node image/live-check.mjs --provider=e2b --help
 node image/live-check.mjs --provider=e2b --prepare
 ```
 
-`--prepare` checks the shipped runtime and preview probes, the provider
+`--prepare` checks the shipped runtime, computer, and preview probes, the provider
 migration, and the script imports. It needs no runner bundle.
 It uses no credential, provider, image, sandbox, or agent.
 Preparation does not prove a real template or runtime check.
@@ -58,7 +58,8 @@ node image/live-check.mjs --provider=e2b
 ## Image chain
 
 1. Create a clean sandbox from the configured template.
-2. Check Ubuntu, the base tools, Node 24, Python 3.12, and a disposable Docker container.
+2. Check Ubuntu, the base tools, Node 24, Python 3.12, a disposable Docker container,
+   and the computer tools.
 3. Install the newest release with the production installer. Check its
    `conductive` program, its completion marker, and its SDK helper under
    `/opt/conductive/current`.
@@ -66,7 +67,7 @@ node image/live-check.mjs --provider=e2b
 5. Save filesystem-only image A and delete the first build sandbox.
 6. Close the local D1 runtime and reopen its persistent path with the same key.
 7. Create another build sandbox from image A through the saved mapping.
-8. Check marker retention and run the same production installers again.
+8. Check marker retention and the computer tools. Run the same production installers again.
 9. Save filesystem-only image B and delete the second build sandbox.
 10. Create a probe sandbox from image B and run the runtime and ingress assertions.
 11. Pause and resume it without memory, then check fresh runtime state and preview access again.
@@ -78,12 +79,24 @@ Git repository created only for this check.
 
 ## Runtime and ingress assertions
 
+The computer probe reads `/home/user/.claude.json` and validates the actual
+`computer` entry as a stdio server. It checks its ownership, absolute driver
+path, MCP arguments, and display `:0`. It starts that exact MCP command and
+negotiates the supported `2025-06-18` protocol. It opens a disposable local
+page in a separate Chrome profile on `:0` and waits for the page's load
+signal. Through MCP, `get_desktop_state` must return a native 1920 by 1080
+PNG and list that Chrome window as visible. The probe closes its own
+processes and removes its temporary profile. It records only boolean facts.
+It runs on the template, both restored images, and after filesystem-only
+resume. Neither help nor prepare mode starts a computer probe.
+
 The check requires 4 CPUs and 8192 MiB in the provider's sandbox detail.
 The provider's `diskSizeMB` field reports provisioned disk size in MiB.
 The check converts that value to bytes and requires the requested 51 GB.
 It records formatted filesystem capacity separately as an observation.
 It requires systemd as PID 1 and tmpfs at `/run`.
-It checks enabled services and verifies that runner and terminal stay
+It checks the running display, window manager, Chrome, and computer-config
+services. It checks enabled services and verifies that runner and terminal stay
 gated without workspace credentials or ready markers.
 It checks that disk markers survive and runtime markers disappear.
 The environment file must contain the current harmless probe value with

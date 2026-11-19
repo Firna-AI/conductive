@@ -12,6 +12,7 @@ import { e2bConfiguration, e2bRequiredInputs } from './live-input'
 import { checkOldAlias, checkPreview } from './live-preview'
 import {
   checkBoot,
+  checkComputer,
   checkEnvironment,
   checkResources,
   probe,
@@ -32,6 +33,7 @@ export async function e2bLiveMain(
   }
   await Promise.all([
     access(join(root, 'image/e2b/runtime-probe.py')),
+    access(join(root, 'image/e2b/computer-probe.py')),
     access(join(root, 'image/e2b/preview-probe.mjs')),
   ])
   if (arguments_.includes('--prepare')) {
@@ -74,8 +76,8 @@ export async function e2bLiveMain(
       'node24',
       'python312',
       'dockerContainer',
-      'noComputer',
     ])
+    report.computer = await checkComputer(session.provider, first)
     report.first = await installProbeImage(
       session.provider,
       first,
@@ -89,6 +91,7 @@ export async function e2bLiveMain(
     session = await openLiveProvider(root, config.stateDirectory, options)
     const second = await resources.create(session.provider, 'second', imageA)
     report.firstRestore = await checkFirstRestore(session.provider, second)
+    report.restoredComputer = await checkComputer(session.provider, second)
     report.second = await installProbeImage(
       session.provider,
       second,
@@ -100,6 +103,7 @@ export async function e2bLiveMain(
     const id = await resources.create(session.provider, 'probe', imageB)
     report.resources = await checkResources(session.provider, config, id)
     report.boot = await checkBoot(session.provider, id)
+    report.probeComputer = await checkComputer(session.provider, id)
     const markers = await probe(session.provider, id, 'markers')
     report.markers = requireFlags(markers, [
       'diskMarkers',
@@ -110,6 +114,7 @@ export async function e2bLiveMain(
     report.preview = preview
     report.resume = await checkResume(session.provider, id)
     report.resumedBoot = await checkBoot(session.provider, id)
+    report.resumedComputer = await checkComputer(session.provider, id)
     report.oldAlias = await checkOldAlias(
       session.provider,
       id,

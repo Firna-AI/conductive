@@ -123,7 +123,12 @@ The [E2B template](e2b/README.md) supplies Ubuntu 24.04 and the software of
 public image inputs and prints the actual template ID.
 It installs a private TCP relay for web servers that listen on loopback.
 An enabled systemd service seeds that relay under `/run` at boot.
-The relay holds no credential and supplies no computer tools.
+The relay holds no credential. The template also supplies the `computer`
+MCP server through Cua Driver 0.54.0, with Google Chrome, Xvfb, and Openbox
+on display `:0`. Enabled services start the desktop and merge the computer
+entry into `/home/user/.claude.json` at each boot. It supplies no desktop
+stream. The [template guide](e2b/README.md#software-and-pins) gives the pins
+and their sources.
 Each org image build still installs the newest release of the sandbox
 software, as on Boat.
 

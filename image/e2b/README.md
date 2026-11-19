@@ -8,7 +8,8 @@ software with the existing [release installer](../install.md#release-installatio
 The template installs every tool in
 [`BASE_IMAGE`](../../src/shared/base-image.ts): Node 24, npm, pnpm, Bun,
 Python 3.12, uv, Go, Rust, Java, GCC, Clang, Docker, git, and gh.
-It supplies no computer MCP server or desktop stream.
+It also supplies the `computer` MCP server through the Cua Driver, with
+Google Chrome on display `:0`. It supplies no desktop stream.
 
 ## Build the template
 
@@ -75,6 +76,59 @@ The pins and digests come from the publisher's release metadata:
 - [uv release](https://github.com/astral-sh/uv/releases/tag/0.13.7)
   and [asset digests](https://api.github.com/repos/astral-sh/uv/releases/tags/0.13.7).
 
+`install-computer.sh` installs Xvfb, Openbox, and the MIT-licensed Cua Driver
+0.54.0. It downloads only the stable Linux x86-64 binary archive from
+[release `cua-driver-rs-v0.54.0`](https://github.com/trycua/cua/releases/tag/cua-driver-rs-v0.54.0).
+Its SHA-256 is `53b38ee3a5aeed39bdcd3acee0bea98a0eed3315e9df2d8af73345680c49868e`,
+from the release's
+[`SHA256SUMS`](https://github.com/trycua/cua/releases/download/cua-driver-rs-v0.54.0/SHA256SUMS).
+The installer checks the digest before extraction. It installs `cua-driver`
+and `cua-cursor-theme` from the archive root. It installs no nightly build,
+SDK library, Wayland helper, or AGPL extension, including `cua-perception`.
+
+`install-chrome.sh` installs `google-chrome-stable` from Google's signed apt
+repository. Chrome follows that repository's stable version at template
+build time. It uses no snap. The installer verifies the primary signing
+key fingerprint `EB4C1BFD4F042F6DDDCCEC917721F63BD38B4796`, published on
+[Google's Linux repository page](https://www.google.com/linuxrepositories/).
+It exports only that key into a repository-specific keyring. Apt verifies
+the repository metadata and the downloaded package against that key.
+
+## Computer services
+
+The template installer enables and starts four systemd services.
+They start again at every filesystem boot:
+
+- `conductive-e2b-display.service` starts Xvfb on `:0` at 1920 by 1080,
+  with 24-bit colour and no TCP listener. It reports ready through Xvfb's
+  display notification pipe. It removes the previous boot's display socket
+  and lock before starting Xvfb.
+- `conductive-e2b-desktop.service` starts Openbox and a session D-Bus.
+  Openbox reports ready after its startup. The user-owned runtime directory
+  `/run/conductive-e2b-desktop` holds the bus socket with mode 0700.
+- `conductive-e2b-chrome.service` starts Google Chrome on that display,
+  with accessibility enabled and an empty page. Its disposable profile
+  stays under `/run`, so a saved image keeps no browser process lock.
+- `conductive-e2b-computer-config.service` merges `mcpServers.computer`
+  into `/home/user/.claude.json` before envd and the runner start.
+
+The config service runs as `user`. It creates a missing file with mode
+0600. It replaces only `computer` and keeps every other key and MCP server.
+It warns and keeps the existing file when it cannot parse or write it.
+The entry uses `/usr/local/bin/cua-driver`, `args: ["mcp"]`, `DISPLAY=:0`,
+and the desktop session's D-Bus address. The runner reads it at each agent
+start and passes it to both agents.
+
+Linux `cua-driver mcp` owns its runtime, so the template starts no driver
+daemon. The pinned
+[runtime guide](https://github.com/trycua/cua/blob/cua-driver-rs-v0.54.0/libs/cua-driver/rust/Skills/cua-driver/RUNTIME.md#preflight-and-transport)
+states this mode. One-shot driver CLI calls use a daemon instead.
+The pinned
+[Linux guide](https://github.com/trycua/cua/blob/cua-driver-rs-v0.54.0/libs/cua-driver/rust/Skills/cua-driver/LINUX.md#at-spi-needs-the-session-bus-headless--containers--runuser)
+explains why the graphical programs and the MCP process share a D-Bus.
+These services need no workspace credential. A filesystem-only resume
+starts them again from disk and writes the computer entry again.
+
 ## Private loopback relay
 
 The E2B ingress reaches a sandbox's network address.
@@ -125,6 +179,9 @@ runtime state. The source under `/usr/local/lib` contains only code.
 [E2B image live check](live-check.md) gives the provider mode of the
 existing live entry. It uses persistent local D1 state and the real client.
 It builds clean disposable images and checks both preview relay layers.
+It checks the actual stdio computer server, a 1920 by 1080 screenshot, and
+a visible Chrome page before and after filesystem-only image restores and
+resume. These computer probes run only in a real E2B live check.
 Its help and prepare modes need no key. A real run needs the project
 inputs and support settings described in that guide.
 
@@ -147,6 +204,10 @@ authorizations in [Deployment inputs](../../docs/deployment.md).
 ### Key code
 
 - `Dockerfile`, `install-base.sh`, `install-tools.sh`: the base software.
+- `install-computer.sh`, `install-chrome.sh`: the desktop and verified downloads.
+- `display-start.py`, `display.service`, `desktop.service`, `desktop-session.conf`,
+  `chrome.service`: display readiness, the session bus, Openbox, and Chrome.
+- `computer-config.py`, `computer-config.service`: the boot-time MCP merge.
 - `build-template.mjs`, `template-build.ts`: the developer entry and build.
 - `template-context.ts`: the public upload context and shared Node inputs.
 - `template-cli.ts`: the pinned CLI invocation and private output handling.
@@ -155,4 +216,5 @@ authorizations in [Deployment inputs](../../docs/deployment.md).
   behavior checks, with its adjacent test support.
 - `live-state.ts`, `live-provider.ts`: persistent local D1 and the real client.
 - `live-main.ts`, `live-builds.ts`, `live-resources.ts`: the image chain and cleanup.
-- `live-probes.ts`, `live-preview.ts`: runtime and private ingress assertions.
+- `live-probes.ts`, `computer-probe.py`, `live-preview.ts`: runtime,
+  computer MCP, and private ingress assertions.

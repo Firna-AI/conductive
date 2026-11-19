@@ -1,0 +1,19 @@
+[Unit]
+Description=Conductive computer window manager and session bus
+Requires=conductive-e2b-display.service
+After=conductive-e2b-display.service
+
+[Service]
+Type=notify
+NotifyAccess=all
+User=user
+Group=user
+Environment=HOME=/home/user DISPLAY=:0 XDG_SESSION_TYPE=x11
+Environment=XDG_RUNTIME_DIR=/run/conductive-e2b-desktop
+RuntimeDirectory=conductive-e2b-desktop
+RuntimeDirectoryMode=0700
+ExecStart=/usr/bin/dbus-run-session --config-file=/usr/local/lib/conductive-e2b/desktop-session.conf -- /usr/bin/openbox --sm-disable --startup "/usr/bin/systemd-notify --ready"
+KillMode=control-group
+
+[Install]
+WantedBy=multi-user.target

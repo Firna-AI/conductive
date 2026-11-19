@@ -22,6 +22,7 @@ done
 sh "$base_scripts/install-tools.sh" \
   "$base_node_directory/bin/node" \
   "$base_node_directory/lib/node_modules/npm/bin/npm-cli.js"
+sh "$base_scripts/install-computer.sh"
 
 usermod -aG docker user
 install -d -m 755 /usr/local/lib/conductive-e2b

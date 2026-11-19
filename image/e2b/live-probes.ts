@@ -1,6 +1,7 @@
 import type { E2bLiveSandbox } from './live-provider'
 import type { SandboxProvider } from '../../worker/sandbox/provider'
 import source from './runtime-probe.py?raw'
+import computerSource from './computer-probe.py?raw'
 
 import { PREVIEW_INGRESS_PATH } from '../../src/shared/preview-ingress'
 import { E2bControl } from '../../worker/sandbox/e2b/control'
@@ -44,6 +45,25 @@ export async function checkBoot(provider: E2bLiveSandbox, id: string) {
       ? requireFlags(value, ['systemd', 'runTmpfs', 'servicesActive'])
       : null
   }, 'the E2B boot services')
+}
+
+export async function checkComputer(provider: E2bLiveSandbox, id: string) {
+  await upload(provider, id, 'computer-probe.py', computerSource)
+  const value = object(
+    JSON.parse(
+      await command(
+        provider,
+        id,
+        `/usr/bin/python3 ${shellQuote(`${probeDirectory}/computer-probe.py`)}`,
+      ),
+    ),
+  )
+  return requireFlags(value, [
+    'computerStdio',
+    'computerOwned',
+    'computerScreenshot',
+    'chromePage',
+  ])
 }
 
 export async function checkEnvironment(
