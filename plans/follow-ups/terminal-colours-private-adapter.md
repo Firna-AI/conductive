@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-19, from branch `calummoore/follow-up-colour-changes-before-first-hn3n`, which fixed `terminal-colours-before-first-show.md` with its option D. Option C here keeps that item's blocked upstream option F. Options A, B, D, and E keep its options D, E, A, and B, and **Left out** keeps its option C.
-- **Location:** `src/terminal/xtermColours.ts:27`, its calls in `openScreen` at `src/terminal/screenConnection.ts:76,85`, and xterm.js 6.0.0's `src/browser/CoreBrowserTerminal.ts:168,189,472` in `node_modules/@xterm/xterm/`.
+- **Location:** `src/terminal/xtermColours.ts:29`, its calls in `openScreen` at `src/terminal/screenConnection.ts:76,85`, and xterm.js 6.0.0's `src/browser/CoreBrowserTerminal.ts:168,189,472` in `node_modules/@xterm/xterm/`.
 - **Reason:** The upstream fix needs a public contribution to xterm.js, which the user has not approved, and then an xterm.js release with the fix.
 
 - **Source:** Review.
@@ -38,6 +38,7 @@
   - Accepting the loss: it fails the goal and brings back the fixed defect.
 - **Wider fix:** C. It removes the cause in xterm.js, so the app needs no colour code of its own.
 - **Previous examples:** `plans/follow-ups/terminal-css-private-classes.md` and `plans/follow-ups/terminal-link-press-rule.md` record other app code that depends on private parts of xterm.js. None found for colours.
+- **Related:** `terminal-colours-hidden-theme-order.md` records kept colours that override a newer colour scheme, and `terminal-colours-hidden-queue-growth.md` records kept events with no bound. Both come from the same colour adapter. Option C here, with ThemeService before `open`, also fixes both, and it is option E of the theme-order item. The theme-order fix adds its rule to the rules for a replacement at the end of this item.
 - **Recommendation:** C. It removes the private dependency of this app and fixes the cause for every user of xterm.js.
 - **Action:** ask the user, because on 19 November 2026 the user approved only the local fix and kept upstream work for a separate approval.
 
