@@ -90,9 +90,10 @@ export function applyMoves(
   let next = snapshot
   for (const move of moves) {
     next = moveDraft(next, move)
-    const activeTab = next.view?.activeTab
-    const showsFile = activeTab?.kind === 'file' || activeTab?.kind === 'diff'
-    if (!move.open || next.activeSessionId !== move.from || showsFile) continue
+    const activeTab = next.view?.activeTab ?? null
+    const showsNonSession = activeTab !== null && activeTab.kind !== 'session'
+    if (!move.open || next.activeSessionId !== move.from || showsNonSession)
+      continue
     next = {
       ...next,
       activeSessionId: move.to,
