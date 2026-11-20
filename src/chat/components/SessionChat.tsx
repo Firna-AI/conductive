@@ -224,6 +224,7 @@ export function SessionChat(props: SessionChatProps) {
           blocked={block !== null}
           choice={session.choice}
           draft={state.draft}
+          favourites={snapshot.account?.favourites}
           files={files}
           focus={props.composerFocus}
           login={loginLabelOf(login)}

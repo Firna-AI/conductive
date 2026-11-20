@@ -299,6 +299,14 @@ otherwise.
   and Deleted orgs have. So the row follows from that rule. A row that
   opens the model menu was rejected, because the menu adds no favourite.
   The options check of 20 November 2026 found that the rule settles it.
+- The menu shows a favourite only when All models shows its model. So
+  when the endpoint list of a session hides the current model, which the
+  picker keeps, the favourites on that model still show.
+- Escape closes an open All models submenu first, then the menu. A hover
+  over All models opens it, and a hover over another row closes it, as the
+  submenu of the right-click menu of the shell does.
+- The saves of the Favourites section go one at a time, because the
+  account state queues no save, as for the default choice.
 - On a phone, the menu with five favourites and the six efforts of Opus
   5.5 is about 590 px high. Each menu keeps its height limit of 70% of the
   screen, so on a screen lower than about 845 px the menu scrolls, and the
@@ -424,24 +432,29 @@ Tags: ui
 
 Depends on: 3, 4
 
-- [ ] Read and save the favourites in `src/app/account-model.ts`. A
+- [x] Read and save the favourites in `src/app/account-model.ts`. A
       failed save keeps the saved list.
-- [ ] Build the favourites rows in one module that both pickers use:
+- [x] Build the favourites rows in one module that both pickers use,
+      `src/chat/components/model-rows.ts`. The session picker uses it.
+      The shell picker uses it with the next TODO:
       `src/chat/components/model-menu.ts` and
       `src/shell/ui/ModelPicker.tsx`.
-- [ ] Add the All models submenu to the chat menu in
+- [x] Add the All models submenu to the chat menu in
       `src/chat/ui/Menu.tsx`, with the keys of the submenu of
       `src/shell/ui/MenuList.tsx`. On a phone, show the list in place of
       the menu, with Back.
 - [ ] Give the shell picker of `src/shell/ui/ModelPicker.tsx` the All
       models submenu too. `MenuButton` passes no `submenus` to `MenuList`
       today. Open its phone form as the answer of decision 5 says.
-- [ ] Hide the favourites whose model the own endpoint or the model list
+- [x] Hide the favourites whose model the own endpoint or the model list
       does not hold.
-- [ ] Keep the keys of Model picker, Next effort level, and Fast mode
+- [x] Keep the keys of Model picker, Next effort level, and Fast mode
       working as before.
-- [ ] Add component tests for the rows, the marks, the submenu, and a
+- [x] Add component tests for the rows, the marks, the submenu, and a
       favourite of the other agent.
+- [ ] Run `desktop/tests/chat-menu-clipping.spec.ts` on the Mac CI job.
+      It could not run here, without Electron. Report:
+      `.context/model-favourites/reports/m5-session.md`.
 
 ## Milestone 6: The Favourites section
 

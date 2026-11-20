@@ -216,7 +216,7 @@ export interface GitHubRepositoriesResponse {
   repositories: readonly GitHubRepository[]
 }
 
-export const MODEL_FAVOURITES_LIMIT = 5
+const MODEL_FAVOURITES_LIMIT = 5
 
 export function firstFavourites(
   choices: readonly AgentChoice[],

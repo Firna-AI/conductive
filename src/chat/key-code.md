@@ -231,6 +231,15 @@ is relative to `src/chat/`, the folder of this guide.
   `ui/near-view.ts`: `useNearView`, which says when an element comes near
   the view of the chat, and `NearViewRoot`, the scroll box that `ChatPane`
   gives as the view. The pictures of answers start their reads with it.
+- `components/model-rows.ts`: `modelMenuRows`, the rows of the model menu,
+  as [Model favourites](../../docs/protocol/model-favourites.md#the-model-menu)
+  gives them: the favourites that the picker offers, All models with the
+  models of each agent, the efforts, and Fast. The rows name no menu
+  component, so each model picker can draw them. `components/model-menu.ts`
+  draws them as the entries of `ui/Menu.tsx` for the picker of a session.
+  `ui/Menu.tsx` opens the submenu of an item, such as All models, beside the
+  menu, or in its place in the phone layout, with `ui/submenu.tsx`.
+  `ui/menu-rows.tsx` draws the rows and moves the focus between them.
 - `components/send-key.ts`: `useSendKey`, the send key that the composer
   shares with the page and the dialog of New workspace in the app shell.
 - `device/`: the Mac commands. Their [README](device/README.md) names

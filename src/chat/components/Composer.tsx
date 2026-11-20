@@ -46,6 +46,8 @@ export interface ComposerProps {
   /** The model and the effort of the session. */
   choice: AgentChoice
   models: readonly AgentModel[]
+  /** The favourites of the reader, which the model menu lists first. */
+  favourites?: readonly AgentChoice[]
   /** The agent of a session with messages (decision 51). */
   sessionAgent?: Agent
   /** A turn runs, so a message steers it, and Stop ends it. */
@@ -226,6 +228,7 @@ export function Composer(props: ComposerProps) {
               />
               <ModelPicker
                 choice={props.choice}
+                favourites={props.favourites}
                 models={props.models}
                 onChoose={props.onChooseModel}
                 sessionAgent={props.sessionAgent}
