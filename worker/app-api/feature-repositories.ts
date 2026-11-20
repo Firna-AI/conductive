@@ -73,14 +73,21 @@ export async function shellRepositoryChoices(
   return mergeRepositories(orgId, stored, access.repositories)
 }
 
+/**
+ * Adds or removes one repository of the org. An add starts a build unless
+ * `build` is false: the app then starts one build at Done, after all the
+ * adds of one edit. A request without `build`, from an older app, still
+ * starts a build at each add.
+ */
 export async function changeShellRepository(
   env: AppEnv,
   orgId: string,
   userId: string,
   repositoryId: string,
-  selected: boolean,
+  change: { selected: boolean; build: boolean },
   dependencies: AppDependencies,
 ): Promise<Response> {
+  const { selected } = change
   await assertCanChangeSharedSettings(env.DB, orgId, userId)
   const stored = await shellRepositories(env.DB, orgId)
   let repository = stored.find((entry) => entry.id === repositoryId)
@@ -110,7 +117,7 @@ export async function changeShellRepository(
     await assertCanChangeSharedSettings(env.DB, orgId, userId)
     throw repositoryNotFound()
   }
-  if (saved.added) {
+  if (saved.added && change.build) {
     try {
       await startImageBuild(
         imageRuntime(

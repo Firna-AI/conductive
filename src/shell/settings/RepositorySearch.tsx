@@ -32,8 +32,6 @@ export function ChoiceActions(props: {
   name: string
   selected: boolean
   press: (selected: boolean) => void
-  /** The change of this repository runs. */
-  busy?: boolean
   disabled?: boolean
 }) {
   if (props.selected) {
@@ -44,7 +42,6 @@ export function ChoiceActions(props: {
           Added
         </span>
         <IconButton
-          busy={props.busy}
           disabled={props.disabled}
           icon={X}
           label={`Remove ${props.name}`}
@@ -57,7 +54,6 @@ export function ChoiceActions(props: {
   return (
     <ActionButton
       accessibilityLabel={`Add ${props.name}`}
-      busy={props.busy}
       disabled={props.disabled}
       icon={Plus}
       onPress={() => props.press(true)}
