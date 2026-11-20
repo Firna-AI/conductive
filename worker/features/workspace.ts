@@ -56,7 +56,15 @@ export class WorkspaceFeatures {
     this.matches = matches
     this.schedulePreview = schedulePreview
     this.publishPreviews = publishPreviews
-    const tools = dependencies
+    const tools = {
+      ...dependencies,
+      fileServerAvailable: (workspaceId: string) => {
+        const runner = chat.runner.connections.current
+        return (
+          runner?.workspace.id === workspaceId && runner.fileServer === true
+        )
+      },
+    }
     this.previews = createPreviewHandler(env, tools)
     this.terminals = new WorkspaceTerminals(chat)
     this.terminal = createTerminalHandler(env, tools, this.terminals)

@@ -1,4 +1,6 @@
 import { parseRoute } from '../../../../../src/app/router'
+import { pictureType } from '../../../../../src/files/page/file-view'
+import { lineLabelEnds } from '../../../../../src/markdown/markdown-labels'
 import {
   webAddressParts,
   type WebAddressPart,
@@ -34,16 +36,67 @@ export type TextPart =
 
 /**
  * A Markdown link or image of an answer to an entry of the tree. It shows
- * as a normal link with its label, which opens the file.
+ * as a normal link with its label, which opens the file. `picture` marks
+ * the Markdown image of a PNG, JPEG, GIF, or WebP file, which can show as
+ * its picture (screenshot decision 2). The file tab shows the same files
+ * as pictures, so an SVG file stays a link.
  */
 export type FileLinkPart = {
   kind: 'file-link'
   label: string
   source: string
+  picture: boolean
 } & PathTarget
 
-/** A Markdown link or image whose target is not a web address. */
-const pathLinkPattern = /!?\[([^\]\n]*)\]\((?:<([^<>\n]+)>|([^\s()<>]+))\)/g
+/** A Markdown link or image: its start, source, label, and target. */
+type PathLink = { index: number; source: string; label: string; target: string }
+
+/**
+ * The target of a Markdown link or image after its `](`, through its `)`:
+ * a target in angle brackets, or one with no space, parenthesis, or angle
+ * bracket.
+ */
+const pathTarget = /(?:<([^<>\n]+)>|([^\s()<>]+))\)/y
+
+/**
+ * The Markdown links and images of a text, in order, as a global search
+ * for `[label](target)` with an optional `!` before it finds them. A label
+ * ends at the first `]` of its line. One pass reads that end for each `[`,
+ * and each end reads its target once. A link hides each `[` inside it.
+ * After a `[` that starts no link, the next `[` tries.
+ */
+function* pathLinks(text: string): Generator<PathLink> {
+  const labelEndAt = lineLabelEnds(text, 'plain')
+  const targets = new Map<number, RegExpExecArray | null>()
+  const targetAt = (end: number) => {
+    let target = targets.get(end)
+    if (target === undefined) {
+      pathTarget.lastIndex = end + 2
+      target = pathTarget.exec(text)
+      targets.set(end, target)
+    }
+    return target
+  }
+  let at = text.indexOf('[')
+  while (at >= 0) {
+    const end = labelEndAt(at)
+    const target = end >= 0 && text[end + 1] === '(' ? targetAt(end) : null
+    if (!target) {
+      at = text.indexOf('[', at + 1)
+      continue
+    }
+    // A link ends with `)`, so a `!` before a `[` is in no earlier link.
+    const index = text[at - 1] === '!' ? at - 1 : at
+    const next = end + 2 + target[0].length
+    yield {
+      index,
+      source: text.slice(index, next),
+      label: text.slice(at + 1, end),
+      target: target[1] ?? target[2] ?? '',
+    }
+    at = text.indexOf('[', next)
+  }
+}
 
 /**
  * Plain text of an answer with its links to files of the tree. Each other
@@ -55,13 +108,23 @@ function fileLinkParts(
 ): TextPart[] {
   const parts: TextPart[] = []
   let end = 0
-  for (const match of text.matchAll(pathLinkPattern)) {
-    const target = fileTarget(match[2] ?? match[3] ?? '')
+  for (const link of pathLinks(text)) {
+    const target = fileTarget(link.target)
     if (!target) continue
-    parts.push(...rest(text.slice(end, match.index)))
-    const label = match[1].trim() === '' ? entryName(target.entry) : match[1]
-    parts.push({ kind: 'file-link', label, source: match[0], ...target })
-    end = match.index + match[0].length
+    parts.push(...rest(text.slice(end, link.index)))
+    const label =
+      link.label.trim() === '' ? entryName(target.entry) : link.label
+    const { folder, path } = target.entry
+    const image = link.source.startsWith('!')
+    const picture = image && !folder && pictureType(path) !== undefined
+    parts.push({
+      kind: 'file-link',
+      label,
+      source: link.source,
+      picture,
+      ...target,
+    })
+    end = link.index + link.source.length
   }
   return [...parts, ...rest(text.slice(end))]
 }

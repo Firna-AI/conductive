@@ -79,11 +79,15 @@ export async function retrySoftwareImageCleanup(
 export async function cleanupOldSoftwareImages(
   runtime: SoftwareImageRuntime,
   account: string,
+  currentVersion: string | null,
 ): Promise<void> {
   const images = await softwareImages(runtime.env.DB, account)
-  const newest = images.find((image) => image.state === 'ready')
   for (const image of images) {
-    if (image.id === newest?.id) continue
+    if (
+      image.state === 'ready' &&
+      (currentVersion === null || image.version === currentVersion)
+    )
+      continue
     if (
       image.state === 'ready' &&
       !(await claimSoftwareImageDeletion(runtime.env.DB, image))

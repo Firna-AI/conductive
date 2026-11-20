@@ -120,6 +120,7 @@ export class RunnerChannel {
       active.protocolVersion = welcome.protocolVersion
       active.loginKinds = message.loginKinds
       active.repositoryFolder = message.repositoryFolder
+      active.fileServer = message.fileServer
       active.ready = welcome.ready
       await this.connections.persist(active)
       this.connections.reportConnected(active)
@@ -129,6 +130,9 @@ export class RunnerChannel {
         protocolVersion: welcome.protocolVersion,
         streamId: message.streamId,
         confirmedThrough: welcome.cursor,
+        ...(message.completeToolDetails === true
+          ? { completeToolDetails: true }
+          : {}),
       })
       await this.repairs.flush(active)
       await this.moves.check(active)

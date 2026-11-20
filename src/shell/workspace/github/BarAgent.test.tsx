@@ -3,6 +3,7 @@
 import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 import { routes } from '../../../app/router'
+import { HeldRequests } from '../../../app/test-kit'
 import { loginGone, withSessions } from '../../../chat/state/linked-kit'
 import type { FilesTab } from '../../../files/navigation'
 import { sessionPaths } from '../../../shared/sessions'
@@ -121,6 +122,61 @@ describe('the agent actions of the bar', () => {
       address: routes.workspace(org, id),
       notice: true,
       draft: 'Half a thought',
+    })
+  })
+
+  test('on a phone, a send that fails after the member left Checks keeps the page that the member chose, and the chat keeps its notice, draft, and client ID', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer({ banner: 'checks-failed' })
+    serveWork(server, 'none')
+    const path = sessionPaths.messages(org, id, session)
+    const error = { code: 'unavailable', message: 'The Worker did not answer.' }
+    server.json('POST', path, { error }, 503)
+    const held = new HeldRequests(server)
+    held.holdAnswer('POST', path)
+    const here = routes.workspace(org, id)
+    const { view, navigation } = await openTab(server, here, {
+      viewport: 'phone',
+      fetch: held.fetch,
+    })
+    const checks = filesHref(org, id, { kind: 'list', list: 'checks' })
+    const pressFixChecks = async () => {
+      act(() => navigation.push(checks))
+      await settle()
+      click(
+        byRole('button', 'Fix checks', byLabel('Pull request actions', view)),
+      )
+      await settle()
+    }
+    typeText(messageField(view), 'Half a thought')
+    await settle()
+    await pressFixChecks()
+    act(() => navigation.push(routes.automations(org)))
+    await settle()
+
+    held.release('POST', path)
+    await settle()
+    const history = [...navigation.history]
+    act(() => navigation.push(here))
+    await settle()
+    const notice = (view.textContent ?? '').includes("Your message didn't send")
+    const draft = draftOf(view)
+    // A second try of the prompt keeps the client ID of the failed send.
+    await pressFixChecks()
+
+    const ids = (await sends(server)).map((body) => Object(body).id)
+    expect({
+      history,
+      notice,
+      draft,
+      sends: ids.length,
+      clientIds: new Set(ids).size,
+    }).toEqual({
+      history: [here, checks, routes.automations(org)],
+      notice: true,
+      draft: 'Half a thought',
+      sends: 2,
+      clientIds: 1,
     })
   })
 

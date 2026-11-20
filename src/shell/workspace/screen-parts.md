@@ -185,6 +185,8 @@ Each folder of a path is a part of the address. Another address under
   of the saved view too, though the row of a phone shows no file tabs.
 - The links of the file preview open through the one link opener of the
   screen, as [The chat of the workspace](#the-chat-of-the-workspace) says.
+  The tab of an HTML file shows its page as
+  [The tabs of HTML files](html-tabs.md) says.
 - The lists show while the sandbox is stopped or failed, from the copy
   that the workspace keeps. While the sandbox starts, and while the app
   refuses its start, the sandbox panel shows in place of All files and
@@ -276,7 +278,9 @@ through them while the workspace loads.
 - An agent action sends its prompt through `WorkspaceContext.chat`. A prompt
   that did not go out shows the chat of its session, where the composer
   names the cause: the chat in place of a file on desktop, and the chat tab
-  on a phone.
+  on a phone. A failure that arrives after the screen closed, or after the
+  branch changed, keeps the view and selects no session, as
+  [Agent actions](../../github/actions.md#agent-actions) says.
 - `ContinueDialog` asks the question of Continue, after its check found
   local work. `LocalWorkList` of the mockups lists that work, as in the
   mockup of the question.

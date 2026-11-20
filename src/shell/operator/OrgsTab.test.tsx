@@ -36,37 +36,64 @@ function orgsBox(view: HTMLElement): string {
 }
 
 /** The header of the table, and the rows of the samples, newest first. */
-const header = 'Org Created Members Workspaces Running'
+const header = 'Org Created Account Members Workspaces Running'
 const sampleRows = [
-  'RD Rhino Data 15 Jan 1 2 1',
-  'TP Tidepool 14 Jan 2 3 0',
-  'PC Pinecrest Deleted 10 Jan 2 4 0',
-  'NL Northstar Labs 9 Jan 2 5 0',
-  'HW Hexwave Suspended 4 Jan 3 10 2',
-  'LW Lumen Works 1 Jan 2 18 1',
-  'DL Dana’s Lab 28 Dec 2026 1 5 0',
-  'BH Blue Harbor 16 Dec 2026 2 97 2',
-  'NW Northwind 30 Sept 2026 2 164 4',
-  'KL Kestrel Labs 14 Sept 2026 2 212 6',
-  'OS Orbit Studio 9 Sept 2026 1 85 5',
-  'AC Acme 2 Sept 2026 3 131 3',
-  'FI Firna 1 Sept 2026 1 8 0',
-  'FX Futex 31 Aug 2026 1 4 0',
+  'RD Rhino Data 15 Jan boat 1 2 1',
+  'TP Tidepool 14 Jan boat 2 3 0',
+  'PC Pinecrest Deleted 10 Jan boat 2 4 0',
+  'NL Northstar Labs 9 Jan boat 2 5 0',
+  'HW Hexwave Suspended 4 Jan boat 3 10 2',
+  'LW Lumen Works 1 Jan boat 2 18 1',
+  'DL Dana’s Lab 28 Dec 2026 boat 1 5 0',
+  'BH Blue Harbor 16 Dec 2026 boat 2 97 2',
+  'NW Northwind 30 Sept 2026 boat 2 164 4',
+  'KL Kestrel Labs 14 Sept 2026 boat 2 212 6',
+  'OS Orbit Studio 9 Sept 2026 boat 1 85 5',
+  'AC Acme 2 Sept 2026 boat 3 131 3',
+  'FI Firna 1 Sept 2026 boat 1 8 0',
+  'FX Futex 31 Aug 2026 boat 1 4 0',
 ]
 
 describe('the Orgs tab of the operator section', () => {
-  test('lists the newest orgs with their count, the state under a suspended or deleted name, and links to their pages', async () => {
+  test('lists the newest orgs with their count, their account, the state under a suspended or deleted name, and links to their pages', async () => {
     const server = new FakeApiServer()
-    serveOperator(server)
+    const fixtures = serveOperator(server)
+    const [newest, ...older] = fixtures.orgs
+    if (!newest) throw new Error('The samples have no org.')
+    server.json(
+      'GET',
+      operatorOrgsPath(),
+      page([
+        orgRow({ ...newest, providerAccount: 'e2b' }),
+        ...older.map((org) => orgRow(org)),
+      ]),
+    )
     const { view } = await mountShell(server, routes.operatorOrgs())
     const box = orgsBox(view)
-    click(byText('Hexwave'))
+    const phone = await mountShell(server, routes.operatorOrgs(), {
+      viewport: 'phone',
+    })
+    // A phone has no Account column, so the line under a name gives it.
+    const nameCell = (name: string) =>
+      textOf(byText(name, phone.view).parentElement?.innerHTML ?? '')
+    const phoneCells = [nameCell('Rhino Data'), nameCell('Tidepool')]
+    click(byText('Hexwave', view))
     await settle()
     expect({
       box,
+      phoneCells,
       opened: view.querySelector('main h1')?.textContent,
     }).toEqual({
-      box: ['Orgs 14 orgs, newest first.', header, ...sampleRows].join(' '),
+      box: [
+        'Orgs 14 orgs, newest first.',
+        header,
+        'RD Rhino Data 15 Jan e2b 1 2 1',
+        ...sampleRows.slice(1),
+      ].join(' '),
+      phoneCells: [
+        'Rhino Data Created 15 Jan Runs on e2b',
+        'Tidepool Created 14 Jan Runs on boat',
+      ],
       opened: 'Hexwave',
     })
   })
@@ -132,7 +159,7 @@ describe('the Orgs tab of the operator section', () => {
       none: textOf(none.view.querySelector('main section')?.innerHTML ?? ''),
     }).toEqual({
       lookup:
-        'Orgs 1 org matches this preview address. Org Created Members Workspaces Running HW Hexwave Preview address · Suspended 4 Jan 3 10 2',
+        'Orgs 1 org matches this preview address. Org Created Account Members Workspaces Running HW Hexwave Preview address · Suspended 4 Jan boat 3 10 2',
       none: 'Orgs Search by name, org ID, cloud computer ID, or preview address. No org matches “acme-old”.',
     })
   })

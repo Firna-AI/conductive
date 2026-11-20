@@ -1,3 +1,4 @@
+import { isFilePath } from '../../src/shared/file-path'
 import type { PreviewLaunchResponse } from '../../src/shared/previews'
 import type { AppEnv } from '../env'
 import { HttpError, privateResponse } from '../http'
@@ -24,6 +25,7 @@ export async function previewLaunchPage(
   row: PreviewRecord,
   viewer: PreviewViewer,
   now: number,
+  path?: string,
 ): Promise<Response> {
   const { token: grant } = await launchGrant(env, row, viewer, now)
   const nonce = randomToken()
@@ -35,6 +37,7 @@ export async function previewLaunchPage(
     nonce,
     appOrigin: env.APP_ORIGIN,
     desktopOrigin: DESKTOP_ORIGIN,
+    path,
   })
   const response = privateResponse(
     new Response(html, {
@@ -54,13 +57,16 @@ export async function previewNativeLaunch(
   row: PreviewRecord,
   viewer: PreviewViewer,
   now: number,
+  path?: string,
 ): Promise<Response> {
   const { token, expiresAt } = await launchGrant(env, row, viewer, now)
   const url = new URL(previewHandoffUrl(env))
-  url.hash = new URLSearchParams({
+  const fields = new URLSearchParams({
     hostname: row.hostname,
     grant: token,
-  }).toString()
+  })
+  if (path !== undefined) fields.set('path', path)
+  url.hash = fields.toString()
   return privateResponse(
     Response.json({ url: url.href, expiresAt } satisfies PreviewLaunchResponse),
   )
@@ -121,10 +127,14 @@ export async function previewHandoff(
     }
   }
   const hostnames = form.getAll('hostname')
+  const paths = form.getAll('path')
+  const path = paths[0]
   const suffix = `.${env.PREVIEW_DOMAIN?.toLowerCase()}`
   const hostname = hostnames[0] ?? ''
   if (
     hostnames.length !== 1 ||
+    paths.length > 1 ||
+    (path !== undefined && !isFilePath(path)) ||
     !hostname.endsWith(suffix) ||
     !/^[a-f0-9]{32}$/.test(hostname.slice(0, -suffix.length))
   )
@@ -152,18 +162,16 @@ export async function previewHandoff(
     )
   }
   const { row, cookie } = redeemed
+  const url = `https://${row.hostname}/${path?.split('/').map(encodeURIComponent).join('/') ?? ''}`
   if (headerMode)
     return privateResponse(
-      Response.json(
-        { url: `https://${row.hostname}/` },
-        { headers: { 'Set-Cookie': cookie } },
-      ),
+      Response.json({ url }, { headers: { 'Set-Cookie': cookie } }),
     )
   return privateResponse(
     new Response(null, {
       status: 303,
       headers: {
-        Location: `https://${row.hostname}/`,
+        Location: url,
         'Set-Cookie': cookie,
       },
     }),

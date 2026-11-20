@@ -6,6 +6,7 @@ import {
 import { chatFilesStorage } from './files-storage'
 import { saveHistoryEvent } from './history-storage'
 import { HistoryPages, type ReadScope } from './history-pages'
+import { prepareSessionHistory } from './history-session-preparation'
 import { ChatRecords } from './chat-records'
 import type { FilesStorage } from '../files/storage'
 import type { GitHubStateTransaction } from '../github/contracts'
@@ -15,7 +16,6 @@ import { PreviewRevocations } from '../previews/revocation-events'
 import { TerminalList } from '../terminal/list-store'
 import { RunnerOutputState } from './runner-output-state'
 import {
-  CHAT_ROOT as ROOT,
   CHAT_META as META,
   chatKey as key,
   chatEventKey as eventKey,
@@ -40,12 +40,21 @@ export class ChatTransaction extends ChatRecords {
   readonly output: RunnerOutputState
   readonly secrets: SecretRequestRecords
   private readonly summary: WorkspaceSummaryProjection
-  private readonly pages = new HistoryPages(this.data)
+  private readonly pages: HistoryPages
+  private readonly prepareSession:
+    ((through: number) => Promise<void>) | undefined
   private through: number
   private commandThrough: number
 
-  constructor(data: ChatData, metadata: ChatMetadata, now: number) {
+  constructor(
+    data: ChatData,
+    metadata: ChatMetadata,
+    now: number,
+    prepareSession?: (through: number) => Promise<void>,
+  ) {
     super(data)
+    this.prepareSession = prepareSession
+    this.pages = new HistoryPages(data, prepareSession)
     this.secrets = new SecretRequestRecords(data)
     this.output = new RunnerOutputState(data)
     this.files = chatFilesStorage(data)
@@ -68,18 +77,6 @@ export class ChatTransaction extends ChatRecords {
     this.now = now
   }
 
-  async pending(): Promise<PendingCommand[]> {
-    const records = [
-      ...(
-        await this.data.list<{ command: PendingCommand; order: number }>({
-          prefix: `${ROOT}command:`,
-        })
-      ).values(),
-    ]
-    return records
-      .sort((left, right) => left.order - right.order)
-      .map((entry) => entry.command)
-  }
   saveFirstMessageAdmission(first: FirstWorkspaceMessage): Promise<void> {
     return this.data.put(FIRST_MESSAGE_ADMISSION_KEY, first)
   }
@@ -164,7 +161,12 @@ export class ChatTransaction extends ChatRecords {
     return this.data.put(key('cursor', streamId), through)
   }
   history(after: number, through = this.through, scope?: ReadScope) {
-    return this.pages.read(after, Math.min(through, this.through), scope)
+    return this.pages.read(
+      after,
+      Math.min(through, this.through),
+      scope,
+      this.prepareSession !== undefined,
+    )
   }
   newestHistory(sessionId: string, before?: number, through = this.through) {
     through = Math.min(through, this.through)
@@ -259,6 +261,8 @@ export class ChatStore {
         this.storage,
         await readChatMetadata(this.storage, workspaceId),
         this.now(),
+        (through) =>
+          prepareSessionHistory(this.storage, through, this.currentTurn),
       ),
     )
   }

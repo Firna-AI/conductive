@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Switch } from '@firna/ui/switch'
 import type { PersonKey } from '../../fixtures/members'
 import type { WorkspaceGrants } from '../../fixtures/secretRequests'
@@ -32,6 +33,15 @@ export type CapabilitiesView = {
 }
 
 /**
+ * What the secrets of the control show: the secrets of the org with the
+ * pre-approved ones checked, and the link to the Secrets tab.
+ */
+type SecretsView = Pick<
+  CapabilitiesView,
+  'org' | 'secrets' | 'preApproved' | 'secretsTo'
+>
+
+/**
  * A secret of the org with its checkbox, which pre-approves it for the
  * workspace. A secret for all agents is always available, so its checkbox
  * stays checked and off.
@@ -62,7 +72,7 @@ function SecretCheck(props: { secret: OrgSecret; checked: boolean }) {
  * The secrets of the org, each with its checkbox. An org without secrets
  * links to its Secrets tab.
  */
-function SecretPicker(props: { view: CapabilitiesView }) {
+function SecretPicker(props: { view: SecretsView }) {
   const { view } = props
   if (view.secrets.length === 0) {
     return (
@@ -120,28 +130,56 @@ function MacAccessSwitch(props: { on: boolean }) {
 }
 
 /**
+ * The secrets part, with its hint and its content. Manage secrets opens the
+ * Secrets tab, while the org has secrets.
+ */
+function secretsPart(
+  view: SecretsView,
+  hint: string,
+  content: ReactNode,
+): CapabilityPart {
+  return {
+    key: 'secrets',
+    title: secretsPartWords.title,
+    hint,
+    control:
+      view.secrets.length === 0 ? undefined : (
+        <ScreenLink className={styles.link} to={view.secretsTo}>
+          {secretsPartWords.manage}
+        </ScreenLink>
+      ),
+    content,
+  }
+}
+
+/**
  * The parts of the Capabilities control, in their order: the secrets that
  * the workspace pre-approves, with its grants, and Mac access.
  */
 export function capabilityParts(view: CapabilitiesView): CapabilityPart[] {
   return [
-    {
-      key: 'secrets',
-      title: secretsPartWords.title,
-      hint: secretsPartWords.hint,
-      control:
-        view.secrets.length === 0 ? undefined : (
-          <ScreenLink className={styles.link} to={view.secretsTo}>
-            {secretsPartWords.manage}
-          </ScreenLink>
-        ),
-      content: <SecretsContent view={view} />,
-    },
+    secretsPart(view, secretsPartWords.hint, <SecretsContent view={view} />),
     {
       key: 'mac-access',
       title: macAccessWords.title,
       hint: macAccessWords.hint,
       control: <MacAccessSwitch on={view.macAccess} />,
     },
+  ]
+}
+
+/**
+ * The parts of the Capabilities control of an automation: only the secrets
+ * that each run workspace pre-approves (automation capabilities decision
+ * 1 A). Each run workspace keeps Mac access off (decision 2 A), so the
+ * control has no Mac access part. An automation has no grants of its own.
+ */
+export function automationCapabilityParts(view: SecretsView): CapabilityPart[] {
+  return [
+    secretsPart(
+      view,
+      secretsPartWords.automationHint,
+      <SecretPicker view={view} />,
+    ),
   ]
 }

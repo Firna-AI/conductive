@@ -1,9 +1,10 @@
-import { Fragment, useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
 import { MessageSquareText } from 'lucide-react'
 import styles from '../../../docs/mockups/src/components/chat/ToolGroup.module.css'
 import a11y from '../../../docs/mockups/src/components/common/a11y.module.css'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import markdown from '../../../docs/mockups/src/components/files/MarkdownView.module.css'
+import type { AnswerPictures } from '../links/FilePicture'
 import { AnswerText } from '../links/LinkedText'
 import { PlainLinks } from '../../shell/ui/text-links'
 import { LinksProvider, type ChatLinks } from '../links/LinksContext'
@@ -17,6 +18,7 @@ import {
   type TextTable,
 } from './agent-text'
 import local from './chat.module.css'
+import { blockShowsText } from './readable-text'
 import { useFold } from './useFold'
 
 /**
@@ -37,20 +39,32 @@ function TableText(props: { table: TextTable }) {
 }
 
 /**
+ * The state of a message line that each of its blocks gets: whether the
+ * line is open, and the pictures of its message while it is open. A closed
+ * line shows each image as its link, so the line stays one line.
+ */
+interface LineState {
+  open: boolean
+  pictures?: AnswerPictures
+}
+
+const closedLine: LineState = { open: false }
+
+/**
  * The text of a list item in a message line. An item of one paragraph shows
  * its text alone. Another item shows its blocks, such as its text and the
  * list that the agent indents under it.
  */
-function LineItem(props: { item: TextItem; open: boolean }) {
+function LineItem(props: { item: TextItem; line: LineState }) {
   const [first] = props.item
   if (props.item.length === 1 && first.kind === 'p') {
     return (
       <>
-        <AnswerText text={first.text} />{' '}
+        <AnswerText pictures={props.line.pictures} text={first.text} />{' '}
       </>
     )
   }
-  return <LineBlocks blocks={props.item} open={props.open} />
+  return <LineBlocks blocks={props.item} line={props.line} />
 }
 
 /**
@@ -58,7 +72,7 @@ function LineItem(props: { item: TextItem; open: boolean }) {
  * number, from the start of its list, because a browser numbers a list
  * item of spans by the items of the list of the fold.
  */
-function LineList(props: { list: TextList; open: boolean }) {
+function LineList(props: { list: TextList; line: LineState }) {
   const { list } = props
   const numbered = list.kind === 'ol'
   return (
@@ -76,7 +90,7 @@ function LineList(props: { list: TextList; open: boolean }) {
               <span className={styles.number}>{list.start + index}.</span>{' '}
             </>
           ) : null}
-          <LineItem item={item} open={props.open} />
+          <LineItem item={item} line={props.line} />
         </span>
       ))}
     </span>
@@ -93,15 +107,17 @@ function LineList(props: { list: TextList; open: boolean }) {
  * closed line stays one line. A heading is a span in the weight of a
  * heading too: the closed line stays one line, and the button role of a
  * summary hides a heading from the heading list of a screen reader. A
- * heading with no text draws nothing.
+ * heading with no text draws nothing. In the same way as a code block, the
+ * Markdown image of a picture file in a paragraph or a list item shows as
+ * its picture only while the line is open.
  */
-function LineBlock(props: { block: TextBlock; open: boolean }) {
-  const { block } = props
+function LineBlock(props: { block: TextBlock; line: LineState }) {
+  const { block, line } = props
   switch (block.kind) {
     case 'p':
       return (
         <span className={classes(styles.paragraph, local.lineBlock)}>
-          <AnswerText text={block.text} />{' '}
+          <AnswerText pictures={line.pictures} text={block.text} />{' '}
         </span>
       )
     case 'heading':
@@ -119,7 +135,7 @@ function LineBlock(props: { block: TextBlock; open: boolean }) {
       )
     case 'ul':
     case 'ol':
-      return <LineList list={block} open={props.open} />
+      return <LineList line={line} list={block} />
     case 'code':
       return (
         <>
@@ -127,7 +143,7 @@ function LineBlock(props: { block: TextBlock; open: boolean }) {
             className={classes(
               local.lineBlock,
               local.code,
-              props.open && markdown.block,
+              line.open && markdown.block,
             )}
           >
             {block.text}
@@ -144,15 +160,10 @@ function LineBlock(props: { block: TextBlock; open: boolean }) {
 }
 
 /** The blocks of a message line as text, in the line. */
-function LineBlocks(props: { blocks: readonly TextBlock[]; open: boolean }) {
+function LineBlocks(props: { blocks: readonly TextBlock[]; line: LineState }) {
   return props.blocks.map((block, index) => (
-    <LineBlock block={block} key={index} open={props.open} />
+    <LineBlock block={block} key={index} line={props.line} />
   ))
-}
-
-/** Whether a block draws nothing: a heading with no text. */
-function isEmptyHeading(block: TextBlock): boolean {
-  return block.kind === 'heading' && block.text === ''
 }
 
 /** Whether a block is a table, or a list with a table in an item. */
@@ -170,21 +181,39 @@ function holdsTable(block: TextBlock): boolean {
  *
  * A `<summary>` holds no table. So the open line keeps the blocks before
  * the first table, or before the list that holds it. That block and the
- * blocks after it open under the line. A line that starts with a table, or
- * with only empty headings before it, keeps its closed text as its name for
- * a screen reader. That hidden copy shows no chips, and draws each link as
- * its words, so it holds no link that the keyboard can reach while nobody
- * sees it. A press on a link in the line opens the link, as on a chip, and
- * the line stays open or closed.
+ * blocks after it open under the line. When the line shows no readable text
+ * for the blocks that it keeps, as `blockShowsText` reads them, it keeps its
+ * closed text as its name for a screen reader. So does a line that starts
+ * with a table. That hidden copy shows no chips, and draws each link as its
+ * words, so it holds no link that the keyboard can reach while nobody sees
+ * it. A press on a link in the line opens the link, as on a chip, and the
+ * line stays open or closed.
+ *
+ * The closed line shows the Markdown image of a picture file as its link,
+ * so the line stays one line. The open line shows its picture, read for
+ * the message with the ID `id`, the ID of its item in the transcript. A
+ * press on the picture opens the file, and the line stays open. The line
+ * parses the text again only when the text changes, not when it opens.
  */
-export function MessageLine(props: { text: string }) {
+export function MessageLine(props: { id: string; text: string }) {
   const [open, setOpen] = useState(false)
   const fold = useFold(open, setOpen)
-  const blocks = textBlocks(props.text)
+  const { text } = props
+  const blocks = useMemo(() => textBlocks(text), [text])
   const firstTable = blocks.findIndex(holdsTable)
+  // Whether the blocks that the open line keeps show no readable text, so
+  // the line needs its hidden name. It depends on the text alone, so it
+  // runs again only when the text changes.
+  const unnamed = useMemo(
+    () => firstTable >= 0 && !blocks.slice(0, firstTable).some(blockShowsText),
+    [blocks, firstTable],
+  )
   const split = open && firstTable >= 0
   const lead = split ? blocks.slice(0, firstTable) : blocks
   const body = split ? blocks.slice(firstTable) : []
+  const line: LineState = open
+    ? { open, pictures: { message: props.id } }
+    : closedLine
   return (
     <details
       className={classes(styles.message, local.message)}
@@ -193,13 +222,13 @@ export function MessageLine(props: { text: string }) {
       <summary className={styles.messageLine} {...fold.line}>
         <MessageSquareText aria-hidden className={styles.icon} size={13} />
         <span className={styles.messageText}>
-          <LineBlocks blocks={lead} open={open} />
-          {split && lead.every(isEmptyHeading) ? (
+          <LineBlocks blocks={lead} line={line} />
+          {split && unnamed ? (
             <span className={a11y.hidden}>
               <LinksProvider value={plainLinks}>
                 <PlainLinks>
                   <MentionsProvider value={null}>
-                    <LineBlocks blocks={body} open={false} />
+                    <LineBlocks blocks={body} line={closedLine} />
                   </MentionsProvider>
                 </PlainLinks>
               </LinksProvider>
@@ -209,7 +238,7 @@ export function MessageLine(props: { text: string }) {
       </summary>
       {split ? (
         <div className={classes(styles.messageBody, local.messageBody)}>
-          <AgentBlocks blocks={body} />
+          <AgentBlocks blocks={body} pictures={line.pictures} />
         </div>
       ) : null}
     </details>

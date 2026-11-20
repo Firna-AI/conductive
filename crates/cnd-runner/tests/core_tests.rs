@@ -17,3 +17,5 @@ mod reports;
 #[path = "core/runtime_tests.rs"]
 mod runtime_tests;
 mod support;
+#[path = "core/tool_detail_tests.rs"]
+mod tool_detail_tests;

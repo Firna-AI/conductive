@@ -101,7 +101,8 @@ function taskOf(lines: string[]): { checked: boolean | null; lines: string[] } {
 /**
  * Reads the lines of one item from `start`, whose marker is `marker`. The
  * item holds the lines indented to its text, and the unindented lines that
- * can continue its paragraph. `lazy` holds the indexes of those lines in
+ * can continue its paragraph. A blank line directly after an empty marker
+ * line ends the item. `lazy` holds the indexes of the unindented lines in
  * `body`. `next` is the index of the first line after the item.
  */
 function itemLines(
@@ -119,8 +120,13 @@ function itemLines(
     // A marker left of the text of the item starts the next item, also
     // a number such as `2.` that cannot interrupt a paragraph.
     const sibling = listMarker(line) !== null || isRule(line)
-    if (isBlank(line)) body.push('')
-    else if (indentOf(line) >= marker.offset) {
+    if (isBlank(line)) {
+      if (index === start + 1 && isBlank(marker.content)) {
+        while (index < lines.length && isBlank(lines[index])) index += 1
+        break
+      }
+      body.push('')
+    } else if (indentOf(line) >= marker.offset) {
       body.push(line.slice(marker.offset))
     } else if (!previousBlank && !sibling && !startsBlock(lines, index)) {
       lazy.add(body.length)

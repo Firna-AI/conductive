@@ -64,8 +64,9 @@ The CLI and the MCP server offer these routes, as
 - It calls `PreviewActions` of the [preview backend](../previews/README.md).
   The app's preview API calls the same actions in the same live handler,
   so the private-port cache and the proxy registry stay shared.
-- A list gives each active preview of the workspace, also each preview
-  that a member opened.
+- A list gives each active port preview of the workspace, also each port
+  preview that a member opened. It excludes the files preview, whose
+  stored port is 0. An open still accepts only ports from 1 to 65535.
 - An open passes only the port. The app's running-computer, owner, org,
   relay, port, and provider checks apply. A stopped computer gives HTTP 409
   `sandbox_not_ready`, and the call starts no computer. A suspended owner
@@ -77,6 +78,8 @@ The CLI and the MCP server offer these routes, as
   for the stored `preview.revoked` event. `closed` is false for a preview
   that is already closed, expired, unknown, or of another workspace. A
   repeat publishes no second event.
+- A close of the files preview finds no port preview. It returns
+  `closed: false`, changes no row, cancels no stream, and publishes no event.
 - After each call, the boundary schedules the preview alarm for the next
   expiry.
 - A provider failure gives the app's HTTP 502 `sandbox_unavailable`,
@@ -98,3 +101,5 @@ The [Rust tools crate](../../crates/cnd-tools/README.md) tests CLI and MCP reque
   opens, signed-in launch links, list facts, close publication, repeated
   and wrong-workspace closes, cross-org refusal, a suspended owner, and a
   stopped computer.
+- `previews-files.test.ts`: a hidden files preview, a refused open of
+  port 0, and a close that changes no row and publishes no event.

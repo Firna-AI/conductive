@@ -3,6 +3,7 @@
 pub mod connection;
 pub mod ports;
 mod receive;
+mod tool_detail;
 
 #[cfg(test)]
 #[path = "_tests_/runtime/mod.rs"]

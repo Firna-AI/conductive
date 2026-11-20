@@ -91,13 +91,20 @@ that doc says.
   and the marks of the last start of the sandbox.
 - The Durable Object does this for each runner, also for an older runner
   from an org image or a saved disk. It also hides a copy that consecutive
-  text events of one answer split.
+  text events of one answer split, as
+  [Answer text secrets](answer-text-secrets.md) says.
 - Reason: an org image or a saved disk can hold an older runner. A filter
   of secret values in the runner was rejected, because an older runner
   does not have it.
 - The Durable Object also hides each value that a run with secrets used,
   as [The exact-copy filter](secret-requests.md#the-exact-copy-filter)
   says.
+- With complete tool details, the Durable Object hides these copies before
+  it cuts a long tool detail, as [Tool detail secrets](tool-detail-secrets.md) says.
+- Risk: older runners and fallback connections still cut before the filter.
+  So the start of a value that crosses the cut can show. The risk ends when
+  both sides support complete tool details. A stopped workspace can keep an
+  older runner with no time limit. Stored tool details keep their text.
 - The app keeps the real path of each file, the real name of the default
   branch of each repository, and the real name of the base branch of each
   workspace. Reads, diffs, and the file lists use them. The browser gets

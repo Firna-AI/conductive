@@ -29,20 +29,22 @@ function HeadingView(props: { heading: MessageHeading }) {
 /**
  * A list with the lists under its items. An item with a list keeps its own
  * text in a paragraph, and the list follows it inside the item, as the app
- * draws a Markdown list that the agent indents under an item.
+ * draws a Markdown list that the agent indents under an item. `pictures`
+ * shows the pictures of its items.
  */
-function ListView(props: { list: MessageList }) {
+function ListView(props: { list: MessageList; pictures: boolean }) {
+  const { pictures } = props
   const items = props.list.items.map((item, index) => (
     <li key={index}>
       {item.list ? (
         <>
           <p>
-            <MessageText answer text={item.text} />
+            <MessageText answer pictures={pictures} text={item.text} />
           </p>
-          <ListView list={item.list} />
+          <ListView list={item.list} pictures={pictures} />
         </>
       ) : (
-        <MessageText answer text={item.text} />
+        <MessageText answer pictures={pictures} text={item.text} />
       )}
     </li>
   ))
@@ -56,20 +58,31 @@ function ListView(props: { list: MessageList }) {
  * chip. Each mention, and each inline code whose whole text is a path of
  * the tree, is a file chip. A code block stays code. The element around
  * them sets the type and the space between them.
+ *
+ * With `pictures`, the Markdown image of a picture file in a paragraph or a
+ * list item shows as its picture (screenshot decision 2). A heading and a
+ * table cell keep its link, because a picture breaks the layout of the
+ * heading or of the row.
  */
-export function AgentBlocks(props: { blocks: readonly AgentBlock[] }) {
+export function AgentBlocks(props: {
+  blocks: readonly AgentBlock[]
+  pictures?: boolean
+}) {
+  const pictures = props.pictures === true
   return props.blocks.map((block, index) => {
     if (typeof block === 'string') {
       return (
         <p key={index}>
-          <MessageText answer text={block} />
+          <MessageText answer pictures={pictures} text={block} />
         </p>
       )
     }
     if (block.kind === 'heading') {
       return <HeadingView heading={block} key={index} />
     }
-    if (block.kind === 'list') return <ListView key={index} list={block} />
+    if (block.kind === 'list') {
+      return <ListView key={index} list={block} pictures={pictures} />
+    }
     if (block.kind === 'code')
       return <CodeBlock key={index} text={block.text} />
     return (

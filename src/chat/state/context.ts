@@ -1,6 +1,5 @@
 import { ApiError } from '../../app/api/client'
 import type { Delay } from '../../app/events'
-import type { WorkspaceView } from '../../shared/workspace-view'
 import type { ChatApi, WorkspaceTarget } from '../api/client'
 import type { DeviceChannel } from '../device/device-actions'
 import type { SecretApi } from '../secrets/secret-actions'
@@ -8,6 +7,7 @@ import type { SessionReads } from '../links/session-reads'
 import type { WorkspaceStream } from '../stream/workspace-stream'
 import { withSession, type ChatSnapshot } from './chat-snapshot'
 import type { ChatStore } from './chat-store'
+import { withLateSends } from './late-sends'
 import type { PendingMove } from './model-moves'
 import type { PendingEdit } from './session-records'
 import type { Transcript } from '../../shared/transcript/transcript'
@@ -39,11 +39,10 @@ export interface ChatContext {
   readonly moves: Map<string, PendingMove>
   readonly newId: () => string
   /**
-   * The client ID of each fixed prompt that did not send, by its session and
-   * its text. So a second try in that session is the same message, and the
-   * same prompt in another session is a new one.
+   * One fixed prompt sends at a time. Its client ID stays by session and
+   * text while it sends and after a failure, so a retry is the same message.
    */
-  readonly prompts: Map<string, string>
+  readonly prompts: { sending: boolean; ids: Map<string, string> }
   /** A new identity for a draft that a session starts after its draft moved. */
   readonly newDraftId: () => string
   /** A new local identity for a file of a draft, in this tab. */
@@ -58,7 +57,7 @@ export interface ChatContext {
    * timers of the chat, which a test gives as manual timers.
    */
   readonly delay: Delay
-  readonly saveView: (view: WorkspaceView) => void
+  readonly saveView: () => void
   /** The chat is still open. A response that arrives later changes nothing. */
   readonly live: () => boolean
   /**
@@ -111,7 +110,9 @@ export function showNotice(
 }
 
 /**
- * Shows a new transcript, and drops sent messages that it now holds. A Stop
+ * Shows a new transcript, and drops sent messages that it now holds. A
+ * message whose send failed but that the transcript holds did send, so its
+ * notice and its copy in a draft go, as `withLateSends` says. A Stop
  * that waits belongs to its turn, so it ends when that turn no longer runs,
  * also when another turn runs now.
  */
@@ -126,7 +127,7 @@ export function withTranscript(
       item.kind === 'user' ? [item.message.id] : [],
     ),
   )
-  return withSession(snapshot, sessionId, (state) => {
+  const next = withSession(snapshot, sessionId, (state) => {
     const running = transcript.turn?.turnId
     const same =
       running !== undefined && running === state.transcript.turn?.turnId
@@ -138,30 +139,5 @@ export function withTranscript(
       stopping: same ? state.stopping : false,
     }
   })
-}
-
-/** Saves the view one request at a time. A newer view replaces one that waits. */
-export function viewWriter(
-  save: (view: WorkspaceView) => Promise<unknown>,
-): (view: WorkspaceView) => void {
-  let waiting: WorkspaceView | null = null
-  let writing = false
-  const flush = async () => {
-    if (writing || !waiting) return
-    const view = waiting
-    waiting = null
-    writing = true
-    try {
-      await save(view)
-    } catch {
-      // The next change sends the whole view again.
-    } finally {
-      writing = false
-      void flush()
-    }
-  }
-  return (view) => {
-    waiting = view
-    void flush()
-  }
+  return withLateSends(next, shown)
 }

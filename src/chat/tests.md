@@ -10,7 +10,10 @@ composer, before newer text, when the Worker refuses it. It also shows a
 fixed prompt at once. `state/prompt-actions.test.ts` sends fixed prompts over the fake API. It
 checks the request and the unchanged draft, a send during a turn, a missing
 login, a linked session, and the client ID of a second try in the same and
-in another session. `components/ContinuedNote.test.tsx` folds the note of
+in another session. After the second try sends, the next send of the same
+prompt gets a new client ID. While one prompt waits, another prompt sends
+nothing, also in another session, and a send from the composer still goes.
+`components/ContinuedNote.test.tsx` folds the note of
 Continue once at its place, also after a repeat and in a new tab, in the
 history of a closed session, and draws "You" or the name of the member.
 `state/repository-folder.test.ts` checks that a record of another
@@ -23,7 +26,11 @@ change in the same way, with its read from the stream and its copy.
 It checks the plain message of a refused retry in a tab that missed newer events.
 `state/linked-replies.test.tsx` drives replies of Send and Try again that
 name a linked session, in both orders, and two chats with different readers
-on one fake stream. `components/SessionLogin.test.tsx` renders the login
+on one fake stream. `state/linked-reply-selection.test.ts` checks that such
+a reply keeps a selected tab of another kind. A fixed prompt from a Preview
+tab keeps that tab and the session of the chat. A held Send whose draft
+cannot move, because the linked session holds a draft, keeps the file tab
+that the user chose during the send. `components/SessionLogin.test.tsx` renders the login
 label and its notices. `components/MissingLoginNotice.dom.test.tsx` mounts
 the chat and checks the watch of the notice of a missing login. The notice
 keeps one watch while it shows, also while the reader types. The watch ends
@@ -71,6 +78,8 @@ and a chip in a heading, and that an empty heading draws nothing.
 `components/MessageLine.dom.test.tsx` renders a message line. A heading in
 a closed line is a span in the line, and the summary holds no heading
 element. A line whose table follows only empty headings keeps a name.
+When that line opens, its table shows the file chip of a mention. The
+hidden text that names the line holds the mention as text, with no link.
 `components/TableReply.dom.test.tsx` drives chat events. It checks a header
 row before its separator row, the rows and a partial row that arrive, and
 the same reply from the saved history.
@@ -113,6 +122,12 @@ and a read-only row opens no menu on it. `state/tab-order.test.ts` moves tabs th
 the controller and checks the saved order. A move that changes the place
 of the temporary tab drops its mark in the same save. A move of another
 tab, and a move to its own place, keep the mark.
+`state/saved-view.test.ts` fails the read of the saved view. A click on
+a session tab and a new session each show the session and load its
+history. A model change to the other agent shows its new session, loads
+its history, and moves the draft there. The view stays null and no view
+save goes out, so the server keeps the saved view. The row keeps the open
+sessions in the order of creation, with each new session last.
 `components/CloseTabs.dom.test.tsx` presses Close tabs to the right on
 the first tab of a row with a file tab and a session tab. The file tab
 leaves the view in one save, with its temporary mark, the session closes
@@ -128,6 +143,15 @@ question. `components/CloseQuestion.dom.test.tsx` checks the words of
 that question for one and for two running sessions, and
 `state/sessions.test.ts` drops a session that another member closes from
 the question.
+`state/close-actions.test.ts` closes a session tab while the test holds
+its request. The tab moves to the session history at once. An open record
+from the stream before the reply does not bring it back. A failed close
+puts the tab back at its place in the row. When the user chose no other
+tab during the close, the tab shows again with the notice
+"The session didn't close". Another session tab or a Preview tab that the
+user chose during the close stays selected. With the Preview tab, the
+failed close also keeps the session of the chat. In both cases, the notice
+goes to the chat, with no session.
 `components/TranscriptCopy.dom.test.tsx` copies the transcript of a tab
 that never showed, through the real controller, client, and menu, with
 the copy of the app's test services. Copy full transcript asks for the
@@ -264,7 +288,39 @@ real copy in Chrome was a manual check. `components/AttachmentChips.test.tsx` re
 files over the size limit, with one name or the count and the limit. It
 also renders the files under a sent message, with their sizes and no
 Remove.
-`links/AnswerText.dom.test.tsx` mounts answers with file chips.
+`links/AnswerText.dom.test.tsx` mounts answers with file chips through
+`AgentText`, which parses an answer again only when its text changes. One
+case holds the reply of the tree. Until the tree comes, a mention and a
+Markdown link of a file show as typed, and a path in code stays code.
+Then the tree loads with no change of the text. The mention and the path
+show as file chips, and the Markdown link shows as a file link.
+`chat-files-test-kit.ts` starts the real store of the Files screens,
+`WorkspaceFiles`, over the fake API, with the tree entries that a test
+gives. It can hold the reply of the tree until the test releases it.
+`links/AnswerText.dom.test.tsx`, `links/MessageFileChips.dom.test.tsx`,
+`components/SentFileChips.dom.test.tsx`, and
+`components/MessageLine.dom.test.tsx` take their files from it.
+`links/FilePicture.dom.test.tsx` mounts an answer with the Markdown image
+of a screenshot in the chat pane, with a fake picture reader. The box of
+the label shows, and the read starts for the message only when the box
+comes near the view, with the scroll box of the chat as the root. The
+picture shows at its own size with the label as its alternative text. A
+plain press opens the file tab, and a press with a modifier key stays with
+the browser. The link shows without a reader, with the code of its label,
+and after a failed read and for bytes that the browser cannot draw. Without
+a reader, nothing watches the image. An unmount aborts the read, and a copy
+gives the Markdown image while the box and while the picture shows.
+`components/AgentPictures.dom.test.tsx` checks the places of a picture: a
+paragraph and a list item show it, and a heading and a table cell keep
+the link. A closed message line shows the link, and the open line shows
+the picture, which a press opens. happy-dom toggles a `<details>` for a
+click on a link in its summary, which a browser does not, so the browser
+smoke test checks that the line stays open.
+`links/picture-test-kit.tsx` holds their helpers: a stand-in for
+`IntersectionObserver`, the fake reader, and the mount. They take the
+image decoder of `fakeDecoder` from `../files/page/picture-test-kit.tsx`.
+`links/chat-parts-answers.test.ts` also checks that only the image of a
+picture file can show as its picture.
 `links/workspace-links.test.ts` reads links with and without a tab path,
 Markdown links, a code label in a sent message, code, `..`, other origins
 and orgs, which are links and no chips, unknown workspaces, and
@@ -386,6 +442,12 @@ files and Changes stay as they were. A queued message gets its copy only
 after Resume gives it to the agent. `../app/dev/attachment-files.test.ts`
 checks the same store in the fake of the app. `../app/dev/attachment-test-kit.ts`
 holds the helpers of both tests.
+
+`dev/dev-stream.test.ts` drives `DevStream` of the development page
+through the real `WorkspaceStream`, with fake timers. `DevStream` sends the
+second of two parts first. `WorkspaceStream` then connects again and gets
+both parts from the stored history. It delivers each part once and in
+order, also after the late copy of the first part.
 
 The tests of the secret requests are in the
 [README of the secret requests](secrets/README.md#tests).

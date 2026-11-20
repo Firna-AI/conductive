@@ -24,11 +24,12 @@ makes each web address of chat text a link, as
 - A file opens in a tab of the centre column. A press on a file opens it in
   the temporary tab, as [Temporary tabs](temporary-tabs.md) says.
 - Markdown shows rendered, with a switch to its source. Code shows with line
-  numbers and syntax colours.
+  numbers and syntax colours. An HTML file shows as a page, with a switch to
+  its source, as [HTML file preview](html-file-preview.md) says.
 - A file tab can open at a line or a range of lines, such as from a file
   chip of an answer with a line target, as
-  [Line targets](file-mentions.md#line-targets) says (answer chip
-  decision 2). The tab then shows the text of the file, also for a
+  [Line targets](file-mentions-answers.md#line-targets) says (answer
+  chip decision 2). The tab then shows the text of the file, also for a
   Markdown file. It scrolls the first line to the middle of the view, and
   marks each line of the range with a background colour.
 - The address of such a tab names the lines in its query, as
@@ -152,7 +153,7 @@ makes each web address of chat text a link, as
 - A browser file event and a browser file response contain complete reports.
   They never expose a runner part as a full tree or changes list.
 - The runner reads one file or one diff on request. When the runner is not
-  connected, a file read falls back to Boat's file read.
+  connected, a file read falls back to the file read of the provider.
 - The Durable Object keeps the last tree and the last changes, so both tabs
   still show them while the sandbox sleeps and while it starts again.
 - Reason: Boat's API can run `git` and read files only while the sandbox

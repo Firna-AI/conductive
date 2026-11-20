@@ -12,8 +12,13 @@ says what the screens show.
 
 - One ChatGPT sign-in of Codex owns its request for a code, its polls, and
   its timer. Cancel, the other kind in the switch, and the end of its form
-  stop it. After that, an answer changes nothing and schedules nothing.
-  A connected answer applies the current login status that the Worker returns.
+  stop it. After that, an answer schedules nothing, and only a connected
+  answer changes something. Each request of the sign-in waits for its turn
+  among the login requests of Codex, as a rule below says. A connected
+  answer applies the current login status that the Worker returns. Then
+  the agent list closes the form of Codex, if that form is open, and
+  leaves a form of Claude open. In Get started, each connected answer also
+  reads the steps again.
 - One rule, `loginUsable` in `api/read-core.ts`, says whether turns can
   run on a login. A connected login with an `unusableCause` cannot. The
   composers and Get started count such a login as missing.
@@ -46,20 +51,39 @@ says what the screens show.
 - Each open of the agent list, on the account and in Get started, reads
   the logins again through `AccountModel.refreshLogins`. So a login that
   the Worker stopped after the app opened shows Signed out. An open shares
-  a read that runs already.
+  a read that waits or runs already.
 - Only a reply of the account writes the logins and the default logins,
   because only it holds the own logins and the default logins of every
   org. The read of the org logins of an org also names the default logins
   of the person in that org, as the protocol says, but the account does
   not take them. So a reply that holds a part never hides a newer reply
   of the whole account, also when it comes first.
+- `AccountLoginRequests` in `account-login-requests.ts` runs the login
+  requests of each agent one at a time, in the order of the calls. These
+  requests are a save, a share change, a Refresh of an own endpoint, and a
+  remove. The request for a code and each poll of the ChatGPT sign-in are
+  requests of Codex. The read of `AccountModel.orgLoginChanged` after a
+  change of an org login is one too. Each request waits for its turn. Its
+  turn starts when the request before it of the same agent ends. A request
+  ends after the account applies its answer and the read after it ends, or
+  when it fails. The requests of one agent do not wait for the requests of
+  the other. Each read of the whole account by the owner waits for the
+  requests of both agents before it. Each later request, and each new
+  read, waits until that read ends. So a remove, a save, or a share change
+  while a poll waits reaches the Worker after that poll. The screens then
+  show the last change of the person.
 - `AgentLogins` in `agent-logins.ts` counts each local change of a login:
   a save, a remove, a connected sign-in, a share change, a change of an
   org login, and an org that joins the orgs of the person, at its start
-  and when its reply shows. A read shows the login and the default logins
-  of an agent only while that agent had no change during the read. So
-  after each change the account reads the logins of its agent again, as
-  the next rules say, and a read that ran meanwhile takes back nothing.
+  and when its reply shows. A save, a remove, a share change, and a change
+  of an org login count at once, also while they wait for their turn. So a
+  read from before them shows nothing of their agent. A read shows the
+  login and the default logins of an agent only while that agent had no
+  change during the read. A read of the whole account takes its mark when
+  it starts, before it waits for its turn. A read after a change uses the
+  mark of its caller, in the turn of that change. So after each change the
+  account reads the logins of its agent again, as the next rules say, and
+  a read that ran meanwhile takes back nothing.
 - After a save, a remove, a share change, or a connected sign-in of an own
   login, the account reads the logins of its agent again, so that the
   screens show the default logins that the server names after the change.

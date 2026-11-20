@@ -20,8 +20,8 @@
   - **C.** Mark locally hidden open sessions as open and show no closing age. This separates local tab state from stored session state. It adds visible wording and needs a user decision. Effort: Medium.
 - **Left out:** Changing nothing keeps an age that never grows. Anchoring the time at the first menu render measures when the menu opened, not when the tab closed.
 - **Wider fix:** B. One recorded local close time serves every reader of the history order and ages.
-- **Previous examples:** `plans/follow-ups/read-only-session-close-order.md` records another consequence of missing local close metadata.
-- **Related:** `plans/follow-ups/read-only-session-close-order.md` shares B as its wider option D. `plans/follow-ups/read-only-tabs-have-two-owners.md` owns the wider state move. Keep new read-only close state beside the current `archiveTabs` owner until that move.
+- **Previous examples:** [`plans/follow-ups/read-only-session-close-order.md`](https://github.com/Firna-AI/conductive/blob/5e23fb5658a6195ab243404f56fcbf0c2079485b/plans/follow-ups/read-only-session-close-order.md) records another consequence of missing local close metadata.
+- **Related:** [`plans/follow-ups/read-only-session-close-order.md`](https://github.com/Firna-AI/conductive/blob/5e23fb5658a6195ab243404f56fcbf0c2079485b/plans/follow-ups/read-only-session-close-order.md) shares B as its wider option D. Its fix applied its option C, which changes no row time. So the chat snapshot keeps a local close order beside `archiveTabs`. The session history and Reopen closed session use that order before the stored end times. `plans/follow-ups/read-only-tabs-have-two-owners.md` owns the wider state move. Keep new read-only close state beside the current `archiveTabs` owner until that move.
 - **Recommendation:** B. It gives the menu, key, and age one source for local closes.
 - **Action:** Ask the user when this separate work starts, because the choice changes which time read-only history rows describe.
 

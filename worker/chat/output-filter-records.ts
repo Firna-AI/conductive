@@ -3,13 +3,56 @@ import type { AppEnv } from '../env'
 import { decrypt, encrypt } from '../security/crypto'
 import type { ChatTransaction } from './store'
 import { array, parseAgentEvent } from './agent-events'
-import { record, string, strings } from './inputs'
+import { counter, record, string, strings } from './inputs'
+import { prepareOutputState } from './output-filter-state'
 
 function parseHeld(value: unknown): HeldOutput[] {
   return array(value, (entry) => {
     const input = record(entry)
     const event = parseAgentEvent(input.event)
     if (event.type !== 'assistant.delta') throw new Error('Invalid held output')
+    if (input.symbolic !== undefined) {
+      const state = record(input.symbolic)
+      const matches =
+        state.matches === undefined ? undefined : record(state.matches)
+      return {
+        event,
+        secrets: [],
+        symbolic: {
+          salt: string(state.salt),
+          contexts: array(state.contexts, (value) => {
+            const context = record(value)
+            return {
+              identity: string(context.identity),
+              matched: counter(context.matched),
+            }
+          }),
+          ...(matches
+            ? {
+                matches: {
+                  runs: array(matches.runs, (value) => {
+                    const run = record(value)
+                    return {
+                      offset: counter(run.offset),
+                      length: counter(run.length),
+                    }
+                  }),
+                  entries: array(matches.entries, (value) => {
+                    const entry = record(value)
+                    return {
+                      offset: counter(entry.offset),
+                      identity: string(entry.identity),
+                      ...(entry.start === undefined
+                        ? {}
+                        : { start: counter(entry.start) }),
+                    }
+                  }),
+                },
+              }
+            : {}),
+        },
+      }
+    }
     return {
       event,
       secrets: strings(input.secrets),
@@ -63,40 +106,34 @@ export async function saveOutputSnapshot(
   workspaceId: string,
   streamId: string | null,
   snapshot: readonly HeldOutput[],
+  active: ReadonlySet<string>,
+  before: ReadonlySet<string>,
 ) {
-  const ciphertext = snapshot.length
+  const { snapshot: current } = await prepareOutputState(
+    env,
+    workspaceId,
+    snapshot,
+    active,
+    before,
+  )
+  const ciphertext = current.length
     ? await encrypt(
-        JSON.stringify(snapshot),
+        JSON.stringify(current),
         encryptionContext(workspaceId, streamId),
         env.BOAT_KEY_ENCRYPTION_KEY,
       )
     : undefined
   if (streamId === null) await view.output.saveContexts(ciphertext)
   else await view.output.save(streamId, ciphertext)
-}
-
-export function retainActiveSecrets(
-  snapshot: readonly HeldOutput[],
-  active: ReadonlySet<string>,
-): HeldOutput[] {
-  return snapshot
-    .map((held) => ({
-      ...held,
-      secrets: held.secrets.filter((value) => active.has(value)),
-      contexts: held.contexts
-        ?.map((context) => ({
-          ...context,
-          secrets: context.secrets.filter((value) => active.has(value)),
-        }))
-        .filter((context) => context.secrets.length),
-    }))
-    .filter((held) => held.event.text || held.contexts?.length)
+  if (current.some((held) => !held.symbolic && held.contexts?.length))
+    await view.output.markLegacyContexts()
 }
 
 export async function pruneSavedOutputSecrets(
   env: AppEnv,
   view: ChatTransaction,
   active: ReadonlySet<string>,
+  before: ReadonlySet<string> = active,
 ) {
   for (const streamId of [null, ...(await view.output.streams())]) {
     const snapshot = await readOutputSnapshot(
@@ -105,8 +142,22 @@ export async function pruneSavedOutputSecrets(
       view.workspaceId,
       streamId,
     )
-    const current = retainActiveSecrets(snapshot, active)
+    const { snapshot: current } = await prepareOutputState(
+      env,
+      view.workspaceId,
+      snapshot,
+      active,
+      before,
+    )
     if (JSON.stringify(snapshot) !== JSON.stringify(current))
-      await saveOutputSnapshot(env, view, view.workspaceId, streamId, current)
+      await saveOutputSnapshot(
+        env,
+        view,
+        view.workspaceId,
+        streamId,
+        current,
+        active,
+        before,
+      )
   }
 }

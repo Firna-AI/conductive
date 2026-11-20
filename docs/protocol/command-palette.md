@@ -174,6 +174,12 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
   A section is not tied to a repository, so the repository is a filter.
 - The filters start at All repositories and Active each time that the
   palette opens.
+- When the person chooses one repository, it stays the filter until the
+  person changes it or closes the palette. The menu of the filter keeps
+  that repository and checks it. This holds also when it is not a chosen
+  repository of the org and no workspace in the list uses it.
+- A reset to All repositories in that case was rejected, because it
+  changes the choice of the person.
 - With the Archived filter, the tab shows the workspaces of the Archived
   group of the list. They show in one Archived group, in the order of the
   list.

@@ -9,7 +9,7 @@ import {
   ignoreAlreadyRemoved,
   requireDeletedOrgCleanup,
 } from './cleanup-provider'
-import { stopDeletedOrg } from './deletion'
+import { stopDeletedOrgResources, suspendDeletedOrg } from './deletion'
 import {
   cleanupResources,
   deletedOrgs,
@@ -30,6 +30,7 @@ import {
   purgeOrgAttachments,
 } from '../chat/attachment-cleanup'
 import { warnWorker } from '../warnings'
+import type { WorkerWarning } from '../warning-types'
 import { cleanupOrgArchives } from './archive-cleanup'
 
 export async function cleanupDeletedOrgs(
@@ -53,7 +54,7 @@ export async function cleanupDeletedOrgs(
         org.id,
         dependencies,
         async (token, suspended) => {
-          await stopDeletedOrg(
+          await suspendDeletedOrg(
             env,
             org.id,
             token,
@@ -61,32 +62,24 @@ export async function cleanupDeletedOrgs(
             dependencies,
             hooks,
           )
+          const steps = cleanupStepRunner()
+          await steps.run({ kind: 'org_cleanup_stop_failed' }, () =>
+            stopDeletedOrgResources(env, org.id, token, dependencies),
+          )
           if (dependencies.now() < org.deletesAt) {
-            const failures: unknown[] = []
-            try {
-              await cleanupOrgArchives(env, org.id, token, dependencies)
-            } catch (error) {
-              failures.push(error)
-            }
-            try {
-              await maintainDeletedOrg(env, org.id, token, dependencies, hooks)
-            } catch (error) {
-              failures.push(error)
-            }
-            try {
-              await finishPendingRestore(
-                env,
-                org.id,
-                token,
-                dependencies,
-                hooks,
-              )
-            } catch (error) {
-              failures.push(error)
-            }
-            if (failures.length > 0) throw failures[0]
+            await steps.run({ kind: 'org_cleanup_archive_failed' }, () =>
+              cleanupOrgArchives(env, org.id, token, dependencies),
+            )
+            await steps.run({ kind: 'org_cleanup_retention_failed' }, () =>
+              maintainDeletedOrg(env, org.id, token, dependencies, hooks),
+            )
+            await steps.run({ kind: 'org_cleanup_restore_failed' }, () =>
+              finishPendingRestore(env, org.id, token, dependencies, hooks),
+            )
+            steps.rethrowFailure()
             return
           }
+          steps.rethrowFailure()
           if (
             !(await markPurgeStarted(env.DB, org.id, token, dependencies.now()))
           )
@@ -162,8 +155,26 @@ export async function cleanupDeletedOrgs(
         },
       )
     } catch {
+      warnWorker({ kind: 'org_cleanup_failed' })
       result.pending.push(org.id)
     }
   }
   return result
+}
+
+function cleanupStepRunner() {
+  let firstFailure: { error: unknown } | null = null
+  return {
+    async run(warning: WorkerWarning, action: () => Promise<unknown>) {
+      try {
+        await action()
+      } catch (error) {
+        warnWorker(warning)
+        firstFailure ??= { error }
+      }
+    },
+    rethrowFailure() {
+      if (firstFailure) throw firstFailure.error
+    },
+  }
 }

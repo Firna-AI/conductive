@@ -32,7 +32,9 @@ option overrides this default, including queued chats that show no spinner.
   as sent, so `?upload=wait&sent=64` shows the measured state of a file of
   one part. Create org of the dev fake
   requires at least one repository and starts a simulated build. Its
-  repository catalogue keeps the saved choices, and its custom initials
+  repository catalogue keeps the saved choices in the repository order of
+  the Worker. An add goes to the end of the order, and a move of a chosen
+  repository starts no build. Its custom initials
   and its colour stay through rename, delete, and restore. Settings changes during the
   first good build start one added build. The fake compares settings
   revisions with builds as the Worker does.
@@ -114,7 +116,12 @@ option overrides this default, including queued chats that show no spinner.
   write of that org with `org_suspended`. The open app does not read its orgs again, so its pages
   of that org show the suspension only after such a refusal. Without the
   option, each operator request gets `operator_required`, as the Worker
-  does.
+  does. The provider accounts are `boat` and `e2b`, with every new org on
+  `boat`. `?providers=one`, `?providers=three`, or `?providers=fail` gives
+  `boat` only, a third account, or a failed read, and `?providerSave=fail`
+  fails each save of the weights. An org that Create org makes joins the
+  operator section with its account: the choice of an operator, or a draw
+  from the weights.
 - `?waiting=1` signs in Sam Okafor of the waitlist mockups, who waits for
   app access with a verified email, so the app shows only the
   [waitlist](screens.md#the-waitlist). `?waiting=no-email` gives the same
@@ -180,6 +187,8 @@ option overrides this default, including queued chats that show no spinner.
   the run fails with no workspace. A prompt that contains `fail` stands for
   a cloud computer that did not start: the run fails and keeps its
   workspace, in the error state with Try again, as the Worker does. The
+  workspace of a run starts with the chosen secrets of its automation
+  pre-approved, and Mac access off. The
   recorded server has no chat for
   a workspace that the fake made, so its chat does not load, and the line
   of its automation does not show.
@@ -191,7 +200,7 @@ option overrides this default, including queued chats that show no spinner.
   value. A member changes only the own secrets, and only an admin sets the
   mark for all agents or reveals a value, which the fake records. A Replace
   of the value ends the record of the last reveal, and a Delete ends each
-  grant of the secret. A suspended org refuses each write, also a reveal.
+  grant of the secret and leaves the chosen secrets of each automation. A suspended org refuses each write, also a reveal.
   `dev/capability-routes.ts` serves the Capabilities of each workspace:
   `checkout-autocomplete` pre-approves FIGMA_TOKEN and has two approvals of
   its sessions, and a create keeps the choices of its control. The fake

@@ -23,6 +23,7 @@ import { shortcutLabels, useShortcutHint } from '../../shortcuts/shortcut-hints'
 import type { WorkspaceContext, WorkspaceFeatures } from '../features'
 import { BarKeys } from '../github/bar-keys'
 import { useGitHubFeed, useScreenBar } from '../github/WorkspaceGitHub'
+import { useHtmlPreview } from '../previews/use-html-preview'
 import { SandboxPanel } from '../SandboxNotice'
 import { contentState } from '../sandbox-view'
 import { useSavedView } from '../saved-view'
@@ -59,8 +60,10 @@ function pagePlaceholder(context: WorkspaceContext): ReactNode {
  * A file tab or a diff tab as a page, which keeps its tab in the saved view.
  * While the sandbox does not run, the page reads nothing. A sandbox that is
  * stopped or starts, and one whose later start failed, keep the file that
- * the page shows, as they keep the lists. Otherwise the state of the sandbox
- * takes the place of the content, which is the wait while it starts.
+ * the page shows, as they keep the lists, and the page of an HTML file that
+ * shows in its frame. Otherwise the state of the sandbox takes the place of
+ * the content, which is the wait while it starts. The tab of an HTML file
+ * gets its page from the files preview of the workspace.
  */
 function TabPage(props: {
   context: WorkspaceContext
@@ -73,6 +76,7 @@ function TabPage(props: {
   useOpenTab(context.savedView, tab)
   const lines = useAddressLines()
   const targets = useFileTargets(context.org.id)
+  const htmlPreview = useHtmlPreview(context, tab, props.files)
   const common = {
     files: props.files,
     layout: props.layout,
@@ -82,7 +86,13 @@ function TabPage(props: {
     targets,
   }
   return tab.kind === 'file' ? (
-    <FilePage {...common} key={tab.path} lines={lines} tab={tab} />
+    <FilePage
+      {...common}
+      htmlPreview={htmlPreview}
+      key={tab.path}
+      lines={lines}
+      tab={tab}
+    />
   ) : (
     <DiffPage {...common} key={tab.path} tab={tab} />
   )

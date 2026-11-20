@@ -6,6 +6,7 @@ import {
   type OrgDeletion,
   type QuestionTarget,
 } from '../../../docs/mockups/src/components/operator/operatorCopy'
+import { orgAccountWords } from '../../../docs/mockups/src/components/operator/providerCopy'
 import { WorkspaceStates } from '../../../docs/mockups/src/components/operator/WorkspaceStates'
 import { DetailList } from '../../../docs/mockups/src/components/settings/DetailList'
 import { Section } from '../../../docs/mockups/src/components/settings/Section'
@@ -93,9 +94,9 @@ function MemberRow(props: { member: OperatorOrgMember }) {
 }
 
 /**
- * The page of an org for the operator: its state, its details, its workspaces
- * in each state, and its members with their names and roles. Each member opens
- * the page of that user.
+ * The page of an org for the operator: its state, its details with its
+ * provider account by its ID, its workspaces in each state, and its members
+ * with their names and roles. Each member opens the page of that user.
  */
 function OrgDetails(props: {
   org: OperatorOrgDetail
@@ -110,6 +111,11 @@ function OrgDetails(props: {
         <DetailList
           rows={[
             { term: 'Org ID', value: org.id, mono: true },
+            {
+              term: orgAccountWords.term,
+              value: org.providerAccount,
+              mono: true,
+            },
             { term: 'Created', value: formatLongDay(org.createdAt, timeZone) },
             { term: 'Repositories', value: formatCount(org.repositories) },
           ]}

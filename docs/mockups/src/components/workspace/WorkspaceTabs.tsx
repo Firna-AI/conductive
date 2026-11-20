@@ -1,4 +1,4 @@
-import { Fragment } from 'react'
+import { createContext, Fragment, useContext } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import { History, Plus, RotateCcw } from 'lucide-react'
 import { nameLabel } from '../../../../../src/shared/name-label'
@@ -34,12 +34,21 @@ export const historyEntries: readonly MenuEntry[] = closedSessions.map(
   }),
 )
 
+/**
+ * The class of the clock when the screen draws the open session history
+ * above the page, as the app opens it in the top layer of the browser. The
+ * clock then draws no menu of its own, and the class names it as the anchor
+ * where CSS places the menu, as `app/chat/menu-placement` shows.
+ */
+export const HistoryAnchor = createContext<string | undefined>(undefined)
+
 /** The clock that opens the session history, with its menu when open. */
 function HistoryButton(props: {
   open: boolean
   anchored: boolean
   entries: readonly MenuEntry[]
 }) {
+  const anchor = useContext(HistoryAnchor)
   const hasHistory = props.entries.some((entry) => entry.kind === 'item')
   const button = (
     <IconButton
@@ -50,7 +59,7 @@ function HistoryButton(props: {
     />
   )
   return (
-    <span className={styles.anchor}>
+    <span className={classes(styles.anchor, anchor)}>
       {hasHistory ? (
         props.open ? (
           button
@@ -60,7 +69,7 @@ function HistoryButton(props: {
           </ScreenLink>
         )
       ) : null}
-      {props.open && props.anchored ? (
+      {props.open && props.anchored && anchor === undefined ? (
         <Menu
           entries={props.entries}
           label="Session history"

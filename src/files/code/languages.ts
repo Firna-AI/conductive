@@ -165,6 +165,7 @@ const byExtension: ReadonlyMap<string, Language> = new Map([
   ['scss', { ...css, lineComments: ['//'] }],
   ['less', { ...css, lineComments: ['//'] }],
   ['html', markup],
+  ['htm', markup],
   ['xml', markup],
   ['svg', markup],
   ['vue', markup],

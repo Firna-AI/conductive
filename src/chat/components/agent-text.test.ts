@@ -103,7 +103,7 @@ it('nests lists at most 16 levels deep, as the file preview does, and shows deep
   })
 })
 
-it('ends a list item at an unindented line after a code block or a table, as CommonMark does', () => {
+it('ends a list item at an unindented line after code or a table, or at a second initial blank line', () => {
   const text = [
     '1. Run this:',
     '',
@@ -140,6 +140,21 @@ it('ends a list item at an unindented line after a code block or a table, as Com
     },
     p('That is all.'),
   ])
+  expect({
+    paragraph: blocksOf('-', '', '  Outside'),
+    list: blocksOf('-', '', '  - inner'),
+    bulletSibling: blocksOf('-', '', '', '- b'),
+    numberSibling: blocksOf('1.', '', '2. Second'),
+    noBlank: blocksOf('-', '  Inside'),
+    laterBlank: blocksOf('-', '  First', '', '  Next'),
+  }).toEqual({
+    paragraph: [{ kind: 'ul', items: [[]] }, p('Outside')],
+    list: [{ kind: 'ul', items: [[], [p('inner')]] }],
+    bulletSibling: [{ kind: 'ul', items: [[], [p('b')]] }],
+    numberSibling: [{ kind: 'ol', start: 1, items: [[], [p('Second')]] }],
+    noBlank: [{ kind: 'ul', items: [[p('Inside')]] }],
+    laterBlank: [{ kind: 'ul', items: [[p('First'), p('Next')]] }],
+  })
 })
 
 it('starts a list after a line of text only where CommonMark lets it, and before a table', () => {
@@ -189,7 +204,7 @@ it('starts a list after a line of text only where CommonMark lets it, and before
   })
 })
 
-it('reads one to six hashes and a space as a heading of that level, without its closing hashes, in a block of its own', () => {
+it('reads one to six hashes and a space as a heading of that level, without its closing hashes, in a block of its own, with empty text when the chat shows none of it', () => {
   expect({
     levels: blocksOf(
       '# Review of #482',
@@ -205,6 +220,10 @@ it('reads one to six hashes and a space as a heading of that level, without its 
     between: blocksOf('The tests pass.', '## Next', 'Push the branch.'),
     inItem: blocksOf('- Plan:', '  ### Steps', '  Run the tests.', '- Push.'),
     empty: blocksOf('The tests pass.', '## '),
+    boldOnly: blocksOf('The tests pass.', '## **', 'Push the branch.'),
+    codeOnly: blocksOf('### `'),
+    spaceOnly: blocksOf('## ** **'),
+    formatted: blocksOf('## **Plan**', '### `npm ci`', '#### **Pla'),
   }).toEqual({
     levels: [
       h(1, 'Review of #482'),
@@ -225,10 +244,14 @@ it('reads one to six hashes and a space as a heading of that level, without its 
       },
     ],
     empty: [p('The tests pass.'), h(2, '')],
+    boldOnly: [p('The tests pass.'), h(2, ''), p('Push the branch.')],
+    codeOnly: [h(3, '')],
+    spaceOnly: [h(2, '')],
+    formatted: [h(2, '**Plan**'), h(3, '`npm ci`'), h(4, '**Pla')],
   })
 })
 
-it('reads an underline under the text of a paragraph as a heading once a line break follows it, and never under a quote, indented code, or a lazy line', () => {
+it('reads an underline under the text of a paragraph as a heading once a line break follows it, and never under a quote, indented code, or a lazy line, with empty text when the chat shows none of it', () => {
   expect({
     equals: blocksOf('Review of #482', '===', 'The tests pass.'),
     hyphens: blocksOf('Needs your', 'answer', '---', ''),
@@ -237,6 +260,11 @@ it('reads an underline under the text of a paragraph as a heading once a line br
     quote: blocksOf('> Note', '---', ''),
     code: blocksOf('    npm ci', '===', ''),
     lazy: blocksOf('- Plan', '===', ''),
+    mixedEndings: textBlocks(
+      'Before.\r\n## Next\r\nBody.\r\rUnderline\n===\rAfter.',
+    ),
+    boldOnly: blocksOf('**', '---', 'Push the branch.'),
+    formatted: blocksOf('**Plan**', '===', ''),
   }).toEqual({
     equals: [h(1, 'Review of #482'), p('The tests pass.')],
     hyphens: [h(2, 'Needs your answer')],
@@ -245,5 +273,14 @@ it('reads an underline under the text of a paragraph as a heading once a line br
     quote: [p('> Note ---')],
     code: [p('npm ci ===')],
     lazy: [{ kind: 'ul', items: [[p('Plan ===')]] }],
+    mixedEndings: [
+      p('Before.'),
+      h(2, 'Next'),
+      p('Body.'),
+      h(1, 'Underline'),
+      p('After.'),
+    ],
+    boldOnly: [h(2, ''), p('Push the branch.')],
+    formatted: [h(1, '**Plan**')],
   })
 })

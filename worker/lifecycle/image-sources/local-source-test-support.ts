@@ -1,8 +1,9 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
-import { join, resolve } from 'node:path'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
 
 import type { TestHarness } from '../../test-support/harness'
 import { TEST_TIME } from '../../test-support/harness'
+import { testDirectory } from '../../test-support/test-directory'
 import { FakeGitHubGit } from '../fake-github-git-test-support'
 import {
   repositoryLocation,
@@ -44,12 +45,8 @@ export async function localSourceFixture(
     MACHINE_ORIGIN: 'https://machine.conductive.test',
     GITHUB_APP_PRIVATE_KEY: privateKey,
   }
-  const evidence = resolve(
-    import.meta.dirname,
-    '../../../.context/boat-native-remote-workspaces/milestone-5/decision-90/native-sources/native-git',
-  )
-  await mkdir(evidence, { recursive: true })
-  const root = await mkdtemp(join(evidence, 'case-'))
+  const files = await testDirectory('image-source-')
+  const root = files.path
   const home = join(root, 'home')
   const seed = join(root, 'seed')
   const remote = join(root, 'repository.git')
@@ -218,14 +215,23 @@ export async function localSourceFixture(
       write: (path: string, text: string) =>
         writeFile(join(directory, path), text),
       dispose: async () => {
-        await provider.settle()
-        await github?.close()
-        await rm(root, { recursive: true, force: true })
+        try {
+          await provider.settle()
+        } finally {
+          try {
+            await github?.close()
+          } finally {
+            await files.remove()
+          }
+        }
       },
     }
   } catch (error) {
-    await github?.close()
-    await rm(root, { recursive: true, force: true })
+    try {
+      await github?.close()
+    } finally {
+      await files.remove()
+    }
     throw error
   }
 }

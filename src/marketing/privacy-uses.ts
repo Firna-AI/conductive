@@ -90,10 +90,12 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         repositories, workspaces, automations, scripts, and settings that you and your
         team make. Each invite includes the invited email address. They
         run the service.`,
-      text`Automations: the prompt, the triggers, and the author filters of
-        each automation, with the GitHub accounts that a filter names. Each
-        run keeps its owner, its agent, its trigger, its state, and its pull
-        request. A skipped
+      text`Automations: the prompt, the triggers, the chosen org secrets, and
+        the author filters of each automation, with the GitHub accounts
+        that a filter names. Each run keeps its owner, its agent, its trigger,
+        its state, and its pull request. Each run workspace records the
+        chosen secrets as pre-approved by the owner. Its agents use them
+        without a new request. A skipped
         run keeps the GitHub login of the account outside the org whose
         event it skipped. They run the automations and show their runs.`,
       text`Keys and logins: the env var values and agent logins of each
@@ -185,7 +187,8 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         value or the output of the command.`,
       text`Your code: your repositories and files live in the cloud
         computers that ${productName} runs for your org. ${productName}
-        reads a file or a diff when you open it, to show it to you. The
+        reads a file or a diff when you open it, and a picture that an
+        agent answer shows, to show it to you. The
         agents send their model requests through ${productName} to
         Anthropic, OpenAI, or the chosen endpoint.
         Agent settings in the repository can send them to another address
@@ -197,7 +200,7 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         of them to its logs. ${productName} still keeps the chat history and
         the Mac command records above.`,
       text`GitHub events: the state of the pull requests and the checks
-        of your branches, and the new name or default branch of a
+        of your branches, and the new name, owner, or default branch of a
         repository, which GitHub sends to ${productName}. An automation
         also uses the GitHub accounts that open, push to, or merge a pull
         request, to decide whether the event starts a run.`,

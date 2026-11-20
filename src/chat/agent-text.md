@@ -3,15 +3,17 @@
 This guide belongs to [the chat](README.md). It gives the rules of the code
 that formats the text of agent messages: in the chat, and in a message line
 of an open work fold. It also gives the workspace chips of sent messages
-and answers, and the file chips of answers.
+and answers, and the file chips and the pictures of answers.
 [Chat Markdown](../../docs/protocol/chat-markdown.md),
 [Chat tables](../../docs/protocol/chat-tables.md),
 [Workspace links](../../docs/protocol/workspace-links.md), and
-[File mentions](../../docs/protocol/file-mentions.md#files-in-answers)
+[File mentions](../../docs/protocol/file-mentions-answers.md)
 state the requirements.
 
-- `textBlocks` reads the whole text of a message at each update. So a live
-  message and the same message from the saved history show the same blocks.
+- `textBlocks` reads the whole text of a message at each change of the
+  text. So a live message and the same message from the saved history show
+  the same blocks. `AgentText` and `MessageLine` keep the blocks while the
+  text stays the same, so a render for another change reads no text again.
 - `textBlocks` checks for a code fence before it checks for a table, so a
   table in a code block stays code. A `table` block, `TextTable`, can start
   directly after a line of a paragraph or a list.
@@ -21,9 +23,13 @@ state the requirements.
   paragraphs, headings, code blocks, and tables that the agent indents
   under the item. Past `maxNesting` levels, the lines of an item join into
   one paragraph.
-- `textBlocks` replaces tabs with spaces before it reads the structure, as
-  the file preview does. A code block outside a list takes its text from
-  the lines with their tabs, so it keeps them.
+- `textBlocks` splits the text at each line ending and replaces tabs with
+  spaces before it reads the structure, as the file preview does. Both
+  views take their lines from one line reader, as
+  [List parts](#list-parts) says. The split runs on the complete message
+  at each text change. So a CRLF that arrives in two live updates still
+  counts as one line ending. A code block outside a list takes its text
+  from the lines with their tabs, so it keeps them.
 - An item of one paragraph draws its text alone, in `AgentText` and in a
   message line, as in the file preview. Another item draws its blocks.
 - `AgentBlocks` draws the blocks of a message in order. `AgentText` and the
@@ -66,19 +72,34 @@ state the requirements.
   out no hidden table.
 - A line that starts with a table, or with a list that holds one, keeps
   its closed text in a visually hidden span. So the open line keeps a name
-  for a screen reader. An empty heading before the table counts as no
-  text, because it draws nothing. That hidden copy shows no chips, and
-  `PlainLinks` of `src/shell/ui/text-links.tsx` draws each link in it as
-  its words. A `MentionsProvider` without files removes file chips. So
-  the keyboard cannot reach a link in it.
+  for a screen reader. A block before the table that shows no readable
+  text counts as no text, because it gives the open line no name. So an
+  empty heading, a paragraph of only `**`, and an empty fenced code block
+  count as no text. Readable text before the table, such as the number of
+  a numbered list item, names the open line, which then adds no hidden
+  copy.
+- That hidden copy shows no chips, and `PlainLinks` of
+  `src/shell/ui/text-links.tsx` draws each link in it as its words. A
+  `MentionsProvider` without files removes file chips. So the keyboard
+  cannot reach a link in it.
+- `components/readable-text.ts` holds the one rule for readable text.
+  `blockShowsText` checks a block, and `showsText` checks the text of a
+  paragraph or a heading. Bold marks and code backticks draw no text, so a
+  paragraph or a heading of only those marks and white space shows none.
+  The text inside inline code or a code block counts as typed, so it is
+  readable when it holds a character other than white space. So a code
+  block of `**` is readable, but a paragraph of `**` is not. By the same
+  rule, `headingBlock` gives empty text to a heading with no readable text,
+  as [Heading parts](#heading-parts) says.
 
 ## Web addresses
 
 - `src/markdown/web-links.ts` reads web addresses for chat text, the
   message field, and the mockups. It imports no React or app module.
-  `bareAddressAt` reads a bare address with its balanced parentheses and
-  without trailing punctuation or marks. `webAddressParts` splits plain
-  text into addresses and text, with an optional Markdown label.
+  `bareAddressAt` reads a bare address without trailing punctuation or
+  marks. A `)` or a `]` at its end stays in only when it closes a `(`
+  or a `[` inside the address. `webAddressParts` splits plain text into
+  addresses and text, with an optional Markdown label.
 - `webLink` checks an address and gives its kind: an app page, a local
   server with its port, or another web page. The caller supplies the app
   origin and a page check built on `parseRoute`. `appAddress` joins the
@@ -103,8 +124,17 @@ state the requirements.
 - `lineTargets` reads each target of a text once. Keep it so. The readers
   try a link at each `[`, and many `[` can reach the same `(`. One read
   for each `[` would take seconds for a crafted answer.
-- `chatParts` uses `bareAddressAt` and `lineTargets`, through the
-  tokenizer of `links/chat-tokens.ts`. The message field uses
+- `lineLabelEnds` of `src/markdown/markdown-labels.ts` finds where the
+  label of each `[` ends, in one pass over the text. Keep it so. One scan
+  for each `[` would take seconds for a long line of `[`.
+- A label ends at the first `]` after its `[`, on the same line. Labels
+  do not nest, so a `[` in a label does not move its end. When no `(`
+  comes directly after that `]`, the `[` starts no link. `chatParts`
+  reads labels in the `code` mode, where each backtick after the `[`
+  starts or ends code. A `]` in code ends no label. `webAddressParts`
+  reads labels in the `plain` mode, where a backtick is text.
+- `chatParts` uses `bareAddressAt`, `lineTargets`, and `lineLabelEnds`,
+  through the tokenizer of `links/chat-tokens.ts`. The message field uses
   `webAddressParts` and reads no code, so its addresses stay text.
 
 ## Web links
@@ -124,7 +154,8 @@ text. These parts read and draw them:
   its address reads as a bare address: a chip, a link, or text. The
   Markdown of an image, `![alt](address)`, shows as typed in the same way,
   also in an answer, unless its target names a file of the workspace.
-  A file target shows its label as a link that opens the file. Each other
+  A file target shows its label as a link that opens the file, or its
+  picture, as [Pictures in answers](#pictures-in-answers) says. Each other
   Markdown link whose address is no link shows as typed, with its code
   and bold.
 - Inline code whose text, without the spaces at its ends, is one address
@@ -207,8 +238,10 @@ text. These parts read and draw them:
 - A Markdown link or image of an answer whose target is an entry of the
   tree gives a `file-link` part: `fileLinkTarget` reads the target, and
   `FileTextLink` draws a normal link with the label, which opens the file.
-  `chat-tokens.ts` reads a target that is not a web address only where
-  paths count, as in an answer.
+  An image of a picture file can show as its picture instead, as
+  [Pictures in answers](#pictures-in-answers) says. `chat-tokens.ts` reads
+  a target that is not a web address only where paths count, as in an
+  answer.
 - Code in the label of a Markdown link stays code. Where `**` marks bold, a
   mention ends before the mark.
 - A text follows the tree only when it holds `@`, or in an answer a
@@ -225,6 +258,62 @@ text. These parts read and draw them:
 - The chip of a file with lines shows them after its name, and its press
   calls `openFile` with the lines. The shell opens the file tab as text at
   the lines.
+
+## Pictures in answers
+
+[Pictures in answers](../../docs/protocol/file-mentions-answers.md#pictures-in-answers)
+states the requirements. These parts read and draw the pictures:
+
+- `chatParts` sets `picture` on the `file-link` part of the image form,
+  `![label](path)`, of a PNG, JPEG, GIF, or WebP file, which
+  `pictureType` of `src/files/page/file-view.ts` knows by the name. A
+  link without `!`, a folder, and each other file, such as an SVG file,
+  keep `picture` false. The part does not know where it shows, so one
+  reading serves each place.
+- `AnswerText` and `ChatText` take `pictures`, an `AnswerPictures` with the
+  ID of the agent message. `Part` draws a part with `picture` as
+  `FilePicture` only with `pictures`, else as `FileTextLink`. `AgentText`
+  gives `pictures`, with the ID of its item in the transcript, to its
+  paragraphs and list items. A heading and a table cell get none, so the
+  image keeps its link there.
+- `MessageLine` gives `pictures` only while the line is open, also to the
+  blocks that open under the line. So the closed line shows the link and
+  stays one line. The hidden copy of a line that starts with a table gets
+  none.
+- `FilePicture`, in `links/FilePicture.tsx`, draws the mockups'
+  `AnswerPicture` with an opener: the link of `fileOpener`. So a plain
+  press opens the file tab in each state, and a press with a modifier key
+  stays with the browser. The title is the path. The alternative text and
+  the label of the box are the label without its code and bold marks. The
+  link shows the label with its code and bold, through `labelText` of
+  `links/FileTextLink.tsx`, so it looks as the link of each other file.
+- Without `ChatMentions.pictures`, the picture shows the link and watches
+  nothing. With a reader, the box of the label shows until the read and
+  the decode end. `useNearView`, in `ui/near-view.ts`, watches the box
+  with an `IntersectionObserver`. The read starts when the box comes
+  within 400 CSS px of the part of the chat that shows.
+- `ChatPane` gives its scroll box to the observer as its root, through
+  `NearViewRoot`. Reason: a scroll box clips each element at its own
+  edges, so a margin around the window does not reach into the chat.
+  Outside a chat, the margin applies to the window. Without
+  `IntersectionObserver`, the read starts at once.
+- `usePictureRead`, in `links/picture-read.ts`, reads the path with
+  `ChatPictures.read`, with the ID of the agent message as `message`.
+  Then `decodePicture` of `src/files/page/decode-picture.ts` gives the
+  size. A failed read and bytes that the browser cannot draw show the
+  link. An unmount, or a change of the reader, the path, or the message,
+  aborts the read and stops the decode.
+- When the shell takes the reader away, as when the sandbox stops, each
+  picture shows its link. When the reader comes back, the read gives the
+  result that the reader kept, and the picture shows again.
+- A picture is a link, so a press on a picture in an open message line
+  opens the file, and `useFold` leaves the line open.
+- In the box and the picture states, `FilePicture` puts its link in a
+  span with `data-mention`, beside a `ChipCopyText` with the Markdown
+  image as the agent wrote it. So a copy gives that Markdown, as a copy of
+  a chip gives its mention, and the copy holds no picture bytes. The link
+  state has no such span, so a copy gives the label, as for each other
+  link.
 
 ## List parts
 
@@ -252,9 +341,18 @@ CommonMark. These parts read the lists of both:
   as text, closes it, so a list of any number can start under either. A
   list marker comes before a table, so `- a | b` with a separator row
   under it starts a list.
-- `src/markdown/lines.ts` holds the line tests that both readers share,
-  such as `expandTabs`. Like `table-rows.ts`, these modules import no
-  React.
+- `src/markdown/lines.ts` holds the line reader and the line tests that
+  both readers share, such as `isBlank`. Like `table-rows.ts`, these
+  modules import no React.
+- `markdownLines` gives `textBlocks` and `parseBlocks` the lines of a
+  text, so both views read the same lines. It splits the text at each line
+  ending of CommonMark: CRLF, CR, and LF. It does not split at U+2028 or
+  U+2029, because CommonMark reads them as text.
+- `expanded` holds the lines with their tabs replaced by spaces. Both
+  readers read the structure from it. `raw` holds each line as the text
+  has it, without its line ending. A chat code block outside a list takes
+  its text from `raw`. The file preview also takes from `raw` the rest of
+  a file that it shows as typed.
 
 ## Heading parts
 
@@ -285,6 +383,24 @@ preview:
   gets `ends`, which says whether the last of its lines ends the text. So
   an underline on the last line of a list item counts when a line break
   follows the item.
+- `parseLines` makes each hash heading, and `Paragraph.underline` makes
+  each underline heading. Both make the block with `headingBlock` of
+  `components/agent-paragraph.ts`. It checks the text with `showsText` of
+  `components/readable-text.ts`, whose rule also decides the hidden copy
+  of a message line. `showsText` reads the text with `tokens` of
+  `links/chat-tokens.ts`, for code and bold only. When no text or code
+  token holds a character other than white space, the block gets empty
+  text, as for `**` or a lone backtick. A count of the tokens is not
+  enough. A lone backtick starts code that runs to the end of the text, so
+  it gives one empty code token.
+- The block stays with its level, so the heading still ends the
+  paragraph above it. A list item also keeps its blocks while the agent
+  writes the heading. A heading with readable text keeps the text that
+  the agent wrote, such as `**Pla` while the agent writes `**Plan**`.
+  `AnswerText` formats that text when it draws the heading. The check
+  needs no file tree and no workspace list, so the blocks depend only on
+  the text. The file preview reads `**` and a lone backtick as text, so
+  `src/markdown/headings.ts` does not apply this rule.
 - `AgentText` draws a heading as `h1` to `h6`, at its level, with its text
   through `AnswerText`. A heading with no text draws nothing, so a screen
   reader meets no empty heading.

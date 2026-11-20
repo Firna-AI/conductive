@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, expect, it, vi } from 'vitest'
 
-import { recordedPush } from './recorded-webhooks'
+import { recordedPullRequest, recordedPush } from './recorded-webhooks'
 import type { RepositoryChange } from './repository-change'
 import { createGitHubHarness, type GitHubTestHarness } from './test-harness'
 
@@ -42,7 +42,104 @@ async function saved(): Promise<string[]> {
   return results.map((row) => `${row.fullName}@${row.branch}`)
 }
 
+async function addUntrustedInstallation() {
+  await harness.env.DB.prepare(
+    "INSERT INTO github_installations (id, account_login, account_type, created_at) VALUES (2, 'Outside', 'Organization', 0)",
+  ).run()
+}
+
+async function setInstallationSuspended(suspendedAt: number | null) {
+  await harness.env.DB.prepare(
+    'UPDATE github_installations SET suspended_at = ? WHERE id = 1',
+  )
+    .bind(suspendedAt)
+    .run()
+}
+
+async function deleteOrg(orgId: string) {
+  await harness.env.DB.prepare('UPDATE orgs SET deleted_at = 1 WHERE id = ?')
+    .bind(orgId)
+    .run()
+}
+
 const repository = { repositoryId: 186853002, installationId: 1 }
+const changedRepository = {
+  ...recordedPush.repository,
+  full_name: 'Codertocat/Greetings',
+  default_branch: 'trunk',
+}
+const tagPush = {
+  ...recordedPush,
+  repository: changedRepository,
+  ref: 'refs/tags/release',
+}
+const forkPullRequest = {
+  ...recordedPullRequest,
+  repository: changedRepository,
+  pull_request: {
+    ...recordedPullRequest.pull_request,
+    head: {
+      ...recordedPullRequest.pull_request.head,
+      repo: { id: 999, full_name: 'outside/Fork', default_branch: 'fork-main' },
+    },
+    base: {
+      ...recordedPullRequest.pull_request.base,
+      repo: changedRepository,
+    },
+  },
+}
+
+it.each([
+  { kind: 'a tag push', event: 'push', value: tagPush },
+  {
+    kind: 'a fork pull request',
+    event: 'pull_request',
+    value: forkPullRequest,
+  },
+])(
+  'repairs saved values from $kind without branch work',
+  async ({ event, value }) => {
+    await harness.seed()
+    const pushed = vi.fn(async () => undefined)
+    harness.pushed = pushed
+    const response = await harness.webhook(event, value)
+    expect(response.status).toBe(204)
+    expect(await saved()).toEqual(['Codertocat/Greetings@trunk'])
+    expect(reads).toEqual([repository, repository])
+    expect(changed).toEqual([repository])
+    expect(harness.actors.size).toBe(0)
+    expect(harness.tokens).toEqual([])
+    expect(pushed).not.toHaveBeenCalled()
+  },
+)
+
+it('keeps saved values unchanged when a tag event lacks active repository access', async () => {
+  const { orgId } = await harness.seed()
+  await addUntrustedInstallation()
+  const foreign = [
+    {
+      ...tagPush,
+      repository: { ...changedRepository, id: 999 },
+    },
+    { ...tagPush, installation: { id: 2 } },
+  ]
+  for (const [index, value] of foreign.entries())
+    expect(
+      (await harness.webhook('push', value, `foreign-${index}`)).status,
+    ).toBe(204)
+  await setInstallationSuspended(1)
+  expect((await harness.webhook('push', tagPush, 'suspended')).status).toBe(204)
+  await setInstallationSuspended(null)
+  await deleteOrg(orgId)
+  expect((await harness.webhook('push', tagPush, 'deleted-org')).status).toBe(
+    204,
+  )
+  expect(await saved()).toEqual(['Codertocat/Hello-World@main'])
+  expect(reads).toEqual([])
+  expect(changed).toEqual([])
+  expect(harness.actors.size).toBe(0)
+  expect(harness.tokens).toEqual([])
+})
 
 it('catches up from a push that names other repository values than the saved ones', async () => {
   const { workspace } = await harness.seed()

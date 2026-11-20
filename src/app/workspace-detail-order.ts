@@ -4,6 +4,7 @@ import type {
   WorkspaceResponse,
 } from '../shared/workspaces'
 import type { ShellEvent } from './api/read-events'
+import { workspaceRead, workspaceRenamed } from './list-changes'
 import type { OrgModel } from './org-model'
 import type { Change } from './resource'
 import { loading, ready, Store, valueOf, type Loadable } from './store'
@@ -20,6 +21,8 @@ export interface WaitedReply {
   reply: OrderedWorkspaceResponse
   local: readonly Change<WorkspaceResponse>[]
 }
+
+type ListUpdate = 'record' | 'name' | 'read' | 'none'
 
 /**
  * The detail of the open workspace, in the order of its sources. A read and
@@ -80,7 +83,7 @@ export class DetailOrder {
     if (current && lifecycleReplyDetail(current, reply) !== current) {
       this.transitions += 1
     }
-    this.local((value) => lifecycleReplyDetail(value, reply), false)
+    this.local((value) => lifecycleReplyDetail(value, reply), 'none')
   }
 
   /** Waits for a read or a Resume, and keeps the local changes of the wait. */
@@ -120,7 +123,7 @@ export class DetailOrder {
       error,
     })
     const listed = this.org.confirmedWorkspace(this.workspaceId)
-    this.show(detailAfterListLifecycle(next, listed) ?? next)
+    this.show(detailAfterListLifecycle(next, listed) ?? next, 'record')
   }
 
   /** Applies an event of the stream that is newer than the detail. */
@@ -129,15 +132,25 @@ export class DetailOrder {
     if (!detail || eventNumber <= this.shownThrough) return
     this.shownThrough = eventNumber
     const next = workspaceAfterEvent(detail, event)
-    if (next !== detail) this.show(next)
+    if (next === detail) return
+    switch (event.type) {
+      case 'workspace.updated':
+        this.show(next, 'record')
+        break
+      case 'workspace.title':
+        this.show(next, 'name')
+        break
+      case 'start.updated':
+        this.show(next, 'none')
+    }
   }
 
   /** A local change with no number, which stays over waiting replies. */
-  local(change: Change<WorkspaceResponse>, updateList = true): void {
+  local(change: Change<WorkspaceResponse>, listUpdate: ListUpdate): void {
     for (const changes of this.waiting) changes.push(change)
     const detail = valueOf(this.detail.get())
     if (!detail) return
-    this.show(change(detail), updateList)
+    this.show(change(detail), listUpdate)
   }
 
   /**
@@ -164,8 +177,9 @@ export class DetailOrder {
     const next = detailAfterListLifecycle(current, listed)
     if (!next) return
     this.transitions += 1
-    if (current) this.local((value) => lifecycleReplyDetail(value, next), false)
-    else this.show(next, false)
+    if (current)
+      this.local((value) => lifecycleReplyDetail(value, next), 'none')
+    else this.show(next, 'none')
   }
 
   /**
@@ -186,12 +200,27 @@ export class DetailOrder {
    * an older Archive or Restore reply. So a Restore stays over the Archive
    * that it undid, and an Archive stays over the state before it.
    */
-  private show(detail: WorkspaceResponse, updateList = true): void {
+  private show(detail: WorkspaceResponse, listUpdate: ListUpdate): void {
     if (this.stale(detail.workspace)) return
     const current = valueOf(this.detail.get())
     this.floor = archiveFloor(this.floor, current?.workspace, detail.workspace)
     this.showing(detail)
     this.detail.set(ready(detail))
-    if (updateList) this.org.putWorkspace(detail.workspace)
+    switch (listUpdate) {
+      case 'record':
+        this.org.putWorkspace(detail.workspace)
+        break
+      case 'name':
+        this.org.resources.list.confirm(
+          workspaceRenamed(this.workspaceId, detail.workspace.name),
+          `workspace name ${this.workspaceId}`,
+        )
+        break
+      case 'read':
+        this.org.resources.list.confirm(
+          workspaceRead(this.workspaceId),
+          `workspace read ${this.workspaceId}`,
+        )
+    }
   }
 }

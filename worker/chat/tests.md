@@ -106,10 +106,10 @@ npm run typecheck
   split by a second restart. The filter masks only the part that completes
   a secret. Each stream keeps its own raw cursor.
 - `runner-output-legacy.test.ts` starts from two older stream records, one
-  with an answer end and one with held text, and no workspace record. The
-  first receipt moves the answer end into the workspace record, and the
-  older stream keeps no copy. The held text stays with its own stream. No
-  record holds a raw secret prefix.
+  with an answer end and one with held text, and no workspace record or
+  index marker. The first receipt moves the answer end into the record of
+  its answer, and the older stream keeps no copy. The held text stays with
+  its own stream. No record holds a raw secret prefix.
 - `port-reports.test.ts` checks complete private labels, sorted unique ports,
   and the final display limits after filtering.
   `runner-ports.test.ts` checks stored and streamed masked labels, replay,

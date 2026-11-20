@@ -145,8 +145,13 @@ holds its queries. Each row is one epoch of one delivery key of one user.
   holds no feedback text.
 - Each failed send gets `502 feedback_email_failed`: a refusal of Resend,
   a failed request, a missing `RESEND_API_KEY`, or a failed claim or
-  completion of the send limit. The reply and the log give no detail of
-  the provider.
+  completion of the send limit. The reply gives no detail of the provider.
+
+The Worker logs `feedback_email_delivery_failed` before each 502.
+Filter on `kind = feedback_email_delivery_failed`.
+For a `mail` summary, [A failed send](../members/invitations.md#a-failed-send) gives the fields.
+A failed claim or completion of the send limit gives a `d1` or `error` summary.
+The warning can follow an accepted email, as [The send limit](#the-send-limit) describes.
 
 ## Errors
 

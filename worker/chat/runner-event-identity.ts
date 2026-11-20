@@ -1,8 +1,36 @@
 import type { RunnerEvent } from '../../src/shared/generated/RunnerEvent'
+import type { TurnEventContext } from '../../src/shared/generated/TurnEventContext'
 import { isRecord } from '../http'
 
+type RunnerEventScopes = {
+  [Type in RunnerEvent['type']]: Extract<RunnerEvent, { type: Type }> extends
+    TurnEventContext | { start?: TurnEventContext }
+    ? 'turn'
+    : 'workspace'
+}
+
+const eventScopes = {
+  'turn.started': 'turn',
+  'turn.thinking': 'turn',
+  'assistant.delta': 'turn',
+  'assistant.completed': 'turn',
+  'tool.updated': 'turn',
+  'tool.detail.part': 'turn',
+  'turn.completed': 'turn',
+  'turn.failed': 'turn',
+  'runner.ready': 'workspace',
+  'start.updated': 'workspace',
+  'workspace.title': 'workspace',
+  'files.snapshot': 'workspace',
+  'files.unavailable': 'workspace',
+  'files.changed': 'workspace',
+  'changes.updated': 'workspace',
+  'ports.updated': 'workspace',
+} satisfies RunnerEventScopes
+
 export interface RunnerEventIdentity {
-  type: RunnerEvent['type'] | null
+  type: Exclude<RunnerEvent['type'], 'tool.detail.part'> | null
+  scope: RunnerEventScopes[RunnerEvent['type']] | 'unknown'
   sessionId: string | null
   turnId: string | null
   revision: number | null
@@ -14,31 +42,20 @@ export function readRunnerEventIdentity(value: unknown): RunnerEventIdentity {
   if (!isRecord(value)) {
     return {
       type: null,
+      scope: 'unknown',
       sessionId: null,
       turnId: null,
       revision: null,
       partNumber: null,
     }
   }
-  let type: RunnerEventIdentity['type'] = null
-  switch (value.type) {
-    case 'turn.started':
-    case 'turn.thinking':
-    case 'assistant.delta':
-    case 'assistant.completed':
-    case 'tool.updated':
-    case 'turn.completed':
-    case 'turn.failed':
-    case 'runner.ready':
-    case 'start.updated':
-    case 'workspace.title':
-    case 'files.snapshot':
-    case 'files.unavailable':
-    case 'files.changed':
-    case 'changes.updated':
-    case 'ports.updated':
-      type = value.type
-  }
+  const knownType = isRunnerEventType(value.type) ? value.type : null
+  const type = knownType === 'tool.detail.part' ? 'tool.updated' : knownType
+  const scope = knownType === null ? 'unknown' : eventScopes[knownType]
+  const context =
+    knownType === 'tool.detail.part' && isRecord(value.start)
+      ? value.start
+      : value
   const report =
     type === 'files.snapshot'
       ? value.tree
@@ -63,9 +80,20 @@ export function readRunnerEventIdentity(value: unknown): RunnerEventIdentity {
   }
   return {
     type,
-    sessionId: typeof value.sessionId === 'string' ? value.sessionId : null,
-    turnId: typeof value.turnId === 'string' ? value.turnId : null,
+    scope,
+    sessionId:
+      scope !== 'workspace' && typeof context.sessionId === 'string'
+        ? context.sessionId
+        : null,
+    turnId:
+      scope !== 'workspace' && typeof context.turnId === 'string'
+        ? context.turnId
+        : null,
     revision,
     partNumber,
   }
+}
+
+function isRunnerEventType(type: unknown): type is RunnerEvent['type'] {
+  return typeof type === 'string' && Object.hasOwn(eventScopes, type)
 }
