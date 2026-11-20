@@ -147,6 +147,7 @@ export const paths = {
   automationRepositoryChosen:
     'app/automations/automation/repository-removed/chosen-again',
   automationDelete: 'app/automations/automation/delete',
+  automationCapabilities: 'app/automations/automation/capabilities',
   automationUnavailable: 'app/automations/automation/unavailable',
   automationNotLoaded: 'app/automations/automation/not-loaded',
   automationTriggers: 'app/automations/triggers',

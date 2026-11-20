@@ -35,9 +35,15 @@ pull request bar, and the owner picker. A host can give its own parts, as
   kept chat. The
   [chat development page](../chat/dev/README.md) has a fake with state for
   live events and writes.
-- The production build uses `live-services.ts`: the Worker on the origin of
-  the page, its event socket, and an `XMLHttpRequest` for each raw part of
-  an upload, which measures the bytes that the browser sent.
+- The production build uses `createLiveServices` of `live-services.ts`.
+  It requires an app origin and a credential mode. A browser gives
+  the origin of its page and `same-origin`, the default credential mode of
+  `fetch`. The Mac app gives its configured Worker origin and `include`,
+  as the [Mac app README](../../desktop/README.md) says. The API requests,
+  the event and terminal sockets, the paths that `leave` opens, and
+  `AppServices.appOrigin` use that origin. Each raw part of an upload is
+  an `XMLHttpRequest` to the same origin, which measures the bytes that
+  the browser sent.
 
 ## Composition
 
@@ -204,9 +210,14 @@ the Help row of the palette opens.
   field or terminal after a shortcut consumes the press.
   `KeyPress.layoutModifiers` carries the modifiers taken by held layout
   switch keys. `onKey.layoutModifiers()` gives a recorder the same state
-  for its own event. `windowKeys` shares this state per window and resets
-  it on key-up or blur. `windowLayoutModifiers(window)` reads the same
-  snapshot for callers with a window.
+  for its own event. `KeyPress.firstPressConsumed` is true on a repeat
+  when a listener called `preventDefault` on the first press of the same
+  physical key. A first press always has false. The
+  [shortcut model](shortcuts/README.md) stops each repeat of such a key.
+  `windowKeys` shares both states per window and keeps them between
+  listener subscriptions. It resets a key on its key-up, and every key on
+  blur. `windowLayoutModifiers(window)` reads the same layout modifiers
+  for callers with a window.
 - `AppServices.appVersion` is the version of the build: the version of the
   root `package.json` and the short commit, as `<version> (<commit>)`.
   `build-version.ts` at the repository root makes it for the web and Mac
@@ -215,8 +226,13 @@ the Help row of the palette opens.
   feedback message carries it.
 - An address that people share, such as the invite link, starts with
   `AppServices.appOrigin`: the origin of the page in a browser. The Mac
-  app loads the page from its own origin, so it names the app host of the
-  brand.
+  app loads the page from its own origin, so it gives the Worker origin of
+  its build. `CONDUCTIVE_APP_ORIGIN` selects that origin, as
+  [Development](../../desktop/README.md#development) in the Mac app README
+  says. So a join link names the deployment that owns its code. Links in
+  chat text and the file preview to a page of the app at this origin are
+  [links of the app](../../docs/protocol/chat-links.md#links).
+  Each opens its page in the same window.
 - The shell reuses the design tokens, the pure parts, and the CSS modules of
   the [mockups](../../docs/mockups/README.md). It never imports a mockup
   screen, a fixture, `paths.ts`, `ScreenLink`, or Mokly.

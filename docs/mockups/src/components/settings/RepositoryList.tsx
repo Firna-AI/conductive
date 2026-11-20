@@ -84,7 +84,7 @@ export function RepositoryList(props: {
 
 /**
  * Edit, which opens the whole list with search, Add, and Remove, or Done,
- * which closes it again. Only an admin gets it.
+ * which saves the changes of the edit and closes it. Only an admin gets it.
  */
 export function RepositoryEditToggle(props: { editing: boolean }) {
   return props.editing ? (

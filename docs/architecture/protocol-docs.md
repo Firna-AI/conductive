@@ -79,8 +79,8 @@ This page lists each protocol doc and what it covers.
       use in one command, their storage, the Secrets tab, the rights,
       Reveal, the mark for all agents, the grants, and their risks.
       - [Capabilities](../protocol/capabilities.md): the control of New
-        workspace and of each workspace, with its secrets part and Mac
-        access.
+        workspace, of each workspace, and of an automation, with its
+        secrets part and Mac access.
       - [Secret variables](../protocol/secret-variables.md): the names of
         new secrets, the variable name of each secret, the command
         environment, conflicting variable names, and older tools.
@@ -229,7 +229,9 @@ This page lists each protocol doc and what it covers.
 - [Website docs](../protocol/website-docs.md): the public guides of the
   marketing site, their addresses and navigation, and the rules for their
   words.
-- [Automations](../protocol/automations.md): automations and their schedules, with the
-  linked pages [Automation runs](../protocol/automation-runs.md),
-  [Pull request runs](../protocol/pull-request-runs.md), and
-  [Base branches](../protocol/base-branches.md).
+- [Automations](../protocol/automations.md): automations, their chosen
+  secrets, and their schedules, with the linked pages
+  [Automation runs](../protocol/automation-runs.md),
+  [Pull request runs](../protocol/pull-request-runs.md),
+  [Base branches](../protocol/base-branches.md), and
+  [Automation risks](../protocol/automation-risks.md).

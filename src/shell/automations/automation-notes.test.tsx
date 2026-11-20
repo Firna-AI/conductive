@@ -3,9 +3,11 @@ import { automationModel } from '../../app/automation-model'
 import type { AutomationTab } from '../../app/router'
 import type { User } from '../../shared/api'
 import { automationPath, type Automation } from '../../shared/automations'
+import { secretsPath } from '../../shared/secrets'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS, fakeUsers } from '../../test-support/fixtures/core'
 import { automationFixtures } from '../../test-support/fixtures/automations'
+import { secretFixtures } from '../../test-support/fixtures/secrets'
 import { serveSuspendedAcme } from '../../test-support/suspended-org'
 import { renderScreen, startedApp, textOf } from '../test-render'
 import type { Viewport } from '../ui/viewport'
@@ -63,6 +65,7 @@ async function pageOf(
     model.runs.reload(),
     orgModel.reload('repositories'),
     orgModel.reload('list'),
+    orgModel.secrets.read(),
   ])
   const summary = app.orgs.get().find((item) => item.id === org)
   if (!summary) throw new Error('The fake org is missing.')
@@ -138,9 +141,10 @@ describe('the notes of the automation page', () => {
     }).toEqual({ owner: true, member: true, unlisted: true })
   })
 
-  test('a suspended org shows its notice above the automation, with no action and no line about logins', async () => {
+  test('a suspended org shows its notice above the automation, with no action, no line about logins, and the chosen secrets without the pull request hint', async () => {
     const server = new FakeApiServer()
     serveSuspendedAcme(server)
+    server.json('GET', secretsPath(org), { secrets: secretFixtures().secrets })
     const page = await pageOf(server, id, cal)
     expect({
       notice: page.includes(
@@ -148,10 +152,21 @@ describe('the notes of the automation page', () => {
       ),
       owner: page.includes('Only Cal can change'),
       logins: page.includes('Runs use'),
+      secrets: page.includes(
+        'Runs can use FIGMA_TOKEN and VERCEL_TOKEN with no question.',
+      ),
+      hint: page.includes('Text in a pull request'),
       actions: ['Add trigger', 'Delete', 'Save', 'Turn off'].filter((name) =>
         page.includes(name),
       ),
-    }).toEqual({ notice: true, owner: false, logins: false, actions: [] })
+    }).toEqual({
+      notice: true,
+      owner: false,
+      logins: false,
+      secrets: true,
+      hint: false,
+      actions: [],
+    })
   })
 
   test('a suspended org shows its notice above the Runs tab of a phone, and above an automation that the org no longer has', async () => {

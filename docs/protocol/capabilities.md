@@ -1,8 +1,9 @@
 # Capabilities
 
 This doc holds the requirements and the decisions in force for the
-Capabilities control of New workspace and of each workspace. It covers the
-control, its secrets part, and Mac access. It belongs to
+Capabilities control of New workspace, of each workspace, and of an
+automation. It covers the control, its secrets part, the control of an
+automation, and Mac access. It belongs to
 [Secrets](secrets.md), which covers the secrets, their rights, and their
 grants. The [mockup catalogue](../mockups/catalogue-secrets.md) draws the
 control. The terms are those of [Secrets](secrets.md#terms) and of the
@@ -11,7 +12,9 @@ control. The terms are those of [Secrets](secrets.md#terms) and of the
 A decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. A secrets
 decision number names a decision of the change that adds
-[secrets](secrets.md), as that doc says.
+[secrets](secrets.md), as that doc says. An automation capabilities
+decision number names a decision of the change that adds Capabilities to
+automations, as [Automations](automations.md) says.
 
 ## The control
 
@@ -42,6 +45,42 @@ decision number names a decision of the change that adds
   workspace owner and the admins change was rejected, because every member
   can already allow a request in each session (secrets decision 4 B).
 
+## The control of an automation
+
+- The automation page has the same Capabilities icon, in the bar of its
+  prompt box before the model picker (automation capabilities decision
+  1 A).
+- Reason: one control keeps each capability in one place, and later parts
+  can join it (secrets decision 6 G).
+- Only the owner of the automation gets the icon and opens the control.
+  Reason: only the owner changes an automation, as
+  [Access](automations.md#access) says.
+- Its control has only the secrets part. The checked secrets there are the
+  [chosen secrets](automations.md#chosen-secrets) of the automation, which
+  each run workspace starts with as pre-approvals.
+- The line under its title says "What agents in each run can use." The
+  hint of its secrets part says "Each run workspace starts with the
+  checked secrets pre-approved, so agents use them with no question."
+- Reason: a check acts on each later run workspace, not on a workspace
+  that exists.
+- The secrets part shows the secrets of the org and its links, as in New
+  workspace. A secret for all agents shows as checked, with the words "All
+  agents".
+- A check changes the form of the automation, so Save turns on. Save
+  stores the chosen secrets with the other fields.
+- The control differs from the control of New workspace: it has no Mac
+  access part. Reason: each run workspace keeps Mac access off
+  (automation capabilities decision 2 A).
+- As in New workspace, the control lists no session approval and no value
+  for this workspace.
+- A Mac access switch on the automation was rejected. No person watches
+  the Mac of the owner during a run, so text that steers the agent could
+  run each command that the owner always allowed.
+- A switch that turns on Mac access in each run workspace was rejected
+  too, because each later member who sends a message there would expose
+  their own Mac.
+- Every other member reads the chosen secrets in a line under the prompt,
+  as [The automation pages](automations.md#the-automation-pages) says.
 
 ## Mac access
 
