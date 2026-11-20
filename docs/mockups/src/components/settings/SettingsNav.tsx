@@ -3,7 +3,7 @@ import { classes } from '../common/classes'
 import { ScreenLink } from '../common/ScreenLink'
 import styles from './SettingsNav.module.css'
 
-export type SettingsNavRow = {
+type SettingsNavRow = {
   key: string
   label: string
   icon: LucideIcon

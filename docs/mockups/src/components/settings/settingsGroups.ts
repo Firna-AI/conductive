@@ -26,7 +26,7 @@ export type SettingsPlace =
 type TabInfo<Tab> = { tab: Tab; label: string; icon: LucideIcon }
 
 /** The tabs of the account, in their order. This Mac shows in the Mac app. */
-export const accountTabs: readonly TabInfo<AccountTab>[] = [
+const accountTabs: readonly TabInfo<AccountTab>[] = [
   { tab: 'general', label: 'General', icon: UserRound },
   { tab: 'agents', label: 'Agents', icon: Bot },
   { tab: 'preferences', label: 'Preferences', icon: SlidersHorizontal },
@@ -36,7 +36,7 @@ export const accountTabs: readonly TabInfo<AccountTab>[] = [
 ]
 
 /** The tabs of the settings of an org, in their order. */
-export const orgTabs: readonly TabInfo<SettingsTab>[] = [
+const orgTabs: readonly TabInfo<SettingsTab>[] = [
   { tab: 'general', label: 'General', icon: Building2 },
   { tab: 'repositories', label: 'Repositories', icon: FolderGit2 },
   { tab: 'computer', label: 'Cloud computer', icon: Cloud },
