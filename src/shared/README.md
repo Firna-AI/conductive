@@ -234,6 +234,12 @@ per-target outer alias and no credential.
   `workspaceRestoreUntil`, and `workspaceRemovedAt` between the Worker and
   the app. `workspaceRemovedAt(archivedAt, now)` returns the removal time
   when it is at or before `now`, else null. It needs no cloud computer ID.
+- [The workspace record reader](workspace-read.ts) reads each field of a
+  `Workspace` record for the app, the chat, and the Members tab. Each area
+  makes its reader with `createWorkspaceReader`. Each area gives it its own
+  JSON readers and its readers of the owner and the agent choice. Each area
+  also gives its own error for an unknown state. `WORKSPACE_STATES` lists
+  the known workspace states.
 - [Workspace views](workspace-view.ts) define the saved view and its
   `temporaryTab` field. The field names one file or diff by kind and path,
   without a display mode, or is null. The Worker and browser readers use
