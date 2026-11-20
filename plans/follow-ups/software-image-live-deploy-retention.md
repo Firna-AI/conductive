@@ -4,7 +4,7 @@
 - **Kind:** Needs decision.
 - **Added:** 2026-11-20, from branch `calummoore/follow-up-software-image-cleanup-can-3smx`, decision 1.
 - **Location:** `worker/software-image/data.ts`, `claimSoftwareImageDeletion`, the guarded claim that retires one ready image. `worker/software-image/cleanup.ts`, `cleanupOldSoftwareImages`. `worker/software-image/repair.ts`, `repairSoftwareImages`, the Cron work. `worker/software-image/build.ts`, `requestSoftwareImage`, which ends each unfinished build of another version and writes the deploy link and its expiry. `worker/software-image/deploy-data.ts`, `associateSoftwareImageDeploy` and `cleanupSoftwareImageProgress`. `docs/protocol/sandbox-software.md`, section "The software image". `worker/software-image/README.md`, sections "Reply budget" and "Cron work". `worker/software-image/retention.test.ts`, the test that shows the case.
-- **Reason:** the extra retention changes the cleanup rule that the user chose, so it needs Cal's answer.
+- **Reason:** the extra retention changes the cleanup rule of recorded action E, and Cal has not answered that question.
 
 - **Terms:**
   - **Software image:** a saved snapshot of the base image with the app's own software. A first build of an org on the `boat` account starts from the ready one of the current version.
@@ -14,7 +14,12 @@
   - **Deploy link:** one row of the D1 table `software_image_deploys`. It names the attempt that admission chose for the digest of one deploy token.
 - **Background:**
   - The rule in force keeps the ready software image of the current version, whatever the start time of its build. It also keeps each image that a running org build starts from.
-  - That pin is `image_build_jobs.software_image_name`. The rule deletes each other ready software image. `docs/protocol/sandbox-software.md`, section "The software image", states it. The user chose it on 20 November 2026.
+  - That pin is `image_build_jobs.software_image_name`. The rule deletes each other ready software image. `docs/protocol/sandbox-software.md`, section "The software image", states it.
+  - Origin: the follow-up item "Software image cleanup can delete the running version", at `plans/follow-ups/software-image-cleanup-keeps-running-version.md`. That item is now deleted.
+  - That item found that cleanup kept only the ready image with the latest build start. So cleanup could delete the image of the current version.
+  - On 10 November 2026, that item recorded the action "fix after merge, apply E". Its reason: the case is rare, and the fix does not get harder later.
+  - Option E keeps the image of the current version on each cleanup path. A deploy request answers from the attempt that D1 holds, and starts a new attempt when it is gone.
+  - The follow-up orchestrator applied action E on 20 November 2026. No user decision chose E. Cal has not answered the extra live-deploy retention question of this item.
   - Only the Cron work retires ready images. It runs every 15 minutes, as `*/15 * * * *` in `wrangler.jsonc` says.
   - The Cron work reads the newest release once and computes the current version. In each provider account of `software_images`, it keeps the ready image of that version and each pinned image.
   - When the release lookup fails, the Cron work keeps every ready image in that run. A deploy request cleans up only its own attempt.
