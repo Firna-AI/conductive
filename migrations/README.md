@@ -270,8 +270,8 @@ The ledger migration runs after `202611092100_provider_accounts.sql` and
 the table. This order puts the ledger triggers on the rebuilt tables, so
 they stay.
 
-`202611101100_org_provider_assignment.sql` adds the fixed provider account
-of each org. Existing rows receive `boat`. New production writes name the
+`202611101100_org_provider_assignment.sql` adds the provider account of
+each org. Existing rows receive `boat`. New production writes name the
 selected account explicitly. The migration also creates the singleton
 assignment weights setting, with `boat` at 100%, and its change events.
 Each setting change can retain its operator and time. Operator references

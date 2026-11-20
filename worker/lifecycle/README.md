@@ -49,7 +49,7 @@ gives the create, read, resume, and activity routes of a workspace to
 of a create.
 
 The internal `createWorkspace` call can pass a base branch and a start commit separately from the browser request.
-The create reads the fixed org account, and that account selects the published org image independently of those branch fields.
+The create reads the account of the org, and that account selects the published org image independently of those branch fields.
 The creation claim keeps them in its saved plan.
 The fetch updates `refs/remotes/origin/<base branch>`.
 The branch phase uses the event commit when it exists, or the fetched head otherwise.

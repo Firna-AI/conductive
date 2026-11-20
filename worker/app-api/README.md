@@ -177,8 +177,8 @@ View writes cannot change this branch.
 - Create org requires at least one repository. `createShellOrg` starts its
   first image build after it saves the org, its admin, and its repositories.
   The [assignment service](../provider-assignment/README.md) selects and saves
-  the fixed provider account before that build. Only an operator can supply
-  a configured account choice. Other users get a draw from the weights.
+  the provider account of the org before that build. Only an operator can
+  supply a configured account choice. Other users get a draw from the weights.
   A failed build start writes one fixed warning through `warnWorker`.
   The org stays, and the request still answers 201.
 - A save that adds a repository starts an image build for the admin who

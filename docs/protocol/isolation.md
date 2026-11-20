@@ -36,7 +36,9 @@ says.
   through the agent tools, as
   [What the workspace tools reach](#what-the-workspace-tools-reach) says.
 - An operator is the one exception. An operator can suspend or lift any
-  user or org, as [Operator actions](operator-actions.md) says. In the
+  user or org, as [Operator actions](operator-actions.md) says. An
+  operator can also switch any org to another provider account, as
+  [Switch account](switch-account.md) says. In the
   [operator section](operator-section.md#what-the-section-shows), an
   operator also reads counts, names, IDs, dates, roles, states, and codes
   across every org (decisions 142, 144, 147, and 160). An operator also

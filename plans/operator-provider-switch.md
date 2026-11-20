@@ -389,6 +389,35 @@ fixture, so Milestone 5 can use it.
   come back, and it adds no refusal. The mockup subagent raised this as a
   question. The user can change it.
 
+### Calls of the documentation
+
+These are agent calls of 20 November 2026, made in Milestone 2. The user
+can change each one. The docs agent raised the first four as questions.
+The orchestrator made them design calls, because each one follows a rule
+already in force.
+
+- A suspension of the admin that a switch build runs for ends that build.
+  The switch waits, and its build starts again for another active admin.
+  Reason: it follows the rule of an org suspension.
+- An add of a repository during a switch build starts one build that waits,
+  as Build computer does. Reason: an add starts a build when no job runs,
+  and the switch build is hidden.
+- When no other account is configured, the box shows no Switch account,
+  with a line that says why. Reason: the New orgs box does the same.
+- The record of a switch keeps the time and the operator of a stop.
+  Reason: each other operator action records them.
+- All switch rules live in the new page `docs/protocol/switch-account.md`.
+  Reason: `org-image.md` and `operator-section.md` could not hold them.
+  The section "Repository order" moved to `docs/protocol/repository-order.md`
+  word for word, to keep `orgs-and-members.md` short.
+- An org with no good image gets no switch build, also when it is
+  suspended or deleted. When the job that a switch waits for ends, the
+  switch build starts if the org then has a good image. Otherwise the
+  account changes at once.
+- The terms revision `TERMS_VERSION` in `src/shared/terms.ts` changes to
+  `2026-11-20-provider-switch`, because the Terms text changed. Reason:
+  each earlier change of the Terms text did the same, such as #423.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -409,12 +438,12 @@ a switch build, as switch decision 2 D says.
 
 Depends on: 1
 
-- [ ] Update [Provider accounts](../docs/protocol/provider-accounts.md): replace "No org and no workspace moves" with the switch rules and the answered switch decisions.
-- [ ] Update [Orgs and members](../docs/protocol/orgs-and-members.md), [Workspaces and sandboxes](../docs/protocol/workspaces-and-sandboxes.md), [Org image](../docs/protocol/org-image.md), [Operator section](../docs/protocol/operator-section.md), and the terms of the [architecture doc](../docs/architecture.md).
-- [ ] Read the Terms page in `src/marketing/terms.ts` and the Privacy page in `src/marketing/privacy.ts` in full. Update each sentence that restates the account rule, such as "The org keeps that account for its life".
-- [ ] Read each public guide in `src/marketing/docs/` in full, and update each sentence that restates the account rule.
-- [ ] Delete `plans/follow-ups/e2b-written-consent.md`, and remove its link from `plans/follow-ups/e2b-production-account.md`, because E2B consented.
-- [ ] Update `docs/sandbox-provider-accounts.md`: remove the consent steps from "Before a real org runs on E2B", and keep the documents, the settings, and Pro. Also: "No call of an org goes to another account" changes, an old image keeps its account in use, and the switch joins "Before a real org runs on E2B".
+- [x] Update [Provider accounts](../docs/protocol/provider-accounts.md): replace "No org and no workspace moves" with the switch rules and the answered switch decisions.
+- [x] Update [Orgs and members](../docs/protocol/orgs-and-members.md), [Workspaces and sandboxes](../docs/protocol/workspaces-and-sandboxes.md), [Org image](../docs/protocol/org-image.md), [Operator section](../docs/protocol/operator-section.md), and the terms of the [architecture doc](../docs/architecture.md).
+- [x] Read the Terms page in `src/marketing/terms.ts` and the Privacy page in `src/marketing/privacy.ts` in full. Update each sentence that restates the account rule, such as "The org keeps that account for its life".
+- [x] Read each public guide in `src/marketing/docs/` in full, and update each sentence that restates the account rule.
+- [x] Delete `plans/follow-ups/e2b-written-consent.md`, and remove its link from `plans/follow-ups/e2b-production-account.md`, because E2B consented.
+- [x] Update `docs/sandbox-provider-accounts.md`: remove the consent steps from "Before a real org runs on E2B", and keep the documents, the settings, and Pro. Also: "No call of an org goes to another account" changes, an old image keeps its account in use, and the switch joins "Before a real org runs on E2B".
 
 ## Milestone 3: Switch records and the operator route
 
@@ -423,6 +452,7 @@ Depends on: 2
 - [ ] Add the migration of the switch table, under the rules of the [migrations README](../migrations/README.md).
 - [ ] Add the operator route of Switch account, with the operator check of the other operator actions, and its record.
 - [ ] Add the switch and the workspaces by account to the org detail of `worker/operator/org-detail.ts`.
+- [ ] Keep the time and the operator of a stop in the switch record.
 - [ ] Add tests for the route, the record, and the access check.
 
 ## Milestone 4: The switch build
@@ -442,6 +472,9 @@ Depends on: 3
 - [ ] Read the newest build on the account of the org in `staleImageOrgs` of `worker/lifecycle/org-image-refresh-data.ts`.
 - [ ] Carry a push that arrives during the switch build to the new image.
 - [ ] Use the current account of the org for a retry of a create.
+- [ ] End a switch build at a suspension of its admin, and start it again for another active admin.
+- [ ] Make an add of a repository during a switch build start a build that waits.
+- [ ] Update the developer docs that still call the account fixed: `worker/lifecycle/provider-accounts.md`, `worker/lifecycle/image-builds.md`, and `worker/lifecycle/key-code.md`.
 - [ ] Add tests for each case, also a create during the switch build and a resume of a workspace on the old account.
 
 ## Milestone 5: The operator screen
@@ -453,6 +486,8 @@ Depends on: 1, 4
 - [ ] Build Switch account, its question, and the switch states on the org page of the operator section, as the mockups show.
 - [ ] Change the Cloud computer tab for the answer to switch decision 2: the log line of a build that waits.
 - [ ] Change the texts in `providerCopy.ts` and the mockup texts that restate them, as "Problems that the mockups show" says.
+- [ ] Show no Switch account when no other account is configured, with a line that says why.
+- [ ] Update `src/shell/operator/README.md`, `docs/mockups/design-operator.md`, and `docs/mockups/orgs-and-logins.md` where they still say "for its whole life" or give the account in Details.
 - [ ] Test the screens in a browser, and save screenshots under `.context/operator-provider-switch/`.
 
 ## Milestone 6: Verification, commit, review, and pull request

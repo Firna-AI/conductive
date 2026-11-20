@@ -24,9 +24,10 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   [mockups](../mockups/README.md) (decision 15).
 - For an operator, it also shows the operator section at `/operator`. The
   section gives counts across every org. It finds any org or user, and it
-  suspends or lifts it. It also approves people who wait, makes and
-  disables codes, pauses sign-ups, turns the waitlist off and on, and sets
-  the weights of new orgs.
+  suspends or lifts it. It switches an org to another provider account.
+  It also approves people who wait, makes and disables codes, pauses
+  sign-ups, turns the waitlist off and on, and sets the weights of new
+  orgs.
   [Operator section](../protocol/operator-section.md) states its rules.
 - Tabs are links, so each tool and each file view has its own address.
 - The browser stores only the panel sizes and the last workspaces. The
@@ -64,8 +65,10 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 - It calls each sandbox and each saved snapshot through the client of its
   provider account. It takes that account from its own records, as it
   takes the sandbox or the saved snapshot.
-- It sets the provider account of each new org once, from the choice of an
-  operator or from a draw by the weights.
+- It sets the first provider account of each new org, from the choice of
+  an operator or from a draw by the weights. After a switch by an
+  operator, it changes the account of the org when the switch build
+  succeeds, as [Switch account](../protocol/switch-account.md) says.
 - It runs one gate for each hostname before every route and every
   WebSocket upgrade. [Access and security](../protocol/access-and-security.md)
   states the gates.
@@ -101,8 +104,9 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   records of attached files, and the records of the secrets, their grants,
   and their reveals. D1 also holds app access, codes and their uses,
   the sign-up pause, the waitlist switch, and the state of approval emails.
-- D1 also holds the provider account of each org, and the weights of new
-  orgs with the record of each change.
+- D1 also holds the provider account of each org with the record of each
+  switch. It also holds the weights of new orgs with the record of each
+  change.
 - The record of each workspace holds a copy of its
   [GitHub state](../protocol/github-banner.md#the-github-state).
   A list read takes this copy from D1. The GitHub summary adds no Durable
@@ -171,12 +175,17 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   URLs, desktop streams, and environments.
 - E2B is the second provider, so that a Boat outage does not stop every
   org (e2b decision 222).
-- Each org runs in one provider account for its whole life (decision 80,
-  and e2b decision 222). That account holds the org image and every sandbox
-  of the org.
+- Each org runs in one provider account at a time (decision 80, and e2b
+  decision 222). That account holds the org image and the sandboxes of the
+  new workspaces of the org.
   Its plan limits apply to its orgs together.
 - A new org gets its account from the choice of an operator or from the
-  weights. No org moves to another account.
+  weights. An operator can later switch the org to another account. The
+  switch builds the org image on that account, and new workspaces start
+  there when that build succeeds.
+- Each workspace keeps its sandbox on the account that it started on. So
+  after a switch, one org can have sandboxes on two accounts, and an older
+  org image on the old account.
 - The records name the account of each org, each sandbox, and each saved
   snapshot.
 - The app does not depend on provider webhooks. The agent runner reports

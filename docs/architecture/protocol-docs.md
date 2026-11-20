@@ -9,7 +9,11 @@ This page lists each protocol doc and what it covers.
   providers, the account of each org, the org image, the life of a
   workspace, and the disk flushes of a sandbox.
   - [Provider accounts](../protocol/provider-accounts.md): the account of
-    each org, its weights, and the regions of the accounts.
+    each org and of each workspace, the weights, and the regions of the
+    accounts.
+    - [Switch account](../protocol/switch-account.md): the switch of an org
+      to another provider account by an operator, its switch build, what
+      members see of it, and its box on the page of the org.
   - [Sandbox software](../protocol/sandbox-software.md): the releases of the
     app's own software, the updates of each sandbox, the install in a
     build, and the software image.
@@ -189,6 +193,9 @@ This page lists each protocol doc and what it covers.
   - [Org rail order](../protocol/org-rail-order.md): the order of the orgs
     in the rail that each person keeps, how the person changes it, what a
     tile opens, and the workspace list of a hidden sidebar.
+  - [Repository order](../protocol/repository-order.md): the order of the
+    chosen repositories of an org, its default repository, and the moves
+    of an admin.
   - [Get started](../protocol/get-started.md): the first run, its steps,
     the agent step, the state of the first build in its org step, and its
     finish.

@@ -12,7 +12,8 @@ decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. An e2b
 decision number names a decision of the change that adds E2B as the second
 [sandbox provider](workspaces-and-sandboxes.md#the-provider), as that doc
-says.
+says. A switch decision number names a decision of the change that adds
+[Switch account](switch-account.md), as that doc says.
 
 ## The org image
 
@@ -22,7 +23,9 @@ says.
 - The org image lives in the provider account of the org, as
   [The account of an org](provider-accounts.md#the-account-of-an-org)
   says. Every build and every refresh of the org runs in that account
-  (e2b decision 222).
+  (e2b decision 222). The one exception is the switch build of an
+  operator, which members do not see, as
+  [The switch build](switch-account.md#the-switch-build) says.
 - One image for each repository was rejected, because each image costs
   its own saved snapshot and starts.
 - The Repositories tab of the org settings chooses the repositories
@@ -39,6 +42,9 @@ says.
   org.
 - "Build computer" starts a build. A build runs the install script on a
   copy of the image, with every chosen repository cloned (decision 12).
+- A Build computer or a Try again during a switch build waits until that
+  build ends (switch decision 2 D). Its time limit counts from then, as
+  [What members see](switch-account.md#what-members-see) says.
 - An add of a repository also starts a build, as
   [Added repositories](#added-repositories) says (decision 240).
 - The app also starts some builds by itself, as
@@ -179,7 +185,8 @@ saved snapshot of the app's own software that a first build starts from.
 - While a job runs, an add starts no second job.
 - When a job succeeds, and the repositories of that job lack a chosen
   repository, the app starts one added build by itself (decision 240). It
-  does so only when the newest build succeeded.
+  does so only when the newest build succeeded. A switch build gets none,
+  as [The switch build](switch-account.md#the-switch-build) says.
 - So the adds during a job share one added build after that job. Reason:
   without it, a repository that an admin adds during a job never builds.
 - A failed build gets no added build. A refresh after a failed build gets

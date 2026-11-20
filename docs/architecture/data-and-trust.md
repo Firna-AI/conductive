@@ -20,7 +20,7 @@ and the separate preview domain.
 | The pause and the waitlist switch                                            | D1                                       |
 | Automations and their runs | D1 |
 | The org and the provider account of each sandbox and each saved snapshot     | D1                                       |
-| The provider account of each org, and the weights of new orgs with each change | D1 |
+| The provider account of each org with each switch, and the weights of new orgs with each change | D1 |
 | Env var values, agent logins, and the traffic token of each E2B sandbox | The Worker's storage, encrypted |
 | The values of the secrets | The Worker's storage, encrypted |
 | The names and descriptions of the secrets, their grants, and their reveals | D1 |
@@ -32,7 +32,7 @@ and the separate preview domain.
 | Files attached to chat messages | The attachment storage, an R2 bucket, until the sandbox has them. Then the home folder of the sandbox |
 | The records of attached files | D1 |
 | The repository, the files, and the agent sessions                            | The home folder of the sandbox           |
-| The prepared repositories and the installed software | The org image, in the provider account of the org |
+| The prepared repositories and the installed software | The org image, in the provider account of the org. After a switch, also an older org image in the old account, until the org is deleted |
 | The releases of the [sandbox software](sandbox-software.md) | An R2 bucket, public at `runner.conductive.build` |
 | Panel sizes                                                                  | The browser, or the Mac app              |
 | The address of the last workspace page of each org                           | The browser, or the Mac app              |

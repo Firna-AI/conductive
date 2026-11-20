@@ -14,8 +14,9 @@ the merge.
 
 These docs belong to this doc:
 
-- [Provider accounts](provider-accounts.md): the account of each org, its
-  weights, and the regions of the accounts.
+- [Provider accounts](provider-accounts.md): the account of each org and
+  its switch, the account of each workspace, the weights, and the regions
+  of the accounts.
 - [Org image](org-image.md): its builds, refreshes, and first build.
 - [Sandbox software](sandbox-software.md): the releases of the app's own
   software, the updates of each sandbox, the install in a build, and the
@@ -73,7 +74,9 @@ These docs belong to this doc:
 - Every sandbox has one machine size for now, on each provider: Boat's
   default size, with 4 vCPU and 8 GB.
 - [Provider accounts](provider-accounts.md) gives the account of each org
-  and the regions of the accounts.
+  and of each workspace, and the regions of the accounts.
+  [Switch account](switch-account.md) gives the switch of an org to
+  another account by an operator.
 
 ## Disk flushes
 

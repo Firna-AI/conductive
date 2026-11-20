@@ -31,7 +31,7 @@ export const termsDocument: LegalDocument = {
   at ${appDomain}, and in the Mac app. You accept their current version
   each time that you continue with GitHub to sign in. ${productName} keeps
   the latest version that you accepted, and the time when you first
-  accepted it. Effective date: 18 November 2026.`,
+  accepted it. Effective date: 20 November 2026.`,
   sections: [
     {
       title: `Who runs ${productName}`,
@@ -66,10 +66,13 @@ export const termsDocument: LegalDocument = {
             rights and merge method from GitHub. It shows Merge only when
             your GitHub rights let you merge. It shows Ready for review on a
             draft pull request only when you have write access or more.`,
-          text`${productName} runs each org's cloud computers in one of its
-            own accounts with a cloud computer provider. The org keeps
-            that account for its life. You need no account or key of your
-            own for them.`,
+          text`${productName} runs each workspace's cloud computer in one of
+            its own accounts with a cloud computer provider. The operator
+            can switch an org to another account by building its cloud
+            computer setup again there. New workspaces use the new account
+            when that build succeeds, and the old account until then.
+            Existing workspaces keep their accounts. You need no account or
+            key of your own for them.`,
           text`Each session keeps one agent login: its starter's personal
             login or the org login. Your usable personal login comes first
             for a new session. If you have none, the session uses the org

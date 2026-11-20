@@ -40,9 +40,11 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
       text`The email provider of the operator hosts the team inbox and
         receives your feedback message, screenshots, context, and reply
         address. The team reads them there.`,
-      text`A cloud computer provider runs each org's cloud computers in
-        an account that ${productName} owns. The org keeps that account
-        for its life. Your code, your files, and your agent sessions
+      text`A cloud computer provider runs each workspace's cloud computer in
+        an account that ${productName} owns. The operator can switch an org
+        to another account for new workspaces after a successful build of
+        its cloud computer setup there. Existing workspaces keep their
+        accounts. Your code, your files, and your agent sessions
         are in those computers. ${productName} sends their provider
         requests to start, stop, and use them.`,
       text`For a ChatGPT sign-in, OpenAI sends the account owner's email,

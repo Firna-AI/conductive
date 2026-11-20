@@ -10,7 +10,7 @@
 - **Terms:**
   - **Workspace object:** The Cloudflare Durable Object of one workspace. It holds the open tabs and the connection of the agent runner in the sandbox.
   - **Location hint:** The Cloudflare option that places a Durable Object in a region when the object is first created. The object stays there after that.
-  - **Provider account:** An account of the app with a sandbox provider, such as `boat` or `e2b`. Each org runs on one account for its whole life.
+  - **Provider account:** An account of the app with a sandbox provider, such as `boat` or `e2b`. Each org runs on one account at a time. An operator can switch it, and each workspace keeps its own account.
 - **Background:**
   - On 20 November 2026, the user chose that a provider account can run in any region. The EU is not a requirement. `docs/protocol/provider-accounts.md`, section "Regions", holds this rule.
   - The app first chose Western Europe only because Boat's machines run there.
@@ -23,7 +23,7 @@
 - **Options:**
   - **A.** Add a location hint to each account in the provider account settings, with `weur` as the default. Pass the hint of the org's account when a new workspace object, org-image object, or computer-stop object is created. Effort: Medium.
   - **B.** Keep `weur` for every workspace and accept the latency for accounts in other regions. Effort: Small.
-- **Left out:** A move of existing workspace objects, because Cloudflare keeps an object where it was first created, and no org changes its account.
+- **Left out:** A move of existing workspace objects, because Cloudflare keeps an object where it was first created, and each workspace keeps its account. A switch of the org changes only the account of new workspaces.
 - **Wider fix:** A, because it ties the place of each workspace object to its account.
 - **Previous examples:** Commit `d05c47df6` planned the D1 database in Western Europe to be near Boat's machines.
 - **Recommendation:** A. It costs little once an account in another region exists, and the latency hits every runner message.

@@ -19,7 +19,6 @@
   2. Build the template in that project: `node image/e2b/build-template.mjs --name conductive-base`, with `E2B_API_KEY` and the EU `E2B_DOMAIN` in the process environment, never in a command or a file. Note the printed template ID.
   3. Run the live check, `node image/live-check.mjs --provider=e2b`, with the inputs that `image/e2b/live-check.md` gives. It must complete, also its disk requirement.
   4. Write the JSON value to a file outside the repository. Run `npx wrangler secret put SANDBOX_PROVIDER_ACCOUNTS < <file>`, so that the key goes into no command line, and delete the file.
-  5. Keep the weight of `e2b` at 0% in the Providers tab of the operator section until `plans/follow-ups/e2b-written-consent.md` is done.
 - **Impact if no action:** The deployed app can start no sandbox on E2B, also not for an operator's test org.
 - **Needs:** The merged change on production. The EU cluster and the disk from E2B support. The E2B API key of the project.
 - **Done when:** The deployed Worker has the E2B account, and the live check completes against its template. Then delete this item.
