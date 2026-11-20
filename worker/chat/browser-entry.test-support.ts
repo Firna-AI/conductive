@@ -5,6 +5,8 @@ import { record, string, number } from './inputs'
 import { readJsonObject } from '../http/json-body'
 import { NativeCloseProbe } from '../test-support/native-close.test-support'
 import { BrowserSuspensionProbe } from './browser-suspension.test-support'
+import { holdHistoryLists } from './history-hold.test-support'
+import { nativeWarningObservation } from '../test-support/native-warnings'
 
 import { BROWSER_TEST_NOW } from './browser-clock.test-support'
 
@@ -36,9 +38,13 @@ export class Workspace extends ProductionWorkspace {
   }
   private readonly instance = crypto.randomUUID()
   private alarmsCompleted = 0
+  /** The events socket upgrades that the object has answered. */
+  private answered = 0
   private alarmObserved = signal()
   private readonly closeProbe: NativeCloseProbe
   private readonly suspension: BrowserSuspensionProbe
+  private readonly history: ReturnType<typeof holdHistoryLists>
+  private readonly warnings = nativeWarningObservation()
 
   constructor(context: DurableObjectState, env: WorkspaceCompositionEnv) {
     const closeProbe = new NativeCloseProbe(context)
@@ -88,6 +94,7 @@ export class Workspace extends ProductionWorkspace {
     this.controls = controls
     this.closeProbe = closeProbe
     this.suspension = new BrowserSuspensionProbe(context.storage)
+    this.history = holdHistoryLists(this.integration.storage)
     const closeConnections = this.chat.closeConnections.bind(this.chat)
     this.chat.closeConnections = () => this.suspension.close(closeConnections)
     const deviceAlarm = this.devices.alarm.bind(this.devices)
@@ -141,6 +148,11 @@ export class Workspace extends ProductionWorkspace {
   override async fetch(request: Request): Promise<Response> {
     this.closeProbe.fetch()
     const url = new URL(request.url)
+    if (url.pathname.endsWith('/events')) {
+      const response = await super.fetch(request)
+      this.answered++
+      return response
+    }
     if (url.pathname !== '/__test/browser') return super.fetch(request)
     const input = record(await readJsonObject(request))
     const action = string(input.action)
@@ -185,6 +197,16 @@ export class Workspace extends ProductionWorkspace {
       await this.controls.entered.promise
     } else if (action === 'release') {
       this.controls.release.resolve()
+    } else if (action === 'capture-warnings') {
+      await this.warnings.captureWarnings(true)
+    } else if (action === 'history-fail') {
+      this.history.fail(number(input.list))
+    } else if (action === 'history-hold') {
+      this.history.hold(number(input.list))
+    } else if (action === 'history-entered') {
+      await this.history.entered()
+    } else if (action === 'history-release') {
+      this.history.release()
     } else if (action === 'device-hold') {
       this.controls.deviceHeld = true
       this.controls.deviceEntered = signal()
@@ -218,6 +240,8 @@ export class Workspace extends ProductionWorkspace {
       now: this.clock.now,
       alarm: await this.ctx.storage.getAlarm(),
       alarmsCompleted: this.alarmsCompleted,
+      answered: this.answered,
+      warnings: await this.warnings.warningCalls(),
       reads: this.ctx.storage.kv.get('__test:browser-access-reads') ?? 0,
       opened: this.ctx.storage.kv.get('__test:browser-opened') ?? 0,
       closed: this.ctx.storage.kv.get('__test:browser-closed') ?? 0,

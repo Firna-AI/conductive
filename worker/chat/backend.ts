@@ -274,8 +274,9 @@ export class WorkspaceChat {
     after: number,
     peer: BrowserPeer,
     socket?: WebSocket,
+    registered?: () => void,
   ): Promise<() => void> {
-    return this.browsers.subscribe(access, after, peer, socket)
+    return this.browsers.subscribe(access, after, peer, socket, registered)
   }
 
   private operation(workspaceId: string): ChatOperation {

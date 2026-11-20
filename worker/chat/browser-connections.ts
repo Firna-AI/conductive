@@ -49,6 +49,7 @@ export class BrowserConnections extends BrowserTabs {
     after: number,
     peer: BrowserPeer,
     socket?: WebSocket,
+    registered?: () => void,
   ): Promise<() => void> {
     const presented = this.present(peer, access.presentation)
     let persist:
@@ -78,6 +79,7 @@ export class BrowserConnections extends BrowserTabs {
       after,
       peer: presented,
       persist,
+      registered,
     })
   }
 
