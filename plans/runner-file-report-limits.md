@@ -143,6 +143,8 @@ The recommendation changed from 1 A to 1 F, and from 2 A to 2 B.
 A separate fresh check covered legacy rollout in `.context/runner-file-report-limits/legacy-options-check.md`.
 That check confirmed that normal runner updates already define rollout.
 The task requires acceptance of older runners, so this is a design call rather than a fourth decision.
+The post-push review found that cutting legacy changes reports would lose omitted-path refresh signals.
+The compatible path below therefore keeps both legacy lists complete until the runner updates.
 
 ## Design
 
@@ -157,7 +159,7 @@ Record each answer with its date before dependent work starts.
 - **Orchestrator call, 20 November 2026:** The new runner sends explicit zero metadata when nothing is omitted. Missing metadata means a legacy report with no claimed cap.
 - **Orchestrator call, 20 November 2026:** Repeat omission metadata unchanged on every part. Publish it only with the complete report, so a pending part changes no panel count.
 - **Orchestrator call, 20 November 2026:** Generate all boundary types from Rust with `ts-rs`. Keep numeric counts within the non-negative JavaScript safe integer range.
-- **Orchestrator call, 20 November 2026:** Keep legacy trees readable until the normal runner update. Cal already requires acceptance of unlimited old reports. A second legacy projection adds cost without bounding their incoming reports. Hiding them would remove existing file access through the panel.
+- **Orchestrator call, 20 November 2026:** Keep both legacy lists complete until the normal runner update. This preserves old clients' path refresh signals and Cal's compatibility requirement. A second legacy projection adds cost without bounding incoming reports.
 
 The changes header and tab count show retained plus omitted file totals.
 Its line totals also show retained plus omitted values.
@@ -168,10 +170,9 @@ The mockup milestone settles the words and placement of these notices.
 
 Older runners can still send unlimited reports with no omission fields.
 The Worker accepts them without a new size rejection.
-For a complete legacy changes report, the Worker selects retained rows after it validates the original report.
-It computes exact `omitted` totals from the complete source and recomputes `summary` from retained rows.
-It does not claim a zero omission count for an unknown legacy tree.
-The tree cap starts with the first complete report from the new runner.
+The Worker stores and publishes complete legacy trees and changes reports.
+It preserves absent omission metadata as unknown.
+Both caps start with the complete reports from the new runner.
 The public guide states this rollout limit and the normal update path.
 
 The previous Worker discards unknown fields in its file parsers.
@@ -197,11 +198,12 @@ Do not change that plan's bucket format or repair protocol here.
 - **Orchestrator call, 20 November 2026:** Send the new omission count in that delta. Missing delta metadata preserves the previous count. A count-only update can use an empty delta.
 - **Orchestrator call, 20 November 2026:** Send a bounded full tree when a membership replacement or required path refresh cannot fit one delta. Ordinary content updates keep their existing split-delta behavior.
 - **Orchestrator call, 20 November 2026:** Refresh an omitted path with a remove of that absent entry. A retained path uses an unchanged upsert. Existing readers refresh that path without growing the tree.
-- **Orchestrator call, 20 November 2026:** After a base change, refresh changed paths that the retained Changes list omits. Fall back to a full bounded tree when these touches exceed one delta.
-- **Orchestrator call, 20 November 2026:** Limit complete legacy changes reports in the Worker. Full reports contain enough data to compute exact retained and omitted totals without a second projection.
+- **Orchestrator call, 20 November 2026:** After a base change, refresh paths from both complete changes lists that neither retained list names. Include old and new rename paths. Fall back to a full bounded tree when these touches exceed one delta.
+- **Orchestrator call, 20 November 2026:** Also refresh omitted paths when complete change-row metadata changes, including rename pairing without a content or base change. Compare both source lists and include each old and new path.
 - **Orchestrator call, 20 November 2026:** Compare the complete changes source before truncation. An edit confined to omitted files must still produce a changes report.
 
 Directory ancestors consume slots before their descendants.
+Compute content refresh paths from both full scans' Git and readable identities, including omitted deletions.
 Each chosen selection must be deterministic, unique by path, and contain at most the chosen count.
 For C or F, add an ancestor closure only when it fits the remaining budget.
 Skip a priority file whose ancestor closure does not fit, then continue with entries that fit.
@@ -218,6 +220,8 @@ Membership changes, omission counts, and path refreshes share one delta only whe
 Otherwise send one full bounded tree, rather than a partially applied membership replacement.
 Preserve tree metadata while ordinary content deltas advance revisions.
 Measure omitted-only edits and large replacements before the final review.
+Include old app readers in the cost check. Repeated absent-path removes can scan the retained tree once per path.
+Use a full bounded tree below the 512-operation ceiling when measurement shows that repeated removes cost more.
 Verify that the merged bucket implementation handles an absent-path remove without loading the complete projection.
 
 Keep the 256 KiB file-event budget and the 512-change delta budget.
@@ -232,7 +236,7 @@ Extend Worker and app readers to preserve the optional metadata.
 Use existing non-negative safe integer rules for present counts and line totals.
 Check that every part repeats the same omission metadata.
 Keep the existing validation of retained changes summaries.
-Do not infer omitted totals from partial parts. Cut legacy changes only after the complete source passes its original validation.
+Do not infer omitted totals from partial parts. Keep reports without omission metadata complete.
 Avoid a stricter legacy-report validation rule.
 
 Carry metadata through storage reload, reconnect, unavailable marks, repair, repository moves, and response filtering.
@@ -306,7 +310,7 @@ State the chosen limits, omitted totals, selection, mention coverage, and compat
 - [ ] Update `docs/protocol/workspace-tools.md` with the new meaning of complete reports and summaries, notices, tree updates, and selection rules.
 - [ ] Keep part identity, revision, atomic replacement, refusal, reconnect, and repair rules intact.
 - [ ] State omission-count delta semantics, empty count-only deltas, absent-path refreshes, and omitted-diff refresh after a base change.
-- [ ] State the new-runner rollout boundary. Keep unlimited legacy trees readable until their runner updates.
+- [ ] State the new-runner rollout boundary. Keep unlimited legacy trees and changes readable until their runner updates.
 - [ ] Split report requirements into a linked protocol page if the edited document exceeds the documentation skill's length target.
 - [ ] Update the context coverage statements in `repository-folders.md`, `file-mentions.md`, and `file-mentions-answers.md` for the approved selection.
 - [ ] Keep `file-row-menu.md` aligned with the approved mention coverage and Add to chat rule.
@@ -330,7 +334,7 @@ The existing Worker must still accept the emitted reports at this milestone's en
 - [ ] Compare the last emitted selection for deltas. Keep membership replacement, count updates, and absent-path refreshes atomic within one delta, or send a full bounded tree.
 - [ ] Repeat metadata in all parts. Include it in serialized byte budgeting and preserve it through credential filtering.
 - [ ] Extend existing report tests for the cap boundary, deterministic retained paths, exact omitted totals, directory ancestors, and ignored context entries.
-- [ ] Cover growth across the tree limit, return below it, selected-entry eviction, empty count updates, absent-path refreshes, base changes, and requested repairs.
+- [ ] Cover growth across the tree limit, return below it, selected-entry eviction, empty count updates, omitted deletions, base transitions to empty diffs, rename reclassification, and requested repairs.
 - [ ] Keep the existing whole-entry, 256 KiB, 512-change, restart, and resend assertions.
 - [ ] Extend wire serialization cases for absent fields, explicit zeros, and nonzero metadata. Verify the previous Worker's retained-summary check accepts new report samples.
 - [ ] Run `cargo run -p cnd-runner-interface --example export_bindings`. Commit generated output without hand edits.
@@ -345,7 +349,7 @@ Preserve omission metadata through the merged bucket projection, full report ass
 - [ ] Read and integrate the merged memory change before editing `worker/files/runner-reports.ts` or projection storage.
 - [ ] Extend `worker/files/parsers.ts` and `runner-input.ts` to retain optional metadata while accepting legacy reports.
 - [ ] Check repeated metadata when the report completes. Keep the retained-summary equality check and existing repair behavior.
-- [ ] After validating complete legacy changes reports, select 1,000 rows and compute exact retained and omitted totals. Keep legacy trees accepted until the runner update.
+- [ ] Preserve both legacy lists without a Worker cutoff. Check that a legacy report above 1,000 changes still refreshes an open diff after a base-only change.
 - [ ] Store and reload metadata with complete projections. Preserve it through deltas and unavailable marks, and replace it with the next full report.
 - [ ] Verify empty deltas and absent-path removes against the merged bucket implementation. Keep these operations within the affected buckets.
 - [ ] Extend `src/shared/output-fields.ts` only where needed. Verify `worker/chat/runner-output.ts` preserves counts across filtering and masking.
@@ -382,6 +386,7 @@ Verify the combined change, compare report costs, and prepare one pull request i
 - [ ] Run early format, lint, and file-length checks with Node 24.
 - [ ] Prove that each new test fails on the behavior it protects. Run each new asynchronous or browser test 10 times and record its cost.
 - [ ] Run a one-time cost check for 1,000 changes, 50,000 tree entries, and omitted-only edits. Compare CPU, rows, history bytes, and heap with the supplied measurements.
+- [ ] Measure a burst of absent-path refreshes in existing app readers. Choose a full-tree fallback before repeated scans dominate the cost.
 - [ ] Save cost and compatibility evidence under `.context/runner-file-report-limits/`. Ask Cal if a new design choice is needed.
 - [ ] Install desktop and runner dependencies as `AGENTS.md` requires. Run `npm run check`, which includes the mockup check.
 - [ ] Run `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, and `cargo test --workspace`.
