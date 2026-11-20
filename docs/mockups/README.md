@@ -133,7 +133,7 @@ a dropped folder that the browser cannot read. The app shares these words.
 
 | Folder or file            | Contents                                                            |
 | ------------------------- | ------------------------------------------------------------------- |
-| `src/entries/`            | The Mokly root: entry modules, folder records, the flows, and Markdown documents, which Mokly shows as pages of notes. `src/entries/components/` registers the shared parts |
+| `src/entries/`            | The Mokly root: entry modules, folder records, the flows, and Markdown documents, which Mokly shows as pages of notes. `src/entries/components/` holds the registrations of shared parts |
 | `src/screens/`            | One React component for each app screen, for both viewports         |
 | `src/components/`         | Layout and parts that the screens share, where `@firna/ui` has none |
 | `src/fixtures/`           | The sample orgs, members, workspaces, agents, chats, and files, and the drawn screenshots of the image files |
@@ -178,9 +178,10 @@ a dropped folder that the browser cannot read. The app shares these words.
   tokens through the `--ui-*` variables that the renderer writes.
 - Controls come from `@firna/ui`. A control without a handler renders as
   disabled, so the screens pass `noop` from `src/noop.ts`.
-- Each shared part has a Mokly registration under
+- A shared part can have a Mokly registration under
   `src/entries/components/`, so that an edit to the part gives one row in
-  the Changes view. A screen renders its wrapper, and a file that the app
+  the Changes view. The `components` folder of the catalogue lists each
+  registered part. A screen renders its wrapper, and a file that the app
   reaches renders the plain part.
   [Registered parts](registered-parts.md) gives the rules.
 - A switch at the end of a menu row, such as Fast in the model menu, is a

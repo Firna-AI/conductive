@@ -1,9 +1,10 @@
 # Registered parts
 
 Mokly's Changes view compares the catalogue of a branch with `origin/main`.
-A shared part of the catalogue is registered with Mokly's
+A shared part of the catalogue can be registered with Mokly's
 `defineComponent`, so that an edit to the part gives one Changes row for
-the part. The screens that use it show under its Affected screens, and
+the part. Many shared parts are registered, and some are not yet. The
+`components` folder of the catalogue lists each registered part. The screens that use it show under its Affected screens, and
 they get no rows of their own. Without the registration, the same edit
 gives one row for each screen and each variant that looks different: an
 edit to the workspace mark gave 405 rows, and 1 row after its
@@ -11,10 +12,11 @@ registration.
 
 ## Where a registration lives
 
-- Each source file of `src/components/` and the helper parts of
-  `src/screens/` have one entry module under
-  `src/entries/components/<folder>/<File>.mockup.tsx`. It exports one
-  `defineComponent` for each part of the file.
+- A registered part has an entry module under
+  `src/entries/components/<folder>/<File>.mockup.tsx`, one for each source
+  file of `src/components/`, or for a file of helper parts in
+  `src/screens/`. It exports one `defineComponent` for each registered
+  part of the file.
 - The path of a part is `components/<folder>/<part>`, in kebab-case, such
   as `components/workspaces/workspace-mark`. The `components` folder comes
   last in the catalogue.
@@ -60,6 +62,8 @@ registration.
   parts whose CSS the screens load already, or an empty placeholder.
 
 ## What Changes still shows per screen
+
+- An edit to a part that has no registration yet.
 
 - A change of a design token, a custom property, or a `@keyframes` rule.
   Mokly cannot trace those rules to elements.

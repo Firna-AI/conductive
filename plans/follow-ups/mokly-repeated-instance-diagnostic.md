@@ -9,7 +9,7 @@
 - **Terms:**
   - **Instance name:** the `moklyInstance` value of one use of a part that is registered with Mokly's `defineComponent`. Mokly needs it unique in its scope.
   - **Scope:** content that a screen supplies keeps the scope of its outermost slot, also inside the slots of other registered parts. Only the own render of a registered part starts a new scope.
-- **Background:** The mockup catalogue in `docs/mockups/` registers its shared React parts with Mokly 0.19.0, so that the Changes view gives one row for an edited part. Each use of a registered part has an instance name.
+- **Background:** The mockup catalogue in `docs/mockups/` registers many of its shared React parts with Mokly 0.19.0, so that the Changes view gives one row for an edited part. Each use of a registered part has an instance name.
 - **Problem:** The React wrapper of Mokly checks names only within one slot render. A name that repeats across nested slots reaches the Rust core, which fails with `conflicting fragment input <key>`. The message names no entry, no instance, and no call site.
 - **Impact if no action:** Each repeated name costs a long search. Milestone 1 of the registered mockup parts met 29 of them, and found them only with a temporary log in `node_modules`.
 - **Root question:** How does a Mokly author find a repeated instance name at once?
