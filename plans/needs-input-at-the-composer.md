@@ -114,6 +114,79 @@ Contract owners:
   tab at a return.
 - **Outcome:** Cal chose B on 20 November 2026.
 
+### 3. Deny on a card that hides requests
+
+- **Severity:** Medium. **Likelihood:** Common. **Effort:** Small.
+- **Source:** Design.
+- **Category:** Product bug.
+- **Location:** `docs/protocol/secret-requests.md` line 138.
+- **Background:** Under "The stack of requests" below, the newest request
+  for the same set of secrets hides the older ones, and its Allow covers
+  them. Cal chose on 17 November 2026 that "Deny ends only its own
+  request", as decision 2 A of `plans/covered-secret-requests.md`, deleted
+  in commit `bea38c226`. He rejected a Deny that also ends the other open
+  requests that name only the denied secrets, because "it can end a
+  different, valid request".
+- **Problem:** After a Deny of the shown card, the hidden requests stay
+  open. The next one then shows, with an older command for the same
+  secrets. The line "Asked 3 times" suggests that one answer ends them all.
+- **Impact if no action:** A member denies the same secrets again for
+  each time the agent asked. Each new ask hides the older late requests
+  again, and the workspace keeps needs input until the last Deny.
+- **Root question:** How does a member refuse an agent that asked several
+  times for the same secrets, and know what the refusal ends?
+- **Options:**
+  - **A.** Keep the rule. The Deny ends the shown request, and the next
+    hidden one shows. "Asked 3 times" then speaks only of Allow. Risk: the
+    member answers the same question again. Effort: Small.
+  - **B.** The Deny ends the shown request and each request that it hides,
+    all for the same set of secrets. The app sends one Deny for each, so
+    the Worker does not change. It reverses Cal's decision of 17 November
+    2026 for this case. Its reason weakens here: a grant covers the
+    session, not the command, so a Deny of each command gives no extra
+    control. Risk: it ends older commands that the member did not see.
+    Effort: Small.
+  - **C.** The Deny ends the shown request. The card then asks whether to
+    deny the older requests too, or it offers a second button such as
+    "Deny all 3". Risk: one more step or one more button. Effort: Medium.
+  - **E.** As B, but the Worker gives a Deny the reach of the group in one
+    chat operation, as it does for an Allow. Risk: the app and the Worker
+    must agree on the group. An older copy of the web app in the Mac app
+    shows each card apart, and it sees one Deny end other cards. Effort:
+    Medium.
+  - **G.** B, and "Asked 3 times" opens a list of the commands of the
+    hidden requests. The member then sees each command that one answer
+    ends. Risk: a longer card under the 40% cap, and less room on a
+    phone. Effort: Medium.
+  - **F.** The Worker keeps one open request for each session and set of
+    secrets. When the agent asks again, it ends the older late requests
+    with a new end reason, such as "The agent asked again". Then each
+    answer ends one request, and the app needs no merge. Risk: it changes
+    the events and the protocol, and older app copies refuse an unknown
+    end reason, so it needs a compatible path. The older cards then do not
+    say "allowed". Effort: Large.
+- **Left out:**
+  - D, B with the group narrowed to the same set of secrets. The design
+    call now narrows the group for every option, so D equals B.
+  - A Deny that ends the same secrets in every session, because a Deny in
+    one session does not judge another session.
+  - A Deny that also refuses later requests, because the agent must be
+    able to ask again with a better reason.
+  - No merge, because it breaks Cal's message.
+  - An end of old late requests after a fixed time, because the member
+    still meets each hidden request until then.
+- **Wider fix:** F. It removes the repeated requests at their source. It
+  is Large and the older cards would not say "allowed", so it is not the
+  recommendation.
+- **Previous examples:** decision 2 A of `plans/covered-secret-requests.md`,
+  17 November 2026, and commit `2a0818f3d`.
+- **Recommendation:** B. One card takes one answer either way, and for the
+  same set of secrets a Deny of each command gives no extra control. The
+  options check first recommended D, which the narrowed group made equal
+  to B.
+- **Action:** ask the user, because B reverses Cal's decision of 17
+  November 2026 for requests that a card hides.
+
 ## Design
 
 - The request region holds each open request of the shown session: each
@@ -165,6 +238,38 @@ Contract owners:
   line, as `app/secret-requests/several/waiting-and-late` shows. Reason:
   the card keeps its full form. The UI agent's call of 20 November 2026.
 
+### The stack of requests
+
+Cal asked on 20 November 2026, after Milestone 1: "what if there are
+multiple requests? we could stack them behind (so only one is visible at
+the same time) - this would only be requests for different things (i.e.
+multiple requests for the same key should only show the latest and it
+approves all of them when you approve the one". His message chose the
+approach, so no brainstorm ran. It replaces the inner scroll through every
+card and the call above on the late line in a full region.
+
+- The region shows one card at a time, on top of a stack. The edges of the
+  cards behind it show. A label such as "1 of 3" with Previous and Next
+  buttons moves through the stack, also with the keyboard. My call of 20
+  November 2026.
+- The top card is the first in the order of the region: the waiting
+  requests first, then the late requests, each oldest first. An answer
+  shows the next card. My call of 20 November 2026.
+- A newer open request of the same session hides an older one when the
+  two ask for the same set of secrets. Only the newest shows. Its Allow
+  then covers each hidden request, under the rule of covered requests that
+  is already in force. Reason: Cal's message says "the same key". A wider
+  group, such as an older request for fewer secrets, would end a request
+  with a smaller grant, and one request could hide behind two cards. My
+  call of 20 November 2026, after the options check.
+- A card that hides older requests says how often the agent asked, such as
+  "Asked 3 times". The member then knows that one Allow covers them. My
+  call of 20 November 2026.
+- Mac command requests take their place in the stack, but they never merge.
+  Reason: each Allow runs one exact command. My call of 20 November 2026.
+- One card keeps the cap of 40% of the window and its inner scroll, for a
+  long command. My call of 20 November 2026.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -197,9 +302,32 @@ computer and on a phone.
 Evidence: `.context/needs-input-at-the-composer/` holds the check logs, the
 smoke-test results, and the screenshots in `mockups/`.
 
-## Milestone 2: Documentation and protocol
+## Milestone 2: Mockups of the stack
+
+Tags: mockup
 
 Depends on: 1
+
+The region draws its requests as a stack, as "The stack of requests"
+says. Decision 3 sets the words of Deny on a card that hides requests.
+
+- [ ] Draw the stack in `app/secret-requests/several` and its
+      `waiting-and-late` variant: one card on top, the edges of the cards
+      behind it, and "1 of 3" with Previous and Next, on a computer and on
+      a phone.
+- [ ] Add a page with a late request that hides two older requests for the
+      same secret, with "Asked 3 times".
+- [ ] Draw a stack with a Mac command request and a secret request.
+- [ ] Draw the Deny of a card that hides requests, as decision 3 says.
+- [ ] Update `docs/mockups/catalogue-secrets.md` and the design docs of the
+      mockups.
+- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [ ] Update the design and the TODOs of this plan for each problem that
+      the mockups show.
+
+## Milestone 3: Documentation and protocol
+
+Depends on: 2
 
 The protocol docs state the new place of a late request and the mark of a
 session tab.
@@ -217,6 +345,10 @@ session tab.
       request.
 - [ ] Update `plans/follow-ups/mockup-tab-row-clips-shown-tab.md`: `full`
       is now a child page of `app/tabs`, with the same path, not a variant.
+- [ ] State the stack, the merge of requests for the same secrets, and
+      the outcome of decision 3 in `docs/protocol/secret-requests.md` and
+      `docs/protocol/agent-tools.md`. Replace the sentence that the member
+      scrolls through all waiting requests.
 - [ ] Correct `docs/protocol/desktop-commands.md`: a click on the row opens
       the workspace, and the marked tab shows the request.
 - [ ] Check `docs/protocol/chat-and-events.md` "The work of a turn" and the
@@ -227,29 +359,34 @@ session tab.
       sentence that restates a changed fact.
 - [ ] Check each relative link of the changed Markdown files.
 
-## Milestone 3: Late requests above the composer
+## Milestone 4: Late requests above the composer
 
 Tags: ui
 
-Depends on: 2
+Depends on: 3
 
 - [ ] Put each open late request in the region in
       `src/chat/secrets/session-secrets.tsx`, and keep it out of its turn
       while it is open.
 - [ ] Order the region in `src/chat/components/WaitingRequests.tsx`: the
       waiting requests first, then the late requests, each oldest first.
+- [ ] Draw the region as the stack of the mockups, with "1 of 3",
+      Previous, and Next, and the keyboard.
+- [ ] Hide each older request behind a newer one of the same session for
+      the same set of secrets, with "Asked 3 times". Give Deny the outcome of decision 3.
 - [ ] Update the tests in `src/chat/secrets/secret-requests.test.tsx` and
       `src/chat/secrets/answer-request.test.tsx`: a late request shows above
-      the composer, and its answer moves it to its place.
+      the composer, and its answer moves it to its place. Add tests of the
+      stack, of the merge, and of Deny.
 - [ ] Update `src/chat/secrets/README.md` and `src/chat/README.md`.
 - [ ] Check the flow in a browser on a computer and on a phone width. Save
       the screenshots under `.context/needs-input-at-the-composer/`.
 
-## Milestone 4: The needs-input mark of a session tab
+## Milestone 5: The needs-input mark of a session tab
 
 Tags: ui
 
-Depends on: 3
+Depends on: 4
 
 - [ ] Read the open secret requests of every session of the workspace with
       the existing `GET .../secret-requests` read, at the start of the chat
@@ -271,7 +408,7 @@ Depends on: 3
 - [ ] Check the marks in a browser. Save the screenshots under
       `.context/needs-input-at-the-composer/`.
 
-## Milestone 5: Verification, commit, review, and pull request
+## Milestone 6: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
