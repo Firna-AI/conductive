@@ -87,6 +87,11 @@ export const RUNNER_MESSAGE_STAGES = [
 
 export type RunnerMessageStage = (typeof RUNNER_MESSAGE_STAGES)[number]
 
+/** The provider step of a file check or download into a cloud computer. */
+export const ATTACHMENT_STEPS = ['check', 'start', 'status', 'command'] as const
+
+export type AttachmentStep = (typeof ATTACHMENT_STEPS)[number]
+
 export interface RunnerWarningFields {
   workspaceId: WarningId
   connectionId: WarningId | null
@@ -167,6 +172,18 @@ export type WorkerWarning =
       kind: 'runner_message_failed'
       workspaceId: WarningId
       stage: RunnerMessageStage
+      error: ErrorSummary
+    }
+  | {
+      kind: 'attachment_transfer_retried'
+      workspaceId: WarningId
+      step: AttachmentStep
+      error: ErrorSummary
+    }
+  | {
+      kind: 'attachment_copy_failed'
+      workspaceId: WarningId
+      step: AttachmentStep | null
       error: ErrorSummary
     }
   | {
