@@ -93,13 +93,16 @@ test('the bundled workspace aligns its draggable bars and keeps sidebar, right c
       .toEqual({ shown: false, gap: 0 })
     await sidebar.getByRole('link', { name: 'Settings', exact: true }).click()
     await expect(page).toHaveURL(DESKTOP_ORIGIN + routes.settings(FAKE_IDS.org))
-    const settingsTitle = page.getByRole('heading', {
-      name: 'Acme',
-      level: 1,
-      exact: true,
-    })
-    await expect(settingsTitle).toBeVisible()
-    await expectDraggableHeader(settingsTitle)
+    // Settings opens as a dialog over the workspace. The page below keeps
+    // its bar, so the window still drags by it. The page below is inert, so
+    // a CSS locator finds its heading.
+    const settings = page.getByRole('dialog', { name: 'Settings', exact: true })
+    await expect(
+      settings.getByRole('heading', { name: 'General', level: 1, exact: true }),
+    ).toBeVisible()
+    await expectDraggableHeader(
+      page.locator('header h1', { hasText: workspaceTitle }).first(),
+    )
     const deleteOrg = page.getByRole('button', {
       name: 'Delete org',
       exact: true,
