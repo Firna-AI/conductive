@@ -24,7 +24,7 @@ export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
   description: `The privacy notice of ${productName}.`,
   lead: text`This notice says which personal data ${productName} uses, why
-  it uses it, and who gets it. Effective date: 18 November 2026.`,
+  it uses it, and who gets it. Effective date: 20 November 2026.`,
   sections: [
     {
       title: 'Who is responsible',
@@ -67,7 +67,7 @@ export const privacyDocument: LegalDocument = {
           text`The cloud computer providers are companies registered in the
             United States. ${productName} uses their European Union regions
             for cloud computers and saved snapshots. These locations include
-            Belgium, Germany, Finland, and France. UK adequacy regulations
+            Germany, Finland, and France. UK adequacy regulations
             approve transfers to countries in the European Economic Area.
             Other provider operations can involve processing outside that
             area.`,

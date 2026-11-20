@@ -15,7 +15,7 @@ An entry in the JSON `SANDBOX_PROVIDER_ACCOUNTS` Worker secret has these fields:
   "e2b": {
     "kind": "e2b",
     "apiKey": "<Worker-only API key>",
-    "domain": "<trusted EU domain from E2B support>",
+    "domain": "e2b.app",
     "templateId": "<prepared template ID>"
   }
 }

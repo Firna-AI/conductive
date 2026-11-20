@@ -14,7 +14,7 @@ export function templateEnvironment(
   const domain = environment.E2B_DOMAIN
   if (!apiKey || !domain)
     throw new TemplateBuildError(
-      'Set E2B_API_KEY and the selected EU E2B_DOMAIN.',
+      'Set E2B_API_KEY and the E2B_DOMAIN of the project.',
     )
   if (!/^[a-z0-9]+(?:[.-][a-z0-9]+)*$/i.test(domain))
     throw new TemplateBuildError(
