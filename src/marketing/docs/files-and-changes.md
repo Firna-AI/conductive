@@ -1,6 +1,6 @@
 ---
 title: Files and changes
-description: Read repository files, inspect branch changes, copy paths or content, and add files to chat.
+description: Read repository files, preview HTML pages, inspect branch changes, copy paths or content, and add files to chat.
 group: Work
 order: 30
 ---
@@ -51,6 +51,7 @@ Use its back action to return to **All files**.
 
 Text shows line numbers and syntax colours.
 Markdown offers **Preview** for its rendered content and **Source** for its text.
+An HTML file opens as a page, as [Preview an HTML file](#preview-an-html-file) says.
 PNG, JPEG, GIF, and WebP files show as pictures up to the 5 MiB read limit.
 A picture keeps its proportions and fits the view.
 SVG files show their source as text.
@@ -70,6 +71,37 @@ It opens the copy in the workspace's repository folder after the message reaches
 Restore an archived workspace within 14 days before opening its attached files.
 
 - [Attach files to messages](/docs/sessions-and-chat#attach-files)
+
+## Preview an HTML file
+
+An HTML file opens as a page, with its styles, pictures, and scripts.
+For example, an agent can write a report as a web page in `.context/`.
+
+1. Open **All files**.
+2. Select a file whose name ends in `.html` or `.htm`.
+3. Read the page in **Preview**, or select **Source** to read its text.
+
+The page runs on a separate domain from Conductive, as a port preview does.
+Use **Reload** to load the page again.
+Use **Open** to show the page in a new browser tab.
+In the Mac app, **Open** uses your default browser.
+
+The page loads again by itself when its own file changes.
+After a change to another file, such as its style file, select **Reload**.
+A chip with a line, such as `report.html:12`, opens **Source** with that line in view.
+A file whose path label hides a secret value shows only **Source**.
+
+The page loads other files of the repository by their addresses, such as `style.css`.
+An address that starts with `/` names a file from the top of the repository.
+The page cannot load files whose names start with a dot, such as `.env`, or files in `.git`.
+Its scripts can read the other files of the repository and send them to another site.
+
+The preview has no 5 MiB limit, but **Source** keeps it.
+It does not appear in **Preview** or in the previews that agents list.
+If the tab asks for newer software, select **Restart** in the workspace header.
+An [automatic software update](/docs/cloud-computer#apply-setup-changes) also brings the preview to an older workspace at a later start or when it is idle.
+
+- [Understand previews](/docs/security#understand-previews-and-mac-commands)
 
 ## Copy a path or add a file to chat
 

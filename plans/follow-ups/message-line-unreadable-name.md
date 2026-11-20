@@ -14,7 +14,7 @@
   - A message line shows a table below its open control, because a summary cannot hold a table.
   - When the lead blocks draw nothing, the control needs a hidden copy of its closed text as its readable name.
   - `src/chat/message-lines.md` describes that hidden copy.
-  - `agentBlocks` in `src/chat/markdown/agent-blocks.ts` leaves out a heading with no text and an empty quote. So only those count as no block before the table.
+  - `agentBlocks` in `src/chat/markdown/agent-blocks.ts` leaves out a heading that shows no words, such as one of white-space code, and an empty quote. So only those count as no block before the table.
 - **Problem:**
   - An empty code block gives no readable text.
   - A paragraph of only an image with no alt text that opens nothing, such as `![](x)`, also draws no text. The old chat reader showed it as typed text, so this case came with the shared parser.
@@ -32,7 +32,9 @@
 - **Left out:** CSS cannot give the control a readable name. Changing nothing keeps the unnamed control.
 - **Wider fix:** B. One block reader gives each content kind the same readable-name rule.
 - **Previous examples:** Commit `712afd8f` introduced the earlier block-count condition. No other example was found in the focused check.
-- **Related:** `plans/follow-ups/formatting-only-chat-heading.md` covers the same control when its lead is a heading that shows no words. Its recommended reader of shown words can serve both items.
+- **Related:**
+  - `plans/follow-ups/formatting-only-chat-heading.md` covers the same control when its lead is a heading that shows no words, such as the heading of an image with no alt text. Its recommended reader of shown words can serve both items.
+  - The fix of the closed item [Formatting marks leave an empty heading](https://github.com/Firna-AI/conductive/blob/66682a1679dbf3a208427591c9d88cea11fcca82/plans/follow-ups/formatting-only-chat-heading.md) gave a heading of formatting marks alone empty text in the old chat reader, so the fallback added the hidden copy for these lead blocks. `heading` in `src/chat/markdown/agent-paragraphs.ts` now leaves out a heading of white-space code in the same way. A heading of an unpaired mark, such as `## **`, shows the mark as typed, so its text names the control. That fix does not correct paragraphs or code blocks, so this gap stays.
 - **Recommendation:** B. Check readable block content in one place while keeping the normal control names.
 - **Action:** fix after merge, apply B, because the problem already exists on main and does not come from the heading change.
 

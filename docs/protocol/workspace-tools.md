@@ -26,7 +26,8 @@ decision of the change that reads Markdown with one parser, as
 - A file opens in a tab of the centre column. A press on a file opens it in
   the temporary tab, as [Temporary tabs](temporary-tabs.md) says.
 - Markdown shows rendered, with a switch to its source. Code shows with line
-  numbers and syntax colours.
+  numbers and syntax colours. An HTML file shows as a page, with a switch to
+  its source, as [HTML file preview](html-file-preview.md) says.
 - The Markdown preview reads a file with the parser of the chat, by the
   rules of CommonMark with the tables and the strikethrough of GitHub, as
   [Formatting](chat-markdown.md#formatting) says (Markdown parser decision

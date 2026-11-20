@@ -39,6 +39,6 @@
 - **Left out:** Drawing sent messages as Markdown with the reader of agent messages, because `docs/protocol/chat-links.md` requires that a sent message shows the text as the member typed it. Storing chip positions with the message, because it needs a new message format.
 - **Wider fix:** F. It gives every path of chat text one code grammar, the one of the shared parser.
 - **Previous examples:** The reader of agent messages had the same defect until the shared parser replaced it.
-- **Related:** `plans/follow-ups/one-tokenizer-for-chip-text.md` changes the same tokenizer for links and mentions. `plans/follow-ups/link-label-scan-quadratic.md` changes how the same tokenizer reads Markdown links. One branch can do all three.
+- **Related:** `plans/follow-ups/one-tokenizer-for-chip-text.md` changes the same tokenizer for links and mentions. One branch can do both. The fix of the closed item [Long lines of brackets slow the chat link scan](https://github.com/Firna-AI/conductive/blob/25ffc4de99c7bea5c470415adf683794ffbf3f09/plans/follow-ups/link-label-scan-quadratic.md) changed how the same tokenizer finds the end of each Markdown label, with `lineLabelEnds` of `src/markdown/markdown-labels.ts`. Keep that one-pass read with each option.
 - **Recommendation:** F. One code grammar for sent messages and agent messages prevents the class in each shape.
 - **Action:** ask the user, because F changes how sent messages on `origin/main` read a backtick with no pair, and no doc or user decision covers it.

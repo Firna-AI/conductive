@@ -156,7 +156,7 @@ a dropped folder that the browser cannot read. The app shares these words.
   screen declares its states in `src/screens/automationState.ts` in the same
   way. The tab and composer states of the workspace screen live in
   `src/screens/chatStates.ts`. `tabStates` covers the session, file,
-  image, and Preview tabs of the centre column. `temporaryTabStates` covers the
+  image, HTML, and Preview tabs of the centre column. `temporaryTabStates` covers the
   temporary tab, which `src/screens/workspaceTemporaryTab.ts` draws in the
   row. `composerStates` covers the composer, with its links, mentions,
   attached files, drops, and the chip of Add to chat.

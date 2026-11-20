@@ -8,6 +8,7 @@ import { advanceSoftwareImage, requestSoftwareImage } from './build'
 import { softwareImageForDeploy } from './data'
 import { deployTokenDigest } from './deploy-gate'
 import { boundedSoftwareImagePoll } from './poll'
+import { AttemptChanged } from './resources'
 import { softwareImageResult } from './result'
 
 export const SOFTWARE_IMAGE_PATH = '/v1/deploy/software-image'
@@ -36,8 +37,17 @@ export async function handleSoftwareImage(
             readSoftwareRelease(JSON.parse(image.softwareJson)),
             digest,
           )
-        const result = await advanceSoftwareImage(runtime, image.id, true)
-        return softwareImageResult(result.image, result.output)
+        try {
+          const result = await advanceSoftwareImage(runtime, image.id, true)
+          return softwareImageResult(result.image, result.output)
+        } catch (error) {
+          if (!(error instanceof AttemptChanged)) throw error
+          return requestSoftwareImage(
+            runtime,
+            readSoftwareRelease(JSON.parse(image.softwareJson)),
+            digest,
+          )
+        }
       }
       return requestSoftwareImage(
         runtime,

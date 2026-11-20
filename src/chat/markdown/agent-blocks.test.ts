@@ -47,7 +47,7 @@ it('nests lists and quotes at most 16 levels deep, and shows deeper content and 
   )
 })
 
-it('reads one to six hashes and a space as a heading of that level, without its closing hashes, in a block of its own, and leaves out a heading with no text', () => {
+it('reads one to six hashes and a space as a heading of that level, without its closing hashes, in a block of its own, leaves out a heading that shows no words, and shows a mark without its pair as typed', () => {
   expect({
     levels: blocksOf(
       '# Review of #482',
@@ -63,6 +63,11 @@ it('reads one to six hashes and a space as a heading of that level, without its 
     between: blocksOf('The tests pass.', '## Next', 'Push the branch.'),
     inItem: blocksOf('- Plan:', '  ### Steps', '  Run the tests.', '- Push.'),
     empty: blocksOf('The tests pass.', '## '),
+    codeSpace: blocksOf('The tests pass.', '## ` `', 'Push the branch.'),
+    boldOnly: blocksOf('The tests pass.', '## **', 'Push the branch.'),
+    codeOnly: blocksOf('### `'),
+    spaceOnly: blocksOf('## ** **'),
+    formatted: blocksOf('## **Plan**', '### `npm ci`', '#### **Pla'),
   }).toEqual({
     levels: [
       h(1, 'Review of #482'),
@@ -83,10 +88,15 @@ it('reads one to six hashes and a space as a heading of that level, without its 
       },
     ],
     empty: [p('The tests pass.')],
+    codeSpace: [p('The tests pass.'), p('Push the branch.')],
+    boldOnly: [p('The tests pass.'), h(2, '**'), p('Push the branch.')],
+    codeOnly: [h(3, '`')],
+    spaceOnly: [h(2, '** **')],
+    formatted: [h(2, '<b>Plan</b>'), h(3, '`npm ci`'), h(4, '**Pla')],
   })
 })
 
-it('reads an underline under the text of a paragraph as a heading once a line break follows it, and never under a quote, indented code, or a lazy line', () => {
+it('reads an underline under the text of a paragraph as a heading once a line break follows it, and never under a quote, indented code, or a lazy line, with a mark without its pair as typed', () => {
   expect({
     equals: blocksOf('Review of #482', '===', 'The tests pass.'),
     hyphens: blocksOf('Needs your', 'answer', '---', ''),
@@ -99,6 +109,8 @@ it('reads an underline under the text of a paragraph as a heading once a line br
     mixedEndings: shortBlocks(
       agentBlocks('Before.\r\n## Next\r\nBody.\r\rUnderline\n===\rAfter.'),
     ),
+    boldOnly: blocksOf('**', '---', 'Push the branch.'),
+    formatted: blocksOf('**Plan**', '===', ''),
   }).toEqual({
     equals: [h(1, 'Review of #482'), p('The tests pass.')],
     hyphens: [h(2, 'Needs your answer')],
@@ -115,6 +127,8 @@ it('reads an underline under the text of a paragraph as a heading once a line br
       h(1, 'Underline'),
       p('After.'),
     ],
+    boldOnly: [h(2, '**'), p('Push the branch.')],
+    formatted: [h(1, '<b>Plan</b>')],
   })
 })
 

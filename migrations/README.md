@@ -389,6 +389,14 @@ The migration adds `workspaces.mac_access`, on for each existing and new
 row, and `workspace_creation_plans.capabilities_json` for create recovery.
 The [secrets backend](../worker/secrets/README.md) owns these records.
 
+`202611181310_automation_secret_preapprovals.sql` adds the chosen secrets of
+each automation. Composite foreign keys enforce the org of its automation
+and secret. Deleting either removes its rows. Approver IDs are opaque
+attribution IDs, so account removal keeps the choices. The migration adds
+only this table and its indexes for org reads and secret deletion. The
+previous Worker ignores them and keeps its existing reads and writes.
+The [automations backend](../worker/automations/README.md) owns these choices.
+
 `202611161353_secret_reveals.sql` adds retained reveal records with the
 secret ID and name, value version, admin ID, and time. An org foreign key
 removes its records at org purge. Secret and admin IDs have no foreign
@@ -516,3 +524,15 @@ the hourly count, and the cleanup. The migration changes no existing
 table, so the previous Worker keeps working.
 [The send limit](../worker/app-api/feedback.md#the-send-limit) gives the
 rules of these rows.
+
+`202611181500_repository_order.sql` adds the nullable integer
+`repositories.position` column. It holds the place of a chosen repository
+in the repository order of its org, which counts from 0. The migration
+fills it for each chosen row (`selected = 1`) of each org, in the order of
+the lower-case GitHub name, then the exact name, then the ID. A row that
+is not chosen keeps null. The previous Worker adds and chooses rows
+without a position, and its Remove keeps the position. So the order puts a
+chosen row without a position after the rows with one, and it ignores the
+position of a row that is not chosen. The next add or move gives every
+chosen row a position again.
+[The app API](../worker/app-api/README.md) gives the rules of the order.

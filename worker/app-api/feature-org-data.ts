@@ -1,4 +1,5 @@
 import type { GitHubRepository } from '../../src/shared/account'
+import { compareRepositoryNames } from '../../src/shared/org-settings'
 import { shellRepositoryId } from './feature-repositories-data'
 
 export async function insertShellOrg(
@@ -15,6 +16,17 @@ export async function insertShellOrg(
 ): Promise<boolean> {
   const { id, name, initials, userId, providerAccount, repositories, now } =
     input
+  const chosen = repositories
+    .map((repository) => ({
+      repository,
+      repositoryId: shellRepositoryId(id, repository.githubId),
+    }))
+    .sort((a, b) =>
+      compareRepositoryNames(
+        { id: a.repositoryId, fullName: a.repository.fullName },
+        { id: b.repositoryId, fullName: b.repository.fullName },
+      ),
+    )
   const createdOrg =
     'EXISTS (SELECT 1 FROM orgs WHERE id = ? AND creator_user_id = ?)'
   const result = await db.batch([
@@ -42,21 +54,23 @@ export async function insertShellOrg(
        SELECT ?, ?, 'General', 0, 1, ? WHERE ${createdOrg}`,
       )
       .bind(`general-${id}`, id, now, id, userId),
-    ...repositories.map((repository) =>
+    ...chosen.map(({ repository, repositoryId }, position) =>
       db
         .prepare(
           `INSERT INTO repositories
-       (id, org_id, github_repository_id, full_name, description, default_branch, installation_id, selected)
-       SELECT ?, ?, ?, ?, ?, ?, ?, 1 WHERE ${createdOrg}`,
+       (id, org_id, github_repository_id, full_name, description, default_branch, installation_id,
+        selected, position)
+       SELECT ?, ?, ?, ?, ?, ?, ?, 1, ? WHERE ${createdOrg}`,
         )
         .bind(
-          shellRepositoryId(id, repository.githubId),
+          repositoryId,
           id,
           repository.githubId,
           repository.fullName,
           repository.description,
           repository.defaultBranch,
           repository.installationId,
+          position,
           id,
           userId,
         ),

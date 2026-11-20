@@ -49,13 +49,16 @@ screen, its props, and the services that the shell passes to it.
   or refuses the new one. Bytes that the browser cannot draw offer
   Download, as a binary file does. An image file with no bytes shows that
   it is empty.
+- `FilePage` shows the tab of an HTML file, a name that ends with `.html`
+  or `.htm` in any case, as [The page of an HTML file](html-page.md) says.
 - `DiffPage` shows the diff of one changed file.
 - The `placeholder` prop of `FilePage` and `DiffPage` replaces the content
   of the page, for example with a sandbox state. The page then reads
   nothing, and its header offers no Download. A diff keeps its changed
   lines from Changes. With `keepShown`, a page that already shows its file
-  keeps it, with Copy, and the placeholder shows only in place of a page
-  with nothing to show. When the placeholder goes, the page reads at once.
+  keeps it, with Copy, and so does the page of an HTML file that shows in
+  its frame. The placeholder shows only in place of a page with nothing to
+  show. When the placeholder goes, the page reads at once.
 - `FileTabItem` is the closable tab of a file or a diff, and
   `LiftedFileTab` is the copy that a drag lifts.
   [File tabs](file-tabs.md) gives their props, their names, the temporary
@@ -64,6 +67,9 @@ screen, its props, and the services that the shell passes to it.
 [The Markdown preview](markdown-preview.md#the-worker) gives the worker
 that parses the Markdown of a preview, and what the preview shows while
 it waits for the worker or when the worker fails.
+
+[The page of an HTML file](html-page.md) gives the tab of an HTML file:
+its views, the `htmlPreview` prop that the shell gives, and its read.
 
 Each screen takes `layout`: `desktop`, or `phone` with touch targets of at
 least 40 px. On a phone, a file page and a diff page link back to All

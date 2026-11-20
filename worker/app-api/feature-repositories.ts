@@ -1,5 +1,12 @@
 import type { GitHubRepository } from '../../src/shared/account'
-import type { Repository } from '../../src/shared/org-settings'
+import type {
+  Repository,
+  RepositoryOrderResponse,
+} from '../../src/shared/org-settings'
+import {
+  chosenRepositoryIds,
+  compareInRepositoryOrder,
+} from '../data/repository-order'
 import { latestSoftwareRelease } from '../lifecycle/software-release'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
@@ -10,15 +17,26 @@ import {
   requireOrgMember,
 } from '../members/permissions'
 import { readGitHubConnection } from '../security/github-connection-store'
+import type { RequestContext } from '../security/gate'
 import { warnWorker } from '../warnings'
 import { shellGitHubAccess } from './feature-github'
 import {
+  moveShellRepository,
   saveShellRepository,
   shellRepositoryId,
 } from './feature-repositories-data'
+import {
+  invalidShellInput,
+  optionalShellPosition,
+} from './feature-shell-access'
 import { shellRepositories } from './shell-data'
 import { workspaceBinding } from './workspace-state'
 
+/**
+ * The stored repositories with the ones that the person reaches on GitHub:
+ * the chosen ones first, in the repository order, then the others in the
+ * name order.
+ */
 function mergeRepositories(
   orgId: string,
   stored: readonly Repository[],
@@ -36,9 +54,10 @@ function mergeRepositories(
       selected: previous?.selected ?? false,
     })
   }
-  return [...result.values()].sort(
-    (a, b) => a.fullName.localeCompare(b.fullName) || a.id.localeCompare(b.id),
-  )
+  const chosenIds = stored
+    .filter((repository) => repository.selected)
+    .map((repository) => repository.id)
+  return [...result.values()].sort(compareInRepositoryOrder(chosenIds))
 }
 
 export async function shellRepositoryChoices(
@@ -54,14 +73,21 @@ export async function shellRepositoryChoices(
   return mergeRepositories(orgId, stored, access.repositories)
 }
 
+/**
+ * Adds or removes one repository of the org. An add starts a build unless
+ * `build` is false: the app then starts one build at Done, after all the
+ * adds of one edit. A request without `build`, from an older app, still
+ * starts a build at each add.
+ */
 export async function changeShellRepository(
   env: AppEnv,
   orgId: string,
   userId: string,
   repositoryId: string,
-  selected: boolean,
+  change: { selected: boolean; build: boolean },
   dependencies: AppDependencies,
 ): Promise<Response> {
+  const { selected } = change
   await assertCanChangeSharedSettings(env.DB, orgId, userId)
   const stored = await shellRepositories(env.DB, orgId)
   let repository = stored.find((entry) => entry.id === repositoryId)
@@ -91,7 +117,7 @@ export async function changeShellRepository(
     await assertCanChangeSharedSettings(env.DB, orgId, userId)
     throw repositoryNotFound()
   }
-  if (saved.added) {
+  if (saved.added && change.build) {
     try {
       await startImageBuild(
         imageRuntime(
@@ -117,6 +143,36 @@ export async function changeShellRepository(
       dependencies,
     ),
   })
+}
+
+/**
+ * Moves one chosen repository to `index` of the repository order, as an
+ * admin. The index counts the chosen repositories without the moved one.
+ * A repository that is not chosen moves nothing. A move starts no build and
+ * keeps the settings revision, because the image does not depend on the
+ * order. The reply is the saved repository order, from stored data only,
+ * so that no call to GitHub can fail a move that saved.
+ */
+export async function moveShellRepositoryRoute(
+  env: AppEnv,
+  orgId: string,
+  userId: string,
+  repositoryId: string,
+  body: RequestContext['body'],
+): Promise<Response> {
+  const index = optionalShellPosition(body?.index)
+  if (index === undefined) throw invalidShellInput()
+  await assertCanChangeSharedSettings(env.DB, orgId, userId)
+  const moved = await moveShellRepository(env.DB, {
+    orgId,
+    userId,
+    repositoryId,
+    index,
+  })
+  if (!moved) await assertCanChangeSharedSettings(env.DB, orgId, userId)
+  return Response.json({
+    order: await chosenRepositoryIds(env.DB, orgId),
+  } satisfies RepositoryOrderResponse)
 }
 
 function repositoryNotFound(): HttpError {

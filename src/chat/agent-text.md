@@ -181,6 +181,16 @@ has. These parts read and draw the headings:
   keeps the level of each heading, and leaves out a heading with no text,
   such as `## ` while the agent writes. The heading still ends the
   paragraph above it.
+- `heading` of `markdown/agent-paragraphs.ts` also leaves out a heading
+  that shows no words, as `showsWords` says: no text or code node holds a
+  character other than white space, and no link or image stands in it. So
+  `` ## ` ` `` draws nothing, as `main` pull request #555 made the old
+  reader do. A link or an image counts as words, because what it shows
+  depends on the tree and the links of the screen, when it draws. A mark
+  without its pair is text, so `## **` shows `**`, as
+  [Formatting](../../docs/protocol/chat-markdown.md#formatting) says. The
+  check needs no tree and no workspace list, so the blocks depend only on
+  the text.
 - The file preview reads its headings through the same parser, in
   `preview-blocks.ts` of `src/files/markdown/`.
 - `AgentText` draws a heading as `h1` to `h6`, at its level, with its text

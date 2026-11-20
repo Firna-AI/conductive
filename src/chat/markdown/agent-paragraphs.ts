@@ -59,11 +59,29 @@ function withText(text: InlineText, more: string): InlineText {
 }
 
 /**
+ * Whether the text of a heading shows words: a text or a code node with a
+ * character other than white space, or a link or an image, which shows its
+ * words, its address, or its file when the heading draws. So a heading of
+ * only white-space code, such as `` ## ` ` ``, shows no words. A mark that
+ * the parser does not pair, such as one `**`, is text and shows as typed.
+ */
+function showsWords(text: InlineText): boolean {
+  return text.some((node) => {
+    if (node.kind === 'text' || node.kind === 'code') {
+      return node.text.trim() !== ''
+    }
+    if (node.kind === 'mark') return showsWords(node.nodes)
+    return node.kind !== 'break'
+  })
+}
+
+/**
  * A heading at the index of the read. An underline counts only when a line
  * break follows it, so a message that ends on an underline shows that line
  * as text of the paragraph above it. In live text, the open marks of that
  * paragraph close after the underline, at the end of the text. A heading
- * with no text draws nothing.
+ * that shows no words draws nothing, as `showsWords` says. It still ends
+ * the paragraph above it.
  */
 export function heading(read: AgentRead, quotes: number): TextBlock[] {
   const open = read.tokens[read.index]
@@ -83,6 +101,6 @@ export function heading(read: AgentRead, quotes: number): TextBlock[] {
   }
   const text = textOf(read, inline)
   const level = headingLevels.get(open.tag)
-  if (text.length === 0 || level === undefined) return paragraph(text)
-  return [{ kind: 'heading', level, text }]
+  if (level === undefined) return paragraph(text)
+  return showsWords(text) ? [{ kind: 'heading', level, text }] : []
 }

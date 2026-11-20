@@ -4,7 +4,10 @@
   gap: 6px;
 }
 
-/* The box of the composer: the text, then a bar with the model picker. */
+/*
+ * The box of the composer: the text, then a bar with the Capabilities icon
+ * of the owner and the model picker.
+ */
 .box {
   display: flex;
   flex-direction: column;
@@ -19,6 +22,7 @@
 .bar {
   display: flex;
   align-items: center;
+  gap: 4px;
   min-width: 0;
 }
 
@@ -51,7 +55,12 @@
   font-weight: 400;
 }
 
-/* A muted caption under the box, as under a composer. */
+/*
+ * A muted caption under the box, as under a composer: the logins of the
+ * runs, the secrets that they use, and the hint of a pull request trigger.
+ * `.logins` is the same caption, for the line of the logins.
+ */
+.caption,
 .logins {
   display: flex;
   align-items: flex-start;
@@ -67,4 +76,16 @@
   flex-shrink: 0;
   margin-top: 2px;
   color: var(--ui-faint);
+}
+
+/* The icon of the hint of a pull request trigger. */
+.warning {
+  color: var(--ui-warning);
+}
+
+/* The name of a secret in a caption, in the font of an environment variable. */
+.secret {
+  color: var(--ui-ink2);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-xs);
 }

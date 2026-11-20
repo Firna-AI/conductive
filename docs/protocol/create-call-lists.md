@@ -37,7 +37,12 @@ a create call takes, with their IDs.
   name, such as `acme/web`, and the default branch.
 - Each entry also says whether it is the repository of the calling
   workspace.
-- The list is in the order of the GitHub names.
+- The list is in the
+  [repository order](orgs-and-members.md#repository-order) of the org.
+  A repository of the image that the org no longer chose goes at the
+  end, in the order of the GitHub names (repository-order decision 2 B).
+- Reason: an agent then sees the same order and the same first
+  repository as the people of the org.
 - When the org has no good image, the call fails with HTTP 409
   `image_required`, the same error as a create.
 - Reason: an empty list would hide why no create can work.

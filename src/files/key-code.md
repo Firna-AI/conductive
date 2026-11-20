@@ -89,10 +89,15 @@ first. Each path is relative to `src/files/`, the folder of this guide.
   through the link opener of the app shell.
 - `code/`: the syntax colours and the code view. `code/file-kind.ts` gives
   `fileKind`, the kind of a file by its name: Markdown, code, or another
-  file. A file is code when the code view gives it syntax colours.
+  file. A file is code when the code view gives it syntax colours. It also
+  gives `isMarkdown` and `isHtml`, the files whose tab has a Preview. An
+  HTML file keeps the kind and the icon of code.
   `panel/file-icons.tsx` draws the icon of each kind through `EntryIcon` of
   the mockups, the one icon map of All files, the tabs, the list of `@`,
   and the file chips.
+- `page/html-preview.ts` and `page/HtmlPagePreview.tsx`: the
+  `htmlPreview` prop of `FilePage`, and the drawing of its views and of
+  Reload and Open.
 - `diff/`: the unified diff parser and view. `diff/highlight-diff.ts`
   colours each diff line from the whole old or new file of the diff
   reply, so a line inside a comment that opens above its hunk keeps its

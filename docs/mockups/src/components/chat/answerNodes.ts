@@ -13,6 +13,7 @@ import {
 } from './answerPaths'
 import { entryName } from './entryPaths'
 import { mentionParts } from './fileMentions'
+import { pathLinks } from './pathLinks'
 import { webCodePart, type TextPart } from './workspaceLinks'
 
 /**
@@ -48,9 +49,6 @@ export type AnswerPart = TextPart | FileLinkPart | ImagePart
 export type AnswerNode = MarkNode<AnswerPart>
 
 type AnswerItem = MarkItem<AnswerPart>
-
-/** A Markdown link or image whose target is not a web address. */
-const pathLinkPattern = /!?\[([^\]\n]*)\]\((?:<([^<>\n]+)>|([^\s()<>]+))\)/g
 
 function unit(part: AnswerPart, source: string): AnswerItem {
   return { kind: 'unit', unit: part, source }
@@ -89,18 +87,19 @@ function webLinkItems(text: string): AnswerItem[] {
 
 /**
  * Text with its Markdown links and images to entries of the tree, each one
- * unit. A label with no text shows the name of the entry. Each other part
- * reads as `webLinkItems` says.
+ * unit, as `pathLinks` finds them in one pass. A label with no text shows
+ * the name of the entry. Each other part reads as `webLinkItems` says.
  */
 function fileLinkItems(text: string): AnswerItem[] {
   const items: AnswerItem[] = []
   let end = 0
-  for (const match of text.matchAll(pathLinkPattern)) {
-    const target = fileTarget(match[2] ?? match[3] ?? '')
+  for (const link of pathLinks(text)) {
+    const target = fileTarget(link.target)
     if (!target) continue
-    items.push(...webLinkItems(text.slice(end, match.index)))
-    const label = match[1].trim() === '' ? entryName(target.entry) : match[1]
-    const [source] = match
+    items.push(...webLinkItems(text.slice(end, link.index)))
+    const label =
+      link.label.trim() === '' ? entryName(target.entry) : link.label
+    const { source } = link
     const { folder, path } = target.entry
     const picture =
       source.startsWith('!') && !folder && pictureType(path) !== undefined
@@ -112,7 +111,7 @@ function fileLinkItems(text: string): AnswerItem[] {
       ...target,
     }
     items.push(unit(part, source))
-    end = match.index + source.length
+    end = link.index + source.length
   }
   return [...items, ...webLinkItems(text.slice(end))]
 }

@@ -46,18 +46,25 @@ it('shows each heading of a closed message line as text of the line in the headi
   })
 })
 
-it('keeps the closed text as the name of an open line whose table comes after an empty heading', async () => {
-  const text = [
-    '## ',
-    '| Workers | Time |',
-    '| ---: | ---: |',
-    '| 4 | 3m 10s |',
-  ]
-  const view = await mount(<MessageLine id="agent:1" text={text.join('\n')} />)
-  const line = view.container.querySelector('summary')
-  if (!line) throw new Error('The message has no line')
-  await press(line)
-  expect(accessibleName(line)).toBe('Workers · Time · 4 · 3m 10s')
+it('keeps the closed text as the name of an open line whose table comes after headings that show no words, and shows a mark without its pair as typed in the line', async () => {
+  const table = ['| Workers | Time |', '| ---: | ---: |', '| 4 | 3m 10s |']
+  const nameOf = async (lines: string[]) => {
+    const text = [...lines, ...table].join('\n')
+    const view = await mount(<MessageLine id="agent:1" text={text} />)
+    const line = view.container.querySelector('summary')
+    if (!line) throw new Error('The message has no line')
+    await press(line)
+    const name = accessibleName(line)
+    await view.unmount()
+    return name
+  }
+  expect({
+    empty: await nameOf(['## ', '## ` `']),
+    marks: await nameOf(['## **', '### `', '**', '---']),
+  }).toEqual({
+    empty: 'Workers · Time · 4 · 3m 10s',
+    marks: '** ` **',
+  })
 })
 
 it('shows file chips in the open line, and none in its hidden copy', async () => {

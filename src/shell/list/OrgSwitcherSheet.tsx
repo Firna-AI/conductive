@@ -10,7 +10,7 @@ import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp } from '../context'
 import { LiftedOrg, OrgDropLine } from '../orgs/OrgDragParts'
-import { useOrgDrag } from '../orgs/useOrgDrag'
+import { useListDrag } from '../ui/useListDrag'
 import { useOrgMove } from '../orgs/useOrgMove'
 import { AppLink } from '../ui/AppLink'
 import { OrgTile, PersonAvatar } from '../ui/Avatars'
@@ -48,7 +48,7 @@ export function OrgSwitcherSheet(props: {
   const app = useApp()
   const orgs = activeOrgs(useStore(app.orgs))
   const operator = useStore(app.account.account)?.operator === true
-  const drag = useOrgDrag(orgs, useOrgMove())
+  const drag = useListDrag(orgs, useOrgMove())
   return (
     <Sheet close={props.close} title="Orgs">
       <nav aria-label="Orgs">

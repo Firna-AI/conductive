@@ -10,6 +10,7 @@ pub mod error;
 pub mod git;
 mod index;
 pub mod io;
+pub(crate) mod open;
 pub mod paths;
 pub mod service;
 mod setup;

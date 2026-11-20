@@ -83,6 +83,15 @@ same list to a test or to the dev fake. `workspaceRecord` of
 `fixtures/workspaces.ts` turns a workspace of the mockups into the record
 of the API.
 
+The open of the files preview, `POST` at `filesPreviewPath`, answers the
+files preview of `toolFixtures().filesPreview`: ID `files-preview-1`, port
+0, and a launch address on `FAKE_ORIGIN`. No list holds it.
+`fakeFilesPreview(routes, reply)` of `fake-tool-routes.ts` sets the next
+reply: `open`, `older-software` for the 409 `file_server_unavailable` of a
+runner without a file server, `failed` for the 502 `sandbox_unavailable`
+of a cloud computer that did not answer, or `not-ready` for the 409
+`sandbox_not_ready` of a cloud computer that does not run.
+
 Writes return recorded replies, except org moves and terminal list writes.
 `fake-org-order-routes.ts` serves `PUT /api/org-order` and saves its order for later org list reads.
 It validates the shared move request and returns 204, or the Worker's validation and visibility errors.

@@ -5,13 +5,15 @@ tree of every file. Changes lists the files that the branch changes
 against the base branch, under the totals of the change. A file opens as a
 page with rendered Markdown or text with line numbers and syntax colours.
 An image file, which is a PNG, JPEG, GIF, or WebP file, opens as a
-picture. A changed file opens its unified diff, with the same syntax
+picture. An HTML file opens its page in a frame from the files preview of
+the workspace. A changed file opens its unified diff, with the same syntax
 colours. The requirements are in
-[Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes).
+[Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes)
+and [HTML file preview](../../docs/protocol/html-file-preview.md).
 The visual spec is the `app/files` page of the
-[mockup catalogue](../../docs/mockups/README.md), and
-`app/chat/unavailable-files` for a tree that the cloud computer could not
-read.
+[mockup catalogue](../../docs/mockups/README.md), `app/files/html` for the
+tab of an HTML file, and `app/chat/unavailable-files` for a tree that the
+cloud computer could not read.
 
 The screens render data from the Worker only. The workspace screen of the
 app shell mounts them, as
@@ -151,17 +153,18 @@ of the tab menu, for such a path.
 
 File content, Markdown, paths, and diffs are untrusted. The screens show
 them as React text only, apart from the picture of an image file. The
+page of an HTML file shows only in the frame that the shell gives, from
+the preview domain, so no script of the file runs on the app's site. The
 Markdown renderer builds React elements from the parts that the shared
 parser gives, so no HTML of a file reaches the page.
 [Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes)
-gives the rule for HTML in a file, and for a line-break tag. A Markdown
-image shows its alt text, and no picture loads. Only absolute `http`,
-`https`, and `mailto` addresses become links. An image at an `http` or
-`https` address shows its alt text as a link. A bare address in the text
-stays text. Quotes and
-lists nest at most 16 levels deep, and deeper content shows as text. The
-parse runs in the worker, off the thread of the page, so a long or
-crafted file cannot stop the page.
+gives the rule for HTML in a Markdown file, and for a line-break tag. A
+Markdown image shows its alt text, and no picture loads. Only absolute
+`http`, `https`, and `mailto` addresses become links. An image at an
+`http` or `https` address shows its alt text as a link. A bare address in
+the text stays text. Quotes and lists nest at most 16 levels deep, and
+deeper content shows as text. The parse runs in the worker, off the thread
+of the page, so a long or crafted file cannot stop the page.
 
 Each link of the preview has the look of the mockups' `TextLink`, and its
 title gives its whole address. The link opener of the app shell opens
@@ -221,8 +224,10 @@ and answers the Markdown worker with `previewDocument`, the parse of the
 worker.
 `page/picture-test-kit.tsx` opens a file page with a given read. Its
 `fakeDecoder` draws or refuses each picture by hand, in place of the image
-decoder of the browser. These tests do not run that decoder. The other
-screen tests keep their static markup checks in Node.
+decoder of the browser. These tests do not run that decoder.
+`page/html-test-kit.tsx` opens the page of an HTML file with a preview that
+stands in for the shell. The other screen tests keep their static markup
+checks in Node.
 
 ## Key code
 
