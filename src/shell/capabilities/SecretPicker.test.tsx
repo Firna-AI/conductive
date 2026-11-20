@@ -61,7 +61,45 @@ function listed(control: HTMLElement): string[] {
   )
 }
 
-describe('the search of the secrets in the Capabilities control', () => {
+describe('the secrets in the Capabilities control', () => {
+  test('a secret hides its description behind an info icon, which a press shows and hides, and the part has no hint line', async () => {
+    const [first] = secrets
+    if (!first) throw new Error('The fixtures have no secret.')
+    const control = await openControl([
+      ...secrets,
+      { ...first, id: 'bare', name: 'BARE_TOKEN', description: '' },
+    ])
+    const info = byRole('button', 'About PROD_DATABASE_URL', control)
+    const before = {
+      hint: control.textContent?.includes('pre-approved secret with no'),
+      text: control.textContent?.includes('Read-only replica'),
+      tip: info.getAttribute('title'),
+      bare: queryByRole('button', 'About BARE_TOKEN', control),
+    }
+    click(info)
+    await settle()
+    const open = {
+      expanded: info.getAttribute('aria-expanded'),
+      text: control.textContent?.includes('Read-only replica'),
+    }
+    click(info)
+    await settle()
+    expect({
+      before,
+      open,
+      closed: control.textContent?.includes('Read-only replica'),
+    }).toEqual({
+      before: {
+        hint: false,
+        text: false,
+        tip: 'Read-only replica of the production database.',
+        bare: null,
+      },
+      open: { expanded: 'true', text: true },
+      closed: false,
+    })
+  })
+
   test('ten secrets or fewer get no search field', async () => {
     const control = await openControl(secrets)
     expect({

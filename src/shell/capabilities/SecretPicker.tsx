@@ -1,4 +1,4 @@
-import { useId, useState } from 'react'
+import { useState } from 'react'
 import { InputFrame } from '@firna/ui/input'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
@@ -13,7 +13,7 @@ import {
   matchingSecrets,
   needsSecretSearch,
 } from '../../../docs/mockups/src/components/capabilities/secretSearch'
-import check from '../../../docs/mockups/src/components/common/CheckOption.module.css'
+import { SecretOption } from '../../../docs/mockups/src/components/capabilities/SecretOption'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import { routes } from '../../app/router'
 import type { OrgSecret } from '../../shared/secrets'
@@ -22,9 +22,8 @@ import { LoadFailure } from '../ui/LoadFailure'
 import type { SecretsView } from './capability-parts'
 
 /**
- * A secret of the org with its checkbox, which pre-approves it for the
- * workspace. A secret for all agents is always available, so its checkbox
- * stays checked and off, with the words "All agents".
+ * A secret of the org with its checkbox, and its description behind an
+ * info icon, which a press shows and hides.
  */
 function SecretCheck(props: {
   secret: OrgSecret
@@ -32,32 +31,13 @@ function SecretCheck(props: {
   disabled: boolean
   change: (on: boolean) => void
 }) {
-  const { secret } = props
-  const hint = useId()
-  const tag = useId()
+  const [infoOpen, setInfoOpen] = useState(false)
   return (
-    <label className={check.option}>
-      <input
-        aria-describedby={secret.allAgents ? `${hint} ${tag}` : hint}
-        aria-label={secret.name}
-        checked={props.checked || secret.allAgents}
-        className={check.box}
-        disabled={secret.allAgents || props.disabled}
-        onChange={(event) => props.change(event.currentTarget.checked)}
-        type="checkbox"
-      />
-      <span className={check.text}>
-        <span className={styles.secretName}>{secret.name}</span>
-        <span className={check.hint} id={hint}>
-          {secret.description}
-        </span>
-      </span>
-      {secret.allAgents ? (
-        <span className={styles.tag} id={tag}>
-          {secretsPartWords.allAgents}
-        </span>
-      ) : null}
-    </label>
+    <SecretOption
+      {...props}
+      infoOpen={infoOpen}
+      toggleInfo={() => setInfoOpen((open) => !open)}
+    />
   )
 }
 

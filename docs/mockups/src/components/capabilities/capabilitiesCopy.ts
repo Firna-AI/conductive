@@ -16,7 +16,6 @@ export const capabilitiesIntro = {
 
 export const secretsPartWords = {
   title: 'Secrets',
-  hint: 'Agents use a pre-approved secret with no question.',
   /** The hint of the part in the control of an automation. */
   automationHint:
     'Each run workspace starts with the checked secrets pre-approved, so agents use them with no question.',
@@ -33,6 +32,11 @@ export const secretsPartWords = {
 /** The line of an org without secrets. */
 export function noSecrets(org: string): string {
   return `${org} has no secrets yet.`
+}
+
+/** The name of the info icon that shows the description of a secret. */
+export function aboutSecret(name: string): string {
+  return `About ${name}`
 }
 
 /** The line of a search that no secret matches. */

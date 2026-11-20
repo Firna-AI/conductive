@@ -11,12 +11,17 @@ import { Sheet } from '../components/common/Sheet'
 import { memberViewer, you } from '../fixtures/members'
 import { orgs } from '../fixtures/orgs'
 import { preApproved } from '../fixtures/secretRequests'
-import { acmeSecrets, manySecrets, secretSearch } from '../fixtures/secrets'
+import {
+  acmeSecrets,
+  manySecrets,
+  replicaUrl,
+  secretSearch,
+} from '../fixtures/secrets'
 import { paths } from '../paths'
 
 /** The parts of the state of New workspace that the control reads. */
 type DraftState = {
-  capabilities: 'closed' | 'open' | 'menu' | 'search'
+  capabilities: 'closed' | 'open' | 'menu' | 'search' | 'info'
   org: 'active' | 'suspended' | 'new'
   viewer: 'admin' | 'member'
 }
@@ -31,7 +36,7 @@ function secretsOf(state: DraftState) {
  * The control of a new workspace. Acme offers its secrets, and the
  * creator pre-approved one. Firna, a new org, has none yet. Mac access
  * shows as a new workspace starts. `search` lists twelve secrets, with a
- * search that keeps three.
+ * search that keeps three. `info` shows one description.
  */
 function panelOf(state: DraftState, sheet: boolean) {
   const firna = state.org === 'new'
@@ -40,6 +45,7 @@ function panelOf(state: DraftState, sheet: boolean) {
     secrets: secretsOf(state),
     preApproved: firna ? [] : preApproved,
     search: state.capabilities === 'search' ? secretSearch : undefined,
+    info: state.capabilities === 'info' ? replicaUrl.name : undefined,
     macAccess: false,
     secretsTo: firna ? paths.secretsEmpty : paths.secrets,
     viewer: state.viewer === 'admin' ? you : memberViewer,
@@ -53,9 +59,9 @@ function panelOf(state: DraftState, sheet: boolean) {
   )
 }
 
-/** The control is drawn open, with or without a search. */
+/** The control is drawn open, also with a search or a description. */
 function isOpen(state: DraftState): boolean {
-  return state.capabilities === 'open' || state.capabilities === 'search'
+  return ['open', 'search', 'info'].includes(state.capabilities)
 }
 
 /**

@@ -76,12 +76,12 @@ function MacAccessSwitch(props: {
 }
 
 /**
- * The secrets part, with its hint and its content. Manage secrets opens the
+ * The secrets part, with its content and an optional hint. Manage secrets opens the
  * Secrets tab of the org settings, while the org has secrets.
  */
 function secretsPart(
   view: SecretsView,
-  hint: string,
+  hint: string | undefined,
   content: ReactNode,
 ): CapabilityPart {
   const listed = view.secrets.state === 'ready' && view.secrets.value.length > 0
@@ -108,7 +108,7 @@ function secretsPart(
  */
 export function capabilityParts(view: CapabilitiesView): CapabilityPart[] {
   return [
-    secretsPart(view, secretsPartWords.hint, <SecretsContent view={view} />),
+    secretsPart(view, undefined, <SecretsContent view={view} />),
     {
       key: 'mac-access',
       title: macAccessWords.title,
