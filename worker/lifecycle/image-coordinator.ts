@@ -9,6 +9,7 @@ import { readImageSoftware } from './image-software'
 import { runImageAlarm, type ImageCoordinatorState } from './image-timers'
 import type { ImageRuntime } from './image-builds'
 import { readImageSchedule } from './image-schedule'
+import { failedBackgroundRetry, nextBackgroundRetry } from './background-retry'
 
 const KEY = 'org-image:coordinator'
 
@@ -63,17 +64,33 @@ export class ImageCoordinator {
         return
       }
     }
-    state = { ...state, buildId: next.buildId, nextAt: next.nextAt }
+    const sameWork =
+      prior?.buildId === next.buildId &&
+      (prior.providerAccount ?? DEFAULT_PROVIDER_ACCOUNT) ===
+        (state.providerAccount ?? DEFAULT_PROVIDER_ACCOUNT)
+    state = {
+      ...state,
+      buildId: next.buildId,
+      nextAt: next.nextAt,
+      retry: sameWork ? prior.retry : undefined,
+    }
     await this.storage.put('image', KEY, {
       ...state,
       software: readImageSoftware(state.software),
     })
-    await this.storage.setAlarm(state.nextAt)
+    await this.storage.setAlarm(Math.max(state.nextAt, state.retry?.at ?? 0))
   }
 
   async alarm(): Promise<void> {
     const state = await this.read()
     if (!state) return
+    if (state.retry && state.retry.at > this.dependencies.now()) {
+      await this.storage.setAlarm(state.retry.at)
+      return
+    }
+    const retry = nextBackgroundRetry(state.retry, this.dependencies.now())
+    await this.storage.put('image', KEY, { ...state, retry })
+    await this.storage.setAlarm(retry.at)
     let scheduled = false
     const runtime: ImageRuntime = {
       env: this.env,
@@ -99,9 +116,20 @@ export class ImageCoordinator {
     }
     try {
       await runImageAlarm(runtime, state)
-      if (!scheduled) await this.storage.deleteAlarm()
-    } catch {
-      await this.storage.setAlarm(this.dependencies.now() + 30_000)
+      const current = await this.read()
+      if (current)
+        await this.storage.put('image', KEY, { ...current, retry: undefined })
+      if (scheduled && current) await this.storage.setAlarm(current.nextAt)
+      else await this.storage.deleteAlarm()
+    } catch (error) {
+      const current = (await this.read()) ?? state
+      const failed = failedBackgroundRetry(
+        retry,
+        error,
+        this.dependencies.now(),
+      )
+      await this.storage.put('image', KEY, { ...current, retry: failed })
+      await this.storage.setAlarm(failed.at)
     }
   }
 }

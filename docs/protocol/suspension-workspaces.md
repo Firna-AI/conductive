@@ -11,9 +11,10 @@ and workspace owners. The terms come from the
   A stop that fails runs again until it completes.
 - That stop goes on after an admin assigns the workspace to another
   member. A running workspace whose workspace token is revoked stops,
-  whoever owns it, and the stop runs again every 30 seconds until it is
-  confirmed. Only a start that waits keeps it running, because that
-  start gives the workspace a new token.
+  whoever owns it, and the stop runs again until it is confirmed. Each
+  retry waits, as [The provider](workspaces-and-sandboxes.md#the-provider)
+  says. Only a start that waits keeps it running, because that start gives
+  the workspace a new token.
 - The restart near day 14 of a stop exists only on Boat, as
   [Stop and resume](stop-and-resume.md#the-restart-near-day-14) says. So
   each rule on that restart covers only a workspace on Boat.

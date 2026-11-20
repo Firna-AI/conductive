@@ -20,9 +20,12 @@ import {
 } from './durable-scheduling'
 import { ArchiveTransitions } from './durable-archive'
 import { failedStartStop } from './durable-start-stop'
-import { advanceLifecycleAlarm } from './durable-alarm'
+import {
+  runLifecycleAlarm,
+  finishLifecycleMaintenance,
+  repairLifecycleRetry,
+} from './durable-retry'
 import { applyLifecycleTurn, recoverLifecycleTurns } from './durable-turns'
-import { isConfirmedStopped } from './confirmed-stop'
 import { LifecycleInputState } from './input-activity-local'
 import {
   LIFECYCLE_STATE_KEY,
@@ -125,11 +128,12 @@ export class DurableLifecycle {
     return this.input.activity(() => this.hooks.extendDeadline())
   }
 
-  rearmStopped(): Promise<void> {
-    return this.serial(async () => {
-      const state = await this.read()
-      if (state && isConfirmedStopped(state)) await this.write(state)
-    })
+  rearmStopped(immediate = true): Promise<void> {
+    return this.serial(() =>
+      repairLifecycleRetry(this.storage, this.now, immediate, (state) =>
+        this.write(state),
+      ),
+    )
   }
 
   recoverTurns(publish?: LifecyclePublisher): Promise<void> {
@@ -215,11 +219,11 @@ export class DurableLifecycle {
   }
 
   finishDiskMaintenance(active: () => Promise<boolean>): Promise<boolean> {
-    return this.serial(async () => {
-      if (!(await active())) return true
-      const state = await this.read()
-      return !state || (await this.keepalive(state)).done
-    })
+    return this.serial(() =>
+      finishLifecycleMaintenance(this.storage, this.now, active, (state) =>
+        this.keepalive(state),
+      ),
+    )
   }
 
   exclusive<T>(operation: () => Promise<T>): Promise<T> {
@@ -241,18 +245,15 @@ export class DurableLifecycle {
   }
 
   alarm(): Promise<void> {
-    return this.serial(async () => {
-      const state = await this.read()
-      if (state)
-        await advanceLifecycleAlarm(
-          this.storage,
-          this.hooks,
-          state,
-          this.now,
-          (next) => this.write(next),
-          (next) => this.keepalive(next),
-        )
-    })
+    return this.serial(() =>
+      runLifecycleAlarm(
+        this.storage,
+        this.hooks,
+        this.now,
+        (next) => this.write(next),
+        (next) => this.keepalive(next),
+      ),
+    )
   }
 
   update(

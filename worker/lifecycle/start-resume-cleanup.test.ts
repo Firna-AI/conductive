@@ -38,20 +38,22 @@ it('ends a timed-out resume and blocks later startup until durable stop cleanup 
   expect(fixture.boat.stopIds).toEqual(['bx_1', 'bx_1'])
   expect(await start.retry()).toBe(false)
   fixture.boat.failStop = false
-  await start.tick(deadlineAt + 60_000)
+  const retry = (await start.actor.readLifecycle())?.retry
+  if (!retry) throw new Error('Missing failed-start stop retry')
+  await start.tick(retry.at)
   expect(fixture.boat.states.get('bx_1')).toBe('archived')
   expect(await start.actor.readLifecycle()).toMatchObject({
     state: 'error',
     error: timeout,
   })
-  await start.tick(deadlineAt + 65_000)
+  await start.tick(retry.at + 5_000)
   expect(await start.actor.readLifecycle()).toMatchObject({
     state: 'error',
     error: timeout,
   })
   expect(await start.retry()).toBe(true)
   expect(fixture.boat.commands).toHaveLength(commands)
-  await start.tick(deadlineAt + 66_000)
+  await start.tick(retry.at + 6_000)
   expect(fixture.boat.resumeIds).toEqual(['bx_1', 'bx_1'])
   expect(fixture.boat.stopIds).toEqual(['bx_1', 'bx_1', 'bx_1'])
 })
@@ -120,7 +122,9 @@ it('completes cancellation while failed stops retry beyond the original resume d
   expect(await start.wait()).toEqual(cancelled)
   expect(await start.retry()).toBe(false)
   fixture.boat.failStop = false
-  await start.tick(deadlineAt + 330_000)
+  const retry = (await start.actor.readLifecycle())?.retry
+  if (!retry) throw new Error('Missing cancelled-start stop retry')
+  await start.tick(retry.at)
   expect(fixture.boat.states.get('bx_1')).toBe('archived')
   expect((await start.actor.readLifecycle())?.state).toBe('stopped')
   expect(await start.retry()).toBe(true)

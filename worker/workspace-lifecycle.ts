@@ -224,8 +224,10 @@ export class WorkspaceLifecycle
     )
   }
 
-  reconcileLifecycleAccess(workspaceId: string): Promise<void> {
-    return this.run(() => this.controller.reconcileLifecycleAccess(workspaceId))
+  reconcileLifecycleAccess(
+    ...args: Parameters<WorkspaceController['reconcileLifecycleAccess']>
+  ): Promise<void> {
+    return this.run(() => this.controller.reconcileLifecycleAccess(...args))
   }
 
   async clearLifecycle(): Promise<void> {

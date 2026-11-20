@@ -51,9 +51,11 @@ it('keeps an operator stop pending when ownership changes before its native obje
     'active-admin',
   )
   expect(result.pendingWorkspaceIds).toEqual([workspaceId])
-  expect(fixture.boat.stopIds).toEqual([sandboxId, sandboxId])
+  expect(fixture.boat.stopIds).toEqual([sandboxId])
   fixture.boat.failStop = false
-  await fixture.actor(workspaceId).tick()
+  const retryAt = await fixture.actor(workspaceId).lifecycleAlarmAt()
+  if (retryAt === null) throw new Error('Missing access stop retry')
+  await fixture.actor(workspaceId).passTime(retryAt)
   expect(fixture.boat.states.get(sandboxId)).toBe('archived')
   const state = await fixture.actor(workspaceId).readLifecycle()
   if (!state) throw new Error('Missing stopped lifecycle')

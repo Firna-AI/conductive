@@ -33,5 +33,6 @@ export async function advanceStartStop(
     : {
         ...reconciledLifecycle(state, result, now()),
         startStop: result,
+        retry: undefined,
       }
 }

@@ -17,6 +17,12 @@ import { isConfirmedStopped } from './confirmed-stop'
 import { retentionResourceAllowed } from './retention-data'
 import type { WorkspaceAlarms } from '../features/alarms'
 import { hasPendingStartWork } from './start-storage'
+import {
+  beginBackgroundAttempt,
+  failBackgroundAttempt,
+} from './background-retry-alarm'
+
+const RETRY_KEY = 'lifecycle:access-retry'
 
 export interface WorkspaceSuspensionContext {
   env: AppEnv
@@ -70,8 +76,17 @@ export class WorkspaceAccessStop {
     )
   }
 
-  ownerChanged(workspaceId: string): Promise<void> {
+  ownerChanged(workspaceId: string, immediate = true): Promise<void> {
     return this.serial(async () => {
+      if (immediate) {
+        const input = this.context()
+        const retry = await input.storage.get('retry', RETRY_KEY)
+        if (retry)
+          await input.storage.put('retry', RETRY_KEY, {
+            ...retry,
+            at: input.dependencies.now(),
+          })
+      }
       const checked = await this.run(workspaceId)
       const state = await checked.input.lifecycle.read()
       const allowed =
@@ -90,7 +105,7 @@ export class WorkspaceAccessStop {
           )),
         )
       if (checked.result === undefined && !checked.startPending && allowed)
-        await checked.input.lifecycle.rearmStopped()
+        await checked.input.lifecycle.rearmStopped(immediate)
     })
   }
 
@@ -105,7 +120,10 @@ export class WorkspaceAccessStop {
       row && (row.orgSuspended || ownerStop || tokenStop)
         ? await stopForAccess(input, workspaceId, row)
         : undefined
-    if (result === undefined) await input.storage.deleteAlarm()
+    if (result === undefined) {
+      await input.storage.delete(RETRY_KEY)
+      await input.storage.deleteAlarm()
+    }
     return { input, row, startPending, result }
   }
 
@@ -134,6 +152,13 @@ async function stopForAccess(
     )
     return false
   }
+  const attempt = await beginBackgroundAttempt(
+    storage,
+    RETRY_KEY,
+    dependencies.now(),
+  )
+  await input.alarms.set('lifecycle', attempt.retry.at)
+  if (!attempt.ready) return false
   try {
     const result = await lifecycle.exclusive(() =>
       stopAccessDeniedWorkspaceSandbox(
@@ -149,7 +174,7 @@ async function stopForAccess(
     )
     if (result === 'pending') {
       await lifecycle.endRestoreWatch()
-      await storage.setAlarm(dependencies.now() + 30_000)
+      await storage.setAlarm(attempt.retry.at)
       return false
     }
     await turns.clear()
@@ -178,13 +203,21 @@ async function stopForAccess(
       ))
         throw error
     }
+    await storage.delete(RETRY_KEY)
     await storage.deleteAlarm()
     if (row.orgSuspended || row.ownerSuspended) {
       await input.alarms.set('lifecycle', null)
     }
     return true
-  } catch {
-    await storage.setAlarm(dependencies.now() + 30_000)
+  } catch (error) {
+    const retry = await failBackgroundAttempt(
+      storage,
+      RETRY_KEY,
+      attempt.retry,
+      error,
+      dependencies.now(),
+    )
+    await input.alarms.set('lifecycle', retry.at)
     return false
   }
 }

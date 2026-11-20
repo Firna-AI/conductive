@@ -3,6 +3,10 @@ import { expect, it } from 'vitest'
 import { setupBackendTests } from '../lifecycle/backend-test-hooks'
 import { recordSandboxCleanup } from '../lifecycle/cleanup'
 import { computerRecords } from '../lifecycle/computer-ledger.test-support'
+import {
+  COMPUTER_STOP_TASK_KEY,
+  computerStopObjectName,
+} from '../lifecycle/computer-stop-task'
 import { membersClient } from '../members/members-test-support'
 import { reassignWorkspace } from '../members/ownership'
 import { boatRoute } from '../sandbox/routes'
@@ -83,6 +87,12 @@ it('stops only live org ledger computers and reports an unknown legacy computer 
   })
   expect(boat.stopIds).toEqual(['retained-computer'])
   boat.failStop = false
+  const task = harness.native.actor(computerStopObjectName(org.id))
+  const retryAt = await task.api.storage.get<number>(
+    `alarm:${COMPUTER_STOP_TASK_KEY}`,
+  )
+  if (retryAt === undefined) throw new Error('Missing computer stop retry')
+  await fixture.setTime(retryAt)
   expect(await suspendOrg(runtime, org.id, user.id)).toMatchObject({
     pendingWorkspaceIds: [],
     pendingBuildIds: [],

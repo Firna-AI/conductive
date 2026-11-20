@@ -17,6 +17,7 @@ import {
 } from './workspace-actions'
 import { keepWorkspaceDisk } from './disk-retention'
 import { IdleStopTime } from './idle-stop'
+import { expireRetentionDeadline } from './retention-deadline'
 import {
   taskWorkspaceStorage,
   workspaceTaskAlarms,
@@ -69,6 +70,10 @@ export function createWorkspaceLifecycle(
           command,
           confirmedStopped,
         )
+      },
+      retentionExpired: async () => {
+        const state = await lifecycle.read()
+        return state ? expireRetentionDeadline(env.DB, state.workspaceId) : null
       },
       extendDeadline: async (request) => {
         const state = await lifecycle.read()

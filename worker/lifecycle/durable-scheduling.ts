@@ -8,6 +8,7 @@ import {
 } from './durable-types'
 import { isConfirmedStopped } from './confirmed-stop'
 import { isFailedRestart, restartDeadline } from './durable-restart'
+import { lifecycleRetryAt } from './durable-retry-time'
 
 export async function writeLifecycleState(
   storage: LifecycleStorage,
@@ -69,8 +70,8 @@ export async function scheduleLifecycleState(
     await storage.deleteAlarm()
     return
   }
-  if (state.startStop === 'pending') {
-    await storage.setAlarm(now() + 30_000)
+  if (state.retry || state.startStop === 'pending') {
+    await storage.setAlarm(lifecycleRetryAt(state, now()) ?? now())
     return
   }
   const startPending = (await hooks.startPending?.()) ?? false

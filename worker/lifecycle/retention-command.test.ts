@@ -58,8 +58,10 @@ it('polls a retained never-ending maintenance script across reconstruction and s
   })
   boat.failStop = false
   boat.commandRunning = false
+  const retry = (await platform.endpoint().readLifecycle())?.retry
+  if (!retry) throw new Error('Missing retention stop retry')
   await platform.restart()
-  await fixture.tick(DEADLINE + 5_000)
+  await fixture.tick(retry.at)
   expect(await fixture.progress()).toBeNull()
   expect(boat.stopIds).toEqual(['bx_1', 'bx_1'])
   await fixture.run(() =>

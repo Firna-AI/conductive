@@ -20,6 +20,7 @@ export function reconciledLifecycle(
       startStop: state.startStop ? 'stopped' : undefined,
       runningSessions: [],
       runnerConnected: false,
+      retry: undefined,
     }
   }
   if (remote === 'error')
@@ -28,6 +29,7 @@ export function reconciledLifecycle(
       state: 'error',
       runningSessions: [],
       runnerConnected: false,
+      retry: undefined,
       error:
         state.startStop && state.error
           ? state.error

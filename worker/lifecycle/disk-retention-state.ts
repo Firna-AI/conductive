@@ -6,6 +6,7 @@ import {
 } from './durable-types'
 import { WORKSPACE_START_TIME_LIMIT_MS } from './job-time-limit'
 import type { RetentionCommandPort } from './retention-command'
+import { failedBackgroundRetry, nextBackgroundRetry } from './background-retry'
 import {
   finishRetentionAttempt,
   hasRetentionAttempt,
@@ -63,14 +64,28 @@ export async function advanceDiskRetentionState(
   const settled = result.done
     ? finishRetentionAttempt(state, result.stoppedAt)
     : state
+  const preserveRetryFailures = result.done
+    ? result.eligible && result.stoppedAt === null
+    : result.preserveRetryFailures
   const next = {
     ...settled,
     error,
+    retry:
+      !result.done && result.retry
+        ? failedBackgroundRetry(
+            state.retry ?? nextBackgroundRetry(undefined, now()),
+            result.retry.failure,
+            now(),
+          )
+        : preserveRetryFailures && state.retry && state.retry.failures > 1
+          ? { failures: state.retry.failures - 1, at: now() + 5_000 }
+          : undefined,
     nextDiskKeepaliveAt:
       result.done && !result.eligible ? null : settled.nextDiskKeepaliveAt,
   }
   await commit(next)
-  if (
+  if (next.retry) await storage.setAlarm(next.retry.at)
+  else if (
     !result.done ||
     (result.eligible &&
       result.stoppedAt === null &&

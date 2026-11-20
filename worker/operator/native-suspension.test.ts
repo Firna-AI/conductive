@@ -35,7 +35,9 @@ it('retries a suspended native workspace stop after a runtime restart without a 
   await fixture.restart()
   fixture.boat.failStop = false
   const restored = fixture.actor(workspaceId)
-  await restored.tick()
+  const retryAt = await restored.lifecycleAlarmAt()
+  if (retryAt === null) throw new Error('Missing access stop retry')
+  await restored.passTime(retryAt)
   expect(fixture.boat.stopIds).toEqual([sandboxId, sandboxId])
   expect(await restored.readLifecycle()).toMatchObject({
     state: 'stopped',

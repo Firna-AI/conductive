@@ -87,8 +87,10 @@ it.each([
       sandboxId: 'bx_1',
     })
     const allocations = requests.length
+    const retryAt = await image.storage.getAlarm()
+    if (retryAt === null) throw new Error('Missing image cleanup retry')
     await image.restart()
-    await image.tick(endAt + 60_000)
+    await image.tick(retryAt)
     expect(await image.job()).toMatchObject({
       state: 'failed',
       phase: 'done',

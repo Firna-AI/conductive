@@ -28,6 +28,7 @@ export async function clearMissingArchiveDisk(
       sandboxId: null,
       allocation: undefined,
       phase: 'purge',
+      retry: undefined,
     })
   } else await context.storage.delete(ARCHIVE_STATE_KEY)
   return true

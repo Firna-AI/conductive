@@ -14,7 +14,7 @@ export async function stopRetention(
   command: RetentionCommandPort,
 ): Promise<DiskRetentionResult> {
   try {
-    if (status === 'stopping') return { done: false, error }
+    if (status === 'stopping') return { done: false, error, retry: {} }
     if (status !== 'stopped') {
       const state = command.read()
       if (state.stopRequestedAt === undefined)
@@ -23,7 +23,7 @@ export async function stopRetention(
           stopRequestedAt: context.dependencies.now(),
         })
       if (providerState((await provider.stop(sandboxId)).state) !== 'stopped')
-        return { done: false, error }
+        return { done: false, error, retry: {} }
     }
     await revokeWorkspacePreviews(
       context.env.DB,
@@ -37,7 +37,7 @@ export async function stopRetention(
       eligible: true,
     }
   } catch (failure) {
-    if (error !== null) return { done: false, error }
+    if (error !== null) return { done: false, error, retry: { failure } }
     throw failure
   }
 }

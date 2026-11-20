@@ -63,13 +63,17 @@ it('ends an unready retention restart at its original deadline through phase cha
     state: 'stopped',
     error: { code: 'workspace_start_failed', message: FAILURE, log: null },
   })
+  const firstRetry = (await platform.endpoint().readLifecycle())?.retry
+  if (!firstRetry) throw new Error('Missing retention stop retry')
   await platform.restart()
-  await fixture.tick(DEADLINE + 5_000)
+  await fixture.tick(firstRetry.at)
   expect(await fixture.progress()).toEqual({ phase: 'stop', error: FAILURE })
   expect(boat.stopIds).toEqual(['bx_1', 'bx_1'])
   expect(boat.resumeIds).toEqual(['bx_1', 'bx_1'])
   boat.failStop = false
-  await fixture.tick(DEADLINE + 10_000)
+  const secondRetry = (await platform.endpoint().readLifecycle())?.retry
+  if (!secondRetry) throw new Error('Missing retention stop retry')
+  await fixture.tick(secondRetry.at)
   expect(await fixture.progress()).toBeNull()
   expect(await platform.endpoint().readLifecycle()).toMatchObject({
     state: 'stopped',

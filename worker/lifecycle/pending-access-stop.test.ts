@@ -69,19 +69,19 @@ it('retries a pending access stop once per due native alarm with a future lifecy
     'bx_pending_access',
   ])
   expect(await actor.readAlarmTimes()).toEqual({
-    next: now + 60_000,
-    lifecycle: now + 60_000,
-    access: now + 60_000,
+    next: now + 90_000,
+    lifecycle: now + 90_000,
+    access: now + 90_000,
   })
-  expect(await actor.advanceOneAlarm(now + 60_000)).toBe(1)
+  expect(await actor.advanceOneAlarm(now + 90_000)).toBe(1)
   expect(active.boat.stopIds).toEqual([
     'bx_pending_access',
     'bx_pending_access',
     'bx_pending_access',
   ])
   expect(await actor.readAlarmTimes()).toEqual({
-    next: now + 90_000,
-    lifecycle: now + 90_000,
-    access: now + 90_000,
+    next: now + 210_000,
+    lifecycle: now + 210_000,
+    access: now + 210_000,
   })
 })

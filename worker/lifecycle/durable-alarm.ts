@@ -8,11 +8,9 @@ import {
   SHORTEST_IDLE_MS,
   type DurableLifecycleState,
   type LifecycleHooks,
-  type LifecycleStorage,
 } from './durable-types'
 
 export async function advanceLifecycleAlarm(
-  storage: LifecycleStorage,
   hooks: LifecycleHooks,
   initial: DurableLifecycleState,
   now: () => number,
@@ -67,7 +65,11 @@ export async function advanceLifecycleAlarm(
       state = reconciledLifecycle(state, await hooks.extendDeadline(), now())
     }
   }
-  if (stopPending) state = { ...state, restoreWatchAt: undefined }
+  state = {
+    ...state,
+    retry: stopPending ? state.retry : undefined,
+    restoreWatchAt: stopPending ? undefined : state.restoreWatchAt,
+  }
   if (
     restoreDue &&
     !stopPending &&
@@ -86,5 +88,4 @@ export async function advanceLifecycleAlarm(
         : reconciledLifecycle(state, result, now())
   }
   await write(state)
-  if (stopPending) await storage.setAlarm(now() + 30_000)
 }

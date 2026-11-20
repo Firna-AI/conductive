@@ -38,6 +38,7 @@ function archivedLifecycle(
     diskRetentionCommand: undefined,
     nextDiskKeepaliveAt: null,
     error: null,
+    retry: undefined,
   }
 }
 

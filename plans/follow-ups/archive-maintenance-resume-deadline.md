@@ -1,0 +1,37 @@
+# Archive resumes ignore their maintenance deadline
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-20, from the read-only policy check on branch `calummoore/follow-up-background-boat-retries-wait-a-8h08`.
+- **Location:** `worker/lifecycle/archive-maintenance.ts:32-37`, `worker/lifecycle/archive-maintenance.ts:49-70`, `worker/lifecycle/archive-state.ts`, `worker/lifecycle/archive-types.ts`, and "Time limits of builds and starts" in `docs/protocol/workspace-life.md:55`.
+- **Reason:** This defect already exists on main and is separate from sharing the background provider retry wait.
+
+- **Source:** Implementation.
+- **Category:** Product bug.
+- **Terms:**
+  - **Archive:** The app keeps a stopped workspace sandbox for 14 days so that Restore can bring it back.
+  - **Maintenance restart:** A brief start and stop that renews a provider's retention of a stopped disk.
+  - **Maintenance deadline:** The saved 20-minute limit for one maintenance start, stored as `maintenanceDeadlineAt`.
+  - **Background retry:** A saved failure count and time that limit repeated provider calls while unfinished work continues.
+- **Background:**
+  - [Time limits of builds and starts](../../docs/protocol/workspace-life.md#time-limits-of-builds-and-starts) requires a 20-minute limit for every workspace start.
+  - The limit includes a maintenance restart and covers the whole start. Progress and provider retries do not reset it.
+  - After a failed maintenance start, the app stops the sandbox again and keeps the workspace stopped or archived.
+  - Archive saves the maintenance deadline when it changes from `retained` to `resume`.
+  - The `wait` phase reads that deadline. The `resume` phase does not.
+- **Problem:** A refused provider resume leaves Archive in `resume` with the original deadline. The next due run can send another resume after that deadline. Repeated refusals can keep the same start attempt alive for days.
+- **Impact if no action:** Archive spends provider starts on an attempt that should have ended. It can postpone the required stop after an uncertain provider reply.
+- **Root question:** How does every Archive maintenance start end at its saved 20-minute deadline?
+- **Options:**
+  - **A.** Use one deadline transition for Archive maintenance start phases. Apply it before provider work and wake local expiry when needed. End the start at its original deadline and retain any unfinished stop. Keep background failure counts, saved provider waits, real disk dates, and sandbox identity. Add a native regression for refused resumes across the deadline and a restart. Effort: Medium.
+  - **B.** Add separate deadline checks to the `resume` and `wait` phases. Preserve the same stop, retry, date, and identity rules. Add the same regression. This duplicates the deadline transition and makes later phases easier to miss. Effort: Medium.
+- **Left out:**
+  - Extending the deadline after each refusal breaks the whole-start limit.
+  - Ending all background retries at the deadline can abandon a disk or an unfinished stop.
+  - Calling the provider before its saved wait ends needs a separate exception. The maintenance time limit does not grant one.
+  - Changing the provider's disk expiry or Archive's 14-day Restore window does not fix this start limit.
+  - A test alone detects the defect but does not end the expired start.
+- **Wider fix:** A. One deadline transition covers each maintenance start phase without separate expiry logic.
+- **Previous examples:** Ordinary disk retention applies the same whole-start limit in `worker/lifecycle/disk-retention.ts`. A native Archive run made 30 refused resumes across 23 hours 3 minutes 30 seconds while the same maintenance attempt remained in `resume`.
+- **Recommendation:** A. It applies the existing time limit once while background recovery can continue.
+- **Action:** fix after merge, apply A, because this pre-existing defect is outside the shared-wait change. The existing protocol settles the time limit.

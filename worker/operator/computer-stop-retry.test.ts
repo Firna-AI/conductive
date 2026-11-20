@@ -106,14 +106,13 @@ it('keeps both suspension scopes in one org task and retries after restart witho
       { sandboxId: 'org-computer', providerAccount: 'boat' },
     ],
   })
-  expect(await task.api.storage.getAlarm()).toBe(TEST_TIME + 60_000)
+  expect(await task.api.storage.getAlarm()).toBe(TEST_TIME + 90_000)
   await task.restart()
   boat.stopReplyState = 'archived'
-  await fixture.advanceTo(TEST_TIME + 60_000, taskName)
+  await fixture.advanceTo(TEST_TIME + 90_000, taskName)
   expect(boat.states.get('user-computer')).toBe('archived')
   expect(boat.states.get('org-computer')).toBe('archived')
   expect(boat.stopIds).toEqual([
-    'user-computer',
     'user-computer',
     'org-computer',
     'absent-computer',

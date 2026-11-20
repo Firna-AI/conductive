@@ -81,6 +81,9 @@ it('keeps a stopped disk through startup and stop failures without a stale stop 
     expect(boat.resumeIds).toEqual(['bx_1', 'bx_1'])
     boat.failStop = false
     boat.commandExitCode = 0
+    const retry = (await actor.readLifecycle())?.retry
+    if (!retry) throw new Error('Missing retention stop retry')
+    await fixture.setTime(retry.at)
     await fixture.run(() =>
       resumeWorkspace(runtime, org.id, created.workspace.id, user.id),
     )

@@ -6,6 +6,7 @@ import type { WorkspaceState } from '../../src/shared/generated/WorkspaceState'
 import type { WorkspaceStart } from '../../src/shared/generated/WorkspaceStart'
 import type { SendMessageRequest } from '../../src/shared/messages'
 import type { WorkspacePlatform } from './workspace-platform'
+import type { BackgroundRetry } from './background-retry'
 
 import type {
   RetentionCommandPort,
@@ -50,11 +51,17 @@ export interface DurableLifecycleState {
   nextDiskKeepaliveAt: number | null
   diskRetentionDeadlineAt?: number
   diskRetentionCommand?: RetentionCommandState
+  retry?: BackgroundRetry
   error: { code: string; message: string; log: string | null } | null
 }
 
 export type DiskRetentionResult =
-  | { done: false; error: string | null }
+  | {
+      done: false
+      error: string | null
+      retry?: { failure?: unknown }
+      preserveRetryFailures?: true
+    }
   | {
       done: true
       error: string | null
@@ -88,6 +95,7 @@ export interface LifecycleHooks {
   reconcile?(): Promise<LifecycleReconciliation>
   checkRestore?(): Promise<LifecycleRestoreResult>
   startPending?(): Promise<boolean>
+  retentionExpired?(): Promise<string | null>
   recoverTurns?(workspaceId: string): Promise<LifecycleTurnRecovery | undefined>
   lastTurnEndedAt?(workspaceId: string): Promise<number | null>
 }

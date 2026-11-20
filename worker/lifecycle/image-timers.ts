@@ -15,6 +15,7 @@ import { firstActiveOrgAdmin, firstOrgAdmin } from './settings-data'
 import { cleanupOrgImageSources } from './image-sources/cleanup'
 import { imageRetryAt } from './image-retry-data'
 import { readOrgImage } from './org-image-data'
+import type { BackgroundRetry } from './background-retry'
 import {
   claimPushRefresh,
   consumePendingPushRefresh,
@@ -93,6 +94,7 @@ export interface ImageCoordinatorState {
   software: ImageSoftwareArtifact
   buildId: string | null
   nextAt: number
+  retry?: BackgroundRetry
 }
 
 /** Called by the namespaced org-image Durable Object's real alarm. */

@@ -1,20 +1,20 @@
 import type { WorkspaceAlarms } from '../features/alarms'
 import type { WorkspaceStorage } from './platform-storage'
 import type { AppDependencies, AppEnv } from '../env'
-import { retrySandboxCleanup } from './cleanup'
 import type { DurableLifecycle } from './durable'
 import type { ImageCoordinator } from './image-coordinator'
 import type { WorkspaceStartCoordinator } from './start-coordinator'
 import type { StartJobStorage } from './start-types'
 import { publishCreationResult } from './creation-publication'
 import { START_JOB_KEY } from './start-storage'
-import { retryAllocationCleanup } from './start-allocation-cleanup'
 import { startAlarmDeadline } from './start-provider-retry'
 import type { WorkspaceAccessStop } from './workspace-suspension'
 import type { WorkspaceArchive } from './archive-state'
 import type { ComputerStopTask } from './computer-stop-task'
 import type { QueueTurn } from '../chat/queue-turn'
 import { StartSuperseded } from './start-guard'
+import { advanceWorkspaceCleanup } from './workspace-cleanup'
+import { lifecycleRetryAt } from './durable-retry-time'
 
 export async function runWorkspaceAlarm(input: {
   turn?: QueueTurn
@@ -49,7 +49,6 @@ export async function runWorkspaceAlarm(input: {
     if (!(await lifecycle.read())) await alarms.set('lifecycle:access', null)
     if (await input.images.read()) {
       if (requested('lifecycle:image') || due.has('lifecycle')) {
-        await alarms.set('lifecycle:image', dependencies.now() + 30_000)
         await alarms.set('lifecycle', null)
         await input.images.alarm()
       }
@@ -84,7 +83,12 @@ export async function runWorkspaceAlarm(input: {
     let cleanupAttempted = false
     if (cleanupId && !terminal && (cleanupRequested || startRequested)) {
       cleanupAttempted = true
-      await advanceCleanup(input.cleanupStorage, env, dependencies, cleanupId)
+      await advanceWorkspaceCleanup(
+        input.cleanupStorage,
+        env,
+        dependencies,
+        cleanupId,
+      )
     }
     if (!terminal && (await storage.get('text', 'lifecycle:cleanup'))) {
       if (pending && startRequested)
@@ -147,7 +151,7 @@ export async function runWorkspaceAlarm(input: {
       return
     const remainingCleanup = await storage.get('text', 'lifecycle:cleanup')
     if (remainingCleanup && !cleanupAttempted && cleanupRequested)
-      await advanceCleanup(
+      await advanceWorkspaceCleanup(
         input.cleanupStorage,
         env,
         dependencies,
@@ -159,41 +163,19 @@ export async function runWorkspaceAlarm(input: {
         await lifecycle.alarm()
         if (!state) await alarms.set('lifecycle', null)
       } catch {
-        const deadlineAt = (await lifecycle.read())?.diskRetentionDeadlineAt
+        const saved = await lifecycle.read()
+        const deadlineAt = saved?.diskRetentionDeadlineAt
         const now = dependencies.now()
         await alarms.set(
           'lifecycle',
-          deadlineAt !== undefined && deadlineAt > now
-            ? Math.min(now + 30_000, deadlineAt)
-            : now + 30_000,
+          (saved && lifecycleRetryAt(saved, now)) ??
+            (deadlineAt !== undefined && deadlineAt > now
+              ? Math.min(now + 30_000, deadlineAt)
+              : now + 30_000),
         )
       }
     }
   } finally {
     await run.finish(dependencies.now())
   }
-}
-
-async function advanceCleanup(
-  storage: WorkspaceStorage,
-  env: AppEnv,
-  dependencies: AppDependencies,
-  cleanupId: string,
-): Promise<void> {
-  await storage.setAlarm(dependencies.now() + 30_000)
-  try {
-    if (
-      (await retryAllocationCleanup(storage, env, dependencies)) &&
-      (await retrySandboxCleanup(env, dependencies, cleanupId))
-    ) {
-      await storage.transaction(async (transaction) => {
-        await transaction.delete('lifecycle:cleanup')
-        await transaction.deleteAlarm()
-      })
-      return
-    }
-  } catch {
-    /* The cleanup owner keeps its retry time. */
-  }
-  await storage.setAlarm(dependencies.now() + 30_000)
 }

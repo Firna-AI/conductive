@@ -30,6 +30,7 @@ import {
 import { releaseImageLease } from './image-leases'
 import { clearMissingArchiveDisk } from './archive-missing'
 import { scheduleArchiveRetry } from './archive-retry'
+import { nextBackgroundRetry } from './background-retry'
 
 export class WorkspaceArchive {
   private readonly context: ArchiveContext
@@ -46,16 +47,18 @@ export class WorkspaceArchive {
     if (initial) await this.advance(initial.defer)
   }
 
-  async repair(workspaceId: string): Promise<void> {
+  async repair(workspaceId: string, immediate = true): Promise<void> {
     const row = await readArchiveResource(this.context.env.DB, workspaceId)
     if (!row || row.archivedAt === null) return
     const state = await this.context.storage.get('archive', ARCHIVE_STATE_KEY)
     if (!state) await this.begin(workspaceId)
     else {
       const now = this.context.dependencies.now()
-      if (state.retry)
+      if (state.retry && immediate)
         await this.save({ ...state, retry: { ...state.retry, at: now } })
-      await this.context.storage.setAlarm(now)
+      await this.context.storage.setAlarm(
+        immediate ? now : Math.max(now, state.retry?.at ?? now),
+      )
     }
   }
 
@@ -158,7 +161,10 @@ export class WorkspaceArchive {
       await storage.setAlarm(state.retry.at)
       return
     }
-    await storage.setAlarm(dependencies.now() + 30_000)
+    const attempt = nextBackgroundRetry(state.retry, dependencies.now())
+    state = { ...state, retry: attempt }
+    await this.save(state)
+    await storage.setAlarm(attempt.at)
     try {
       if (state.phase === 'initializing') {
         state = await prepareArchivedLifecycle(
@@ -168,6 +174,7 @@ export class WorkspaceArchive {
         await this.save(state)
       }
       if (initializeOnly || this.context.hasOutsideTurns?.()) {
+        await this.save({ ...state, retry: saved.retry })
         await storage.setAlarm(dependencies.now())
         return
       }
@@ -218,6 +225,11 @@ export class WorkspaceArchive {
         await this.save(state)
         await writeArchiveDisk(env.DB, row, state.sandboxId, state.stoppedAt)
       }
+      if (state.phase === 'stop') {
+        await scheduleArchiveRepair(env.DB, row, attempt.at)
+        await storage.setAlarm(attempt.at)
+        return
+      }
       if (state.retry) {
         state = { ...state, retry: undefined }
         await this.save(state)
@@ -262,7 +274,7 @@ export class WorkspaceArchive {
         phase: state.phase,
         error: errorSummary(failure),
       })
-      await scheduleArchiveRetry(this.context, row, failure)
+      await scheduleArchiveRetry(this.context, row, failure, attempt)
     }
   }
 }

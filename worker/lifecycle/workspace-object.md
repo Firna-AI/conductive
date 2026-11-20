@@ -41,7 +41,8 @@ says:
   the create. The admission keeps its own copy for repeats.
 
 The `alarm` of the class serves these roles. The detached Stop task keeps
-concrete computer IDs and retries every 30 seconds until each Stop is confirmed.
+concrete computer IDs and retries until each Stop is confirmed. A failed Stop
+waits before its retry, as [The provider](../../docs/protocol/workspaces-and-sandboxes.md#the-provider) says.
 A successful reply that still runs keeps its retry.
 The task checks its org's live ledger before each dispatch.
 An owner change or suspension lift keeps its queued work.
@@ -59,7 +60,7 @@ command start. For a workspace object, it:
   also after the Restore window, until the workspace row holds the recovered ID
 - stops and retains archived sandboxes, bridges an old disk without secrets, and deletes at the archive deadline.
   A failed Archive step tries again after 30 seconds, and each further failure doubles the wait, up to 1 hour.
-  The wait is at least the `Retry-After` of a Boat error, up to the same hour. The D1 repair time moves
+  The wait is at least the `Retry-After` of a provider error, up to the same hour. The D1 repair time moves
   with it, so the repair Cron Trigger does not wake the step early. A step that succeeds ends the wait.
 - clears Restore when the provider confirms that a retained computer is missing
 - repairs the running turns from the committed chat before its deadline
@@ -260,7 +261,9 @@ create and resume. The workspace object runs that start:
     state as the provider state read does. A stopping state, such as
     `archiving`, also ends the watch. Neither writes the marker.
   - A Boat error or a failed marker command keeps the watch. The alarm
-    error handling tries again in 30 seconds.
+    error handling tries again after a wait, as
+    [The provider](../../docs/protocol/workspaces-and-sandboxes.md#the-provider)
+    says.
   - A stop, an error, an archive, or a new start ends the watch. An access
     stop, such as at an org suspension, also ends it when Boat still runs
     the sandbox and the stop waits for a retry. The watch has no deadline
@@ -277,10 +280,11 @@ create and resume. The workspace object runs that start:
   org.
 - A failed or cancelled resume records its result separately from its
   stop cleanup. Native lifecycle state keeps the pending stop across
-  restarts. The lifecycle retries the existing stop operation every 30
-  seconds, and a later resume waits for confirmation. Cleanup keeps the
-  saved failure message. Late runner reports cannot revive that failed
-  start.
+  restarts. The lifecycle retries the existing stop operation, and a later
+  resume waits for confirmation. A failed stop waits before its retry, as
+  [The provider](../../docs/protocol/workspaces-and-sandboxes.md#the-provider)
+  says. Cleanup keeps the saved failure message. Late runner reports cannot
+  revive that failed start.
 
 ## The git credential sender
 

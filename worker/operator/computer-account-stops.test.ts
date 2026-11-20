@@ -87,16 +87,7 @@ it('keeps paired Stop tasks across restarts and retains an unknown account', asy
   ).toEqual({ orgId: org.id, computers })
   expect(
     boat.server.requests.map((request) => request.headers.get('X-Boat-Org')),
-  ).toEqual([
-    'app-org',
-    'app-org',
-    'second-org',
-    'second-org',
-    'app-org',
-    'app-org',
-    'second-org',
-    'second-org',
-  ])
+  ).toEqual(['app-org', 'app-org', 'second-org', 'second-org'])
   await computerDeletedStatement(runtime.env.DB, computers[0], TEST_TIME).run()
   const earlierRequests = boat.server.requests.length
   await task.restart()
@@ -110,9 +101,9 @@ it('keeps paired Stop tasks across restarts and retains an unknown account', asy
   expect(
     await task.api.storage.get<ComputerStopTaskState>(COMPUTER_STOP_TASK_KEY),
   ).toEqual({ orgId: org.id, computers: [computers[2]] })
-  expect(await task.api.storage.getAlarm()).toBe(TEST_TIME + 60_000)
+  expect(await task.api.storage.getAlarm()).toBe(TEST_TIME + 90_000)
   await task.restart()
-  await fixture.advanceTo(TEST_TIME + 60_000, taskName)
+  await fixture.advanceTo(TEST_TIME + 90_000, taskName)
   expect(
     await task.api.storage.get<ComputerStopTaskState>(COMPUTER_STOP_TASK_KEY),
   ).toEqual({ orgId: org.id, computers: [computers[2]] })

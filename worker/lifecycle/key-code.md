@@ -55,6 +55,12 @@ points of each part.
   [Starts, stops, and builds](../../docs/protocol/suspension-workspaces.md#starts-stops-and-builds)
   and [Lift a suspension](../../docs/protocol/operator-actions.md#lift-a-suspension) require.
   `WorkspaceArchive.finishStop`, the stop that Restore needs, does not wait.
+- [`background-retry.ts`](background-retry.ts): the shared wait of each automatic retry of failed work that calls a provider.
+  The first failure waits 30 seconds, and each further failure doubles the wait, up to 1 hour.
+  The wait is at least the `Retry-After` of a provider error, up to the same hour.
+  Each site saves its failure count and retry time, and checks that time before a provider call, as
+  [The provider](../../docs/protocol/workspaces-and-sandboxes.md#the-provider) says.
+  The retry windows of builds, refreshes, and starts in [Provider retries](provider-retries.md) stay separate.
 - [`archive-begin.ts`](archive-begin.ts): `beginWorkspaceArchive` writes the first Archive state and tells `WorkspaceArchive.begin` to run only the initialization while a start job exists or a queue task is outside the chat queue.
 - [`restore-workspace.ts`](restore-workspace.ts): the member Restore route action with an explicit app origin and the fixed expiry check.
 - [`workspace-response.ts`](workspace-response.ts): `presentProvisionedWorkspace` adds the immutable number and request link to older saved create admissions without replacing their saved fields.

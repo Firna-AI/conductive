@@ -57,7 +57,7 @@ export async function keepWorkspaceDisk(
     status = providerState((await provider.get(sandboxId)).state)
   } catch (error) {
     if (progress.phase === 'stop' && progress.error !== null)
-      return { done: false, error: progress.error }
+      return { done: false, error: progress.error, retry: { failure: error } }
     throw error
   }
   progress = await expireRetention(context, progress, deadlineAt)
@@ -88,7 +88,8 @@ export async function keepWorkspaceDisk(
   }
   if (progress.phase === 'resume') {
     await setRetention(env.DB, workspaceId, 'resume')
-    if (status === 'stopping') return { done: false, error: null }
+    if (status === 'stopping')
+      return { done: false, error: null, preserveRetryFailures: true }
     if (status === 'stopped') {
       await requireActiveUser(env.DB, row.ownerUserId, orgId)
       await ensureWorkspaceToken(
@@ -130,7 +131,7 @@ export async function keepWorkspaceDisk(
   if (progress.phase === 'wait') {
     if (status === 'stopped') {
       await setRetention(env.DB, workspaceId, 'resume')
-      return { done: false, error: null }
+      return { done: false, error: null, preserveRetryFailures: true }
     }
     if (status === 'ready') await setRetention(env.DB, workspaceId, 'startup')
     return { done: false, error: null }
@@ -138,7 +139,7 @@ export async function keepWorkspaceDisk(
   if (progress.phase === 'startup') {
     if (status === 'stopped') {
       await setRetention(env.DB, workspaceId, 'resume')
-      return { done: false, error: null }
+      return { done: false, error: null, preserveRetryFailures: true }
     }
     if (status !== 'ready') return { done: false, error: null }
     return advanceRetentionCommand(

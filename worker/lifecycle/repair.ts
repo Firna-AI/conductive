@@ -2,7 +2,6 @@ import { warnWorker } from '../warnings'
 import type { ImageRuntime } from './image-builds'
 import { scheduleIdleImage } from './image-schedule'
 import type { ImageSoftwareArtifact } from './image-software'
-import { workspaceOwnerChangedHook } from './ownership-maintenance'
 import {
   deferOverdueRepair,
   overdueLifecycleRepairs,
@@ -21,7 +20,6 @@ export async function repairLifecycleAlarms(
   const { env, dependencies } = runtime
   const cutoff = dependencies.now() - REPAIR_GRACE_MS
   const due = await overdueLifecycleRepairs(env.DB, cutoff)
-  const check = workspaceOwnerChangedHook(runtime)
   const attempted: { kind: RepairKind; id: string }[] = []
   const result = {
     workspaces: 0,
@@ -37,7 +35,8 @@ export async function repairLifecycleAlarms(
     if (kind === 'workspace') result.workspaces++
     else result.orgs++
     try {
-      if (kind === 'workspace') await check(id)
+      if (kind === 'workspace')
+        await runtime.workspace(id).reconcileLifecycleAccess(id, false)
       else await scheduleIdleImage(images, id, await software())
     } catch {
       if (kind === 'workspace') result.pendingWorkspaces++

@@ -52,6 +52,22 @@ These docs belong to this doc:
   account, and the app had to name Boat to them.
 - The orgs of one provider account share the plan limits of that account,
   such as the number of sandboxes at once and of starts in a day.
+- On every provider account, the app waits before each automatic retry of
+  failed work that calls a provider for a workspace or an org image.
+  Archive, the restart near day 14, stops, and cleanups retry in this way.
+  The first wait is 30 seconds. Each further failure doubles it, up to
+  1 hour. The wait is at least the provider's `Retry-After`, up to the
+  same hour. A success ends the wait.
+- No retry calls the provider before its wait ends, also after a restart
+  or when other work runs it early. The number of retries has no limit.
+  A repair after an owner change or a suspension lift gets one attempt at
+  once. It keeps the failure count. The stop that a Restore needs does not
+  wait. A build, a refresh, or another start keeps its own retries within
+  its time limit.
+- Reason: a provider can count each try as a start, and the orgs of an
+  account share its starts. A limit on the number of retries was rejected,
+  because a disk, a stop, or a cleanup could then be lost with no notice.
+  A longer fixed wait was rejected, because it ignores `Retry-After`.
 - [The app's Boat key](isolation.md#the-apps-boat-key) and
   [the app's E2B key](isolation.md#the-apps-e2b-key) state how the Worker
   keeps each key.

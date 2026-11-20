@@ -183,9 +183,9 @@ export function createWorkspaceController(
       return (await accessStop.check(workspaceId, ownerUserId)) === true
     },
     changeLifecycle: (change) => lifecycle.update(change),
-    async reconcileLifecycleAccess(workspaceId: string): Promise<void> {
-      await archive.repair(workspaceId)
-      await accessStop.ownerChanged(workspaceId)
+    async reconcileLifecycleAccess(workspaceId, immediate = true) {
+      await archive.repair(workspaceId, immediate)
+      await accessStop.ownerChanged(workspaceId, immediate)
     },
     async clearLifecycle(): Promise<void> {
       const state = await lifecycle.read()

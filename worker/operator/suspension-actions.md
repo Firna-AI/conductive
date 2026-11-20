@@ -38,7 +38,8 @@ The action takes these steps, in this order:
    retries the cleanup until no build sandbox of that build is left.
 4. It reads the live computer ledger and stops detached computers.
    One native task per org saves their concrete IDs and its alarm before Stop.
-   Each failed Stop stays in the pending lists and retries every 30 seconds.
+   Each failed Stop stays in the pending lists and retries after a wait, as
+   [The provider](../../docs/protocol/workspaces-and-sandboxes.md#the-provider) says.
    The task keeps its work after an owner change, a lift, or a runtime restart.
    Failed task admission fails the request before a detached Stop is sent.
 

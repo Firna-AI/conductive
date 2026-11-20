@@ -73,7 +73,8 @@ export function workspaceLifecycleEndpoint(
     lifecycleFailed: (error) => transport.lifecycleFailed(error),
     lifecycleStopped: () => transport.lifecycleStopped(),
     suspendLifecycle: (id, ownerId) => transport.suspendLifecycle(id, ownerId),
-    reconcileLifecycleAccess: (id) => transport.reconcileLifecycleAccess(id),
+    reconcileLifecycleAccess: (id, immediate) =>
+      transport.reconcileLifecycleAccess(id, immediate),
     clearLifecycle: () => transport.clearLifecycle(),
     lifecycleActivity: () => transport.lifecycleActivity(),
     credentialSender: (turnId) => transport.credentialSender(turnId),

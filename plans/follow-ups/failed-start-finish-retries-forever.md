@@ -23,6 +23,6 @@
 - **Left out:** A longer retry interval only, because it keeps the loop and only slows it.
 - **Wider fix:** C. One limit ends every kind of permanent error in the finish, also an error that a later change adds.
 - **Previous examples:** The review of `calummoore/perth-5m3h` reproduced a permanent `FOREIGN KEY constraint failed` in the delete of a never-accepted parent.
-- **Related:** `plans/follow-ups/background-boat-retry-wait.md` gives Boat calls of background alarms a growing wait. It does not end a failed start, so this item stays separate.
+- **Related:** The rule of [The provider](../../docs/protocol/workspaces-and-sandboxes.md#the-provider) makes automatic provider retries of workspace and image alarms wait longer after each failure, up to 1 hour. A longer wait does not end a failed start, so this item stays separate.
 - **Recommendation:** C. A time limit follows the rule of the start itself and needs no list of steps.
 - **Action:** fix after merge, apply C, because no current error is known to loop and the fix touches the start lifecycle outside this branch.

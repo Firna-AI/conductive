@@ -49,8 +49,10 @@ archived workspace.
   hide a waiting Mac request.
 - An error in the repair at a `hello` closes the runner connection, and
   the next `hello` repairs again. An error in the alarm sets the next
-  alarm in 30 seconds, or at the saved disk retention deadline when that
-  comes sooner.
+  alarm after a wait, as
+  [The provider](../../docs/protocol/workspaces-and-sandboxes.md#the-provider)
+  says. When the saved disk retention deadline comes sooner, the alarm
+  comes at that deadline.
 
 The chat keeps these values in its summary record:
 

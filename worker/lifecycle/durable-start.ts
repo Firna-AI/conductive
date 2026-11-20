@@ -62,6 +62,7 @@ export function beginningLifecycleStart(
     startStop: undefined,
     diskRetentionCommand: undefined,
     softwareRestartAt: undefined,
+    retry: undefined,
   }
 }
 
