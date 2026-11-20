@@ -59,10 +59,15 @@ which shows its Markdown as typed.
 - `src/markdown/markdown-destination.ts` holds `readInlineTarget`. It
   reads the target of an inline link after its `(`: the spaces and line
   breaks around the address, the address, an optional link title, and the
-  `)`. An address in angle brackets ends at the first `>` that no
-  backslash escapes, as CommonMark does. Sent messages, the message field,
-  and the mockups share it through `lineTargets`, with its address
-  boundaries, its escape decoding, and its length limits.
+  `)`. Sent messages, the message field, and the mockups share it through
+  `lineTargets`, with its address boundaries, its escape decoding, and its
+  length limits.
+- One scan reads an address in angle brackets. As in CommonMark, it ends
+  at the first `>` that no backslash escapes. It refuses an address with
+  a `<` that no backslash escapes, or with an LF. A backslash does not
+  escape an LF. An escaped `<` or `>` stays in the address. Keep these
+  rules in this one scan, so that no second test reads the escapes in
+  another way.
 - Each target gives its address in two forms. `destination` is the
   decoded address: each backslash escape, such as `\(`, becomes the
   character after the backslash. `start` and `end` mark the source of the
