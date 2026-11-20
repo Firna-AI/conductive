@@ -134,15 +134,30 @@ pages:
   chips. Its `workspace-chip` and `attached-file` variants show the same
   × on a pasted workspace link and on an attached file in the text.
 - `app/file-mentions/answers` has an answer of the agent with file chips,
-  from answer chip decisions 1 and 2 of 13 November 2026. A `@` mention,
-  an absolute path under the repository folder in code, and a relative
-  path with the line target `:19-22` in code show as chips. A path in
-  another repository and a code block stay code. A press on the chip with
-  the line target opens `app/files/code/at-line`.
+  from answer chip decisions 1 and 2 of 13 November 2026, and with a
+  screenshot as a picture, from screenshot decision 2 of 18 November
+  2026. A `@` mention, an absolute path under the repository folder in
+  code, and a relative path with the line target `:19-22` in code show
+  as chips. A path in another repository and a code block stay code. The
+  Markdown image of the screenshot shows as a small picture at its place
+  in the line, at most 240 px high. A press on the chip with the line
+  target opens `app/files/code/at-line`. A press on the picture, or on the
+  chip after.png, opens `app/files/image/from-answer`. The page shows only
+  its canonical screen. Its child pages:
+  - `app/file-mentions/answers/loading` has the box of the label, as wide
+    as the answer and 240 px high, while the read of the picture runs.
+  - `app/file-mentions/answers/stopped` has the answer while the cloud
+    computer is stopped. The chat reads no picture then, so the image
+    shows as the link Postcode field on a phone.
+  - `app/file-mentions/answers/work` has the open work of a finished turn
+    with two screenshots. The closed line of the first message shows its
+    image as a link, and the open line of the last message shows its
+    picture.
 
 On a phone each chip of the composer keeps its icon and ends with a ×.
 The flow `user-flows/mention-a-file` goes from the query to the sent
 message, and ends with a press on the file chip, which opens
 `app/files/code`. The flow `user-flows/open-a-file-from-an-answer` goes
 from the answer of `app/file-mentions/answers` to the file tab at the
-lines, `app/files/code/at-line`.
+lines, `app/files/code/at-line`. Then a press on the picture of the
+screenshot opens it in the file tab, `app/files/image/from-answer`.

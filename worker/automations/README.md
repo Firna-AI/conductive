@@ -82,7 +82,7 @@ The dispatch stores a queued run before the webhook reply.
 The minute scan recovers it if the background task did not start it.
 Opened and pushed runs pass the head branch and event commit to the internal create.
 Merged runs pass the pull request base branch.
-Both use the published org image of the default provider account, through the shared create path.
+Both use the published org image of the org's fixed provider account, through the shared create path.
 
 Failed checks, starts, and first turns update the run and the consecutive failure count in one D1 batch.
 Each terminal outcome counts once.
@@ -146,6 +146,9 @@ The batch-limit test passes 2 for each limit and checks the stored operation cou
 - [automation-data.ts](automation-data.ts) reads automations and checks their repository and section.
 - [automation-response.ts](automation-response.ts) adds the resolved public login owner to each record reply.
 - [automation-write-data.ts](automation-write-data.ts) guards mutations with current membership and ownership.
+  It uses `guardedStatement` and `guardedRun` from
+  [shell-guard.ts](../app-api/shell-guard.ts) for the shared member check.
+  Its numbered bindings also retain the ownership and reference checks.
 - [schedules.ts](schedules.ts) validates schedules and computes their next time through `croner`.
 - [schedule-scan.ts](schedule-scan.ts) starts due schedules and retries old queued runs through the shared starter.
 - [schedule-scan-data.ts](schedule-scan-data.ts) reads bounded scan batches and claims due times with their run rows atomically.

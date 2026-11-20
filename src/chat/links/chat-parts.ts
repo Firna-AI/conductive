@@ -1,3 +1,4 @@
+import { pictureType } from '../../files/page/file-view'
 import { labelHidesAddress, type WebLink } from '../../markdown/web-links'
 import { attachmentForMention } from '../../shared/attachment-mentions'
 import type { FileEntry } from '../../shared/generated/FileEntry'
@@ -48,7 +49,10 @@ type LabelPart = LinkWord
  * A Markdown link or image of an answer whose target is an entry of the
  * file tree, such as `[the form](src/app.ts#L42)`. It shows as a link with
  * its label, which opens the file. An image with no label shows the name
- * of the file.
+ * of the file. `picture` marks the image of a PNG, JPEG, GIF, or WebP file,
+ * such as `![Phone view](shots/after.png)`, which can show as its picture
+ * (screenshot decision 2). The file tab shows the same files as pictures,
+ * so an SVG file and a link without `!` stay links.
  */
 export type FileLinkPart = {
   kind: 'file-link'
@@ -56,6 +60,7 @@ export type FileLinkPart = {
   entry: FileEntry
   lines: LineRange | null
   label: LabelPart[]
+  picture: boolean
   strong: boolean
 }
 
@@ -181,13 +186,18 @@ export function chatParts(
     const { mentions, code } = options
     const file = mentions && code && fileLinkTarget(href, mentions, code.root)
     if (file) {
-      const label =
-        markdown.label.trim() === '' ? file.entry.name : markdown.label
+      const { entry } = file
+      const label = markdown.label.trim() === '' ? entry.name : markdown.label
+      const picture =
+        markdown.image &&
+        entry.kind === 'file' &&
+        pictureType(entry.path) !== undefined
       parts.push({
         kind: 'file-link',
         source,
         ...file,
         label: labelWords(label),
+        picture,
         strong,
       })
       return

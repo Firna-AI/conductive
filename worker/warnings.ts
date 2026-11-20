@@ -1,5 +1,7 @@
 import { D1_ERROR_REASONS } from './d1-errors'
+import { mailDiagnosticFields } from './mail-diagnostics'
 import {
+  ATTACHMENT_STEPS,
   RUNNER_MESSAGE_STAGES,
   SIMPLE_WARNINGS,
   type RunnerWarningFields,
@@ -34,6 +36,20 @@ export function warnWorker(warning: WorkerWarning): void {
 
 function warningFields(warning: WorkerWarning) {
   switch (warning.kind) {
+    case 'invitation_email_delivery_failed':
+    case 'approval_email_delivery_failed':
+    case 'feedback_email_delivery_failed':
+      return {
+        kind: warning.kind,
+        message: {
+          invitation_email_delivery_failed:
+            'Invitation email delivery failed. The invitation remains saved.',
+          approval_email_delivery_failed:
+            'Approval email delivery failed. The email remains pending.',
+          feedback_email_delivery_failed: 'Feedback email delivery failed.',
+        }[warning.kind],
+        error: errorFields(warning.error),
+      }
     case 'runner_connected':
     case 'runner_disconnected':
       return {
@@ -110,6 +126,18 @@ function warningFields(warning: WorkerWarning) {
         workspaceId: warning.workspaceId.text,
         error: errorFields(warning.error),
       }
+    case 'attachment_transfer_retried':
+    case 'attachment_copy_failed':
+      return {
+        kind: warning.kind,
+        message:
+          warning.kind === 'attachment_transfer_retried'
+            ? 'The provider did not answer a file transfer step. The transfer runs once more.'
+            : 'The files of a message did not reach the cloud computer.',
+        workspaceId: warning.workspaceId.text,
+        step: ATTACHMENT_STEPS.find((step) => step === warning.step) ?? null,
+        error: errorFields(warning.error),
+      }
     case 'automation_report_failed':
       return {
         kind: warning.kind,
@@ -162,12 +190,48 @@ function warningFields(warning: WorkerWarning) {
           'The runner closes because its protocol version is not supported or does not meet the workspace version pin.',
         workspaceId: warning.workspaceId.text,
       }
+    case 'runner_repository_move_refused':
+      return {
+        kind: warning.kind,
+        message:
+          'The runner refused to move to the repository folder of its workspace.',
+        workspaceId: warning.workspaceId.text,
+        reason: warning.reason,
+      }
+    case 'repository_change_settle_failed':
+      return {
+        kind: warning.kind,
+        message:
+          'A step after a repository change failed: the second context copy or the terminal folder.',
+        workspaceId: warning.workspaceId.text,
+      }
+    case 'repository_change_ended':
+      return {
+        kind: warning.kind,
+        message:
+          'A repository change ended after the steps after its move failed for 10 minutes. The record keeps the old repository.',
+        workspaceId: warning.workspaceId.text,
+        phase: warning.phase,
+      }
     case 'lifecycle_repair_limited':
       return {
         kind: warning.kind,
         message: 'Lifecycle repair limited its checks.',
         resource: warning.resource,
         limit: warning.limit,
+      }
+    case 'unexpected_error':
+      return {
+        kind: warning.kind,
+        message: 'A request failed with an unexpected error.',
+        errorName: warning.errorName,
+        knownText: warning.knownText,
+        retryable: warning.retryable,
+        overloaded: warning.overloaded,
+        durableObjectReset: warning.durableObjectReset,
+        method: warning.method,
+        route: warning.route,
+        frames: [...warning.frames],
       }
     case 'lifecycle_repair_pending':
       return {
@@ -193,6 +257,8 @@ function runnerFields(warning: RunnerWarningFields) {
 
 function errorFields(error: ErrorSummary): ErrorSummary {
   switch (error.kind) {
+    case 'mail':
+      return { kind: 'mail', ...mailDiagnosticFields(error) }
     case 'provider':
       return {
         kind: error.kind,

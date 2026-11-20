@@ -82,7 +82,7 @@ export function createPreviewHandler(
         }
         throw new HttpError(404, 'not_found', 'The page is not available.')
       } catch (error) {
-        return toolError(error)
+        return toolError(error, request)
       }
     },
     proxy: (request: Request) => proxy.fetch(request),

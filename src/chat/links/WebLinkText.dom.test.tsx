@@ -101,7 +101,9 @@ const newTab = 'noopener noreferrer'
 
 describe('links in the text of an answer', () => {
   test('each link shows its words with its whole address as its title, keeps its bold and code, and leads to a new tab, a page of the app, or the preview of its port', async () => {
-    const { container } = await mountOpening(<AgentText text={answer} />)
+    const { container } = await mountOpening(
+      <AgentText id="agent:1" text={answer} />,
+    )
     expect({
       links: linksIn(container),
       code: container.querySelector('a code')?.textContent,
@@ -157,7 +159,7 @@ describe('links in the text of an answer', () => {
 
   test('a plain press opens a page of the app and the preview of a port in the app, and leaves a press on another link and a press with a modifier key to the browser', async () => {
     const { container, opened, navigation } = await mountOpening(
-      <AgentText text={answer} />,
+      <AgentText id="agent:1" text={answer} />,
     )
     expect({
       taken: [
@@ -177,7 +179,10 @@ describe('links in the text of an answer', () => {
   })
 
   test('where the workspace runs no server, a local address stays text and a Markdown link to it shows as typed', async () => {
-    const { container } = await mountOpening(<AgentText text={answer} />, false)
+    const { container } = await mountOpening(
+      <AgentText id="agent:1" text={answer} />,
+      false,
+    )
     expect({
       links: linksIn(container).map((link) => link.text),
       text: container.querySelectorAll('p')[2]?.textContent,
@@ -194,7 +199,7 @@ describe('links in the text of an answer', () => {
   })
 
   test('outside a screen that opens links, each link opens a new tab at its address', async () => {
-    const { container } = await mount(<AgentText text={answer} />)
+    const { container } = await mount(<AgentText id="agent:1" text={answer} />)
     expect(
       linksIn(container)
         .slice(3, 6)
@@ -212,6 +217,7 @@ describe('links in the text of an answer', () => {
   test('a message line shows the links of the answer, and a press on a link in the line goes to the link', async () => {
     const { container, navigation } = await mountOpening(
       <MessageLine
+        id="agent:1"
         text={`[The agents](${settings}) need a login. See ${pull}.`}
       />,
     )

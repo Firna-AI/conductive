@@ -29,12 +29,24 @@ says what the screens show.
   An older reply of the account names no default login, so the own login
   then decides alone. `inOrgs` keeps the default logins of the orgs that
   the org list shows, so a leave or a delete shows at once.
+- After the app opens, `AccountLoginReads` in `account-login-reads.ts` is
+  the one owner of the reads of the logins and the default logins of the
+  account. The start of the app reads the account in `openApp` of
+  `app-model.ts`. Each later read goes through the owner: an open of the
+  agent list, a return to the visible page, the timer, a change of a
+  login, an org that joins the orgs of the person, a newer login state
+  that a view reports, and a notice of a missing login that shows. The
+  next rules give each of them. The Worker gives the own logins only in
+  `GET /api/account`, so each read is a read of the whole account. A read
+  takes only the logins and the default logins of that answer, in the
+  order that `AgentLogins` keeps, as a rule below says. A failed read
+  keeps what shows. A read across a new app start or a sign-out changes
+  nothing. Such a start or a sign-out also forgets the login states and
+  the notices that the views reported before it.
 - Each open of the agent list, on the account and in Get started, reads
   the logins again through `AccountModel.refreshLogins`. So a login that
-  the Worker stopped after the app opened shows Signed out. The Worker
-  gives the own logins only in `GET /api/account`, and the read takes only
-  the logins and the default logins of that answer. An open shares a read
-  that runs already, and a failed read keeps what shows.
+  the Worker stopped after the app opened shows Signed out. An open shares
+  a read that runs already.
 - Only a reply of the account writes the logins and the default logins,
   because only it holds the own logins and the default logins of every
   org. The read of the org logins of an org also names the default logins
@@ -52,7 +64,9 @@ says what the screens show.
   login, the account reads the logins of its agent again, so that the
   screens show the default logins that the server names after the change.
   An account that names no default login needs no such read, except the
-  read of the model list after the save of an own endpoint.
+  read of the model list after the save of an own endpoint. These reads,
+  and the read after Refresh of an own endpoint, use the caller's mark to
+  preserve later login changes.
 - After each save, switch change, remove, and Refresh of an org login in
   this tab, `OrgModel` reports the change through
   `AccountModel.orgLoginChanged`. The account counts it as a change of its
@@ -66,22 +80,50 @@ says what the screens show.
   org login of the new org serves can start a session at once, and Get
   started counts that login. The orgs of an app start read nothing,
   because the start read the account with them.
-- `AccountLoginReads` in `account-login-reads.ts` shares those reads with
-  each return to the visible page. It also reads once a minute while the
-  page shows and a picker of the person follows a model list that the
-  Worker can read again in the background. Such a list belongs to an own
-  endpoint login, to an org login that a new session takes, or to an org
-  endpoint whose list the account keeps for older sessions.
-  `orgLoginsInUse` in `default-logins.ts` gives the rule of the org
-  logins. The account does not say whether an org login is an endpoint,
-  so an org API key that serves also keeps the timer. `modelListWait` in
-  `endpoint-models.ts` gives the wait. Each read merges only the logins
-  and the default logins, with the same guards. A read across a new app
-  start or a sign-out changes nothing. Polling stops without such a list
-  or while the app is not ready. A hidden page cancels its timer. When the
-  page shows again, the reader reads once and resumes polling.
-  The same reader owns the reads after an endpoint save or Refresh.
-  Those reads use the caller's mark to preserve later login changes.
+- The owner also reads at each return to the visible page. It also reads
+  once a minute while the page shows and a picker of the person follows a
+  model list that the Worker can read again in the background. Such a list
+  belongs to an own endpoint login, to an org login that a new session
+  takes, or to an org endpoint whose list the account keeps for older
+  sessions. `orgLoginsInUse` in `default-logins.ts` gives the rule of the
+  org logins. The account does not say whether an org login is an
+  endpoint, so an org API key that serves also keeps the timer. A notice
+  of a missing login keeps the timer too, as a rule below says.
+  `modelListWait` in `endpoint-models.ts` gives the wait. Polling stops
+  when no such list and no such notice remain, or while the app is not
+  ready. A hidden page cancels its timer. When the page shows again, the
+  owner reads once and resumes polling.
+- A view reports through `AccountModel.observeLogin` each login state that
+  it learns outside the account. Such a state can be newer than the
+  account. The workspace chat reports, through `ChatSources`, whether the
+  login of each session record can serve. When a state contradicts the
+  account, the owner reads the whole account once. An example is a record
+  that says that a login cannot serve, while the account still names that
+  login as usable or as the default login of that org and agent. A read
+  that started before that report does not count for it, and it shows no
+  login and no default login of that agent. A report that a login of the
+  person or of the org cannot serve makes an earlier read old too, also
+  without a contradiction. No report makes a pending local write old, so
+  that write still shows its reply. A repeat of the same state of the same
+  record reads nothing more, also while the reply still contradicts it. No
+  report writes the logins or the default logins. So when a record shows a
+  refused renewal, each view of the tab stops counting the failed login as
+  usable after one read. A member whom the org login serves then gets no
+  Connect notice.
+- While the composer shows the notice of a missing login, which offers
+  Connect, it holds a watch from `AccountModel.watchMissingLogin` through
+  the chat. The composer shows that notice before the send, as
+  [Messages](../../docs/protocol/messages-and-attachments.md#messages)
+  says. The owner reads the whole account when a watch starts. While a
+  watch holds on a visible page, the owner keeps its timer. The watch ends
+  when the notice goes or when its chat stops. So when an admin connects
+  an org login while the notice shows, the notice goes after the next read
+  of the timer. This holds also in the own empty session of the person.
+  Its older record still says that no login serves, but a reply of the
+  whole account that names the default logins and shows after that record
+  decides its login. A notice from an older account can show for the time
+  of one read. The New workspace form and the automation form hold no such
+  watch yet.
 - The Agents tab of the org settings reads the org logins at its open, at
   each return to the page, and once a minute while an org endpoint is
   connected, as `orgLoginsWait` in `org-waits.ts` says. So the model list

@@ -26,4 +26,8 @@ export type RunnerWelcome = {
    * confirmedThrough.
    */
   confirmedThrough: number
+  /**
+   * Accept the optional complete tool source offer.
+   */
+  completeToolDetails?: boolean
 }

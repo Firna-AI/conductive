@@ -4,6 +4,7 @@ import type { RunnerFileEvent } from './RunnerFileEvent.js'
 import type { RunnerPortsUpdated } from './RunnerPortsUpdated.js'
 import type { RunnerReady } from './RunnerReady.js'
 import type { RunnerStartUpdated } from './RunnerStartUpdated.js'
+import type { RunnerToolDetailPart } from './RunnerToolDetailPart.js'
 import type { RunnerWorkspaceTitle } from './RunnerWorkspaceTitle.js'
 
 /**
@@ -11,6 +12,7 @@ import type { RunnerWorkspaceTitle } from './RunnerWorkspaceTitle.js'
  * A failed tree scan sends files.unavailable before runner.ready.
  */
 export type RunnerEvent =
+  | RunnerToolDetailPart
   | AgentChatEvent
   | RunnerFileEvent
   | RunnerPortsUpdated

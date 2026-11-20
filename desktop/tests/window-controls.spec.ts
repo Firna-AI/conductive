@@ -1,4 +1,5 @@
 import { mkdir, mkdtemp, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import { resolve } from 'node:path'
 import { expect, test } from '@playwright/test'
 import type { ElectronApplication } from '@playwright/test'
@@ -14,20 +15,35 @@ import {
   rightColumnLayout,
 } from './window-layout.js'
 import {
-  evidence,
   launchWindow,
   openWindowWorkspace,
   workspacePath,
   workspaceTitle,
 } from './window-shell.js'
+import {
+  installWindowTerminal,
+  terminalMetrics,
+  terminalRows,
+} from './window-terminal.js'
+
+const evidence = resolve(
+  import.meta.dirname,
+  '../../.context/hidden-terminal-line-spacing',
+)
 
 test('the bundled workspace aligns its draggable bars and keeps sidebar, right column, resize, and history controls working', async () => {
   await mkdir(evidence, { recursive: true })
-  const profile = await mkdtemp(resolve(evidence, 'window-controls-profile-'))
+  const profile = await mkdtemp(resolve(tmpdir(), 'window-controls-profile-'))
   let electron: ElectronApplication | undefined
   try {
     electron = await launchWindow(profile)
+    const terminal = await installWindowTerminal(await electron.firstWindow())
     const page = await openWindowWorkspace(electron)
+    await expect(terminalRows(page)).toContainText('Ready')
+    await expect(page.getByText('Disconnected', { exact: true })).toHaveCount(0)
+    const visibleTerminal = await terminalMetrics(page)
+    expect(visibleTerminal.rowPitch).toBeGreaterThan(0)
+    const visibleConnections = terminal.connections
     await expectWindowLayout(page)
     const controls = page.getByRole('navigation', { name: 'Window controls' })
     const sidebar = page.getByRole('complementary', { name: 'Workspaces' })
@@ -71,6 +87,10 @@ test('the bundled workspace aligns its draggable bars and keeps sidebar, right c
       .poll(() => rightColumnLayout(page, workspaceHeading))
       .toEqual({ shown: true, gap: 0 })
 
+    await hideColumn.click()
+    await expect
+      .poll(() => rightColumnLayout(page, workspaceHeading))
+      .toEqual({ shown: false, gap: 0 })
     await sidebar.getByRole('link', { name: 'Settings', exact: true }).click()
     await expect(page).toHaveURL(DESKTOP_ORIGIN + routes.settings(FAKE_IDS.org))
     const settingsTitle = page.getByRole('heading', {
@@ -114,6 +134,18 @@ test('the bundled workspace aligns its draggable bars and keeps sidebar, right c
     await expect(
       page.getByRole('heading', { name: workspaceTitle, exact: true }),
     ).toBeVisible()
+    await expect
+      .poll(() => rightColumnLayout(page, workspaceHeading))
+      .toEqual({ shown: false, gap: 0 })
+    await expect.poll(() => terminal.connections).toBe(visibleConnections + 1)
+    terminal.emit('Buffered while hidden\r\n')
+    await page
+      .getByRole('button', { name: 'Show the right column', exact: true })
+      .click()
+    await expect(terminalRows(page)).toContainText('Ready')
+    await expect(terminalRows(page)).toContainText('Buffered while hidden')
+    await expect(page.getByText('Disconnected', { exact: true })).toHaveCount(0)
+    await expect.poll(() => terminalMetrics(page)).toEqual(visibleTerminal)
     await expect(forward).toBeEnabled()
     await forward.click()
     await expect(page).toHaveURL(DESKTOP_ORIGIN + routes.settings(FAKE_IDS.org))

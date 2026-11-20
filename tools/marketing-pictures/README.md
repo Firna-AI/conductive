@@ -44,8 +44,9 @@ the 64-pixel title at weight 650, equal 64-pixel app margins, a plain frame,
 and a crop at the bottom.
 
 Commit the generated card with changes to its screen, title, brand, or
-layout. Captures need a system font with the ⌘ glyph for the Search
-shortcut. Linux captures can use DejaVu Sans Mono.
+layout. Captures draw monospace text with the system fonts of the capture
+machine. When those fonts do not have ⌘ or ⇧, labels such as the Search
+shortcut draw that symbol with the bundled Inter font.
 
 ## Key code
 

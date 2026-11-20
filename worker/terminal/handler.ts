@@ -104,7 +104,7 @@ export function createTerminalHandler(
           },
         )
       } catch (error) {
-        return toolError(error)
+        return toolError(error, request)
       }
     },
   }

@@ -100,6 +100,7 @@ async fn logs_startup_milliseconds_and_file_count_once_across_reconnects() {
             protocol_version: RunnerProtocolVersion,
             stream_id: "stream".into(),
             confirmed_through: 0,
+            complete_tool_details: None,
         }))
         .await;
     scan.arrived.notified().await;

@@ -1,5 +1,6 @@
 //! Real Node child framing, request correlation, close, and startup cleanup.
 
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -29,6 +30,7 @@ fn helpers() -> Arc<NodeHelpers> {
     Arc::new(NodeHelpers {
         node: PathBuf::from("node"),
         program: PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/sdk-helper.mjs"),
+        environment: Default::default(),
     })
 }
 async fn options(model: &str) -> std::result::Result<HelperOptions, Box<dyn std::error::Error>> {
@@ -44,6 +46,35 @@ async fn options(model: &str) -> std::result::Result<HelperOptions, Box<dyn std:
     options.choice.model = model.into();
     h.close().await?;
     Ok(options)
+}
+
+#[tokio::test]
+async fn gives_the_helper_the_folder_and_branch_of_the_current_round() -> TestResult {
+    let (sender, mut receiver) = mpsc::unbounded_channel();
+    let moved = NodeHelpers {
+        node: PathBuf::from("node"),
+        program: helpers().program.clone(),
+        environment: BTreeMap::from([
+            (
+                "CONDUCTIVE_REPOSITORY_DIR".into(),
+                "/home/user/code/billing".into(),
+            ),
+            (
+                "CONDUCTIVE_WORKSPACE_BRANCH".into(),
+                "alice/cart-v2-cd34".into(),
+            ),
+        ]),
+    };
+    let helper = HelperConnection::new(moved.port()?, Arc::new(Output(sender)));
+    helper.start(options("environment").await?).await?;
+    assert_eq!(
+        receiver.recv().await,
+        Some(HelperOutput::Warning {
+            message: "/home/user/code/billing alice/cart-v2-cd34".into()
+        })
+    );
+    helper.close().await?;
+    Ok(())
 }
 
 #[tokio::test]

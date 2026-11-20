@@ -34,7 +34,7 @@ export const secretsWords = {
 
 /** What the tab is for, under its title. */
 export const secretsIntro =
-  'Agents run a command with a secret after a member allows it. They get only its name, and the chat hides its value.'
+  'Agents run a command with a secret after a member allows it. They get its name, and the chat hides its value.'
 
 /**
  * The line that says when to use the env vars instead. The tab links the

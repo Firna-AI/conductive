@@ -1,5 +1,10 @@
 import { d1ErrorReason, type D1ErrorReason } from './d1-errors'
 import { HttpError } from './http'
+import {
+  type MailDiagnosticFields,
+  mailDiagnosticFields,
+} from './mail-diagnostics'
+import { MailDeliveryError } from './mail-sender'
 import { ProviderError } from './sandbox/errors'
 import { CommandFailed } from './warnings'
 
@@ -97,6 +102,9 @@ const HTTP_CODES = [
   'current_turn_required',
   'github_reconnect_required',
   'github_refresh_failed',
+  'attachment_copy_failed',
+  'attachment_missing',
+  'attachment_not_found',
 ] as const
 
 export type WarningCode = (typeof HTTP_CODES)[number] | 'unknown'
@@ -135,10 +143,13 @@ export type ErrorSummary =
       timedOut: boolean
     }
   | { kind: 'd1'; reason: D1ErrorReason }
+  | ({ kind: 'mail' } & MailDiagnosticFields)
   | { kind: 'error' | 'unknown' }
 
 /** Keep fixed error kinds, allowlisted codes and states, and numeric outcomes. */
 export function errorSummary(error: unknown): ErrorSummary {
+  if (error instanceof MailDeliveryError)
+    return { kind: 'mail', ...mailDiagnosticFields(error.diagnostic) }
   if (error instanceof ProviderError)
     return {
       kind: 'provider',

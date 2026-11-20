@@ -1,6 +1,7 @@
 import { Ban, CircleCheck, CircleMinus } from 'lucide-react'
 import { agents } from '../../fixtures/agents'
 import type { PersonKey } from '../../fixtures/members'
+import { orgWithLogin } from '../../fixtures/orgLogins'
 import { orgs } from '../../fixtures/orgs'
 import type { SecretRunItem } from '../../fixtures/secretRequests'
 import { paths } from '../../paths'
@@ -15,6 +16,7 @@ import {
   lateAnswerNote,
   reconnectNote,
   secretRunWords,
+  type SessionLoginOwner,
 } from './secretRunCopy'
 
 /** Whether a request names a secret of the org too. */
@@ -138,7 +140,8 @@ function answeredBy(item: SecretRunItem): PersonKey | undefined {
  * followed, or why it ended with no answer. A late Allow starts a turn for
  * the sender of the turn that asked (secrets decision 10 B). When that
  * turn cannot run, the line says when the agent learns of the answer: at
- * the next message, or when the starter connects the agent again.
+ * the next message, or when the login of the session is connected again,
+ * by its starter or, for the org login, by an admin.
  */
 export function endLine(
   item: SecretRunItem,
@@ -153,6 +156,10 @@ export function endLine(
   if (item.state === 'late-denied') return lateAnswerNote(who, 'denied')
   const delivery = item.delivery ?? { kind: 'turn' }
   if (delivery.kind !== 'reconnect') return lateAnswerNote(who, delivery.kind)
-  const starter = whoOf(delivery.starter, viewer).object
-  return reconnectNote(who, starter, agents[delivery.agent].name)
+  const { login } = delivery
+  const owner: SessionLoginOwner =
+    login.type === 'org'
+      ? { type: 'org', name: orgWithLogin.name }
+      : { type: 'personal', name: whoOf(login.starter, viewer).object }
+  return reconnectNote(who, owner, agents[delivery.agent].name)
 }

@@ -25,7 +25,9 @@ interface ScreenProps {
 /**
  * One terminal: its screen, and the Disconnected bar with Reconnect after
  * its connection ended. Reconnect opens a new connection of this terminal
- * only. A hidden terminal keeps its connection.
+ * only, and so does the automatic try after a lost connection. The screen
+ * keeps its output until the new connection shows its own. A hidden
+ * terminal keeps its connection.
  */
 function TerminalPane(
   props: ScreenProps & {
@@ -34,7 +36,7 @@ function TerminalPane(
     ended: boolean
     /** The focus request of the owner, for the shown terminal only. */
     focusRequest: TerminalFocusRequest | null
-    /** The connection of the terminal. A new one mounts a new screen. */
+    /** The connection of the terminal. A new one opens a new socket. */
     connection: number
     dispatch: (action: ReadyTerminalsAction) => void
   },
@@ -47,9 +49,11 @@ function TerminalPane(
         connect={props.connect}
         ended={props.ended}
         focusRequest={props.focusRequest}
-        key={props.connection}
+        connection={props.connection}
         links={props.links}
-        onClosed={() => dispatch({ type: 'ended', terminalId: id })}
+        onClosed={(end, lasted) =>
+          dispatch({ type: 'ended', terminalId: id, end, lasted })
+        }
         onFocusDone={props.onFocusDone}
         onInput={props.onActivity}
         screenRef={props.screenRef}

@@ -266,7 +266,7 @@ npm --prefix desktop run test:packaged
 The build copies the [1024px PNG master](../docs/brand/conductive-icon-1024.png) unchanged for the Dock.
 The `package` command makes DMG and ZIP packages for the architecture of the Mac that runs it.
 The packaged tests run only that package.
-The `package:release` command makes the packages for both Mac architectures.
+The `package:release` command makes the packages for both Mac architectures, or for the one that its `--arm64` or `--x64` flag names.
 The `package` command uses an ad-hoc signature.
 PR builds force this same ad-hoc signing mode without certificate credentials.
 The package command verifies the app bundle with `codesign --verify --deep --strict`.
@@ -287,6 +287,8 @@ The package includes only `dist/app/` and `dist/bundle/`.
 ### Key Code
 
 - [Main process](src/main.ts) composes the protocol, window, session, and updater.
+- [Install location](src/install-location.ts) decides at launch whether to offer the move into Applications.
+  It tests for a read-only volume next to the app, and keeps the version that Not now dismissed.
 - [Renderer entry](renderer/main.tsx) gives the shared App its desktop services and browser navigation inside `MacApp`.
 - [Renderer services](renderer/services.ts) routes credentialed API calls, file uploads, and event sockets to the configured Worker.
   It supplies the Mac keyboard and the fixed Mac app host for shortcuts.

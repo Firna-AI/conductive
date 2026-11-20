@@ -140,7 +140,9 @@ export async function createNativeRuntime(
     const value: NativeActor = {
       ready,
       api,
-      rpc: bindings.WORKSPACES.getByName(name),
+      get rpc() {
+        return bindings.WORKSPACES.getByName(name)
+      },
       fetch: async (request) => {
         await ready
         const response = await runtime.dispatchFetch(request.url, {
@@ -154,7 +156,9 @@ export async function createNativeRuntime(
             : request.body,
           duplex: 'half',
         })
-        return new Response(await response.arrayBuffer(), {
+        const body =
+          response.status === 204 ? null : await response.arrayBuffer()
+        return new Response(body, {
           status: response.status,
           headers: [...response.headers],
         })

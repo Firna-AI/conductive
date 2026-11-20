@@ -1,5 +1,6 @@
 import { providerState, type ProviderState } from './provider-state'
 import { requireActiveUser } from '../data/user-access'
+import { configuredProviderAccount } from '../sandbox/accounts'
 import { WorkspaceStartError } from './workspace-start'
 import type { DiskRetentionResult } from './durable-types'
 import { JobTimeLimit } from './job-time-limit'
@@ -38,6 +39,7 @@ export async function keepWorkspaceDisk(
   const { env, workspaceId, orgId } = context
   const { provider, sandboxId, row } = await actionResources(context)
   if (
+    configuredProviderAccount(env, row.providerAccount).kind !== 'boat' ||
     row.archivedAt !== null ||
     !(row.state === 'stopped' || (row.state === 'error' && confirmedStopped))
   )

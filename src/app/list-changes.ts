@@ -26,7 +26,9 @@ export type ListChange = Change<ListData>
  * record of a workspace can be older than a move, so its placement does
  * not count. A listed row also keeps its GitHub summary, which only a list
  * read replaces on the same branch. A branch change takes the new branch's
- * summary. A new workspace goes to the top with its initial summary.
+ * summary. A new workspace goes to the top with its initial summary. An
+ * open pull request bar shows its own state over the summary, as
+ * `LiveGitHubStates` says.
  */
 export function workspaceUpdated(workspace: Workspace): ListChange {
   return (list) => {
@@ -64,6 +66,18 @@ export function workspaceRenamed(
   name: string | null,
 ): ListChange {
   return workspaceChanged(workspaceId, { name })
+}
+
+/** A read mark clears unread output without changing another listed state. */
+export function workspaceRead(workspaceId: string): ListChange {
+  return (list) => ({
+    ...list,
+    workspaces: list.workspaces.map((item) =>
+      item.id === workspaceId && item.state === 'unread'
+        ? { ...item, state: 'ready' }
+        : item,
+    ),
+  })
 }
 
 export function workspaceReassigned(

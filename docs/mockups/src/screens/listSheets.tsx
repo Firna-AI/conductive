@@ -67,9 +67,10 @@ function OrgRowContent(props: { org: Org; current: boolean }) {
 /**
  * The org switcher of a phone, which has no rail: every org in the order
  * of the person, a way to create one, and the account. An operator also
- * gets Operator under the account. `drag` draws an org that a long press
- * lifted, from decision 515 C: a faint copy stays at its place, a line
- * marks where it lands, and a raised copy of its row follows the finger.
+ * gets Operator under the account, and the account choice on Create org.
+ * `drag` draws an org that a long press lifted, from decision 515 C: a
+ * faint copy stays at its place, a line marks where it lands, and a raised
+ * copy of its row follows the finger.
  */
 export function OrgSwitcherSheet(props: {
   current: OrgKey
@@ -119,7 +120,9 @@ export function OrgSwitcherSheet(props: {
           ))}
           {dropAt(orgs.length)}
           <li>
-            <SheetRow to={paths.createOrg}>
+            <SheetRow
+              to={props.operator ? paths.createOrgOperator : paths.createOrg}
+            >
               <span className={styles.createTile}>
                 <Plus aria-hidden size={15} />
               </span>

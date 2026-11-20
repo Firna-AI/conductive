@@ -4,6 +4,7 @@ import { describe, expect, test, vi } from 'vitest'
 import { secretAllAgentsPath, secretPath } from '../../shared/secrets'
 import {
   byRole,
+  queryAllByText,
   queryByRole,
   queryByText,
 } from '../../test-support/dom-queries'
@@ -31,6 +32,14 @@ function field(view: HTMLElement, name: string): HTMLInputElement {
     throw new Error(`${name} is no field.`)
   }
   return found
+}
+
+/** The lines under a field, as a screen reader reads them: error, then hint. */
+function linesOf(input: HTMLElement): string[] {
+  return (input.getAttribute('aria-describedby') ?? '')
+    .split(' ')
+    .filter(Boolean)
+    .map((id) => document.getElementById(id)?.textContent ?? '')
 }
 
 describe('the changes of an admin in the Secrets tab', () => {
@@ -127,9 +136,34 @@ describe('the changes of an admin in the Secrets tab', () => {
     }).toEqual({ before: 'false', after: 'true', sent: [{ allAgents: true }] })
   })
 
-  test('Add secret sends the name, the description, the value, and the mark, and shows the refusal of a name that the org has under the name', async () => {
+  test('Add secret sends the name, the description, the value, and the mark, shows the refusal of a name with other characters in place of the hint of the name with each field kept, and shows the refusal of a name that the org has under the name', async () => {
     const server = secretsServer()
     const view = await mountSecrets(server)
+    const rule = 'Use only letters, digits, and underscores.'
+    server.json(
+      'POST',
+      listPath,
+      { error: { code: 'invalid_secret_name', message: rule } },
+      400,
+    )
+    click(byRole('button', 'Add secret', view))
+    const startsOff = byRole('switch', 'All agents', view).getAttribute(
+      'aria-checked',
+    )
+    const hint = linesOf(field(view, 'Name'))
+    typeText(field(view, 'Name'), 'Linear API key')
+    typeText(field(view, 'Description'), 'Reads the issues in Linear.')
+    typeText(field(view, 'Value'), 'lin_api_4f8Kq2nWx7')
+    click(byRole('switch', 'All agents', view))
+    click(byRole('button', 'Save secret', view))
+    await settle()
+    const invalid = {
+      name: field(view, 'Name').value,
+      lines: linesOf(field(view, 'Name')),
+      shown: queryAllByText(rule, view).length,
+    }
+    typeText(field(view, 'Name'), 'FIGMA_TOKEN')
+    const retyped = linesOf(field(view, 'Name'))
     server.json(
       'POST',
       listPath,
@@ -141,14 +175,6 @@ describe('the changes of an admin in the Secrets tab', () => {
       },
       409,
     )
-    click(byRole('button', 'Add secret', view))
-    const startsOff = byRole('switch', 'All agents', view).getAttribute(
-      'aria-checked',
-    )
-    typeText(field(view, 'Name'), 'FIGMA_TOKEN')
-    typeText(field(view, 'Description'), 'Reads the issues in Linear.')
-    typeText(field(view, 'Value'), 'lin_api_4f8Kq2nWx7')
-    click(byRole('switch', 'All agents', view))
     click(byRole('button', 'Save secret', view))
     await settle()
     const refused = queryByText(
@@ -168,14 +194,26 @@ describe('the changes of an admin in the Secrets tab', () => {
     await settle()
     expect({
       startsOff,
+      hint,
+      invalid,
+      retyped,
       refused: refused !== null,
       sent: await sentBodies(server, 'POST', listPath),
       names: rowsOf(view).map(([name]) => name),
       closed: queryByRole('button', 'Save secret', view),
     }).toEqual({
       startsOff: 'false',
+      hint: [`Agents ask for the secret by this name. ${rule}`],
+      invalid: { name: 'Linear API key', lines: [rule], shown: 1 },
+      retyped: [`Agents ask for the secret by this name. ${rule}`],
       refused: true,
       sent: [
+        {
+          name: 'Linear API key',
+          description: 'Reads the issues in Linear.',
+          value: 'lin_api_4f8Kq2nWx7',
+          allAgents: true,
+        },
         {
           name: 'FIGMA_TOKEN',
           description: 'Reads the issues in Linear.',

@@ -1,4 +1,5 @@
-import type { SecretGrant } from '../../src/shared/secret-requests'
+import type { SecretGrant } from '../../src/shared/generated/SecretGrant'
+
 import { secretMemberPredicate } from './access'
 
 export interface GrantedSecret {

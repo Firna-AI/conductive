@@ -112,6 +112,60 @@ describe('the Workspaces tab of the palette', () => {
         'acme/admin-dashboard',
       ],
     })
+
+    const chosen = query({
+      tab: 'workspaces',
+      repositoryId: 'mobile-app',
+      archived: true,
+    })
+    const before = paletteResults(
+      chosen,
+      source({ list, listTime: FAKE_TIME - 1 }),
+    )
+    const after = paletteResults(chosen, source({ list }))
+    const repository = { id: 'mobile-app', name: 'acme/mobile-app' }
+    expect(shown(before)).toEqual([['Archived', ['App icons']]])
+    expect(before.repositories).toContainEqual(repository)
+    expect(after.repositories).toContainEqual(repository)
+    expect({
+      before: before.repository,
+      after: after.repository,
+      repositoryId: chosen.repositoryId,
+      rows: shown(after),
+      empty: after.empty,
+    }).toEqual({
+      before: repository,
+      after: repository,
+      repositoryId: 'mobile-app',
+      rows: [],
+      empty: {
+        kind: 'line',
+        text: 'Archived workspaces of acme/mobile-app show here for 14 days',
+      },
+    })
+
+    const otherRepository = paletteResults(
+      { ...chosen, text: 'Checkout page redesign' },
+      source({ list }),
+    )
+    expect({
+      repository: otherRepository.repository,
+      rows: shown(otherRepository),
+      empty: otherRepository.empty,
+    }).toEqual({
+      repository,
+      rows: [],
+      empty: { kind: 'no-match', query: 'Checkout page redesign' },
+    })
+
+    const unknown = paletteResults(
+      query({ tab: 'workspaces', repositoryId: 'unknown' }),
+      source({ list: ready({ sections, workspaces: [admin] }) }),
+    )
+    expect({ repository: unknown.repository, rows: shown(unknown) }).toEqual({
+      repository: null,
+      rows: [['General', ['Refunds']]],
+    })
   })
 
   test('a Workspaces tab without a workspace names where they show, for 14 days with the Archived filter, and a query without a match says so', () => {

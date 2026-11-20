@@ -27,9 +27,9 @@
 - **Left out:**
   - Let unexpected errors escape the handlers, so that the runtime records them. Each client then gets the error page of Cloudflare, not the API error reply, and the runtime logs the full message, as C does.
   - A third-party error tracker, such as Sentry. The user asked for the tool of Cloudflare, and a new provider would get user data.
-  - More typed warnings at single failure sites, as `plans/follow-ups/mail-failure-reason-not-logged.md` proposes for emails. They cover only the errors that someone expected.
+  - More typed warnings at single failure sites, such as the email warnings of `worker/invitation-mailer.ts`, `worker/operator/approval-email.ts`, and `worker/app-api/feedback-mail.ts`. They cover only the errors that someone expected.
   - Workers traces. They show the failed outbound call, but no code line. They are in beta, and Cloudflare bills stored traces from 1 December 2026.
 - **Wider fix:** B. All catch-alls share `errorResponse`, so a new catch-all logs the record too.
-- **Previous examples:** The failed invitation of 9 November 2026, in `plans/follow-ups/mail-failure-reason-not-logged.md`.
+- **Previous examples:** The failed invitation of 9 November 2026, in [`plans/follow-ups/mail-failure-reason-not-logged.md`](https://github.com/Firna-AI/conductive/blob/85c955ab9fce298b8c7389d2f22e8b06b429c040/plans/follow-ups/mail-failure-reason-not-logged.md).
 - **Recommendation:** B. The error type and the stack lines find most causes, and no error message goes into a log.
 - **Action:** ask the user, because B and C trade detail against the risk of a secret in a log, and B adds log content that no requirement covers.

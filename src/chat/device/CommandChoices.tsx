@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
   type KeyboardEvent,
+  type RefObject,
 } from 'react'
 import { Button } from '@firna/ui/button'
 import { ChevronDown } from 'lucide-react'
@@ -12,6 +13,8 @@ import type { DeviceApprovalAction } from '../../shared/device'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import styles from '../../../docs/mockups/src/components/mac/CommandActions.module.css'
+import { PopoverSurface } from '../../shell/ui/PopoverSurface'
+import ui from '../../shell/ui/ui.module.css'
 import { ActionButton } from '../ui/actions'
 import controls from '../ui/controls.module.css'
 import { useDismiss, useFocusInside } from '../ui/dismiss'
@@ -48,21 +51,54 @@ const choices = [
 const ITEM = '[role="menuitem"]'
 
 /**
- * The menu of the other ways to allow. It is a popover in the top layer, so
- * the scrolling region of the requests never cuts it, and the CSS keeps it
- * at the actions of its request. The arrow keys move between rows.
+ * The menu keeps its own width and height, up to the room of the window,
+ * and opens 6 px from the actions, as the mockups draw it. Where the room
+ * is shorter than the menu, its list scrolls.
  */
+const SURFACE = {
+  anchorWidthAsMinimum: false,
+  maxWidth: Number.POSITIVE_INFINITY,
+  maxHeight: Number.POSITIVE_INFINITY,
+  gutter: 6,
+}
+
+/**
+ * The width of the box of the actions while their request is narrow, else
+ * null. A narrow request puts its actions under the command, and the CSS
+ * of `marker` then sets `--narrow-actions`. A change of the size of the box
+ * reads them again.
+ */
+function useNarrowWidth(
+  marker: RefObject<HTMLElement | null>,
+  actions: RefObject<HTMLElement | null>,
+  open: boolean,
+): number | null {
+  const [width, setWidth] = useState<number | null>(null)
+  useLayoutEffect(() => {
+    const node = marker.current
+    const box = actions.current
+    if (!open || !node || !box) return
+    const read = () => {
+      const style = getComputedStyle(node)
+      const narrow = style.getPropertyValue('--narrow-actions') !== ''
+      setWidth(narrow ? box.getBoundingClientRect().width : null)
+    }
+    read()
+    if (typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(read)
+    observer.observe(box)
+    return () => observer.disconnect()
+  }, [marker, actions, open])
+  return width
+}
+
+/** The menu of the other ways to allow. The arrow keys move between rows. */
 function ChoiceMenu(props: {
   onChoose: (action: DeviceApprovalAction) => void
   onClose: () => void
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const id = useId()
-  useLayoutEffect(() => {
-    const menu = ref.current
-    // A browser without the Popover API shows the menu in place.
-    if (menu && 'showPopover' in menu) menu.showPopover()
-  }, [])
   useFocusInside(ref, (node) => node.querySelector<HTMLElement>(ITEM))
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const items = [...(ref.current?.querySelectorAll<HTMLElement>(ITEM) ?? [])]
@@ -81,9 +117,8 @@ function ChoiceMenu(props: {
   return (
     <div
       aria-label="More ways to allow"
-      className={styles.choices}
+      className={classes(styles.choices, ui.anchoredMenu)}
       onKeyDown={onKeyDown}
-      popover="manual"
       ref={ref}
       role="menu"
     >
@@ -114,11 +149,15 @@ function ChoiceMenu(props: {
  * Deny and Allow for a command that waits on this Mac, and the arrow beside
  * Allow that opens the other ways to allow. `answering` is the choice that
  * this window sent: every choice then waits for the Mac to act on it. The
- * menu opens from the actions that hold these choices, so a narrow card can
- * keep it inside its edges. Escape, a press outside, and Tab close it, and
- * the focus goes back to the arrow.
+ * menu opens above `actions`, the box of the actions of the request that
+ * holds these choices, on the surface of the shell menus. It is in the top
+ * layer, so the region of the requests never cuts it. With no room above,
+ * it opens on the side with more room. A narrow request starts it at the
+ * start of that box and keeps it inside the width of the box. Escape, a
+ * press outside, and Tab close it, and the focus goes back to the arrow.
  */
 export function CommandChoices(props: {
+  actions: RefObject<HTMLElement | null>
   answering: DeviceApprovalAction | null
   onAnswer: (action: DeviceApprovalAction) => void
 }) {
@@ -127,6 +166,7 @@ export function CommandChoices(props: {
   const anchor = useRef<HTMLSpanElement>(null)
   const close = useCallback(() => setOpen(false), [])
   useDismiss(anchor, open, close)
+  const narrow = useNarrowWidth(anchor, props.actions, open)
   const { answering, onAnswer } = props
   const sent = answering !== null
   const choose = (action: DeviceApprovalAction) => {
@@ -177,7 +217,17 @@ export function CommandChoices(props: {
           <ChevronDown aria-hidden size={14} />
         </button>
       </span>
-      {open ? <ChoiceMenu onChoose={choose} onClose={close} /> : null}
+      {open ? (
+        <PopoverSurface
+          align={narrow === null ? 'end' : 'start'}
+          anchor={props.actions}
+          className={classes(ui.menuLayer, local.layer)}
+          options={narrow === null ? SURFACE : { ...SURFACE, maxWidth: narrow }}
+          side="above"
+        >
+          <ChoiceMenu onChoose={choose} onClose={close} />
+        </PopoverSurface>
+      ) : null}
     </span>
   )
 }

@@ -32,6 +32,13 @@ export class ProviderError extends Error {
   }
 }
 
+/** Internal cleanup proof. No dispatched allocation can still appear for this key. */
+export class ProviderAllocationAbsent extends ProviderError {
+  constructor() {
+    super('not_found', 404)
+  }
+}
+
 export function providerError(
   response: Response,
   body: unknown,

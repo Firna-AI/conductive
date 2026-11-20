@@ -91,13 +91,20 @@ that doc says.
   and the marks of the last start of the sandbox.
 - The Durable Object does this for each runner, also for an older runner
   from an org image or a saved disk. It also hides a copy that consecutive
-  text events of one answer split.
+  text events of one answer split, as
+  [Answer text secrets](answer-text-secrets.md) says.
 - Reason: an org image or a saved disk can hold an older runner. A filter
   of secret values in the runner was rejected, because an older runner
   does not have it.
 - The Durable Object also hides each value that a run with secrets used,
   as [The exact-copy filter](secret-requests.md#the-exact-copy-filter)
   says.
+- With complete tool details, the Durable Object hides these copies before
+  it cuts a long tool detail, as [Tool detail secrets](tool-detail-secrets.md) says.
+- Risk: older runners and fallback connections still cut before the filter.
+  So the start of a value that crosses the cut can show. The risk ends when
+  both sides support complete tool details. A stopped workspace can keep an
+  older runner with no time limit. Stored tool details keep their text.
 - The app keeps the real path of each file, the real name of the default
   branch of each repository, and the real name of the base branch of each
   workspace. Reads, diffs, and the file lists use them. The browser gets
@@ -108,8 +115,34 @@ that doc says.
 - Reason: a hidden path or branch name names nothing real, and two hidden
   paths can become equal. File IDs in place of real paths were rejected,
   because they change the file API.
-- The runner hides the workspace token and the turn token in the text
-  that screens show, before it saves or sends an event.
+- The runner hides the workspace token and each turn token that it got
+  since it started, in the text that screens show. It does this before it
+  saves or sends an event.
+- It hides each whole copy of such a token, at any length.
+- It also hides each run of 21 or more consecutive characters of such a
+  token, from any place in the token. It counts each Unicode scalar value
+  as one character.
+- It also hides a whole token or such a run when consecutive text events
+  of one answer split it.
+- The rule does not check whether a run is secret. So it also hides a
+  public run of 21 or more characters of a token.
+- A run of 20 or fewer characters shows, unless it is a whole token or
+  lies in a longer hidden run.
+- Reason: with this rule, a cut or a change of text before the filter
+  cannot show a long part of a token (the user's decision of 18 November
+  2026). A rule that each cut runs after the filter, and a type for
+  filtered text, were rejected. New code can still cut text before the
+  filter.
+- Reason: the limit is longer than each fixed public start of a token,
+  such as `sk-ant-oat01-`. The longest such start has 20 characters. So
+  text that holds only such a start does not change.
+- Risk: a run of 20 or fewer characters outside a hidden run still shows,
+  and so does a changed or encoded token. Several short runs, such as the
+  lines of a wrapped token, can together show the token.
+- Risk: an older runner, from an org image or a saved disk, hides only
+  whole tokens until it updates, as [Updates](sandbox-software.md#updates)
+  says. The rule changes no runner message, so such a runner keeps
+  working. No filter in the Worker hides a part of these tokens.
 - A start log hides each exact copy of a secret value and of the workspace
   token before a browser gets it.
 - The app does not hide the value of an env var that is not secret. So
@@ -118,9 +151,9 @@ that doc says.
   only values of 8 or more characters count, was rejected, because it
   guesses. A mask of every value was rejected, because it also hides
   short, common values, such as `1`, in ordinary text.
-- Risk: the app hides only exact copies of a value. A changed or encoded
-  value still shows. File content, diff content, and the terminal hide no
-  value.
+- Risk: the app hides only exact copies of a secret value. A changed or
+  encoded value still shows. File content, diff content, and the terminal
+  hide no value.
   The mark does not keep a value from the agent or from a member with a
   terminal, because each sandbox gets the env vars of its org.
 - Risk: the runner does not hide secret values. So its saved events on the

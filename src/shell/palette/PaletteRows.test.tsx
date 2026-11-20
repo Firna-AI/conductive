@@ -141,7 +141,9 @@ describe('the rows of the command palette', () => {
       groups: groupLabels(),
       starts: rowStarts(),
       strong: options().map((row) =>
-        row.classList.contains(paletteStyles.strong),
+        row
+          .querySelector(`:scope > .${paletteStyles.label}`)
+          ?.classList.contains(paletteStyles.strong),
       ),
     }
     typeText(searchField(), 'storefront')

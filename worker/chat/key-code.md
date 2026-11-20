@@ -81,8 +81,8 @@ first.
   `QueueTurn`, the handle whose `outside(call)` runs one call outside the
   queue. `hasOutsideTurns` tells Archive that a queue task is outside.
 - `queue-generation.ts`: `QueueGenerations`, which keeps the member
-  receiver generation of each queue task for the guarded storage, the Boat
-  fetch check, and the start guard.
+  receiver generation of each queue task for the guarded storage, the
+  provider fetch check, and the start guard.
 - `lifecycle-queue.ts`: `runWorkspaceLifecycle`, which runs one lifecycle
   change in a queue task with its receiver generation, then calls
   `flushRunner`.
@@ -99,37 +99,112 @@ first.
   or refusal marker of each runner event. An accepted connection has the
   protocol version `RUNNER_PROTOCOL_VERSION`, and its `welcome` repeats
   that version. It also keeps `hello.loginKinds` for the connection's
-  dispatch checks, and `hello.processStartId` for its warnings.
+  dispatch checks, `hello.processStartId` for its warnings, and
+  `hello.repositoryFolder` for the folder check. Its `welcome` accepts
+  `hello.completeToolDetails` when the `hello` offers it.
+- `runner-repository-move.ts`: `RepositoryMoves` compares the runner folder
+  with the record folder from `branch-data.ts`. It sends one
+  `repository.move` to each capable connection in the stored folder of
+  another repository, and holds turns until the folders match. A
+  refused move fails the held turns. `RunnerChannel.checkRepository` runs
+  the same check for the connected runner with no turn, after a
+  [repository change](../lifecycle/repository-change.md#publication).
 - `runner-connections.ts` and `runner-connection-store.ts`:
   `RunnerConnections`, the native acceptance, restore, close, and idle
   alarm of the current runner, and the chunked durable record of a
   physical runner socket. That record keeps the protocol version, the
-  process-start ID, and the login kinds declared in `hello`. A record
-  without login kinds keeps that list absent, as its `hello` did. So after
-  a wake, the runner keeps its login support and its process-start ID
-  with no second `hello` or `welcome`. A restore retires
+  process-start ID, the login kinds, and the repository folder declared
+  in `hello`. A record without login kinds keeps that list absent, as its
+  `hello` did. So after a wake, the runner keeps its login support and its
+  process-start ID with no second `hello` or `welcome`. A restore retires
   a record of an unsupported version, or with a stream and no version.
 - `runner-output.ts` and `runner-output-state.ts`: the filter from the
   actual start capture, and its encrypted state. Each runner stream keeps
-  its held answer text. One workspace record keeps each shown answer end
-  that can still start a secret, so a new stream cannot complete such a
+  its held answer text. Each answer record keeps the shown ends of its
+  answer that can still start a secret, so a new stream cannot complete such a
   secret. That state, the filtered events, and the raw cursor of the
   stream commit in one transaction. The shared field policy keeps
   operational paths and masks display labels. It masks each complete port
   name and folder before the workspace display excerpt and the second parse.
-- `runner-output.ts` also moves the answer ends of older stream records
-  into the workspace record, at the first accepted receipt without that
-  record. Held text stays with its own stream, because the held text of
-  two streams has no order. A workspace record with no answer ends still
-  marks the move as done, so later receipts do not scan older stream
-  records again.
+- `output-answer-records.ts` and `output-answer-key.ts`: the answer records,
+  as [Key code: answer records](key-code-answer-records.md) says.
+- `output-filter-records.ts`, `output-filter-state.ts`, and
+  `output-filter-snapshot.ts`: the saved answer state. `readOutputSnapshot`
+  reads both formats. A symbolic record keeps the value list field, always
+  empty. A rollback still needs a Worker that reads both formats, as the
+  [rollout](../../docs/protocol/answer-text-secrets.md#rollout) says. Each
+  receipt that reaches the answer filter and each cleanup runs
+  `prepareOutputState` first. It reads `CONDUCTIVE_SYMBOLIC_ANSWER_STATE`,
+  which `wrangler.jsonc` sets to
+  `"true"`. Only `"true"` turns it on. While it is off, no new or saved
+  answer becomes symbolic, and a symbolic answer stays symbolic. While it
+  is on, each answer becomes symbolic at its next write, and loses its lists.
+- `output-filter-identity.ts`: `outputCandidates` gives each value an
+  HMAC-SHA-256 identity under the app key, with the purpose, the workspace,
+  and the salt of the answer in its input. The salt and the identities stay
+  encrypted, and each write keeps only those of active values. The rollout
+  also gives the limit of records in the earlier format.
+- `tool-detail-input.ts`, `tool-detail-filter.ts`, and
+  `tool-detail-records.ts`: the parse of each private `tool.detail.part`,
+  `filterToolDetail`, and the encrypted header of the assembly of each
+  runner stream in `runner-output-state.ts`. The header keeps the turn, the
+  tool with its target masked at receipt, and the cursor. It also keeps the
+  source generation, the record count, the held end, and a random salt of
+  the source. It keeps no value list.
+- `tool-detail-source.ts` and `tool-detail-source-records.ts`:
+  `appendToolDetailSource`, `readToolDetailSource`, and
+  `ToolDetailSourceRecords`. The text of each part before the last, masked
+  with the values that are active at its receipt, goes into the source
+  records of the assembly.
+  The plaintext of each record holds at most 16,384 UTF-16 code units. Its
+  encryption context binds the workspace, the stream, the generation, and
+  the index.
+- `tool-detail-scan.ts`: `scanToolText` and `scanHeld`, the scanner of a
+  private source. The held end is the end that a later part can still
+  complete or extend. Examples are the start of a value and a literal
+  `[redacted]`. Matching memory follows the held end, not the source length.
+- `tool-detail-held.ts`, `tool-detail-match.ts`, and
+  `tool-detail-identity.ts`: the held end after a cleanup. Each erased
+  character belongs to an unknown run. The saved `held` text has
+  `[redacted]` in place of each run, so an older Worker reads a marker
+  there. `heldMatches` keeps the runs and the entries.
+- An entry names a remaining value, or the literal marker, at an offset.
+  `agrees` lets a value cross a run only through its own entry, and checks
+  each known character. A match or a held end can start inside a run. Each
+  part of a run that no match covers shows as one marker.
+- `toolCandidates` gives each value an HMAC identity under the app key. Its
+  input separates the purpose, the workspace, the stream, and the salt of
+  the source. The salt and the entries live only in the encrypted header,
+  so a reader without the app key cannot test a guessed value.
+- At the last part, `filterToolDetail` scans all source records, the held
+  end, the new text, and the target again with the current values. Only
+  then does it cut the longest prefix, count the omitted bytes, and make the
+  one `tool.updated`.
+- `tool-detail-cleanup.ts`: `maskOpenToolDetails`, which
+  `RunnerOutputState.maskTools` runs with two value sets. The expiry,
+  removal, and archive callers read the set before the change, change the
+  temporary records, and read the set after it. One transaction holds these
+  steps and the cleanup.
+- The cleanup rescans each open assembly with the set from before the
+  change. When nothing in the held end can continue into a later part, it
+  finishes the end with that set. Otherwise it erases every whole copy of an
+  ended value in the end. It keeps the entries of the remaining values and
+  the marker whose match crosses a run. It writes a new source generation,
+  and removes the old one in the same transaction. It keeps all other
+  source text.
+- `RunnerOutputState.saveTool` with no header clears the header and every
+  source record of a stream. The last part, a refusal, an interrupted
+  sequence, and a new stream use it. A refusal of a later part first reads
+  its session and turn from `RunnerOutputState.toolContext`.
 - `authenticated-runner.ts`: `AuthenticatedRunner`, the token check of the
   runner connection before each message. `RunnerConnections.alarm` runs it
   while the connection is idle.
 - [`runner-version-data.ts`](runner-version-data.ts): `readRunnerProtocolVersion`, the workspace pin read before a runner's welcome or commands.
-  [`runner-handshake.ts`](runner-handshake.ts): `prepareRunnerHello` checks the `hello`, closes an unsupported version or a runner below that pin, and starts the stream before the `welcome`.
+  [`runner-handshake.ts`](runner-handshake.ts): `prepareRunnerHello` checks the `hello`, closes an unsupported version or a runner below that pin, and starts the stream before the `welcome`. That start drops the tool-detail assembly of every other stream.
 - `runner-event-identity.ts`: `readRunnerEventIdentity` returns the readable
   fields in `RunnerEventIdentity` for refusal, repair, and turn-context checks.
+  A private tool-detail part reads as `tool.updated`. Only its first part
+  carries a turn context.
 - `runner-delivery.ts`: the sends of pending commands, with the login
   and runner support checks and the current branches that `branch-data.ts`
   reads. Each `turn` command gets a turn token, after the running state

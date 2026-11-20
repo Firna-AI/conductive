@@ -87,6 +87,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   A move that the place of a tab rules out keeps its place, greyed.
   A read-only workspace leaves out each item that it does not allow,
   from decision 214.
+- The app opens a menu beside its button in the top layer, so no box cuts
+  it. `app/chat/menu-placement` draws such menus above the page, and CSS
+  anchors place each one at its button.
 - A sub-workspace shows under the row of its parent, from sub-workspace
   decisions 1 C, 4 F, 5 C, and 6 A, as `app/sub-workspaces` shows.
   `withTrees` in `src/components/workspaces/trees.ts` places the rows of
@@ -215,6 +218,10 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - `ConfirmDialog` in `src/components/common/` asks before an action that a
   user cannot simply undo: a dialog over the dimmed app on desktop, and a
   sheet on a phone. The desktop dialog lies in the `overlay` of `AppFrame`.
+  A question that runs its own action stays open while the action runs. A
+  spinner then leads the confirming action, and Cancel is off, as
+  `app/orgs/suspended/leave/leaving` shows. Escape and a press outside then
+  do nothing, on desktop and in the sheet of a phone.
 - `ToastLayer` in `src/components/common/` draws a toast of Firna open
   where the app shows its toasts: at the bottom right of a desktop, and
   across the bottom of a phone. An action that a user can undo, such as
@@ -231,10 +238,11 @@ sessions as tabs above the chat, and four tabs at the bottom.
   of `ConfirmDialog`. The repository picker sits at the top left, and the
   org and the section of the new workspace, in plain text, at the top
   right. The message and its files fill the middle, and the notices of the
-  New workspace page follow them. The model picker sits at the bottom left,
-  and the Capabilities icon, the attach button, and Create, with the hint
-  of the Enter key, at the bottom right. A phone always opens the page, so the dialog has no phone
-  layout.
+  New workspace page follow them. The attach button, the Capabilities icon,
+  and the model picker sit at the bottom left. The org login label follows
+  the model picker when the first message uses it. Create, with the hint of
+  the Enter key, sits at the bottom right. A phone always opens the page,
+  so the dialog has no phone layout.
 - The account has five tabs, General, Agents, Preferences, Keyboard
   shortcuts, and Stats, as links, as the org settings have. The Mac app
   adds This Mac as its sixth tab. On a phone, a tab that

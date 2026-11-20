@@ -57,6 +57,8 @@ export async function openPaletteTab(
     copy?: AppServices['copy']
     /** Opens a page in a new tab, such as a fake that keeps each address. */
     openInNewTab?: AppServices['openInNewTab']
+    /** The time zone of dates, in place of the UTC of the test services. */
+    timeZone?: AppServices['timeZone']
   } = {},
 ) {
   const server = options.server ?? new FakeApiServer()
@@ -76,6 +78,7 @@ export async function openPaletteTab(
     ...options.clock,
     ...(options.copy ? { copy: options.copy } : {}),
     ...(options.openInNewTab ? { openInNewTab: options.openInNewTab } : {}),
+    ...(options.timeZone ? { timeZone: options.timeZone } : {}),
   })
   const navigation = memoryNavigation(href)
   const shell = options.mac ? (

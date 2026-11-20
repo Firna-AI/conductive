@@ -1,7 +1,26 @@
+import type { ReactNode } from 'react'
 import inline from '../../../docs/mockups/src/components/common/InlineText.module.css'
 import { useChatMentions } from '../mentions/MentionsContext'
 import type { FileLinkPart } from './chat-parts'
 import { fileOpener, fileTitle } from './file-opener'
+
+/**
+ * The label of a link to a file, as the agent wrote it, with its code and
+ * bold. The link of a picture shows the same label.
+ */
+export function labelText(label: FileLinkPart['label']): ReactNode[] {
+  return label.map((part, index) =>
+    part.kind === 'code' ? (
+      <code className={inline.code} key={index}>
+        {part.text}
+      </code>
+    ) : part.strong ? (
+      <strong key={index}>{part.text}</strong>
+    ) : (
+      part.text
+    ),
+  )
+}
 
 /**
  * A Markdown link or image of an answer to a file of the tree: a normal
@@ -13,17 +32,7 @@ import { fileOpener, fileTitle } from './file-opener'
 export function FileTextLink(props: { part: FileLinkPart }) {
   const mentions = useChatMentions()
   const { entry, lines, label } = props.part
-  const text = label.map((part, index) =>
-    part.kind === 'code' ? (
-      <code className={inline.code} key={index}>
-        {part.text}
-      </code>
-    ) : part.strong ? (
-      <strong key={index}>{part.text}</strong>
-    ) : (
-      part.text
-    ),
-  )
+  const text = labelText(label)
   if (!mentions) return <>{text}</>
   return (
     <a

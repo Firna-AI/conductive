@@ -10,6 +10,7 @@ use cnd_runner_interface::runner::{RunnerEvent, RunnerReady};
 use cnd_runner_interface::runner_commands::{
     RunnerCommand, RunnerControlCommand, RunnerReportKind, RunnerReportRefresh,
 };
+use cnd_runner_interface::runner_handshake::RunnerToWorkspace;
 use futures_util::future::BoxFuture;
 use tokio::task::JoinHandle;
 
@@ -102,6 +103,10 @@ impl CommandHandler for ReportCommandHandler {
         self.dependencies.next.busy().await
     }
 
+    async fn working(&self) -> Result<bool> {
+        self.dependencies.next.working().await
+    }
+
     async fn start(&self) -> Result<()> {
         self.dependencies.files.start().await?;
         self.dependencies.next.start().await?;
@@ -175,7 +180,12 @@ impl CommandHandler for ReportCommandHandler {
                 let response = dependencies.files.request(command).await;
                 let response = dependencies.filter.response(response);
                 let result = match response {
-                    Ok(response) => dependencies.link.reply(response).await,
+                    Ok(response) => {
+                        dependencies
+                            .link
+                            .reply(RunnerToWorkspace::RunnerFileResponse(response))
+                            .await
+                    }
                     Err(error) => Err(error),
                 };
                 if result.is_err() {

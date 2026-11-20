@@ -169,17 +169,18 @@ export async function decryptAgentLogin(
   }
 }
 
-/** The transcript keeps the workspace name captured with its session. */
+/** The transcript captures the names of its workspace and org together. */
 export function transcriptWorkspaceName(
   db: D1Database,
   workspaceId: string,
-): Promise<{ name: string | null } | null> {
+): Promise<{ name: string | null; orgName: string } | null> {
   return db
     .prepare(
-      `SELECT ${workspaceNameColumn('workspaces')} FROM workspaces WHERE id = ?`,
+      `SELECT ${workspaceNameColumn('w')}, o.name AS orgName
+     FROM workspaces w JOIN orgs o ON o.id = w.org_id WHERE w.id = ?`,
     )
     .bind(workspaceId)
-    .first<{ name: string | null }>()
+    .first<{ name: string | null; orgName: string }>()
 }
 
 /** Reads the credential of the explicit session owner. */

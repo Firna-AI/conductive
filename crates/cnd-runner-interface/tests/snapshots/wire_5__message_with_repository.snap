@@ -1,0 +1,40 @@
+---
+source: crates/cnd-runner-interface/tests/wire_5.rs
+description: Current protocol JSON. Optional fields stay absent; nullable fields stay null.
+expression: message
+---
+{
+  "type": "message",
+  "commandId": "command-2",
+  "sessionId": "session-1",
+  "turnId": "turn-1",
+  "message": {
+    "id": "message-1",
+    "sessionId": "session-1",
+    "sender": {
+      "id": "member-1",
+      "githubLogin": "member",
+      "displayName": null,
+      "avatarUrl": null
+    },
+    "text": "Read the file.",
+    "attachments": [],
+    "choice": {
+      "agent": "claude",
+      "model": "test-model",
+      "effort": "high",
+      "fast": false
+    },
+    "createdAt": 1730000000000,
+    "state": "sent"
+  },
+  "branches": {
+    "workspaceBranch": "feature",
+    "targetBranch": "main"
+  },
+  "repository": {
+    "fullName": "acme/billing",
+    "folder": "/home/user/code/billing"
+  },
+  "attachments": []
+}

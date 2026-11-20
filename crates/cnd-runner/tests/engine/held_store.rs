@@ -37,6 +37,14 @@ impl EventStore for HeldStore {
     async fn confirm(&self, through: u64) -> Result<()> {
         self.inner.confirm(through).await
     }
+    async fn append_batch(
+        &self,
+        events: Vec<RunnerEvent>,
+        now: i64,
+        command: Option<String>,
+    ) -> Result<Option<Vec<RunnerEventEnvelope>>> {
+        self.inner.append_batch(events, now, command).await
+    }
     async fn remember(&self, session: SavedSession) -> Result<()> {
         self.session.wait().await;
         self.inner.remember(session).await

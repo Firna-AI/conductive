@@ -8,7 +8,7 @@ import {
 } from '../../shared/transcript/session-events'
 import { withSecretEvents } from '../secrets/secret-snapshot'
 import { mergeSession } from './session-records'
-import { withWorkspaceChange } from './workspace-records'
+import { afterRepositoryMove, withWorkspaceChange } from './workspace-records'
 
 /**
  * Applies workspace stream events in order: chat events to the log of their
@@ -46,6 +46,7 @@ export function applyEnvelopes(
     context,
     changes.flatMap((change) => change.record?.session ?? []),
   )
+  const before = context.store.get()
   context.store.update((snapshot) => {
     let next = snapshot
     for (const { eventNumber, event } of envelopes) {
@@ -63,4 +64,5 @@ export function applyEnvelopes(
     return applyMoves(next, moves)
   })
   saveMovedView(context, moves)
+  afterRepositoryMove(context, before)
 }

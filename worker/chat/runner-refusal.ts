@@ -9,6 +9,7 @@ import type { ChatTransaction } from './store'
 import { refuseReportRepair } from './repair-refusal'
 import { verifiedTurn } from './turn-context'
 import { TurnLifecycle } from './turn-lifecycle'
+import { isRecord } from '../http'
 
 export async function refuseRunnerEvent(
   transaction: ChatTransaction,
@@ -17,6 +18,18 @@ export async function refuseRunnerEvent(
   randomId: () => string,
 ): Promise<void> {
   const identity = readRunnerEventIdentity(message.event)
+  if (
+    isRecord(message.event) &&
+    message.event.type === 'tool.detail.part' &&
+    (identity.sessionId === null || identity.turnId === null)
+  ) {
+    const context = await transaction.output.toolContext(message.streamId)
+    if (context) {
+      identity.sessionId = context.sessionId
+      identity.turnId = context.turnId
+    }
+  }
+  await transaction.output.saveTool(message.streamId, undefined)
   const type = identity.type ?? 'unknown'
   const workspaceLevel =
     type === 'runner.ready' ||

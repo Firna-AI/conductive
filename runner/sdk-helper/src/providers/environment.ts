@@ -5,6 +5,11 @@ import { TOOL_ENV } from '../../../../src/shared/agent-tools'
 import { commitAuthorEnvironment } from '../../../../src/shared/commit-author'
 import type { WorkspaceToolContext } from '../generated/WorkspaceToolContext'
 
+/** Claude keeps its settings and saved sessions here. */
+export function claudeConfigDirectory(home: string): string {
+  return `${home}/.conductive/claude`
+}
+
 export async function prepareProviderHome(home: string): Promise<void> {
   await Promise.all(
     ['claude', 'codex'].map((name) =>
@@ -26,7 +31,7 @@ export function providerEnvironment(
       delete env[key]
   }
   env.HOME = home
-  env.CLAUDE_CONFIG_DIR = `${home}/.conductive/claude`
+  env.CLAUDE_CONFIG_DIR = claudeConfigDirectory(home)
   env.CODEX_HOME = `${home}/.conductive/codex`
   env.CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC = '1'
   env.DISABLE_AUTOUPDATER = '1'

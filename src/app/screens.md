@@ -59,6 +59,12 @@ the Help row of the command palette opens.
   `AccountModel.repositories`, before the org exists. The create sends the
   GitHub IDs of the chosen ones. Create org stays off until the person
   chooses at least one, also while the list is empty or did not load.
+- Create org of an operator also offers the provider account of the org:
+  By weights, the default, or a configured account by its ID, from the
+  operator's providers reply. Only a chosen account goes into the create.
+  The create does not wait for that reply. Nobody else sees the choice or
+  sends its read, as [Provider accounts](../shell/operator/README.md#provider-accounts)
+  says.
 - The rail, the org switcher, and General show the saved initials of an
   org. An org without them shows the initials of its name.
 - The tile of the open org shows the colour of the org in its initials
@@ -295,8 +301,8 @@ the Help row of the command palette opens.
   [Attached files of a draft](../chat/draft-files.md) says.
 - The page and the dialog have the Capabilities icon, the Blocks icon with
   its label as a native tooltip (secrets decision 6 G). On a computer the
-  page shows it after the attach button, and the dialog before it. Its
-  control opens above the icon. On a phone, one + button, "More options",
+  page and the dialog show it after the attach button. Its control opens
+  above the icon. On a phone, one + button, "More options",
   holds Attach files and Capabilities, which opens the control as a sheet
   (secrets decision 16 G). The control lists the secrets of the org, which
   it reads each time that it opens, with a checkbox that pre-approves each

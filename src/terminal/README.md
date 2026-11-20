@@ -28,6 +28,11 @@ change can move the shared parts to the app's shared components.
 - The screen uses the Graphite tokens: the surface, the ink, the monospace
   font at 12px, lines 1.6 times the font size apart, and the status colours
   for the ANSI colours. It follows a change of the colour scheme.
+- A program can change and reset the colours of the screen with OSC
+  sequences, also while a hidden screen waits for its first open. The
+  screen applies them in order when it opens. It answers no colour
+  request from before the open, because a late answer can reach the shell
+  as input.
 - The screen fits its box, and sends its size at the start and at each
   change. It keeps 2,000 lines of history, as tmux does in the cloud
   computer.
@@ -104,10 +109,16 @@ change can move the shared parts to the app's shared components.
   `openSocket` of the app's event source, with the fixed `tty`
   subprotocol. It opens `socketPath` on the Worker of the app, also in the
   Mac app, and decodes the ttyd protocol into the `TerminalTransport` of the
-  [shared contracts](../shared/README.md). Keep the function stable. A
-  transport that closes, or a `connect` that throws, shows Disconnected with
-  Reconnect. A source without `openSocket`, as in the development fake,
-  throws. The transport takes text only. The rules for the binary mouse
+  [shared contracts](../shared/README.md). Keep the function stable. The
+  transport says how it ended: `closed` for a close of the server, and
+  `lost` for a drop with no close frame, code 1006, or code 1001 or 1012.
+  A lost connection connects again once by itself, as `retries` of
+  `terminalRetry.ts` says. A close of the server, a failed try, and a
+  `connect` that throws show Disconnected with Reconnect. Each new
+  connection of a terminal writes on the same xterm.js screen, which keeps
+  the old output until the new connection shows its own, as
+  `screenConnection.ts` says. A source without `openSocket`, as in the
+  development fake, throws. The transport takes text only. The rules for the binary mouse
   reports of xterm.js are under Behaviour.
 - `route` is the `TerminalRoute` of `terminalRoute.ts`: `terminalId`, the
   terminal of the address, `saved`, the terminal of the saved view, `href`,
@@ -136,7 +147,7 @@ change can move the shared parts to the app's shared components.
 - `touch` selects the phone layout: 40px controls and the key row.
 - `focusRequest` is optional. A new request moves the keyboard focus to
   the xterm.js screen of the shown terminal. A hidden terminal never takes
-  it. A request waits until that screen exists, also across the read of
+  it. A request waits until that screen opens, also across the read of
   the terminals, the mount, and the connection of the terminal. The screen
   takes it only while the focus is still on the element of the request,
   `from`, or on no element. Then it calls `onFocusDone`, and the owner
@@ -236,9 +247,18 @@ each link that opens, in place of opening it.
   shown terminal from the route and the list.
 - `useTerminalActions.ts`: the open, also from outside the tool, and the
   close, and their failure toasts. `terminalCopy.ts`: the words of the tabs.
-- `TerminalScreen.tsx`: the xterm.js screen, its fit, and the key row.
+- `TerminalScreen.tsx`: the xterm.js screen of one terminal, its
+  connections, its focus request, and the key row.
+- `screenConnection.ts`: `openScreen` makes the xterm.js screen of a
+  terminal, which outlives each connection. The screen opens in its box
+  once the box has a size. `connectScreen` connects one transport to the
+  screen. It fits the screen to its box, or shows the shared size of the
+  bridge.
 - `xtermScreen.ts`: splits the data of xterm.js into the user's input and
   its own replies.
+- `xtermColours.ts`: `keepColoursUntilOpen` keeps the colour changes that
+  xterm.js parses before the screen opens, and gives them to xterm.js at
+  the open. It relies on private parts of xterm.js, as its comment says.
 - `terminalLinks.ts`: the kind of a link of the terminal, from the shared
   reader `webLink` of `src/markdown/web-links.ts`, the key of a link
   click, and the hint.
