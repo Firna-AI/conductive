@@ -8,7 +8,7 @@ import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { acmeRail } from '../components/layout/OrgRail'
 import { useMacApp } from '../components/mac/MacApp'
 import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
-import { ChatMarks } from '../components/side-questions/chatMarks'
+import { ChatMarks } from '../components/explain/chatMarks'
 import { ChecksActions } from '../components/workspace/BarActions'
 import { MobileTabBar } from '../components/workspace/MobileTabBar'
 import {
@@ -33,7 +33,7 @@ import { centreOf } from './workspaceCentre'
 import { placeLostUpdate } from './lostUpdates'
 import { changedWorkspaces, chatWorkspacesOf } from './orgWorkspaces'
 import { viewerOf } from './sessionStarter'
-import { chatMarksOf } from './sideQuestionMarks'
+import { chatMarksOf } from './explainMarks'
 import { barOf, branchOf } from './workspaceBar'
 import {
   FilesContent,
@@ -74,7 +74,7 @@ const raisedSplit = 35
  * `overlay` lies over the workspace in place of the overlay of its state,
  * such as a dialog that another screen opens over it. The chat and the
  * overlay find the workspaces of their chips in the list of the screen,
- * and the chat draws the marks of side questions over its messages.
+ * and the chat draws the marks of explanations over its messages.
  * The toast of the state lies over everything. `shortcuts` holds the
  * person's changes to the shortcuts. With them, the palette rows show their
  * keys, and the Search row shows the person's key of the palette.

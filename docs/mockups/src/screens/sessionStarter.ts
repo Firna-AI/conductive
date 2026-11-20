@@ -6,7 +6,7 @@ import {
   startedSession,
   workspaceSessions,
 } from '../fixtures/sessions'
-import { sideQuestions } from '../fixtures/sideQuestions'
+import { explanations } from '../fixtures/explanations'
 import type { Workspace } from '../fixtures/workspaces'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
@@ -32,8 +32,8 @@ function starterOf(state: WorkspaceState, workspace: Workspace): PersonKey {
       return workspaceSessions[1].starter
     case 'started-session':
       return startedSession.starter
-    case 'side-session':
-      return sideQuestions.count.starter
+    case 'explanation':
+      return explanations.count.starter
     case 'session':
     case 'code':
     case 'code-lines':

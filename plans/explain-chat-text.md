@@ -145,6 +145,28 @@ These calls were made on 20 November 2026:
 - An agent request that waits for input, such as a secret request, shows
   in the popover in the same way as at the end of a session tab.
 
+These calls were made on 20 November 2026, in the Explain mockups:
+
+- The popover header shows the quote, at most two lines, then Expand and
+  Close. It has no title of its own.
+- On a computer the popover is 400 px wide and at most 420 px high, or
+  less when the room by the mark is smaller. It opens below the mark, or
+  above it when it has more room there. It puts no dim over the app,
+  because the parent chat stays live.
+- On a phone the sheet puts no dim over the app. While a request waits for
+  the member, the sheet opens at full height, so the request card and the
+  chat above it both have room.
+- The follow-up field grows from one line to four lines. It has Stop while
+  a turn runs, and Send. It has no model picker and no attach button,
+  because Expand gives the full composer. A follow-up during a turn steers
+  that turn, as each message of a session does.
+- A mark shows the state of its explanation: a spinner while it runs or
+  while the cloud computer starts, Needs input, a red alert when it
+  failed, and the Explain icon when it is answered.
+- The read-only popover has no follow-up field.
+- The written prompt names the parent session with its session link only,
+  because the link shows as a chip with the title.
+
 Contract owners:
 
 - A new protocol doc, `docs/protocol/explain.md`, linked from
@@ -195,29 +217,33 @@ Redraw the flow of Milestone 1 as Explain, and draw each of its states,
 for a computer and a phone, in light and dark. Rename the side question
 pages, parts, and words to Explain.
 
-- [ ] Rename the pages under `app/chat/side-questions` to `app/chat/explain`
+- [x] Rename the pages under `app/chat/side-questions` to `app/chat/explain`
       and the user flow to `user-flows/explain-chat-text`. Rename the parts
       and the copy to Explain.
-- [ ] Remove the prompt field and its sheet.
-- [ ] Draw the selection with Explain: in an agent answer, in a member
+- [x] Remove the prompt field and its sheet.
+- [x] Draw the selection with Explain: in an agent answer, in a member
       message, and on a phone.
-- [ ] Draw the popover in each state: starting while the cloud computer
+- [x] Draw the popover in each state: starting while the cloud computer
       starts, working with no answer yet, answering, answered, a follow-up
       running, waiting for input, failed with Try again, stopped, and a
       long answer that scrolls.
-- [ ] Draw the follow-up field, Stop, expand, and close in the popover.
-- [ ] Draw the marks with the popover closed: running, waiting for input,
+- [x] Draw the follow-up field, Stop, expand, and close in the popover.
+- [x] Draw the marks with the popover closed: running, waiting for input,
       answered, failed, overlapping marks with their menu, and a mark whose
       text no longer matches.
-- [ ] Draw the popover of a closed explanation, where a send or expand
+- [x] Draw the popover of a closed explanation, where a send or expand
       reopens it.
-- [ ] Draw the expanded tab, with the written prompt as its first message.
-- [ ] Draw the read-only workspace: marks, a read-only popover, and no
+- [x] Draw the expanded tab, with the written prompt as its first message.
+- [x] Draw the read-only workspace: marks, a read-only popover, and no
       Explain.
-- [ ] Draw the phone sheet at half height and at full height.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Draw the phone sheet at half height and at full height.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+
+The mockups are under `app/chat/explain` and
+`user-flows/explain-chat-text`. Screenshots are in
+`.context/explain/mockups/final/`.
 
 ## Milestone 3: Documentation and protocol
 
@@ -289,6 +315,10 @@ Depends on: 6
 - [ ] Show each state of the mockups, and a closed explanation to read. A
       send there reopens it.
 - [ ] Show the menu of overlapping marks.
+- [ ] Scroll the mark into view above the phone sheet when the popover
+      opens.
+- [ ] Give the popover a fallback place in browsers without CSS anchor
+      positioning.
 - [ ] Add DOM tests for the popover states, expand, a closed explanation,
       and the read-only popover.
 - [ ] Check the flow in a browser, on a computer and a phone width.

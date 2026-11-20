@@ -32,11 +32,26 @@ import styles from './ChatPane.module.css'
  * the transcript and stay in view just above the composer, in a region
  * that scrolls when they need more room. Once answered, a command or a run
  * shows at its place in the transcript. A request that outlived its tool
- * call stays at its place, as a late request.
+ * call stays at its place, as a late request. A small chat, such as the
+ * popover of an explanation, is `compact`, and its `field` takes the place
+ * of the composer.
  */
 export function ChatPane(props: {
   items: readonly ChatItem[]
-  composer: ComposerState
+  composer?: ComposerState
+  /**
+   * The box under the chat in place of the composer, such as the follow-up
+   * field of a popover. `null` shows no box, as a read-only popover does.
+   */
+  field?: ReactNode
+  /** Less room around the transcript and the footer, with no column width. */
+  compact?: boolean
+  /**
+   * The ID of a message that the chat leaves out, such as the written
+   * prompt of an explanation in its popover. It still starts its turn, so
+   * the work of that turn folds.
+   */
+  hide?: string
   /**
    * The sandbox is not running: the bar takes the place of the composer. A
    * failed first start keeps the composer under its bar, so members can
@@ -63,13 +78,23 @@ export function ChatPane(props: {
   const pending = props.items.filter(isPendingRequest)
   const commands = pending.filter(isPendingCommand)
   const transcript = props.items.filter((item) => !isPendingRequest(item))
+  const entries = groupItems(transcript).filter(
+    (entry) => entry.kind !== 'item' || entry.item.id !== props.hide,
+  )
   const fold = props.fold ?? 'closed'
+  const box =
+    props.field !== undefined ? (
+      props.field
+    ) : props.composer ? (
+      <Composer {...props.composer} />
+    ) : null
   return (
     <section
       aria-label="Chat"
       className={classes(
         styles.chat,
         props.viewport === 'mobile' && styles.mobile,
+        props.compact && styles.compact,
       )}
     >
       {empty && props.empty ? (
@@ -83,7 +108,7 @@ export function ChatPane(props: {
           data-mokly-scroll="chat-transcript"
         >
           <div className={styles.transcript}>
-            {groupItems(transcript).map((entry) => {
+            {entries.map((entry) => {
               switch (entry.kind) {
                 case 'tools':
                   return (
@@ -147,7 +172,7 @@ export function ChatPane(props: {
         {mac?.choicesOpen && commands.length > 0 ? <DrawnChoices /> : null}
         {props.notice}
         {props.problem ? <SandboxBar {...props.problem} /> : null}
-        {composer ? <Composer {...props.composer} /> : null}
+        {composer ? box : null}
       </div>
     </section>
   )

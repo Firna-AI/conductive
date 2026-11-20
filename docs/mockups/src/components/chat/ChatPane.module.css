@@ -141,3 +141,18 @@
 .mobile .footer {
   padding: 0 10px 10px;
 }
+
+/*
+ * A small chat, such as the popover of an explanation, keeps less room
+ * around its transcript and its footer, and fills its box.
+ */
+.compact .transcript {
+  max-width: none;
+  padding: 12px 14px 10px;
+}
+
+.compact .footer {
+  gap: 8px;
+  max-width: none;
+  padding: 0 8px 8px;
+}

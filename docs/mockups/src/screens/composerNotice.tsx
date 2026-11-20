@@ -20,7 +20,7 @@ import { droppedFolder, largeRecording } from '../fixtures/attachments'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import { loginOwnerOf } from './sessionStarter'
-import { sideAskNotice } from './sideQuestionMarks'
+import { explainNotice } from './explainMarks'
 import type { WorkspaceState } from './workspaceState'
 
 /**
@@ -96,12 +96,12 @@ function folderNotice() {
  * an admin removed the org login. The starter whose own login is not
  * available sees the notice that asks to connect. A viewer whose default
  * login is the org login sees no such notice (decision 4 of the org logins
- * plan). While text of the chat is selected, a phone shows Ask about this
- * there instead, as `sideAskNotice` says.
+ * plan). While text of the chat is selected, a phone shows Explain there
+ * instead, as `explainNotice` says.
  */
 export function composerNotice(state: WorkspaceState, workspace: Workspace) {
-  const ask = sideAskNotice(state)
-  if (ask) return ask
+  const explain = explainNotice(state)
+  if (explain) return explain
   if (state.composer === 'too-large' && state.tab !== 'new-session') {
     return tooLargeNotice()
   }

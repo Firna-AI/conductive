@@ -17,7 +17,7 @@ import {
 import { workspaceSessions } from '../fixtures/sessions'
 import { checkoutAutocomplete, savedCarts } from '../fixtures/workspaces'
 import { paths } from '../paths'
-import { parentPage, sideChatShows } from './sideQuestionModel'
+import { parentPage } from './explainModel'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
 
@@ -103,12 +103,13 @@ export function changedWorkspaces(
 }
 
 /**
- * The screen that shows an open session that a link names. The chat of a
- * side session links to its parent, the first session, whose page then
- * shows the parent chat with its marks, as `parentPage` says.
+ * The screen that shows an open session that a link names. The written
+ * prompt in the tab of an explanation links to its parent, the first
+ * session, whose page then shows the parent chat with its marks, as
+ * `parentPage` says.
  */
 function sessionPage(state: WorkspaceState, key: string): string | undefined {
-  const parent = key === workspaceSessions[0].key && sideChatShows(state)
+  const parent = key === workspaceSessions[0].key && state.tab === 'explanation'
   return parent ? parentPage(state) : sessionPages[key]
 }
 

@@ -15,7 +15,7 @@ import { branchPictures, splitPath } from '../fixtures/files'
 import { maskedDiffPath } from '../fixtures/maskedFiles'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
-import { sideTabs } from './sideQuestionModel'
+import { explainTabs } from './explainModel'
 import type { WorkspaceState } from './workspaceState'
 import { codeTabKey, moreTabs, withCodeMoved } from './workspaceTabRow'
 import { withTemporaryTab } from './workspaceTemporaryTab'
@@ -135,7 +135,7 @@ function previewTabs(state: WorkspaceState): WorkspaceTab[] {
  * session can show, and each session tab leads to its chat of that time.
  * The file or the diff that the state opens can be the temporary tab, as
  * `withTemporaryTab` draws it. The Preview tabs show after the code file.
- * The tabs of the open side sessions come last, as `sideTabs` says.
+ * The tabs of the open explanations come last, as `explainTabs` says.
  */
 export function tabsFor(
   state: WorkspaceState,
@@ -257,5 +257,5 @@ export function tabsFor(
     running: tab === active && (running || background),
   }))
   const row = state.tabRow === 'moved' ? withCodeMoved(states) : states
-  return withTemporaryTab(state, [...row, ...sideTabs(state)])
+  return withTemporaryTab(state, [...row, ...explainTabs(state)])
 }

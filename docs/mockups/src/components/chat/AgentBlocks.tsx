@@ -57,7 +57,7 @@ function ListView(props: { list: MessageList; text: TextOf }) {
  * chip. Each mention, and each inline code whose whole text is a path of
  * the tree, is a file chip. A code block stays code. The element around
  * them sets the type and the space between them. `text` draws each text,
- * such as with the marks of side questions in the chat.
+ * such as with the marks of explanations in the chat.
  */
 export function AgentBlocks(props: {
   blocks: readonly AgentBlock[]

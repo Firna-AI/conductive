@@ -9,9 +9,9 @@ import { classes } from '../common/classes'
 import headingStyles from '../common/MarkdownHeadings.module.css'
 import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
-import { useMessageMarks } from '../side-questions/chatMarks'
-import { SideText } from '../side-questions/SideText'
-import { WholeMark } from '../side-questions/WholeMark'
+import { useMessageMarks } from '../explain/chatMarks'
+import { MarkedText } from '../explain/MarkedText'
+import { WholeMark } from '../explain/WholeMark'
 import { AgentBlocks } from './AgentBlocks'
 import { ContinuedLine } from './ContinuedLine'
 import type { SingleItem } from './groupItems'
@@ -64,8 +64,8 @@ function stopNotes(item: StoppedItem): string[] {
 /**
  * One item of a chat transcript, other than a tool call, which joins a run
  * of tool calls. `viewer` is the person signed in, who reads the transcript.
- * A member message and an answer show the marks of their side questions
- * and the selection of the member, as `SideText` draws them.
+ * A member message and an answer show the marks of their explanations
+ * and the selection of the member, as `MarkedText` draws them.
  */
 export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
   const { item, viewer } = props
@@ -82,7 +82,7 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
         <div className={styles.user}>
           <div className={styles.bubble}>
             {marks ? (
-              <SideText marks={marks} render={text} text={item.text} />
+              <MarkedText marks={marks} render={text} text={item.text} />
             ) : (
               text(item.text)
             )}
@@ -95,7 +95,7 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
       const answer = (part: string) => <MessageText answer text={part} />
       const text = marks
         ? (part: string) => (
-            <SideText marks={marks} render={answer} text={part} />
+            <MarkedText marks={marks} render={answer} text={part} />
           )
         : undefined
       return (
