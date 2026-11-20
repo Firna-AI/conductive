@@ -41,10 +41,13 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         It reads the current branch list with your token and stores no copy
         of that list. It checks named branches other than the default before
         creating a workspace. This check uses the GitHub token of the member
-        who requests the workspace. A merge uses the token of the member who
-        clicks. Continue fetches the branch that the pull request merged into
-        with the token of the member who clicks Continue. If that branch no
-        longer exists, it fetches the default branch. When GitHub deletes a
+        who requests the workspace. A merge and Ready for review of a draft
+        pull request use the token of the member who clicks. Continue
+        fetches the branch that the pull request merged into with the token
+        of the member who clicks Continue. If that branch no longer exists,
+        it fetches the default branch. A repository change fetches the
+        latest default branch of the new repository with the token of the
+        member who changes the repository. When GitHub deletes a
         workspace's base branch, ${productName} fetches the default branch
         into its cloud computer. The cloud computer uses the new base only
         after that fetch succeeds. When no member starts the move, the fetch
@@ -65,6 +68,10 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         waitlist off. ${productName} also keeps the time and operator of
         the last change to the waitlist setting. These records let the
         operator trace misuse back to a code or a person.`,
+      text`Your last activity: ${productName} keeps one time for your
+        account. It is the time when you last created a workspace or sent a
+        chat message in the app. It keeps no history. The operator sees
+        this time, to know which accounts are still in use.`,
       text`Invite codes: each account with app access has an invite code
         with 5 invites. ${productName} keeps who used each code, and when.
         You see how many of your invites are left, but not who used them.
@@ -90,38 +97,54 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         second cookie protects the GitHub sign-in while it runs. A third
         cookie keeps the screen that you left for GitHub, for up to 1 hour.`,
       text`Your orgs: the orgs, members, roles, invites, sections,
-        repositories, workspaces, routines, scripts, and settings that you and your
+        repositories, workspaces, automations, scripts, and settings that you and your
         team make. Each invite includes the invited email address. They
         run the service.`,
-      text`Routines: the prompt, the triggers, and the author filters of
-        each routine, with the GitHub accounts that a filter names. Each
-        run keeps its owner, its agent, its trigger, its state, and its pull
-        request. A skipped
+      text`Automations: the prompt, the triggers, the chosen org secrets, and
+        the author filters of each automation, with the GitHub accounts
+        that a filter names. Each run keeps its owner, its agent, its trigger,
+        its state, and its pull request. Each run workspace records the
+        chosen secrets as pre-approved by the owner. Its agents use them
+        without a new request. A skipped
         run keeps the GitHub login of the account outside the org whose
-        event it skipped. They run the routines and show their runs.`,
-      text`Keys and logins: the env var values of each org, and your
-        agent logins. An own endpoint login holds the endpoint address and
-        its key. ${productName} stores these values encrypted. It
-        uses your login only for the turns of the sessions that you start,
-        also the sessions that the runs of your routines start. The one
+        event it skipped. They run the automations and show their runs.`,
+      text`Keys and logins: the env var values and agent logins of each
+        org, the values of its secrets, and your personal agent logins. An
+        own endpoint login holds the endpoint address and its key.
+        ${productName} stores these values encrypted. It
+        uses a login only for the turns of sessions on it, including
+        automation runs. The one
         exception is that ${productName} reads an own endpoint's model list
         with its key, at the times in Endpoint models below.
-        The messages of other members in those sessions use it only when
-        you let other members use that login. ${productName} keeps agent
+        A personal login serves the sessions that its owner starts on it.
+        Other members use a personal login in those sessions only when its
+        owner allows it. Each member can send messages on a session's org
+        login. ${productName} keeps agent
         logins outside cloud computers. Each turn gets only a temporary
         credential for model requests through ${productName} while that
         turn runs. ${productName} renews your saved ChatGPT sign-in itself.
         An own endpoint's address and key never reach a cloud computer.
         ${productName} starts turns only with supported agent software.`,
+      text`Secrets: the Secrets settings of an org keep the name, the
+        description, and the value of each secret. They also keep the member
+        who added it, whether it is for all agents, and the admin and the
+        time of each reveal. ${productName} keeps the approvals of each
+        session and the pre-approvals of each workspace. It also keeps a
+        value that a member gives an agent, for 15 minutes or until its
+        workspace is archived. They let an agent use a secret in a command
+        only after a member allows it.`,
       text`Endpoint models: ${productName} reads the endpoint's model list
-        with its key when you save the login or press Refresh on your account
-        page. When you save a Codex endpoint whose address gives no model
-        list, it can read the list a second time, at that address with /v1
-        added. When only that read gives a list, it saves the address with
-        /v1 added. It also reads the list in the background when a turn on
-        that login starts, at most once in 10 minutes. It stores the model
+        with its key when you or an admin save the login or select Refresh. For a
+        personal login, you use Refresh on your account page. For an org
+        login, an admin uses Refresh on the Agents tab of the org settings.
+        When you or an admin save a Codex endpoint whose address gives no
+        model list, it can read the list a second time, at that address with
+        /v1 added. When only that read gives a list, it saves the address
+        with /v1 added. It also reads the list in the background when a turn
+        on that login starts, at most once in 10 minutes. It stores the model
         IDs from the last list it could read to set the models in your
-        pickers.`,
+        pickers. For an org endpoint, that list sets the pickers of every
+        member on the org login.`,
       text`Own endpoints: ${productName} sends each model request of a turn
         on an own endpoint login to that endpoint, with its key. The endpoint
         gets the messages, the files, and the command results of each turn
@@ -135,15 +158,39 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         This includes a close that stops a running turn. The chat and
         copied transcripts name that session with Stopped from and its link.
         The chat history also records
-        who used Continue, the new branch, and the branch it starts from. It keeps
+        who used Continue, the new branch, and the branch it starts from.
+        It also records who changed the repository of a workspace, the new
+        repository, and the new branch. It keeps
         the last file list and the last summary of changes of each
         workspace. With the chat history, it keeps each list of the
         servers that run in the cloud computer of a workspace: the port,
-        a short program name, and the folder of each server. The files
-        that you attach to a message stay in the
-        storage of ${productName} at Cloudflare. When the agent starts
-        work on the message, ${productName} copies them to the cloud
-        computer of the workspace.`,
+        a short program name, and the folder of each server. It also keeps
+        the latest list of the skills of each workspace, with the name and
+        the description of each skill. The files
+        that you attach to a message stay in the storage of
+        ${productName} at Cloudflare until the agent starts work on the
+        message. The cloud computer of the workspace then downloads them.
+        When the cloud computer has a file and its first start succeeded,
+        ${productName} deletes its own copy. The file stays in the cloud
+        computer. Removing the workspace from the list keeps its chat
+        history until the org is deleted.`,
+      text`Operational logs: ${productName} records when the program that
+        runs workspace agents connects to the service or disconnects.
+        It also records turns that end without a Stop request, including
+        whether they finished, stopped, or failed.
+        It also records work on a message from that program when a restart
+        of the service ends that work. That record holds the kind of the
+        work, how far it got, the event type and number, and the size of the
+        message. To find such work, ${productName} keeps a short note of
+        the work that starts in the first 30 seconds after the program
+        connects. It keeps the note while the work runs, and after a
+        restart until the program connects again.
+        These records include the workspace ID and any available turn,
+        connection, and event stream IDs, and communication protocol version.
+        When available, they also include a random ID for each start of that
+        program. The team uses these logs to investigate connection problems,
+        program restarts, and interrupted agent work. These logs hold no tokens,
+        secret values, message text, file contents, or connection close reasons.`,
       text`Mac commands: ${productName} keeps each request and its result.
         They record the command, its folder, its reason, its time limit,
         and the output. A request also names the Mac that gets it.
@@ -152,9 +199,15 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         permissions stay only on your Mac. The Mac saves timed permissions,
         including the end time set by Extend. Permission until you stop
         stays only in memory and ends when you quit the Mac app or sign out.`,
+      text`Secret requests: ${productName} keeps each request of an agent
+        for a secret, and its result, in the chat history. They record the
+        names, the reason, the command that the agent said it would run, the
+        member who answered, and what let the command run. They never hold a
+        value or the output of the command.`,
       text`Your code: your repositories and files live in the cloud
         computers that ${productName} runs for your org. ${productName}
-        reads a file or a diff when you open it, to show it to you. The
+        reads a file or a diff when you open it, and a picture that an
+        agent answer shows, to show it to you. The
         agents send their model requests through ${productName} to
         Anthropic, OpenAI, or the chosen endpoint.
         Agent settings in the repository can send them to another address
@@ -166,9 +219,19 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         of them to its logs. ${productName} still keeps the chat history and
         the Mac command records above.`,
       text`GitHub events: the state of the pull requests and the checks
-        of your branches, which GitHub sends to ${productName}. A routine
+        of your branches, and the new name, owner, or default branch of a
+        repository, which GitHub sends to ${productName}. An automation
         also uses the GitHub accounts that open, push to, or merge a pull
         request, to decide whether the event starts a run.`,
+      text`Merge records: ${productName} keeps one record for each merged
+        pull request of a workspace branch. The record holds the GitHub
+        repository ID, the pull request number, the org, the workspace, the
+        workspace owner at the time of the record, the merge time from
+        GitHub, and the time of the record. ${productName} writes it when it
+        reads a merged pull request from GitHub for a workspace, and when
+        GitHub sends the event of the merge, also for an archived workspace.
+        The records are for the counts of merged pull requests on the Stats
+        tab of your account page.`,
       text`Feedback: your message and any screenshots help the team answer
         questions, find problems, and improve ${productName}. Each message
         includes your ${productName} user ID, GitHub user ID and login, the
@@ -179,14 +242,20 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         metadata, such as a photo's location, from selected screenshots
         before sending. The reply address is your primary verified email
         on GitHub, when available.`,
+      text`Feedback send records: ${productName} keeps your user ID, hashed
+        delivery identifiers, random identifiers, attempt times, delivery
+        status, and active request counts. They limit feedback sends and
+        prevent duplicate emails. These records hold no message, screenshot,
+        email address, or secret.`,
       text`Panel sizes: your browser keeps the sizes of the panels of the
         app. They stay in your browser.`,
       text`Last workspaces: your browser keeps the address of the last
         workspace page that you opened in each org. The address holds the
-        IDs of the org, the workspace, and the session or the preview. It
-        can also hold the name of a tool and the path of an open file. A
-        switch to the org opens that page again. The addresses stay in your
-        browser, also after you sign out, until you clear its saved data.`,
+        IDs of the org, the workspace, and the session, the preview, the
+        port of a preview, or the terminal. It can also hold the name of a
+        tool and the path of an open file. A switch to the org opens that
+        page again. The addresses stay in your browser, also after you sign
+        out, until you clear its saved data.`,
     ),
     paragraph`Where data protection law requires a lawful basis, the
       operator relies on performance of a contract to provide the

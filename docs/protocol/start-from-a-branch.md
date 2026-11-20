@@ -178,7 +178,7 @@ branches that the create call of an agent takes.
   for each branch that it names, other than the default branch. The Worker
   asks GitHub with the GitHub token of the sender, as
   [Branch reads](github-tokens.md#branch-reads) says.
-- The run of a routine gets no branch check. Reason: a pull request run
+- The run of an automation gets no branch check. Reason: a pull request run
   takes its branch from the GitHub event, and each other run starts from
   the default branch.
 - The create from New workspace gets the same branch check as the create

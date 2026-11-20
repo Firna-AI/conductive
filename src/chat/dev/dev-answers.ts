@@ -1,4 +1,6 @@
 import type { DevOptions } from './dev-options'
+import { devShots } from './dev-pictures'
+import { longAnswer, proseAnswer, prosePlan } from './dev-prose-answers'
 
 /** The browser projects of the end-to-end tests in the wide table. */
 const browsers = [
@@ -68,6 +70,42 @@ const headings = [
 ]
 
 /**
+ * Task lists, as the mockups draw them at `app/chat/lists/tasks`: the plan
+ * holds two open tasks, so its message line in the folded work shows two
+ * empty boxes, and the answer holds two done tasks and an open task with a
+ * note in a list under it. Each part is one line or one blank line.
+ */
+const taskPlan = [
+  'Two changes to make:\n\n',
+  '- [ ] Debounce the lookups\n',
+  '- [ ] Move the fields under the list',
+]
+
+const taskAnswer = [
+  'I pushed both changes:\n\n',
+  '- [x] Each lookup waits 250 ms after the last key press, in `useAddressAutocomplete`.\n',
+  '- [x] On a phone, the fields move down under the list.\n',
+  '- [ ] Priya approves the changes.\n',
+  '  - She asked to see the phone test first.\n\n',
+  'Only her approval is left.',
+]
+
+/**
+ * An answer with the screenshots of the context folder as Markdown images:
+ * two pictures side by side, a plain link and an image that stay links, an
+ * image whose read fails, and an image in a table cell, which keeps its
+ * link. Each part is one line or one blank line.
+ */
+const pictures = [
+  'I moved the list of suggestions under the postcode field, so it no longer covers the field.\n\n',
+  `Before and after: ![Postcode field before the fix](${devShots.before}) ![Postcode field after the fix](${devShots.after})\n\n`,
+  `The same screenshot as a link: [after the fix](${devShots.after}). An older screenshot: ![Old checkout](${devShots.lost}).\n\n`,
+  '| Screen | Screenshot |\n',
+  '| --- | --- |\n',
+  `| Phone | ![Phone after the fix](${devShots.after}) |`,
+]
+
+/**
  * What a scripted turn writes, in parts: its plan before its tool calls,
  * which folds with its work when the turn ends, and its answer.
  */
@@ -82,7 +120,10 @@ const plan = ['I will read ', 'the files that this touches first.']
  * What each scripted turn writes, in the parts that the agent writes it.
  * The page sends each part as its own update, and the whole answer last.
  * With the headings answer, the plan starts with a heading, so its message
- * line in the folded work holds a heading.
+ * line in the folded work holds a heading. With the prose answer, the plan
+ * holds a quote, a rule, strikethrough, and a line break. With the pictures
+ * answer, the plan holds a screenshot, so its closed message line shows the
+ * link, and the open line shows the picture.
  */
 export const devScripts: Readonly<Record<DevOptions['answer'], DevScript>> = {
   text: {
@@ -97,5 +138,15 @@ export const devScripts: Readonly<Record<DevOptions['answer'], DevScript>> = {
       '- Then run the checkout tests.',
     ],
     answer: headings,
+  },
+  prose: { plan: prosePlan, answer: proseAnswer },
+  long: { plan, answer: longAnswer },
+  tasks: { plan: taskPlan, answer: taskAnswer },
+  pictures: {
+    plan: [
+      'The list of suggestions covers the postcode field: ',
+      `![Postcode field before the fix](${devShots.before}). I will move it under the field.`,
+    ],
+    answer: pictures,
   },
 }

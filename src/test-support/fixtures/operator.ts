@@ -13,6 +13,7 @@ import type {
   OperatorSuspension,
   OperatorUserDetail,
   OperatorUserSummary,
+  OperatorWorkspaceStates,
 } from '../../shared/operator'
 import { FAKE_TIME, fakeUser } from './core'
 import {
@@ -25,6 +26,7 @@ import { sampleAccessRecords } from './operator-access-records'
 import {
   daysBefore,
   SAMPLE_IDS,
+  sampleLastActiveAt,
   sampleOrgs,
   sampleUsers,
   type SampleOrg,
@@ -95,11 +97,12 @@ export function sampleOrgDetail(
 ): OperatorOrgDetail {
   return {
     id: org.id,
+    providerAccount: 'boat',
     name: org.name,
     initials: org.initials,
     createdAt: daysBefore(now, org.createdDaysAgo),
     repositories: org.repositories,
-    workspaceStates: org.states,
+    workspaceStates: wireStates(org.states),
     running: { workspaces: org.states.running, builds: org.builds },
     members: Object.entries(org.members).map(([login, role]) => {
       const { githubId, name } = sampleUser(login)
@@ -125,6 +128,7 @@ export function sampleUserDetail(
     name: user.name,
     email: access.hasVerifiedEmail ? `${user.login}@example.com` : null,
     joinedAt,
+    lastActiveAt: sampleLastActiveAt(user.login, now),
     ...access,
     workspaces: { total: user.owned, running: user.running },
     orgs: sampleOrgs.flatMap((org) => {
@@ -134,6 +138,15 @@ export function sampleUserDetail(
     }),
     suspension: records.userSuspensions.get(user.githubId) ?? null,
   }
+}
+
+/**
+ * The state counts of a Worker reply, from the counts that a page shows.
+ * The reply counts the removed workspaces in `archived` too, so that an
+ * older app adds up, and the app takes them out again.
+ */
+function wireStates(states: OperatorWorkspaceStates): OperatorWorkspaceStates {
+  return { ...states, archived: states.archived + states.removed }
 }
 
 function totalOf(org: OperatorOrgDetail): number {
@@ -153,6 +166,7 @@ export function orgRow(
       : 'active'
   return {
     id: org.id,
+    providerAccount: org.providerAccount,
     name: org.name,
     initials: org.initials,
     createdAt: org.createdAt,
@@ -176,6 +190,7 @@ export function userRow(user: OperatorUserDetail): OperatorUserSummary {
     login: user.login,
     name: user.name,
     joinedAt: user.joinedAt,
+    lastActiveAt: user.lastActiveAt,
     orgs: user.orgs.length,
     workspaces: user.workspaces.total,
     status: user.suspension ? 'suspended' : 'active',
@@ -185,12 +200,14 @@ export function userRow(user: OperatorUserDetail): OperatorUserSummary {
 /**
  * The numbers of the Overview of the mockups, for the 30 UTC days up to
  * the day of `readAt`. The largest orgs are those of the samples, so that
- * each opens its page, and `waiting` counts the people who wait.
+ * each opens its page, and `waiting` counts the people who wait. The long
+ * runs come only from the samples, as other orgs have no sample runs.
  */
 export function operatorOverview(
   orgs: readonly OperatorOrgDetail[],
   readAt = FAKE_TIME,
   waiting = 0,
+  sampledAt = readAt,
 ): OperatorOverview {
   const today = Math.floor(readAt / DAY)
   const dated = (days: readonly { count: number }[]) =>
@@ -211,7 +228,7 @@ export function operatorOverview(
     orgs: operatorTotals.orgs,
     workspaces: operatorTotals.workspaces,
     running: { ...runningComputers },
-    workspaceStates: { ...workspaceStates },
+    workspaceStates: wireStates(workspaceStates),
     newWorkspacesByDay: dated(newWorkspacesByDay),
     newUsersByDay: dated(newUsersByDay),
     largestOrgs: largest.map((org) => ({
@@ -222,7 +239,40 @@ export function operatorOverview(
       workspaces: totalOf(org),
       running: org.workspaceStates.running,
     })),
+    longRuns: orgs
+      .filter((org) => org.workspaceStates.running > 0 || org.deletion)
+      .flatMap((org) => {
+        const source = sampleOrgs.find((sample) => sample.id === org.id)
+        return source ? [{ org, source }] : []
+      })
+      .slice(0, 10)
+      .map(({ org, source }, index) => {
+        const owner =
+          org.members.find(
+            (member) => member.githubId === SAMPLE_IDS.suspendedUser,
+          ) ?? org.members[0]
+        if (!owner) throw new Error('The sample run has no owner.')
+        const pending = org.id === 'acme'
+        return {
+          workspaceId: `${org.id}-long-run`,
+          workspaceNumber: index + 1,
+          orgId: org.id,
+          orgName: org.name,
+          orgStatus: orgRow(org).status,
+          ownerGithubId: owner.githubId,
+          ownerLogin: owner.login,
+          ownerStatus: owner.suspended ? 'suspended' : 'active',
+          cloudComputerId: pending ? null : sampleComputerId(source),
+          state: pending ? 'starting' : 'ready',
+          runningSince: sampledAt - (pending ? 41_000 : (10 - index) * HOUR),
+          lastActivityAt: sampledAt - (pending ? 0 : (index + 1) * MINUTE),
+        }
+      }),
   }
+}
+
+export function sampleComputerId(org: SampleOrg): string {
+  return org.computers[0] ?? `sbx_${org.id}`
 }
 
 /** Every reply of the operator samples at `now`, with their records. */

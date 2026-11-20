@@ -66,10 +66,10 @@ export async function routeModelGateway(
   try {
     if (!(await runtime.workspaceAllowed(route.workspaceId)))
       return refuse('turn_token_invalid')
-    const endpoint = runtime.workspace(route.workspaceId)
     const lifetime = new GatewayRequestLifetime(request, {
       agent,
-      check: () => endpoint.checkTurnToken(token),
+      workspaceId: route.workspaceId,
+      check: () => runtime.workspace(route.workspaceId).checkTurnToken(token),
       now: runtime.dependencies.now,
       schedule:
         runtime.dependencies.scheduleGatewayCheck ?? scheduleConnectionCheck,
@@ -128,7 +128,13 @@ export async function routeModelGateway(
           : [login.secret]
       const auth = chatgpt
         ? await lifetime.wait(
-            gatewayCodexAuth(runtime, endpoint, token, loginOwnerId, lifetime),
+            gatewayCodexAuth(
+              runtime,
+              route.workspaceId,
+              token,
+              loginOwnerId,
+              lifetime,
+            ),
           )
         : null
       const init = {

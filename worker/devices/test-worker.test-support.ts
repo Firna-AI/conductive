@@ -116,7 +116,9 @@ export default {
     const deviceObject = deviceTestTarget(url)
     const workspaceId = url.pathname.match(/\/workspaces\/([^/]+)/)?.[1]
     if (
-      (workspaceId && !url.pathname.includes('/device-commands')) ||
+      (workspaceId &&
+        !url.pathname.includes('/device-commands') &&
+        !url.pathname.endsWith('/capabilities')) ||
       url.pathname === MACHINE_PATHS.runner ||
       url.pathname === '/__test/clear-device-records' ||
       deviceObject

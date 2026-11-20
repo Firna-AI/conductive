@@ -17,7 +17,7 @@ import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { holdAnimationFrames, mount, waitFor } from '../../test-support/mount'
 import { nameLabel } from '../../shared/name-label'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
-import { readView } from '../api/read-responses'
+import { readView } from '../api/read-view'
 import type { SubscribeToWorkspace } from '../stream/workspace-stream'
 import type { CopyServices } from '../transcript-copy'
 import { WorkspaceChat } from '../WorkspaceChat'
@@ -112,12 +112,17 @@ export async function mountChat(options: {
  * the row takes from a real path shows the secret value. The tab that
  * `temporary` names is the temporary tab: it draws in italics, and Keep open
  * of its tab menu calls `keep` of the navigation, which changes no view.
+ * Each label hides a secret value, so no tab has Copy path, as the app
+ * gives it.
  */
 export function fileTabs(
   navigation: FilesNavigation,
   temporary: TemporaryTab | null = null,
 ): RenderTab {
-  return (tab) => {
+  return (host) => {
+    // These rows hold no Preview tab, so each host tab is a file or a diff.
+    if (host.kind === 'preview') throw new Error('No Preview tab here')
+    const tab = host
     const label = labelOf(tab.path)
     const isTemporary =
       temporary !== null &&
@@ -143,6 +148,7 @@ export function fileTabs(
         ),
       show: () => navigation.navigate(tab),
       keep: isTemporary ? () => navigation.keep(tab) : null,
+      copyPath: null,
     }
   }
 }

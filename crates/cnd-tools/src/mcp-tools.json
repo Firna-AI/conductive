@@ -1,5 +1,44 @@
 [
   {
+    "name": "list_secrets",
+    "description": "List the secrets of this org with each name, environmentVariable, description, and availability. Read each value through its environmentVariable. Needs only the workspace token. An active turn adds its session approvals to availability. Never returns values. Keep secret values out of output, files, and answers.",
+    "inputSchema": { "type": "object", "properties": {} },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true
+    }
+  },
+  {
+    "name": "run_with_secrets",
+    "description": "Run a shell command on this cloud computer with named secrets in its environment. Needs an active calling turn. Acts for the member whose message started that turn. Requests approval when needed and waits up to 90 seconds. A pending result ends without a command. After a late-answer notice, call again. Read each value through the environmentVariable from list_secrets. Two names that need one environment key fail before any request. Run those names separately. Returns filtered stdout, stderr, exitCode, and the environmentVariables name-to-variable map. Keep each value out of output, files, and answers. The filter hides only exact copies.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "names": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 },
+          "description": "One or more secret names. A missing name asks a member for a temporary value."
+        },
+        "command": {
+          "type": "string",
+          "description": "Shell command to run with /bin/sh in this workspace. The request shows this text as the command you say you will run. Read values from the environment. Never put a value in this text."
+        },
+        "reason": {
+          "type": "string",
+          "description": "Why this command needs the named secrets."
+        }
+      },
+      "required": ["names", "command"]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false
+    }
+  },
+  {
     "name": "run_mac_command",
     "description": "Ask to run a command on the active turn sender's connected Mac. Approval stays on that Mac.",
     "inputSchema": {
@@ -40,7 +79,7 @@
   },
   {
     "name": "create_workspace",
-    "description": "Create a workspace with this workspace's owner and start its first message. Needs an active calling turn. Acts for the member whose message started that turn. Omitted model and effort use the owner's defaults. An omitted section uses the default section. startBranch creates the workspace branch from that branch. baseBranch sets the pull request target and Changes comparison branch. If both branches are omitted, both use the repository default branch. If only one branch is given, both use that branch. Fast mode requires explicit fast: true for a marked model. The reply gives the workspace number and link, and the first session link. These calls reach workspaces in this org. An omitted workspaceId names the calling workspace. Use names and returned links in normal answers. Workspace and session links show as chips. A session link holds both IDs. A Sent by: line names the sending session. Do not reply only to confirm it.",
+    "description": "Create a workspace with this workspace's owner and start its first message. Needs an active calling turn. Acts for the member whose message started that turn. Omitted model and effort use the owner's defaults. An omitted section uses the default section. startBranch creates the workspace branch from that branch. baseBranch sets the pull request target and Changes comparison branch. If both branches are omitted, both use the repository default branch. If only one branch is given, both use that branch. Fast mode requires explicit fast: true for a marked model. The reply gives the workspace number and link, and the first session link. These calls reach workspaces in this org. An omitted workspaceId names the calling workspace. Use names and returned links in normal answers. Workspace and session links show as chips. A session link holds both IDs. A Sent by: line names the sending session. Do not reply only to confirm it. Pass parentId to nest the new workspace. Nest work that belongs to the calling workspace's task: a part of a large task that can run in parallel, follow-up work that the task starts, work in another repository for the same task, or a change that needs its own pull request. Each separate pull request needs its own workspace. Omit parentId for unrelated work. When a member names the place, follow the member. Agents usually pass their own workspace ID from their instructions. The new workspace joins its parent's section, so sectionId has no effect with parentId. Nesting stops at depth 3. A create under a workspace at depth 3 fails with nesting_limit. Its message gives the parentId for a sibling. Start the sibling's name with a one-word group prefix, such as \"Limits: \". The workspace in the reply gives parentId. The reply can give a notice about its section.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -93,7 +132,7 @@
         "sectionId": {
           "type": "string",
           "minLength": 1,
-          "description": "A section ID from list_sections. Omission uses the default section."
+          "description": "A section ID from list_sections. Omission uses the default section. With parentId, the new workspace joins its parent's section."
         },
         "requestId": {
           "type": "string",
@@ -103,6 +142,11 @@
         "fast": {
           "type": "boolean",
           "description": "Use fast mode for a marked model. Creates default to false. Omission on send keeps the session speed."
+        },
+        "parentId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Parent workspace ID. Agents usually pass their own workspace ID from their instructions. Omission makes a top-level workspace."
         }
       },
       "required": ["repositoryId", "firstMessage"]
@@ -115,7 +159,7 @@
   },
   {
     "name": "list_workspaces",
-    "description": "List workspaces with their number, link, name, branch, state, and owner ID, login, and display name. Needs only the workspace token. Without filters or paging, returns every workspace, including archives. Use the actual message sender's member ID for their workspaces. Find another owner's ID in returned owner fields. Do not infer the owner from the token or active turn. These calls reach workspaces in this org. An omitted workspaceId names the calling workspace. Use names and returned links in normal answers. Workspace and session links show as chips. A session link holds both IDs. A Sent by: line names the sending session. Do not reply only to confirm it.",
+    "description": "List workspaces with their number, link, name, branch, state, and owner ID, login, and display name. Needs only the workspace token. Without filters or paging, returns every workspace that is not removed, including archives. Set removed true to list only removed workspaces. Each filter must match. Use the actual message sender's member ID for their workspaces. Find another owner's ID in returned owner fields. Do not infer the owner from the token or active turn. These calls reach workspaces in this org. An omitted workspaceId names the calling workspace. Use names and returned links in normal answers. Workspace and session links show as chips. A session link holds both IDs. A Sent by: line names the sending session. Do not reply only to confirm it. Each entry gives parentId, or null for a top-level workspace. Pass parentId to list only the direct sub-workspaces of that workspace.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -151,7 +195,11 @@
         },
         "archived": {
           "type": "boolean",
-          "description": "Select archived workspaces with true, or other workspaces with false."
+          "description": "Select archived workspaces with true, or other workspaces with false. Removed workspaces need removed true."
+        },
+        "removed": {
+          "type": "boolean",
+          "description": "Select only removed workspaces with true. False or omission leaves them out."
         },
         "limit": {
           "type": "integer",
@@ -163,6 +211,11 @@
           "type": "integer",
           "minimum": 0,
           "description": "Entries to skip before the next page."
+        },
+        "parentId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Parent workspace ID. List only its direct sub-workspaces. An unknown ID gives an empty list."
         }
       }
     },
@@ -174,7 +227,7 @@
   },
   {
     "name": "get_workspace",
-    "description": "Get workspace details, including owner, repository, base branch, section, activity, and restore times. Needs only the workspace token. These calls reach workspaces in this org. An omitted workspaceId names the calling workspace. Use names and returned links in normal answers. Workspace and session links show as chips. A session link holds both IDs. A Sent by: line names the sending session. Do not reply only to confirm it.",
+    "description": "Get workspace details, including owner, repository, base branch, section, activity, archive, restore, and removal times. Reads removed workspaces too. Needs only the workspace token. These calls reach workspaces in this org. An omitted workspaceId names the calling workspace. Use names and returned links in normal answers. Workspace and session links show as chips. A session link holds both IDs. A Sent by: line names the sending session. Do not reply only to confirm it. The reply gives parentId, parent, depth, and children. The parent is a list entry or null. Children are direct sub-workspaces, oldest first, including archived ones.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -218,7 +271,7 @@
   },
   {
     "name": "move_workspace",
-    "description": "Move a workspace to the top of an org section. Needs an active calling turn. Acts for the member whose message started that turn. These calls reach workspaces in this org. An omitted workspaceId names the calling workspace. Use names and returned links in normal answers. Workspace and session links show as chips. A session link holds both IDs. A Sent by: line names the sending session. Do not reply only to confirm it.",
+    "description": "Move a workspace tree to an org section, under a parent, or to the top level. Needs an active calling turn. Acts for the member whose message started that turn. These calls reach workspaces in this org. An omitted workspaceId names the calling workspace. Use names and returned links in normal answers. Workspace and session links show as chips. A session link holds both IDs. A Sent by: line names the sending session. Do not reply only to confirm it. Pass parentId to nest the whole tree under that parent, or topLevel: true to take it out of its tree. Use only one target. A section is required without a target. A nest joins the parent's shown section. A different sectionId gives a notice. At the top level, the tree goes first in the named or shown section. A target equal to the current place changes nothing. Loops and moves past depth 3 are refused without changes. A section-only move of a nested row moves nothing. Its notice names the top-level workspace to move.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -230,10 +283,18 @@
         "sectionId": {
           "type": "string",
           "minLength": 1,
-          "description": "A section ID from list_sections."
+          "description": "A section ID from list_sections. Required without a target. A parent target uses the parent's shown section."
+        },
+        "parentId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "A workspace ID from list_workspaces or get_workspace. Nest the moved tree under this parent. Do not combine with topLevel: true."
+        },
+        "topLevel": {
+          "type": "boolean",
+          "description": "Use true to take the moved tree to the top level. Do not combine with parentId. False gives no target."
         }
-      },
-      "required": ["sectionId"]
+      }
     },
     "annotations": {
       "readOnlyHint": false,
@@ -243,7 +304,7 @@
   },
   {
     "name": "archive_workspace",
-    "description": "Archive a workspace. Only its owner or an org admin can archive it. Archiving the calling workspace ends this turn. A member can restore it for 14 days. Needs an active calling turn. Acts for the member whose message started that turn. These calls reach workspaces in this org. An omitted workspaceId names the calling workspace. Use names and returned links in normal answers. Workspace and session links show as chips. A session link holds both IDs. A Sent by: line names the sending session. Do not reply only to confirm it.",
+    "description": "Archive a workspace. Only its owner or an org admin can archive it. Archiving the calling workspace ends this turn. A member can restore it for 14 days. Then it leaves the workspace list. Needs an active calling turn. Acts for the member whose message started that turn. These calls reach workspaces in this org. An omitted workspaceId names the calling workspace. Use names and returned links in normal answers. Workspace and session links show as chips. A session link holds both IDs. A Sent by: line names the sending session. Do not reply only to confirm it.",
     "inputSchema": {
       "type": "object",
       "properties": {

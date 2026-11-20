@@ -27,7 +27,7 @@ pub(super) fn created() -> Value {
         "workspace": {
             "id":"created-workspace", "number":3,
             "link":"https://app.conductive.test/org/created-workspace",
-            "orgId":"org", "repositoryId":"repo", "sectionId":"general",
+            "orgId":"org", "repositoryId":"repo", "sectionId":"general", "parentId":null,
             "owner":{"id":"owner", "githubLogin":"owner", "displayName":null, "avatarUrl":null},
             "name":null, "branch":"owner/task-ab12",
             "choice":{"agent":"codex", "model":"model", "effort":"high", "fast":false},
@@ -133,6 +133,8 @@ pub(super) async fn run(mcp: bool, fields: Value, response: Option<HttpResponse>
         http,
         runtime,
         streams,
+        // A workspace create runs no process, so any call fails the test.
+        Arc::new(Unimock::new(())),
     );
     let status = if mcp {
         program.mcp().await.unwrap()

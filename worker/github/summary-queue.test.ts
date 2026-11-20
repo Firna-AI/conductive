@@ -1,10 +1,10 @@
 import { expect, it } from 'vitest'
 
 import type { GitHubSnapshot } from './contracts'
-import { MemoryWorkspace } from './memory-workspace'
+import { nativeGitHubStore } from './state-fixture.test-support'
 
 it('finishes each summary copy before the next refresh reads GitHub', async () => {
-  const memory = new MemoryWorkspace('workspace')
+  const native = await nativeGitHubStore('workspace')
   const order: string[] = []
   const first: GitHubSnapshot = {
     banner: {
@@ -27,7 +27,7 @@ it('finishes each summary copy before the next refresh reads GitHub', async () =
   }
   const copied: GitHubSnapshot[] = []
   const authorize = async () => undefined
-  const pending = memory.state.refresh(
+  const pending = native.state.refresh(
     async () => {
       order.push('first-read')
       return first
@@ -41,7 +41,7 @@ it('finishes each summary copy before the next refresh reads GitHub', async () =
       order.push('first-copy-end')
     },
   )
-  const following = memory.state.refresh(
+  const following = native.state.refresh(
     async () => {
       order.push('second-read')
       return second

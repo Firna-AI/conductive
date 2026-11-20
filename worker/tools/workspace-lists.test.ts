@@ -2,8 +2,17 @@ import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import type { AgentListWorkspacesResponse } from '../../src/shared/generated/AgentListWorkspacesResponse'
 import { MACHINE_PATHS, TOOL_TURN_HEADER } from '../../src/shared/agent-tools'
-import { createHarness, type TestHarness } from '../test-support/harness'
-import { toolFixture, TOOL_TEST_ORIGIN, type ToolFixture } from './test-support'
+import {
+  createHarness,
+  TEST_TIME,
+  type TestHarness,
+} from '../test-support/harness'
+import {
+  seedRemovedWorkspace,
+  toolFixture,
+  TOOL_TEST_ORIGIN,
+  type ToolFixture,
+} from './test-support'
 
 let harness: TestHarness
 let fixture: ToolFixture
@@ -14,6 +23,7 @@ beforeAll(async () => {
 beforeEach(async () => {
   await harness.reset()
   fixture = await toolFixture(harness)
+  await seedRemovedWorkspace(fixture.db)
   await fixture.db.batch([
     fixture.db.prepare(
       "UPDATE users SET display_name = 'The owner' WHERE id = 'owner'",
@@ -75,6 +85,17 @@ it('filters the org list independently and together without a turn or a login lo
     [{ archived: 'true' }, ['archived-workspace']],
     [{ archived: 'false' }, ['calling-workspace', 'teammate-workspace']],
     [
+      { removed: 'false' },
+      ['calling-workspace', 'teammate-workspace', 'archived-workspace'],
+    ],
+    [{ removed: 'true' }, ['removed-workspace']],
+    [{ archived: 'true', removed: 'true' }, ['removed-workspace']],
+    [{ state: 'archived', removed: 'true' }, ['removed-workspace']],
+    [{ archived: 'false', removed: 'true' }, []],
+    [{ ownerId: 'teammate', removed: 'true' }, []],
+    [{ repositoryId: 'other-repo', removed: 'true' }, []],
+    [{ query: 'madrid', removed: 'true' }, ['removed-workspace']],
+    [
       {
         ownerId: 'owner',
         archived: 'true',
@@ -106,6 +127,14 @@ it('filters the org list independently and together without a turn or a login lo
     displayName: null,
   })
   expect(fixture.services.callingTurn).not.toHaveBeenCalled()
+  fixture.setTime(TEST_TIME - 1)
+  const beforeRemoval: AgentListWorkspacesResponse = await (
+    await list({ archived: 'true' })
+  ).json()
+  expect(beforeRemoval.workspaces.map(({ id }) => id)).toEqual([
+    'archived-workspace',
+    'removed-workspace',
+  ])
 })
 
 it('pages in creation order with exact more flags and preserves unlimited and offset-only lists', async () => {
@@ -123,6 +152,7 @@ it('pages in creation order with exact more flags and preserves unlimited and of
       false,
     ],
     [{ limit: '2', offset: '3' }, [], false],
+    [{ removed: 'true', limit: '1' }, ['removed-workspace'], false],
     [{ offset: '1' }, ['teammate-workspace', 'archived-workspace'], undefined],
     [
       { ownerId: 'owner', limit: '1', offset: '1' },
@@ -142,6 +172,40 @@ it('pages in creation order with exact more flags and preserves unlimited and of
   }
 })
 
+it('filters direct children with other filters and keeps each parent ID', async () => {
+  await fixture.db.batch([
+    fixture.db.prepare(
+      "UPDATE workspaces SET parent_workspace_id = 'calling-workspace' WHERE id IN ('teammate-workspace', 'archived-workspace')",
+    ),
+    fixture.db.prepare(
+      "UPDATE workspaces SET parent_workspace_id = 'teammate-workspace' WHERE id = 'archived-workspace'",
+    ),
+  ])
+  for (const [query, expected] of [
+    [
+      { parentId: 'calling-workspace' },
+      [['teammate-workspace', 'calling-workspace']],
+    ],
+    [
+      { parentId: 'teammate-workspace', archived: 'true' },
+      [['archived-workspace', 'teammate-workspace']],
+    ],
+    [{ parentId: 'calling-workspace', ownerId: 'owner' }, []],
+    [{ parentId: 'outside-workspace' }, []],
+    [{ parentId: 'unknown-workspace' }, []],
+  ] as const) {
+    const response = await list(query)
+    expect(response.status).toBe(200)
+    const result: AgentListWorkspacesResponse = await response.json()
+    expect(
+      result.workspaces.map(({ id, parentId }) => [id, parentId]),
+      JSON.stringify(query),
+    ).toEqual(expected)
+  }
+  const result: AgentListWorkspacesResponse = await (await list()).json()
+  expect(result.workspaces[0]?.parentId).toBeNull()
+})
+
 it('refuses malformed list filters and paging with invalid_input', async () => {
   const cases: Record<string, string>[] = [
     { limit: '0' },
@@ -153,7 +217,10 @@ it('refuses malformed list filters and paging with invalid_input', async () => {
     { offset: '1.1' },
     { state: 'unknown' },
     { archived: 'maybe' },
+    { removed: 'maybe' },
+    { removed: '' },
     { updatedSince: 'yesterday' },
+    { parentId: '' },
   ]
   for (const query of cases) {
     const response = await list(query)

@@ -2,7 +2,6 @@ import type { ChangesResponse } from '../shared/generated/ChangesResponse'
 import type { ButtonTint } from '../../docs/mockups/src/components/common/tint'
 import {
   barLabels,
-  barMessageText,
   type MergeMethod,
 } from '../../docs/mockups/src/components/workspace/barCopy'
 import {
@@ -14,6 +13,7 @@ import {
 } from '../../docs/mockups/src/components/workspace/barModel'
 import type { GitHubBanner, GitHubCapabilities } from '../shared/github'
 import { bannerStatus } from './bannerStatus'
+import { messageOf } from './barMessage'
 import { failingChecks } from './barPrompts'
 import type { GitHubSnapshot } from './githubClient'
 
@@ -27,6 +27,7 @@ export type CapabilityState =
 export type LocalWork = LocalWorkKind | 'unknown'
 
 type MergeRefusal = 'merge-moved-head' | 'merge-no-right' | 'merge-refused'
+type ReadyRefusal = 'ready-no-right' | 'ready-pull-changed' | 'ready-refused'
 
 /** An action of the app that the bar shows: a run, or how it ended. */
 export type BarOutcome =
@@ -34,6 +35,10 @@ export type BarOutcome =
   | { kind: 'merge-refused'; reason: MergeRefusal }
   /** A merge that ended without a refusal of GitHub, with the app's words. */
   | { kind: 'merge-failed'; message: string }
+  | { kind: 'marking-ready' }
+  | { kind: 'ready-refused'; reason: ReadyRefusal }
+  /** Ready for review that ended without a known refusal, with its words. */
+  | { kind: 'ready-failed'; message: string }
   | { kind: 'continuing' }
   /** The Worker refused Continue because a turn runs. */
   | { kind: 'continue-waits' }
@@ -152,15 +157,26 @@ function accessOf(state: CapabilityState): {
   }
 }
 
+/**
+ * Whether the member gets the agent actions: with write access, or when
+ * the access read failed. A read that has not answered offers none.
+ */
+export function offersAgentActions(state: CapabilityState): boolean {
+  return accessOf(state).access !== 'read'
+}
+
 function appActionOf(outcome: BarOutcome | null): BarFacts['appAction'] {
   switch (outcome?.kind) {
     case 'merging':
+    case 'marking-ready':
     case 'continuing':
     case 'continue-failed':
       return outcome.kind
     case 'merge-refused':
+    case 'ready-refused':
       return outcome.reason
     case 'merge-failed':
+    case 'ready-failed':
     case 'continue-waits':
     case undefined:
       return 'none'
@@ -170,62 +186,6 @@ function appActionOf(outcome: BarOutcome | null): BarFacts['appAction'] {
 function linkOf(model: BarModel, banner: GitHubBanner): BarLink | null {
   if (model.link === 'open' && banner.pullRequest !== null) {
     return { label: barLabels.openOnGitHub, href: banner.pullRequest.url }
-  }
-  return null
-}
-
-function messageOf(
-  model: BarModel,
-  outcome: BarOutcome | null,
-  banner: GitHubBanner,
-): BarMessage | null {
-  const url = banner.pullRequest?.url ?? null
-  const branches = { branch: banner.branch, base: banner.baseBranch }
-  const waits: BarMessage = {
-    text: barMessageText('continue-waits', branches),
-    tone: 'status',
-    href: null,
-  }
-  switch (model.message) {
-    case 'continue-waits':
-      return waits
-    case 'continue-failed':
-      // The Worker names the cause, also a clash of the changed files.
-      return outcome?.kind === 'continue-failed'
-        ? { text: outcome.message, tone: 'danger', href: null }
-        : null
-    case 'merge-refused':
-      return {
-        text: barMessageText(model.message, branches),
-        tone: 'danger',
-        href: url,
-      }
-    case 'merge-moved-head':
-    case 'merge-no-right':
-      return {
-        text: barMessageText(model.message, branches),
-        tone: 'danger',
-        href: null,
-      }
-    case 'base-moved':
-      // The Worker moved a deleted base to the default branch, which the
-      // banner names as its base, and it keeps the deleted name.
-      return {
-        text: barMessageText(model.message, {
-          ...branches,
-          moved: banner.baseMoved,
-        }),
-        tone: 'info',
-        href: null,
-      }
-    case undefined:
-      break
-  }
-  if (banner.state === 'merged' && outcome?.kind === 'continue-waits') {
-    return waits
-  }
-  if (banner.state === 'ready-to-merge' && outcome?.kind === 'merge-failed') {
-    return { text: outcome.message, tone: 'danger', href: url }
   }
   return null
 }

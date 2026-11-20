@@ -31,6 +31,7 @@ it('migrates legacy released context across streams and keeps unpublished text i
   const workspaceKey = chatKey('output-context', 'workspace')
   await f.storage.delete(workspaceKey)
   await f.storage.delete(`${workspaceKey}:0`)
+  await f.storage.delete(chatKey('output-context', 'indexed'))
   await saveLegacy('legacy-context', [
     {
       event: { ...delta, messageId: 'released-answer', text: '' },

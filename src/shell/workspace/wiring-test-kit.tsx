@@ -1,3 +1,4 @@
+import type { FetchLike } from '../../app/api/client'
 import type { AppServices } from '../../app/services'
 import { memoryNavigation, NavigationContext } from '../../app/navigation'
 import type { TerminalSocket } from '../../app/terminal-transport'
@@ -14,7 +15,8 @@ import { recordingSocket } from './kept-test-kit'
 /**
  * The whole app in a tab at `href`, over the fake API and its stream. The
  * services can replace the event source, such as with a terminal socket,
- * and the timer, such as with a `ManualDelay` that runs the reads again.
+ * the timer, such as with a `ManualDelay` that runs the reads again, and
+ * the clock, such as one that a test moves past an expiry.
  */
 export async function openTab(
   server: FakeApiServer,
@@ -23,11 +25,16 @@ export async function openTab(
     viewport?: Viewport
     events?: AppServices['events']
     delay?: AppServices['delay']
+    now?: AppServices['now']
+    /** A fetch in front of the server, such as one that holds requests. */
+    fetch?: FetchLike
   } = {},
 ) {
   const app = await startedApp(server, {
     events: options.events ?? recordingSocket(server).source,
     ...(options.delay ? { delay: options.delay } : {}),
+    ...(options.now ? { now: options.now } : {}),
+    ...(options.fetch ? { fetch: options.fetch } : {}),
   })
   const navigation = memoryNavigation(href)
   const view = mountScreen(

@@ -69,11 +69,10 @@ pub(super) fn workspace(
             parsed.insert(key.into(), value.clone());
         }
     }
-    if fields.contains_key("sectionId") {
-        parsed.insert(
-            "sectionId".into(),
-            Value::String(text(fields, "sectionId")?),
-        );
+    for key in ["sectionId", "parentId"] {
+        if fields.contains_key(key) {
+            parsed.insert(key.into(), Value::String(text(fields, key)?));
+        }
     }
     decode(parsed)
 }

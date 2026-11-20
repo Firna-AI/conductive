@@ -18,9 +18,14 @@ import {
   history,
 } from './autocompleteTurn'
 import { backgroundConversations } from './backgroundConversations'
-import { barConversations, type ContinuedItem } from './barConversations'
+import {
+  barConversations,
+  type ContinuedItem,
+  type RepositoryChangedItem,
+} from './barConversations'
 import { chatLinkConversations } from './chatLinkConversations'
 import type { ChangedFile } from './files'
+import { formattingConversations } from './formattingConversations'
 import {
   headingConversations,
   type MessageHeading,
@@ -33,13 +38,21 @@ import { macConversations } from './macConversations'
 import type { PersonKey } from './members'
 import { linkedSession } from './sessions'
 import { newWorkspaceConversations } from './newWorkspaceConversations'
+import { postcodeHistory } from './postcodeConversation'
+import type { MessageQuote, MessageRule } from './proseBlocks'
+import { secretConversations } from './secretConversations'
+import type { LateAnswerItem, SecretRunItem } from './secretRequests'
+import { secretValueConversations } from './secretValueConversations'
 import { speedConversations } from './speedConversations'
 import { tableConversations } from './tableConversations'
+import { taskListConversations } from './taskListConversations'
 import { unavailableConversations } from './unavailableConversations'
 import { workConversations } from './workConversations'
 import { conversationKeys } from './conversationKeys'
+import { answerFileConversations } from './answerFiles'
 import { fileMentionConversations } from './fileMentions'
 import { sessionLinkConversations } from './sessionLinkConversations'
+import { skillConversations } from './skills'
 import { workspaceLinkConversations } from './workspaceLinkConversations'
 
 export type ToolKind = 'read' | 'search' | 'create' | 'edit' | 'run'
@@ -49,11 +62,21 @@ type ToolCallStatus = 'done' | 'running' | 'stopped'
 /** A table in a message of the agent. A short row keeps only its own cells. */
 export type MessageTable = { kind: 'table' } & TableCells<string>
 
+/** A code block in a message of the agent, with its text as written. */
+type MessageCodeBlock = { kind: 'code'; text: string }
+
 /**
- * A block of a message of the agent: a paragraph, a heading, a table, or a
- * list.
+ * A block of a message of the agent: a paragraph, a heading, a table, a
+ * list, a code block, a quote, or a rule.
  */
-export type AgentBlock = string | MessageHeading | MessageTable | MessageList
+export type AgentBlock =
+  | string
+  | MessageHeading
+  | MessageTable
+  | MessageList
+  | MessageCodeBlock
+  | MessageQuote
+  | MessageRule
 
 export type ChatItem =
   | {
@@ -72,6 +95,11 @@ export type ChatItem =
       id: string
       /** The blocks of the message, in order. */
       blocks: readonly AgentBlock[]
+      /**
+       * The agent still writes the message, so a mark that opens at the end
+       * of its text closes there (item 9 C of the Markdown plan).
+       */
+      live?: true
     }
   | {
       kind: 'tool'
@@ -112,7 +140,18 @@ export type ChatItem =
       /** Why a fast turn ran at standard speed (fast mode decision 257). */
       standardSpeed?: StandardSpeedCause
     }
-  | { kind: 'error'; id: string; text: string }
+  | {
+      /** A failed turn: the cause, and Try again. */
+      kind: 'error'
+      id: string
+      text: string
+      /**
+       * A failed turn before the newest turn of the session. Try again shows
+       * only on the failed turn whose message the session record names for
+       * a retry, so this one has none.
+       */
+      older?: true
+    }
   | { kind: 'working'; id: string; elapsed: string }
   | {
       kind: 'turn-end'
@@ -150,6 +189,9 @@ export type ChatItem =
       from: string
     }
   | ContinuedItem
+  | RepositoryChangedItem
+  | SecretRunItem
+  | LateAnswerItem
 
 /** One tool call of an agent turn. */
 export type ToolCallItem = Extract<ChatItem, { kind: 'tool' }>
@@ -197,6 +239,8 @@ export const conversations: Readonly<
   ...endpointConversations({ history, followUp: followUpDraft }),
   ...newWorkspaceConversations,
   ...macConversations(history),
+  ...secretConversations(history),
+  ...secretValueConversations(history),
   ...lostConversations(history),
   ...unavailableConversations({ history, cutOff: cutOffTurn }),
   ...speedConversations({ history, cutOff: cutOffTurn }),
@@ -207,6 +251,8 @@ export const conversations: Readonly<
   ...workspaceLinkConversations(history),
   ...sessionLinkConversations(history),
   ...fileMentionConversations(history),
+  ...skillConversations(history),
+  ...answerFileConversations(history),
   ...workConversations({
     start: autocompleteStart,
     tests: autocompleteTests,
@@ -215,6 +261,10 @@ export const conversations: Readonly<
   ...tableConversations,
   ...barConversations({ history, cutOff: cutOffTurn }),
   ...listConversations,
+  ...taskListConversations,
   ...headingConversations,
+  ...formattingConversations,
+  /** The chat of the removed workspace that a chip opens. */
+  'postcode-history': postcodeHistory,
   ...chatLinkConversations(history),
 }

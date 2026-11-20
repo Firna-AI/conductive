@@ -6,12 +6,14 @@ import {
   sessionOf,
   type ChatEnvelope,
 } from '../../shared/transcript/session-events'
+import { withSecretEvents } from '../secrets/secret-snapshot'
 import { mergeSession } from './session-records'
-import { withWorkspaceChange } from './workspace-records'
+import { afterRepositoryMove, withWorkspaceChange } from './workspace-records'
 
 /**
  * Applies workspace stream events in order: chat events to the log of their
- * session, and records of the workspace, its start, and its sessions. Each
+ * session, records of the workspace, its start, and its sessions, and the
+ * secret requests, runs, and late answers. Each
  * session record goes to the log of its session, which keeps the newest
  * record by event number. A batch, such as the history after a reconnect,
  * then shows only where each session ends, so an older close in the batch
@@ -44,6 +46,7 @@ export function applyEnvelopes(
     context,
     changes.flatMap((change) => change.record?.session ?? []),
   )
+  const before = context.store.get()
   context.store.update((snapshot) => {
     let next = snapshot
     for (const { eventNumber, event } of envelopes) {
@@ -56,7 +59,10 @@ export function applyEnvelopes(
       }
     }
     for (const change of changes) next = change.apply(next)
+    const secrets = withSecretEvents(next.secrets, envelopes)
+    if (secrets !== next.secrets) next = { ...next, secrets }
     return applyMoves(next, moves)
   })
   saveMovedView(context, moves)
+  afterRepositoryMove(context, before)
 }

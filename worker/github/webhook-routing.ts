@@ -1,5 +1,6 @@
-import type { RoutineRunTrigger } from '../../src/shared/routines'
+import type { AutomationRunTrigger } from '../../src/shared/automations'
 import { HttpError, isRecord } from '../http'
+import type { ReachedRepository } from './repository-reach'
 
 export interface GitHubPullRequestEvent {
   repositoryId: number
@@ -10,12 +11,12 @@ export interface GitHubPullRequestEvent {
   senderId: number
   authorLogin?: string
   senderLogin?: string
-  trigger: Extract<RoutineRunTrigger, { kind: 'pull-request' }>
+  /** The GitHub merge time of a merged pull request, when the event has one. */
+  mergedAt?: number
+  trigger: Extract<AutomationRunTrigger, { kind: 'pull-request' }>
 }
 
-export interface WebhookRoute {
-  repositoryId: number
-  installationId: number
+export interface WebhookRoute extends ReachedRepository {
   branch?: string
   /** The branches that a check event names. Empty when it names none. */
   branches?: string[]
@@ -53,10 +54,17 @@ function login(value: unknown): string | undefined {
     : undefined
 }
 
-export function webhookRoute(
+/** A merge time that does not parse leaves the time to the caller. */
+function mergeTime(kind: string, value: unknown): { mergedAt?: number } {
+  if (kind !== 'merged' || typeof value !== 'string') return {}
+  const time = Date.parse(value)
+  return Number.isSafeInteger(time) ? { mergedAt: time } : {}
+}
+
+export function webhookRepository(
   event: string,
   value: unknown,
-): WebhookRoute | null {
+): ReachedRepository | null {
   if (
     ![
       'push',
@@ -71,9 +79,21 @@ export function webhookRoute(
     return null
   }
   if (!isRecord(value)) return invalid()
-  const repositoryId = id(value.repository)
-  const installationId = id(value.installation)
-  const common = { repositoryId, installationId, push: event === 'push' }
+  return {
+    repositoryId: id(value.repository),
+    installationId: id(value.installation),
+  }
+}
+
+export function webhookRoute(
+  event: string,
+  value: unknown,
+): WebhookRoute | null {
+  const repository = webhookRepository(event, value)
+  if (repository === null) return null
+  if (!isRecord(value)) return invalid()
+  const { repositoryId, installationId } = repository
+  const common = { ...repository, push: event === 'push' }
   if (event === 'push') {
     const ref = string(value.ref)
     return ref.startsWith('refs/heads/')
@@ -120,6 +140,7 @@ export function webhookRoute(
         senderId: id(value.sender),
         authorLogin: login(value.pull_request.user),
         senderLogin: login(value.sender),
+        ...mergeTime(kind, value.pull_request.merged_at),
         trigger: {
           kind: 'pull-request',
           event: kind,

@@ -34,7 +34,7 @@ New memberships keep an unset place and go at the end.
 [Org rail order](../../docs/protocol/org-rail-order.md) states the requirements.
 Org creation stays with `featureShellRoute` of the [app API](../app-api/README.md).
 The routes also serve member lists, invitation creation and cancellation, role changes,
-removal, leave, workspace reassignment, org rename, Delete, and Restore.
+removal, leave, workspace reassignment, org rename and colour, Delete, and Restore.
 Shared-settings persistence remains with the settings backend.
 That backend must call `assertCanChangeSharedSettings` before writes.
 It must also include `activeAdminPredicate` in its D1 mutation.
@@ -136,10 +136,19 @@ Restore makes no provider resume call. Old preview hostnames stay revoked.
 
 Schedule `cleanupDeletedOrgs` with all hooks except `readWorkspace`.
 It retries stops and controlled retention during the restore window.
+Before the deadline, each run first completes the suspension through `suspendOrg`, unless an earlier call completed it.
+A failed suspension ends the run of that org, and the org stays pending.
+The run then tries each independent step: the stops, the expired Archive deletes, retention, and the pending Org Restore handoff.
+Each failed step writes one fixed warning for that step, with no request, error, or secret data.
+After a failed step, the run still tries the later steps. Then it rethrows the first failure, so the org stays pending.
+So a failed stop or delete does not hold back retention or the handoff.
+Each step keeps its existing org and cleanup lease checks.
+Only the scheduled run isolates these steps.
+In the Delete and Restore routes, a failed stop ends the request before the next step.
 [`archive-cleanup.ts`](archive-cleanup.ts) deletes expired archived disks under the same cleanup lease.
 Its detach marks the exact ledger entry deleted in the same D1 batch.
 Each delete, with its provider lookup, fails alone: it writes the existing Archive warning and keeps its records for the next run.
-The run still tries the later deletes, retention, and the pending Org Restore handoff under their guards, then rethrows the first failure, so the org stays pending.
+The Archive delete step still tries the later deletes before it fails.
 A successful handoff rearms the native Archive alarm of each retained expired computer.
 Retention continues before each pending Restore handoff attempt.
 Choose a cleanup interval plus retry budget smaller than the lifecycle's
@@ -156,6 +165,7 @@ The ledger entries remain until the org purge removes them through the org refer
 Each journal resource holds its kind, its ID, and its provider account. So equal IDs in two accounts stay two resources.
 Each org image of `org_images` enters the journal with the provider account of its own record. The purge also deletes the `org_images` rows of the org.
 The result names purged orgs and orgs that need another attempt.
+The run also writes one fixed warning for each org that needs another attempt.
 D1 ownership records stay until every external cleanup succeeds.
 Attachment cleanup follows the same rule.
 Workspace purge removes its R2 files after the workspace receiver fence drains its work.
@@ -168,27 +178,19 @@ See [chat attachments](../chat/attachments.md) for the storage boundary and expi
 A cleanup lease separates Restore from cleanup calls.
 An expired lease permits a later attempt after a worker stops.
 
-The maintenance capability accepts only workspace IDs from its callback.
-It checks the current lease before every operation.
-The disk lists of maintenance, retention, and Restore leave out each workspace whose owner the [operator suspended](../operator/README.md).
-The capability also refuses to restart such a workspace, so retention starts no cloud computer of a suspended user.
-A restart must be due at its stored keepalive date.
-Each stop, keepalive date, and restart write matches its sandbox by the sandbox ID and the provider account together.
-It resumes with `noEnv` and empty env vars, then stops the sandbox.
-It supplies no workspace token, agent login, or org secret.
-Keep runner, preview, user startup, and agent access suspended in retention mode.
-Before the resume, Members journals a pending stop for crash recovery.
-Only an acknowledged resume followed by a stop creates a new real stop date.
-A failed or uncertain resume keeps the older conservative date.
-The capability expires when its callback ends or its lease expires.
+The [disk retention guide](retention.md) describes the maintenance capability,
+provider kinds, and Restore timers.
 
-[Invitations](invitations.md) gives the email of an invitation, the match
-of verified emails at each sign-in, and the explicit acceptance.
+[Invitations](invitations.md) gives the email of an invitation and the
+diagnostics of a failed send. It also gives the match of verified emails
+at each sign-in and the explicit acceptance.
 
-Call `workspaceCreator` when the lifecycle creates a workspace.
-Store its ID in `owner_user_id` in the creation transaction.
+The lifecycle stores the ID of the member who creates a workspace in
+`owner_user_id`, in the creation transaction.
 Reassignment changes the owner and update time only.
-Each session keeps the agent login of its starter.
+Each session keeps its fixed personal or org agent login.
+An org session serves current members after its starter leaves.
+A personal session still needs its login owner to remain a member.
 
 `activeAdminMemberPredicate(alias)` in [`active-admin.ts`](../data/active-admin.ts) is the one SQL rule of an active admin: the admin role, and a user whose account is not suspended.
 It accepts only the trusted aliases `m`, `access_member`, `org_members`, `remaining`, and `candidate`.
@@ -198,7 +200,7 @@ It accepts only the trusted aliases `m`, `access_member`, `org_members`, `remain
   Otherwise it fails with 409 `last_admin`, which asks to make another member whose account is not suspended an admin.
 - A leave gives the workspaces to the earliest active admin, else to the earliest member who is not suspended, else to the earliest admin.
   A removal gives them to the admin who removes the member.
-- The same leave or removal batch moves the member's routines in that org to that recipient.
+- The same leave or removal batch moves the member's automations in that org to that recipient.
   It turns them off with `owner_left`, clears their next time, and keeps the departing member's name.
 - A reassignment checks its recipient in the same write. A suspended recipient gets 409 `owner_suspended`, and nothing changes.
 - `firstOrgAdmin` and the account-deletion guard of `account.ts` do not use the rule. So that guard still counts every admin.
@@ -226,7 +228,8 @@ The harness uses Wrangler's migration SQL splitter to keep trigger bodies intact
 - [creation-checkpoint.ts](creation-checkpoint.ts) requeues a retained create only after current access and token checks. A create without a sandbox also needs its image pin, with the same image name and provider account. A create with a retained sandbox takes the account of the workspace record.
 - `gate.ts` extends the request gate for deleted-org access and shared writes.
 - `route.ts` defines HTTP dispatch and the required integration hooks.
-- [org-data.ts](org-data.ts) supplies `visibleOrgs` and the atomic `moveOrg` write for each person's rail order.
+- [org-data.ts](org-data.ts) supplies `visibleOrgs`, the atomic `moveOrg` write for each person's rail order, and `updateOrg`, which saves the name, the initials, and the colour of an org.
+- [org-update.ts](org-update.ts) reads the PATCH of an org. A colour can come without the name, and a colour that is not a preset is refused.
 - `membership.ts` manages roles, removal, leave, and the last-admin rule.
 - `errors.ts` defines `lastActiveAdminError` and `suspendedOwnerRecipientError`.
 - [`active-admin.ts`](../data/active-admin.ts) defines `activeAdminMemberPredicate`, the shared SQL rule of an active admin.
@@ -243,7 +246,7 @@ The harness uses Wrangler's migration SQL splitter to keep trigger bodies intact
 - `restore.ts` implements the retryable Restore handoff.
 - `cleanup-lease.ts` scopes cleanup work and maps its failures to `org_cleanup_failed`.
 - `cleanup-provider.ts` exports `requireDeletedOrgCleanup`, the cleanup lease check before each provider call, and `ignoreAlreadyRemoved`.
-- `cleanup.ts` implements scheduled provider and data cleanup.
+- `cleanup.ts` implements scheduled provider and data cleanup, and runs each pre-purge step in isolation.
 - `account.ts` exposes the last-admin account-deletion guard.
 - `*-data.ts` owns the D1 queries and the guarded mutation predicates.
 

@@ -1,8 +1,12 @@
-import { PREVIEW_RELAY_MARK_HEADER } from '../../src/shared/previews'
+import {
+  PREVIEW_FILE_SERVER_PORT,
+  PREVIEW_FILES_MARK_HEADER,
+  PREVIEW_RELAY_MARK_HEADER,
+} from '../../src/shared/previews'
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
 import { ProviderError } from '../sandbox/errors'
-import { recordActivity, toolError } from './access'
+import { toolError } from './access'
 import type { PreviewConnection } from './connection'
 import { previewIdentity } from './credentials'
 import { portRequest, portResponseHeaders } from './headers'
@@ -98,18 +102,28 @@ export class PreviewProxy {
       connection = active
       // One read checks the viewer before the sandbox call. It also covers the window that follows.
       const row = await timing.step('access', () => scope.access(active))
+      if (
+        row.port === 0 &&
+        request.headers.get('Upgrade')?.toLowerCase() === 'websocket'
+      )
+        throw new HttpError(
+          404,
+          'preview_not_found',
+          'The preview is not available.',
+        )
+      const previewPort = row.port === 0 ? PREVIEW_FILE_SERVER_PORT : row.port
       const ready = this.ports.isReady(row)
       const port = await timing.step('relay', () => this.ports.get(row))
-      recordActivity(this.dependencies, row.workspaceId)
       // A relay lookup that called the provider can outlast a sandbox change, so it needs a new read.
       if (!ready) scope.refresh()
       await timing.step('check', active.authorize)
       let upstream: Response
       try {
-        const outgoing = portRequest(request, port, row.port, {
+        const outgoing = portRequest(request, port, previewPort, {
           body: connection.wrap(request.body),
           signal: connection.signal,
         })
+        if (row.port === 0) outgoing.headers.set(PREVIEW_FILES_MARK_HEADER, '1')
         upstream = await timing.step('upstream', () =>
           this.dependencies.fetch(outgoing),
         )
@@ -124,7 +138,7 @@ export class PreviewProxy {
         throw new ProviderError('unavailable', 503)
       }
       await timing.step('check-after', active.authorize)
-      const headers = portResponseHeaders(upstream, request, port, row.port)
+      const headers = portResponseHeaders(upstream, request, port, previewPort)
       // Only a reply that passed every check gets timings, so no refusal shows its reason.
       headers.set(SERVER_TIMING_HEADER, timing.header())
       if (request.headers.get('Upgrade')?.toLowerCase() === 'websocket') {

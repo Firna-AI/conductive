@@ -12,6 +12,7 @@ use cnd_runner_interface::tools::resources::{
     AgentCreateSectionResponse, AgentDeleteSectionResponse, AgentListModelsResponse,
     AgentListRepositoriesResponse, AgentListSectionsResponse,
 };
+use cnd_runner_interface::tools::secret_results::{ListSecretsResult, RunWithSecretsResult};
 use cnd_runner_interface::tools::session_actions::{
     AgentGetMessageResponse, AgentSessionResponse, AgentStopSessionResponse,
 };
@@ -26,10 +27,13 @@ use cnd_runner_interface::tools::workspaces::{
 use crate::call::Name;
 use crate::error::{Error, ErrorResultExt, Result};
 use crate::reply_validation::{cap_output, normalize_paths, valid};
+use crate::secrets::response;
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(untagged)]
 pub(crate) enum Reply {
+    ListSecrets(ListSecretsResult),
+    RunWithSecrets(RunWithSecretsResult),
     RunMacCommand(DeviceCommandResponse),
     CreateWorkspace(AgentCreateWorkspaceResponse),
     ListWorkspaces(AgentListWorkspacesResponse),
@@ -59,6 +63,7 @@ pub(crate) enum Reply {
 impl Reply {
     pub(crate) fn failed(&self) -> bool {
         match self {
+            Self::RunWithSecrets(value) => value.exit_code() != 0,
             Self::RunMacCommand(value) => {
                 value.request.state != DeviceCommandState::Completed
                     || value
@@ -92,9 +97,14 @@ pub(crate) fn parse(name: Name, body: &str) -> Result<Reply> {
         Err(_) => return Err(Error::Reply { mac }),
     };
     normalize_paths(&mut value);
+    if name == Name::ListSecrets {
+        return response::list(value).map(Reply::ListSecrets);
+    }
     let source = value.clone();
     let parsed =
         match name {
+            Name::ListSecrets => return Err(Error::Reply { mac }),
+            Name::RunWithSecrets => return Err(Error::Reply { mac }),
             Name::RunMacCommand => {
                 serde_json::from_value::<DeviceCommandResponse>(value).map(Reply::RunMacCommand)
             }

@@ -4,6 +4,16 @@ import type { AgentChoice } from '../shared/generated/AgentChoice'
 import type { EndpointModelList } from '../shared/account'
 
 /**
+ * How soon a page that shows reads the last model list of an endpoint
+ * again: the account while a picker of the person follows such a list,
+ * and the Agents tab of the org settings while an org endpoint is
+ * connected. The Worker reads a list in the background at most once in 10
+ * minutes, so a new list shows within a minute. This is a choice of the
+ * app, not a product limit.
+ */
+export const modelListWait = 60_000
+
+/**
  * An agent login of the signed-in person, with the last model list of an
  * own endpoint login. Only the owner's account carries the list, and only
  * after a read of the list that worked.
@@ -56,7 +66,7 @@ function isChoice(model: AgentModel, choice: AgentChoice | undefined): boolean {
  * except one that the last model list of the owner's own endpoint login of
  * its agent does not name. A picker keeps `current`, the model that it
  * shows, also when the list does not name it, so that it never hides the
- * state of its session or its routine.
+ * state of its session or its automation.
  */
 export function offeredModels(
   models: readonly AgentModel[],

@@ -80,7 +80,7 @@ export interface GitHubStateTransaction {
 
 export type GitHubUpdate = Extract<WorkspaceEvent, { type: 'github.updated' }>
 
-export interface GitHubStateOperation {
+interface GitHubStateOperation {
   transaction<T>(
     action: (transaction: GitHubStateTransaction) => Promise<T>,
   ): Promise<T>

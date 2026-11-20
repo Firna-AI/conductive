@@ -1,17 +1,18 @@
 import type { RunnerFileCommand } from '../../src/shared/generated/RunnerFileCommand'
-import { warnWorker } from '../warnings'
-import { errorSummary, WarningId } from '../warning-values'
 import type { WorkspaceEventEnvelope } from './workspace-events'
 import { HttpError } from '../http'
 import { RunnerConnections } from './runner-connections'
 import type { NativeBrowserConnections } from './browser-connections'
 import { RunnerDelivery } from './runner-delivery'
 import { parseRunnerTransport } from './runner-input'
+import { receiveRunnerMessage } from './runner-receive'
+import { RunnerWorkWatch, type RunnerProgress } from './runner-work-watch'
 import type { ChatStore } from './store'
 import type { WorkspaceTurnTokens } from '../model-gateway/workspace'
 import { storeRunnerReceipt } from './runner-receipt'
 import { RepairDelivery } from './repair-delivery'
 import { prepareRunnerHello } from './runner-handshake'
+import { RepositoryMoves } from './runner-repository-move'
 import type {
   ChatDependencies,
   ChatCallbackPublisher,
@@ -24,6 +25,8 @@ export class RunnerChannel {
   readonly connections: RunnerConnections
   private readonly delivery: RunnerDelivery
   private readonly repairs: RepairDelivery
+  private readonly moves: RepositoryMoves
+  private readonly watch: RunnerWorkWatch
   private readonly store: ChatStore
   private readonly dependencies: ChatDependencies
   private readonly publish: (events: readonly WorkspaceEventEnvelope[]) => void
@@ -47,6 +50,8 @@ export class RunnerChannel {
       forRunningTurn,
     )
     this.repairs = new RepairDelivery(store, publish)
+    this.moves = new RepositoryMoves(dependencies)
+    this.watch = new RunnerWorkWatch(dependencies.runnerWork, dependencies.now)
     this.connections = new RunnerConnections(
       store,
       dependencies,
@@ -77,24 +82,20 @@ export class RunnerChannel {
       const active = this.connections.current
       if (!active || !active.peer.matches(peer)) return
       if (!(await active.peer.authorize())) return
-      try {
-        const input: unknown =
-          typeof value === 'string' ? JSON.parse(value) : value
-        await this.handle(active, input)
-      } catch (error) {
-        warnWorker({
-          kind: 'runner_message_failed',
-          workspaceId: WarningId.checked(active.workspace.id),
-          error: errorSummary(error),
-        })
-        active.peer.close()
-        throw error
-      }
+      await receiveRunnerMessage(active, value, this.watch, (input, progress) =>
+        this.handle(active, input, progress),
+      )
     })
   }
 
-  private async handle(active: ActiveRunner, value: unknown): Promise<void> {
+  private async handle(
+    active: ActiveRunner,
+    value: unknown,
+    progress: RunnerProgress,
+  ): Promise<void> {
     const message = parseRunnerTransport(value)
+    progress.stage = message.type === 'hello' ? 'hello' : 'event'
+    progress.mark = await this.watch.begin(active, message, progress.size)
     if (message.type === 'hello') {
       const welcome = await prepareRunnerHello(
         active,
@@ -105,18 +106,26 @@ export class RunnerChannel {
       )
       if (!welcome) return
       active.streamId = message.streamId
+      active.processStartId = message.processStartId
       active.protocolVersion = welcome.protocolVersion
       active.loginKinds = message.loginKinds
+      active.repositoryFolder = message.repositoryFolder
+      active.fileServer = message.fileServer
       active.ready = welcome.ready
       await this.connections.persist(active)
+      this.connections.reportConnected(active)
       if (active.ready) this.connections.attachFiles(active)
       await active.peer.send({
         type: 'welcome',
         protocolVersion: welcome.protocolVersion,
         streamId: message.streamId,
         confirmedThrough: welcome.cursor,
+        ...(message.completeToolDetails === true
+          ? { completeToolDetails: true }
+          : {}),
       })
       await this.repairs.flush(active)
+      await this.moves.check(active)
       await this.dependencies.runnerHello(
         active.workspace.id,
         this.publisher(active.workspace.id),
@@ -127,7 +136,7 @@ export class RunnerChannel {
           this.publisher(active.workspace.id),
         )
       void this.store
-        .run(() => this.flush())
+        .run(() => this.watch.flush(active, () => this.flush()))
         .catch(() => {
           if (this.connections.current === active) this.close()
           active.peer.close()
@@ -144,8 +153,14 @@ export class RunnerChannel {
       message.type === 'file.read.result' ||
       message.type === 'file.diff.result'
     ) {
+      progress.stage = 'file_result'
       if (active.id)
         await this.dependencies.receiveFileResult(message.value, active.id)
+      return
+    }
+    if (message.type === 'repository.move.refused') {
+      this.moves.refused(active, message)
+      await this.flush()
       return
     }
     if (message.streamId !== active.streamId)
@@ -176,6 +191,8 @@ export class RunnerChannel {
       },
       this.publish,
     )
+    progress.stage = 'after_commit'
+    await progress.mark?.stage('after_commit')
     if (message.eventNumber > cursor) {
       await active.peer.send({
         type: 'resend',
@@ -201,6 +218,23 @@ export class RunnerChannel {
     for (const envelope of stored)
       await this.dependencies.runnerEventStored(envelope, publish)
     await this.flush()
+  }
+
+  /**
+   * Moves a connected runner to the record folder, as after a repository
+   * change. A runner that cannot move, or that is already there, gets no
+   * command. A failed send closes the connection, and the next hello
+   * moves the runner. Call inside the store queue.
+   */
+  async checkRepository(): Promise<void> {
+    const active = this.connections.current
+    if (!active || active.protocolVersion === null) return
+    if (!(await active.peer.authorize())) return
+    try {
+      await this.moves.check(active)
+    } catch {
+      this.close()
+    }
   }
 
   async flush(): Promise<void> {

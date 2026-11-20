@@ -1,6 +1,10 @@
 import { expect, test } from 'vitest'
 
-import { ACCOUNT_PATHS, type AgentLoginStatus } from '../shared/account'
+import {
+  ACCOUNT_PATHS,
+  refreshAgentLoginModelsPath,
+  type AgentLoginStatus,
+} from '../shared/account'
 import { FakeApiServer } from '../test-support/fake-api'
 import { endpointLoginFixtures } from '../test-support/fixtures/agent-logins'
 import { coreFixtures, FAKE_TIME } from '../test-support/fixtures/core'
@@ -128,15 +132,35 @@ test('page returns share one account read and keep login and preference changes 
   } as const
   server.json('PUT', ACCOUNT_PATHS.defaultModel, { choice })
   await app.account.setDefaultChoice(choice)
-  await app.account.removeLogin('claude')
+  const remove = app.account.removeLogin('claude')
+  const read = app.account.refreshLogins()
   held.release('GET', ACCOUNT_PATHS.account)
-  await app.account.refreshLogins()
+  await Promise.all([read, remove])
   expect(app.account.login('claude')).toEqual({
     agent: 'claude',
     connected: false,
   })
   expect(app.account.login('codex')).toEqual(discovered[1])
   expect(app.account.account.get()?.defaultChoice).toEqual(choice)
+})
+
+test('a Refresh of an own endpoint shows its new list before a queued page-return read', async () => {
+  const { app, server, held, focus, logins } = await startedWithEndpoints()
+  const path = refreshAgentLoginModelsPath('claude')
+  server.json('POST', path, { modelListReadFailed: false })
+  held.holdAnswer('POST', path)
+  const refresh = app.account.refreshModels('claude')
+  await flushMicrotasks()
+  focus.focus()
+  const pageRead = app.account.refreshLogins()
+  const refreshed = logins.map((login) => ({
+    ...login,
+    modelList: { missing: [], checkedAt: FAKE_TIME + 600_000 },
+  }))
+  serveLogins(server, refreshed)
+  held.release('POST', path)
+  await Promise.all([refresh, pageRead])
+  expect(app.account.login('claude')).toEqual(refreshed[0])
 })
 
 test('account polling stops after the last own endpoint is removed and page returns still read logins', async () => {

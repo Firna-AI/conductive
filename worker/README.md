@@ -9,9 +9,10 @@ The Durable Object runs the complete request gate.
 Durable Objects hold workspace state, and D1 holds shared records.
 The [security area](security/README.md) owns the app request gate.
 The [HTTP area](http/README.md) owns the request body limit at the Worker entry.
-The [sandbox area](sandbox/README.md) owns the Boat adapter and the use of the app's one Boat key.
-The Worker reads that key from the Worker secret `BOAT_API_KEY`.
+The [sandbox area](sandbox/README.md) owns the provider accounts and the client of each provider kind.
+The `boat` account uses the app's Boat key, from the Worker secret `BOAT_API_KEY`.
 The Worker variable `BOAT_ORG_ID` names the app's Boat organization.
+Each other account, such as `e2b`, comes from the Worker secret `SANDBOX_PROVIDER_ACCOUNTS`, as [Sandbox provider accounts](../docs/sandbox-provider-accounts.md) says.
 The [chat backend](chat/README.md) owns the sessions, the messages, and the event history of each workspace.
 The [lifecycle](lifecycle/README.md) records each image's runner version and copies it before each new computer allocation.
 The chat backend accepts only runner protocol version 2, which the packaged runner sends and each full image build records.
@@ -47,16 +48,25 @@ On the app hostname, the Worker serves these API routes:
 - The session, sign-out, the org list, a new org, and one org.
 - The waitlist state and code use, through the [waitlist backend](waitlist/README.md).
 - The account, its default model, its agent logins, the model list, and Get started.
+- The org login metadata for members, and admin writes and endpoint model
+  refreshes, through [org login routes](app-api/org-agent-logins.ts).
 - The start and poll of a Codex ChatGPT device code sign-in, through
   [Codex authentication](codex-auth/README.md).
 - The sections, the repositories, the members, and the workspace list of an org.
-- The list, read, create, update, and delete routes of an org's routines, Run now, and run history.
+- The list, read, create, update, and delete routes of an org's automations, Run now, and run history.
 - Leave org, under the existing last-active-admin rule.
 - The create, read, resume, and activity routes of a workspace.
 - The view and the read mark of a workspace.
+- `GET /api/orgs/<orgId>/workspaces/<workspaceId>/terminal`, the terminal state, list, and software support.
+- `POST /api/orgs/<orgId>/workspaces/<workspaceId>/terminal/terminals`, a new terminal entry.
+- `DELETE /api/orgs/<orgId>/workspaces/<workspaceId>/terminal/terminals/<terminalId>`, the close of a terminal and its shell.
+- `GET /api/orgs/<orgId>/workspaces/<workspaceId>/terminal/socket`, the legacy terminal socket.
+- Org secret settings, workspace capabilities, and secret request answers, through the [secrets backend](secrets/README.md).
 - The Mac device routes.
 - `GET /api/feedback`, the reply address of feedback, and `POST /api/feedback`, the send of feedback, as [Feedback routes](app-api/feedback.md) says.
 - `GET /api/operator/overview`, the app-wide numbers for operators.
+- `GET` and `PUT /api/operator/providers`, configured accounts, org counts,
+  and the assignment weights of new orgs.
 - `GET /api/operator/orgs`, the org search and cursor pages for operators.
 - `GET /api/operator/users`, the user search and cursor pages for operators.
 - `GET /api/operator/orgs/<orgId>`, the org page for operators.
@@ -84,19 +94,19 @@ The model list and the default model come from Worker variables, as [Deployment 
 The optional Worker secret `FEEDBACK_EMAIL` names the team inbox of feedback.
 [The email](app-api/feedback.md#the-email) of the feedback routes gives the local log, the 503 without that inbox, and the 502 of a failed send.
 
-The Worker also serves org settings, repository choices, sections, member writes,
+The Worker also serves org settings, repository choices and their order, sections, member writes,
 workspace metadata, Archive, and Restore, image builds and logs, account GitHub access,
 and pending invitations with explicit acceptance.
 The [feature shell](app-api/feature-shell.ts) implements the shared shell writes.
 The [workspace features](features/workspace.ts) dispatch files, terminal,
 previews, and desktop inside the real workspace object.
 The [GitHub composition](features/github.ts) stores banner updates in the common chat stream.
-The [routines area](routines/README.md) stores saved prompts and their triggers.
+The [automations area](automations/README.md) stores saved prompts and their triggers.
 It validates schedules and resolves author-filter logins at save.
 Its owner-only Run now starts a stored run as a new workspace.
 The run starter joins repeated creates through a stable first-message ID and returns before the workspace start ends.
 The runs list projects the current workspace state and retains failed-start and first-turn causes.
-Three failed runs in a row turn the routine off.
+Three failed runs in a row turn the automation off.
 The minute schedule scan calls the same starter.
 Signed pull request webhooks store matching runs before the reply.
 Their background tasks call the same starter.
@@ -107,9 +117,12 @@ On the machine hostname, the Worker serves the Mac command routes, the git
 credential route, the image source credential route, the
 [software image deploy route](software-image/README.md#deploy-route), the
 [workspace tools](tools/README.md), GitHub webhooks, the model gateway, and the runner socket.
+The machine host also serves the one-use [attachment download](chat/attachments.md#dispatch).
 These handlers use their own machine credentials and skip the browser gate.
+The [secret tool routes](secrets/README.md#workspace-tool-routes) list metadata
+with a workspace token and return approved run values only during a running turn.
 The [model gateway](model-gateway/README.md) accepts only a turn token.
-It adds the starter's login to allowed Anthropic, OpenAI, or own endpoint requests.
+It adds the login of the session to allowed Anthropic, OpenAI, or own endpoint requests.
 Its request upload and model answer both stream.
 The chat backend checks the login kinds of the runner before delivery.
 Each `turn` command carries a turn token and never a real login.
@@ -122,102 +135,68 @@ Its authorizer redeems the one-use viewer grant before any sandbox request.
 The object owns preview expiry and revocation beside its other alarm sources.
 The `*/15 * * * *` Cron Trigger runs deleted-org maintenance and cleanup every 15 minutes.
 It also removes expired Codex device sign-in records.
+It also deletes each feedback send record whose 24 hours and hourly count have both ended, as [The send limit](app-api/feedback.md#the-send-limit) says.
 It also retries pending approval emails until delivery or 24 hours from
 approval. [Approval delivery](operator/README.md#approval-email-delivery)
 describes the saved messages and delivery keys.
 It also repairs overdue workspace disk and archive alarms and org image refreshes after a 15-minute grace period.
 It then advances unfinished software image builds and retries their cleanup
-in the default provider account.
+in each provider account of `software_images`.
 The repair checks at most 50 workspaces and 50 orgs per run.
 It defers failed calls and logs counts when either limit leaves work pending.
-The `* * * * *` Cron Trigger runs routine schedules and recovers old queued runs each minute.
+The `* * * * *` Cron Trigger runs automation schedules and recovers old queued runs each minute.
 The scheduled entry dispatches each trigger by its cron expression.
 The [member composition](members/composition.ts) supplies the durable lifecycle hooks.
 
+## Last active time
+
+`users.last_active_at` holds the time of the last real action of each
+person, which the operator sees on the Users tab.
+[Orgs and Users](../docs/protocol/operator-section.md#orgs-and-users) gives
+the requirement.
+
+- `routeChat` in [chat/router.ts](chat/router.ts) records a chat message
+  that the person sends or sends again, after the workspace object answers
+  with a 2xx status.
+- `chatLifecycleRoute` in [app-api/lifecycle.ts](app-api/lifecycle.ts)
+  records a new workspace, after the create answers with 201.
+- Agent tools and automations do not pass these routes, so their actions do
+  not count.
+- `recordUserActivity` in [data/user-activity.ts](data/user-activity.ts)
+  takes the signed-in person that the session gate returns, with the
+  sign-in session ID. Shared code of agent tools and automations holds no
+  sign-in session, so it cannot record an action. The write runs only
+  while that session exists, and only when the stored time is older than
+  1 minute. It runs in `waitUntil` when the entry has an execution
+  context. A failed write logs the `user_activity_failed` warning and
+  never fails the request.
+
 ## Workspace object connections
 
-One `Workspace` class serves each workspace object and each Mac broker object.
-It accepts server sockets in three roles through the platform's [hibernation API](https://developers.cloudflare.com/durable-objects/best-practices/websockets/): the events socket of a browser tab, the runner socket, and the Mac device socket.
-These sockets keep their wire formats, so installed Mac apps and supported runners from older images need no change.
-
-`WorkspaceSockets` in [native-sockets.ts](native-sockets.ts) is the only caller of `acceptWebSocket`.
-It gives each socket a trusted role, and it sends each message, close, and error event to the owner of that role.
-The constructor of `WorkspaceLifecycle` restores the open sockets inside `blockConcurrencyWhile`.
-So no request, RPC call, alarm, or socket event runs before the restore ends.
-A restore registers saved state only. It starts no model work, and it sends no second `welcome`, `device.connected`, or history.
-A socket that its owner cannot restore closes.
-
-Each attachment holds a format version, the role, a connection ID of at most 128 code units, and a generation.
-A browser attachment also holds the app origin and the workspace number of its tab.
-State that can grow and public metadata live in durable records: raw records under the `native:` key prefix, and the pending command and repair records of chat.
-No attachment or native record holds a cookie, a workspace token, an agent login, a turn token, an env value, a transcript, or a growing ID list.
-
-A wake keeps the original sockets and their state.
-A real disconnect, a replacement, and a restart that closes the sockets still run their cleanup, such as the runner disconnect hook, the Mac drop, and the tab removal.
-The runner and the Mac keep a durable generation and a retirement tombstone. So a closing older socket cannot take back the authority of a newer connection.
-A close or an error can be the first event after a wake. Its owner then reads the saved state, and the cleanup runs once.
-Production upgrades always pass a physical socket. Only a physical socket, accepted or restored, saves, arms, and retires native state.
-A feature test can give a tab or runner owner an abstract peer inside the real object. That peer uses the same access logic.
-Its access checks use the scheduler that the test injects. Production has no default timer for them.
-[Open connections](chat/access.md#open-connections) and [Sleep and restore](devices/README.md#sleep-and-restore) give the state of each role.
+[Workspace object connections](workspace-object-connections.md) gives the
+socket roles of the `Workspace` class, the restore of each socket after a
+wake, and the state that each attachment holds.
 
 ### Alarms
 
-`WorkspaceAlarms` in [features/alarms.ts](features/alarms.ts) keeps the due time of each source in its `alarm:<source>` marker, and it sets the one platform alarm.
-The security sources are `browser`, `runner`, and `devices`. They use raw storage, so a member fence cannot refuse their writes.
-The regular sources are the lifecycle tasks, `github`, `previews`, and `continue`. They use the guarded receiver storage, as [Lifecycle ownership](members/README.md#lifecycle-ownership) says.
-[The object alarm scheduler](lifecycle/alarm-scheduler.md) gives the shared rules, such as the lifecycle run lease and the steps at the end of each run.
-
-`Workspace.alarm` calls `WorkspaceAlarmRunner.alarm` in [features/workspace-alarm.ts](features/workspace-alarm.ts).
-It takes the due security sources before any member fence or lifecycle check.
-It runs the tab expiry at once. Runner, Mac, and regular work run as tracked tasks of `WorkspaceAlarmTasks`.
-So the handler returns before a slow access read or provider call ends.
-A due security source keeps a retry deadline until its owner replaces or clears it.
-The regular task then checks the member fence and the org lifecycle generation. Then it calls `runWorkspaceAlarms` in [workspace-alarms.ts](workspace-alarms.ts).
-While a fence pauses that work, a numeric deferral moves the platform alarm time of the regular sources. Each regular due time stays in its marker.
-A member suspension clears the regular sources in two guarded stages, and both stages keep each security deadline, as [Lifecycle ownership](members/README.md#lifecycle-ownership) says.
-Its final stage also cancels the lifecycle run lease and the deferral. So a suspended object keeps no regular retry. A Restore clears the deferral in its guarded transaction.
-Provider and lifecycle writes stay fenced.
-
-Tab and runner access checks run every 15 seconds. Tab grants last at most 30 seconds. Mac session checks run at least every 10 seconds.
-The tab and runner owners save their next check before they read access.
-Each owner closes a connection at its stored deadline, by the current clock.
-A late alarm or a failed access read never extends a grant.
+[Alarms](workspace-object-connections.md#alarms) gives the alarm sources
+of the object, the alarm runner, and the access checks of tabs, runners,
+and Macs.
 
 ### The Mac heartbeat
 
-The platform answers the exact Mac ping `{"type":"device.ping"}` with `{"type":"device.pong"}`, and the object does not wake.
-That automatic response applies to every hibernation socket of one object.
-So only a verified Mac broker object sets it, when it accepts or restores a Mac socket. The shared constructor never sets it.
-So no browser or runner socket gets a Mac pong. The runner checks the token of each frame, also a Mac ping, before it reads the frame.
-An automatic pong grants no command permission, and the session check still runs, as [Sleep and restore](devices/README.md#sleep-and-restore) says.
+[The Mac heartbeat](workspace-object-connections.md#the-mac-heartbeat)
+gives the automatic pong of a Mac broker object.
 
 ### Work that keeps the object active
 
-An object whose open sockets all use these three roles can hibernate between its alarms and requests.
-This work keeps the object active:
-
-- An open terminal or preview socket. Its bridge holds an outbound socket to the sandbox, which cannot hibernate, as the [terminal](terminal/README.md) and [preview](previews/README.md) READMEs say.
-- A request that waits, such as a Mac settings reply, a file read or diff, an attachment copy, an input activity write, a title model call, or a preview HTTP stream.
-- A tracked alarm task, until it ends.
-
-The code closes no terminal, drops no pending promise, and weakens no limit to make the object sleep.
-So a workspace object stays active while a terminal socket is open, also while that socket is idle.
-The Mac broker is a separate object, so it can sleep while a workspace object stays active.
-No measurement of production sleep time, wake time, or cost saving exists.
+[Work that keeps the object active](workspace-object-connections.md#work-that-keeps-the-object-active)
+lists the work that keeps a workspace object from hibernation.
 
 ### Wake tests
 
-A wake test calls `unsafeEvictDurableObject(scriptName, 'Workspace', { name, webSockets: 'hibernate' })` of the pinned Miniflare.
-The client sockets stay open while a new object instance restores.
-Each fixture entry returns a random instance marker from a test-only route, and the test checks that the marker changed.
-The marker never enters a product route or a wire frame.
-An eviction without `webSockets` closes the sockets, so it tests the restart path, not a wake.
-The native alarm handler returns before its tracked work ends. So a fixture that calls `alarm()` also awaits the protected `settledAlarms()`.
-The native test harness and the lifecycle fixtures run only the stored alarms that are due, through `advanceScheduledAlarms`. They await `settledAlarms()` after each one.
-An automatic pong does not show that queued socket work ended. So the device fixture reads its readiness route after each socket message.
-A native fixture starts its client socket closes and `runtime.dispose()` together, and it awaits both.
-[Chat backend tests](chat/tests.md) and the [device checks](devices/README.md#composition-and-checks) name the fixtures.
+[Wake tests](workspace-object-connections.md#wake-tests) gives how a test
+evicts an object and checks its restore.
 
 ## Development
 
@@ -241,6 +220,7 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 ### Key Code
 
 - [app.ts](app.ts) exports the Worker HTTP handler.
+- [machine-grants.ts](machine-grants.ts) dispatches the private image-source credential and attachment download routes on the machine host.
 - [application.ts](application.ts) selects each host surface and dispatches the app and machine routes with their own access gates.
 - [http.ts](http.ts): `privateResponse` adds private response headers. It preserves an explicit referrer policy and defaults to `no-referrer`.
   `previewResponse` adds the same security headers to each reply of the preview host. It keeps the cache rules that the preview code set. A reply without rules gets `no-store`, except a bare 304.
@@ -252,30 +232,34 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [server-timing.ts](server-timing.ts): `ServerTiming` records the steps of one request for its `Server-Timing` header. The preview proxy and the create of a workspace use it.
 - [codex-auth/README.md](codex-auth/README.md) owns device authorization,
   encrypted ChatGPT sign-ins, and serialized refresh-token renewal.
-- [http.ts](http.ts) serializes `HttpError` as the shared API error body, with optional structured details.
+- [http.ts](http.ts) serializes `HttpError` as the shared API error body, with optional structured details and an optional `retryAt`. It answers an error of a Durable Object that restarted, such as for a deploy, as `503 server_restarted`, and each other unexpected error as `500 internal_error`. Each error that is not an `HttpError` writes the `unexpected_error` warning, with the route when the caller passes its request.
 - [waitlist/route.ts](waitlist/route.ts) reads the signed-in user's waitlist state and uses invite or referral codes.
 - [waitlist/grant.ts](waitlist/grant.ts) supplies the shared app access grant statements for D1 batches.
 - [app-api/README.md](app-api/README.md) names the entry points of the account, shell, and workspace routes.
+- [secrets/README.md](secrets/README.md) owns encrypted org secrets, their grants, and workspace capabilities.
 - [configuration.ts](configuration.ts): `appFrameSources` reads extra frame origins. Release admission reads validated newest-release metadata.
-- [chat/router.ts](chat/router.ts) forwards the browser chat routes and the runner socket to the Durable Object of their workspace.
+- [chat/router.ts](chat/router.ts) forwards the browser chat routes and the runner socket to the Durable Object of their workspace. It records the [last active time](#last-active-time) of a sent message.
 - [workspace.ts](workspace.ts) composes each workspace Durable Object. [workspace-lifecycle.ts](workspace-lifecycle.ts) exposes its lifecycle RPC methods and owns its [input activity](lifecycle/README.md#input-activity). Its constructor restores the native sockets, and it receives their message, close, and error events.
 - [native-sockets.ts](native-sockets.ts): `WorkspaceSockets`, the trusted socket roles, the attachment check, the restore, and the dispatch of native socket events.
 - [model-gateway/README.md](model-gateway/README.md): the machine model routes, credential replacement, header rules, stream cancellation, and turn-token checks.
   Each runner `turn` command carries one of these tokens.
 - [warnings.ts](warnings.ts): `warnWorker`, the one console warning of the Worker. It writes one structured object with fixed text and selected safe fields. It copies no extra caller field, token, error message, request body, command output, or response body. `WarningRecord` names the logged object type. `CommandFailed` carries a failed command's state, exit code, and time-out.
-- [warning-types.ts](warning-types.ts): `WorkerWarning`, the fixed warning kinds and their typed fields. Warning callbacks use this type too.
-- [warning-values.ts](warning-values.ts): `WarningId.checked` accepts the canonical 43-character base64url IDs from `randomToken`. Other values become `unknown` in the log only. `warningCode` and `errorSummary` keep allowlisted codes and command states. A generic error has the fixed kind `error`, with no class name.
-- [workspace-alarms.ts](workspace-alarms.ts): `runWorkspaceAlarms`, the dispatch of the regular owners of each alarm run: a running Continue, the lifecycle run, the previews, and GitHub. It runs the owners whose due time has come, then sets the alarm to the earliest stored due time.
-- [features/alarms.ts](features/alarms.ts): `WorkspaceAlarms`, the one alarm scheduler of each workspace object. It keeps a durable due time for each owner: each lifecycle task, the previews, GitHub, Continue, and the `browser`, `runner`, and `devices` security sources. `scheduleWorkspaceAlarm` sets the one platform alarm. `suspendWorkspaceAlarms` is the alarm step of each member suspension stage. [The object alarm scheduler](lifecycle/alarm-scheduler.md) gives its rules.
+- [warning-types.ts](warning-types.ts): `WorkerWarning`, the fixed warning kinds and their typed fields. Warning callbacks use this type too. It also names the stages of `runner_message_failed`: `parse`, `hello`, `file_result`, `event`, and `after_commit`, the work after the commit of a runner event. It names the steps of `attachment_transfer_retried` and `attachment_copy_failed` too: `check`, `start`, `status`, and `command`.
+- [unexpected-error.ts](unexpected-error.ts): `unexpectedErrorFields`, the safe fields of the `unexpected_error` warning that `errorResponse` writes for each error that is not an `HttpError`. It keeps a built-in error name, a fixed kind for each known Cloudflare runtime text, the Cloudflare flags `retryable`, `overloaded`, and `durableObjectReset`, the method, the route with each segment outside a fixed list of API route words as `*`, and up to 8 stack lines that hold only a code place in a `.js`, `.mjs`, `.cjs`, or `.ts` file, with no `[as key]` part. An error that throws when the log reads it logs fixed fields, and the reply stays the same. It keeps no message and no stack line of a stack that does not start with its own name and message. Cal chose this on 17 November 2026, as option B of item 2 of the investigation of a failed session close.
+- [warning-values.ts](warning-values.ts): `WarningId.checked` accepts the canonical 43-character base64url IDs from `randomToken`. Other values become `unknown` in the log only. `warningCode` and `errorSummary` keep allowlisted codes and command states. A D1 error has the kind `d1` and one fixed reason from [d1-errors.ts](d1-errors.ts), such as `no_such_table`, with no text of the error. A generic error has the fixed kind `error`, with no class name.
+- [workspace-alarms.ts](workspace-alarms.ts): `runWorkspaceAlarms`, the dispatch of the regular owners of each alarm run: a running Continue, a running repository change, the lifecycle run, the previews, GitHub, and the automation report retry. It runs the owners whose due time has come, then sets the alarm to the earliest stored due time.
+- [features/alarms.ts](features/alarms.ts): `WorkspaceAlarms`, the one alarm scheduler of each workspace object. It keeps a durable due time for each owner: each lifecycle task, the previews, GitHub, Continue, the repository change, the automation report retry, and the `browser`, `runner`, `devices`, and `secrets` security sources. `scheduleWorkspaceAlarm` sets the one platform alarm. `suspendWorkspaceAlarms` is the alarm step of each member suspension stage. [The object alarm scheduler](lifecycle/alarm-scheduler.md) gives its rules.
 - [features/workspace-alarm.ts](features/workspace-alarm.ts): `WorkspaceAlarmRunner`, the short native alarm handler, the security work before the fences, and the fenced regular work.
 - [features/alarm-tasks.ts](features/alarm-tasks.ts): `WorkspaceAlarmTasks`, the tracked background work of an alarm.
 - [members/workspace-receiver.ts](members/workspace-receiver.ts) fences suspension, Restore, and payload deletion.
 - [operator/route.ts](operator/route.ts) serves the operator routes after the request gate.
-- [routines/route.ts](routines/route.ts) serves routine records after the request gate.
-- [routines/run-route.ts](routines/run-route.ts) serves Run now and paginated run history.
-- [routines/run-starter.ts](routines/run-starter.ts) starts queued runs with the owner's logins.
-- [routines/pull-request-dispatch.ts](routines/pull-request-dispatch.ts) applies author filters, trust, and loop guards before it stores pull request runs.
-- [routines/schedule-scan.ts](routines/schedule-scan.ts) claims up to 50 due routines and retries up to 50 old queued runs each minute.
+- [automations/route.ts](automations/route.ts) serves automation records after the request gate.
+- [automations/run-route.ts](automations/run-route.ts) serves Run now and paginated run history.
+- [automations/run-starter.ts](automations/run-starter.ts) starts queued runs in the name of the automation owner.
+- [automations/pull-request-dispatch.ts](automations/pull-request-dispatch.ts) applies author filters, trust, and loop guards before it stores pull request runs.
+- [automations/schedule-scan.ts](automations/schedule-scan.ts) claims up to 50 due automations and retries up to 50 old queued runs each minute.
+- [email-messages.ts](email-messages.ts): `createEmailMessages` takes the [effective `APP_ORIGIN`](../docs/local-development.md#the-app-origin) of the request.
+  Its `approval()` and `invitation()` build the subject and body of the approval and org invitation emails, with their app links. The product name comes from the brand.
 - [operator/approval-email.ts](operator/approval-email.ts) sends approval messages and retries pending deliveries from the scheduled entry.
 - [mail-sender.ts](mail-sender.ts) shares Resend transport and local logging between the approval, invitation, and feedback emails.
   It writes the sender address, and the name and the media type of each attachment from a `CheckedImage`.
@@ -297,4 +281,4 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [Chat and events](../docs/protocol/chat-and-events.md)
 - [Agent runner](../docs/protocol/agent-runner.md)
 - [Workspaces and sandboxes](../docs/protocol/workspaces-and-sandboxes.md)
-- [Routines](../docs/protocol/routines.md)
+- [Automations](../docs/protocol/automations.md)

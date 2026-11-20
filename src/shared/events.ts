@@ -5,6 +5,9 @@ import type { ChatEvent } from './chat-events'
 import type { FileEvent } from './files'
 import type { GitHubBanner, GitHubChecksResponse } from './github'
 import type { PortsUpdated } from './ports'
+import type { SkillsUpdated } from './generated/SkillsUpdated'
+import type { SecretWorkspaceEvent } from './secret-requests'
+import type { TerminalEntry } from './terminal'
 import { workspacePath, type WorkspaceResponse } from './workspaces'
 
 export function workspaceEventsPath(
@@ -31,8 +34,10 @@ export function chatHistoryPath(
 
 export type WorkspaceEvent =
   | ChatEvent
+  | SecretWorkspaceEvent
   | FileEvent
   | PortsUpdated
+  | SkillsUpdated
   | {
       type: 'workspace.updated'
       workspace: Workspace
@@ -49,6 +54,15 @@ export type WorkspaceEvent =
       checks: GitHubChecksResponse
     }
   | { type: 'preview.revoked'; previewId: string }
+  | {
+      type: 'terminals.updated'
+      terminals: readonly TerminalEntry[]
+      /**
+       * Whether the terminal service opens several shells, after a Restart
+       * that changed it. Older events and other changes leave it out.
+       */
+      several?: boolean
+    }
 
 /** The workspace assigns contiguous event numbers, starting at 1. */
 export interface WorkspaceEventEnvelope {

@@ -12,11 +12,16 @@ type GitHubAccess = (typeof gitHubAccesses)[number]
 
 /**
  * The action of the app that the bar shows: none, a merge that runs or that
- * GitHub refused, or a Continue that runs or that stopped.
+ * GitHub refused, Ready for review that runs or that GitHub refused, or a
+ * Continue that runs or that stopped.
  */
 export const appActions = [
   'none',
   'merging',
+  'marking-ready',
+  'ready-no-right',
+  'ready-pull-changed',
+  'ready-refused',
   'merge-moved-head',
   'merge-no-right',
   'merge-refused',
@@ -39,6 +44,8 @@ export type LocalWorkKind = (typeof localWorkKinds)[number]
 export type BarAction =
   | { kind: 'agent'; action: AgentAction }
   | { kind: 'merge'; method: MergeMethod; busy: boolean }
+  /** Ready for review of a draft. `busy`: the change runs. */
+  | { kind: 'ready'; busy: boolean }
   /** `waiting`: a turn runs, so Continue is not available yet. */
   | { kind: 'continue'; busy: boolean; waiting: boolean }
   /** `busy`: the Archive runs. Archive asks no question. */
@@ -131,10 +138,11 @@ function localWorkAction(localWork: LocalWorkKind): AgentAction | undefined {
 
 /**
  * The one main action of a state before the merge. Local work comes first:
- * Commit and push, or Push, takes the place of Merge and of the fixes. An
- * agent action needs write access, or an access that the Worker could not
- * read.
- * Merge needs write access that the Worker read, and a merge method.
+ * Commit and push, or Push, takes the place of Merge, of the fixes, and of
+ * Ready for review. An agent action needs write access, or an access that
+ * the Worker could not read. Ready for review needs write access that the
+ * Worker read. Merge needs write access that the Worker read, and a merge
+ * method.
  */
 function mainAction(facts: BarFacts): BarAction | undefined {
   const { banner, method } = facts
@@ -148,6 +156,12 @@ function mainAction(facts: BarFacts): BarAction | undefined {
   if (local && isOpen(banner)) return agent(local)
   const fix = fixOf(banner)
   if (fix) return agent(fix)
+  if (banner === 'draft') {
+    const mayChange =
+      facts.access === 'write' && facts.appAction !== 'ready-no-right'
+    if (!mayChange) return undefined
+    return { kind: 'ready', busy: facts.appAction === 'marking-ready' }
+  }
   const mayMerge =
     facts.access === 'write' && facts.appAction !== 'merge-no-right'
   if (banner !== 'ready-to-merge' || !mayMerge || method === null) {
@@ -157,14 +171,20 @@ function mainAction(facts: BarFacts): BarAction | undefined {
   return { kind: 'merge', method, busy }
 }
 
-/** A refusal of GitHub stays under the bar of Ready to merge. */
-function mergeMessage(facts: BarFacts): BarMessageKind | undefined {
-  if (facts.banner !== 'ready-to-merge') return undefined
+/**
+ * A refusal of a merge stays under the bar of Ready to merge, and a refusal
+ * of Ready for review under the bar of the draft.
+ */
+function refusalMessage(facts: BarFacts): BarMessageKind | undefined {
   switch (facts.appAction) {
     case 'merge-moved-head':
     case 'merge-no-right':
     case 'merge-refused':
-      return facts.appAction
+      return facts.banner === 'ready-to-merge' ? facts.appAction : undefined
+    case 'ready-no-right':
+    case 'ready-pull-changed':
+    case 'ready-refused':
+      return facts.banner === 'draft' ? facts.appAction : undefined
     default:
       return undefined
   }
@@ -206,6 +226,6 @@ export function barModel(facts: BarFacts): BarModel {
   return {
     ...bar,
     actions: main ? [main] : [],
-    message: mergeMessage(facts) ?? baseMessage(facts),
+    message: refusalMessage(facts) ?? baseMessage(facts),
   }
 }

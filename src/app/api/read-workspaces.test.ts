@@ -1,10 +1,21 @@
 import { expect, it } from 'vitest'
 
 import { readUserMessage } from '../../chat/api/read-chat'
-import { readWorkspaceResponse as readChatWorkspace } from '../../chat/api/read-workspace'
-import { parseWorkspace } from '../../members/api/parseCore'
-import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
-import { readAttachment, readCreated, readWorkspace } from './read-workspaces'
+import {
+  readEnvelope as readChatEnvelope,
+  readWorkspaceResponse as readChatWorkspace,
+} from '../../chat/api/read-workspace'
+import { parseWorkspace, parseWorkspaces } from '../../members/api/parseCore'
+import {
+  senderSnapshot,
+  workspaceFixtures,
+} from '../../test-support/fixtures/workspaces'
+import {
+  readAttachment,
+  readCreated,
+  readOrderedWorkspaceResponse,
+  readWorkspace,
+} from './read-workspaces'
 
 const attachment = {
   id: 'image',
@@ -31,7 +42,7 @@ it('reads upload and sent paths and gives old stored files a null path', () => {
   }
 })
 
-it('preserves each GitHub summary in shell, chat, and member workspace records', () => {
+it('preserves the parent and each GitHub summary in shell, chat, and member workspace records', () => {
   const { detail } = workspaceFixtures()
   for (const github of [
     'checks-running',
@@ -44,22 +55,74 @@ it('preserves each GitHub summary in shell, chat, and member workspace records',
     'blocked',
     null,
   ]) {
-    const workspace = { ...detail.workspace, github }
+    const workspace = { ...detail.workspace, parentId: 'parent', github }
     expect(readWorkspace(workspace).github).toBe(github)
+    expect(readWorkspace(workspace).parentId).toBe('parent')
     expect(readChatWorkspace({ ...detail, workspace }).workspace.github).toBe(
       github,
     )
+    expect(readChatWorkspace({ ...detail, workspace }).workspace.parentId).toBe(
+      'parent',
+    )
     expect(parseWorkspace(workspace).github).toBe(github)
+    expect(parseWorkspace(workspace).parentId).toBe('parent')
   }
 })
 
-it('reads older shell, chat, and member replies without a GitHub summary as null', () => {
+it('reads older shell, chat, and member replies without a GitHub summary or a parent as null', () => {
   const { detail } = workspaceFixtures()
   const workspace = { ...detail.workspace }
   Reflect.deleteProperty(workspace, 'github')
+  Reflect.deleteProperty(workspace, 'parentId')
   expect(readWorkspace(workspace).github).toBeNull()
-  expect(
-    readChatWorkspace({ ...detail, workspace }).workspace.github,
-  ).toBeNull()
+  expect(readWorkspace(workspace).parentId).toBeNull()
+  const chat = readChatWorkspace({ ...detail, workspace }).workspace
+  expect(chat.github).toBeNull()
+  expect(chat.parentId).toBeNull()
   expect(parseWorkspace(workspace).github).toBeNull()
+  expect(parseWorkspace(workspace).parentId).toBeNull()
+})
+
+it('keeps the response fields used by shell creation, chat streams, and the Members list', () => {
+  const { created } = workspaceFixtures()
+  const workspace = {
+    ...created.workspace,
+    owner: senderSnapshot(created.workspace.owner),
+  }
+  const firstMessage = {
+    ...created.firstMessage,
+    sender: senderSnapshot(created.firstMessage.sender),
+  }
+  const error = {
+    code: 'start_failed',
+    message: 'The cloud computer did not start. Try again.',
+    log: 'Saved start log',
+  }
+  const creation = { ...created, workspace, firstMessage, error }
+  expect(readCreated(creation)).toEqual(creation)
+
+  const detail = {
+    workspace,
+    start: created.start,
+    error,
+    eventNumber: 71,
+  }
+  expect(readOrderedWorkspaceResponse(detail)).toEqual(detail)
+  expect(readChatWorkspace(detail)).toEqual(detail)
+  expect(parseWorkspaces({ workspaces: [workspace] })).toEqual({
+    workspaces: [workspace],
+  })
+
+  const envelope = {
+    workspaceId: workspace.id,
+    eventNumber: 72,
+    occurredAt: 1_800_000_003_000,
+    event: {
+      type: 'workspace.updated',
+      workspace,
+      error: { code: error.code, message: error.message },
+    },
+    late: true,
+  }
+  expect(readChatEnvelope(envelope)).toEqual(envelope)
 })

@@ -64,6 +64,10 @@ These docs belong to this doc:
   serious desktop app.
 - The sidebar toggle sits beside the window buttons. Back and Forward sit
   at the right of the top bar of the left panel.
+- While the toggle hides the sidebar, these controls keep their own width
+  in the top left corner. The top bar of the main area starts after them.
+  [The hidden sidebar](org-rail-order.md#the-hidden-sidebar) gives the
+  rest.
 - These controls sit where the [mockups](../mockups/README.md#the-mac-app)
   draw them. Back and Forward move through the pages of the window.
 - The top bars of the app move the window when the user drags them. Their
@@ -107,7 +111,7 @@ These docs belong to this doc:
 
 - A port preview shows in a frame of the page, as in a browser. The frame
   loads the launch address of the preview from `app.conductive.build`, as
-  [Port previews](terminal-previews-and-desktop.md#port-previews) says.
+  [Preview grants](preview-grants.md#the-launch) says.
 - A link or a request for a new window from the main page to a launch
   address opens the preview in the user's default browser. The window
   keeps its page.
@@ -118,8 +122,9 @@ These docs belong to this doc:
   address. It sends its own sign-in session, the desktop origin, and
   `Accept: application/json`.
 - A browser launch is a JSON reply with an authorizer address and the
-  expiry of its grant. The address carries the preview hostname and a new
-  grant only in its fragment.
+  expiry of its grant. The address carries the preview hostname, a new
+  grant, and the [launch path](preview-grants.md#launch-paths) when the
+  launch names one, only in its fragment.
 - The Mac app opens only an authorizer address on a preview domain that
   the configured frame origins include. It opens no other address from a
   browser launch.

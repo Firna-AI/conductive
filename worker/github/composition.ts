@@ -3,11 +3,13 @@ import { workspaceBinding } from '../app-api/workspace-state'
 import { latestSoftwareRelease } from '../lifecycle/software-release'
 import { imageRuntime } from '../lifecycle/runtime'
 import { refreshImagesForPush } from '../lifecycle/image-timers'
+import { wakeImagesForRepositoryChange } from '../lifecycle/repository-change-builds'
 import { handleGitHubWebhook } from './webhook'
 import { installedRepository } from './composition-data'
+import { readGitHubRepository } from './repository-read'
 import { requireFeatureResult } from '../features/result'
-import { dispatchPullRequestRuns } from '../routines/pull-request-dispatch'
-import { routineRunRuntime } from '../routines/run-runtime'
+import { dispatchPullRequestRuns } from '../automations/pull-request-dispatch'
+import { automationRunRuntime } from '../automations/run-runtime'
 import { warnWorker } from '../warnings'
 
 export async function productionGitHubWebhook(
@@ -28,7 +30,7 @@ export async function productionGitHubWebhook(
       now: dependencies.now,
       pullRequest: (event, deliveryId) =>
         dispatchPullRequestRuns(
-          routineRunRuntime(env, dependencies),
+          automationRunRuntime(env, dependencies),
           event,
           deliveryId,
           (work) => background.push(work),
@@ -49,6 +51,24 @@ export async function productionGitHubWebhook(
           software: await latestSoftwareRelease(env, dependencies.fetch),
         })
       },
+      repositoryChange: {
+        read: (change) =>
+          readGitHubRepository(
+            dependencies,
+            {
+              clientId: env.GITHUB_CLIENT_ID,
+              privateKey: env.GITHUB_APP_PRIVATE_KEY ?? '',
+            },
+            change,
+          ),
+        changed: async (change) => {
+          await wakeImagesForRepositoryChange(imageRuntime(env, dependencies), {
+            githubRepositoryId: change.repositoryId,
+            installationId: change.installationId,
+            software: () => latestSoftwareRelease(env, dependencies.fetch),
+          })
+        },
+      },
     },
   )
   if (execution && background.length)
@@ -58,7 +78,7 @@ export async function productionGitHubWebhook(
           try {
             await work()
           } catch {
-            warnWorker({ kind: 'routine_background_start_failed' })
+            warnWorker({ kind: 'automation_background_start_failed' })
           }
         }),
       ),

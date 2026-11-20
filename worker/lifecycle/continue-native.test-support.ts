@@ -1,18 +1,12 @@
 import { execFile } from 'node:child_process'
-import {
-  chmod,
-  mkdir,
-  mkdtemp,
-  readFile,
-  rm,
-  writeFile,
-} from 'node:fs/promises'
-import { join, resolve } from 'node:path'
+import { chmod, mkdir, readFile, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
 import process from 'node:process'
 
 import { onTestFinished } from 'vitest'
 
 import { isolatedProcessEnvironment } from '../test-support/process-environment'
+import { testDirectory } from '../test-support/test-directory'
 import type { CommandResult } from '../sandbox/provider'
 import { FakeGitHubGit } from './fake-github-git-test-support'
 import { shellQuote } from './commands'
@@ -25,9 +19,8 @@ import {
 import { localWorkCommand, localWorkResult } from './local-work'
 
 export async function continueNativeFixture(trackIgnored = false) {
-  const parent = resolve('.context/pull-request-bar-actions/milestone-7/native')
-  await mkdir(parent, { recursive: true })
-  const root = await mkdtemp(join(parent, 'case-'))
+  const files = await testDirectory('continue-')
+  const root = files.path
   const home = join(root, 'home')
   const directory = join(home, "working repo's folder")
   const seed = join(root, 'seed')
@@ -120,8 +113,11 @@ export async function continueNativeFixture(trackIgnored = false) {
   })
   const origin = await server.listen()
   onTestFinished(async () => {
-    await server.close()
-    await rm(root, { recursive: true, force: true })
+    try {
+      await server.close()
+    } finally {
+      await files.remove()
+    }
   })
   const helper = join(root, 'legacy-helper')
   await writeFile(
@@ -145,8 +141,7 @@ export async function continueNativeFixture(trackIgnored = false) {
       installationId: 1,
     },
   }
-  // Only the HOME of the command is the home of the cloud computer. The
-  // fixture folders can also start with /home/user, in a checkout there.
+  // Map only the cloud computer's HOME assignment, not fixture paths.
   const map = (command: string) =>
     command
       .replaceAll('HOME=/home/user ', `HOME=${shellQuote(home)} `)

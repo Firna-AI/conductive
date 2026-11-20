@@ -11,7 +11,8 @@ says.
 ## The parts and the section
 
 - The dialog holds the parts of the page: the repository picker, the
-  branch control, the message and its files, and the model picker.
+  branch control, the message and its files, the model picker, and the
+  Capabilities icon.
 - The header of the dialog holds the repository picker, with the branch
   control directly right of it, as on the page (decision 301). The target
   choice stands in the dropdown of the branch control, not on a line under

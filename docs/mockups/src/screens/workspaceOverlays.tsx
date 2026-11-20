@@ -9,11 +9,18 @@ import { FailureToast } from '../components/common/FailureToast'
 import { Menu } from '../components/common/Menu'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { Sheet } from '../components/common/Sheet'
+import { RowMenuSheet } from '../components/files/FileRowMenu'
+import { pathResults } from '../components/files/rowMenuCopy'
 import { CommandPalette } from '../components/palette/CommandPalette'
 import type { PaletteContext } from '../components/palette/paletteContent'
 import { ArchivedToast } from '../components/workspace/ArchivedToast'
 import { ContinueDialog } from '../components/workspace/ContinueDialog'
 import { reassignMenu } from '../components/workspace/OwnerPicker'
+import {
+  RestartDialog,
+  RestartSheet,
+  UpdateCheckToast,
+} from '../components/workspace/RestartParts'
 import type { WorkspaceTab } from '../components/workspace/TabItem'
 import { TabMenuSheet } from '../components/workspace/TabMenu'
 import { transcriptToasts } from '../components/workspace/transcriptCopy'
@@ -21,6 +28,13 @@ import { workspaceSessions } from '../fixtures/sessions'
 import { closedTerminal, cloudComputerSilent } from '../fixtures/terminals'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
+import { valueSheet } from './requestSheets'
+import { expandedPage } from './workspaceExpanded'
+import { headerMenuOf } from './workspaceHeaderMenu'
+import { capabilitiesSheet } from './workspaceCapabilities'
+import { openFile } from './workspaceFileTab'
+import { repositoryOverlay } from './workspaceRepositoryOverlay'
+import { rowMenuOf } from './workspaceRowMenu'
 import type { WorkspaceState } from './workspaceState'
 import { historyFor } from './workspaceTabs'
 
@@ -109,39 +123,48 @@ function TerminalFailure(props: { title: string; viewport: Viewport }) {
 }
 
 /**
- * The toast after a copy of a session transcript from the tab menu, if any.
- * It lies over the workspace at the place of the toasts of the app.
+ * The toast after a copy from a menu, if any: Copy path from a row menu or
+ * a tab menu, or a copy of a session transcript from the tab menu. It lies
+ * over the workspace at the place of the toasts of the app.
  */
-export function transcriptToast(
+export function copyToast(
   state: WorkspaceState,
   viewport: Viewport,
 ): ReactNode {
-  switch (state.copyTranscript) {
-    case 'none':
-      return null
-    case 'copied':
-      return (
-        <ToastLayer
-          phone={viewport === 'mobile'}
-          toast={{ title: transcriptToasts.copied, tone: 'success' }}
-        />
-      )
-    case 'failed':
-      return (
-        <ToastLayer
-          phone={viewport === 'mobile'}
-          toast={{ title: transcriptToasts.failed, tone: 'error' }}
-        />
-      )
-  }
+  const path = state.copyPath !== 'none'
+  const result = path ? state.copyPath : state.copyTranscript
+  if (result === 'none') return null
+  const words = path ? pathResults : transcriptToasts
+  return (
+    <ToastLayer
+      phone={viewport === 'mobile'}
+      toast={{
+        title: words[result],
+        tone: result === 'copied' ? 'success' : 'error',
+      }}
+    />
+  )
+}
+
+/**
+ * The sheet of the open menu of a row of the Files panel, on a phone. Its
+ * Files tab shows the lists, unless the state shows a file there as a page.
+ */
+function rowMenuSheet(state: WorkspaceState, viewport: Viewport): ReactNode {
+  const shown = state.focus === 'files' && openFile(state) === undefined
+  const menu = shown ? rowMenuOf(state, viewport) : undefined
+  return menu ? <RowMenuSheet menu={menu} /> : null
 }
 
 /**
  * What lies open over a workspace. Desktop draws the menus beside their
- * buttons, and the tab menu below its tab, so only the dialog lies over the
- * app. A phone draws each one as a sheet. `row` holds the tabs that the
- * viewport shows, the tab whose menu is open, if any, and whether the
- * workspace is read-only, which leaves items out of that menu.
+ * buttons, the tab menu below its tab, and the menu of a row of the Files
+ * panel at the pointer, so only the dialog lies over the app. A phone draws
+ * each one as a sheet, and the open Capabilities control too. `row` holds
+ * the tabs that the viewport shows, the tab whose menu is open, if any, and
+ * whether the workspace is read-only, which leaves items out of that menu.
+ * Desktop draws the workspace menu of the header at the pointer in the
+ * header, and a phone as a sheet.
  */
 export function workspaceOverlay(
   state: WorkspaceState,
@@ -152,7 +175,18 @@ export function workspaceOverlay(
   const mobile = viewport === 'mobile'
   switch (state.overlay) {
     case 'none':
+      return (
+        capabilitiesSheet(state, viewport) ??
+        (mobile ? rowMenuSheet(state, viewport) : null)
+      )
+    case 'restarting':
       return null
+    case 'restart':
+      return mobile ? <RestartSheet name={workspace.name} /> : null
+    case 'restart-confirm':
+      return <RestartDialog viewport={viewport} />
+    case 'restart-update-failed':
+      return <UpdateCheckToast viewport={viewport} />
     case 'close-session':
       return <CloseSessionDialog viewport={viewport} />
     case 'continue-unpushed':
@@ -177,6 +211,10 @@ export function workspaceOverlay(
           />
         </Sheet>
       ) : null
+    case 'repository':
+    case 'repository-change':
+    case 'repository-failed':
+      return repositoryOverlay(state.overlay, workspace, viewport)
     case 'tab-menu':
       return mobile && row.menuTab ? (
         <TabMenuSheet
@@ -201,6 +239,22 @@ export function workspaceOverlay(
           viewport={viewport}
         />
       )
+    case 'value-sheet':
+      return valueSheet(state, viewport)
+    case 'workspace-menu':
+      return mobile ? (
+        <Sheet title={workspace.name}>
+          <Menu
+            entries={headerMenuOf(state, workspace.owner)}
+            label={workspace.name}
+            placement="sheet"
+          />
+        </Sheet>
+      ) : null
+    case 'header-rename':
+      return null
+    case 'expanded-page':
+      return mobile ? null : expandedPage(state)
   }
 }
 

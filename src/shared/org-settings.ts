@@ -1,16 +1,39 @@
 import type { Timestamp } from './generated/Timestamp'
+import type { Agent } from './generated/Agent'
 import { orgPath } from './api'
 import type { BaseImage } from './base-image'
 
 export const orgSettingsPaths = {
   repositories: (orgId: string) => `${orgPath(orgId)}/repositories`,
   settings: (orgId: string) => `${orgPath(orgId)}/settings`,
+  agentLogins: (orgId: string) => `${orgPath(orgId)}/agent-logins`,
   builds: (orgId: string) => `${orgPath(orgId)}/builds`,
   refresh: (orgId: string) => `${orgPath(orgId)}/image/refresh`,
 } as const
 
+export function orgAgentLoginPath(orgId: string, agent: Agent): string {
+  return `${orgSettingsPaths.agentLogins(orgId)}/${agent}`
+}
+
+export function refreshOrgAgentLoginModelsPath(
+  orgId: string,
+  agent: Agent,
+): string {
+  return `${orgAgentLoginPath(orgId, agent)}/models/refresh`
+}
+
 export function repositoryPath(orgId: string, repositoryId: string): string {
   return `${orgSettingsPaths.repositories(orgId)}/${encodeURIComponent(repositoryId)}`
+}
+
+export const REPOSITORY_POSITION_SUFFIX = '/position'
+
+/** The move of a chosen repository in the repository order of the org. */
+export function repositoryPositionPath(
+  orgId: string,
+  repositoryId: string,
+): string {
+  return `${repositoryPath(orgId, repositoryId)}${REPOSITORY_POSITION_SUFFIX}`
 }
 
 export function buildPath(orgId: string, buildId: string): string {
@@ -29,6 +52,61 @@ export interface Repository {
   defaultBranch: string
   installationId: number
   selected: boolean
+}
+
+/**
+ * A move of a chosen repository. `index` counts the chosen repositories
+ * without the moved one. The reply is a `RepositoryOrderResponse`.
+ */
+export interface MoveRepositoryRequest {
+  index: number
+}
+/**
+ * The saved repository order of an org: the IDs of its chosen
+ * repositories, first one first. A move answers with it alone, from stored
+ * data, so that no call to GitHub can fail a move that saved.
+ */
+export interface RepositoryOrderResponse {
+  order: readonly string[]
+}
+
+function compareText(a: string, b: string): number {
+  return a < b ? -1 : a > b ? 1 : 0
+}
+
+/**
+ * The name order of repositories: the lower-case GitHub name, then the
+ * exact name, then the ID. GitHub names hold only ASCII characters, so
+ * this order matches SQLite `lower` and its binary text order.
+ */
+export function compareRepositoryNames(
+  a: Pick<Repository, 'id' | 'fullName'>,
+  b: Pick<Repository, 'id' | 'fullName'>,
+): number {
+  return (
+    compareText(a.fullName.toLowerCase(), b.fullName.toLowerCase()) ||
+    compareText(a.fullName, b.fullName) ||
+    compareText(a.id, b.id)
+  )
+}
+
+/**
+ * The body of an add or a removal of a repository. With `build: false`, an
+ * add starts no build, so that one build at Done holds every add of an
+ * edit. A body without `build` starts a build at each add.
+ */
+export interface RepositoryChangeRequest {
+  build?: boolean
+}
+
+/** Whether a repository add starts a build: each body but `build: false`. */
+export function buildsAtAdd(body: unknown): boolean {
+  return !(
+    typeof body === 'object' &&
+    body !== null &&
+    'build' in body &&
+    body.build === false
+  )
 }
 export interface RepositoriesResponse {
   repositories: readonly Repository[]

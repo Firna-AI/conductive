@@ -1,7 +1,10 @@
 import { onTestFinished } from 'vitest'
 import type { FileReply } from '../../app/api/client'
 import type { DraftFile } from '../../app/draft-files'
-import { controlledUploads } from '../../app/draft-files.test-support'
+import {
+  controlledUploads,
+  refusedPart,
+} from '../../app/draft-files.test-support'
 import { fileMark } from '../../app/draft-marks'
 import { accessibleName, byRole } from '../../test-support/dom-queries'
 import { FAKE_TIME } from '../../test-support/fixtures/core'
@@ -21,11 +24,8 @@ import { WorkspaceChatView } from '../WorkspaceChat'
 /** A file of a pick, with its bytes. */
 export const picked = (name: string, bytes = 'x') => new File([bytes], name)
 
-/** The reply of an upload that failed. */
-export const failedUpload: FileReply = {
-  status: 502,
-  body: { error: { code: 'upload_failed', message: 'The upload failed.' } },
-}
+/** The reply of a part that failed, which the browser does not send again. */
+export const failedUpload: FileReply = refusedPart
 
 /** The names of the files, in their order. */
 export const names = (files: readonly DraftFile[]) =>
@@ -43,7 +43,7 @@ export async function pressFirst(controls: readonly HTMLElement[]) {
  */
 async function heldChat(hold: (request: Request) => boolean) {
   const upload = controlledUploads()
-  const chat = chatFor({ conversation: 'history', files: upload.files, hold })
+  const chat = chatFor({ conversation: 'history', uploads: upload, hold })
   await chat.controller.start()
   return { ...chat, ...upload }
 }

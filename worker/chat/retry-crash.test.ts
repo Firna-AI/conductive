@@ -4,7 +4,8 @@ import {
   TEST_TIME,
   type TestHarness,
 } from '../test-support/harness'
-import { createChatFixture, WORKSPACE_ID } from './harness.test-support'
+import { WORKSPACE_ID } from './harness.test-support'
+import { createRunningRetryFixture } from './retry-crash.test-support'
 import {
   liveSessions,
   retryRequest,
@@ -26,62 +27,6 @@ beforeEach(async () => {
 afterAll(async () => {
   await harness.dispose()
 })
-async function runningFixture() {
-  const ids = [
-    'session',
-    'original-turn',
-    'original-command',
-    'retry-message',
-    'retry-turn',
-    'retry-command',
-  ]
-  const fixture = await createChatFixture(harness, {
-    ids,
-  })
-  const session = await fixture.createSession()
-  const runner = await fixture.connect()
-  runner.emit({ type: 'runner.ready' })
-  await fixture.drain()
-  const { message } = await fixture.send(session.id, 'original')
-  const turn = messageCommands(runner, 'original')[0]
-  if (turn?.type !== 'turn') throw new Error('The original turn is missing.')
-  const gateway = await fixture.chat.store.read(
-    WORKSPACE_ID,
-    async (view) => (await view.turn(turn.turnId))?.gateway,
-  )
-  expect(gateway).toEqual({
-    nonce: expect.stringMatching(/^[A-Za-z0-9_-]{43}$/),
-    loginVersion: TEST_TIME,
-  })
-  const failedSession = {
-    ...session,
-    title: 'Check this code',
-    retryMessageId: 'original',
-  }
-  const failedTurn = {
-    id: 'original-turn',
-    sessionId: session.id,
-    senderId: fixture.owner.id,
-    messageIds: ['original'],
-    state: 'failed',
-    error: { code: 'agent_unavailable', message: 'Try again.' },
-    closeAfterStop: false,
-    nextTurnId: null,
-    started: true,
-    startedAt: TEST_TIME,
-    gateway,
-  }
-  const sentMessage = { ...message, state: 'sent' as const }
-  return {
-    fixture,
-    session,
-    runner,
-    turn,
-    failedSession,
-    failedTurn,
-    sentMessage,
-  }
-}
 it('keeps the full failed receipt after a crash immediately after its commit', async () => {
   const {
     fixture,
@@ -91,9 +36,9 @@ it('keeps the full failed receipt after a crash immediately after its commit', a
     failedSession,
     failedTurn,
     sentMessage,
-  } = await runningFixture()
+  } = await createRunningRetryFixture(harness)
   const before = await fixture.history(session.id)
-  expect(before.throughEventNumber).toBe(4)
+  expect(before.throughEventNumber).toBe(5)
   const tab = await fixture.tab()
   const received = structuredClone(runner.received)
   await fixture.failNextCommit('after', 'Injected post-commit crash')
@@ -123,18 +68,18 @@ it('keeps the full failed receipt after a crash immediately after its commit', a
     messageTurn: 'original-turn',
   })
   const expectedHistory = {
-    throughEventNumber: 6,
+    throughEventNumber: 7,
     events: [
       ...before.events,
       {
         workspaceId: WORKSPACE_ID,
-        eventNumber: 5,
+        eventNumber: 6,
         occurredAt: TEST_TIME,
         event: terminalEvent(turn, 'failed'),
       },
       {
         workspaceId: WORKSPACE_ID,
-        eventNumber: 6,
+        eventNumber: 7,
         occurredAt: TEST_TIME,
         event: { type: 'session.updated', session: failedSession },
       },
@@ -155,11 +100,11 @@ it('keeps the full failed receipt after a crash immediately after its commit', a
 })
 it('keeps the full accepted retry after a crash immediately after its commit', async () => {
   const { fixture, session, runner, turn, failedTurn, sentMessage } =
-    await runningFixture()
+    await createRunningRetryFixture(harness)
   runner.emit(terminalEvent(turn, 'failed'))
   await fixture.drain()
   const before = await fixture.history(session.id)
-  expect(before.throughEventNumber).toBe(6)
+  expect(before.throughEventNumber).toBe(7)
   const tab = await fixture.tab()
   await fixture.failNextCommit('after', 'Injected post-commit crash')
   const response = await retryRequest(fixture, session.id, 'original')
@@ -176,6 +121,8 @@ it('keeps the full accepted retry after a crash immediately after its commit', a
   await fixture.restart()
   const retrySession = {
     ...session,
+    defaultLogin: undefined,
+    login: { type: 'personal', userId: fixture.owner.id },
     title: 'Check this code',
     activeTurnId: 'retry-turn',
   }
@@ -188,6 +135,7 @@ it('keeps the full accepted retry after a crash immediately after its commit', a
     messageIds: ['retry-message'],
     state: 'queued',
     closeAfterStop: false,
+    stopRequest: null,
     nextTurnId: null,
   }
   const retryCommand = {
@@ -212,18 +160,18 @@ it('keeps the full accepted retry after a crash immediately after its commit', a
     })),
   ).toEqual({ cursor: 2, newest: 'retry-turn', messageTurn: 'retry-turn' })
   const expectedHistory = {
-    throughEventNumber: 8,
+    throughEventNumber: 9,
     events: [
       ...before.events,
       {
         workspaceId: WORKSPACE_ID,
-        eventNumber: 7,
+        eventNumber: 8,
         occurredAt: TEST_TIME,
         event: { type: 'message.accepted', message: retryMessage },
       },
       {
         workspaceId: WORKSPACE_ID,
-        eventNumber: 8,
+        eventNumber: 9,
         occurredAt: TEST_TIME,
         event: { type: 'session.updated', session: retrySession },
       },
@@ -278,12 +226,12 @@ it('keeps the full accepted retry after a crash immediately after its commit', a
     messages: [sentMessage, { ...retryMessage, state: 'sent' }],
   })
   expect(await fixture.history(session.id)).toEqual({
-    throughEventNumber: 9,
+    throughEventNumber: 10,
     events: [
       ...expectedHistory.events,
       {
         workspaceId: WORKSPACE_ID,
-        eventNumber: 9,
+        eventNumber: 10,
         occurredAt: TEST_TIME,
         event: {
           type: 'message.sent',

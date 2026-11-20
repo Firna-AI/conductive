@@ -5,12 +5,13 @@ import {
   operatorWaitlistSwitchPath,
   type OperatorApprovalResponse,
 } from '../../src/shared/operator-waitlist'
+import { createEmailMessages } from '../email-messages'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
 import type { RequestContext } from '../security/gate'
 import { isOperator } from './access'
 import { approvalEmailState, approveWaitingUser } from './approval-data'
-import { approvalEmailContent, sendApprovalEmail } from './approval-email'
+import { sendApprovalEmail } from './approval-email'
 import {
   createOperatorCode,
   disableOperatorCode,
@@ -118,7 +119,7 @@ export async function operatorWaitlistRoute(
     githubId,
     context.user.id,
     dependencies.now(),
-    approvalEmailContent(),
+    createEmailMessages(env.APP_ORIGIN).approval(),
   )
   const emailFailed = changed
     ? await sendApprovalEmail(env, dependencies, userId)

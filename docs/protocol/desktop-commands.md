@@ -42,7 +42,8 @@ keeps it after the merge.
 
 This section states the side of the Mac app.
 [Agent tools](agent-tools.md#mac-commands) states the requests, their
-limits, their results, and what the chat shows.
+limits, their results, and what the chat shows. A workspace with
+[Mac access](secrets.md#mac-access) off sends no request to a Mac.
 
 ### The device
 
@@ -70,7 +71,8 @@ limits, their results, and what the chat shows.
   message in the chat, with the command and its actions.
 - While a request waits, the row of its workspace shows needs input on
   every page of the Mac app. A click on that row opens the request
-  (decision 68).
+  (decision 68). Starting shows over needs input, as
+  [Secret requests](secret-requests.md#the-request) says.
 - When the Mac app is in the background, a notification of macOS tells of
   the request. The notification opens the workspace of the request.
 - The notification comes from the Mac app. The page still gets no
@@ -151,10 +153,11 @@ limits, their results, and what the chat shows.
 - A saved end of the 15 minutes includes an end that Extend set.
 - Reason: the Mac then decides what runs on it, and no record on the
   server can allow a command.
-- The account page of the Mac app has a This Mac tab, after Keyboard
-  shortcuts. It shows the name of the Mac, whether the Mac is available,
-  and each always-allowed command by its exact text, with Remove. It also
-  shows each workspace with a grant, with the time left or Until you stop, and Stop.
+- The account page of the Mac app has a This Mac tab, after Stats. It
+  shows the name of the Mac, whether the Mac is available, and each
+  always-allowed command by its exact text, with Remove. It also shows
+  each workspace with a grant, with the time left or Until you stop, and
+  Stop.
 - A long always-allowed command shows its first three lines, and its last
   shown line fades out. Show all shows the whole command, and Show less
   makes it short again. A command that fits shows no button.

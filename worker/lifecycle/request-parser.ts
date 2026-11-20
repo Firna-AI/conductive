@@ -1,5 +1,6 @@
 import type { CreateWorkspaceRequest } from '../../src/shared/workspaces'
 import { HttpError, isRecord } from '../http'
+import { readCreationCapabilities } from '../secrets/capabilities-input'
 
 export function createWorkspaceInput(value: unknown): CreateWorkspaceRequest {
   if (
@@ -51,6 +52,7 @@ export function createWorkspaceInput(value: unknown): CreateWorkspaceRequest {
     ...(typeof value.baseBranch === 'string' && {
       baseBranch: value.baseBranch,
     }),
+    capabilities: readCreationCapabilities(value.capabilities),
     firstMessage: {
       id: message.id,
       text: message.text,

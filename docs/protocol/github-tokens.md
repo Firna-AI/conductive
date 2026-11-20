@@ -2,6 +2,9 @@
 
 This doc states how a cloud computer gets GitHub access, who its commits
 name as their author, and how the Worker acts on GitHub as a member.
+[GitHub tokens: image builds](github-tokens-image-builds.md) states which
+GitHub tokens an image job uses to copy the repositories. An image job is
+a build or a refresh of the org image.
 [Access and security](access-and-security.md) states the shared access
 rules. A decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says.
@@ -20,13 +23,14 @@ rules. A decision number names a dated record, as
 - In an agent turn, Git and `gh` use the token of the person who sent that
   turn. Pushes and pull requests show as that person, as decision 50 requires.
 - Outside an agent turn, `gh` uses the workspace owner's GitHub account.
-  The terminal is shared, so this account is the same for each connection.
+  The members share the terminals, so this account is the same in each
+  terminal and for each connection.
 - A supplied turn ID must name a current turn. An unknown or ended turn
   never falls back to the workspace owner.
-- A trusted job is the other case. The fetch of a Continue job gets the
-  token of the member who pressed Continue, as [Continue](#continue) says.
-  The fetch of a moved base gets the token of the workspace owner, as
-  [A moved base](#a-moved-base) says.
+- Trusted jobs are the other cases. The fetch of a Continue job or of a
+  repository change job gets the token of the member who pressed the
+  action, as [Continue](#continue) says. The fetch of a moved base gets
+  the token of the workspace owner, as [A moved base](#a-moved-base) says.
 - Each command that an agent runs in a turn has the ID of that turn. This
   holds also in a shell that loads the sandbox's own variables again, such
   as the login shell in which Codex runs each command.
@@ -68,7 +72,7 @@ rules. A decision number names a dated record, as
   each agent turn name the workspace owner. An update of the sandbox
   software gives such a sandbox a newer runner at a later start, as
   [Updates](sandbox-software.md#updates) says.
-- Outside an agent turn, such as in the shared terminal or in the startup
+- Outside an agent turn, such as in the shared terminals or in the startup
   script, the author is the workspace owner.
 - The author of the first commit that the app pushes to an empty
   repository is the sender of the turn that creates the workspace.
@@ -173,6 +177,11 @@ rules. A decision number names a dated record, as
   in a suspended org, and in an archived workspace.
 - No GitHub error text reaches the browser. The Worker gives each refusal
   of GitHub as an error code of the app.
+- The Worker also marks a draft ready for review with the GitHub token of
+  the member who clicks Ready for review, as
+  [Ready for review](github-banner.md#ready-for-review) says. The same
+  access rule, refusals, and error codes of the app apply. The user chose
+  this on 17 November 2026.
 
 ## Branch reads
 
@@ -213,6 +222,9 @@ rules. A decision number names a dated record, as
 - Every member may press Continue (decision 224). So the token of a member
   who is not the owner reaches the sandbox of the owner for the fetch, as
   it does for a message of that member.
+- A [repository change](repository-change.md) fetches the latest default
+  branch of the new repository in the same way, with the token of the
+  member who changes the repository.
 - These ways were rejected (decision 226):
   - The token of the workspace owner, through the mode that `gh` uses
     outside a turn. It works only in a workspace from a newer org image.

@@ -12,6 +12,7 @@ import {
 
 export interface ProvisionedWorkspace extends WorkspaceResponse {
   first: FirstWorkspaceMessage
+  notice?: string
 }
 
 export interface SavedProvisionedWorkspace extends Omit<
@@ -77,5 +78,8 @@ export async function provisionedResponse(
   return {
     ...(await workspaceResponse(runtime, orgId, workspaceId)),
     first: admission.created.first,
+    ...(admission.created.notice !== undefined && {
+      notice: admission.created.notice,
+    }),
   }
 }

@@ -16,6 +16,8 @@ export interface DevParams {
   state: string
   workspace: string
   preview: string | null
+  /** The terminal that the address names, as `terminal/<terminalId>` does. */
+  terminal: string | null
   /** The report of the listening ports that the fake events hold. */
   ports: DevPortReport
 }
@@ -39,6 +41,7 @@ function parse(search: string): DevParams {
     state: oneOf(query.get('state'), devStates[tool]),
     workspace: query.get('workspace') ?? FAKE_IDS.workspace,
     preview: query.get('preview'),
+    terminal: query.get('terminal'),
     ports: oneOf(query.get('ports'), devPortReports),
   }
 }
@@ -66,6 +69,12 @@ function subscribe(listener: () => void): () => void {
 /** Goes to an address of the page without a page load, as a link would. */
 export function go(href: string): void {
   history.pushState(null, '', href)
+  for (const listener of listeners) listener()
+}
+
+/** Puts an address of the page in place of the current one. */
+export function replace(href: string): void {
+  history.replaceState(null, '', href)
   for (const listener of listeners) listener()
 }
 

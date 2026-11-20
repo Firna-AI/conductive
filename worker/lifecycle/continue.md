@@ -41,9 +41,11 @@ admits a request in the chat queue:
 - Only one Continue runs at a time. A repeat by the same member from the
   same branch joins the running job. Any other request gets 409
   `workspace_continuing`.
-- The new branch takes the name rule of a create from `workspaceBranch` in
+- The new branch takes its name from `workspaceBranch` in
   [`workspace-branch.ts`](workspace-branch.ts), with the owner's current
-  GitHub login.
+  GitHub login, the workspace name, and the next task number. The publish
+  write adds 1 to `workspaces.task_number`. It matches the earlier branch,
+  so a repeated write changes nothing.
 - An admitted Continue counts as activity of the workspace.
 
 ## The reservation
@@ -124,7 +126,8 @@ fetches the selected base branch into a bare staging repository under
 - The scope of that ID opens before the fetch command starts. It closes
   when the fetch ends or fails, at a cancel, and when the object rebuilds.
 - Before it starts the fetch or the move, Continue sets the auto-stop
-  deadline of the sandbox to 30 minutes. Each command starts detached, and
+  deadline of the sandbox to the stop time plus 60 seconds, as
+  [The stop time](README.md#the-stop-time) says. Each command starts detached, and
   the job keeps its process ID and output offsets for the later steps.
 
 ## The move

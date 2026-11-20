@@ -1,6 +1,11 @@
 import type { ReactNode } from 'react'
 import { CircleSlash } from 'lucide-react'
-import { splitPath, withPublicOpen } from '../../fixtures/files'
+import {
+  splitPath,
+  withContextOpen,
+  withPublicOpen,
+  type TreeEntry,
+} from '../../fixtures/files'
 import { filesFor, type PathState } from '../../fixtures/maskedFiles'
 import type { BannerState } from '../../fixtures/pullRequests'
 import { checksPaths, paths } from '../../paths'
@@ -11,6 +16,7 @@ import { LinkTabs } from '../common/LinkTabs'
 import { PanelBar } from '../workspace/PanelBar'
 import { ChangeList } from './ChangeList'
 import { ChecksList } from './ChecksList'
+import type { FileRowMenu } from './FileRowMenu'
 import { FileTree } from './FileTree'
 import styles from './FilesPanel.module.css'
 
@@ -29,13 +35,19 @@ export type TreeState = (typeof treeStates)[number]
 
 /**
  * The kinds of file that open as a tab in the centre column: a code file,
- * a Markdown file, a diff, the diff of a file whose label hides a secret
- * value, and a file whose name the app does not know. Then a picture of
- * the branch, an image whose bytes the browser cannot draw, and the copy
- * of an attached screenshot, which All files does not list.
+ * the code file at a range of lines that an answer named, a Markdown file,
+ * a diff, the diff of a file whose label hides a secret value, and a file
+ * whose name the app does not know. Then a picture of
+ * the branch, an image whose bytes the browser cannot draw, the copy of an
+ * attached screenshot, which All files does not list, and the screenshot
+ * of the agent in the closed context folder. Then the HTML report of the
+ * context folder: its page, its source, the wait until its page loads, the
+ * notice of older cloud computer software, and a preview that did not
+ * open.
  */
 export type FileTabView =
   | 'code'
+  | 'code-lines'
   | 'markdown'
   | 'diff'
   | 'masked-diff'
@@ -43,17 +55,50 @@ export type FileTabView =
   | 'image'
   | 'image-not-drawn'
   | 'attachment'
+  | 'screenshot'
+  | 'html'
+  | 'html-source'
+  | 'html-opening'
+  | 'html-older-software'
+  | 'html-failed'
 
 /** The open tab whose row All files marks: a file of the tree. */
-function treeTab(open: FileTabView | undefined) {
+function treeTab(open: FileTabView | undefined): TreeEntry['preview'] {
   switch (open) {
+    case 'code-lines':
+      return 'code'
     case 'code':
     case 'markdown':
     case 'image':
     case 'image-not-drawn':
+    case 'html':
       return open
+    case 'html-source':
+    case 'html-opening':
+    case 'html-older-software':
+    case 'html-failed':
+      return 'html'
     default:
       return undefined
+  }
+}
+
+/**
+ * The tree with the folder of the open file open: the public folder for an
+ * image of the branch, and the context folder for the report.
+ */
+function withOpenFolder(
+  tree: readonly TreeEntry[],
+  open: TreeEntry['preview'],
+): readonly TreeEntry[] {
+  switch (open) {
+    case 'image':
+    case 'image-not-drawn':
+      return withPublicOpen(tree)
+    case 'html':
+      return withContextOpen(tree)
+    default:
+      return tree
   }
 }
 
@@ -100,7 +145,8 @@ function FileTabs(props: {
  * is available. `paths` adds two files whose labels hide a secret value.
  * `checksTop` stands above the checks, such as the actions of the pull
  * request bar on a phone. `only` keeps the changes of these paths, such as
- * the changed files that moved to the new branch of Continue.
+ * the changed files that moved to the new branch of Continue. `menu` is the
+ * open menu of a row of the shown list.
  */
 export function FilesPanel(props: {
   view: FileList
@@ -112,6 +158,7 @@ export function FilesPanel(props: {
   paths?: PathState
   checksTop?: ReactNode
   only?: readonly string[]
+  menu?: FileRowMenu
 }) {
   const { view, open, only } = props
   const masked = props.paths === 'masked'
@@ -121,9 +168,7 @@ export function FilesPanel(props: {
     : []
   const names = new Set(changes.map((file) => splitPath(file.path).name))
   const treeOpen = treeTab(open)
-  // The images of the branch lie in the public folder, which their tabs open.
-  const pictures = treeOpen === 'image' || treeOpen === 'image-not-drawn'
-  const shown = pictures ? withPublicOpen(files.tree) : files.tree
+  const shown = withOpenFolder(files.tree, treeOpen)
   const tree = shown.map((entry) =>
     props.edited && (!only || names.has(entry.name))
       ? entry
@@ -145,7 +190,7 @@ export function FilesPanel(props: {
       ) : null}
       {view === 'all' && lists && props.tree !== 'none' ? (
         <div className={styles.scroll} data-mokly-scroll="file-tree">
-          <FileTree entries={tree} open={treeOpen} />
+          <FileTree entries={tree} menu={props.menu} open={treeOpen} />
         </div>
       ) : null}
       {view === 'changes' && lists ? (
@@ -153,6 +198,7 @@ export function FilesPanel(props: {
           diffOpen={open === 'diff' || open === 'masked-diff'}
           diffTo={masked ? paths.maskedPaths : paths.diff}
           files={changes}
+          menu={props.menu}
         />
       ) : null}
       {props.tree === 'saved' ? (

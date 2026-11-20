@@ -28,6 +28,7 @@ describe('the actions of an open workspace', () => {
         chat: true,
         desktopTool: false,
         offersRestore: false,
+        mergeLatest: false,
         ...overrides,
       })
     expect({
@@ -52,6 +53,15 @@ describe('the actions of an open workspace', () => {
         offersRestore: true,
       }),
       desktopTool: ids({ desktopTool: true }),
+      mergeLatest: ids({ mergeLatest: true }),
+      mergeLatestSuspended: ids({
+        access: { role: 'admin', suspended: true },
+        mergeLatest: true,
+      }),
+      mergeLatestArchived: ids({
+        workspace: { ...workspace, state: 'archived' },
+        mergeLatest: true,
+      }),
     }).toEqual({
       owner: ['new-session', 'session-history', ...goTo, 'archive-workspace'],
       otherMember: ['new-session', 'session-history', ...goTo],
@@ -69,6 +79,15 @@ describe('the actions of an open workspace', () => {
         'go-to-desktop',
         'archive-workspace',
       ],
+      mergeLatest: [
+        'new-session',
+        'session-history',
+        ...goTo,
+        'merge-latest',
+        'archive-workspace',
+      ],
+      mergeLatestSuspended: ['session-history', ...goTo],
+      mergeLatestArchived: ['session-history'],
     })
   })
 })

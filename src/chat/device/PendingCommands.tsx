@@ -1,9 +1,10 @@
 import type { DeviceCommandRecord } from '../../shared/generated/DeviceCommandRecord'
+import { useRef } from 'react'
 import { Laptop } from 'lucide-react'
 import type { DeviceApprovalAction } from '../../shared/device'
-import pane from '../../../docs/mockups/src/components/chat/ChatPane.module.css'
 import styles from '../../../docs/mockups/src/components/chat/PendingCommand.module.css'
 import { macLabel } from '../../shared/transcript/command-words'
+import type { WaitingItem } from '../secrets/session-secrets'
 import { CommandChoices } from './CommandChoices'
 import {
   CommandLine,
@@ -28,6 +29,7 @@ function PendingCommand(props: {
   onAnswer: (requestId: string, action: DeviceApprovalAction) => void
 }) {
   const { request, devices } = props
+  const actions = useRef<HTMLSpanElement>(null)
   const choices = !props.readOnly && canAnswer(devices, request)
   const mac = macLabel(request, choices)
   return (
@@ -40,9 +42,10 @@ function PendingCommand(props: {
         <span className={styles.command}>
           <CommandLine command={request.command} />
         </span>
-        <span className={styles.end}>
+        <span className={styles.end} ref={actions}>
           {choices ? (
             <CommandChoices
+              actions={actions}
               answering={answerOf(devices, request.requestId)}
               onAnswer={(action) => props.onAnswer(request.requestId, action)}
             />
@@ -57,36 +60,28 @@ function PendingCommand(props: {
 }
 
 /**
- * The requests of the session that wait for an answer, the oldest first,
- * just above the composer. Each one keeps its own choices, so every request
- * that waits has a way to answer it. A long command or many requests scroll
- * inside the region, so the composer stays in view.
+ * The Mac commands of the session that wait for an answer, as parts of the
+ * region of the requests that wait, which orders them by their time.
  */
-export function PendingCommands(props: {
+export function pendingCommandItems(props: {
   requests: readonly DeviceCommandRecord[]
   devices: DeviceSnapshot
   readers: RequestReaders
   /** The workspace takes no answer: it is archived, or its org is suspended. */
-  readOnly?: boolean
+  readOnly: boolean
   onAnswer: (requestId: string, action: DeviceApprovalAction) => void
-}) {
-  if (props.requests.length === 0) return null
-  return (
-    <div
-      aria-label="Commands that wait for an answer"
-      className={pane.requests}
-      role="group"
-    >
-      {props.requests.map((request) => (
-        <PendingCommand
-          devices={props.devices}
-          key={request.requestId}
-          onAnswer={props.onAnswer}
-          readOnly={props.readOnly ?? false}
-          readers={props.readers}
-          request={request}
-        />
-      ))}
-    </div>
-  )
+}): WaitingItem[] {
+  return props.requests.map((request) => ({
+    key: `command:${request.requestId}`,
+    createdAt: request.createdAt,
+    node: (
+      <PendingCommand
+        devices={props.devices}
+        onAnswer={props.onAnswer}
+        readOnly={props.readOnly}
+        readers={props.readers}
+        request={request}
+      />
+    ),
+  }))
 }

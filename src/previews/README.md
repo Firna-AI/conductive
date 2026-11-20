@@ -1,12 +1,27 @@
 # Port previews
 
-The Preview tool shows the web servers of a workspace's cloud computer. Each
-preview shows in a frame, with an "Open" link to a new tab. The workspace
-screen shows the tool in the tools panel of the right column, and on a phone
-as the Preview page, as
-[the tools part](../shell/workspace/README.md#the-tools-part) says.
+The Preview tool shows the web servers of a workspace's cloud computer. On
+a phone, `PreviewTool` is the Preview page: each preview shows in a frame,
+with an "Open" link to a new tab. On desktop, `PreviewPanel` is the Preview
+tool of the tools panel: the list of ports, with no bar and no frame. The
+page of each port then shows in its Preview tab of the centre row, which
+the workspace screen draws, as
+[Preview tabs](../shell/workspace/tools-part.md#preview-tabs) says.
 
-## Behaviour
+## The desktop tool
+
+- `PreviewPanel` shows the port form at all times, with no "+" (decision
+  290). It lists each server of the report, then each port with a Preview
+  tab or an open preview that the report does not name, as `Port 8080`.
+  `panelPortList` gives that list.
+- A click on a port, or a typed port, calls `onShow`. The shell then shows
+  the Preview tab of the port, or opens one. The row of `current`, the port
+  of the shown tab, is the current one, with `aria-current`.
+- Nothing in the tool ends a preview (decision 292).
+- `previewOfPort` gives the preview that a tab of a port shows: the oldest
+  open preview of the port.
+
+## The phone page
 
 - The tool lists the open previews from the API. It keeps the latest
   `ports.updated` report of the workspace events, with the servers that
@@ -73,6 +88,44 @@ as the Preview page, as
   page, such as the browser's JSON view in dark mode, shows dark.
 - A failed request shows its message and leaves the tool usable.
 
+## The files preview
+
+The files preview shows the files of the workspace's repository folder,
+from the file server of the agent runner, as
+[HTML file preview](../../docs/protocol/html-file-preview.md) says. The tab
+of an HTML file shows it, as
+[The tabs of HTML files](../shell/workspace/html-tabs.md) says. It is no
+port preview: no list and no tab of the Preview tool holds it.
+
+- `openFilesPreview` of `previewsApi.ts` sends `POST` to the route of the
+  files preview with an empty JSON object. The reply gives the files
+  preview of the workspace, with port 0, or the active one. A runner that
+  announced no file server gets the error `file_server_unavailable`.
+- `filesPreview.ts` holds the store of the files preview of one workspace:
+  the files preview that lives, the previews that ended, whether an open
+  runs, whether it is in a running period, and the count of its periods. A
+  `preview.revoked` event of its ID ends it, and so does the action
+  `ended`, which the shell sends at its expiry and when the cloud computer
+  stops. An open that answers with a preview that ended changes nothing.
+- A running period lasts while the workspace is ready and the open of the
+  visit of the screen has ended, as `WorkspaceModel.opened` says. Before
+  that open ends, the screen can show a saved state. The shell sends the
+  action `running` at each start and each end of a running period. The
+  action ends the open that runs, but keeps the files preview, so a
+  Restart keeps the page that a tab shows.
+- The action `disconnected`, at the end of the connection of the screen,
+  forgets the files preview and the open that runs. The count of the
+  periods grows at each start and each end of a running period, and at
+  each end of the connection. An open answers with the count of the period
+  in which it started, and an answer of an earlier period changes nothing.
+  A failed open forgets the files preview too, but ends no ID, so the next
+  open can answer it again.
+- `PreviewFrame` takes an optional `file`: the real path, which the launch
+  address names through `previewLaunchUrl`, and the file name of its
+  label, which names the frame, such as "Preview of report.html".
+  `OpenInNewTab` takes the same `path`. Without them, both open the root of
+  the preview, as for a port.
+
 ## Mount the tool
 
 ```tsx
@@ -85,15 +138,24 @@ as the Preview page, as
     navigate: goToPreview,
     replace: replaceAddress,
   }}
+  store={keptPreviews}
   touch={phone}
   workspace={{ orgId, workspaceId, fetch, subscribe }}
+/>
+
+<PreviewPanel
+  current={shownPort}
+  dispatch={keptPreviews.dispatch}
+  now={now}
+  onShow={showPort}
+  state={snapshot}
+  tabPorts={tabPorts}
 />
 ```
 
 - `now` gives the time for the age of the notice of a failed repair. Keep
   it stable. The shell gives the clock of the app, and the default is the
   clock of the browser.
-
 - `route` comes from the app shell, which owns the addresses. `previewId` is
   the preview that the current address names, and `port` is the port that
   it names. `href` gives the address of a tab, and `navigate` goes there
@@ -101,30 +163,41 @@ as the Preview page, as
   tool for null, in place of the current address, with no new history
   entry. When the address names no preview, or one that is gone, the first
   tab shows.
+- `store` is optional. The shell gives the previews store that it keeps
+  and connects for the workspace, which the Preview tabs read too. The tool
+  then connects nothing. Without it, the tool makes and connects its own.
 - `workspace` and `touch` are the same as for the
   [terminal](../terminal/README.md#mount-the-tool). `workspace.subscribe` is
   required.
+- `PreviewPanel` reads the snapshot of that store. `tabPorts` are the ports
+  of the Preview tabs of the saved view, and `onShow` shows the tab of a
+  port.
 
 ## Key code
 
-- `PreviewTool.tsx`: the tool, its states, and the route seam.
+- `PreviewTool.tsx`: the phone page, its states, and the route seam.
+- `PreviewPanel.tsx`: the desktop tool, the list of ports.
 - `previewActions.ts`: the preview in the frame, the open, the close, and
   the tabs, and the open of the port of the address with its move of the
   address.
 - `addressPort.ts`: `useAddressPort`, which opens the port of each address
   once.
 - `PreviewToolbar.tsx`: the link tabs and the actions of a preview.
-- `PreviewFrame.tsx`: the frame, its sandbox flags, and the new tab link.
+- `PreviewFrame.tsx`: the frame, its sandbox flags, and the new tab link,
+  at the path of a file for the files preview.
+- `filesPreview.ts`: the store of the files preview of one workspace.
 - `PreviewOpenForm.tsx`: the port form, its list states, and its field.
 - `ServerRows.tsx`: the buttons of the detected servers.
 - `PortsNotice.tsx`: the notice of a failed repair of the list.
 - `previewsState.ts`: the list, its revoked previews, the selection, the
   latest port report, and the time of a failed repair. `portFormList`
-  gives what the form lists. The reducer takes the tool's actions and the
+  gives what the form of a phone lists, and `panelPortList` what the
+  desktop tool lists. `previewOfPort` gives the oldest preview of a port. The reducer takes the tool's actions and the
   events.
 - `previewsStore.ts`: the tool store, and the action of a failed repair.
-- `previewsApi.ts`: list, open, and close requests.
+- `previewsApi.ts`: list, open, and close requests, and the open of the
+  files preview.
 
-See [Port previews](../../docs/protocol/workspace-tools.md#port-previews),
+See [Port previews](../../docs/protocol/port-previews.md),
 [Listening ports](../../docs/protocol/agent-runner.md#listening-ports),
 and [Access and security](../../docs/protocol/terminal-previews-and-desktop.md#port-previews).

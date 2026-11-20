@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-11, the wider fix of finding 107 of review round 2 on branch `calummoore/cli-proxy-setup`, which fixed the account login reads only.
-- **Location:** `Refresher` in `src/app/refresh.ts`, the chat's own list at `src/chat/state/workspace-list.ts`, `AppServices.visible` in `src/app/services.ts`, and `docs/protocol/routine-runs.md`.
+- **Location:** `Refresher` in `src/app/refresh.ts`, the chat's own list at `src/chat/state/workspace-list.ts`, `AppServices.visible` in `src/app/services.ts`, and `docs/protocol/automation-runs.md`.
 - **Reason:** The rule changes how the lists of `main` refresh, so the user decides.
 
 - **Terms:**
@@ -18,7 +18,7 @@
 - **Root question:** How does the app keep its lists current without timed reads on a hidden page?
 - **Options:**
   - **A.** Change nothing. Effort: Small.
-  - **D.** `Refresher` holds its timer while `AppServices.visible` is false, and its focus read catches up when the page shows. Give the chat's own list a visibility default, and add a sentence to `docs/protocol/routine-runs.md`. Cost: it changes the refresh of the lists of `main`. Effort: Medium.
+  - **D.** `Refresher` holds its timer while `AppServices.visible` is false, and its focus read catches up when the page shows. Give the chat's own list a visibility default, and add a sentence to `docs/protocol/automation-runs.md`. Cost: it changes the refresh of the lists of `main`. Effort: Medium.
   - **E.** The Worker tells the open tabs of a user about each change, so the timers can go. Cost: a channel for each user, a Durable Object migration, a protocol section, and tests. Effort: Large.
 - **Left out:** A visibility rule in `AppServices.delay` for every timer, because it stops the ChatGPT sign-in poll.
 - **Wider fix:** D.

@@ -4,6 +4,10 @@ import { createFilesHandler } from '../files/handlers'
 import type { WorkspaceFiles } from '../files/workspace'
 import { createDesktopHandler } from '../desktop/handler'
 import { createTerminalHandler } from '../terminal/handler'
+import { WorkspaceTerminals } from '../terminal/workspace'
+import { refreshWorkspaceTerminal } from '../terminal/refresh'
+import type { WorkspaceTarget } from '../previews/types'
+import type { WorkspaceChat } from '../chat/backend'
 import { createPreviewHandler } from '../previews/handler'
 import { workspaceRepositoryLocations } from '../lifecycle/repository-location-data'
 import { repositoryLocation } from '../lifecycle/repository-locations'
@@ -18,6 +22,8 @@ import { revokedWorkspacePreviews } from './preview-data'
 export class WorkspaceFeatures {
   readonly previews: ReturnType<typeof createPreviewHandler>
   private readonly terminal: ReturnType<typeof createTerminalHandler>
+  private readonly terminals: WorkspaceTerminals
+  private readonly dependencies: AppDependencies
   private readonly desktop: ReturnType<typeof createDesktopHandler>
   private readonly files: ReturnType<typeof createFilesHandler>
   private readonly env: AppEnv
@@ -38,20 +44,30 @@ export class WorkspaceFeatures {
     files: WorkspaceFiles,
     matches: (id: string) => boolean,
     schedulePreview: (workspaceId: string, at: number | null) => Promise<void>,
-    activity: (workspaceId: string, at: number) => void,
     publishPreviews: (
       workspaceId: string,
       ids: readonly string[],
       queueOwned: boolean,
     ) => Promise<void>,
+    chat: WorkspaceChat,
   ) {
     this.env = env
+    this.dependencies = dependencies
     this.matches = matches
     this.schedulePreview = schedulePreview
     this.publishPreviews = publishPreviews
-    const tools = { ...dependencies, onActivity: activity }
+    const tools = {
+      ...dependencies,
+      fileServerAvailable: (workspaceId: string) => {
+        const runner = chat.runner.connections.current
+        return (
+          runner?.workspace.id === workspaceId && runner.fileServer === true
+        )
+      },
+    }
     this.previews = createPreviewHandler(env, tools)
-    this.terminal = createTerminalHandler(env, tools)
+    this.terminals = new WorkspaceTerminals(chat)
+    this.terminal = createTerminalHandler(env, tools, this.terminals)
     this.desktop = createDesktopHandler(env, tools)
     this.files = createFilesHandler({
       ...dependencies,
@@ -65,6 +81,21 @@ export class WorkspaceFeatures {
     })
   }
 
+  refreshTerminal(target: WorkspaceTarget): Promise<void> {
+    if (!this.matches(target.workspaceId))
+      throw new HttpError(
+        404,
+        'workspace_not_found',
+        'The workspace is not available.',
+      )
+    return refreshWorkspaceTerminal(
+      this.env,
+      target,
+      this.dependencies,
+      this.terminals,
+    )
+  }
+
   async fetch(request: Request): Promise<Response | null> {
     const path = new URL(request.url).pathname
     const workspaceId = featureWorkspaceId(path)
@@ -75,8 +106,7 @@ export class WorkspaceFeatures {
         'workspace_not_found',
         'The workspace is not available.',
       )
-    if (/\/terminal(?:\/socket)?$/.test(path))
-      return this.terminal.fetch(request)
+    if (/\/terminal(?:\/.*)?$/.test(path)) return this.terminal.fetch(request)
     if (path.endsWith('/desktop')) return this.desktop.fetch(request)
     if (/\/previews(?:\/[^/]+)?$/.test(path)) {
       const response = await this.previews.fetch(request)

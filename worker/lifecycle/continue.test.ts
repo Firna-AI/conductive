@@ -59,7 +59,7 @@ it('continues as another member, keeps workspace identity, and publishes one not
     id: WORKSPACE_ID,
     name: 'Kept name',
     owner: { id: f.owner.id },
-    branch: expect.stringMatching(/^current-owner\/[a-z]+-[a-z0-9]{4}$/),
+    branch: expect.stringMatching(/^current-owner\/kept-name-v2-[a-z0-9]{4}$/),
     github: null,
   })
   await saveWorkspaceGitHubSummary(f.env.DB, job.binding, 'merged')

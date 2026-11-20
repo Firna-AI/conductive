@@ -9,10 +9,19 @@ import { ChatController } from '../../chat/state/controller'
 import type { ChatSources } from '../../chat/state/sources'
 import type { SubscribeToWorkspace } from '../../chat/stream/workspace-stream'
 import type { WorkspaceFiles } from '../../files/model/files-store'
+import {
+  createFilesPreviewStore,
+  type FilesPreviewStore,
+} from '../../previews/filesPreview'
+import {
+  createPreviewsStore,
+  type PreviewsStore,
+} from '../../previews/previewsStore'
 
 import { createWorkspaceFiles } from './files/files-store'
 import { HeaderNotices } from './header-notices'
 import { ToolEvents } from './tools/tool-events'
+import { WorkspaceSkills } from './workspace-skills'
 import { WorkspaceView } from './workspace-view'
 
 /**
@@ -26,6 +35,8 @@ export interface ShownWorkspace {
   readonly chat: ChatController
   /** The events that the tools read, with the revokes that they keep. */
   readonly toolEvents: ToolEvents
+  /** The latest skill lists, for the list of `/` of the chat. */
+  readonly skills: WorkspaceSkills
 }
 
 interface KeptWorkspace extends ShownWorkspace {
@@ -42,6 +53,7 @@ interface KeptWorkspace extends ShownWorkspace {
  * while it shows, as the sidebar does.
  */
 function chatSources(app: AppModel, org: OrgModel): ChatSources {
+  const boot = app.boot.get()
   return {
     account: app.account.account,
     models: app.models,
@@ -58,6 +70,16 @@ function chatSources(app: AppModel, org: OrgModel): ChatSources {
       subscribe: org.workspaces.subscribe,
     },
     watchWorkspaces: () => org.watch('list'),
+    observeLogin: (observation) => {
+      if (app.boot.get() === boot) app.account.observeLogin(observation)
+    },
+    loginObservationCurrent: (observation) =>
+      app.boot.get() === boot &&
+      app.account.loginObservationCurrent(observation),
+    watchMissingLogin: () =>
+      app.boot.get() === boot
+        ? app.account.watchMissingLogin()
+        : () => undefined,
   }
 }
 
@@ -75,6 +97,10 @@ export class ShownWorkspaces {
   private readonly kept = new Map<string, KeptWorkspace>()
   /** The kept files of each workspace, made when a Files part first shows. */
   private readonly keptFiles = new Map<string, WorkspaceFiles>()
+  /** The kept previews of each workspace, made at their first read. */
+  private readonly keptPreviews = new Map<string, PreviewsStore>()
+  /** The kept files preview of each workspace, made at its first read. */
+  private readonly keptFilesPreviews = new Map<string, FilesPreviewStore>()
 
   /**
    * `onShow` runs at the first show of each workspace, after its render. It
@@ -134,6 +160,7 @@ export class ShownWorkspaces {
       model: new WorkspaceModel(org, workspaceId),
       notices: new HeaderNotices(),
       toolEvents: new ToolEvents(),
+      skills: new WorkspaceSkills(),
       chat: new ChatController({
         target: { orgId, workspaceId },
         // The client of the org takes each `org_suspended` refusal of the
@@ -186,12 +213,44 @@ export class ShownWorkspaces {
     return files
   }
 
+  /**
+   * The kept previews of a workspace: the list, the revokes, and the report
+   * of the servers. The first call makes the store, which starts nothing.
+   * The workspace screen connects it, and the Preview tool and the Preview
+   * tabs read the same store.
+   */
+  previews(orgId: string, workspaceId: string): PreviewsStore {
+    const key = `${orgId}/${workspaceId}`
+    const known = this.keptPreviews.get(key)
+    if (known) return known
+    const previews = createPreviewsStore({ orgId, workspaceId })
+    this.keptPreviews.set(key, previews)
+    return previews
+  }
+
+  /**
+   * The kept files preview of a workspace, which the tabs of HTML files
+   * show. The first call makes the store, which starts nothing. The
+   * workspace screen connects it, so the end of the files preview reaches
+   * it, and each tab of an HTML file reads it.
+   */
+  filesPreview(orgId: string, workspaceId: string): FilesPreviewStore {
+    const key = `${orgId}/${workspaceId}`
+    const known = this.keptFilesPreviews.get(key)
+    if (known) return known
+    const store = createFilesPreviewStore({ orgId, workspaceId })
+    this.keptFilesPreviews.set(key, store)
+    return store
+  }
+
   /** Stops every kept workspace and forgets it, as at a sign-out. */
   clear(): void {
     for (const shown of this.kept.values()) stop(shown)
     this.kept.clear()
     for (const files of this.keptFiles.values()) files.stop()
     this.keptFiles.clear()
+    this.keptPreviews.clear()
+    this.keptFilesPreviews.clear()
   }
 }
 

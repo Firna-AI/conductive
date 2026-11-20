@@ -4,19 +4,23 @@ This folder holds the app's own sandbox software. Each image build installs
 it before it runs the org's install script. A software image build installs
 it once for each app software version. A first org build from that image
 also checks and installs the newest release. Without a matching ready software image,
-the first build installs it itself. Later builds and refreshes install the newest release. The org
+the first build installs it itself. The software image lives in the `boat`
+account, so the first build of an org on `e2b` starts from the
+[E2B template](e2b/README.md) and installs the software. Later builds and
+refreshes install the newest release. The org
 image is the saved snapshot that every new sandbox of an org starts from.
 In a workspace sandbox, this software starts the agent runner and the
 preview relay. It also
 gives git a fresh GitHub token for each operation. The release program also
 supplies the workspace CLI and MCP server. The folder also holds [developer scripts](developer-scripts.md) that no build installs: release
-packaging and a real-sandbox live check.
+packaging, a real-sandbox live check, and the E2B template builder.
 
 ## Responsibilities
 
 - Install the pinned private Node after a check of its SHA-256 digest, or
   reuse it when the image already holds it.
-- Install the newest release through a verified bootstrap program.
+- Install the newest release through the installed program, or through a
+  verified bootstrap program when the image has none.
 - Install and enable the systemd services of the agent runner and preview relay.
 - Install and enable the preview relay's socket unit.
 - Install the udev rule that stops disk flushes at each boot, as
@@ -31,7 +35,9 @@ packaging and a real-sandbox live check.
 
 The [terminal backend](../worker/terminal/README.md) supplies the terminal
 script sources. The release packages those scripts and their units.
-The build calls `terminalPackagesCommand()` for `ttyd` and `tmux`.
+The build calls `terminalPackagesCommand()` for `ttyd` and `tmux` when the
+image lacks a package, when the ttyd service is not masked, or when the apt
+part changed.
 The release installer owns the installed scripts and units.
 It enables services and starts none.
 
@@ -72,13 +78,34 @@ CLI, the MCP server, the preview relay, Git credentials, and release updates.
 from `release/`. It renders the start scripts with paths under
 `/opt/conductive/current`. It generates terminal scripts from the existing
 terminal module. The previous release keeps its own system part for fallback.
+The terminal files are `terminal`, `terminal-attach`, `terminal-password`,
+and `terminal-sessions`, plus the `terminal-bridge` folder.
+The launcher embeds the attach program in ttyd's arguments at start.
+An apply or rollback therefore changes no attach program of a running ttyd.
 
 The runner service applies a staged release in its root pre-start step.
 It applies only when `/run/conductive/workspace-ready` exists.
 Relay and terminal restarts do not apply or roll back releases.
+The terminal start command checks the running ttyd before it reports support
+for several terminals. An updated file alone does not prove that support.
+The system installer that an apply runs restarts a running relay, so the relay
+runs the active release. The installer of an older release, which a rollback
+can run, may not restart it.
 The runner requests a background check after each start. `conductive-update-check.timer` also checks after
-30 seconds of boot and every hour. The root check service runs the program
+30 seconds of boot and every 10 minutes. The root check service runs the program
 and then exits. No separate updater process remains resident.
+
+A running runner also applies a staged release when its workspace is idle,
+as the [runner service guide](../runner/service/README.md) describes. It
+runs `update apply` through `sudo -n`, then executes the new
+`current/system/runner-start.sh` in the same process. The service does not
+restart. [Release installation](install.md#release-installation) says when
+a changed runner unit applies. A runner without this step applies a release
+only at its next start.
+The relay and terminal processes keep their release until they start again.
+A new terminal connection runs the bridge from `current` under the command
+line of the running terminal service. So the bridge keeps its command-line
+arguments compatible across releases.
 
 The Rust runner calls `update started` only after its first valid Worker
 `welcome`. A process start alone leaves the pending marker in place.
@@ -89,14 +116,31 @@ The next apply restores the previous release when confirmation did not occur.
 [The private Node runtime](runtime.md) gives the pinned Node release, its
 paths, and its update steps.
 
+## E2B base template
+
+The [E2B template](e2b/README.md) supplies Ubuntu 24.04 and the software of
+`BASE_IMAGE`, with 4 vCPU and 8192 MiB. Its developer builder uploads only
+public image inputs and prints the actual template ID.
+It installs a private TCP relay for web servers that listen on loopback.
+An enabled systemd service seeds that relay under `/run` at boot.
+The relay holds no credential. The template also supplies the `computer`
+MCP server through Cua Driver 0.54.0, with Google Chrome, Xvfb, and Openbox
+on display `:0`. Enabled services start the desktop and merge the computer
+entry into `/home/user/.claude.json` at each boot. It supplies no desktop
+stream. The [template guide](e2b/README.md#software-and-pins) gives the pins
+and their sources.
+Each org image build still installs the newest release of the sandbox
+software, as on Boat.
+
 ## Install
 
 [Install in a build](install.md) describes the verified bootstrap, release
 layout, apt packages, and startup locking. Every org build and refresh uses
 the release installer. The [software image backend](../worker/software-image/README.md)
-uses the same command. A workspace downloads updates in the background and
-applies them before a later runner start. A workspace without the program
-gets it through the background startup bootstrap.
+uses the same command. A workspace downloads updates in the background. Its
+runner applies them when the workspace is idle, or before a later runner
+start. A workspace without the program gets it through the background
+startup bootstrap.
 
 ## Start in a workspace
 

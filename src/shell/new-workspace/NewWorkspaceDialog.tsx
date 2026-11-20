@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { Paperclip } from 'lucide-react'
+import { SessionLoginLabel } from '../../../docs/mockups/src/components/chat/SessionLogin'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import layer from '../../../docs/mockups/src/components/common/ConfirmDialog.module.css'
 import styles from '../../../docs/mockups/src/components/new-workspace/NewWorkspaceDialog.module.css'
@@ -13,8 +14,10 @@ import {
 import { ChipTextField } from '../../chat/components/chip-field/ChipTextField'
 import type { FieldHandle } from '../../chat/components/chip-field/focus-plugins'
 import { useComposerDrop } from '../../chat/components/composer-drop'
+import { ToolButton } from '../../chat/components/ComposerTools'
 import { useSendKey } from '../../chat/components/send-key'
 import type { OrgSummary } from '../../shared/orgs'
+import { draftCapabilities } from '../capabilities/DraftCapabilities'
 import { useApp, useOrgAccess, useOrgModel } from '../context'
 import { IconButton } from '../ui/actions'
 import { useGo } from '../ui/AppLink'
@@ -147,19 +150,16 @@ function DialogCard(props: {
             </div>
           ) : null}
           <div className={styles.footer}>
-            {form.choice ? (
-              <ModelPicker
-                change={(choice) => model.setChoice(choice)}
-                choice={form.choice}
-                models={form.models}
-              />
-            ) : null}
-            <span className={styles.spacer} />
             <IconButton
               disabled={sending}
               icon={Paperclip}
               label="Attach files"
               onPress={pick}
+            />
+            <ToolButton
+              disabled={sending}
+              placement="above-start"
+              tool={draftCapabilities(org, model)}
             />
             <input
               className={ui.hidden}
@@ -174,6 +174,15 @@ function DialogCard(props: {
               tabIndex={-1}
               type="file"
             />
+            {form.choice ? (
+              <ModelPicker
+                change={(choice) => model.setChoice(choice)}
+                choice={form.choice}
+                models={form.models}
+              />
+            ) : null}
+            {form.login ? <SessionLoginLabel {...form.login} /> : null}
+            <span className={styles.spacer} />
             <CreateButton
               busy={sending}
               create={form.send}
@@ -193,10 +202,11 @@ function DialogCard(props: {
  * workspace at the top right, as a menu of the sections of the org. The
  * target of a picked branch lives in the dropdown of the branch control.
  * The message and its files fill the middle, with the notices of the page
- * under them. The model picker sits at the bottom left, and the attach
- * button and Create at the bottom right. The dialog and the page of an org
- * and a section share one draft, so a close keeps the message, its files,
- * its branch, and its target.
+ * under them. The attach button, the Capabilities icon, and the model
+ * picker sit at the bottom left, with the label of the org login after the
+ * model picker when the first message runs on it. Create sits at the bottom
+ * right. The dialog and the page of an org and a section share one draft,
+ * so a close keeps the message, its files, its branch, and its target.
  */
 export function NewWorkspaceDialog(props: {
   orgId: string

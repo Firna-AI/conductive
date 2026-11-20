@@ -2,7 +2,6 @@ import { activeAdminMemberPredicate } from '../data/active-admin'
 import { activeOrgPredicate } from '../data/org-access'
 import { workspaceTokenResourcePredicate } from '../data/workspace-token-access'
 import { WORKSPACE_RESTORE_MS } from '../../src/shared/workspaces'
-import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 
 export const REPAIR_GRACE_MS = 15 * 60 * 1_000
 export const REPAIR_LIMIT = 50
@@ -29,11 +28,11 @@ export async function overdueLifecycleRepairs(db: D1Database, cutoff: number) {
     db
       .prepare(
         `SELECT o.id FROM org_images i JOIN orgs o ON o.id = i.org_id
-         WHERE i.provider_account = ? AND i.image_name IS NOT NULL AND ${orgEligible}
+         WHERE i.provider_account = o.provider_account AND i.image_name IS NOT NULL AND ${orgEligible}
          AND i.next_image_refresh_at <= ?
          ORDER BY i.next_image_refresh_at, o.id LIMIT ?`,
       )
-      .bind(DEFAULT_PROVIDER_ACCOUNT, cutoff, REPAIR_LIMIT + 1),
+      .bind(cutoff, REPAIR_LIMIT + 1),
   ])
   return { workspaces: workspaces.results, orgs: orgs.results }
 }
@@ -54,13 +53,12 @@ function repairDeferral(
         )
       : db.prepare(
           `UPDATE org_images SET next_image_refresh_at = ?
-           WHERE org_id = ? AND provider_account = ? AND image_name IS NOT NULL
+           WHERE org_id = ? AND image_name IS NOT NULL
            AND next_image_refresh_at <= ? AND EXISTS (
-             SELECT 1 FROM orgs o WHERE o.id = org_images.org_id AND ${orgEligible})`,
+             SELECT 1 FROM orgs o WHERE o.id = org_images.org_id
+             AND o.provider_account = org_images.provider_account AND ${orgEligible})`,
         )
-  return kind === 'workspace'
-    ? statement.bind(now, id, cutoff)
-    : statement.bind(now, id, DEFAULT_PROVIDER_ACCOUNT, cutoff)
+  return statement.bind(now, id, cutoff)
 }
 
 export async function deferOverdueRepair(

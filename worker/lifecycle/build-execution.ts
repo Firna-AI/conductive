@@ -9,17 +9,19 @@ import {
   type BuildPhase,
 } from './build-data'
 import { savedScriptCommand } from './saved-script'
-import { installImageSoftware } from './image-software'
-import { latestSoftwareRelease } from './software-release'
+import { buildSoftwareCommand } from './build-software'
 import { imageIsLeased } from './image-leases'
 import { scheduleIdleImage } from './image-schedule'
 import type { ImageRuntime } from './image-builds'
 import { deleteSandboxIfPresent, deleteSnapshotIfPresent } from './cleanup'
 import { cleanupBuildImageSources } from './image-sources/cleanup'
 import { lifecycleCommand } from './command-intents'
-import { recordBuildCommand } from './build-command-data'
+import {
+  recordBuildCommand,
+  recordSoftwarePackages,
+} from './build-command-data'
 import { completeBuildPhase } from './build-phase-data'
-import { recoverImageBuildAllocation } from './image-allocation'
+import { recoverImageBuildForCleanup } from './image-allocation'
 import { liveBuildComputers } from './computer-ledger'
 import { startAddedImageBuild } from './first-image-build'
 import { imageIsPublished } from './org-image-data'
@@ -33,11 +35,15 @@ export async function advanceBuildCommand(
   if (!sandboxId) throw new Error('Missing build sandbox')
   if (job.processId === null) {
     let command: string
-    if (job.phase === 'software')
-      command = installImageSoftware(
-        await latestSoftwareRelease(runtime.env, runtime.dependencies.fetch),
+    if (job.phase === 'software') {
+      const software = await buildSoftwareCommand(runtime, job)
+      command = software.command
+      await recordSoftwarePackages(
+        runtime.env.DB,
+        job.buildId,
+        software.packagesVersion,
       )
-    else
+    } else
       command = `set -eu\n${savedScriptCommand('/tmp/conductive-install.sh', job.installScript, ['set -a', '. /run/ascii-secrets/env.sh', 'set +a'])}\nrm -f /tmp/conductive-install.sh`
     if (job.phase !== 'software' && job.phase !== 'install')
       throw new Error('Invalid image command phase')
@@ -95,7 +101,16 @@ export async function cleanupBuild(
       ...job,
       sandboxId:
         job.sandboxId ??
-        (await recoverImageBuildAllocation(runtime.env.DB, provider, job)),
+        (await recoverImageBuildForCleanup(
+          runtime.env.DB,
+          providerForAccount(
+            runtime.env,
+            runtime.dependencies.fetch,
+            job.providerAccount,
+            'cleanup',
+          ),
+          job,
+        )),
     }
     await updateBuildJob(runtime.env.DB, job.buildId, 'cleanup')
   }
@@ -169,12 +184,7 @@ export async function cleanupBuild(
   }
   await updateBuildJob(runtime.env.DB, job.buildId, 'done')
   await startAddedImageBuild(runtime, job)
-  await scheduleIdleImage(
-    runtime,
-    job.orgId,
-    jobSoftware(job),
-    job.providerAccount,
-  )
+  await scheduleIdleImage(runtime, job.orgId, jobSoftware(job))
   return true
 }
 

@@ -93,6 +93,7 @@ async function publishFallback(
     orgId: row.orgId,
     repositoryId: row.repositoryId,
     sectionId: row.sectionId,
+    parentId: row.parentId,
     owner: {
       id: row.ownerId,
       githubLogin: row.githubLogin,

@@ -102,9 +102,9 @@ async fn hides_transport_details_and_opaque_server_bodies() -> Result<()> {
 }
 
 #[tokio::test]
-async fn keeps_redacted_worker_refusals_for_all_24_calls() -> Result<()> {
+async fn keeps_redacted_worker_refusals_for_all_26_calls() -> Result<()> {
     let calls = cases()?;
-    assert_eq!(calls.len(), 24);
+    assert_eq!(calls.len(), 26);
     for case in calls {
         let name = case.call.name();
         let call = case.call;

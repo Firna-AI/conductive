@@ -19,7 +19,7 @@ number names a dated record, as
 | Open a preview | `open_preview` | `conductive previews open` | `POST /v1/tools/workspaces/{workspaceId}/previews` | An active turn |
 | Close a preview | `close_preview` | `conductive previews close` | `POST /v1/tools/workspaces/{workspaceId}/previews/{previewId}/close` | An active turn |
 
-- [Sections](workspace-calls.md#sections) states the list of the sections.
+- [Sections](create-call-lists.md#sections) states the list of the sections.
 
 ## Sections
 
@@ -32,15 +32,15 @@ number names a dated record, as
   the start and at the end gets HTTP 400 with the error code
   `invalid_input`, as the section route of the app does.
 - The new section comes at the end of the sections of the org, as New
-  section in the app does.
+  section in the command palette of the app does.
 - The reply gives the new section with its ID and its name, as the section
   list gives them.
 - `delete_section` takes a section of the org. It makes the same change as
   Delete section in the app.
 - So each workspace of the section moves to the default section, also each
   archived one, as [Sections](orgs-and-members.md#sections) says. Each
-  routine of the section moves there too, as
-  [A routine](routines.md#a-routine) says.
+  automation of the section moves there too, as
+  [An automation](automations.md#an-automation) says.
 - The default section cannot be deleted. A delete of it changes nothing,
   as in the app.
 - An unknown section gets HTTP 404 with the error code
@@ -49,10 +49,12 @@ number names a dated record, as
 
 ## Previews
 
-- `list_previews` takes a workspace. It gives each open preview of that
-  workspace, with its ID, its port, its link, and the time when it ends.
-  Reason: Conductor's `preview get` gives the preview of a workspace.
-- The list also holds the previews that members opened in the app.
+- `list_previews` takes a workspace. It gives each open port preview of
+  that workspace, with its ID, its port, its link, and the time when it
+  ends. Reason: Conductor's `preview get` gives the preview of a workspace.
+- The list also holds the previews that members opened in the app. It
+  leaves out the [files preview](html-file-preview.md#the-files-preview)
+  of the HTML file tabs.
 - `open_preview` takes a workspace and a port. It opens a preview of that
   port, as a member does in the app, with the checks of
   [Port previews](port-previews.md). Reason: Conductor's `preview set`
@@ -61,7 +63,7 @@ number names a dated record, as
 - The reply gives the preview with its link. The link is the launch
   address of the preview on the app origin. So each load of the link needs
   a sign-in and access to the workspace, as
-  [Port previews](terminal-previews-and-desktop.md#port-previews) says.
+  [Preview grants](preview-grants.md#the-launch) says.
 - Each preview that `open_preview` opens needs a sign-in. The call has no
   choice that opens a preview without a sign-in.
 - Reason: sandbox code must not make its own server public through an
@@ -81,3 +83,5 @@ number names a dated record, as
 - A close of a preview that is already closed, or that the workspace does
   not have, changes nothing, as in the app. Its reply says that no preview
   closed.
+- `close_preview` cannot close the files preview. A close that names it
+  changes nothing, as for a preview that the workspace does not have.

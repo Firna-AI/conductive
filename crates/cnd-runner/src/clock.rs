@@ -3,6 +3,7 @@
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use async_trait::async_trait;
+use tokio::time::Instant;
 
 use crate::error::{Error, ErrorResultExt, Result};
 
@@ -12,8 +13,20 @@ use crate::error::{Error, ErrorResultExt, Result};
 pub trait Clock: Send + Sync {
     /// Unix milliseconds for an event or recovered turn.
     fn now(&self) -> Result<i64>;
+    /// Monotonic time for idle intervals, independent of event date corrections.
+    fn monotonic(&self) -> Instant {
+        Instant::now()
+    }
     /// Wait one second before reconnecting.
     async fn reconnect_delay(&self);
+    /// Wait one minute before the next local idle-update check.
+    async fn update_delay(&self) {
+        tokio::time::sleep(Duration::from_secs(60)).await;
+    }
+    /// Wait one second before a waiting repository move checks the turns again.
+    async fn move_delay(&self) {
+        tokio::time::sleep(Duration::from_secs(1)).await;
+    }
 }
 
 /// System time and Tokio's cancellable scheduler.

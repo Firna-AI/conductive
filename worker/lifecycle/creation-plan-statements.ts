@@ -1,3 +1,4 @@
+import { NEW_WORKSPACE_CAPABILITIES } from '../../src/shared/secrets'
 import { publishedRepositorySource } from './published-image-data'
 import type { WorkspaceStartJob } from './start-types'
 
@@ -19,12 +20,12 @@ export function planStatement(
       `INSERT OR IGNORE INTO workspace_creation_plans
     (workspace_id, repository_id, owner_user_id, section_id, session_id, turn_id, city, branch,
      start_attempt, startup_script, environment_ciphertext, image_name, default_branch, agent, model, effort, fast, attachment_ids_json,
-     repositories_json, repository_locations_json, message_text, base_branch, start_branch, start_sha, name, provider_account, first_session_title)
+     repositories_json, repository_locations_json, message_text, base_branch, start_branch, start_sha, name, provider_account, first_session_title, parent_workspace_id, capabilities_json)
     SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, s.startup_script, s.env_vars_ciphertext,
       b.snapshot_name, json_extract(repository.value, '$.defaultBranch'), ?, ?, ?, ?, ?,
       j.repositories_json, j.repository_locations_json, ?,
       CASE WHEN ? = 1 AND ? = json_extract(repository.value, '$.defaultBranch') THEN NULL ELSE ? END,
-      COALESCE(?, json_extract(repository.value, '$.defaultBranch')), ?, ?, b.provider_account, ?
+      COALESCE(?, json_extract(repository.value, '$.defaultBranch')), ?, ?, b.provider_account, ?, ?, ?
     ${publishedRepositorySource}
     AND EXISTS (SELECT 1 FROM workspace_creation_attempts a
       WHERE a.workspace_id = ? AND a.org_id = s.org_id AND a.state = 'pending')`,
@@ -52,6 +53,8 @@ export function planStatement(
       job.startSha ?? null,
       creation.name ?? null,
       creation.firstSessionTitle ?? null,
+      creation.parentId ?? null,
+      JSON.stringify(creation.capabilities ?? NEW_WORKSPACE_CAPABILITIES),
       job.orgId,
       job.providerAccount,
       creation.repositoryId,

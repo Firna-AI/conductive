@@ -3,6 +3,8 @@
 use std::collections::BTreeMap;
 use std::path::{Component, Path, PathBuf};
 
+use url::Url;
+
 use crate::error::{Error, Result};
 
 /// A WebSocket request. Its token must never enter event state or diagnostics.
@@ -12,6 +14,28 @@ pub struct ConnectionRequest {
     pub url: String,
     /// Workspace bearer token.
     pub workspace_token: String,
+}
+
+/// Stable workspace tree facts supplied by the Worker at each start.
+#[derive(Clone)]
+pub struct WorkspaceContext {
+    /// Canonical workspace link.
+    pub link: String,
+    /// Number of stored parent links above this workspace.
+    pub depth: u32,
+    /// Deepest permitted depth supplied by the Worker.
+    pub max_depth: u32,
+    /// Direct parent, absent only for a top-level workspace.
+    pub parent: Option<ParentWorkspace>,
+}
+
+/// Identity and canonical link of a workspace's direct parent.
+#[derive(Clone)]
+pub struct ParentWorkspace {
+    /// Parent workspace ID used to create a sibling.
+    pub id: String,
+    /// Canonical parent workspace link.
+    pub link: String,
 }
 
 /// Parsed service configuration shared with the file and turn owners.
@@ -29,6 +53,8 @@ pub struct Configuration {
     pub default_branch: String,
     /// Branch tracked by the workspace, when supplied by its service.
     pub workspace_branch: Option<String>,
+    /// Validated tree facts, omitted for older or malformed service settings.
+    pub workspace_context: Option<WorkspaceContext>,
     /// Image repository variables in name order.
     pub repository_directories: BTreeMap<String, PathBuf>,
     /// State file path, with the Node runner's default.
@@ -49,8 +75,15 @@ impl Configuration {
         if workspace_branch.is_none() {
             tracing::warn!("The workspace branch is unavailable. Agent instructions will omit it.");
         }
+        let workspace_id = required(env, "CONDUCTIVE_WORKSPACE_ID")?;
+        let workspace_context = workspace_context(env, &workspace_id);
+        if workspace_context.is_none() {
+            tracing::warn!(
+                "The workspace tree context is unavailable. Agent instructions will omit it."
+            );
+        }
         Ok(Self {
-            workspace_id: required(env, "CONDUCTIVE_WORKSPACE_ID")?,
+            workspace_id,
             request: ConnectionRequest {
                 url: required(env, "CONDUCTIVE_RUNNER_URL")?,
                 workspace_token: required(env, "CONDUCTIVE_WORKSPACE_TOKEN")?,
@@ -63,6 +96,7 @@ impl Configuration {
             home,
             default_branch: required(env, "CONDUCTIVE_DEFAULT_BRANCH")?,
             workspace_branch,
+            workspace_context,
             repository_directories: env
                 .iter()
                 .filter(|(name, value)| repository_variable(name) && !value.is_empty())
@@ -70,6 +104,62 @@ impl Configuration {
                 .collect(),
         })
     }
+}
+
+fn workspace_context(
+    env: &BTreeMap<String, String>,
+    workspace_id: &str,
+) -> Option<WorkspaceContext> {
+    identifier(workspace_id)?;
+    let workspace_link = link(env.get("CONDUCTIVE_WORKSPACE_LINK")?)?;
+    let depth = decimal(env.get("CONDUCTIVE_WORKSPACE_DEPTH")?)?;
+    let max_depth = decimal(env.get("CONDUCTIVE_WORKSPACE_MAX_DEPTH")?)?;
+    if max_depth == 0 || depth > max_depth {
+        return None;
+    }
+    let parent = if depth == 0 {
+        if env.contains_key("CONDUCTIVE_PARENT_WORKSPACE_ID")
+            || env.contains_key("CONDUCTIVE_PARENT_WORKSPACE_LINK")
+        {
+            return None;
+        }
+        None
+    } else {
+        let id = identifier(env.get("CONDUCTIVE_PARENT_WORKSPACE_ID")?)?;
+        if id == workspace_id {
+            return None;
+        }
+        Some(ParentWorkspace {
+            id: id.into(),
+            link: link(env.get("CONDUCTIVE_PARENT_WORKSPACE_LINK")?)?,
+        })
+    };
+    Some(WorkspaceContext {
+        link: workspace_link,
+        depth,
+        max_depth,
+        parent,
+    })
+}
+
+fn identifier(value: &str) -> Option<&str> {
+    (!value.is_empty() && !value.chars().any(|c| c.is_whitespace() || c.is_control()))
+        .then_some(value)
+}
+
+fn decimal(value: &str) -> Option<u32> {
+    if value.is_empty() || !value.bytes().all(|c| c.is_ascii_digit()) {
+        return None;
+    }
+    value.parse().ok()
+}
+
+fn link(value: &str) -> Option<String> {
+    if value.trim() != value || value.chars().any(char::is_control) {
+        return None;
+    }
+    let url = Url::parse(value).ok()?;
+    (matches!(url.scheme(), "http" | "https") && url.host_str().is_some()).then(|| value.to_owned())
 }
 
 fn required(env: &BTreeMap<String, String>, name: &'static str) -> Result<String> {

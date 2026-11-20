@@ -1,9 +1,16 @@
 import type { Timestamp } from './generated/Timestamp'
 import { orgPath, type Org } from './api'
+import type { OrgColor } from './org-colors'
 
 export interface OrgSummary extends Org {
   /** Custom initials shown in the rail. Older replies may omit them. */
   initials?: string
+  /**
+   * The preset key of the colour of the org, absent until an admin picks
+   * one. A key that `ORG_COLORS` does not hold reads as the default, so it
+   * stays a string.
+   */
+  color?: string
   suspension?: { suspendedAt: Timestamp }
   /** Absent for an active org. Only its admins can see a deleted org. */
   deletion?: { deletedAt: Timestamp; deletesAt: Timestamp }
@@ -40,6 +47,7 @@ export interface OrgResponse {
 export interface CreateOrgRequest {
   name: string
   initials?: string
+  providerAccount?: string
   /** GitHub repository IDs from the account list, not app Repository.id values. */
   repositoryIds?: readonly number[]
 }
@@ -47,6 +55,10 @@ export type CreateOrgResponse = OrgResponse
 export interface RenameOrgRequest {
   name: string
   initials?: string
+}
+/** A PATCH of the org with its colour alone. The name stays. */
+export interface OrgColorRequest {
+  color: OrgColor
 }
 export interface DeleteOrgRequest {
   name: string

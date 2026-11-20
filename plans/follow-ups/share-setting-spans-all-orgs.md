@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-09, from the options check of decision 4 of the own endpoint plan on branch `calummoore/cli-proxy-setup`.
-- **Location:** "Agent logins" in `docs/protocol/tokens-and-secrets.md` and "Agent logins in a sandbox" in `docs/protocol/isolation.md`, and the share setting on the account page in `src/shell/account/LoginShareSetting.tsx`.
+- **Location:** "Agent logins" in `docs/protocol/tokens-and-secrets.md` and `docs/protocol/share-setting.md`, and the share setting on the account page in `src/shell/account/LoginShareSetting.tsx`.
 - **Reason:** the own endpoint change keeps one share setting for each login, and this item asks only for text that no current requirement states.
 
 - **Terms:**

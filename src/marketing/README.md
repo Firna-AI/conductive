@@ -2,9 +2,8 @@
 
 The marketing site is the public site at the root of the product domain,
 `conductive.build`. It has the home page, the public docs, the Terms page,
-and the Privacy page. It also has a page for an unknown address. It has no pricing page, because the product is
-free, as [Orgs and members](../../docs/protocol/orgs-and-members.md#orgs)
-says.
+and the Privacy page. It also has [the pricing page](pricing-page.md) and
+a page for an unknown address.
 Visitors need no sign-in. The pages run no
 script and set no cookie. Every sign-in link leads to the app, on the
 `app.` host.
@@ -24,9 +23,9 @@ words of both actions from `siteActionCopy` in `access-copy.ts`.
 
 The shared header links to the public source repository on GitHub.
 The link appears on phones and desktops. On desktops, the header also has
-Features and Download. They lead to the features and the Mac app section
-of the home page. The Product column of the footer links both, so a phone
-reaches them from the footer. The header
+Features, Download, and Pricing. They lead to the features, the Mac app
+section of the home page, and the pricing page. The Product column of the
+footer links all three, so a phone reaches them from the footer. The header
 links never wrap. The header and the footer also link to the public docs.
 A phone header keeps the lockup, Docs, the GitHub mark alone, and Sign in.
 
@@ -47,8 +46,10 @@ The marketing mockups are the visual spec:
 [`LegalScreen.tsx`](../../docs/mockups/src/screens/LegalScreen.tsx),
 [`NotFoundScreen.tsx`](../../docs/mockups/src/screens/NotFoundScreen.tsx),
 [`DocsScreen.tsx`](../../docs/mockups/src/screens/DocsScreen.tsx),
+[`PricingScreen.tsx`](../../docs/mockups/src/screens/PricingScreen.tsx),
 and the parts in
-[`components/marketing/`](../../docs/mockups/src/components/marketing/).
+[`components/marketing/`](../../docs/mockups/src/components/marketing/) and
+[`components/pricing/`](../../docs/mockups/src/components/pricing/).
 The [brand folder](../../docs/brand/README.md) gives the logo files. The
 site uses the lockups and favicons from that folder unchanged. The header
 and the footer show the lockup 25 px high, from the `lockupHeight` token
@@ -132,6 +133,11 @@ In the same change, update each sentence of the legal pages that restates
 the fact. A search for the old words is not enough, because a legal page
 can restate a fact in other words.
 
+A change to the Terms text gives a new Terms revision on its own, because
+`TERMS_VERSION` in [`src/shared/terms.ts`](../shared/terms.ts) is a digest
+of the text. In the same change, set the effective date at the top of the
+Terms to the date of the change.
+
 ## Public docs
 
 The public docs are guides to the product at `/docs`.
@@ -178,9 +184,13 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
 before the Worker serves them.
 
 - Run the site tests with `npm run test -- worker/marketing src/marketing`.
-  The built-site test clears Astro's content cache and builds once in a
-  temporary folder, so Markdown hooks always use current source. The
-  capture tests use fake pages and a fake browser, so they need no Chrome.
+  The built-site test clears Astro's content cache so Markdown hooks use
+  current source. It builds once into a new
+  `node_modules/.cache/conductive-site-<suffix>` folder, which Git and the
+  checks ignore. The folder stays on the checkout's mount so Astro can
+  rename built assets. The test removes its folder after success or
+  failure. The capture tests use fake pages and a fake browser, so they
+  need no Chrome.
 - Work on the pages with `npm run site:dev`. It serves them at
   `http://localhost:4321` and reloads them after edits. Sign-in links lead
   to the app of `npm run dev`. The footer shows the current year.
@@ -191,16 +201,21 @@ before the Worker serves them.
   and `/app-host/github-setup/requested`.
 - Run `npm run site:build` to write the pages, files, and file list into
   `public/_site/`, which Git ignores. `npm run dev` and `npm run build`
-  build the site first. Restart the Worker after rebuilding the site so
-  it reads the new file list.
+  build the site first. To see an edit through the Worker, start
+  `npm run dev` again. It rebuilds the site. The Worker then reads the new
+  file list.
 - Preview through the Worker with `npm run dev`. Set `APP_ORIGIN` to
   `http://127.0.0.1:5173` and `MARKETING_ORIGIN` to
   `http://localhost:5173` in `.dev.vars`. Open `http://localhost:5173` for
   the site and `http://127.0.0.1:5173` for the app.
 - To preview the production build, use port 5174 in those settings.
   Run `npm run build`, then `npm run preview`. Open
-  `http://localhost:5174`. The agreement page opens on the app host at
-  `/api/auth/github` without the current `terms_version` value.
+  `http://localhost:5174`.
+- `npm run dev` and `npm run preview` serve the built agreement and GitHub
+  return pages on the app host. The agreement page opens at
+  `/api/auth/github` without the current `terms_version` value. The
+  installed return page opens at `/github/setup?state=mac`. The requested
+  return page opens at `/github/setup?state=mac&setup_action=request`.
 
 ### Key code
 

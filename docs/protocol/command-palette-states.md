@@ -41,11 +41,13 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws these states at
 - With the Active filter, the line says
   `Workspaces of <org or repository> show here`.
 - With the Archived filter, the line says
-  `Archived workspaces of <org or repository> show here`.
+  `Archived workspaces of <org or repository> show here for 14 days`.
+  Reason: the line says why an older archive does not show. It left the
+  list, as [Removed workspaces](workspace-life.md#removed-workspaces) says.
 - `<org or repository>` names the chosen repository, such as
   acme/marketing-site, or the org while the filter shows all repositories.
 - Without an org, the line has no name: `Workspaces show here`, or
-  `Archived workspaces show here`.
+  `Archived workspaces show here for 14 days`.
 - With a query, the palette says `Nothing matches “<query>”` when the tab
   has no row and no status part. `<query>` is the text of the search field.
 - Under it, the palette says "Try a workspace name, a branch, or a

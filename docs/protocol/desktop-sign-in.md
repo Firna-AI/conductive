@@ -58,10 +58,12 @@ says.
   [Access and security](access-and-security.md#sign-in) says.
 - The Worker reads the cookie of the Mac app on a request whose `Origin`
   header is the desktop origin.
-- It also reads that cookie on a GET of the exact launch address of a port
-  preview without an `Origin` or an `Upgrade` header. When such a GET
-  carries the cookie of the Mac app, the Worker reads no other session
-  cookie.
+- It also reads that cookie on a GET of the exact launch address of a
+  preview without an `Origin` or an `Upgrade` header. This holds also for
+  a launch address with a [launch path](preview-grants.md#launch-paths),
+  and for the [files preview](html-file-preview.md#the-files-preview) of
+  an HTML file tab. When such a GET carries the cookie of the Mac app, the
+  Worker reads no other session cookie.
 - Reason: the window loads the launch address in a frame, and a navigation
   sends no `Origin` header. Such a GET returns only the launch page or a
   browser launch. No other origin can read either reply.
@@ -88,8 +90,7 @@ says.
   access. It allows the methods of the API, and `Content-Type` as the only
   request header outside the CORS safelist.
 - The gate then needs a JSON body, or raw bytes on the two attachment
-  upload routes, as
-  [Attachment uploads](access-and-security.md#attachment-uploads) says
+  part routes, as [Attachment uploads](attachment-uploads.md) says
   (decision 144).
 - The hostname for machines, `api.conductive.build`, and the preview
   domain, `conductive.page`, never accept the desktop origin.

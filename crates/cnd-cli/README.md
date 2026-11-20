@@ -24,9 +24,12 @@ sorts below every release.
 
 The commands are `runner`, `relay`, `mcp`, `git-credential`, `update`,
 `workspaces`, `sessions`, `messages`, `sections`, `repositories`, `models`,
-`previews`, and `mac`. The workspace commands and `mcp` run the 24 calls in
+`previews`, `mac`, and `secrets`. The workspace commands and `mcp` run the 26 calls in
 [cnd-tools](../cnd-tools/README.md). They preserve the Worker replies and
 refusal codes. `relay` serves previews through [cnd-relay](../cnd-relay/README.md).
+`secrets list` returns metadata only. `secrets run --secret NAME -- <command>`
+puts approved values only in that command's environment. It keeps stdin,
+filters exact copies from stdout and stderr, and returns the child's exit status.
 `git-credential` supplies fresh GitHub tokens through
 [cnd-credential](../cnd-credential/README.md). The installed
 `conductive-git-credential` executable name selects that subcommand.
@@ -42,6 +45,33 @@ builds use `node` and `dist/sdk-helper/sdk-helper.mjs` in the working folder.
 SIGTERM and SIGINT end live turns, save pending events, and close the connection.
 The installed service runs this Rust runner. Its first valid welcome confirms
 the release through the pinned executable. It keeps the Node-format state file.
+
+The runner checks downloaded releases through the updater's `DiskStore`.
+After an idle swap result, it runs its own pinned executable as
+`sudo -n -- <executable> update apply` with no standard input.
+It then checks `current` again. A newer release replaces the runner through
+`current/system/runner-start.sh` with the same process ID.
+An unchanged release starts a fresh connection and fresh handlers on the
+running version. A failed activation also reconnects when `current` still names
+the running release and no pending marker exists.
+`runner` makes one process-start ID when the program starts, as
+[Process starts](../../docs/protocol/runner-warnings.md#process-starts) says.
+Each fresh connection and each set of fresh handlers of that program keep it.
+A newer release that replaces the runner makes a new ID, although the process
+ID stays the same. Each process attempts only
+one idle update. A reconnect after that attempt disables further idle updates
+until the next service start. Failed activation after a state change, or failed
+execution, exits for the service's existing restart and rollback path.
+
+A relocation result points the configuration at the folder and branches of
+the `repository.move` command. The runner then starts fresh handlers in the
+same process, with no update attempt. Each round gives its helper the
+`CONDUCTIVE_REPOSITORY`, `CONDUCTIVE_REPOSITORY_DIR`,
+`CONDUCTIVE_DEFAULT_BRANCH`, and `CONDUCTIVE_WORKSPACE_BRANCH` values of
+its configuration, so agent commands get the new folder. A later process
+start reads the start variables again.
+A shutdown received during activation prevents execution of the new release.
+Development builds disable idle swaps.
 
 `update check` uses `cli-updater` to read and compare the newest release.
 It downloads into a private version folder. It checks the program digest
@@ -124,16 +154,24 @@ The musl build needs a C compiler for musl. On Ubuntu, install the
 - [update/ports.rs](src/update/ports.rs) defines disk, process, and updater boundaries.
 - [update/disk.rs](src/update/disk.rs) stores complete versions and locks.
 - [update_tests.rs](tests/update_tests.rs) checks real files and local HTTP downloads.
-- [runner_command.rs](src/runner_command.rs) composes the full runner and graceful shutdown.
+- [runner_command.rs](src/runner_command.rs) makes one `RunnerStart` before its reconstruction loop, and composes the full runner and graceful shutdown.
+- [runner_start.rs](src/runner_start.rs) owns `RunnerStart`, which makes the process-start ID and gives it to each `SavedRunnerLink`.
+- [runner_update/idle.rs](src/runner_update/idle.rs) shares one idle update attempt across fresh runner instances and disables readiness afterward.
+- [runner_update/releases.rs](src/runner_update/releases.rs) checks complete releases and running-release confirmation through `DiskStore`.
+- [runner_update/swap.rs](src/runner_update/swap.rs) applies a release and checks whether to reconnect or exec the current launcher.
+- [runner_update/process.rs](src/runner_update/process.rs) runs noninteractive sudo and replaces the process without changing its ID.
 - [sandbox_command.rs](src/sandbox_command.rs) composes the relay and credential runtimes.
 - [tool_command.rs](src/tool_command.rs) composes the workspace CLI and MCP runtime.
 - [environment.rs](src/environment.rs) reads saved shell settings for tools and credentials.
 - [relay_start_tests.rs](tests/relay_start_tests.rs) executes the relay start script with a fake program.
+- [system_install_tests.rs](tests/system_install_tests.rs) executes the system installer with stub commands and checks the relay restart.
 - [cli_tests.rs](src/_tests_/cli_tests.rs) checks relay argument parsing.
+- [secret_command_tests.rs](tests/secret_command_tests.rs) checks the native secret routes, turn header, and filtered CLI streams.
 
 ### Related Docs
 
 - [Architecture](../../docs/architecture.md) describes the system components.
 - [Agent runner](../../docs/protocol/agent-runner.md) defines the runner contract.
+- [Runner warnings](../../docs/protocol/runner-warnings.md) defines the process-start ID.
 - [Workspaces and sandboxes](../../docs/protocol/workspaces-and-sandboxes.md) defines cloud computer behaviour.
 - [Workspace tools](../../tools/README.md) describes the workspace command interface.

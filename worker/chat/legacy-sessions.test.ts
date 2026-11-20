@@ -137,6 +137,7 @@ async function removeMetadata(
 ) {
   const without = (value: Record<string, unknown>) => {
     const result = { ...value }
+    delete result.login
     delete result.startedBy
     delete result.sourceSessionId
     delete result.loginAvailable

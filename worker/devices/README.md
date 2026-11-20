@@ -2,7 +2,8 @@
 
 This feature routes a sandbox command to its active turn sender's connected Mac.
 It uses the existing `WORKSPACES` Durable Object binding.
-It adds no D1 migration or separate deployment binding.
+It uses the [workspace capability records](../secrets/README.md) in D1 and
+adds no separate deployment binding.
 
 ## Public contract
 
@@ -125,6 +126,14 @@ Device cleanup therefore does not delay or fail an otherwise successful chat res
 Command socket references include both workspace ID and request ID.
 A result from another connection or workspace cannot complete that request.
 
+When workspace Mac access is off, a new request ends as `failed`, with
+`mac_access_off` and the Capabilities reason. It contacts no Mac.
+The capability settings route calls `workspace.mac-access-changed` through
+the existing internal RPC to settle each waiting request.
+The workspace repeats the Mac access check before dispatch and each
+waiting-to-running transition. It keeps the reason when broker cleanup
+also finds that request. Running commands keep their result path.
+
 ## Workspace state
 
 A durable publication marker retries an interrupted state/event update.
@@ -135,7 +144,9 @@ The existing stored chat session supplies the workspace's real agent choice.
 
 Each waiting request contributes to the workspace's `input` state.
 An answer clears this request's wait.
-`input` shows over starting, working, ready, and unread.
+`input` shows over working, ready, and unread.
+Starting shows over a waiting request during a start or a Restart.
+When the runner is ready and starting ends, `input` shows again while a request still waits.
 Newer stopped, archived, or error states show over a waiting request.
 The durable marker also repairs a restart before the D1 input transition.
 
@@ -239,6 +250,7 @@ When the turn ends, the request fails with `turn_ended`, and D1 shows `ready`.
 - `runtime.ts`, `router.ts`: feature dispatch, the RPC operation entry, and Durable Object composition.
 - `access.ts`: `activeStoredTurn`, the shared read of the running stored turn, and `activeDeviceSender` with the current access checks.
 - `workspace-commands.ts`, `workspace-browser.ts`: machine commands and scoped app records/approvals.
+- `mac-access.ts`: the Mac access refusal code, reason, and terminal state.
 - `broker.ts`, `broker-routes.ts`, `broker-messages.ts`: the broker, its upgrade route, and its relays.
 - `native-sockets.ts`, `connection-store.ts`: `DeviceSockets`, the native acceptance, restore, close, and automatic heartbeat response of the Mac socket, and the durable current connection with its generation.
 - `broker-lifecycle.ts`: the lease and session check, the drop that settles pending work, and the alarm schedule.

@@ -34,6 +34,8 @@ import {
   saveAccountNewWorkspaceView,
   updateAccountLoginReuse,
 } from './account-data'
+import { readDefaultAgentLogins } from './default-agent-logins'
+import { readAccountStats } from './account-stats'
 import { endpointModelsRoute } from './endpoint-models'
 import { githubInstallUrl } from './feature-github'
 import { getStartedData } from './get-started-data'
@@ -68,10 +70,16 @@ export async function bootRoute(
         agentLogins: await accountLogins(env.DB, userId, () =>
           configuredModels(env),
         ),
+        defaultLogins: await readDefaultAgentLogins(env, userId),
         newWorkspaceView: await accountNewWorkspaceView(env.DB, userId),
         shortcuts: await accountShortcuts(env.DB, userId),
         githubAppUrl: githubInstallUrl(env),
       } satisfies AccountResponse)
+    }
+    if (path === ACCOUNT_PATHS.stats) {
+      return Response.json(
+        await readAccountStats(env.DB, userId, dependencies.now()),
+      )
     }
   }
   if (path === ACCOUNT_PATHS.defaultModel && request.method === 'PUT') {

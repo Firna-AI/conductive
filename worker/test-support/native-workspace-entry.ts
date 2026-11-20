@@ -23,12 +23,12 @@ import { nativeChatObservers } from './native-chat-observers'
 import { nativeDatabase } from './native-d1'
 import { nativeCryptoObservation } from './native-crypto'
 import { nativeChatRecordControls } from './native-chat-record-controls'
-import { nativeAttachmentControls } from './native-attachment-controls'
 import { nativeWarningObservation } from './native-warnings'
 import { initialNativeTitleModel } from './native-constructor-options'
 import { nativeEntryFetch } from './native-entry-router'
 import { nativeLifecycleControls } from './native-lifecycle-controls'
 import { nativeLifecycleRpc } from './native-lifecycle-rpc'
+import { nativeGitHubState } from '../github/native-state.test-support'
 
 interface NativeEnvironment extends LifecycleEnvironment {
   NATIVE_CONTROL: Fetcher
@@ -148,6 +148,10 @@ export class NativeWorkspace extends Workspace {
       if (errors.length) throw errors.shift()
     }
     this.native = {
+      github: nativeGitHubState(this.chat, env.DB, () => {
+        if (!state.workspaceId) throw new Error('Missing native workspace ID.')
+        return state.workspaceId
+      }),
       chat: this.chat,
       controller: this.controller,
       storage: context.storage,
@@ -174,7 +178,9 @@ export class NativeWorkspace extends Workspace {
         ...nativeCryptoObservation(),
         ...nativeWarningObservation(),
         ...nativeChatRecordControls(this.chat, this.integration.files),
-        ...nativeAttachmentControls(env, clock.now),
+        enqueueWorkspaceChange: async (workspaceId, work) => {
+          context.waitUntil(this.chat.changeWorkspace(workspaceId, work))
+        },
         configure: async (options) => {
           state.workspaceId = options.workspaceId
           for (const key of Object.keys(hooks))
@@ -258,6 +264,8 @@ export class NativeWorkspace extends Workspace {
             async (view) => view.eventNumber,
           ),
         takeEvents: observations.takeEvents,
+        takePublications: observations.takePublications,
+        failPublication: observations.failPublication,
         takeStoredEvents: observations.takeStoredEvents,
         persist: saveClock,
       },

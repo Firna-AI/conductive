@@ -4,7 +4,7 @@ import { MacAppScreen, macAppSchema } from '../../../screens/MacAppScreen'
 export const thisMac = defineScreen({
   title: 'This Mac',
   description:
-    'The This Mac tab of the account in the Mac app, after Keyboard shortcuts: the name of the Mac, its state, and the commands that always run on it without asking, each with Remove, and the workspaces whose commands all run without asking, each with the time left or Until you stop, and Stop. A long command shows its first three lines, and its last line fades out, with Show all under it. Show all shows the whole command, and then Show less makes it short again. After a Remove, its result shows under the list. The Mac app keeps the sidebar of the org beside the account.',
+    'The This Mac tab of the account in the Mac app, after Stats: the name of the Mac, its state, and the commands that always run on it without asking, each with Remove, and the workspaces whose commands all run without asking, each with the time left or Until you stop, and Stop. A long command shows its first three lines, and its last line fades out, with Show all under it. Show all shows the whole command, and then Show less makes it short again. After a Remove, its result shows under the list. The Mac app keeps the sidebar of the org beside the account.',
   rationale:
     'Always allow covers the exact text of one command on this Mac, so the list shows each command as it was allowed (decision 62). On 12 November 2026 the user asked for This Mac in its own tab, and for long commands cut short with a fade and Show all, so that more commands show at once. The tab comes last, so the tabs that a browser also shows keep their places. One list holds the 15 minutes and the grants until Stop, because both cover every command of one workspace (Mac until-stop decision 0). The web app in a browser has no This Mac tab.',
   relatedDocs: [],
@@ -25,9 +25,9 @@ export const thisMac = defineScreen({
       slug: 'needs-input',
       title: 'A workspace needs input',
       description:
-        'An agent asks to run a command on this Mac while the app shows This Mac. The workspace list marks Checkout address autocomplete with Needs input: its green mark pulses. Its row opens the workspace, where the request waits above the composer.',
+        'An agent asks to run a command on this Mac while the app shows This Mac. The workspace list marks Checkout address autocomplete with Needs input: its mark turns blue and pulses. Its row opens the workspace, where the request waits above the composer.',
       rationale:
-        'The request no longer opens a dialog over every page, so the user asked for a blue mark on the workspace that asks for help, an approval, or an answer (decision 62). The list mark now shows the GitHub state in its colour (list mark decision 1), so the row pulses in that colour. The header of the workspace keeps the blue column.',
+        'The request no longer opens a dialog over every page, so the user asked for a blue mark on the workspace that asks for help, an approval, or an answer (decision 62). The list mark shows the GitHub state in its colour (list mark decision 1), but on 17 November 2026 the user asked again for a blue mark that pulses while the workspace needs input, whatever the GitHub state. The header of the workspace keeps the blue column.',
       props: { command: 'prompt' },
     },
     {

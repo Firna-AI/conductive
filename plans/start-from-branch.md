@@ -530,6 +530,18 @@ Design calls from the UI of Milestone 16, made on 20 November 2026:
   it above. The room caps of the mockup would fit by only 2 px, and not at
   all for a control on a second line.
 
+Design calls from the merge of `origin/main`, made on 20 November 2026:
+
+- A base move waits while a Continue or a repository change runs. Reason:
+  the repository change of `main` holds the workspace against each action
+  that changes its branch, as Continue does, and the call of Milestones 11
+  to 13 keeps the move away from a job that owns the branch.
+- Continue reads the default branch with the GitHub token of the member
+  who pressed it, and a repository change keeps the token of the GitHub
+  App. Reason: Continue reads its pull request and its base with that
+  token, and a member's token may not reach the new repository of a
+  change.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -892,6 +904,9 @@ Depends on: every other milestone
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds.
+
+The justifications of the merge of `origin/main` at `5ca03a0c2` are in
+`.context/start-from-branch/merge-2/justifications.md`.
 
 ## Post-merge follow-up (non-blocking)
 

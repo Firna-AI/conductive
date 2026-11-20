@@ -2,90 +2,22 @@ import { appDomain } from '../brand'
 import { defaultChoice, type AgentChoice } from './agents'
 import { people, type PersonKey } from './members'
 import { orgs, type Org } from './orgs'
-import type { GitHubSummary } from '../../../../src/shared/generated/GitHubSummary'
-import { repositories, type RepositoryKey } from './repositories'
-import type { SectionKey } from './sections'
+import { repositories } from './repositories'
+import type { Workspace } from './workspaceType'
+
+export type { ActivityStatus, Workspace } from './workspaceType'
 
 /**
- * What a workspace is doing. `working` means an agent turn runs, and
- * `unread` means a turn ended with output that the user has not seen.
- * `input` means that the turn waits for the user, such as for the
- * approval of a command on a Mac. All three run on a ready sandbox.
- * `archived` means that Archive stopped its cloud computer, which the app
- * deletes 14 days later, and that its chat is read-only. The other values
- * are the sandbox states.
+ * The workspaces that a screen can show open. Postcode lookup for the
+ * shipping and billing forms is removed: a chip opens its read-only chat.
  */
-export type ActivityStatus =
-  | 'working'
-  | 'input'
-  | 'unread'
-  | 'ready'
-  | 'starting'
-  | 'stopped'
-  | 'error'
-  | 'archived'
-
-/** The workspaces that a screen can show open. */
 export const openableWorkspaces = [
   'checkout-autocomplete',
   'saved-carts',
+  'postcode-lookup',
 ] as const
 
 export type OpenableWorkspace = (typeof openableWorkspaces)[number]
-
-export type Workspace = {
-  key: string
-  /**
-   * Its name. A new workspace has no name until its title comes, and the
-   * screen then shows the label of `nameLabel` in `src/shared/`.
-   */
-  name: string
-  /**
-   * The number of the workspace in its org. It counts up from 1 in the
-   * order of creation. The header and each chip show it as a label,
-   * such as `W-395`.
-   */
-  number: number
-  /**
-   * The web address of the workspace, with the IDs of its org and of the
-   * workspace. Copy link copies it, and a message keeps it under a chip,
-   * so the label can change later.
-   */
-  link: string
-  branch: string
-  repository: RepositoryKey
-  section: SectionKey
-  /** The agent, model, and effort of its last message. */
-  choice: AgentChoice
-  /** The status in the workspace list when the app opens. */
-  status: ActivityStatus
-  /**
-   * The GitHub state of its pull request when the app opens, which the
-   * list mark shows in colour. `null` is a branch without a pull request,
-   * a pull request without checks, or one closed without a merge.
-   */
-  github: GitHubSummary | null
-  /** The time since the last activity, such as `2h`. */
-  updated: string
-  /**
-   * The member who created it, until an admin reassigns it. Each session
-   * runs on the agent login of the member who started it.
-   */
-  owner: PersonKey
-  /**
-   * The branch that its work goes to. Changes and each diff compare with
-   * it from the merge base, and the pull request bar names it. Without
-   * one, the default branch of the repository applies. A pull request run
-   * gets the head branch of its pull request (decision 507 G).
-   */
-  baseBranch?: string
-  /**
-   * The stored base branch that GitHub no longer has, which the Worker
-   * replaced with the default branch (decision 294). The line under the
-   * pull request bar names it.
-   */
-  movedBase?: string
-}
 
 /** The branch that the work of a workspace goes to. */
 export function baseBranchOf(workspace: Workspace): string {
@@ -107,7 +39,7 @@ export function workspaceLink(
 
 /**
  * The branch of a workspace: the GitHub login of its owner, then a name,
- * such as `calummoore/lisbon-7k2q`, as decision 53 says.
+ * such as `calummoore/saved-carts-7k2q`, as decision 53 says.
  */
 function branchFor(owner: PersonKey, name: string): string {
   return `${people[owner].login}/${name}`
@@ -133,15 +65,17 @@ export const checkoutAutocomplete: Workspace = {
  * name from the send until its title comes, about a second later, while
  * the sandbox starts. `name` is that title, from a small model that reads
  * the first message. A failed title request leaves the workspace without a
- * name until a later message with text. Its branch keeps a city name with
- * a random suffix.
+ * name until a later message with text. Its branch starts with a city name
+ * and a random suffix. It takes the title with the same suffix, because the
+ * title comes before the sandbox creates the branch.
  */
 export const savedCarts: Workspace = {
   key: 'saved-carts',
   name: 'Saved carts',
   number: 402,
   link: workspaceLink('ffpdvCrydZ85CicAsK7cqpirDrbK6GhAA6hB33ck1vE'),
-  branch: branchFor('cal', 'lisbon-7k2q'),
+  branch: branchFor('cal', 'saved-carts-7k2q'),
+  placeholderBranch: branchFor('cal', 'lisbon-7k2q'),
   repository: 'storefront',
   section: 'general',
   choice: defaultChoice,
@@ -149,13 +83,6 @@ export const savedCarts: Workspace = {
   github: null,
   updated: 'now',
   owner: 'cal',
-}
-
-export const openableWorkspaceRecords: Readonly<
-  Record<OpenableWorkspace, Workspace>
-> = {
-  'checkout-autocomplete': checkoutAutocomplete,
-  'saved-carts': savedCarts,
 }
 
 /** The Codex model and effort of the workspaces that use Codex. */

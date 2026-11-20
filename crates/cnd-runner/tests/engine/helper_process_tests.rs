@@ -1,5 +1,6 @@
 //! Real Node child framing, request correlation, close, and startup cleanup.
 
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -8,6 +9,7 @@ use cnd_runner::helper::boundary::{Helper, HelperEvents, HelperPorts, Startup};
 use cnd_runner::helper::driver::HelperConnection;
 use cnd_runner::helper::process::NodeHelpers;
 use cnd_runner::helper::startup::RunnerStartup;
+use cnd_runner::runtime::CommandHandler;
 use cnd_runner_interface::provider_events::ProviderEvent;
 use cnd_runner_interface::sdk_helper::{HelperModelResult, HelperOutput};
 use cnd_runner_interface::sdk_helper_options::{HelperOptions, ProviderInput};
@@ -28,6 +30,7 @@ fn helpers() -> Arc<NodeHelpers> {
     Arc::new(NodeHelpers {
         node: PathBuf::from("node"),
         program: PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/sdk-helper.mjs"),
+        environment: Default::default(),
     })
 }
 async fn options(model: &str) -> std::result::Result<HelperOptions, Box<dyn std::error::Error>> {
@@ -43,6 +46,35 @@ async fn options(model: &str) -> std::result::Result<HelperOptions, Box<dyn std:
     options.choice.model = model.into();
     h.close().await?;
     Ok(options)
+}
+
+#[tokio::test]
+async fn gives_the_helper_the_folder_and_branch_of_the_current_round() -> TestResult {
+    let (sender, mut receiver) = mpsc::unbounded_channel();
+    let moved = NodeHelpers {
+        node: PathBuf::from("node"),
+        program: helpers().program.clone(),
+        environment: BTreeMap::from([
+            (
+                "CONDUCTIVE_REPOSITORY_DIR".into(),
+                "/home/user/code/billing".into(),
+            ),
+            (
+                "CONDUCTIVE_WORKSPACE_BRANCH".into(),
+                "alice/cart-v2-cd34".into(),
+            ),
+        ]),
+    };
+    let helper = HelperConnection::new(moved.port()?, Arc::new(Output(sender)));
+    helper.start(options("environment").await?).await?;
+    assert_eq!(
+        receiver.recv().await,
+        Some(HelperOutput::Warning {
+            message: "/home/user/code/billing alice/cart-v2-cd34".into()
+        })
+    );
+    helper.close().await?;
+    Ok(())
 }
 
 #[tokio::test]
@@ -133,7 +165,7 @@ async fn closes_a_pending_start_and_fails_all_requests_after_exit_or_malformed_o
 }
 
 #[tokio::test]
-async fn removes_only_stale_credentials_before_credential_free_warming() -> TestResult {
+async fn removes_only_stale_credentials_before_connection() -> TestResult {
     let home = tempfile::tempdir()?;
     let claude = home.path().join(".conductive/anthropic/credentials");
     let codex = home.path().join(".conductive/codex/session-homes/session");
@@ -145,7 +177,6 @@ async fn removes_only_stale_credentials_before_credential_free_warming() -> Test
     std::fs::write(codex.join("config.toml"), "keep")?;
     let startup: Arc<dyn Startup> = Arc::new(RunnerStartup {
         home: home.path().to_owned(),
-        helpers: helpers(),
         executable: PathBuf::from("/unused"),
     });
     startup.prepare().await?;
@@ -159,13 +190,21 @@ async fn removes_only_stale_credentials_before_credential_free_warming() -> Test
 #[tokio::test]
 async fn runs_a_complete_turn_through_real_helper_pipes_and_saves_only_filtered_events()
 -> TestResult {
+    let home = tempfile::tempdir()?;
+    let helpers = helpers();
+    let startup = RunnerStartup {
+        home: home.path().to_owned(),
+        executable: PathBuf::from("/unused"),
+    };
+    startup.prepare().await?;
     let h = Fixture::compose(
         Arc::new(Memory::default()),
         Arc::new(Helpers::default()),
         None,
-        Some(helpers()),
+        Some(helpers),
     )
     .await?;
+    h.engine.start().await?;
     let mut command = turn("session", "first")?;
     if let cnd_runner_interface::runner_commands::RunnerCommand::RunnerTurn(
         cnd_runner_interface::runner_commands::RunnerTurn::Turn { message, .. },

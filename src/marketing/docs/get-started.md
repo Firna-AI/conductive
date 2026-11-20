@@ -12,11 +12,11 @@ Have these ready:
 - A GitHub account.
 - GitHub read access to the repository where you will create a workspace.
 - Permission to install a GitHub App if you will set up your own org.
-- A Claude subscription token, an Anthropic API key, an OpenAI API key, a ChatGPT plan, or an endpoint address and key.
+- A usable personal or org login for at least one agent.
 
 If you cannot install the GitHub App, ask a GitHub organization owner to help.
 If you join an existing org, its admin manages repository access.
-Your GitHub permissions still govern repository reads, pushes, and merges made with your account.
+Your GitHub permissions still govern repository reads, pushes, merges, and other pull request changes made with your account.
 Conductive runs the agents and repositories on cloud computers.
 You can use the browser without a local copy of your repository.
 
@@ -59,7 +59,8 @@ It guides you through the GitHub App, your first org, and an agent login.
 
 An accepted org invitation opens that org instead.
 Its admin manages its repositories and cloud computer.
-Connect an agent in **Account** if needed.
+If its org login serves your chosen agent, you need no personal login.
+Otherwise, connect an agent in **Account**.
 Then continue with [Create your first workspace](/docs/get-started#create-your-first-workspace).
 
 If a code is not found, check its text.
@@ -122,7 +123,14 @@ You can also find the build in **Settings**, under **Cloud computer**.
 
 ## Connect an agent
 
-Connect at least one login in **Connect Claude or Codex**.
+If a usable org login serves you, **Connect Claude or Codex** shows **Ready** and names the org login.
+You can start without connecting your own login.
+You can connect a personal login later in **Account**.
+An admin connects org API keys or endpoints in **Settings**, under **Agents**.
+
+- [Understand org logins and their order](/docs/agent-logins#use-an-org-login)
+
+Without a usable org login, connect at least one personal login in **Connect Claude or Codex**.
 Choose the login you want to use:
 
 | Agent | Login | What to enter |
@@ -158,7 +166,7 @@ The connected row shows the host, including any non-default port.
 
 An own endpoint gets the messages, files, and command results of turns on that login.
 Model use bills where its owner runs the endpoint.
-An own endpoint login starts with sharing on.
+Your personal own endpoint login starts with sharing on.
 Open **Account** to change **Let other members use this login**.
 
 For a ChatGPT plan, first turn on device code sign-in in your ChatGPT security settings.
@@ -172,10 +180,11 @@ Never share the code.
 Enter only a code that the Conductive page shows.
 The code expires in 15 minutes.
 
-One connected agent is enough to finish setup.
+One agent with a usable personal or org login is enough to finish setup.
 You can connect the other later in **Account**.
 
-If your first agent request reports a login error, open **Account**.
+If a request on an org login reports a login error, ask an admin to check the org's **Agents** tab.
+For an error on your personal login, open **Account**.
 Remove that agent's login.
 Then connect the correct token, key, account, or endpoint.
 If the Codex row shows **Signed out**, select **Sign in again** instead.
@@ -192,7 +201,7 @@ If you accepted an org invitation, your org is already open.
 2. Choose the repository for your task.
 3. Keep the default branch, or choose another starting branch.
 4. If you choose another branch, open the branch control again and choose its target under **Target**.
-5. Choose a model for the agent you connected.
+5. Choose a model for an agent available to you.
 6. Choose the effort in the same model menu.
 7. Describe your task in the message box.
 8. Select **Create** in the dialog, or **Send** on the page.
@@ -270,6 +279,7 @@ Use **Startup script** for commands needed when you start or resume a workspace.
 It starts in the workspace's repository folder.
 Use **Environment variables** for values your application needs.
 Changed values apply at the next start of each workspace's cloud computer.
+Use **Secrets** for keys that agents should use only with a member's approval.
 
 - [Read the Overview](/docs)
 - [Configure the cloud computer](/docs/cloud-computer)

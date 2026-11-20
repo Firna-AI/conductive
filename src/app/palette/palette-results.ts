@@ -1,4 +1,5 @@
 import { valueOf } from '../store'
+import { listedWorkspaces } from '../workspace-removal'
 import { rankRows, searchWords } from './matcher'
 import { tabGroups } from './palette-groups'
 import { rowTexts, withNumberLabel, type PaletteGroup } from './palette-rows'
@@ -22,46 +23,65 @@ export interface PaletteResults {
   status: PaletteStatus | null
   /** Set when the tab has no group and no status part. */
   empty: PaletteEmpty | null
+  /** The resolved repository filter, or `null` for all repositories. */
+  repository: RepositoryChoice | null
   repositories: readonly RepositoryChoice[]
 }
 
 /**
  * The line of the Workspaces tab without a workspace to show: it names the
  * chosen repository, or the org while the filter shows all repositories.
+ * An archived workspace shows for the 14 days after its Archive, and then
+ * it leaves the list, so the line of the Archived filter says so.
  */
-function emptyLine(query: PaletteQuery, source: PaletteSource): string {
-  const repository = valueOf(source.repositories)?.find(
-    (item) => item.id === query.repositoryId,
-  )
-  const place = repository?.fullName ?? source.org?.name
+function emptyLine(
+  query: PaletteQuery,
+  source: PaletteSource,
+  repository: RepositoryChoice | null,
+): string {
+  const place = repository?.name ?? source.org?.name
   const what = query.archived ? 'Archived workspaces' : 'Workspaces'
-  return place === undefined
-    ? `${what} show here`
-    : `${what} of ${place} show here`
+  const where = place === undefined ? what : `${what} of ${place}`
+  return query.archived
+    ? `${where} show here for 14 days`
+    : `${where} show here`
 }
 
 function emptyOf(
   query: PaletteQuery,
   source: PaletteSource,
+  repository: RepositoryChoice | null,
   searching: boolean,
 ): PaletteEmpty {
   if (searching || query.tab !== 'workspaces') {
     return { kind: 'no-match', query: query.text.trim() }
   }
-  return { kind: 'line', text: emptyLine(query, source) }
+  return { kind: 'line', text: emptyLine(query, source, repository) }
 }
 
 /**
- * The repositories that the org uses, and those that hold its workspaces.
- * Until their names arrive, the filter offers only all repositories.
+ * The repositories that the org uses, and those that hold the workspaces
+ * of its list, plus the chosen filter. A removed workspace shows in no
+ * tab, so its repository counts only when the org uses it or the filter
+ * chooses it. Until their names arrive, the filter offers only all
+ * repositories.
  */
-function repositoryChoices(source: PaletteSource): RepositoryChoice[] {
+function repositoryChoices(
+  source: PaletteSource,
+  repository: RepositoryChoice | null,
+): RepositoryChoice[] {
   if (source.org === null) return []
   const { list } = source
-  const workspaces = list.state === 'ready' ? list.value.workspaces : []
+  const workspaces =
+    list.state === 'ready'
+      ? listedWorkspaces(list.value.workspaces, source.listTime)
+      : []
   const used = new Set(workspaces.map((workspace) => workspace.repositoryId))
   return (valueOf(source.repositories) ?? [])
-    .filter((item) => item.selected || used.has(item.id))
+    .filter(
+      (item) =>
+        item.selected || used.has(item.id) || item.id === repository?.id,
+    )
     .map((item) => ({ id: item.id, name: item.fullName }))
 }
 
@@ -76,10 +96,17 @@ export function paletteResults(
   query: PaletteQuery,
   source: PaletteSource,
 ): PaletteResults {
+  const chosen = source.org
+    ? valueOf(source.repositories)?.find(
+        (item) => item.id === query.repositoryId,
+      )
+    : undefined
+  const repository = chosen ? { id: chosen.id, name: chosen.fullName } : null
+  const effectiveQuery = { ...query, repositoryId: repository?.id ?? null }
   const words = searchWords(query.text)
   const searching = words.length > 0
-  const status = paletteStatus(query, source, searching)
-  const groups = tabGroups(query, source, {
+  const status = paletteStatus(effectiveQuery, source, searching)
+  const groups = tabGroups(effectiveQuery, source, {
     searching,
     workspaces: status === null,
   })
@@ -94,7 +121,10 @@ export function paletteResults(
   return {
     groups,
     status,
-    empty: shows ? null : emptyOf(query, source, searching),
-    repositories: repositoryChoices(source),
+    empty: shows
+      ? null
+      : emptyOf(effectiveQuery, source, repository, searching),
+    repository,
+    repositories: repositoryChoices(source, repository),
   }
 }

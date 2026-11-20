@@ -1,17 +1,23 @@
-import { Button } from '@firna/ui/button'
-import { ArrowUp, Paperclip, Square } from 'lucide-react'
+import type { ReactNode } from 'react'
+import { Paperclip } from 'lucide-react'
 import type { AgentChoice, AgentKey } from '../../fixtures/agents'
 import type { Attachment } from '../../fixtures/attachments'
-import { noop } from '../../noop'
+import {
+  CapabilitiesButton,
+  type CapabilitiesControl,
+} from '../capabilities/CapabilitiesButton'
 import { ScreenLink } from '../common/ScreenLink'
-import { ActionButton, IconButton } from '../common/actions'
+import { IconButton } from '../common/actions'
 import { classes } from '../common/classes'
-import { useControlSizes } from '../common/touch'
+import { useTouch } from '../common/touch'
+import { SendButton, StopButton } from './ComposerButtons'
+import { ComposerMenu, type ComposerMenuState } from './ComposerMenu'
 import { FileMentionList, type MentionTree } from './FileMentionList'
 import { MentionAnchor } from './MentionList'
 import { MessageField } from './MessageField'
 import { ModelPicker } from './ModelPicker'
 import { SessionLoginLabel, type SessionLogin } from './SessionLogin'
+import { SkillMentionList, type SkillSource } from './SkillMentionList'
 import styles from './Composer.module.css'
 
 export type ComposerState = {
@@ -75,9 +81,9 @@ export type ComposerState = {
   /** The agent of the chosen model is not connected, so Send is off. */
   blocked?: boolean
   /**
-   * The agent login of another member that the session uses: the login of
-   * its starter. A label in the bar names it. A message on the own login of
-   * the viewer has no label.
+   * The agent login that a message uses when it is not the own login of the
+   * viewer: the login of another member, or the org login. A label in the
+   * bar names it. A message on the own login of the viewer has no label.
    */
   sessionLogin?: SessionLogin
   /**
@@ -86,37 +92,47 @@ export type ComposerState = {
    */
   mention?: MentionTree
   /**
+   * The list of `/` is open above the box, for the query after the last `/`
+   * of the draft, with the skills as the workspace has them.
+   */
+  skills?: SkillSource
+  /**
    * A view has no pointer, so this draws it over the icon of the first chip
    * of the text.
    */
   pointer?: boolean
+  /**
+   * A picker in place of the model picker, for a page that draws another
+   * menu of the model, such as `app/model-favourites`.
+   */
+  pickerPart?: ReactNode
+  /**
+   * The Capabilities icon beside the attach button, and its control when
+   * it is open (secrets decisions 6 and 8).
+   */
+  capabilities?: CapabilitiesControl
+  /**
+   * The menu of the one button of a phone, which holds Attach files and
+   * Capabilities (secrets decision 16 G). A computer has no such menu.
+   */
+  menu?: ComposerMenuState
 }
 
-/** The query of the list of `@`: the text after the last `@` of the draft. */
-function mentionQuery(draft: string): string {
-  return draft.slice(draft.lastIndexOf('@') + 1)
-}
-
-function SendButton(props: { draft: string; blocked?: boolean }) {
-  const control = useControlSizes()
-  const off = props.draft === '' || props.blocked === true
-  return (
-    <Button
-      accessibilityLabel="Send"
-      boxSize={control.height}
-      disabled={off}
-      icon={ArrowUp}
-      onPress={noop}
-      shape="square"
-      size="sm"
-      tone={off ? 'secondary' : 'primary'}
-    />
-  )
+/**
+ * The query of a list: the text after the last `@` of the draft for the
+ * list of files, or after the last `/` for the list of skills.
+ */
+function queryAfter(draft: string, mark: '@' | '/'): string {
+  return draft.slice(draft.lastIndexOf(mark) + 1)
 }
 
 /**
  * The message box: the text, with a chip for each attached file at its
- * place, then a bar with the attach button, the model picker, and Send.
+ * place, then a bar with the attach button, the Capabilities icon, the
+ * model picker, and Send. The Capabilities icon opens what the agents of
+ * the workspace can use. A phone holds Attach files and Capabilities in
+ * the menu of one button, and shows Stop as its icon, so the model and a
+ * login label stay readable (secrets decision 16 G).
  * The attach button puts each picked file at the caret, or at the end. The
  * whole box takes a drop of files, and shows the drop state while files
  * hover over it. While a turn runs, a message steers the turn unless it
@@ -128,7 +144,8 @@ function SendButton(props: { draft: string; blocked?: boolean }) {
  * login, so the box keeps its place. A pasted workspace link shows as a
  * chip, and the draft keeps the plain link. `@` opens the list of the
  * files and folders of the workspace above the box, and a pick puts a file
- * chip into the text.
+ * chip into the text. `/` opens the list of skills in the same place, and
+ * a pick puts a skill chip into the text.
  */
 export function Composer(props: ComposerState & { lines?: number }) {
   const steers = props.running && props.startsSession !== true
@@ -137,14 +154,21 @@ export function Composer(props: ComposerState & { lines?: number }) {
     : (props.placeholder ?? 'Message the agent')
   const uploads = props.attachments.some((file) => file.state !== undefined)
   const off = props.blocked === true || uploads
+  const phone = useTouch()
   const attach = <IconButton icon={Paperclip} label="Attach files" />
   return (
     <div className={styles.wrap}>
       <MentionAnchor>
         {props.mention ? (
           <FileMentionList
-            query={mentionQuery(props.draft)}
+            query={queryAfter(props.draft, '@')}
             tree={props.mention}
+          />
+        ) : null}
+        {props.skills ? (
+          <SkillMentionList
+            query={queryAfter(props.draft, '/')}
+            source={props.skills}
           />
         ) : null}
         <div
@@ -160,27 +184,43 @@ export function Composer(props: ComposerState & { lines?: number }) {
             text={props.draft}
           />
           <div className={styles.bar}>
-            {props.attachTo ? (
-              <ScreenLink asChild to={props.attachTo}>
-                {attach}
-              </ScreenLink>
+            {phone ? (
+              <ComposerMenu
+                attachTo={props.attachTo}
+                capabilities={props.capabilities}
+                state={props.menu}
+              />
             ) : (
-              attach
+              <>
+                {props.attachTo ? (
+                  <ScreenLink asChild to={props.attachTo}>
+                    {attach}
+                  </ScreenLink>
+                ) : (
+                  attach
+                )}
+                {props.capabilities ? (
+                  <CapabilitiesButton
+                    {...props.capabilities}
+                    placement="above-start"
+                  />
+                ) : null}
+              </>
             )}
-            <ModelPicker
-              choice={props.choice}
-              fastKey={props.fastKey}
-              hiddenModels={props.hiddenModels}
-              open={props.picker}
-              sessionAgent={props.sessionAgent}
-            />
+            {props.pickerPart ?? (
+              <ModelPicker
+                choice={props.choice}
+                fastKey={props.fastKey}
+                hiddenModels={props.hiddenModels}
+                open={props.picker}
+                sessionAgent={props.sessionAgent}
+              />
+            )}
             {props.sessionLogin ? (
               <SessionLoginLabel {...props.sessionLogin} />
             ) : null}
             <span className={styles.spacer} />
-            {props.running ? (
-              <ActionButton icon={Square}>Stop</ActionButton>
-            ) : null}
+            {props.running ? <StopButton /> : null}
             {props.sendTo && !off ? (
               <ScreenLink asChild to={props.sendTo}>
                 <SendButton draft={props.draft} />

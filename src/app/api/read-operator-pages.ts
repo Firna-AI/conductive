@@ -42,6 +42,7 @@ export function readOperatorOrg(value: unknown): OperatorOrgDetail {
   const org = record(value, 'org')
   return {
     id: text(org, 'id'),
+    providerAccount: text(org, 'providerAccount'),
     name: text(org, 'name'),
     initials: maybeText(org, 'initials'),
     createdAt: count(org, 'createdAt'),
@@ -79,6 +80,7 @@ export function readOperatorUser(value: unknown): OperatorUserDetail {
     name: maybeText(user, 'name'),
     email: maybeText(user, 'email'),
     joinedAt: count(user, 'joinedAt'),
+    lastActiveAt: maybeCount(user, 'lastActiveAt'),
     workspaces: nested(user, 'workspaces', (item) => {
       const workspaces = record(item, 'workspaces')
       return {

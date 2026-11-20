@@ -1,7 +1,8 @@
 # Invitations
 
 This guide belongs to the [members backend](README.md). It gives the
-email of an invitation, the match of verified emails, and the acceptance.
+email of an invitation, the diagnostics of a failed send, the match of
+verified emails, and the acceptance.
 
 ## The invitation email
 
@@ -13,8 +14,34 @@ The mailer posts to Resend with the `RESEND_API_KEY` Worker secret, from `invite
 With a local `APP_ORIGIN`, such as `http://127.0.0.1:5173`, the mailer always writes each invitation link to the log and sends no email.
 This is also true when the key is set.
 On every other origin, the mailer needs the key and fails each send without it.
-A failed send returns `invite_email_failed` and keeps the invitation, so the admin can invite the same email again.
-The link opens the app origin with the invite ID in its `invite` query parameter.
+`createEmailMessages` in [`email-messages.ts`](../email-messages.ts) takes the effective `APP_ORIGIN` of the invite request.
+Its `invitation()` builds the subject, the body, and the link of the email.
+The link opens that origin with the invite ID in its `invite` query parameter.
+
+## A failed send
+
+A failed send returns 502 `invite_email_failed`.
+The invitation stays saved, so the admin can invite the same email again.
+Before that reply, the Worker logs a warning with a safe summary of the failure.
+Find the warning in Workers Logs, Cloudflare's store of the log lines of the Worker.
+Filter on `error.kind = mail`.
+
+The summary has four fields:
+
+- `reason` names the failure case:
+  - `not_configured`: the Worker has no `RESEND_API_KEY`.
+  - `provider_refused`: Resend sent an error reply.
+  - `request_failed`: the request failed, for example by a time-out or a runtime error.
+- `status` gives the HTTP status of the reply from Resend.
+- `code` gives the error code of that reply, such as `validation_error`.
+- `errorType` gives the type of the error that stopped the request, such as `TypeError`.
+
+A field that does not apply is null.
+`reason`, `code`, and `errorType` keep only values from fixed lists.
+Each other value logs as `unknown`, so new text from Resend or the runtime stays out of the log.
+`warnWorker` checks each field again before it writes the warning.
+The summary copies no message from Resend or from the runtime.
+It holds no email address, token, request body, or secret.
 
 ## Verified emails and acceptance
 

@@ -37,6 +37,14 @@ it('installs verified release software and apt packages without the legacy insta
   expect(command).not.toContain('install-runtime.sh')
   expect(command).not.toContain('/etc/systemd/system/conductive-terminal')
   expect(command).not.toContain('systemctl restart')
+  expect(command).not.toContain('dpkg-query')
+  const checked = unquote(installImageSoftware(SOFTWARE, 'when-missing'))
+  expect(checked).toContain('dpkg-query -W')
+  expect(checked.indexOf('dpkg-query')).toBeLessThan(
+    checked.indexOf(
+      'apt-get -o Acquire::AllowReleaseInfoChange::Label=true update',
+    ),
+  )
 })
 
 it('bootstraps only a missing program in a detached root job and serializes activation with runner restart', () => {
@@ -90,4 +98,15 @@ it('warns and still restarts the runner when release discovery failed', () => {
   expect(command).toContain("printf '%s\\n' 'Warning: release unavailable' >&2")
   expect(command).not.toContain('nohup')
   expect(command).toContain('systemctl restart conductive-runner.service')
+})
+
+it('removes the terminal folder of a repository change at each start, before the runner restarts', () => {
+  const command = workspaceStartupCommand(readSavedScript(''), null)
+  expect(command).toContain("rm -f -- '/run/conductive/repository'")
+  expect(command.indexOf('/run/conductive/repository')).toBeGreaterThan(
+    command.indexOf('install -d -m 700 -o user -g user /run/conductive'),
+  )
+  expect(command.indexOf('/run/conductive/repository')).toBeLessThan(
+    command.indexOf('systemctl restart conductive-runner.service'),
+  )
 })

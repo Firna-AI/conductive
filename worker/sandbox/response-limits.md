@@ -3,13 +3,12 @@
 This guide belongs to the [sandbox provider](README.md). It gives the
 byte budget of each response of the fixed Boat routes, and the errors
 of a response that passes its budget.
-[File reads](README.md#file-reads) gives the file content budget and the
-metadata fallback.
+[File reads](boat-transport.md#file-reads) gives the file content budget and
+the metadata fallback.
 
 ## Response byte limits
 
 Every Boat API response uses the [shared bounded JSON reader](../http/README.md#bounded-json-reader).
-Signed file transfers use the same bounded byte reader without requiring JSON.
 The following limits are Worker policy chosen by the user.
 They are not published Boat response maxima.
 The Worker counts received bytes and does not trust `Content-Length`.
@@ -31,8 +30,6 @@ A command with a nonzero exit code still uses 18 MiB when its HTTP response is s
 | `GET`, `DELETE /saved-snapshots/{name}` | 1 MiB | 1 MiB |
 | `GET /sandboxes/{id}/files` | `4 × ceil(maxBytes / 3) + envelopeBytes` | 1 MiB |
 | `GET /sandboxes/{id}/files/info` | 1 MiB | 1 MiB |
-| `POST /sandboxes/{id}/files/upload-url` | 1 MiB | 1 MiB |
-| `PUT` to that grant's exact signed upload address | 1 MiB | 1 MiB |
 
 Here, 1 MiB is 1,048,576 bytes.
 The 18 MiB command budget is 18,874,368 bytes for the complete JSON body.
@@ -62,7 +59,7 @@ Their message is "The cloud computer response is too large."
 These messages describe a response body that exceeds the Worker budget.
 They contain no provider text.
 
-A successful file content overflow instead keeps the metadata fallback that [File reads](README.md#file-reads) describes.
+A successful file content overflow instead keeps the metadata fallback that [File reads](boat-transport.md#file-reads) describes.
 An oversized file error reply gets the generic response error and does not start that fallback.
 An oversized metadata reply also gets the generic response error.
 

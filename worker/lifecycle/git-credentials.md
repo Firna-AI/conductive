@@ -13,6 +13,7 @@ methods of the object.
   and its `turnId` matches. The grant gives the sender of the admitted
   first message.
 - A Continue fetch has its own grant too, as [Continue](#continue) says.
+  So has the fetch of a repository change.
 - A saved base-move fetch grants the workspace owner, as
   [Moved bases](README.md#moved-bases) says. Its trusted ID cannot name an
   agent turn. The grant ends when the fetch request ends.
@@ -43,3 +44,11 @@ Continue job, and passes each other ID to the rules above.
 - The scope lives only in the memory of the object. A rebuilt object has
   no open scope, so an earlier fetch ID never works again.
 - [Continue](continue.md#the-fetch) gives the fetch that sends this ID.
+- `WorkspaceRepositoryChange.credentialSender` in
+  [`repository-change.ts`](repository-change.ts) answers next, with the
+  same rules for the fetch ID of a running repository change. It gives the
+  member who changed the repository. That fetch reads the new repository
+  while the record still names the old one. The user token of the member
+  reaches each repository that the member can read, so the fetch needs no
+  other grant. [`workspace-jobs.ts`](workspace-jobs.ts) asks Continue
+  first, then the change, then the rules above.

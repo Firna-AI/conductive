@@ -1,18 +1,12 @@
 import { execFile } from 'node:child_process'
-import {
-  mkdir,
-  mkdtemp,
-  readFile,
-  realpath,
-  rm,
-  writeFile,
-} from 'node:fs/promises'
-import { join, resolve } from 'node:path'
+import { mkdir, readFile, realpath, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
 import process from 'node:process'
 
 import { TOOL_TURN_HEADER } from '../../src/shared/agent-tools'
 import type { CommandResult } from '../sandbox/provider'
 import { isolatedProcessEnvironment } from '../test-support/process-environment'
+import { testDirectory } from '../test-support/test-directory'
 import type { backendFixture } from './backend-test-support'
 import { shellQuote } from './commands'
 import { defaultBranchCommand } from './default-branch-command'
@@ -50,16 +44,12 @@ function run(
   })
 }
 
-/** Run the shipped command only inside isolated repositories under .context. */
+/** Runs the shipped command in isolated repositories in the test run folder. */
 export async function defaultBranchFixture(
   backend: Awaited<ReturnType<typeof backendFixture>>,
 ) {
-  const evidence = resolve(
-    import.meta.dirname,
-    '../../.context/boat-native-remote-workspaces/milestone-5/decisions-89-91-94/bootstrap/native-git',
-  )
-  await mkdir(evidence, { recursive: true })
-  const root = await realpath(await mkdtemp(join(evidence, "case sender's ")))
+  const files = await testDirectory("case sender's ")
+  const root = await realpath(files.path)
   const directory = join(root, "sender's working repository")
   const remote = join(root, 'repository.git')
   const home = join(root, 'home')
@@ -182,13 +172,19 @@ export async function defaultBranchFixture(
         writeFile(join(directory, name), text),
       config: () => readFile(join(directory, '.git/config'), 'utf8'),
       dispose: async () => {
-        await github?.close()
-        await rm(root, { recursive: true, force: true })
+        try {
+          await github?.close()
+        } finally {
+          await files.remove()
+        }
       },
     }
   } catch (error) {
-    await github?.close()
-    await rm(root, { recursive: true, force: true })
+    try {
+      await github?.close()
+    } finally {
+      await files.remove()
+    }
     throw error
   }
 }

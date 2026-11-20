@@ -22,6 +22,7 @@ import {
   text,
   type JsonObject,
 } from './parse'
+import { readLongRun } from './read-operator-runs'
 import {
   readAccessCode,
   readApprovalEmail,
@@ -35,7 +36,7 @@ const ORG_MATCHES = [
 ] as const satisfies readonly OperatorOrgMatch[]
 
 /** A total, and the new ones of the last 7 days. */
-function readWeekly(value: unknown, name: string) {
+export function readWeekly(value: unknown, name: string) {
   const weekly = record(value, name)
   return { total: count(weekly, 'total'), lastWeek: count(weekly, 'lastWeek') }
 }
@@ -49,17 +50,30 @@ export function readRunning(value: unknown) {
   }
 }
 
+/**
+ * The workspaces in each state, of the Overview, the page of an org, and
+ * the Stats tab of the account. The reply counts every archived workspace
+ * in `archived`, so that an older app adds up, and the removed ones also in
+ * `removed`. Archived here counts the archived workspaces of the list, and
+ * Removed those whose Restore ended, which left it.
+ */
 export function readWorkspaceStates(value: unknown): OperatorWorkspaceStates {
   const states = record(value, 'workspaceStates')
+  const archived = count(states, 'archived')
+  const removed = count(states, 'removed')
+  if (removed > archived)
+    throw new Error('The removed workspaces exceed the archived ones.')
   return {
     running: count(states, 'running'),
     stopped: count(states, 'stopped'),
     failed: count(states, 'failed'),
-    archived: count(states, 'archived'),
+    archived: archived - removed,
+    removed,
   }
 }
 
-function readDays(object: JsonObject, key: string) {
+/** The counts of the 30 UTC days of a list of days. */
+export function readDays(object: JsonObject, key: string) {
   return items(object, key, (value) => {
     const day = record(value, 'day')
     return { date: text(day, 'date'), count: count(day, 'count') }
@@ -92,6 +106,7 @@ export function readOperatorOverview(value: unknown): OperatorOverview {
         running: count(org, 'running'),
       }
     }),
+    longRuns: items(overview, 'longRuns', readLongRun),
   }
 }
 
@@ -107,6 +122,7 @@ function readOrgSummary(value: unknown): OperatorOrgSummary {
   const match = org.match
   return {
     id: text(org, 'id'),
+    providerAccount: text(org, 'providerAccount'),
     name: text(org, 'name'),
     initials: maybeText(org, 'initials'),
     createdAt: count(org, 'createdAt'),
@@ -129,6 +145,7 @@ function readUserSummary(value: unknown): OperatorUserSummary {
     login: text(user, 'login'),
     name: maybeText(user, 'name'),
     joinedAt: count(user, 'joinedAt'),
+    lastActiveAt: maybeCount(user, 'lastActiveAt'),
     orgs: count(user, 'orgs'),
     workspaces: count(user, 'workspaces'),
     status: choice(user, 'status', ['active', 'suspended']),

@@ -1,3 +1,4 @@
+import type { DefaultAgentLogin } from './generated/DefaultAgentLogin'
 import type { Agent } from './generated/Agent'
 import type { AgentChoice } from './generated/AgentChoice'
 import type { Timestamp } from './generated/Timestamp'
@@ -19,7 +20,43 @@ export const ACCOUNT_PATHS = {
   githubInstallations: '/api/account/github-installations',
   githubRepositories: '/api/account/github-repositories',
   deleteAccount: '/api/account/delete',
+  stats: '/api/account/stats',
 } as const
+
+/**
+ * The workspaces of the person in each state of the Stats tab, as the app
+ * shows them: Archived counts the archived workspaces of the list, and
+ * Removed those whose Restore ended. The Worker reply counts every archived
+ * workspace in `archived`, so that an older app adds up, and the app takes
+ * Removed out of it when it reads the reply.
+ */
+interface AccountWorkspaceStates {
+  running: number
+  stopped: number
+  failed: number
+  archived: number
+  removed: number
+}
+
+/**
+ * The counts of the Stats tab of the account, for the person signed in.
+ * Deleted orgs and their records count nowhere. `readAt` is the read time.
+ * Each list of days holds the 30 UTC days through `readAt`, oldest first.
+ */
+export interface AccountStats {
+  readAt: Timestamp
+  /** The orgs of the person. */
+  orgs: number
+  /** The workspaces that the person owns, and the new ones of 7 days. */
+  workspaces: { total: number; lastWeek: number }
+  /** The workspaces of the person by state. */
+  workspaceStates: AccountWorkspaceStates
+  /** The automations that the person owns. */
+  automations: number
+  newWorkspacesByDay: readonly { date: string; count: number }[]
+  /** The runs that were not skipped, by the owner at the time of the run. */
+  automationRunsByDay: readonly { date: string; count: number }[]
+}
 
 export const NEW_WORKSPACE_VIEWS = ['page', 'dialog'] as const
 export type NewWorkspaceView = (typeof NEW_WORKSPACE_VIEWS)[number]
@@ -131,6 +168,8 @@ export interface AccountResponse {
   newWorkspaceView: NewWorkspaceView
   shortcuts: ShortcutPreferences
   agentLogins: readonly AgentLoginStatus[]
+  /** Resolved defaults by org and agent. Older account replies omit this field. */
+  defaultLogins?: readonly DefaultAgentLogin[]
   /**
    * The page of the shared GitHub App on GitHub. It lists the GitHub
    * accounts of the person. An account with the app opens the settings

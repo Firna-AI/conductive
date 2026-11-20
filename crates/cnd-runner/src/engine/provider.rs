@@ -8,17 +8,17 @@ use cnd_runner_interface::sdk_helper::{HelperModelResult, HelperOutput};
 use cnd_runner_interface::sdk_helper_options::{
     HelperCredential, HelperOptions, ProviderInput, WorkspaceToolContext,
 };
-use tokio::sync::mpsc;
 use url::Url;
 
 use crate::error::{Error, ErrorResultExt, Result};
 use crate::helper::boundary::HelperEvents;
 
 use super::control::Control;
+use super::mailbox::Mailbox;
 use super::types::{Session, Work, identity};
 
 struct ForwardOutput {
-    mailbox: mpsc::UnboundedSender<Work>,
+    mailbox: Mailbox,
     generation: u64,
     control: Control,
 }
@@ -88,6 +88,7 @@ impl Session {
             conversation_id: saved.provider_session_id.clone(),
             instructions: saved.instructions.clone().unwrap_or_default(),
             instruction_branches: saved.instruction_branches.clone().flatten(),
+            instruction_folder: saved.instruction_folder.clone(),
             tools: WorkspaceToolContext {
                 machine_origin: origin.origin().ascii_serialization(),
                 workspace_token: self

@@ -14,6 +14,8 @@ use cnd_runner_interface::tools::workspaces::{
 
 use crate::call::{Call, Name};
 use crate::error::{Error, ErrorResultExt, InputError, Result};
+use crate::process::CommandInput;
+use crate::secrets::input;
 
 use super::{lists, writes};
 
@@ -22,6 +24,12 @@ pub(crate) fn parse(name: Name, fields: &Map<String, Value>, request_id: &str) -
         || optional_text(fields, "workspaceId").map(|id| id.unwrap_or_else(|| "current".into()));
     let session = || text(fields, "sessionId");
     Ok(match name {
+        Name::ListSecrets => Call::ListSecrets,
+        Name::RunWithSecrets => {
+            let input = input::parse(fields)?;
+            let command = CommandInput::Capture(input.command.clone());
+            Call::RunWithSecrets(input, command)
+        }
         Name::RunMacCommand => Call::RunMacCommand(writes::mac(fields, request_id)?),
         Name::CreateWorkspace => Call::CreateWorkspace(writes::workspace(fields, request_id)?),
         Name::ListWorkspaces => Call::ListWorkspaces(lists::workspaces(fields)?),
@@ -32,12 +40,7 @@ pub(crate) fn parse(name: Name, fields: &Map<String, Value>, request_id: &str) -
                 name: text(fields, "name")?,
             },
         ),
-        Name::MoveWorkspace => Call::MoveWorkspace(
-            workspace()?,
-            AgentMoveWorkspaceRequest {
-                section_id: text(fields, "sectionId")?,
-            },
-        ),
+        Name::MoveWorkspace => Call::MoveWorkspace(workspace()?, move_workspace(fields)?),
         Name::ArchiveWorkspace => Call::ArchiveWorkspace(workspace()?),
         Name::ListRepositories => Call::ListRepositories,
         Name::ListSections => Call::ListSections,
@@ -90,6 +93,26 @@ pub(crate) fn parse(name: Name, fields: &Map<String, Value>, request_id: &str) -
     })
 }
 
+fn move_workspace(fields: &Map<String, Value>) -> Result<AgentMoveWorkspaceRequest> {
+    let section_id = optional_text(fields, "sectionId")?;
+    let parent_id = optional_text(fields, "parentId")?;
+    let top_level = match fields.get("topLevel") {
+        None => None,
+        Some(Value::Bool(value)) => Some(*value),
+        _ => return Err(Error::Input(InputError::Required)),
+    };
+    if (parent_id.is_some() && top_level == Some(true))
+        || (section_id.is_none() && parent_id.is_none() && top_level != Some(true))
+    {
+        return Err(Error::Input(InputError::Required));
+    }
+    Ok(AgentMoveWorkspaceRequest {
+        section_id,
+        parent_id,
+        top_level,
+    })
+}
+
 pub(super) fn text(fields: &Map<String, Value>, key: &str) -> Result<String> {
     match fields.get(key).and_then(Value::as_str) {
         Some(value) if !value.trim().is_empty() => Ok(value.into()),
@@ -123,3 +146,7 @@ pub(super) fn decode<T: DeserializeOwned>(mut fields: Map<String, Value>) -> Res
 #[cfg(test)]
 #[path = "../_tests_/input_tests.rs"]
 mod input_tests;
+
+#[cfg(test)]
+#[path = "../_tests_/move_workspace_tests.rs"]
+mod move_workspace_tests;

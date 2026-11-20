@@ -6,20 +6,20 @@ import { workspaceStartFailure } from '../lifecycle/workspace-start'
 import { readWorkspace, workspaceView } from '../lifecycle/workspace-data'
 import type { ProvisionedWorkspace } from '../lifecycle/workspace-response'
 import { sessionLink } from '../../src/shared/session-link'
-import { saveWorkspaceToolParent, toolUser } from './composition-data'
+import { saveWorkspaceToolCreator, toolUser } from './composition-data'
 import type { ToolWorkspaceCreation, ToolWorkspaceReplay } from './services'
 
 async function finishCreation(
   env: AppEnv,
   dependencies: AppDependencies,
   created: ProvisionedWorkspace,
-  parentId: string,
+  creatorId: string,
 ) {
   const { orgId, id } = created.workspace
   await workspaceBinding(env)
     .getByName(id)
     .acceptLifecycleFirstMessage(created.first)
-  await saveWorkspaceToolParent(env.DB, orgId, id, parentId)
+  await saveWorkspaceToolCreator(env.DB, orgId, id, creatorId)
   const result = await workspaceRuntime(env, dependencies)
     .workspace(id)
     .waitCreationLifecycle()
@@ -30,6 +30,7 @@ async function finishCreation(
       env.APP_ORIGIN,
     ),
     sessionId: created.first.sessionId,
+    ...(created.notice !== undefined && { notice: created.notice }),
     sessionLink: sessionLink(
       env.APP_ORIGIN,
       orgId,
@@ -72,6 +73,7 @@ export async function createWorkspaceFromTool(
       startBranch: input.startBranch,
       baseBranch: input.baseBranch,
       sectionId: input.sectionId,
+      parentId: input.parentId,
       name: input.name,
       firstSessionTitle: input.firstSessionTitle,
       firstMessage: {

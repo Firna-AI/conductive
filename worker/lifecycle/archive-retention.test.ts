@@ -99,9 +99,9 @@ it('stops, bridges, and purges an equal-ID disk only through its saved provider 
   const fixture = fixtureForTest()
   const second = new LifecycleBoat()
   second.server.addAccount({ orgId: 'second-org', apiKey: 'boat-second' })
-  fixture.runtime.env.SANDBOX_PROVIDER_ACCOUNTS = {
+  fixture.runtime.env.SANDBOX_PROVIDER_ACCOUNTS = JSON.stringify({
     'boat-second': { kind: 'boat', orgId: 'second-org', apiKey: 'boat-second' },
-  }
+  })
   const fetch = fixture.runtime.dependencies.fetch
   fixture.runtime.dependencies.fetch = (request) =>
     request.headers.get('X-Boat-Org') === 'second-org'
@@ -128,7 +128,7 @@ it('stops, bridges, and purges an equal-ID disk only through its saved provider 
   if (archived.workspace.restoreUntil === null)
     throw new Error('Missing secondary deadline')
   await saved.actor.native.configure({
-    environment: { SANDBOX_PROVIDER_ACCOUNTS: {} },
+    environment: { SANDBOX_PROVIDER_ACCOUNTS: JSON.stringify({}) },
   })
   await fixture.advanceTo(archived.workspace.restoreUntil, saved.id)
   expect(second.deletedIds).toEqual([])

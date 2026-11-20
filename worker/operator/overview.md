@@ -1,6 +1,7 @@
 # Operator overview
 
 This guide belongs to the [operator backend](README.md).
+The [Overview protocol](../../docs/protocol/operator-overview.md) gives its requirements.
 
 ## Overview
 
@@ -24,22 +25,39 @@ The reply is an `OperatorOverview` from
   The user counts and daily user counts still include every account.
 - `running` gives separate counts for `workspaces` and unfinished image `builds`.
   Builds include both builds and refreshes whose job phase is not `done`.
-- `workspaceStates` gives `running`, `stopped`, `failed`, and `archived`.
+- `workspaceStates` gives `running`, `stopped`, `failed`, `archived`, and `removed`.
   Running includes starting, ready, working, unread, and input.
-  An archived workspace contributes only to Archived.
+  `archived` counts every archived workspace, removed ones included, so that an older app that reads four states adds up to the total.
+  `removed` counts archived workspaces from the end of their 14 days of Restore.
+  The app subtracts `removed` from `archived` and shows the two as separate rows.
+  This count does not depend on a kept cloud computer or its deletion.
   Failed counts the error state.
-  The four counts add up to the workspace total.
+  The five counts add up to the workspace total.
 - `newWorkspacesByDay` and `newUsersByDay` each give 30 `{ date, count }` entries.
   Dates use `YYYY-MM-DD` in UTC, from oldest to newest.
   The last entry covers the current UTC day through `readAt`.
   A day without a record has a zero count.
 - `largestOrgs` gives up to five orgs with `id`, `name`, `initials`, `members`, `workspaces`, and `running`.
   Initials are null when the org has no custom initials.
-  The workspace count includes archived workspaces.
+  The workspace count includes every workspace, also archived and removed workspaces.
   The order is workspace count first, largest first, then org name.
   This list leaves out deleted orgs.
+- `longRuns` gives up to ten running, unarchived workspaces with a known start.
+  It orders them by `runningSince`, oldest first, then by `workspaceId`.
+  Each entry gives `workspaceId`, `workspaceNumber`, `orgId`, and `orgName`.
+  Its `orgStatus` is `active`, `suspended`, or `deleted`. Deleted takes priority.
+  Its `ownerGithubId`, `ownerLogin`, and `ownerStatus` identify the owner.
+  Owner status is `active` or `suspended`.
+  `cloudComputerId` is the sandbox ID, or null until it is assigned.
+  `state` uses the shared workspace state type.
+  `runningSince` is the current run's start in Unix milliseconds.
+  `lastActivityAt` is the last activity in Unix milliseconds, or null without a saved time.
+  These entries have no workspace name or org initials.
+  The list includes deleted and suspended orgs and suspended owners.
 
-[`overview.ts`](overview.ts) reads every count from D1 in one batch.
+[`overview.ts`](overview.ts) reads the counts and long runs from D1 in one batch.
 The counts include all records that still exist, also those of deleted orgs.
 Only `largestOrgs` leaves deleted orgs out.
 The route keeps no history and calls no sandbox provider.
+The [Long runs protocol](../../docs/protocol/operator-overview.md#long-runs)
+gives the list rules and the limits of the saved workspace state.

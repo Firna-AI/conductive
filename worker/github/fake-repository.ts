@@ -26,6 +26,8 @@ export class RepositoryGitHub {
   deniedTokens = new Set<string>()
   readonly merges = new RepositoryMerges()
   failure: Response | null = null
+  /** GitHub refuses Ready for review, such as for a rule of the branch. */
+  readyRefused = false
   onRequest: ((operation: string) => Promise<void>) | null = null
   private readonly signIn: FakeGitHub
 
@@ -76,6 +78,33 @@ export class RepositoryGitHub {
     }
   }
 
+  /** Ready for review, which needs write access, as on GitHub. */
+  private markReady(request: Request, variables: Record<string, unknown>) {
+    const token = (request.headers.get('Authorization') ?? '').replace(
+      /^Bearer /,
+      '',
+    )
+    const permission = this.merges.capabilities(token).viewerPermission
+    const pull = Object.values(this.pulls).find(
+      (pull) => `PR_${pull.number}` === variables.id,
+    )
+    if (
+      !pull ||
+      this.readyRefused ||
+      !['WRITE', 'MAINTAIN', 'ADMIN'].includes(permission ?? '')
+    )
+      return Response.json({
+        data: { markPullRequestReadyForReview: null },
+        errors: [{ message: 'GitHub detail that must stay on the server.' }],
+      })
+    pull.isDraft = false
+    return Response.json({
+      data: {
+        markPullRequestReadyForReview: { pullRequest: { isDraft: false } },
+      },
+    })
+  }
+
   fetch: HttpFetch = async (request) => {
     const url = new URL(request.url)
     if (url.hostname === 'github.com' || url.pathname === '/user')
@@ -102,9 +131,10 @@ export class RepositoryGitHub {
     ) {
       throw new Error('Expected a GraphQL query')
     }
-    const operation = body.query.match(/query (\w+)/)?.[1] ?? ''
+    const operation = body.query.match(/(?:query|mutation) (\w+)/)?.[1] ?? ''
     await this.onRequest?.(operation)
     const variables = body.variables
+    if (operation === 'MarkReady') return this.markReady(request, variables)
     if (
       this.deniedTokens.has(
         (request.headers.get('Authorization') ?? '').replace(/^Bearer /, ''),
@@ -196,6 +226,13 @@ export class RepositoryGitHub {
             variables.after,
             variables.mergeAfter,
           )
+          break
+        case 'ReadyPull':
+          repository.pullRequest = {
+            id: `PR_${pull.number}`,
+            state: pull.state,
+            isDraft: pull.isDraft,
+          }
           break
         case 'BannerReviews':
           repository.pullRequest = {

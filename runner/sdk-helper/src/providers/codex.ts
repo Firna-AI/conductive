@@ -1,68 +1,47 @@
-import type { RunnerBranches } from '../generated/RunnerBranches'
 import {
   WORKSPACE_TOOLS_MCP,
   TOOL_ENV,
 } from '../../../../src/shared/agent-tools'
 
 import { object, string } from '../parse'
-import {
-  attachmentDescription,
-  attachmentReadInstruction,
-} from './attachment-description'
 import { codexBinary } from './binaries'
+import { codexInput } from './codex-input'
 import { writeCodexCredentials } from './codex-credentials'
 import { codexNotification } from './codex-events'
+import { codexStdioServer } from './codex-mcp'
 import { checkCodexGateway, codexSettings } from './codex-settings'
 import { openCodexThread } from './codex-thread'
 import { readComputerServer } from './computer-mcp'
 import { prepareProviderHome } from './environment'
 import { failureCause } from './failure'
 import { ProviderLifetime } from './lifetime'
-import { providerMessage } from './message'
 import { startProcess, type StartProcess } from './process'
 import { JsonRpc } from './rpc'
+import { noSkills, type SkillSource } from './skill-input'
 import type { ProviderFactory } from './types'
-import type { ProviderInput } from '../generated/ProviderInput'
 
-function input(command: ProviderInput, branches?: RunnerBranches | null) {
-  return [
-    {
-      type: 'text',
-      text: providerMessage(command.message, command.branches, branches),
-      text_elements: [],
-    },
-    ...(command.attachments.length
-      ? [
-          {
-            type: 'text',
-            text:
-              attachmentReadInstruction +
-              (command.message.attachments.some((file) => file.kind === 'image')
-                ? ' Each image is also in this message.'
-                : ''),
-            text_elements: [],
-          },
-        ]
-      : []),
-    ...command.attachments.flatMap((attachment) => {
-      const metadata = command.message.attachments.find(
-        (item) => item.id === attachment.attachmentId,
-      )
-      const description = {
-        type: 'text',
-        text: attachmentDescription(command, attachment),
-        text_elements: [],
-      }
-      return metadata?.kind === 'image'
-        ? [description, { type: 'localImage', path: attachment.path }]
-        : [description]
-    }),
-  ]
+/**
+ * Codex runs each subagent in its own thread, and the App Server sends the
+ * notifications of every thread. Only the conversation thread belongs to
+ * this session. So a subagent's turn never replaces the active turn, ends
+ * the session's turn, or adds an answer to the chat.
+ */
+function otherThread(params: unknown, threadId: string | null): boolean {
+  return (
+    threadId !== null &&
+    typeof params === 'object' &&
+    params !== null &&
+    'threadId' in params &&
+    typeof params.threadId === 'string' &&
+    params.threadId !== threadId
+  )
 }
 
+/** `skills` gives the current Codex list at each send, also during a turn. */
 export function createCodexFactory(
   start: StartProcess = startProcess,
   credentials = writeCodexCredentials,
+  skills: SkillSource = noSkills,
 ): ProviderFactory {
   return async (options) => {
     options.signal?.throwIfAborted()
@@ -97,20 +76,7 @@ export function createCodexFactory(
       await lifetime.close()
       throw error
     }
-    const configs = {
-      ...settings.config,
-      'mcp_servers.conductive.command': WORKSPACE_TOOLS_MCP.command,
-      'mcp_servers.conductive.args': WORKSPACE_TOOLS_MCP.args,
-      'mcp_servers.conductive.env_vars': Object.values(TOOL_ENV),
-      ...(computer
-        ? {
-            'mcp_servers.computer.command': computer.command,
-            ...(computer.args
-              ? { 'mcp_servers.computer.args': computer.args }
-              : {}),
-          }
-        : {}),
-    }
+    let threadId: string | null = null
     let activeTurn: string | null = null
     let userIds: string[] = []
     let choice = options.choice
@@ -121,10 +87,14 @@ export function createCodexFactory(
       const args = [
         codexBinary(),
         'app-server',
-        ...Object.entries(configs).flatMap(([key, value]) => [
+        ...Object.entries(settings.config).flatMap(([key, value]) => [
           '-c',
           `${key}=${JSON.stringify(value)}`,
         ]),
+        ...codexStdioServer('conductive', WORKSPACE_TOOLS_MCP),
+        '-c',
+        `mcp_servers.conductive.env_vars=${JSON.stringify(Object.values(TOOL_ENV))}`,
+        ...(computer ? codexStdioServer('computer', computer) : []),
       ]
       rpc = new JsonRpc(
         start({
@@ -136,6 +106,7 @@ export function createCodexFactory(
           lifetime,
         }),
         (method, params) => {
+          if (otherThread(params, threadId)) return
           if (method === 'turn/started')
             activeTurn = string(object(object(params).turn).id)
           codexNotification(method, params, userIds, options.event)
@@ -192,12 +163,9 @@ export function createCodexFactory(
               ? options.credential.token
               : options.credential.login.secret,
         })
-      const threadId = await openCodexThread(
-        rpc,
-        options,
-        settings.modelProvider,
-      )
-      options.event({ type: 'conversation', id: threadId })
+      const thread = await openCodexThread(rpc, options, settings.modelProvider)
+      threadId = thread
+      options.event({ type: 'conversation', id: thread })
       return {
         send: async (command) => {
           if (activeTurn) {
@@ -205,10 +173,10 @@ export function createCodexFactory(
             userIds.push(command.message.id)
             try {
               await rpc.request('turn/steer', {
-                threadId,
+                threadId: thread,
                 expectedTurnId: activeTurn,
                 clientUserMessageId: command.message.id,
-                input: input(command, options.instructionBranches),
+                input: codexInput(command, skills, options),
               })
             } catch (error) {
               userIds = before
@@ -221,8 +189,8 @@ export function createCodexFactory(
               options.event({ type: 'speed', speed: { state: 'fast' } })
             const result = object(
               await rpc.request('turn/start', {
-                threadId,
-                input: input(command, options.instructionBranches),
+                threadId: thread,
+                input: codexInput(command, skills, options),
                 clientUserMessageId: command.message.id,
                 model: choice.model,
                 effort: choice.effort === 'none' ? 'none' : choice.effort,
@@ -244,7 +212,7 @@ export function createCodexFactory(
         interrupt: async () => {
           if (activeTurn)
             await rpc.request('turn/interrupt', {
-              threadId,
+              threadId: thread,
               turnId: activeTurn,
             })
         },

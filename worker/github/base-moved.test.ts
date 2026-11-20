@@ -64,7 +64,7 @@ it('moves a deleted base to the default and keeps its name across reads until a 
       .bind(f.workspace.id)
       .first(),
   ).toEqual({ base: null })
-  h.memory(f.workspace.id).restart()
+  await h.restart(f.workspace.id)
   expect(await (await h.read(f.path, f.session)).json()).toMatchObject({
     banner: {
       baseBranch: 'main',
@@ -83,12 +83,12 @@ it('moves a deleted base to the default and keeps its name across reads until a 
     banner: { pullRequest: { number: 3 } },
   })
   expect(
-    (await h.memory(f.workspace.id).state.stored())?.banner,
+    (await h.actor(f.workspace.id).api.github.stored())?.banner,
   ).not.toHaveProperty('baseMoved')
   h.api.pulls = {}
   expect((await h.read(f.path, f.session)).status).toBe(200)
   expect(
-    (await h.memory(f.workspace.id).state.stored())?.banner,
+    (await h.actor(f.workspace.id).api.github.stored())?.banner,
   ).not.toHaveProperty('baseMoved')
 })
 
@@ -106,10 +106,10 @@ it('keeps the stored base and last banner when GitHub cannot answer', async () =
       .bind(f.workspace.id)
       .first(),
   ).toEqual({ base: 'feature/review' })
-  expect((await h.memory(f.workspace.id).state.stored())?.banner).toMatchObject(
-    { baseBranch: 'feature/review' },
-  )
   expect(
-    (await h.memory(f.workspace.id).state.stored())?.banner,
+    (await h.actor(f.workspace.id).api.github.stored())?.banner,
+  ).toMatchObject({ baseBranch: 'feature/review' })
+  expect(
+    (await h.actor(f.workspace.id).api.github.stored())?.banner,
   ).not.toHaveProperty('baseMoved')
 })

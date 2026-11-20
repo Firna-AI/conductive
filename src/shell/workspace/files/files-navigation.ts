@@ -2,12 +2,12 @@ import { useEffect, useMemo, useRef } from 'react'
 import { useNavigation } from '../../../app/navigation'
 import { routes } from '../../../app/router'
 import {
-  isFilesTab,
   type FileListKind,
   type FilesNavigation,
   type FilesTab,
   type FilesTarget,
 } from '../../../files/navigation'
+import type { LineRange } from '../../../shared/line-target'
 import type { WorkspaceTab } from '../../../shared/workspace-view'
 import type { SavedView, WorkspaceContext } from '../features'
 import { saveView, useSavedView, useViewKnown } from '../saved-view'
@@ -27,14 +27,14 @@ export function useFilesNavigation(context: WorkspaceContext): FilesNavigation {
   const { org, workspace, viewport, savedView } = context
   const onList = filesPlace(context.view)?.kind === 'list'
   return useMemo(() => {
-    const href = (target: FilesTarget) =>
-      filesHref(org.id, workspace.id, target)
+    const href = (target: FilesTarget, lines?: LineRange) =>
+      filesHref(org.id, workspace.id, target, lines)
     return {
       href,
-      navigate: (target) => {
+      navigate: (target, lines) => {
         if (target.kind !== 'list') {
           saveView(savedView, (view) => withActiveTab(view, target))
-          navigation.push(href(target))
+          navigation.push(href(target, lines))
           return
         }
         saveView(savedView, (view) => withFileList(view, target.list))
@@ -76,9 +76,10 @@ export function useOpenTab(saved: SavedView, tab: FilesTab): void {
 }
 
 /**
- * While a file or diff shows in the centre, the chat can make a session the
- * active tab: a click on its tab, a new session, or a reopened one. The
- * address then goes back to the chat, which shows that session.
+ * While a file, a diff, or a Preview tab shows in the centre, the chat can
+ * make a session the active tab: a click on its tab, a new session, or a
+ * reopened one. The address then goes back to the chat, which shows that
+ * session.
  */
 export function useLeaveForSession(
   context: WorkspaceContext,
@@ -91,7 +92,10 @@ export function useLeaveForSession(
   useEffect(() => {
     const previous = before.current
     before.current = active
-    if (showsTab && active?.kind === 'session' && isFilesTab(previous)) {
+    // A file, diff, or Preview tab showed, and the chat made a session
+    // active, such as by a click on its tab.
+    const hostTab = previous !== null && previous.kind !== 'session'
+    if (showsTab && active?.kind === 'session' && hostTab) {
       navigation.push(routes.workspace(org.id, workspace.id))
     }
   }, [navigation, org.id, workspace.id, showsTab, active])

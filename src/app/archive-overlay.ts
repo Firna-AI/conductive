@@ -4,6 +4,7 @@ import {
   type WorkspaceResponse,
 } from '../shared/workspaces'
 import type { ArchiveAction } from './archive-model'
+import { replaceWorkspace } from './list-trees'
 import { ready, type Loadable } from './store'
 
 /** An Archive or a Restore of a workspace that runs, and when it started. */
@@ -31,21 +32,24 @@ function archivingWorkspace(workspace: Workspace, at: number): Workspace {
   }
 }
 
-/** The list with each Archive that runs shown as done. */
+/**
+ * The list with each Archive that runs shown as done. The live rows under
+ * an archived row take its place, as the Worker writes them, so the list
+ * does not change again when the reply comes.
+ */
 export function listWithArchives(
   list: Loadable<readonly Workspace[]>,
   running: ReadonlyMap<string, RunningWrite>,
 ): Loadable<readonly Workspace[]> {
   if (list.state !== 'ready') return list
-  let changed = false
-  const workspaces = list.value.map((workspace) => {
-    const write = running.get(workspace.id)
-    if (write?.action !== 'archive') return workspace
-    const next = archivingWorkspace(workspace, write.at)
-    if (next !== workspace) changed = true
-    return next
-  })
-  return changed ? ready(workspaces) : list
+  let workspaces = list.value
+  for (const [workspaceId, write] of running) {
+    if (write.action !== 'archive') continue
+    workspaces = replaceWorkspace(workspaces, workspaceId, (workspace) =>
+      archivingWorkspace(workspace, write.at),
+    )
+  }
+  return workspaces === list.value ? list : ready(workspaces)
 }
 
 /**

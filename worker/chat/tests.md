@@ -1,6 +1,7 @@
 # Chat backend tests
 
-The `attachment-*.test.ts` files use local R2 and D1 through the internal storage boundary.
+The `attachment-*.test.ts` files use local R2 and D1 through the production multipart storage operations.
+Their fixtures start an upload, write native or Node-compatible R2 parts, and complete it with its receipts.
 They cover exact bytes, ownership, expiry races, the shared copy owner and proof, path extensions, and Stop during a held transfer.
 `attachment-first-message.test.ts` admits a first-message file before a computer exists.
 It also covers the first-message file of a removed workspace: a new attempt can claim it, and it expires at its upload deadline.
@@ -27,12 +28,11 @@ It also checks that a restart sends the stored interrupts again, and that each l
 `integration/attachment-raw.test.ts` checks native fixed-length R2 writes, raw metadata and ownership, interrupted transfers, and desktop admission.
 `integration/attachment-cleanup.test.ts` runs the production scheduled handler through `/__test/scheduled`, with the native workspace object, D1, and R2.
 An expired claim without an accepted message loses its record and its object. An accepted file keeps both.
-`integration/failed-first-start-retry.test.ts` keeps the first-message file of a failed first start through the native `expireChatAttachment` RPC, a restart, and Try again in the same workspace.
+`integration/failed-first-start-retry.test.ts` keeps the first-message file of a failed first start through the native `expireChatAttachment` RPC, a restart, and Try again in the same workspace. After the good first start of the retry, it runs the transferred-bytes sweep and checks that the stored copy is gone while the record stays.
 Try again copies its exact bytes once, as [Outer Worker tests](integration/outer-worker-tests.md) says.
 The HTTP and security raw-upload tests check shared route budgets and admission before body reads.
-The 100 MB boundary case creates its unknown-length stream inside the native runtime.
-It reads the stored byte count and exact byte samples from real R2 there.
-This keeps large byte arrays out of the test bridge while retaining the exact maximum and first excess byte.
+`attachment-multipart-storage.test.ts` checks membership and suspension changes during completion before publication.
+`integration/attachment-multipart-start.test.ts` checks the 1 GB declared-size limit before storage starts.
 
 This guide belongs to the [chat backend](README.md). Run the tests from
 the repository root:
@@ -105,10 +105,10 @@ npm run typecheck
   split by a second restart. The filter masks only the part that completes
   a secret. Each stream keeps its own raw cursor.
 - `runner-output-legacy.test.ts` starts from two older stream records, one
-  with an answer end and one with held text, and no workspace record. The
-  first receipt moves the answer end into the workspace record, and the
-  older stream keeps no copy. The held text stays with its own stream. No
-  record holds a raw secret prefix.
+  with an answer end and one with held text, and no workspace record or
+  index marker. The first receipt moves the answer end into the record of
+  its answer, and the older stream keeps no copy. The held text stays with
+  its own stream. No record holds a raw secret prefix.
 - `port-reports.test.ts` checks complete private labels, sorted unique ports,
   and the final display limits after filtering.
   `runner-ports.test.ts` checks stored and streamed masked labels, replay,
@@ -116,6 +116,15 @@ npm run typecheck
   across the final name and folder cuts. The real workspace lifecycle test in
   `integration/workspace-lifecycle.test.ts` checks the stop clear with no
   previews, and unchanged activity when a port report arrives.
+- `runner-skills.test.ts` checks that a skills report passes the secret
+  filter before the description cut, that a skill whose name held a secret
+  stays out, and that the history keeps only the latest list for each tab
+  and after a restart. `runner-skills-state.test.ts` checks the unavailable
+  list of a runner that sends no skills report, across reconnects and a
+  restart, and a refused list over the limit with its repair.
+- Each test whose runner sends `runner.ready` with no skills report also
+  stores one `skills.updated` event with `skills: null`. Event numbers in
+  such tests count it.
 - `runner-repairs.test-support.ts` builds a full and an oversized report of
   each kind, and reads the requests and markers of the repair tests.
 - `late-events.test.ts` and `never-started.test.ts` cover replay after a
@@ -127,13 +136,23 @@ npm run typecheck
 - `retry.test.ts`, `retry-queue.test.ts`, and `retry-crash.test.ts` cover
   the newest failed turn: stale tabs, refused ends, waiting work, rollback,
   and commit crashes. `retry.test-support.ts` sends retries and reads the
-  session records.
+  session records. `retry-crash.test-support.ts` prepares the running turn
+  and checks its saved gateway before each commit-crash case.
 - `session-logins.test.ts`, `linked-sessions.test.ts`, `linked-retry.test.ts`,
   and `legacy-sessions.test.ts` test starters, linked sessions, and old data.
   `login-observation.test.ts` tests that an observed change stays after a
   refused Send, and that a repeated message ID observes nothing.
   `linked-retry.test.ts` also restarts after a crash at the acceptance of a
   linked Retry. It checks each stored record, and a stale Retry gets 409.
+- `org-logins.test.ts` covers first-message selection, current-member access
+  after the starter leaves, preference changes, personal fallback, and linked retries after removal.
+  It also checks unusable personal logins and the refused org endpoint cause.
+  `org-login-legacy.test.ts` checks stored sessions with and without messages,
+  and an empty session that changes its agent before admission.
+  `org-login.test-support.ts` saves org logins through the real API.
+- `empty-session-login.test.ts` checks another member's record read before the first accepted message.
+  It checks default-owner updates, secret and host privacy, and a starter who left or was suspended.
+  The last cases compare unavailable record metadata with the linked session that Send accepts.
 - `login-reuse.test.ts` tests a starter who does not share the login.
   Another member gets an empty linked session, and the first session keeps
   `loginAvailable: true` with `loginShared: false`. A queued message of
@@ -148,6 +167,8 @@ npm run typecheck
 - `turn-dispatch.test.ts` checks that a runner disconnect during the
   registration of a turn undoes that registration before any send.
 - [Gateway tests](../model-gateway/README.md) cover stable turn tokens, login changes, Stop, late events, and retry through chat.
+  `../model-gateway/org-logins.test.ts` checks org replacement, switch stability,
+  starter departure, retry with the new key, and current-sender suspension.
   [runtime.test.ts](../model-gateway/runtime.test.ts) evicts the production SQLite object after a saved gateway Stop.
   It checks the retained interrupt, one failure with its cause after duplicate runner ends, late changed files, and the Retry message.
   `integration/gateway-entry.test-support.ts` adds test-only token issuance and a fetch wrapper for the production workspace RPC.
@@ -169,9 +190,11 @@ npm run typecheck
   original tab sockets, with a production and a local origin, through a
   wake. Both tabs then get each new event in order, with the link of their
   own origin.
-- `createAdapterRuntime` can bundle another Durable Object entry, also for
-  another workspace ID. The [GitHub store tests](../github/README.md#verification)
-  use it to run `WorkspaceChat` with the GitHub state on SQLite.
+- `createAdapterRuntime` can bundle another Durable Object entry. Its
+  callers pass the browser, runner, or gateway entry.
+- The [GitHub store tests](../github/verification.md#native-workspace-harness)
+  use the production workspace object of the [shared test harness](../test-support/README.md).
+  They run the GitHub state on its `WorkspaceChat`, with native SQLite storage.
 - `browser-entry.test-support.ts` and `runner-entry.test-support.ts` extend
   the production `Workspace`. Each adds a stored fixture clock, controls
   that fail an access read or a lifecycle read or write, a random instance

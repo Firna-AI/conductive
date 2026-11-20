@@ -7,6 +7,10 @@ import { readRetention } from './retention-data'
 import { createCompletedWorkspace } from './completed-creation-test-support'
 import { resumeCompletedWorkspace as resumeWorkspace } from './completed-resume-test-support'
 import { reconcileWorkspaceSandbox } from './workspace-actions'
+import {
+  seedSecondaryOrgImage,
+  SECONDARY_IMAGE_ACCOUNT,
+} from './org-image-account-test-support'
 
 const backendFixture = setupBackendTests()
 
@@ -14,6 +18,12 @@ it('keeps a stopped disk through startup and stop failures without a stale stop 
   const fixture = await backendFixture()
   try {
     const { runtime, org, user, boat } = fixture
+    await seedSecondaryOrgImage(fixture)
+    await runtime.env.DB.prepare(
+      'UPDATE orgs SET provider_account = ? WHERE id = ?',
+    )
+      .bind(SECONDARY_IMAGE_ACCOUNT, org.id)
+      .run()
     const created = await fixture.run(() =>
       createCompletedWorkspace(runtime, org.id, user, {
         repositoryId: fixture.repositoryId,

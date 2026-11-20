@@ -2,10 +2,10 @@ import type { AgentModel } from '../shared/generated/AgentModel'
 
 import { API_PATHS, type User } from '../shared/api'
 import { GET_STARTED_PATH, type GetStartedResponse } from '../shared/onboarding'
+import type { OrgColor } from '../shared/org-colors'
 import {
   leaveOrgPath,
   type CreateOrgRequest,
-  type MoveOrgRequest,
   type OrgSummary,
   type RenameOrgRequest,
 } from '../shared/orgs'
@@ -14,6 +14,7 @@ import { ignore } from './api/parse'
 import { readGetStarted } from './api/read-core'
 import { readSession } from './api/read-waitlist'
 import { AccountModel } from './account-model'
+import { activeOrgSource } from './active-orgs'
 import type { ComposerFocusRequest } from './composer-focus'
 import { FeedbackModel } from './feedback-model'
 import { failedBoot, readShared, watchSession, type Boot } from './boot'
@@ -21,7 +22,7 @@ import { InvitationsModel } from './invitations-model'
 import { LastWorkspaces } from './last-workspaces'
 import { OrgList } from './org-list'
 import { OrgModel } from './org-model'
-import { patchOrg, postOrg } from './org-writes'
+import { postOrg, putOrgOrder, saveOrgPatch } from './org-writes'
 import { suspendedOrg } from './permissions'
 import type { AppServices } from './services'
 import { setupSteps } from './setup-steps'
@@ -29,15 +30,16 @@ import { Store, type Readable } from './store'
 import { WaitlistModel } from './waitlist-model'
 
 /**
- * The data that every screen shares: the person signed in, their orgs, the
- * models, and the steps of Get started. It also keeps one `OrgModel` for
- * each org that the user opens.
+ * The shared app data and the steps of Get started. It keeps one
+ * `OrgModel` for each org that the user opens.
  */
 export class AppModel {
   readonly boot = new Store<Boot>({ state: 'loading' })
   private readonly orgList = new OrgList()
-  /** The orgs of the person in their own order, as `OrgList` says. */
+  /** The raw org list, including deleted orgs, in the order of `OrgList`. */
   readonly orgs: Readable<readonly OrgSummary[]> = this.orgList
+  /** The orgs that switchers use, in their saved order, without deleted orgs. */
+  readonly activeOrgs = activeOrgSource(this.orgs)
   /**
    * The orgs whose requests the API refused with `org_suspended`. Such a
    * refusal shows that the org is suspended, also while its summary is old.
@@ -46,9 +48,8 @@ export class AppModel {
    */
   readonly refusedOrgs = new Store<ReadonlySet<string>>(new Set())
   /**
-   * The org that the person opened last in this tab, also a deleted one.
-   * A page without an org works on it, as `keptOrg` says. The tab keeps it
-   * in memory only.
+   * The last org opened in this tab, including deleted orgs. `keptOrg`
+   * selects it only while it is active. The tab keeps it in memory.
    */
   readonly lastOrg = new Store<string | null>(null)
   /**
@@ -63,9 +64,8 @@ export class AppModel {
   readonly composerFocus = new Store<ComposerFocusRequest | null>(null)
   readonly models = new Store<readonly AgentModel[]>([])
   /**
-   * The steps of Get started as every screen shows them. Only the step of
-   * the GitHub App comes from the reply of the API. The others follow the
-   * org list and the account, as `setupSteps` says.
+   * The steps of Get started. The GitHub App step comes from the API. The
+   * other steps follow the active orgs and account, as `setupSteps` says.
    */
   readonly getStarted: Readable<GetStartedResponse | null>
   readonly account: AccountModel
@@ -91,7 +91,7 @@ export class AppModel {
     this.feedback = new FeedbackModel(this)
     this.getStarted = setupSteps({
       server: this.setupReply,
-      orgs: this.orgs,
+      orgs: this.activeOrgs,
       account: this.account.account,
     })
     this.invitations = new InvitationsModel(this)
@@ -204,10 +204,15 @@ export class AppModel {
   org(orgId: string): OrgModel {
     let model = this.orgModels.get(orgId)
     if (!model) {
-      model = new OrgModel(this.services, orgId, {
-        suspended: suspendedOrg(orgId, this.orgs, this.refusedOrgs),
-        note: () => this.noteSuspended(orgId),
-      })
+      model = new OrgModel(
+        this.services,
+        orgId,
+        {
+          suspended: suspendedOrg(orgId, this.orgs, this.refusedOrgs),
+          note: () => this.noteSuspended(orgId),
+        },
+        (agent) => this.account.orgLoginChanged(agent),
+      )
       this.orgModels.set(orgId, model)
     }
     return model
@@ -258,9 +263,8 @@ export class AppModel {
    * shows at once. A failure takes back only this move, and throws.
    */
   moveOrg(orgId: string, index: number): Promise<void> {
-    const request: MoveOrgRequest = { orgId, index }
     return this.orgList.move(orgId, index, () =>
-      this.services.api.send('PUT', API_PATHS.orgOrder, request, ignore),
+      putOrgOrder(this.services.api, orgId, index),
     )
   }
 
@@ -275,8 +279,13 @@ export class AppModel {
   }
 
   /** Saves the name and the initials of an org. */
-  async renameOrg(orgId: string, request: RenameOrgRequest): Promise<void> {
-    this.putOrg(await patchOrg(this.orgApi(orgId), orgId, request))
+  renameOrg(orgId: string, request: RenameOrgRequest): Promise<void> {
+    return saveOrgPatch(this.orgApi(orgId), this.orgList, orgId, request)
+  }
+
+  /** Saves the colour of an org, which the rail shows while it is open. */
+  setOrgColor(orgId: string, color: OrgColor): Promise<void> {
+    return saveOrgPatch(this.orgApi(orgId), this.orgList, orgId, { color })
   }
 
   /**

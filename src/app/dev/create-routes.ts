@@ -10,6 +10,7 @@ import { readChoice } from '../api/read-core'
 import { defaultSection } from '../sections'
 import { requireOrg, requireWorkspace, type DevBackend } from './backend'
 import { checkBranches, type DevBranchCheck } from './branch-routes'
+import { createdCapabilities } from './capability-routes'
 import {
   ID,
   json,
@@ -69,12 +70,12 @@ export interface WorkspaceRequest {
   first: SendMessageRequest
   /**
    * The start branch and the base branch that a create names, with the
-   * answer of the fake branch check. A routine run names none.
+   * answer of the fake branch check. An automation run names none.
    */
   branches?: { named: readonly (string | undefined)[]; check: DevBranchCheck }
   /**
    * A first start that fails keeps its workspace in the error state, as
-   * the Worker keeps the workspace of a routine run.
+   * the Worker keeps the workspace of an automation run.
    */
   keepFailedStart?: boolean
 }
@@ -144,6 +145,7 @@ export function startWorkspace(
     orgId: org.org.id,
     repositoryId,
     sectionId: section?.id ?? '',
+    parentId: null,
     owner,
     name: null,
     branch,
@@ -183,8 +185,9 @@ export function startWorkspace(
 }
 
 /**
- * Create workspace, from the first message of the user. A named branch
- * other than the default branch gets the answer `check` of the branch check.
+ * Create workspace, from the first message of the user, with the choices of
+ * its Capabilities control. A named branch other than the default branch
+ * gets the answer `check` of the branch check.
  */
 function createWorkspace(
   backend: DevBackend,
@@ -193,6 +196,11 @@ function createWorkspace(
   check: DevBranchCheck,
 ): Response {
   const fields = record(body)
+  const capabilities = createdCapabilities(
+    backend.state,
+    org.org.id,
+    fields.capabilities,
+  )
   const created = startWorkspace(backend, org, {
     repositoryId: requiredText(fields, 'repositoryId'),
     sectionId: maybeText(fields, 'sectionId'),
@@ -205,6 +213,7 @@ function createWorkspace(
       check,
     },
   })
+  capabilities.keep(created.workspace.id)
   return json(created satisfies CreateWorkspaceResponse, 201)
 }
 

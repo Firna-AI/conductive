@@ -1,6 +1,6 @@
-import { appDomain, productName } from '../../docs/mockups/src/brand'
 import type { AppDependencies, AppEnv } from '../env'
 import { createMailSender } from '../mail-sender'
+import { errorSummary } from '../warning-values'
 import { warnWorker } from '../warnings'
 import {
   APPROVAL_RETRY_WINDOW,
@@ -8,13 +8,6 @@ import {
   pendingApprovalEmail,
   pendingApprovalUsers,
 } from './approval-data'
-
-export function approvalEmailContent() {
-  return {
-    subject: `Your ${productName} account is ready`,
-    body: `You can now use ${productName}. Sign in with GitHub to get started:\nhttps://${appDomain}/`,
-  }
-}
 
 export async function sendApprovalEmail(
   env: AppEnv,
@@ -36,8 +29,11 @@ export async function sendApprovalEmail(
       deliveryKey: async () => `waitlist-approval/${userId}`,
       developmentLog: `Approval email to ${email.recipient}: ${email.subject}\n${email.body}`,
     })
-  } catch {
-    warnWorker({ kind: 'approval_email_delivery_failed' })
+  } catch (error) {
+    warnWorker({
+      kind: 'approval_email_delivery_failed',
+      error: errorSummary(error),
+    })
     return true
   }
   await finishApprovalEmail(env.DB, userId, 'sent', dependencies.now())

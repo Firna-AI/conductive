@@ -2,20 +2,27 @@ import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { CircleAlert } from 'lucide-react'
 import { people, type PersonKey } from '../../fixtures/members'
+import { orgs } from '../../fixtures/orgs'
 import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
 import { classes } from '../common/classes'
 import headingStyles from '../common/MarkdownHeadings.module.css'
+import prose from '../common/MarkdownProse.module.css'
 import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
 import { AgentBlocks } from './AgentBlocks'
 import { ContinuedLine } from './ContinuedLine'
+import { RepositoryChangedLine } from './RepositoryChangedLine'
 import type { SingleItem } from './groupItems'
 import { LinkedLine } from './LinkedLine'
 import { LostLine } from './LostLine'
 import { turnFilesUnavailable, unlistedFiles } from './lostCopy'
 import { MacCommand } from './MacCommand'
 import { filesWithoutPlace, LinkText, MessageText } from './MessageText'
+import { LateAnswerLine } from './LateAnswerLine'
+import { isLateRequest } from './requests'
+import { SecretRequest } from './SecretRequest'
+import { SecretRun } from './SecretRun'
 import { SentFiles } from './SentFiles'
 import { standardSpeedText } from './speedCopy'
 import { StopLine, type StopSource } from './StopLine'
@@ -80,12 +87,29 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
     }
     case 'agent':
       return (
-        <div className={classes(styles.agent, headingStyles.headings)}>
-          <AgentBlocks blocks={item.blocks} />
+        <div
+          className={classes(styles.agent, headingStyles.headings, prose.prose)}
+        >
+          <AgentBlocks blocks={item.blocks} live={item.live} pictures />
         </div>
       )
     case 'mac-command':
       return <MacCommand request={item.request} state={item.state} />
+    case 'late-answer':
+      return (
+        <LateAnswerLine
+          grant={item.grant}
+          names={item.names}
+          org={orgs.acme.name}
+          who={item.grant.by === viewer ? 'You' : people[item.grant.by].name}
+        />
+      )
+    case 'secret-run':
+      return isLateRequest(item) ? (
+        <SecretRequest item={item} viewer={viewer} />
+      ) : (
+        <SecretRun item={item} viewer={viewer} />
+      )
     case 'turn-end':
       return (
         <TurnEnd
@@ -115,6 +139,14 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
           who={item.by === viewer ? 'You' : people[item.by].name}
         />
       )
+    case 'repository-changed':
+      return (
+        <RepositoryChangedLine
+          branch={item.branch}
+          repository={item.repository}
+          who={item.by === viewer ? 'You' : people[item.by].name}
+        />
+      )
     case 'stopped':
       return (
         <StopLine notes={stopNotes(item)} source={stopSource(item, viewer)} />
@@ -122,7 +154,9 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
     case 'error':
       return (
         <Notice
-          action={<ActionButton>Try again</ActionButton>}
+          action={
+            item.older ? undefined : <ActionButton>Try again</ActionButton>
+          }
           body={item.text}
           icon={CircleAlert}
           title="This turn stopped"

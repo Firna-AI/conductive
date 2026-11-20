@@ -16,7 +16,7 @@ import { Menu, type MenuEntry } from '../ui/Menu'
 import { useEdgeScroll, useRowScroll } from './row-scroll'
 import { SessionTabItem } from './SessionTab'
 import { DropLine, LiftedTab } from './TabDragParts'
-import { closeTabsRight } from './close-right'
+import { closeOtherTabs, closeTabsRight } from './close-tabs'
 import { TabMenu } from './TabMenu'
 import { TabNodes } from './tab-nodes'
 import { rowKey, type RowTab } from './tab-row'
@@ -41,9 +41,9 @@ function keptTab(tabs: readonly RowTab[], renaming: string | null) {
  * the session history. Every tab closes. A tab moves by drag and drop, or
  * by a long press on a phone, as `useTabDrag` says, and its tab menu renames
  * a session, copies its link or its transcript, keeps the temporary tab,
- * moves a tab one place, and closes the tabs to its right, as `useTabMenu`
- * says. A row whose tabs do not fit scrolls sideways, as `useRowScroll`
- * says. On desktop the history and the tab menu open beside their trigger;
+ * moves a tab one place, and closes the other tabs or the tabs to its
+ * right, as `useTabMenu` says. A row whose tabs do not fit scrolls
+ * sideways, as `useRowScroll` says. On desktop the history and the tab menu open beside their trigger;
  * a phone shows them as sheets.
  */
 export function SessionTabs(props: {
@@ -60,7 +60,7 @@ export function SessionTabs(props: {
   onSelect: (id: string) => void
   /** Closes session tabs, with one question for the running sessions. */
   onClose: (...ids: string[]) => void
-  /** Closes file and diff tabs of the host, for Close tabs to the right. */
+  /** Closes file and diff tabs of the host, for the closes of the tab menu. */
   onCloseTabs: (tabs: readonly WorkspaceTab[]) => void
   onStartRename: (id: string) => void
   onRename: (id: string, title: string) => void
@@ -89,6 +89,7 @@ export function SessionTabs(props: {
     renaming,
     onRename: props.onStartRename,
     onStep: moves.step,
+    onCloseOthers: (tab) => closeOtherTabs(tabs, tab, props),
     onCloseRight: (tab) => closeTabsRight(tabs, tab, props),
     onKeep: moves.keep,
     onCopy: props.onCopy,
@@ -182,6 +183,7 @@ export function SessionTabs(props: {
         ) : null}
         {historyMenu ? (
           <Menu
+            anchor={anchor}
             entries={props.historyEntries}
             label="Session history"
             onClose={closeHistory}

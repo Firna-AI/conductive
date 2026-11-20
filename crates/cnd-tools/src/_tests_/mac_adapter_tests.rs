@@ -103,7 +103,13 @@ async fn run(mcp: bool, responses: Vec<HttpResponse>) -> Result<(u8, Vec<String>
         Some("turn".into()),
     )
     .internal()?;
-    let program = ToolProgram::new(config, effects.clone(), effects.clone(), Arc::new(streams));
+    let program = ToolProgram::new(
+        config,
+        effects.clone(),
+        effects.clone(),
+        Arc::new(streams),
+        effects.clone(),
+    );
     let status = if mcp {
         program.mcp().await?
     } else {

@@ -28,8 +28,11 @@ the folder of this page.
   `listed-commands.ts` gives `listedCommands`, the commands that the
   palette lists now with their rows, which the keys of the palette run.
   It leaves out Switch to org 1 to 9, which the org rail runs.
-  `page-actions.ts` gives the offers of the parts of the page and
-  `workspaceActionIds`. `palette-org.ts` chooses the org of the palette,
+  `page-actions.ts` gives the offers of the parts of the page,
+  `workspaceActionIds`, and `showsGoToRows`, where the Go to rows and New
+  terminal show. The group of the open workspace in `palette-groups.ts`
+  takes the rows of each part that offers for it, such as its screen and
+  its Terminal tool, in the order of `offeredActionIds`. `palette-org.ts` chooses the org of the palette,
   and gives `switchCommand`, the key of the Switch to row of an org by its
   place in the rail. `controller.ts` gives the open state and the offers
   of one tab, with `show`, the one way to open the palette.
@@ -129,11 +132,13 @@ the folder of this page.
   and a failed read. `ScreenshotChips` draws the chips.
   `screenshot-input.ts` gives `pastedFiles` and `useScreenshotDrop`.
   `FeedbackDialog.test.tsx` mounts the dialog in happy-dom, with
-  `feedback-test-kit.tsx`.
+  `feedback-test-kit.tsx`. `send-limit.test.tsx` checks the notice of the
+  send limit.
 - `../shell/ui/Dialog.tsx` and `Sheet.tsx`: their optional `initial` names
   the part that takes the focus as they open. The Feedback dialog passes
   its message box. `Sheet` puts its content in the scrolling `.body` of
   the mockup sheet.
 - [feedbackCopy.ts](../../docs/mockups/src/components/feedback/feedbackCopy.ts):
   the words of the row, the dialog, and the toast that the app and the
-  mockups share.
+  mockups share. Its `sendLimitBody` gives the words of a send over the
+  limit.

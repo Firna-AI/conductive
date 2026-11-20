@@ -1,4 +1,4 @@
-import type { Shortcut } from '../components/common/KeyChips'
+import { sameShortcut, type Shortcut } from '../components/common/KeyChips'
 import type { FixedRow, FixedSpec } from './fixedShortcuts'
 import {
   shortcutSpecs,
@@ -62,8 +62,7 @@ function rowIn(
 
 /**
  * The groups of the tab on a host, with the keys of its keyboard. Only the
- * Mac app has the sidebar toggle, Back, Forward, and its menus, so a
- * browser leaves them out.
+ * Mac app has Back, Forward, and its menus, so a browser leaves them out.
  */
 export function shortcutGroups(host: ShortcutHost): ShortcutGroup[] {
   return shortcutSpecs
@@ -112,7 +111,9 @@ export function fixedLabel(
   const holders = shortcutSpecs
     .flatMap((group) => group.rows)
     .filter(
-      (spec) => spec.kind === 'fixed' && spec[keyboard].includes(shortcut),
+      (spec) =>
+        spec.kind === 'fixed' &&
+        spec[keyboard].some((key) => sameShortcut(key, shortcut)),
     )
   return holders.length === 1 ? holders[0]?.label : undefined
 }

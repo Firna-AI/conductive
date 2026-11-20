@@ -36,6 +36,8 @@ pub(crate) enum Command {
     Previews(PendingArgs),
     /// Run a command on a connected Mac.
     Mac(PendingArgs),
+    /// List secrets or run a command with approved secrets.
+    Secrets(PendingArgs),
 }
 
 impl fmt::Display for Command {
@@ -54,6 +56,7 @@ impl fmt::Display for Command {
             Self::Models(_) => "models",
             Self::Previews(_) => "previews",
             Self::Mac(_) => "mac",
+            Self::Secrets(_) => "secrets",
         };
         formatter.write_str(name)
     }

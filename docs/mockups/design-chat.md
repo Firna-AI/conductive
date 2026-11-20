@@ -3,12 +3,18 @@
 This page belongs to [the design](design.md), which gives the style, the
 layouts, the design tokens, and the shared parts. This page gives workspace,
 session, and file chips with the list of `@`, and attached files with their
-drops. [Links in text](design-links.md) gives the other links of the chat. It gives the picture of an image file, the Markdown tables and
-headings of a reply and of a file preview, the work fold of a turn, and the
+drops. [Links in text](design-links.md) gives the other links of the chat. It gives the picture of an image file, the work fold of a turn, and the
 line of a stopped turn. It also gives the data that the chat does not
 have, the files that the cloud computer could not read, the end of a turn at the time limit of
 background work, and the end of a fast turn that ran at standard speed.
+[The Markdown of replies](design-markdown.md) gives the tables, the
+headings, the quotes, the rules, the marks, and the line breaks of a reply
+and of a file preview.
 
+- A session tab shows a muted spinner in place of its chat icon while its
+  agent works. The spinner keeps the icon's size and stays visible on
+  background tabs and while the user drags a tab. An idle tab shows the
+  chat icon.
 - `DraftFileChip` in `src/components/chat/` draws each attached file of a
   draft as a chip at its place in the text of the message box. It is one
   unit of the text, as a file chip is, with the size of a file chip, from
@@ -29,12 +35,12 @@ background work, and the end of a fast turn that ran at standard speed.
     at the place of each file, and its other text is escaped, as
     [`draft-marks.ts`](../../src/app/draft-marks.ts) of the app says. The
     mockups and the app share that module. Send waits for each upload.
-- A file over 100 MB never becomes a chip: a notice over the composer names
+- A file over 1 GB never becomes a chip: a notice over the composer names
   it, gives the limit, and offers "Attach a smaller file", as
   `app/attachments/too-large` shows. A dropped folder becomes one zip
   chip, such as `checkout-screens.zip`, at its place among the files of
-  the drop, as `app/attachments/drop/folder` shows. A zip over 100 MB gets
-  the notice of a file over 100 MB. A folder that the browser cannot read
+  the drop, as `app/attachments/drop/folder` shows. A zip over 1 GB gets
+  the notice of a file over 1 GB. A folder that the browser cannot read
   is not attached: its notice names it, says that it could not be read and
   to attach the files in it, and offers "Attach files", as
   `app/attachments/drop/unreadable-folder` shows.
@@ -57,69 +63,30 @@ background work, and the end of a fast turn that ran at standard speed.
   waits for the cloud computer opens nothing. `SentFiles` lists the files
   that the text does not show under the message, at the right, with
   `AttachmentChips.module.css` and `AttachmentStates.module.css`.
+- A later try of a sent message uses the copies of its files in the cloud
+  computer, because the app deletes its stored copy of each file once the
+  cloud computer has it. When a copy is no longer there, the turn fails
+  with the notice of a failed turn: "This turn stopped", the cause, and
+  Try again. The cause names each file that is gone, and asks to attach it
+  again in a new message, as `app/attachments/missing` shows. Only the
+  newest failed turn of a session offers Try again. The `older` mark of an
+  `error` item in `conversations.ts` draws an older failed turn without it.
 - Both chips of an attached file take no fixtures, so the app can use them.
   The New workspace page and dialog use the same chips before the
   workspace exists, as `app/new-workspace/files` and
   `app/new-workspace/dialog/files` show. In the dialog, the notice of a
-  file over 100 MB sits with its other notices, under the message.
+  file over 1 GB sits with its other notices, under the message.
 - `ImageView` in `src/components/files/` draws the picture of a PNG, JPEG,
   GIF, or WebP file in its tab, from decision 265 B. The picture keeps its
   proportions, in the middle of the tab, at its own size or smaller, so
   that it fits the width and the height of the tab. The header keeps
   Download, and Copy is off. An image that the browser cannot draw shows
   "Download this file to open it", as `app/files/image/cannot-draw` shows.
-- `MarkdownTable` in `src/components/common/` draws each Markdown table of
-  a reply and of the Markdown preview of a file as a native table. It
-  imports no fixture, so the app can use it too. Each caller draws the
-  content of the cells, such as inline code.
-  - The header row has the raised fill and the strong weight. One 1 px line
-    in the border colour stands between two cells and around the table.
-    The text of the table has the small size, one step under the text of a
-    reply.
-  - Each column takes the alignment of its separator cell, also in the
-    header row. A table wider than its place scrolls sideways inside its
-    box, so the text around it keeps its width, as
-    `app/chat/tables/wide` shows.
-  - A short row of a reply keeps only the cells that the agent wrote. Its
-    last cell spans the missing columns, up to 1,000, the most that HTML
-    allows, and any columns after that stay empty. The user chose the span
-    on 9 November 2026. The cell that spans keeps its text at its start,
-    so the text never stands under a column that it does not belong to,
-    as `app/chat/tables/short-row` shows. The file preview fills a short
-    row of a file with empty cells instead.
-  - While the agent writes, a header row shows as its text, with its
-    pipes, until a separator row with as many cells follows it. Then the
-    table shows the rows that have arrived, as `app/chat/tables/header`
-    and `app/chat/tables/rows` show.
-- `MarkdownHeadings.module.css` in `src/components/common/` gives the
-  Markdown headings of a reply and of the Markdown preview of a file one
-  look, under its `headings` class. It sets the size, the weight, the
-  colour, and the letter spacing of each level, and the line under a
-  level-one heading. Each view sets the space around its headings, as
-  `app/chat/headings` and `app/files/markdown` show.
-  - A heading shows at the level that the agent wrote, from `h1` to `h6`.
-    Each level has its own size, as a ratio of the text around it: 1.7143,
-    1.4286, 1.2857, 1.1429, 1, and 0.9286 times the text size. At the
-    13 px text of a reply and of the file preview, the levels are about
-    22.3, 18.6, 16.7, 14.9, 13, and 12.1 px. Each level has the heading
-    weight and the ink colour, and level 1 has a 1 px line in the border
-    colour under it.
-  - Bold text keeps the weight that the browser gives it, which is heavier
-    than the heading weight. The size step sets levels 1 to 4 apart from a
-    bold label.
-  - In a reply, a heading after another block stands further from it than
-    two paragraphs stand from each other: 12 px more for levels 1 and 2,
-    and 8 px more for levels 3 to 6. A heading that starts the reply has
-    no space above it, and the gap of the reply sets the space under each
-    heading. A heading inside a list item stands as far from the block
-    above it as a heading in a reply does. The mockups do not draw this
-    case.
-  - In the file preview, a heading of level 1 or 2 has 24 px above it, and
-    a smaller heading has 20 px. Level 1 has 10 px under its line, level 2
-    has 8 px under it, and the smaller levels have 6 px. The first block of
-    the file has no space above it.
-  - The text of a heading shows inline code, bold text, and workspace
-    chips, as a paragraph does. A heading with no text draws nothing.
+- [The Markdown of replies](design-markdown.md) gives `MarkdownTable`,
+  `MarkdownHeadings.module.css`, and `MarkdownProse.module.css`. They give
+  the tables, the headings, the quotes, the rules, the emphasis, and the
+  strikethrough of a reply and of the Markdown preview of a file one look.
+  The page also gives the marks and the line breaks of both views.
 - When a turn ends, the work before its answer folds into one line, from
   decision 150. The work is the agent messages and the tool calls, with
   the Mac command cards and the lost lines among them. The answer is the
@@ -141,27 +108,20 @@ background work, and the end of a fast turn that ran at standard speed.
     with the icons of the tool kinds and the left-out output. `FoldLine` in
     `ToolGroup.tsx` draws the line of both kinds of fold. A Mac command
     card and a lost line fold at their place, with no count and no mark,
-    from decision 151.
+    from decision 151. The card of a run with secrets folds in the same way.
+    A late request for secrets is not work, so it stays at its place, as
+    [secrets and Capabilities](design-secrets.md) gives.
   - The open fold lists its steps in order, in the indented list of an
     open run of tool calls: the call line that `ToolGroup` shares, a
     message as its first words on one line, the Mac command card, and the
     lost line, which starts at the left edge. A click on a message line
-    grows it to the full text, with its paragraphs, headings, and bullets.
-  - A message line holds no table, because HTML allows no table in a
-    summary. Closed, the line shows a table as its cells, row by row, with
-    a dot between two cells. Open, the line keeps the paragraphs before
-    the first table, and the table and the rest of the message show under
-    the line, at the left edge of its text, as `app/chat/work/table`
-    shows.
-  - A message line holds no heading element either. A summary may hold a
-    heading, but its button role hides the heading from the heading list
-    of a screen reader. Each heading of the line has the heading weight
-    and the size of the text of the line. Closed, the line shows the text
-    of a heading in the line, so the line stays one line, and the weight
-    shows where the heading ends. Open, the line shows each heading on its
-    own line, 10 px under the block above it, as
-    `app/chat/headings/work` shows. A heading after the first table shows
-    under the line as a heading element, in the same look.
+    grows it to the full text, with its paragraphs, headings, bullets,
+    quotes, and rules.
+  - A message line is a `<summary>`, so it holds no table, no heading, no
+    quote, and no rule element.
+    [In the work of a turn](design-markdown.md#in-the-work-of-a-turn)
+    gives how the line shows each of them, and each line break, closed
+    and open.
   - The `fold` state of the workspace opens the folds, and `open-message`
     also opens the last message line of each. A view runs no script, so a
     chat with open folds starts at its top.
@@ -236,28 +196,31 @@ background work, and the end of a fast turn that ran at standard speed.
   - A fast turn that ran at fast speed, and a turn without fast mode, show
     no note.
 
-## Workspace, session, and file chips
+## Workspace, session, file, and skill chips
 
 - `WorkspaceChip` in `src/components/chat/` draws a link to a workspace of
   the org as a chip in a line of text: a small rounded pill with the list
   mark of the workspace, `WorkspaceMark`, its label in a muted colour, and
-  its current name. The name of a workspace with unread output takes the
+  its current name. `WorkspaceName`, which [the marks](design-marks.md)
+  give, draws the name. The name of a workspace with unread output takes the
   strong weight of 600, as in the list, in place of the chip's 500. Its
   height is the height of the line less 2 px, so a line with a chip keeps
   its height. A chip is never wider than its line or than 22 times the
   size of its font, and a long name is cut short. It takes no fixtures, so
   the app can use it too.
-  - `MessageText` shows the chips in sent messages and in answers, as
-    links to the screens of the workspaces. In an answer, `**` marks bold
-    text, and a chip inside it is bold too. A Markdown link to a
-    workspace shows as the chip alone. A link in code is no chip. A link
+  - `MessageText` shows the chips in sent messages, and `AnswerText` in
+    answers, as links to the screens of the workspaces. In an answer, a
+    chip inside bold text is bold too. A Markdown link to a workspace
+    shows as the chip alone. A link in code is no chip. A link
     to another org, or to a workspace that the list does not hold, is a
     link, as [Links in text](design-links.md) says.
   - The chat finds each workspace in the list of the org, with the
-    archived ones and with the states of the list, through
+    archived ones, the removed ones, and the states of the list, through
     `ChatWorkspaces`. A phone finds the same workspaces with no list on
     the screen. An archived workspace keeps its chip, with the archived
-    mark.
+    mark. A removed workspace, whose 14 days ended, keeps that chip too,
+    and a press on it opens its read-only chat, from decision 519 B, as
+    `user-flows/open-a-removed-workspace` shows.
   - A pasted link becomes a chip in the message box at once: in the chat,
     and in New workspace as a page or a dialog. `MessageField` gives each
     box its field. A draft with a workspace link or a file mention shows
@@ -283,10 +246,11 @@ background work, and the end of a fast turn that ran at standard speed.
   the same place. Its title is the whole title of the session, and screen
   readers hear "Session" before it. It takes no fixtures, so the app can
   use it too.
-  It renders through `WorkspaceChip`, so both chip forms share the mark,
-  state words, removal cells, and bold unread title.
-  - `MessageText` shows a session chip for a link to the address of a
-    session that the chat read. `ChatWorkspaces` gives each linked
+  It renders through `WorkspaceChip`, which draws the title with
+  `WorkspaceName`, as it draws the name of a workspace. So both chip forms
+  share the mark, state words, removal cells, and bold unread title.
+  - `MessageText` and `AnswerText` show a session chip for a link to the
+    address of a session that the chat read. `ChatWorkspaces` gives each linked
     workspace the sessions that the chat read when it loaded, open and
     closed. A link to any other session shows the chip of its workspace.
     `LinkText` beside it shows one link in the same way, such as the
@@ -305,11 +269,45 @@ background work, and the end of a fast turn that ran at standard speed.
   `src/files/code/file-kind.ts` of the app says, so one list of languages
   sets both. The user chose this on 10 November 2026. A sent message shows
   each file chip as a link to the tab of the
-  file, and an answer shows none. It takes no fixtures, so the app can use
-  it too.
+  file. It takes no fixtures, so the app can use it too.
+  - An answer shows a file chip for each `@` mention of an entry of the
+    tree, and for each inline code whose whole text is the path of an
+    entry, from answer chip decisions 1 and 2 of 13 November 2026. The
+    path can be relative, or absolute under the repository folder.
+    `answerPaths.ts` beside it reads the path and its line target. A code
+    block, a path in another repository, and code of one word without a
+    `/` or a `.` stay code. A chip from code inside bold text is bold too,
+    as code inside bold text is.
+  - A line target, such as `:19-22`, adds `:19-22` to the name and to the
+    title of the chip. A press opens the file tab at the lines, which
+    `CodeView` in `src/components/files/` marks with the soft amber fill
+    and scrolls so that the first line sits in the middle of the view.
+  - `MentionChip` beside it draws the chip of a mention part, with its
+    line target and the page that a press opens.
+- `CodeBlock` in `src/components/chat/` draws a code block of an answer
+  with the look of a code block of a Markdown file. On a phone a Copy code
+  button shows in its top corner. With a mouse the button shows only while
+  the pointer is on the block, so a desktop view draws none.
 - `FileMentionList` in `src/components/chat/` draws the list of `@` above
   the message box: the icon, the name, and the folder of each entry that
   matches the query, with the first row highlighted. One line takes the
   place of the rows while the tree loads, when no tree is available, and
   when nothing matches. `fileMentions.ts` beside it reads the mentions of
   a text and orders the rows.
+- `SkillChip` in `src/components/chat/` draws a skill of the agent as a
+  chip of the same size: the skill icon, `SkillIcon`, and the name of the
+  skill. The icon is `SquareSlash` of the Lucide set, a `/` in a square,
+  because `/` opens the list of skills. Its title is the description of
+  the skill, and screen readers hear "Skill" before the name. In a message
+  box it has the cell of its icon and the × of `ChipRemove.tsx`, as a file
+  chip does. A sent message shows it without a ×, and a press opens
+  nothing. It takes no fixtures, so the app can use it too.
+- `SkillMentionList` in `src/components/chat/` draws the list of `/` above
+  the message box, in the place of the list of `@`. It renders through
+  `MentionList`: each row gives the name and a `description`, which shows
+  muted after the name and is cut with an ellipsis, and `label` names the
+  listbox "Skills". One line takes the place of the rows before the first
+  skills report, when the runner sent no report, and, for `/` alone, when
+  the repository has no skills. When no skill matches the query, the list
+  closes. `skillCopy.ts` holds the words of these lines, and
+  `skillMentions.ts` reads the skills of a text and orders the rows.

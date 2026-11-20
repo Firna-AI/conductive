@@ -6,12 +6,15 @@ import type { FileEntry } from '../../shared/generated/FileEntry'
 import type { Attachment } from '../../shared/generated/Attachment'
 import type { UserMessage } from '../../shared/generated/UserMessage'
 import { attachmentPath } from '../../shared/attachment-paths'
+import { COPY_TEXT_CLASS } from '../../../docs/mockups/src/components/chat/ChipCopyText'
 import { queryAllByRole } from '../../test-support/dom-queries'
 import { FAKE_IDS, FAKE_TIME, fakeUser } from '../../test-support/fixtures/core'
 import { senderSnapshot } from '../../test-support/fixtures/workspaces'
 import { mount, press } from '../../test-support/mount'
+import { chatFiles } from '../chat-files-test-kit'
 import { LinksProvider } from '../links/LinksContext'
 import { Copying, copyAll } from '../links/mention-copy-test-kit'
+import { FakeSkills } from '../mentions/skills-test-kit'
 import {
   MentionsProvider,
   type ChatMentions,
@@ -91,16 +94,13 @@ async function mountMessages(
   workspaceFiles: boolean,
 ) {
   const opened: string[] = []
-  const snapshot = {
-    tree: { entries: new Map([[readme.path, readme]]) },
-    treeError: null,
-    treeUnavailable: false,
-  }
+  const { files } = await chatFiles([readme])
   const value: ChatMentions = {
-    files: { subscribe: () => () => undefined, getSnapshot: () => snapshot },
+    files,
     openFile: (path) => opened.push(path),
     showFolder: () => undefined,
     href: (entry) => `/files/${entry.path}`,
+    skills: new FakeSkills({ claude: [], codex: [] }),
   }
   const { container } = await mount(
     <LinksProvider value={{ links: { orgId: FAKE_IDS.org, workspaces: [] } }}>
@@ -136,13 +136,23 @@ function placesOf(bubble: Element) {
   })
 }
 
-/** Each chip in `root`: its element, its mention, its title, and its words. */
+/** The words of a chip, without its copy text. */
+function shownWords(chip: Element): string {
+  const shown = chip.cloneNode(true) as Element
+  shown.querySelector(`.${COPY_TEXT_CLASS}`)?.remove()
+  return textOf(shown.outerHTML).trim()
+}
+
+/**
+ * Each chip in `root`: its element, its mention, its title, and the words
+ * that it shows, without its copy text, which shows only during a copy.
+ */
 function chipsOf(root: Element) {
   return Array.from(root.querySelectorAll('[data-mention]'), (chip) => ({
     tag: chip.tagName.toLowerCase(),
     mention: chip.getAttribute('data-mention'),
     title: chip.getAttribute('title'),
-    words: textOf(chip.outerHTML).trim(),
+    words: shownWords(chip),
   }))
 }
 
@@ -249,7 +259,8 @@ describe('the chips of attached files in a sent message', () => {
       true,
     )
     expect(copyAll(view.container)).toEqual({
-      kept: true,
+      copying: true,
+      native: true,
       text: `Compare @${shot.path} and @${notes.path}\nThen @${shot.path}`,
     })
   })

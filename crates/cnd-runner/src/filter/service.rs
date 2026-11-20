@@ -41,9 +41,7 @@ impl Credentials for CredentialFilter {
     }
     fn add(&self, secret: String) -> Result<()> {
         let mut state = self.state.lock().or(Err(Error::InvalidCommand))?;
-        if !secret.is_empty() && !state.secrets.contains(&secret) {
-            state.secrets.push(secret);
-        }
+        state.registry.add(secret);
         Ok(())
     }
     fn text(&self, value: &str) -> Result<String> {

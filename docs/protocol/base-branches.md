@@ -32,13 +32,17 @@ says.
   branch as a create that names none. Reason: that base branch then
   follows a rename of the default branch.
 - A workspace keeps its base branch at each start: the create, a resume,
-  and the restart near day 14 of a stop. The agent runner gets the base
-  branch at each start.
+  and, on Boat, the restart near day 14 of a stop. The agent runner gets
+  the base branch at each start.
 - After a merge, Continue makes the branch that the pull request merged
   into the base branch of the workspace. When GitHub no longer has that
   branch, Continue takes the default branch, as
   [The base and the new branch](continue.md#the-base-and-the-new-branch)
   says (decision 290).
+- A repository change makes the latest default branch of the new
+  repository the base branch of the workspace, as
+  [The base and the new branch](repository-change.md#the-base-and-the-new-branch)
+  says.
 - A change of the base of an open pull request on GitHub does not change
   the base branch of the workspace. A base branch that follows the pull
   request on GitHub was left out for now (decisions 291 and 294).

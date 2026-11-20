@@ -1,19 +1,23 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
-import { routinePaths } from '../../shared/routines'
+import { automationPaths } from '../../shared/automations'
+import { secretPath } from '../../shared/secrets'
 import { workspaceViewPath } from '../../shared/workspace-view'
-import { readViewReply } from '../../chat/api/read-responses'
+import { readViewReply } from '../../chat/api/read-view'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FakeWorkspaceEvents } from '../../test-support/fake-events'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { createApiClient } from '../api/client'
+import { ignore } from '../api/parse'
 import {
-  readRoutineRunResponse,
-  readRoutineRunsResponse,
-} from '../api/read-routine-runs'
+  readAutomationRunResponse,
+  readAutomationRunsResponse,
+} from '../api/read-automation-runs'
 import { createBackend, guardScope } from './backend'
 import { readDevOptions } from './options'
 import { routeFetch } from './router'
 import { runRoutes } from './run-routes'
+import { secretRoutes } from './secret-routes'
+import { orgSecretsOf } from './secret-store'
 import { seedState } from './seed'
 
 const orgId = FAKE_IDS.org
@@ -33,14 +37,14 @@ function setup(search = '') {
   )
   const api = createApiClient(
     routeFetch(
-      runRoutes(backend),
+      [...runRoutes(backend), ...secretRoutes(backend)],
       (path, method) => guardScope(backend.state, path, method),
       new FakeApiServer().fetch,
     ),
   )
   const acme = backend.state.orgs.find((org) => org.org.id === orgId)
   if (!acme) throw new Error('The seed has no Acme.')
-  return { api, acme }
+  return { api, acme, backend }
 }
 
 function runs(
@@ -48,7 +52,10 @@ function runs(
   id: string,
   before?: string,
 ) {
-  return api.get(routinePaths.runs(orgId, id, before), readRoutineRunsResponse)
+  return api.get(
+    automationPaths.runs(orgId, id, before),
+    readAutomationRunsResponse,
+  )
 }
 
 function runNow(
@@ -58,9 +65,9 @@ function runNow(
 ) {
   return api.send(
     'POST',
-    routinePaths.runNow(orgId, id),
+    automationPaths.runNow(orgId, id),
     { requestId },
-    readRoutineRunResponse,
+    readAutomationRunResponse,
   )
 }
 
@@ -95,7 +102,7 @@ describe('the runs of the dev fake', () => {
     })
   })
 
-  test('Run now starts a workspace in the section of the routine, once for each request ID', async () => {
+  test('Run now starts a workspace in the section of the automation, once for each request ID', async () => {
     const { api, acme } = setup()
     const before = acme.workspaces.length
     const run = await runNow(api, 'error-triage', 'request-1')
@@ -130,21 +137,64 @@ describe('the runs of the dev fake', () => {
     })
   })
 
-  test('Run now refuses another owner and a routine of pull requests, fails without an agent login, and keeps the workspace of a start that failed', async () => {
+  test('Run now pre-approves the chosen secrets of the automation in its workspace, with Mac access off', async () => {
+    const { api, acme, backend } = setup()
+    acme.automations = acme.automations.map((automation) =>
+      automation.id === 'error-triage'
+        ? {
+            ...automation,
+            capabilities: { preapprovedSecretIds: ['figma-token'] },
+          }
+        : automation,
+    )
+    const run = await runNow(api, 'error-triage', 'request-secrets')
+    const grants = orgSecretsOf(backend.state, orgId).capabilities.get(
+      run.workspaceId ?? '',
+    )
+    expect({
+      preapproved: grants?.preapprovedSecretIds,
+      macAccess: grants?.macAccess,
+    }).toEqual({ preapproved: ['figma-token'], macAccess: false })
+  })
+
+  test('Run now goes on without a chosen secret that was deleted', async () => {
+    const { api, acme, backend } = setup()
+    acme.automations = acme.automations.map((automation) =>
+      automation.id === 'error-triage'
+        ? {
+            ...automation,
+            capabilities: {
+              preapprovedSecretIds: ['figma-token', 'vercel-token'],
+            },
+          }
+        : automation,
+    )
+    await api.send('DELETE', secretPath(orgId, 'figma-token'), {}, ignore)
+    const run = await runNow(api, 'error-triage', 'request-deleted')
+    const grants = orgSecretsOf(backend.state, orgId).capabilities.get(
+      run.workspaceId ?? '',
+    )
+    expect({
+      state: run.state,
+      preapproved: grants?.preapprovedSecretIds,
+    }).toEqual({ state: 'starting', preapproved: ['vercel-token'] })
+  })
+
+  test('Run now refuses another owner and an automation of pull requests, fails without an agent login, and keeps the workspace of a start that failed', async () => {
     const { api } = setup()
     await expect(
       runNow(api, 'dependency-updates', 'request-1'),
-    ).rejects.toMatchObject({ status: 403, code: 'routine_owner_required' })
+    ).rejects.toMatchObject({ status: 403, code: 'automation_owner_required' })
     await expect(runNow(api, 'review-prs', 'request-1')).rejects.toMatchObject({
       status: 409,
-      code: 'routine_pull_request_required',
+      code: 'automation_pull_request_required',
     })
     const run = await runNow(setup('?login=none').api, 'error-triage', 'r')
     // A prompt that contains `fail` stands for a cloud computer that did
     // not start, and its run keeps the workspace, as the Worker does.
     const start = setup()
     const { acme } = start
-    acme.routines = acme.routines.map((item) =>
+    acme.automations = acme.automations.map((item) =>
       item.id === 'error-triage'
         ? { ...item, prompt: `${item.prompt} Then fail.` }
         : item,
@@ -156,7 +206,7 @@ describe('the runs of the dev fake', () => {
       workspaceId: null,
       error: {
         code: 'agent_login_required',
-        message: 'Connect Claude to run this routine.',
+        message: 'Connect Claude to run this automation.',
       },
     })
     expect({
@@ -183,14 +233,14 @@ describe('the runs of the dev fake', () => {
     })
   })
 
-  test('the view of a run workspace names its routine and the pull request of its run', async () => {
+  test('the view of a run workspace names its automation and the pull request of its run', async () => {
     const path = workspaceViewPath(orgId, FAKE_IDS.workspace)
-    const routineOf = async (search: string) =>
-      (await setup(search).api.get(path, readViewReply)).routine
+    const automationOf = async (search: string) =>
+      (await setup(search).api.get(path, readViewReply)).automation
     expect({
-      person: await routineOf(''),
-      pullRequest: await routineOf('?run=pull-request'),
-      schedule: await routineOf('?run=schedule'),
+      person: await automationOf(''),
+      pullRequest: await automationOf('?run=pull-request'),
+      schedule: await automationOf('?run=schedule'),
     }).toEqual({
       person: null,
       pullRequest: {

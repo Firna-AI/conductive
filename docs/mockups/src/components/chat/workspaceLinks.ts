@@ -12,20 +12,25 @@ import {
   type AttachedPart,
   type MentionPart,
 } from './fileMentions'
+import { skillParts, type SkillPart } from './skillMentions'
 
 /**
  * A part of a text: plain text, code in backticks, a link, a mention of a
- * file or a folder, or a mention of an attached file of the message. Code
- * whose text, without the spaces at its ends, is one web address gives
- * that address as `href`.
+ * file or a folder, a mention of an attached file of the message, or a
+ * skill. Code whose text, without the spaces at its ends, is one web
+ * address gives that address as `href`.
  */
 export type TextPart =
   | WebAddressPart
   | { kind: 'code'; text: string; href?: string }
   | MentionPart
   | AttachedPart
+  | SkillPart
 
-/** Plain text with its links, and with its mentions when `mentions` asks. */
+/**
+ * Plain text with its links, and with its mentions when `mentions` asks.
+ * The text of a member also reads its skills.
+ */
 function plainParts(
   text: string,
   mentions: boolean,
@@ -33,12 +38,16 @@ function plainParts(
 ): TextPart[] {
   if (!mentions) return webAddressParts(text)
   return mentionParts(text, files).flatMap((part): TextPart[] =>
-    part.kind === 'text' ? webAddressParts(part.text) : [part],
+    part.kind !== 'text'
+      ? [part]
+      : skillParts(part.text).flatMap((piece): TextPart[] =>
+          piece.kind === 'text' ? webAddressParts(piece.text) : [piece],
+        ),
   )
 }
 
 /** Code, with the web address that it holds alone, if any. */
-function codePart(text: string): TextPart {
+export function webCodePart(text: string): TextPart {
   const parts = webAddressParts(text.trim(), false)
   const [only] = parts
   return parts.length === 1 && only?.kind === 'link'
@@ -47,14 +56,13 @@ function codePart(text: string): TextPart {
 }
 
 /**
- * Splits a text into plain text, code, links, and mentions. In a sent
- * message or an answer, `code` is true: each part in backticks is code,
- * and a link or a mention in it is no chip. Code that holds only a web
- * address gives that address. A message box keeps plain text, so it reads
- * no code. Only the text of a member, in a message box or a sent message,
- * reads mentions, so `mentions` is false in an answer. A mention of the
- * copy path of one of the `files` of a sent message is the mention of
- * that file.
+ * Splits the text of a member into plain text, code, links, mentions, and
+ * skills. In a sent message, `code` is true: each part in backticks is
+ * code, and a mention or a skill in it stays code. A web address alone in
+ * code is a link. A message box keeps plain text, so it reads no code. The
+ * text reads mentions and skills when `mentions` asks. A mention of the
+ * copy path of one of the `files` of a sent message is the mention of that
+ * file. `answerNodes` reads the text of an answer.
  */
 export function textParts(
   text: string,
@@ -66,7 +74,7 @@ export function textParts(
   return text
     .split('`')
     .flatMap((part, index): TextPart[] =>
-      index % 2 === 1 ? [codePart(part)] : plainParts(part, mentions, files),
+      index % 2 === 1 ? [webCodePart(part)] : plainParts(part, mentions, files),
     )
 }
 

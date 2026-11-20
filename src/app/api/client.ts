@@ -14,41 +14,49 @@ export class ApiError extends Error {
   readonly status: number
   readonly code: string
   readonly details: ApiErrorDetails | null
+  /** When the request can go again, in Unix milliseconds, or null. */
+  readonly retryAt: number | null
 
   constructor(
     status: number,
     code: string,
     message: string,
     details: ApiErrorDetails | null = null,
+    retryAt: number | null = null,
   ) {
     super(message)
     this.status = status
     this.code = code
     this.details = details
+    this.retryAt = retryAt
   }
 }
 
-/** One raw file for an upload route, as a `FileTransport` sends it. */
+/** One raw part of a file for a part route, as a `FileTransport` sends it. */
 interface FileRequest {
-  /** The path of the route, with the query that names the file. */
+  /** The path of the part route, which names the upload and the part. */
   path: string
-  file: File
-  /** Gets the number of bytes of the file that the browser sent so far. */
+  /**
+   * The bytes of the part: a slice of the file, so the browser reads them
+   * from the disk as it sends them.
+   */
+  body: Blob
+  /** Gets the number of bytes of the part that the browser sent so far. */
   progress: (sentBytes: number) => void
   /** Stops the request, such as after Remove or a change of person. */
   signal: AbortSignal
 }
 
-/** The status of an answer to a file, and its JSON body, or `null`. */
+/** The status of an answer to a part, and its JSON body, or `null`. */
 export interface FileReply {
   status: number
   body: unknown
 }
 
 /**
- * Sends one raw file with the session cookie, from the address that the
- * client's fetch uses. It rejects when no answer came, such as offline, or
- * when `signal` stopped the request.
+ * Sends one raw part of a file with `PUT` and the session cookie, from the
+ * address that the client's fetch uses. It rejects when no answer came,
+ * such as offline, or when `signal` stopped the request.
  */
 export type FileTransport = (request: FileRequest) => Promise<FileReply>
 
@@ -68,12 +76,14 @@ export interface ApiClient {
     read: (body: unknown) => T,
   ): Promise<T>
   /**
-   * Sends one raw file, as the upload routes take it, through the file
-   * transport of the client. Its answer and its errors read as a write's.
+   * Sends one raw part of a file, as the part routes take it, through the
+   * file transport of the client. Its answer and its errors read as a
+   * write's. A request that got no answer, also one that `signal` stopped,
+   * fails with the error code `network`.
    */
-  sendFile<T>(
+  sendPart<T>(
     path: string,
-    file: File,
+    part: Blob,
     read: (body: unknown) => T,
     hooks: Pick<FileRequest, 'progress' | 'signal'>,
   ): Promise<T>
@@ -113,6 +123,24 @@ function readDetails(value: unknown): ApiErrorDetails | null {
   }
 }
 
+/** The last time that a JavaScript date can hold, in Unix milliseconds. */
+const lastDateMs = 8_640_000_000_000_000
+
+/**
+ * The time when a refused request can go again, in Unix milliseconds, as
+ * the send limit of feedback gives it. A missing time, or one that is not
+ * a whole number that a date can hold, reads as null, and the error keeps
+ * its message.
+ */
+function readRetryAt(value: unknown): number | null {
+  return typeof value === 'number' &&
+    Number.isInteger(value) &&
+    value >= 0 &&
+    value <= lastDateMs
+    ? value
+    : null
+}
+
 function errorFrom(status: number, body: unknown): ApiError {
   try {
     const error = record(record(body).error, 'error')
@@ -121,6 +149,7 @@ function errorFrom(status: number, body: unknown): ApiError {
       text(error, 'code'),
       text(error, 'message'),
       readDetails(error.details),
+      readRetryAt(error.retryAt),
     )
   } catch {
     return new ApiError(status, 'http_error', 'The request failed. Try again.')
@@ -148,7 +177,7 @@ function answer<T>(
 
 /**
  * The JSON client of the browser API. It sends the session cookie. `files`
- * sends the raw files of uploads, so that the browser can measure them.
+ * sends the raw parts of uploads, so that the browser can measure them.
  */
 export function createApiClient(
   fetch: FetchLike,
@@ -188,11 +217,11 @@ export function createApiClient(
         },
         read,
       ),
-    sendFile: async (path, file, read, hooks) => {
+    sendPart: async (path, part, read, hooks) => {
       if (!files) throw new Error('This client has no file transport.')
       let reply: FileReply
       try {
-        reply = await files({ path, file, ...hooks })
+        reply = await files({ path, body: part, ...hooks })
       } catch {
         throw offline
       }

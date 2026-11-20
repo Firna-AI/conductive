@@ -1,7 +1,7 @@
 import type { ChangesResponse } from '../../src/shared/generated/ChangesResponse'
 import type { FileTreeResponse } from '../../src/shared/generated/FileTreeResponse'
-import type { Attachment } from '../../src/shared/generated/Attachment'
 import type { WorkspaceChat } from '../chat/backend'
+import type { ChatTransaction } from '../chat/store'
 import type { WorkspaceController } from '../lifecycle/workspace-controller-types'
 import type { WorkspaceEventPublication } from '../lifecycle/workspace-platform'
 import type { NativeChatCallbacks } from './native-chat-resolvers'
@@ -16,12 +16,11 @@ import type {
   WorkspaceEvent,
   WorkspaceEventEnvelope,
 } from '../chat/workspace-events'
-import type { AttachmentStorageInput } from '../chat/attachment-storage'
-import type { NativeByteChunk } from './native-attachment-controls'
 import type { NativeQuery } from './native-d1'
 import type { NativeLifecycleControls } from './native-lifecycle-controls'
 import type { TurnTokenCheck } from '../model-gateway/types'
 import type { ProviderAccountConfigurations } from '../sandbox/accounts'
+import type { NativeGitHubState } from '../github/native-state.test-support'
 
 export const NATIVE_TEST_TIME = 1_800_000_000_000
 
@@ -73,6 +72,8 @@ interface NativeWorkspaceControls {
   dispatchAlarm(): Promise<void>
   eventNumber(workspaceId: string): Promise<number>
   takeEvents(): Promise<WorkspaceEventEnvelope[]>
+  takePublications(): Promise<WorkspaceEventEnvelope[]>
+  failPublication(message: string | null): Promise<void>
   takeStoredEvents(): Promise<WorkspaceEventEnvelope[]>
   persist(): Promise<void>
   captureDecrypt(active: boolean): Promise<void>
@@ -92,18 +93,14 @@ interface NativeWorkspaceControls {
     workspaceId: string,
     event: WorkspaceEvent,
   ): Promise<WorkspaceEventEnvelope>
-  storeAttachmentChunks(
-    input: AttachmentStorageInput,
-    id: string,
-    chunks: readonly NativeByteChunk[],
-  ): Promise<Attachment>
-  attachmentByteSample(
-    id: string,
-    positions: readonly number[],
-  ): Promise<{ byteLength: number; samples: number[] }>
+  enqueueWorkspaceChange(
+    workspaceId: string,
+    work: (transaction: ChatTransaction) => Promise<unknown>,
+  ): Promise<void>
 }
 
 export interface NativeWorkspaceApi {
+  github: NativeGitHubState
   chat: WorkspaceChat
   controller: WorkspaceController
   storage: DurableObjectStorage
@@ -115,6 +112,7 @@ export interface NativeWorkspaceApi {
       | 'scheduleImage'
       | 'archiveWorkspace'
       | 'restoreWorkspace'
+      | 'softwareRestart'
       | 'resumeMemberCreation'
       | 'reportRunnerLifecycle'
       | 'registerLifecycleTurn'

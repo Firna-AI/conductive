@@ -46,6 +46,8 @@ export const mergeLabels: Readonly<Record<MergeMethod, string>> = {
 
 export const barLabels = {
   merging: 'Merging',
+  readyForReview: 'Ready for review',
+  markingReady: 'Marking ready',
   continue: 'Continue',
   continuing: 'Continuing',
   archive: 'Archive',
@@ -62,6 +64,9 @@ export type BarMessageKind =
   | 'merge-moved-head'
   | 'merge-no-right'
   | 'merge-refused'
+  | 'ready-no-right'
+  | 'ready-pull-changed'
+  | 'ready-refused'
   | 'continue-waits'
   | 'continue-failed'
   | 'base-moved'
@@ -73,10 +78,10 @@ export type BarMessageKind =
 export type BarBranches = { branch: string; base: string; moved?: string }
 
 /**
- * The words of each message. A moved head and a missing right use the
- * app's own words. Every other refusal of GitHub says only that GitHub
- * refused the merge, beside Open on GitHub, because no GitHub error text
- * reaches the browser.
+ * The words of each message. A moved head, another pull request, and a
+ * missing right use the app's own words. Every other refusal of GitHub
+ * says only that GitHub refused the merge or Ready for review, beside Open
+ * on GitHub, because no GitHub error text reaches the browser.
  */
 export function barMessageText(
   kind: BarMessageKind,
@@ -89,6 +94,12 @@ export function barMessageText(
       return `Not merged: your GitHub access doesn't allow merges into ${branches.base}.`
     case 'merge-refused':
       return 'GitHub refused the merge.'
+    case 'ready-no-right':
+      return "Not marked ready: your GitHub access doesn't allow changes to this pull request."
+    case 'ready-pull-changed':
+      return 'Not marked ready: the branch has another pull request now. Review it, then try again.'
+    case 'ready-refused':
+      return 'Not marked ready: GitHub refused the change.'
     case 'continue-waits':
       return 'Continue waits for the agent to finish.'
     case 'continue-failed':

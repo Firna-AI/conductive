@@ -71,9 +71,17 @@ access to one user at a time.
 
 ### Approval email delivery
 
-[`approval-email.ts`](approval-email.ts) builds the plain text email from
-the brand and retries pending messages. The stored subject, recipient,
-and body keep retries unchanged after a later sign-in or deployment.
+`createEmailMessages` in [`email-messages.ts`](../email-messages.ts)
+takes the effective `APP_ORIGIN` of the approval request. Its `approval()`
+builds the plain text email that the grant batch saves. The email links to
+that origin and takes the product name from the brand. A local request
+uses its own origin, as
+[The app origin](../../docs/local-development.md#the-app-origin) says.
+
+[`approval-email.ts`](approval-email.ts) sends the saved message at once
+and retries pending messages. A scheduled retry has no request, so it
+never builds the message again. The stored subject, recipient, and body
+keep retries unchanged after a later sign-in or deployment.
 [`mail-sender.ts`](../mail-sender.ts) sends both approval and invitation
 emails through Resend. It uses the same sender and local logging policy.
 Invitations retain their content hash in their delivery key.
@@ -82,4 +90,7 @@ Approvals use `waitlist-approval/<userId>` for every attempt.
 The scheduled Worker entry retries pending messages every 15 minutes.
 It marks a message failed at or after 24 hours from approval, before
 another send. Each successful send records its time and leaves the retry
-list. A send failure logs fixed warning text without the address.
+list. A send failure keeps the message pending for the next retry. It logs
+fixed warning text and a safe summary of the failure, without the address.
+[A failed send](../members/invitations.md#a-failed-send) in the invitation
+guide says where to find the warning and what the summary holds.

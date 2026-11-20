@@ -16,10 +16,6 @@ function response(requestId, result = null) {
 for await (const line of lines) {
   const request = JSON.parse(line)
   switch (request.type) {
-    case 'warm':
-      response(request.requestId)
-      process.stdout.end(() => process.exit(0))
-      break
     case 'start':
       complete = request.options.choice.model === 'complete'
       if (complete)
@@ -32,6 +28,11 @@ for await (const line of lines) {
         process.stdout.write('{bad\n')
         break
       }
+      if (request.options.choice.model === 'environment')
+        output({
+          type: 'warning',
+          message: `${process.env.CONDUCTIVE_REPOSITORY_DIR} ${process.env.CONDUCTIVE_WORKSPACE_BRANCH}`,
+        })
       if (request.options.choice.model === 'hold') {
         held = request.requestId
         output({ type: 'warning', message: 'start held' })

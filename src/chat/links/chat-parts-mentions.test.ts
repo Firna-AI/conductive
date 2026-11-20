@@ -3,7 +3,7 @@ import type { FileEntry } from '../../shared/generated/FileEntry'
 import type { Attachment } from '../../shared/generated/Attachment'
 import { attachmentPath } from '../../shared/attachment-paths'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
-import { chatParts, type ChatPart, type MentionLookup } from './chat-parts'
+import { chatParts, type ChatPart, type EntryLookup } from './chat-parts'
 import { shapeOf, webLinkOf } from './links-test-kit'
 
 const links = { orgId: FAKE_IDS.org, workspaces: [] }
@@ -14,11 +14,9 @@ const entries: FileEntry[] = [
 ]
 
 /** Finds a file by a file mention, and a folder by a folder mention. */
-const lookup: MentionLookup = (mention) =>
+const lookup: EntryLookup = (path, folder) =>
   entries.find(
-    (entry) =>
-      entry.path === mention.path &&
-      (entry.kind === 'directory') === mention.folder,
+    (entry) => entry.path === path && (entry.kind === 'directory') === folder,
   )
 
 const shapes = (parts: readonly ChatPart[]) => parts.map(shapeOf)
@@ -28,13 +26,7 @@ describe('mentions in a sent message', () => {
     const text =
       'Move @src/app.ts into @src/lib/ and @src/lib but not @src/gone.ts'
     expect(
-      shapes(
-        chatParts(text, links, {
-          strong: false,
-          web: webLinkOf,
-          mentions: lookup,
-        }),
-      ),
+      shapes(chatParts(text, links, { web: webLinkOf, mentions: lookup })),
     ).toEqual([
       { text: 'Move ' },
       { file: 'src/app.ts' },
@@ -44,28 +36,23 @@ describe('mentions in a sent message', () => {
     ])
   })
 
-  test('a mention in code stays code, and an answer without mentions keeps its text', () => {
-    const text = 'Read `@src/app.ts` and @src/app.ts'
+  test('a mention in code stays code, and so does a path in code', () => {
+    const read = (text: string) =>
+      chatParts(text, links, { web: webLinkOf, mentions: lookup })
     expect({
-      message: shapes(
-        chatParts(text, links, {
-          strong: false,
-          web: webLinkOf,
-          mentions: lookup,
-        }),
-      ),
-      answer: shapes(chatParts(text, links, { strong: true, web: webLinkOf })),
+      mention: shapes(read('Read `@src/app.ts` and @src/app.ts')),
+      path: read('`src/app.ts` and @src/app.ts'),
     }).toEqual({
-      message: [
+      mention: [
         { text: 'Read ' },
         { code: '@src/app.ts' },
         { text: ' and ' },
         { file: 'src/app.ts' },
       ],
-      answer: [
-        { text: 'Read ' },
-        { code: '@src/app.ts' },
-        { text: ' and @src/app.ts' },
+      path: [
+        { kind: 'code', text: 'src/app.ts' },
+        { kind: 'text', text: ' and ' },
+        { kind: 'file', source: '@src/app.ts', entry: entries[0], lines: null },
       ],
     })
   })
@@ -88,13 +75,12 @@ describe('mentions in a sent message', () => {
       kind: 'file',
       change: null,
     }
-    const withCopy: MentionLookup = (mention) =>
-      mention.path === path && !mention.folder ? copy : lookup(mention)
+    const withCopy: EntryLookup = (found, folder) =>
+      found === path && !folder ? copy : lookup(found, folder)
     const text = `Compare @${path} with @src/app.ts and not \`@${path}\` or @${path}/`
-    const read = (mentions?: MentionLookup) =>
+    const read = (mentions?: EntryLookup) =>
       shapes(
         chatParts(text, links, {
-          strong: false,
           web: webLinkOf,
           mentions,
           attachments: [legacy, shot],

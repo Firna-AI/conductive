@@ -18,6 +18,7 @@ use crate::link::connection::SavedRunnerLink;
 use crate::runtime::{CommandHandlerMock, Runner, RunnerCore};
 use crate::socket::{ConnectorMock, Socket, SocketMock};
 use crate::test_support::{Memory, clock, title};
+use crate::update::NoUpdates;
 
 #[unimock::unimock(api = SocketWorkMock)]
 trait SocketWork: Send + Sync {
@@ -107,6 +108,7 @@ impl Fixture {
         );
         let link = Arc::new(SavedRunnerLink::new(
             "workspace".into(),
+            "abcdef01-2345-4678-89ab-cdef01234567".into(),
             ConnectionRequest {
                 url: "wss://machines.test/v1/runner".into(),
                 workspace_token: "workspace-token".into(),
@@ -114,6 +116,7 @@ impl Fixture {
             Arc::new(connector),
             runtime_clock.clone(),
             store.clone(),
+            false,
         ));
         let reports_release = Arc::new(Notify::new());
         let reports_done = Arc::new(Notify::new());
@@ -157,6 +160,7 @@ impl Fixture {
             store,
             runtime_clock,
             Arc::new(handler),
+            Arc::new(NoUpdates),
         ));
         Ok(Self {
             link,
@@ -177,6 +181,7 @@ pub(super) fn welcome() -> WorkspaceToRunner {
         protocol_version: RunnerProtocolVersion,
         stream_id: "stream".into(),
         confirmed_through: 0,
+        complete_tool_details: None,
     })
 }
 

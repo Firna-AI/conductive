@@ -1,5 +1,10 @@
 import type { AgentChoice } from '../shared/generated/AgentChoice'
 import type { BuildsResponse, Repository } from '../shared/org-settings'
+import {
+  NEW_WORKSPACE_CAPABILITIES,
+  type OrgSecret,
+  type WorkspaceCapabilities,
+} from '../shared/secrets'
 import type { ApiError } from './api/client'
 import { filesWait, type DraftFile } from './draft-files'
 import { markedFiles } from './draft-file-state'
@@ -29,6 +34,12 @@ export interface Draft {
    * form. A send ends the pick.
    */
   sectionId: string | null
+  /**
+   * The choices of the Capabilities control: the secrets that the new
+   * workspace pre-approves, and its Mac access. A send ends them, so each
+   * new workspace starts from `NEW_WORKSPACE_CAPABILITIES`.
+   */
+  capabilities: WorkspaceCapabilities
   /** The files, each with its upload. Only ready ones go with the message. */
   files: readonly DraftFile[]
   /** Files without chips, kept for undo until this draft ends. */
@@ -56,6 +67,27 @@ export type CreateState =
       repositoryId: string
       startBranch: string | null
     }
+
+/**
+ * A new draft with the message ID `messageId`. It keeps the choice and a
+ * picked repository of `keep`. Its capabilities start again from the
+ * defaults, because the closed icon of the control shows no state.
+ */
+export function emptyDraft(messageId: string, keep?: Draft): Draft {
+  return {
+    text: '',
+    repository: keep?.repository?.picked ? keep.repository : null,
+    branch: null,
+    choice: keep?.choice ?? null,
+    sectionId: null,
+    capabilities: NEW_WORKSPACE_CAPABILITIES,
+    files: [],
+    detached: [],
+    refused: [],
+    refusedFolders: [],
+    messageId,
+  }
+}
 
 /**
  * Whether the draft can go: it has text, and each of its files is ready,
@@ -121,4 +153,23 @@ export function keptRepository(
   return draft.repository?.id === repositoryId
     ? draft.repository
     : { id: repositoryId, picked: false }
+}
+
+/**
+ * The capabilities that a create sends: those of the draft, without each
+ * pre-approved secret that the last read of the secrets no longer lists,
+ * such as one that a member deleted. Before any read, the draft has none.
+ */
+export function sentCapabilities(
+  capabilities: WorkspaceCapabilities,
+  secrets: readonly OrgSecret[] | undefined,
+): WorkspaceCapabilities {
+  const { preapprovedSecretIds, macAccess } = capabilities
+  if (!secrets) return capabilities
+  return {
+    preapprovedSecretIds: preapprovedSecretIds.filter((id) =>
+      secrets.some((secret) => secret.id === id),
+    ),
+    macAccess,
+  }
 }

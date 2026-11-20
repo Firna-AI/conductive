@@ -1,16 +1,18 @@
 import { spawn } from 'node:child_process'
-import { chmod, mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises'
-import { resolve } from 'node:path'
+import { chmod, mkdir, readFile, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
 
+import {
+  testDirectory,
+  testSocketDirectory,
+} from '../test-support/test-directory'
 import type { TerminalScriptOptions } from './scripts'
 import { shellArgument } from './privileged'
 
 export async function scriptFixture() {
-  const parent = resolve(
-    '.context/boat-native-remote-workspaces/milestone-5/orchestrator-round-1/terminal-state/script-runs',
-  )
-  await mkdir(parent, { recursive: true })
-  const root = await mkdtemp(`${parent}/run-`)
+  const files = await testDirectory('terminal-')
+  const root = files.path
+  const runtime = await testSocketDirectory(join(root, 'runtime folder'))
   const entropyInput = `${root}/entropy-input`
   const calls = `${root}/entropy-calls`
   const capturedEntropy = `${root}/entropy-captured`
@@ -50,8 +52,8 @@ printf '%s\\0' "$PWD" "$CONDUCTIVE_LAUNCH_TEST" "$@"
     `CONDUCTIVE_REPOSITORY_DIR=${shellArgument(repository)}\nCONDUCTIVE_LAUNCH_TEST='workspace environment'\n`,
   )
   const options: TerminalScriptOptions = {
-    runtimeDirectory: `${root}/runtime folder`,
-    restoreMarker: `${root}/runtime folder/restore-ended`,
+    runtimeDirectory: runtime.path,
+    restoreMarker: `${runtime.path}/restore-ended`,
     environmentFile,
     owner: String(process.getuid?.()),
     group: String(process.getgid?.()),
@@ -73,6 +75,13 @@ printf '%s\\0' "$PWD" "$CONDUCTIVE_LAUNCH_TEST" "$@"
     sessionSocket: `${options.runtimeDirectory}/tmux.sock`,
     readPassword: () =>
       readFile(`${options.runtimeDirectory}/password`, 'utf8'),
+    dispose: async () => {
+      try {
+        await runtime.remove()
+      } finally {
+        await files.remove()
+      }
+    },
   }
 }
 
@@ -82,7 +91,12 @@ printf '%s\\0' "$PWD" "$CONDUCTIVE_LAUNCH_TEST" "$@"
  */
 export function runInteractiveBash(
   lines: readonly string[],
-  options: { folder: string; home: string; promptCommand: string },
+  options: {
+    folder: string
+    home: string
+    promptCommand: string
+    historyFile?: string
+  },
 ) {
   return new Promise<{ code: number | null; stdout: string; stderr: string }>(
     (done, reject) => {
@@ -91,7 +105,7 @@ export function runInteractiveBash(
         env: {
           ...process.env,
           HOME: options.home,
-          HISTFILE: '',
+          HISTFILE: options.historyFile ?? '',
           PS1: '',
           PROMPT_COMMAND: options.promptCommand,
         },

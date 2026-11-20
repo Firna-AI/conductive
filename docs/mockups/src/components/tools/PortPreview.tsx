@@ -1,4 +1,4 @@
-import { Plus, RotateCw } from 'lucide-react'
+import { Maximize2, Plus, RotateCw } from 'lucide-react'
 import {
   detectedServers,
   openPort,
@@ -13,13 +13,20 @@ import { ExternalLink } from '../common/ExternalLink'
 import { ScreenLink } from '../common/ScreenLink'
 import { PortMessage, ServerList } from './PortForm'
 import { PreviewTabs } from './PreviewTabs'
-import { portFormCopy, previewTabLabel, serverDescription } from './previewCopy'
+import {
+  expandedPreviewCopy,
+  portFormCopy,
+  previewTabLabel,
+  serverDescription,
+} from './previewCopy'
 import { StorefrontPage } from './StorefrontPage'
 import styles from './PortPreview.module.css'
 
 /**
- * The states of the Preview tool: a preview in its frame, or "+" beside
- * the tabs of the open previews. With no preview open, the port form lists
+ * The states of the Preview tool: open previews, or on a phone "+" beside
+ * their tabs. A phone shows the open preview in a frame of the tool, and
+ * the desktop in the Preview tab of the centre row. With no preview open,
+ * the port form lists
  * the servers that the runner detects, says that it reports none, or reads
  * as before when the app has no report, as for an older image. After a
  * failed repair of the list, the form keeps its last list under a notice.
@@ -38,35 +45,60 @@ export type PreviewState = (typeof previewStates)[number]
 /**
  * A tab for each open preview: the port and the cut name of its server.
  * The tooltip and the spoken name give the full name and the folder.
+ * `current` is the port of the preview that shows, or null for none.
  */
-function previewTabs(adding: boolean) {
+function previewTabs(current: number | null) {
   return openPorts.map((port) => {
     const server = detectedServers.find((each) => each.port === port)
     return {
       label: previewTabLabel(port, server),
       title: server ? serverDescription(server) : undefined,
       to: paths.preview,
-      selected: !adding && port === openPort,
+      selected: port === current,
     }
   })
 }
 
 /**
- * The open previews of the sandbox. A preview shows in a frame, with a link
- * to a new tab. Each tab closes its preview with the Close button beside
- * its label. After "+", no tab is current, and the port form lists the
- * servers that have no preview yet.
+ * Reload, Expand, and Open of the page that shows. Open opens `href` in a
+ * new tab: by default the launch address of the open port preview. Expand
+ * shows only on desktop, with `expandTo`, the screen of the page in its
+ * large window over the whole app.
  */
-function PortPreview(props: { adding: boolean }) {
-  const { adding } = props
-  const unopened = detectedServers.filter(
-    (server) => !openPorts.includes(server.port),
+export function PreviewActions(props: { href?: string; expandTo?: string }) {
+  return (
+    <>
+      <IconButton icon={RotateCw} label="Reload" />
+      {props.expandTo ? (
+        <ScreenLink asChild to={props.expandTo}>
+          <IconButton icon={Maximize2} label={expandedPreviewCopy.expand} />
+        </ScreenLink>
+      ) : null}
+      <span className={styles.link}>
+        <ExternalLink href={props.href ?? previewUrl} label="Open in new tab">
+          Open
+        </ExternalLink>
+      </span>
+    </>
   )
+}
+
+/**
+ * The open previews on a phone. A preview shows in a frame, with a link to
+ * a new tab. Each tab closes its preview with the Close button beside its
+ * label. After "+", no tab is current, and the port form lists the servers
+ * that have no preview yet.
+ */
+function PhonePreview(props: { adding: boolean }) {
+  const { adding } = props
   return (
     <div className={styles.preview}>
       <div className={styles.toolbar}>
         {/* Beside the actions of the frame, two named tabs do not fit. */}
-        <PreviewTabs fadeEnd={!adding} tabs={previewTabs(adding)} />
+        <PreviewTabs
+          fadeEnd={!adding}
+          tabs={previewTabs(adding ? null : openPort)}
+        />
         {adding ? (
           <IconButton icon={Plus} label="Preview another port" pressed />
         ) : (
@@ -75,19 +107,10 @@ function PortPreview(props: { adding: boolean }) {
           </ScreenLink>
         )}
         <span className={styles.spacer} />
-        {adding ? null : (
-          <>
-            <IconButton icon={RotateCw} label="Reload" />
-            <span className={styles.link}>
-              <ExternalLink href={previewUrl} label="Open in new tab">
-                Open
-              </ExternalLink>
-            </span>
-          </>
-        )}
+        {adding ? null : <PreviewActions />}
       </div>
       {adding ? (
-        <ServerList servers={unopened} />
+        <ServerList servers={unopened()} />
       ) : (
         <div className={styles.frame}>
           <StorefrontPage />
@@ -97,13 +120,49 @@ function PortPreview(props: { adding: boolean }) {
   )
 }
 
-/** The Preview tool in one of its states. */
-export function PreviewTool(props: { state: PreviewState }) {
+/**
+ * The tool in the tools panel of the desktop (decisions 290 and 291). It
+ * has no bar: each port has its own Preview tab in the centre row, with
+ * Reload and Open in the bar of that tab. The tool lists each port, also
+ * the ports that have a tab. A click on a port shows its tab, or opens one.
+ * The row of the shown tab is the current one. The user does not end a
+ * preview: it ends by itself when the cloud computer stops (decisions 292
+ * and 294).
+ */
+function PanelPreview(props: { shown: number | null }) {
+  return (
+    <div className={styles.preview}>
+      <ServerList current={props.shown} servers={detectedServers} />
+    </div>
+  )
+}
+
+/** The servers that have no preview yet, in the order of their ports. */
+function unopened() {
+  return detectedServers.filter((server) => !openPorts.includes(server.port))
+}
+
+/**
+ * The Preview tool in one of its states. `frame` draws the page in the
+ * tool, as a phone does. Without it, the page shows in the Preview tab of
+ * its port in the centre row. On desktop, "+" and its `adding` state do not exist, so
+ * `adding` draws the open previews.
+ */
+export function PreviewTool(props: {
+  state: PreviewState
+  frame: boolean
+  /** The port of the Preview tab that shows on desktop, or null. */
+  shownPort: number | null
+}) {
+  const open = props.frame ? (
+    <PhonePreview adding={props.state === 'adding'} />
+  ) : (
+    <PanelPreview shown={props.shownPort} />
+  )
   switch (props.state) {
     case 'open':
-      return <PortPreview adding={false} />
     case 'adding':
-      return <PortPreview adding />
+      return open
     case 'detected':
       return <ServerList servers={detectedServers} />
     case 'no-servers':

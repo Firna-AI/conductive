@@ -15,6 +15,20 @@ export function pathLabel(record: {
   return record.displayPath ?? record.path
 }
 
+/**
+ * Whether the label of a record hides a secret value: its label is not its
+ * real path. The real path of such a record then leaves no screen: no copy,
+ * no mention, and no item of a menu takes it. This is the one check of the
+ * list of `@`, the row menu, and the tab menu. An entry of a moved folder
+ * keeps its old label until its update, so it hides one until then too.
+ */
+export function hidesSecret(record: {
+  path: string
+  displayPath?: string
+}): boolean {
+  return pathLabel(record) !== record.path
+}
+
 /** The name that a tab or a header shows when no record names its file. */
 export const unknownFileName = 'File'
 
@@ -37,7 +51,10 @@ function listLabel(
 
 /**
  * The label of an open page: from the reply that it read for its path, or
- * else from the lists, or null when neither names the file.
+ * else the label of its tab, as `tabLabel` gives it, or null when no record
+ * names the file. So a page whose read fails, and a page that shows again
+ * before its read answers, keep the label of the last read of a path that
+ * no list names.
  */
 export function pageLabel(
   snapshot: FilesSnapshot,
@@ -46,7 +63,7 @@ export function pageLabel(
   reply: { path: string; displayPath?: string } | null,
 ): string | null {
   if (reply && reply.path === path) return pathLabel(reply)
-  return listLabel(snapshot, path, kind)
+  return tabLabel(snapshot, path, kind)
 }
 
 /**
@@ -63,6 +80,15 @@ export function tabLabel(
   return (
     listLabel(snapshot, path, kind) ?? snapshot.readLabels.get(path) ?? null
   )
+}
+
+/**
+ * Whether the label of a tab, from `tabLabel`, hides a secret value, as
+ * `hidesSecret` says. A tab whose label is not known yet, which shows
+ * "File", counts as hiding one, so a missing label lets no value through.
+ */
+export function tabHidesSecret(path: string, label: string | null): boolean {
+  return label === null || hidesSecret({ path, displayPath: label })
 }
 
 /** The file name of a label, or the word for a file that no record names. */

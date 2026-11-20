@@ -1,20 +1,31 @@
-import type { Workspace } from '../../shared/generated/Workspace'
-import type { WorkspaceState } from '../../shared/generated/WorkspaceState'
 import type { StartStep } from '../../shared/generated/StartStep'
 import type { WorkspaceStart } from '../../shared/generated/WorkspaceStart'
 import type { ChatEvent } from '../../shared/chat-events'
 import type { WorkspaceEvent } from '../../shared/events'
-import { readGitHubSummary } from '../../shared/github-read'
+import { createWorkspaceReader } from '../../shared/workspace-read'
+import type { SecretWorkspaceEvent } from '../../shared/secret-requests'
 import type { OrderedWorkspaceResponse } from '../../shared/workspaces'
-import { count, isRecord, list, nullable, oneOf, record, text } from './json'
+import { readSecretEvent } from '../secrets/read-secret-events'
+import {
+  count,
+  isRecord,
+  list,
+  nullable,
+  oneOf,
+  record,
+  text,
+  UnreadableResponse,
+} from './json'
 import { readChatEvent, readChoice, readSender } from './read-chat'
 
 /**
- * The workspace events that the chat reads. The stream also carries file,
- * GitHub, and preview events. Those only move the stream cursor on.
+ * The workspace events that the chat reads, with the requests, the runs,
+ * and the late answers of secrets. The stream also carries file, GitHub,
+ * and preview events. Those only move the stream cursor on.
  */
 type ChatStreamEvent =
   | ChatEvent
+  | SecretWorkspaceEvent
   | Extract<
       WorkspaceEvent,
       { type: 'workspace.updated' | 'workspace.title' | 'start.updated' }
@@ -52,38 +63,16 @@ export type StreamMessage =
   | { type: 'history'; history: StoredEvents }
   | { type: 'event'; envelope: StreamEnvelope }
 
-const readState = oneOf<WorkspaceState>({
-  working: true,
-  input: true,
-  unread: true,
-  ready: true,
-  starting: true,
-  stopped: true,
-  error: true,
-  archived: true,
+const readWorkspace = createWorkspaceReader({
+  record,
+  text: (source, key) => text(source[key]),
+  count: (source, key) => count(source[key]),
+  nullableText: (source, key) => nullable(text)(source[key]),
+  nullableCount: (source, key) => nullable(count)(source[key]),
+  sender: readSender,
+  choice: readChoice,
+  invalidState: () => new UnreadableResponse('choice'),
 })
-
-function readWorkspace(value: unknown): Workspace {
-  const source = record(value, 'workspace')
-  return {
-    id: text(source.id),
-    number: count(source.number),
-    link: text(source.link),
-    orgId: text(source.orgId),
-    repositoryId: text(source.repositoryId),
-    sectionId: text(source.sectionId),
-    owner: readSender(source.owner),
-    name: nullable(text)(source.name),
-    branch: text(source.branch),
-    choice: readChoice(source.choice),
-    state: readState(source.state),
-    github: readGitHubSummary(source.github),
-    createdAt: count(source.createdAt),
-    updatedAt: count(source.updatedAt),
-    archivedAt: nullable(count)(source.archivedAt),
-    restoreUntil: nullable(count)(source.restoreUntil),
-  }
-}
 
 function readStep(value: unknown): StartStep {
   const source = record(value, 'step')
@@ -152,6 +141,10 @@ function readEvent(value: unknown): ChatStreamEvent | null {
       return { type: value.type, name: text(value.name) }
     case 'start.updated':
       return { type: value.type, start: readStart(value.start) }
+    case 'secrets.request.updated':
+    case 'secrets.run':
+    case 'secrets.notice':
+      return readSecretEvent(value)
     default:
       return readChatEvent(value)
   }

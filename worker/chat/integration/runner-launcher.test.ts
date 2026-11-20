@@ -1,6 +1,6 @@
 import { execFile } from 'node:child_process'
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
-import { join, resolve } from 'node:path'
+import { mkdir, rm, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
 import { promisify } from 'node:util'
 
 import { expect, it } from 'vitest'
@@ -9,13 +9,13 @@ import { MACHINE_PATHS } from '../../../src/shared/agent-tools'
 import { shellQuote } from '../../lifecycle/commands'
 import runnerStart from '../../../image/runner-start.sh?raw'
 import { isolatedProcessEnvironment } from '../../test-support/process-environment'
+import { testDirectory } from '../../test-support/test-directory'
 
 const execute = promisify(execFile)
 
 async function runnerLauncher() {
-  const evidence = resolve('.context/runner-launcher-test')
-  await mkdir(evidence, { recursive: true })
-  const root = await mkdtemp(join(evidence, 'case-'))
+  const files = await testDirectory('runner-launcher-')
+  const root = files.path
   const installation = join(root, 'opt/conductive')
   const secrets = join(root, 'run/ascii-secrets')
   const runtime = join(root, 'run/conductive')
@@ -99,10 +99,10 @@ process.stdout.write(JSON.stringify({
             }
           })
       },
-      dispose: () => rm(root, { recursive: true, force: true }),
+      dispose: files.remove,
     }
   } catch (error) {
-    await rm(root, { recursive: true, force: true })
+    await files.remove()
     throw error
   }
 }

@@ -48,12 +48,16 @@ Each path is relative to `src/marketing/` unless the link names another folder.
 - `access-copy.ts`: the words of the two actions of the site, and the
   sentence under the last call to action, which fits each state of
   sign-ups.
+- `pricing.ts` and `pages/pricing.astro`: the one source of the plans and
+  words of the pricing page and its mockup, and the page. Its
+  [key code](pricing-page.md#key-code) names each part.
 - `links.ts`: the source repository address, the Mac app download
   addresses, `docsPath` for the docs, site paths, the section that the
   header marks, and `pageHrefs` for links from another origin.
-- `terms.ts`, `terms-org.ts`, `privacy.ts`, `privacy-uses.ts`,
-  `privacy-recipients.ts`, and `legal-text.ts`: legal pages, the "Working
-  in an org" section of the Terms, the "What Conductive uses, and why" and
+- `terms.ts`, `terms-work.ts`, `terms-org.ts`, `privacy.ts`,
+  `privacy-uses.ts`, `privacy-recipients.ts`, and `legal-text.ts`: legal
+  pages, the "Your work" and "Working in an org" sections of the Terms,
+  the "What Conductive uses, and why" and
   "Who gets your data" sections of the Privacy page, and the shared text
   model, titles, contact addresses, and sign-in agreement.
 - `request-values.ts`: built-page markers, local Astro preview values,

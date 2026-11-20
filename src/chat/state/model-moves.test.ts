@@ -3,7 +3,7 @@ import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import { pickChatFiles } from './draft-files.test-support'
 import { readyIds } from '../../app/draft-files'
 import { fileMark } from '../../app/draft-marks'
-import { filePaths } from '../../shared/files'
+import { attachmentUploadCompletePath } from '../../shared/messages'
 import { sessionPaths } from '../../shared/sessions'
 import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
@@ -42,7 +42,11 @@ type Chat = ReturnType<typeof chatFor>
 async function attach(chat: Chat, sessionId: string, fileId: string) {
   chat.server.json(
     'POST',
-    filePaths.attachments(org, ws),
+    attachmentUploadCompletePath(
+      org,
+      { type: 'workspace', workspaceId: ws },
+      FAKE_IDS.upload,
+    ),
     {
       attachment: {
         id: fileId,
@@ -106,26 +110,69 @@ async function pickThatWaits() {
 }
 
 describe('a model change that opens a session', () => {
-  it('keeps a file tab selected when a model reply moves the last shown session draft', async () => {
+  it('sends the new speed and session ID when fast changes after an unanswered move', async () => {
+    const fast: AgentChoice = { ...codex, fast: true }
+    const chat = chatFor({
+      conversation: 'history',
+      answer: async (request) => {
+        if (!isModel(request)) return null
+        throw new Error('The connection dropped.')
+      },
+    })
+    await chat.controller.start()
+    chat.controller.setDraft(id, 'Check the postcode rules.')
+    await chat.controller.chooseModel(id, codex)
+    await chat.controller.chooseModel(id, fast)
+
+    expect(await chat.bodies('PUT', sessionPaths.model(org, ws, id))).toEqual([
+      {
+        choice: codex,
+        draft: { text: 'Check the postcode rules.', attachmentIds: [] },
+        newSessionId: created,
+      },
+      {
+        choice: fast,
+        draft: { text: 'Check the postcode rules.', attachmentIds: [] },
+        newSessionId: 'client-2',
+      },
+    ])
+  })
+
+  it.each<WorkspaceTab>([
+    { kind: 'file', path: 'src/checkout.ts', mode: 'source' },
+    { kind: 'preview', port: 3000 },
+  ])(
+    'keeps a $kind tab selected when a model reply moves the last shown session draft',
+    async (tab) => {
+      const { chat, reply } = await pickThatWaits()
+      chat.controller.updateView((view) => ({
+        ...view,
+        tabs: [...view.tabs, tab],
+        activeTab: tab,
+      }))
+      const selectedView = chat.controller.getSnapshot().view
+      await reply()
+      const snapshot = chat.controller.getSnapshot()
+      expect(snapshot.view).toEqual(withCreatedPlace(selectedView))
+      expect(snapshot.activeSessionId).toBe(id)
+      expect(chat.draftOf(created)?.text).toBe(keptText)
+      expect(chat.draftOf(id)?.text).toBe('')
+      expect(chat.histories(created)).toBe(0)
+    },
+  )
+
+  it('selects the new session when a model reply moves the draft in a view with no active tab', async () => {
     const { chat, reply } = await pickThatWaits()
-    const file: WorkspaceTab = {
-      kind: 'file',
-      path: 'src/checkout.ts',
-      mode: 'source',
-    }
-    chat.controller.updateView((view) => ({
-      ...view,
-      tabs: [...view.tabs, file],
-      activeTab: file,
-    }))
-    const selectedView = chat.controller.getSnapshot().view
+    chat.controller.updateView((view) => ({ ...view, activeTab: null }))
     await reply()
     const snapshot = chat.controller.getSnapshot()
-    expect(snapshot.view).toEqual(withCreatedPlace(selectedView))
-    expect(snapshot.activeSessionId).toBe(id)
+    expect(snapshot.view?.activeTab).toEqual({
+      kind: 'session',
+      sessionId: created,
+    })
+    expect(snapshot.activeSessionId).toBe(created)
     expect(chat.draftOf(created)?.text).toBe(keptText)
     expect(chat.draftOf(id)?.text).toBe('')
-    expect(chat.histories(created)).toBe(0)
   })
 
   it.each(['reply', 'stream'] as const)(

@@ -12,6 +12,7 @@ import { authorizeContinue } from './continue-data'
 import type { ContinueJob, ContinueOptions } from './continue-types'
 import { publishContinue } from './continue-publication'
 import { continueBase } from './continue-base'
+import { workspaceAutoStopSeconds } from './idle-stop'
 
 export interface ContinueProgress {
   scope: string | null
@@ -166,7 +167,10 @@ async function advanceContinueCommand(
     const recoverOnly = job.commandStarted
     if (!recoverOnly) {
       await options.run(() => authorizeContinue(options, job))
-      await provider.setAutoStop(job.sandboxId, 1_800)
+      await provider.setAutoStop(
+        job.sandboxId,
+        await workspaceAutoStopSeconds(options.env.DB),
+      )
       await options.run(() => authorizeContinue(options, job))
       job.commandStarted = true
       await progress.save(job)

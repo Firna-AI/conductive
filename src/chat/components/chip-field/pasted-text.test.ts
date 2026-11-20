@@ -13,6 +13,7 @@ function held(...names: string[]): DraftFile[] {
     id: `draft-${index}`,
     file: new File(['x'], name),
     sentBytes: null,
+    upload: null,
   }))
 }
 

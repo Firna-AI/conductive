@@ -50,3 +50,32 @@ export const portFormCopy = {
   otherPort: 'Other port',
   open: 'Open preview',
 } as const
+
+/**
+ * The words of the page that shows while a preview opens, in a frame or in
+ * a browser tab. The server sends this page, so it reads the same words.
+ */
+export const previewOpeningCopy = {
+  opening: 'Opening preview',
+  failedTitle: 'Preview not available',
+  failedBody: 'Open it again from the workspace.',
+} as const
+
+/**
+ * The words of a preview that the app could not open, in a Preview tab and
+ * in the tab of an HTML file. The message of the server shows under the
+ * title.
+ */
+export const previewOpenFailedCopy = {
+  title: "The preview couldn't open",
+  retry: 'Try again',
+} as const
+
+/**
+ * The words of Expand, which shows the page of a Preview tab or of an HTML
+ * file in a large window over the whole app, and of the window itself.
+ */
+export const expandedPreviewCopy = {
+  expand: 'Expand',
+  close: 'Close',
+} as const

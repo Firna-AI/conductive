@@ -109,6 +109,12 @@ describe('messages after Stop', () => {
         const continuation = messageCommands(runner, beforeId)[1]
         if (continuation?.type !== 'turn')
           throw new Error('The unanswered message did not get a turn.')
+        expect(
+          await fixture.chat.store.read(
+            WORKSPACE_ID,
+            async (view) => (await view.turn(continuation.turnId))?.stopRequest,
+          ),
+        ).toBeNull()
         runner.emit(terminalEvent(continuation, 'finished'))
         await fixture.drain()
       }

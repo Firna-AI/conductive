@@ -1,4 +1,5 @@
 import type { Session } from '../../src/shared/generated/Session'
+import { sameChoice } from '../../src/shared/agents'
 import type { ChangeModelResponse } from '../../src/shared/sessions'
 import type { User } from '../../src/shared/api'
 import { HttpError } from '../http'
@@ -26,6 +27,10 @@ export async function changeModel(
   const otherAgent = next.agent !== session.choice.agent
   if (!otherAgent || !(await transaction.newestTurn(session.id))) {
     session.choice = next
+    if (otherAgent) {
+      delete session.login
+      delete session.defaultLogin
+    }
     if (otherAgent && session.startedBy)
       Object.assign(
         session,
@@ -60,10 +65,10 @@ export async function changeModel(
       !original ||
       original.sourceSessionId !== creation.sourceSessionId ||
       original.requestedById !== user.id ||
-      original.choice.agent !== next.agent ||
-      original.choice.model !== next.model ||
-      original.choice.effort !== next.effort ||
-      (original.choice.fast ?? false) !== next.fast ||
+      !sameChoice(
+        { ...original.choice, fast: original.choice.fast ?? false },
+        next,
+      ) ||
       original.draft.text !== savedDraft.text ||
       JSON.stringify(original.draft.attachmentIds) !==
         JSON.stringify(savedDraft.attachmentIds)

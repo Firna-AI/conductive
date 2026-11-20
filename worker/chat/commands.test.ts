@@ -5,6 +5,7 @@ import type {
   SessionsResponse,
 } from '../../src/shared/sessions'
 import { sessionPaths, sessionsPath } from '../../src/shared/sessions'
+import type { WorkspaceToRunner } from '../../src/shared/generated/WorkspaceToRunner'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import {
   CLAUDE,
@@ -22,6 +23,52 @@ describe('workspace chat commands', () => {
   })
   afterAll(async () => {
     await harness.dispose()
+  })
+  it('redelivers a command sent before an unread disconnect exactly once on the next connection', async () => {
+    const fixture = await createChatFixture(harness)
+    const session = await fixture.createSession()
+    const runner = await fixture.connect()
+    runner.emit({ type: 'runner.ready' })
+    await fixture.drain()
+    await fixture.setSendRule({ type: 'turn', drop: true })
+    const sent: WorkspaceToRunner[] = []
+    fixture.observeOutgoing((command) => sent.push(command))
+    await fixture.send(session.id, 'during-swap')
+    expect(runner.commands).toEqual([])
+    expect(sent).toMatchObject([
+      { type: 'turn', sessionId: session.id, message: { id: 'during-swap' } },
+    ])
+    const command = sent[0]
+    if (command?.type !== 'turn') throw new Error('Expected a sent turn.')
+    await fixture.disconnect(runner)
+    await fixture.setSendRule(null)
+    const replacement = await fixture.connect(runner)
+    replacement.emit({ type: 'runner.ready' })
+    await fixture.drain()
+    expect(replacement.commands).toMatchObject([
+      {
+        type: 'turn',
+        commandId: command.commandId,
+        turnId: command.turnId,
+        message: { id: 'during-swap' },
+      },
+    ])
+    replacement.emit({ type: 'runner.ready' })
+    await fixture.drain()
+    expect(replacement.commands).toHaveLength(1)
+    expect(
+      (await fixture.history(session.id)).events
+        .map(({ event }) => event)
+        .filter((event) => event.type === 'message.sent'),
+    ).toEqual([
+      {
+        type: 'message.sent',
+        sessionId: session.id,
+        turnId: command.turnId,
+        messageId: 'during-swap',
+      },
+    ])
+    await fixture.disconnect(replacement)
   })
   it('keeps same-agent model changes and moves the unchanged draft from a session with a message to a new agent session', async () => {
     const ids = ['z-session', 'model-command']
@@ -46,7 +93,7 @@ describe('workspace chat commands', () => {
     )
     const same: ChangeModelResponse = await sameResponse.json()
     expect(same).toEqual({
-      eventNumber: 2,
+      eventNumber: 3,
       session: { ...session, choice: nextChoice },
       created: false,
       draft,
@@ -145,6 +192,8 @@ describe('workspace chat commands', () => {
     expect(closed.history).toEqual([
       {
         ...session,
+        defaultLogin: undefined,
+        login: { type: 'personal', userId: fixture.owner.id },
         title: 'Check this code',
         activeTurnId: null,
         closedAt: 1_800_000_000_000,
@@ -174,7 +223,7 @@ describe('workspace chat commands', () => {
       { turnId: continued.turnId },
     )
     expect(await stopped.json()).toEqual({
-      eventNumber: 12,
+      eventNumber: 13,
       turnId: continued.turnId,
       state: 'stopping',
     })

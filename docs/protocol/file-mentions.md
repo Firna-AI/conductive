@@ -2,14 +2,24 @@
 
 This doc holds the requirements and the decisions in force for the list
 of `@` in the composer of a workspace chat, the chips of the files and
-folders that it puts into a message, the mentions and the sent chips of
-attached files, and the removal of each chip of the composer. The terms
-are those of the [architecture doc](../architecture.md#terms). A decision
-number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says. The
+folders that it puts into a message, Add to chat, the mentions and the
+sent chips of attached files, and the removal of each chip of the
+composer. Its linked page
+[File mentions: files in answers](file-mentions-answers.md) holds the
+file chips, the file links, and the pictures in the answers of the
+agents. The terms are those of the
+[architecture doc](../architecture.md#terms). A decision number names a
+dated record, as [Decision numbers](../architecture.md#decision-numbers)
+says. A file row menu decision number names a decision of the change that
+adds the menu of the rows of All files and Changes, as
+[File row menu](file-row-menu.md) says. An answer chip decision number
+names a decision of the change that added file chips to answers. The
 [mockup catalogue](../mockups/catalogue.md) draws these screens at
-`app/file-mentions`, at `app/attachments/sent`, and in the flow
-`user-flows/mention-a-file`.
+`app/file-mentions`, at `app/attachments/sent`, at
+`app/files/menu/added`, and in the flow `user-flows/mention-a-file`.
+[Skill mentions](skill-mentions.md) states the list of `/` and the skill
+chips. That list opens in the place of this list, and it shares the keys
+and the highlight of [The list](#the-list).
 
 ## The list
 
@@ -78,13 +88,64 @@ number names a dated record, as
 - A sent message shows a chip for each mention that names an entry of the
   tree, and for each mention of one of its attached files. Every other
   mention stays text. A mention in inline code or in a code block stays
-  code.
-- The answers of the agents keep their text. Reason: only the composer
-  writes mentions.
+  code. Inline code in a message of a member stays code.
+- The answers of the agents show file chips too, as
+  [Files in answers](file-mentions-answers.md#files-in-answers) says.
 - A copy of a chip gives its mention. A paste of a mention gives a chip
   when the mention names an entry of the tree.
+- A copy of chat text with a chip is the browser's own copy (answer chip
+  decision 3). It keeps the formatted text, such as bold, code, lists, and
+  tables, for a paste into a rich editor. Each chip gives its text in the
+  plain text and in the formatted text. A selection that starts or ends
+  inside a chip takes the whole chip.
+- Reason: answers hold chips often, and a copy built by the app gave plain
+  text only. A formatted copy built by the app was rejected, because it
+  drifts from what the browser copies.
+- The copy is checked in Chrome. Firefox and Safari are not checked.
 - A draft keeps the mention of each chip. When a draft comes back, its
   mentions show as chips again.
+
+## Add to chat
+
+- Add to chat in the [row menu](file-row-menu.md) of a row of All files or
+  Changes puts the chip of the file or the folder of that row into a
+  message field. [Add to chat](file-row-menu.md#add-to-chat) of the row
+  menu states which rows offer it.
+- The chip goes into the message field of the session that the member saw
+  last (file row menu decision 4 A). The app first shows the tab of that
+  session. On a phone, it switches to the chat of that session.
+- When the workspace has no open session tab, Add to chat starts a new
+  session, as + does. The chip then goes into the message field of that
+  session.
+- The chip is the same as after a pick of its entry from the list. It goes
+  to the caret of the field, with a space after it. When the field has no
+  caret, such as when its session did not show, the chip goes to the end
+  of the text.
+- On desktop, the field then takes the focus, and the caret stands after
+  the chip. On a phone, the field does not take the focus, so no keyboard
+  opens by itself.
+- When the field shows only later, such as after a new session starts, it
+  takes the focus unless the focus moved to another element before then.
+  Reason: the message box never takes the focus from a later choice of the
+  member, as [Sections](orgs-and-members.md#sections) says for a press on
+  a workspace row.
+- Reason: one press puts the chip where the member writes next, and the
+  member sees it at once. The agent actions of the pull request bar send
+  to the same session, as
+  [Messages from the bar](messages-and-attachments.md#messages-from-the-bar)
+  says.
+- A new session for each Add to chat, a submenu of the open sessions, and
+  an item only while a session tab shows were not chosen. A message field
+  that stays below each file tab, and a drag of a row onto the field, were
+  not chosen either.
+- A mention at the end of the draft, with a toast and no change of the
+  view, was not chosen, because the member would not see the chip at once.
+  A write into the draft while its field does not show was not chosen
+  either. So no row offers Add to chat while a bar of the cloud computer
+  takes the place of the message field, as
+  [Add to chat](file-row-menu.md#add-to-chat) says.
+- A chip in each open message field was rejected, because a member writes
+  one message at a time.
 
 ## The text of a mention
 
@@ -97,7 +158,21 @@ number names a dated record, as
   [The send](message-attachments.md#the-send) states where the composer
   writes it.
 - A mention starts at the start of the text, or after a space or a line
-  break.
+  break. Where the chat reads Markdown marks, as in an answer, a mention
+  can also start right after a `*`, `_`, or `~~`, such as in
+  `**@src/app.ts**` or `_@src/app.ts_` (answer chip decision 5).
+- Reason: agents often write a file name in bold. A start after any
+  character was rejected, because `a@b.com` would then start a mention.
+- A mention of a file can end with a line target, such as
+  `@src/app.ts:42`, as [Line targets](file-mentions-answers.md#line-targets)
+  says.
+- When a mention names no entry, and its last character is `.`, `,`, `;`,
+  `:`, `!`, `?`, or `)`, the chat drops that one character and reads the
+  mention again. The character then shows as text after the chip. Reason:
+  agents end sentences right after a mention, as in "See @src/app.ts."
+- Where the chat reads Markdown marks, a mention ends before the next `*`
+  or `~~`, and before a `_` that closes a mark. So bold, emphasis, and
+  strikethrough around a mention keep their look.
 - The draft, the sent message, and the text that the agent gets hold the
   same mention of a file or a folder. For an attached file, Send writes
   the mention at the place of its chip, because the path comes only with
@@ -124,9 +199,8 @@ number names a dated record, as
 - A press on the chip opens the file tab of the copy, as a press on a file
   chip opens its file (decision 264 B). The press can resume a stopped
   cloud computer, as the open of each file does.
-- All files does not list the copy. So the tab shows "File" until the read
-  of the copy gives its safe name, as for each path that All files does not
-  list.
+- All files lists the copy, as it lists every file of the
+  [context folder](repository-folders.md#the-context-folder).
 - Reason: the member sees the file again in the file tab, as each other
   file of the workspace. A chip that opens nothing was rejected, because
   the member then cannot see the file after Send. A read of the file from
@@ -143,11 +217,17 @@ number names a dated record, as
   each other file.
 - A copy of the chip gives its mention, as for a file chip.
 
+## Files in answers
+
+[File mentions: files in answers](file-mentions-answers.md) states the
+file chips, the file links, and the pictures in the answers of the
+agents, and their line targets.
+
 ## Remove a chip of the composer
 
 - Each chip of the composer shows its icon in a cell at its start
   (decision 215). This holds for each chip of the message field: a file
-  chip, a workspace chip, and the chip of an attached file.
+  chip, a workspace chip, a skill chip, and the chip of an attached file.
 - While a pointer is over the cell, a × takes the place of the icon. A
   press on the × removes the chip. The removal is one step of undo.
 - A keyboard removes a chip with Backspace or Delete, so the cell takes no

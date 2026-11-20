@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { operatorOverviewPath } from '../../src/shared/operator'
+import { WORKSPACE_RESTORE_MS } from '../../src/shared/workspaces'
 import {
   createHarness,
   TEST_TIME,
@@ -47,8 +48,15 @@ it('returns zero counts and thirty empty UTC days before any org exists', async 
     orgs: { total: 0, lastWeek: 0 },
     workspaces: { total: 0, lastWeek: 0 },
     running: { workspaces: 0, builds: 0 },
-    workspaceStates: { running: 0, stopped: 0, failed: 0, archived: 0 },
+    workspaceStates: {
+      running: 0,
+      stopped: 0,
+      failed: 0,
+      archived: 0,
+      removed: 0,
+    },
     largestOrgs: [],
+    longRuns: [],
   })
   expect(result.newWorkspacesByDay).toHaveLength(30)
   expect(result.newUsersByDay).toHaveLength(30)
@@ -78,13 +86,23 @@ it('counts each workspace state and unfinished builds across existing and delete
       state,
       ...(state === 'archived' ? { archivedAt: TEST_TIME } : {}),
     })
-  for (const state of ['ready', 'stopped', 'error'] as const)
+  for (const [state, boundaryOffset, sandboxId] of [
+    ['ready', 1, undefined],
+    ['stopped', 0, 'kept-disk'],
+    ['error', -1, undefined],
+  ] as const)
     await seedWorkspace(harness, {
       id: `archived-${state}`,
       orgId: 'active',
       state,
-      archivedAt: 0,
+      archivedAt: TEST_TIME - WORKSPACE_RESTORE_MS + boundaryOffset,
+      sandboxId,
     })
+  await seedWorkspace(harness, {
+    id: 'archived-without-time',
+    orgId: 'active',
+    state: 'archived',
+  })
   await seedWorkspace(harness, { id: 'deleted-ready', orgId: 'deleted' })
   await seedBuild(harness, {
     id: 'build',
@@ -115,18 +133,20 @@ it('counts each workspace state and unfinished builds across existing and delete
   })
   const result = await overview(harness, cookie)
   expect(result.orgs).toEqual({ total: 2, lastWeek: 2 })
-  expect(result.workspaces).toEqual({ total: 12, lastWeek: 12 })
+  expect(result.workspaces).toEqual({ total: 13, lastWeek: 13 })
   expect(result.running).toEqual({ workspaces: 6, builds: 2 })
   expect(result.workspaceStates).toEqual({
     running: 6,
     stopped: 1,
     failed: 1,
-    archived: 4,
+    archived: 5,
+    removed: 2,
   })
-  expect(
-    Object.values(result.workspaceStates).reduce(
-      (sum, count) => sum + count,
-      0,
-    ),
-  ).toBe(result.workspaces.total)
+  // An older app reads only the first four states. They still add up to the
+  // total, because `archived` holds the removed workspaces too.
+  const { removed, ...olderStates } = result.workspaceStates
+  expect({
+    removed,
+    olderTotal: Object.values(olderStates).reduce((sum, n) => sum + n, 0),
+  }).toEqual({ removed: 2, olderTotal: result.workspaces.total })
 })

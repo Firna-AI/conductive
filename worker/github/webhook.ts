@@ -8,7 +8,18 @@ import {
   recordDelivery,
   repositoryWorkspaces,
 } from './data'
-import { webhookRoute, type GitHubPullRequestEvent } from './webhook-routing'
+import {
+  handleRepositoryChange,
+  repositoryChange,
+  type RepositoryChangeDependencies,
+} from './repository-change'
+import { recordBranchMerge } from './merge-record-data'
+import { checkRepositoryValues } from './repository-values-check'
+import {
+  webhookRepository,
+  webhookRoute,
+  type GitHubPullRequestEvent,
+} from './webhook-routing'
 
 export const GITHUB_WEBHOOK_BODY_BYTES = 26 * 1024 * 1024
 
@@ -30,6 +41,8 @@ export interface GitHubWebhookDependencies {
     installationId: number,
     branch: string,
   ) => Promise<void>
+  /** Without it, the handler ignores repository changes. */
+  repositoryChange?: RepositoryChangeDependencies
 }
 
 async function authenticatedBody(
@@ -116,6 +129,28 @@ export async function handleGitHubWebhook(
         'The GitHub webhook is not valid.',
       )
     }
+    const change = repositoryChange(event, value)
+    if (change) {
+      await handleRepositoryChange(
+        env.DB,
+        change,
+        deliveryId,
+        dependencies.now,
+        dependencies.repositoryChange,
+      )
+      return new Response(null, { status: 204 })
+    }
+    // The pull request runs, the workspace lookup, and the push refresh below
+    // match saved rows by the install of the event. So the repair of a missed
+    // move or rename runs before branch routing, including ignored events.
+    const repository = webhookRepository(event, value)
+    if (repository)
+      await checkRepositoryValues(
+        env.DB,
+        repository,
+        value,
+        dependencies.repositoryChange,
+      )
     const route = webhookRoute(event, value)
     if (route === null || (await isProcessed(env.DB, deliveryId)))
       return new Response(null, { status: 204 })
@@ -126,6 +161,25 @@ export async function handleGitHubWebhook(
         await dependencies.pullRequest?.(route.pullRequest, deliveryId)
     } catch (error) {
       pullRequestFailure = { error }
+    }
+    // An archived workspace gets no refresh, so the event records the merge.
+    let mergeFailure: { error: unknown } | undefined
+    const merged = route.pullRequest
+    try {
+      if (merged?.trigger.event === 'merged')
+        await recordBranchMerge(
+          env.DB,
+          {
+            repositoryId: merged.repositoryId,
+            installationId: merged.installationId,
+            number: merged.trigger.number,
+            branch: merged.trigger.headBranch,
+            mergedAt: merged.mergedAt ?? dependencies.now(),
+          },
+          dependencies.now(),
+        )
+    } catch (error) {
+      mergeFailure = { error }
     }
     const workspaces = await repositoryWorkspaces(
       env.DB,
@@ -162,10 +216,11 @@ export async function handleGitHubWebhook(
         route.branch,
       )
     if (pullRequestFailure) throw pullRequestFailure.error
+    if (mergeFailure) throw mergeFailure.error
     if (failure) throw failure.error
     await completeDelivery(env.DB, deliveryId, dependencies.now())
     return new Response(null, { status: 204 })
   } catch (error) {
-    return privateResponse(errorResponse(error))
+    return privateResponse(errorResponse(error, request))
   }
 }

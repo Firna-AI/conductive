@@ -18,6 +18,7 @@ use crate::body::RelayBody;
 use crate::connect::Connector;
 use crate::error::{ErrorResultExt, Result};
 use crate::headers;
+use crate::ingress::Ingress;
 
 /// Preview request boundary shared by each accepted connection.
 #[cfg_attr(test, unimock::unimock(api = ProxyMock))]
@@ -31,12 +32,15 @@ pub trait Proxy: Send + Sync {
 pub struct RelayProxy {
     /// Only this boundary can choose the destination address.
     pub connector: Arc<dyn Connector>,
+    /// Current protected provider identity and private ingress aliases.
+    pub ingress: Arc<dyn Ingress>,
 }
 
 #[async_trait]
 impl Proxy for RelayProxy {
     async fn request(&self, request: Request<Incoming>, relay_port: u16) -> Response<RelayBody> {
-        let port = match headers::target(request.headers(), relay_port) {
+        let ingress = self.ingress.read().await;
+        let port = match headers::target(request.headers(), relay_port, &ingress) {
             Ok(port) => port,
             Err(status) => return failure(status),
         };
@@ -84,6 +88,8 @@ impl RelayProxy {
         }));
         let mut response = sender.send_request(request).await.internal()?;
         let mut filtered = headers::response(response.headers());
+        let refused_upgrade =
+            downstream.is_some() && response.status() != StatusCode::SWITCHING_PROTOCOLS;
         if response.status() == StatusCode::SWITCHING_PROTOCOLS
             && let Some(downstream) = downstream
         {
@@ -109,7 +115,9 @@ impl RelayProxy {
             *answer.headers_mut() = filtered;
             return Ok(answer);
         }
-        filtered.insert(CONNECTION, HeaderValue::from_static("close"));
+        if refused_upgrade {
+            filtered.insert(CONNECTION, HeaderValue::from_static("close"));
+        }
         let (mut parts, incoming) = response.into_parts();
         parts.headers = filtered;
         Ok(Response::from_parts(

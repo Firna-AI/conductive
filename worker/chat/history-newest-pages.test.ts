@@ -69,26 +69,22 @@ it('moves each earlier page back exclusively past other sessions and workspace e
   ])
   const limits = { scan: 3, bytes: Infinity }
   const first = await read(limits, 10)
-  const second = await read(limits, 10, first.nextBeforeEventNumber)
-  const third = await read(limits, 10, second.nextBeforeEventNumber)
-  const last = await read(limits, 10, third.nextBeforeEventNumber)
+  const last = await read(limits, 10, first.nextBeforeEventNumber)
   expect(
-    [first, second, third, last].map((page) => ({
+    [first, last].map((page) => ({
       numbers: page.events.map(({ eventNumber }) => eventNumber),
       cursor: page.nextBeforeEventNumber ?? null,
       through: page.throughEventNumber,
     })),
   ).toEqual([
-    { numbers: [10], cursor: 8, through: 10 },
-    { numbers: [7], cursor: 5, through: 10 },
-    { numbers: [4], cursor: 2, through: 10 },
+    { numbers: [4, 7, 10], cursor: 4, through: 10 },
     { numbers: [1], cursor: null, through: 10 },
   ])
   expect(last).not.toHaveProperty('hasMore')
   expect(last).not.toHaveProperty('nextAfterEventNumber')
 })
 
-it('bounds scans and moves an empty page back to the oldest session event', async () => {
+it('reaches the oldest session event without pages of unrelated workspace events', async () => {
   const read = await pagesOf([
     answer('oldest'),
     ...Array.from({ length: 6 }, (_, index): WorkspaceEvent => ({
@@ -97,21 +93,13 @@ it('bounds scans and moves an empty page back to the oldest session event', asyn
     })),
   ])
   const limits = { scan: 3, bytes: 1_000 }
-  expect(await read(limits, 7)).toEqual({
-    throughEventNumber: 7,
-    events: [],
-    hasMore: true,
-    nextBeforeEventNumber: 5,
-  })
-  expect(await read(limits, 7, 5)).toEqual({
-    throughEventNumber: 7,
-    events: [],
-    hasMore: true,
-    nextBeforeEventNumber: 2,
-  })
-  const last = await read(limits, 7, 2)
+  const last = await read(limits, 7)
   expect(last.events.map(({ eventNumber }) => eventNumber)).toEqual([1])
   expect(last).not.toHaveProperty('hasMore')
+  expect(await read(limits, 7, 1)).toEqual({
+    throughEventNumber: 7,
+    events: [],
+  })
 })
 
 it('ends at the oldest stored session event when compaction removed an earlier key', async () => {

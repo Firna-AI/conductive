@@ -18,7 +18,8 @@ that keeps a turn open for background work, as
 - [Agents](agents-and-sessions.md#agents) says which agents the app
   offers, where they run, and whose agent login each session uses.
 - [Agent instructions](agent-instructions.md) states the text that each
-  session gets apart from the messages, and the sender line of each
+  session gets apart from the messages.
+  [Message lines](message-lines.md) states the sender line of each
   message.
 
 ## Names in the product
@@ -43,7 +44,7 @@ that keeps a turn open for background work, as
 
 ## Messages
 
-[Messages and attachments](messages-and-attachments.md) holds the composer, turns, retries, titles, and attached files.
+[Messages and attachments](messages-and-attachments.md) holds the composer, turns, retries, and attached files.
 
 ### Messages from the bar
 
@@ -93,7 +94,7 @@ holds how an agent action of the pull request bar sends its fixed prompt.
   `app/chat/background-limit`.
 - The line names no length of the limit. Reason: the member cannot change
   the limit.
-- A toast at the limit was rejected, because a routine run has no open tab.
+- A toast at the limit was rejected, because an automation run has no open tab.
 - When the runner cannot tell which files a turn changed, its end shows
   "Changed files unavailable" in place of the files (decision 109). The
   turn still shows as finished or stopped, not as failed.
@@ -113,6 +114,10 @@ holds how an agent action of the pull request bar sends its fixed prompt.
 - After [Continue](continue.md), each session shows one note at its place,
   with the member who pressed Continue, the new branch, and its base. To
   that member it says "You". The note reaches no agent.
+- After a [repository change](repository-change.md), each session shows
+  one note at its place, with the member who changed the repository, the
+  new repository, and the new branch. To that member it says "You". The
+  note reaches no agent.
 - The chat hides the messages that the SDK adds on its own, such as
   "[Request interrupted by user]".
 - Each result of the agent shows with the messages that it answers. One
@@ -171,8 +176,13 @@ holds how an agent action of the pull request bar sends its fixed prompt.
 - The work of a turn is its agent messages and its tool calls. The results
   of its [Mac commands](agent-tools.md#mac-commands) and the lines of its
   refused events are part of that work, at their place (decision 151).
+  So are the results of its
+  [runs with secrets](secret-requests.md#what-the-chat-shows).
 - Reason: the turn stays as short as in Conductor. A command result or a
   line of a refused event that stays in view between two folds was rejected.
+- A late secret request is not part of that work, and it never folds.
+  Reason: it still waits for a member, as
+  [Late requests](secret-requests.md#late-requests) says.
 - A message that a member sends during a turn stays in view. It starts a
   new part of the turn, with its own answer and its own fold.
 - The answer of a part is its last agent message, with the agent messages

@@ -15,6 +15,13 @@ Each path is relative to `src/app/`, the folder of this page.
 - `dev/org-routes.ts` creates orgs and starts their first simulated build.
   `dev/build-routes.ts` runs builds and the added build after the first image.
   `dev/settings-routes.ts` saves settings and repository choices.
+  `dev/provider-routes.ts` keeps the provider accounts and their weights,
+  and gives a new org its account. `dev/operator-orgs.ts` lists the samples
+  and the orgs that Create org made for the operator section.
+- `dev/seed.ts`: the state of the dev fake when the app opens.
+  `dev/acme-seed.ts`: Acme with its recorded records, and its
+  sub-workspaces with `?subWorkspaces=1`. `dev/workspace-writes.ts`:
+  Rename, the move of a tree, Archive, and Restore of one workspace.
 - `dev/waitlist-routes.ts`: the waitlist of the person signed in, and
   `admitOpenSignup`, which gives app access during open sign-up before each
   request. `dev/signup-routes.ts`: the pause and the waitlist switch of
@@ -31,9 +38,10 @@ Each path is relative to `src/app/`, the folder of this page.
   the chat API, and the file client.
 - `api/client.ts`: the JSON client and `ApiError`. The client also gives
   its `fetch`, for a feature client that reads its own replies, so the web
-  app and the Mac app keep their transport. Its `sendFile` sends a raw file
-  through the file transport of the services: `api/xhr-files.ts` in the
-  browser and in the Mac app. `api/read-*.ts`: the readers.
+  app and the Mac app keep their transport. Its `sendPart` sends a raw part
+  of a file with `PUT` through the file transport of the services:
+  `api/xhr-files.ts` in the browser and in the Mac app.
+  `api/read-*.ts`: the readers.
   [api/read-shortcuts.ts](api/read-shortcuts.ts) reads both shortcut keyboards and
   the reply of a shortcut save with the shared reply readers. A malformed
   account structure remains an `invalid_response` error from the API
@@ -59,9 +67,17 @@ Each path is relative to `src/app/`, the folder of this page.
   with one error code, also the replies of its fetch.
 - `org-list.ts`: `OrgList`, the orgs of the person in their own order, as
   `AppModel.orgs` gives them: the list that the server confirmed, then the
-  moves that wait for their answer.
-- `org-writes.ts`: the requests of `AppModel.createOrg` and
-  `AppModel.renameOrg`, each of which reads the org record from its answer.
+  moves that wait for their answer. `OrgList.patch` takes from the answer
+  of a partial save only the fields of its request, as
+  [Data lifecycle](data-lifecycle.md) says.
+- [send-queue.ts](send-queue.ts): `SendQueue`, whose `run` sends the moves
+  of one `OrgList`, or the writes and saves of one `Resource`, one at a
+  time. Each request goes out after the answer of the one before.
+- `org-writes.ts`: the requests of `AppModel.createOrg`,
+  `AppModel.renameOrg`, and `AppModel.setOrgColor`, which read the org record.
+  `saveOrgPatch` sends the partial save that `renameOrg` and `setOrgColor`
+  share, and gives its answer and its request to `OrgList.patch`.
+  `putOrgOrder` saves the user's org order for `AppModel.moveOrg`.
 - `waitlist-model.ts`: `WaitlistModel`, the screen of a person who waits:
   the use of a code from the field or a join link, the invitations with
   Accept, and the read of the app access at each return to the page.
@@ -82,36 +98,45 @@ Each path is relative to `src/app/`, the folder of this page.
   `api/read-invitations.ts`: their readers.
 - `get-started.ts`: the order and the states of the steps of Get started.
   `setup-steps.ts`: `setupSteps`, the steps that the screens show, and
-  `setupOrg`, the org of Get started and of the address `/`.
+  `setupOrg`, the org of Get started and of the address `/`. The agent
+  step is complete with an own login or an org login that serves.
 - [getStartedCopy.ts](../../docs/mockups/src/screens/getStartedCopy.ts): the
   setup text that the app and mockups share.
 - `org-model.ts`: the sections, workspaces, repositories, builds, members,
-  routines, and computer settings of one org, with `watch`. `org-waits.ts`
-  gives the wait of each part, such as `workspacesWait`.
-  `OrgModel.startBuild` sends Build computer and Try again for each screen
-  that offers them.
+  automations, computer settings, and org logins of one org, with `watch`.
+  `org-resources.ts` gives the read of each part, and `org-waits.ts` its
+  wait, such as `workspacesWait`. `OrgModel.startBuild` sends Build
+  computer and Try again for each screen that offers them.
+- `org-agent-logins.ts`: `OrgAgentLogins`, the org logins of one org with
+  the save, the switch, Remove, and Refresh of an admin. Each save, switch
+  change, remove, and Refresh calls `changed`, which reads the default
+  logins of the account again, as [Login data](login-data.md#rules) says.
+  `api/read-org-logins.ts` reads them. `../shell/settings/AgentsTab.tsx`,
+  `OrgLoginList.tsx`, and `EveryMemberSetting.tsx` draw the Agents tab.
+- `secrets-model.ts`: `SecretsModel`, the secrets of one org with their
+  create, Replace, delete, mark for all agents, and reveal.
+  `api/read-secrets.ts` reads them and the capabilities of a workspace,
+  and keeps no value from a reply of the list.
+- `capabilities-model.ts`: `WorkspaceCapabilitiesModel`, the pre-approved
+  secrets, the approvals of the sessions, the values for the workspace, and
+  Mac access of one workspace, with their changes. It reads the values from
+  the list of the secret requests, and removes one with its route.
+- `new-workspace-draft.ts`: `Draft`, with the Capabilities choices of New
+  workspace, and the pure rules of a draft that `new-workspace-model.ts`
+  applies. Each draft starts from `NEW_WORKSPACE_CAPABILITIES` in
+  [`../shared/secrets.ts`](../shared/secrets.ts).
+- `permissions.ts`: `secretRights` and `mayAddSecret`, the rights of the
+  Secrets tab, beside the other rights of an org.
 - `first-build.ts`: `firstBuildOf` and `useFirstBuild`, the state of the
   first build of an org from its builds, which Get started and New
   workspace show until the org has a good image. `changedScriptNotice`
   gives the words of the notice of a changed install script, which the
   Cloud computer tab of an admin and of a member show.
-- `api/read-routines.ts`: the readers of the routines, each with its newest run, and of one routine. `api/read-routine-runs.ts`: the readers of the runs.
-- `routine-model.ts`: `RoutineModel`, one routine with its reads, its
-  saves, and its runs, and `routineModel`, the model that the org keeps for
-  each routine. Its `client` sends the other requests of the routine page,
-  and a `routine_not_found` from any of them reads the routine again.
-  `routine-actions.ts`: create, update, Turn off, Delete, and Run now,
-  which also update the Routines list.
-- `routine-runs.ts`: `RoutineRuns`, the Runs list of one routine: the
-  pages that it shows, which each read gets again from the newest run
-  while the page shows them, Show older runs, which adds a page, and Run
-  now.
-- `routine-draft.ts`: the draft of the routine page, the equality of each
-  of its fields, its create and update requests, and whether Save can send
-  it. `routine-triggers.ts`: the
-  defaults of a new trigger and the edits of an author filter.
-  `routine-cron.ts`: the rule of a custom cron, which the Worker applies
-  too.
+- `current-build.ts`: `currentBuild`, the build that new workspaces start
+  from: the current image build of the org, else its newest good build.
+- [Key code: automations](key-code-automations.md) names the entry points
+  of the automations: their readers, models, and drafts, the Automations
+  page, the automation page, and the Runs list.
 - `repository-changes.ts`: the saved repository changes that the org
   image lacks, from `BuildsResponse.changes`. `repositoryWaitOf` gives
   their state, `repositoryChangesOf` the changes of the repository
@@ -138,91 +163,32 @@ Each path is relative to `src/app/`, the folder of this page.
   ChatGPT sign-in of Codex. `../shell/account/codex-sign-in.ts`:
   `CodexSignIn`, the steps, the polls, and the timer of that sign-in.
   `api/read-core.ts`: `loginUsable`, whether turns can run on a login.
+  After a save, a remove, a share change, or a connected sign-in,
+  `readDefaults` reads the logins of the agent again for the default
+  logins of the account, and `orgLoginChanged` does so after a change of
+  an org login.
+  `account-login-reads.ts`: `AccountLoginReads`, the one owner of the
+  reads of the logins. Each of its reads is a read of the whole account.
+  It also reads the account once when an org joins the orgs of the
+  person.
+  `login-owner.ts`: `loginOwnerName`, the name of the owner of a login,
+  the org or a member, for the label of the composer and the line under
+  the prompt of an automation.
+  `default-logins.ts`: `newSessionLogin`, the login of a new session of
+  the person in an org, from the default logins that the server names,
+  and the readers of those default logins for the screens.
 - `panels.ts`: `PanelLayout`, the widths of the panels, whether the right
   column shows, and `next`, the one rule of their steps.
 - `resource.ts`: `Resource`, a server value with its confirmed changes and
   its waiting writes, and the errors that prove that the value no longer
   exists. `refresh.ts`: `Refresher`, the shared reads of a part while
   screens show it, and `reread`, a read that starts after a refusal.
-- `section-actions.ts`, `list-changes.ts`, and `sections.ts`: the list
-  writes, their changes, moves, and the Archived group.
-- `workspace-actions.ts`: `OrgModel.workspaceActions`, the Rename write,
-  owner-only confirmation, the Archive and Restore flows of unopened rows,
-  and `running`, the Archive or the Restore that runs for each workspace.
-  `list-changes.ts` confirms only the fields of each action. The reply of
-  Archive or Restore changes the row only when its `updatedAt` is newer.
-- `../shell/workspace/shown-workspaces.ts`: `ShownWorkspaces.rename`,
-  `reassigned`, and `archive` use a kept model when one exists. They open
-  no workspace and create no model for an unopened row.
-- `../shell/workspace/useArchiveActions.ts`: `useArchiveActions`, Archive
-  and Restore for each control, with their toasts. The toast of a done
-  Archive offers Restore only while the workspace can come back.
-- `deadlines.ts`: `usePassedDeadlines`, which renders a screen again at
-  each deadline, such as the last day of a Restore, through the clock and
-  the timers of `AppServices`.
-- `../shell/list/`: the workspace list. `WorkspaceRow.tsx` draws a row,
-  with its Archive shortcut over the time on hover, and the Rename field
-  of `WorkspaceNameField.tsx`. Its list mark is the mockups' `WorkspaceMark`,
-  with the words of `listMarkLabel`. A right click or the menu keys open the menu
-  of a row. `useRowMenus.tsx` gives each row the actions that the person
-  can use, from `workspaceMenuItems` of the mockups, and draws the open
-  `RowMenu.tsx`. Every row offers Copy link, which copies `workspace.link`
-  through `AppServices.copy` and gives its result in a toast. The Archive shortcut and Archive in the menu share one
-  flow, `ShownWorkspaces.archive`, so a second press while it runs sends
-  nothing. A row of the Archived group shows its Restore shortcut over the
-  time on hover until the last day of Restore.
-  `SectionHeader.tsx` draws a section header with its menu and Rename
-  section. `useListActions.ts` runs the list changes, with a toast for a
-  failure. `RowMenu.test.tsx`, `RowMenuAccess.test.tsx`,
-  `RowActions.test.tsx`, `RowArchive.test.tsx`, `RowRename.test.tsx`, and
-  `RowCopyLink.test.tsx` mount the whole app.
-  [Workspace menu](../../docs/protocol/workspace-menu.md) states the menu
-  of a workspace row.
-- `../shell/ui/Menu.tsx`: `MenuButton`, the menu of the shell, a sheet on
-  a phone. On desktop it opens on `PopoverSurface.tsx`, in the top layer,
-  which places it beside its button with the dropdown placement of
-  `@firna/ui`, and flips it when it does not fit. The member menus use the
-  same surface. `MenuList.tsx` draws the items, also a switch row, such as
-  Fast in the model menu, which keeps the menu open, and an item that shows
-  choices. While the owner of a `MenuButton` saves a change, its `busy`
-  state turns off the trigger and the items and switches of the open menu.
-  These rows keep the focus, and the menu stays open.
-  `PointMenu.tsx` draws a menu at a point above the page, with its
-  choices beside it, and `menu-place.ts` keeps both inside the window.
-  `menu-keys.ts`: `opensMenu`, the menu keys of a row and of a tab.
-- `workspace-model.ts` and `archive-model.ts`: an open workspace, its
-  `startError` and `reassigned`, and Archive and Restore, each with one
-  request. `WorkspaceModel.renamed` takes the confirmed name into the kept
-  detail. `workspace-detail-order.ts`: `DetailOrder`, the order of the
-  detail: its read and Resume replies, its stream, its local changes,
-  which stay over pending replies, and the Archive and Restore records of
-  the list. `workspace-detail.ts` maps the stream, Archive, and Restore
-  records to the detail. `olderAcrossArchive` orders the two sides of an
-  Archive by `updatedAt`, and `archiveFloor` keeps each record from before
-  the newest Archive or Restore out, on both sides.
-  `workspace-activity.ts` counts input reports through `WorkspaceActivity`.
+- [Key code: the workspace list and the workspace models](key-code-workspaces.md)
+  names the entry points of the workspace list, its menus, Archive and
+  Restore, and the models of an open workspace and of New workspace.
 - `suspension.ts` and `permissions.ts`: the suspension of an org, the
   client that reports its refusals, also the replies of its fetch, and the
   rules of what a person may change.
-- `workspace-read-marks.ts`: `WorkspaceReadMarks`, the read marks of one
-  kept workspace model, with its shown and confirmed numbers. They stop
-  while the workspace is archived, and go again after a Restore.
-- `new-workspace-model.ts`: the first message that creates a workspace.
-  `NewWorkspaceModel.filesSource` is the `FieldFiles` of its draft.
-  `attach` gives the IDs of a pick at once, `setText` takes each new text
-  of the field, and `retryFile` is Try again. `attach` also keeps the
-  names that it refuses, as
-  [Refused files and folders](../chat/draft-files.md#refused-files-and-folders)
-  says.
-- `new-workspace-marks.test.ts` checks the IDs at once, the words outside
-  the chips, and the mentions in the order of the chips. It also checks
-  undo of a ready file, stopped and queued uploads, a sign-out, and the
-  text that a create took. `new-workspace-refusals.test.ts` checks folder
-  names with no files, an empty pick, a file with no bytes, a sign-out,
-  and a failed create.
-- `creations.ts`: `Creations`, the life of the create requests of an org in
-  this tab, which a sign-out ends. `first-start.ts`: `failedFirstStart`,
-  which tells a failed first start, and `resumesAtOpen`.
 - `computer-model.ts`: the scripts, the env vars with their Secret marks,
   the builds, and the log. `classifyEnvVar` changes only the mark of a
   variable, and sends no value. `replaceEnvVar` changes only the value,
@@ -236,17 +202,10 @@ Each path is relative to `src/app/`, the folder of this page.
   of a row wait while one of them saves.
 - `build-log-follower.ts`: `BuildLogFollower`, the reads and the timer of
   the log of one build.
-- `events.ts`: the ordered event stream, its count of reconnects, the event
-  socket, and `openSocket`, the terminal socket on the same origin as the
-  events.
-- `workspace-store.ts`: `useWorkspaceStore`, which gives a connected view
-  the store of its workspace, and the `create` and `connect` functions that
-  the view supplies.
-- `workspace-store.test.tsx`: mounts the real hook with logged test stores in
-  happy-dom. It checks the connection after the render and the stop at
-  unmount. It checks that a switch stops the old store before the new one
-  connects, and shows only the new store. It also checks when the hook keeps
-  a store, connects it again, or makes a new one.
+- `events.ts`: the ordered event stream and its count of reconnects. Its
+  `subscribe` tells the replayed events from the live ones.
+- `event-socket.ts`: the event socket of the Worker, and `openSocket`, the
+  terminal socket on the same origin as the events.
 - `pointer-drag.ts`: `usePointerDrag`, the drag and drop of any pointer
   that the tab row of the chat, the workspace list, the org rail, and the
   org switcher use: the press, the start after a move of a mouse or a long
@@ -268,14 +227,20 @@ Each path is relative to `src/app/`, the folder of this page.
   control keeps, and stops the click after a hold. A mouse and a pen bind
   nothing. `../chat/components/TranscriptCopy.dom.test.tsx` checks it
   through the tab row of a read-only chat.
-  `../shell/list/useRowDrag.ts`: the drag of a workspace row to a place in
-  a section, on `usePointerDrag`.
-- `../shell/orgs/useOrgDrag.ts`: the drag of an org in the rail and in the
-  org switcher of a phone, on `usePointerDrag`. `../shell/orgs/useOrgMove.ts`:
-  the move with the toast of a failed save.
-  `../shell/layout/useRailOrder.ts`: the drag, the tile menu
-  (`useTileMenu.tsx`), and Alt and Up or Down (`useRailMoves.ts`) of the
-  org tiles. `../shell/list/OrgSwitcherSheet.tsx`: the org switcher, where
+  `../shell/list/useRowDrag.ts`: the drag of a top-level row with its tree
+  to a place in a section, on `usePointerDrag`, and `still`, the handlers
+  of a nested row, whose long press does nothing, on `useLongPress`.
+  `../shell/list/drop-target.ts`: `DropLayout`, the boxes of the sections,
+  the rows, and the trees that a drop measures.
+- `../shell/ui/useListDrag.ts`: the drag of an item in a vertical list,
+  such as an org in the rail and in the org switcher of a phone, or a
+  chosen repository of an org, on `usePointerDrag`.
+  `../shell/ui/useListMoves.ts`: the moves of such an item by a menu and by
+  Alt and Up or Down. `../shell/orgs/useOrgMove.ts`: the move of an org with
+  the toast of a failed save. `../shell/layout/useRailOrder.ts`: the drag,
+  the tile menu (`useTileMenu.tsx`), and the moves of the org tiles.
+  `../shell/settings/RepositoryOrder.tsx`: the same moves of the chosen
+  repositories, with their row menu. `../shell/list/OrgSwitcherSheet.tsx`: the org switcher, where
   a long press lifts an org.
 - `sideways-wheel.ts`: `useSidewaysWheel`, which turns a
   vertical wheel turn over a row that scrolls sideways into a sideways
@@ -287,6 +252,8 @@ Each path is relative to `src/app/`, the folder of this page.
   the entry of each item, and `intakeOf`, which turns each folder into its
   zip. `folder-zip.ts`: `zipFolder`, the zip of one dropped folder in the
   browser, with `fflate`, which stops at the size limit of an attachment.
+  It moves the compressed bytes into blobs of about 8 MiB, so the page
+  never holds the whole zip.
   `folder-entries.ts`: the parts of a dropped entry that the zip reads. `useFileDropGuard` cancels each drag of files that no part
   took, so the browser opens no file in place of the page. `App` and the
   chat development page mount it. The composer drop and the
@@ -295,10 +262,12 @@ Each path is relative to `src/app/`, the folder of this page.
   the Overview and the pages of the operator section, its searches, and
   Suspend and Lift. `operator-pause.ts`, `operator-switch.ts`, and
   `operator-access.ts`: the pause of sign-ups, the waitlist switch,
-  Approve, New code, and Disable. A refusal with
-  `operator_required` marks the account as not an operator.
-  `api/read-operator.ts`, `api/read-operator-pages.ts`, and
-  `api/read-operator-waitlist.ts`: their readers. The
+  Approve, New code, and Disable. `operator-providers.ts`: the provider
+  accounts, their weights for new orgs, and the save of the weights. A
+  refusal with `operator_required` marks the account as not an operator.
+  `api/read-operator.ts`, `api/read-operator-pages.ts`,
+  `api/read-operator-waitlist.ts`, and `api/read-operator-providers.ts`:
+  their readers. The
   [operator section](../shell/operator/README.md) gives the screens.
 - `router.ts` and `navigation.ts`: the addresses of the screens.
   `routeOf` gives the screen of an address, and `useRoute` the screen of
@@ -322,28 +291,6 @@ Each path is relative to `src/app/`, the folder of this page.
   names the entry points of the command palette, the layers of each
   frame, New workspace as a dialog, and feedback with its screenshots.
 - `../shell/Shell.tsx` and `../shell/OrgRoutes.tsx`: the screen of each address.
-- `../shell/routines/RoutinesScreen.tsx`: the Routines page, which the
-  Routines link of the sidebar and of the phone list opens.
-  [Routines](../../docs/protocol/routines.md#the-routine-pages) states what
-  it shows.
-- `../shell/routines/RoutineScreen.tsx`: the routine page and the page of
-  a new routine. `RoutineEditor.tsx` is the form of the owner, and
-  `RoutineReader.tsx` the read-only view of every other member, with Turn
-  off and Delete for an admin. `useRoutineSave.ts` is Save, with the login
-  that a save refused. `RoutineFrame.tsx` puts the Runs list beside the
-  form on desktop, and on the Runs tab of a phone. It alone shows the
-  notice of a suspended org, in every view of the page. `RoutineNote.tsx`
-  is the note above a routine, which reads the saved repository from the
-  repository list of the org.
-- `../shell/routines/RunsPanel.tsx` and `RunList.tsx`: the Runs list, with
-  the mark, the state, the trigger, the pull request, and the time of each
-  run, and the link to its workspace. `run-copy.ts`: the mark of a run, the
-  cause of a failed run in words, from the agent and the owner of the run
-  itself, and the reason of a skipped run, with the login of an account
-  outside the org. `RunNow.tsx`: Run now of the owner.
-- `../shell/workspace/RunLine.tsx`: the line under the header of a run
-  workspace, which links to its routine, and to the pull request of a pull
-  request run.
 - `../shell/ui/useSavedDraft.ts`: the draft of an editor of a saved value,
   as one value or field by field (`eachField`).
   `../shell/list/useRowFocus.ts`: the focus of a row after a move by keys.

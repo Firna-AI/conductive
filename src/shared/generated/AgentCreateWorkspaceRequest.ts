@@ -39,6 +39,10 @@ export type AgentCreateWorkspaceRequest = {
    */
   sectionId?: string
   /**
+   * Parent workspace for the new sub-workspace.
+   */
+  parentId?: string
+  /**
    * name.
    */
   name?: string

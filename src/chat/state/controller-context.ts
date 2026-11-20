@@ -1,18 +1,22 @@
 import type { ApiClient } from '../../app/api/client'
+import type { Delay } from '../../app/events'
 import { createChatApi, type WorkspaceTarget } from '../api/client'
 import type { StreamEnvelope } from '../api/read-workspace'
 import { DeviceReads, refreshDevices } from '../device/device-actions'
 import { createDeviceApi } from '../device/device-api'
+import { createSecretApi } from '../secrets/secret-actions'
 import { SessionReads } from '../links/session-reads'
 import {
+  browserTimers,
   WorkspaceStream,
   type StreamTimers,
   type SubscribeToWorkspace,
 } from '../stream/workspace-stream'
-import type { ChatStore } from './chat-snapshot'
+import type { ChatStore } from './chat-store'
 import { applyEnvelopes } from './apply-events'
 import { isArchived, reloadView } from './archive-view'
-import { viewWriter, type ChatContext } from './context'
+import type { ChatContext } from './context'
+import { viewWriter } from './saved-view'
 import type { ChatSources } from './sources'
 
 export interface ChatContextOptions {
@@ -29,6 +33,21 @@ export interface ChatContextOptions {
    * workspace list itself.
    */
   sources?: ChatSources
+}
+
+/** A delay over the timers of the chat, so the waits of uploads use them too. */
+function timerDelay(timers: StreamTimers): Delay {
+  return (ms, run) => {
+    // A cancelled wait never runs, also when its timer is already due.
+    let live = true
+    const handle = timers.set(() => {
+      if (live) void run()
+    }, ms)
+    return () => {
+      live = false
+      timers.clear(handle)
+    }
+  }
 }
 
 /** The Worker records a change of the workspace with each change of a Mac command. */
@@ -56,7 +75,7 @@ export function createChatContext(
     picks: new Map(),
     moves: new Map(),
     newId: options.newId ?? (() => crypto.randomUUID()),
-    prompts: new Map(),
+    prompts: { sending: false, ids: new Map() },
     newDraftId: () => {
       drafts += 1
       return `draft:new:${draftEpoch}:${drafts}`
@@ -66,13 +85,18 @@ export function createChatContext(
       return `file-${files}`
     },
     uploads: new Map(),
-    saveView: viewWriter((view) => api.saveView(view)),
+    delay: timerDelay(timers ?? browserTimers),
+    saveView: viewWriter(
+      () => store.get().view,
+      (view) => api.saveView(view),
+    ),
     live,
     owned: options.sources !== undefined,
     devices: {
       api: createDeviceApi(options.client),
       reads: new DeviceReads(),
     },
+    secrets: createSecretApi(options.client),
     sessionReads: new SessionReads((workspaceId) =>
       createChatApi(options.client, { ...target, workspaceId }).sessions(),
     ),

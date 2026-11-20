@@ -1,0 +1,91 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/*
+ * The box of the composer: the text, then a bar with the Capabilities icon
+ * of the owner and the model picker.
+ */
+.box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 10px 8px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-xl);
+  background: var(--ui-composer);
+  box-shadow: 0 1px 2px var(--ui-shadow);
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+/* The prompt that another member reads, in a quiet box with a full outline. */
+.readOnly {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+}
+
+.text {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: var(--ui-text-md);
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.model {
+  color: var(--ui-ink);
+  font-size: var(--ui-text-sm);
+  font-weight: 500;
+}
+
+.effort {
+  color: var(--ui-muted);
+  font-weight: 400;
+}
+
+/*
+ * A muted caption under the box, as under a composer: the logins of the
+ * runs, the secrets that they use, and the hint of a pull request trigger.
+ * `.logins` is the same caption, for the line of the logins.
+ */
+.caption,
+.logins {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  margin: 0;
+  padding-left: 14px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 16px;
+}
+
+.icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--ui-faint);
+}
+
+/* The icon of the hint of a pull request trigger. */
+.warning {
+  color: var(--ui-warning);
+}
+
+/* The name of a secret in a caption, in the font of an environment variable. */
+.secret {
+  color: var(--ui-ink2);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-xs);
+}

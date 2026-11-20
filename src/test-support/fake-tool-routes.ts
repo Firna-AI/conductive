@@ -1,11 +1,23 @@
 import type { PathState } from '../../docs/mockups/src/fixtures/maskedFiles'
+import { sandboxNotAnswering } from '../../docs/mockups/src/fixtures/previews'
 import { desktopPath } from '../shared/desktop'
 import { filePaths } from '../shared/files'
 import { githubPaths, type BannerState } from '../shared/github'
-import { attachmentUploadPath } from '../shared/messages'
+import {
+  ATTACHMENT_PART_BYTES,
+  attachmentUploadCompletePath,
+  attachmentUploadPartPath,
+  attachmentUploadStartPath,
+  type AttachmentUploadPart,
+  type StartAttachmentUploadResponse,
+} from '../shared/messages'
 import { attachmentPath } from '../shared/attachment-paths'
-import { previewPath, previewsPath } from '../shared/previews'
-import { terminalPaths } from '../shared/terminal'
+import {
+  FILE_SERVER_UNAVAILABLE,
+  filesPreviewPath,
+  previewPath,
+  previewsPath,
+} from '../shared/previews'
 import type { FakeRouteWriter } from './fake-api-routes'
 import { FAKE_IDS } from './fixtures/core'
 import {
@@ -54,6 +66,71 @@ export function fakeGitHub(
     githubPaths.mergeResult(FAKE_IDS.org, workspaceId, `merge-${workspaceId}`),
     { state: 'merged' },
   )
+  routes.json('POST', githubPaths.ready(FAKE_IDS.org, workspaceId), {
+    state: 'ready',
+  })
+}
+
+/**
+ * How the fake API answers the open of the files preview: with the files
+ * preview, as `open` does by default, with the refusal of a runner that
+ * announced no file server, with the failure of a cloud computer that did
+ * not answer, or with the refusal while the cloud computer does not run.
+ */
+export type FakeFilesPreview =
+  'open' | 'older-software' | 'failed' | 'not-ready'
+
+/** Sets the reply of the open of the files preview of the fake workspace. */
+export function fakeFilesPreview(
+  routes: FakeRouteWriter,
+  reply: FakeFilesPreview,
+): void {
+  const path = filesPreviewPath(FAKE_IDS.org, FAKE_IDS.workspace)
+  switch (reply) {
+    case 'open':
+      routes.json('POST', path, toolFixtures().filesPreview, 201)
+      return
+    case 'older-software':
+      routes.json(
+        'POST',
+        path,
+        {
+          error: {
+            code: FILE_SERVER_UNAVAILABLE,
+            message:
+              'The cloud computer software cannot serve files. Restart the workspace.',
+          },
+        },
+        409,
+      )
+      return
+    case 'failed':
+      routes.json(
+        'POST',
+        path,
+        {
+          error: {
+            code: 'sandbox_unavailable',
+            message: sandboxNotAnswering,
+          },
+        },
+        502,
+      )
+      return
+    case 'not-ready':
+      routes.json(
+        'POST',
+        path,
+        {
+          error: {
+            code: 'sandbox_not_ready',
+            message: 'Open the workspace to start its cloud computer.',
+          },
+        },
+        409,
+      )
+      return
+  }
 }
 
 export function fakeToolRoutes(
@@ -89,16 +166,32 @@ export function fakeToolRoutes(
   )
   routes.json('GET', filePaths.changes(org, id), data.changes)
   routes.json('GET', filePaths.diff(org, id, FAKE_FILE_PATH), data.diff)
-  // The raw file upload of the app's upload operation, at the route of each
-  // target: a workspace, and the first message of a new workspace.
+  // The upload in parts of the app's upload operation, at the routes of each
+  // target: a workspace, and the first message of a new workspace. Each
+  // start gives the same upload of one part, and its complete call the file.
   for (const [fileId, target] of [
     ['attachment-1', { type: 'workspace', workspaceId: id }],
     ['draft-attachment-1', { type: 'new-workspace', messageId: '' }],
   ] as const) {
     const file = { id: fileId, name: 'postcode-overlap.png' }
+    const upload = FAKE_IDS.upload
     routes.json(
       'POST',
-      attachmentUploadPath(org, target),
+      attachmentUploadStartPath(org, target),
+      {
+        uploadId: upload,
+        partSizeBytes: ATTACHMENT_PART_BYTES,
+        partCount: 1,
+      } satisfies StartAttachmentUploadResponse,
+      201,
+    )
+    routes.json('PUT', attachmentUploadPartPath(org, target, upload, 1), {
+      partNumber: 1,
+      etag: 'etag-1',
+    } satisfies AttachmentUploadPart)
+    routes.json(
+      'POST',
+      attachmentUploadCompletePath(org, target, upload),
       attachmentPath(file).then((path) => ({
         attachment: {
           ...file,
@@ -111,9 +204,9 @@ export function fakeToolRoutes(
       201,
     )
   }
-  routes.json('GET', terminalPaths.connection(org, id), data.terminal)
   routes.json('GET', previewsPath(org, id), data.previews)
   routes.json('POST', previewsPath(org, id), data.preview, 201)
+  fakeFilesPreview(routes, 'open')
   routes.empty('DELETE', previewPath(org, id, FAKE_IDS.preview))
   routes.json('GET', desktopPath(org, id), data.desktop)
   fakeGitHub(routes, id, banner)

@@ -14,16 +14,18 @@ import {
   restoreOrgPath,
 } from '../../src/shared/orgs'
 
+import { createEmailMessages } from '../email-messages'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError, requiredString } from '../http'
-import { createInvitationMailer, invitationLink } from '../invitation-mailer'
+import { createInvitationMailer } from '../invitation-mailer'
 import type { RequestContext } from '../security/gate'
 import { deleteOrg } from './deletion'
 import { cancelOrgInvite, inviteOrgMember } from './invites'
 import type { LifecycleOwnership } from './lifecycle-contract'
 import type { OrgMaintenanceHooks } from './maintenance-contract'
 import { changeMemberRole, listMembers, removeOrgMember } from './membership'
-import { moveOrg, renameOrg, visibleOrgs } from './org-data'
+import { moveOrg, updateOrg, visibleOrgs } from './org-data'
+import { readOrgUpdate } from './org-update'
 import { reassignWorkspace } from './ownership'
 import { requireOrgAdmin, requireOrgMember } from './permissions'
 import { restoreOrg } from './restore'
@@ -81,17 +83,7 @@ export async function membersRoute(
       })
     if (request.method === 'PATCH') {
       await requireOrgAdmin(db, orgId, actorId)
-      if (
-        !(await renameOrg(
-          db,
-          orgId,
-          actorId,
-          requiredString(body?.name),
-          body?.initials === undefined
-            ? undefined
-            : requiredString(body.initials),
-        ))
-      ) {
+      if (!(await updateOrg(db, orgId, actorId, readOrgUpdate(body)))) {
         await requireOrgAdmin(db, orgId, actorId)
       }
       return Response.json({ org: await requireOrgMember(db, orgId, actorId) })
@@ -145,7 +137,7 @@ export async function membersRoute(
       email: invite.email,
       orgName: context.org.name,
       invitedBy: context.user.displayName ?? context.user.githubLogin,
-      link: invitationLink(env.APP_ORIGIN, invite.id),
+      link: createEmailMessages(env.APP_ORIGIN).invitationLink(invite.id),
     })
     return Response.json({ invite }, { status: 201 })
   }

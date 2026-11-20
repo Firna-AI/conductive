@@ -9,7 +9,9 @@ states the rules of the releases and the updates. A decision number names
 a dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A sandbox software decision number, such as sandbox software
 decision 3, names a decision of the change that makes the sandbox software
-update itself.
+update itself. An idle update decision number, such as idle update
+decision 1, names a decision of the change that installs a new release
+while the workspace is idle.
 
 ## Programs
 
@@ -18,7 +20,8 @@ The sandbox software includes these programs:
 - `conductive`, one Rust program. Its subcommands run the agent runner,
   the preview relay, the agent tools, the git credential helper, and the
   updater. The runner runs as an always-on service. The relay listens on a
-  private port.
+  private port. The runner also holds the file server, which listens only
+  on a loopback port.
 - The SDK helper, a Node program. It runs the Claude Agent SDK and the
   Codex SDK for the runner, because these SDKs exist only in TypeScript
   and Python. The runner starts it as a child process. The two programs
@@ -36,9 +39,9 @@ published stable API.
 
 The agent tools are an MCP server and a CLI. They manage the workspaces,
 the sessions, the sections, and the port previews of the org, and they ask
-for Mac commands. [Agent tools](../protocol/agent-tools.md) states their
-calls. The git credential helper gets a fresh GitHub token for each git
-operation.
+for Mac commands and run commands with the secrets of the org.
+[Agent tools](../protocol/agent-tools.md) states their calls. The git
+credential helper gets a fresh GitHub token for each git operation.
 
 The program also installs the other parts of the software:
 
@@ -52,7 +55,11 @@ The program also installs the other parts of the software:
   [Disk flushes](../protocol/workspaces-and-sandboxes.md#disk-flushes) says
 
 The image build installs the system packages, such as the terminal
-packages `ttyd` and `tmux`.
+packages `ttyd` and `tmux`. It runs apt only when the image lacks a
+package, when the ttyd service is not masked, or when the apt part of the
+build changed, as
+[Installs in a build](../protocol/sandbox-software.md#installs-in-a-build)
+says.
 
 ## Releases and updates
 
@@ -63,13 +70,22 @@ packages `ttyd` and `tmux`.
    (sandbox software decision 4). It writes the JSON file of the newest
    release last.
 3. In each sandbox, the updater reads that JSON file when the runner
-   starts and every hour. It uses the `cli-updater` crate of
+   starts and every 10 minutes. It uses the `cli-updater` crate of
    `futex-ai/cli-release` (sandbox software decision 1).
 4. The updater downloads a newer release in the background, with only the
-   parts that changed. The next start of the runner applies it (sandbox
-   software decision 5).
-5. Each build of an org image or of the software image installs the newest
-   release through the same program.
+   parts that changed. It never changes the release that runs.
+5. The runner decides when its own release changes, because only the
+   runner knows whether a turn runs. When its workspace is idle, the
+   runner closes its connection, runs the updater as root to install the
+   release, and runs the new release in the same process (idle update
+   decision 1). So its service keeps running, and so does each process
+   that an agent started. Otherwise, the next start of the runner applies
+   the release (sandbox software decision 5). The preview relay and the
+   terminal run a new release from their next start.
+6. Each build of an org image or of the software image installs the newest
+   release through the same program. When the image already holds the
+   program, the build uses its updater, which downloads only the parts
+   that changed.
 
 ## Message types
 
@@ -83,10 +99,12 @@ source, and a separate source for each boundary were rejected.
 ## The software image
 
 The Worker builds one software image for each version of this software,
-when the deploy run asks. The software image holds the base image and a
-release of this software, and no org data. A build of an org without an
-org image starts from it. That build then installs only the parts that a
-newer release changed.
+in the `boat` account, when the deploy run asks. The software image holds
+the base image and a release of this software, and no org data. A build of
+an org on `boat` without an org image starts from it. That build then
+installs only the parts that a newer release changed. A first build of an
+org on another account, such as `e2b`, starts from the base image of that
+account, and installs this software.
 
 ## Agents and ports
 
@@ -116,6 +134,15 @@ sandbox. The previewed server then gets its local address as `Host`
 (decision 218).
 [Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md#port-previews)
 states the rules of the relay.
+
+The file server is a part of the agent runner. It serves the files of the
+workspace's repository folder over HTTP, for the files preview of the HTML
+file tabs. The preview relay forwards each request of a files preview to
+it, as to any port. The runner announces the file server to its workspace,
+and the file server updates with the runner, also at an install at idle.
+[File server](../protocol/file-server.md) states its rules. Reason: the runner already knows the repository folder,
+and it reads files safely for the file tabs. The preview relay reads no
+workspace variable, so it stays as it is.
 
 The Worker gives each sandbox the commit author of its workspace owner.
 The agent runner gives each agent the commit author of the sender of its

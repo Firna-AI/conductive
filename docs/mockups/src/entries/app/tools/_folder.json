@@ -1,11 +1,15 @@
 {
   "order": [
     "terminals",
+    "terminal-links",
     "disconnected",
     "shared-size",
     "older-software",
     "preview",
+    "preview-tab",
+    "preview-expanded",
     "preview-repair",
+    "preview-opening",
     "desktop"
   ]
 }

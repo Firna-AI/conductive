@@ -12,12 +12,14 @@ and a darker accent.
 
 The desktop layout has four columns. The org rail holds the mark, the orgs
 as squares with their initials, Create org, and the account at the bottom.
-The sidebar shows the org name with its Settings link, New workspace, Routines, Search, and
+The sidebar shows the org name with its Settings cog, New workspace, Automations, Search, and
 the sections that the user made. Each workspace is one line: a dot-matrix
-mark in the colour of its GitHub state, the name, and the time, and it
-moves to another section by drag and drop. Archive covers the time on
+mark in the colour of its GitHub state, the name, and the time. A
+sub-workspace shows indented under the row of its parent, and a top-level
+row moves to another section by drag and drop, with the rows under it. Archive covers the time on
 hover only, without moving the row content, and Restore does so in the
-Archived group. Selection and
+Archived group, which holds the archived workspaces of the last 14 days.
+Selection and
 keyboard focus alone keep the time visible. A right click on a row opens
 the menu of the workspace. The centre column has a slim header that names
 the
@@ -25,14 +27,15 @@ workspace and its number, such as `W-395`, the repository, and
 the owner of the workspace, and ends with the toggle of the
 right column. The toggle hides the right column, so the centre column
 takes its width, and shows it again. Then come a tab for each agent
-session and each open file or diff, in the order that the user gives them
-by drag, + for a new session, and a clock that opens the session history.
+session, each open file or diff, and a Preview tab for each previewed
+port, in the order that the user gives them by drag, + for a new
+session, and a clock that opens the session history.
 The file or diff of the last press shows in the temporary tab, with its
 title in italics, until the next press replaces it.
 The right column has the pull request bar on top, the All files, Changes,
 and Checks lists below it, and the Terminal and Preview tabs at the bottom.
-It shows no file content. A phone shows an org switcher at the top of the list,
-then New workspace, Routines, and Search. It shows the
+It shows no file content, and on desktop no page of a preview. A phone shows an org switcher at the top of the list,
+then New workspace, Automations, and Search. It shows the
 workspace with its number under its name, a compact pull request row, the
 sessions as tabs above the chat, and four tabs at the bottom.
 
@@ -70,8 +73,10 @@ sessions as tabs above the chat, and four tabs at the bottom.
   the icon on each model of the other agent say it.
 - A view runs no script, so a screen draws an open menu in place: `Menu` in
   `src/components/common/` beside its button or its tab, at the pointer of
-  a right click, or in a `Sheet` on a phone. Firna's own menu rows are
-  taller than the dense design. A row can lead with a mark, such as an
+  a right click, or in a `Sheet` on a phone. `PointMenu` beside it draws
+  the menu of a right click on a row at the pointer, with an open submenu
+  beside it, for a workspace row and a row of All files or Changes.
+  Firna's own menu rows are taller than the dense design. A row can lead with a mark, such as an
   avatar, and end with a muted detail and an icon. An item that is off
   keeps its place, greyed, and its detail keeps the muted colour, so that
   the reason stays readable. An item with choices ends with an arrow, and
@@ -82,14 +87,58 @@ sessions as tabs above the chat, and four tabs at the bottom.
   A move that the place of a tab rules out keeps its place, greyed.
   A read-only workspace leaves out each item that it does not allow,
   from decision 214.
+- The app opens a menu beside its button in the top layer, so no box cuts
+  it. `app/chat/menu-placement` draws such menus above the page, and CSS
+  anchors place each one at its button.
+- A sub-workspace shows under the row of its parent, from sub-workspace
+  decisions 1 C, 4 F, 5 C, and 6 A, as `app/sub-workspaces` shows.
+  `withTrees` in `src/components/workspaces/trees.ts` places the rows of
+  each section with `placeWorkspaces`, the rule of the app in
+  [`src/shared/workspace-tree.ts`](../../src/shared/workspace-tree.ts).
+  So the mockups and the app place each row in the same way: a top-level
+  row, then its sub-workspaces, oldest first, each followed by its own. A
+  sub-workspace whose parent the list does not show, such as an archived
+  parent, shows under the nearest live row above it in its tree, in the
+  place of the archived row. Each level indents the row by one step, 12 px
+  in the sidebar and 16 px on the list page of a phone, so a tree shows at
+  most four levels. The indent follows the rows that the list shows, not
+  the depth of the record. The guide lines join the rows of a tree as the
+  lines of a file tree do, as the user asked on 17 November 2026. Each
+  line is a 1 px hairline in the `border2` colour. In forced colours, the
+  lines take the system colour of quiet text. A short stub runs down
+  from the bottom of the mark of each row with nested rows. The line of
+  that row then runs down under the middle of its mark. A short connector
+  runs from that line to the mark of each nested row (├─). The line
+  ends at the connector of the last nested row, in the middle of that row
+  (└─). An outer line runs through a row only while its row has a nested
+  row further down (│). Elsewhere its column stays empty. `treeLines` in
+  [`src/shared/workspace-tree-lines.ts`](../../src/shared/workspace-tree-lines.ts)
+  gives each row these facts. `withTrees` and the app both use it, so they
+  draw the same lines. The guides are neutral lines of the tree, not an
+  accent edge. They lie over the fill of a hover or a selection, and the
+  fill still spans the whole row. The faint tree of a drag keeps its
+  guides, and the lifted card shows none. A tree has no collapse control.
+  `.nested` and `.indent1` to `.indent3` of `WorkspaceRow.module.css` draw
+  the indent. `GuideLines.module.css` beside it draws the guides, and
+  `guideClasses` in `src/components/workspaces/guideLines.ts` gives their
+  classes. The app shares all three.
+- Only a top-level row drags, and its whole tree moves with it. The lifted
+  row stands for the tree: in place of its time it shows the count of the
+  nested rows that move with it, such as +2, over the edge of a second
+  card. The rows of the tree stay faint in their place, and the line falls
+  only between two trees, at the edge of a top-level row, as
+  `app/sub-workspaces/drag` shows. A nested row has no drag, no long press,
+  no move by keys, and no Move to section.
 - The menu of a workspace row has Move to section, Reassign to, Rename,
   Copy link, a line, then Archive, as `app/workspace-menu` shows. It lists
   only the actions that the person can use, from `workspaceMenu.ts` in
-  `src/components/workspaces/`. Every row offers Copy link, so every row
+  `src/components/workspaces/`. A nested row has no Move to section,
+  because it moves only with its tree. Every row offers Copy link, so every row
   has a menu. `linkCopy.ts` in `src/components/workspace/` gives the words
   of Copy link and of its result. The app
   reads the same list, so `workspaceMenu.ts` imports no fixture. A right
-  click opens the menu at the pointer, from `RowMenu.tsx` beside it.
+  click opens the menu at the pointer, from `RowMenu.tsx` beside it, which
+  draws it with `PointMenu`.
   Shift+F10 and the Menu key on a focused row open it below the row. No
   row has a button for the menu. The row under the pointer keeps its
   hover, with Archive over the time when the person can archive the
@@ -98,8 +147,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   menu and its choices in a sheet. A
   long press on a phone still lifts the row for a drag, and opens no menu.
   Rename puts a field in place of the name and the time, with the name
-  selected. `RowMenu.module.css` styles the field and the menu at the
-  pointer.
+  selected. `RowMenu.module.css` styles the field, and
+  `PointMenu.module.css` in `src/components/common/` styles the menu at
+  the pointer.
 - `OrgRail` in `src/components/layout/` draws the order of the orgs that
   each person keeps, from decisions 515 to 517, as `app/orgs/reorder`
   shows. A drag of a tile looks like the drag of a tab and of a workspace
@@ -113,12 +163,19 @@ sessions as tabs above the chat, and four tabs at the bottom.
   menu. On a phone, a long press lifts an org in the org switcher with the
   same look, and opens no menu. `OrgDrop` and `OrgDrag.module.css` beside
   `orgTileMenu.ts` draw the drag on the rail and in the org switcher.
+- `OrgTile` in `src/components/orgs/` draws the initials and the outline
+  of the open org in the colour of the org, as `app/org-settings/colour`
+  shows. `src/design/orgColors.ts` gives the eight presets, each with its
+  own ink and outline for the light and the dark scheme. Blue takes the
+  accent. `OrgColorField` in `src/components/settings/` draws the presets
+  as round radio swatches, and a ring marks the chosen one.
 - `FailureToast` in `src/components/common/` draws the toast that names a
   change of the list that failed, with the message of the server, in the
   `ToastLayer` beside it, as `app/workspace-menu/rename/failed` shows.
-  Transcript copy uses the same layer. A copy that worked shows the
-  success mark. A copy that failed shows the error mark with the words
-  "Try again", as `app/transcripts` shows.
+  Transcript copy and Copy path use the same layer. A copy that worked
+  shows the success mark. A copy that failed shows the error mark with the
+  words "Try again", as `app/transcripts` and `app/files/menu/copied`
+  show.
 - `SignInFrame` in `src/screens/signInFrame.tsx` draws the pages before the
   app opens: the wordmark, one card in the middle, and the legal links. The
   sign-in, the sign-in of an invite link, and the waitlist share it, without
@@ -161,12 +218,17 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - `ConfirmDialog` in `src/components/common/` asks before an action that a
   user cannot simply undo: a dialog over the dimmed app on desktop, and a
   sheet on a phone. The desktop dialog lies in the `overlay` of `AppFrame`.
+  A question that runs its own action stays open while the action runs. A
+  spinner then leads the confirming action, and Cancel is off, as
+  `app/orgs/suspended/leave/leaving` shows. Escape and a press outside then
+  do nothing, on desktop and in the sheet of a phone.
 - `ToastLayer` in `src/components/common/` draws a toast of Firna open
   where the app shows its toasts: at the bottom right of a desktop, and
   across the bottom of a phone. An action that a user can undo, such as
   Archive, asks no question and offers the undo in its toast.
   `ArchivedToast` in `src/components/workspace/` gives the toast after
-  Archive, over the workspace and over the list.
+  Archive, over the workspace and over the list. Its second line gives the
+  day when the workspace leaves the list.
 - [The pull request bar](design-bar.md) gives its one main action in each
   state, the line under the bar, the branches and the actions on top of the
   Checks tab of a phone, and the question and the note of Continue.
@@ -179,20 +241,27 @@ sessions as tabs above the chat, and four tabs at the bottom.
   picked branch lives in the dropdown of the branch control, so no line
   follows the header (decision 301). The message and its files fill the
   middle, and the notices of the New workspace page follow them.
-  The model picker sits at the bottom left, and the attach button and
-  Create, with the hint of the Enter key, at the bottom right. A phone
-  always opens the page, so the dialog has no phone layout.
+  The attach button, the Capabilities icon, and the model picker sit at
+  the bottom left. The org login label follows the model picker when the
+  first message uses it. Create, with the hint of the Enter key, sits at
+  the bottom right. A phone always opens the page, so the dialog has no
+  phone layout.
 - [New workspace](design-new-workspace.md) gives the branch control of the
   page and of the dialog, its dropdown with the parts Start from and
   Target, and the refusals of the branch check.
-- The account has four tabs, General, Agents, Preferences, and Keyboard
-  shortcuts, as links, as the org settings have. The Mac app adds This Mac
-  as its fifth tab. On a phone, a tab that
+- The account has five tabs, General, Agents, Preferences, Keyboard
+  shortcuts, and Stats, as links, as the org settings have. The Mac app
+  adds This Mac as its sixth tab. On a phone, a tab that
   does not fit moves to a second line. Preferences holds the New
   workspaces section, whose rows put each label beside its control in two
   columns. A segmented control chooses how New workspace opens, with a
   helper line under it, and a narrow section puts it under its label. A
   failed save shows its error under the control.
+- Stats uses the parts of the operator Overview: a box of tiles, the
+  workspaces by state, and the daily charts. Its tiles are Workspaces with
+  the new ones of 7 days, Running now, Automations, and Orgs. Its list of
+  states has Removed after Archived, as the Overview has, for the
+  workspaces that left the list. The Workspaces tile still counts them.
 - `ShortcutsSections` in `src/components/settings/` draws the Keyboard
   shortcuts tab, in the Mac app and in each browser. It shows the keys of
   a host: the Mac app, a normal tab of Chrome or Firefox, or the installed
@@ -242,20 +311,25 @@ sessions as tabs above the chat, and four tabs at the bottom.
   because nothing brings the changes back. The error of a failed Reset all
   stands under the lines and Reset all, across the width of the tab.
 - [The marks](design-marks.md) give the list mark, the mark
-  of the header, and the marks of routine runs. They also give the mark of
+  of the header, and the marks of automation runs. They also give the mark of
   an agent.
-- [Workspace, session, and file chips](design-chat.md#workspace-session-and-file-chips)
-  gives the chips, the list of `@`, and chip removal.
+- [Workspace, session, file, and skill chips](design-chat.md#workspace-session-file-and-skill-chips)
+  gives the workspace links, the session links, file mentions, the list of
+  `@`, skill chips, the list of `/`, and chip removal.
   [Links in text](design-links.md) gives the other links and `TextLink`.
-- The parts of routines live in `src/components/routines/`. The routine
+- The parts of automations live in `src/components/automations/`. The automation
   page puts its form beside the Runs column on desktop. A phone shows a
-  saved routine in two tabs, Routine and Runs. The Runs list holds the
+  saved automation in two tabs, Automation and Runs. The Runs list holds the
   newest 50 runs, and Show older runs ends it when older runs exist. A
   phone opens the Add trigger menu and the author filter of a pull request
-  trigger in a sheet. A suspended org keeps its Routines link, and shows
-  its routines read-only under its notice. `RunLinks` in
+  trigger in a sheet. The bar of the prompt box holds the Capabilities icon
+  of the owner and the model picker, and the lines under the box say what
+  the runs use, as
+  [the Capabilities control](design-secrets.md#the-capabilities-control)
+  says. A suspended org keeps its Automations link, and shows
+  its automations read-only under its notice. `RunLinks` in
   `src/components/workspace/` draws the line under the header of a run
-  workspace, which links to its routine and to its pull request. The pull
+  workspace, which links to its automation and to its pull request. The pull
   request bar names the base branch of a workspace: the default branch, the
   picked branch of a start that stacks on it, or for a pull request run the
   head branch of its pull request. A long base
@@ -263,22 +337,22 @@ sessions as tabs above the chat, and four tabs at the bottom.
   bubble of a message keeps its line breaks, as in the app, so the first
   message of a run shows the facts of its trigger on their own lines.
   - `runCopy.ts` gives the words of a failed run from its stored cause, and
-    from the agent and the owner of the run itself, not of its routine. So
-    a later change of the agent, or a move of the routine to another owner,
+    from the agent and the owner of the run itself, not of its automation. So
+    a later change of the agent, or a move of the automation to another owner,
     changes no past row. A failed start and a failed first turn keep their
-    workspace, and their rows open it, as `app/routines/runs/failed` shows.
-  - When the routine page cannot show its routine, the page keeps Routine
-    as its name and shows no tabs, no Runs list, and no actions. A routine
-    that the org no longer has shows the empty state "This routine is not
-    available" with Open Routines. A read that failed shows `LoadFailure`.
-    `app/routines/routine/unavailable` and `not-loaded` show them.
+    workspace, and their rows open it, as `app/automations/runs/failed` shows.
+  - When the automation page cannot show its automation, the page keeps Automation
+    as its name and shows no tabs, no Runs list, and no actions. An automation
+    that the org no longer has shows the empty state "This automation is not
+    available" with Open Automations. A read that failed shows `LoadFailure`.
+    `app/automations/automation/unavailable` and `not-loaded` show them.
 - `SuspendedOrgNotice` in `src/components/orgs/` draws the notice of a
   suspended org, with the mark of a refused start. It names the org and
   the abuse address, and it offers no action. It is a box at the top of
-  the list, of each settings tab, and of each view of a routine page, and
+  the list, of each settings tab, and of each view of an automation page, and
   above the bar of an archived workspace. A phone shows it above either
-  tab of a routine page, as the `runs` variant of
-  `app/orgs/suspended/routines/routine` shows. `SuspendedOrgPanel` shows the same words in the main area of
+  tab of an automation page, as the `runs` variant of
+  `app/orgs/suspended/automations/automation` shows. `SuspendedOrgPanel` shows the same words in the main area of
   a wide desktop list. `SuspendedOrgAbove` puts the box above the page of
   a deleted org, at the width of a settings page. A suspended org shows no
   action that it refuses.
@@ -317,6 +391,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
   panel gets an accent edge. The same handle lies across the top edge of the
   tools panel, and moves the split between the file lists and the tools, as
   `app/panels/split` shows.
+- The sidebar toggle hides the sidebar. In the browser it sits beside the
+  cog of Settings, and in the Mac app beside the window buttons. While the
+  sidebar is hidden, the tile of the current org opens the whole sidebar as
+  a popover beside the rail, as `app/panels/list-popover` shows. In the Mac
+  app the window controls then keep their width in the top left corner, as
+  `mac-app/window/sidebar-popover` shows.
 - A state tints a whole bar or box, and its edges stay neutral. No box has
   an accent strip on any edge.
 - `sizes.ts` in `src/components/chat/` holds the one size formatter.
@@ -326,10 +406,16 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - [The workspace](design-workspace.md) gives the messages that wait for
   the sandbox, the tab row with its temporary tab, and the number with Copy
   link. It also gives the bars of the cloud computer.
-- [The chat](design-chat.md) gives the chips of attached files, the
-  Markdown tables and headings of a reply and of a file preview, and the
+- [The chat](design-chat.md) gives the chips of attached files and the
   fold of the work of a turn. It also gives the data that the chat does
   not have, and the files that the cloud computer could not read.
+- [The Markdown of replies](design-markdown.md) gives the tables, the
+  headings, the quotes, the rules, the marks, the line breaks, and the
+  pictures of a reply and of a file preview, and how a message line in the
+  work of a turn shows them.
+- [Secrets and Capabilities](design-secrets.md) gives the Secrets tab of
+  the org settings, the Capabilities icon beside every message box with
+  its control, and the requests and results of the secrets in the chat.
 - The app frame is a size container (`app-frame`), so the layout follows the
   width of the frame, not of the window. In the app the two are the same. A
   screen is as high as `--ui-screen-height`, which is the visible part of
@@ -340,8 +426,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
   the Waitlist tab, the codes, and the approval email. It also gives
   Suspend, Lift, and Approve, the daily chart, the notice of a pause, and
   the waitlist switch.
-- On a phone the org settings put their four tabs in three columns, so every
-  tab shows. The session tabs all shrink, and the current one keeps the start
+- On a phone the org settings put their six tabs in three columns, on two
+  lines, so every tab shows. The session tabs all shrink, and the current one keeps the start
   of its title beside its close button. When the session tabs still do not
   fit, their row scrolls sideways. A phone tab stays 40 px high to touch,
   but its fill is 32 px high, with 4 px of the row above and below it.

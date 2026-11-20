@@ -1,0 +1,45 @@
+# Older runners can show cut secret starts
+
+- **Severity:** High. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-18, from the docs step of the branch `calummoore/follow-up-tool-detail-cuts-precede-env-q1hv`. That branch fixed the follow-up item `tool-detail-cut-before-env-filter.md` with complete tool details, and left this path open.
+- **Location:** `crates/cnd-runner/src/limits.rs:63`, `crates/cnd-runner/src/link/tool_detail.rs:20`, `worker/chat/runner-event-limits.ts:47`, `worker/chat/runner-output.ts:75`, `src/shared/event-limits.ts:45`, and `docs/protocol/tool-detail-secrets.md`, which records the risk of older runners and fallback connections.
+- **Reason:** Option B changes the exact-copy rule of a protocol doc, so it waits for Cal's choice, while option A stays in force by a design call.
+
+- **Source:** Design.
+- **Category:** Security.
+- **Terms:**
+  - **Runner:** the program in each workspace cloud computer that sends agent events to the Durable Object of its workspace. Its code is in `crates/cnd-runner/`.
+  - **Hidden value:** a value that the Durable Object hides in each runner event: the value of a secret env var, or a value that a run with secrets used.
+  - **Tool detail:** the `detail` text of a `tool.updated` event, the description or subject of a tool call. The chat keeps at most 64 KiB of serialized JSON, and `omittedDetailBytes` counts the rest.
+  - **Complete tool details:** a runner offers them in its `hello`. When the `welcome` of the workspace accepts them, the runner sends the complete source, and the Durable Object filters before it cuts.
+  - **Cut detail:** a tool detail that the runner shortened before it sent the event. Its `omittedDetailBytes` is more than zero when it arrives.
+- **Background:**
+  - On a legacy or fallback connection, the runner hides its known tokens, then cuts each tool detail to the longest prefix that fits 64 KiB. A legacy connection has an older runner without complete tool details. A fallback connection has a workspace that does not accept them. `prepare` in `crates/cnd-runner/src/link/tool_detail.rs` calls `bound_event` on such a connection, before `emit` in `crates/cnd-runner/src/link/connection.rs` saves the event. `detail_prefix` in `crates/cnd-runner/src/limits.rs` makes the cut.
+  - The runner does not know the hidden values. Only the Durable Object hides them, in `filterRunnerOutput` of `worker/chat/runner-output.ts`, after it receives the event. `OutputSanitizer` in `src/shared/output-sanitizer.ts` replaces each exact copy with `[redacted]`, with the scanner of `src/shared/secret-text.ts`.
+  - `boundChatEvent` in `src/shared/event-limits.ts` cuts the detail again after that filter, and adds its count to the count of the runner.
+  - The SDK helper sends each tool with `omittedDetailBytes: 0`, in `runner/sdk-helper/src/providers/tool.ts`. So a count above zero on arrival means that the runner cut the detail.
+  - With complete tool details, the Durable Object gets the whole source and filters before it cuts. The problem below does not happen on such a connection.
+  - Every other connection is a legacy or a fallback connection, and it keeps the unconditional cut in the runner.
+  - A newer runner keeps its cut on a fallback connection, because `worker/chat/runner-event-limits.ts:47` refuses a detail over 64 KiB as too large.
+  - A design call of the parent orchestrator of 18 November 2026 keeps the current path for legacy and fallback connections. It is option A below. `docs/protocol/tool-detail-secrets.md` records its risk.
+  - The gap ends for a sandbox only when its runner and its workspace both support complete tool details. The runner gets that support through an update, as `docs/protocol/sandbox-software.md` says under "Updates" and "Installs at idle".
+  - The program `conductive` checks for an update at each runner start and every 10 minutes. It downloads the update in the background. A running sandbox installs a complete download after 2 idle minutes.
+  - A start runs the older runner when no complete download is there, because a start never waits for a download. A new sandbox from an org image of an earlier build also starts with an older runner.
+  - So the gap has no time limit. A long turn, a turn that waits for background work, a failed check, download, install, or start, or a stopped sandbox can keep an older runner.
+- **Problem:** On a legacy or fallback connection, a hidden value can cross the cut. Only the start of the value then reaches the Durable Object. The filter hides only exact copies, so that start shows. Example: a value `secretpass` that starts five characters before the end of the kept prefix leaves `secre`.
+- **Impact if no action:** The chat can store the start of a hidden value in tool history, and send it to each authorized browser in every replay. Stored history keeps it after the runner updates.
+- **Root question:** What should the chat show when a runner already cut a tool detail?
+- **Options:**
+  - **A.** Show the cut detail after the exact-copy filter, as now, and record the risk. The start of a value at the cut shows until both sides support complete tool details. This is in force by the design call of 18 November 2026. Effort: Small.
+  - **B.** Show the cut detail without its end when that end matches the start of a hidden value. The Durable Object adds the removed bytes to `omittedDetailBytes`. This changes the exact-copy behaviour of `docs/protocol/tokens-and-secrets.md`, because it hides text that is not a whole copy. It can hide ordinary text that matches the start of a value, such as one letter. It also changes the risk and the reason in `docs/protocol/tool-detail-secrets.md`. It needs Cal's choice. Effort: Medium.
+  - **C.** Show no text of a cut detail, only its count: an empty detail and the full count. A null detail with a count is not valid, as `worker/chat/runner-event-limits.ts:44` shows. This drops the longest-prefix rule of `docs/protocol/agent-runner.md` for these details, and members lose the prefix. It also changes the risk and the reason in `docs/protocol/tool-detail-secrets.md`. Effort: Small.
+- **Left out:**
+  - A recovery of the complete source. An older runner saves only the cut event in its outbox, and it closes its connection at an unknown command, as `docs/protocol/sandbox-software.md` says under "Updates".
+  - A refusal of older runners, or a higher version pin. It breaks the rule of `AGENTS.md` that older runners in the sandboxes must keep working, and it adds a rejection that only the user can allow.
+  - A delivery of the hidden values to the runner. An older runner has no code to use them.
+- **Wider fix:** B. It hides the start of a value at every cut that comes before the filter, also on a connection that never gets complete tool details.
+- **Previous examples:** Tool details had this cut before the filter on every connection, until complete tool details. The workspace-title path once cut its text before its filter. The preview-port labels first had the same order, and their change moved the filter before the cut. The runner-known tokens use a rule for parts of a token, from the user's decision of 18 November 2026, in `docs/protocol/tokens-and-secrets.md`.
+- **Related:** `plans/follow-ups/tool-detail-called-output.md` asks whether a tool detail shows tool output. Output would make long details common, so it makes this gap more frequent.
+- **Recommendation:** B. It closes the gap for each connection that cuts before the filter, and it hides at most the end of a detail that is already cut. Option A stays in force until Cal chooses.
+- **Action:** ask the user, because B changes the exact-copy rule of `docs/protocol/tokens-and-secrets.md`, and no recorded user decision covers that change.

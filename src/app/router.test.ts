@@ -43,23 +43,26 @@ describe('routes', () => {
         routes.settings('acme', tab),
         { screen: 'settings', orgId: 'acme', tab },
       ]),
-      [routes.routines('acme'), { screen: 'routines', orgId: 'acme' }],
-      [routes.newRoutine('acme'), { screen: 'new-routine', orgId: 'acme' }],
+      [routes.automations('acme'), { screen: 'automations', orgId: 'acme' }],
       [
-        routes.routine('acme', 'review prs'),
+        routes.newAutomation('acme'),
+        { screen: 'new-automation', orgId: 'acme' },
+      ],
+      [
+        routes.automation('acme', 'review prs'),
         {
-          screen: 'routine',
+          screen: 'automation',
           orgId: 'acme',
-          routineId: 'review prs',
-          tab: 'routine',
+          automationId: 'review prs',
+          tab: 'automation',
         },
       ],
       [
-        routes.routine('acme', 'review prs', 'runs'),
+        routes.automation('acme', 'review prs', 'runs'),
         {
-          screen: 'routine',
+          screen: 'automation',
           orgId: 'acme',
-          routineId: 'review prs',
+          automationId: 'review prs',
           tab: 'runs',
         },
       ],
@@ -70,7 +73,7 @@ describe('routes', () => {
     expect(parse('/orgs/acme/settings/billing')).toEqual({
       screen: 'not-found',
     })
-    expect(parse('/orgs/acme/routines/review-prs/runs/older')).toEqual({
+    expect(parse('/orgs/acme/automations/review-prs/runs/older')).toEqual({
       screen: 'not-found',
     })
   })
@@ -166,6 +169,14 @@ describe('routes', () => {
         { screen: 'operator', view: { page: 'codes', search: 'K7QHM-3XP2R' } },
       ],
       [
+        routes.operatorProviders(),
+        { screen: 'operator', view: { page: 'providers' } },
+      ],
+      [
+        routes.operatorSettings(),
+        { screen: 'operator', view: { page: 'settings' } },
+      ],
+      [
         routes.operatorOrg('org/h3x w4v'),
         { screen: 'operator', view: { page: 'org', id: 'org/h3x w4v' } },
       ],
@@ -182,12 +193,13 @@ describe('routes', () => {
       view: { page: 'orgs', search: '' },
     })
     for (const path of [
-      '/operator/settings',
+      '/operator/settings/stop-time',
       '/operator/users/dana-k',
       '/operator/users/0',
       '/operator/orgs/acme/members',
       '/operator/waitlist/58201734',
       '/operator/codes/K7QHM-3XP2R',
+      '/operator/providers/boat',
     ]) {
       expect(parse(path), path).toEqual({ screen: 'not-found' })
     }

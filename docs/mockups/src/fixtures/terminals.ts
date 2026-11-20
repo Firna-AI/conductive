@@ -5,6 +5,8 @@
  */
 
 import {
+  hoveredLinkSession,
+  labelledLinkSession,
   testSession,
   workspacePrompt,
   workspaceSession,
@@ -21,6 +23,9 @@ import {
  *   terminal ended.
  * - `older`: a workspace whose cloud computer software opens one terminal
  *   only, so the tool shows no row of tabs.
+ * - `link`: the dev server, with the mouse pointer on its local address.
+ * - `labelled-link`: a test run, with the pointer on a link that its
+ *   reporter prints with a label.
  * - `shared-larger`: another viewer with a larger panel set the shared size
  *   of the shown terminal, so the text is smaller.
  * - `shared-smaller`: another viewer with a smaller panel set the shared
@@ -32,6 +37,8 @@ export const terminalStates = [
   'limit',
   'disconnected',
   'older',
+  'link',
+  'labelled-link',
   'shared-larger',
   'shared-smaller',
 ] as const
@@ -79,6 +86,13 @@ export const terminalSets: Readonly<Record<TerminalState, TerminalSet>> = {
   },
   disconnected: { numbers: three, shown: 2, lines: testSession },
   older: { numbers: [1], shown: 1, lines: workspaceSession },
+  link: { numbers: [1], shown: 1, lines: hoveredLinkSession },
+  'labelled-link': {
+    numbers: [1, 2],
+    shown: 2,
+    lines: labelledLinkSession,
+    prompt: workspacePrompt,
+  },
   'shared-larger': {
     numbers: three,
     shown: 1,

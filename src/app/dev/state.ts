@@ -1,3 +1,4 @@
+import type { Agent } from '../../shared/generated/Agent'
 import type { Workspace } from '../../shared/generated/Workspace'
 import type { Attachment } from '../../shared/generated/Attachment'
 import type { AccountResponse } from '../../shared/account'
@@ -8,13 +9,15 @@ import type {
   GetStartedResponse,
   GetStartedStep,
 } from '../../shared/onboarding'
-import type {
-  BuildResponse,
-  OrgSettings,
-  Repository,
+import {
+  compareRepositoryNames,
+  type BuildResponse,
+  type OrgSettings,
+  type Repository,
 } from '../../shared/org-settings'
+import type { OrgAgentLoginStatus } from '../../shared/org-agent-logins'
 import type { OrgSummary } from '../../shared/orgs'
-import type { Routine, RoutineRun } from '../../shared/routines'
+import type { Automation, AutomationRun } from '../../shared/automations'
 import type { Section } from '../../shared/sections'
 import type { WorkspaceResponse } from '../../shared/workspaces'
 import { coreFixtures } from '../../test-support/fixtures/core'
@@ -51,9 +54,9 @@ export interface OrgState {
   currentImageBuildId: string | null
   members: MembersResponse
   /** Newest first, as the Worker lists them. */
-  routines: readonly Routine[]
-  /** The runs of every routine of the org. */
-  runs: readonly RoutineRun[]
+  automations: readonly Automation[]
+  /** The runs of every automation of the org. */
+  runs: readonly AutomationRun[]
 }
 
 /**
@@ -70,9 +73,35 @@ export interface DevWaitlist {
   invitations: { invite: PendingOrgInvite; org: OrgState }[]
 }
 
+/**
+ * The provider accounts of the dev fake: the configured IDs in ID order,
+ * the weight of each for new orgs, and the last change of the weights. A
+ * read or a save can fail on purpose, from the options. `made` keeps the
+ * account and the time of each org that Create org made in the page, so
+ * the operator section lists it, as the Worker does.
+ */
+export interface DevProviders {
+  accounts: readonly string[]
+  weights: Readonly<Record<string, number>>
+  updatedAt: number | null
+  operator: { githubId: number; login: string } | null
+  readFails: boolean
+  saveFails: boolean
+  made: Map<string, { providerAccount: string; createdAt: number }>
+}
+
+/** A connected org login, as the dev fake keeps it, with no key. */
+export type DevOrgLogin = Extract<OrgAgentLoginStatus, { connected: true }>
+
 /** Everything that the writes of the dev fake change. */
 export interface DevState {
+  /**
+   * The account, without its default logins, which the account route
+   * names from the logins at each read, as the Worker does.
+   */
   account: AccountResponse
+  /** The org logins of each org, by org ID and agent. */
+  orgLogins: Map<string, Map<Agent, DevOrgLogin>>
   getStarted: GetStartedResponse
   /** In the order of the org rail. */
   orgs: readonly OrgState[]
@@ -93,34 +122,47 @@ export interface DevState {
   /** Each change of a share setting fails, from `shareSave=fail`. */
   shareSaveFails: boolean
   waitlist: DevWaitlist
+  providers: DevProviders
 }
 
 /**
  * The repositories of a new org: every repository of the account catalogue,
  * which the person and the GitHub App both reach, with the chosen GitHub
- * IDs added.
+ * IDs added. The chosen ones come first, in the name order, as Create org
+ * of the Worker orders them.
  */
 function catalogueOf(
   orgId: string,
   chosen: readonly number[],
 ): readonly Repository[] {
   const taken: string[] = []
-  return coreFixtures().githubRepositories.repositories.map((repository) => {
-    const id = uniqueId(repository.fullName.split('/').at(-1) ?? 'repo', taken)
-    taken.push(id)
-    return {
-      ...repository,
-      id,
-      orgId,
-      selected: chosen.includes(repository.githubId),
-    }
-  })
+  const catalogue = coreFixtures().githubRepositories.repositories.map(
+    (repository): Repository => {
+      const id = uniqueId(
+        repository.fullName.split('/').at(-1) ?? 'repo',
+        taken,
+      )
+      taken.push(id)
+      return {
+        ...repository,
+        id,
+        orgId,
+        selected: chosen.includes(repository.githubId),
+      }
+    },
+  )
+  return [
+    ...catalogue
+      .filter((repository) => repository.selected)
+      .sort(compareRepositoryNames),
+    ...catalogue.filter((repository) => !repository.selected),
+  ]
 }
 
 /**
  * A new org: the default section, no workspaces, the repositories of the
  * catalogue with the chosen ones added, empty scripts with the base image,
- * no builds, the user as its only member, and no routines.
+ * no builds, the user as its only member, and no automations.
  */
 export function freshOrg(
   org: OrgSummary,
@@ -156,7 +198,7 @@ export function freshOrg(
       members: [{ user, role: org.role, joinedAt: now }],
       invites: [],
     },
-    routines: [],
+    automations: [],
     runs: [],
   }
 }

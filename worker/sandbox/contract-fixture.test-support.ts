@@ -22,6 +22,7 @@ export type ContractReply =
     }
   | { kind: 'large_file'; path: string; sizeBytes: number }
   | { kind: 'wrong_file'; path: string }
+  | { kind: 'file_info'; path: string; sizeBytes: number }
   | { kind: 'port' }
   | {
       kind: 'failure'
@@ -39,7 +40,9 @@ export interface ProviderContractFixture {
   readonly provider: SandboxProvider
   readonly secret: string
   readonly expectedPort: PrivatePort
-  given(reply: ContractReply): void
+  readonly defaultProviderCode?: string
+  readonly providerCodeFor?: (code: string) => string | null
+  given(reply: ContractReply): void | Promise<void>
   createIdentities(): readonly (string | null)[]
 }
 

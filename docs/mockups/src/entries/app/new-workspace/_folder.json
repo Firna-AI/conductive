@@ -4,6 +4,7 @@
     "waiting-repository",
     "not-created",
     "files",
+    "capabilities",
     "fast",
     "dialog",
     "start-branch",

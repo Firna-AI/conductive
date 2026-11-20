@@ -5,7 +5,10 @@ import { fileMark } from '../../app/draft-marks'
 import { pickChatFiles } from './draft-files.test-support'
 import { readyIds } from '../../app/draft-files'
 import { chatHistoryPath } from '../../shared/events'
-import { filePaths } from '../../shared/files'
+import {
+  attachmentUploadCompletePath,
+  attachmentUploadStartPath,
+} from '../../shared/messages'
 import { retryMessagePath, sessionPaths } from '../../shared/sessions'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
@@ -102,9 +105,10 @@ describe('a reply that names a linked session', () => {
     chat.controller.setDraft(first, words)
     await chat.controller.send(first)
     expect(snapshot(chat).notice?.title).toBe("Your message didn't send")
-    // The Worker took the message before its reply got lost.
-    streamLinked(chat)
+    // The Worker took the message before its reply got lost. A send again
+    // before the stream shows it keeps the same ID.
     await chat.controller.send(first)
+    streamLinked(chat)
     const bodies = await chat.bodies(
       'POST',
       sessionPaths.messages(org, ws, first),
@@ -177,9 +181,11 @@ const codex: AgentChoice = {
   effort: 'medium',
   fast: false,
 }
+const target = { type: 'workspace', workspaceId: ws } as const
+/** The start call of an upload, which comes before its parts. */
 const isUpload = (request: Request) =>
   request.method === 'POST' &&
-  new URL(request.url).pathname === filePaths.attachments(org, ws)
+  new URL(request.url).pathname === attachmentUploadStartPath(org, target)
 const isRetry = (request: Request) =>
   request.method === 'POST' && request.url.endsWith('/retry')
 
@@ -187,7 +193,7 @@ const isRetry = (request: Request) =>
 function attachThatWaits(chat: Chat) {
   chat.server.json(
     'POST',
-    filePaths.attachments(org, ws),
+    attachmentUploadCompletePath(org, target, FAKE_IDS.upload),
     {
       attachment: {
         id: 'late-file',

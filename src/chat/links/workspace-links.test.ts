@@ -22,7 +22,7 @@ const shapes = (parts: readonly ChatPart[]) => parts.map(shapeOf)
 
 /** The parts of a sent message, as the chat reads it. */
 const messageParts = (text: string, list: WorkspaceLinks = links) =>
-  chatParts(text, list, { strong: false, web: webLinkOf })
+  chatParts(text, list, { web: webLinkOf })
 
 /** The parts of the text of a message field, with a chip for each link. */
 function fieldShapes(text: string) {

@@ -1,22 +1,16 @@
 import type { AgentChoice } from '../shared/generated/AgentChoice'
 import type { FieldFiles } from '../chat/components/chip-field/attached-files'
+import type { WorkspaceCapabilities } from '../shared/secrets'
 import {
   workspacesPath,
-  type CreateWorkspaceRequest,
   type CreateWorkspaceResponse,
 } from '../shared/workspaces'
 import { readCreated } from './api/read-workspaces'
-import { isMissingFile, readyIds, type IntakeRefusals } from './draft-files'
+import { withPreapproval } from './capabilities-model'
+import { isMissingFile, type IntakeRefusals } from './draft-files'
+import { failSentDraft, withoutFileMarks } from './draft-file-state'
 import {
-  failSentDraft,
-  markedFiles,
-  messageText,
-  withoutFileMarks,
-} from './draft-file-state'
-import {
-  branchFields,
   branchIn,
-  formBranch,
   withPick,
   withTarget,
   type BranchRepository,
@@ -24,11 +18,13 @@ import {
 } from './new-workspace-branch'
 import {
   draftReady,
+  emptyDraft,
   keptRepository,
   withShownRepository,
   type CreateState,
   type Draft,
 } from './new-workspace-draft'
+import { createRequest } from './new-workspace-request'
 import { DraftUploads } from './new-workspace-files'
 import type { OrgModel } from './org-model'
 import { asApiError, Store, valueOf } from './store'
@@ -53,6 +49,9 @@ import { asApiError, Store, valueOf } from './store'
  * Once the server takes the message, the workspace exists. When its first
  * start fails, the workspace keeps the message in its chat, with the saved
  * cause and Try again, so the form gives nothing back.
+ *
+ * The create also takes the choices of the Capabilities control: the
+ * secrets that the new workspace pre-approves, and its Mac access.
  */
 export class NewWorkspaceModel {
   readonly draft: Store<Draft>
@@ -78,13 +77,14 @@ export class NewWorkspaceModel {
   constructor(org: OrgModel, sectionId: string | null) {
     this.org = org
     this.sectionId = sectionId
-    this.draft = new Store<Draft>(this.emptyDraft())
+    this.draft = new Store<Draft>(this.newDraft())
     this.uploads = new DraftUploads({
       draft: this.draft,
       api: org.services.api,
       orgId: org.orgId,
       newId: () => org.services.newId(),
       lifetime: () => org.creations.lifetime,
+      delay: org.services.delay,
     })
     this.create = new Store<CreateState>({ state: 'idle' })
     // A draft that got its text before the repositories and the builds
@@ -93,20 +93,9 @@ export class NewWorkspaceModel {
     org.builds.subscribe(() => this.keepShownRepository())
   }
 
-  /** A new draft. It keeps the choice and a picked repository of `keep`. */
-  private emptyDraft(keep?: Draft): Draft {
-    return {
-      text: '',
-      repository: keep?.repository?.picked ? keep.repository : null,
-      branch: null,
-      choice: keep?.choice ?? null,
-      sectionId: null,
-      files: [],
-      detached: [],
-      refused: [],
-      refusedFolders: [],
-      messageId: this.org.services.newId(),
-    }
+  /** A new draft, which keeps the choice and a picked repository of `keep`. */
+  private newDraft(keep?: Draft): Draft {
+    return emptyDraft(this.org.services.newId(), keep)
   }
 
   /** The draft takes the repository that the form shows, if it has none. */
@@ -172,6 +161,28 @@ export class NewWorkspaceModel {
     this.draft.change((draft) => ({ ...draft, sectionId }))
   }
 
+  /** Pre-approves a secret of the org for the new workspace, or not. */
+  setPreapproved(secretId: string, on: boolean): void {
+    this.changeCapabilities(({ preapprovedSecretIds, macAccess }) => ({
+      preapprovedSecretIds: withPreapproval(preapprovedSecretIds, secretId, on),
+      macAccess,
+    }))
+  }
+
+  setMacAccess(macAccess: boolean): void {
+    this.changeCapabilities((capabilities) => ({ ...capabilities, macAccess }))
+  }
+
+  private changeCapabilities(
+    change: (capabilities: WorkspaceCapabilities) => WorkspaceCapabilities,
+  ): void {
+    if (this.create.get().state === 'sending') return
+    this.draft.change((draft) => ({
+      ...draft,
+      capabilities: change(draft.capabilities),
+    }))
+  }
+
   /**
    * Attaches one pick and returns its new file IDs immediately.
    * While the create runs, it uploads nothing, because the create already
@@ -210,27 +221,15 @@ export class NewWorkspaceModel {
     if (!draftReady(draft) || this.create.get().state === 'sending') {
       return null
     }
-    const sectionId = draft.sectionId ?? this.sectionId
-    const repositoryId = draft.repository?.id ?? defaults.repositoryId
-    const repository = valueOf(this.org.repositories.get())?.find(
-      (item) => item.id === repositoryId,
-    )
-    const request: CreateWorkspaceRequest = {
-      repositoryId,
-      ...(sectionId ? { sectionId } : {}),
-      // The Worker refuses a create in a repository that the org does not
-      // have before any branch check, so such a create names no branch.
-      ...(repository ? branchFields(formBranch(draft.branch, repository)) : {}),
-      firstMessage: {
-        id: draft.messageId,
-        text: messageText(draft.text, draft.files),
-        attachmentIds: readyIds(markedFiles(draft.text, draft.files)),
-        choice: draft.choice ?? defaults.choice,
-      },
-    }
+    const request = createRequest(draft, {
+      ...defaults,
+      sectionId: this.sectionId,
+      repositories: valueOf(this.org.repositories.get()),
+      secrets: valueOf(this.org.secrets.list.store.get()),
+    })
     const life = this.org.creations.lifetime
     const unfollow = life.onEnd(() => {
-      this.draft.set(this.emptyDraft())
+      this.draft.set(this.newDraft())
       this.create.set({ state: 'idle' })
     })
     this.create.set({ state: 'sending' })
@@ -246,7 +245,7 @@ export class NewWorkspaceModel {
       opened?.(created)
       this.uploads.end()
       this.draft.change((current) => ({
-        ...this.emptyDraft(current),
+        ...this.newDraft(current),
         text:
           current.text === draft.text
             ? ''
@@ -268,10 +267,14 @@ export class NewWorkspaceModel {
           ...failSentDraft(current, sent, error),
         }))
       }
+      const failure = asApiError(error)
+      // A secret of the draft is gone, so the secrets read again, and Try
+      // again sends only the secrets that remain.
+      if (failure.code === 'secret_not_found') void this.org.secrets.read()
       this.create.set({
         state: 'failed',
-        error: asApiError(error),
-        repositoryId,
+        error: failure,
+        repositoryId: request.repositoryId,
         startBranch: request.startBranch ?? null,
       })
       return null

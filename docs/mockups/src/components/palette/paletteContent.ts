@@ -1,9 +1,9 @@
-import { archivedWorkspaceList } from '../../fixtures/archivedWorkspaces'
 import { orgs } from '../../fixtures/orgs'
 import type { RepositoryKey } from '../../fixtures/repositories'
 import type { ShortcutChanges } from '../../fixtures/shortcutChanges'
 import { helpGroupLabel } from '../feedback/feedbackCopy'
 import {
+  archivedRows,
   workspaceSections,
   type OpenWorkspace,
   type WorkspaceRow,
@@ -11,6 +11,7 @@ import {
 import {
   appActions,
   helpActions,
+  windowActions,
   orgActions,
   workspaceActions,
   type Command,
@@ -74,6 +75,11 @@ export type PaletteContext = {
   archivable: boolean
   restorable?: boolean
   rightColumn?: boolean
+  /**
+   * The page under the palette can show the sidebar, so the Window group
+   * offers Hide the sidebar. A phone has no sidebar, so it leaves it out.
+   */
+  sidebar?: boolean
   mac?: boolean
   /**
    * The person's changes to the shortcuts (decision 190). On desktop, each
@@ -98,14 +104,11 @@ const recentKeys = [
 
 const recentLimit = 5
 
-const archivedRows: readonly WorkspaceRow[] = archivedWorkspaceList.map(
-  (workspace) => ({
-    workspace,
-    status: 'archived',
-    github: workspace.github,
-    selected: false,
-  }),
-)
+/**
+ * The archived workspaces of the last 14 days, as the Archived group has
+ * them. A removed workspace shows in no group of the palette.
+ */
+const archived: readonly WorkspaceRow[] = archivedRows()
 
 function workspaceRows(rows: readonly WorkspaceRow[]): PaletteRow[] {
   return rows.map((row) => ({ kind: 'workspace', row }))
@@ -130,11 +133,17 @@ function openActions(context: PaletteContext): Command[] {
 }
 
 /**
- * The actions in their order: those of the open workspace, of the org, and
- * of the orgs, then Send feedback, which comes last.
+ * The actions in their order: those of the open workspace, of the org, of
+ * the orgs, and of the window, then Send feedback, which comes last.
  */
 function actionsOf(context: PaletteContext): Command[] {
-  return [...openActions(context), ...orgActions, ...appActions, ...helpActions]
+  return [
+    ...openActions(context),
+    ...orgActions,
+    ...appActions,
+    ...(context.sidebar ? windowActions : []),
+    ...helpActions,
+  ]
 }
 
 /** The settings, each with the page that holds it, for a mixed list. */
@@ -147,8 +156,9 @@ function settingRows(context: PaletteContext): PaletteRow[] {
 
 /**
  * The results of a query on the All tab: the workspaces, the actions, and
- * the settings that match, then the archived workspaces that match. Without
- * the workspace data, only the actions and the settings can match.
+ * the settings that match, then the archived workspaces of the last 14 days
+ * that match. Without the workspace data, only the actions and the settings
+ * can match.
  */
 function searchGroups(
   query: string,
@@ -160,7 +170,7 @@ function searchGroups(
     { label: 'Workspaces', rows: loaded ? workspaceRows(active) : [] },
     { label: 'Actions', rows: commandRows(actionsOf(context)) },
     { label: 'Settings', rows: settingRows(context) },
-    { label: 'Archived', rows: loaded ? workspaceRows(archivedRows) : [] },
+    { label: 'Archived', rows: loaded ? workspaceRows(archived) : [] },
   ]
   return groups
     .map((group) => ({
@@ -172,7 +182,7 @@ function searchGroups(
 
 /** The archived workspaces of one repository, or of all, in one group. */
 function archivedGroups(repository?: RepositoryKey): PaletteGroup[] {
-  const rows = archivedRows.filter(
+  const rows = archived.filter(
     (row) =>
       repository === undefined || row.workspace.repository === repository,
   )
@@ -224,6 +234,9 @@ function groupsOf(
         ...own,
         { label: orgs.acme.name, rows: commandRows(orgActions) },
         { label: 'Orgs', rows: commandRows(appActions) },
+        ...(context.sidebar
+          ? [{ label: 'Window', rows: commandRows(windowActions) }]
+          : []),
         { label: helpGroupLabel, rows: commandRows(helpActions) },
       ]
     }

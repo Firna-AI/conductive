@@ -13,7 +13,7 @@ import {
   baseChangeFetchCommand,
   baseChangeInstallCommand,
 } from './base-change-commands'
-import { pendingContinue } from './continue-types'
+import { pendingWorkspaceChange } from './repository-change-types'
 import { repositoryLocation } from './repository-locations'
 import { workspaceRepositoryLocations } from './repository-location-data'
 
@@ -72,7 +72,8 @@ export class WorkspaceBaseChanges {
         job.change,
       )
       if (!moved) return await this.finish(job)
-      if (await pendingContinue(this.storage)) return await this.retry(job)
+      if (await pendingWorkspaceChange(this.storage))
+        return await this.retry(job)
       const row = (await baseChangeWorkspace(this.env.DB, job))?.row
       if (!row) return await this.finish(job)
       if (!baseChangeComputerReady(row) || !row.sandboxId)
@@ -144,7 +145,7 @@ export class WorkspaceBaseChanges {
       current.row.ownerUserId === scope.ownerUserId &&
       current.row.sandboxId === scope.sandboxId &&
       current.row.providerAccount === scope.providerAccount &&
-      !(await pendingContinue(this.storage)),
+      !(await pendingWorkspaceChange(this.storage)),
     )
   }
 

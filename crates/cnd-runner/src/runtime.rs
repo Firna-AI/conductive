@@ -11,13 +11,27 @@ use tokio::task::JoinSet;
 use crate::clock::Clock;
 use crate::error::Result;
 use crate::link::ports::{LinkUpdate, RunnerLink};
+use crate::relocation::{RepositoryFolders, RepositoryTarget, check_move, requested_move};
+use crate::startup_log::StartupLog;
 use crate::state::store::EventStore;
+use crate::update::{IdleUpdate, ReleaseReadiness};
+
+/// Why the runner completed its normal shutdown path.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum RunExit {
+    /// A shutdown signal or a closed shutdown channel stopped the runner.
+    Shutdown,
+    /// Idle work and local release readiness permit an in-place release change.
+    Swap,
+    /// A repository move names another folder, and no turn runs.
+    Relocate(RepositoryTarget),
+}
 
 /// File and turn owners receive commands without blocking socket confirmations.
 #[cfg_attr(test, unimock::unimock(api = CommandHandlerMock))]
 #[async_trait]
 pub trait CommandHandler: Send + Sync {
-    /// Start warm-up and offline report schedules before the first connection attempt.
+    /// Remove stale credentials and start offline report schedules before the first connection attempt.
     async fn start(&self) -> Result<()> {
         Ok(())
     }
@@ -25,6 +39,12 @@ pub trait CommandHandler: Send + Sync {
     fn connected(&self) -> BoxFuture<'static, Result<()>>;
     /// Queue one command in wire order. The handler owns its asynchronous work.
     fn command(&self, command: RunnerCommand) -> Result<()>;
+    /// Report active turns, queued work, unfinished accepted turns, and report requests.
+    async fn busy(&self) -> Result<bool>;
+    /// Report agent work only. A repository move waits for it, but not for reports.
+    async fn working(&self) -> Result<bool> {
+        self.busy().await
+    }
     /// End accepted live turns before the final persist and socket close.
     async fn shutdown(&self) -> Result<()>;
 }
@@ -33,7 +53,7 @@ pub trait CommandHandler: Send + Sync {
 #[async_trait]
 pub trait Runner: Send + Sync {
     /// Run until shutdown is true or its sender closes. Startup errors propagate.
-    async fn run(&self, shutdown: watch::Receiver<bool>) -> Result<()>;
+    async fn run(&self, shutdown: watch::Receiver<bool>) -> Result<RunExit>;
 }
 
 /// Connection runtime. Repository scans and agents belong to injected handlers.
@@ -42,6 +62,9 @@ pub struct RunnerCore {
     store: Arc<dyn EventStore>,
     clock: Arc<dyn Clock>,
     handler: Arc<dyn CommandHandler>,
+    releases: Arc<dyn ReleaseReadiness>,
+    folders: Option<RepositoryFolders>,
+    startup_log: Option<Arc<dyn StartupLog>>,
 }
 
 impl RunnerCore {
@@ -51,13 +74,29 @@ impl RunnerCore {
         store: Arc<dyn EventStore>,
         clock: Arc<dyn Clock>,
         handler: Arc<dyn CommandHandler>,
+        releases: Arc<dyn ReleaseReadiness>,
     ) -> Self {
         Self {
             link,
             store,
             clock,
             handler,
+            releases,
+            folders: None,
+            startup_log: None,
         }
+    }
+
+    /// Accept repository moves to these folders. Without them, each move is refused.
+    pub fn with_folders(mut self, folders: RepositoryFolders) -> Self {
+        self.folders = Some(folders);
+        self
+    }
+
+    /// Share the process startup measurements supplied by the composition root.
+    pub fn with_startup_log(mut self, startup_log: Arc<dyn StartupLog>) -> Self {
+        self.startup_log = Some(startup_log);
+        self
     }
 
     async fn connected(
@@ -65,12 +104,26 @@ impl RunnerCore {
         shutdown: &mut watch::Receiver<bool>,
         jobs: &mut JoinSet<(u64, Result<()>)>,
         round: u64,
-    ) {
+    ) -> Option<RunExit> {
         let mut step = self.link.step();
+        let mut check = self.clock.update_delay();
+        let mut idle = IdleUpdate::default();
+        let mut welcomed = false;
+        let mut relocation: Option<RepositoryTarget> = None;
         loop {
+            if let Some(target) = relocation.take() {
+                match self.handler.working().await {
+                    Ok(false) => return Some(RunExit::Relocate(target)),
+                    Ok(true) => relocation = Some(target),
+                    Err(_) => {
+                        tracing::warn!("The runner could not check its turns before a move.");
+                        relocation = Some(target);
+                    }
+                }
+            }
             tokio::select! {
                 biased;
-                _ = async { let _ = shutdown.wait_for(|stopped| *stopped).await; } => return,
+                _ = async { let _ = shutdown.wait_for(|stopped| *stopped).await; } => return None,
                 finished = jobs.join_next(), if !jobs.is_empty() => {
                     match finished {
                         Some(Ok((job_round, Err(_)))) => {
@@ -78,7 +131,7 @@ impl RunnerCore {
                             if job_round == round {
                                 drop(step);
                                 let _ = self.link.close().await;
-                                return;
+                                return None;
                             }
                         },
                         Some(Err(_)) => tracing::warn!("The runner command task could not finish."),
@@ -88,25 +141,55 @@ impl RunnerCore {
                 update = &mut step => {
                     match update {
                         Ok(LinkUpdate::Connected) => {
+                            if let Some(log) = &self.startup_log { log.welcomed(); }
+                            welcomed = true;
                             let connected = self.handler.connected();
                             jobs.spawn(async move { (round, connected.await) });
                         },
                         Ok(LinkUpdate::Command(command)) => {
-                            if self.handler.command(*command).is_err() { tracing::warn!("The runner command could not finish."); }
+                            idle.reset();
+                            if let Some(request) = requested_move(&command) {
+                                if let Some(target) = check_move(self.folders.as_ref(), self.link.as_ref(), request).await {
+                                    relocation = Some(target);
+                                }
+                            } else if self.handler.command(*command).is_err() { tracing::warn!("The runner command could not finish."); }
                         },
                         Ok(LinkUpdate::Progress) => {},
-                        Ok(LinkUpdate::Disconnected) | Err(_) => return,
+                        Ok(LinkUpdate::Disconnected) | Err(_) => return None,
                     }
                     step = self.link.step();
                 },
+                _ = &mut check => {
+                    check = self.clock.update_delay();
+                    if !welcomed || !jobs.is_empty() {
+                        idle.reset();
+                        continue;
+                    }
+                    match self.check_update(&mut idle).await {
+                        Ok(true) => return Some(RunExit::Swap),
+                        Ok(false) => {},
+                        Err(error) => {
+                            idle.reset();
+                            tracing::warn!(%error, "The runner could not check its idle update.");
+                        }
+                    }
+                },
+                _ = self.clock.move_delay(), if relocation.is_some() => {},
             }
         }
+    }
+
+    async fn check_update(&self, idle: &mut IdleUpdate) -> Result<bool> {
+        let busy = self.handler.busy().await?;
+        let now = self.clock.monotonic();
+        let release = self.releases.status()?;
+        Ok(idle.observe(now, busy, release))
     }
 }
 
 #[async_trait]
 impl Runner for RunnerCore {
-    async fn run(&self, mut shutdown: watch::Receiver<bool>) -> Result<()> {
+    async fn run(&self, mut shutdown: watch::Receiver<bool>) -> Result<RunExit> {
         let now = self.clock.now()?;
         if self.store.recover(now).await.is_err() {
             self.store.persist().await?;
@@ -115,6 +198,8 @@ impl Runner for RunnerCore {
         self.handler.start().await?;
         let mut jobs = JoinSet::new();
         let mut round = 0;
+        let mut exit = RunExit::Shutdown;
+        let mut swap_close = Ok(());
         while !*shutdown.borrow() && shutdown.has_changed().is_ok() {
             round += 1;
             let connected = tokio::select! {
@@ -123,7 +208,14 @@ impl Runner for RunnerCore {
                 connected = self.link.connect() => connected,
             };
             if connected.is_ok() {
-                self.connected(&mut shutdown, &mut jobs, round).await;
+                if let Some(log) = &self.startup_log {
+                    log.connected();
+                }
+                if let Some(ended) = self.connected(&mut shutdown, &mut jobs, round).await {
+                    swap_close = self.link.close().await;
+                    exit = ended;
+                    break;
+                }
             }
             if *shutdown.borrow() || shutdown.has_changed().is_err() {
                 break;
@@ -145,10 +237,16 @@ impl Runner for RunnerCore {
         let closed = self.link.close().await;
         ended?;
         saved?;
-        closed
+        closed?;
+        swap_close?;
+        Ok(exit)
     }
 }
 
 #[cfg(test)]
 #[path = "_tests_/runtime_tests.rs"]
 mod runtime_tests;
+
+#[cfg(test)]
+#[path = "_tests_/idle_runtime/mod.rs"]
+mod idle_runtime;

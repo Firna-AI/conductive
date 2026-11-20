@@ -30,7 +30,7 @@ says.
   reached it.
 - The text is the stored text, as the chat shows it. So the text of a tool
   message ends with its `Sent by:` line. No text holds a
-  [sender line](agent-instructions.md#the-sender-line).
+  [sender line](message-lines.md#the-sender-line).
 - Reason: Conductor's `message get` gives one message.
 - An unknown message, or a message of another session, gets HTTP 404 with
   the error code `message_not_found`.
@@ -60,6 +60,9 @@ says.
   route of the app does.
 - The reply gives the session with its link. It says whether the session
   is closed.
+- A close also ends each open secret request of the session, as
+  [The end of a request](secret-requests.md#the-end-of-a-request) says.
+  This holds for a close in the app too.
 - Reason: Conductor's `session archive` closes a session. A close of a
   session whose turn runs asks first in the app, so the call asks for the
   same choice.

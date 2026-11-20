@@ -6,16 +6,17 @@ import type { StartingLog } from '../../fixtures/starting'
 import { classes } from '../common/classes'
 import { DrawnChoices } from '../mac/CommandActions'
 import { useMacApp } from '../mac/MacApp'
-import { SandboxBar } from '../workspace/SandboxNotice'
-import {
-  replacesComposer,
-  type SandboxNoticeState,
-} from '../workspace/sandboxNoticeState'
+import { SandboxBar, type BarNotice } from '../workspace/SandboxNotice'
+import { replacesComposer } from '../workspace/sandboxNoticeState'
 import { StartingCard } from '../workspace/StartingCard'
 import { ChatItemView } from './ChatItemView'
+import { ChatPictures, type PictureRead } from './chatPictures'
 import { Composer, type ComposerState } from './Composer'
 import { groupItems } from './groupItems'
 import { isPendingCommand, PendingCommand } from './PendingCommand'
+import { isPendingRequest } from './requests'
+import { SecretRequest } from './SecretRequest'
+import { secretRunWords } from './secretRunCopy'
 import { ToolGroup } from './ToolGroup'
 import { WorkFold, type FoldState } from './WorkFold'
 import styles from './ChatPane.module.css'
@@ -25,9 +26,11 @@ import styles from './ChatPane.module.css'
  * the sandbox starts, its steps show at the end of the transcript. An empty
  * transcript shows `empty` instead. When a turn ends, the work before each
  * of its answers folds into one line. The commands that wait for approval
- * on a Mac leave the transcript and stay in view just above the composer,
- * in a region that scrolls when they need more room. Once answered, a
- * command shows at its place in the transcript.
+ * on a Mac, and the requests for secrets while their tool calls wait, leave
+ * the transcript and stay in view just above the composer, in a region
+ * that scrolls when they need more room. Once answered, a command or a run
+ * shows at its place in the transcript. A request that outlived its tool
+ * call stays at its place, as a late request.
  */
 export function ChatPane(props: {
   items: readonly ChatItem[]
@@ -36,9 +39,9 @@ export function ChatPane(props: {
    * The sandbox is not running: the bar takes the place of the composer. A
    * failed first start keeps the composer under its bar, so members can
    * still queue messages. A failed start carries its saved message, and a
-   * refused start its reason.
+   * refused start its reason, and an archived workspace its days.
    */
-  problem?: SandboxNoticeState
+  problem?: BarNotice
   starting?: StartingLog
   empty?: ReactNode
   /** A message above the composer, such as a failed create. */
@@ -51,12 +54,18 @@ export function ChatPane(props: {
    * open folds starts at its top.
    */
   fold?: FoldState
+  /**
+   * The reads of the pictures of the answers. The chat reads pictures only
+   * while the cloud computer runs. Without reads, each shows as its link.
+   */
+  pictures?: PictureRead
 }) {
   const mac = useMacApp()
   const empty = props.items.length === 0 && !props.starting
   const composer = !props.problem || !replacesComposer(props.problem)
-  const pending = props.items.filter(isPendingCommand)
-  const transcript = props.items.filter((item) => !isPendingCommand(item))
+  const pending = props.items.filter(isPendingRequest)
+  const commands = pending.filter(isPendingCommand)
+  const transcript = props.items.filter((item) => !isPendingRequest(item))
   const fold = props.fold ?? 'closed'
   return (
     <section
@@ -77,30 +86,37 @@ export function ChatPane(props: {
           data-mokly-scroll="chat-transcript"
         >
           <div className={styles.transcript}>
-            {groupItems(transcript).map((entry) => {
-              switch (entry.kind) {
-                case 'tools':
-                  return (
-                    <ToolGroup
-                      calls={entry.calls}
-                      open={entry.open}
-                      key={entry.id}
-                    />
-                  )
-                case 'work':
-                  return (
-                    <WorkFold key={entry.id} state={fold} steps={entry.steps} />
-                  )
-                case 'item':
-                  return (
-                    <ChatItemView
-                      item={entry.item}
-                      key={entry.item.id}
-                      viewer={props.viewer}
-                    />
-                  )
-              }
-            })}
+            <ChatPictures read={props.pictures}>
+              {groupItems(transcript).map((entry) => {
+                switch (entry.kind) {
+                  case 'tools':
+                    return (
+                      <ToolGroup
+                        calls={entry.calls}
+                        open={entry.open}
+                        key={entry.id}
+                      />
+                    )
+                  case 'work':
+                    return (
+                      <WorkFold
+                        key={entry.id}
+                        state={fold}
+                        steps={entry.steps}
+                        viewer={props.viewer}
+                      />
+                    )
+                  case 'item':
+                    return (
+                      <ChatItemView
+                        item={entry.item}
+                        key={entry.item.id}
+                        viewer={props.viewer}
+                      />
+                    )
+                }
+              })}
+            </ChatPictures>
             {props.starting ? <StartingCard log={props.starting} /> : null}
           </div>
         </div>
@@ -108,20 +124,32 @@ export function ChatPane(props: {
       <div className={styles.footer}>
         {pending.length > 0 ? (
           <div
-            aria-label="Commands that wait for an answer"
+            aria-label={secretRunWords.region}
             className={styles.requests}
             role="group"
           >
-            {pending.map((item, index) => (
-              <PendingCommand
-                key={item.id}
-                open={mac?.choicesOpen === true && index === 0}
-                request={item.request}
-              />
-            ))}
+            {pending.map((item) => {
+              if (item.kind === 'secret-run') {
+                return (
+                  <SecretRequest
+                    item={item}
+                    key={item.id}
+                    viewer={props.viewer}
+                  />
+                )
+              }
+              if (!isPendingCommand(item)) return null
+              return (
+                <PendingCommand
+                  key={item.id}
+                  open={mac?.choicesOpen === true && item === commands[0]}
+                  request={item.request}
+                />
+              )
+            })}
           </div>
         ) : null}
-        {mac?.choicesOpen && pending.length > 0 ? <DrawnChoices /> : null}
+        {mac?.choicesOpen && commands.length > 0 ? <DrawnChoices /> : null}
         {props.notice}
         {props.problem ? <SandboxBar {...props.problem} /> : null}
         {composer ? <Composer {...props.composer} /> : null}

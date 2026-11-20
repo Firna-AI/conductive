@@ -12,6 +12,11 @@ each resume, together with the org's env vars:
 | --- | --- |
 | `WORKSPACE_TOKEN` | The workspace token. |
 | `CONDUCTIVE_WORKSPACE_ID` | The workspace ID. |
+| `CONDUCTIVE_WORKSPACE_LINK` | The canonical workspace link, from the app origin and the workspace record. |
+| `CONDUCTIVE_WORKSPACE_DEPTH` | The number of parent links above the workspace, as a decimal number. A top-level workspace has depth `0`. |
+| `CONDUCTIVE_WORKSPACE_MAX_DEPTH` | The deepest permitted depth, from `MAX_WORKSPACE_DEPTH`. |
+| `CONDUCTIVE_PARENT_WORKSPACE_ID` | The direct parent's workspace ID, for a sub-workspace only. |
+| `CONDUCTIVE_PARENT_WORKSPACE_LINK` | The direct parent's canonical workspace link, for a sub-workspace only. |
 | `CONDUCTIVE_MACHINE_ORIGIN` | The origin of the machine hostname. |
 | `CONDUCTIVE_DEFAULT_BRANCH` | The workspace base branch, with the repository default as a fallback. |
 | `CONDUCTIVE_WORKSPACE_BRANCH` | The workspace branch that the app tracks, from the Worker's record of the workspace. |
@@ -33,8 +38,9 @@ folder names and the variable names. The
 Worker makes and keeps the folder map.
 
 The runner, the terminal launcher, and the terminal's shell server read the
-variables from `/run/ascii-secrets/env.sh`, where Boat puts them. A systemd
-service does not get them in another way. A Boat command process does not
+variables from `/run/ascii-secrets/env.sh`. Boat writes that file, and the
+E2B adapter uses the same path. A systemd service does not get them in
+another way. A Boat command process does not
 get them either. So the install command of a build loads the same file,
 with automatic export, before Bash runs the org's install script. The
 install script then gets the folder variables.
@@ -95,7 +101,9 @@ Both units stay enabled, so the relay starts without waiting for a preview reque
 The [preview relay guide](../runner/preview-relay.md) gives its start command.
 It reads no workspace variable or workspace marker.
 Its service restarts it after each exit.
-A restart of the runner service does not restart the relay service.
+A restart of the runner service alone does not restart the relay service.
+When the runner pre-start step applies a release, the system installer
+restarts a running relay, as [Release installation](install.md#release-installation) says.
 
 Before it runs the runner, `runner-start.sh` sets three variables of the
 runner's [configuration](../runner/README.md#configuration) from the table.
@@ -107,9 +115,10 @@ Each value replaces a saved variable of the same name.
 | `CONDUCTIVE_REPOSITORY` | `CONDUCTIVE_REPOSITORY_DIR` |
 | `CONDUCTIVE_RUNNER_URL` | `CONDUCTIVE_MACHINE_ORIGIN` without a trailing slash, then the path of `MACHINE_PATHS.runner` |
 
-The Worker gives no setting for the computer tools. Boat writes the entry
-of the `computer` server into each sandbox at its start, and the runner
-reads it, as [What it does](../runner/README.md#what-it-does) says.
+The Worker gives no setting for the computer tools. On Boat, the provider
+writes the `computer` server entry at each sandbox start. The E2B template
+supplies no entry. The runner reads the optional entry, as
+[What it does](../runner/README.md#what-it-does) says.
 
 ## Secrets
 

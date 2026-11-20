@@ -11,6 +11,10 @@ export type AgentListWorkspacesRequest = {
    */
   ownerId?: string
   /**
+   * Filter by the direct parent workspace.
+   */
+  parentId?: string
+  /**
    * state.
    */
   state?: WorkspaceState
@@ -30,6 +34,10 @@ export type AgentListWorkspacesRequest = {
    * archived.
    */
   archived?: boolean
+  /**
+   * Only removed workspaces when true. False or omission leaves them out.
+   */
+  removed?: boolean
   /**
    * limit.
    */

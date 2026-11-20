@@ -1,12 +1,15 @@
 import type { SoftwareRelease } from '../lifecycle/software-release'
 import { softwareImageName } from '../lifecycle/image-names'
+import { softwareImageOutputStatements } from './output-data'
 import type { SoftwareImage } from './types'
 
-const columns = `id, provider_account AS providerAccount, version, software_json AS softwareJson,
+const columns = `software_images.id, provider_account AS providerAccount, version, software_json AS softwareJson,
   snapshot_name AS snapshotName, snapshot_recorded AS snapshotRecorded, state, phase, revision,
   sandbox_id AS sandboxId, process_id AS processId, stdout_offset AS stdoutOffset,
   stderr_offset AS stderrOffset, output, error, token_digest AS tokenDigest,
-  started_at AS startedAt, completed_at AS completedAt`
+  started_at AS startedAt, completed_at AS completedAt, packages_version AS packagesVersion,
+  (SELECT operation FROM software_image_operations o WHERE o.image_id = software_images.id
+    AND o.phase = software_images.phase AND o.revision = software_images.revision) AS operation`
 
 export function readSoftwareImage(
   db: D1Database,
@@ -33,6 +36,21 @@ export function latestSoftwareImage(
     .first<SoftwareImage>()
 }
 
+export function softwareImageForDeploy(
+  db: D1Database,
+  account: string,
+  digest: string,
+): Promise<SoftwareImage | null> {
+  return db
+    .prepare(
+      `SELECT ${columns} FROM software_images WHERE provider_account = ? AND state != 'deleting'
+       AND (token_digest = ? OR id IN (SELECT image_id FROM software_image_deploys WHERE token_digest = ?))
+       ORDER BY started_at DESC, rowid DESC LIMIT 1`,
+    )
+    .bind(account, digest, digest)
+    .first<SoftwareImage>()
+}
+
 export async function softwareImages(
   db: D1Database,
   account: string,
@@ -46,6 +64,16 @@ export async function softwareImages(
       .bind(account)
       .all<SoftwareImage>()
   ).results
+}
+
+export async function softwareImageAccounts(db: D1Database): Promise<string[]> {
+  return (
+    await db
+      .prepare(
+        'SELECT DISTINCT provider_account AS account FROM software_images ORDER BY provider_account',
+      )
+      .all<{ account: string }>()
+  ).results.map((row) => row.account)
 }
 
 export async function insertSoftwareImage(
@@ -96,6 +124,7 @@ type Progress = Partial<
     | 'error'
     | 'completedAt'
     | 'snapshotRecorded'
+    | 'packagesVersion'
   >
 >
 
@@ -104,13 +133,14 @@ export async function saveSoftwareImage(
   db: D1Database,
   before: SoftwareImage,
   changes: Progress,
+  newOutput = '',
 ): Promise<boolean> {
   const next = { ...before, ...changes }
-  const result = await db
+  const update = db
     .prepare(
       `UPDATE software_images SET phase = ?, state = ?, sandbox_id = ?,
     process_id = ?, stdout_offset = ?, stderr_offset = ?, output = ?, error = ?,
-    completed_at = ?, snapshot_recorded = ?, revision = revision + 1
+    completed_at = ?, snapshot_recorded = ?, packages_version = ?, revision = revision + 1
     WHERE id = ? AND state = ? AND phase = ? AND revision = ?`,
     )
     .bind(
@@ -124,13 +154,17 @@ export async function saveSoftwareImage(
       next.error,
       next.completedAt,
       next.snapshotRecorded,
+      next.packagesVersion,
       before.id,
       before.state,
       before.phase,
       before.revision,
     )
-    .run()
-  return result.meta.changes === 1
+  const statements = softwareImageOutputStatements(db, before, newOutput)
+  const result = statements.length
+    ? (await db.batch([...statements, update])).at(-1)
+    : await update.run()
+  return result?.meta.changes === 1
 }
 
 export async function claimSoftwareImageDeletion(

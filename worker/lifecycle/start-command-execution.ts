@@ -21,12 +21,14 @@ import type {
   WorkspaceRunningStartJob,
 } from './start-types'
 import type { WorkspaceRow } from './workspace-row'
+import { settleWorkspaceBranch } from './workspace-branch'
 import type { WorkspaceLifecycleEndpoint } from './workspace-runtime'
 import { WorkspaceStartError } from './workspace-start'
 import { JobTimeLimit } from './job-time-limit'
 import { startTimeLimitReached } from './start-provider-retry'
 import type { StartCall } from './start-guard'
 import { missingStartBranchFailure } from './start-branch-failure'
+import { workspaceAutoStopSeconds } from './idle-stop'
 
 export async function advanceStartCommand(
   env: AppEnv,
@@ -50,7 +52,8 @@ export async function advanceStartCommand(
   )
     throw new WorkspaceStartError(null)
   const phase = job.phase
-  await call(() => provider.setAutoStop(sandboxId, 1_800))
+  const autoStop = await call(() => workspaceAutoStopSeconds(env.DB))
+  await call(() => provider.setAutoStop(sandboxId, autoStop))
   if (job.processId === null) {
     const secrets = await call(async () => {
       const values = await workspaceEnvironmentSettings(
@@ -77,6 +80,18 @@ export async function advanceStartCommand(
         }
       }
     }
+    // From the branch step on, the sandbox uses the branch, so a later name
+    // no longer changes it.
+    const commandRow =
+      phase === 'fetch'
+        ? row
+        : {
+            ...row,
+            branch:
+              (await call(() =>
+                settleWorkspaceBranch(env.DB, job.workspaceId),
+              )) ?? row.branch,
+          }
     const started = await call(async () =>
       provider.startCommand(
         sandboxId,
@@ -90,7 +105,7 @@ export async function advanceStartCommand(
           job.phase === 'terminal'
             ? terminalStartCommand()
             : workspacePhaseCommand(
-                row,
+                commandRow,
                 job,
                 job.phase === 'startup'
                   ? await ownerCommitAuthor(env.DB, row.ownerUserId)

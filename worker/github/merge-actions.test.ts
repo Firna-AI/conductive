@@ -11,7 +11,6 @@ beforeAll(async () => {
 })
 beforeEach(async () => {
   await fixture.harness.reset()
-  fixture.jobs.clear()
 })
 afterAll(async () => {
   await fixture.base.dispose()
@@ -25,7 +24,10 @@ it('reads the clicking member capability without publishing it', async () => {
     canWrite: true,
     mergeMethod: 'squash',
   })
-  expect(fixture.harness.states.size).toBe(0)
+  expect(
+    (await fixture.harness.inspect('workspace-1')).records.has('github:state'),
+  ).toBe(false)
+  expect((await fixture.harness.inspect('workspace-1')).published).toEqual([])
   expect(fixture.harness.api.requests[0].headers.get('Authorization')).toBe(
     'Bearer github-test-token',
   )
@@ -102,7 +104,7 @@ it('starts and polls a direct member merge with the displayed head and publishes
   )
   expect(await completed.json()).toEqual({ state: 'merged' })
   expect(
-    fixture.harness.memory('workspace-1').published.at(-1)?.event,
+    (await fixture.harness.inspect('workspace-1')).published.at(-1)?.event,
   ).toMatchObject({
     type: 'github.updated',
     banner: {
@@ -112,9 +114,9 @@ it('starts and polls a direct member merge with the displayed head and publishes
     },
   })
   expect(
-    JSON.stringify(fixture.harness.memory('workspace-1').published),
+    JSON.stringify((await fixture.harness.inspect('workspace-1')).published),
   ).not.toContain('canWrite')
-  expect(JSON.stringify([...fixture.jobs.values()])).not.toContain(
+  expect(JSON.stringify([...(await fixture.jobs()).values()])).not.toContain(
     'github-test-token',
   )
 })

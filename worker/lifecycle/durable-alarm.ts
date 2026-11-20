@@ -2,9 +2,10 @@ import { advanceStartStop } from './durable-start-stop'
 import { reconciledLifecycle } from './durable-reconciliation'
 import { recoverLifecycleTurns } from './durable-turns'
 import { isConfirmedStopped } from './confirmed-stop'
+import { expiredRestartLifecycle, isFailedRestart } from './durable-restart'
 import {
-  IDLE_MS,
   RESTORE_POLL_MS,
+  SHORTEST_IDLE_MS,
   type DurableLifecycleState,
   type LifecycleHooks,
   type LifecycleStorage,
@@ -36,6 +37,7 @@ export async function advanceLifecycleAlarm(
   ) {
     state = reconciledLifecycle(state, await hooks.reconcile(), now())
   }
+  state = expiredRestartLifecycle(state, now())
   if (isConfirmedStopped(state)) {
     if (
       state.nextDiskKeepaliveAt !== null &&
@@ -46,17 +48,24 @@ export async function advanceLifecycleAlarm(
     }
   } else if (state.runningSessions.length) {
     state = reconciledLifecycle(state, await hooks.extendDeadline(), now())
-  } else if (
-    state.state !== 'error' &&
-    state.lastActivityAt + IDLE_MS <= now()
-  ) {
-    const result = await hooks.stop()
-    stopPending = result === 'pending'
-    state = reconciledLifecycle(
-      state,
-      result === 'pending' ? undefined : (result ?? 'stopped'),
-      now(),
-    )
+  } else if (state.state !== 'error' || isFailedRestart(state)) {
+    const idleMs = await hooks.idleMs()
+    if (state.lastActivityAt + idleMs <= now()) {
+      const result = await hooks.stop()
+      stopPending = result === 'pending'
+      state = reconciledLifecycle(
+        state,
+        result === 'pending' ? undefined : (result ?? 'stopped'),
+        now(),
+      )
+    } else if (
+      state.runnerConnected &&
+      !restoreDue &&
+      state.lastActivityAt + SHORTEST_IDLE_MS <= now()
+    ) {
+      // A longer stop time: the provider auto-stop still holds the old time.
+      state = reconciledLifecycle(state, await hooks.extendDeadline(), now())
+    }
   }
   if (stopPending) state = { ...state, restoreWatchAt: undefined }
   if (

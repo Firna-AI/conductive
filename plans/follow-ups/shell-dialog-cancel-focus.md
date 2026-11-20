@@ -1,0 +1,74 @@
+# Focus may leave a busy shell question
+
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Low. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-18, from branch `calummoore/follow-up-shell-questions-close-while-m7rh`, implementation concern 1.
+- **Location:** `src/shell/ui/Dialog.tsx:45` (the shared Cancel), `src/shell/ui/actions.tsx:54` (`keepFocus`), `src/shell/ui/Overlay.tsx:205` (the first focus of a question).
+- **Reason:** The only path that could show the problem, a mouse press in Firefox on a Mac, is not proven, and the fix costs the same later.
+
+- **Terms:**
+  - **Shell question:** a confirm step of the app shell, drawn with `Dialog` from `src/shell/ui/Dialog.tsx`: a dialog on desktop and a sheet on a phone.
+  - **Shared Cancel:** the Cancel that `Dialog` draws before the confirming action of each shell question.
+  - **Natively disabled:** a button with the HTML `disabled` attribute. A browser takes the focus away from such a button.
+  - **Mouse focus:** whether a mouse press on an element gives it the focus. Browsers differ for buttons.
+  - **`keepFocus`:** a prop of the shell `ActionButton` in `src/shell/ui/actions.tsx`. A button that turns off while it has the focus keeps the focus until the focus leaves.
+- **Background:**
+  - Since 2026-11-18, a shell question that runs its own write stays open while the write runs, as the user chose. A question that closes before its write starts still closes at once.
+  - `Dialog` requires `busy` and draws Cancel. While `busy` is true, Cancel, Escape, and a press outside change nothing, on desktop and in the phone sheet.
+  - `src/shell/ui/Dialog.tsx:40-47` gives Cancel `disabled={busy}`. One guarded `dismiss` serves Cancel, Escape, and a press outside.
+  - Leave org, Reset all, Delete automation, and Delete secret turned Cancel off for the first time with that change. Before it, they drew Cancel without `disabled`.
+  - The operator questions, New section, and Send feedback already turned Cancel off while their write ran. Continue, Change repository, Restart, and Close terminal pass `busy={false}`, because they close before their write starts.
+  - As a question opens, it focuses `initial`, else an element with `data-autofocus`, else its first focusable element (`src/shell/ui/Overlay.tsx:205-209`).
+  - Cancel comes first in the row of actions. The text of Leave org, Reset all, Delete automation, and Delete secret has no control. So Cancel has the focus as these questions open.
+  - The Firna button renders a native `<button>`. When it is off, it gets the `disabled` attribute (`node_modules/@firna/ui/dist/node/primitives/dom/domProps.js:152`).
+  - The Firna `Pressable` always sets `tabIndex`: 0 when on, and -1 when off (`node_modules/@firna/ui/dist/node/primitives/dom/Pressable.js:95`).
+  - Firna `busy` blocks a press, but the button stays focusable. So the busy confirming action keeps a focus that it has.
+  - The JSDoc of the shell `ActionButton` says that a browser takes the focus from a natively disabled button (`src/shell/ui/actions.tsx:54-58`).
+  - These paths move the focus to the confirming action before the write starts. So Cancel turns off without the focus:
+    - Chrome and Edge focus a pressed button on each system.
+    - Safari on a Mac makes a form control with an explicit `tabindex` mouse focusable. WebKit `Source/WebCore/html/HTMLFormControlElement.cpp:229-240` says so for macOS.
+    - At a mouse press, WebKit focuses the first mouse-focusable element up from the target, in `Source/WebCore/page/EventHandler.cpp:3575-3612`. Both WebKit files were read on the main branch on 2026-11-18.
+    - The Firna button always has an explicit `tabindex`. So Safari on a Mac is not affected.
+    - The keyboard needs Tab to the confirming action, or Enter in a field, before the write starts.
+  - These paths are not proven:
+    - Firefox on a Mac. On 2026-11-18 the only browser on hand was Chrome, and nobody read the Gecko source.
+    - The expectation is that Firefox on a Mac does not focus a button at a mouse press, also with a `tabindex`. It then focuses the nearest focusable ancestor, or it clears the focus.
+    - The dialog and the sheet are `section` elements with `tabIndex={-1}` (`src/shell/ui/Dialog.tsx:97`, `src/shell/ui/Sheet.tsx:76`). So the question box would take the focus, and the focus would stay in the question.
+    - If that expectation is true, no normal path leaves the focus on Cancel.
+  - The tests do not reach this path:
+    - `src/shell/settings/LeaveOrg.test.tsx` holds the leave request and tries Cancel, Escape, and an outside press, on desktop and on a phone. At line 91 it checks that Cancel has `disabled` or `aria-disabled="true"`.
+    - `src/shell/operator/TargetDialogs.test.tsx` does the same for Suspend and Lift.
+    - Their helper `click` in `src/shell/test-mount.tsx:69-74` focuses its target before the click. So the confirming action has the focus when the write starts.
+    - `plans/follow-ups/click-helper-sends-pointer.md` tracks that this helper sends no pointer events.
+    - No test fails when the shared Cancel lacks `keepFocus`.
+- **Problem:** A press on the confirming action could leave the focus on Cancel. Cancel then turns natively disabled while it has the focus, and the browser takes the focus out of the question. No proven browser path does this.
+- **Impact if no action:** On such a path, the keyboard focus is not in the question after the write. A user then needs Tab to reach it again. Escape still works, and the question still shows a failed write.
+- **Root question:** How does the focus stay in a question while its write runs?
+- **Options:**
+  - **A.** Change nothing. The behaviour matches the questions that already turned Cancel off, and no proven path shows the problem. Effort: Small.
+  - **B.** Give the shared Cancel `keepFocus`. Effort: Small.
+    - A Cancel with the focus then stays a native button that looks off and ignores a press. Its wrapper says `aria-disabled` until the focus leaves.
+    - A Cancel without the focus is natively disabled at once, as now. So the proven paths do not change, and the check at `src/shell/settings/LeaveOrg.test.tsx:91` still holds.
+    - The wrapper is a `span` with `display: contents`. `.keepFocus > * { flex: inherit }` gives the button the `flex: 1` of `.sheetActions > *`, so the phone row keeps two equal buttons.
+    - Those rules are in `src/shell/ui/ui.module.css:22-33` and `docs/mockups/src/components/common/ConfirmDialog.module.css:80-82`.
+  - **C.** When `busy` turns on while Cancel has the focus, `Dialog` moves the focus to the question box, the `section` of the dialog or the sheet. Cancel stays natively disabled. Effort: Small.
+    - It needs new focus code in `Dialog`, `DialogBox`, and `Sheet`, because `action` is a `ReactNode` without a ref.
+    - It moves the focus without an action of the user.
+- **Left out:**
+  - A Cancel that is never natively disabled, with only `aria-disabled` and the off look. B is better on every point, because B also takes Cancel out of the Tab order when Cancel does not have the focus.
+  - `keepFocus` on by default in the shared `ActionButton` for every caller. It changes every caller outside this concern, and the class beyond Cancel has its own items under **Related**.
+  - A change in the Firna `Button` of `@firna/ui`. A package release costs more than the one-line B for a Low concern.
+- **Wider fix:** B, because the one shared Cancel covers every shell question. The class beyond Cancel lives in other shared buttons, which the items under **Related** track.
+- **Previous examples:** `keepFocus` on the Save buttons of `src/shell/settings/ScriptSection.tsx:41`, `src/shell/settings/GeneralTab.tsx:66`, and `src/shell/automations/AutomationEditor.tsx:115`. The test at `src/shell/ui/actions.test.tsx:41` checks that a button that turns off with the focus keeps it, looks and acts off, and is natively off when the focus leaves.
+- **Related:**
+  - `plans/follow-ups/busy-buttons-lose-focus.md`: the same class, a natively disabled button that loses the focus. There the pressed busy button itself turns off, in the chat `ActionButton` and two shell callers. Here a Cancel that had the first focus turns off when another button starts the write. Neither fix covers the other.
+  - `plans/follow-ups/busy-menu-escape-loses-focus.md`: the same class, for the trigger of a busy shell menu after Escape. Neither fix covers the other.
+  - `plans/follow-ups/shell-button-focus-default.md`: the same class, as a choice for every shell button. Its option C, a `keepFocus` default in the shell `ActionButton`, would give the shared Cancel the behaviour of B here. This item does not wait for that answer.
+- **Recommendation:** B, after a real browser shows the path. B reuses the tested `keepFocus` in one line, changes nothing on the proven paths, and covers the unproven one.
+  - First reproduce the path in Firefox on a Mac. Open a question without a field, such as Delete secret. Slow the network so that the write runs for a few seconds.
+  - Press the confirming action with the mouse. Read `document.activeElement` before the press, during the write, and after it.
+  - If the focus stays on Cancel and then leaves the question, apply B. Add a regression test that gives Cancel the focus, starts the write without a focus move, and fails without `keepFocus`.
+  - Check that the test can fail. A fake page such as happy-dom may not take the focus from a button that turns disabled, and then the test needs a real browser.
+  - If the run rules the path out, record that evidence and close this item in the same task, with A.
+  - Do not describe B as a Safari fix in a commit or a pull request.
+- **Action:** fix after merge, apply B, because a Low and Rare product concern waits when its fix costs the same later, and the fix first needs a reproduction.

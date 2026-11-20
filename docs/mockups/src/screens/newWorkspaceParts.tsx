@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { ConnectAgentNotice } from '../components/chat/ConnectAgentNotice'
+import type { SessionLogin } from '../components/chat/SessionLogin'
 import { fileMark, withoutMarks } from '../../../../src/app/draft-marks'
 import { CreateFailedNotice } from '../components/new-workspace/notices'
 import { repositoryWaits } from '../components/settings/repositoryChangeCopy'
@@ -9,6 +10,7 @@ import {
   firstMessageDrafts,
   type Attachment,
 } from '../fixtures/attachments'
+import { orgWithLogin } from '../fixtures/orgLogins'
 import { savedCartsMessage } from '../fixtures/newWorkspaceConversations'
 import { followUpTask } from '../fixtures/workspaceLinkConversations'
 import { savedCarts } from '../fixtures/workspaces'
@@ -35,9 +37,13 @@ export const newWorkspaceFormProperties = {
   files: { enum: ['none', 'uploading', 'ready', 'drop-over'] },
   /**
    * The agent of the chosen model: connected, or not connected. Then a
-   * notice leads to its Connect form, and the message waits.
+   * notice leads to its Connect form, and the message waits. `org` has the
+   * org login of Acme as the default login of the viewer: the viewer has
+   * no login of their own, or an admin turned on "Use for every member".
+   * The message goes, and the bar names that login (decisions 4, 6 A, and
+   * 7 B of the org logins plan).
    */
-  login: { enum: ['connected', 'missing'] },
+  login: { enum: ['connected', 'missing', 'org'] },
   /**
    * The repositories of the org. `chosen` has the three that the cloud
    * computer of Acme holds. `waiting` adds acme/admin-dashboard, which waits
@@ -90,6 +96,17 @@ export const newWorkspaceFormProperties = {
    * a build runs, or no build runs, such as after a start that failed.
    */
   waitingBuild: { enum: repositoryWaits },
+  /**
+   * The Capabilities control of the icon beside the attach button, closed
+   * or drawn open (secrets decision 6). It holds the secrets that the new
+   * workspace pre-approves, and Mac access. `menu` opens the menu of the
+   * one button of a phone, which holds Attach files and Capabilities
+   * (secrets decision 16 G). A computer has no such menu. `search` draws
+   * the control open on an org with more than ten secrets, with a search
+   * typed above them. `info` draws it open with the description of
+   * PROD_DATABASE_URL shown under its name.
+   */
+  capabilities: { enum: ['closed', 'open', 'menu', 'search', 'info'] },
 } as const
 
 type FormProperty = keyof typeof newWorkspaceFormProperties
@@ -148,6 +165,19 @@ export function hasWords(text: string): boolean {
 
 /** The model and the effort of the first message. */
 export const newWorkspaceChoice = savedCarts.choice
+
+/**
+ * The login label of the form: the name of the org while the default login
+ * of the viewer is the org login, such as "Acme's login". The account names
+ * that default login, so the form shows it and does not work it out. The
+ * own login of the viewer gets no label.
+ */
+export function formLoginLabel(
+  state: NewWorkspaceFormState,
+): SessionLogin | undefined {
+  if (state.login !== 'org') return undefined
+  return { owner: orgWithLogin.name }
+}
 
 /**
  * Whether the message waits: its agent is not connected, or the org has no

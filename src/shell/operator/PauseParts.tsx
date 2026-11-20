@@ -59,22 +59,18 @@ export function PauseDialog(props: {
   const pause = useQuestion(props.pause, props.close)
   return (
     <Dialog
-      actions={
-        <>
-          <ActionButton disabled={pause.pending} onPress={pause.dismiss}>
-            Cancel
-          </ActionButton>
-          <ActionButton
-            busy={pause.pending}
-            icon={Pause}
-            onPress={() => pause.run()}
-            tone="danger"
-          >
-            {pauseWords.pause}
-          </ActionButton>
-        </>
+      action={
+        <ActionButton
+          busy={pause.pending}
+          icon={Pause}
+          onPress={() => pause.run()}
+          tone="danger"
+        >
+          {pauseWords.pause}
+        </ActionButton>
       }
-      close={pause.dismiss}
+      busy={pause.pending}
+      close={props.close}
       title={pauseWords.question}
     >
       {pauseWords.questionText.map((text) => (

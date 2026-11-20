@@ -17,6 +17,12 @@ These facts belong to this implementation, not to the protocol docs.
   [Agent logins](agent-logins.md#codex) gives both routes through the gateway.
   [Conversation continuation](codex-logins.md#conversation-continuation)
   gives the resume and fork sequence after a login kind change.
+- Codex runs each subagent in its own thread. The App Server sends the
+  notifications of all threads on one connection. The Codex adapter keeps
+  only the notifications of the conversation thread. So a subagent turn
+  does not change the turn that a message steers. It also does not end the
+  session's turn or add an answer to the chat. The Claude adapter also
+  ignores the events of a subagent.
 - Claude takes `fastMode` in its start settings and in `applyFlagSettings`.
   Codex takes `serviceTierForTurn` on each `turn/start`: `priority` for fast
   and `default` for standard. No thread setting keeps a tier across turns.
@@ -28,9 +34,10 @@ These facts belong to this implementation, not to the protocol docs.
   describes the request requirements.
 - Both agents request no approvals and the service user's rights. ChatGPT
   workspace rules can replace these Codex settings on a ChatGPT turn.
-- The runner configures the sandbox's `computer` and `conductive` MCP
-  servers for both agents. The [agent tools guide](agent-tools.md) gives
-  their settings, runtime context, and process lifetime.
+- The runner configures the `conductive` MCP server for both agents, and
+  the sandbox's `computer` MCP server when it exists. The
+  [agent tools guide](agent-tools.md) gives their settings, runtime
+  context, and process lifetime.
 - No command carries an agent login or a GitHub token. Each `turn` command
   carries a turn token for the model gateway, as [Agent logins](agent-logins.md)
   says. [GitHub tokens](../docs/protocol/github-tokens.md)
@@ -77,11 +84,18 @@ These facts belong to this implementation, not to the protocol docs.
   only the running turn that it names. Others get only a local warning. An
   idle `model` command only saves the choice, and the next turn applies it.
 - The shared output filter stays in the runner, before saved and sent events.
-  It replaces the workspace token and the turn
-  tokens in displayed text with `[redacted]`. It holds possible secret
-  prefixes across answer events. After a completion or a turn end, it
-  keeps the shown end of each answer that can still start a secret. Later
-  text of that answer then masks the part that completes a secret.
+  It replaces each whole copy of the workspace token and of the turn
+  tokens in displayed text with `[redacted]`, at any length. It also
+  replaces each run of at least 21 consecutive characters of such a token,
+  from any place in the token. It counts Unicode scalar values, not bytes.
+  A run of 20 or fewer characters stays, unless it is a whole token or
+  lies in a longer masked run. The filter does not check whether a run is
+  secret.
+- Across answer events, the filter holds the end of the text that can
+  still grow into a whole token or such a run. After a completion or a
+  turn end, it keeps the shown end of each answer that can still grow into
+  one. Later text of that answer then masks the part that, with that end,
+  makes a whole token or a run of at least 21 characters.
 - The filter keeps real file paths and base branches for operations, and
   masks their separate display labels. The workspace object filters marked
   org env values before it stores or sends events. The runner receives no
@@ -103,6 +117,26 @@ These facts belong to this implementation, not to the protocol docs.
   same turn. Outside a wait, the adapter ignores the result. An ignored
   result does not take the message list of an earlier SDK frame. It does
   not end the active turn, and it frees no sent message.
+- After a drop, the Claude adapter sends the agent one continue message in
+  place of a failure, as
+  [Dropped answers](../docs/protocol/dropped-answers.md)
+  says. A drop is a model answer stream that ends early. The adapter finds
+  it from either signal: the drop text of the `claude` program in a failed
+  result, or a failed result after a main answer that started and never
+  stopped.
+- The adapter maps the continue message to the member messages of the
+  request that dropped. So its result frees the same held input, and the
+  runner ends the turn only when the agent finishes. A drop in a wake-up
+  reply during a background wait also gets a continue message. Its result
+  then counts as a wake-up reply, like the reply that dropped, unless the
+  reply also takes in a member message. Then its result answers that
+  message.
+- Each agent process gets at most one continue message. A second drop
+  fails the turn. A Stop before or during the continue message ends the
+  turn as stopped. An automatic release update gives an existing
+  workspace this behavior.
+- Codex gets no continue message. It reconnects a dropped answer stream by
+  itself, with the default of its `stream_max_retries` setting.
 - The runner saves the events of all sessions in one state file, in order,
   before it sends them. The state file holds the stream ID, its event
   counter, the unconfirmed events, the tree and changes revisions, and
@@ -144,16 +178,18 @@ These facts belong to this implementation, not to the protocol docs.
 - The [file reports guide](file-reports.md) gives the base of each
   comparison, the counts of each changes report, and the limits of file
   reads and diffs.
-- Before it connects, the runner reads the `claude` program file once, so
-  that the disk loads it early. It uses no credential and starts no agent.
-- After a start from a saved snapshot, the sandbox provider restores the
+- Before it connects, the runner removes stale agent credentials and starts
+  its file watches. Each agent start loads its own program.
+- After a start from a saved snapshot on Boat, the provider restores the
   disk in the background. When the restore ends, a running program keeps
   an old view of the disk at another path, such as
   `/var/lib/ascii-lazy/retired/home/code/<name>`. A repository watch made
   before that end then misses every later edit, so the file lists stop.
   The runner checks once a second for the
   [terminal's restore marker](../worker/terminal/README.md), which the
-  Worker writes when the provider reports the end of the restore. When the
+  Worker writes when the provider reports the end of the restore. E2B
+  reports no background restore, so the Worker writes the marker as soon as
+  the sandbox reports ready. When the
   marker appears, the runner watches the live folder again and scans the
   repository once. A marker that exists when the watch starts changes
   nothing, because that watch already sees the live folder. Each Git

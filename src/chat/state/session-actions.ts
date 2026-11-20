@@ -1,13 +1,18 @@
 import type { WorkspaceView } from '../../shared/workspace-view'
 import { showNotice, type ChatContext } from './context'
 import { hydrate } from './history'
+import { withView } from './saved-view'
 import { beginEdit, confirmRecord } from './session-records'
 import { viewShowing } from './sessions'
 
 /** The view already shows these tabs, with the same tab open. */
-function sameTabs(current: WorkspaceView | null, next: WorkspaceView): boolean {
+function sameTabs(
+  current: WorkspaceView | null,
+  next: WorkspaceView | null,
+): boolean {
   return (
     current !== null &&
+    next !== null &&
     current.tabs.length === next.tabs.length &&
     JSON.stringify(current.activeTab) === JSON.stringify(next.activeTab)
   )
@@ -25,18 +30,18 @@ export async function selectSession(
   context.tabChoices.count += 1
   const snapshot = context.store.get()
   if (!snapshot.sessions.some((item) => item.id === sessionId)) return
-  const view = viewShowing(snapshot.view, sessionId)
+  const next = withView(snapshot, (view) => viewShowing(view, sessionId))
+  const { view } = next
   if (snapshot.activeSessionId === sessionId && sameTabs(snapshot.view, view)) {
     await hydrate(context, sessionId)
     return
   }
-  context.store.update((current) => ({
-    ...current,
+  context.store.update(() => ({
+    ...next,
     activeSessionId: sessionId,
-    view,
     overlay: { kind: 'none' },
   }))
-  context.saveView(view)
+  context.saveView()
   await hydrate(context, sessionId)
 }
 
@@ -54,12 +59,9 @@ export function updateView(
   save: boolean,
 ): void {
   if (!context.live()) return
-  const current = context.store.get().view
-  if (current === null) return
-  const view = change(current)
-  if (view === current) return
-  context.store.update((latest) => ({ ...latest, view }))
-  if (save) context.saveView(view)
+  const before = context.store.get().view
+  context.store.update((snapshot) => withView(snapshot, change))
+  if (save && context.store.get().view !== before) context.saveView()
 }
 
 /** Shows a session that an action opened, when it is open now. */
@@ -72,9 +74,13 @@ async function showIfOpen(context: ChatContext, sessionId: string) {
 
 /**
  * "+" starts a session on the same branch and cloud computer, with the
- * default model of the user's account.
+ * default model of the user's account. `opened` gets the ID of the new
+ * session just before the chat shows it, as Add to chat needs.
  */
-export async function newSession(context: ChatContext): Promise<void> {
+export async function newSession(
+  context: ChatContext,
+  opened?: (sessionId: string) => void,
+): Promise<void> {
   const snapshot = context.store.get()
   const shown = snapshot.sessions.find(
     (item) => item.id === snapshot.activeSessionId,
@@ -87,7 +93,9 @@ export async function newSession(context: ChatContext): Promise<void> {
   try {
     const { session, eventNumber } = await context.api.createSession(choice)
     confirmRecord(context, session, eventNumber)
-    if (context.live()) await showIfOpen(context, session.id)
+    if (!context.live()) return
+    opened?.(session.id)
+    await showIfOpen(context, session.id)
   } catch (error) {
     showNotice(context, null, "The new session didn't open", error)
   }

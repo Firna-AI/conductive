@@ -8,9 +8,8 @@ decision number names a dated record, as
 ## Responsibilities
 
 - Static pages at the root of `conductive.build`: the home page, the public
-  docs, and the Terms and Privacy pages. Visitors see them without a sign-in.
-- The site has no pricing page and sells nothing, because the product is
-  free, as [Orgs and members](../protocol/orgs-and-members.md#orgs) says.
+  docs, the pricing page, and the Terms and Privacy pages. Visitors see them
+  without a sign-in.
 - Astro builds these pages ahead of time. The Worker serves the built files
   on `conductive.build`. It fills in the values of each request, such as
   the app address in the sign-in links and the year in the footer.
@@ -32,7 +31,7 @@ decision number names a dated record, as
 - The second action of the hero and of the last call to action is
   "Download for Mac". It leads to the Mac app section of the home page,
   because the site runs no script to pick the chip of the visitor.
-- The site does not name Boat, and users need no Boat account
+- The site names no sandbox provider, and users need no provider account
   (decision 80).
 - The home page has a Mac app section. It links the DMG for Apple silicon
   first, then the DMG for Intel, from the latest release of the public
@@ -47,3 +46,19 @@ decision number names a dated record, as
 - The public docs are guides to the product, at `/docs`. The team writes
   them in Markdown, and the site builds them with a docs layout of its own.
   [Website docs](../protocol/website-docs.md) states their requirements.
+
+## The pricing page
+
+- The page at `conductive.build/pricing` shows the plans, the prices, and
+  the cloud hours. [Pricing](../protocol/pricing.md) states its
+  requirements.
+- Its plans and words are content of the site. A change to a price is a
+  change to the repository.
+- No component computes a price or reads a plan while the site runs. The
+  page reads nothing from the app, the API, a sandbox, or a payment
+  provider.
+- The site build and the mockup catalogue read the same plans and words, so
+  the page and its mockup show the same prices.
+- The page sells nothing. It has no checkout, and it links no payment
+  provider. Billing is a planned change, as
+  [Planned changes](../protocol/pricing.md#planned-changes) says.

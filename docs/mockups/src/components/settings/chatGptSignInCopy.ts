@@ -7,7 +7,7 @@ export const signInSteps = ['start', 'code', 'expired', 'refused'] as const
 
 export type SignInStep = (typeof signInSteps)[number]
 
-/** How long a code works: the time that the pinned Codex 0.167.0 waits. */
+/** How long a code works: the time that the pinned Codex 0.170.0 waits. */
 const codeMinutes = 15
 
 /**
