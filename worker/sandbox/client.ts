@@ -42,13 +42,13 @@ export function providerForAccount(
 ): SandboxProvider {
   const observer = env.DB && observers.get(env.DB)
   if (!observer) return createProvider(env, fetch, accountId, allocationMode)
+  // A live view, not a copy: a workspace object env can gain keys later.
+  const plain = new Proxy(env, {
+    get: (target, key) =>
+      key === 'DB' ? observer.plain : Reflect.get(target, key),
+  })
   return observer.observe(
-    createProvider(
-      { ...env, DB: observer.plain },
-      fetch,
-      accountId,
-      allocationMode,
-    ),
+    createProvider(plain, fetch, accountId, allocationMode),
   )
 }
 
