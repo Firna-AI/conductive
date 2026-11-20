@@ -72,11 +72,25 @@ state the requirements.
   out no hidden table.
 - A line that starts with a table, or with a list that holds one, keeps
   its closed text in a visually hidden span. So the open line keeps a name
-  for a screen reader. An empty heading before the table counts as no
-  text, because it draws nothing. That hidden copy shows no chips, and
-  `PlainLinks` of `src/shell/ui/text-links.tsx` draws each link in it as
-  its words. A `MentionsProvider` without files removes file chips. So
-  the keyboard cannot reach a link in it.
+  for a screen reader. A block before the table that shows no readable
+  text counts as no text, because it gives the open line no name. So an
+  empty heading, a paragraph of only `**`, and an empty fenced code block
+  count as no text. Readable text before the table, such as the number of
+  a numbered list item, names the open line, which then adds no hidden
+  copy.
+- That hidden copy shows no chips, and `PlainLinks` of
+  `src/shell/ui/text-links.tsx` draws each link in it as its words. A
+  `MentionsProvider` without files removes file chips. So the keyboard
+  cannot reach a link in it.
+- `components/readable-text.ts` holds the one rule for readable text.
+  `blockShowsText` checks a block, and `showsText` checks the text of a
+  paragraph or a heading. Bold marks and code backticks draw no text, so a
+  paragraph or a heading of only those marks and white space shows none.
+  The text inside inline code or a code block counts as typed, so it is
+  readable when it holds a character other than white space. So a code
+  block of `**` is readable, but a paragraph of `**` is not. By the same
+  rule, `headingBlock` gives empty text to a heading with no readable text,
+  as [Heading parts](#heading-parts) says.
 
 ## Web addresses
 
@@ -371,12 +385,14 @@ preview:
   follows the item.
 - `parseLines` makes each hash heading, and `Paragraph.underline` makes
   each underline heading. Both make the block with `headingBlock` of
-  `components/agent-paragraph.ts`. It reads the text with `tokens` of
-  `links/chat-tokens.ts`. When no text or code token holds a character
-  other than white space, the block gets empty text, as for `**` or a
-  lone backtick. A count of the tokens is not enough. A lone backtick
-  starts code that runs to the end of the text, so it gives one empty
-  code token.
+  `components/agent-paragraph.ts`. It checks the text with `showsText` of
+  `components/readable-text.ts`, whose rule also decides the hidden copy
+  of a message line. `showsText` reads the text with `tokens` of
+  `links/chat-tokens.ts`, for code and bold only. When no text or code
+  token holds a character other than white space, the block gets empty
+  text, as for `**` or a lone backtick. A count of the tokens is not
+  enough. A lone backtick starts code that runs to the end of the text, so
+  it gives one empty code token.
 - The block stays with its level, so the heading still ends the
   paragraph above it. A list item also keeps its blocks while the agent
   writes the heading. A heading with readable text keeps the text that
