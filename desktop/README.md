@@ -24,7 +24,7 @@ File uploads go to the same origin in parts. Each part is one raw `XMLHttpReques
 Workspace sockets use the same Worker origin.
 `AppServices.appOrigin` and the paths that `leave` opens, such as sign-in, use it too.
 The join links of the Account page and of the operator section start with that origin, so they name the deployment that owns their codes.
-Chat, file preview, and terminal links to a page of the app at that origin open the page in the window.
+Chat and file preview links to a page of the app at that origin open the page in the window.
 The renderer keeps its normal `fetch` function and has no OS bridge.
 
 ## Development

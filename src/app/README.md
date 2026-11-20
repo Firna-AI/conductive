@@ -225,8 +225,8 @@ the Help row of the palette opens.
   its build. `CONDUCTIVE_APP_ORIGIN` selects that origin, as
   [Development](../../desktop/README.md#development) in the Mac app README
   says. So a join link names the deployment that owns its code. Links in
-  chat text, the file preview, and the terminal to a page of the app at
-  this origin are [links of the app](../../docs/protocol/chat-links.md#links).
+  chat text and the file preview to a page of the app at this origin are
+  [links of the app](../../docs/protocol/chat-links.md#links).
   Each opens its page in the same window.
 - The shell reuses the design tokens, the pure parts, and the CSS modules of
   the [mockups](../../docs/mockups/README.md). It never imports a mockup
