@@ -13,7 +13,6 @@ import { Archive, ArchiveRestore } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { WorkspaceMark } from '../../../docs/mockups/src/components/workspaces/WorkspaceMark'
 import styles from '../../../docs/mockups/src/components/workspaces/WorkspaceRow.module.css'
-import { activityPresentation } from '../../../docs/mockups/src/components/workspaces/status'
 import { routes } from '../../app/router'
 import { ownPress } from '../../app/pointer-drag'
 
@@ -124,7 +123,6 @@ export function WorkspaceRow({
     styles.row,
     page && styles.page,
     props.selected && styles.selected,
-    styles[activityPresentation[workspace.state].emphasis],
     props.drag && styles[props.drag],
     carried > 0 && styles.liftedTree,
     nested,

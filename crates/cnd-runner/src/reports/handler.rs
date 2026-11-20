@@ -1,4 +1,4 @@
-//! Compose file commands and report repairs with the existing connection handler.
+//! Compose file, port, and skill reports with connection commands and repairs.
 
 use std::collections::BTreeSet;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
@@ -10,6 +10,7 @@ use cnd_runner_interface::runner::{RunnerEvent, RunnerReady};
 use cnd_runner_interface::runner_commands::{
     RunnerCommand, RunnerControlCommand, RunnerReportKind, RunnerReportRefresh,
 };
+use cnd_runner_interface::runner_handshake::RunnerToWorkspace;
 use futures_util::future::BoxFuture;
 use tokio::task::JoinHandle;
 
@@ -19,6 +20,7 @@ use crate::error::{Error, Result};
 use crate::link::ports::RunnerLink;
 use crate::ports::reporter::PortReports;
 use crate::runtime::CommandHandler;
+use crate::skills::boundary::SkillReports;
 use crate::state::store::EventStore;
 use crate::watcher::service::ReportWatches;
 
@@ -31,6 +33,8 @@ pub struct ReportDependencies {
     pub files: Arc<dyn FileReports>,
     /// Optional listening-port owner.
     pub ports: Option<Arc<dyn PortReports>>,
+    /// Optional skill discovery and report owner.
+    pub skills: Option<Arc<dyn SkillReports>>,
     /// Event output policy shared with the turn owner.
     pub emitter: Arc<dyn EventEmitter>,
     /// Saved connection for unnumbered file replies and retained report replay.
@@ -93,6 +97,10 @@ impl CommandHandler for ReportCommandHandler {
         self.dependencies.next.busy().await
     }
 
+    async fn working(&self) -> Result<bool> {
+        self.dependencies.next.working().await
+    }
+
     async fn start(&self) -> Result<()> {
         self.dependencies.files.start().await?;
         self.dependencies.next.start().await?;
@@ -139,6 +147,14 @@ impl CommandHandler for ReportCommandHandler {
             if stopped.load(Ordering::Acquire) {
                 return Ok(());
             }
+            if let Some(skills) = &dependencies.skills
+                && skills.refresh(true, None).await.is_err()
+            {
+                tracing::warn!("The initial skill lists are unavailable.");
+            }
+            if stopped.load(Ordering::Acquire) {
+                return Ok(());
+            }
             dependencies
                 .emitter
                 .emit(
@@ -161,7 +177,12 @@ impl CommandHandler for ReportCommandHandler {
                 let response = dependencies.files.request(command).await;
                 let response = dependencies.filter.response(response);
                 let result = match response {
-                    Ok(response) => dependencies.link.reply(response).await,
+                    Ok(response) => {
+                        dependencies
+                            .link
+                            .reply(RunnerToWorkspace::RunnerFileResponse(response))
+                            .await
+                    }
                     Err(error) => Err(error),
                 };
                 if result.is_err() {
@@ -194,6 +215,12 @@ impl CommandHandler for ReportCommandHandler {
                         Some(ports) => ports.refresh(true, Some(command_id)),
                         None => Box::pin(async { Ok(()) }),
                     },
+                    RunnerReportKind::SkillsUpdated if dependencies.skills.is_some() => {
+                        match &dependencies.skills {
+                            Some(skills) => skills.refresh(true, Some(command_id)),
+                            None => Box::pin(async { Ok(()) }),
+                        }
+                    }
                     kind => Box::pin(async move {
                         let now = dependencies.clock.now()?;
                         dependencies
@@ -230,7 +257,12 @@ impl CommandHandler for ReportCommandHandler {
                 ports.close().await;
             }
         };
-        let (turns, _, _) = tokio::join!(turns, ports, watches);
+        let skills = async {
+            if let Some(skills) = &self.dependencies.skills {
+                skills.close().await;
+            }
+        };
+        let (turns, _, _, _) = tokio::join!(turns, ports, watches, skills);
         let jobs = std::mem::take(&mut *self.jobs.lock().or(Err(Error::InvalidCommand))?);
         for job in jobs {
             let _ = job.await;

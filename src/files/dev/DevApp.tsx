@@ -17,6 +17,7 @@ import { FilePage } from '../page/FilePage'
 import { FilesPanel, useFilesSnapshot } from '../panel/FilesPanel'
 import { FileTabItem } from '../tabs/FileTabItem'
 import { editOpenTab, playRecordedUpdates } from './dev-events'
+import { HtmlPreviewControls, useDevHtmlPreview } from './dev-html-preview'
 import { devNow, RepairControls } from './RepairControls'
 import {
   readView,
@@ -24,6 +25,7 @@ import {
   viewAfter,
   viewQuery,
   withTab,
+  type DevPreview,
   type DevView,
 } from './dev-view'
 import styles from './DevApp.module.css'
@@ -53,8 +55,14 @@ function Page(props: {
   view: DevView
   navigation: FilesNavigation
   targets: FileActionTargets
+  onPreview: (preview: DevPreview) => void
 }) {
   const { tab } = props
+  const htmlPreview = useDevHtmlPreview(
+    tab.path,
+    props.view.preview,
+    props.onPreview,
+  )
   const common = {
     files: props.files,
     layout: props.view.layout,
@@ -62,7 +70,7 @@ function Page(props: {
     targets: props.targets,
   }
   return tab.kind === 'file' ? (
-    <FilePage {...common} key={tab.path} tab={tab} />
+    <FilePage {...common} htmlPreview={htmlPreview} key={tab.path} tab={tab} />
   ) : (
     <DiffPage {...common} key={tab.path} tab={tab} />
   )
@@ -135,6 +143,7 @@ export function DevApp(props: {
     <Page
       files={files}
       navigation={navigation}
+      onPreview={(preview) => show({ ...view, preview })}
       tab={view.active}
       targets={props.targets}
       view={view}
@@ -212,6 +221,10 @@ export function DevApp(props: {
             Play the recorded updates
           </button>
           <RepairControls files={files} server={server} />
+          <HtmlPreviewControls
+            onChange={(preview) => show({ ...view, preview })}
+            value={view.preview}
+          />
           {view.active ? (
             <button
               onClick={() => {

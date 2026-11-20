@@ -119,7 +119,9 @@ The token expires after ten minutes.
 [attachment-download-command.ts](attachment-download-command.ts) builds the detached command.
 It starts with an empty environment and uses absolute commands, HTTPS, no curl configuration, and no redirects.
 It creates the file's parent folder and writes `*` into `.context/attachments/.gitignore`.
-It removes older temporary files of that file and downloads to a new random temporary file beside the destination.
+It then takes `flock` on the file's own folder, so the commands of one file in one computer run one at a time.
+Under the lock, a regular file at the final path ends the command with success and no download, so a late command never replaces a delivered or edited file.
+Otherwise it removes older temporary files of that file and downloads to a new random temporary file beside the destination.
 Curl uses a 1 KiB/s low-speed limit for 60 seconds and a one-hour total limit.
 The command checks the byte count before an atomic move to the final path.
 A folder at the final path makes the move fail.
@@ -127,7 +129,16 @@ It removes its temporary file on failure and prints no output.
 The token appears only in the Authorization header of the download.
 `SandboxProvider.startCommand` starts it, and `getCommandStatus` polls it to completion.
 [attachment-download-process.ts](attachment-download-process.ts) waits 100, 200, 400, and 800 ms between the first status checks, then 1 second, so a small file does not wait a full second after its curl exits.
-A failed command gives `attachment_copy_failed` through the normal failed-turn path.
+[attachment-transfer-failure.ts](attachment-transfer-failure.ts) defines `AttachmentTransferFailed`, an `attachment_copy_failed` HTTP error that keeps the failed step and its cause.
+The steps are `check`, `start`, `status`, and `command`.
+A failed start or status request, or a command that exits without success, gives this error through the normal failed-turn path.
+A provider error of the kind `unavailable` with a status of 500 or more marks the error as unanswered: the request timed out or got no connection, or the provider answered with a server error.
+A status that the provider client does not list, such as 405, also has the kind `unavailable`, but it is an answer.
+`retryUnanswered` runs a check or a download once more after an unanswered error, and logs `attachment_transfer_retried`.
+A download run creates its token inside the retried work, so the second run uses a new token.
+The first command can still run late with its own token, as after a restart, and the folder lock then orders the two commands.
+An unanswered error gives the text "The cloud computer did not answer, so the attached files did not arrive. Try again."
+Each other copy failure gives "The attached files could not reach the cloud computer. Try again."
 The helper checks the sandbox and provider account before and after the transfer.
 After a successful download, [attachment-transfer-data.ts](attachment-transfer-data.ts) records `transferred_sandbox_id` before the message proof.
 This update keeps the claim revision and the `claimed` state.
@@ -149,7 +160,7 @@ One active file owner serves each computer and path across messages.
 After a restart, a missing message proof checks a recorded transfer through provider metadata.
 When no transfer is recorded, it starts a new download with a new token and temporary file.
 The restarted command removes older temporary files of that file.
-Each final move is atomic, so overlapping downloads cannot mix bytes at the final path.
+The folder lock runs overlapping commands one at a time, and each final move is atomic.
 No process ID is stored.
 
 Completion enters the chat queue again.
@@ -170,7 +181,8 @@ A new computer or message gets a new preparation key and joins or starts its fil
 A failed proof save closes the runner connection and clears the owner.
 Redelivery reads any proof that committed before the failure.
 
-A failed copy clears its owner in the chat queue.
+A failed copy first logs `attachment_copy_failed` with the step and the error summary of its cause, or with no step for another error.
+It then clears its owner in the chat queue.
 `AttachmentPreparation.currentCommand` then finds the current command of the message.
 That is the first pending `turn` or `message` command of the message that the newest connection of the owner can still send.
 The failure ends the turn of that command, queued or running, through the existing failed-turn path.
@@ -196,7 +208,7 @@ The current connection and computer then get their own owner.
 It uses the absolute copy path and compares the byte size with the stored upload size.
 It accepts a same-size edit without reading R2 or starting another download.
 A directory, a changed size, or a provider 404 makes the file missing.
-Other provider failures give `attachment_copy_failed`.
+Other provider failures give `attachment_copy_failed` with the step `check`, after one more check when the provider gave no answer.
 The message owner checks every transferred file and collects missing names in message order.
 [attachment-missing.ts](attachment-missing.ts) builds the singular or plural `attachment_missing` cause.
 The failed-turn path saves that cause in both the turn and its event.
@@ -255,10 +267,13 @@ The multipart tests cover both targets, part replacement, exact body lengths, em
 Completion tests check the final size, access changes, competing completion calls, and abort of an expired unfinished upload.
 Copy tests inject detached command responses through `prepareAttachments`.
 The fake command downloads through the real one-use route with local D1 and R2.
-Shell tests execute the generated command with a fake curl boundary to check byte counts and atomic file placement.
+Shell tests execute the generated command with a fake curl boundary to check byte counts, atomic file placement, and that a later command leaves a delivered file alone.
+The overlap test holds the first fake download inside curl, starts a second command for the same file, and checks that only one download runs.
 The copy owner tests use that fake transfer to count the writers of each computer and path, and the writes after delivery.
 The later-message test keeps a same-size edit and checks metadata without another transfer or R2 read.
 The missing-file tests cover ordered names, changed sizes, a replacement sandbox, provider outages, and Try again after restoration.
+The retry tests let the fake provider run a download but answer its start with a server error, as with a late answer.
+They check the second download with a new token, and the failed turn after two unanswered starts.
 The retention and cleanup tests cover proof order, failed first starts, retryable byte deletion, and purge after byte deletion.
 The legacy-path tests store an old absolute or message-derived relative path with a proof, and check that the turn fails.
 The fixture never sends a request to a real provider.

@@ -12,13 +12,15 @@ use uuid::Uuid;
 /// Owns the identity of one runner program, independent of its saved stream.
 pub(crate) struct RunnerStart {
     process_start_id: String,
+    file_server: bool,
 }
 
 impl RunnerStart {
     /// Make one identity before the program's runner reconstruction loop.
-    pub(crate) fn new() -> Self {
+    pub(crate) fn new(file_server: bool) -> Self {
         Self {
             process_start_id: Uuid::new_v4().to_string(),
+            file_server,
         }
     }
 
@@ -38,6 +40,7 @@ impl RunnerStart {
             connector,
             clock,
             store,
+            self.file_server,
         )
     }
 }

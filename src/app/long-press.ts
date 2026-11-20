@@ -31,10 +31,12 @@ interface Hold<T> extends Point {
  * 450 ms, then lets go within 8 px of its press, calls `onHold` with the
  * item and the point of the press. A finger that moves further, before or
  * after the hold, scrolls the page, and Escape, a cancel of the browser,
- * or an unmount ends the press with no call. The click that ends a held
- * press reaches nothing, and a finger opens no menu of the browser. A press
- * on a control with `ownPress`, such as Close, starts nothing. A mouse and
- * a pen bind nothing, so their right click opens the menu.
+ * or an unmount ends the press with no call. Escape stops the default
+ * action of the key, so the page takes no other action for it. The click
+ * that ends a held press reaches nothing, and a finger opens no menu of the
+ * browser. A press on a control with `ownPress`, such as Close, starts
+ * nothing. A mouse and a pen bind nothing, so their right click opens the
+ * menu.
  *
  * `bind(item)` gives the handlers of the element.
  */
@@ -66,6 +68,8 @@ export function useLongPress<T>(onHold: (item: T, at: Point) => void) {
     function onKey(event: KeyboardEvent) {
       const current = hold.current
       if (event.key !== 'Escape' || !current) return
+      // The key ends the press, so no other Escape action of the page runs.
+      event.preventDefault()
       // The press stays until its release, so that the release selects nothing.
       if (current.held) current.cancelled = true
       else finish(false)

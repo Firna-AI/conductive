@@ -3,7 +3,7 @@ import type { AppEnv } from '../env'
 import { decrypt } from '../security/crypto'
 import { secretValueContext } from './data'
 import { secretCiphertexts } from './grant-data'
-import type { SecretRequestRecords } from './request-records'
+import type { SecretRequestRecords, TemporarySecret } from './request-records'
 import { temporaryValueContext } from './request-records'
 
 export async function agentOutputSecrets(
@@ -11,6 +11,24 @@ export async function agentOutputSecrets(
   records: SecretRequestRecords,
   workspace: { id: string; orgId: string },
   now: number,
+): Promise<string[]> {
+  return readValues(env, records, workspace, await records.temporary(now))
+}
+
+/** Cleanup reads still-stored values before expiry removes their records. */
+export async function storedAgentOutputSecrets(
+  env: AppEnv,
+  records: SecretRequestRecords,
+  workspace: { id: string; orgId: string },
+): Promise<string[]> {
+  return readValues(env, records, workspace, await records.values())
+}
+
+async function readValues(
+  env: AppEnv,
+  records: SecretRequestRecords,
+  workspace: { id: string; orgId: string },
+  temporary: readonly TemporarySecret[],
 ): Promise<string[]> {
   const values: string[] = []
   for (const row of await secretCiphertexts(
@@ -25,7 +43,7 @@ export async function agentOutputSecrets(
         env.BOAT_KEY_ENCRYPTION_KEY,
       ),
     )
-  for (const value of await records.temporary(now))
+  for (const value of temporary)
     values.push(
       await decrypt(
         value.ciphertext,

@@ -1,11 +1,12 @@
 import { requireActiveOrg } from '../data/user-access'
 import { HttpError } from '../http'
-import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
+import { readOrgProviderAccount } from '../data/org-provider-account'
 import { runningBuild } from './build-data'
 import type { ImageRuntime } from './image-builds'
 import { pendingImageCleanup } from './image-maintenance-data'
 import type { ImageSoftwareArtifact } from './image-software'
 import { readOrgImage } from './org-image-data'
+import { imageHoldsOldValues } from './org-image-refresh-data'
 import { imageRetryAt } from './image-retry-data'
 
 export const IMAGE_DAY_MS = 86_400_000
@@ -20,6 +21,8 @@ type ImageSchedule =
       dailyAt: number
       pendingAt: number
       imageName: string | null
+      /** The image holds an old name or default branch, so a build is due. */
+      oldValues: boolean
     }
 
 /** Every idle caller uses the persisted daily and pending push deadlines. */
@@ -28,7 +31,7 @@ export async function readImageSchedule(
   orgId: string,
   now: number,
   requested: { buildId: string | null; nextAt: number },
-  providerAccount = DEFAULT_PROVIDER_ACCOUNT,
+  providerAccount: string,
 ): Promise<ImageSchedule> {
   const active =
     (await runningBuild(db, orgId)) ?? (await pendingImageCleanup(db, orgId))
@@ -52,12 +55,14 @@ export async function readImageSchedule(
           image.pendingPushRefreshAt,
           (image.lastPushRefreshAt ?? -Infinity) + IMAGE_PUSH_MS,
         )
+  const oldValues = await imageHoldsOldValues(db, orgId, providerAccount)
   return {
     buildId: null,
-    nextAt: Math.min(dailyAt, pendingAt),
+    nextAt: oldValues ? now : Math.min(dailyAt, pendingAt),
     dailyAt,
     pendingAt,
     imageName: image?.imageName ?? null,
+    oldValues,
   }
 }
 
@@ -66,8 +71,8 @@ export async function scheduleIdleImage(
   runtime: ImageRuntime,
   orgId: string,
   software: ImageSoftwareArtifact,
-  providerAccount = DEFAULT_PROVIDER_ACCOUNT,
 ): Promise<void> {
+  const providerAccount = await readOrgProviderAccount(runtime.env.DB, orgId)
   const now = runtime.dependencies.now()
   const next = await readImageSchedule(
     runtime.env.DB,

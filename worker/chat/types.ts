@@ -30,6 +30,8 @@ import type { ChatTransaction } from './store'
 import type { TurnTokenState } from '../model-gateway/token'
 import type { TitleModelCall } from './title-model'
 import type { AgentLogin } from './login-kind'
+import type { RepositoryMoveState } from './runner-repository-move'
+import type { RunnerRepositoryRecord } from './branch-data'
 
 export interface ChatData {
   get<T>(key: string): Promise<T | undefined>
@@ -134,6 +136,13 @@ export interface ActiveRunner {
   processStartId: string | null
   protocolVersion: RunnerProtocolVersion | null
   loginKinds?: readonly RunnerLoginKind[]
+  /** The folder of a runner that accepts repository.move. Older runners omit it. */
+  repositoryFolder?: string
+  /** The move of this connection. A new connection starts without one. */
+  repositoryMove?: RepositoryMoveState
+  fileServer?: boolean
+  /** The end of the watch window of runner work, from the hello. */
+  watchUntil?: number
   ready: boolean
 }
 
@@ -161,6 +170,8 @@ export interface ChatDependencies {
   ): Promise<
     import('../../src/shared/generated/RunnerBranches').RunnerBranches | null
   >
+  /** The record repository and the stored folders, or null without them. */
+  readRepository(workspaceId: string): Promise<RunnerRepositoryRecord | null>
   readCommitAuthor: (userId: string) => Promise<CommitAuthor | null>
   readAutomaticTitleWorkspace: (
     workspaceId: string,
@@ -211,6 +222,8 @@ export interface ChatDependencies {
   browserAlarm?: (at: number | null) => Promise<void>
   scheduleRunnerCheck?: ConnectionScheduler
   runnerAlarm?: (at: number | null) => Promise<void>
+  /** Keeps the mark of runner work. Without it, the workspace marks nothing. */
+  runnerWork?: import('./runner-work-watch').RunnerWorkStorage
   /** Stores the due time of the automation report retry, unless an earlier one is due. */
   automationReportAlarm?: (at: number) => Promise<void>
   readRunnerAccess: (workspaceId: string, tokenHash: string) => Promise<boolean>

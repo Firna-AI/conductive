@@ -41,6 +41,7 @@ export async function suspendOrg(
         jobSoftware(job),
         dependencies.now(),
         build.id,
+        job.providerAccount,
       )
     } catch {
       // The saved image alarm retries cleanup after a failed wake.

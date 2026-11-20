@@ -1,13 +1,15 @@
 // @vitest-environment happy-dom
 
-import { describe, expect, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { readView } from '../../../chat/api/read-view'
 import { terminalPaths, type TerminalResponse } from '../../../shared/terminal'
 import { workspaceViewPath } from '../../../shared/workspace-view'
+import screenStyles from '../../../terminal/TerminalScreen.module.css'
 import { byRole, queryByLabel } from '../../../test-support/dom-queries'
 import { FakeApiServer } from '../../../test-support/fake-api'
 import { FAKE_IDS } from '../../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../../test-support/fixtures/workspaces'
+import { layOut } from '../../../test-support/layout'
 import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
@@ -22,6 +24,10 @@ import { firstTerminal, openTerminals, terminalTabs } from './terminal-tabs-kit'
 import { previewPortHref } from './tool-address'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
+
+// happy-dom lays out nothing, and a terminal screen opens only in a host
+// with a size. Each shown terminal gets the size of the tools panel.
+beforeEach(() => layOut(`.${screenStyles.host}`, { width: 440, height: 389 }))
 
 const { org, workspace: id } = FAKE_IDS
 const viewPath = workspaceViewPath(org, id)

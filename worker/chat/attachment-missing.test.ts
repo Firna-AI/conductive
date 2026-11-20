@@ -118,7 +118,7 @@ it('fails a new sandbox after byte deletion without downloading or checking its 
   }
 })
 
-it('reports provider metadata outages as copy failures instead of missing files', async () => {
+it('checks a file once more after a provider metadata outage, then reports a copy failure instead of a missing file', async () => {
   const { fixture, copy, runner, file, session } =
     await downloadedAttachment(harness)
   try {
@@ -131,8 +131,9 @@ it('reports provider metadata outages as copy failures instead of missing files'
     expect((await latestAttachmentFailure(fixture))?.error).toEqual({
       code: 'attachment_copy_failed',
       message:
-        'The attached files could not reach the cloud computer. Try again.',
+        'The cloud computer did not answer, so the attached files did not arrive. Try again.',
     })
+    expect(copy.metadataRequests).toHaveLength(2)
     expect(messageCommands(runner, 'provider-down')).toEqual([])
     expect(copy.writes).toHaveLength(1)
   } finally {

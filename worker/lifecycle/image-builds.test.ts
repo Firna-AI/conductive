@@ -38,10 +38,16 @@ it.each(['allocating', 'sources'] as const)(
       sandboxId: phase === 'allocating' ? null : 'bx_1',
     })
     expect(
-      await readImageSchedule(images.env.DB, org.id, TEST_TIME, {
-        buildId: failed.id,
-        nextAt: TEST_TIME,
-      }),
+      await readImageSchedule(
+        images.env.DB,
+        org.id,
+        TEST_TIME,
+        {
+          buildId: failed.id,
+          nextAt: TEST_TIME,
+        },
+        'boat',
+      ),
     ).toMatchObject({ buildId: failed.id })
     images.scheduler.schedule = schedule
     await finish(fixture, failed.id)

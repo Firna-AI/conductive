@@ -15,7 +15,7 @@ Each handler returns `null` for a path that it does not own. The
 | `orgAgentLoginsRoute` in [`org-agent-logins.ts`](org-agent-logins.ts) | `GET /api/orgs/:orgId/agent-logins`; admin `PUT`, `PATCH`, and `DELETE` of `/:agent`; admin `POST` of `/:agent/models/refresh` |
 | `codexDeviceRoute` in [`codex-device.ts`](codex-device.ts) | `POST /api/account/agent-logins/codex/device` starts a ChatGPT sign-in. `POST` of its `/:handle` polls and exchanges it |
 | `shellRoute` in [`shell.ts`](shell.ts) | `GET` of the sections, the repositories, the members, and the workspace list of an org. `GET` and `PUT` of the view of a workspace, and `PUT` of its read mark |
-| `featureShellRoute` in [`feature-shell.ts`](feature-shell.ts) | GitHub installations and available repositories of the account; Create org with initials and repositories; settings reads and writes; repository choices; section writes; workspace names and moves |
+| `featureShellRoute` in [`feature-shell.ts`](feature-shell.ts) | GitHub installations and available repositories of the account; Create org with initials and repositories; settings reads and writes; repository choices and moves; section writes; workspace names and moves |
 | `archiveRoute` in [`archive.ts`](archive.ts) | `POST` of a workspace’s `archive` and `restore` |
 | `chatLifecycleRoute` in [`lifecycle.ts`](lifecycle.ts) | `POST` of the workspace list, which creates a workspace. `GET` of a workspace, `POST` of its `resume` and `activity`, and image build, refresh, and log routes |
 | `feedbackRoute` in [`feedback.ts`](feedback.ts) | `GET` and `POST` of `/api/feedback`. [Feedback routes](feedback.md) gives their checks, their errors, and the email |
@@ -28,6 +28,7 @@ repository selection, sections, and workspace metadata.
 The [invitation route](invitations.ts) serves the signed-in pending list and explicit acceptance.
 The [archive route](archive.ts) archives and restores a workspace through its workspace object, as [Archive](../../docs/protocol/workspace-life.md#archive) says.
 The [Continue route](continue.ts) starts a Continue job and reads its result in the real workspace object, as [Continue routes](../lifecycle/continue-routes.md) says.
+The [repository change route](repository-change.ts) starts a repository change and reads its result in the same way, as [Repository change](../lifecycle/repository-change.md#routes) says.
 `membersRoute` alone serves the org list and one org.
 It also serves Leave, org recovery, roles, invitations, and workspace ownership.
 Leave keeps the existing last-active-admin rule and native owner-change maintenance.
@@ -175,13 +176,48 @@ View writes cannot change this branch.
   `get-started-data.ts` uses the same default resolver as message admission.
 - Create org requires at least one repository. `createShellOrg` starts its
   first image build after it saves the org, its admin, and its repositories.
+  The [assignment service](../provider-assignment/README.md) selects and saves
+  the fixed provider account before that build. Only an operator can supply
+  a configured account choice. Other users get a draw from the weights.
   A failed build start writes one fixed warning through `warnWorker`.
   The org stays, and the request still answers 201.
 - A save that adds a repository starts an image build for the admin who
-  added it, also after a failed build. A repeated save and a removal start
-  no build. A running job takes the request without starting another job.
+  added it, also after a failed build, unless its body says
+  `build: false`. The app sends that body, so that Done of the
+  Repositories tab starts one build for every add of an edit. A request
+  without the field, from an older copy of the app, still builds at the
+  add. A repeated save and a removal start no build. A running job takes the request without starting another job.
   A failed start writes one fixed warning through `warnWorker`. The saved
   choice stays, and the reply keeps the repository list and HTTP 200.
+- `PUT` and `DELETE` on `repositoryPath` add and remove a repository, for
+  an admin. Each reply is `RepositoriesResponse`: the stored repositories
+  after the save, merged with the GitHub repositories of the admin. The
+  route reads those GitHub repositories once, before the save, so that no
+  call to GitHub can fail a change that saved. A failed read fails the
+  change before it saves. A removal by an admin without a saved GitHub
+  connection reads nothing from GitHub. Its reply holds the stored
+  repositories only.
+- `REPOSITORY_ORDER` in [`repository-order.ts`](../data/repository-order.ts)
+  gives the repository order of an org. The chosen repositories come
+  first, by `position`, then a chosen row without a position, then the
+  repositories that are not chosen. The name order breaks each tie: the
+  lower-case GitHub name, then the exact name, then the ID. The repository
+  list, its merge with the GitHub repositories of the person, and the agent
+  tool list use this order. The image build keeps its order by ID.
+- An add gives the repository the last position, also when the org chose
+  it before. Each add first gives every chosen row a position again, from
+  0, in the current order, so that a row that the previous Worker added
+  gets one. A Remove clears the position. Create org gives its
+  repositories positions in the name order.
+- `PUT` on `repositoryPositionPath` moves one chosen repository, for an
+  admin. Its body `MoveRepositoryRequest` holds `index`, which counts the
+  chosen repositories without the moved one. A larger index moves it to
+  the end. A body without a number index gets `400 invalid_input`. A
+  repository that is not chosen moves nothing. The reply is
+  `RepositoryOrderResponse`, the IDs of the chosen repositories in the
+  saved order. It reads stored data only, so that no call to GitHub can
+  fail a move that saved. A move starts no build, and it keeps the settings
+  revision, because the image does not depend on the order.
 - The build history reply also gives `BuildsResponse.changes`: the saved
   install script change and the added and removed repositories. The
   [image build reader](../lifecycle/image-builds.md#build-jobs) owns the
@@ -310,7 +346,7 @@ The machine tools use the configured app origin instead.
   Each other row of that section above that position, live or archived,
   gains the promoted count minus one. With zero or one promoted row,
   no other row changes position. All other stored positions stay.
-  `writeWorkspaceTree` selects these descendants inside the Archive batch.
+  `markWorkspaceArchived` selects these descendants inside its Archive batch.
   Its single position write follows Archive and checks `changes()`.
   It runs only when Archive wrote. Promoted top-level rows then keep their
   initial places and can move independently. Restore shows them under
@@ -351,6 +387,9 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 - [`lifecycle.ts`](lifecycle.ts): the lifecycle routes and their options.
 - [`continue.ts`](continue.ts): `continueRoute`, which checks the Continue
   request body and gives the start and each poll to the workspace object.
+- [`repository-change.ts`](repository-change.ts): `repositoryChangeRoute`,
+  which checks the `ChangeRepositoryRequest` body and gives the start and
+  each poll to the workspace object.
 - [`feature-shell.ts`](feature-shell.ts): shell write dispatch after the
   request gate. [`feature-settings.ts`](feature-settings.ts) encrypts env
   values and their secret marks. Replies return names and marks only.
@@ -367,15 +406,21 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   publishes the metadata of each moved workspace. `feature-workspaces.ts` and the
   [agent workspace tools](../tools/workspaces.md#rename-and-move) both call
   it. A tool move to the current section of a workspace changes nothing.
+- [`shell-guard.ts`](shell-guard.ts): `guardedStatement` inserts the current
+  shell member check at each `shellGuard` token and appends its org and user
+  bindings. Guarded SQL uses numbered placeholders. `GuardedStatement`
+  limits `guardedBatch` and `guardedRun` to statements from the builder.
+  `shellRead` prepares a single `SELECT` for reads in the writer files.
 - [`workspace-parent-change-data.ts`](workspace-parent-change-data.ts):
   `writeWorkspaceParentChange`, the guarded parent change and tree placement
   in one D1 batch, including creates in flight under the moved tree.
 - [`feature-workspaces-data.ts`](feature-workspaces-data.ts):
   `readWorkspaceTree` and `readWorkspaceMove` read the org's tree and its
   shown places for reads and notices. `updateShellWorkspace` prepares the
-  guarded metadata write. `writeWorkspaceTree` saves tree moves and Archive
-  promotions in one D1 batch, with current membership and places.
-  [`archive-data.ts`](archive-data.ts) guards Archive and its promoted rows.
+  guarded metadata write. `writeWorkspaceTree` saves tree moves in one D1
+  batch, with current membership and places.
+  [`archive-data.ts`](archive-data.ts) keeps Archive, descendant promotion,
+  and token revocation in one batch with its owner-or-admin access check.
   [`feature-sections-data.ts`](feature-sections-data.ts): the
   section writes `insertShellSection`, `updateShellSection`, and
   `deleteShellSection`. [List order](#list-order) gives their rules.
@@ -386,12 +431,14 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   [image lifecycle](../lifecycle/image-builds.md).
   [`feature-repositories.ts`](feature-repositories.ts) merges
   the org's saved choices with repositories that its reader can access,
-  and starts a build after an add.
+  and starts a build after an add without `build: false`.
   Their `*-data.ts` files keep queries and guarded writes.
 - [`feedback.ts`](feedback.ts), [`feedback-input.ts`](feedback-input.ts),
-  [`feedback-data.ts`](feedback-data.ts), and
-  [`feedback-mail.ts`](feedback-mail.ts): the feedback routes, the checked
-  body, the reply email and reachable IDs, and the email.
+  [`feedback-data.ts`](feedback-data.ts),
+  [`feedback-mail.ts`](feedback-mail.ts), and
+  [`feedback-quota-data.ts`](feedback-quota-data.ts): the feedback routes,
+  the checked body, the reply email and reachable IDs, the email, and the
+  send limit.
   [Feedback routes](feedback.md#key-code) gives each entry point.
 
 ### Related docs

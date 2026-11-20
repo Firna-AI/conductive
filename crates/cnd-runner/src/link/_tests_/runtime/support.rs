@@ -116,6 +116,7 @@ impl Fixture {
             Arc::new(connector),
             runtime_clock.clone(),
             store.clone(),
+            false,
         ));
         let reports_release = Arc::new(Notify::new());
         let reports_done = Arc::new(Notify::new());
@@ -180,6 +181,7 @@ pub(super) fn welcome() -> WorkspaceToRunner {
         protocol_version: RunnerProtocolVersion,
         stream_id: "stream".into(),
         confirmed_through: 0,
+        complete_tool_details: None,
     })
 }
 

@@ -13,6 +13,7 @@ import { acme } from './acme-seed'
 import { devEndpointLogins } from './endpoint-logins'
 import type { DevOptions } from './options'
 import { seededOrgLogins } from './org-login-routes'
+import { seedProviders } from './provider-routes'
 import { operatorRecords } from './seed-operator'
 import { freshOrg, type DevState, type DevWaitlist } from './state'
 
@@ -98,6 +99,7 @@ export function seedState(options: DevOptions): DevState {
     stopAfterMs: options.stopAfterMs,
     operator: operatorRecords(options, user),
     shareSaveFails: options.shareSaveFails,
+    providers: seedProviders(options),
     waitlist: {
       appAccess: !waits,
       approvalEmail:

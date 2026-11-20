@@ -74,19 +74,17 @@ function LeaveOrgDialog(props: {
     : undefined
   return (
     <Dialog
-      actions={
-        <>
-          <ActionButton onPress={props.close}>Cancel</ActionButton>
-          <ActionButton
-            busy={leave.pending}
-            icon={LogOut}
-            onPress={() => leave.run()}
-            tone="danger"
-          >
-            Leave org
-          </ActionButton>
-        </>
+      action={
+        <ActionButton
+          busy={leave.pending}
+          icon={LogOut}
+          onPress={() => leave.run()}
+          tone="danger"
+        >
+          Leave org
+        </ActionButton>
       }
+      busy={leave.pending}
       close={props.close}
       title={`Leave ${org.name}?`}
     >

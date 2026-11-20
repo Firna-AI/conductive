@@ -65,6 +65,28 @@ fn instructions(env: &BTreeMap<String, String>, agent: &Agent) -> Result<Vec<Str
 }
 
 #[test]
+fn gives_screenshot_guidance_after_computer_tools() -> Result<()> {
+    let config = Configuration::parse(
+        &configured("0"),
+        Path::new("/repo"),
+        Path::new("/home/user"),
+    )?;
+    for agent in [Agent::Claude, Agent::Codex] {
+        let (text, _) = build(&config, None, &agent)?;
+        assert_eq!(
+            text.split("\n\n")
+                .skip_while(|line| !line.starts_with("When computer tools are available"))
+                .nth(1),
+            Some(
+                "When you design or check an interface in a browser, save a screenshot of the result as a PNG file in the context folder. Show it in your reply as a Markdown image."
+            ),
+            "{agent:?}"
+        );
+    }
+    Ok(())
+}
+
+#[test]
 fn gives_exact_top_level_context_to_both_agents() -> Result<()> {
     for agent in [Agent::Claude, Agent::Codex] {
         assert_eq!(

@@ -4,7 +4,11 @@ import {
   type ReactNode,
   type RefCallback,
 } from 'react'
-import { ariaShortcut, formatShortcut } from '../../app/shortcuts/keys'
+import {
+  ariaShortcut,
+  formatShortcut,
+  shortcutTokens,
+} from '../../app/shortcuts/keys'
 import { ServicesContext } from '../../app/services'
 import type { ShortcutCommandId } from '../../shared/shortcut-commands'
 import ui from '../ui/ui.module.css'
@@ -13,7 +17,12 @@ import { useShortcutKeyOf } from './shortcut-context'
 
 /** The hint of the key of a command, as a control or a row shows it. */
 export interface ShortcutHint {
-  /** The key as its keyboard prints it, such as ⌥⌘B, or Alt+Shift+B. */
+  /**
+   * The modifiers and the key, each as its keyboard prints it, for the key
+   * chips: ⌥, ⌘, and B, or Alt, Shift, and B.
+   */
+  readonly tokens: readonly string[]
+  /** The key as a tooltip prints it, such as ⌥⌘B, or Alt+Shift+B. */
   readonly text: string
   /** The key for `aria-keyshortcuts`, such as `Alt+Meta+B`. */
   readonly aria: string
@@ -44,6 +53,7 @@ function useShortcutHintOf(): (
       const key = keyOf(command)
       if (key === undefined || !services || phone) return undefined
       return {
+        tokens: shortcutTokens(key, services.platform),
         text: formatShortcut(key, services.platform),
         aria: ariaShortcut(key),
       }

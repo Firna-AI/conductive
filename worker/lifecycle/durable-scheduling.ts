@@ -1,5 +1,4 @@
 import {
-  IDLE_MS,
   LIFECYCLE_STATE_KEY,
   TURN_HEARTBEAT_MS,
   type DurableLifecycleState,
@@ -88,7 +87,7 @@ export async function scheduleLifecycleState(
           ? now() + 5_000
           : state.runningSessions.length
             ? now() + TURN_HEARTBEAT_MS
-            : state.lastActivityAt + IDLE_MS
+            : state.lastActivityAt + (await hooks.idleMs())
   if (alarm === null || state.state === 'archived') await storage.deleteAlarm()
   else {
     const next = Math.min(

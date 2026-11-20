@@ -1,0 +1,73 @@
+/*
+ * The picture of a Markdown image of an answer. It stands in the line of
+ * text, and the text of the line keeps to its top edge, as beside a chip,
+ * so the sentence reads on from the line above it. It keeps its
+ * proportions. It is never larger than its own size, never wider than the
+ * answer, and never higher than 240 px. A hairline keeps a light picture
+ * apart from a light answer.
+ */
+.picture {
+  display: inline-block;
+  width: min(100%, var(--picture-width), calc(240px * var(--picture-ratio)));
+  aspect-ratio: var(--picture-ratio);
+  overflow: hidden;
+  border-radius: var(--ui-radius-md);
+  outline: 1px solid var(--ui-border);
+  vertical-align: top;
+}
+
+.picture > * {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+a.picture:hover {
+  outline-color: var(--ui-faint);
+}
+
+/*
+ * The box of a picture while the read of its file runs. The size of the
+ * picture is not known yet, so the box takes the most room that a picture
+ * takes: the width of the answer and a height of 240 px.
+ */
+.loading {
+  display: inline-flex;
+  box-sizing: border-box;
+  width: 100%;
+  height: 240px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-raised);
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.4;
+  text-align: center;
+  text-decoration: none;
+  vertical-align: top;
+}
+
+a.loading:hover {
+  border-color: var(--ui-faint);
+}
+
+.picture:focus-visible,
+.loading:focus-visible {
+  outline: 2px solid var(--ui-primary);
+  outline-offset: 1px;
+}
+
+/* The icon of a picture, which says what takes the place of the box. */
+.icon {
+  flex-shrink: 0;
+}
+
+/* A long label wraps inside the box. */
+.label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

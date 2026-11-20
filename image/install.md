@@ -35,14 +35,29 @@ The Worker installs no separate tool source files or launcher.
 
 The command first runs the apt part. It installs `ttyd` and `tmux` with
 `terminalPackagesCommand()`, then `gh`, with apt. It disables and masks the
-package's own ttyd service. `imagePackagesVersion()` hashes this part alone,
-so a new release does not change it. Each build job and each software image
-row records the version of the part that its command ran. A later build
-reads the version that its source image holds. When that version is
-current, the command first checks the image. When `dpkg-query` finds the
-three packages installed and `systemctl is-enabled ttyd.service` prints
-`masked`, the command skips apt. Otherwise, and for a software image build
-from the base image, it runs the apt part.
+package's own ttyd service.
+
+The `apt-get update` of the apt part adds
+`-o Acquire::AllowReleaseInfoChange::Label=true`, so apt accepts a changed
+`Label` in the release file of a source. The Boat base image holds
+`ondrej/php`, a Launchpad apt source of PHP packages. Its `Label` changed to
+`PPA for PHP (deprecated)`. Without the option, `apt-get update` fails with
+exit code 100 while the cached lists hold the old `Label`. apt still checks
+the signatures. A changed `Origin` or `Codename` still stops the update.
+
+`imagePackagesVersion()` hashes this part alone, so a new release does not
+change it. A change of the part's text, such as an apt option, changes this
+version. It also changes the app software version, which hashes the release
+version and the whole install command. Each build job and each software
+image row records the version of the part that its command ran.
+
+A later build reads the version that its source image holds. When that
+version is current, the command first checks the image. When `dpkg-query`
+finds the three packages installed and `systemctl is-enabled ttyd.service`
+prints `masked`, the command skips apt. Otherwise, and for a software image
+build from the base image, it runs the apt part. So after a change of the
+part, the next build or refresh from each image with an older version runs
+the apt part once.
 
 The release part runs as root with `umask 022`, so services that run as
 `user` can read the release files. When `/opt/conductive/current/conductive`
@@ -156,6 +171,9 @@ same program and selects `git-credential`.
 It runs
 `systemctl daemon-reload` and enables the runner, relay, terminal, and
 check timer. It changes no package, and it starts no stopped service.
+A changed start of a running unit, such as its commands, user, or
+environment, applies only at the next start of that unit. The reload
+applies a changed `OOMPolicy` of a running unit at once.
 Last, it restarts the relay when the relay runs, without waiting.
 Boat starts the relay at boot, before the runner pre-start step applies a
 release, so the relay otherwise keeps the release that was active at boot.
@@ -175,10 +193,9 @@ Relay and terminal restarts do not change the selected release.
 A running runner also runs apply itself, through `sudo -n`, when its
 workspace is idle and its own release is confirmed. It then executes the new
 `current/system/runner-start.sh` in the same process, as the
-[runner service guide](../runner/service/README.md) says. That apply runs the
-same system installer, which restarts no unit. So a changed runner unit
-applies at the next start of the service, and the relay and terminal keep
-their running release until they start again.
+[runner service guide](../runner/service/README.md) says. The apply runs
+the same system installer, which restarts no unit. So the relay and
+terminal keep their running release until they start again.
 The runner, relay, and terminal entry points use `current/system/`.
 The runner executes `/opt/conductive/current/conductive runner`. It resolves
 its private Node and SDK helper beside that executable. The relay executes

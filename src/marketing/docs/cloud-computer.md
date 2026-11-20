@@ -46,22 +46,63 @@ After the first successful build, use these steps to change its repositories:
 4. Add or remove the repositories you want in its setup.
 5. Select **Done**.
 
-The tab lists the repositories in the setup.
-**Edit** lists every repository that the GitHub App can reach.
-Each add or remove saves at once.
+The tab lists the repositories in the setup, in the org's order.
+**Edit** lists every repository that the GitHub App can reach, by name.
+Your changes save when you select **Done**.
+If you leave the tab before **Done**, nothing changes.
 The full list has **Manage access** for the GitHub App's access on GitHub.
 Your account and the app must both be able to reach a repository to select it.
 
-Adding a repository starts a build automatically.
+Selecting **Done** after you add repositories starts one build automatically, so you can add many repositories first.
 If a build or refresh is running, one more build usually starts after it succeeds.
 When the repository notice offers **Try again**, the last build failed, and the repository waits for it.
 Select **Try again** to build it.
+A newly added repository goes at the end of the order.
 A newly added repository becomes usable after a successful build includes it.
 Until then, **New workspace** shows it as unavailable, with a note that says when it will be ready.
+
+When a repository gets a new name or default branch on GitHub, Conductive saves it and starts a build automatically.
+After that build, the repository's folder uses its new name, such as `~/code/<new-name>`.
+Update each install or startup script that names the old folder.
+Existing workspaces keep their old folders.
+If a build is running, the new build starts after it.
+If the last build failed, the change waits for **Try again**.
+
+When a repository moves to another owner on GitHub, Conductive follows the move like a new name.
+It does so only when the org already has another repository of the new owner.
+Otherwise, builds fail, and its workspaces and automations get no updates from GitHub.
+To fix this, an admin removes the repository in **Edit** and selects **Done**.
+Then the admin adds it again in **Edit** and selects **Done**.
+The removal turns off each automation of the repository.
+After the repository is back, the owner of each automation turns it on again.
 
 A removed repository stays in the setup until the next build.
 To apply a removal, select **Build computer** under **Cloud computer**.
 Existing workspaces keep the repositories and folders from the setup they started with.
+A workspace can move only to a repository that its computer holds, as [Change the repository](/docs/workspaces#change-the-repository) says.
+
+## Order repositories
+
+The first repository on the **Repositories** tab is the default.
+It shows **Default**.
+New workspaces and automations start in it.
+While it waits for a build, new workspaces start in the next ready repository.
+The repository menus of **New workspace** and of automations use the same order.
+So does the repository list that agents get from the workspace tools.
+
+Admins set the order for the whole org.
+Other members see it read-only.
+Each move saves at once and starts no build.
+
+Outside **Edit**, move a repository in one of these ways:
+
+- Drag its row up or down.
+  Press **Escape** to cancel a drag.
+  On a phone, long-press it and move it.
+- Open its **More** menu.
+  Then choose **Make default**, **Move up**, or **Move down**.
+- Focus its row and press **Alt+Up** or **Alt+Down** to move it one place.
+  On a Mac, use **Option** in place of **Alt**.
 
 ## Install software
 
@@ -132,8 +173,8 @@ An older workspace gets the turn sender as commit author when an automatic softw
 A Git command can still set its own author, for example with `--author`.
 The author of a commit does not prove who made it.
 
-The **Secret** mark hides exact copies of a value in displayed agent output, start logs, and program names and folders in **Preview**.
-It does not hide values in file content, diffs, or Terminal.
+The **Secret** mark hides exact copies of a value in displayed agent output, start logs, program names and folders in **Preview**, and skill names and descriptions in the message box.
+It does not hide values in file content, pictures in agent replies, diffs, or Terminal.
 
 ## Add secrets for agents
 
@@ -164,6 +205,8 @@ The command gets the value.
 The agent gets the secret's name and environment variable name, without the value.
 A member allows each session with **Allow for this session**.
 A secret for **All agents**, or one that is pre-approved in the workspace's **Capabilities**, needs no approval.
+The owner of an automation can choose secrets in **Capabilities** on its page.
+Each run workspace starts with those secrets pre-approved by the owner.
 
 The secret list gives the environment variable name that the command must read.
 Use the secret's name to request it.
@@ -179,6 +222,7 @@ An older tool can still omit a value if the secret's name cannot be a shell vari
 An [automatic software update](#apply-setup-changes) adds support for these names.
 
 - [Understand secrets](/docs/security#understand-secrets)
+- [Choose secrets for automation runs](/docs/security#choose-secrets-for-automation-runs)
 
 ## Apply setup changes
 
@@ -186,7 +230,7 @@ A successful build updates the starting setup for new workspaces.
 A failed build keeps the last successful setup.
 Existing workspaces keep their files.
 
-Adding a repository starts a build automatically.
+Selecting **Done** after you add repositories starts a build automatically.
 Each build installs the newest release of Conductive's own cloud computer software.
 **Continue** keeps that same computer and the software installed by the org's install script for the workspace's next task.
 A new build does not replace the existing computer.

@@ -5,20 +5,43 @@ export const readme = `# Storefront
 
 The Acme web shop, built with Next.js and Postgres.
 
+> **Note:** the browser calls \`/api/places\`, *never* the places API, so \`PLACES_API_KEY\` stays on the server.
+
 ## Getting started
 
 1. Copy \`.env.example\` to \`.env.local\`.
 2. Run \`npm ci\`, then \`npm run dev\`.
 3. Open \`http://localhost:3000\`.
 
+## Environment
+
+| Variable | Used for | Required |
+| --- | --- | :---: |
+| \`DATABASE_URL\` | Orders, carts, and sessions | Yes |
+| \`PLACES_API_KEY\` | Address suggestions at checkout<br>Manual entry without it | No |
+| ~~\`POSTCODE_API_KEY\`~~ | Removed with the postcode lookup | No |
+
 ## Checkout
 
-Checkout suggests addresses as you type. Suggestions come from \`/api/places\`, which needs \`PLACES_API_KEY\`. Without the key, the form falls back to manual entry.
+Checkout suggests addresses as you type. Suggestions come from \`/api/places\`, which needs \`PLACES_API_KEY\`. Without the key, the form falls back to *manual entry*.
+
+![Suggestions under the address field](https://design.acme.example/forms/address/suggestions.png)
+
+- [x] Suggestions from the places API
+- [x] Manual entry without the key
+- [ ] Saved addresses for signed-in customers
+
+---
 
 ## Tests
 
 \`\`\`bash
 npm test
+\`\`\`
+
+### End-to-end tests
+
+\`\`\`bash
 npx playwright test
 \`\`\`
 `

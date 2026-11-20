@@ -12,9 +12,9 @@ const fixtureForTest = setupBackendTests()
 it('keeps equal allocation keys and imported IDs separate across accounts', async () => {
   const { runtime, org, user, boat } = fixtureForTest()
   boat.server.addAccount({ orgId: 'second-org', apiKey: 'boat-second' })
-  runtime.env.SANDBOX_PROVIDER_ACCOUNTS = {
+  runtime.env.SANDBOX_PROVIDER_ACCOUNTS = JSON.stringify({
     'boat-second': { kind: 'boat', orgId: 'second-org', apiKey: 'boat-second' },
-  }
+  })
   for (const providerAccount of ['boat', 'boat-second'])
     await recordSandboxCleanup(runtime.env.DB, {
       workspaceId: `imported-${providerAccount}`,
@@ -96,9 +96,9 @@ it('keeps equal allocation keys and imported IDs separate across accounts', asyn
 it('rejects and reopens only the allocation of the named account', async () => {
   const { runtime, org, user, boat } = fixtureForTest()
   boat.server.addAccount({ orgId: 'second-org', apiKey: 'boat-second' })
-  runtime.env.SANDBOX_PROVIDER_ACCOUNTS = {
+  runtime.env.SANDBOX_PROVIDER_ACCOUNTS = JSON.stringify({
     'boat-second': { kind: 'boat', orgId: 'second-org', apiKey: 'boat-second' },
-  }
+  })
   for (const providerAccount of ['boat', 'boat-second'])
     await recordComputerIntent(
       runtime.env.DB,

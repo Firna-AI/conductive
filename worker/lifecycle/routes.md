@@ -105,7 +105,8 @@ turn and the branch step use the sender.
 1. It runs the checks of a resume: an active org, a member, a workspace
    that is not archived and has a sandbox, and an active owner.
 2. `softwareRestart(id, 'begin')` of the workspace object runs in its
-   lifecycle queue. It refuses a pending Continue. `restartingLifecycle`
+   lifecycle queue. It refuses a pending Continue and a pending
+   [repository change](repository-change.md#the-reservation). `restartingLifecycle`
    of [`durable-restart.ts`](durable-restart.ts) refuses each state other
    than ready, working, input, and unread with HTTP 409 and
    `workspace_not_running`. Otherwise it shows Starting and stores
@@ -154,13 +155,14 @@ The preview proxy reports no input (decision 293).
   fenced by the member generation. The shared deadline hook checks the org
   before this queued local write. The write publishes no shown state and
   waits for no provider call.
-- The idle stop still comes 30 minutes after `lastActivityAt`.
+- The idle stop still comes the stop time after `lastActivityAt`.
 - The owner updates D1 and the provider at most once a minute. The first
   input after a quiet minute starts an update. One more update follows for
   the newest input of that minute.
 - An update moves `last_activity_at` forward only, while the workspace, its
   sandbox, and the org generation stay active. It then sets the provider's
-  auto-stop to 1,860 seconds, which covers the minute of collection.
+  auto-stop to the stop time plus 60 seconds, which covers the minute of
+  collection.
 - When the provider reports a stopped or failed sandbox, the update
   reconciles the durable lifecycle state.
 - A failed update keeps its input time for the next minute, also without

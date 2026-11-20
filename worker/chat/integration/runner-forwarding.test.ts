@@ -108,10 +108,18 @@ it('dispatches a queued sender message and streams text and Stop through bearer-
     'outer-secret-owner',
   )
   const turnId = string(turn.turnId)
+  // This runner sent no skills report before `runner.ready`.
   expect(await browserInbox.next()).toMatchObject({
     type: 'event',
     envelope: {
       eventNumber: 4,
+      event: { type: 'skills.updated', skills: null },
+    },
+  })
+  expect(await browserInbox.next()).toMatchObject({
+    type: 'event',
+    envelope: {
+      eventNumber: 5,
       event: { type: 'message.sent', messageId: 'runner-ask', turnId },
     },
   })
@@ -130,7 +138,7 @@ it('dispatches a queued sender message and streams text and Stop through bearer-
   expect(await browserInbox.next()).toMatchObject({
     type: 'event',
     envelope: {
-      eventNumber: 5,
+      eventNumber: 6,
       event: { type: 'assistant.delta', text: 'Streamed through the Worker' },
     },
   })
@@ -140,7 +148,7 @@ it('dispatches a queued sender message and streams text and Stop through bearer-
   )
   expect(stopped.status).toBe(200)
   expect(await stopped.json()).toEqual({
-    eventNumber: 6,
+    eventNumber: 7,
     turnId,
     state: 'stopping',
   })
@@ -152,7 +160,7 @@ it('dispatches a queued sender message and streams text and Stop through bearer-
   expect(await browserInbox.next()).toMatchObject({
     type: 'event',
     envelope: {
-      eventNumber: 6,
+      eventNumber: 7,
       event: { type: 'turn.stop-requested', requestedById: 'owner', turnId },
     },
   })
@@ -174,14 +182,14 @@ it('dispatches a queued sender message and streams text and Stop through bearer-
   expect(await browserInbox.next()).toMatchObject({
     type: 'event',
     envelope: {
-      eventNumber: 7,
+      eventNumber: 8,
       event: { type: 'turn.completed', state: 'stopped', turnId },
     },
   })
   expect(await browserInbox.next()).toMatchObject({
     type: 'event',
     envelope: {
-      eventNumber: 8,
+      eventNumber: 9,
       event: { type: 'session.updated', session: { activeTurnId: null } },
     },
   })
@@ -191,22 +199,22 @@ it('dispatches a queued sender message and streams text and Stop through bearer-
   expect(history.status).toBe(200)
   const stored: unknown = await history.json()
   expect(stored).toMatchObject({
-    throughEventNumber: 8,
+    throughEventNumber: 9,
     events: [
       { eventNumber: 1, event: { type: 'session.updated' } },
       { eventNumber: 2, event: { type: 'message.accepted' } },
       { eventNumber: 3, event: { type: 'session.updated' } },
-      { eventNumber: 4, event: { type: 'message.sent' } },
+      { eventNumber: 5, event: { type: 'message.sent' } },
       {
-        eventNumber: 5,
+        eventNumber: 6,
         event: { type: 'assistant.delta', text: 'Streamed through the Worker' },
       },
       {
-        eventNumber: 6,
+        eventNumber: 7,
         event: { type: 'turn.stop-requested', requestedById: 'owner' },
       },
-      { eventNumber: 7, event: { type: 'turn.completed', state: 'stopped' } },
-      { eventNumber: 8, event: { type: 'session.updated' } },
+      { eventNumber: 8, event: { type: 'turn.completed', state: 'stopped' } },
+      { eventNumber: 9, event: { type: 'session.updated' } },
     ],
   })
   expect(JSON.stringify(stored)).not.toContain('outer-secret-member')

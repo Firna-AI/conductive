@@ -1,14 +1,16 @@
-import type { ReactNode } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 import type {
   AnswerSecretRequest,
   SecretRequest,
 } from '../../shared/secret-requests'
 import { placeCommands } from '../../shared/transcript/command-placement'
 import type { TranscriptInsert } from '../../shared/transcript/transcript-entries'
+import { KeptParts, sameData, sameElement } from '../components/same-data'
 import type { ChatSnapshot, SessionState } from '../state/chat-snapshot'
+import { loginReader } from '../state/session-login'
 import { LateAnswerLine } from './LateAnswerLine'
 import { isOpen } from './secret-snapshot'
-import { lateAnswerParts } from './secret-words'
+import { keptLoginOwner, lateAnswerParts } from './secret-words'
 import { SecretRequestCard } from './SecretRequestCard'
 import { SecretRunCard } from './SecretRunCard'
 import { agentNames } from '../../shell/account/labels'
@@ -27,8 +29,17 @@ interface SecretRecord {
   createdAt: number
   number: number
   unfolded: boolean
-  node: ReactNode
+  node: ReactElement<object>
 }
+
+/**
+ * The card of each request, run, and late answer, kept for its record while
+ * it holds the same data, and the insert of each card. So a change of the
+ * transcript, such as a streamed part, gives the same insert for a card
+ * whose record and place did not change.
+ */
+const cards = new KeptParts<ReactElement<object>>(sameElement)
+const placedCards = new KeptParts<TranscriptInsert<ReactNode>>(sameData)
 
 /**
  * The secret requests, runs, and late answers of the shown session, as the
@@ -56,21 +67,29 @@ export function sessionSecrets(
   const session = [...snapshot.sessions, ...snapshot.history].find(
     (item) => item.id === sessionId,
   )
-  const starter = session
-    ? { person: session.startedBy, agent: agentNames[session.choice.agent] }
+  // The org as the session-login view names it, with the name of the cards
+  // when the chat does not know that name.
+  const orgName = loginReader(snapshot)?.orgName ?? org
+  const login = session
+    ? {
+        owner: keptLoginOwner(session, viewerId, orgName),
+        agent: agentNames[session.choice.agent],
+      }
     : null
-  const card = (request: SecretRequest) => (
-    <SecretRequestCard
-      answering={answers[request.id] ?? null}
-      choices={props.choices}
-      key={`${request.id}:${isOpen(request) ? 'open' : 'ended'}`}
-      onAnswer={(answer) => props.onAnswer(request.id, answer)}
-      org={org}
-      request={request}
-      starter={starter}
-      viewerId={viewerId}
-    />
-  )
+  const card = (request: SecretRequest) =>
+    cards.keep(
+      request,
+      <SecretRequestCard
+        answering={answers[request.id] ?? null}
+        choices={props.choices}
+        key={`${request.id}:${isOpen(request) ? 'open' : 'ended'}`}
+        login={login}
+        onAnswer={props.onAnswer}
+        org={org}
+        request={request}
+        viewerId={viewerId}
+      />,
+    )
   const own = Object.values(requests).filter(
     ({ request }) => request.sessionId === sessionId,
   )
@@ -91,14 +110,15 @@ export function sessionSecrets(
         number: firstNumber ?? Number.MAX_SAFE_INTEGER,
         unfolded: request.late,
         node:
-          request.state === 'denied' && !request.late ? (
-            <SecretRunCard
-              item={{ kind: 'denied', request }}
-              viewerId={viewerId}
-            />
-          ) : (
-            card(request)
-          ),
+          request.state === 'denied' && !request.late
+            ? cards.keep(
+                request,
+                <SecretRunCard
+                  item={{ kind: 'denied', request }}
+                  viewerId={viewerId}
+                />,
+              )
+            : card(request),
       })),
     ...Object.values(runs)
       .filter(({ event }) => event.sessionId === sessionId)
@@ -108,7 +128,8 @@ export function sessionSecrets(
         createdAt: occurredAt,
         number,
         unfolded: false,
-        node: (
+        node: cards.keep(
+          event,
           <SecretRunCard
             item={{
               kind: 'run',
@@ -116,7 +137,7 @@ export function sessionSecrets(
               request: requests[event.id]?.request ?? null,
             }}
             viewerId={viewerId}
-          />
+          />,
         ),
       })),
     ...Object.values(notices)
@@ -129,11 +150,12 @@ export function sessionSecrets(
           createdAt: occurredAt,
           number,
           unfolded: true,
-          node: (
+          node: cards.keep(
+            event,
             <LateAnswerLine
               parts={answered ? lateAnswerParts(answered, viewerId, org) : null}
               text={event.text}
-            />
+            />,
           ),
         }
       }),
@@ -141,11 +163,13 @@ export function sessionSecrets(
   const placed = placeCommands(state.transcript.items, state.times, records)
   return {
     waiting,
-    inserts: placed.map(({ request: record, after }) => ({
-      key: `secret:${record.id}`,
-      after,
-      content: record.node,
-      ...(record.unfolded ? { unfolded: true as const } : {}),
-    })),
+    inserts: placed.map(({ request: record, after }) =>
+      placedCards.keep(record.node, {
+        key: `secret:${record.id}`,
+        after,
+        content: record.node,
+        ...(record.unfolded ? { unfolded: true as const } : {}),
+      }),
+    ),
   }
 }

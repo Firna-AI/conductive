@@ -13,6 +13,7 @@ export const SANDBOX_STATES = [
 ] as const
 
 export type SandboxState = (typeof SANDBOX_STATES)[number]
+export type ProviderAllocationMode = 'active' | 'cleanup'
 
 export interface Sandbox {
   id: string

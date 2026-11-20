@@ -270,6 +270,20 @@ The ledger migration runs after `202611092100_provider_accounts.sql` and
 the table. This order puts the ledger triggers on the rebuilt tables, so
 they stay.
 
+`202611101100_org_provider_assignment.sql` adds the fixed provider account
+of each org. Existing rows receive `boat`. New production writes name the
+selected account explicitly. The migration also creates the singleton
+assignment weights setting, with `boat` at 100%, and its change events.
+Each setting change can retain its operator and time. Operator references
+become null after account deletion. Existing org, resource, and computer
+ledger records and triggers stay in place.
+
+`202611101110_e2b_provider_state.sql` adds E2B create claims, encrypted traffic tokens,
+and the mapping from app snapshot names to provider snapshot IDs.
+Claims precede provider mutations. They survive ambiguous replies and org removal.
+Completed deletions retain tombstones so old requests cannot allocate again.
+The [E2B client](../worker/sandbox/e2b/README.md) gives the recovery behavior.
+
 `202611101200_software_images.sql` adds `software_images`, which owns each
 software image attempt and its provider account, version, artifact, phase,
 resources, output, and deploy token digest. A partial unique index allows
@@ -285,6 +299,19 @@ runs the apt part once. A build job also keeps an empty version when two
 starts of its software command carried different apt parts.
 [Image builds](../worker/lifecycle/image-builds.md#the-software-step) says
 how a build reads and writes it.
+
+`202611181709_software_image_poll_progress.sql` adds three tables for the
+deploy polls of a software image attempt. `software_image_operations`
+keeps the last finished call of an attempt before its main provider call,
+such as the readiness read, for one phase and revision.
+`software_image_output` keeps the build output that no deploy poll has
+taken yet. `software_image_deploys` links a deploy token digest to the
+attempt that its admission chose, until that deploy token expires. Each
+row references `software_images` with `ON DELETE CASCADE`, so deleting an
+attempt deletes its rows. The migration changes no existing table, column,
+or phase name, so the previous Worker keeps working.
+[Reply budget](../worker/software-image/README.md#reply-budget) says how
+the deploy polls use these tables.
 
 `202611101300_routines.sql` adds org-scoped automations and their run records.
 Automation owners reference users, so membership removal can transfer their records.
@@ -361,6 +388,14 @@ attribution IDs, so account removal keeps the records.
 The migration adds `workspaces.mac_access`, on for each existing and new
 row, and `workspace_creation_plans.capabilities_json` for create recovery.
 The [secrets backend](../worker/secrets/README.md) owns these records.
+
+`202611181310_automation_secret_preapprovals.sql` adds the chosen secrets of
+each automation. Composite foreign keys enforce the org of its automation
+and secret. Deleting either removes its rows. Approver IDs are opaque
+attribution IDs, so account removal keeps the choices. The migration adds
+only this table and its indexes for org reads and secret deletion. The
+previous Worker ignores them and keeps its existing reads and writes.
+The [automations backend](../worker/automations/README.md) owns these choices.
 
 `202611161353_secret_reveals.sql` adds retained reveal records with the
 secret ID and name, value version, admin ID, and time. An org foreign key
@@ -477,3 +512,46 @@ rows.
 the preset colour that an admin picks for the tile of the open org, as
 [Orgs and members](../docs/protocol/orgs-and-members.md) says. Existing orgs
 get null, which the app shows as Blue.
+
+`202611181200_feedback_sends.sql` adds `feedback_sends`. Each row holds one
+24-hour epoch of the delivery key of one feedback email of one user. It
+keeps the user, the delivery key, the time of the first try, the time of
+the hourly count, a generation token, the delivery state, and the number
+of tries that still run. A row keeps no message, screenshot, email
+address, browser string, or secret. Deleting the user deletes the rows
+through the foreign key. Three indexes serve the lookup of a delivery key,
+the hourly count, and the cleanup. The migration changes no existing
+table, so the previous Worker keeps working.
+[The send limit](../worker/app-api/feedback.md#the-send-limit) gives the
+rules of these rows.
+
+`202611181500_repository_order.sql` adds the nullable integer
+`repositories.position` column. It holds the place of a chosen repository
+in the repository order of its org, which counts from 0. The migration
+fills it for each chosen row (`selected = 1`) of each org, in the order of
+the lower-case GitHub name, then the exact name, then the ID. A row that
+is not chosen keeps null. The previous Worker adds and chooses rows
+without a position, and its Remove keeps the position. So the order puts a
+chosen row without a position after the rows with one, and it ignores the
+position of a row that is not chosen. The next add or move gives every
+chosen row a position again.
+[The app API](../worker/app-api/README.md) gives the rules of the order.
+
+`202611201200_pull_request_merges.sql` adds `pull_request_merges`. Each row
+holds one merged pull request of a workspace branch: the GitHub repository
+ID and the number as the key, the org, the workspace, the owner at the time
+of the record, the GitHub merge time, and the record time. Deleting the org
+deletes the rows through the foreign key. The workspace ID has no foreign
+key, so the org purge can delete the workspaces first. One index serves the
+counts of an owner by merge time, and one serves the cascade of an org. The
+migration copies no data, so the table starts empty. It changes no existing
+table, so the previous Worker keeps working.
+[The merge record](../worker/github/README.md#the-merge-record) gives the
+rules of the rows.
+
+`202611201400_idle_stop_settings.sql` adds `idle_stop_settings`, one row
+with the stop time of idle workspace computers in minutes, 30 at first,
+with its last change and operator. `idle_stop_events` keeps each change
+with its operator and time. The previous Worker reads neither table and
+keeps its fixed 30 minutes.
+[Operator stop time](../worker/operator/idle-stop.md) gives the rules.

@@ -20,18 +20,20 @@ and the separate preview domain.
 | The pause and the waitlist switch                                            | D1                                       |
 | Automations and their runs | D1 |
 | The org and the provider account of each sandbox and each saved snapshot     | D1                                       |
-| Env var values and agent logins                                              | The Worker's storage, encrypted          |
+| The provider account of each org, and the weights of new orgs with each change | D1 |
+| Env var values, agent logins, and the traffic token of each E2B sandbox | The Worker's storage, encrypted |
 | The values of the secrets | The Worker's storage, encrypted |
 | The names and descriptions of the secrets, their grants, and their reveals | D1 |
 | The secret requests that wait, and the temporary values | The workspace Durable Object, with each value encrypted |
 | The host of each own endpoint login | D1 |
-| The Boat key and the other keys of the Worker                                | Worker secrets                           |
+| The Boat key, the E2B key, and the other keys of the Worker | Worker secrets |
 | Chat history and banner state                                                | The workspace Durable Object             |
 | A copy of the [GitHub state](../protocol/github-banner.md#the-github-state) of each workspace, for the lists | D1 |
 | Files attached to chat messages | The attachment storage, an R2 bucket, until the sandbox has them. Then the home folder of the sandbox |
 | The records of attached files | D1 |
+| The [merge record](../protocol/account-stats.md#the-merge-record) of each merged pull request of a workspace branch | D1 |
 | The repository, the files, and the agent sessions                            | The home folder of the sandbox           |
-| The prepared repositories and the installed software                         | The org image, in the app's Boat account |
+| The prepared repositories and the installed software | The org image, in the provider account of the org |
 | The releases of the [sandbox software](sandbox-software.md) | An R2 bucket, public at `runner.conductive.build` |
 | Panel sizes                                                                  | The browser, or the Mac app              |
 | The address of the last workspace page of each org                           | The browser, or the Mac app              |
@@ -42,12 +44,15 @@ and the separate preview domain.
   for a member of that org. An operator is the one exception, as
   [Orgs and workspaces](../protocol/isolation.md#orgs-and-workspaces)
   says.
-- The one Boat key reaches the sandboxes and the saved snapshots of every
-  org (decision 80). So the Worker's own records keep the orgs apart, as
+- The key of each provider account reaches the sandboxes and the saved
+  snapshots of every org on that account (decision 80). So the Worker's own
+  records keep the orgs apart, as
   [Access and security](../protocol/isolation.md#orgs-and-workspaces)
   says.
-- The Boat key never goes to the browser, into a sandbox, into a log, or
-  into a saved snapshot.
+- No provider key goes to the browser, into a sandbox, into a log, or into
+  a saved snapshot.
+- The port credential of a sandbox, such as its E2B traffic token, stays
+  on the server. The proxies add it, and the browser never gets it.
 - Sandbox code is untrusted. Agents write and run it, and previews show it
   only on the preview domain.
 - A sandbox never reads the attachment storage. It gets each attached file
@@ -58,7 +63,7 @@ and the separate preview domain.
   trusted as the Worker deploy, because each sandbox installs the newest
   release from it. Today only the deploy token writes it, as
   [Releases](../protocol/sandbox-software.md#releases) says.
-- A sandbox gets none of the secrets of the app's Boat account. At a
+- A sandbox gets none of the secrets of the app's provider accounts. At a
   start, it gets only the secrets of its workspace and its org.
 - The value of a [secret](../protocol/secrets.md) of the Secrets tab
   reaches a sandbox only for one run of the agent tools that a grant
@@ -88,7 +93,9 @@ and the separate preview domain.
   says.
 - An automation run acts as its owner while no person watches. It uses the
   owner's default login and GitHub token, and the org's env vars. It also
-  uses each secret that a grant allows, such as a secret for all agents.
-  Its sandbox follows the same gateway boundary above. Other GitHub accounts
-  can write text that its agent reads, as
-  [Risks that stay open](../protocol/automations.md#risks-that-stay-open) says.
+  uses each secret that a grant allows, such as a chosen secret of its
+  automation or a secret for all agents. Its sandbox follows the same
+  gateway boundary above. Other GitHub accounts can write text that its
+  agent reads, as
+  [Risks that stay open](../protocol/automation-risks.md#risks-that-stay-open)
+  says.

@@ -242,11 +242,18 @@ browser, as [Hosts](keyboard-shortcuts-hosts.md#hosts) says.
 
 | Browser | Mac | Windows | Linux |
 | --- | --- | --- | --- |
-| Chrome and Edge | ⌘1 to ⌘9, ⌘L | Ctrl+1 to Ctrl+9, Ctrl+L | Ctrl+1 to Ctrl+9, Alt+1 to Alt+9, Ctrl+L |
-| Firefox | ⌘1 to ⌘9, ⌘L | Ctrl+1 to Ctrl+9, Ctrl+L | Alt+1 to Alt+9, Ctrl+L |
+| Chrome and Edge | ⌘1 to ⌘9, ⌘L | Ctrl+1 to Ctrl+9, Ctrl+L, Alt+D, F6 | Ctrl+1 to Ctrl+9, Alt+1 to Alt+9, Ctrl+L, Alt+D, F6 |
+| Firefox | ⌘1 to ⌘9, ⌘L | Ctrl+1 to Ctrl+9, Ctrl+L, Alt+D | Alt+1 to Alt+9, Ctrl+L, Alt+D |
 | Safari | ⌘1 to ⌘9, ⌘L | – | – |
 
-- In Safari, these keys are also kept keys.
+- In Chrome, Edge, and Firefox, the app also leaves to the browser the
+  keypad form of each digit key of the table. Examples are ⌘Num 1 on a Mac
+  and Alt+Num 1 on Linux. These browsers select a tab on a keypad digit
+  too. A keypad digit is a key of its own, as
+  [How a key matches](keyboard-shortcuts-matching.md#how-a-key-matches)
+  says.
+- In Safari, these keys are also kept keys. The Safari row lists only the
+  top-row digits.
 - [Windows and Linux](#windows-and-linux) says how Android and an unknown
   system count.
 - An unknown browser leaves to the browser the keys of each supported

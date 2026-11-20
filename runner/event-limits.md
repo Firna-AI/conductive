@@ -10,10 +10,16 @@ state. The [shared contracts](../src/shared/README.md) hold the constants.
 No variable changes them.
 Runner byte budgets apply after its known-credential filter. Displayed
 port-label limits apply later, after the workspace's marked-env filter.
+So does the displayed tool-detail limit, when the workspace accepts
+complete tool details.
 
 - A tool detail keeps the longest prefix that fits
   [`TOOL_DETAIL_MAX_BYTES`](../src/shared/chat-events.ts), and
-  `omittedDetailBytes` counts the rest. A turn summary keeps the first whole
+  `omittedDetailBytes` counts the rest. When the `welcome` accepts complete
+  tool details, the runner sends the complete source after its own filter,
+  and the workspace keeps that prefix after its filter. Each private part
+  of a long source fits the envelope limit of the outbox check below. Otherwise the runner
+  keeps the prefix, as an older runner does. A turn summary keeps the first whole
   files within `TURN_COMPLETED_MAX_FILES` and `TURN_COMPLETED_FILES_MAX_BYTES`.
   `omittedFileCount` counts the rest, and the Changes report lists every file.
 - Each file event fits [`FILE_EVENT_MAX_BYTES`](../src/shared/files.ts). A
@@ -29,6 +35,8 @@ port-label limits apply later, after the workspace's marked-env filter.
   against [`RUNNER_EVENT_MAX_BYTES`](../src/shared/runner.ts). An event
   that does not fit gets a local warning and no number, so later events
   continue. This check covers the size of an event only.
+- The private parts of one tool detail take their numbers together, and
+  one write saves them. When one part does not fit, no part gets a number.
 - A confirm can also cover a refusal marker that the workspace stored for
   an event. The runner then removes that event from its outbox and does
   not send it again. The runner never sends a refusal marker.
@@ -44,3 +52,7 @@ port-label limits apply later, after the workspace's marked-env filter.
   These final excerpts never split a Unicode character.
   [Listening ports](../docs/protocol/agent-runner.md#listening-ports)
   gives the limits of that report: its ports, its names, and its folders.
+- `skills.updated` sends at most 200 skills for each agent. The runner
+  never cuts a name or a description. It sends a description over 4096
+  characters as an empty string, and fits whole descriptions in a 512 KiB
+  budget, as [Skills](reports.md#skills) says.

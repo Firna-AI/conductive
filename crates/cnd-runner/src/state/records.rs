@@ -5,6 +5,7 @@ use cnd_runner_interface::ports::{PORT_REPORT_MAX_PORTS, RunnerPortsUpdated};
 use cnd_runner_interface::runner::{RunnerEvent, RunnerStartUpdated, RunnerWorkspaceTitle};
 use cnd_runner_interface::runner_commands::RunnerBranches;
 use cnd_runner_interface::runner_handshake::RunnerEventEnvelope;
+use cnd_runner_interface::skills::RunnerSkillsUpdated;
 use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::error::{Error, Result};
@@ -116,6 +117,9 @@ pub struct SavedSession {
         deserialize_with = "present_branches"
     )]
     pub instruction_branches: Option<Option<RunnerBranches>>,
+    /// Repository folder named by the fixed instructions. Older files omit it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub instruction_folder: Option<String>,
 }
 
 fn present_branches<'de, D: Deserializer<'de>>(
@@ -151,6 +155,13 @@ pub struct RetainedReports {
     /// Last workspace name.
     #[serde(rename = "workspace.title")]
     pub title: Option<RunnerWorkspaceTitle>,
+    /// Last bounded skill lists, without private paths. Older files omit this field.
+    #[serde(
+        default,
+        rename = "skills.updated",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub skills: Option<RunnerSkillsUpdated>,
 }
 
 /// Saved receipts suppress repeated report requests after restart.

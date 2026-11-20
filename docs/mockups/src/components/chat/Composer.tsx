@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Paperclip } from 'lucide-react'
 import type { AgentChoice, AgentKey } from '../../fixtures/agents'
 import type { Attachment } from '../../fixtures/attachments'
@@ -16,6 +17,7 @@ import { MentionAnchor } from './MentionList'
 import { MessageField } from './MessageField'
 import { ModelPicker } from './ModelPicker'
 import { SessionLoginLabel, type SessionLogin } from './SessionLogin'
+import { SkillMentionList, type SkillSource } from './SkillMentionList'
 import styles from './Composer.module.css'
 
 export type ComposerState = {
@@ -90,10 +92,20 @@ export type ComposerState = {
    */
   mention?: MentionTree
   /**
+   * The list of `/` is open above the box, for the query after the last `/`
+   * of the draft, with the skills as the workspace has them.
+   */
+  skills?: SkillSource
+  /**
    * A view has no pointer, so this draws it over the icon of the first chip
    * of the text.
    */
   pointer?: boolean
+  /**
+   * A picker in place of the model picker, for a page that draws another
+   * menu of the model, such as `app/model-favourites`.
+   */
+  pickerPart?: ReactNode
   /**
    * The Capabilities icon beside the attach button, and its control when
    * it is open (secrets decisions 6 and 8).
@@ -106,9 +118,12 @@ export type ComposerState = {
   menu?: ComposerMenuState
 }
 
-/** The query of the list of `@`: the text after the last `@` of the draft. */
-function mentionQuery(draft: string): string {
-  return draft.slice(draft.lastIndexOf('@') + 1)
+/**
+ * The query of a list: the text after the last `@` of the draft for the
+ * list of files, or after the last `/` for the list of skills.
+ */
+function queryAfter(draft: string, mark: '@' | '/'): string {
+  return draft.slice(draft.lastIndexOf(mark) + 1)
 }
 
 /**
@@ -129,7 +144,8 @@ function mentionQuery(draft: string): string {
  * login, so the box keeps its place. A pasted workspace link shows as a
  * chip, and the draft keeps the plain link. `@` opens the list of the
  * files and folders of the workspace above the box, and a pick puts a file
- * chip into the text.
+ * chip into the text. `/` opens the list of skills in the same place, and
+ * a pick puts a skill chip into the text.
  */
 export function Composer(props: ComposerState & { lines?: number }) {
   const steers = props.running && props.startsSession !== true
@@ -145,8 +161,14 @@ export function Composer(props: ComposerState & { lines?: number }) {
       <MentionAnchor>
         {props.mention ? (
           <FileMentionList
-            query={mentionQuery(props.draft)}
+            query={queryAfter(props.draft, '@')}
             tree={props.mention}
+          />
+        ) : null}
+        {props.skills ? (
+          <SkillMentionList
+            query={queryAfter(props.draft, '/')}
+            source={props.skills}
           />
         ) : null}
         <div
@@ -185,13 +207,15 @@ export function Composer(props: ComposerState & { lines?: number }) {
                 ) : null}
               </>
             )}
-            <ModelPicker
-              choice={props.choice}
-              fastKey={props.fastKey}
-              hiddenModels={props.hiddenModels}
-              open={props.picker}
-              sessionAgent={props.sessionAgent}
-            />
+            {props.pickerPart ?? (
+              <ModelPicker
+                choice={props.choice}
+                fastKey={props.fastKey}
+                hiddenModels={props.hiddenModels}
+                open={props.picker}
+                sessionAgent={props.sessionAgent}
+              />
+            )}
             {props.sessionLogin ? (
               <SessionLoginLabel {...props.sessionLogin} />
             ) : null}

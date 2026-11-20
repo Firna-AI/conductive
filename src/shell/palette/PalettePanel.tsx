@@ -117,7 +117,7 @@ export function PalettePanel(props: { controller: PaletteController }) {
         choices={results.repositories}
         onArchived={(archived) => change({ archived })}
         onRepository={(repositoryId) => change({ repositoryId })}
-        repositoryId={query.repositoryId}
+        repository={results.repository}
       />
     ) : null
   const list = (

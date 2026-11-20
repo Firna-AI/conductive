@@ -65,7 +65,9 @@ says.
   restores nothing again.
 - Close on a file tab takes it out of the view. When it shows, the next
   file tab shows, else the one before, else the chat. Close on the
-  temporary tab also clears its mark.
+  temporary tab also clears its mark. While the temporary tab shows,
+  Escape closes it in the same way, through `usePageEscape` of the
+  [shortcut layer](../shortcuts/README.md#escape-on-the-page).
 - A file of a finished turn opens its diff tab. A phone shows it in the
   Files tab.
 - The chat gets the kept files of the workspace as `mentions`, for the
@@ -77,6 +79,13 @@ says.
   shows the right column on desktop, or the Files tab on a phone.
 - An archived workspace shows no file tabs and no file page, and its chat
   gets no files.
+- A record of the workspace with another repository closes each file and
+  diff tab of the view, because its path belongs to the old folder, as
+  [After the change](../../../docs/protocol/repository-change.md#after-the-change)
+  says. The chat then shows the chat of its session, and it saves the
+  view. `LeaveMovedFiles` of `files/moved-files.tsx` replaces a file or
+  diff address with the chat on desktop, and with the Files tab on a
+  phone.
 - The screen gives each of its parts one link opener, `WorkspaceLinks` of
   `link-opening.tsx`, through `LinkOpeningProvider` of
   `../ui/text-links.tsx`. So the links of chat text open as
@@ -178,6 +187,8 @@ Each folder of a path is a part of the address. Another address under
   of the saved view too, though the row of a phone shows no file tabs.
 - The links of the file preview open through the one link opener of the
   screen, as [The chat of the workspace](#the-chat-of-the-workspace) says.
+  The tab of an HTML file shows its page as
+  [The tabs of HTML files](html-tabs.md) says.
 - The lists show while the sandbox is stopped or failed, from the copy
   that the workspace keeps. While the sandbox starts, and while the app
   refuses its start, the sandbox panel shows in place of All files and
@@ -211,6 +222,10 @@ Each folder of a path is a part of the address. Another address under
 - A Restore moves no address, so it starts nothing, also while the address
   names a file or diff tab. The next visit that opens a tab resumes the
   sandbox.
+- After a repository change, the kept files mark the tree as unavailable,
+  drop the changes, and read the changes again, as
+  [Store rules](../../files/store.md) says. The reports of the new folder
+  then replace both lists.
 - The kept files, Copy, and Download use the services of the org, as
   [the Files screens](../../files/README.md#integration) say.
 - The tabs of All files, Changes, and Checks name the keys of Go to All
@@ -265,7 +280,9 @@ through them while the workspace loads.
 - An agent action sends its prompt through `WorkspaceContext.chat`. A prompt
   that did not go out shows the chat of its session, where the composer
   names the cause: the chat in place of a file on desktop, and the chat tab
-  on a phone.
+  on a phone. A failure that arrives after the screen closed, or after the
+  branch changed, keeps the view and selects no session, as
+  [Agent actions](../../github/actions.md#agent-actions) says.
 - `ContinueDialog` asks the question of Continue, after its check found
   local work. `LocalWorkList` of the mockups lists that work, as in the
   mockup of the question.

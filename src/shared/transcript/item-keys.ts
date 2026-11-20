@@ -19,3 +19,7 @@ export const failedKey = (turnId: string) => `failed:${turnId}`
 
 /** The note of Continue: one for each new branch in a session. */
 export const continuedKey = (branch: string) => `continued:${branch}`
+
+/** The note of a repository change: one for each new branch in a session. */
+export const repositoryChangedKey = (repositoryId: string, branch: string) =>
+  `repository-changed:${repositoryId}:${branch}`
