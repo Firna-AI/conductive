@@ -24,6 +24,9 @@ This page lists each protocol doc and what it covers.
       turn that cannot run fast.
     - [Dropped answers](../protocol/dropped-answers.md): the continue
       message of a Claude turn after its model answer drops.
+  - [The scroll of the chat](../protocol/chat-scroll.md): the row that
+    stays in view, the scroll after a send, and the place that each tab
+    keeps.
   - [File mentions](../protocol/file-mentions.md): the list of `@` in the
     composer, the chips of files and folders, Add to chat, the sent chips
     of attached files, and the removal of each chip of the composer.
@@ -119,10 +122,17 @@ This page lists each protocol doc and what it covers.
     create, list, get, rename, move, and archive workspaces.
     - [Repository, section, and model lists](../protocol/create-call-lists.md):
       the lists that a create call takes.
+    - [Workspace management](../protocol/workspace-management.md): the
+      calls that rename, move, and archive one workspace.
   - [Session calls](../protocol/session-calls.md): the calls that start,
     list, message, and read the sessions of the org.
     - [Session management](../protocol/session-management.md): the calls
       that get, rename, close, and stop a session, and get a message.
+    - [Session watches](../protocol/session-watches.md): the call that
+      watches one turn of a session, and the wake that tells the calling
+      session of its end.
+    - [The `Sent by:` line](../protocol/sent-by-line.md): the line that ends
+      the text of each tool message.
   - [Section and preview calls](../protocol/section-and-preview-calls.md):
     the calls that create and delete sections, and list, open, and close
     port previews.
@@ -220,6 +230,9 @@ This page lists each protocol doc and what it covers.
     agents and the base instructions of Codex agents.
   - [Agent instructions: how each agent gets them](../protocol/agent-instructions-delivery.md):
     the system instructions of each agent, and the ways that were rejected.
+  - [Agent instructions: the same text for the life of a session](../protocol/agent-instructions-lifetime.md):
+    the instructions that a session keeps, and the facts that the messages
+    give in their place.
 - [Waitlist](../protocol/waitlist.md): app access, the waitlist screen, the
   ways in, the approval email, and the record of app access.
 - [Invite and referral codes](../protocol/waitlist-codes.md): the codes of

@@ -7,7 +7,7 @@ Use `cnd-runner-interface` for the shared wire types.
 ## Responsibilities
 
 Parse tool options. Preserve valid Unicode message text. Authenticate fixed-route HTTP
-requests. Validate replies. Serve the same 26 calls through CLI and MCP.
+requests. Validate replies. Serve the same 27 calls through CLI and MCP.
 Run commands with approved secrets under their variable names, and filter their output.
 
 ## What This Crate Does
@@ -66,6 +66,15 @@ The shared JSON decoder replaces lone UTF-16 surrogate escapes with U+FFFD
 in Worker replies and MCP tool text. Valid surrogate pairs remain unchanged.
 Every MCP reply preserves its request ID exactly, including error replies.
 
+### Session watches
+
+`sessions watch` and `watch_session` ask the Worker for one wake of the
+calling session when one turn of a session ends. They take the session, an
+optional workspace, and an optional turn ID. The reply comes at once, with
+`watching`, `idle`, or the end of a turn that already ended.
+[Session watches](../../docs/protocol/session-watches.md) states the rules.
+The CLI and the MCP server do not offer this call yet.
+
 ## Quick Start
 
 Run from the repository root:
@@ -115,6 +124,7 @@ isolation and filtered output. Worker route tests need no Rust build.
 
 - [Architecture](../../docs/architecture.md)
 - [Agent tools](../../docs/protocol/agent-tools.md)
+- [Session watches](../../docs/protocol/session-watches.md)
 - [Secret requests](../../docs/protocol/secret-requests.md)
 - [Secret variables](../../docs/protocol/secret-variables.md)
 - [Workspace commands](../../tools/README.md)

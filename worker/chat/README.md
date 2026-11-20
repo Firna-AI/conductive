@@ -320,6 +320,7 @@ gives the context and type of a private tool-detail part.
 
 - [Chat and events: Messages](../../docs/protocol/messages-and-attachments.md#messages)
 - [Chat and events: Events](../../docs/protocol/chat-and-events.md#events)
+- [Session watches](../../docs/protocol/session-watches.md)
 - [Agent runner: Lost workspace updates](../../docs/protocol/agent-runner.md#lost-workspace-updates)
 - [Agent runner: Runner warnings](../../docs/protocol/runner-warnings.md)
 - [Chat backend integration](integration/README.md)

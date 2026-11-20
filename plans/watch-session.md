@@ -1,6 +1,6 @@
 # Wake a session when a watched turn ends
 
-Status: Active. On branch `calummoore/wake-a-session-when-a-turn-ends-b5kh`, no pull request yet. Cal approved watch decisions 2 D, 3 C, 4 C, 5 D, and 6 B on 20 November 2026. Milestone 1 is checked complete. The pull request that completes this work deletes this plan.
+Status: Active. On branch `calummoore/wake-a-session-when-a-turn-ends-b5kh`, no pull request yet. Cal approved watch decisions 2 D, 3 C, 4 C, 5 D, and 6 B on 20 November 2026. Milestones 1 and 2 are checked complete. The pull request that completes this work deletes this plan.
 
 Conductive agents hand work to other sessions. No workspace tool tells the caller when that work ends. A waiting parent keeps its turn and cloud computer active. This change adds a one-shot watch. The Worker wakes the calling session when the watched turn finishes, fails, or stops.
 
@@ -128,6 +128,9 @@ The first three calls came from the brainstorm on 18 November 2026. They are age
 - **20 November 2026, UI implementor call:** A wake starts a new turn part and never folds. Reason: messages during a turn and late secret answers use this boundary.
 - **20 November 2026, UI implementor call:** Show a finished wake turn with folded work in the failed variant. Show running wake turns in the other variants. Reason: the mockups check that the wake stays visible after folding.
 - **20 November 2026, UI implementor call:** Use the checks of Saved carts' branch in its fixture. Reason: that fixture has no pull request. Show it ready in the workspace list without adding an unrelated screen.
+- **20 November 2026, orchestrator refinement:** After Milestone 3, run Milestones 4 and 5 in parallel. Reason: Milestone 3 settles their shared contracts. Chat TypeScript and CLI/MCP Rust have separate owners, files, test fixtures, ports, and build output. This narrows the earlier call for sequential work. The combined gate still waits for both.
+- **20 November 2026, orchestrator call:** Keep delivery paused under the existing org receiver fence. Retry retained watches after the lift with current access checks. Reason: no wake admission runs while the org is fenced. Discarding retained watches would add a cancellation rule that Cal did not choose.
+- **20 November 2026, orchestrator call:** Add the watch to the public tool lists and sender and resume descriptions. Reason: Cal required legal and guide text that restates changed facts to stay aligned. This corrects the first audit's narrower reading of the open lists. The Terms digest changes with the approved feature text. This pull request makes no deployment.
 
 The fresh options check is `.context/watch-session/options-check.md`. Its resolution is `.context/watch-session/options-check-resolution.md`. The check widened the options and changed the recommendations for repeat calls and Stop. The orchestrator kept the task's one-turn scope when it chose the targeting recommendation.
 
@@ -281,16 +284,18 @@ Use the `ui implementor` action. Cal answered watch decisions 2 to 6 on 20 Novem
 
 Evidence: `.context/watch-session/m1-report.md` and `.context/watch-session/m1-root-check.md`.
 
-## Milestone 2: Documentation and protocol
+## Milestone 2: Documentation and protocol — completed
 
 Depends on: 1
 
 Use the `docs implementor` action for internal docs. Use the `external docs implementor` only if a public guide needs changed words.
 
-- [ ] Add a short watch protocol section or linked page. State targeting, one-shot ends, repeat rules, access, skipped delivery, text, and resume behavior.
-- [ ] Update session calls, agent tool access, agent tools, message lines, chat and events, stop and resume, and agent instructions where their current claims need the watch.
-- [ ] Read both legal pages and every public guide in full. Update each sentence that restates a changed fact. Keep unrelated guide work outside this change.
-- [ ] Update the relevant tools, chat, runner-interface, and Rust tools READMEs with public behavior and useful entry points. Check every changed Markdown link.
+- [x] Add a short watch protocol section or linked page. State targeting, one-shot ends, repeat rules, access, skipped delivery, text, and resume behavior.
+- [x] Update session calls, agent tool access, agent tools, message lines, chat and events, stop and resume, and agent instructions where their current claims need the watch.
+- [x] Read both legal pages and every public guide in full. Update each sentence that restates a changed fact. Keep unrelated guide work outside this change.
+- [x] Update the relevant tools, chat, runner-interface, and Rust tools READMEs with public behavior and useful entry points. Check every changed Markdown link.
+
+Evidence: `.context/watch-session/m2-report.md`, `.context/watch-session/m2-root-check.md`, and `.context/watch-session/m2-public-report.md`.
 
 ## Milestone 3: Durable watches and shared contracts
 
@@ -301,11 +306,12 @@ Use the `non-ui implementor` action. Keep generated shared types and their gener
 - [ ] Define the new request, reply, and chat boundary types in `crates/cnd-runner-interface/`. Regenerate `src/shared/generated/` with the repository command.
 - [ ] Replace the mockup's local `WakeEnd` union with the generated terminal type. Build agent input with the single `wakeText` and `wakeWords` source.
 - [ ] Add the fixed Worker route with existing active-turn, stored sender, membership, org, and archive rules. Implement the approved target and repeat semantics.
-- [ ] Expose the initial accepted turn ID in workspace-create replies if exact-turn targeting is chosen. Keep the field additive for older tools and the previous Worker.
-- [ ] Implement the approved caller Stop rule. If D is chosen, capture caller-owned Stop generations and check them at acceptance. Keep idle-stop watches valid and allow fresh watch intent after an explicit Stop.
+- [ ] Expose the initial accepted turn ID in workspace-create replies. Keep the field additive for older tools and the previous Worker.
+- [ ] Implement the approved caller Stop rule. Capture caller-owned Stop generations and check them at acceptance. Keep idle-stop watches valid and allow fresh watch intent after an explicit Stop.
 - [ ] Add additive watch records, exact-turn registration, and durable pending delivery to target workspace storage. Prove previous Worker storage compatibility once.
 - [ ] Integrate every terminal path with the persistent delivery queue. Reconcile retained terminal turns after restart. Retry transient failures without holding cross-workspace chat queues.
 - [ ] Admit wake lines with stable message IDs. Reuse late-secret login rules, current turn selection, runner dispatch, and stopped-computer resume. Consume undeliverable watches.
+- [ ] Update the Worker tools, chat, and runner-interface entry points. Remove the temporary README statement that the watch route is not accepted yet.
 - [ ] Add focused route and lifecycle regression cases for registration races, terminal outcomes, duplicate delivery, restart recovery, login access, and closed or archived callers. Reuse existing tests when they cover the requirement.
 - [ ] Prove each new test fails on a behavior assertion. Run each new asynchronous test ten times. Save evidence and test costs under `.context/watch-session/`.
 
@@ -324,12 +330,13 @@ Use the `ui implementor` action. The approved mockup and generated event type ar
 
 ## Milestone 5: CLI, MCP, and agent guidance
 
-Depends on: 4
+Depends on: 3
 
-Use the `non-ui implementor` action. The live watch path and chat line exist before these callers expose it.
+Use the `non-ui implementor` action. The live watch path and generated contracts exist first. This work can run beside Milestone 4. Keep each agent's files, ports, test fixtures, and build output separate. The final pull request includes both milestones.
 
 - [ ] Add `watch_session` to the MCP schema and dispatch. Add `conductive sessions watch` to CLI parsing and help.
-- [ ] Expose the approved targeting and request replay inputs consistently. Return the Worker reply and its existing error form.
+- [ ] Update `crates/cnd-tools/README.md`, `crates/cnd-cli/README.md`, `tools/README.md`, and `tools/calls.md`. Replace the old call counts and the temporary unbuilt-call statement.
+- [ ] Expose the approved targeting and coalescing rules consistently. Return the Worker reply and its existing error form.
 - [ ] Add watch guidance to tool descriptions and `crates/cnd-runner/src/engine/instructions.rs`. Tell agents to set the watch, end their reply, and read the session after a wake.
 - [ ] Explain that a turn end does not mean a whole delegated task ended. Explain the approved Stop rule. Change no shared skill in this repository.
 - [ ] Keep existing session instructions stable for their lifetime. Keep all dev server guidance unchanged.
@@ -337,7 +344,7 @@ Use the `non-ui implementor` action. The live watch path and chat line exist bef
 
 ## Milestone 6: Verification, review, and pull request
 
-Depends on: 5
+Depends on: 4, 5
 
 The orchestrator owns this milestone. No delegated tests run beside the gate.
 
