@@ -1,10 +1,10 @@
 # Skills copy warnings reach only the runner log
 
 - **Severity:** Low. **Likelihood:** Common. **Effort:** Large. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-17, from branch `calummoore/oslo-3u7a`, a design call of the org skills repository plan.
 - **Location:** `crates/cnd-runner/src/skills/service.rs`, `docs/protocol/org-skills.md`, `crates/cnd-cli/src/runner_update/releases.rs`.
-- **Reason:** Cal chose option B on 2026-11-18, and its detailed design below waits for Cal's approval before implementation.
+- **Reason:** Cal chose option B on 2026-11-18 and approved its plan, `plans/org-skills-copy-status.md`, on 2026-11-20. It is built in its own pull request after PR #426 merges.
 
 ### 1. Skills copy warnings reach only the runner log
 
@@ -35,7 +35,7 @@
 - **Previous examples:** Options D and F of decision 7 of the org skills repository plan, which the user did not choose on 2026-11-16. D was a report of each copy result with the newest result of the org. F listed each workspace without skills.
 - **Related:** `plans/follow-ups/skills-startup-cleanup-hides-restored-copy.md` changes the same runner warning paths. Its fix does not depend on this status choice. A cleanup warning must not make a later status report mark a usable published copy as failed. A failed startup preparation publishes no copy, so the design below reports it as a failure. `plans/follow-ups/release-confirmation-cleanup-result.md` records that the result of `update started` cannot prove a confirmation. This work does not use that result. Its release gate reads the saved update state. That item stays open for its warning fix.
 - **Recommendation:** B. It shows the common fault with one result for the org. The options check kept B. D serves the member in the affected workspace better and can follow B later. E keeps one result, but it suggests the health of the other workspaces.
-- **Action:** fix now, apply B after Cal approves the detailed design below.
+- **Action:** fix after merge, apply B, as the approved plan `plans/org-skills-copy-status.md` says, because Cal chose to merge PR #426 first.
 
 ## Answer
 

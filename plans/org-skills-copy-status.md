@@ -1,6 +1,6 @@
 # Copy status of org skills
 
-Status: Active. [PR #426](https://github.com/Firna-AI/conductive/pull/426) is open on branch `calummoore/oslo-3u7a`. Cal chose 404 B on 2026-11-18. This detailed plan awaits Cal's approval. The last implementation commit deletes this plan.
+Status: Active. No branch yet. Cal chose 404 B on 2026-11-18, and approved this plan on 2026-11-20. It starts in its own branch and pull request after [PR #426](https://github.com/Firna-AI/conductive/pull/426) merges. The last implementation commit deletes this plan.
 
 Conductive gives the agents of every workspace the skills of one public
 GitHub repository that an org admin names. The agent runner in each cloud
@@ -44,8 +44,11 @@ Contract owners:
 
 ## Decision 404: Skills copy warnings reach only the runner log
 
-Answered on 2026-11-18: Cal chose **B** with "404 = B". The detailed
-design below awaits approval.
+Answered on 2026-11-18: Cal chose **B** with "404 = B". On 2026-11-20,
+Cal approved the detailed design below with "404 = B". It is built in its
+own branch and pull request after PR #426 merges, not on the branch of
+PR #426. Reason: PR #426 is complete and green, and a separate pull
+request keeps the large status work reviewable.
 
 - **Severity:** Low. **Likelihood:** Common. **Effort:** Large.
 - **Source:** Design.
