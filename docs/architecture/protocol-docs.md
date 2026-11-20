@@ -8,6 +8,8 @@ This page lists each protocol doc and what it covers.
 - [Workspaces and sandboxes](../protocol/workspaces-and-sandboxes.md): the
   providers, the account of each org, the org image, the life of a
   workspace, and the disk flushes of a sandbox.
+  - [Provider accounts](../protocol/provider-accounts.md): the account of
+    each org, its weights, and the regions of the accounts.
   - [Sandbox software](../protocol/sandbox-software.md): the releases of the
     app's own software, the updates of each sandbox, the install in a
     build, and the software image.
