@@ -2,6 +2,7 @@
 
 use std::fs;
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
 use async_trait::async_trait;
@@ -19,7 +20,9 @@ use crate::support::fixture::{FixedClock, Fixture};
 
 struct StartupConnection {
     startup: Arc<dyn Startup>,
-    credentials: PathBuf,
+    profiles: PathBuf,
+    connections: AtomicUsize,
+    connected: Notify,
     stop: watch::Sender<bool>,
 }
 
@@ -30,8 +33,16 @@ impl CommandHandler for StartupConnection {
     }
 
     fn connected(&self) -> BoxFuture<'static, Result<()>> {
-        assert_eq!(fs::read_dir(&self.credentials).unwrap().count(), 0);
-        self.stop.send_replace(true);
+        let previous = self.connections.fetch_add(1, Ordering::SeqCst);
+        assert_eq!(fs::read_dir(&self.profiles).unwrap().count(), previous);
+        let profile = self.profiles.join("credentials/live-process/credentials");
+        fs::create_dir_all(&profile).unwrap();
+        if previous == 0 {
+            fs::write(profile.join("current.json"), "live credential").unwrap();
+            self.connected.notify_one();
+        } else {
+            self.stop.send_replace(true);
+        }
         Box::pin(async { Ok(()) })
     }
 
@@ -49,33 +60,50 @@ impl CommandHandler for StartupConnection {
 }
 
 #[tokio::test]
-async fn connects_without_opening_a_helper_during_startup() {
+async fn connects_without_a_helper_and_keeps_live_profiles_on_reconnect() {
     let h = Fixture::new().await;
     let home = tempfile::tempdir().unwrap();
-    let credentials = home.path().join(".conductive/anthropic/credentials");
-    fs::create_dir_all(&credentials).unwrap();
-    fs::write(credentials.join("old.json"), "stale secret").unwrap();
+    let profiles = home.path().join(".conductive/anthropic");
+    fs::create_dir_all(profiles.join("credentials")).unwrap();
+    fs::write(profiles.join("credentials/old.json"), "stale secret").unwrap();
     let (stop, receiver) = watch::channel(false);
     let handler = Arc::new(StartupConnection {
         startup: Arc::new(RunnerStartup {
             home: home.path().to_owned(),
             executable: PathBuf::from("/unused"),
         }),
-        credentials,
+        profiles: profiles.clone(),
+        connections: AtomicUsize::new(0),
+        connected: Notify::new(),
         stop,
     });
     let core = RunnerCore::new(
         h.link.clone(),
         h.store.clone(),
         Arc::new(FixedClock),
-        handler,
+        handler.clone(),
         Arc::new(NoUpdates),
     );
-    let result = core.run(receiver).await;
-    assert_eq!(result.unwrap(), RunExit::Shutdown);
+    let mut running = tokio::spawn(async move { core.run(receiver).await });
+    let ended = tokio::select! {
+        _ = handler.connected.notified() => None,
+        ended = &mut running => Some(ended),
+    };
+    assert!(ended.is_none(), "runner ended before its first connection");
+    h.endpoint.disconnect().await;
+    assert_eq!(running.await.unwrap().unwrap(), RunExit::Shutdown);
+    assert_eq!(handler.connections.load(Ordering::SeqCst), 2);
+    assert_eq!(
+        fs::read_to_string(profiles.join("credentials/live-process/credentials/current.json"))
+            .unwrap(),
+        "live credential"
+    );
     assert!(matches!(
         h.endpoint.state.lock().await.received.as_slice(),
-        [RunnerToWorkspace::RunnerHello(_)]
+        [
+            RunnerToWorkspace::RunnerHello(_),
+            RunnerToWorkspace::RunnerHello(_)
+        ]
     ));
 }
 
