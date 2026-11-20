@@ -182,8 +182,11 @@ View writes cannot change this branch.
   A failed build start writes one fixed warning through `warnWorker`.
   The org stays, and the request still answers 201.
 - A save that adds a repository starts an image build for the admin who
-  added it, also after a failed build. A repeated save and a removal start
-  no build. A running job takes the request without starting another job.
+  added it, also after a failed build, unless its body says
+  `build: false`. The app sends that body, so that Done of the
+  Repositories tab starts one build for every add of an edit. A request
+  without the field, from an older copy of the app, still builds at the
+  add. A repeated save and a removal start no build. A running job takes the request without starting another job.
   A failed start writes one fixed warning through `warnWorker`. The saved
   choice stays, and the reply keeps the repository list and HTTP 200.
 - `REPOSITORY_ORDER` in [`repository-order.ts`](../data/repository-order.ts)
@@ -420,7 +423,7 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   [image lifecycle](../lifecycle/image-builds.md).
   [`feature-repositories.ts`](feature-repositories.ts) merges
   the org's saved choices with repositories that its reader can access,
-  and starts a build after an add.
+  and starts a build after an add without `build: false`.
   Their `*-data.ts` files keep queries and guarded writes.
 - [`feedback.ts`](feedback.ts), [`feedback-input.ts`](feedback-input.ts),
   [`feedback-data.ts`](feedback-data.ts),

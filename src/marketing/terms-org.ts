@@ -140,13 +140,26 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         automation moves to the member who gets their workspaces. It stays
         off until that member turns it on. Later runs follow the same
         agent login rule and use that member's GitHub token.`,
+      text`The owner can choose org secrets in Capabilities on the automation
+        page. Every member sees the chosen secret names. Only the owner changes
+        the choice. Each run workspace starts with these secrets pre-approved
+        by the owner. Its agents can use them without a new request.`,
+      text`These pre-approvals stay in a kept run workspace until a member
+        removes them or the secret is deleted. Changing the automation's
+        choice affects only later run workspaces. The member who added a
+        chosen secret, or an admin, can replace its value. Later runs then
+        use the new value. A request for another
+        secret still waits for a member unless another approval allows it.
+        Mac access starts off in each run workspace.`,
       text`The run of an automation for a pull request reads that pull request,
         also the comments, reviews, and descriptions of other GitHub
         accounts. Such text can steer the agent while the run uses the
         session's agent login, the owner's GitHub token, and the org's
         env vars.
         It can also steer the agent to use the secrets that need no new
-        approval, such as a secret for all agents.
+        approval, such as a secret for all agents or one chosen for the
+        automation. The automation page warns every member about this risk
+        when the automation has a pull request trigger and a chosen secret.
         Such text can also steer the agent to read and change work across
         the org, with that member's workspace tool rights.
         Messages follow the same session login rules.`,

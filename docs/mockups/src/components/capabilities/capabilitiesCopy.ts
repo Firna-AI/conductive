@@ -1,7 +1,7 @@
 /**
- * The words of the Capabilities control of New workspace and of a
- * workspace (secrets decisions 6 and 8). The app and the mockups take them
- * from here.
+ * The words of the Capabilities control of New workspace, of a workspace,
+ * and of an automation (secrets decisions 6 and 8, and automation
+ * capabilities decision 1). The app and the mockups take them from here.
  */
 
 /** The label of the icon on hover, and the title of the control. */
@@ -11,11 +11,15 @@ export const capabilitiesLabel = 'Capabilities'
 export const capabilitiesIntro = {
   create: 'What agents in the new workspace can use.',
   workspace: 'What agents in this workspace can use.',
+  automation: 'What agents in each run can use.',
 } as const
 
 export const secretsPartWords = {
   title: 'Secrets',
   hint: 'Agents use a pre-approved secret with no question.',
+  /** The hint of the part in the control of an automation. */
+  automationHint:
+    'Each run workspace starts with the checked secrets pre-approved, so agents use them with no question.',
   manage: 'Manage secrets',
   allAgents: 'All agents',
   add: 'Add a secret',
@@ -46,4 +50,17 @@ export function valueDetail(who: string, when: string): string {
 export const macAccessWords = {
   title: 'Mac access',
   hint: 'Lets agents ask to run commands on the Mac of the member who sent the message.',
+} as const
+
+/**
+ * The lines under the prompt of an automation, which every member reads.
+ * The first names the secrets that each run workspace pre-approves, between
+ * `lead` and `tail`. The hint follows it while the triggers have a pull
+ * request trigger (automation capabilities decision 3 A).
+ */
+export const runSecretsWords = {
+  lead: 'Runs can use',
+  tail: 'with no question.',
+  pullRequest:
+    'Text in a pull request, such as a comment, can steer the agent to use these secrets.',
 } as const

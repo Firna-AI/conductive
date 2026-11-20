@@ -60,7 +60,7 @@ export function focusOf(
 /**
  * The offered commands, and the command that owns the open dialog or sheet.
  * While a layer of another owner is open, the page under it takes no input,
- * so it offers nothing, and the layer keeps every key.
+ * so it offers nothing.
  */
 function offersOf(
   page: ShortcutPage,

@@ -17,6 +17,7 @@ import {
 } from '../components/settings/RepositoryList'
 import { repositoryDefaultNote } from '../components/settings/repositoryOrder'
 import { RepositoryOrderList } from '../components/settings/RepositoryOrderList'
+import { EditRepositoryNotice } from '../components/settings/RepositoryNotice'
 import { Section } from '../components/settings/Section'
 import {
   memberViewer,
@@ -24,6 +25,7 @@ import {
   type Membership,
   type PersonKey,
 } from '../fixtures/members'
+import { addedRepository } from '../fixtures/repositories'
 import { olderSecret, type OrgSecret } from '../fixtures/secrets'
 import { orgAgentsFor } from './orgAgentsState'
 import type { OrgSettingsState } from './OrgSettingsScreen'
@@ -80,7 +82,7 @@ function tabSecrets(
  * suspended org says why nothing changes, so the tab adds nothing.
  */
 const repositoryNotes: Readonly<Record<ReadOnlyCause | 'editable', string>> = {
-  editable: ' Adding a repository starts a build.',
+  editable: ' Adding repositories starts a build when you select Done.',
   member: ' Only an admin can change them.',
   suspended: '',
 }
@@ -114,16 +116,29 @@ export function TabBody(props: {
       )
     case 'repositories': {
       const note = repositoryNotes[readOnly ?? 'editable']
-      const editing = !readOnly && state.repositoryView === 'edit'
+      const editing = !readOnly && state.repositoryView !== 'list'
+      // An open edit with an add that Done has not saved yet.
+      const unsaved = editing && state.repositoryView === 'edit-added'
+      const listed = unsaved
+        ? settings.repositories.map((repository) =>
+            repository.name === addedRepository
+              ? { ...repository, used: true }
+              : repository,
+          )
+        : settings.repositories
       return (
         <Section
           action={readOnly ? null : <RepositoryEditToggle editing={editing} />}
           description={`The cloud computer of ${org.name} holds these repositories, and its workspaces start in them. ${repositoryDefaultNote}${note}`}
           title="Repositories"
         >
-          {settingsRepositoryNotice(state, settings)}
+          {unsaved ? (
+            <EditRepositoryNotice added={[addedRepository]} />
+          ) : (
+            settingsRepositoryNotice(state, settings)
+          )}
           {editing ? (
-            <RepositoryList repositories={settings.repositories} search="" />
+            <RepositoryList repositories={listed} search="" />
           ) : (
             <RepositoryOrderList
               canMove={!readOnly}

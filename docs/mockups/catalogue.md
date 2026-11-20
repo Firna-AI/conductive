@@ -25,7 +25,7 @@ how a screen is built, and links to the other pages.
 | `app/operator`      | The operator's Overview with the long runs of cloud computers, the Orgs, Users, Waitlist, Invite codes, and Providers tabs, the page of an org and of a user with Suspend, Lift, and Approve, the pause of sign-ups, the waitlist switch, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, its other states, Merge, local work, the agent actions in the chat, and Continue |
 | `app/new-workspace` | An empty chat, the first build of a new org, a repository that waits for its build, its error, files on the first message, the Capabilities control, the model menu with Fast on, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
-| `app/automations` | The automations of the org, an automation, its triggers, its runs, and a run workspace |
+| `app/automations` | The automations of the org, an automation with the Capabilities of its runs, its triggers, its runs, and a run workspace |
 | `app/org-settings`  | General with Delete org, the colour of the org in the rail, then Repositories and Cloud computer with the notice of a repository change, the first build of a new org, Agents with the org logins, Secrets with Reveal for an admin and the view of a member, and Members |
 | `app/chat`          | A finished turn with its work folded, then running turns, turns that an agent stopped, open work, tables in replies, lists in replies, headings in replies, links in chat text, lost data, lost updates, unread files, the time limit of background work, a fast turn at standard speed, and menus that show whole over a box that scrolls |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat, and one that a workspace with Mac access off refused |
@@ -125,6 +125,18 @@ view shows the New workspace page in the same state.
 `user-flows/create-workspace-dialog` goes from Preferences through the
 dialog to the new workspace. Its child page `org-login` has a draft on the
 org login, as [org logins](catalogue-org-logins.md) gives.
+
+The `viewer` control of `app/new-workspace/dialog` sets one viewer for the
+whole screen: Cal, an admin, or Priya, a member who is not an admin. The
+dialog, the screen behind it, and the page of a phone all use that
+viewer. So the rail shows that person, and the notices of the dialog, the
+owner menu, and Archive follow the permissions of that person.
+[Orgs and members](orgs-and-logins.md#orgs-and-members) gives these
+permissions.
+
+`app/new-workspace/dialog/org-login` has the dialog of Priya over the ready
+workspace as she sees it, without the owner menu. The other saved states
+show Cal with the controls of an admin.
 
 `app/composer` shows a message with two uploaded files in a sentence. Its
 other states are child pages: `picker` has the open model picker,
