@@ -544,6 +544,22 @@ each doc stays under the length target of about 250 lines.
 - [preview-failure-says-try-again-twice.md](follow-ups/preview-failure-says-try-again-twice.md):
   the mockups found that a failed preview shows "Try again" in its
   message and on its button. It is outside the scope of this change.
+- [preview-launch-error-is-json.md](follow-ups/preview-launch-error-is-json.md):
+  a failed launch shows raw JSON in a frame, outside the scope.
+- [file-server-same-second-rewrite.md](follow-ups/file-server-same-second-rewrite.md):
+  review finding 1, fix after merge, with the wider fix of finding 2.
+- [launch-path-line-breaks.md](follow-ups/launch-path-line-breaks.md):
+  review finding 51, fix after merge.
+- [html-page-label-after-failed-read.md](follow-ups/html-page-label-after-failed-read.md):
+  review finding 102, fix after merge.
+- [html-tab-open-before-confirmed-state.md](follow-ups/html-tab-open-before-confirmed-state.md):
+  review finding 105, fix after merge.
+- [needs-input-hides-starting.md](follow-ups/needs-input-hides-starting.md):
+  review finding 52. Cal chose option A on 20 November 2026, as a
+  follow-up after the merge: the Worker shows Starting also while a
+  request waits.
+- [html-preview-deployed-smoke-test.md](follow-ups/html-preview-deployed-smoke-test.md):
+  the post-merge smoke test of this plan.
 
 ## Milestone 1: Mockups
 
@@ -734,9 +750,10 @@ Depends on: every other milestone
 
 The gate runs, the review reports, and the findings file of 18 November
 2026 are in `.context/html-file-preview/logs/` and
-`.context/reviews/calummoore/preview-html-file-c42r/`. Review finding 52
-waits for the user, so the plan stays and the pull request does not open
-yet.
+`.context/reviews/calummoore/preview-html-file-c42r/`. Cal answered
+review finding 52 on 20 November 2026 with option A, as a follow-up item.
+The merge of `origin/main` on 20 November 2026 made the file server
+follow a repository move of the runner, which `main` added.
 
 ## Post-merge follow-up (non-blocking)
 

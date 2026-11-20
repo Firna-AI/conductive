@@ -1,10 +1,10 @@
 # A waiting request hides Starting from the app
 
 - **Severity:** Medium. **Likelihood:** Common. **Effort:** Small. **Confidence:** High. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-18, from the review of branch `calummoore/preview-html-file-c42r`, finding 52.
 - **Location:** `worker/lifecycle/workspace-state-projection.ts:51-55`, `worker/secrets/request-records.ts:140`, `src/shell/workspace/features.ts:157-170`, `src/shell/workspace/previews/use-html-preview.tsx:116-153`, `docs/protocol/secret-requests.md:111-113`, `docs/protocol/agent-tools.md:216-219`, `docs/protocol/restart-the-software.md:64-65`.
-- **Reason:** The recommended fix changes the rule that a workspace keeps needs input while any request waits, and only the user can change that rule.
+- **Reason:** Cal chose option A on 2026-11-20, and asked for it as a follow-up after the merge of the HTML file preview.
 
 - **Terms:**
   - **Needs input:** the workspace state `input`, which shows while an agent request waits for a member, such as a request for secrets or a Mac command.
@@ -32,4 +32,5 @@
 - **Previous examples:** Commit `93ae7fc22` keeps Starting when turns end during a Restart. Commit `8c49081e3` corrects another case where the shown state hid Starting.
 - **Related:** `plans/follow-ups/html-tab-open-before-confirmed-state.md`: its fix builds on the signal that this item chooses.
 - **Recommendation:** A. It makes the shown state meet the Restart rule and the guide, with a Small change to one writer.
-- **Action:** ask the user, because A changes the rule that a workspace keeps needs input while any request waits, which `docs/protocol/secret-requests.md` and `docs/protocol/agent-tools.md` state, and no recorded user decision covers that change.
+- **Decision:** Cal chose A on 2026-11-20. This decision covers the change of the rule in `docs/protocol/secret-requests.md` and `docs/protocol/agent-tools.md`: Starting wins over needs input from a start or a Restart until the runner is ready, and then needs input shows again while requests still wait.
+- **Action:** fix after merge, apply A, because Cal chose A on 2026-11-20 and asked for it in a later branch.

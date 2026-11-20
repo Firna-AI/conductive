@@ -12,7 +12,7 @@
 - **Background:**
   - When the cloud computer does not answer, the Worker replies 502 `sandbox_unavailable` with the message "The cloud computer did not answer. Try again."
   - A Preview tab whose open fails shows the title "The preview couldn't open", the message of the server, and a button "Try again", in `PreviewTabPage` of `src/shell/workspace/previews/PreviewPages.tsx`.
-  - The HTML file tab of the change in `plans/html-file-preview.md` shows the same failure, as the mockup `app/files/html/failed` draws it.
+  - The tab of an HTML file shows the same failure, as `docs/protocol/html-file-preview.md` states and the mockup `app/files/html/failed` draws it.
 - **Problem:** The screen reads "The cloud computer did not answer. Try again." directly above a button named "Try again".
 - **Impact if no action:** The words repeat. A member still understands the screen and can press the button.
 - **Root question:** What words should a failure with a Try again button show for a cloud computer that does not answer?
