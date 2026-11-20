@@ -78,7 +78,7 @@ function RowContent(props: {
         ) : null}
         {hint ? (
           <span aria-hidden className={styles.keys}>
-            <KeyChips shortcut={hint.text} />
+            <KeyChips shortcut={hint.tokens} />
           </span>
         ) : null}
       </>

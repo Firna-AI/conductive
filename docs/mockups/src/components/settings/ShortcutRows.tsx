@@ -3,7 +3,7 @@ import { Plus } from 'lucide-react'
 import type { BrowserTab } from '../../fixtures/shortcutHosts'
 import { shortcutLimit } from '../../fixtures/shortcuts'
 import { ActionButton, IconButton } from '../common/actions'
-import { KeyChips, type Shortcut } from '../common/KeyChips'
+import { KeyChips, sameShortcut, type Shortcut } from '../common/KeyChips'
 import {
   CancelButton,
   ConflictActions,
@@ -81,8 +81,8 @@ export function FixedShortcuts(props: {
 }) {
   return (
     <RowLayout
-      keys={props.keys.map((shortcut) => (
-        <span className={styles.still} key={shortcut}>
+      keys={props.keys.map((shortcut, index) => (
+        <span className={styles.still} key={index}>
           <KeyChips shortcut={shortcut} />
         </span>
       ))}
@@ -98,7 +98,9 @@ export function FixedShortcuts(props: {
 
 /** The browser that keeps a shortcut in a normal tab, or none. */
 function keeper(shortcut: Shortcut, tab?: BrowserTab) {
-  return tab?.kept.has(shortcut) ? tab.browser : undefined
+  return tab?.kept.some((key) => sameShortcut(key, shortcut))
+    ? tab.browser
+    : undefined
 }
 
 /**
@@ -112,19 +114,20 @@ function recordingKeys(
   recorded?: Shortcut,
 ): ReactNode[] {
   const recorder = <Recorder key="recorder" shortcut={recorded} />
-  const others = state.keys.map((shortcut) =>
-    shortcut === state.replaces ? (
+  const { replaces } = state
+  const others = state.keys.map((shortcut, index) =>
+    replaces !== undefined && sameShortcut(shortcut, replaces) ? (
       recorder
     ) : (
       <KeyButton
-        key={shortcut}
+        key={index}
         keptBy={keeper(shortcut, tab)}
         label={label}
         shortcut={shortcut}
       />
     ),
   )
-  return state.replaces === undefined ? [...others, recorder] : others
+  return replaces === undefined ? [...others, recorder] : others
 }
 
 /**
@@ -136,11 +139,11 @@ function resetKeys(
   state: { keys: readonly Shortcut[]; shortcut: Shortcut },
   tab?: BrowserTab,
 ): ReactNode[] {
-  return state.keys.map((shortcut) =>
-    shortcut === state.shortcut ? (
-      <Recorder key={shortcut} shortcut={shortcut} />
+  return state.keys.map((shortcut, index) =>
+    sameShortcut(shortcut, state.shortcut) ? (
+      <Recorder key={index} shortcut={shortcut} />
     ) : (
-      <span className={styles.still} key={shortcut}>
+      <span className={styles.still} key={index}>
         <KeyChips
           dimmed={keeper(shortcut, tab) !== undefined}
           shortcut={shortcut}
@@ -232,7 +235,7 @@ function ShortcutsLine(props: {
         ) : (
           state.keys.map((shortcut, index) => (
             <KeyButton
-              key={shortcut}
+              key={index}
               keptBy={keeper(shortcut, props.tab)}
               label={label}
               shortcut={shortcut}
