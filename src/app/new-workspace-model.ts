@@ -1,6 +1,5 @@
 import type { AgentChoice } from '../shared/generated/AgentChoice'
 import type { FieldFiles } from '../chat/components/chip-field/attached-files'
-import type { BuildsResponse, Repository } from '../shared/org-settings'
 import {
   workspacesPath,
   type CreateWorkspaceRequest,

@@ -7,6 +7,7 @@ mod repository {
     mod context_tests;
     mod limits_tests;
     mod paths_tests;
+    mod stacked_base_tests;
     mod support;
     mod watch_tests;
 }

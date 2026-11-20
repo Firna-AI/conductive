@@ -1,4 +1,4 @@
-import type { Timestamp } from './api'
+import type { Timestamp } from './generated/Timestamp'
 import { repositoryPath } from './org-settings'
 
 export function repositoryBranchesPath(

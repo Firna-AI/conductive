@@ -40,7 +40,7 @@
   },
   {
     "name": "create_workspace",
-    "description": "Create a workspace with this workspace's owner and start its first message. Needs an active calling turn. Acts for the member whose message started that turn. Omitted model and effort use the owner's defaults. Fast mode requires explicit fast: true for a marked model. The reply gives the workspace number and link, and the first session link. These calls reach workspaces in this org. An omitted workspaceId names the calling workspace. Use names and returned links in normal answers. Workspace and session links show as chips. A session link holds both IDs. A Sent by: line names the sending session. Do not reply only to confirm it.",
+    "description": "Create a workspace with this workspace's owner and start its first message. Needs an active calling turn. Acts for the member whose message started that turn. Omitted model and effort use the owner's defaults. An omitted section uses the default section. startBranch creates the workspace branch from that branch. baseBranch sets the pull request target and Changes comparison branch. If both branches are omitted, both use the repository default branch. If only one branch is given, both use that branch. Fast mode requires explicit fast: true for a marked model. The reply gives the workspace number and link, and the first session link. These calls reach workspaces in this org. An omitted workspaceId names the calling workspace. Use names and returned links in normal answers. Workspace and session links show as chips. A session link holds both IDs. A Sent by: line names the sending session. Do not reply only to confirm it.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -52,6 +52,14 @@
         "firstMessage": {
           "type": "string",
           "minLength": 1
+        },
+        "startBranch": {
+          "type": "string",
+          "description": "Create the workspace branch from this branch. Omission uses baseBranch, or the repository default when both branches are omitted."
+        },
+        "baseBranch": {
+          "type": "string",
+          "description": "Use this branch for the pull request target and Changes comparison. Omission uses startBranch, or the repository default when both branches are omitted."
         },
         "name": {
           "type": "string",

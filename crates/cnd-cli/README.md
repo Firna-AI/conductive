@@ -87,6 +87,15 @@ cargo run -p cnd-cli -- update parts
 
 The last command prints the embedded parts without a network request.
 
+To create a workspace from a branch and target another branch:
+
+```sh
+cargo run -p cnd-cli -- workspaces create --repository repo-id --message 'Build the next change.' \
+  --start-branch feature/review --base-branch main
+```
+
+[Workspace tool calls](../../tools/calls.md#workspaces) gives the branch defaults and replay rules.
+
 ## Development
 
 Run these commands from the repository root:

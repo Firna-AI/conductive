@@ -32,6 +32,14 @@ The shared JSON decoder replaces lone UTF-16 surrogate escapes with U+FFFD
 in Worker replies and MCP tool text. Valid surrogate pairs remain unchanged.
 Every MCP reply preserves its request ID exactly, including error replies.
 
+Workspace create accepts `--start-branch` and `--base-branch` in the CLI,
+or `startBranch` and `baseBranch` in MCP. The first supplies the starting
+commit. The second sets the pull request target and Changes comparison.
+With neither field, both use the repository default branch.
+With one field, both use that branch. The adapters preserve each branch
+string, including blank strings. The Worker validates branch names after
+creation replay, so a retry keeps the first create's branches.
+
 ## Quick Start
 
 Run from the repository root:

@@ -51,8 +51,6 @@ export async function prepareCreationRequest(
         input,
         repository.defaultBranch,
       )
-  await requireOrgMember(env.DB, orgId, user.id)
-  await requireOrgMember(env.DB, orgId, sender.id)
   const id = reservedId ?? dependencies.randomToken()
   const sessionId = dependencies.randomToken()
   const turnId = dependencies.randomToken()

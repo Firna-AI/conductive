@@ -165,6 +165,21 @@ async fn separates_protocol_errors_from_tool_errors_and_ignores_notifications() 
             .ok_or(Error::Reply { mac: false })?;
         assert_eq!(tool["inputSchema"]["properties"]["fast"]["type"], "boolean");
     }
+    let create = tools
+        .iter()
+        .find(|tool| tool["name"] == "create_workspace")
+        .ok_or(Error::Reply { mac: false })?;
+    for field in ["startBranch", "baseBranch"] {
+        assert_eq!(create["inputSchema"]["properties"][field]["type"], "string");
+        assert_eq!(
+            create["inputSchema"]["properties"][field]["minLength"],
+            Value::Null
+        );
+    }
+    assert_eq!(
+        create["inputSchema"]["required"],
+        json!(["repositoryId", "firstMessage"])
+    );
     let mac = tools
         .iter()
         .find(|tool| tool["name"] == "run_mac_command")

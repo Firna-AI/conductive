@@ -95,6 +95,9 @@ pub enum InputError {
     /// Use a nonempty request ID.
     #[error("Use a nonempty request ID.")]
     RequestId,
+    /// Use a Git branch name for each branch.
+    #[error("Use a Git branch name for each branch.")]
+    Branch,
     /// Use a whole, nonnegative transcript position.
     #[error("Use a whole, nonnegative transcript position.")]
     Position,

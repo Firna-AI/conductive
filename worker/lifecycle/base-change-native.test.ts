@@ -3,9 +3,6 @@ import { join } from 'node:path'
 
 import { expect, it } from 'vitest'
 
-import { FileReporter } from '../../runner/src/files'
-import { Repository } from '../../runner/src/repository'
-import type { RunnerFileEvent } from '../../src/shared/files'
 import {
   baseChangeFetchCommand,
   baseChangeInstallCommand,
@@ -68,16 +65,6 @@ it('fetches a missing merge commit before targeting the default and excludes mer
   expect(await readFile(join(source.stage, 'config'), 'utf8')).not.toContain(
     f.token,
   )
-  const repository = new Repository(f.directory)
-  const events: RunnerFileEvent[] = []
-  const reporter = new FileReporter(
-    repository,
-    'feature/review',
-    async (event) => {
-      events.push(event)
-    },
-  )
-  await reporter.refresh(true)
   const install = baseChangeInstallCommand(source)
   expect(await f.execute(install)).toMatchObject({
     exitCode: 0,
@@ -91,19 +78,15 @@ it('fetches a missing merge commit before targeting the default and excludes mer
   expect(await f.git('branch', '--show-current')).toBe('owner/old\n')
   expect(await f.git('rev-parse', 'HEAD')).toBe(head)
   expect(await f.read('carry.txt')).toBe('kept work\n')
-  await reporter.refresh()
-  expect(events.at(-1)).toMatchObject({
-    type: 'changes.updated',
-    changes: {
-      baseBranch: 'main',
-      files: [{ path: 'carry.txt' }, { path: 'workspace.txt' }],
-    },
-  })
-  expect(await repository.diff('feature.txt', 'main')).toMatchObject({
-    oldContent: 'merged feature\n',
-    newContent: 'merged feature\n',
-    patch: '',
-  })
+  const base = (await f.git('merge-base', 'HEAD', 'origin/main')).trim()
+  expect(base).toBe((await f.git('rev-parse', 'origin/feature/review')).trim())
+  expect(await f.git('config', 'branch.owner/old.gh-merge-base')).toBe('main\n')
+  expect(await f.git('diff', '--name-only', base)).toBe(
+    'carry.txt\nworkspace.txt\n',
+  )
+  expect(await f.git('show', `${base}:feature.txt`)).toBe('merged feature\n')
+  expect(await f.read('feature.txt')).toBe('merged feature\n')
+  expect(await f.git('diff', base, '--', 'feature.txt')).toBe('')
   expect(fetch + install).not.toContain(f.token)
   expect(await f.read('.git/config')).not.toContain(f.token)
 })

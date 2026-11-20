@@ -1,6 +1,5 @@
 import { expect, it } from 'vitest'
 
-import { Repository } from '../../runner/src/repository'
 import { setupBackendTests } from './backend-test-hooks'
 import { defaultBranchFixture } from './default-branch-test-support'
 import { workspacePhaseCommand } from './start-command'
@@ -68,8 +67,8 @@ it('fetches start and base refs, branches from start, and points GitHub tools at
     )
     expect(await h.git('status', '--porcelain')).toBe('')
     expect(
-      await new Repository(h.directory).snapshot('release/next'),
-    ).toMatchObject({ baseCommit: main })
+      await h.git('merge-base', 'HEAD', 'refs/remotes/origin/release/next'),
+    ).toBe(`${main}\n`)
   } finally {
     await h.dispose()
   }

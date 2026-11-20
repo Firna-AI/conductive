@@ -4,7 +4,6 @@ import { RepositoryGitHub } from '../github/fake-repository'
 import { saveGitHubTokens } from '../security/github-tokens'
 import { TEST_TIME } from '../test-support/harness'
 import type { backendFixture } from './backend-test-support'
-import { SOFTWARE } from './backend-test-support'
 import { handleLifecycleRequest } from './browser'
 import { FIRST_MESSAGE } from './durable-test-support'
 
@@ -53,7 +52,6 @@ export function browserBranchCreate(
       { user: fixture.user, org: fixture.org, sessionId: 'signed-in', body },
       { ...fixture.runtime, images: fixture.images },
       {
-        software: SOFTWARE,
         acceptFirstMessage: async (first) => ({
           id: first.request.id,
           sessionId: first.sessionId,

@@ -1,4 +1,4 @@
-import type { AgentChoice } from '../shared/agents'
+import type { AgentChoice } from '../shared/generated/AgentChoice'
 import type { BuildsResponse, Repository } from '../shared/org-settings'
 import type { ApiError } from './api/client'
 import { filesWait, type DraftFile } from './draft-files'

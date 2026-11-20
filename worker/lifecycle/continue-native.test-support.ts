@@ -155,12 +155,23 @@ export async function continueNativeFixture(trackIgnored = false) {
         `GIT_CEILING_DIRECTORIES=${shellQuote(home)} `,
       )
       .replaceAll('/tmp/conductive-continue', join(root, 'continuations'))
+      .replaceAll('cd /tmp', `cd ${shellQuote(root)}`)
       .replaceAll('/usr/local/bin/conductive-git-credential', helper)
       .replaceAll(
         'https://github.com/example/repository.git',
         `${origin}/repository.git`,
       )
-  const execute = (command: string) => run('/bin/sh', ['-c', map(command)])
+  const execute = (command: string) => {
+    const mapped = map(command)
+    const unmapped = mapped.replaceAll(root, '<fixture>')
+    if (
+      /\bsudo\b|systemctl|\/(?:opt|run|home\/user|tmp)(?:\/|\b)|\/usr\/local\/bin\/conductive|https:\/\/github\.com\//.test(
+        unmapped,
+      )
+    )
+      throw new Error('The native command keeps a production operation')
+    return run('/bin/sh', ['-c', mapped])
+  }
   return {
     root,
     home,

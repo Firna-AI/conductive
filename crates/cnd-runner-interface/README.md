@@ -17,6 +17,8 @@ resend requests, file results, and temporary turn credentials.
 The workspace tools provide workspace, session, message, repository, section,
 model, preview, and Mac command requests and replies. Their replies preserve
 accepted message and turn pairs, resume errors, and transcript positions.
+Workspace creation carries optional `startBranch` and `baseBranch` strings.
+The Worker resolves their defaults and validates them after creation replay.
 Dependent types include workspace and session records, messages, attachments,
 model choices, file reports, port reports, startup reports, and commit authors.
 Browser-only events and local socket adapters remain in TypeScript.

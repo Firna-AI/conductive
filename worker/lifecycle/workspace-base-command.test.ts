@@ -1,15 +1,12 @@
+import { mkdir, writeFile } from 'node:fs/promises'
 import { expect, it } from 'vitest'
 
-import { FileReporter } from '../../runner/src/files'
-import { Repository } from '../../runner/src/repository'
-import type { RunnerFileEvent } from '../../src/shared/files'
-import { parseDiff } from '../files/content'
 import { continueNativeFixture } from './continue-native.test-support'
 import { readSavedScript } from './saved-script'
 import { workspacePhaseCommand } from './start-command'
 import { workspaceBaseCommand } from './workspace-base-command'
 
-it('moves GitHub CLI targeting, runner changes, and strict diff replies to the default without moving the workspace branch', async () => {
+it('moves the GitHub CLI and comparison base to the default without moving the workspace branch', async () => {
   const f = await continueNativeFixture()
   await f.git('update-ref', 'refs/remotes/origin/feature/review', 'HEAD')
   await f.git('config', 'branch.owner/old.gh-merge-base', 'feature/review')
@@ -18,16 +15,6 @@ it('moves GitHub CLI targeting, runner changes, and strict diff replies to the d
     'refs/remotes/origin/HEAD',
     'refs/remotes/origin/feature/review',
   )
-  const repository = new Repository(f.directory)
-  const events: RunnerFileEvent[] = []
-  const reporter = new FileReporter(
-    repository,
-    'feature/review',
-    async (event) => {
-      events.push(event)
-    },
-  )
-  await reporter.refresh(true)
   const head = await f.git('rev-parse', 'HEAD')
   await f.write('carry.txt', 'kept work\n')
   const result = await f.execute(
@@ -45,18 +32,10 @@ it('moves GitHub CLI targeting, runner changes, and strict diff replies to the d
   expect(await f.git('branch', '--show-current')).toBe('owner/old\n')
   expect(await f.git('rev-parse', 'HEAD')).toBe(head)
   expect(await f.read('carry.txt')).toBe('kept work\n')
-  await reporter.refresh()
-  expect(events.at(-1)).toMatchObject({
-    type: 'changes.updated',
-    changes: { baseBranch: 'main', files: [{ path: 'carry.txt' }] },
-  })
-  expect(
-    parseDiff(await repository.diff('carry.txt', 'main'), 'carry.txt', 'main'),
-  ).toMatchObject({
-    baseBranch: 'main',
-    oldContent: 'original\n',
-    newContent: 'kept work\n',
-  })
+  const base = (await f.git('merge-base', 'HEAD', 'origin/main')).trim()
+  expect(await f.git('diff', '--name-only', base)).toBe('carry.txt\n')
+  expect(await f.git('show', `${base}:carry.txt`)).toBe('original\n')
+  expect(await f.read('carry.txt')).toBe('kept work\n')
 })
 
 it('syncs the workspace base while another branch is checked out', async () => {
@@ -106,17 +85,28 @@ async function resumeStartupFixture(baseBranch = 'main') {
     },
     null,
   )
+  const software = `${f.root}/software`
+  await mkdir(`${software}/current`, { recursive: true })
+  await writeFile(`${software}/current/conductive`, '#!/bin/sh\nexit 0\n', {
+    mode: 0o755,
+  })
   const local = command
     .replaceAll(
       'sudo -n install -d -m 700 -o user -g user /run/conductive',
       'install -d -m 700 /run/conductive',
     )
-    .replaceAll('/run/conductive', `${f.root}/runtime`)
-    .replaceAll('. /run/ascii-secrets/env.sh', ':')
     .replaceAll(
-      'sudo -n systemctl restart conductive-runner.service',
+      'sudo -n flock /run/conductive/bootstrap-activate.lock systemctl restart conductive-runner.service',
       "printf '%s\\n' 'runner restarted'",
     )
+    .replaceAll('/run/conductive', `${f.root}/runtime`)
+    .replaceAll('/opt/conductive', software)
+    .replaceAll('. /run/ascii-secrets/env.sh', ':')
+  // The startup command restarts the runner and updates the software of the
+  // machine. A text that no replacement matched would run here for real.
+  const unmapped = local.replaceAll(f.root, '<fixture>')
+  if (/\bsudo\b|systemctl|\/opt\/|\/run\//.test(unmapped))
+    throw new Error('The startup command keeps a production operation')
   return {
     ...f,
     startup: () =>
@@ -139,12 +129,7 @@ it.each([
       'refs/remotes/origin/HEAD',
       'refs/remotes/origin/main',
     )
-    const repository = new Repository(f.directory)
-    const events: RunnerFileEvent[] = []
-    const reporter = new FileReporter(repository, 'trunk', async (event) => {
-      events.push(event)
-    })
-    await reporter.refresh(true)
+    const base = (await f.git('merge-base', 'HEAD', 'origin/main')).trim()
     await f.write('carry.txt', 'kept work\n')
     const head = await f.git('rev-parse', 'HEAD')
     const result = await (mode === 'resume'
@@ -166,11 +151,8 @@ it.each([
     )
     expect(await f.git('branch', '--show-current')).toBe('owner/old\n')
     expect(await f.git('rev-parse', 'HEAD')).toBe(head)
-    await reporter.refresh()
-    expect(events.at(-1)).toMatchObject({
-      type: 'changes.updated',
-      changes: { baseBranch: 'main', files: [{ path: 'carry.txt' }] },
-    })
+    expect(await f.git('merge-base', 'HEAD', 'origin/main')).toBe(`${base}\n`)
+    expect(await f.git('diff', '--name-only', base)).toBe('carry.txt\n')
   },
 )
 

@@ -68,7 +68,7 @@ fn name(group: &str, verb: &str) -> Result<Name> {
 fn options(name: Name) -> Vec<&'static str> {
     let options = match name {
         Name::CreateWorkspace => {
-            "repository message message-file agent model effort fast section name first-session-title request-id"
+            "repository message message-file agent model effort fast section name first-session-title request-id start-branch base-branch"
         }
         Name::ListWorkspaces => "owner state repository query updated-since archived limit offset",
         Name::GetWorkspace | Name::ArchiveWorkspace | Name::ListPreviews => "workspace",
