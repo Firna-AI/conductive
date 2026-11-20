@@ -1,5 +1,5 @@
-import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
 import type { ImageRuntime } from './image-builds'
+import { scheduleIdleImage } from './image-schedule'
 import type { ImageSoftwareArtifact } from './image-software'
 import { staleImageOrgs } from './org-image-refresh-data'
 
@@ -21,22 +21,15 @@ export async function wakeImagesForRepositoryChange(
     /** Read only when an org needs a build. */
     software: () => Promise<ImageSoftwareArtifact>
   },
-  providerAccount = DEFAULT_PROVIDER_ACCOUNT,
 ): Promise<readonly string[]> {
-  const orgIds = await staleImageOrgs(runtime.env.DB, input, providerAccount)
+  const orgIds = await staleImageOrgs(runtime.env.DB, input)
   if (orgIds.length === 0) return []
   const software = await input.software()
   let failure: { error: unknown } | undefined
   for (const orgId of orgIds) {
     // One org that cannot wake does not stop the other orgs.
     try {
-      await runtime.scheduler.schedule(
-        orgId,
-        software,
-        runtime.dependencies.now(),
-        null,
-        providerAccount,
-      )
+      await scheduleIdleImage(runtime, orgId, software)
     } catch (error) {
       failure ??= { error }
     }

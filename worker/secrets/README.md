@@ -130,8 +130,10 @@ to name the member and says the command did not run.
 `{ state: "sent", turnId }`. A failed admission has
 `{ state: "not-sent", reason }`, where the reason is `login-not-shared`,
 `login-unavailable`, or `sender-unavailable`. The grant stays. The widget
-can explain how the next message, or restoring the starter's login,
-tells the agent. A late deny sends no notice.
+can explain how the next message, or restoring the login of the session,
+tells the agent. The session's `login` names who restores it: the starter
+for a personal login or a record without `login`, and an admin for the
+org login. A late deny sends no notice.
 
 The notice starts a turn for the sender of the turn that asked. It uses
 that sender's current login rules. It joins a running turn in the same
@@ -170,10 +172,22 @@ used. It keeps no stored value copy in the request records. Replacement
 and deletion therefore change the next filter read. Every live temporary
 value also enters the filter, including a supplied value before a run.
 The filter covers runner text and each request's reason and command.
-Expiry and removal also remove temporary copies from encrypted saved
-filter state. An automation run has no grant kind and no rule of its own.
-Its copied pre-approvals report the `workspace` grant, so older tools read
-them.
+Expiry, removal, and archive read the value set before the change, change
+the temporary records, and read the set after it, in one transaction. The
+cleanup then masks each open private tool-detail source in place with the
+set from before the change. It leaves no whole copy of an ended value in
+the held end of that source. Last, `pruneSavedOutputSecrets` prepares each
+saved answer record again, with both sets. While
+`CONDUCTIVE_SYMBOLIC_ANSWER_STATE` is off, an answer in the earlier format
+only loses its ended values, and its held text stays as it is. An answer
+in the symbolic format keeps its masks, and keeps identities only for the
+set after the change. While the control is on, an answer in the earlier
+format becomes symbolic. Each whole copy of a value from either set, or
+from its old lists, then becomes a mask.
+[Answer text secrets](../../docs/protocol/answer-text-secrets.md#rollout)
+states the rollout of the control. An automation run uses the workspace
+grant rules. Its copied pre-approvals report the `workspace` grant, so
+older tools read them.
 
 ## Key code
 
@@ -191,7 +205,8 @@ them.
 - [request-covered.ts](request-covered.ts): the other open requests that an allow covers, and their notices.
 - [notice-delivery.ts](notice-delivery.ts): runner delivery and resume after an accepted late notice.
 - [request-records.ts](request-records.ts) and [request-storage.ts](request-storage.ts): durable requests and encrypted temporary values.
-- [output-values.ts](output-values.ts) and [filter state](../chat/output-filter-records.ts): exact-copy filtering.
+- [output-values.ts](output-values.ts), [filter records](../chat/output-filter-records.ts), and [filter state](../chat/output-filter-state.ts): exact-copy filtering. `storedAgentOutputSecrets` also reads stored values whose time just ended, for the set from before a cleanup change. `pruneSavedOutputSecrets` passes both sets to `prepareOutputState`.
+- [tool-detail-cleanup.ts](../chat/tool-detail-cleanup.ts): `maskOpenToolDetails`, the in-place mask and erasure of open tool-detail sources when a temporary value goes.
 - [Settings routes](../app-api/secrets.ts) and
   [capability routes](../app-api/capabilities.ts): the signed-in browser API.
 
@@ -203,5 +218,7 @@ Run `npm run test -- worker/secrets --maxWorkers=1` for tool routes,
 member answers, covered requests, grants, fake-clock deadlines, lifecycle cleanup,
 encrypted value lifetimes, restart, and filtering.
 
-See [Secrets](../../docs/protocol/secrets.md) and
-[Secret requests](../../docs/protocol/secret-requests.md) for the requirements.
+See [Secrets](../../docs/protocol/secrets.md),
+[Secret requests](../../docs/protocol/secret-requests.md), and
+[Answer text secrets](../../docs/protocol/answer-text-secrets.md) for the
+requirements.

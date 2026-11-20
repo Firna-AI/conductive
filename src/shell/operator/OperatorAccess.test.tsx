@@ -66,6 +66,7 @@ describe('the access to the operator section', () => {
       routes.operator(),
       routes.operatorOrgs('hexwave'),
       routes.operatorUser(SAMPLE_IDS.suspendedUser),
+      routes.operatorProviders(),
     ]) {
       const { view } = await mountShell(server, href)
       shown.push({
@@ -77,7 +78,7 @@ describe('the access to the operator section', () => {
       title: 'This page is not available',
       rail: ['Acme', 'Futex', 'Firna', 'Create org', 'Account'],
     }
-    expect(shown).toEqual([notFound, notFound, notFound])
+    expect(shown).toEqual([notFound, notFound, notFound, notFound])
     expect(await operatorRequests(server)).toEqual([])
   })
 

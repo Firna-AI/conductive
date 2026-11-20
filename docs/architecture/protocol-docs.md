@@ -5,8 +5,11 @@ feature. The [architecture doc](../architecture.md) describes the components
 that meet them, and gives the terms and the meaning of a decision number.
 This page lists each protocol doc and what it covers.
 
-- [Workspaces and sandboxes](../protocol/workspaces-and-sandboxes.md): the org
-  image, the life of a workspace, and the disk flushes of a sandbox.
+- [Workspaces and sandboxes](../protocol/workspaces-and-sandboxes.md): the
+  providers, the account of each org, the org image, the life of a
+  workspace, and the disk flushes of a sandbox.
+  - [Provider accounts](../protocol/provider-accounts.md): the account of
+    each org, its weights, and the regions of the accounts.
   - [Sandbox software](../protocol/sandbox-software.md): the releases of the
     app's own software, the updates of each sandbox, the install in a
     build, and the software image.
@@ -45,7 +48,10 @@ This page lists each protocol doc and what it covers.
       place of the moved tree, and the refusals.
   - [Workspace tools](../protocol/workspace-tools.md)
     - [Terminal](../protocol/terminal.md): the terminals of a workspace
-      and their tabs, and the shell of each terminal.
+      and their tabs.
+      - [Terminal shell](../protocol/terminal-shell.md): the shell of each
+        terminal, its connection, its end, its command history, and what
+        an out-of-memory kill ends.
       - [Terminal screen](../protocol/terminal-screen.md): the screen of
         each terminal, its output history, its selection, its size, and its
         keys.
@@ -78,10 +84,13 @@ This page lists each protocol doc and what it covers.
   - [File mentions](../protocol/file-mentions.md): the list of `@` in the
     composer, the chips of files and folders, Add to chat, the sent chips
     of attached files, and the removal of each chip of the composer.
+    - [File mentions: files in answers](../protocol/file-mentions-answers.md):
+      the file chips, the file links, and the pictures in the answers of
+      the agents, and their line targets.
   - [Agent runner](../protocol/agent-runner.md): the connection of the runner,
-    its events and their limits, its turns, the background work of Claude
-    turns with its note and its time limit, its port reports, and the repair
-    of lost workspace updates.
+    its events and their limits, its turns, what an out-of-memory kill ends,
+    the background work of Claude turns with its note and its time limit,
+    its port reports, and the repair of lost workspace updates.
     - [Background work of Claude turns](../protocol/background-work.md):
       the wait of a Claude turn for background work, its note, and its time
       limit.
@@ -102,6 +111,8 @@ This page lists each protocol doc and what it covers.
 - [Access and security](../protocol/access-and-security.md): sign-in, the
   gates, the secrets, and the isolation of sandboxes and previews.
   - [Isolation of orgs and sandboxes](../protocol/isolation.md)
+    - [The app's provider keys](../protocol/provider-keys.md): the Boat key
+      and the E2B key.
     - [Version pins](../protocol/version-pins.md): the runner version that
       a workspace accepts, the version pin, and the risks of the turn
       token in a sandbox.
@@ -109,6 +120,12 @@ This page lists each protocol doc and what it covers.
       messages of other members can run on a personal login, its default,
       its checks, and its risks.
   - [Tokens and secrets](../protocol/tokens-and-secrets.md)
+    - [Tool detail secrets](../protocol/tool-detail-secrets.md): the filter
+      of secret values before the cut of a long tool detail, and the risk
+      of older runners and fallback connections.
+    - [Answer text secrets](../protocol/answer-text-secrets.md): the held
+      end of an unfinished answer, the saved state of its filter, and a
+      longer value that shows as two masks.
     - [Own endpoint logins](../protocol/own-endpoint-logins.md): the
       endpoint and the key of each agent, the model list of the endpoint,
       and the addresses that the app accepts.
@@ -177,6 +194,9 @@ This page lists each protocol doc and what it covers.
     finish.
   - [Delete org](../protocol/delete-org.md): the end of an org, its restore
     within 7 days, and the delete of its data.
+  - [Sections](../protocol/sections.md): the sections of an org, the moves
+    of workspaces between them, the Archived group, and the rows of the
+    workspace list.
 - [Pricing](../protocol/pricing.md): the plans and their cloud hours, the
   extra hours, the seller and the tax, the pricing page, and the planned
   billing changes. Use is free until billing starts.
@@ -188,10 +208,15 @@ This page lists each protocol doc and what it covers.
 - [Operator actions](../protocol/operator-actions.md): the operator, the
   suspension of a user or an org, the lift of a suspension, and abuse
   reports.
+  - [Org suspension](../protocol/operator-org-suspension.md): the
+    suspension of an org, and what its members keep.
 - [Operator section](../protocol/operator-section.md): the pages of the
-  operator in the web app, their counts, and their searches.
+  operator in the web app, their counts, their searches, and the weights
+  of new orgs.
   - [Operator section: the Overview](../protocol/operator-overview.md): the
     live counts of the Overview, and the long runs of cloud computers.
+  - [Waitlist tabs of the operator section](../protocol/operator-waitlist-tabs.md):
+    the Waitlist tab, Approve, the Invite codes tab, and the pause.
 - [Command palette](../protocol/command-palette.md): the key and the search
   that finds the workspaces, the actions, and the settings.
 - [Command palette: empty and unavailable states](../protocol/command-palette-states.md):
@@ -203,6 +228,9 @@ This page lists each protocol doc and what it covers.
 - [Feedback](../protocol/feedback.md): the Feedback dialog that Send
   feedback opens, its screenshots and context, the reply address, the
   routes, and the email to the team inbox.
+  - [Feedback: the send limit](../protocol/feedback-send-limit.md): how
+    often a person can send feedback, the repeats of one draft, the
+    notice of a refused send, and the record of each send.
 - [Keyboard shortcuts](../protocol/keyboard-shortcuts.md): the commands that
   keys run, where a key goes, and where the changes of a person live.
   - [Keyboard shortcuts: the keys](../protocol/keyboard-shortcuts-keys.md)

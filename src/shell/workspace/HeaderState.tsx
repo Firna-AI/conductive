@@ -128,16 +128,12 @@ export function HeaderState(props: {
       />
       {confirming ? (
         <Dialog
-          actions={
-            <>
-              <ActionButton onPress={() => setConfirming(false)}>
-                Cancel
-              </ActionButton>
-              <ActionButton icon={RotateCw} onPress={restart} tone="primary">
-                {restartCopy.confirmAction}
-              </ActionButton>
-            </>
+          action={
+            <ActionButton icon={RotateCw} onPress={restart} tone="primary">
+              {restartCopy.confirmAction}
+            </ActionButton>
           }
+          busy={false}
           close={() => setConfirming(false)}
           title={restartCopy.confirmTitle}
         >

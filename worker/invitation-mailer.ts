@@ -3,6 +3,8 @@ import type { AppEnv, HttpFetch } from './env'
 import { HttpError } from './http'
 import { hash } from './security/crypto'
 import { createMailSender } from './mail-sender'
+import { errorSummary } from './warning-values'
+import { warnWorker } from './warnings'
 
 export interface InvitationEmail {
   id: string
@@ -38,7 +40,11 @@ export function createInvitationMailer(
             `org-invite/${invitation.id}/${await hash(body)}`,
           developmentLog: `${invitation.invitedBy} invited ${invitation.email} to ${invitation.orgName}: ${invitation.link}`,
         })
-      } catch {
+      } catch (error) {
+        warnWorker({
+          kind: 'invitation_email_delivery_failed',
+          error: errorSummary(error),
+        })
         throw new HttpError(
           502,
           'invite_email_failed',

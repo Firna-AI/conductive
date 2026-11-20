@@ -1,26 +1,48 @@
-# Fast mode needs a check with real logins
+# Fast mode needs checks with each login kind
 
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
-- **Kind:** Post-merge check.
+- **Kind:** Post-merge task.
 - **Added:** 2026-11-13, from the post-merge task of the fast mode plan on branch `calummoore/bern-mapm`.
 - **Location:** `runner/sdk-helper/src/providers/claude.ts`, `runner/sdk-helper/src/providers/codex.ts`, `docs/protocol/fast-mode.md`.
-- **Reason:** Only the test deployment has real agent logins. The branch checked the requests of both agent programs against a local capture server, with no real model call.
+- **Reason:** The remaining runs need real logins of each kind and billing access, which the checks of 18 November 2026 did not have.
 
 - **Terms:**
   - **Fast mode:** the faster, pricier serving mode of a provider. Claude calls it fast mode. Codex calls it the Fast service tier, `priority`.
-  - **Agent login:** the Claude or Codex login of the member who starts a session.
+  - **Agent login:** the Claude or Codex login of a session, which is a personal login of its starter or an org login.
+  - **Org login:** an Anthropic or OpenAI API key, or an own endpoint, that an admin connects for one agent of an org.
+  - **End line:** the line at the end of a turn, such as "Finished in 2s", which adds "Standard speed" for a fast turn at standard speed.
 - **Background:**
   - The runner turns on the `fastMode` flag setting of Claude and sends `serviceTierForTurn: "priority"` to Codex for a fast turn.
-  - Local runs showed the fast fields in the requests, and fast mode on, for Opus 5.5 and the four Codex models of the app.
+  - Earlier runs against a local capture server showed the fast fields for Opus 5.5 and the four Codex models. Those runs made no real model call.
+  - On 18 November 2026, the model list of the production app at `app.conductive.build` marked fast mode on Opus 5.5 and the four Codex models. An agent started one test session for each model, with the agent tools. Each turn answered one short message at low effort, with fast mode on and no tool call. Each turn finished. Each session kept fast mode on in its choice. The app gave each session the org login of its agent.
+  - Opus 5.5, `claude-opus-5-5`: the Claude transcript under `~/.conductive/claude/projects/` shows a request with `speed` set to `fast` and the beta `fast-mode-2026-02-01`. About 0.5 seconds later, the agent program sent the request again without `speed`. The usage of the answer gave `standard` for `speed` and for `service_tier`. The end line read "Finished in 3s · Standard speed", with no cause. The turn used 2 uncached input, 13,727 cache creation input, 10,793 cache read input, and 9 output tokens.
+  - Codex: each end line read "Finished in 2s", with no speed note. Each Codex rollout file under `~/.conductive/codex/sessions/` holds the requested model, the model provider `conductive`, and a `task_complete` event. The duration of that event and the tokens of each turn were:
+    - GPT-6.1 Sol: 2,222 ms, with 17,637 input and 8 output tokens.
+    - GPT-6 Luna: 2,049 ms, with 16,945 input and 8 output tokens.
+    - GPT-6.1 Terra: 1,630 ms, with 17,594 input and 8 output tokens.
+    - GPT-6 Astra: 2,104 ms, with 17,573 input and 8 output tokens.
+  - No run shows fast speed from a provider. Claude fell back to standard speed. Codex does not report the speed that OpenAI gave, as `docs/protocol/fast-mode.md` says. The Codex log database on the cloud computer had no rows for these turns. The end line times are observations, not a speed benchmark.
+  - No run shows a product fault. `docs/protocol/fast-mode.md` allows a fast turn at standard speed, and "Standard speed" alone when the app knows no cause.
+  - An org login is an API key or an own endpoint, never a Claude subscription or a ChatGPT sign-in, as `docs/protocol/org-logins.md` says. The checks did not identify the kind of each org login. So no result applies to a known kind of login. A session from the agent tools takes the default login of its starter. The tools cannot choose another login. The checks changed no login or org setting.
+  - No provider bill was available. The actual cost of each turn and the price of fast mode stay unknown. The Opus 5.5 turn has only the cost estimate of its agent program, $0.1121626. The checks knew of no setup with EU data residency.
   - Some facts stay unchecked: the API price of the Codex Fast tier, how a ChatGPT sign-in prices Fast on GPT-6.1 Terra and GPT-6 Luna, what OpenAI does with Fast under EU data residency, how the live Anthropic API refuses fast mode for an API key without access, and how an own endpoint proxy treats the fast fields.
-- **Problem:** No real model call has run with fast mode on.
-- **Impact if no action:** A refusal or a price that the local runs did not show can reach members first.
+- **Problem:** Real turns requested fast mode only on org logins of an unidentified kind. No run shows fast speed from a provider, or the price of fast mode. No run used a Claude subscription, a ChatGPT sign-in, or a known API key or own endpoint.
+- **Impact if no action:** A refusal or a price that the checks so far did not show can reach members first.
 - **Root question:** Does fast mode run, and report its speed, with each kind of real login?
 - **Options:**
-  - **A.** On the test deployment, send fast messages with real logins: a Claude subscription with and without usage credits, a Claude API key, an OpenAI API key on GPT-6.1 Sol, a ChatGPT sign-in on GPT-6 Luna and GPT-6.1 Terra, and an own endpoint login. Check the speed, the end line, and the cost of each. Effort: Small.
+  - **A.** On the production app at `app.conductive.build`, send one short fast message with each of these real logins. Note the kind of each login. Check the speed, the end line, and the cost of each. Take the cost from the provider's bill or usage page, not from the estimate of the agent program. Effort: Small.
+    - A Claude subscription with usage credits, and one without.
+    - A Claude API key with fast access, and one without.
+    - An OpenAI API key on GPT-6.1 Sol.
+    - A ChatGPT sign-in on GPT-6 Luna and on GPT-6.1 Terra.
+    - An own endpoint login.
+    - A Codex login under EU data residency, when such a setup exists.
   - **B.** Change nothing. Effort: Small.
 - **Left out:** An automated test with real logins. It spends real money on each run, and the gate must not need provider credentials.
 - **Wider fix:** None. This is a one-time check after a release.
 - **Previous examples:** None found.
 - **Recommendation:** A. It is the only check of the real providers.
-- **Action:** fix after merge, apply A, because it needs the real logins of the test deployment.
+- **Action:** fix after merge, apply A, because the remaining runs need real logins of each kind and billing access.
+- **Task:** Apply option A. For each login, send one short fast message at low effort, with no tool call. For Codex, also look for the served speed on the provider's bill or usage page.
+- **Needs:** Each real login of option A, and the bill or usage page of its provider account. The EU check also needs a Codex login under EU data residency.
+- **Done when:** Each login of option A has a recorded kind, requested speed, end line, and provider-reported cost or billing outcome. Record the served speed when a source shows it. Otherwise record why it is unknown. Each unchecked fact in **Background** has an answer. An unavailable login, bill, or EU setup keeps its case open. Each problem that a run finds has its own follow-up item.

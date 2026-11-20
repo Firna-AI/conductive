@@ -1,7 +1,10 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test, vi } from 'vitest'
-import { repositoryPath } from '../../shared/org-settings'
+import {
+  compareRepositoryNames,
+  repositoryPath,
+} from '../../shared/org-settings'
 import { byRole, queryByRole } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
@@ -38,7 +41,7 @@ function rowNames(view: HTMLElement): string[] {
 }
 
 describe('the Repositories tab of an admin', () => {
-  test('lists only the chosen repositories, and Edit opens every repository with Add and Remove until Done', async () => {
+  test('lists only the chosen repositories, and Edit opens every repository by name with Add and Remove until Done', async () => {
     const server = new FakeApiServer()
     const view = await repositoriesTab(server)
     const { repositories } = repositoryFixtures(org).repositories
@@ -67,7 +70,9 @@ describe('the Repositories tab of an admin', () => {
     expect({ before, editing, after: rowNames(view) }).toEqual({
       before: { rows: chosen, search: false },
       editing: {
-        rows: repositories.map((item) => item.fullName),
+        rows: [...repositories]
+          .sort(compareRepositoryNames)
+          .map((item) => item.fullName),
         search: true,
       },
       after: repositories

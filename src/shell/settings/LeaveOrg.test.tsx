@@ -1,13 +1,18 @@
 // @vitest-environment happy-dom
 
+import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 import type { AppModel } from '../../app/app-model'
-import { requestLines } from '../../app/test-kit'
+import { HeldRequests, requestLines } from '../../app/test-kit'
 import type { OrgRole } from '../../shared/api'
 import { membersPath } from '../../shared/members'
 import { leaveOrgPath } from '../../shared/orgs'
 import { workspacesPath } from '../../shared/workspaces'
-import { byRole } from '../../test-support/dom-queries'
+import {
+  byRole,
+  queryByRole,
+  queryByText,
+} from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import {
   coreFixtures,
@@ -16,10 +21,13 @@ import {
 } from '../../test-support/fixtures/core'
 import { removedWorkspace } from '../../test-support/fixtures/removed-workspace'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
-import { MOUNTED_TEST_TIMEOUT } from '../../test-support/mount'
+import {
+  holdAnimationFrames,
+  MOUNTED_TEST_TIMEOUT,
+} from '../../test-support/mount'
 import { serveSuspendedAcme } from '../../test-support/suspended-org'
-import { click, mountScreen, settle } from '../test-mount'
-import { startedApp } from '../test-render'
+import { click, mountScreen, press, settle } from '../test-mount'
+import { startedApp, type ScreenOptions } from '../test-render'
 import { OverlayHost } from '../ui/Overlay'
 import { OrgSettingsScreen } from './OrgSettingsScreen'
 
@@ -32,7 +40,10 @@ const leavePath = leaveOrgPath(FAKE_IDS.org)
  * frame of the app draws each dialog in its overlay host, so the screen
  * mounts inside one.
  */
-async function leave(app: AppModel): Promise<HTMLElement> {
+async function leave(
+  app: AppModel,
+  options: ScreenOptions = {},
+): Promise<HTMLElement> {
   const boot = app.boot.get()
   const org = app.orgs.get().find((item) => item.id === FAKE_IDS.org)
   if (boot.state !== 'ready' || !org) throw new Error('The app did not start.')
@@ -41,6 +52,7 @@ async function leave(app: AppModel): Promise<HTMLElement> {
     <OverlayHost>
       <OrgSettingsScreen org={org} tab="general" user={boot.user} />
     </OverlayHost>,
+    options,
   )
   await settle()
   click(byRole('button', 'Leave org', view))
@@ -59,6 +71,71 @@ function suspendedServer(role: OrgRole): FakeApiServer {
 }
 
 describe('Leave org in a suspended org', () => {
+  test.each(['desktop', 'phone'] as const)(
+    'keeps the same question open on %s through every dismissal while leaving, then shows the failure and permits dismissal',
+    async (viewport) => {
+      holdAnimationFrames()
+      const server = suspendedServer('member')
+      const message = 'The leave request failed. Try again.'
+      server.json(
+        'POST',
+        leavePath,
+        { error: { code: 'internal_error', message } },
+        500,
+      )
+      const held = new HeldRequests(server)
+      held.hold('POST', leavePath)
+      const app = await startedApp(server, { fetch: held.fetch })
+      const question = await leave(app, { viewport })
+      const cancel = byRole('button', 'Cancel', question)
+      const cancelDisabled =
+        cancel.hasAttribute('disabled') ||
+        cancel.getAttribute('aria-disabled') === 'true'
+      click(cancel)
+      await settle()
+      const afterCancel = queryByRole('dialog', 'Leave Acme?') === question
+      press(question, 'Escape')
+      await settle()
+      const afterEscape = queryByRole('dialog', 'Leave Acme?') === question
+      act(() => {
+        document.body.dispatchEvent(
+          new PointerEvent('pointerdown', { bubbles: true }),
+        )
+      })
+      await settle()
+      const afterOutside = queryByRole('dialog', 'Leave Acme?') === question
+      held.release('POST', leavePath)
+      await settle()
+      const failure = {
+        sameQuestion: queryByRole('dialog', 'Leave Acme?') === question,
+        title: queryByText("You didn't leave Acme", question) !== null,
+        message: queryByText(message, question) !== null,
+      }
+      expect({
+        cancelDisabled,
+        afterCancel,
+        afterEscape,
+        afterOutside,
+        failure,
+        listed: app.orgs.get().some((item) => item.id === FAKE_IDS.org),
+        leaves: requestLines(server).filter(
+          (line) => line === `POST ${leavePath}`,
+        ).length,
+      }).toEqual({
+        cancelDisabled: true,
+        afterCancel: true,
+        afterEscape: true,
+        afterOutside: true,
+        failure: { sameQuestion: true, title: true, message: true },
+        listed: true,
+        leaves: 1,
+      })
+      click(byRole('button', 'Cancel', question))
+      await settle()
+      expect(queryByRole('dialog', 'Leave Acme?')).toBeNull()
+    },
+  )
+
   test('a member leaves: the question counts their workspaces in the list, without a removed one, and the org leaves their list', async () => {
     const server = suspendedServer('member')
     // Priya also owns a workspace whose 14 days ended, which left the list.

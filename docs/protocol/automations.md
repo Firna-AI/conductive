@@ -46,8 +46,9 @@ merge.
 - Reason: a run without a prompt has no task, but it still spends a start.
   An automation without a prompt was rejected, also as a draft that stays off.
 - A new automation starts active, with no chosen secret. It gets the first
-  repository of the org, the General section, and the default model of its
-  owner, with its effort and its fast mode.
+  repository in the org's [repository order](orgs-and-members.md#repository-order),
+  the General section, and the default model of its owner, with its effort
+  and its fast mode.
 - An automation can have no trigger. Then only Run now starts it.
 - Deleting a section moves its automations to General, as it moves its
   workspaces.
@@ -187,7 +188,8 @@ merge.
 - The form refuses a cron that breaks the rule, and says why. The Worker
   refuses it too. It also refuses a cron without five fields and an unknown
   time zone.
-- Reason: all orgs share the daily starts of the app's Boat account. A cron
+- Reason: the orgs of one provider account share its daily starts, as
+  [The provider](workspaces-and-sandboxes.md#the-provider) says. A cron
   that runs each minute makes 1,440 starts a day.
 - Pull request triggers have no limit.
 - Caps on the runs of an automation, of an org, or of all automations were
@@ -244,8 +246,13 @@ merge.
 ## Limits
 
 - Automations add no limit beyond the hourly rule of schedules
-  (decision 503 B). The plan limits of the app's Boat account still apply,
-  as [The provider](workspaces-and-sandboxes.md#the-provider) says.
-- Risk: automations can still use up the daily starts that all orgs share. A
-  few hourly automations can do it. The restarts near day 14 of kept run
-  workspaces can do it too.
+  (decision 503 B). The plan limits of the provider account of the org
+  still apply, as [The provider](workspaces-and-sandboxes.md#the-provider)
+  says.
+- Risk: automations can still use up the daily starts that the orgs of one
+  provider account share. A few hourly automations can do it. On Boat, the
+  restarts near day 14 of kept run workspaces can do it too.
+
+## Risks that stay open
+
+See [Automation risks](automation-risks.md#risks-that-stay-open).

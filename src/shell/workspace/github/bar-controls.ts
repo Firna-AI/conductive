@@ -2,7 +2,8 @@ import { useCallback, useSyncExternalStore } from 'react'
 import { useNavigation } from '../../../app/navigation'
 import { routes } from '../../../app/router'
 import { anyTurnRuns } from '../../../chat/state/chat-snapshot'
-import type { BarActions, BarActionsPorts } from '../../../github/barActions'
+import type { BarActions } from '../../../github/barActions'
+import type { BarActionsPorts } from '../../../github/barPorts'
 import { localWorkOf, type BarControls } from '../../../github/barView'
 import { createContinueActions } from '../../../github/continueActions'
 import { createGitHubActions } from '../../../github/githubActions'
@@ -52,7 +53,7 @@ export function useScreenActions(
  * cause, such as a missing login or a failed send: the chat of the open
  * session in place of a file on desktop, and the chat tab on a phone.
  * Without an open session, the chat shows, where the member can start
- * one.
+ * one. The callers use only a result from the connection of the press.
  */
 export function useShowChat(context: WorkspaceContext): () => void {
   const { chat, org, workspace, viewport } = context
@@ -74,7 +75,8 @@ export function useShowChat(context: WorkspaceContext): () => void {
  * where the composer names the cause, such as a missing login or a failed
  * send: the chat in place of a file on desktop, and the chat tab on a
  * phone. Without an open session, the chat shows, where the member can
- * start one. A sent prompt keeps the view.
+ * start one. A sent prompt keeps the view. A result after the connection
+ * of the press ends also keeps the view and selects no session.
  */
 export function useScreenControls(
   context: WorkspaceContext,

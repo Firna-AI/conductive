@@ -14,17 +14,21 @@ export class ApiError extends Error {
   readonly status: number
   readonly code: string
   readonly details: ApiErrorDetails | null
+  /** When the request can go again, in Unix milliseconds, or null. */
+  readonly retryAt: number | null
 
   constructor(
     status: number,
     code: string,
     message: string,
     details: ApiErrorDetails | null = null,
+    retryAt: number | null = null,
   ) {
     super(message)
     this.status = status
     this.code = code
     this.details = details
+    this.retryAt = retryAt
   }
 }
 
@@ -119,6 +123,24 @@ function readDetails(value: unknown): ApiErrorDetails | null {
   }
 }
 
+/** The last time that a JavaScript date can hold, in Unix milliseconds. */
+const lastDateMs = 8_640_000_000_000_000
+
+/**
+ * The time when a refused request can go again, in Unix milliseconds, as
+ * the send limit of feedback gives it. A missing time, or one that is not
+ * a whole number that a date can hold, reads as null, and the error keeps
+ * its message.
+ */
+function readRetryAt(value: unknown): number | null {
+  return typeof value === 'number' &&
+    Number.isInteger(value) &&
+    value >= 0 &&
+    value <= lastDateMs
+    ? value
+    : null
+}
+
 function errorFrom(status: number, body: unknown): ApiError {
   try {
     const error = record(record(body).error, 'error')
@@ -127,6 +149,7 @@ function errorFrom(status: number, body: unknown): ApiError {
       text(error, 'code'),
       text(error, 'message'),
       readDetails(error.details),
+      readRetryAt(error.retryAt),
     )
   } catch {
     return new ApiError(status, 'http_error', 'The request failed. Try again.')

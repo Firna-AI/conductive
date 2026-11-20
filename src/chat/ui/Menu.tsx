@@ -3,6 +3,7 @@ import {
   useRef,
   type KeyboardEvent,
   type ReactNode,
+  type RefObject,
 } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import { Check } from 'lucide-react'
@@ -12,6 +13,8 @@ import { KeyChips } from '../../../docs/mockups/src/components/common/KeyChips'
 import styles from '../../../docs/mockups/src/components/common/Menu.module.css'
 import { SwitchPicture } from '../../../docs/mockups/src/components/common/SwitchPicture'
 import type { ShortcutHint } from '../../shell/shortcuts/shortcut-hints'
+import { PopoverSurface } from '../../shell/ui/PopoverSurface'
+import ui from '../../shell/ui/ui.module.css'
 import controls from './controls.module.css'
 import { useFocusInside } from './dismiss'
 import local from './menu.module.css'
@@ -68,17 +71,30 @@ export interface MenuPoint {
   y: number
 }
 
+/** Where a menu beside its trigger opens: below or above, from which edge. */
+type AnchoredPlacement =
+  'below-start' | 'below-end' | 'above-start' | 'above-end'
+
 /**
  * Where a menu opens: beside its trigger, with its top left corner at a
- * point of the window, or in a phone sheet.
+ * point of the window, or in a phone sheet. A menu beside its trigger names
+ * its anchor, the trigger or the wrapper that holds it.
  */
-export type MenuPlacement =
-  | 'below-start'
-  | 'below-end'
-  | 'above-start'
-  | 'above-end'
-  | 'sheet'
-  | MenuPoint
+type MenuPlace =
+  | { placement: AnchoredPlacement; anchor: RefObject<HTMLElement | null> }
+  | { placement: 'sheet' | MenuPoint; anchor?: undefined }
+
+/**
+ * A menu beside its trigger keeps its own width and its own height limit,
+ * as the shell menus do. The surface limits it only to the room beside its
+ * trigger. The gaps are those of the mockups: 6 px above, 4 px below.
+ */
+const ABOVE = {
+  anchorWidthAsMinimum: false,
+  maxHeight: Number.POSITIVE_INFINITY,
+  gutter: 6,
+}
+const BELOW = { ...ABOVE, gutter: 4 }
 
 /** The items that the keyboard reaches: the items that are on. */
 const ITEM = [
@@ -164,22 +180,32 @@ function firstItem(menu: HTMLElement): HTMLElement | null {
   return items.find((item) => item.ariaChecked === 'true') ?? items[0] ?? null
 }
 
+/** The class of the place of a menu: its layer, a point, or a sheet. */
+function placeClass(place: MenuPlace): string | undefined {
+  if (place.anchor) return ui.anchoredMenu
+  return typeof place.placement === 'string' ? styles.sheet : local.point
+}
+
 /**
  * An open menu of actions or choices, in the dense rows of the mockups.
- * Beside its trigger, the trigger's wrapper sets the position that it opens
- * from. At a point, it draws above the page from its own fixed position. The
- * arrow keys move between the items that are on, and skip the items that are
- * off, as the menus of the design system do. Escape closes it. Tab closes a
- * popover, and a menu at a point gives the focus back to where it was. Tab
- * stays inside a sheet. A wide menu fits long rows, such as session titles.
+ * Beside its trigger, it opens on the surface of the shell menus, in the top
+ * layer, so no box around the trigger cuts it. It opens on the side of its
+ * placement when it fits there, else on the side with more room, and gets
+ * shorter to fit. At a point, it draws above the page from its own fixed
+ * position. The arrow keys move between the items that are on, and skip the
+ * items that are off, as the menus of the design system do. Escape closes
+ * it. Tab closes a popover, and a menu at a point gives the focus back to
+ * where it was. Tab stays inside a sheet. A wide menu fits long rows, such
+ * as session titles.
  */
-export function Menu(props: {
-  label: string
-  entries: readonly MenuEntry[]
-  placement: MenuPlacement
-  onClose: () => void
-  wide?: boolean
-}) {
+export function Menu(
+  props: {
+    label: string
+    entries: readonly MenuEntry[]
+    onClose: () => void
+    wide?: boolean
+  } & MenuPlace,
+) {
   const ref = useRef<HTMLDivElement>(null)
   const { placement } = props
   const point = typeof placement === 'string' ? null : placement
@@ -217,12 +243,12 @@ export function Menu(props: {
     event.preventDefault()
     next.focus()
   }
-  return (
+  const list = (
     <div
       aria-label={props.label}
       className={classes(
         styles.menu,
-        typeof placement === 'string' ? styles[placement] : local.point,
+        placeClass(props),
         props.wide && styles.wide,
       )}
       onKeyDown={onKeyDown}
@@ -252,5 +278,18 @@ export function Menu(props: {
         }
       })}
     </div>
+  )
+  if (!props.anchor) return list
+  const above = props.placement.startsWith('above')
+  return (
+    <PopoverSurface
+      align={props.placement.endsWith('end') ? 'end' : 'start'}
+      anchor={props.anchor}
+      className={ui.menuLayer}
+      options={above ? ABOVE : BELOW}
+      side={above ? 'above' : 'below'}
+    >
+      {list}
+    </PopoverSurface>
   )
 }

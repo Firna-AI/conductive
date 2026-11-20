@@ -73,4 +73,8 @@
 - **Evidence update, 2026-11-10, build jobs:** `stopOrgLifecycleRecords` in `worker/members/composition-data.ts:17-37` sets each running build job of the deleted org to the phase `done`, at lines 33-37.
   - Then `cleanupBuild` in `worker/lifecycle/build-execution.ts` does not replay the saved build request. So Delete org ends the build replay before the purge, in addition to the gaps above.
   - Recheck this against the current hooks before the work starts. This note changes no option and no recommendation. It does not claim that the gap still reproduces.
-  - `plans/follow-ups/pre-purge-step-failure-blocks-others.md` puts the stop step of Delete org into a default step runner. It touches the same code, and neither item waits for the other.
+  - The stop step of Delete org runs in two places. Option B here changes that step and the deletion list, so it touches this code.
+    - In the 7 days before the purge, the scheduled cleanup in `worker/members/cleanup.ts` first completes the suspension, unless an earlier call did. The suspension fills the deletion list, and its failure ends the run of the org.
+    - Then one step runner isolates the stops from the other pre-purge steps. A failed stop writes a fixed warning, and the later pre-purge steps still run.
+    - The Delete org and Restore org routes run the suspension and the stops through `stopDeletedOrg` in `worker/members/deletion.ts`. A failed stop there ends the request before the next step.
+    - An earlier follow-up item chose that step runner. It is at [this permalink](https://github.com/Firna-AI/conductive/blob/456e53237c38ff800dbf076fb004f36b5c287554/plans/follow-ups/pre-purge-step-failure-blocks-others.md).

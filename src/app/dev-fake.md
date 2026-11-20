@@ -32,7 +32,9 @@ option overrides this default, including queued chats that show no spinner.
   as sent, so `?upload=wait&sent=64` shows the measured state of a file of
   one part. Create org of the dev fake
   requires at least one repository and starts a simulated build. Its
-  repository catalogue keeps the saved choices, and its custom initials
+  repository catalogue keeps the saved choices in the repository order of
+  the Worker. An add goes to the end of the order, and a move of a chosen
+  repository starts no build. Its custom initials
   and its colour stay through rename, delete, and restore. Settings changes during the
   first good build start one added build. The fake compares settings
   revisions with builds as the Worker does.
@@ -98,7 +100,11 @@ option overrides this default, including queued chats that show no spinner.
   `<GitHub login>@example.com`, and each send answers 204.
   `?feedback=no-email` gives a reply without an address.
   `?feedback=fail` fails the first send of the page with
-  `502 feedback_email_failed`, so a retry sends. With `?waiting=1`, both
+  `502 feedback_email_failed`, so a retry sends.
+  `?feedback=limit` refuses the first send of the page with
+  `429 feedback_send_limit`, as the send limit does. Its `retryAt` is
+  23 minutes and 40 seconds after the clock of the fake. A retry sends.
+  With `?waiting=1`, both
   routes refuse with `access_required`. The fake sends no email and keeps
   no copy.
 - `?operator=1` makes the dev user an operator, so the rail and the org
@@ -110,7 +116,12 @@ option overrides this default, including queued chats that show no spinner.
   write of that org with `org_suspended`. The open app does not read its orgs again, so its pages
   of that org show the suspension only after such a refusal. Without the
   option, each operator request gets `operator_required`, as the Worker
-  does.
+  does. The provider accounts are `boat` and `e2b`, with every new org on
+  `boat`. `?providers=one`, `?providers=three`, or `?providers=fail` gives
+  `boat` only, a third account, or a failed read, and `?providerSave=fail`
+  fails each save of the weights. An org that Create org makes joins the
+  operator section with its account: the choice of an operator, or a draw
+  from the weights.
 - `?waiting=1` signs in Sam Okafor of the waitlist mockups, who waits for
   app access with a verified email, so the app shows only the
   [waitlist](screens.md#the-waitlist). `?waiting=no-email` gives the same

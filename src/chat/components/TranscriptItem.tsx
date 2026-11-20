@@ -11,17 +11,10 @@ import { Notice } from '../../../docs/mockups/src/components/common/Notice'
 import styles from '../../../docs/mockups/src/components/chat/ChatItemView.module.css'
 import { filesWithoutChip } from '../links/chat-parts'
 import { ChatText, SessionLinkText, useChatParts } from '../links/LinkedText'
-import type { Transcript } from '../../shared/transcript/transcript'
 import type { SingleItem } from '../../shared/transcript/transcript-entries'
 import {
   continuedBy,
-  filesUnread,
-  omittedFiles,
-  standardSpeedOf,
-  stoppedAttribution,
-  stoppedNotes,
   turnCopy,
-  turnEndReason,
   type ChatReaders,
 } from '../../shared/transcript/turn-words'
 import { ActionButton } from '../ui/actions'
@@ -29,7 +22,7 @@ import controls from '../ui/controls.module.css'
 import { AgentText } from './AgentText'
 import { SentFiles } from './AttachmentChips'
 import { LostEventLine } from './LostEventLine'
-import { TurnEnd } from './TurnEnd'
+import type { StopFacts } from './turn-facts'
 
 /**
  * A message that a person sent. Each part in backticks is code, and each
@@ -63,18 +56,21 @@ export function UserBubble(props: {
  * agent stopped the turn with a workspace tool, else the words of a Stop
  * that a member pressed, or of a stop without one.
  */
-function stopSource(
-  item: Extract<SingleItem, { kind: 'stopped' }>,
-  transcript: Transcript,
-  readers: ChatReaders,
-): StopSource {
-  const source = stoppedAttribution(transcript, item.turnId, item.by, readers)
-  if (source.kind === 'text') return { kind: 'words', text: source.text }
-  const { workspaceId, sessionId } = source.reference
+function stopSource(attribution: StopFacts['attribution']): StopSource {
+  if (attribution.kind === 'text') {
+    return { kind: 'words', text: attribution.text }
+  }
+  const { workspaceId, sessionId } = attribution.reference
   return {
     kind: 'session',
     chip: <SessionLinkText sessionId={sessionId} workspaceId={workspaceId} />,
   }
+}
+
+/** The line of a stopped turn: who stopped it, then the notes of its end. */
+export function StoppedLine(props: { facts: StopFacts }) {
+  const { facts } = props
+  return <StopLine notes={facts.notes} source={stopSource(facts.attribution)} />
 }
 
 export interface ItemActions {
@@ -82,13 +78,21 @@ export interface ItemActions {
   canRetry: boolean
   retrying: boolean
   onRetry: (messageId: string) => void
-  onOpenDiff?: (path: string) => void
 }
 
-/** One part of a session's chat, other than a run of tool calls. */
+/**
+ * An item whose part shows only its own data and the readers. The end of a
+ * turn and the line of a stopped turn also show data that the transcript
+ * keeps about their turn, as `EndFacts` and `StopFacts` say.
+ */
+export type PlainItem = Exclude<SingleItem, { kind: 'turn-end' | 'stopped' }>
+
+/**
+ * One part of a session's chat, other than a run of tool calls, the end of
+ * a turn, and the line of a stopped turn.
+ */
 export function ItemView(props: {
-  item: SingleItem
-  transcript: Transcript
+  item: PlainItem
   actions: ItemActions
   readers: ChatReaders
 }) {
@@ -97,30 +101,7 @@ export function ItemView(props: {
     case 'user':
       return <UserBubble message={item.message} />
     case 'agent':
-      return <AgentText text={item.text} />
-    case 'turn-end':
-      return (
-        <TurnEnd
-          durationMs={item.durationMs}
-          endReason={turnEndReason(props.transcript, item.turnId)}
-          files={item.files}
-          // Files that a row lists stay true, also after a later end.
-          filesUnavailable={
-            item.files.length === 0 &&
-            filesUnread(props.transcript, item.turnId)
-          }
-          omittedFiles={omittedFiles(props.transcript, item.turnId)}
-          onOpenDiff={actions.onOpenDiff}
-          standardSpeed={standardSpeedOf(props.transcript, item.turnId)}
-        />
-      )
-    case 'stopped':
-      return (
-        <StopLine
-          notes={stoppedNotes(props.transcript, item.turnId)}
-          source={stopSource(item, props.transcript, props.readers)}
-        />
-      )
+      return <AgentText id={item.id} text={item.text} />
     case 'failed':
       return (
         <Notice

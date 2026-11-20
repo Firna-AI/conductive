@@ -1,5 +1,6 @@
-import { HttpError } from '../http'
 import type { SandboxProvider } from '../sandbox/provider'
+import { CommandFailed } from '../warnings'
+import { AttachmentTransferFailed } from './attachment-transfer-failure'
 
 /**
  * The waits between the status checks of a download, in ms. The first
@@ -18,24 +19,31 @@ export async function runAttachmentDownload(
   command: string,
   wait: (ms: number) => Promise<void> = sleep,
 ): Promise<void> {
-  const started = await provider.startCommand(sandboxId, command)
+  const started = await provider
+    .startCommand(sandboxId, command)
+    .catch((error: unknown) => {
+      throw new AttachmentTransferFailed('start', error)
+    })
   let offsets = { stdoutOffset: 0, stderrOffset: 0 }
   for (let checks = 0; ; checks += 1) {
-    const status = await provider.getCommandStatus(
-      sandboxId,
-      started.processId,
-      offsets,
-    )
+    const status = await provider
+      .getCommandStatus(sandboxId, started.processId, offsets)
+      .catch((error: unknown) => {
+        throw new AttachmentTransferFailed('status', error)
+      })
     offsets = {
       stdoutOffset: status.stdoutNextOffset,
       stderrOffset: status.stderrNextOffset,
     }
     if (!status.running && !status.more) {
       if (status.state !== 'exited' || status.exitCode !== 0 || status.timedOut)
-        throw new HttpError(
-          503,
-          'attachment_copy_failed',
-          'The attached files could not reach the cloud computer. Try again.',
+        throw new AttachmentTransferFailed(
+          'command',
+          new CommandFailed(
+            status.state,
+            status.exitCode,
+            status.timedOut === true,
+          ),
         )
       return
     }

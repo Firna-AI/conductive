@@ -1,4 +1,5 @@
 import type { AgentChoice } from '../shared/generated/AgentChoice'
+import { sameChoice } from '../shared/agents'
 import type { Repository } from '../shared/org-settings'
 import type {
   CreateAutomationRequest,
@@ -186,15 +187,6 @@ function sameTriggers(
   return (
     a.length === b.length &&
     a.every((item, index) => sameTrigger(item, b[index]))
-  )
-}
-
-function sameChoice(a: AgentChoice, b: AgentChoice): boolean {
-  return (
-    a.agent === b.agent &&
-    a.model === b.model &&
-    a.effort === b.effort &&
-    a.fast === b.fast
   )
 }
 

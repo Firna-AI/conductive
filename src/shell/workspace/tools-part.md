@@ -50,7 +50,7 @@ tools.
   and the address keeps the tab of the centre. Only a tool address follows
   the new tool.
 - On desktop, a choice of Terminal moves the keyboard focus to the shown
-  terminal, as [The shell](../../../docs/protocol/terminal.md#the-shell)
+  terminal, as [The shell](../../../docs/protocol/terminal-shell.md#the-shell)
   says. The `select` of `useToolSelect` runs for a click on its tab and for
   Go to Terminal of the palette or its key. It asks `terminalFocus` of the
   workspace context, a `TerminalFocus` that each workspace screen keeps.

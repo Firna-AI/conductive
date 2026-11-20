@@ -22,6 +22,7 @@ export interface FakeRunnerOptions {
   /** A runner that accepts repository.move names its folder. */
   repositoryFolder?: string
   processStartId?: RunnerHello['processStartId']
+  completeToolDetails?: RunnerHello['completeToolDetails']
 }
 
 /**
@@ -60,6 +61,9 @@ export class FakeRunner {
       protocolVersion: this.options.protocolVersion ?? 2,
       workspaceId: this.options.workspaceId,
       streamId: this.streamId,
+      ...(this.options.completeToolDetails === undefined
+        ? {}
+        : { completeToolDetails: this.options.completeToolDetails }),
       ...(this.options.processStartId === undefined
         ? {}
         : { processStartId: this.options.processStartId }),

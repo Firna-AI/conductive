@@ -6,6 +6,7 @@ installs them.
 
 - `package-system.sh` packages the system part.
 - `live-check.mjs` checks chat in a real sandbox and times the first agent start.
+- `e2b/build-template.mjs` builds the E2B base template from public inputs.
 
 Run commands from the repository root with Node 24. Run `npm ci --prefix runner`
 first. It installs the SDK helper packages and the live-check developer packages.
@@ -27,6 +28,11 @@ gives their public paths and publication order.
 `.context/chat-live-check/cli.mjs`, with the esbuild of the SDK helper
 packages. Then it runs that file.
 
+The default mode uses Boat. The
+[E2B image/runtime mode](e2b/live-check.md) uses `--provider=e2b` and its own
+inputs. It checks clean disposable images and both preview relay layers.
+It does not run the Boat chat or placement measurements.
+
 ```sh
 npm --prefix runner/sdk-helper run build
 node image/live-check.mjs --help
@@ -34,9 +40,12 @@ node image/live-check.mjs --prepare
 node image/live-check.mjs
 ```
 
-- `--help` lists the variables.
+- `--help` lists the variables of the selected provider mode.
 - `--prepare` checks that esbuild can bundle the check, and that the SDK helper
   bundles are in `dist/sdk-helper/`. It uses no app, no sandbox, and no agent.
+  In the E2B mode, it checks the shipped probes and the provider migration in
+  place of those bundles, as the [E2B image live check](e2b/live-check.md)
+  says.
 - Without an option, the script runs the real check. It reads its inputs
   and its secrets from the environment. Put no secret in a saved command
   or file.
@@ -152,13 +161,25 @@ More facts:
   real login, unlike a workspace sandbox, which holds only turn tokens.
   Clean up each sandbox that `cleanupNeeded` lists at once.
 
+## E2B template builder
+
+Run `node image/e2b/build-template.mjs --help` for its inputs.
+Run it with `--prepare` to stage only the public image files, without a
+provider request or a CLI install. A real build reads `E2B_API_KEY` and the
+selected EU `E2B_DOMAIN` from the process environment. It uses the pinned
+official CLI through `npm exec` and prints the actual template ID.
+[E2B base template](e2b/README.md) gives its software, output, private
+loopback relay, and required live checks.
+
 ## Development
 
 - `npm run typecheck` does not check these TypeScript files. Check them
   with `npx tsc -p image/tsconfig.json`.
 - The lint and format checks of `npm run check` include these files. Lint
   includes the file-length limit.
-- No test runs these scripts.
+- The [relay integration tests](e2b/README.md#checks-and-live-prerequisites)
+  run the real E2B relay with local TCP peers. The developer entry points
+  use their help and prepare commands for checks without credentials.
 
 ## Key code
 
@@ -174,3 +195,5 @@ More facts:
   `LIVE_BOAT_ORG`.
 - [`live-measure.ts`](live-measure.ts): the forks, the timed resumes, and
   the comparison.
+- [`e2b/live-main.ts`](e2b/live-main.ts): the E2B image chain, probes,
+  persistent local provider state, and cleanup.

@@ -158,7 +158,9 @@ If the bar says **GitHub state did not load**, select **Try again**.
 GitHub can also need time to update a pull request's merge state.
 Follow the error's retry action when that happens.
 
-If an agent action cannot send, the chat opens with the cause.
+If an agent action cannot send while you stay in the workspace on the same branch, the chat opens with the cause.
+If you leave or change the branch before the failure arrives, your chosen page stays open.
+The cause waits in that session's message box, also if you return before the failure arrives.
 Open a session or connect its required login before trying again.
 The action follows the same login and sharing rules as a message you write.
 

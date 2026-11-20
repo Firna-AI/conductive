@@ -66,8 +66,9 @@ link.
 - A bare address is a web address with no Markdown around it. It shows as
   the text has it.
 - A bare address ends at a space or an angle bracket. Punctuation, quotes,
-  `*`, `_`, `~`, and `]` at its end stay out of it. A `)` at its end stays
-  in only when it closes a `(` inside the address, as on GitHub.
+  `*`, `_`, and `~` at its end stay out of it. A `)` or a `]` at its end
+  stays in only when it closes a `(` or a `[` inside the address. GitHub
+  uses the same rule for a `)`.
 - In an agent message, a Markdown link shows as its label, and its title
   gives its address (chat link decision 1 D). Reason: the text then reads
   as the agent meant it, with no raw brackets.
@@ -102,11 +103,13 @@ link.
   typed it.
 - A Markdown link whose address stays text shows as typed, also in an
   agent message. A file target instead opens its file, as
-  [Files in answers](file-mentions.md#files-in-answers) says.
+  [Files in answers](file-mentions-answers.md#files-in-answers) says.
 - The Markdown of an image, such as `![alt](address)`, is not a Markdown
   link. It shows as typed, as [Formatting](chat-markdown.md#formatting)
   says, and its address is a link as a bare address is. An image to a
-  file of the workspace instead shows its label as a link to that file.
+  file of the workspace instead shows its label as a link to that file,
+  or a picture of that file, as
+  [Files in answers](file-mentions-answers.md#files-in-answers) says.
 
 ### Local addresses
 

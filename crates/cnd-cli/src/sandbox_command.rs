@@ -7,6 +7,8 @@ use cnd_credential::http::NativeHttp;
 use cnd_credential::service::{Credential, CredentialService};
 use cnd_credential::streams::NativeStreams;
 use cnd_relay::connect::LocalConnector;
+use cnd_relay::ingress::IngressReader;
+use cnd_relay::ingress_file::NativeIngressFiles;
 use cnd_relay::listener::NativeListener;
 use cnd_relay::proxy::RelayProxy;
 use cnd_relay::server::{RelayServer, Server};
@@ -40,6 +42,9 @@ pub(crate) async fn relay() -> Result<()> {
         listener: Arc::new(NativeListener::open().await.internal()?),
         proxy: Arc::new(RelayProxy {
             connector: Arc::new(LocalConnector),
+            ingress: Arc::new(IngressReader {
+                files: Arc::new(NativeIngressFiles::default()),
+            }),
         }),
     });
     server.run().await.internal()

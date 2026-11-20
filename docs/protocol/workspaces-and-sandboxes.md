@@ -6,10 +6,16 @@ for the app's own software in each sandbox.
 [Workspace tools](workspace-tools.md) covers the tools of a workspace. The
 terms are those of the [architecture doc](../architecture.md#terms). A
 decision number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says.
+[Decision numbers](../architecture.md#decision-numbers) says. An e2b decision
+number, such as e2b decision 222, names the dated record of one decision of
+the change that adds E2B as the second sandbox provider. Its plan keeps
+these records while the change is open. Its pull request keeps them after
+the merge.
 
 These docs belong to this doc:
 
+- [Provider accounts](provider-accounts.md): the account of each org, its
+  weights, and the regions of the accounts.
 - [Org image](org-image.md): its builds, refreshes, and first build.
 - [Sandbox software](sandbox-software.md): the releases of the app's own
   software, the updates of each sandbox, the install in a build, and the
@@ -37,29 +43,37 @@ These docs belong to this doc:
 
 ## The provider
 
-- Boat runs every sandbox (decision 2).
-- Every sandbox and every org image of every org runs in the app's own
-  Boat account (decision 80). That account pays for all use.
-- No user needs a Boat account or a Boat key.
+- Two providers run the sandboxes: Boat and E2B (decision 2, and e2b decision 222).
+- Every sandbox and every org image of every org runs in a provider
+  account of the app (decision 80). The app pays for all use. Its account
+  with Boat has the ID `boat`, and its account with E2B has the ID `e2b`.
+- No user needs a provider account or a provider key.
 - A Boat key for each org was rejected. Users then needed their own Boat
   account, and the app had to name Boat to them.
-- All orgs share the plan limits of the app's Boat account, such as the
-  number of sandboxes at once and of starts in a day.
-- [Access and security](isolation.md#the-apps-boat-key) states
-  how the Worker keeps the app's Boat key.
-- User-facing text never names Boat (decision 80). It says "cloud
+- The orgs of one provider account share the plan limits of that account,
+  such as the number of sandboxes at once and of starts in a day.
+- [The app's Boat key](isolation.md#the-apps-boat-key) and
+  [the app's E2B key](isolation.md#the-apps-e2b-key) state how the Worker
+  keeps each key.
+- User-facing text never names a provider (decision 80). It says "cloud
   computer" or "sandbox". This holds in the app, the Mac app, the
   marketing site, Get started, and the legal pages.
 - Reason: the user asked that the provider stays hidden, so that the app
   can move to another provider later.
+- Operator screens are the one exception. They name each provider account
+  by its ID, such as `boat` or `e2b` (e2b decision 221). Labels from the
+  settings and neutral numbers were rejected, because an operator must
+  know which account runs on Boat in an outage.
 - Each workspace has its own sandbox with its own clone of its repository
   (decision 4). One worktree for each workspace in a shared sandbox was
   rejected, because each workspace gets its own sandbox.
 - A workspace works in one repository at a time. A
   [repository change](repository-change.md) moves it to another repository
   that its sandbox holds.
-- Every sandbox has one machine size for now: Boat's default size, with
-  4 vCPU and 8 GB.
+- Every sandbox has one machine size for now, on each provider: Boat's
+  default size, with 4 vCPU and 8 GB.
+- [Provider accounts](provider-accounts.md) gives the account of each org
+  and the regions of the accounts.
 
 ## Disk flushes
 
@@ -128,7 +142,7 @@ for, downloads, and applies an update.
 - Builds and refreshes get none of the env vars, and no saved snapshot
   holds them. Reason: a saved snapshot keeps every file.
 - The app gives each sandbox its values itself, because every sandbox
-  starts with no secrets of a Boat environment.
+  starts with no secrets of its provider account.
 - [Access and security](tokens-and-secrets.md#secrets-that-users-enter)
   says how the app keeps the values.
 

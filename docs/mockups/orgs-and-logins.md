@@ -115,8 +115,10 @@ plan limits.
   org offer only Copy link. The menu has no
   Restore: the row keeps it, for every member of an org that is not
   suspended.
-- No stopped workspace shows as expiring. Near day 14 of a stop, the app
-  starts the cloud computer briefly and stops it again, from decision 43.
+- No stopped workspace shows as expiring. On the `boat` account, near day
+  14 of a stop, the app starts the cloud computer briefly and stops it
+  again, from decision 43. The `e2b` account keeps a stopped cloud
+  computer with no time limit.
 - Any user creates orgs. Create org of the first run returns to Get started.
 - Create org needs at least one repository, from decision 151, because it
   starts the first build of the cloud computer. The hint under
@@ -124,6 +126,10 @@ plan limits.
   one is added, as `app/orgs/new/no-repository` shows. When the GitHub App
   reaches no repository, the list asks the person to give it access, with
   Manage access, as `app/orgs/new/no-access` shows.
+- Create org of an operator also offers the provider account of the org,
+  from e2b decision 222: By weights, the default, or an account by its ID,
+  as `app/orgs/new/operator` shows. An e2b decision is a decision of the change that adds E2B as the second sandbox provider. The org keeps its account for its whole
+  life. Nobody else sees the choice, so no other screen names a provider.
 - Delete org asks for the org name. The deleted org leaves the rail. Until
   the date when everything is deleted, the General tab of the Account page
   lists it for its admins with Restore, as `app/account/deleted-orgs`

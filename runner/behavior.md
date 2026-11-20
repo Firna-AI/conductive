@@ -34,9 +34,10 @@ These facts belong to this implementation, not to the protocol docs.
   describes the request requirements.
 - Both agents request no approvals and the service user's rights. ChatGPT
   workspace rules can replace these Codex settings on a ChatGPT turn.
-- The runner configures the sandbox's `computer` and `conductive` MCP
-  servers for both agents. The [agent tools guide](agent-tools.md) gives
-  their settings, runtime context, and process lifetime.
+- The runner configures the `conductive` MCP server for both agents, and
+  the sandbox's `computer` MCP server when it exists. The
+  [agent tools guide](agent-tools.md) gives their settings, runtime
+  context, and process lifetime.
 - No command carries an agent login or a GitHub token. Each `turn` command
   carries a turn token for the model gateway, as [Agent logins](agent-logins.md)
   says. [GitHub tokens](../docs/protocol/github-tokens.md)
@@ -179,14 +180,16 @@ These facts belong to this implementation, not to the protocol docs.
   reads and diffs.
 - Before it connects, the runner reads the `claude` program file once, so
   that the disk loads it early. It uses no credential and starts no agent.
-- After a start from a saved snapshot, the sandbox provider restores the
+- After a start from a saved snapshot on Boat, the provider restores the
   disk in the background. When the restore ends, a running program keeps
   an old view of the disk at another path, such as
   `/var/lib/ascii-lazy/retired/home/code/<name>`. A repository watch made
   before that end then misses every later edit, so the file lists stop.
   The runner checks once a second for the
   [terminal's restore marker](../worker/terminal/README.md), which the
-  Worker writes when the provider reports the end of the restore. When the
+  Worker writes when the provider reports the end of the restore. E2B
+  reports no background restore, so the Worker writes the marker as soon as
+  the sandbox reports ready. When the
   marker appears, the runner watches the live folder again and scans the
   repository once. A marker that exists when the watch starts changes
   nothing, because that watch already sees the live folder. Each Git

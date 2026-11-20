@@ -14,16 +14,17 @@ use tokio::sync::Mutex;
 use crate::clock::Clock;
 use crate::config::ConnectionRequest;
 use crate::error::Result;
-use crate::limits::bound_event;
 use crate::socket::{Connector, Socket};
 use crate::state::store::EventStore;
 
 use super::ports::{LinkUpdate, RunnerLink};
+use super::tool_detail::prepare;
 
 pub(super) struct Connection {
     pub(super) generation: u64,
     pub(super) socket: Option<Arc<dyn Socket>>,
     pub(super) welcomed: bool,
+    pub(super) complete_tool_details: bool,
 }
 
 /// Configured transport and state dependencies. Tokens stay in memory only.
@@ -37,6 +38,7 @@ pub struct SavedRunnerLink {
     pub(super) connection: Mutex<Connection>,
     connecting: Mutex<()>,
     pub(super) messages: Mutex<()>,
+    emitting: Mutex<()>,
     repository_folder: Option<String>,
 }
 
@@ -61,9 +63,11 @@ impl SavedRunnerLink {
                 generation: 0,
                 socket: None,
                 welcomed: false,
+                complete_tool_details: false,
             }),
             connecting: Mutex::new(()),
             messages: Mutex::new(()),
+            emitting: Mutex::new(()),
             repository_folder: None,
         }
     }
@@ -152,6 +156,7 @@ impl RunnerLink for SavedRunnerLink {
                 },
             ]),
             repository_folder: self.repository_folder.clone(),
+            complete_tool_details: Some(true),
         };
         if let Err(error) = socket.send(&RunnerToWorkspace::RunnerHello(hello)).await {
             self.disconnect(generation).await;
@@ -165,14 +170,20 @@ impl RunnerLink for SavedRunnerLink {
     }
 
     async fn emit(&self, event: RunnerEvent, report_command_id: Option<String>) -> Result<()> {
+        let _emitting = self.emitting.lock().await;
+        let complete = self.connection.lock().await.complete_tool_details;
+        let now = self.clock.now()?;
+        let events = prepare(event, complete, &self.store.snapshot().await.stream_id, now)?;
         match self
             .store
-            .append(bound_event(event)?, self.clock.now()?, report_command_id)
+            .append_batch(events, now, report_command_id)
             .await?
         {
-            Some(envelope) => {
-                self.send(RunnerToWorkspace::RunnerEventEnvelope(envelope))
-                    .await
+            Some(envelopes) => {
+                for envelope in envelopes {
+                    self.send(RunnerToWorkspace::RunnerEventEnvelope(envelope))
+                        .await;
+                }
             }
             None => tracing::warn!("The runner event exceeds its byte limit."),
         }

@@ -1,7 +1,10 @@
 // @vitest-environment happy-dom
 
+import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
+import type { FetchLike } from '../../../app/api/client'
 import { routes } from '../../../app/router'
+import { HeldRequests } from '../../../app/test-kit'
 import { githubPaths } from '../../../shared/github'
 import { sessionPaths } from '../../../shared/sessions'
 import { accessibleName } from '../../../test-support/dom-queries'
@@ -24,7 +27,7 @@ import {
 import { pressCommand } from '../../shortcuts/shortcut-test-kit'
 import { click, settle, typeText } from '../../test-mount'
 import { filesHref } from '../files/files-address'
-import { bodiesOf } from '../kept-test-kit'
+import { bodiesOf, savedViewsOf } from '../kept-test-kit'
 import { socketsOf } from '../wiring-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
@@ -46,14 +49,19 @@ function serveReleaseTarget(server: FakeApiServer): void {
   })
 }
 
-/** Opens the palette over the page and searches for Merge latest. */
+/**
+ * Opens the palette over the page and searches for Merge latest. `fetch`
+ * is the fetch of the app, such as one of `HeldRequests`.
+ */
 async function searchMergeLatest(
   server: FakeApiServer,
   address = routes.workspace(org, id),
+  fetch?: FetchLike,
 ) {
   const tab = await openPaletteTab(address, {
     server,
     events: socketsOf(server).events,
+    fetch,
   })
   pressCommand('command-palette', 'other', document.body)
   typeText(searchField(), 'merge latest')
@@ -117,6 +125,53 @@ describe('Merge latest in the palette', () => {
       address: navigation.href(),
       notice: (view.textContent ?? '').includes("Your message didn't send"),
     }).toEqual({ rows: 1, address: routes.workspace(org, id), notice: true })
+  })
+
+  test('a send that fails after the member left the workspace keeps the page that the member chose, and the tab that the workspace saved', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer({ banner: 'ready-to-merge' })
+    serveWork(server, 'none')
+    serveReleaseTarget(server)
+    const path = sessionPaths.messages(org, id, session)
+    const error = { code: 'unavailable', message: 'The Worker did not answer.' }
+    server.json('POST', path, { error }, 503)
+    const held = new HeldRequests(server)
+    held.holdAnswer('POST', path)
+    const file = filesHref(org, id, {
+      kind: 'file',
+      path: FAKE_FILE_PATH,
+      mode: 'preview',
+    })
+    const { rows, navigation } = await searchMergeLatest(
+      server,
+      file,
+      held.fetch,
+    )
+    const [row] = rows
+    if (row) click(row)
+    await settle()
+    act(() => navigation.push(routes.automations(org)))
+    await settle()
+    const from = server.requests.length
+
+    held.release('POST', path)
+    await settle()
+    const views = await savedViewsOf(server, from)
+    // A return shows the tab that the workspace saved, in place of its address.
+    act(() => navigation.push(routes.workspace(org, id)))
+    await settle()
+
+    expect({
+      rows: rows.length,
+      sends: (await sends(server)).length,
+      views,
+      history: navigation.history,
+    }).toEqual({
+      rows: 1,
+      sends: 1,
+      views: [],
+      history: [file, routes.automations(org), file],
+    })
   })
 
   test.each([

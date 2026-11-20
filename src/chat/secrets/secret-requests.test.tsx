@@ -3,6 +3,7 @@
 import { describe, expect, test } from 'vitest'
 import { olderSecret } from '../../../docs/mockups/src/fixtures/secrets'
 import type { WorkspaceEvent } from '../../shared/events'
+import type { Session } from '../../shared/generated/Session'
 import type { SecretRequest } from '../../shared/secret-requests'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import {
@@ -28,6 +29,15 @@ function updated(item: SecretRequest): [WorkspaceEvent, number] {
     { type: 'secrets.request.updated', sessionId, request: item },
     item.updatedAt,
   ]
+}
+
+/** The session keeps the org login of Acme, which an admin removed. */
+function keepsRemovedOrgLogin(session: Session): Session {
+  return {
+    ...session,
+    login: { type: 'org', orgId: FAKE_IDS.org },
+    loginAvailable: false,
+  }
 }
 
 /** The names of the buttons of one card, in their order. */
@@ -204,5 +214,25 @@ describe('secret requests in the chat', () => {
         'Priya Raman gave MAPBOX_TOKEN for this workspace.',
       ),
     })
+  })
+
+  test('a late Allow in a session that keeps the org login after an admin removed it says that an admin connects the Claude login of the org again, and names no connect action of the starter', async () => {
+    const gone = request('org-gone', asks.vercel, inWork, {
+      turnId: SECRET_TURN,
+      state: 'allowed',
+      late: true,
+      answeredBy: priya,
+      updatedAt: start + 91 * second,
+      notice: { state: 'not-sent', reason: 'login-unavailable' },
+    })
+    const page = await renderSecrets({
+      events: secretTurn(start, [updated(gone)]),
+      sessions: keepsRemovedOrgLogin,
+    })
+    const line = textOfCard(page, 'Request for VERCEL_TOKEN')
+    expect(line).toMatch(
+      /Priya Raman answered\. The agent learns of it when an admin connects Acme's Claude login again\.$/,
+    )
+    expect(line).not.toMatch(/connects? Claude again/)
   })
 })

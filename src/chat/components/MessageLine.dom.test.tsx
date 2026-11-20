@@ -5,6 +5,7 @@ import toolGroup from '../../../docs/mockups/src/components/chat/ToolGroup.modul
 import a11y from '../../../docs/mockups/src/components/common/a11y.module.css'
 import { accessibleName } from '../../test-support/dom-queries'
 import { mount, press } from '../../test-support/mount'
+import { chatFiles } from '../chat-files-test-kit'
 import {
   MentionsProvider,
   type ChatMentions,
@@ -20,6 +21,7 @@ it('shows each heading of a closed message line as text of the line in the headi
   const page = document.createElement('div')
   page.innerHTML = renderToStaticMarkup(
     <MessageLine
+      id="agent:1"
       text={[
         '## Plan',
         '- Wait 250 ms after the last key press.',
@@ -51,7 +53,7 @@ it('keeps the closed text as the name of an open line whose table comes after an
     '| ---: | ---: |',
     '| 4 | 3m 10s |',
   ]
-  const view = await mount(<MessageLine text={text.join('\n')} />)
+  const view = await mount(<MessageLine id="agent:1" text={text.join('\n')} />)
   const line = view.container.querySelector('summary')
   if (!line) throw new Error('The message has no line')
   await press(line)
@@ -65,13 +67,9 @@ it('shows file chips in the open line, and none in its hidden copy', async () =>
     kind: 'file' as const,
     change: null,
   }
-  const snapshot = {
-    tree: { entries: new Map([[entry.path, entry]]) },
-    treeError: null,
-    treeUnavailable: false,
-  }
+  const { files } = await chatFiles([entry])
   const mentions: ChatMentions = {
-    files: { subscribe: () => () => undefined, getSnapshot: () => snapshot },
+    files,
     openFile: () => undefined,
     showFolder: () => undefined,
     href: (item) => `/files/${item.path}`,
@@ -84,7 +82,7 @@ it('shows file chips in the open line, and none in its hidden copy', async () =>
   ]
   const view = await mount(
     <MentionsProvider value={mentions}>
-      <MessageLine text={text.join('\n')} />
+      <MessageLine id="agent:1" text={text.join('\n')} />
     </MentionsProvider>,
   )
   const line = view.container.querySelector('summary')

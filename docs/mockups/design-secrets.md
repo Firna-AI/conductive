@@ -158,9 +158,13 @@ one.
   member, from `lateAnswerWords`, and never a value. When that turn cannot
   run, the app sends nothing. When the starter does not share the login
   with that sender, the line of the request says that the agent learns of
-  the answer at the next message. When the login of the starter is gone,
-  the line names the action that gets the agent going again, such as "The
-  agent learns of it when Cal connects Claude again".
+  the answer at the next message. When the login of the session is gone,
+  the line names the action that gets the agent going again: a connect of
+  that login. For a personal login, and for an older session whose record
+  names no login, the starter connects it, such as "The agent learns of it
+  when Cal connects Claude again". For the org login, an admin connects
+  it, such as "The agent learns of it when an admin connects Acme's Claude
+  login again".
 - An Archive of the workspace, or a suspension of its org, ends each open
   request as Not answered, with no choices, and Needs input ends. Its line
   says what ended it.

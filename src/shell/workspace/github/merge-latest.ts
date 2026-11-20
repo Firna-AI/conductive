@@ -24,7 +24,8 @@ export interface MergeLatest {
  * GitHub state of the branch, and the access that offers the agent
  * actions. A read-only workspace and a merged pull request offer none: a
  * merged branch continues from the target branch. A prompt that did not go
- * out shows the chat, where the composer names the cause.
+ * out shows the chat, where the composer names the cause, while the
+ * connection of the press stays connected.
  */
 export function useMergeLatest(
   context: WorkspaceContext,

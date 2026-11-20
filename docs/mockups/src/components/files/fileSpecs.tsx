@@ -8,6 +8,7 @@ import {
   FileText,
   FileX,
 } from 'lucide-react'
+import { answerShot } from '../../fixtures/answerFiles'
 import { screenshotCopy } from '../../fixtures/attachments'
 import {
   addressFormDiff,
@@ -16,7 +17,11 @@ import {
 } from '../../fixtures/fileContents'
 import { maskedDiffPath, seedScriptDiff } from '../../fixtures/maskedFiles'
 import { branchPictures, splitPath } from '../../fixtures/files'
-import { CheckoutPicture, screenshotSize } from '../../fixtures/pictures'
+import {
+  CheckoutPicture,
+  screenshotSize,
+  type CheckoutView,
+} from '../../fixtures/pictures'
 import { ActionButton } from '../common/actions'
 import { EmptyState } from '../common/EmptyState'
 import { CodeView, type LineRange } from './CodeView'
@@ -43,13 +48,13 @@ export type FileSpec = {
  * The picture of an image file. The tab shows a PNG, JPEG, GIF, or WebP
  * file by its name as a picture, up to the read limit of the file tab.
  */
-function picture(path: string, overlap: boolean): FileSpec {
+function picture(path: string, view: CheckoutView): FileSpec {
   return {
     path,
     icon: File,
     content: (
       <ImageView size={screenshotSize}>
-        <CheckoutPicture label={splitPath(path).name} overlap={overlap} />
+        <CheckoutPicture label={splitPath(path).name} view={view} />
       </ImageView>
     ),
     binary: true,
@@ -129,10 +134,12 @@ export function specFor(view: FileTabView): FileSpec {
         closed: true,
       }
     case 'image':
-      return picture(branchPictures.picture, false)
+      return picture(branchPictures.picture, 'form')
     case 'image-not-drawn':
       return notDrawn(branchPictures.damaged)
     case 'attachment':
-      return picture(screenshotCopy.path, true)
+      return picture(screenshotCopy.path, 'covered')
+    case 'screenshot':
+      return picture(answerShot, 'fixed')
   }
 }

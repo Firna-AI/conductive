@@ -21,7 +21,7 @@ import { InvitationsModel } from './invitations-model'
 import { LastWorkspaces } from './last-workspaces'
 import { OrgList } from './org-list'
 import { OrgModel } from './org-model'
-import { patchOrg, postOrg, putOrgOrder } from './org-writes'
+import { postOrg, putOrgOrder, saveOrgPatch } from './org-writes'
 import { suspendedOrg } from './permissions'
 import type { AppServices } from './services'
 import { setupSteps } from './setup-steps'
@@ -279,13 +279,13 @@ export class AppModel {
   }
 
   /** Saves the name and the initials of an org. */
-  async renameOrg(orgId: string, request: RenameOrgRequest): Promise<void> {
-    this.putOrg(await patchOrg(this.orgApi(orgId), orgId, request))
+  renameOrg(orgId: string, request: RenameOrgRequest): Promise<void> {
+    return saveOrgPatch(this.orgApi(orgId), this.orgList, orgId, request)
   }
 
   /** Saves the colour of an org, which the rail shows while it is open. */
-  async setOrgColor(orgId: string, color: OrgColor): Promise<void> {
-    this.putOrg(await patchOrg(this.orgApi(orgId), orgId, { color }))
+  setOrgColor(orgId: string, color: OrgColor): Promise<void> {
+    return saveOrgPatch(this.orgApi(orgId), this.orgList, orgId, { color })
   }
 
   /**

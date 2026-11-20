@@ -3,8 +3,7 @@ import type { Agent } from '../../shared/generated/Agent'
 import { modelLabel } from '../../shared/agents'
 
 import { pendingCommandItems } from '../device/PendingCommands'
-import { sessionSecrets } from '../secrets/session-secrets'
-import { DeviceLoadNotice, sessionCommands } from '../device/session-commands'
+import { DeviceLoadNotice } from '../device/session-commands'
 import { tabSessions } from '../state/archive-view'
 import { sendBlock } from '../state/blockers'
 import {
@@ -34,7 +33,7 @@ import {
   HistoryFailure,
   showsContent,
 } from './SessionStatus'
-import { sourceInsert } from './SourceLine'
+import { useTranscriptInputs } from './transcript-inputs'
 import { TranscriptView } from './TranscriptView'
 import { WaitingRequests } from './WaitingRequests'
 
@@ -163,21 +162,17 @@ export function SessionChat(props: SessionChatProps) {
   const status = historyStatus(state)
   const content = showsContent(state, starting !== null)
   const viewerId = snapshot.account?.user.id ?? null
-  const commands = sessionCommands(snapshot, id, state)
-  const secrets = sessionSecrets(snapshot, id, state, {
-    choices: !readOnly,
-    onAnswer: (requestId, answer) =>
-      void controller.answerSecret(requestId, answer),
-  })
+  const { commands, secrets, inserts, readers, onRetry } = useTranscriptInputs(
+    snapshot,
+    controller,
+    session,
+    state,
+    readOnly,
+  )
   const reader = loginReader(snapshot)
   const login = session ? sessionLoginOf(session, reader) : null
   const linked =
     login?.kind === 'linked' || (login?.kind === 'missing' && login.linked)
-  const openSession = (sessionId: string) => {
-    const open = snapshot.sessions.some((item) => item.id === sessionId)
-    void (open ? controller.select(sessionId) : controller.reopen(sessionId))
-  }
-  const source = sourceInsert(snapshot, session, openSession)
   const footer = (
     <>
       {id && content && status === 'failed' ? (
@@ -274,16 +269,12 @@ export function SessionChat(props: SessionChatProps) {
     >
       {content && status === 'loading' ? <EarlierLoading /> : null}
       <TranscriptView
-        inserts={[
-          ...(source ? [source] : []),
-          ...commands.inserts,
-          ...secrets.inserts,
-        ]}
+        inserts={inserts}
         now={now}
         onOpenDiff={props.onOpenDiff}
-        onRetry={(messageId) => id && void controller.retry(id, messageId)}
+        onRetry={onRetry}
         pending={state.pending}
-        readers={{ viewerId, members: snapshot.members }}
+        readers={readers}
         readOnly={readOnly}
         retrying={state.retrying}
         transcript={state.transcript}

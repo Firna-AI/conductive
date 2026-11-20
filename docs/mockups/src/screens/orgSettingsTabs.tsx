@@ -1,3 +1,4 @@
+import type { Viewport } from '@mokly/mokly'
 import { MembersTab } from '../components/members/MembersTab'
 import { SecretsTab } from '../components/secrets/SecretsTab'
 import type { SecretsAccess } from '../components/secrets/secretRights'
@@ -11,10 +12,11 @@ import {
   type ReadOnlyCause,
 } from '../components/settings/OrgSections'
 import {
-  OrgRepositoryList,
   RepositoryEditToggle,
   RepositoryList,
 } from '../components/settings/RepositoryList'
+import { repositoryDefaultNote } from '../components/settings/repositoryOrder'
+import { RepositoryOrderList } from '../components/settings/RepositoryOrderList'
 import { Section } from '../components/settings/Section'
 import {
   memberViewer,
@@ -84,8 +86,11 @@ const repositoryNotes: Readonly<Record<ReadOnlyCause | 'editable', string>> = {
 }
 
 /** The body of the open tab of the org settings. */
-export function TabBody(props: { state: OrgSettingsState }) {
-  const { state } = props
+export function TabBody(props: {
+  state: OrgSettingsState
+  viewport: Viewport
+}) {
+  const { state, viewport } = props
   const viewer = settingsViewer(state)
   const readOnly = readOnlyCause(state)
   const settings = settingsOrg(state)
@@ -113,14 +118,19 @@ export function TabBody(props: { state: OrgSettingsState }) {
       return (
         <Section
           action={readOnly ? null : <RepositoryEditToggle editing={editing} />}
-          description={`The cloud computer of ${org.name} holds these repositories, and its workspaces start in them.${note}`}
+          description={`The cloud computer of ${org.name} holds these repositories, and its workspaces start in them. ${repositoryDefaultNote}${note}`}
           title="Repositories"
         >
           {settingsRepositoryNotice(state, settings)}
           {editing ? (
             <RepositoryList repositories={settings.repositories} search="" />
           ) : (
-            <OrgRepositoryList repositories={settings.repositories} />
+            <RepositoryOrderList
+              canMove={!readOnly}
+              repositories={settings.repositories}
+              state={state.repositoryOrder}
+              viewport={viewport}
+            />
           )}
         </Section>
       )

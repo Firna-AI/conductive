@@ -2,7 +2,7 @@ import { expect, test } from 'vitest'
 import { shortcutKeyAvailability } from './browser-keys'
 import { decideShortcut } from './decision'
 import { buildShortcutKeymap, firstShortcutKey } from './keymap'
-import { context, key, press, tab } from './shortcut-test-support'
+import { context, key, macApp, press, tab } from './shortcut-test-support'
 
 test('leaves browser tab and address keys but runs their second keys and other takeable keys', () => {
   for (const browser of ['chrome', 'firefox', 'safari', 'unknown'] as const) {
@@ -99,7 +99,7 @@ test('leaves browser tab and address keys but runs their second keys and other t
   ] as const
   for (const [browser, system, control, alt] of cases) {
     const host = tab(browser, system)
-    for (const digit of ['1', '9']) {
+    for (const digit of ['1', '9', 'Numpad1', 'Numpad9']) {
       expect
         .soft(
           shortcutKeyAvailability(key(`Ctrl+${digit}`), 'other', host),
@@ -144,6 +144,34 @@ test('leaves browser tab and address keys but runs their second keys and other t
           : { kind: 'pass' },
       )
   }
+  for (const [browser, system, address] of [
+    ['chrome', 'windows', 'Alt+D'],
+    ['edge', 'windows', 'F6'],
+    ['chrome', 'linux', 'Alt+D'],
+    ['edge', 'linux', 'F6'],
+    ['firefox', 'windows', 'Alt+D'],
+    ['firefox', 'linux', 'Alt+D'],
+  ] as const) {
+    expect
+      .soft(
+        shortcutKeyAvailability(key(address), 'other', tab(browser, system)),
+        `${browser} ${system} ${address}`,
+      )
+      .toBe('browser')
+  }
+  for (const [host, availability] of [
+    [tab('chrome'), 'browser'],
+    [tab('firefox'), 'browser'],
+    [tab('safari'), 'available'],
+    [macApp, 'available'],
+  ] as const) {
+    expect
+      .soft(
+        shortcutKeyAvailability(key('Meta+Numpad1'), 'mac', host),
+        `${host.kind} ${'browser' in host ? host.browser : 'mac'}`,
+      )
+      .toBe(availability)
+  }
   const installed = {
     kind: 'installed-app',
     browser: 'chrome',
@@ -164,4 +192,40 @@ test('leaves browser tab and address keys but runs their second keys and other t
       }),
     ),
   ).toEqual({ kind: 'command', command: 'org-1', closeMenu: false })
+  const recorded = buildShortcutKeymap('other', [
+    { command: 'command-palette', keys: [key('Alt+Numpad1')] },
+  ])
+  for (const [host, hint, decision] of [
+    [tab('chrome', 'linux'), undefined, { kind: 'pass' }],
+    [
+      installed,
+      'Alt+Numpad1',
+      { kind: 'command', command: 'command-palette', closeMenu: false },
+    ],
+  ] as const) {
+    expect
+      .soft(
+        firstShortcutKey('command-palette', recorded, 'other', host),
+        host.kind,
+      )
+      .toBe(hint)
+    expect
+      .soft(
+        decideShortcut(
+          context({
+            keyboard: 'other',
+            host,
+            keymap: recorded,
+            press: press({
+              key: '1',
+              code: 'Numpad1',
+              metaKey: false,
+              altKey: true,
+            }),
+          }),
+        ),
+        host.kind,
+      )
+      .toEqual(decision)
+  }
 })

@@ -4,10 +4,17 @@ The [agent runner](../README.md) runs as an unprivileged systemd service.
 The [release installer](../../image/install.md#release-installation) installs
 its unit. Installation enables services and starts none.
 
+Boat restarts the enabled services after each resume and fork. On E2B,
+each create and each resume boots the sandbox from its disk, and systemd
+starts the enabled services. So the runner starts in each sandbox that
+starts from the org image.
+
 The unit is [conductive-runner.service](../../image/release/conductive-runner.service).
 It runs as `user`, after the network and the local update-apply unit.
 Its launcher is [runner-start.sh](../../image/runner-start.sh).
-The launcher loads `/run/ascii-secrets/env.sh` and checks the workspace-ready
+The launcher loads `/run/ascii-secrets/env.sh`, the file of the variables
+of the sandbox. Boat writes it on Boat, and the Worker writes it on E2B at
+each create and resume. The launcher then checks the workspace-ready
 marker, workspace identity, and disk-retention setting.
 It maps sandbox settings to the [runner configuration](../configuration.md).
 It then runs `/opt/conductive/current/conductive runner` in the repository folder.
@@ -32,7 +39,8 @@ When `current` then names the newer release, it executes the new
 `/opt/conductive/current/system/runner-start.sh` in the same process.
 The service does not stop, so systemd stops no process of the service group.
 When `current` did not change, the runner warns and connects again on its release.
-A changed runner unit applies only at the next start of the service.
+[Release installation](../../image/install.md#release-installation) says when a
+changed runner unit applies.
 
 A new runner confirms its release only after its first valid `welcome`.
 Its startup hook calls the resolved executable's `update started` through
@@ -45,4 +53,8 @@ So after an idle install, a new release that exits at its start restarts the ser
 That restart stops each process of the service group, and its pre-start apply restores the previous release.
 SIGTERM closes helper processes and ends running turns before the connection closes.
 `KillMode=control-group` keeps its child processes in the service group.
+`OOMPolicy=continue` keeps the service running when the kernel ends one of
+those processes for lack of memory, as
+[Out of memory](../../docs/protocol/agent-runner.md#out-of-memory) says.
+The default policy, `stop`, would stop the service and end every running turn.
 [Workspace startup](../../image/start.md) gives the build and retention gates.
