@@ -100,6 +100,8 @@ The [file server protocol](../../docs/protocol/file-server.md) defines its
 private request headers, file access, indexes, types, cache dates, and byte ranges.
 The server shares descriptor checks with file reads. It streams files
 without the file-tab size limit and refuses dot files and links to dot files.
+It reads the current repository folder of the runner at each request, so a
+repository move points it at the new folder with no new bind.
 
 File reports keep separate tree and changes histories. Filtering runs on each
 complete report before splitting. Multipart reports keep whole entries and

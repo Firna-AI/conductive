@@ -5,6 +5,7 @@ use std::time::SystemTime;
 
 use async_trait::async_trait;
 use tokio::io::{AsyncRead, AsyncSeek};
+use tokio::sync::watch;
 
 use crate::repository::error::{Error, ErrorResultExt, Result};
 use crate::repository::open::{verified_directory, verified_file};
@@ -39,16 +40,17 @@ pub trait Files: Send + Sync {
     async fn open(&self, path: String) -> Result<Entry>;
 }
 
-/// Native files of one repository folder.
+/// Native files of the runner's current repository folder.
 pub struct RepositoryFiles {
-    /// Live repository folder, reopened after restores.
-    pub root: PathBuf,
+    /// The live repository folder. A repository move of the runner sends a
+    /// new folder, and each later request reads from it.
+    pub root: watch::Receiver<PathBuf>,
 }
 
 #[async_trait]
 impl Files for RepositoryFiles {
     async fn open(&self, path: String) -> Result<Entry> {
-        let root = self.root.clone();
+        let root = self.root.borrow().clone();
         tokio::task::spawn_blocking(move || {
             let opened = match verified_file(&root, &path) {
                 Ok(opened) => opened,

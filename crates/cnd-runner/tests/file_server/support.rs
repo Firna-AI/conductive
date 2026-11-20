@@ -3,6 +3,7 @@
 use std::collections::BTreeMap;
 use std::fs::{self, File};
 use std::net::SocketAddr;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::SystemTime;
 
@@ -25,6 +26,7 @@ pub(super) struct Reply {
 pub(super) struct Fixture {
     pub(super) directory: TempDir,
     pub(super) address: SocketAddr,
+    root: watch::Sender<PathBuf>,
     stop: watch::Sender<bool>,
     task: JoinHandle<()>,
 }
@@ -35,12 +37,11 @@ impl Fixture {
         let listener = LoopbackListener::bind(0).await.unwrap();
         let address = listener.address().unwrap();
         assert_eq!(address.ip().to_string(), "127.0.0.1");
+        let (root, served_root) = watch::channel(directory.path().to_path_buf());
         let server: Arc<dyn FileServer> = Arc::new(HttpFileServer {
             listener: Arc::new(listener),
             requests: Arc::new(FilePolicy {
-                files: Arc::new(RepositoryFiles {
-                    root: directory.path().into(),
-                }),
+                files: Arc::new(RepositoryFiles { root: served_root }),
             }),
         });
         let (stop, shutdown) = watch::channel(false);
@@ -48,9 +49,15 @@ impl Fixture {
         Self {
             directory,
             address,
+            root,
             stop,
             task,
         }
+    }
+
+    /// Point the server at another folder, as a repository move of the runner does.
+    pub(super) fn move_to(&self, folder: &Path) {
+        self.root.send_replace(folder.to_path_buf());
     }
 
     pub(super) fn write(&self, path: &str, content: &[u8]) {

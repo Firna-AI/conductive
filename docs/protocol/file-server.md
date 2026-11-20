@@ -12,6 +12,9 @@ names a dated record, as
 
 ## Requirements
 
+- The file server serves the current repository folder of the workspace.
+  After a [repository change](repository-change.md), each later request
+  reads the files of the new folder.
 - The file server listens only on `127.0.0.1:7683`. It takes no
   connection from another address.
 - The sandbox keeps port 7683 for the file server.

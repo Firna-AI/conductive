@@ -4,6 +4,7 @@ use std::fs;
 use std::os::unix::fs::symlink;
 
 use rustix::fs::{CWD, Mode, mkfifoat};
+use tempfile::TempDir;
 
 use super::support::Fixture;
 
@@ -138,4 +139,17 @@ async fn serves_indexes_redirects_directories_and_never_lists_them() {
     assert_eq!(h.get("/empty").await.status, 404);
     assert_eq!(h.get("/index.html/").await.status, 404);
     h.finish().await;
+}
+
+#[tokio::test]
+async fn serves_the_current_folder_after_a_repository_move() {
+    let h = Fixture::new().await;
+    h.write("page.html", b"first");
+    assert_eq!(h.get("/page.html").await.body, b"first");
+    let moved = TempDir::new().unwrap();
+    fs::write(moved.path().join("page.html"), b"second").unwrap();
+    h.move_to(moved.path());
+    assert_eq!(h.get("/page.html").await.body, b"second");
+    fs::remove_file(moved.path().join("page.html")).unwrap();
+    assert_eq!(h.get("/page.html").await.status, 404);
 }

@@ -108,14 +108,13 @@ pub(crate) async fn execute() -> Result<()> {
         tokio::select! { _ = terminate.recv() => {}, _ = interrupt.recv() => {} }
         stop.send_replace(true);
     });
+    let (repository_root, served_root) = watch::channel(configuration.cwd.clone());
     let file_server = match LoopbackListener::bind(FILE_SERVER_PORT).await {
         Ok(listener) => {
             let server: Arc<dyn FileServer> = Arc::new(HttpFileServer {
                 listener: Arc::new(listener),
                 requests: Arc::new(FilePolicy {
-                    files: Arc::new(RepositoryFiles {
-                        root: configuration.cwd.clone(),
-                    }),
+                    files: Arc::new(RepositoryFiles { root: served_root }),
                 }),
             });
             let stopped = shutdown.clone();
@@ -142,7 +141,10 @@ pub(crate) async fn execute() -> Result<()> {
                 return Ok(());
             }
             match exit {
-                RunExit::Relocate(target) => target.apply(&mut configuration),
+                RunExit::Relocate(target) => {
+                    target.apply(&mut configuration);
+                    repository_root.send_replace(configuration.cwd.clone());
+                }
                 _ => updates.swap(shutdown.clone()).await.internal()?,
             }
         }
