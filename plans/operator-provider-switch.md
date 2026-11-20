@@ -41,8 +41,7 @@ Contract owners:
 ## Decisions
 
 The prefix `switch` names this change, as
-[Decision numbers](../docs/architecture.md#decision-numbers) says. Every
-decision below is open.
+[Decision numbers](../docs/architecture.md#decision-numbers) says. The user answered every decision on 20 November 2026.
 
 ### switch decision 1. New workspaces wait while the switch builds
 
@@ -72,6 +71,7 @@ decision below is open.
 - **Related:** Switch decisions 2 and 3 are about the same build.
 - **Recommendation:** B. Members never lose new workspaces to the switch, and a failed build keeps the last good image, as decision 9 asks. Under A, the web app still shows the old good build as current, so members get no wait notice, only a failed create. Older copies of the Mac app do the same. Choose D only if the operator's switch must never wait for a build. The options check also recommends B.
 - **Action:** ask the user, because A and B have real trade-offs, and the user's words "switch, then rebuild" can mean A.
+- **Chosen:** B, by the user on 20 November 2026, as recommended.
 
 ### switch decision 2. Members see the switch build as their own
 
@@ -99,6 +99,7 @@ decision below is open.
 - **Related:** Switch decision 1. Under switch decision 1 A, the org has no working image during the build, so B and C lose their reason for no mark. Switch decision 3: under C, an ended build of an admin is not rebuilt by the switch.
 - **Recommendation:** C. Members keep the image that they use, and a failed switch build is the operator's problem, not theirs. C needs two conditions. The Worker leaves a failed switch build out of the members' list, so that older Mac apps show no mark. The switch build does not start the added build of the saved settings. The options check also recommends C.
 - **Action:** ask the user, because a switch build is behaviour at a boundary that no requirement covers.
+- **Chosen:** D, by the user on 20 November 2026: "hide the operator builds from the user". The agent recommended C. D keeps the input copy of C as a design call, because a hidden build must not change the image of the members.
 
 ### switch decision 3. A switch waits behind a running build
 
@@ -130,6 +131,7 @@ Changed by the options check: option E, and the recommendation changed from B to
 - **Related:** Switch decision 2. Under B, members see the ended build. Under switch decision 2 C, B loses the admin's build of a new script.
 - **Recommendation:** D. The first recommendation was B. This request is about a real user's org, not an outage, so B would end an admin's good build for no gain. D still lets the operator end a stuck build in an outage. The options check recommends D.
 - **Action:** ask the user, because B ends a build that an admin started, and A and B have real trade-offs.
+- **Chosen:** D, by the user on 20 November 2026, as recommended.
 
 ### switch decision 4. Real orgs on E2B before E2B consents
 
@@ -156,6 +158,7 @@ Changed by the options check: option E, and the recommendation changed from B to
 - **Related:** None.
 - **Recommendation:** A. The operators are the app's own staff, and `docs/sandbox-provider-accounts.md` already holds the rule. Choose D if more people get operator access. The options check also recommends A.
 - **Action:** ask the user, because only the user can accept the risk under E2B's terms.
+- **Chosen:** none of the options, on 20 November 2026. The user said that E2B consented. So the risk is gone, and no guard is needed. The change deletes `plans/follow-ups/e2b-written-consent.md` and the consent steps of `docs/sandbox-provider-accounts.md`. The other steps of "Before a real org runs on E2B" stay.
 
 ## Design
 
@@ -195,9 +198,27 @@ change each one. Each assumes switch decision 1 B.
 - The switch build starts from the software image, as a first build does,
   and it records no previous image. Reason: an old image of the target
   account gets no refresh, and a first build must start from the software
-  image, as [Org image](../docs/protocol/org-image.md) says. Under switch
-  decision 2 C, the switch build does not start the added build of the
-  saved settings. Added after the options check.
+  image, as [Org image](../docs/protocol/org-image.md) says. Added after
+  the options check.
+- The switch build copies the inputs of the newest good image: the
+  install script, the settings revision, the repositories, and their
+  folders. It does not start the added build of the saved settings.
+  Reason: under switch decision 2 D, members do not see the switch build,
+  so it must not change their image. This is the input copy of option C.
+- The Worker leaves each switch build out of every read of the members:
+  the build list, the current build, the newest build that sets the
+  Settings mark, and the build log. Only the operator section shows it.
+  After the switch, the Cloud computer tab keeps the newest visible good
+  build as current. That build holds the same inputs.
+- A Build computer or a Try again of an admin during a switch build waits
+  until the switch build ends. Then it runs on the account of the org at
+  that time. The tab shows it with the build states that it knows today,
+  so that older copies of the Mac app keep working. The mockups settle
+  its words. Reason: switch decision 2 D.
+- Under switch decision 3 D, the switch question names a running build of
+  the org and offers to end it. Without that choice, the switch waits,
+  and the switch build starts when the running build ends. The page of
+  the org shows the waiting switch.
 - The automatic build after a GitHub rename or a new default branch reads
   the newest build on the account of the org. Today it reads the newest
   build on any account, so a failed switch build would stop it. Added
@@ -228,10 +249,12 @@ Tags: mockup
 Depends on: none
 
 The operator org page gets Switch account and the states of a switch. The
-Cloud computer tab of the members changes only as switch decision 2 says.
+Cloud computer tab of the members changes only for a build that waits for
+a switch build, as switch decision 2 D says.
 
 - [ ] Update `OperatorOrgScreen.tsx` in `docs/mockups/src/screens/`: Switch account, its question, a running switch build, a failed switch build, the last switch, and the workspaces by account.
-- [ ] Update the Cloud computer tab mockup for the answer to switch decision 2.
+- [ ] Update the Cloud computer tab mockup: a Build computer of an admin that waits for a hidden switch build. Members see no other sign of the switch.
+- [ ] Show a waiting switch on the org page, and the running build that the switch question offers to end.
 - [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
 - [ ] Update the design and the TODOs of this plan for each problem that the mockups show.
 
@@ -243,7 +266,8 @@ Depends on: 1
 - [ ] Update [Orgs and members](../docs/protocol/orgs-and-members.md), [Workspaces and sandboxes](../docs/protocol/workspaces-and-sandboxes.md), [Org image](../docs/protocol/org-image.md), [Operator section](../docs/protocol/operator-section.md), and the terms of the [architecture doc](../docs/architecture.md).
 - [ ] Read the Terms page in `src/marketing/terms.ts` and the Privacy page in `src/marketing/privacy.ts` in full. Update each sentence that restates the account rule, such as "The org keeps that account for its life".
 - [ ] Read each public guide in `src/marketing/docs/` in full, and update each sentence that restates the account rule.
-- [ ] Update `docs/sandbox-provider-accounts.md`: "No call of an org goes to another account" changes, an old image keeps its account in use, and the switch joins "Before a real org runs on E2B".
+- [ ] Delete `plans/follow-ups/e2b-written-consent.md`, and remove its link from `plans/follow-ups/e2b-production-account.md`, because E2B consented.
+- [ ] Update `docs/sandbox-provider-accounts.md`: remove the consent steps from "Before a real org runs on E2B", and keep the documents, the settings, and Pro. Also: "No call of an org goes to another account" changes, an old image keeps its account in use, and the switch joins "Before a real org runs on E2B".
 
 ## Milestone 3: Switch records and the operator route
 
@@ -259,6 +283,8 @@ Depends on: 2
 Depends on: 3
 
 - [ ] Start the switch build on the target account, as switch decisions 1, 2, and 3 say.
+- [ ] Leave switch builds out of every members' read, and show them on the org page of the operator section.
+- [ ] Make a Build computer or a Try again of an admin wait for a running switch build.
 - [ ] Change the account of the org in the same write that publishes the image of a switch build.
 - [ ] Handle a failed build, a switch back, an org with no good image, a suspended org, and an org with no active admin, as the design says.
 - [ ] Start a waiting switch build at Lift and from the image timer.
