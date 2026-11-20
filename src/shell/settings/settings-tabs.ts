@@ -65,7 +65,7 @@ const orgTabs: readonly {
 /** The name of the tab of a route, such as Agents, and its group. */
 export function tabTitle(
   route: Extract<SettingsRoute, { tab: unknown }>,
-  org: OrgSummary | undefined,
+  org: OrgSummary | null,
 ): { title: string; group: string } {
   if (route.screen === 'account') {
     const label = accountTabs.find((item) => item.tab === route.tab)?.label
@@ -82,7 +82,7 @@ export function tabTitle(
  */
 export function settingsGroups(props: {
   route: SettingsRoute | null
-  org: OrgSummary | undefined
+  org: OrgSummary | null
   mac: boolean
 }): SettingsGroup[] {
   const { route, org } = props

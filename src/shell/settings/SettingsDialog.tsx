@@ -2,12 +2,7 @@ import { createContext, useContext, useId, useRef, type ReactNode } from 'react'
 import { X } from 'lucide-react'
 import styles from '../../../docs/mockups/src/components/settings/SettingsDialog.module.css'
 import { IconButton } from '../ui/actions'
-import {
-  Overlay,
-  useEscapeLayer,
-  useLayerFocus,
-  type Focusable,
-} from '../ui/Overlay'
+import { Overlay, useEscapeLayer, useLayerFocus } from '../ui/Overlay'
 import { trapTab } from '../ui/Sheet'
 import { SettingsNav } from './SettingsNav'
 import type { SettingsGroup } from './settings-tabs'
@@ -66,12 +61,7 @@ function DialogLayer(props: DialogProps) {
   const dialog = useRef<HTMLElement>(null)
   const title = useId()
   // The row of the open tab takes the focus as the dialog opens.
-  const openRow = useRef<Focusable>({
-    focus: () =>
-      dialog.current
-        ?.querySelector<HTMLElement>('nav a[aria-current="page"]')
-        ?.focus(),
-  })
+  const openRow = useRef<HTMLAnchorElement>(null)
   useEscapeLayer(true, props.close)
   useLayerFocus(dialog, { modal: true, moved: () => true, initial: openRow })
   return (
@@ -95,7 +85,11 @@ function DialogLayer(props: DialogProps) {
       >
         <div className={styles.side}>
           <div className={styles.heading}>Settings</div>
-          <SettingsNav groups={props.groups} variant="panel" />
+          <SettingsNav
+            groups={props.groups}
+            openRow={openRow}
+            variant="panel"
+          />
         </div>
         <div className={styles.main}>
           <header className={styles.bar}>

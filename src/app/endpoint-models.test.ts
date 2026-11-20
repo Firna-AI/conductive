@@ -77,7 +77,7 @@ describe('the models that the pickers of the owner of an own endpoint offer', ()
   })
 })
 
-describe('the models that the account page names for the list of a login', () => {
+describe('the models that Account settings names for the list of a login', () => {
   test('names the unlisted app models of its agent with the time of the read, and says when the list names none of them', () => {
     expect({
       some: unlistedModels(

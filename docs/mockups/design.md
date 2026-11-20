@@ -419,7 +419,7 @@ sessions as tabs above the chat, and four tabs at the bottom.
   tab of an automation page, as the `runs` variant of
   `app/orgs/suspended/automations/automation` shows. `SuspendedOrgPanel` shows the same words in the main area of
   a wide desktop list. `SuspendedOrgAbove` puts the box above the page of
-  a deleted org, at the width of a settings page. A suspended org shows no
+  a deleted org, at the width of a tab of Settings. A suspended org shows no
   action that it refuses.
 - Copy says cloud computer or sandbox. No screen names Boat, also not the
   marketing site or Get started.

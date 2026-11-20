@@ -1,10 +1,7 @@
 // @vitest-environment happy-dom
 
-import type { ReactElement } from 'react'
 import { describe, expect, test, vi } from 'vitest'
-import { memoryNavigation, NavigationContext } from '../../app/navigation'
 import { routes } from '../../app/router'
-import { Store } from '../../app/store'
 import { byRole, queryByRole } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
@@ -12,10 +9,8 @@ import {
   MOUNTED_TEST_TIMEOUT,
   requestDialogClose,
 } from '../../test-support/mount'
-import { MacApp, type MacWindow, type MacWindowState } from '../mac/mac-app'
-import { Shell } from '../Shell'
-import { click, mountScreen, press, settle } from '../test-mount'
-import { startedApp } from '../test-render'
+import { click, press, settle } from '../test-mount'
+import { openShell } from './settings-shell-kit'
 import { settingsDialog, settingsGroup, settingsRow } from './settings-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
@@ -36,40 +31,6 @@ const orgRows = [
   'Secrets',
   'Members',
 ]
-
-/** The shell at `address`, as a desktop, a phone, or the Mac app. */
-async function openShell(
-  address: string,
-  options: {
-    viewport?: 'desktop' | 'phone'
-    mac?: boolean
-    server?: FakeApiServer
-  } = {},
-) {
-  const app = await startedApp(options.server ?? new FakeApiServer())
-  const navigation = memoryNavigation(address)
-  const window: MacWindow = {
-    state: new Store<MacWindowState>({
-      mode: 'window',
-      canGoBack: false,
-      canGoForward: false,
-    }),
-    back: () => undefined,
-    forward: () => undefined,
-  }
-  const shell: ReactElement = (
-    <NavigationContext.Provider value={navigation}>
-      <Shell />
-    </NavigationContext.Provider>
-  )
-  const view = mountScreen(
-    app,
-    options.mac ? <MacApp window={window}>{shell}</MacApp> : shell,
-    { viewport: options.viewport ?? 'desktop' },
-  )
-  await settle()
-  return { app, view, navigation }
-}
 
 /** The names of the org sidebars of the page below. */
 function sidebars(view: HTMLElement): (string | null | undefined)[] {
@@ -198,24 +159,35 @@ describe('Settings', () => {
     })
   })
 
-  test('a phone lists the tabs at the list address, and each tab is a screen with Settings as the way back', async () => {
-    const { navigation } = await openShell(routes.settingsList(), {
-      viewport: 'phone',
-    })
+  test('a phone lists the tabs at the list address, its way back opens the workspace list, and each tab is a screen with Settings as the way back', async () => {
+    const { navigation } = await openShell(
+      routes.workspace(org, FAKE_IDS.workspace),
+      { viewport: 'phone' },
+    )
+    navigation.push(routes.settingsList())
+    await settle()
+    const back = byRole('button', 'Workspaces')
     const list = {
       dialog: settingsDialog() !== null,
       account: settingsGroup('Account').rows,
       org: settingsGroup('Acme').rows,
     }
+    click(back)
+    await settle()
+    const workspaces = navigation.href()
+    navigation.push(routes.settingsList())
+    await settle()
     click(settingsRow('Account', 'Agents'))
     await settle()
     expect({
       list,
+      workspaces,
       address: navigation.href(),
       title: document.querySelector('main h1')?.textContent,
       back: byRole('button', 'Settings') !== null,
     }).toEqual({
       list: { dialog: false, account: accountRows, org: orgRows },
+      workspaces: routes.org(org),
       address: routes.accountTab('agents'),
       title: 'Agents',
       back: true,

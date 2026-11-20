@@ -23,7 +23,7 @@ export const sections = core.sectionList.sections
 const repositories = core.repositories.repositories
 export const workspaces = workspaceFixtures().workspaces.workspaces
 
-/** The sections of the Account page outside the Mac app, then Keyboard shortcuts. */
+/** The sections of Account settings outside the Mac app, then Keyboard shortcuts. */
 export const accountRows = [
   'Sign-in',
   'GitHub',

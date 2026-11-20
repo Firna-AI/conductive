@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react'
-import { activeOrgs, keptOrg } from '../../app/kept-org'
+import { useEffect, type ReactNode } from 'react'
 import { routeOf } from '../../app/navigation'
+import { paletteOrg } from '../../app/palette/palette-org'
 import {
   isSettingsRoute,
   routeOrgId,
@@ -25,17 +25,25 @@ import { settingsGroups, tabTitle } from './settings-tabs'
 
 type TabRoute = Extract<SettingsRoute, { tab: unknown }>
 
-/** The tab of a route of Settings. The list shows General on a desktop. */
-function tabRouteOf(route: SettingsRoute): TabRoute {
-  return route.screen === 'settings-list'
-    ? { screen: 'account', tab: 'general', connect: null }
-    : route
+/**
+ * The tab that a route of Settings shows. The list shows General on a
+ * desktop. Only the Mac app has This Mac, so a browser shows General at its
+ * address, and the title, the open row, and the content all follow it.
+ */
+function tabRouteOf(route: SettingsRoute, mac: boolean): TabRoute {
+  if (route.screen === 'settings-list') {
+    return { screen: 'account', tab: 'general', connect: null }
+  }
+  if (route.screen === 'account' && route.tab === 'this-mac' && !mac) {
+    return { ...route, tab: 'general' }
+  }
+  return route
 }
 
 /** The content of the tab of a route. */
 function TabContent(props: {
   route: TabRoute
-  org: OrgSummary | undefined
+  org: OrgSummary | null
   user: User
 }) {
   const { route, org } = props
@@ -65,16 +73,45 @@ export type SettingsView =
   | { kind: 'page'; route: PageRoute; dialog: ReactNode }
   | { kind: 'screen'; screen: ReactNode }
 
+/** The org of a page, when the person has it and it is not deleted. */
+function ownOrg(route: Route, orgs: readonly OrgSummary[]) {
+  const orgId = routeOrgId(route)
+  return orgs.find((org) => org.id === orgId && !org.deletion) ?? null
+}
+
 /**
- * Settings at its address. A desktop shows the page below, `below`, with
- * the Settings dialog over it. `below` is the last page that the tab
- * showed. Without one, the page below is the workspace list of the org of
- * the org settings, or Get started without an org. A phone shows the list
- * of the tabs at `/settings`, and each tab as a screen of its own. The org
- * of the org settings is the org of the address, else of the page below,
- * else the org that the person opened last. An address of an org that the
- * person cannot open, or a deleted org, shows the page of that org. Any
- * other address shows its page, without a dialog.
+ * The page below Settings: the last page of the tab, when it has no org of
+ * its own or the org of an org tab, and the address that Close opens.
+ * Without one, it is the workspace list of the org, or Get started.
+ */
+function pageBelow(
+  shown: { route: PageRoute; href: string } | null,
+  orgs: readonly OrgSummary[],
+  tabOrg: OrgSummary | null,
+  orgTab: boolean,
+): { route: PageRoute; href: string } {
+  const own = shown === null ? null : ownOrg(shown.route, orgs)
+  if (shown !== null && (!orgTab || own === null || own.id === tabOrg?.id)) {
+    return shown
+  }
+  if (tabOrg) {
+    return {
+      route: { screen: 'org', orgId: tabOrg.id },
+      href: routes.org(tabOrg.id),
+    }
+  }
+  return { route: { screen: 'get-started' }, href: routes.getStarted() }
+}
+
+/**
+ * Settings at its address. A desktop shows the page below with the
+ * Settings dialog over it, as `pageBelow` says. A phone shows the list of
+ * the tabs at `/settings`, and each tab as a screen of its own. The org of
+ * the org settings is the org of an org tab, else the org that the page
+ * below works on, as the command palette does. An org tab makes its org
+ * the org that the tab opened last. An address of an org that the person
+ * cannot open, or a deleted org, shows the page of that org. Any other
+ * address shows its page, without a dialog.
  */
 export function useSettingsView(
   route: Route,
@@ -87,9 +124,11 @@ export function useSettingsView(
   const phone = useViewport() === 'phone'
   const mac = useMacApp() !== null
   const go = useGo()
+  const tabOrgId = route.screen === 'settings' ? route.orgId : null
+  useEffect(() => {
+    if (tabOrgId !== null) app.openOrg(tabOrgId)
+  }, [app, tabOrgId])
   if (!isSettingsRoute(route)) return { kind: 'page', route, dialog: null }
-  const shown = below === null ? null : routeOf(below)
-  const belowOrgId = shown === null ? null : routeOrgId(shown)
   if (route.screen === 'settings') {
     const named = all.find((item) => item.id === route.orgId)
     if (!named || named.deletion) {
@@ -100,63 +139,50 @@ export function useSettingsView(
       }
     }
   }
+  const last = below === null ? null : routeOf(below)
+  const shown =
+    last === null || isSettingsRoute(last) || below === null
+      ? null
+      : { route: last, href: below }
   const org =
     route.screen === 'settings'
-      ? all.find((item) => item.id === route.orgId)
-      : (activeOrgs(all).find((item) => item.id === belowOrgId) ??
-        keptOrg(all, lastOrg))
-  const groups = (selected: SettingsRoute | null) =>
+      ? ownOrg(route, all)
+      : paletteOrg(shown?.route ?? { screen: 'home' }, all, lastOrg)
+  const tab = tabRouteOf(route, mac)
+  const groups = (selected: TabRoute | null) =>
     settingsGroups({ route: selected, org, mac })
-  const tab = tabRouteOf(route)
   const content = <TabContent org={org} route={tab} user={user} />
   const { title, group } = tabTitle(tab, org)
-  if (phone && route.screen === 'settings-list') {
-    return {
-      kind: 'screen',
-      screen: (
-        <PhoneFrame>
-          <Page
-            back={{ label: 'Workspaces', to: routes.home() }}
-            title="Settings"
-          >
-            <SettingsNav groups={groups(null)} variant="touch" />
-          </Page>
-        </PhoneFrame>
-      ),
-    }
-  }
   if (phone) {
-    return {
-      kind: 'screen',
-      screen: (
-        <PhoneFrame>
-          <Page
-            back={{ label: 'Settings', to: routes.settingsList() }}
-            subtitle={group}
-            title={title}
-          >
-            {content}
-          </Page>
-        </PhoneFrame>
-      ),
-    }
+    const screen =
+      route.screen === 'settings-list' ? (
+        <Page
+          back={{
+            label: 'Workspaces',
+            to: org ? routes.org(org.id) : routes.home(),
+          }}
+          title="Settings"
+        >
+          <SettingsNav groups={groups(null)} variant="touch" />
+        </Page>
+      ) : (
+        <Page
+          back={{ label: 'Settings', to: routes.settingsList() }}
+          subtitle={group}
+          title={title}
+        >
+          {content}
+        </Page>
+      )
+    return { kind: 'screen', screen: <PhoneFrame>{screen}</PhoneFrame> }
   }
-  // An org tab lies over a page of its own org.
-  const sameOrg = route.screen !== 'settings' || belowOrgId === route.orgId
-  const page =
-    shown !== null && !isSettingsRoute(shown) && sameOrg ? shown : null
-  const fallback: PageRoute = org
-    ? { screen: 'org', orgId: org.id }
-    : { screen: 'get-started' }
-  const pageRoute = page ?? fallback
-  const pageHref =
-    page && below ? below : org ? routes.org(org.id) : routes.getStarted()
+  const page = pageBelow(shown, all, org, route.screen === 'settings')
   return {
     kind: 'page',
-    route: pageRoute,
+    route: page.route,
     dialog: (
       <SettingsDialog
-        close={() => go(pageHref)}
+        close={() => go(page.href)}
         group={group}
         groups={groups(tab)}
         title={title}

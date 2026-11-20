@@ -1,6 +1,8 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test, vi } from 'vitest'
+import { memoryNavigation, NavigationContext } from '../../app/navigation'
+import { routes } from '../../app/router'
 import { Store } from '../../app/store'
 import { requestLines } from '../../app/test-kit'
 import { DEVICE_CURRENT_PATH, DEVICE_SETTINGS_PATH } from '../../shared/device'
@@ -14,6 +16,8 @@ import {
 } from '../../test-support/mount'
 import { MacApp, type MacWindow, type MacWindowState } from '../mac/mac-app'
 import { mountScreen, settle } from '../test-mount'
+import { settingsGroup, settingsTab } from '../settings/settings-test-kit'
+import { Shell } from '../Shell'
 import { startedApp } from '../test-render'
 import { AccountTabContent } from './AccountTabContent'
 
@@ -89,19 +93,38 @@ describe('This Mac in the account', () => {
     })
   })
 
-  test('a browser shows General at the address of This Mac, and asks no Mac', async () => {
+  test('in a browser, Settings names, marks, focuses, and shows General at the address of This Mac, and asks no Mac', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer()
     const app = await startedApp(server)
-    const view = mountScreen(
+    mountScreen(
       app,
-      <AccountTabContent connect={null} tab="this-mac" user={fakeUser} />,
+      <NavigationContext.Provider
+        value={memoryNavigation(routes.accountTab('this-mac'))}
+      >
+        <Shell />
+      </NavigationContext.Provider>,
     )
     await settle()
+    // The open tab of the dialog has the name of its title.
+    const tab = settingsTab('General')
     expect({
-      sections: sections(view),
+      account: settingsGroup('Account'),
+      focused: document.activeElement?.textContent,
+      sections: sections(tab),
       requests: macRequests(server),
     }).toEqual({
+      account: {
+        rows: [
+          'General',
+          'Agents',
+          'Preferences',
+          'Keyboard shortcuts',
+          'Stats',
+        ],
+        open: ['General'],
+      },
+      focused: 'General',
       sections: ['GitHub', 'Invite code'],
       requests: [],
     })

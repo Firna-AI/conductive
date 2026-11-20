@@ -103,7 +103,7 @@ describe('the Actions and Settings tabs of the palette', () => {
     })
   })
 
-  test('the Settings tab shows the tabs of the org settings, then the Account rows in the order of the Account page, with Favourites before New workspaces, Keyboard shortcuts after New workspaces, and This Mac last in the Mac app, and a search finds their pages', () => {
+  test('the Settings tab shows the tabs of the org settings, then the Account rows in the order of Account settings, with Favourites before New workspaces, Keyboard shortcuts after New workspaces, and This Mac last in the Mac app, and a search finds their pages', () => {
     const tab = (overrides: Partial<PaletteSource>, text = '') =>
       paletteResults(query({ tab: 'settings', text }), source(overrides))
     const general = tab({}).groups[0]?.rows[0]

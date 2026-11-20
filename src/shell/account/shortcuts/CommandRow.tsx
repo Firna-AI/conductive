@@ -7,6 +7,7 @@ import type {
   ShortcutKeyText,
 } from '../../../shared/shortcut-key'
 import type { RowControls } from './RowButtons'
+import { useEscapeLayer } from '../../ui/Overlay'
 import { KeysRow, RecordingRow, ResetRow } from './RowStates'
 import type { FocusTarget, ShortcutEditor } from './shortcut-edit'
 import { Keys, RowLayout } from './ShortcutParts'
@@ -55,15 +56,11 @@ export function CommandRow(props: {
     editor.focused()
   }, [focus, editor])
   const row = { ...props, controls }
+  // Escape ends an open edit, also in Settings, whose dialog is an older
+  // layer of the same stack.
+  useEscapeLayer(edit !== null, () => editor.cancel())
   return (
-    <li
-      className={styles.row}
-      onKeyDown={(event) => {
-        if (edit === null || event.key !== 'Escape') return
-        event.preventDefault()
-        editor.cancel()
-      }}
-    >
+    <li className={styles.row}>
       {edit?.kind === 'recording' ? (
         <RecordingRow {...row} edit={edit} fixedLabel={props.fixedLabel} />
       ) : edit?.kind === 'reset' ? (
