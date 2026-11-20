@@ -94,8 +94,8 @@ marked in the open context folder of All files. Its variants:
 
 `app/files/temporary` draws the temporary tab, from decisions 284 to 287.
 Its canonical screen has README.md, which a press in All files opened in
-the temporary tab at the end of the row, with its title in italics. Its
-variants:
+the temporary tab at the end of the row, with its title in italics.
+While it shows, Escape closes it. Its variants:
 
 - Its `replaced` variant has the diff of AddressForm.tsx in the place of
   README.md, after a press in Changes, before a new session that opened

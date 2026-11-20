@@ -94,7 +94,7 @@ useShortcutOffer('command-palette', ready ? toggle : null, controller)
 | Hide or show the right column | `RightColumnToggle` in `WorkspaceColumns.tsx` |
 | Back, Forward | The window controls of the Mac app, while the window has a page there |
 | Open workspace 1 to 9, Previous and Next workspace, Next workspace that needs input | `useListKeys` of the workspace list, while the page shows the list |
-| Previous tab, Next tab, Close tab, Reopen closed session | `useTabKeys` of the tab row of the chat. A shown file tab offers its own Close tab. |
+| Previous tab, Next tab, Close tab, Reopen closed session | `useTabKeys` of the tab row of the chat. A shown file tab offers its own Close tab. The shown temporary tab also offers its close to Escape, with `usePageEscape`. |
 | Copy concise transcript, Copy full transcript | `useTabKeys` of the tab row of the chat, while a session tab shows, with the copy of its tab menu |
 | Focus the message field, Attach files, Stop the agent | The composer of the chat |
 | Model picker, Next effort level, Fast mode | The model picker of the composer of a session. It offers Fast mode only for a model that the model list marks as fast. |
@@ -110,6 +110,28 @@ A Switch to row names the command of the place of its org, whose key it
 shows, but the rail runs that key, so `listedCommands` leaves it out.
 The Help group offers Send feedback on each page. Its key opens the
 Feedback dialog through the same row action.
+
+## Escape on the page
+
+Escape is a fixed key, so no keymap holds it, and no part can offer it as
+a command. A part that closes something on Escape, such as the shown
+temporary tab, offers its action with `usePageEscape`:
+
+```tsx
+usePageEscape(shown && temporary ? close : null)
+```
+
+- `null` offers nothing. The key runs the `run` of the latest render.
+- The press counts only when it is free as it starts: no modifier, no
+  repeat, no composition, the focus on the page and not in a text field
+  or a terminal, and no open menu, modal layer, or recorder. The open
+  layers count as they are in the capture phase, before a handler closes
+  one of them.
+- The action waits for the end of the bubble phase of the window. A
+  handler that takes Escape, such as the end of a drag, the close of the
+  list popover, or a handler that stops the press, keeps the key. Such a
+  handler calls `preventDefault`, or stops the press.
+- The action stops the default action of the key.
 
 ## Mark a terminal
 
@@ -190,7 +212,10 @@ of the bar and of Copy link, also where their controls do not show or
 cannot take a click. `KeyHints.test.tsx` checks the hints in a browser tab
 and in the phone layout, also those of the bar and of the label of the
 number. `pressHintKey` presses the key of the keymap with the changes of
-the account.
+the account. `PageEscape.test.tsx` checks when Escape is free for the
+page, and
+`../workspace/files/TemporaryTabEscape.test.tsx` closes the temporary tab
+with it.
 
 ### Key Code
 
@@ -204,6 +229,8 @@ the account.
 - [shortcut-context.ts](shortcut-context.ts): `useShortcutOffer`,
   `useShortcutOffers`, `useShortcutTerminal`, `useShortcutRecorder`,
   `useShortcutKeymap`, `useShortcutKeyOf`, and `useShortcutKey`.
+- [page-escape.ts](page-escape.ts): `usePageEscape`, the Escape action of
+  the page.
 - [shortcut-hints.tsx](shortcut-hints.tsx): `useShortcutHint`,
   `useAriaShortcut`, `shortcutTip`, `shortcutLabels`,
   `useShortcutLabelsOf`, and `ShortcutTip`.
