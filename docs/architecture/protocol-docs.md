@@ -12,6 +12,9 @@ This page lists each protocol doc and what it covers.
     build, and the software image.
   - [Create a workspace](../protocol/create-a-workspace.md): New workspace as a
     page or as a dialog, the create, the branch, and a failed first start.
+    - [Create a workspace: the preference](../protocol/create-a-workspace-preference.md):
+      the tabs of the Account page, and the choice of how New workspace
+      opens, with its save and its default.
     - [Create a workspace: the dialog](../protocol/create-a-workspace-dialog.md):
       the parts of the dialog, its section, its notices, its close, and its
       draft.

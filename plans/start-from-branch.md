@@ -834,12 +834,12 @@ Depends on: 14
 
 Depends on: 15
 
-- [ ] Move the section "The preference" of
+- [x] Move the section "The preference" of
       `docs/protocol/create-a-workspace.md` to a new linked page, and leave
       a short section with the same heading and a link, so that every link
       into it keeps working. Reason: the doc has 281 lines, over the target
       of about 250 of the `documentation` skill.
-- [ ] Check each relative link into and out of both docs.
+- [x] Check each relative link into and out of both docs.
 
 ## Milestone 9: Verification, commit, review, and pull request
 
