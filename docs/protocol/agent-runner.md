@@ -40,6 +40,13 @@ out-of-memory kill.
 - The field needs no new protocol version, so the runner protocol version
   stays 2. Reason: the hello already announces the login kinds that the
   runner supports.
+- Each hello of a runner that gives
+  [change notes](capabilities-agents.md#where-the-note-goes) to its agents
+  also carries `capabilityNotices: true`. Any other hello announces no
+  change notes, also the hello of an older runner. A value of another type
+  does not refuse the hello. This field needs no new protocol version
+  either.
+- The Worker sends change notes only to a runner that announces them.
 - Each build of the org image installs the newest runner. Each sandbox then
   updates its runner itself, at a later start or when its workspace is
   idle, as [Updates](sandbox-software.md#updates) says. Reason: a fix of
@@ -146,6 +153,9 @@ out-of-memory kill.
 - Each turn also asks the runner for the fast mode of its choice. A runner
   that does not support fast mode ignores it, and the turn runs at standard
   speed, as [Fast mode](fast-mode.md#the-requests-of-the-agents) says.
+- Each turn also brings the capabilities of its session, for the agent
+  instructions of a new session, as
+  [The capabilities](agent-instructions-changes.md#the-capabilities) says.
 - Each turn that the runner accepts gets exactly one end: `turn.completed`
   or `turn.failed`. This holds also when Stop, a shutdown, or a crash of
   the runner comes before the agent starts.

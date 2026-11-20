@@ -2,7 +2,10 @@
 
 This doc holds the requirements and the decisions in force for the
 instructions that the app gives each agent session. It covers the facts
-and the guidance in them. [Message lines](message-lines.md) states the
+and the guidance in them.
+[Agent instructions: facts that change](agent-instructions-changes.md)
+states the same text for the life of a session, and the facts that can
+change during a session. [Message lines](message-lines.md) states the
 sender line, the repository line, and the branch line of each message.
 [Base prompts](base-prompts.md) states the base prompt of Claude
 agents. [Agents and sessions](agents-and-sessions.md#agents) states the
@@ -13,12 +16,13 @@ dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A secrets decision number names a decision of the change that adds
 [secrets](secrets.md), as that doc says. A stop diagnostics decision number
 names a decision of the change that adds the
-[runner warnings](runner-warnings.md), as that doc says. A parent-move
-decision number names a decision of the change that adds
-[parent changes](parent-changes.md), as that doc says. A screenshot
+[runner warnings](runner-warnings.md), as that doc says. A screenshot
 decision number names a decision of the change that shows the screenshots
 of agents as pictures in their answers, as
-[File mentions: files in answers](file-mentions-answers.md) says.
+[File mentions: files in answers](file-mentions-answers.md) says. A
+capability prompts decision number names a decision of the change that
+tells each agent the capabilities of its session, as
+[Capabilities: what agents learn](capabilities-agents.md) says.
 
 ## Terms
 
@@ -65,6 +69,10 @@ of agents as pictures in their answers, as
     or a sub-workspace. For a sub-workspace, its depth, and the ID and the
     link of its parent.
   - The [deepest depth](sub-workspaces.md#the-depth-limit) of a sub-workspace.
+  - The capabilities of the session, when it has some: the secrets that it
+    uses with no request, and whether Mac access is on, as
+    [The capabilities](agent-instructions-changes.md#the-capabilities)
+    says.
 - The instructions also give this guidance:
   - The agent keeps notes, screenshots, and files for other sessions of the
     workspace in the context folder.
@@ -92,8 +100,12 @@ of agents as pictures in their answers, as
     list, get, rename, close, and stop sessions, send and get messages,
     read a chat, and list, open, and close previews. They also create and
     delete the sections of the org, and ask to run a command on the Mac of
-    the sender of the turn. They also list the secrets of the org, and run
-    a command with secrets, as [Secret requests](secret-requests.md) says.
+    the sender of the turn. They also list the secrets of the org with
+    `list_secrets`, and run a command with secrets with
+    `run_with_secrets`, as [Secret requests](secret-requests.md) says
+    (capability prompts decision 2 A).
+  - Before the agent asks a member for a key, a token, or another
+    credential, it calls `list_secrets` (capability prompts decision 2 A).
   - The agent nests a new workspace under this workspace when the work
     belongs to the task of this workspace. It makes a top-level workspace
     for other work. [When to nest](sub-workspaces.md#when-to-nest) gives
@@ -146,9 +158,11 @@ of agents as pictures in their answers, as
 - Screenshots that the runner takes by itself were rejected, because the
   sessions share one desktop. The screenshot guidance names no computer
   tool, for the reason of the desktop guidance.
+- Reason for the secrets guidance: the session can often use the secret
+  already, with no request. The agent then does not ask a member for it.
 - An existing session keeps its saved instructions, and gets no later
   change of the instructions, as
-  [The same text for the life of a session](#the-same-text-for-the-life-of-a-session)
+  [The same text for the life of a session](agent-instructions-changes.md#the-same-text-for-the-life-of-a-session)
   says.
 - When an older or manual runner start lacks the link or the depth of the
   workspace, the runner warns and continues. Its instructions then leave
@@ -193,21 +207,9 @@ of agents as pictures in their answers, as
 
 ### The parent and the depth
 
-- A [parent change](parent-changes.md) changes the parent and the depth of
-  a workspace, and the depth of each workspace under it.
-- The instructions still hold the parent and the depth (parent-move
-  decision 2 A). They also say that a move can change them, and that
-  `get_workspace` gives the current ones. The sub-workspaces change too,
-  so the instructions name the calls that list them.
-- Accepted cost: a running session keeps the parent and the depth of its
-  instructions. A new session gets the parent and the depth of the last
-  start of the cloud computer.
-- These ways were rejected (parent-move decision 2), because the user
-  chose the smallest change:
-  - A tree line in each message with the current parent and depth, as
-    [the branch line](message-lines.md#the-branch-line) of decision 227.
-  - Instructions without the parent and the depth, so that each agent
-    reads them with `get_workspace`.
+[The parent and the depth](agent-instructions-changes.md#the-parent-and-the-depth)
+states how the instructions hold the parent and the depth, which a move
+can change.
 
 ## The sender line
 
@@ -229,39 +231,9 @@ requirements of the line that names the current branches.
 
 ## The same text for the life of a session
 
-- A session keeps the same agent instructions for its whole life. A Claude
-  session also keeps the same base prompt.
-- This holds across each turn, each stop and resume of the sandbox, and
-  each restart of the agent runner.
-- This holds also when a fact, the wording of the instructions, or the
-  base prompt changes later. An example is a new default branch of the
-  repository at a later resume.
-- A new session gets the instructions with the current facts and wording.
-  The parent and the depth are the exception, as
-  [The parent and the depth](#the-parent-and-the-depth) says.
-- A session that started without agent instructions can get them once, at
-  a later turn. It then keeps that text.
-- Apart from the branches, the repository folder, the parent, and the
-  depth, the instructions hold no fact that changes during the work, such
-  as the date, the Git state, or the pull request state. The agent reads
-  such facts with its tools.
-- Reason: a change of the text rewrites the prompt cache of the
-  conversation. An agent can also keep the first instructions of a session
-  until it summarizes the conversation.
-- The workspace branch and the target branch can change, by Continue, by
-  a repository change, or by a new default branch. The instructions keep
-  the branches of the start of the session, and
-  [the branch line](message-lines.md#the-branch-line) names the current
-  branches.
-- The repository folder can change by a repository change. The
-  instructions keep the folder of the start of the session, and
-  [the repository line](message-lines.md#the-repository-line) names the
-  current folder.
-- A tool that returns facts that change, such as the pull request state,
-  was rejected. It widens what the workspace token allows, and agents still
-  need instructions to call it.
-  [The workspace token](tokens-and-secrets.md#the-workspace-token) states
-  what the token allows.
+[The same text for the life of a session](agent-instructions-changes.md#the-same-text-for-the-life-of-a-session)
+states that a session keeps its instructions, and how the agent learns of
+the facts that change.
 
 ## How each agent gets them
 

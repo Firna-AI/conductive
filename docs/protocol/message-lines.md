@@ -2,7 +2,9 @@
 
 This doc holds the requirements and the decisions in force for the lines
 that the app adds to each message before it reaches an agent: the sender
-line, the repository line, and the branch line. It belongs to
+line, the repository line, and the branch line. It also states the app
+header, which takes the place of a sender line for a change note. It
+belongs to
 [Agent instructions](agent-instructions.md), which defines these lines
 and states the text that each session gets apart from the messages. The
 other terms are those of the
@@ -37,10 +39,17 @@ number names a decision of the change that added the
   a message of a member. Its text names the member who answered, in place
   of a sender line, as [Late answers](secret-requests.md#late-answers)
   says.
+- A [change note](capabilities-agents.md#the-change-note) of the
+  capabilities is a line of the app too. The agent reads it under an app
+  header, in place of a sender line. The app header says that the text
+  comes from the app, and it names no member.
+- Reason: no member sent the change note. Its text names the member who
+  made the change, as the text of a late answer names the member who
+  answered.
 - The sender line exists only in the text that reaches the agent. The
   stored message, the chat, and the titles from messages never hold it.
-- The chat never shows the sender line or the agent instructions. Reason:
-  they are for the agent.
+- The chat never shows the sender line, the app header, or the agent
+  instructions. Reason: they are for the agent.
 
 ### Access
 
@@ -53,7 +62,7 @@ number names a decision of the change that added the
   [GitHub tokens](github-tokens.md) says. The commits of the turn name that
   member too, as [Commit author](github-tokens.md#commit-author) says.
 - A message that another member sends during the turn changes none of
-  them.
+  them. A change note that joins the turn changes none of them either.
 - A turn that a late answer to a secret request starts has the sender of
   the turn that asked (secrets decision 10 B). So its Mac commands, its
   GitHub token, and its commits follow that sender, not the member who

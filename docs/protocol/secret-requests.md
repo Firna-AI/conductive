@@ -88,6 +88,9 @@ decision number names a decision of the change that adds
   to keep each value out of its output, its files, and its answers.
 - They also tell the agent to read each value through its variable name,
   and they say what a conflict does.
+- They also say when to use each call. The agent calls `list_secrets`
+  before it asks a member for a credential, and it runs each command that
+  needs a secret with `run_with_secrets`.
 
 ## The request
 

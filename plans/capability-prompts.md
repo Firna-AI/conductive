@@ -83,10 +83,11 @@ new runner command, a waiting store, and a chat note.
   writes are an edit in the Capabilities control, through
   `worker/app-api/capabilities.ts`, the Remove of a value for this
   workspace, through `worker/secrets/routes.ts`, and an answer that gives a
-  value for this workspace. The session that asked gets no line for its
-  own answer, because its call or its late-answer line tells it. The
-  writes report what they changed with `RETURNING`, so two edits at the
-  same time each name their own member.
+  value for this workspace. A session that its own request already told
+  gets no line for the answer: the session that asked, and each session
+  with a covered request that the same answer settles. Its call or its
+  late-answer line tells it. The writes report what they changed with
+  `RETURNING`, so two edits at the same time each name their own member.
 - **The words.** One shared function in `src/shared/` writes the words for
   the chat and for the agent from the member and the structured changes,
   as the late-answer line does. The chat writes "You" for the viewer. A
@@ -141,9 +142,14 @@ Design calls, by Claude on 2026-11-20:
   names. Reason: an admin marks them so that each agent uses them with no
   request. The limit keeps a large org from filling the instructions.
 - An answer that a member gives to the request of an agent sends no line
-  to the session that asked. A value for this workspace sends a line to
-  each other session. Reason: decision 1 sends each change, and only the
-  session that asked learns of the answer by itself.
+  to a session that its own request already told: the session that asked,
+  and each session with a covered request that the same answer settles. A
+  value for this workspace sends a line to each other session. Reason:
+  decision 1 sends each change, and only those sessions learn of the
+  answer by themselves. So one answer tells each session once, as the
+  late-answer rule of one line for each session says. The covered
+  sessions joined this call on 2026-11-20, after the Milestone 2 report
+  found that the late-answer rule already tells them.
 - A mark for all agents that an admin adds or removes, a new secret with
   that mark, and a deleted secret send no line. Reason: they change each
   workspace of the org at once. New sessions get the facts, and the Worker
@@ -188,10 +194,40 @@ Design calls from the mockups, by Claude on 2026-11-20:
   folder with child folders shows only its canonical screen, as
   [the catalogue](../docs/mockups/catalogue.md) says.
 
+Design calls from the docs, by Claude on 2026-11-20:
+
+- "What agents learn" is its own page,
+  [Capabilities: what agents learn](../docs/protocol/capabilities-agents.md),
+  with a short section of that name in `capabilities.md`. "The same text
+  for the life of a session" and "The parent and the depth" moved to
+  [Agent instructions: facts that change](../docs/protocol/agent-instructions-changes.md),
+  beside the capability text of the instructions. Short sections with the
+  old headings keep the old anchors. Reason: the `documentation` skill
+  targets about 250 lines for a protocol doc. `capabilities.md` would reach
+  280 lines, and `agent-instructions.md` would pass 300. The split also
+  does the work of the follow-up item `agent-instructions-doc-length.md`,
+  so this branch deletes that item. The item also asked to move the short
+  "The branch line" section. It stays, because the doc is under the target
+  without that move, and the section only links to `message-lines.md`.
+- A session that has not started a turn, and a session that its own
+  request already told of an answer, get no change note in their chat
+  either. Reason: the design keeps one line for the waiting store and the
+  chat, and the chat shows what the agent was told, as decision 4 B wants.
+- The docs record a risk: an agent chooses the name of a value for this
+  workspace, and the instructions and the change notes of the other
+  sessions then name it. Reason: the member sees the name before giving
+  the value, the instructions quote each name as JSON, and `read_session`
+  already gives such names to other agents. A name rule for such values
+  was left out, because it is a new validation, and only the user adds one.
+
 Contract owners:
 
-- [Capabilities](../docs/protocol/capabilities.md).
-- [Agent instructions](../docs/protocol/agent-instructions.md).
+- [Capabilities: what agents learn](../docs/protocol/capabilities-agents.md),
+  linked from [Capabilities](../docs/protocol/capabilities.md).
+- [Agent instructions](../docs/protocol/agent-instructions.md) and
+  [Agent instructions: facts that change](../docs/protocol/agent-instructions-changes.md).
+- [Message lines](../docs/protocol/message-lines.md), for the app header of
+  a change note.
 - [Late answers](../docs/protocol/secret-late-answers.md), for the shared
   shape of a line of the app.
 - The [mockup catalogue of secrets](../docs/mockups/catalogue-secrets.md).
@@ -226,24 +262,24 @@ idle session.
 
 Depends on: 1
 
-- [ ] Add a section "What agents learn" to `docs/protocol/capabilities.md`
+- [x] Add a section "What agents learn" to `docs/protocol/capabilities.md`
       with the facts, a change, the change note, where it goes, and older
       runners. Record decisions 1, 3, and 4 with their rejected options.
       Record the cost of decision 1: a summary can drop a change line.
-- [ ] Update `docs/protocol/agent-instructions.md`: add the capabilities to
+- [x] Update `docs/protocol/agent-instructions.md`: add the capabilities to
       the facts, add the guidance for `list_secrets`, and add the
       capabilities to the facts that can change during a session.
-- [ ] Update `docs/protocol/message-lines.md` for the app header of a line of
+- [x] Update `docs/protocol/message-lines.md` for the app header of a line of
       the app, and `docs/protocol/secret-late-answers.md` where it rejects a
       notice that waits, so that the two rules read clearly side by side.
-- [ ] Update `docs/protocol/automation-runs.md` where it says that the run
+- [x] Update `docs/protocol/automation-runs.md` where it says that the run
       text names no chosen secret, with the new reason.
-- [ ] Update `docs/protocol/secret-requests.md` for the new tool text.
-- [ ] Read `src/marketing/terms.ts`, `src/marketing/privacy.ts`, and each
+- [x] Update `docs/protocol/secret-requests.md` for the new tool text.
+- [x] Read `src/marketing/terms.ts`, `src/marketing/privacy.ts`, and each
       public guide in full. Update each sentence that the change makes
       wrong. Check `security.md`, `cloud-computer.md`, and `mac-app.md` in
       `src/marketing/docs/` first.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
 
 ## Milestone 3: Runner instructions and tool text
 
@@ -314,7 +350,8 @@ Depends on: 4, 5
 - [ ] Add Worker tests: a running turn, an idle session and its next turn,
       a session that has not started, an edit with no change, a removal
       that another grant covers, several sessions, a closed session, an
-      older runner, and a value for this workspace from an answer.
+      older runner, a value for this workspace from an answer, and a
+      covered request in another session that the same answer settles.
 
 ## Milestone 7: App note
 

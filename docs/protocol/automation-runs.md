@@ -157,9 +157,10 @@ Capabilities to automations, as [Automations](automations.md) says.
 - The run text copies no title and no body of a pull request.
 - Reason: the agent reads the pull request itself, and the facts stay
   short.
-- The run text names no chosen secret. Reason: `list_secrets` already says
-  which secrets the session may use with no request, as
-  [List the secrets](secret-requests.md#list-the-secrets) says.
+- The run text names no chosen secret. Reason: the agent instructions of
+  the first session already name the secrets that it uses with no request,
+  as [The capabilities](agent-instructions-changes.md#the-capabilities)
+  says. `list_secrets` gives the whole list.
 
 ## Run states
 

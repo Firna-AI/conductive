@@ -5,8 +5,10 @@ Capabilities control of New workspace, of each workspace, and of an
 automation. It covers the control, its secrets part, the control of an
 automation, and Mac access. It belongs to
 [Secrets](secrets.md), which covers the secrets, their rights, and their
-grants. The [mockup catalogue](../mockups/catalogue-secrets.md) draws the
-control. The terms are those of [Secrets](secrets.md#terms) and of the
+grants. [Capabilities: what agents learn](capabilities-agents.md) covers
+what agents learn of the capabilities. The
+[mockup catalogue](../mockups/catalogue-secrets.md) draws the control. The
+terms are those of [Secrets](secrets.md#terms) and of the
 [architecture doc](../architecture.md#terms).
 
 A decision number names a dated record, as
@@ -122,3 +124,9 @@ automations, as [Automations](automations.md) says.
   sender of the next turn. A command that the sender always allowed then
   runs with no question, as
   [The choices](desktop-commands.md#the-choices) says.
+
+## What agents learn
+
+[Capabilities: what agents learn](capabilities-agents.md) states the
+facts of a session that its agent learns. It also states the change note
+that tells the agent and the members of each later change.

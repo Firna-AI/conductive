@@ -118,6 +118,8 @@ holds how an agent action of the pull request bar sends its fixed prompt.
   one note at its place, with the member who changed the repository, the
   new repository, and the new branch. To that member it says "You". The
   note reaches no agent.
+- A change of the capabilities shows a change note in the sessions whose
+  facts it changes, as [In the chat](capabilities-agents.md#in-the-chat) says.
 - The chat hides the messages that the SDK adds on its own, such as
   "[Request interrupted by user]".
 - Each result of the agent shows with the messages that it answers. One

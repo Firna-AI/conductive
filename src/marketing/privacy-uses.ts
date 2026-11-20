@@ -150,7 +150,9 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         The chat history also records
         who used Continue, the new branch, and the branch it starts from.
         It also records who changed the repository of a workspace, the new
-        repository, and the new branch. It keeps
+        repository, and the new branch. It also records who changed the
+        capabilities of a workspace, the names of the secrets that changed,
+        and each change of Mac access. It keeps
         the last file list and the last summary of changes of each
         workspace. With the chat history, it keeps each list of the
         servers that run in the cloud computer of a workspace: the port,

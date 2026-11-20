@@ -81,6 +81,10 @@ This page lists each protocol doc and what it covers.
       - [Capabilities](../protocol/capabilities.md): the control of New
         workspace, of each workspace, and of an automation, with its
         secrets part and Mac access.
+        - [Capabilities: what agents learn](../protocol/capabilities-agents.md):
+          the facts of a session that its agent learns, the change note of
+          each change, where the note goes, what the chat shows, and older
+          runners.
       - [Secret variables](../protocol/secret-variables.md): the names of
         new secrets, the variable name of each secret, the command
         environment, conflicting variable names, and older tools.
@@ -214,8 +218,12 @@ This page lists each protocol doc and what it covers.
 - [Agent instructions](../protocol/agent-instructions.md): the text that each
   agent session gets.
   - [Message lines](../protocol/message-lines.md): the sender line, the
-    repository line, and the branch line of each message, and the access
-    of a turn, which does not depend on the sender line.
+    repository line, and the branch line of each message, the app header
+    of a change note, and the access of a turn, which does not depend on
+    the sender line.
+  - [Agent instructions: facts that change](../protocol/agent-instructions-changes.md):
+    the same text for the life of a session, and the parent, the depth,
+    and the capabilities, which can change during a session.
   - [Base prompts](../protocol/base-prompts.md): the base prompt of Claude
     agents and the base instructions of Codex agents.
   - [Agent instructions: how each agent gets them](../protocol/agent-instructions-delivery.md):
