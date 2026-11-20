@@ -110,8 +110,17 @@ state the requirements.
 - `lineTargets` reads each target of a text once. Keep it so. The readers
   try a link at each `[`, and many `[` can reach the same `(`. One read
   for each `[` would take seconds for a crafted answer.
-- `chatParts` uses `bareAddressAt` and `lineTargets`, through the
-  tokenizer of `links/chat-tokens.ts`. The message field uses
+- `lineLabelEnds` of `src/markdown/markdown-labels.ts` finds where the
+  label of each `[` ends, in one pass over the text. Keep it so. One scan
+  for each `[` would take seconds for a long line of `[`.
+- A label ends at the first `]` after its `[`, on the same line. Labels
+  do not nest, so a `[` in a label does not move its end. When no `(`
+  comes directly after that `]`, the `[` starts no link. `chatParts`
+  reads labels in the `code` mode, where each backtick after the `[`
+  starts or ends code. A `]` in code ends no label. `webAddressParts`
+  reads labels in the `plain` mode, where a backtick is text.
+- `chatParts` uses `bareAddressAt`, `lineTargets`, and `lineLabelEnds`,
+  through the tokenizer of `links/chat-tokens.ts`. The message field uses
   `webAddressParts` and reads no code, so its addresses stay text.
 
 ## Web links
