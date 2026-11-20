@@ -95,16 +95,19 @@ Depends on: none
 
 Depends on: 1
 
-- [ ] Update `docs/protocol/stop-and-resume.md`: the stop time is the
+- [x] Update `docs/protocol/stop-and-resume.md`: the stop time is the
       operator setting, 30 minutes by default.
-- [ ] Update `docs/protocol/operator-section.md`: the new setting, its tab,
+- [x] Update `docs/protocol/operator-section.md`: the new setting, its tab,
       its values, and the record of each change.
-- [ ] Update `docs/protocol/operator-overview.md` and
+- [x] Update `docs/protocol/operator-overview.md` and
       `docs/protocol/pricing.md` for the stop time. The Overview lines on the
       last activity and on how late a run shows must hold for any saved time.
-- [ ] Read the Terms and Privacy pages and each public guide in full.
+- [x] Read the Terms and Privacy pages and each public guide in full.
       Update each sentence that restates the stop time, as decision 3 says.
-- [ ] Update `worker/lifecycle/README.md` and `worker/operator/README.md`.
+- [x] Update the mockup docs `docs/mockups/design-operator.md`,
+      `catalogue-operator.md`, and `catalogue.md`.
+- [x] Move the README TODO to Milestone 3, because the READMEs describe
+      the code that Milestone 3 adds.
 
 ## Milestone 3: Backend
 
@@ -123,6 +126,7 @@ Depends on: 2
       `repository-change-command.ts`. The turn heartbeat has no margin
       today, and this change gives it 60 seconds.
 - [ ] Apply decision 2 to the computers that already run.
+- [ ] Update `worker/lifecycle/README.md` and `worker/operator/README.md`.
 - [ ] Add the tests: the routes, the default, a shorter and a longer time,
       and the provider auto-stop.
 
