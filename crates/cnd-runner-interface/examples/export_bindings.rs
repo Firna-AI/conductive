@@ -7,7 +7,7 @@ use ts_rs::{Config, TS};
 use cnd_runner_interface::{
     agents, api, chat_events, commit_author, file_changes, file_tree, files, messages, ports,
     preview_ingress, provider_events, runner, runner_commands, runner_credentials, runner_files,
-    runner_handshake, runner_repository, sdk_helper, sdk_helper_options, tools, workspaces,
+    runner_handshake, runner_repository, sdk_helper, sdk_helper_options, skills, tools, workspaces,
 };
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -49,6 +49,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     messages::UserMessage::export_all(&cfg)?;
     ports::ListeningPort::export_all(&cfg)?;
     ports::RunnerPortsUpdated::export_all(&cfg)?;
+    skills::AgentSkill::export_all(&cfg)?;
+    skills::RunnerSkillsUpdated::export_all(&cfg)?;
+    skills::SkillLists::export_all(&cfg)?;
+    skills::SkillsUpdated::export_all(&cfg)?;
     preview_ingress::PreviewIngressIdentity::export_all(&cfg)?;
     runner::RunnerEvent::export_all(&cfg)?;
     runner_commands::RunnerAttachment::export_all(&cfg)?;

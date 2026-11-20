@@ -17,6 +17,9 @@ names a decision of the change that added file chips to answers. The
 [mockup catalogue](../mockups/catalogue.md) draws these screens at
 `app/file-mentions`, at `app/attachments/sent`, at
 `app/files/menu/added`, and in the flow `user-flows/mention-a-file`.
+[Skill mentions](skill-mentions.md) states the list of `/` and the skill
+chips. That list opens in the place of this list, and it shares the keys
+and the highlight of [The list](#the-list).
 
 ## The list
 
@@ -224,7 +227,7 @@ agents, and their line targets.
 
 - Each chip of the composer shows its icon in a cell at its start
   (decision 215). This holds for each chip of the message field: a file
-  chip, a workspace chip, and the chip of an attached file.
+  chip, a workspace chip, a skill chip, and the chip of an attached file.
 - While a pointer is over the cell, a × takes the place of the icon. A
   press on the × removes the chip. The removal is one step of undo.
 - A keyboard removes a chip with Backspace or Delete, so the cell takes no

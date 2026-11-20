@@ -213,6 +213,12 @@ impl EventStore for DurableStore {
                 .title
                 .clone()
                 .map(RunnerEvent::RunnerWorkspaceTitle),
+            RunnerReportKind::SkillsUpdated => state
+                .reports
+                .latest
+                .skills
+                .clone()
+                .map(RunnerEvent::RunnerSkillsUpdated),
             _ => return Err(Error::InvalidCommand),
         };
         if let Some(report) = report {

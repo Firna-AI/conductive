@@ -78,7 +78,7 @@ export function WorkspaceScreen(props: {
     { orgId: props.org.id, workspaceId: props.workspaceId },
     { create, connect: connectView },
   )
-  const { model, notices, chat, toolEvents } = shown
+  const { model, notices, chat, toolEvents, skills } = shown
   const [terminalFocus] = useState(() => new TerminalFocus())
   const restore = useTabRestore()
   const startError = useStore(model.startError)
@@ -164,6 +164,7 @@ export function WorkspaceScreen(props: {
     savedView: chat,
     chat,
     toolEvents: toolEvents.subscribe,
+    skills,
     terminalFocus,
     archive: mayArchive(access, workspace, props.viewer)
       ? () => lifecycle.archive(workspace)

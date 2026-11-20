@@ -1,4 +1,5 @@
 import { attachmentForMention } from '../../shared/attachment-mentions'
+import type { AgentSkill } from '../../shared/generated/AgentSkill'
 import type { FileEntry } from '../../shared/generated/FileEntry'
 import type { Attachment } from '../../shared/generated/Attachment'
 import type { LineRange } from '../../shared/line-target'
@@ -8,6 +9,7 @@ import {
   tokens,
   type LinkToken,
   type MarkdownLink,
+  type SkillLookup,
   type Token,
 } from './chat-tokens'
 import {
@@ -29,6 +31,7 @@ export type ChatPart =
   | { kind: 'chip'; source: string; target: LinkTarget }
   | LinkPart
   | FilePart
+  | { kind: 'skill'; source: string; skill: AgentSkill }
   | AttachmentPart
 
 /**
@@ -67,9 +70,12 @@ export type { EntryLookup }
  * shows as the text has it.
  *
  * With `mentions`, each mention of an entry of the file tree is a file
- * chip, and each other mention stays text. `attachments` are the files of
- * the message: each mention of the copy path of one of them is the chip of
- * that file, before an entry of the tree, also in a chat without a tree.
+ * chip, and each other mention stays text. With `skills`, each skill text
+ * that names a skill of either agent is a skill chip, as `skillTextAt`
+ * reads it. Each other skill text stays text, and a skill text in code
+ * stays code. `attachments` are the files of the message: each mention of
+ * the copy path of one of them is the chip of that file, before an entry
+ * of the tree, also in a chat without a tree.
  * The text of an agent message reads through `answerParts` instead.
  */
 export function chatParts(
@@ -78,6 +84,7 @@ export function chatParts(
   options: {
     web: WebLinkOf
     mentions?: EntryLookup
+    skills?: SkillLookup
     attachments?: readonly Attachment[]
   },
 ): ChatPart[] {
@@ -138,11 +145,19 @@ export function chatParts(
       else if (token.kind === 'code') {
         parts.push(linked ? codePart(token.text, options.web) : token)
       } else if (token.kind === 'mention') addMention(token.mention)
+      else if (token.kind === 'skill') parts.push(token)
       else if (token.markdown) addMarkdown(token, token.markdown)
       else addAddress(token.href)
     }
   }
-  take(tokens(text, { links: true, mentions: counts }), true)
+  take(
+    tokens(text, {
+      links: true,
+      mentions: counts,
+      skills: options.skills,
+    }),
+    true,
+  )
   return parts
 }
 

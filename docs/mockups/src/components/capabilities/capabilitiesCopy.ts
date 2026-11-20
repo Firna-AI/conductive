@@ -23,7 +23,7 @@ export const secretsPartWords = {
   manage: 'Manage secrets',
   allAgents: 'All agents',
   add: 'Add a secret',
-  sessions: 'Allowed in sessions',
+  session: 'This session',
   values: 'Values for this workspace',
   remove: 'Remove',
 } as const
@@ -33,13 +33,12 @@ export function noSecrets(org: string): string {
   return `${org} has no secrets yet.`
 }
 
-/** What a session approval says: its session, who allowed it, and when. */
-export function approvalDetail(
-  session: string,
-  who: string,
-  when: string,
-): string {
-  return `${session} · by ${who}, ${when}`
+/**
+ * What an approval of the open session says: who allowed it, and when. The
+ * title of its group names the session.
+ */
+export function approvalDetail(who: string, when: string): string {
+  return `Allowed by ${who}, ${when}`
 }
 
 /** What a value for the workspace says: who gave it, and when. */

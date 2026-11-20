@@ -73,9 +73,9 @@ operator section. Its linked page
 [the pull request bar](catalogue-bar.md) gives `app/banner` and its child
 pages. The [chat and automations](catalogue-chat-and-automations.md) page gives
 the child pages and flows of `app/chat` and `app/automations`. The
-[workspace links, file mentions, and tools](catalogue-workspace-tools.md)
+[workspace links, file and skill mentions, and tools](catalogue-workspace-tools.md)
 page gives the child pages and flows of `app/workspace-links`,
-`app/file-mentions`, and `app/tools`.
+`app/file-mentions`, `app/skill-mentions`, and `app/tools`.
 The [command palette and feedback](catalogue-palette.md) page gives the child
 pages of `app/command-palette` and `app/feedback`, the Feedback dialog,
 and the flow that sends feedback.
@@ -160,7 +160,7 @@ a dropped folder that the browser cannot read. The app shares these words.
   image, HTML, and Preview tabs of the centre column. `temporaryTabStates` covers the
   temporary tab, which `src/screens/workspaceTemporaryTab.ts` draws in the
   row. `composerStates` covers the composer, with its links, mentions,
-  attached files, drops, and the chip of Add to chat.
+  skills, attached files, drops, and the chip of Add to chat.
   `src/screens/composerState.ts` adds that composer to the workspace state,
   with the login of the open session and the model of the next message.
   `src/screens/rowMenuState.ts` holds the open menu of a row of All files

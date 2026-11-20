@@ -135,6 +135,10 @@ this guide.
   tool that shows later gets them first, in event order. It passes each
   readable list of terminals, and keeps none, because the Terminal tool
   reads the list with its state.
+- `workspace-skills.ts`: `WorkspaceSkills`, the latest skill lists of the
+  workspace from the ordered stream, as a store that the chat reads for
+  the list of `/` and the skill chips. The context gives it as `skills`,
+  and `files/chat-files.tsx` puts it into `ChatMentions`.
 - `github/WorkspaceGitHub.tsx` and `github/github-events.ts`: the one
   GitHub store of the screen, the bar or the row, and the GitHub events of
   the ordered stream. `github/bar-controls.ts` gives the one action state of

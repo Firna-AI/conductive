@@ -135,7 +135,7 @@ wake at `app/chat/wakes`.
 - An accepted wake starts a stopped cloud computer of the calling
   workspace, as an accepted late answer does. The cases and the checks are
   the same, as [The resume](stop-and-resume.md#the-resume) says.
-- The agent gets the words of the wake as a message, after its
+- The agent gets the words of the wake as a message, with its
   [sender line](message-lines.md#the-sender-line). So an older runner needs
   no update for a wake.
 

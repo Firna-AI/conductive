@@ -246,7 +246,7 @@ An `author` or `committer` setting in the repository or in the global Git settin
 A Git command can still set its own author, for example with `--author`.
 The author of a commit does not prove who made it.
 
-The **Secret** mark hides exact copies of a value in displayed agent output, start logs, and program names and folders in **Preview**.
+The **Secret** mark hides exact copies of a value in displayed agent output, start logs, program names and folders in **Preview**, and skill names and descriptions in the message box.
 It starts on for a new variable.
 Conductive hides these values in program names and folders before shortening them for display.
 Values and marks changed in settings apply at the computer's next start.
@@ -272,7 +272,11 @@ The agent gets the secret's name and environment variable name, without the valu
 Each session needs a member's approval, unless the secret is for **All agents** or pre-approved in the workspace's **Capabilities**.
 Any member who sees the session can allow the request.
 The approval lasts for that session.
-Every member can remove approvals in **Capabilities**.
+Every member can remove an approval under **This session** in **Capabilities**, beside the message box of that session.
+**Capabilities** lists only the approvals of the session where you open it.
+To see the approvals of another session, open that session.
+**Capabilities** hides an approval while the secret is for **All agents** or pre-approved.
+The approval stays, and it shows again when that ends.
 
 A request waits 90 seconds for an answer.
 After that, it stays in the chat, and a later **Allow** tells the agent in a new turn.

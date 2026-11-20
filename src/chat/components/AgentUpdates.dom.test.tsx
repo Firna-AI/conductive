@@ -17,6 +17,7 @@ import {
   MentionsProvider,
   type ChatMentions,
 } from '../mentions/MentionsContext'
+import { FakeSkills } from '../mentions/skills-test-kit'
 import { AgentText } from './AgentText'
 
 // Each block that draws reads its parts once, so the calls count the
@@ -49,6 +50,7 @@ function filesOf() {
       },
       getSnapshot: () => snapshot,
     },
+    skills: new FakeSkills({ claude: [], codex: [] }),
     openFile: () => undefined,
     showFolder: () => undefined,
     href: (item) => `/files/${item.path}`,

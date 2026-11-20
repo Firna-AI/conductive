@@ -15,9 +15,22 @@ number names a decision of the change that added the
 
 ## The sender line
 
-- Each message that reaches the agent starts with a sender line. This
-  holds also for each message during a turn, and for each message of the
+- Each message that reaches the agent ends with a sender line. This holds
+  also for each message during a turn, and for each message of the
   starter.
+- The member's text comes first, then the lines of the attached files, an
+  empty line, the sender line, and any repository line and branch line
+  (skill list decision 3). Reason: a skill text at the start of the member's
+  text then starts the message, so Claude runs it.
+- Exception: when the text of a Claude message starts with `/` and a word
+  that names no skill of the Claude list, the sender line and any
+  repository line and branch line come first, then an empty line and the
+  text. Reason: Claude reads such a word as a command. With the sender line at the end, Claude ran
+  its built-in command `/context`. The app does not know the effects of a
+  built-in command, such as `/clear`, so no message runs one.
+- The instructions of an older session still say that each message starts
+  with a sender line, because a session keeps its instructions for its
+  whole life.
 - The sender line gives the display name, the GitHub login, and the
   member ID of the member who sent the message (decision 283). For a
   member without a display name, it gives only the GitHub login and the
@@ -38,8 +51,8 @@ number names a decision of the change that added the
   of a sender line, as [Late answers](secret-requests.md#late-answers)
   says.
 - The [wake](session-watches.md#the-wake-line) of a watch is a line of the
-  app too, not a message of a member. It reaches the agent as a message, so
-  it starts with a sender line, and the words of the wake follow it.
+  app too, not a message of a member. It reaches the agent as a message,
+  with its sender line under the rules above.
 - That sender line names the member who set the watch. When the wake joins
   a running turn, it names the sender of that turn, as
   [Delivery](session-watches.md#delivery) says.

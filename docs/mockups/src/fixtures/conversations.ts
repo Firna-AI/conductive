@@ -53,6 +53,7 @@ import { conversationKeys } from './conversationKeys'
 import { answerFileConversations } from './answerFiles'
 import { fileMentionConversations } from './fileMentions'
 import { sessionLinkConversations } from './sessionLinkConversations'
+import { skillConversations } from './skills'
 import { workspaceLinkConversations } from './workspaceLinkConversations'
 
 export type ToolKind = 'read' | 'search' | 'create' | 'edit' | 'run'
@@ -253,6 +254,7 @@ export const conversations: Readonly<
   ...workspaceLinkConversations(history),
   ...sessionLinkConversations(history),
   ...fileMentionConversations(history),
+  ...skillConversations(history),
   ...answerFileConversations(history),
   ...workConversations({
     start: autocompleteStart,

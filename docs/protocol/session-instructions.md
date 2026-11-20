@@ -1,11 +1,12 @@
-# Agent instructions: the same text for the life of a session
+# Session instructions
 
-This doc holds the requirements and the decisions in force for the agent
-instructions that a session keeps for its whole life, and for the facts
-that the messages give in their place. It belongs to
-[Agent instructions](agent-instructions.md), which states what the
-instructions hold and gives the terms. A decision number names a dated
-record, as [Decision numbers](../architecture.md#decision-numbers) says.
+This page belongs to [Agent instructions](agent-instructions.md). It
+states how a session keeps its agent instructions for its whole life, and
+how each agent gets them. The terms are those of
+[Agent instructions](agent-instructions.md#terms) and of the
+[architecture doc](../architecture.md#terms). A decision number names a
+dated record, as [Decision numbers](../architecture.md#decision-numbers)
+says.
 
 ## The same text for the life of a session
 
@@ -42,3 +43,9 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
   need instructions to call it.
   [The workspace token](tokens-and-secrets.md#the-workspace-token) states
   what the token allows.
+
+## How each agent gets them
+
+[How each agent gets them](agent-instructions-delivery.md) states how
+Claude and Codex get the agent instructions, and the ways that were
+rejected.

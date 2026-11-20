@@ -307,8 +307,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - [The marks](design-marks.md) give the list mark, the mark
   of the header, and the marks of automation runs. They also give the mark of
   an agent.
-- [Workspace, session, and file chips](design-chat.md#workspace-session-and-file-chips)
-  gives the chips, the list of `@`, and chip removal.
+- [Workspace, session, file, and skill chips](design-chat.md#workspace-session-file-and-skill-chips)
+  gives the workspace links, the session links, file mentions, the list of
+  `@`, skill chips, the list of `/`, and chip removal.
   [Links in text](design-links.md) gives the other links and `TextLink`.
 - The parts of automations live in `src/components/automations/`. The automation
   page puts its form beside the Runs column on desktop. A phone shows a
