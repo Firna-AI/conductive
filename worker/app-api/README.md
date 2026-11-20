@@ -183,7 +183,10 @@ View writes cannot change this branch.
   The org stays, and the request still answers 201.
 - A save that adds a repository starts an image build for the admin who
   added it, also after a failed build. A repeated save and a removal start
-  no build. A running job takes the request without starting another job.
+  no build. An ordinary running job takes the request without starting
+  another job. During a hidden switch build, the add records a member
+  build that waits. [Provider switches](../lifecycle/provider-switches.md)
+  gives its first log line and its execution deadline.
   A failed start writes one fixed warning through `warnWorker`. The saved
   choice stays, and the reply keeps the repository list and HTTP 200.
 - `REPOSITORY_ORDER` in [`repository-order.ts`](../data/repository-order.ts)

@@ -50,7 +50,10 @@ export async function advanceBuildStep(
   if (status !== 'ready') return false
   // A long build receives the same safety deadline as other active work.
   await provider.setAutoStop(job.sandboxId, 1_800)
-  if (dependencies.now() >= job.startedAt + IMAGE_BUILD_TIME_LIMIT_MS)
+  if (
+    dependencies.now() >=
+    (job.executionStartedAt ?? job.startedAt) + IMAGE_BUILD_TIME_LIMIT_MS
+  )
     throw new JobTimeLimit('build')
   if (job.phase === 'snapshot') {
     if (job.snapshotName === null)

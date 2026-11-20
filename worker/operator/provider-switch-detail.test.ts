@@ -10,6 +10,7 @@ import { addMember, directoryUser, orgPage } from './directory.test-support'
 import { seedBuild, seedOrg, seedWorkspace } from './overview.test-support'
 import { setupProviderTests } from './providers.test-support'
 import { operatorWrite } from './waitlist.test-support'
+import { seedSwitchImage } from './provider-switch-record.test-support'
 
 const fixtureForTest = setupProviderTests()
 
@@ -53,6 +54,12 @@ it('shows the newest failed switch and the last completed switch with separate t
   const harness = fixtureForTest()
   const cookie = await harness.login()
   await seedOrg(harness, { id: 'org' })
+  await seedSwitchImage(harness, 'org')
+  await harness.env.DB.prepare(
+    "UPDATE orgs SET suspended_at = ? WHERE id = 'org'",
+  )
+    .bind(TEST_TIME)
+    .run()
   const path = operatorOrgSwitchPath('org')
   const first = await harness.request(
     path,
@@ -68,6 +75,7 @@ it('shows the newest failed switch and the last completed switch with separate t
   await harness.env.DB.prepare(
     "UPDATE orgs SET provider_account = 'e2b' WHERE id = 'org'",
   ).run()
+  await seedSwitchImage(harness, 'org', 'e2b', 'source-e2b')
   harness.setTime(TEST_TIME + 200)
   const next = await harness.request(
     path,
@@ -152,10 +160,8 @@ it('records a refresh wait and each build eligibility wait without refusing a sw
     state: 'running',
     phase: 'sources',
   })
-  await harness.env.DB.prepare(
-    `INSERT INTO org_images (org_id, provider_account, image_name)
-     SELECT id, 'boat', 'good-image' FROM orgs WHERE id != 'no-image'`,
-  ).run()
+  for (const id of ['refresh', 'suspended', 'deleted', 'admin', 'ready'])
+    await seedSwitchImage(harness, id, 'boat', `source-${id}`)
   await harness.env.DB.prepare(
     "UPDATE orgs SET suspended_at = ? WHERE id IN ('suspended', 'no-image')",
   )
@@ -176,13 +182,13 @@ it('records a refresh wait and each build eligibility wait without refusing a sw
   )
     .bind(TEST_TIME)
     .run()
-  for (const [id, waitReason] of [
-    ['refresh', 'job'],
-    ['suspended', 'suspended'],
-    ['deleted', 'deleted'],
-    ['admin', 'admin'],
-    ['ready', null],
-    ['no-image', null],
+  for (const [id, waitReason, state] of [
+    ['refresh', 'job', 'waiting'],
+    ['suspended', 'suspended', 'waiting'],
+    ['deleted', 'deleted', 'waiting'],
+    ['admin', 'admin', 'waiting'],
+    ['ready', null, 'building'],
+    ['no-image', null, 'completed'],
   ] as const) {
     const reply = await harness.request(
       operatorOrgSwitchPath(id),
@@ -191,10 +197,10 @@ it('records a refresh wait and each build eligibility wait without refusing a sw
     )
     expect(reply.status, id).toBe(200)
     expect(await reply.json()).toMatchObject({
-      switch: { state: 'waiting', waitReason, endRunningJob: false },
+      switch: { state, waitReason, endRunningJob: false },
     })
     expect((await orgPage(harness, cookie, id)).switchWaitReason).toBe(
-      waitReason,
+      state === 'building' ? 'job' : waitReason,
     )
   }
   expect(

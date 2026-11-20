@@ -9,13 +9,22 @@ import { orgPage } from './directory.test-support'
 import { seedBuild, seedOrg } from './overview.test-support'
 import { setupProviderTests } from './providers.test-support'
 import { operatorWrite } from './waitlist.test-support'
+import {
+  seedSwitchImage,
+  seedSwitchBlockingJob,
+  makeRecordedSwitchBuild,
+} from './provider-switch-record.test-support'
 
 const fixtureForTest = setupProviderTests()
 
-it('records the switch and the selected job stop without changing the account or starting a build', async () => {
+it('records the switch and selected job stop, then waits for Lift before changing the account or starting a build', async () => {
   const harness = fixtureForTest()
   const cookie = await harness.login()
   await seedOrg(harness, { id: 'org/with%id' })
+  await seedSwitchImage(harness, 'org/with%id')
+  await harness.env.DB.prepare('UPDATE orgs SET suspended_at = ? WHERE id = ?')
+    .bind(TEST_TIME, 'org/with%id')
+    .run()
   await seedBuild(harness, {
     id: 'admin-build',
     orgId: 'org/with%id',
@@ -45,13 +54,8 @@ it('records the switch and the selected job stop without changing the account or
       endRunningJob: true,
       endRunningJobId: 'admin-build',
       state: 'waiting',
-      waitReason: 'job',
-      waitingJob: {
-        id: 'admin-build',
-        kind: 'build',
-        startedAt: TEST_TIME,
-        starter: { githubId: 7, login: 'octocat' },
-      },
+      waitReason: 'suspended',
+      waitingJob: null,
       buildId: null,
       buildStartedAt: null,
       buildCompletedAt: null,
@@ -81,11 +85,17 @@ it('records the switch and the selected job stop without changing the account or
   expect(page.providerSwitch).toEqual(body.switch)
   expect(page.lastProviderSwitch).toBeNull()
   expect(page.runningJob).toEqual(body.switch?.waitingJob)
-  expect(page.switchWaitReason).toBe('job')
+  expect(page.switchWaitReason).toBe('suspended')
   expect(
-    (await harness.env.DB.prepare('SELECT id, state FROM image_builds').all())
-      .results,
-  ).toEqual([{ id: 'admin-build', state: 'running' }])
+    (
+      await harness.env.DB.prepare(
+        'SELECT id, state FROM image_builds ORDER BY id',
+      ).all()
+    ).results,
+  ).toEqual([
+    { id: 'admin-build', state: 'failed' },
+    { id: 'source-build', state: 'succeeded' },
+  ])
   expect(harness.boat.requests).toEqual([])
 })
 
@@ -129,6 +139,7 @@ it('keeps one open switch when operator requests overlap and permits a new switc
   const harness = fixtureForTest()
   const cookie = await harness.login()
   await seedOrg(harness, { id: 'org' })
+  await seedSwitchBlockingJob(harness, 'org')
   const path = operatorOrgSwitchPath('org')
   const start = () =>
     harness.request(path, cookie, operatorWrite({ providerAccount: 'e2b' }))
@@ -140,9 +151,7 @@ it('keeps one open switch when operator requests overlap and permits a new switc
       'SELECT COUNT(*) FROM org_provider_switches',
     ).first('COUNT(*)'),
   ).toBe(1)
-  await harness.env.DB.prepare(
-    "UPDATE org_provider_switches SET state = 'building'",
-  ).run()
+  await makeRecordedSwitchBuild(harness, 'org')
   const repeated = await harness.request(
     path,
     cookie,
@@ -155,6 +164,7 @@ it('keeps one open switch when operator requests overlap and permits a new switc
   expect(
     (await harness.request(path, cookie, operatorWrite({}, 'DELETE'))).status,
   ).toBe(200)
+  await seedSwitchBlockingJob(harness, 'org', 'next-build')
   expect((await start()).status).toBe(200)
   expect(
     (
@@ -169,6 +179,7 @@ it('keeps the first stop operator and time and hides the stopped switch on the o
   const harness = fixtureForTest()
   const cookie = await harness.login()
   await seedOrg(harness, { id: 'org' })
+  await seedSwitchBlockingJob(harness, 'org')
   const path = operatorOrgSwitchPath('org')
   expect(
     (await harness.request(path, cookie, operatorWrite({}, 'DELETE'))).status,

@@ -107,6 +107,8 @@ workspace object.
 
 [Image builds](image-builds.md) describes build sandboxes, the runner version of an image, suspension,
 provider retries, logs, snapshot leases, and refresh timers.
+[Provider switches](provider-switches.md) gives hidden switch builds, member
+build waits, and the atomic publication of a new account.
 The [software image area](../software-image/README.md) builds the shared
 image that a build of an org without an org image starts from.
 

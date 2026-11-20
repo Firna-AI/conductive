@@ -37,7 +37,7 @@ export async function readOperatorOrg(
         `SELECT o.id, o.provider_account AS providerAccount, o.name, o.initials, o.created_at AS createdAt,
            (SELECT COUNT(*) FROM repositories r WHERE r.org_id = o.id AND r.selected = 1) AS repositories,
            (SELECT COUNT(*) FROM image_builds b JOIN image_build_jobs j ON j.build_id = b.id
-             WHERE b.org_id = o.id AND j.phase != 'done') AS builds,
+             WHERE b.org_id = o.id AND j.phase != 'done' AND b.waiting_for_switch_id IS NULL) AS builds,
            o.suspended_at AS suspendedAt, actor.github_id AS operatorGithubId,
            actor.github_login AS operatorLogin, o.deleted_at AS deletedAt,
            o.purge_after AS purgeAt

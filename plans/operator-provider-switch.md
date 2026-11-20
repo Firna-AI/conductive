@@ -417,6 +417,12 @@ already in force.
 - The terms revision `TERMS_VERSION` in `src/shared/terms.ts` changes to
   `2026-11-20-provider-switch`, because the Terms text changed. Reason:
   each earlier change of the Terms text did the same, such as #423.
+- A second migration recreates the index `image_builds_running` so that
+  it leaves out a build that waits for a switch build. Reason: a build
+  that waits shows as running, and the old index allowed one running row
+  for each org. The index still allows one build that executes. Agent
+  call of the orchestrator during Milestone 4, after the blocker of the
+  backend agent.
 
 ## Milestone 1: Mockups
 
@@ -459,23 +465,23 @@ Depends on: 2
 
 Depends on: 3
 
-- [ ] Start the switch build on the target account, as switch decisions 1, 2, and 3 say.
-- [ ] Leave switch builds out of every members' read, and show them on the org page of the operator section.
-- [ ] Make a Build computer or a Try again of an admin wait for a running switch build.
-- [ ] Change the account of the org in the same write that publishes the image of a switch build.
-- [ ] Handle a failed build, a switch back, an org with no good image, a suspended org, and an org with no active admin, as the design says.
-- [ ] Start a waiting switch build at Lift, at Restore of a deleted org, and from the image timer.
-- [ ] End a switch build at a suspension, and make the switch wait for Lift.
-- [ ] Count the time limit of a build that waits for a switch build from the end of its wait.
-- [ ] Save "Another update of the cloud computer stopped this build. Try again." for a build that the switch question ends, also for a running refresh.
-- [ ] Make the switch build start from the software image, with no previous image and no added build.
-- [ ] Read the newest build on the account of the org in `staleImageOrgs` of `worker/lifecycle/org-image-refresh-data.ts`.
-- [ ] Carry a push that arrives during the switch build to the new image.
-- [ ] Use the current account of the org for a retry of a create.
-- [ ] End a switch build at a suspension of its admin, and start it again for another active admin.
-- [ ] Make an add of a repository during a switch build start a build that waits.
-- [ ] Update the developer docs that still call the account fixed: `worker/lifecycle/provider-accounts.md`, `worker/lifecycle/image-builds.md`, and `worker/lifecycle/key-code.md`.
-- [ ] Add tests for each case, also a create during the switch build and a resume of a workspace on the old account.
+- [x] Start the switch build on the target account, as switch decisions 1, 2, and 3 say.
+- [x] Leave switch builds out of every members' read, and show them on the org page of the operator section.
+- [x] Make a Build computer or a Try again of an admin wait for a running switch build.
+- [x] Change the account of the org in the same write that publishes the image of a switch build.
+- [x] Handle a failed build, a switch back, an org with no good image, a suspended org, and an org with no active admin, as the design says.
+- [x] Start a waiting switch build at Lift, at Restore of a deleted org, and from the image timer.
+- [x] End a switch build at a suspension, and make the switch wait for Lift.
+- [x] Count the time limit of a build that waits for a switch build from the end of its wait.
+- [x] Save "Another update of the cloud computer stopped this build. Try again." for a build that the switch question ends, also for a running refresh.
+- [x] Make the switch build start from the software image, with no previous image and no added build.
+- [x] Read the newest build on the account of the org in `staleImageOrgs` of `worker/lifecycle/org-image-refresh-data.ts`.
+- [x] Carry a push that arrives during the switch build to the new image.
+- [x] Use the current account of the org for a retry of a create.
+- [x] End a switch build at a suspension of its admin, and start it again for another active admin.
+- [x] Make an add of a repository during a switch build start a build that waits.
+- [x] Update the developer docs that still call the account fixed: `worker/lifecycle/provider-accounts.md`, `worker/lifecycle/image-builds.md`, and `worker/lifecycle/key-code.md`.
+- [x] Add tests for each case, also a create during the switch build and a resume of a workspace on the old account.
 
 ## Milestone 5: The operator screen
 

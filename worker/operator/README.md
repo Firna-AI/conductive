@@ -46,8 +46,13 @@ request returns that record and keeps its original choice.
 DELETE accepts `{}`. It changes the open switch to `stopped` and saves
 the stop operator and time. The reply is HTTP 200 with the stopped record
 in `switch`, or null when no switch was open. A repeat keeps the first stop.
-These routes only record the actions. They start no build, end no job,
-and change no org or workspace account.
+POST also wakes the image coordinator. It ends the selected job when the
+operator asked for that, or waits for it. It starts the hidden switch build
+on the target account when the org can run it. The account changes only
+with successful image publication. With no good image and no running job,
+it changes at once. DELETE ends a running switch build and releases its
+waiting member build. [Provider switches](../lifecycle/provider-switches.md)
+gives input capture, cleanup, failure causes, and atomic publication.
 
 The org detail always adds `OperatorOrgSwitchDetail` fields. The shared
 type makes them optional so existing app readers and older replies still
@@ -116,7 +121,11 @@ A failed workspace call does not fail the lift.
 `pendingWorkspaceIds` lists the checks that did not finish.
 A repeat changes nothing, writes no event, and runs no workspace check.
 Its `liftedAt` is null and its pending list is empty.
-A lift brings back no session, workspace token, preview, or build.
+An actual org Lift wakes its waiting provider switch. User Lift wakes
+waiting switches in that user's orgs. A user suspension can restart a
+switch for another active admin.
+A lift brings back no session, workspace token, preview, or previous build.
+A waiting switch starts a new build attempt.
 A deleted org keeps its deletion and its restore window.
 The org and user pages show only the current suspension, never its event history.
 

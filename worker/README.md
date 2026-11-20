@@ -71,7 +71,7 @@ On the app hostname, the Worker serves these API routes:
 - `GET /api/operator/users`, the user search and cursor pages for operators.
 - `GET /api/operator/orgs/<orgId>`, the org page for operators.
 - `POST` and `DELETE /api/operator/orgs/<orgId>/provider-switch`, the
-  operator's switch and stop records, as [Provider account switches](operator/README.md#provider-account-switches) says.
+  operator's provider account switch and stop, as [Provider account switches](operator/README.md#provider-account-switches) says.
 - `GET /api/operator/users/<githubId>`, the user page for operators.
 - The operator's waitlist list and approval, invite code list, creation and
   disable, sign-up pause, and waitlist switch, as the [operator area](operator/README.md#waitlist-codes-and-sign-ups) says.

@@ -8,6 +8,11 @@ import type { RepositoryLocation } from './repository-locations'
 import type { ImageSoftwareArtifact } from './image-software'
 import { serializeSavedScript, type SavedScript } from './saved-script'
 import { writeBuildEnd } from './build-end-data'
+import {
+  switchAdmission,
+  switchAdmissionStatements,
+  type SwitchBuildAdmission,
+} from './build-switch-admission'
 
 export async function finishUnscheduledBuild(
   db: D1Database,
@@ -32,7 +37,7 @@ export async function finishUnscheduledBuild(
 
 export async function insertBuild(
   db: D1Database,
-  input: {
+  input: SwitchBuildAdmission & {
     id: string
     orgId: string
     providerAccount: string
@@ -50,13 +55,16 @@ export async function insertBuild(
     now: number
     nextImageRefreshAt?: number
   },
-): Promise<void> {
-  await db.batch([
+): Promise<boolean> {
+  const admission = switchAdmission(input)
+  const result = await db.batch([
     db
       .prepare(
         `INSERT INTO image_builds (id, org_id, kind, state, settings_revision,
-       runner_protocol_version, started_by_user_id, started_at, provider_account)
-       SELECT ?, ?, ?, 'running', ?, ?, ?, ?, ? WHERE ${activeOrgIdPredicate('?')}`,
+       runner_protocol_version, started_by_user_id, started_at, provider_account,
+       operator_switch_id, waiting_for_switch_id, execution_started_at)
+       SELECT ?, ?, ?, 'running', ?, ?, ?, ?, ?, ?, ?, ?
+       WHERE ${activeOrgIdPredicate('?')} ${admission.sql}`,
       )
       .bind(
         input.id,
@@ -67,7 +75,11 @@ export async function insertBuild(
         input.userId,
         input.now,
         input.providerAccount,
+        input.operatorSwitchId ?? null,
+        input.waitingForSwitchId ?? null,
+        input.waitingForSwitchId ? null : input.now,
         input.orgId,
+        ...admission.values,
       ),
     db
       .prepare(
@@ -106,8 +118,10 @@ export async function insertBuild(
         input.nextImageRefreshAt ?? null,
         input.id,
       ),
+    ...switchAdmissionStatements(db, input),
   ])
   await requireActiveOrg(db, input.orgId)
+  return result[0].meta.changes === 1
 }
 
 export async function publishBuild(

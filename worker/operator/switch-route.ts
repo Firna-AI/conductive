@@ -6,6 +6,12 @@ import type { RequestContext } from '../security/gate'
 import { isOperator } from './access'
 import { readOrgSwitchContext } from './switch-context-data'
 import { readSwitchRecord } from './switch-data'
+import { imageRuntime } from '../lifecycle/runtime'
+import {
+  wakeProviderSwitch,
+  stopProviderSwitchBuild,
+} from '../lifecycle/provider-switch-control'
+import { readBuildJob, jobSoftware } from '../lifecycle/build-data'
 import {
   recordProviderSwitch,
   recordProviderSwitchStop,
@@ -76,6 +82,21 @@ export async function operatorSwitchRoute(
       context.user.id,
       dependencies.now(),
     )
+    if (id) {
+      const runtime = imageRuntime(env, dependencies)
+      await stopProviderSwitchBuild(runtime, orgId)
+      const stopped = await readSwitchRecord(env.DB, orgId, id)
+      if (stopped?.buildId) {
+        const job = await readBuildJob(env.DB, orgId, stopped.buildId)
+        await runtime.scheduler.schedule(
+          orgId,
+          jobSoftware(job),
+          dependencies.now(),
+          job.buildId,
+          job.providerAccount,
+        )
+      }
+    }
   } else {
     const input = readSwitchRequest(
       context.body,
@@ -93,6 +114,7 @@ export async function operatorSwitchRoute(
       waitReason: org.waitReason,
     })
     if (id === null) throw invalidSwitch()
+    await wakeProviderSwitch(imageRuntime(env, dependencies), orgId)
   }
   return Response.json({
     switch: id === null ? null : await readSwitchRecord(env.DB, orgId, id),

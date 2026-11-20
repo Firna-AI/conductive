@@ -546,3 +546,14 @@ The migration changes no existing value, column rule, or write default.
 The previous Worker therefore keeps working on this schema.
 The [operator backend](../worker/operator/README.md#provider-account-switches)
 owns the new records.
+
+`202611201500_waiting_image_builds.sql` recreates `image_builds_running`
+with `waiting_for_switch_id IS NULL` in its condition. It permits waiting
+member builds beside one executing build. Existing values and columns
+stay unchanged. The previous Worker omits the waiting link, so its
+inserts still get null and retain the same one-running-build rule.
+The previous schema and write shapes therefore keep working. Its old
+`runningBuild` query does not understand waits and can select a waiting
+row. The new reader explicitly excludes those rows. The
+[provider switch guide](../worker/lifecycle/provider-switches.md) gives
+the atomic transition into execution and the separate execution deadline.

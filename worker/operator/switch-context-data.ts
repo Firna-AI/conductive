@@ -56,7 +56,7 @@ export async function readOrgSwitchContext(db: D1Database, orgId: string) {
         `SELECT b.id, b.kind, b.started_at AS startedAt,
          u.github_id AS starterGithubId, u.github_login AS starterLogin
          FROM image_builds b LEFT JOIN users u ON u.id = b.started_by_user_id
-         WHERE b.org_id = ? AND b.state = 'running' ORDER BY b.started_at, b.id LIMIT 1`,
+         WHERE b.org_id = ? AND b.state = 'running' AND b.waiting_for_switch_id IS NULL ORDER BY b.started_at, b.id LIMIT 1`,
       )
       .bind(orgId),
   ])
