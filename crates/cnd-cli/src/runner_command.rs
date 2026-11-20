@@ -33,6 +33,8 @@ use cnd_runner::reports::handler::{ReportCommandHandler, ReportDependencies};
 use cnd_runner::repository::git::{Cancellation, ChildGit};
 use cnd_runner::repository::io::LocalRepositoryIo;
 use cnd_runner::runtime::{RunExit, Runner, RunnerCore};
+use cnd_runner::skills::helper::{NodeSkillScanner, SkillHelpers};
+use cnd_runner::skills::reporter::SkillReporter;
 use cnd_runner::socket::WebSocketConnector;
 use cnd_runner::state::store::{DurableStore, EventStore};
 use cnd_runner::update::ReleaseReadiness;
@@ -228,13 +230,30 @@ async fn run_once(
         saving.clone(),
         filter.clone(),
     ));
-    let watches = Arc::new(ReportWatchService::new(
-        Arc::new(LinuxWatchDriver),
-        files.clone(),
-        Some(ports.clone()),
-        configuration.cwd.clone(),
-        PathBuf::from("/run/conductive-terminal/restore-ended"),
+    let skills = Arc::new(SkillReporter::new(
+        Arc::new(NodeSkillScanner::new(
+            helpers.clone(),
+            filter.clone(),
+            configuration.cwd.to_string_lossy().into_owned(),
+            configuration.home.to_string_lossy().into_owned(),
+        )),
+        saving.clone(),
+        filter.clone(),
     ));
+    let agent_helpers = Arc::new(SkillHelpers {
+        ports: helpers.clone(),
+        skills: skills.clone(),
+    });
+    let watches = Arc::new(
+        ReportWatchService::new(
+            Arc::new(LinuxWatchDriver),
+            files.clone(),
+            Some(ports.clone()),
+            configuration.cwd.clone(),
+            PathBuf::from("/run/conductive-terminal/restore-ended"),
+        )
+        .with_skills(skills.clone()),
+    );
     let startup = Arc::new(RunnerStartup {
         home: configuration.home.clone(),
         helpers: helpers.clone(),
@@ -246,7 +265,7 @@ async fn run_once(
             store: store.clone(),
             emitter: chat,
             credentials: filter.clone(),
-            helpers,
+            helpers: agent_helpers,
             repositories,
             clock: clock.clone(),
             startup,
@@ -258,6 +277,7 @@ async fn run_once(
         ReportDependencies {
             files,
             ports: Some(ports),
+            skills: Some(skills),
             emitter: saving,
             link: link.clone(),
             store: store.clone(),

@@ -31,7 +31,9 @@ Move requests can instead name the top level. Their section ID is optional
 when the request gives a target.
 Create and workspace write replies can carry an optional notice.
 Dependent types include workspace and session records, messages, attachments,
-model choices, file reports, port reports, startup reports, and commit authors.
+model choices, file reports, port reports, skill reports, startup reports, and commit authors.
+Skill metadata has no private path. Only helper scan results and explicit
+Codex input carry the absolute path of a skill file.
 `SessionLogin` names a personal owner or org without a credential.
 `Session.login` is optional for older clients and stored records.
 `Session.defaultLogin` names the starter's current default owner before the first accepted message.
@@ -96,6 +98,7 @@ One test compares the TypeScript runtime limits with their Rust constants.
 - [Tool details](src/runner_tool_detail.rs) defines the private parts of a complete tool-detail source.
 - [File reports](src/file_tree.rs) defines report parts, deltas, and their identities.
 - [File results](src/runner_files.rs) defines read commands and their results.
+- [Skill reports](src/skills.rs) defines public metadata and private discovery/input records.
 - [Helper messages](src/sdk_helper.rs) defines JSON line requests and outputs.
 - [Helper options](src/sdk_helper_options.rs) defines private start options and input.
 - [Provider events](src/provider_events.rs) defines adapter results and background state.

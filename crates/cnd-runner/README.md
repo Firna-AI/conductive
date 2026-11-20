@@ -16,7 +16,8 @@ The `conductive runner` command composes this crate. The installed service runs 
 - Read and write the existing Node state file format without a migration.
 - Read safe repository files and compare Git changes through private indexes and objects.
 - Stream repository files over private loopback HTTP for HTML file previews.
-- Send bounded file reports and stable listening-port reports.
+- Send bounded file reports, stable listening-port reports, and agent skill reports.
+- Keep private skill paths in memory and supply explicit Codex skills on each send.
 - Watch recursive repository changes and repair watches after a restore.
 - Prepare ignored context storage, including linked Git worktrees.
 - Run independent sessions through private Node SDK helper processes.
@@ -111,7 +112,12 @@ together. Retained reports select the newest pending state under the store lock.
 Port scans inspect Linux socket tables and process metadata. They never read
 process environments. Reports require two successful scans for additions and
 removals. Complete labels stay cached for each socket identity.
-Native watches debounce file events by 100 ms. Restore polling reopens the
+A separate SDK helper reads Claude skill folders and the Codex app-server
+list, with folder fallback. Rust filters whole skill sources, applies name,
+count, and byte limits, and saves the report and refresh receipt together.
+The store retains the latest skill metadata without private paths.
+
+Native watches debounce file and skill events by 100 ms. Restore polling reopens the
 live repository path once. Port scans run on an independent two-second timer.
 
 ## Quick Start
@@ -234,6 +240,8 @@ and connection drops. It does not run the Worker.
 - [prepare.rs](src/reports/prepare.rs): `ReportFilter` receives complete sources before byte limits.
 - [reporter.rs](src/ports/reporter.rs): `PortReporter` keeps stable bounded port lists.
 - [proc.rs](src/ports/proc.rs): `ProcPortScanner` captures Linux listeners and complete cached labels.
+- [reporter.rs](src/skills/reporter.rs): `SkillReporter` orders discovery and saves complete bounded skill reports.
+- [helper.rs](src/skills/helper.rs): `NodeSkillScanner` reads private metadata and `SkillHelpers` supplies current Codex paths.
 - [service.rs](src/watcher/service.rs): `ReportWatchService` owns watch debounce, restore repair, and port timing.
 
 ### Related Docs

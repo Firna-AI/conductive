@@ -9,6 +9,7 @@ import {
   MentionsProvider,
   type ChatMentions,
 } from '../mentions/MentionsContext'
+import { FakeSkills } from '../mentions/skills-test-kit'
 import { AgentText } from './AgentText'
 import { MessageLine } from './MessageLine'
 
@@ -28,6 +29,7 @@ const flow: FileEntry = {
 function mentionsOf(files: ChatMentions['files']): ChatMentions {
   return {
     files,
+    skills: new FakeSkills({ claude: [], codex: [] }),
     openFile: () => undefined,
     showFolder: () => undefined,
     href: (entry) => `/files/${entry.path}`,

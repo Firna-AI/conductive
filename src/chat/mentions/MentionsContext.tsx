@@ -9,6 +9,7 @@ import type { FileEntry } from '../../shared/generated/FileEntry'
 import type { LineRange } from '../../shared/line-target'
 import type { ChatPictures } from '../../files/page/picture-reads'
 import { mentionable } from './mention-rows'
+import type { SkillsStore } from './mention-skills'
 
 /**
  * What the chat reads of the kept files of the workspace: the store of the
@@ -30,11 +31,14 @@ interface MentionFiles {
 
 /**
  * The files and folders that the composer of a workspace chat can mention,
- * and what a press on a chip does. The shell gives
- * them. Each function stays the same while the workspace shows.
+ * the skills that it can name after `/`, and what a press on a chip does.
+ * The shell gives them. Each function stays the same while the workspace
+ * shows.
  */
 export interface ChatMentions {
   files: MentionFiles
+  /** The latest skill lists of the workspace, as `MentionSkills` says. */
+  skills: SkillsStore
   /** Reads pictures only while the sandbox runs. Never starts or resumes it. */
   pictures?: ChatPictures
   /**

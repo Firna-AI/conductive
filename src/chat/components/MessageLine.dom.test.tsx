@@ -11,6 +11,7 @@ import {
   MentionsProvider,
   type ChatMentions,
 } from '../mentions/MentionsContext'
+import { FakeSkills } from '../mentions/skills-test-kit'
 import { MessageLine } from './MessageLine'
 
 /** The text of a node, with each run of white space as one space. */
@@ -109,6 +110,7 @@ it('shows file chips in the open line, and nothing that takes focus in its hidde
   const { files } = await chatFiles([entry])
   const mentions: ChatMentions = {
     files,
+    skills: new FakeSkills({ claude: [], codex: [] }),
     openFile: () => undefined,
     showFolder: () => undefined,
     href: (item) => `/files/${item.path}`,

@@ -11,6 +11,7 @@ import { useChatWorkspaces } from './chatWorkspaces'
 import { MentionChip } from './MentionChip'
 import { SentFileChip } from './SentFileChip'
 import { SessionChip, type ChipSession } from './SessionChip'
+import { SkillChip } from './SkillChip'
 import { CodeText, WebLinkPart } from './WebLinkText'
 import {
   linkPage,
@@ -131,6 +132,9 @@ export function Part(props: {
     )
   }
   if (part.kind === 'mention') return <MentionChip part={part} />
+  if (part.kind === 'skill') {
+    return <SkillChip mention={part.source} skill={part.skill} />
+  }
   return <ChatLink answer={props.answer} part={part} />
 }
 
@@ -154,7 +158,8 @@ export function LinkText(props: { href: string; source?: string }) {
  * `https` address is a link, as `WebLinkPart` says, and a Markdown link
  * shows as typed. Code that holds only an address shows it as a link in its
  * code box, and other code stays code. `mentions` makes each mention of a
- * file or a folder of the tree a chip that opens the file. `AnswerText`
+ * file or a folder of the tree a chip that opens the file, and each skill
+ * of the list a skill chip, which opens nothing. `AnswerText`
  * draws the text of an answer.
  *
  * `files` are the attached files of a sent message. A mention of the copy
