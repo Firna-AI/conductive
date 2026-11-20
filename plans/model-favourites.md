@@ -134,6 +134,59 @@ Contract owners:
   favourites gets the same list. A saved default of a member does not
   join the list.
 
+### 4. What Add a favourite adds
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Docs or spec.
+- **Location:** `docs/mockups/src/components/settings/FavouritesSection.tsx`, Milestone 6.
+- **Terms:**
+  - **Exact copy:** two favourites with the same agent, model, effort, and fast mode. The save keeps only the first.
+- **Background:** Decision 2 A makes the Favourites section of Preferences the only place that adds a favourite. Each mockup view holds five favourites, so Add a favourite is always off there.
+- **Problem:** No rule says which choice a new favourite starts with, or when the list saves it.
+- **Impact if no action:** Milestone 6 guesses. A new row that copies a favourite disappears at the save.
+- **Root question:** How does a member choose and add a new favourite?
+- **Options:**
+  - **A.** Add a row at the end with the default of new workspaces, and open its picker. A copy disappears at the save. Effort: Small.
+  - **B.** Open the list of every model. A pick adds that model at the effort of the default of new workspaces, or the nearest lower one, with Fast off. The row picker then changes the effort and Fast. A pick that makes an exact copy adds nothing. Effort: Small.
+  - **C.** Open a small panel with one picker and Add. Add is off for an exact copy. It needs one more control and a new mockup. Effort: Medium.
+  - **D.** As B, but when the starting choice is already a favourite, the pick takes the nearest effort of that model that no favourite holds, lower efforts first, with Fast off. When the model has no such effort, the pick adds nothing, and a line says so. The member can get an effort that they did not pick, which the row picker then changes. Effort: Small.
+  - **E.** A wider fix, with any option: the add and each pick in the picker of a row go through one helper. When the new list holds an exact copy, it saves nothing, and a line under the list says "Opus 5.5 High is already a favourite." It adds a refusal, a mockup view, and lines in the protocol doc. Effort: Medium.
+  - Each option adds the new favourite at the end of the list.
+- **Left out:**
+  - A row in the model menu: decision 2 A rejected it.
+  - Five fixed slots in place of Add a favourite: it breaks the rule that Add a favourite is off at five.
+- **Wider fix:** E. Today a pick in the picker of a row can also copy another favourite, and the save then drops the row with no word.
+- **Previous examples:** Add trigger of an automation opens a menu, and a pick there adds a row, as B and D do.
+- **Recommendation:** D. It keeps the one pick of B and never ends a pick with nothing. The first recommendation was B, which the options check of 20 November 2026 changed, because B adds nothing when the member picks a model that the list already holds at the starting effort, such as Opus 5.5 High.
+- **Action:** ask the user, because this behaviour has no requirement, and the options trade a control against a copy that the save drops.
+
+### 5. Shell pickers on a phone: sheet or menu
+
+- **Severity:** Low. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Mockup.
+- **Location:** `src/shell/ui/Menu.tsx` (`MenuButton`), and the phone views of `app/new-workspace/fast`, `app/account/preferences/model-menu`, and `app/automations/automation/new/org-models`.
+- **Terms:**
+  - **Shell pickers:** the pickers of New workspace, of the default of new workspaces in Preferences, and of an automation.
+  - **Sheet:** a panel that rises from the bottom of a phone screen.
+- **Background:** On a phone, the app opens the menu of a shell picker as a sheet, in `src/shell/ui/Menu.tsx`. The mockups draw a menu beside the picker. The difference existed before this change.
+- **Problem:** The spec and the app disagree, and the difference now also covers All models.
+- **Impact if no action:** Milestone 5 builds All models in a sheet with no mockup that shows it.
+- **Root question:** How does the model menu open on a phone, in each picker that shows it?
+- **Options:**
+  - **A.** Draw a sheet in the mockups, as the app does. All models then replaces the rows of the sheet, with Back. Effort: Small.
+  - **B.** Change the app to open a menu beside the picker, as the mockups draw. Effort: Small.
+  - **C.** Keep both, and record the difference. It breaks the rule of the `mockups` skill that the mockups match the implementation. Effort: Small.
+  - **D.** Every picker opens the model menu as a sheet on a phone, the session picker too. It changes the session picker on `origin/main`, and the phone views of several mockup pages. Effort: Medium.
+  - **E.** A wider fix, with B or D: every picker uses one model picker component, so the phone layout and All models are built once. Effort: Medium.
+  - B changes only the model pickers. The Restart menu also uses `MenuButton`, and it stays a sheet on a phone.
+- **Left out:** None.
+- **Wider fix:** E.
+- **Previous examples:** The Restart menu, a `MenuButton`, opens as a sheet on a phone, because the user asked for it on 16 November 2026. The session picker opens its menu beside the picker on a phone, as `app/chat/menu-placement` shows.
+- **Recommendation:** B, for the model pickers only. Each picker then opens the menu as the session picker and every mockup already do. The first recommendation was A, which the options check of 20 November 2026 changed, because A keeps two ways to open one menu on a phone.
+- **Action:** ask the user, because the answer decides which side of a mismatch between the mockups and the app is right.
+
 ## Design calls
 
 These calls are mine, made on 20 November 2026, unless a line says
@@ -224,10 +277,13 @@ otherwise.
   fast mode, in the route and in the setting. So no list holds two equal
   favourites.
 - A malformed entry of `CONDUCTIVE_STARTING_FAVOURITES` is left out with
-  a warning, and the other entries still work. Only a missing value or a
-  value that is not an array falls back to the app default, with a
-  warning. With no app default either, the read gives no favourites and
-  still works.
+  a warning, and the other entries still work. A missing value, a value
+  that is not an array, and a list with no entry that remains each give
+  the app default as the one starting favourite, with a warning, because
+  decision 1 A rejects a start with no favourites. With no app default
+  either, the read gives no favourites and still works.
+- A body that is not a JSON object gets `invalid_json`, as on each route.
+  A special case in the security gate for this one route was rejected.
 - `PUT /api/account/favourites` takes and gives `{ favourites }`. It
   checks each entry as `PUT /api/account/default-model` does, and does
   not check the model or the effort against the model list.
@@ -236,6 +292,13 @@ otherwise.
   moved, unchanged, to `docs/protocol/new-workspace-dialog.md`. The new
   `model-favourites.md` is a top-level protocol doc, because
   `messages-and-attachments.md` has no room for another child link.
+- The command palette gets a Favourites row in its Account group, before
+  New workspaces, which opens the Preferences tab. Its search words also
+  hold "favorites". Decision 198 lists the sections of the Account page in
+  page order, and a section has no row only for a stated reason, as Stats
+  and Deleted orgs have. So the row follows from that rule. A row that
+  opens the model menu was rejected, because the menu adds no favourite.
+  The options check of 20 November 2026 found that the rule settles it.
 - On a phone, the menu with five favourites and the six efforts of Opus
   5.5 is about 590 px high. Each menu keeps its height limit of 70% of the
   screen, so on a screen lower than about 845 px the menu scrolls, and the
@@ -279,11 +342,8 @@ menu.
 - [x] Run `npm run mockups:check`. Smoke-test the changed pages.
 - [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
-- [ ] Draw what Add a favourite adds in the Favourites section, after the
-      user answers the open question of 20 November 2026. No mockup, design
-      call, or requirement says which choice a new favourite starts with,
-      or when it saves, and every view holds five favourites, so the button
-      is always off.
+- [x] Draw what Add a favourite adds in the Favourites section. Moved,
+      unchecked, to Milestone 4, because it waits for decision 4.
 
 ## Milestone 2: Documentation and protocol
 
@@ -318,29 +378,51 @@ Depends on: 1
 
 Depends on: 2
 
-- [ ] Add a migration with the nullable `model_favourites` column of
+- [x] Add a migration with the nullable `model_favourites` column of
       `user_preferences`. Check that the previous Worker keeps working, as
       `migrations/README.md` says.
-- [ ] Read `CONDUCTIVE_STARTING_FAVOURITES` in
+- [x] Read `CONDUCTIVE_STARTING_FAVOURITES` in
       `worker/app-api/models.ts`, with the filter, the warning, and the
       fallback of the design calls. Add it to the `vars` of
       `wrangler.jsonc` with the production values of the design calls,
       and to the env types.
-- [ ] Read and save the list in `worker/app-api/account-data.ts`.
-- [ ] Give `favourites` in `GET /api/account`, and add
+- [x] Read and save the list in `worker/app-api/account-data.ts`.
+- [x] Give `favourites` in `GET /api/account`, and add
       `PUT /api/account/favourites` in `worker/app-api/boot.ts`, with
       `ACCOUNT_PATHS.favourites` in `src/shared/account.ts`.
-- [ ] Add the same route to the dev routes of
+- [x] Add the same route to the dev routes of
       `src/app/dev/account-routes.ts`.
-- [ ] Test the read, the save, the starting favourites, a missing and a
+- [x] Test the read, the save, the starting favourites, a missing and a
       bad setting, an entry outside the model list, the duplicates, the sixth entry, a
       model outside the list, and the isolation between accounts.
+- [x] A saved list that cannot be read gives the starting favourites with
+      a warning, so the account still reads. Report:
+      `.context/model-favourites/reports/m3-worker.md`.
 
-## Milestone 4: The model menu
+## Milestone 4: Mockup gaps
+
+Tags: mockup
+
+Depends on: 1, and the answers of decisions 4 and 5
+
+Milestones 2 and 3 found three gaps in the mockups of Milestone 1.
+
+- [ ] Draw Add a favourite as the answer of decision 4 says, in a child
+      page of `app/model-favourites/preferences` with a list of four.
+- [ ] Draw the phone form of the model menu of New workspace, the
+      Preferences default, and an automation, as the answer of decision 5
+      says, with All models.
+- [ ] Add the Favourites row to the Settings tab of the palette mockup,
+      before New workspaces.
+- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [ ] Update the design and the TODOs of this plan for each problem that
+      the mockups show.
+
+## Milestone 5: The model menu
 
 Tags: ui
 
-Depends on: 3
+Depends on: 3, 4
 
 - [ ] Read and save the favourites in `src/app/account-model.ts`. A
       failed save keeps the saved list.
@@ -351,6 +433,9 @@ Depends on: 3
       `src/chat/ui/Menu.tsx`, with the keys of the submenu of
       `src/shell/ui/MenuList.tsx`. On a phone, show the list in place of
       the menu, with Back.
+- [ ] Give the shell picker of `src/shell/ui/ModelPicker.tsx` the All
+      models submenu too. `MenuButton` passes no `submenus` to `MenuList`
+      today. Open its phone form as the answer of decision 5 says.
 - [ ] Hide the favourites whose model the own endpoint or the model list
       does not hold.
 - [ ] Keep the keys of Model picker, Next effort level, and Fast mode
@@ -358,21 +443,25 @@ Depends on: 3
 - [ ] Add component tests for the rows, the marks, the submenu, and a
       favourite of the other agent.
 
-## Milestone 5: The Favourites section
+## Milestone 6: The Favourites section
 
 Tags: ui
 
-Depends on: 4
+Depends on: 5
 
 - [ ] Add the Favourites section to `src/shell/account/PreferencesSections.tsx`:
       the rows in order, a drag that moves a row, × that removes it, and
       Add a favourite, which is off at five.
 - [ ] Show a favourite that the menu leaves out greyed, with its line.
 - [ ] Show the error of a failed save under the section.
+- [ ] Add Add a favourite, as the answer of decision 4 says.
+- [ ] Add the Favourites row to the Account group of the command palette,
+      before New workspaces, with the search word "favorites". Update
+      `docs/protocol/command-palette-actions.md`.
 - [ ] Add component tests for the add, the move, the removal, the limit,
       and a failed save.
 
-## Milestone 6: Verification, commit, review, and pull request
+## Milestone 7: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 

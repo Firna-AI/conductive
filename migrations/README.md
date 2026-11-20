@@ -536,3 +536,10 @@ chosen row without a position after the rows with one, and it ignores the
 position of a row that is not chosen. The next add or move gives every
 chosen row a position again.
 [The app API](../worker/app-api/README.md) gives the rules of the order.
+
+`202611181710_model_favourites.sql` adds the nullable text column
+`user_preferences.model_favourites`. It holds the saved JSON list of
+one account. Existing rows keep null. The migration changes no existing
+column, default, or constraint, so the previous Worker keeps working.
+[Model favourites](../docs/protocol/model-favourites.md#the-starting-favourites)
+gives the rules for an account without a saved list.

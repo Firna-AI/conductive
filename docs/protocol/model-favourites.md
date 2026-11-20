@@ -231,7 +231,8 @@ change that adds the org logins, as
   effort of [Models](../deployment/models.md#models). Fast mode is on only
   when `fast` is `true`.
 - A body with another shape gets HTTP 400 with the error code
-  `invalid_input`, and the route saves nothing.
+  `invalid_input`, and the route saves nothing. A body that is not a JSON
+  object gets HTTP 400 with `invalid_json`, as on each route of the app.
 - An entry with fast mode on needs the model list. Without a valid model
   list, the route answers HTTP 503 with the error code
   `models_unavailable`, as

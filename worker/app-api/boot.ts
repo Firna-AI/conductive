@@ -2,9 +2,11 @@ import {
   ACCOUNT_PATHS,
   NEW_WORKSPACE_VIEWS,
   agentLoginPath,
+  firstFavourites,
   type AccountResponse,
   type SaveAgentLoginResponse,
   type SetNewWorkspaceViewResponse,
+  type SetFavouritesResponse,
 } from '../../src/shared/account'
 import { MODELS_PATH } from '../../src/shared/agents'
 import {
@@ -26,10 +28,12 @@ import { encrypt } from '../security/crypto'
 import type { RequestContext } from '../security/gate'
 import {
   accountDefault,
+  accountFavourites,
   accountLogins,
   accountNewWorkspaceView,
   removeAccountLogin,
   saveAccountDefault,
+  saveAccountFavourites,
   saveAccountLogin,
   saveAccountNewWorkspaceView,
   updateAccountLoginReuse,
@@ -42,6 +46,7 @@ import { getStartedData } from './get-started-data'
 import {
   configuredDefaultChoice,
   configuredModels,
+  configuredStartingFavourites,
   modelChoice,
 } from './models'
 import { accountShortcuts, saveAccountShortcuts } from './shortcuts-data'
@@ -67,6 +72,9 @@ export async function bootRoute(
         defaultChoice:
           (await accountDefault(env.DB, userId)) ??
           configuredDefaultChoice(env),
+        favourites:
+          (await accountFavourites(env.DB, userId)) ??
+          configuredStartingFavourites(env),
         agentLogins: await accountLogins(env.DB, userId, () =>
           configuredModels(env),
         ),
@@ -86,6 +94,15 @@ export async function bootRoute(
     const selected = modelChoice(env, choice(context.body?.choice))
     await saveAccountDefault(env.DB, userId, selected, dependencies.now())
     return Response.json({ choice: selected })
+  }
+  if (path === ACCOUNT_PATHS.favourites && request.method === 'PUT') {
+    const input = context.body?.favourites
+    if (!Array.isArray(input)) return invalidInput()
+    const favourites = firstFavourites(
+      input.map((entry: unknown) => modelChoice(env, choice(entry))),
+    )
+    await saveAccountFavourites(env.DB, userId, favourites, dependencies.now())
+    return Response.json({ favourites } satisfies SetFavouritesResponse)
   }
   if (path === ACCOUNT_PATHS.newWorkspaceView && request.method === 'PUT') {
     const view = NEW_WORKSPACE_VIEWS.find((view) => view === context.body?.view)

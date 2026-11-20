@@ -84,6 +84,7 @@ export function isolationAccountStates(
   const empty: AccountState = {
     operator: false,
     defaultChoice: choice,
+    favourites: [choice],
     newWorkspaceView: 'dialog',
     shortcuts: { mac: [], other: [] },
     githubAppUrl: harnessGitHubAppUrl,
@@ -93,6 +94,7 @@ export function isolationAccountStates(
   const firstConnected: AccountState = {
     operator: false,
     defaultChoice: choice,
+    favourites: [choice],
     newWorkspaceView: 'dialog',
     shortcuts: { mac: [], other: [] },
     githubAppUrl: harnessGitHubAppUrl,
@@ -106,6 +108,7 @@ export function isolationAccountStates(
   const otherConnected: AccountState = {
     operator: false,
     defaultChoice: choice,
+    favourites: [choice],
     newWorkspaceView: 'dialog',
     shortcuts: { mac: [], other: [] },
     githubAppUrl: harnessGitHubAppUrl,
