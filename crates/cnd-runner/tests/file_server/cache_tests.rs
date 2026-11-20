@@ -1,7 +1,9 @@
 //! File versions and conditional requests across deterministic repository rewrites.
 
-use std::fs;
-use std::time::{Duration, UNIX_EPOCH};
+use std::fs::{self, File};
+use std::os::unix::fs::MetadataExt;
+use std::path::Path;
+use std::time::{Duration, Instant, UNIX_EPOCH};
 
 use super::super::support::Fixture;
 
@@ -66,7 +68,45 @@ async fn same_second_and_restored_mtime_rewrites_refresh_equal_length_files() {
         rewritten.headers["last-modified"]
     );
     assert_ne!(restored.headers["etag"], *current_tag);
+
+    let current_tag = &restored.headers["etag"];
+    let page = h.directory.path().join("page.html");
+    let saved = fs::metadata(&page).unwrap();
+    later_change_time(h.directory.path(), &saved);
+    h.write("page.html", b"saved page");
+    h.set_modified("page.html", saved.modified().unwrap());
+    let kept = fs::metadata(&page).unwrap();
+    assert_eq!(
+        (kept.ino(), kept.len(), kept.modified().unwrap()),
+        (saved.ino(), saved.len(), saved.modified().unwrap())
+    );
+    let in_place = h
+        .marked("GET", "/page.html", &[("If-None-Match", current_tag)])
+        .await;
+    assert_eq!(in_place.status, 200);
+    assert_eq!(in_place.body, b"saved page");
+    assert_ne!(in_place.headers["etag"], *current_tag);
     h.finish().await;
+}
+
+/// Waits until a change on the fixture filesystem gets a later change time.
+fn later_change_time(directory: &Path, saved: &fs::Metadata) {
+    let probe = directory.join(".clock");
+    fs::write(&probe, b"").unwrap();
+    let deadline = Instant::now() + Duration::from_secs(10);
+    loop {
+        File::options()
+            .write(true)
+            .open(&probe)
+            .unwrap()
+            .set_modified(UNIX_EPOCH)
+            .unwrap();
+        let current = fs::metadata(&probe).unwrap();
+        if (current.ctime(), current.ctime_nsec()) > (saved.ctime(), saved.ctime_nsec()) {
+            return;
+        }
+        assert!(Instant::now() < deadline, "the change time did not advance");
+    }
 }
 
 #[tokio::test]
