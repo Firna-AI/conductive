@@ -1,51 +1,91 @@
 import { defineComponent } from '@mokly/mokly'
+import type {
+  TextBlock,
+  TextTable,
+} from '../../../../../../src/chat/markdown/agent-blocks'
 import { AgentBlocks } from '../../../components/chat/AgentBlocks'
-import { bullets } from '../../../fixtures/listConversations'
-import { agentBlockSchema } from './chatBlockSchemas'
+import { fixtureDrawing } from '../../../components/chat/fixtureDrawing'
+import {
+  bullets,
+  code,
+  codeBlock,
+  heading,
+  item,
+  numbered,
+  p,
+  strong,
+  table,
+  under,
+} from '../../../fixtures/agentText'
+import { markdownTable } from '../common/MarkdownTable.mockup'
+import { agentBlocksSchema } from './chatBlockSchemas'
 
-/**
- * The blocks of a message of the agent, registered with Mokly. Its pages
- * show paragraphs with a list, headings, a table, a list with lists under
- * its items, and a code block.
- */
-export const agentBlocks = defineComponent({
+const propSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['id', 'blocks'],
+  properties: {
+    id: { type: 'string', minLength: 1 },
+    blocks: agentBlocksSchema,
+  },
+} as const
+
+type Props = { id: string; blocks: readonly TextBlock[] }
+
+function tableCount(blocks: readonly TextBlock[]): number {
+  let count = 0
+  for (const block of blocks) {
+    if (block.kind === 'table') count += 1
+    if (block.kind === 'quote') count += tableCount(block.blocks)
+    if (block.kind === 'ol' || block.kind === 'ul') {
+      for (const item of block.items) count += tableCount(item.blocks)
+    }
+  }
+  return count
+}
+
+function RegisteredBlocks({ blocks, id }: Props) {
+  // A single table can keep its name when it moves within the message.
+  const drawing =
+    tableCount(blocks) === 1
+      ? {
+          ...fixtureDrawing,
+          table: (block: TextTable) => (
+            <markdownTable.Component
+              align={block.align}
+              head={block.head}
+              moklyInstance={`table-${id}`}
+              rows={block.rows}
+            />
+          ),
+        }
+      : fixtureDrawing
+  return <AgentBlocks blocks={blocks} drawing={drawing} />
+}
+
+/** The blocks of a message of the agent, registered with Mokly. */
+export const agentBlocks = defineComponent<typeof propSchema, [], Props>({
   slug: 'agent-blocks',
   title: 'Agent blocks',
   description:
-    'The blocks of a message of the agent, in order: its paragraphs, its headings, its tables, its lists, its code blocks, its quotes, and its rules. Their text keeps its inline code, its bold text, its emphasis, its strikethrough, and its line breaks, and each link to a workspace of the org is a chip. Each mention, and each inline code whose whole text is a path of the tree, is a file chip. A code block stays code. A list shows the lists that the agent indents under its items, and a task item its check box. A quote holds its own blocks. While the agent still writes, a mark that opens in the last paragraph closes at its end. With pictures, the image of a picture file in a paragraph or a list item shows as its picture. The element around them sets the type and the space between them. Its own page shows the answer of a finished turn.',
+    'The blocks of a message of the agent, in order: paragraphs, headings, tables, lists, code blocks, quotes, and rules. Text keeps its inline code, bold text, emphasis, strikethrough, and line breaks. A workspace link or file mention shows as a chip. A list item can hold more blocks, and a task item shows its check box. A paragraph or list item can show a picture. A heading or table cell shows its link. The element around the blocks sets their type and spacing. Its own page shows the answer of a finished turn.',
   relatedDocs: ['docs/mockups/design-chat.md'],
-  propSchema: {
-    type: 'object',
-    additionalProperties: false,
-    required: ['id', 'blocks'],
-    properties: {
-      /** The ID of the message, which names its table for Mokly. */
-      id: { type: 'string', minLength: 1 },
-      blocks: { type: 'array', items: agentBlockSchema },
-      /** The agent still writes the message. */
-      live: { type: 'boolean' },
-      /** The images of picture files show as their pictures. */
-      pictures: { type: 'boolean' },
-    },
-  } as const,
+  propSchema,
   props: {
     id: 'done',
     blocks: [
-      'Done. Checkout now suggests addresses as you type.',
+      p('Done. Checkout now suggests addresses as you type.'),
       bullets(
-        'Choosing a suggestion fills the street, city, and postcode.',
-        'Unit tests cover `useAddressAutocomplete`, and the checkout end-to-end tests pass.',
+        item('Choosing a suggestion fills the street, city, and postcode.'),
+        item(
+          'Unit tests cover ',
+          code('useAddressAutocomplete'),
+          ', and the checkout end-to-end tests pass.',
+        ),
       ),
     ],
   },
-  render: (props) => (
-    <AgentBlocks
-      blocks={props.blocks}
-      id={props.id}
-      live={props.live}
-      pictures={props.pictures}
-    />
-  ),
+  render: (props) => <RegisteredBlocks {...props} />,
   variants: [
     {
       slug: 'headings',
@@ -54,15 +94,11 @@ export const agentBlocks = defineComponent({
       props: {
         id: 'review',
         blocks: [
-          { kind: 'heading', level: 1, text: 'Review of #482' },
-          'The suggestions work, and the unit and end-to-end tests pass.',
-          { kind: 'heading', level: 2, text: 'Needs your answer' },
-          {
-            kind: 'heading',
-            level: 3,
-            text: '1. Lookups can pass the rate limit',
-          },
-          '**Severity:** Medium. **Effort:** Small.',
+          heading(1, 'Review of #482'),
+          p('The suggestions work, and the unit and end-to-end tests pass.'),
+          heading(2, 'Needs your answer'),
+          heading(3, '1. Lookups can pass the rate limit'),
+          p(strong('Severity:'), ' Medium. ', strong('Effort:'), ' Small.'),
         ],
       },
     },
@@ -74,16 +110,15 @@ export const agentBlocks = defineComponent({
       props: {
         id: 'bundles',
         blocks: [
-          'The autocomplete adds 6.1 kB to the checkout bundle.',
-          {
-            kind: 'table',
-            head: ['Bundle', 'Before', 'After'],
-            rows: [
-              ['`checkout`', '182.4 kB', '188.5 kB'],
-              ['`cart`', '96.0 kB', '96.0 kB'],
+          p('The autocomplete adds 6.1 kB to the checkout bundle.'),
+          table(
+            [null, 'right', 'right'],
+            ['Bundle', 'Before', 'After'],
+            [
+              [code('checkout'), '182.4 kB', '188.5 kB'],
+              [code('cart'), '96.0 kB', '96.0 kB'],
             ],
-            align: [null, 'right', 'right'],
-          },
+          ),
         ],
       },
     },
@@ -95,23 +130,22 @@ export const agentBlocks = defineComponent({
       props: {
         id: 'choices',
         blocks: [
-          {
-            kind: 'list',
-            numbered: true,
-            items: [
-              {
-                text: 'Provider (medium effort).',
-                list: bullets(
-                  'a. Keep the places proxy.',
-                  'b. Move to the hosted widget.',
-                ),
-              },
-              {
-                text: 'Manual fields (small effort).',
-                list: bullets('a. Keep them as a fallback.', 'b. Hide them.'),
-              },
-            ],
-          },
+          numbered(
+            under(
+              item('Provider (medium effort).'),
+              bullets(
+                item('a. Keep the places proxy.'),
+                item('b. Move to the hosted widget.'),
+              ),
+            ),
+            under(
+              item('Manual fields (small effort).'),
+              bullets(
+                item('a. Keep them as a fallback.'),
+                item('b. Hide them.'),
+              ),
+            ),
+          ),
         ],
       },
     },
@@ -123,11 +157,10 @@ export const agentBlocks = defineComponent({
       props: {
         id: 'screenshot',
         blocks: [
-          'I took the screenshot with:',
-          {
-            kind: 'code',
-            text: 'npx playwright screenshot --device="iPhone 13" http://localhost:3000/checkout .context/shots/after.png',
-          },
+          p('I took the screenshot with:'),
+          codeBlock(
+            'npx playwright screenshot --device="iPhone 13" http://localhost:3000/checkout .context/shots/after.png',
+          ),
         ],
       },
     },

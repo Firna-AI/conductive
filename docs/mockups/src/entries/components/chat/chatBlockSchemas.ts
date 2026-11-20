@@ -9,130 +9,96 @@ const cellAligns = [
   null,
 ] as const satisfies readonly CellAlign[]
 
-/** A heading of a message, as `MessageHeading`. */
-const headingSchema = {
-  type: 'object',
-  additionalProperties: false,
-  required: ['kind', 'level', 'text'],
-  properties: {
-    kind: { const: 'heading' },
-    level: { enum: [1, 2, 3, 4, 5, 6] },
-    text: { type: 'string' },
-  },
-} as const
+const string = { type: 'string' } as const
 
-/** A table of a message, as `MessageTable`: a short row keeps its cells. */
-const tableSchema = {
-  type: 'object',
-  additionalProperties: false,
-  required: ['kind', 'head', 'rows', 'align'],
-  properties: {
-    kind: { const: 'table' },
-    head: { type: 'array', items: { type: 'string' } },
-    rows: {
-      type: 'array',
-      items: { type: 'array', items: { type: 'string' } },
-    },
-    align: { type: 'array', items: { enum: cellAligns } },
-  },
-} as const
+/**
+ * Mokly schemas cannot reference themselves. The child arrays hold the
+ * same typed trees as the top level.
+ */
+const children = { type: 'array' } as const
 
-/** A list of a message whose items take the schema `item`. */
-function listOf<const Item>(item: Item) {
+function node<
+  const Kind extends string,
+  const Fields extends Record<string, unknown>,
+  const Required extends readonly Extract<keyof Fields, string>[],
+>(kind: Kind, required: Required, fields: Fields) {
   return {
     type: 'object',
     additionalProperties: false,
-    required: ['kind', 'numbered', 'items'],
-    properties: {
-      kind: { const: 'list' },
-      numbered: { type: 'boolean' },
-      items: { type: 'array', items: item },
-    },
+    required: ['kind', ...required],
+    properties: { kind: { const: kind }, ...fields },
   } as const
 }
 
-/** An item of a list with the list under it, whose schema is `list`. */
-function itemWith<const List>(list: List) {
-  return {
-    type: 'object',
-    additionalProperties: false,
-    required: ['text'],
-    properties: { text: { type: 'string' }, list },
-  } as const
-}
-
-/** An item of the deepest list, without a list under it. */
-const leafItem = {
-  type: 'object',
-  additionalProperties: false,
-  required: ['text'],
-  properties: { text: { type: 'string' } },
-} as const
-
-/**
- * A list of a message, as `MessageList`, with the lists that the agent
- * indents under its items. A schema has no reference to itself, so it
- * takes lists three levels deep. The replies of the mockups go two deep.
- */
-const listSchema = listOf(itemWith(listOf(itemWith(listOf(leafItem)))))
-
-/** A code block of a message, as `MessageCodeBlock`: its text as written. */
-const codeSchema = {
-  type: 'object',
-  additionalProperties: false,
-  required: ['kind', 'text'],
-  properties: {
-    kind: { const: 'code' },
-    text: { type: 'string' },
+/** Inline text of a paragraph, heading, or table cell. */
+export const inlineTextSchema = {
+  type: 'array',
+  items: {
+    anyOf: [
+      node('text', ['text'], { text: string }),
+      node('code', ['text'], { text: string }),
+      node('break', [], {}),
+      node('mark', ['mark', 'nodes'], {
+        mark: { enum: ['strong', 'emphasis', 'strike'] },
+        nodes: children,
+      }),
+      node('link', ['href', 'label', 'typed'], {
+        href: string,
+        label: children,
+        typed: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['open', 'close'],
+          properties: { open: string, close: string },
+        },
+      }),
+      node('image', ['href', 'alt', 'source'], {
+        href: string,
+        alt: children,
+        source: string,
+      }),
+    ],
   },
 } as const
 
-/** A rule of a message, as `MessageRule`: a line between two of its parts. */
-const ruleSchema = {
-  type: 'object',
-  additionalProperties: false,
-  required: ['kind'],
-  properties: { kind: { const: 'rule' } },
-} as const
-
-/** The blocks of a message that hold no other block. */
-const flatBlocks = [
-  { type: 'string' },
-  headingSchema,
-  tableSchema,
-  listSchema,
-  codeSchema,
-  ruleSchema,
-] as const
-
-/** A quote of a message whose blocks take the schema `block`. */
-function quoteOf<const Block>(block: Block) {
-  return {
+const listItems = {
+  type: 'array',
+  items: {
     type: 'object',
     additionalProperties: false,
-    required: ['kind', 'blocks'],
-    properties: {
-      kind: { const: 'quote' },
-      blocks: { type: 'array', items: block },
-    },
-  } as const
-}
+    required: ['checked', 'blocks'],
+    properties: { checked: { enum: [true, false, null] }, blocks: children },
+  },
+} as const
 
-/**
- * A quote of a message, as `MessageQuote`, with the blocks that it holds. A
- * schema has no reference to itself, so it takes quotes two levels deep.
- * The replies of the mockups quote one level.
- */
-const quoteSchema = quoteOf({
-  anyOf: [...flatBlocks, quoteOf({ anyOf: flatBlocks })],
-})
-
-/**
- * A block of a message of the agent, as `AgentBlock`: a paragraph, a
- * heading, a table, a list, a code block, a quote, or a rule.
- */
-export const agentBlockSchema = {
-  anyOf: [...flatBlocks, quoteSchema],
+/** The blocks of an agent message, as the shared renderer reads them. */
+export const agentBlocksSchema = {
+  type: 'array',
+  items: {
+    anyOf: [
+      node('p', ['text'], { text: inlineTextSchema }),
+      node('heading', ['level', 'text'], {
+        level: { enum: [1, 2, 3, 4, 5, 6] },
+        text: inlineTextSchema,
+      }),
+      node('ul', ['items'], { items: listItems }),
+      node('ol', ['start', 'items'], {
+        start: { type: 'integer' },
+        items: listItems,
+      }),
+      node('code', ['text'], { text: string }),
+      node('quote', ['blocks'], { blocks: children }),
+      node('rule', [], {}),
+      node('table', ['head', 'rows', 'align'], {
+        head: { type: 'array', items: inlineTextSchema },
+        rows: {
+          type: 'array',
+          items: { type: 'array', items: inlineTextSchema },
+        },
+        align: { type: 'array', items: { enum: cellAligns } },
+      }),
+    ],
+  },
 } as const
 
 /** The kinds of an attached file, as `Attachment` lists them. */

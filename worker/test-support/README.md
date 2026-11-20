@@ -23,6 +23,11 @@ Use it to end work in progress, as an out-of-memory reset does. Hold that work o
 Instance identity checks prove that reconstruction creates a fresh object.
 Production request timeouts stay unchanged.
 
+Await Reset, Restart, and Crash before later calls to the object, because the context reset can interrupt them.
+An interrupted call can get a text error from the runtime instead of JSON.
+When the HTTP reply to a call through the `api` of a native actor is not JSON, the call fails.
+Its error names the native call, the HTTP status, and the reply text.
+
 The root Vitest setup builds one current Worker bundle for each run and watch rerun.
 Native fixtures read that bundle from the provided test context.
 Standalone callers build on demand and reuse that bundle only within their process.
@@ -201,7 +206,9 @@ A callback counts as complete only after the `waitUntil` work that it starts end
 - `harness.ts` creates the native runtime, and owns the D1 row reset and the HTTP test app.
   Its HTTP requests provide a fake execution context for credential task ownership.
 - [native-runtime.ts](native-runtime.ts): `createNativeRuntime` creates the Miniflare runtime of `createHarness`, with local D1 and R2, the native workspace objects, and their fake outbound fetch path.
-  Its `actor(name)` gives the HTTP, lifecycle RPC, test controls, restart, and reset of one workspace object.
+  Its `actor(name)` gives the HTTP, lifecycle RPC, test controls, restart, crash, and reset of one workspace object.
+- [native-protocol.ts](native-protocol.ts) reads, checks, and writes the packets between the test process and the native runtime.
+  Its `readNativeReply` reads the HTTP replies to calls through the `api` of a native actor.
 - [native-workspace-entry.ts](native-workspace-entry.ts): `NativeWorkspace` extends the production `Workspace` with test controls.
   Its default export is the Worker entry of the native bundle.
 - [native-close.test-support.ts](native-close.test-support.ts): `NativeCloseProbe`, the close-first control of the native browser, runner, and Mac fixture entries.

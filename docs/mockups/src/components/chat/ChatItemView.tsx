@@ -107,8 +107,6 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
             blocks={item.blocks}
             id={item.id}
             moklyInstance="blocks"
-            pictures
-            {...defined({ live: item.live })}
           />
         </div>
       )

@@ -90,11 +90,33 @@ describe('the links of a sent message', () => {
     ])
   })
 
-  test('a sent message keeps an escaped angle end as typed and opens the full decoded address', () => {
-    expect(sent(String.raw`[x](<https://example.com/a\>b>)`)).toEqual([
-      text('[x](<'),
-      web('https://example.com/a%3Eb', String.raw`https://example.com/a\>b`),
-      text('>)'),
-    ])
-  })
+  test.each([
+    [String.raw`https://example.com/a\>b`, 'https://example.com/a%3Eb'],
+    [String.raw`https://example.com/a\<b`, 'https://example.com/a%3Cb'],
+  ])(
+    'a sent message keeps %s as typed and opens the full decoded address',
+    (address, href) => {
+      expect(sent(`[x](<${address}>)`)).toEqual([
+        text('[x](<'),
+        web(href, address),
+        text('>)'),
+      ])
+    },
+  )
+
+  test.each([
+    ['<', 'https://example.com/a', '<b>)'],
+    [String.raw`\\<`, String.raw`https://example.com/a\\`, '<b>)'],
+    ['\n', 'https://example.com/a', '\nb>)'],
+    ['\\\n', 'https://example.com/a\\', '\nb>)'],
+  ])(
+    'a sent message keeps a refused angle destination with %j as typed',
+    (boundary, href, after) => {
+      expect(sent(`[x](<https://example.com/a${boundary}b>)`)).toEqual([
+        text('[x](<'),
+        web(href),
+        text(after),
+      ])
+    },
+  )
 })

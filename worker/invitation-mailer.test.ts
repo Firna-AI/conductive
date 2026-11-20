@@ -1,14 +1,17 @@
 import { expect, it, vi } from 'vitest'
 
+import { createEmailMessages } from './email-messages'
 import type { HttpFetch } from './env'
-import { createInvitationMailer, invitationLink } from './invitation-mailer'
+import { createInvitationMailer } from './invitation-mailer'
 
 const invitation = {
   id: 'invite-1',
   email: 'mira@example.com',
   orgName: 'Example org',
   invitedBy: 'Cal',
-  link: invitationLink('https://app.conductive.build', 'invite-1'),
+  link: createEmailMessages('https://app.conductive.build').invitationLink(
+    'invite-1',
+  ),
 }
 
 function env(origin = 'https://app.conductive.build') {
@@ -172,7 +175,10 @@ it('logs the invitation destination and app link through the development mailer'
     await createInvitationMailer(
       { ...env(origin), RESEND_API_KEY: 'local-resend-secret' },
       fetch,
-    ).send({ ...invitation, link: invitationLink(origin, invitation.id) })
+    ).send({
+      ...invitation,
+      link: createEmailMessages(origin).invitationLink(invitation.id),
+    })
     expect(requests).toHaveLength(0)
     expect(messages).toEqual([
       'Cal invited mira@example.com to Example org: http://127.0.0.1:5173/?invite=invite-1',

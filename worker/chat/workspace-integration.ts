@@ -33,6 +33,7 @@ import { unsupportedRunnerReason } from './runner-unsupported'
 import { SecretRuntime } from '../secrets/runtime'
 import { nativeRunnerWorkStorage } from './runner-work-watch'
 import { projectInputState } from '../secrets/workspace-runtime'
+import { StartJobRecords } from '../lifecycle/start-job-records'
 
 export type WorkspaceCompositionEnv = LifecycleEnvironment
 export type WorkspaceChatResolvers = Partial<
@@ -219,11 +220,13 @@ export function createWorkspaceIntegration(
       generation: generations.current,
     }),
   )
+  const startRecords = new StartJobRecords(env, platform.storage, now)
   const controller: WorkspaceController = createWorkspaceController(
-    env,
+    startRecords.env,
     dependencies,
     {
       ...platform,
+      startRecords,
       assertStartActive: (turn) =>
         assertReceiverActive(storage, generations.forTurn(turn)),
       hasOutsideTurns: () => chat.store.hasOutsideTurns,
@@ -287,6 +290,7 @@ export function createWorkspaceIntegration(
     files,
     alarms,
     sockets,
+    startRecords,
     withGeneration: generations.withGeneration,
     reconcileStopped: async () => {
       await Promise.all([devices.reconcile(), secrets.reconcile()])

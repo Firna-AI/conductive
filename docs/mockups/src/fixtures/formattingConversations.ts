@@ -4,9 +4,20 @@
  * API, use the reserved top-level domain `.example`.
  */
 
-import type { AgentBlock, ChatItem, ToolKind } from './conversations'
-import { formattingInWork } from './formattingWorkTurn'
-import { quote, rule, twoLineAddress } from './proseBlocks'
+import type { TextBlock } from '../../../../src/chat/markdown/agent-blocks'
+import {
+  code,
+  emphasis,
+  image,
+  lineBreak,
+  p,
+  quote,
+  rule,
+  strike,
+  strong,
+} from './agentText'
+import type { ChatItem, ToolKind } from './conversations'
+import { formattingInWork, twoLineAddress } from './formattingWorkTurn'
 import { pullRequest } from './pullRequests'
 
 /** A tool call of a turn that finished. */
@@ -43,38 +54,62 @@ const commentsAsk: readonly ChatItem[] = [
  * rule between them, emphasis and strikethrough, the address of her test
  * on two lines, and a bold label at its end.
  */
-const commentsAnswer: readonly AgentBlock[] = [
-  'Priya left two comments. The first is on the lookups:',
+const commentsAnswer: readonly TextBlock[] = [
+  p('Priya left two comments. The first is on the lookups:'),
   quote(
-    'Each key press sends a lookup. Can we wait until the person *stops* typing?',
+    p(
+      'Each key press sends a lookup. Can we wait until the person ',
+      emphasis('stops'),
+      ' typing?',
+    ),
   ),
-  'A wait of 250 ms after the last key press sends one lookup in place of about 8. I can add it to `useAddressAutocomplete`.',
+  p(
+    'A wait of 250 ms after the last key press sends one lookup in place of about 8. I can add it to ',
+    code('useAddressAutocomplete'),
+    '.',
+  ),
   rule,
-  'The second is on the phone layout:',
-  quote('On a phone, the list covers the city and postcode fields.'),
-  `~~Hide the fields while the list is open.~~ Priya wants each field in view, so the fields can move down under the list. She tested with this address:<br>${twoLineAddress}`,
-  `**Next:** say yes, and I'll make both changes and push them to #${pullRequest.number}.`,
+  p('The second is on the phone layout:'),
+  quote(p('On a phone, the list covers the city and postcode fields.')),
+  p(
+    strike('Hide the fields while the list is open.'),
+    ' Priya wants each field in view, so the fields can move down under the list. She tested with this address:',
+    lineBreak,
+    ...twoLineAddress,
+  ),
+  p(
+    strong('Next:'),
+    ` say yes, and I'll make both changes and push them to #${pullRequest.number}.`,
+  ),
 ]
 
 /**
  * The same answer while the agent writes it. The bold label at its end has
- * its first `**`, and its closing `**` has not arrived. The open mark
- * closes at the end of the text, so the label shows bold at once.
+ * its first `**`, and its closing `**` has not arrived. The app closes the
+ * open mark at the end of the text of a live message, so the label shows
+ * bold at once.
  */
-const writingAnswer: readonly AgentBlock[] = [
+const writingAnswer: readonly TextBlock[] = [
   ...commentsAnswer.slice(0, -1),
-  '**Next:',
+  p(strong('Next:')),
 ]
 
 /**
  * An answer whose marks have no pair, so they show as typed: a `~` before
  * a number, a `*` between spaces, and the `**` and `*` of a file pattern.
- * HTML other than a line break stays text too.
+ * HTML other than a line break stays text too. The app reads each of them
+ * as text.
  */
-const typedAnswer: readonly AgentBlock[] = [
-  'Each lookup waits ~250 ms after the last key press. With 3 retries, a refused lookup waits at most 3 * 250 ms.',
-  'Vitest runs each file that matches tests/**/*.test.ts, so it finds the new test of the wait.',
-  'Press <kbd>Esc</kbd> to close the list before the wait ends, and no lookup goes out.',
+const typedAnswer: readonly TextBlock[] = [
+  p(
+    'Each lookup waits ~250 ms after the last key press. With 3 retries, a refused lookup waits at most 3 * 250 ms.',
+  ),
+  p(
+    'Vitest runs each file that matches tests/**/*.test.ts, so it finds the new test of the wait.',
+  ),
+  p(
+    'Press <kbd>Esc</kbd> to close the list before the wait ends, and no lookup goes out.',
+  ),
 ]
 
 /**
@@ -83,11 +118,27 @@ const typedAnswer: readonly AgentBlock[] = [
  * shows its alt text only, and the screenshot in the workspace, which
  * shows as its picture and opens its file.
  */
-const imagesAnswer: readonly AgentBlock[] = [
-  'The guide of the places API draws the flow of one session of lookups:',
-  '![Session flow of the places API](https://docs.places.example/v1/images/session-flow.png)',
-  'A session starts at the first key press and ends when the person chooses a suggestion. The proxy sends the same session token with each lookup, so the API bills each session once.',
-  'The README keeps a copy of the diagram, ![Session flow](docs/session-flow.png), and the phone view is in ![Suggestions on a phone](/home/user/code/storefront/.context/shots/after.png).',
+const imagesAnswer: readonly TextBlock[] = [
+  p('The guide of the places API draws the flow of one session of lookups:'),
+  p(
+    image(
+      'Session flow of the places API',
+      'https://docs.places.example/v1/images/session-flow.png',
+    ),
+  ),
+  p(
+    'A session starts at the first key press and ends when the person chooses a suggestion. The proxy sends the same session token with each lookup, so the API bills each session once.',
+  ),
+  p(
+    'The README keeps a copy of the diagram, ',
+    image('Session flow', 'docs/session-flow.png'),
+    ', and the phone view is in ',
+    image(
+      'Suggestions on a phone',
+      '/home/user/code/storefront/.context/shots/after.png',
+    ),
+    '.',
+  ),
 ]
 
 /** The chats of the formatting page, and of its work variant. */
@@ -99,12 +150,7 @@ export const formattingConversations = {
   ],
   'formatting-writing': [
     ...commentsAsk,
-    {
-      kind: 'agent',
-      id: 'comments-answer',
-      blocks: writingAnswer,
-      live: true,
-    },
+    { kind: 'agent', id: 'comments-answer', blocks: writingAnswer },
     { kind: 'working', id: 'working', elapsed: '19s' },
   ],
   'formatting-in-work': formattingInWork,

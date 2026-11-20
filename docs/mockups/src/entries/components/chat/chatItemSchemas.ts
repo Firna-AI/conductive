@@ -1,7 +1,7 @@
 import type { ToolCallItem, ToolKind } from '../../../fixtures/conversations'
 import { changedFileSchema } from '../files/fileSchemas'
 import { personKeys } from '../layout/railSchemas'
-import { agentBlockSchema, attachmentSchema } from './chatBlockSchemas'
+import { agentBlocksSchema, attachmentSchema } from './chatBlockSchemas'
 import {
   lostReasons,
   lostWhats,
@@ -68,9 +68,7 @@ export const agentItemSchema = {
   properties: {
     kind: { const: 'agent' },
     id: { type: 'string', minLength: 1 },
-    blocks: { type: 'array', items: agentBlockSchema },
-    /** The agent still writes it, so an open mark closes at its end. */
-    live: { const: true },
+    blocks: agentBlocksSchema,
   },
 } as const
 

@@ -61,7 +61,6 @@ function Block(props: { block: MarkdownBlock }) {
       return (
         <markdownTable.Component
           align={block.align}
-          cells="file"
           className={styles.table}
           head={block.head}
           rows={block.rows}

@@ -180,7 +180,13 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         When available, they also include a random ID for each start of that
         program. The team uses these logs to investigate connection problems,
         program restarts, and interrupted agent work. These logs hold no tokens,
-        secret values, message text, file contents, or connection close reasons.`,
+        secret values, message text, file contents, or connection close reasons.
+        ${productName} also records when each step of a cloud computer
+        build and of a workspace start begins and ends, with the IDs of the
+        org, the workspace, and the build or the start, and the time of its calls to
+        other services. The team uses these records to make builds and
+        starts faster. They hold no names of repositories or branches, and
+        no message text, file contents, or secret values.`,
       text`Mac commands: ${productName} keeps each request and its result.
         They record the command, its folder, its reason, its time limit,
         and the output. A request also names the Mac that gets it.
