@@ -182,8 +182,9 @@ otherwise.
   does today, and has no All models row.
 - Each model picker of the app shows the favourites menu: a session, New
   workspace, the default of new workspaces, and an automation. The
-  pickers of the Favourites rows show the menu of today, because a row
-  sets one favourite. Made on 16 November 2026.
+  pickers of the Favourites rows show the menu with no favourites, which
+  lists every model at its top, because a row sets one favourite. Made on
+  16 November 2026.
 - The menu marks a favourite only when it matches the current choice
   exactly, with its fast mode. Made on 16 November 2026.
 - A favourite of the other agent in a session with messages opens a new
@@ -195,6 +196,31 @@ otherwise.
   the menu, not a submenu. Made on 16 November 2026.
 - A phone shows the All models list in place of the menu, with Back at
   its top. Made on 16 November 2026.
+- Every picker on the org login follows the list of the org endpoint,
+  from decision 3 A of the org logins plan. So the menu of a session on
+  that login also leaves out each favourite whose model that list does not
+  name, as `app/chat/endpoint-models/org` shows. Preferences greys a
+  favourite only for an own endpoint of the member, because the list of
+  the org endpoint applies only to the sessions on the org login, and only
+  an admin sees it.
+- In Preferences, the row of a favourite that the menu leaves out keeps
+  its handle, its picker, and ×. Its picker shows at half strength and
+  still works, so a pick of a listed model shows the favourite in the menu
+  again. The line under it says "Hidden from the model menu, because your
+  endpoint does not list Fable 5.1." For a model that the model list no
+  longer holds, it says "Hidden from the model menu, because Fable 5.1 is
+  no longer available." A picker that is off was rejected, because the
+  member would then remove the favourite and add another to change it.
+- A failed save of the Favourites section keeps the saved list. The error
+  under the list says "The change wasn't saved. Try again.", in the rose
+  colour with an alert icon, as the other errors of Preferences do. The
+  next change tries again.
+- On a phone, the menu with five favourites and the six efforts of Opus
+  5.5 is about 590 px high. Each menu keeps its height limit of 70% of the
+  screen, so on a screen lower than about 845 px the menu scrolls, and the
+  Fast row shows after a scroll. The efforts stay rows, as the user chose
+  on 16 November 2026. The marketing picture of the picker shows four
+  favourites, so that its menu fits the picture.
 
 ## Milestone 1: Mockups
 
@@ -206,32 +232,37 @@ The mockup of `app/model-favourites` exists. This milestone makes it the
 spec. Each other page that draws a model picker shows the favourites
 menu.
 
-- [ ] Draw the favourites menu in the mockup `ModelPicker` by default,
+- [x] Draw the favourites menu in the mockup `ModelPicker` by default,
       with a prop for the menu of today, which the Favourites rows use.
-- [ ] Update the text of each page that draws an open picker:
+- [x] Update the text of each page that draws an open picker:
       `app/composer` (`picker`), `app/fast-mode`, `app/new-workspace`
       with its dialog, `app/account/preferences` (`model-menu`), the
       prompt box of `app/automations`, and `app/chat/endpoint-models`.
-- [ ] Remove the review words of `app/model-favourites`. Say in its
+- [x] Remove the review words of `app/model-favourites`. Say in its
       `new-account` view that the deployment setting of decision 3 A
       gives the starting favourites.
-- [ ] Split `app/model-favourites` into child pages, as it passes five
+- [x] Split `app/model-favourites` into child pages, as it passes five
       views. Add the views of the design calls:
-  - [ ] A menu that leaves out a favourite whose model the own endpoint
+  - [x] A menu that leaves out a favourite whose model the own endpoint
         does not list.
-  - [ ] Preferences with that favourite greyed, with its line.
-  - [ ] A menu with no favourites.
-  - [ ] A failed save of the Favourites section.
-- [ ] Put the Favourites section into the Preferences tab of
+  - [x] Preferences with that favourite greyed, with its line.
+  - [x] A menu with no favourites.
+  - [x] A failed save of the Favourites section.
+- [x] Put the Favourites section into the Preferences tab of
       `AccountScreen`, and drop the `content` slot that only
       `app/model-favourites` uses.
-- [ ] Capture the marketing pictures again with
+- [x] Capture the marketing pictures again with
       `npm run marketing:pictures`. Two pictures show the open picker.
-- [ ] Update `docs/mockups/catalogue.md` and
+- [x] Update `docs/mockups/catalogue.md` and
       `docs/mockups/design-chat.md`.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+- [ ] Draw what Add a favourite adds in the Favourites section, after the
+      user answers the open question of 20 November 2026. No mockup, design
+      call, or requirement says which choice a new favourite starts with,
+      or when it saves, and every view holds five favourites, so the button
+      is always off.
 
 ## Milestone 2: Documentation and protocol
 

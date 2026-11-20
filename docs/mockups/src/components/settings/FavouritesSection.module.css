@@ -25,6 +25,48 @@
   cursor: grab;
 }
 
-.spacer {
+/* The picker of the favourite, and the line under it when the menu hides it. */
+.choice {
+  display: flex;
   flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.picker {
+  display: flex;
+  max-width: 100%;
+}
+
+/*
+ * A favourite that the menu leaves out: its picker shows at half strength,
+ * as an item that is off does, and it still works. The line under it keeps
+ * the muted colour, so that the reason stays readable.
+ */
+.off {
+  opacity: 0.5;
+}
+
+.why {
+  padding: 0 8px 6px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+}
+
+/* A change that the app did not save: its error, until the next change. */
+.error {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  color: var(--ui-rose);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+}
+
+/* The icon centres on the first line of the text. */
+.icon {
+  flex-shrink: 0;
+  margin-top: 2px;
 }

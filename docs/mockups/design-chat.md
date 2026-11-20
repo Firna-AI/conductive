@@ -9,7 +9,9 @@ have, the files that the cloud computer could not read, the end of a turn at the
 background work, and the end of a fast turn that ran at standard speed.
 [The Markdown of replies](design-markdown.md) gives the tables, the
 headings, the quotes, the rules, the marks, and the line breaks of a reply
-and of a file preview.
+and of a file preview. [The model menu](design-model-menu.md) gives the
+model picker of the composer, its favourites, and the Favourites section
+of Preferences.
 
 - A session tab shows a muted spinner in place of its chat icon while its
   agent works. The spinner keeps the icon's size and stays visible on

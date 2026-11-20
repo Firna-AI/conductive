@@ -67,10 +67,12 @@ export const accountSchema = {
     /** How New workspace opens on a computer: as the page, or as a dialog. */
     view: { enum: ['page', 'dialog'] },
     /**
-     * The save of the last change on Preferences: saved, or failed. A failed
-     * save shows its error, and the choice keeps its saved value.
+     * The save of the last change on Preferences: saved, a change of how
+     * New workspace opens that failed, or a change of the favourites that
+     * failed. A failed save shows its error, and the setting keeps its saved
+     * value.
      */
-    save: { enum: ['saved', 'failed'] },
+    save: { enum: ['saved', 'failed', 'favourites-failed'] },
     /**
      * The invite code of the user: invites left, sign-ups paused, every
      * invite used, or turned off by an operator.

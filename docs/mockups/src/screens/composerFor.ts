@@ -19,6 +19,7 @@ import {
 import { barRunningConversations } from '../fixtures/barConversations'
 import { followUpDraft, steerDraft } from '../fixtures/conversations'
 import { unlistedChoice, unlistedLabels } from '../fixtures/endpointModels'
+import { favouriteLists } from '../fixtures/favourites'
 import {
   addedChipDraft,
   mentionChipsDraft,
@@ -149,6 +150,8 @@ function choiceOf(state: WorkspaceState, workspace: Workspace): AgentChoice {
       return { ...workspace.choice, fast: true }
     case 'no-fast':
       return noFastChoice
+    case 'max':
+      return { ...workspace.choice, effort: 'max' }
   }
 }
 
@@ -162,10 +165,12 @@ export function isRunning(state: WorkspaceState): boolean {
 /**
  * The composer of a workspace state: a steer message while a turn runs, or
  * a message with attached files, with the model picker open when the state
- * asks for it. A new session starts empty. In a session with messages,
- * the picker marks the models of the other agent as opening a new session.
- * In a session of the viewer on an own endpoint, it leaves out the models
- * that the model list of the endpoint does not name. Every picker on the
+ * asks for it, with the favourites of the state and All models open or
+ * closed. A new session starts empty. In a session with messages, the
+ * picker marks the models and favourites of the other agent as opening a
+ * new session. In a session of the viewer on an own endpoint, it leaves out
+ * the models that the model list of the endpoint does not name, and each
+ * favourite on one of them. Every picker on the
  * org login does the same with the list of the org endpoint (decision 3 A
  * of the org logins plan). After a turn that the endpoint did not serve,
  * the session keeps the model of that turn.
@@ -260,6 +265,8 @@ export function composerFor(
     attachTo:
       files && state.composer === 'attachments' ? paths.attachments : undefined,
     picker: state.composer === 'picker' || unlistedPicker,
+    favourites: favouriteLists[state.favourites],
+    allModels: state.allModels === 'open',
     // A session takes its agent at its first message.
     sessionAgent: noMessages(state) ? undefined : choice.agent,
     fastKey: true,

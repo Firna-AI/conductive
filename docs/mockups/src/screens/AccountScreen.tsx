@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
+import { PlacedModelMenu } from '../components/chat/PlacedModelMenu'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import type { RailState } from '../components/layout/OrgRail'
 import { Page } from '../components/layout/Page'
@@ -11,6 +11,7 @@ import {
   SignInSection,
 } from '../components/settings/AccountSections'
 import { DeletedOrgsSection } from '../components/settings/DeletedOrgsSection'
+import { FavouritesSection } from '../components/settings/FavouritesSection'
 import { InviteCodeSection } from '../components/settings/InviteCodeSection'
 import { DefaultsSection } from '../components/settings/PreferencesSections'
 import { StatsTab } from './accountStats'
@@ -19,6 +20,7 @@ import { ShortcutsTab } from '../components/settings/ShortcutsSections'
 import { ThisMacSection } from '../components/settings/ThisMacSection'
 import { workspaceSections } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
+import { fastChoice } from '../fixtures/agents'
 import { account, orgList, orgs } from '../fixtures/orgs'
 import {
   editedShortcuts,
@@ -28,7 +30,7 @@ import type { ShortcutHost } from '../fixtures/shortcutHosts'
 import { viewerMembership } from '../fixtures/members'
 import { paths } from '../paths'
 import type { AccountState, AccountView } from './accountState'
-import { agentsFor } from './accountAgents'
+import { agentsFor, hiddenModelsFor } from './accountAgents'
 
 const connectedRail: RailState = { orgs: orgList, current: 'account' }
 
@@ -70,11 +72,17 @@ function TabContent(props: {
       return <AgentsSection {...agentsFor({ ...state, tab: 'agents' })} />
     case 'preferences':
       return (
-        <DefaultsSection
-          fastMenu={state.modelMenu === 'open-fast'}
-          saveFailed={state.save === 'failed'}
-          view={state.view}
-        />
+        <>
+          <FavouritesSection
+            hiddenModels={hiddenModelsFor({ ...state, tab: 'preferences' })}
+            saveFailed={state.save === 'favourites-failed'}
+          />
+          <DefaultsSection
+            fastMenu={state.modelMenu === 'open-fast'}
+            saveFailed={state.save === 'failed'}
+            view={state.view}
+          />
+        </>
       )
     case 'shortcuts':
       return (
@@ -96,21 +104,20 @@ function TabContent(props: {
  * The account, in tabs. General holds the GitHub sign-in, the GitHub App,
  * and the invite code of the user. Agents holds the logins of Claude and
  * Codex that every org shares, with the share setting of each login and
- * the host of an own endpoint. Preferences holds how new
- * workspaces start: their model, and how New workspace opens. Keyboard
+ * the host of an own endpoint. Preferences holds the favourites of the
+ * model menu, then how new workspaces start: their model, and how New
+ * workspace opens. Keyboard
  * shortcuts holds the keys of the host: the Mac app, or the browser and the
  * keyboard of `state.host`. Stats holds the person's own counts. The Mac
  * app adds This Mac, with the commands
  * that always run on this Mac. The product is free, so the page shows no
  * plan and no billing, and the sandbox provider stays out of sight. With the
  * person's changes to the shortcuts, the Search row of the Mac app's
- * sidebar shows the person's key of the palette. `content` takes the place
- * of the content of the tab, for a page that draws other settings.
+ * sidebar shows the person's key of the palette.
  */
 export function AccountScreen(props: {
   state: AccountView
   viewport: Viewport
-  content?: ReactNode
 }) {
   const { state } = props
   const mac = useMacApp()
@@ -130,14 +137,12 @@ export function AccountScreen(props: {
       title="Account"
       viewport={props.viewport}
     >
-      {props.content ?? (
-        <TabContent
-          changes={changes}
-          host={host}
-          state={state}
-          viewport={props.viewport}
-        />
-      )}
+      <TabContent
+        changes={changes}
+        host={host}
+        state={state}
+        viewport={props.viewport}
+      />
     </Page>
   )
   // Reset all asks first: a dialog over the account, or a sheet on a phone.
@@ -149,11 +154,17 @@ export function AccountScreen(props: {
         viewport={props.viewport}
       />
     ) : null
+  // The open menu of the default model lies above the page, at its picker.
+  const modelMenu =
+    state.tab === 'preferences' && state.modelMenu === 'open-fast' ? (
+      <PlacedModelMenu choice={fastChoice} placement="below" />
+    ) : null
   if (mobile) {
     return (
       <MobileFrame>
         {page}
         {dialog}
+        {modelMenu}
       </MobileFrame>
     )
   }
@@ -168,7 +179,12 @@ export function AccountScreen(props: {
   ) : undefined
   return (
     <AppFrame
-      overlay={dialog}
+      overlay={
+        <>
+          {dialog}
+          {modelMenu}
+        </>
+      }
       rail={connected ? connectedRail : firstRunRail}
       sidebar={sidebar}
     >

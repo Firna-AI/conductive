@@ -2,6 +2,7 @@ import { SegmentedControl, type SegmentOption } from '@firna/ui/segmented'
 import { defaultChoice, fastChoice } from '../../fixtures/agents'
 import { noop } from '../../noop'
 import { ModelPicker } from '../chat/ModelPicker'
+import { PlacedModelAnchor } from '../chat/PlacedModelMenu'
 import { useControlSizes } from '../common/touch'
 import { Section } from './Section'
 import styles from './AccountSections.module.css'
@@ -49,22 +50,31 @@ function NewWorkspaceViewChoice(props: {
  * The New workspaces section of Preferences: the model, the effort, and the
  * speed that new workspaces start with, and how New workspace opens. Each
  * change saves at once. A failed save shows its error and keeps the saved
- * choice. `fastMenu` draws the menu of the picker open, with fast mode on.
+ * choice. `fastMenu` opens the picker, with fast mode on. The screen then
+ * draws its menu above the page with `PlacedModelMenu`, so the box of the
+ * page does not cut it, because the picker sits low under Favourites.
  */
 export function DefaultsSection(props: {
   view: NewWorkspaceView
   saveFailed: boolean
   fastMenu?: boolean
 }) {
+  const picker = (
+    <ModelPicker
+      choice={props.fastMenu ? fastChoice : defaultChoice}
+      menu={false}
+      open={props.fastMenu}
+    />
+  )
   return (
     <Section description="How you start new workspaces." title="New workspaces">
       <div className={styles.defaults}>
         <span className={styles.defaultsLabel}>Model and effort</span>
-        <ModelPicker
-          choice={props.fastMenu ? fastChoice : defaultChoice}
-          open={props.fastMenu}
-          placement="below-start"
-        />
+        {props.fastMenu ? (
+          <PlacedModelAnchor>{picker}</PlacedModelAnchor>
+        ) : (
+          picker
+        )}
         <span className={styles.defaultsLabel}>{viewLabel}</span>
         <div className={styles.defaultsWide}>
           <NewWorkspaceViewChoice

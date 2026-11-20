@@ -1,9 +1,11 @@
 import type { Viewport } from '@mokly/mokly'
 import { ModelPicker } from '../components/chat/ModelPicker'
-import { pickerMenu } from '../components/chat/pickers'
+import {
+  PlacedModelAnchor,
+  PlacedModelMenu,
+} from '../components/chat/PlacedModelMenu'
 import { classes } from '../components/common/classes'
 import { Menu } from '../components/common/Menu'
-import { useShortcutHint } from '../components/common/ShortcutTip'
 import { HistoryAnchor } from '../components/workspace/WorkspaceTabs'
 import { checkoutAutocomplete } from '../fixtures/workspaces'
 import { MacAppScreen, type MacAppState } from './MacAppScreen'
@@ -52,34 +54,26 @@ const allowState: MacAppState = {
 }
 
 /**
- * The model menu of the composer, above the page at its picker. It reads the
- * key of Fast mode where it draws, so a phone shows no key, as the picker
- * does.
+ * The workspace with the model menu of its composer open, with the
+ * favourites of the viewer first, above the page at its picker.
  */
-function PlacedModelMenu() {
-  const fastKey = useShortcutHint('fast-mode')
+function ModelMenuScreen(props: { viewport: Viewport }) {
   const { choice } = checkoutAutocomplete
   return (
-    <div className={classes(styles.above, styles.model)}>
-      <Menu
-        entries={pickerMenu(choice, choice.agent, undefined, fastKey)}
-        label="Model and effort"
-        placement="point"
-      />
-    </div>
-  )
-}
-
-/** The workspace with the model menu of its composer open. */
-function ModelMenuScreen(props: { viewport: Viewport }) {
-  return (
     <WorkspaceScreen
-      overlay={<PlacedModelMenu />}
+      overlay={
+        <PlacedModelMenu
+          choice={choice}
+          fastKey
+          placement="above"
+          sessionAgent={choice.agent}
+        />
+      }
       picker={
-        <span className={styles.modelAnchor}>
+        <PlacedModelAnchor>
           {/* The screen draws the menu above the page, so none in place. */}
-          <ModelPicker choice={checkoutAutocomplete.choice} menu={false} open />
-        </span>
+          <ModelPicker choice={choice} menu={false} open />
+        </PlacedModelAnchor>
       }
       state={modelState}
       viewport={props.viewport}
