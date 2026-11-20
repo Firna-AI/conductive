@@ -23,7 +23,7 @@ import type { ActiveRunner } from './types'
 /** A connection marks its runner work only this long after its hello. */
 export const RUNNER_WORK_WATCH_MS = 30_000
 
-const RUNNER_WORK_MARK_KEY = chatKey('runner-work', 'current')
+export const RUNNER_WORK_MARK_KEY = chatKey('runner-work', 'current')
 
 type RunnerTransport = ReturnType<typeof parseRunnerTransport>
 
@@ -90,7 +90,6 @@ export interface RunnerProgress {
  */
 export class RunnerWorkWatch {
   private checked = false
-  private window: { connection: ActiveRunner; until: number } | null = null
   private readonly storage: RunnerWorkStorage | undefined
   private readonly now: () => number
 
@@ -113,21 +112,20 @@ export class RunnerWorkWatch {
     })
   }
 
-  /** Marks one message. A hello starts the window of its connection. */
+  /**
+   * Marks one message. A hello starts the window of its connection. The
+   * saved connection keeps the end of the window, so a wake keeps it too.
+   */
   async begin(
     connection: ActiveRunner,
     message: RunnerTransport | null,
     size: number | null,
   ): Promise<RunnerWorkMark | null> {
     if (message?.type === 'hello')
-      this.window = { connection, until: this.now() + RUNNER_WORK_WATCH_MS }
-    const { storage, window } = this
-    if (
-      !storage ||
-      window?.connection !== connection ||
-      this.now() >= window.until
-    )
-      return null
+      connection.watchUntil = this.now() + RUNNER_WORK_WATCH_MS
+    const { storage } = this
+    const until = connection.watchUntil
+    if (!storage || until === undefined || this.now() >= until) return null
     let record: StoredRunnerWork = {
       ...connectionValues(connection, message),
       ...workValues(message, size),

@@ -81,8 +81,10 @@ explicitly, because a typed caller can still supply extra fields.
 - [`runner-receive.ts`](runner-receive.ts) parses each runner message,
   writes `runner_message_failed` when it fails, and ends the record in a
   `finally` block. The runner channel updates the stage to `after_commit`.
-- The watch window belongs to the in-memory connection of the hello. A
-  connection that the object restores after hibernation has no window.
+- The hello sets `ActiveRunner.watchUntil`. The saved runner connection
+  keeps it, so a wake from hibernation keeps the window to its original
+  end. A saved connection without the value, such as from an older Worker,
+  has no window.
 - Each record step is best effort and ignores its own failure.
 - [`warning-runner-work.ts`](../warning-runner-work.ts) checks the values
   again when the warning is written.
@@ -112,5 +114,8 @@ explicitly, because a typed caller can still supply extra fields.
   object without waiting for its work, and connects again. It checks one
   warning with the event values and the `after_commit` stage, no warning
   after work that ended, and no record after the watch window.
+- `runner-work-wake.test.ts` counts the writes of the record across two
+  wakes: work 10 seconds after the hello still gets a record, and work at
+  30 seconds gets none.
 - [`worker/warnings.test.ts`](../warnings.test.ts) checks that the
   explicit field selection drops private fields and invalid values.

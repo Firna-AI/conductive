@@ -114,6 +114,8 @@ decision about the warning for runner work that did not finish.
   workspace removes the record.
 - A log line before each work was rejected. Reason: the platform does not
   promise that a reset keeps the log lines of the work that it ends.
+- A wake of the workspace that restores its saved runner connection keeps
+  the watch window of that connection, with its original end.
 - The watch covers only the watch window. Reason: the runner sends its
   unconfirmed events again at once after its hello. So each pass of such
   a loop starts in a watch window. A record for each runner message was

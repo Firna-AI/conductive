@@ -141,6 +141,8 @@ export interface ActiveRunner {
   /** The move of this connection. A new connection starts without one. */
   repositoryMove?: RepositoryMoveState
   fileServer?: boolean
+  /** The end of the watch window of runner work, from the hello. */
+  watchUntil?: number
   ready: boolean
 }
 
