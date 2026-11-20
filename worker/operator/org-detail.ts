@@ -6,6 +6,8 @@ import type {
 import { HttpError } from '../http'
 import { suspensionNote, type SuspensionRow } from './suspension-note'
 import { workspaceStateCounts } from './workspace-counts'
+import { readOrgSwitchContext } from './switch-context-data'
+import { readOrgSwitches } from './switch-data'
 
 interface OrgHeader extends SuspensionRow {
   id: string
@@ -63,9 +65,24 @@ export async function readOperatorOrg(
   const workspaceStates = counts.results[0]
   if (!workspaceStates || !('archived' in workspaceStates))
     throw new Error('Invalid operator workspace counts')
+  const [switches, switchContext, accounts] = await Promise.all([
+    readOrgSwitches(db, orgId),
+    readOrgSwitchContext(db, orgId),
+    db
+      .prepare(
+        `SELECT provider_account AS id, COUNT(*) AS workspaces FROM workspaces
+       WHERE org_id = ? GROUP BY provider_account ORDER BY provider_account`,
+      )
+      .bind(orgId)
+      .all<{ id: string; workspaces: number }>(),
+  ])
   return {
     id: org.id,
     providerAccount: org.providerAccount,
+    ...switches,
+    runningJob: switchContext.runningJob,
+    switchWaitReason: switchContext.waitReason,
+    workspacesByAccount: accounts.results,
     name: org.name,
     initials: org.initials,
     createdAt: org.createdAt,

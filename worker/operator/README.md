@@ -25,6 +25,45 @@ their search, their pages, and the fields of each reply.
 The [provider weights guide](providers.md) gives the GET and PUT routes,
 configured accounts, org counts, and atomic change records.
 
+## Provider account switches
+
+`operatorOrgSwitchPath` in
+[`operator-switch.ts`](../../src/shared/operator-switch.ts) builds
+`/api/operator/orgs/<orgId>/provider-switch` with the org ID encoded.
+The route uses the app gate and the same operator check as suspension.
+Other signed-in users get 403 `operator_required`.
+An unknown org gets 404 `org_not_found`.
+
+POST accepts `OperatorOrgSwitchRequest`: `providerAccount` names another
+configured account. The optional `endRunningJob` boolean defaults to false.
+It records the operator's choice and the ID of the job that it concerns.
+An invalid account or choice gets 400 `invalid_input`.
+The reply is HTTP 200 with `OperatorOrgSwitchResponse`.
+Its `switch` field holds the saved record, including its operator and time.
+An org has at most one waiting or building switch. A repeated or concurrent
+request returns that record and keeps its original choice.
+
+DELETE accepts `{}`. It changes the open switch to `stopped` and saves
+the stop operator and time. The reply is HTTP 200 with the stopped record
+in `switch`, or null when no switch was open. A repeat keeps the first stop.
+These routes only record the actions. They start no build, end no job,
+and change no org or workspace account.
+
+The org detail always adds `OperatorOrgSwitchDetail` fields. The shared
+type makes them optional so existing app readers and older replies still
+work. `providerSwitch` gives the newest waiting, building, or failed switch.
+A newer stopped or completed switch clears it. `lastProviderSwitch` gives
+the last completed switch, with its separate account-change time.
+`runningJob` gives the current build or refresh and its starter.
+`switchWaitReason` gives its current build eligibility wait, or null when
+none applies. The switch record also keeps its recorded wait and waiting job.
+`workspacesByAccount` counts every workspace, including removed workspaces
+and accounts that are no longer configured. Its rows sort by account ID.
+The reply includes no build log, script, repository content, or credential.
+
+The [Switch account protocol](../../docs/protocol/switch-account.md) holds
+the build and account-change requirements.
+
 ## Waitlist, codes, and sign-ups
 
 The [waitlist guide](waitlist.md) gives the routes, approval rules, codes,
@@ -170,6 +209,10 @@ The [operator test guide](tests.md) gives the commands and native provider setup
 - [`user-access-data.ts`](user-access-data.ts): user grant sources, email state, and referral recipients.
 - [`org-directory.ts`](org-directory.ts) and [`user-directory.ts`](user-directory.ts): list queries and cursors.
 - [`org-detail.ts`](org-detail.ts) and [`user-detail.ts`](user-detail.ts): page queries and reply mapping.
+- [`switch-route.ts`](switch-route.ts): the switch and stop routes, access check, and request reader.
+- [`switch-write-data.ts`](switch-write-data.ts): atomic switch admission and stop records.
+- [`switch-data.ts`](switch-data.ts): switch records and the current and last completed switch of an org.
+- [`switch-context-data.ts`](switch-context-data.ts): the running job, its starter, and the build eligibility wait.
 - [`workspace-counts.ts`](workspace-counts.ts): the five state counts shared by the overview, the org page, and the account stats, with removal computed at the read time. `archived` counts every archived workspace, removed ones included, and `removed` counts the removed ones again. Each of the three replies sends both, and the app takes `removed` out of Archived. It also holds the 7-day and 30-day windows and daily counts of the overview and the account stats.
 - [`lift.ts`](lift.ts): the lifts and the checks of affected workspaces.
 - [`repair.ts`](../lifecycle/repair.ts): bounded Cron repair of overdue disk and image alarms.

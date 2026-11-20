@@ -12,6 +12,7 @@ import { liftOrgSuspension, liftUserSuspension } from './lift'
 import { numericGitHubId } from './directory'
 import { operatorWaitlistRoute } from './waitlist-route'
 import { operatorProvidersRoute } from './providers-route'
+import { operatorSwitchRoute } from './switch-route'
 
 export async function handleOperatorRequest(
   request: Request,
@@ -19,6 +20,13 @@ export async function handleOperatorRequest(
   context: RequestContext,
   dependencies: AppDependencies,
 ): Promise<Response | null> {
+  const providerSwitch = await operatorSwitchRoute(
+    request,
+    env,
+    context,
+    dependencies,
+  )
+  if (providerSwitch) return providerSwitch
   const providers = await operatorProvidersRoute(
     request,
     env,

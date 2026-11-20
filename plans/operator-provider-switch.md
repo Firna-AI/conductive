@@ -449,11 +449,11 @@ Depends on: 1
 
 Depends on: 2
 
-- [ ] Add the migration of the switch table, under the rules of the [migrations README](../migrations/README.md).
-- [ ] Add the operator route of Switch account, with the operator check of the other operator actions, and its record.
-- [ ] Add the switch and the workspaces by account to the org detail of `worker/operator/org-detail.ts`.
-- [ ] Keep the time and the operator of a stop in the switch record.
-- [ ] Add tests for the route, the record, and the access check.
+- [x] Add the migration of the switch table, under the rules of the [migrations README](../migrations/README.md).
+- [x] Add the operator route of Switch account, with the operator check of the other operator actions, and its record.
+- [x] Add the switch and the workspaces by account to the org detail of `worker/operator/org-detail.ts`.
+- [x] Keep the time and the operator of a stop in the switch record.
+- [x] Add tests for the route, the record, and the access check.
 
 ## Milestone 4: The switch build
 

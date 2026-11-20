@@ -528,3 +528,21 @@ chosen row without a position after the rows with one, and it ignores the
 position of a row that is not chosen. The next add or move gives every
 chosen row a position again.
 [The app API](../worker/app-api/README.md) gives the rules of the order.
+
+`202611201200_org_provider_switches.sql` adds `org_provider_switches`.
+It stores each org's switch request, accounts, operator, time, job stop
+choice, wait, build identity and times, failure cause, account-change time,
+and stop operator and time. A partial unique index allows one waiting or
+building switch per org. Org purge deletes its records. User deletion
+clears the actor references. Build deletion clears the job references.
+The migration also adds three nullable columns to `image_builds`:
+`operator_switch_id` identifies each hidden switch build attempt,
+`waiting_for_switch_id` identifies a member build that waits for a switch,
+and `execution_started_at` can hold when that build actually starts.
+These fields let the build code retain every switch attempt and keep a
+waiting member build's execution time separate from its request time.
+Existing rows and previous Worker inserts get null in all three columns.
+The migration changes no existing value, column rule, or write default.
+The previous Worker therefore keeps working on this schema.
+The [operator backend](../worker/operator/README.md#provider-account-switches)
+owns the new records.
