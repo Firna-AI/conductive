@@ -213,7 +213,9 @@ Projection, under option C of decision 1:
 15. The reader release has its own branch from `main` and its own pull
     request into `main`, in a nested workspace. Reason: it must merge and
     stay live for an hour before this branch merges. It must not carry the
-    unmerged work of this branch.
+    unmerged work of this branch. The primary orchestrator keeps this plan,
+    adds the reader's `Branch:` markers, and ticks its TODOs after checking
+    the reader's report. The reader prompt includes the milestone text.
 
 Runner parts:
 
@@ -507,8 +509,13 @@ branch merges only after this release has been live for at least one hour,
 as [the two-PR rule](../migrations/README.md#keep-the-previous-worker-working)
 says.
 
+The reader workspace follows `finish-work`, because its pull request
+targets `main`. Its prompt must keep review and fixes before PR creation.
+The primary orchestrator owns this milestone's plan edits and TODO ticks.
+
 - [ ] Create a nested workspace for this milestone. Start its branch from
-      `main`. Open its pull request into `main`.
+      `main`. Add its `Branch:` markers here. Include this milestone and
+      its review order in the delegation prompt. Keep this plan off that branch.
 - [ ] Define the bucket layout in one module under `worker/files/`. Give
       its keys, marker, chunks, order text, counts, and digests in the doc
       comment of the module. Keep room for the optional scalar fields of
@@ -536,9 +543,11 @@ says.
 - [ ] Update the storage section and Key Code of the
       [files README](../worker/files/README.md).
 - [ ] Run the targeted tests, `npm run test -- worker/files`, and the
-      complete gate. Commit, push, and open the pull request into `main`.
-- [ ] Review the pull request with the `implementation-review` skill
-      against `origin/main`. Apply the fix rule.
+      complete gate. Commit and push the branch.
+- [ ] Review the complete local diff against `origin/main` with the
+      `implementation-review` skill after the push. Apply its fix rule.
+      Push and re-review required fixes before opening the pull request.
+- [ ] Open the reader pull request into `main` after review and fixes.
 - [ ] After Cal merges it, record the merge commit and the time of the
       successful deploy run in `.context/workspace-object-memory/`.
 
