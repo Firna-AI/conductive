@@ -174,7 +174,12 @@ New workspace opens. Its child pages:
   run for each cause, skipped runs, and, as `saved` and `run-now`, the
   automation of the flow before and after Run now. In `failed`, a run that a
   check failed has no workspace, and a run whose first start or first
-  turn failed opens its workspace. A phone shows a saved automation in two
+  turn failed opens its workspace. The cloud computer stopped the first
+  turn of three runs, from decision 6 D of the continuation plan. One
+  failed after a second stop soon after the agent continued, and one
+  failed for the login of the owner, which was gone at the stop. Both
+  kept their workspace. The third did not fail, because the turn that
+  continued its work finished. A phone shows a saved automation in two
   tabs, Automation and Runs. These pages open on the Runs tab, except
   `saved`.
 - `app/automations/run-workspace` has the workspace of a pull request run,

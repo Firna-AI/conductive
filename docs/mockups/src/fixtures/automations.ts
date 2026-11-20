@@ -89,7 +89,9 @@ export type Automation = {
   movedFrom?: string
   /**
    * The runs that failed in a row. A failed check, a failed start, and a
-   * failed first turn count. A finished first turn resets the count.
+   * failed first turn count, and so does a first turn that the cloud
+   * computer stopped with no turn to continue its work. A run whose first
+   * turn, or the last turn that continued it, finished resets the count.
    */
   failedRunsInARow?: number
   /** Why the automation turned off after its repository was removed. */

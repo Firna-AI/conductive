@@ -21,6 +21,14 @@ import {
  * used Codex, before Cal moved the automation to Claude, so its row still
  * names Codex. The run of #485 finished its first turn, and its workspace
  * could not resume later, so it shows the state of that workspace.
+ *
+ * The cloud computer stopped the first turn of three runs (decision 6 D of
+ * the continuation plan). For #483, it stopped again less than 15 minutes
+ * after the start of the turn that continued the work, so no further turn
+ * continued it, and the run failed. For #481, Cal's Claude login was gone
+ * at the stop, so no turn continued it, and the run failed with the cause
+ * of the login. Both kept their workspace. For #480, the turn that
+ * continued the work finished, so that run did not fail.
  */
 export const failedRuns: readonly Run[] = runsOf(automations['review-prs'], [
   {
@@ -63,6 +71,26 @@ export const failedRuns: readonly Run[] = runsOf(automations['review-prs'], [
     trigger: pr('opened', 485),
     state: 'error',
     when: '6h',
+  },
+  {
+    key: 'pushed-483',
+    trigger: pr('pushed', 483),
+    state: 'failed',
+    cause: 'cloud-computer-stopped',
+    when: '9h',
+  },
+  {
+    key: 'pushed-480',
+    trigger: pr('pushed', 480),
+    state: 'ready',
+    when: '14h',
+  },
+  {
+    key: 'pushed-481',
+    trigger: pr('pushed', 481),
+    state: 'failed',
+    cause: 'agent-login',
+    when: '1d',
   },
   {
     key: 'pushed-484',

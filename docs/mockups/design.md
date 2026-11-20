@@ -327,8 +327,10 @@ sessions as tabs above the chat, and four tabs at the bottom.
   - `runCopy.ts` gives the words of a failed run from its stored cause, and
     from the agent and the owner of the run itself, not of its automation. So
     a later change of the agent, or a move of the automation to another owner,
-    changes no past row. A failed start and a failed first turn keep their
-    workspace, and their rows open it, as `app/automations/runs/failed` shows.
+    changes no past row. A failed start, a failed first turn, and a first
+    turn that the cloud computer stopped with no turn to continue it keep
+    their workspace, and their rows open it, as `app/automations/runs/failed`
+    shows.
   - When the automation page cannot show its automation, the page keeps Automation
     as its name and shows no tabs, no Runs list, and no actions. An automation
     that the org no longer has shows the empty state "This automation is not

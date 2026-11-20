@@ -4,8 +4,10 @@
  * is queued. A rule can skip a run, with its reason. A run fails with its
  * cause: a check before the create fails it before it has a workspace, and
  * a first start or a first turn that fails keeps its workspace (decisions
- * 130 D and 512 B). Each run keeps the agent and the owner that it ran
- * with, so a later change of its automation changes no past run.
+ * 130 D and 512 B). A run whose first turn the cloud computer stopped, with
+ * no turn to continue its work, also fails and keeps its workspace. Each
+ * run keeps the agent and the owner that it ran with, so a later change of
+ * its automation changes no past run.
  */
 
 import type { AgentKey } from './agents'
@@ -35,8 +37,19 @@ export type RunTrigger =
  * workspace. A first start that failed keeps its workspace in its error
  * state, and a first turn that failed keeps its workspace with the error of
  * the turn. Try again in that workspace retries the start or the turn.
+ *
+ * A run takes the outcome of the last turn of the chain of its first turn:
+ * that turn, and each turn that continues its work after a stop of the
+ * cloud computer (decision 6 D of the continuation plan). A chain that ends
+ * with no turn to continue it fails the run, and the run keeps its
+ * workspace. When the login of the owner is gone, the cause is
+ * `agent-login`, as for the check. A stop less than 15 minutes after the
+ * start of a turn that continued the work gives `cloud-computer-stopped`,
+ * and so does a stop after the 30 days of the chain have passed. A message
+ * in the workspace continues the work.
  */
-type FailureCause = 'agent-login' | 'github-access' | 'start' | 'turn'
+type FailureCause =
+  'agent-login' | 'github-access' | 'start' | 'turn' | 'cloud-computer-stopped'
 
 /**
  * Why a rule skipped a pull request event (decision 506 C): its author, or

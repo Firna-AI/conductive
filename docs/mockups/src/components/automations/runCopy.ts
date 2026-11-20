@@ -58,6 +58,14 @@ export type FailureCopy = {
  * A failed start and a failed first turn kept their workspace, which has
  * Try again, so their rows offer no action. `viewer` is the person signed
  * in, or none where nobody can act, as in a suspended org.
+ *
+ * A run whose work the cloud computer stopped, with no turn to continue it,
+ * kept its workspace too. When the login of the owner was gone, the row
+ * gives the words and the action of the check. Otherwise, the row says that
+ * a message in the workspace continues the work, because a stopped turn has
+ * no Try again. It says so only when the person signed in can send one.
+ * The words name what stopped, not the limit that ended the turns, as the
+ * stopped line of the chat does.
  */
 export function failureCopy(run: FailedRun, viewer?: PersonKey): FailureCopy {
   const agent = agents[run.agent].name
@@ -82,6 +90,14 @@ export function failureCopy(run: FailedRun, viewer?: PersonKey): FailureCopy {
       return { text: "The cloud computer didn't start." }
     case 'turn':
       return { text: run.message }
+    case 'cloud-computer-stopped': {
+      const stopped = 'The cloud computer stopped before the agent finished.'
+      return {
+        text: viewer
+          ? `${stopped} Send a message in the workspace to continue.`
+          : stopped,
+      }
+    }
   }
 }
 

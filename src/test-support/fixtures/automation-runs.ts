@@ -77,6 +77,11 @@ const failures: Readonly<
     code: 'workspace_start_failed',
     message: 'The cloud computer could not start. Try again.',
   },
+  'cloud-computer-stopped': {
+    code: 'cloud_computer_stopped',
+    message:
+      'The cloud computer stopped before the agent finished. Send a message in the workspace to continue.',
+  },
 }
 
 /** Each reason of a skipped run, as the Worker stores it. */
@@ -107,8 +112,9 @@ function skipLogin(run: Run): string | undefined {
 /**
  * Whether a run has a workspace: a run in the state of a workspace, and a
  * run whose first start or first turn failed, which keeps its workspace. A
- * queued or skipped run has none, and neither has a run that a check failed
- * before the create.
+ * run whose first turn the cloud computer stopped, with no turn to continue
+ * it, keeps its workspace too. A queued or skipped run has none, and
+ * neither has a run that a check failed before the create.
  */
 function hasWorkspace(run: Run): boolean {
   switch (run.state) {
@@ -116,7 +122,11 @@ function hasWorkspace(run: Run): boolean {
     case 'skipped':
       return false
     case 'failed':
-      return run.cause === 'start' || run.cause === 'turn'
+      return (
+        run.cause === 'start' ||
+        run.cause === 'turn' ||
+        run.cause === 'cloud-computer-stopped'
+      )
     default:
       return true
   }

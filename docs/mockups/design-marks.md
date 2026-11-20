@@ -55,8 +55,10 @@ with Copy link.
   keeps its failed outcome.
   - A run whose first start failed shows the cross, as its workspace in
     the error state does.
-  - A run that a check failed before it had a workspace, and a run whose
-    first turn failed, show a slash in rose. After a failed turn, the mark
-    of the header shows a finished turn, which would hide the failure.
+  - A run that a check failed before it had a workspace, a run whose first
+    turn failed, and a run whose first turn the cloud computer stopped with
+    no turn to continue it show a slash in rose. The mark of the header
+    would hide the failure: after a failed turn it shows a finished turn,
+    and after such a stop a stopped or a ready workspace.
 - `AgentMark` in `src/components/chat/` marks the agent of a session with two
   letters on a small tile, CL or CX, because the app draws no brand logo.

@@ -7,6 +7,7 @@ import { API_PATHS } from '../../shared/api'
 import { automationPaths, type Automation } from '../../shared/automations'
 import {
   byRole,
+  queryAllByRole,
   queryAllByText,
   queryByRole,
   queryByText,
@@ -34,6 +35,13 @@ function fixture(id: string): Automation {
 function hrefs(view: HTMLElement, names: readonly string[]) {
   return names.map(
     (name) => queryByRole('link', name, view)?.getAttribute('href') ?? null,
+  )
+}
+
+/** The addresses of all links of the page with each name, top to bottom. */
+function allHrefs(view: HTMLElement, names: readonly string[]) {
+  return names.map((name) =>
+    queryAllByRole('link', name, view).map((link) => link.getAttribute('href')),
   )
 }
 
@@ -118,11 +126,12 @@ describe('the Runs list of an automation', () => {
     ]
     const owner = (await reviewRuns('failed')).view
     const ownerRows = await rows(owner)
-    const actions = hrefs(owner, actionNames)
+    const actions = allHrefs(owner, actionNames)
     const workspaces = hrefs(owner, [
       'Open the workspace of PR opened #488',
       'Open the workspace of PR pushed #486',
       'Open the workspace of PR opened #486',
+      'Open the workspace of PR pushed #483',
     ])
     const ownerMarks = marks(owner)
     owner.remove()
@@ -133,8 +142,8 @@ describe('the Runs list of an automation', () => {
       actions,
       workspaces,
       ownerMarks,
-      memberRows: [memberRows[0], memberRows[1], memberRows[6]],
-      memberActions: hrefs(member, actionNames),
+      memberRows: [0, 1, 6, 8, 9].map((index) => memberRows[index]),
+      memberActions: allHrefs(member, actionNames),
     }).toEqual({
       ownerRows: [
         "PR opened #488 2m Failed Your Claude login isn't connected. Connect Claude",
@@ -143,22 +152,28 @@ describe('the Runs list of an automation', () => {
         'PR pushed #486 3h Failed Claude is overloaded right now.',
         "PR opened #486 4h Failed The cloud computer didn't start.",
         "PR opened #485 6h Couldn't start",
+        'PR pushed #483 9h Failed The cloud computer stopped before the agent finished. Send a message in the workspace to continue.',
+        'PR pushed #480 14h Ready',
+        "PR pushed #481 1d Failed Your Claude login isn't connected. Connect Claude",
         "PR pushed #484 2d Failed Your Codex login isn't connected. Connect Codex",
       ],
       // The automation now runs on Claude, and the run of #484 still ran on Codex.
       actions: [
-        routes.account('claude'),
-        API_PATHS.githubSignIn,
-        routes.account('codex'),
+        [routes.account('claude'), routes.account('claude')],
+        [API_PATHS.githubSignIn],
+        [routes.account('codex')],
       ],
-      // A failed first turn and a failed start keep their workspace.
+      // A failed first turn and a failed start keep their workspace, and so
+      // does a first turn that the cloud computer stopped with no turn to
+      // continue it.
       workspaces: [
         null,
         routes.workspace(org, 'review-prs-pushed-486'),
         routes.workspace(org, 'review-prs-opened-486'),
+        routes.workspace(org, 'review-prs-pushed-483'),
       ],
-      // A failed start shows the cross of its workspace, and a failed check
-      // or a failed first turn the slash.
+      // A failed start shows the cross of its workspace, and each other
+      // failure the slash.
       ownerMarks: [
         'failed',
         'failed',
@@ -167,13 +182,18 @@ describe('the Runs list of an automation', () => {
         'error',
         'error',
         'failed',
+        'ready',
+        'failed',
+        'failed',
       ],
       memberRows: [
         "PR opened #488 2m Failed Cal's Claude login isn't connected.",
         "PR pushed #487 1h Failed Cal's GitHub access expired.",
+        'PR pushed #483 9h Failed The cloud computer stopped before the agent finished. Send a message in the workspace to continue.',
+        "PR pushed #481 1d Failed Cal's Claude login isn't connected.",
         "PR pushed #484 2d Failed Cal's Codex login isn't connected.",
       ],
-      memberActions: [null, null, null],
+      memberActions: [[], [], []],
     })
   })
 

@@ -273,6 +273,37 @@ same day, and added what an open tab shows before the automatic start.
   provider", so that its name differs from the page. The warning of "A
   log" is a requirement in Runner warnings, so the Privacy page names the
   new log record.
+- **Automation runs after a provider stop (decision 6).** My calls of
+  20 November 2026, from the mockups of Milestone 7. The mockup page
+  `app/automations/runs/failed` shows them.
+  - A chain that ends at the 15-minute guard or at the 30-day end fails
+    its run with the new code `cloud_computer_stopped`. It is the same
+    string as the end reason of the stopped turn, because that stop ended
+    the work.
+  - The row of such a run in the Runs list says "The cloud computer
+    stopped before the agent finished. Send a message in the workspace to
+    continue." The first sentence names what stopped, not the limit, as
+    the stopped line of the chat does. The second sentence says what a
+    member can do, because a stopped turn has no Try again.
+  - When nobody can act, as in a suspended org, the row gives only the
+    first sentence. Reason: a suspended org shows no action that it
+    refuses.
+  - A chain that ends because the login of the owner is gone fails with
+    `agent_login_required`. Its row gives the words and the action of the
+    failed login check. The owner reads "Your Claude login isn't
+    connected." with Connect Claude. Another member reads "Cal's Claude
+    login isn't connected." Reason:
+    [Run states](../docs/protocol/automation-runs.md#run-states) gives
+    the owner the one action that fixes the cause. The stored words of the
+    Worker cannot say "Your", and they give no action.
+  - Both runs keep their workspace, and their rows open it. Both show the
+    slash of a failed run, because the mark of the workspace would hide
+    the failure.
+  - The page also shows a run whose continuation turn finished, and that
+    run did not fail. So no three runs in a row fail, and the automation
+    stays on. The mockups draw no workspace for these three runs, so their
+    rows show no chevron, as the row of PR opened #485 does.
+    `app/chat/cloud-computer-stops` draws the lines of their chat.
 
 Not in this change:
 
@@ -471,14 +502,17 @@ Depends on: 6
 
 Decision 6 adds a cause for a run whose chain ends with no continuation.
 
-- [ ] Add the new cause to the mockup page `app/automations/runs/failed`,
+- [x] Add the new cause to the mockup page `app/automations/runs/failed`,
       with its words. The words never name a provider. Show a run whose
       chain ended at the 15-minute guard or at the 30-day end, and a run
       that failed because the login was gone.
-- [ ] Run `npm run mockups:check`. Smoke-test the page, and save a
+- [x] Run `npm run mockups:check`. Smoke-test the page, and save a
       screenshot in `.context/`.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+
+Evidence: the screenshots and the check logs are in
+`.context/agent-continues-after-provider-stop/milestone-7/`.
 
 ## Milestone 8: Documentation of decisions 5, 6, and 7
 
@@ -487,7 +521,9 @@ Depends on: 7
 - [ ] `docs/protocol/automation-runs.md`: a run takes the outcome of the
       last turn of its first turn's chain. A chain that ends with no
       continuation fails the run with its cause and counts toward the
-      turn-off. Update "Run states" and "Turn off after failed runs".
+      turn-off. Update "Run states", with the new cause in its list of
+      causes. Update "Failed runs", because such a run keeps its
+      workspace. Update "Turn off after failed runs".
 - [ ] `docs/protocol/provider-stops.md`: the continuation message names the
       session that holds the work, and tells the agent to read it when it
       lacks the context.
@@ -506,8 +542,11 @@ Depends on: 8
 - [ ] Decision 6: the automation run report follows the first turn's
       chain to its last turn, through a stored link from each stopped turn
       to its continuation. A chain that ends with no continuation fails the
-      run with `agent_login_required` or the new cause, and counts toward
-      the turn-off. Tests: a continuation that finishes, one that fails, the
+      run with `agent_login_required` or `cloud_computer_stopped`, and
+      counts toward the turn-off. A lost login also stores what tells it
+      apart from a first turn whose login failed. Both runs have a
+      workspace and the same code, but the design gives them different
+      words. Tests: a continuation that finishes, one that fails, the
       guard, the 30-day end, a lost login, and the turn-off after three.
 - [ ] Decision 7: one builder writes each continuation message. It names
       the session of the stopped turn and tells the agent to read it with
@@ -523,7 +562,16 @@ Tags: ui
 Depends on: 9
 
 - [ ] Show the new cause in `src/shell/automations/run-copy.ts`, as in the
-      mockup. Add the dev fixture and the tests.
+      mockup. Give only its first sentence when nobody can act. Add the dev
+      fixture and the tests.
+- [ ] Show a lost login at the end of a chain with the words and the action
+      of the failed login check, as the mockup does. Today `failureCopy`
+      shows the stored words of `agent_login_required` for each run with a
+      workspace. Add the dev fixture and the tests.
+- [ ] Give the mockup run of a lost login at the end of a chain a mark that
+      says it has a workspace. `src/test-support/fixtures/automation-runs.ts`
+      finds the workspace of a mockup run from its cause, and it finds none
+      for `agent-login`.
 - [ ] Check the Runs list in a browser, and save a screenshot in
       `.context/`.
 
