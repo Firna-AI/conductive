@@ -29,8 +29,17 @@ impl DiskStore {
         Ok(())
     }
 
+    /// Publish one part under the short store-wide publish lock.
+    ///
+    /// A check and a repair can fetch the same part at once. The lock lets
+    /// only one of them write it, and the other keeps the published part.
     pub(super) fn unpack_part(&self, part: &Part, bytes: &[u8]) -> Result<()> {
+        let publish = self.lock_file("part-publish.lock")?;
+        publish.lock().internal()?;
         let target = self.part_path(&part.sha256);
+        if target.join("complete").try_exists().internal()? {
+            return Ok(());
+        }
         let temporary = target.with_extension("partial");
         if temporary.try_exists().internal()? {
             fs::remove_dir_all(&temporary).internal()?;

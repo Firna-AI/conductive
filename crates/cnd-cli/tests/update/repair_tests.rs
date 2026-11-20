@@ -15,7 +15,7 @@ use cnd_release::parts::{Part, PartsList};
 use crate::support::{Server, archive};
 
 #[tokio::test]
-async fn apply_downloads_lost_parts_of_the_active_release_again()
+async fn apply_downloads_lost_parts_while_a_background_check_runs()
 -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let root = tempfile::tempdir()?;
     let mut responses = HashMap::new();
@@ -55,6 +55,7 @@ async fn apply_downloads_lost_parts_of_the_active_release_again()
         processes: Arc::new(SystemProcesses),
     };
     let engine: &dyn UpdateEngine = &engine;
+    let _background_check = disk.lock()?.ok_or("expected download lock")?;
     engine.apply().await?;
     let active = disk.version_path("0.0.3");
     assert_eq!(fs::read(active.join("node/bin/node"))?, b"node bytes");

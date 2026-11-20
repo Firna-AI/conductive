@@ -1,49 +1,63 @@
 //! Restore the missing parts of the release that a start is about to run.
 
-use cnd_release::parts::{Part, PartsList};
+use std::time::Duration;
+
+use cnd_release::parts::Part;
+use tokio::time::{Instant, timeout};
 
 use super::engine::Engine;
-use super::error::{ErrorResultExt, Result};
+
+/// The longest time that one start spends on part downloads.
+///
+/// It stays below the runner service's start limit of 90 seconds, so the
+/// start can warn and go on before systemd ends it.
+const REPAIR_TIME: Duration = Duration::from_secs(60);
 
 impl Engine {
     /// Download each missing part of `version` again before the release starts.
     ///
-    /// A failure logs a warning and keeps the start, so the start behaves as
-    /// it does without the repair. The next start tries again.
+    /// Each part gets an equal share of the time that is left. A failed or
+    /// slow part logs a warning, and the next part still gets its attempt.
+    /// The start then goes on, and the next start tries again. The repair
+    /// takes no download lock, so a background check never delays it.
     pub(super) async fn restore_parts(&self, version: &str) {
-        if let Err(error) = self.try_restore_parts(version).await {
-            tracing::warn!(%error, version, "missing release parts could not be restored");
-        }
-    }
-
-    async fn try_restore_parts(&self, version: &str) -> Result<()> {
-        let parts = self.store.parts(version)?;
-        if self.missing_parts(&parts)?.is_empty() {
-            return Ok(());
-        }
-        let store = self.store.clone();
-        let _lock = tokio::task::spawn_blocking(move || store.installation_lock())
-            .await
-            .internal()??;
-        let missing = self.missing_parts(&parts)?;
-        for part in &missing {
-            self.download_part(version, part).await?;
-        }
-        tracing::info!(
-            version,
-            restored = missing.len(),
-            "restored missing release parts"
-        );
-        Ok(())
-    }
-
-    fn missing_parts(&self, parts: &PartsList) -> Result<Vec<Part>> {
-        let mut missing = Vec::new();
-        for part in &parts.parts {
-            if !self.store.has_part(&part.sha256)? {
-                missing.push(part.clone());
+        let parts = match self.store.parts(version) {
+            Ok(parts) => parts,
+            Err(error) => {
+                tracing::warn!(%error, version, "release parts could not be read");
+                return;
+            }
+        };
+        let missing: Vec<&Part> = parts
+            .parts
+            .iter()
+            .filter(|part| self.part_missing(version, part))
+            .collect();
+        let deadline = Instant::now() + REPAIR_TIME;
+        for (index, part) in missing.iter().enumerate() {
+            let left = u32::try_from(missing.len() - index).unwrap_or(u32::MAX);
+            let share = deadline.saturating_duration_since(Instant::now()) / left;
+            match timeout(share, self.download_part(version, part)).await {
+                Ok(Ok(())) => {
+                    tracing::info!(version, part = %part.name, "restored a missing release part")
+                }
+                Ok(Err(error)) => {
+                    tracing::warn!(%error, version, part = %part.name, "a missing release part could not be restored")
+                }
+                Err(_) => {
+                    tracing::warn!(version, part = %part.name, "a missing release part did not download in time")
+                }
             }
         }
-        Ok(missing)
+    }
+
+    fn part_missing(&self, version: &str, part: &Part) -> bool {
+        match self.store.has_part(&part.sha256) {
+            Ok(present) => !present,
+            Err(error) => {
+                tracing::warn!(%error, version, part = %part.name, "a release part could not be checked");
+                false
+            }
+        }
     }
 }

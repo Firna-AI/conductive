@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use cli_release_interface::ReleaseAssetInfo;
-use cli_updater::{BinaryInstaller, ReleaseClient};
+use cli_updater::{BinaryInstaller, DynReleaseClient, ReleaseClient};
 use cnd_release::files::sha256;
 use cnd_release::parts::{Part, PartsList};
 use unimock::{Clause, MockFn, Unimock, matching};
@@ -38,10 +38,6 @@ impl UpdateLock for Lock {}
 
 pub(super) fn locked() -> Option<Box<dyn UpdateLock>> {
     Some(Box::new(Lock))
-}
-
-pub(super) fn held() -> Box<dyn UpdateLock> {
-    Box::new(Lock)
 }
 
 /// Each version records the test parts, and each part is on disk.
@@ -91,6 +87,16 @@ pub(super) fn engine(
         client: Arc::new(Network(client)),
         installer: Arc::new(Archive(installer)),
         processes: Arc::new(processes),
+    }
+}
+
+/// An engine with a hand-written release client, such as one that stalls.
+pub(super) fn engine_with_client(store: Unimock, client: DynReleaseClient) -> Engine {
+    Engine {
+        store: Arc::new(store),
+        client,
+        installer: Arc::new(Archive(Unimock::new(()))),
+        processes: Arc::new(Unimock::new(())),
     }
 }
 

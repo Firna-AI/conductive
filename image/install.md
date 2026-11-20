@@ -141,6 +141,7 @@ previous -> versions/<previous-version>
 pending                         # JSON start journal, absent after confirmation
 update.lock                     # exclusive background-check lock
 update-apply.lock               # exclusive apply/confirmation lock
+part-publish.lock               # short lock of each part unpack
 versions/<version>/conductive
 versions/<version>/parts.json
 versions/<version>/sdk-helper -> /opt/conductive/parts/<sdk-helper-sha256>
@@ -163,8 +164,11 @@ folders never qualify for apply. A later check replaces them.
 
 Apply reads `parts.json` of the version that it starts. When a part
 folder of that version has no `complete` marker, apply downloads that
-part again under the download lock, with the digest check of a check.
-A failed repair logs a warning, and apply goes on.
+part again, with the digest check of a check. It takes no download lock.
+All part downloads of one apply share a limit of 60 seconds. A failed or
+slow part logs a warning, and apply goes on. Each unpack, by a check or
+by apply, holds `part-publish.lock` and keeps a part that is already
+complete.
 
 Apply calls `current/system/install-system.sh`. That script installs all
 release units into `/etc/systemd/system`, copies the udev rule, sets the

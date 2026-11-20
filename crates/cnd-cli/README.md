@@ -85,10 +85,14 @@ Downloads have a one-hour total timeout and a ten-second connect timeout.
 `update apply` switches to the newest complete version and installs its
 system files. First it checks that each part of the version that starts
 has its complete marker. In a fallback, that version is the previous
-release. When a part is missing, apply waits for the download lock and
-downloads that part again with the digest check of `update check`. When
-no part is missing, apply uses no network. A failed repair logs a warning,
-and apply goes on. The next apply tries again. It leaves a pending marker until
+release. When a part is missing, apply downloads that part again with the
+digest check of `update check`. The repair takes no download lock, so a
+background check never delays it. A short publish lock lets only one
+process unpack a part, and a part that is already complete stays. Each
+missing part gets an equal share of what is left of 60 seconds. A failed
+or slow part logs a warning, the next part still gets its attempt, and
+apply goes on. The next apply tries again. When no part is missing, apply
+uses no network. It leaves a pending marker until
 `update started` confirms the runner start. Confirmation checks this executable's
 version against current and pending. A different version changes nothing.
 A later apply with that marker restores the previous version and its system files. A persistent rejection

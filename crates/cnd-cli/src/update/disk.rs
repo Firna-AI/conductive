@@ -19,7 +19,7 @@ impl DiskStore {
         Self { root }
     }
 
-    fn lock_file(&self, name: &str) -> Result<File> {
+    pub(super) fn lock_file(&self, name: &str) -> Result<File> {
         fs::create_dir_all(&self.root).internal()?;
         File::options()
             .create(true)
