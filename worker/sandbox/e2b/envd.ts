@@ -33,6 +33,7 @@ export class EnvdSession {
   ): Promise<Response> {
     const user = options.user ?? 'root'
     const { method, path } = envdRoute(route, user)
+    const signal = AbortSignal.timeout(options.timeoutMs ?? 65_000)
     let response: Response
     try {
       const headers = new Headers({
@@ -45,7 +46,7 @@ export class EnvdSession {
         headers,
         body: options.body,
         redirect: 'manual' as const,
-        signal: AbortSignal.timeout(options.timeoutMs ?? 65_000),
+        signal,
         duplex: 'half' as const,
       }
       response = await this.fetch(new Request(new URL(path, this.origin), init))
@@ -62,7 +63,7 @@ export class EnvdSession {
       }
       throw envdError(response, value)
     }
-    return response
+    return deadlineResponse(response, signal)
   }
 
   async json(
@@ -85,6 +86,44 @@ export class EnvdSession {
       return invalidResponse()
     }
   }
+}
+
+function deadlineResponse(response: Response, signal: AbortSignal): Response {
+  if (!response.body) return response
+  const reader = response.body.getReader()
+  return new Response(
+    new ReadableStream<Uint8Array>(
+      {
+        async pull(controller) {
+          try {
+            const { done, value } = await reader.read()
+            if (done) {
+              reader.releaseLock()
+              controller.close()
+            } else controller.enqueue(value)
+          } catch (error) {
+            reader.releaseLock()
+            controller.error(
+              signal.aborted ? new ProviderError('unavailable', 503) : error,
+            )
+          }
+        },
+        async cancel(reason) {
+          try {
+            await reader.cancel(reason)
+          } finally {
+            reader.releaseLock()
+          }
+        },
+      },
+      { highWaterMark: 0 },
+    ),
+    {
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers,
+    },
+  )
 }
 
 export async function envdSession(

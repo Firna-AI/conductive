@@ -33,6 +33,7 @@ export class E2bControl {
     const { method, path } = controlRoute(route)
     const url = new URL(path, `https://api.${this.domain}`)
     if (options.query) url.search = options.query.toString()
+    const signal = options.signal ?? AbortSignal.timeout(30_000)
     let response: Response
     try {
       const headers = new Headers({
@@ -50,7 +51,7 @@ export class E2bControl {
               ? undefined
               : JSON.stringify(options.body),
           redirect: 'manual',
-          signal: options.signal ?? AbortSignal.timeout(30_000),
+          signal,
         }),
       )
     } catch {
@@ -74,6 +75,7 @@ export class E2bControl {
           'The cloud computer response is too large.',
         )
       if (!response.ok) throw failure(response, null)
+      if (signal.aborted) throw new ProviderError('unavailable', 503)
       throw new ProviderError('invalid_response', 502)
     }
     if (!response.ok) throw failure(response, value)
