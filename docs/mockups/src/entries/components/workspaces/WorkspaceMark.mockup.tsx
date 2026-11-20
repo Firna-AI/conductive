@@ -4,9 +4,9 @@ import { activityStatuses, githubSchema } from './workspaceSchemas'
 
 /**
  * The list mark of a workspace, registered with Mokly. Mockup-only parts
- * render `workspaceMark.Component`, so that a change to the mark gives one
- * Changes row for the mark, with the screens that use it under its
- * Affected screens. A part that the app reaches keeps the plain
+ * render `workspaceMark.Component`, so that Changes lists a change to the
+ * mark under the mark, with the screens that use it under its Affected
+ * screens. A part that the app reaches keeps the plain
  * `WorkspaceMark`, because the wrapper renders only inside Mokly.
  *
  * A changed CSS rule goes to the mark only when it matches on the pages of

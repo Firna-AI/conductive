@@ -9,8 +9,9 @@ renders plain React parts. An edit to a shared part therefore gives one
 Changes row for each screen and variant that looks different, and no row
 names the part. Commit `cc3ea647` changed `WorkspaceMark`, which 196 screen
 modules import. This change registers every part of the catalogue with
-Mokly's `defineComponent`: 357 parts. An edit to a registered part then gives one row for the
-part, and the screens that use it go under its Affected screens. The
+Mokly's `defineComponent`: 357 parts. Changes then lists an edit to a
+registered part under the part, with a row for each of its own pages that
+changes, and the screens that use it go under its Affected screens. The
 change adds no HTML entry, changes no screen picture, and changes no app
 code.
 
@@ -112,8 +113,9 @@ counts and test under `.context/mokly-html/` of this workspace.
   runners. `.context/registered-mockup-parts/merge5-build-oom.mem` holds
   the memory log.
 - The proof of Milestone 1, on 2026-11-16: with `WorkspaceMark`
-  registered, a trial edit to its render gave 1 Changes row in place of
-  405, and a trial edit to its CSS also gave 1 row in place of 405. The
+  registered, a trial edit to the render of one of its states gave 1
+  Changes row in place of 405, the one variant that shows that state, and
+  a trial edit to the CSS of that state also gave 1 row in place of 405. The
   388 screens and variants went under its Affected screens.
   `.context/registered-mockup-parts/proof.md` holds the method and the
   counts.
@@ -513,8 +515,13 @@ Mac app, and `ChatWorkspaces`: 35 parts.
 - [ ] Register `ChatWorkspaces` of `components/chat/chatWorkspaces.tsx`,
       with the workspaces as data and its content as a slot, and render it
       from `WorkspaceScreen` and the dialogs, as the design says.
-- [ ] Give the parts with touch sizes a variant with the touch sizes. They
-      include `CopyLinkButton`, `OwnerPicker`, `GitHubLink`, `ChipIconCell`,
+- [ ] Give each registered part that reads the touch sizes or the Mac app
+      a variant in that state, within the limit of five entries until
+      decision 521 is answered: swap a variant where a part has four. Find
+      the parts by their reads of `useTouch`, `useControlSizes`,
+      `useTouchScreen`, and `useMacApp`, for example `ActionButton`,
+      `IconButton`, `SearchField`, `ShortcutTip`, `AppFrame`, `OrgRail`,
+      `ChatPane`, and `PendingCommand`. They also include `CopyLinkButton`, `OwnerPicker`, `GitHubLink`, `ChipIconCell`,
       `ChipTextField`, `MessageField`, `ModelPicker`, `Composer`,
       `FilePage`, `ServerList`, `PortMessage`, `PreviewTabs`,
       `TerminalView`, `TurnFileList`, `CodeBlock`, `OrgNameFields`,

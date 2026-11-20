@@ -179,8 +179,8 @@ a dropped folder that the browser cannot read. The app shares these words.
 - Controls come from `@firna/ui`. A control without a handler renders as
   disabled, so the screens pass `noop` from `src/noop.ts`.
 - A shared part can have a Mokly registration under
-  `src/entries/components/`, so that an edit to the part gives one row in
-  the Changes view. The `components` folder of the catalogue lists each
+  `src/entries/components/`, so that the Changes view lists an edit to the
+  part under the part, not under each screen. The `components` folder of the catalogue lists each
   registered part. A screen renders its wrapper, and a file that the app
   reaches renders the plain part.
   [Registered parts](registered-parts.md) gives the rules.

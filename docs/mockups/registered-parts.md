@@ -2,13 +2,21 @@
 
 Mokly's Changes view compares the catalogue of a branch with `origin/main`.
 A shared part of the catalogue can be registered with Mokly's
-`defineComponent`, so that an edit to the part gives one Changes row for
-the part. Many shared parts are registered, and some are not yet. The
-`components` folder of the catalogue lists each registered part. The screens that use it show under its Affected screens, and
-they get no rows of their own. Without the registration, the same edit
-gives one row for each screen and each variant that looks different: an
-edit to the workspace mark gave 405 rows, and 1 row after its
-registration.
+`defineComponent`, so that Changes lists an edit to the part under the
+part, not under each screen. Many shared parts are registered, and some
+are not yet. The `components` folder of the catalogue lists each
+registered part.
+
+A registered part gets one Changes row for each of its own pages that
+looks different: its own page and each variant. This is also true when
+the edit is in a plain child part that it draws, such as `MarkGrid`
+inside the workspace mark, so one edit can give rows to several parts.
+The screens that use a changed part show under its Affected screens, and
+they get no rows of their own for that edit. Without the registration,
+the same edit gives one row for each screen and each variant that looks
+different. A trial edit to one state of the workspace mark gave 405 rows
+before its registration, and 1 row after it, for the one variant that
+shows that state.
 
 ## Where a registration lives
 
@@ -64,18 +72,26 @@ registration.
 ## What Changes still shows per screen
 
 - An edit to a part that has no registration yet.
-
 - A change of a design token, a custom property, or a `@keyframes` rule.
   Mokly cannot trace those rules to elements.
 - A CSS rule of a state that no own page of the part shows.
-- A change that reaches a part only through React context, such as the
-  Mac app state, the touch sizes, or the workspaces of the chat.
 - An edit to a part whose use stays plain: the parts in chat text,
   message blocks, Markdown blocks, and code lines, which have no stable
   key, and every part in a file that the app reaches.
 - The first registration of a part lists each screen that draws it once,
   with the reasons `structure` and `material`, also when the picture is
   the same.
+
+## What Changes can miss
+
+Mokly compares a registered part inside a screen by its name and its
+props, not by what it draws. So a change that reaches a part only through
+React context can give no row at all: no row for the part, no row for the
+screen, and no entry under Affected screens. Examples are the Mac app
+state, the touch sizes, and the workspaces of the chat. `ShortcutTip`
+draws its key by the Mac app state, and `ActionButton` takes its touch
+height from the touch sizes, and none of their own pages shows those
+states. Check such a change on the screens that draw it.
 
 ## The build
 
