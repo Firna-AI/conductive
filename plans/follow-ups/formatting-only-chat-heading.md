@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-11, from branch `calummoore/markdown-heading-support`, review round 2, finding 3. Updated on 2026-11-17 on branch `calummoore/output-summary-f7sm`, after the shared Markdown parser replaced the chat reader. Updated on 2026-11-20, at the second merge of `main` into that branch, which carried the fix of `main` pull request #555 for headings of white-space code into the parser.
-- **Location:** `src/chat/markdown/answer-parts.ts:190` (`imageParts`), `src/chat/markdown/agent-paragraphs.ts:68` (`showsWords`), `src/chat/components/AgentText.tsx:73`, `src/chat/components/LineBlocks.tsx:153`, and `src/chat/components/MessageLine.tsx:82`.
+- **Location:** `src/chat/markdown/answer-parts.ts:190` (`imageParts`), `src/chat/markdown/readable-text.ts:13` (`showsWords`), `src/chat/components/AgentText.tsx:73`, `src/chat/components/LineBlocks.tsx:153`, and `src/chat/components/MessageLine.tsx:91`.
 - **Reason:** only a heading of an image with no alt text that opens nothing meets it, and the fix costs the same later.
 
 - **Source:** Review. **Category:** Product bug.
@@ -14,9 +14,9 @@
 - **Background:**
   - The chat reads each agent message with the shared `markdown-it` parser, through `agentBlocks`. `answerParts` then makes the parts that the chat draws.
   - `docs/protocol/chat-markdown.md` requires that a heading with no text shows nothing and still ends the paragraph above it. Reason: a screen reader meets no empty heading.
-  - `heading` in `src/chat/markdown/agent-paragraphs.ts` leaves out a heading that shows no words, as `showsWords` says: no text or code with a character other than white space, and no link or image. So `` ## ` ` `` shows nothing, as `main` pull request #555 made the old reader do. A link and an image count as words, because the chat decides when it draws them whether they show words.
+  - `heading` in `src/chat/markdown/agent-paragraphs.ts` leaves out a heading that shows no words, as `showsWords` of `src/chat/markdown/readable-text.ts` says: no text or code with a character other than white space, and no link or image. So `` ## ` ` `` shows nothing, as `main` pull request #555 made the old reader do. A link and an image count as words, because the chat decides when it draws them whether they show words.
   - A heading shows no picture, as "Pictures in answers" of `docs/protocol/file-mentions-answers.md` says, and no picture at a web address loads, as `docs/protocol/chat-links.md` says. When the alt text of an image is empty, an image of a file of the tree shows the file name. An image at a web address shows its address in that case. Any other image shows its alt text only.
-  - An open message line gets a hidden copy of its closed text as its name only when no block comes before its first table, at `MessageLine.tsx:82`.
+  - An open message line gets a hidden copy of its closed text as its name only when its blocks before its first table show no readable text, as `blockShowsText` of the same module says, at `MessageLine.tsx:91`. That check counts an image as text.
 - **Problem:**
   - `## ![](x)` draws an empty `h2` when `x` is no file of the tree and no web address. An image of a file draws an empty `h2` while the chat has no tree.
   - Before a table, such an image heading stops the open message line from adding its hidden name. The line then has an empty accessible name.
@@ -36,7 +36,7 @@
 - **Wider fix:** B. One reader of the shown words keeps each renderer and the name check from drawing or counting an empty block.
 - **Previous examples:** The old chat reader drew `## **` as an empty heading, until `main` pull request #555 gave such a heading empty text. Commit `712afd8f` added the earlier block-count name check.
 - **Related:**
-  - `plans/follow-ups/message-line-unreadable-name.md` covers the same unnamed control when a paragraph or a code block comes before the table. B can serve both items.
+  - `plans/follow-ups/message-line-unreadable-name.md` covers the same unnamed control when a paragraph of such an image comes before the table. B can serve both items.
   - The fix of the closed item [The chat splits Markdown only at line feeds](https://github.com/Firna-AI/conductive/blob/6fa9e75c70f26df8d279521e54ab0f8feab54454/plans/follow-ups/markdown-line-endings.md) made the chat split lines at CRLF, CR, and LF. The shared parser splits them in the same way, so a heading line holds no carriage return. That fix changed no empty check, so this item still applies.
 - **Recommendation:** B. One reader decides emptiness for both renderers and the name check, also for an image whose words depend on the tree. The first review recommended B, and the first record recommended D.
 - **Action:** fix after merge, apply B, because only an unusual heading meets it, and the fix costs the same later.

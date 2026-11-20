@@ -6,6 +6,7 @@ import type {
   AutomationRunTrigger,
   AutomationSchedule,
 } from '../../shared/automations'
+import { WORKSPACE_STATES } from '../../shared/workspace-read'
 import {
   choice,
   count,
@@ -17,7 +18,6 @@ import {
   text,
 } from './parse'
 import { AGENTS, readSender } from './read-core'
-import { WORKSPACE_STATES } from './read-workspaces'
 
 export const SCHEDULES = [
   'hourly',

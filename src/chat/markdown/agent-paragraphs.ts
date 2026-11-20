@@ -3,6 +3,7 @@ import { unquoted, type TokenRead } from '../../markdown/token-read'
 import type { HeadingLevel, TextBlock } from './agent-blocks'
 import { inlineText, type InlineText } from './agent-inline'
 import { closedMarks } from './live-marks'
+import { showsWords } from './readable-text'
 
 /**
  * The paragraphs and the headings of an agent message, as the block read of
@@ -56,23 +57,6 @@ function withText(text: InlineText, more: string): InlineText {
   const last = text.at(-1)
   if (last?.kind !== 'text') return [...text, { kind: 'text', text: more }]
   return [...text.slice(0, -1), { kind: 'text', text: last.text + more }]
-}
-
-/**
- * Whether the text of a heading shows words: a text or a code node with a
- * character other than white space, or a link or an image, which shows its
- * words, its address, or its file when the heading draws. So a heading of
- * only white-space code, such as `` ## ` ` ``, shows no words. A mark that
- * the parser does not pair, such as one `**`, is text and shows as typed.
- */
-function showsWords(text: InlineText): boolean {
-  return text.some((node) => {
-    if (node.kind === 'text' || node.kind === 'code') {
-      return node.text.trim() !== ''
-    }
-    if (node.kind === 'mark') return showsWords(node.nodes)
-    return node.kind !== 'break'
-  })
 }
 
 /**

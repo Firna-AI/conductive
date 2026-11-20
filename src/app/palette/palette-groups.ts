@@ -115,9 +115,7 @@ export function actionGroups(source: PaletteBase): PaletteGroup[] {
     )
     orgRows.push(...offeredRows(list))
   }
-  const others = source.orgs.filter(
-    (other) => !other.deletion && other.id !== org?.id,
-  )
+  const others = source.orgs.filter((other) => other.id !== org?.id)
   const window = offers.filter((offer) => offer.scope.kind === 'window')
   return [
     { label: workspace.name, rows: offeredRows(workspace.offers) },

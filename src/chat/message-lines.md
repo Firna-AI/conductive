@@ -57,9 +57,22 @@ requirements, and the mockups draw them at `app/chat/work`,
   `MessageLine.module.css` sets their space.
 - A line that starts with a table, or with a block that holds one, keeps
   its closed text in a visually hidden span. So the open line keeps a name
-  for a screen reader. `agentBlocks` leaves out a block that draws
-  nothing, such as an empty heading, so such a block before the table
-  counts as no text. That hidden copy shows no chips, and `PlainLinks` of
+  for a screen reader. So does a line whose blocks before the table show
+  no readable text, as `blockShowsText` of `markdown/readable-text.ts`
+  reads them. An empty fenced code block shows no text. `agentBlocks`
+  leaves out a block that draws nothing, such as an empty heading.
+  Readable text before the table, such as the number of a numbered list
+  item or the name of a task box, names the open line, which then adds no
+  hidden copy. `MessageLine` reads this once for each text, with its
+  blocks.
+- A mark without its pair is text, as
+  [Formatting](../../docs/protocol/chat-markdown.md#formatting) says. So a
+  paragraph of only `**` before the table names the line `**`. A code
+  block of `**` names it too. An image counts as text, because what it
+  shows depends on the tree and the links of the screen, when it draws.
+  So an image with no alt text that opens nothing, such as `![](x)`, can
+  still leave the open line with no name.
+- That hidden copy shows no chips, and `PlainLinks` of
   `src/shell/ui/text-links.tsx` draws each link in it as its words. A
   `MentionsProvider` without files removes file chips. So the keyboard
   cannot reach a link in it.

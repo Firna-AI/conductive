@@ -182,8 +182,11 @@ has. These parts read and draw the headings:
   such as `## ` while the agent writes. The heading still ends the
   paragraph above it.
 - `heading` of `markdown/agent-paragraphs.ts` also leaves out a heading
-  that shows no words, as `showsWords` says: no text or code node holds a
-  character other than white space, and no link or image stands in it. So
+  that shows no words, as `showsWords` of `markdown/readable-text.ts`
+  says. The same module decides the hidden name of a message line, as
+  [Message lines](message-lines.md) says. A heading shows no words when
+  no text or code node holds a character other than white space, and no
+  link or image stands in it. So
   `` ## ` ` `` draws nothing, as `main` pull request #555 made the old
   reader do. A link or an image counts as words, because what it shows
   depends on the tree and the links of the screen, when it draws. A mark
