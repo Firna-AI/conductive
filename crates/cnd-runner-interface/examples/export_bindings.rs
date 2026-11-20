@@ -53,6 +53,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     runner::RunnerEvent::export_all(&cfg)?;
     runner_commands::RunnerAttachment::export_all(&cfg)?;
     runner_commands::RunnerBranches::export_all(&cfg)?;
+    runner_commands::RunnerCapabilities::export_all(&cfg)?;
     runner_commands::RunnerChangeModel::export_all(&cfg)?;
     runner_commands::RunnerCommand::export_all(&cfg)?;
     runner_commands::RunnerControlCommand::export_all(&cfg)?;

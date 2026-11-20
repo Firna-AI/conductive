@@ -46,6 +46,10 @@ pub enum RunnerTurn {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[ts(optional)]
         repository: Option<RunnerRepository>,
+        /// Current session capabilities. Older command producers can omit them.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        capabilities: Option<RunnerCapabilities>,
         /// attachments.
         #[ts(as = "ReadonlyVec<RunnerAttachment>")]
         attachments: Vec<RunnerAttachment>,
@@ -64,6 +68,17 @@ pub struct RunnerBranches {
     pub workspace_branch: String,
     /// targetBranch.
     pub target_branch: String,
+}
+
+/// Session capabilities by name only, without secret values.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+pub struct RunnerCapabilities {
+    /// Names of the secrets that this session can use with no request.
+    #[ts(as = "ReadonlyVec<String>")]
+    pub secrets: Vec<String>,
+    /// Whether Mac access is on in this workspace.
+    pub mac_access: bool,
 }
 
 /// Absolute path in the workspace repository, after the backend copies the file.

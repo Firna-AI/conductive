@@ -3,6 +3,7 @@ import type { CommitAuthor } from './CommitAuthor.js'
 import type { ReadonlyVec } from './ReadonlyVec.js'
 import type { RunnerAttachment } from './RunnerAttachment.js'
 import type { RunnerBranches } from './RunnerBranches.js'
+import type { RunnerCapabilities } from './RunnerCapabilities.js'
 import type { RunnerRepository } from './RunnerRepository.js'
 import type { RunnerTurnCredential } from './RunnerTurnCredential.js'
 import type { UserMessage } from './UserMessage.js'
@@ -36,6 +37,10 @@ export type RunnerTurn = {
    * Current repository. Only Workers that can move the runner send it.
    */
   repository?: RunnerRepository
+  /**
+   * Current session capabilities. Older command producers can omit them.
+   */
+  capabilities?: RunnerCapabilities
   /**
    * attachments.
    */

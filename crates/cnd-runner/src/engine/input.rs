@@ -79,9 +79,14 @@ impl Session {
         };
         let needs_instructions = self.saved.as_ref().is_none_or(|s| s.instructions.is_none());
         if needs_instructions {
+            let capabilities = match &input {
+                ProviderInput::Turn(RunnerTurn::Turn { capabilities, .. }) => capabilities.as_ref(),
+                ProviderInput::Message(_) => None,
+            };
             let (text, branches) = instructions::build(
                 &self.dependencies.configuration,
                 branches,
+                capabilities,
                 &message.choice.agent,
             )?;
             let conversation = self

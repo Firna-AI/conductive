@@ -285,21 +285,21 @@ Depends on: 1
 
 Depends on: 2
 
-- [ ] Add `RunnerCapabilities` and the optional `capabilities` field on
+- [x] Add `RunnerCapabilities` and the optional `capabilities` field on
       `RunnerTurn` in `crates/cnd-runner-interface/src/runner_commands.rs`,
       with a wire test. Regenerate the TypeScript with the command in
       `CLAUDE.md`.
-- [ ] In `crates/cnd-runner/src/engine/instructions.rs`, add the capability
+- [x] In `crates/cnd-runner/src/engine/instructions.rs`, add the capability
       paragraph when the facts are not empty. Pass the facts from
       `crates/cnd-runner/src/engine/input.rs`.
-- [ ] Name `list_secrets` and `run_with_secrets` in the tool paragraph, and
+- [x] Name `list_secrets` and `run_with_secrets` in the tool paragraph, and
       add the sentence on when to call `list_secrets`.
-- [ ] Update the descriptions in `crates/cnd-tools/src/mcp-tools.json`, the
+- [x] Update the descriptions in `crates/cnd-tools/src/mcp-tools.json`, the
       CLI help in `crates/cnd-tools/src/help.txt`, and `tools/README.md`.
-- [ ] Add tests in `crates/cnd-runner/src/engine/_tests_/`: no facts, only
+- [x] Add tests in `crates/cnd-runner/src/engine/_tests_/`: no facts, only
       secrets, only Mac access, both, more than 10 names, and an old command
       with no field.
-- [ ] Run the Rust checks of `CLAUDE.md`.
+- [x] Run the Rust checks of `CLAUDE.md`.
 
 ## Milestone 4: Worker facts
 
