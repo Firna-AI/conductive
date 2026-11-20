@@ -154,7 +154,7 @@ export interface Focusable {
 /**
  * Moves the focus into a layer as it opens: to `initial`, else to its
  * element with `data-autofocus`, else to the first one that can take the
- * focus. When the layer closes, the focus goes back to the element that
+ * focus. An `initial` that takes no focus counts as none. When the layer closes, the focus goes back to the element that
  * had it, unless the user moved it elsewhere. `returnFocus` gives it to the
  * trigger that the owner of the layer names instead, such as the new link
  * of a row that a render replaced. When `moved` says that the address
@@ -204,11 +204,18 @@ export function useLayerFocus(
         ? document.activeElement
         : null
     const release = modal ? holdModal() : null
-    const first =
-      initial?.current ??
-      node?.querySelector<HTMLElement>('[data-autofocus]') ??
-      node?.querySelector<HTMLElement>(focusableSelector)
-    ;(first ?? node)?.focus()
+    initial?.current?.focus()
+    // A first target that took no focus, or none, leaves it to the marked
+    // element, then to the first control, then to the layer.
+    const inLayer = () =>
+      document.activeElement instanceof Node &&
+      node?.contains(document.activeElement) === true
+    if (!inLayer()) {
+      const first =
+        node?.querySelector<HTMLElement>('[data-autofocus]') ??
+        node?.querySelector<HTMLElement>(focusableSelector)
+      ;(first ?? node)?.focus()
+    }
     return () => {
       release?.()
       const active = document.activeElement

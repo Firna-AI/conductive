@@ -4,7 +4,6 @@ import type { AccountTab } from '../../app/router'
 import { useServices } from '../../app/services'
 import { ThisMacSection } from '../../chat/device/ThisMacSection'
 import type { User } from '../../shared/api'
-import { useMacApp } from '../mac/mac-app'
 import { useViewport } from '../ui/viewport'
 import { AgentsSection, SignInSection } from './AccountSections'
 import { DeletedOrgsSection } from './DeletedOrgsSection'
@@ -78,8 +77,8 @@ function GeneralTab(props: { user: User }) {
  * agent at first, as the link of a missing login does. Preferences holds
  * how new workspaces start: their model, and how New workspace opens.
  * Keyboard shortcuts holds the keys of the commands. Stats holds the counts
- * of the person, which it reads each time that it opens. Only the Mac app
- * has This Mac, so a browser shows General at its address. The product is
+ * of the person, which it reads each time that it opens. Settings shows This
+ * Mac only in the Mac app. The product is
  * free, so the tabs show no plan and no billing.
  */
 export function AccountTabContent(props: {
@@ -87,7 +86,7 @@ export function AccountTabContent(props: {
   tab: AccountTab
   connect: Agent | null
 }) {
-  const mac = useMacApp()
-  const tab = props.tab === 'this-mac' && !mac ? 'general' : props.tab
-  return <TabContent connect={props.connect} tab={tab} user={props.user} />
+  return (
+    <TabContent connect={props.connect} tab={props.tab} user={props.user} />
+  )
 }

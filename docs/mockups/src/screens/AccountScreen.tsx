@@ -28,6 +28,7 @@ import type { ShortcutHost } from '../fixtures/shortcutHosts'
 import { viewerMembership } from '../fixtures/members'
 import type { AccountState, AccountView } from './accountState'
 import { agentsFor } from './accountAgents'
+import { GetStartedPage, getStartedFirstRun } from './GetStartedScreen'
 import { SettingsFrame } from './settingsFrame'
 
 /** At the first run the rail has no org yet. */
@@ -125,10 +126,14 @@ export function AccountScreen(props: {
       />
     ) : null
   // Settings lies over the workspace list of Acme. At the first run the
-  // person has no org yet, so the page below is empty.
+  // person has no org yet, so it lies over Get started.
   return (
     <SettingsFrame
-      below={connected ? undefined : <div />}
+      below={
+        connected ? undefined : (
+          <GetStartedPage state={getStartedFirstRun} viewport="desktop" />
+        )
+      }
       dialog={dialog}
       group="Account"
       groups={settingsGroups({

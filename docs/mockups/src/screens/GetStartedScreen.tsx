@@ -108,9 +108,30 @@ export function GetStartedScreen(props: {
   state: GetStartedState
   viewport: Viewport
 }) {
+  const { step } = props.state
+  const person = people[props.state.person]
+  const page = <GetStartedPage state={props.state} viewport={props.viewport} />
+  if (props.viewport === 'mobile') return <MobileFrame>{page}</MobileFrame>
+  const rail: RailState = {
+    orgs: isPast(step, 'org') ? [orgs.firna] : [],
+    current: undefined,
+    firstRun: step === 'install',
+    person,
+  }
+  return <AppFrame rail={rail}>{page}</AppFrame>
+}
+
+/**
+ * The page of Get started, without its frame, such as the page below
+ * Settings in the first run.
+ */
+export function GetStartedPage(props: {
+  state: GetStartedState
+  viewport: Viewport
+}) {
   const { step, agent, firstBuild } = props.state
   const person = people[props.state.person]
-  const page = (
+  return (
     <Page
       subtitle={`@${person.login}`}
       title={copy.title}
@@ -137,12 +158,4 @@ export function GetStartedScreen(props: {
       ) : null}
     </Page>
   )
-  if (props.viewport === 'mobile') return <MobileFrame>{page}</MobileFrame>
-  const rail: RailState = {
-    orgs: isPast(step, 'org') ? [orgs.firna] : [],
-    current: undefined,
-    firstRun: step === 'install',
-    person,
-  }
-  return <AppFrame rail={rail}>{page}</AppFrame>
 }

@@ -6,7 +6,7 @@ export function settingsDialog(): HTMLElement | null {
 }
 
 /** The rows of a group of the list of Settings, by their labels. */
-function settingsRows(group: string): Map<string, HTMLAnchorElement> {
+export function settingsRows(group: string): Map<string, HTMLAnchorElement> {
   const list = byRole('group', group, byRole('navigation', 'Settings'))
   const links = list.querySelectorAll<HTMLAnchorElement>('a')
   return new Map(Array.from(links, (link) => [String(link.textContent), link]))

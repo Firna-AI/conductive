@@ -179,7 +179,7 @@ describe('the waitlist of the dev fake', () => {
     })
   })
 
-  test('a pause, a disable, a resume, and the waitlist switch in the operator section show in the waitlist state of the operator, which the Account page reads', async () => {
+  test('a pause, a disable, a resume, and the waitlist switch in the operator section show in the waitlist state of the operator, which Account settings reads', async () => {
     const { send } = devFetch('?operator=1')
     const state = async () => (await send('GET', WAITLIST_PATHS.state)).reply
     const before = await state()

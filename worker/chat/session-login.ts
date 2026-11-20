@@ -160,5 +160,5 @@ function invalidEndpointMessage(session: Session): string {
     ? `${starter.displayName ?? starter.githubLogin}'s`
     : "The session's"
   const agent = session.choice.agent === 'claude' ? 'Claude' : 'Codex'
-  return `${owner} ${agent} login needs a public https:// endpoint with a host name. Update the login on the account page.`
+  return `${owner} ${agent} login needs a public https:// endpoint with a host name. Update the login in Account settings.`
 }

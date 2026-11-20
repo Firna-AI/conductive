@@ -7,6 +7,7 @@ import {
   type RefObject,
 } from 'react'
 import { useMenuLayer } from '../../shell/ui/layers'
+import { useEscapeLayer } from '../../shell/ui/Overlay'
 import { PopoverSurface, type MenuAlign } from '../../shell/ui/PopoverSurface'
 import type { ButtonHandle } from './actions'
 import { useViewport } from './controls'
@@ -74,6 +75,8 @@ export function ChoiceMenu<T extends string>(props: {
   // The key of the command palette asks the desktop menu to close. While
   // a change runs, the menu refuses, and the palette stays closed.
   useMenuLayer(open && !mobile, askToClose)
+  // Escape closes the desktop menu before an older layer, such as Settings.
+  useEscapeLayer(open && !mobile, askToClose)
 
   useEffect(() => {
     if (!open || mobile) return
@@ -111,9 +114,6 @@ export function ChoiceMenu<T extends string>(props: {
     if (!open && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) {
       event.preventDefault()
       onOpenChange(true)
-    } else if (open && event.key === 'Escape') {
-      event.preventDefault()
-      askToClose()
     } else if (open && event.key === 'Tab') {
       askToClose()
     }

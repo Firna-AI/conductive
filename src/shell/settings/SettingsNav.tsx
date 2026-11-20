@@ -1,4 +1,4 @@
-import { useId } from 'react'
+import { useId, type Ref } from 'react'
 import { ChevronRight } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/components/settings/SettingsNav.module.css'
@@ -13,6 +13,8 @@ import type { SettingsGroup, SettingsRow } from './settings-tabs'
 export function SettingsNav(props: {
   groups: readonly SettingsGroup[]
   variant: 'panel' | 'touch'
+  /** Takes the link of the open row, for the first focus of the dialog. */
+  openRow?: Ref<HTMLAnchorElement>
 }) {
   const touch = props.variant === 'touch'
   return (
@@ -21,14 +23,23 @@ export function SettingsNav(props: {
       className={classes(styles.nav, touch && styles.touch)}
     >
       {props.groups.map((group) => (
-        <Group group={group} key={group.title} touch={touch} />
+        <Group
+          group={group}
+          key={group.title}
+          openRow={props.openRow}
+          touch={touch}
+        />
       ))}
     </nav>
   )
 }
 
 /** A group of the list, which its heading names: Account, or the org. */
-function Group(props: { group: SettingsGroup; touch: boolean }) {
+function Group(props: {
+  group: SettingsGroup
+  touch: boolean
+  openRow?: Ref<HTMLAnchorElement>
+}) {
   const heading = useId()
   return (
     <div aria-labelledby={heading} className={styles.group} role="group">
@@ -37,7 +48,12 @@ function Group(props: { group: SettingsGroup; touch: boolean }) {
       </h2>
       <ul className={styles.rows}>
         {props.group.rows.map((row) => (
-          <Row key={row.key} row={row} touch={props.touch} />
+          <Row
+            key={row.key}
+            openRow={props.openRow}
+            row={row}
+            touch={props.touch}
+          />
         ))}
       </ul>
     </div>
@@ -45,7 +61,11 @@ function Group(props: { group: SettingsGroup; touch: boolean }) {
 }
 
 /** A row that opens its tab. A phone marks no row, and shows a chevron. */
-function Row(props: { row: SettingsRow; touch: boolean }) {
+function Row(props: {
+  row: SettingsRow
+  touch: boolean
+  openRow?: Ref<HTMLAnchorElement>
+}) {
   const { row, touch } = props
   const Icon = row.icon
   const selected = row.selected && !touch
@@ -54,6 +74,7 @@ function Row(props: { row: SettingsRow; touch: boolean }) {
       <AppLink
         aria-current={selected ? 'page' : undefined}
         className={classes(styles.row, selected && styles.selected)}
+        ref={selected ? props.openRow : undefined}
         to={row.to}
       >
         <Icon aria-hidden className={styles.icon} size={15} />
