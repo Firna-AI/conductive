@@ -163,6 +163,9 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the switch at
   - The Claude org of the login has not turned on fast mode.
   - OpenAI serves a fast Codex request at standard speed.
   - The cloud computer has a runner that does not support fast mode.
+  - The cloud computer runs a Codex program older than the model, as
+    [Efforts](agents-and-sessions.md#efforts) says. The chat then shows
+    no standard speed for that turn.
 - A failed turn was rejected, because the agent can go on at standard
   speed. A switch that turns itself off was rejected, because the choice of
   the member would then end with a cause that passes, such as a cooldown.

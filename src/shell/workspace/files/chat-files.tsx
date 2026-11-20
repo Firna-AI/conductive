@@ -1,35 +1,24 @@
-import {
-  useContext,
-  useMemo,
-  useSyncExternalStore,
-  type ReactNode,
-} from 'react'
-import type { FileEntry } from '../../../shared/generated/FileEntry'
+import { useSyncExternalStore, type ReactNode } from 'react'
 import { useNavigation } from '../../../app/navigation'
 import { routes } from '../../../app/router'
 import type { RenderedTab, TabDraw } from '../../../chat/components/tab-row'
 import type { ChatMentions } from '../../../chat/mentions/MentionsContext'
 import { tabHidesSecret, tabLabel } from '../../../files/model/file-labels'
-import type { WorkspaceFiles } from '../../../files/model/files-store'
 import { scrollTabKey } from '../../../files/ui/kept-scroll'
 import { useFollowTabs } from '../../../app/tab-places'
-import type {
-  FilesNavigation,
-  FilesTab,
-  FilesTarget,
-} from '../../../files/navigation'
-import type { LineRange } from '../../../shared/line-target'
-import { PanelContext } from '../../layout/panels'
+import type { FilesNavigation, FilesTab } from '../../../files/navigation'
 import {
   FileTabItem,
   fileTabName,
   LiftedFileTab,
 } from '../../../files/tabs/FileTabItem'
 import type { WorkspaceTab } from '../../../shared/workspace-view'
+import { usePageEscape } from '../../shortcuts/page-escape'
 import { useShortcutOffer } from '../../shortcuts/shortcut-context'
 import type { WorkspaceContext } from '../features'
 import { useSavedView } from '../saved-view'
 import { useCopyPath } from './copy-path'
+import { useMentions } from './chat-mentions'
 import { filesPlace, tabOf } from './files-address'
 import { useFilesNavigation, useLeaveForSession } from './files-navigation'
 import {
@@ -72,7 +61,8 @@ function useTabLabels(
  * view marks it as the temporary tab. Close of the shown tab shows the next
  * file tab, else the one before, else the chat with its session. A close of
  * the temporary tab clears the mark. While the tab shows, the key of Close
- * tab closes it, as its Close does.
+ * tab closes it, as its Close does. While the temporary tab shows, Escape
+ * closes it too, when no menu, dialog, drag, or text field takes the key.
  */
 function FileTab(props: {
   context: WorkspaceContext
@@ -109,6 +99,7 @@ function FileTab(props: {
     )
   }
   useShortcutOffer('close-tab', isShown(tab) ? close : null)
+  usePageEscape(isShown(tab) && props.temporary ? close : null)
   return (
     <FileTabItem
       label={props.label}
@@ -132,48 +123,6 @@ export interface ChatFiles {
 }
 
 /**
- * The page of a chip: the file, or All files for a folder. A file with
- * lines opens as text, also a Markdown file, because only the text has
- * line numbers.
- */
-function chipTarget(entry: FileEntry, lines?: LineRange): FilesTarget {
-  return entry.kind === 'directory'
-    ? { kind: 'list', list: 'all' }
-    : { kind: 'file', path: entry.path, mode: lines ? 'source' : 'preview' }
-}
-
-/**
- * The files that the composer lists after `@`, and the pages of the chips.
- * A file opens as a press in All files opens it. A folder shows All files
- * with the folder open, in the right column on desktop, which then shows.
- */
-function useMentions(
-  context: WorkspaceContext,
-  files: WorkspaceFiles | null,
-  navigation: FilesNavigation,
-): ChatMentions | undefined {
-  const panels = useContext(PanelContext)
-  const phone = context.viewport === 'phone'
-  return useMemo(() => {
-    if (!files) return undefined
-    return {
-      files,
-      openFile: (path, lines) =>
-        navigation.navigate(
-          { kind: 'file', path, mode: lines ? 'source' : 'preview' },
-          lines,
-        ),
-      showFolder: (path) => {
-        files.revealFolder(path)
-        if (!phone) panels?.rightShown.set(true)
-        navigation.navigate({ kind: 'list', list: 'all' })
-      },
-      href: (entry, lines) => navigation.href(chipTarget(entry, lines), lines),
-    }
-  }, [files, navigation, panels, phone])
-}
-
-/**
  * The file parts of the kept chat: on desktop, the file and diff tabs at
  * their places in the tab row, with the copy that a drag lifts, and the
  * diff that a file of a finished turn opens. Each tab takes the label of
@@ -187,9 +136,10 @@ function useMentions(
  * session active while `content` shows a file, the address goes back to the
  * chat. The chat reads the kept files for the list of `@` and the file
  * chips, also on a phone before a visit to Files: `KeptConnections` of the
- * screen keeps them connected. A file or diff tab that leaves the saved
- * view, such as one that the user closed, forgets its kept scroll offset.
- * An archived workspace has no files.
+ * screen keeps them connected. It reads the skill lists of the workspace
+ * for the list of `/` and the skill chips. A file or diff tab that leaves
+ * the saved view, such as one that the user closed, forgets its kept scroll
+ * offset. An archived workspace has no files and no skills.
  */
 export function useChatFiles(
   context: WorkspaceContext,

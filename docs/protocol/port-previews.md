@@ -24,6 +24,21 @@ the addresses in the terminal open, as [Terminal](terminal.md) says.
   lives in the centre.
 - Reason for "Open": Safari blocks the cookies of the previewed app inside
   a frame.
+- On desktop, the bar also holds Expand, after Reload. Expand shows the
+  page in a large window over the whole app, on the dim layer of a dialog.
+  The header of the window names the page with the label of its tab, and
+  holds Reload, Open, and Close. The user asked for this on 20 November
+  2026, so a page is easy to view in a larger size.
+- Close, Escape, and a press on the dim layer close the window, and the
+  page stays in its tab. The window also closes when another tab shows or
+  the page goes, such as when the cloud computer stops. While the window
+  shows, the keys of the app run no command, and Tab stays in the window.
+- The window shows the same frame, so the page keeps its state: its
+  address, its scroll place, and its sign-in. A new frame in the window
+  was rejected, because it loads the page again at the root address of
+  the preview. This is a design call of 20 November 2026.
+- A phone has no Expand, because its Preview page already shows the page
+  across the whole width of the screen.
 - On a phone, the Preview page shows the page in a frame, with a bar of
   the tabs of the open previews, "+", Reload, and Open. Reason: a phone has
   no tab row of files, so it shows no Preview tab.
@@ -133,6 +148,14 @@ the addresses in the terminal open, as [Terminal](terminal.md) says.
   The user starts a new workspace after an admin runs Build computer.
 - The sandbox keeps port 7682 for the relay. A preview of port 7682 shows
   an error.
+- The sandbox keeps port 7683 for the
+  [file server](file-server.md). A preview of port
+  7683 shows an error, because the file server answers only the requests
+  of the files preview.
+- The [files preview](html-file-preview.md#the-files-preview) of the HTML
+  file tabs is no port preview. It has no Preview tab, and the Preview
+  tool does not list it. The agent preview calls neither list nor close
+  it.
 
 ## Preview tabs and the end of a preview
 

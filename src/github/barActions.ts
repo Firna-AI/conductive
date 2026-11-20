@@ -1,7 +1,5 @@
-import type { Delay } from '../app/events'
-import type { Readable } from '../app/store'
-import type { GitHubCapabilities } from '../shared/github'
 import type { LocalWork } from '../shared/workspaces'
+import type { BarActionsPorts, PromptResult } from './barPorts'
 import {
   continueOutcome,
   mergeOutcome,
@@ -11,13 +9,8 @@ import {
   waitFor,
 } from './barRuns'
 import type { BarOutcome, CapabilityState } from './barView'
-import type { ContinueActions } from './continueActions'
-import type { createGitHubActions } from './githubActions'
 import type { GitHubSnapshot } from './githubClient'
 import type { GitHubState } from './githubStore'
-
-/** How a fixed prompt ended, as the send of the chat reports it. */
-export type PromptResult = 'sent' | 'failed' | 'blocked' | 'unavailable'
 
 /** The question of Continue after its check found local work. */
 interface ContinueQuestion {
@@ -33,50 +26,13 @@ export interface BarActionsSnapshot {
 }
 
 /**
- * The last access of the member to the repository of the workspace that
- * this tab read. Another workspace of the same repository shows it at
- * once, while the bar reads the access again.
- */
-export interface AccessMemory {
-  get: () => GitHubCapabilities | undefined
-  /** Keeps a new answer, or forgets the access after a failed read. */
-  set: (capabilities: GitHubCapabilities | undefined) => void
-}
-
-export interface BarActionsPorts {
-  /**
-   * The branch of the workspace that the bar shows. Continue starts from it,
-   * and a new branch gets a new action state, so no question, run, or
-   * outcome of the old branch stays.
-   */
-  branch: string
-  github: ReturnType<typeof createGitHubActions>
-  continues: ContinueActions
-  /**
-   * The send of a fixed prompt to the session of the chat, which keeps the
-   * client ID of a prompt that did not send for a second try there.
-   */
-  sendPrompt: (text: string) => Promise<PromptResult>
-  delay: Delay
-  /** The GitHub state of the bar. A new state ends the outcome that shows. */
-  githubState: Readable<GitHubState>
-  /** Reads the shared GitHub state again, as after a merge. */
-  refreshGitHub: () => void
-  /** The number through which the workspace stream applied its events. */
-  streamLast: Readable<number>
-  /** Grows with each reconnect of the workspace stream. */
-  reconnects: Readable<number>
-  /** The access that the tab read last. Without it, the access loads. */
-  access?: AccessMemory
-}
-
-/**
  * The actions of the pull request bar of one workspace and one member, for
  * the desktop bar and the top of the phone Checks tab alike. It keeps the
  * member's own GitHub access out of the shared GitHub state. It runs one
  * merge or one Continue at a time, and reads a pending job again until it
  * ends. An outcome, such as a refusal, shows until the bar shows a newer
- * GitHub state. The stop of `connect` ends each read and each run.
+ * GitHub state. The stop of `connect` ends each read and each run, and the
+ * result of each prompt that still sends, as `sendPrompt` says.
  */
 export class BarActions {
   private snapshot: BarActionsSnapshot = {
@@ -90,8 +46,12 @@ export class BarActions {
   private outcomeAt: GitHubState | null = null
   private run: AbortController | null = null
   private reading: AbortController | null = null
-  /** A prompt sends now, so a second press does nothing. */
-  private prompting = false
+  /**
+   * The connection that `connect` started last, or null before the first
+   * connect. Its stop aborts it, and the next connect starts a new one, so
+   * a connection that ended stays ended.
+   */
+  private connection: AbortController | null = null
 
   constructor(ports: BarActionsPorts) {
     this.ports = ports
@@ -115,12 +75,15 @@ export class BarActions {
    * remembered access shows until the first answer.
    */
   readonly connect = (): (() => void) => {
+    const connection = new AbortController()
+    this.connection = connection
     const stops = [
       this.ports.reconnects.subscribe(() => this.readCapabilities()),
       this.ports.githubState.subscribe(() => this.githubChanged()),
     ]
     this.readCapabilities()
     return () => {
+      connection.abort()
       for (const stop of stops) stop()
       this.reading?.abort()
       this.reading = null
@@ -231,15 +194,19 @@ export class BarActions {
     this.update({ question: null })
   }
 
-  /** Sends a fixed prompt through the chat. A press while it sends does nothing. */
+  /**
+   * Sends a fixed prompt through the chat. A press while it sends does
+   * nothing. The result goes only to the connection of the press. After the
+   * stop of that connection, the result is null, also when the store
+   * connects again. So the caller moves no page and selects no session for
+   * a screen that the member left. The stop does not cancel the send, so
+   * the chat still keeps its notice and the client ID of a failed send.
+   */
   async sendPrompt(text: string): Promise<PromptResult | null> {
-    if (this.prompting) return null
-    this.prompting = true
-    try {
-      return await this.ports.sendPrompt(text)
-    } finally {
-      this.prompting = false
-    }
+    const connection = this.connection
+    const result = await this.ports.sendPrompt(text)
+    const ended = connection === null || connection.signal.aborted
+    return ended ? null : result
   }
 
   private readCapabilities(): void {

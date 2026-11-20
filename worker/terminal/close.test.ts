@@ -1,6 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises'
 
-import { expect, it, vi } from 'vitest'
+import { expect, it, onTestFinished, vi } from 'vitest'
 
 import { ProviderError } from '../sandbox/errors'
 import { closeWorkspaceTerminal } from './close'
@@ -11,6 +11,7 @@ const terminalId = '0123456789abcdef0123456789abcdef'
 
 it('ends only the selected session as user and accepts an absent session or server', async () => {
   const fixture = await scriptFixture()
+  onTestFinished(fixture.dispose)
   await writeFile(
     fixture.multiplexer,
     `#!/bin/sh

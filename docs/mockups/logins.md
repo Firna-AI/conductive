@@ -7,9 +7,9 @@ for an agent that is not connected. The [mockups README](README.md) gives
 the commands, the folder layout, how a screen is built, and links to the
 other pages.
 
-- The app runs every cloud computer in its own account. So no org has a
-  key for its cloud computers, and no screen asks for one or for another
-  account.
+- The app runs every cloud computer in an account of its own. So no org
+  has a key for its cloud computers, and no screen asks for one or for an
+  account of the person.
 - The account connects Claude with a subscription token from
   `claude setup-token` or an API key. It connects Codex with an OpenAI API
   key or with a device code sign-in to the ChatGPT plan of the member,
@@ -90,7 +90,10 @@ other pages.
 - A connected login shows its kind and Remove. The name of the kind
   depends on the agent: a Claude token is a "Subscription token", the
   ChatGPT sign-in of Codex is "ChatGPT plan", and a key is an "API key".
-  `loginLabels` in `src/fixtures/logins.ts` holds the names. On a phone,
+  `agentConnectCopy.ts` in `src/components/settings/` holds the names.
+  It also holds the switch order of `AgentConnectForm`, the field labels
+  and placeholders, the words above the field, and the addresses of the
+  key pages. The app shares these words. On a phone,
   the state and the kind go on a second line under the name of the agent,
   so that the kind shows in full.
 - Under each connected login, the switch "Let other members use this

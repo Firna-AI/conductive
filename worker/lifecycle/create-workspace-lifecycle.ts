@@ -16,6 +16,7 @@ import {
   workspaceActionContext,
 } from './workspace-actions'
 import { keepWorkspaceDisk } from './disk-retention'
+import { IdleStopTime } from './idle-stop'
 import {
   taskWorkspaceStorage,
   workspaceTaskAlarms,
@@ -30,6 +31,7 @@ export function createWorkspaceLifecycle(
 ) {
   const storage = taskWorkspaceStorage(ctx.storage, 'lifecycle')
   const alarms = workspaceTaskAlarms(ctx.storage)
+  const idleStop = new IdleStopTime(env.DB, dependencies.now)
   const lifecycle: DurableLifecycle = new DurableLifecycle(
     {
       get: (key) => ctx.storage.get('lifecycle', key),
@@ -42,6 +44,7 @@ export function createWorkspaceLifecycle(
     },
     dependencies.now,
     {
+      idleMs: () => idleStop.ms(),
       changed: async (state, publish) => {
         if (isConfirmedStopped(state) && !hasRetentionAttempt(state))
           await clearRetention(env.DB, state.workspaceId)

@@ -31,7 +31,7 @@ export const termsDocument: LegalDocument = {
   at ${appDomain}, and in the Mac app. You accept their current version
   each time that you continue with GitHub to sign in. ${productName} keeps
   the latest version that you accepted, and the time when you first
-  accepted it. Effective date: 18 November 2026.`,
+  accepted it. Effective date: 20 November 2026.`,
   sections: [
     {
       title: `Who runs ${productName}`,
@@ -66,9 +66,10 @@ export const termsDocument: LegalDocument = {
             rights and merge method from GitHub. It shows Merge only when
             your GitHub rights let you merge. It shows Ready for review on a
             draft pull request only when you have write access or more.`,
-          text`${productName} runs the cloud computers of every org in its
-            own account with its cloud computer provider. You need no
-            account or key of your own for them.`,
+          text`${productName} runs each org's cloud computers in one of its
+            own accounts with a cloud computer provider. The org keeps
+            that account for its life. You need no account or key of your
+            own for them.`,
           text`Each session keeps one agent login: its starter's personal
             login or the org login. Your usable personal login comes first
             for a new session. If you have none, the session uses the org
@@ -234,6 +235,8 @@ export const termsDocument: LegalDocument = {
     {
       title: 'Changes to these terms',
       blocks: [
+        paragraph`When you accept these terms, you agree that the operator
+          can change them. Each change gives these terms a new version.`,
         paragraph`A changed version of these terms applies from your next sign-in.
           A sign-in session lasts at most 7 days, so a change applies within 7 days
           while you keep using ${productName}. You accept the changed version

@@ -59,8 +59,12 @@ an existing running build keeps that build running.
 
 `changeShellRepository` in
 [`feature-repositories.ts`](../app-api/feature-repositories.ts) starts a
-build after a save adds a repository. It uses the admin who added it,
-also after a failed build. A repeated save and a removal start no build.
+build after a save adds a repository, unless the save says
+`build: false`. The app sends that body, and Done of the Repositories tab
+then starts one build through the builds route. An add without the
+field, from an older copy of the app, builds at once. The build uses the
+admin who added the repository, also after a failed build. A repeated
+save and a removal start no build.
 A failed start keeps the saved choice and writes one fixed warning.
 
 `publishBuild` in [`build-admission-data.ts`](build-admission-data.ts)
@@ -96,10 +100,37 @@ in the same D1 batch as the new snapshot name, before the provider call.
 It writes `SNAPSHOT_DONE_LOG` in the same batch as the change to the
 `publish` phase. So a retry or a replayed save repeats neither line.
 
+`failBuild` in [`build-data.ts`](build-data.ts) and `publishBuild` in
+[`build-admission-data.ts`](build-admission-data.ts) end a build through
+one [shared writer](build-end-data.ts). A failure saves the failed state,
+the failure message, and its log line. A publication saves the succeeded
+state, the org image, and the `cleanup` or `cleanup-build` phase. The writer
+saves each end in one D1 batch. It saves an end only for the call that
+changes a `running` build to `failed` or `succeeded`. A publication also
+needs an active org.
+
+So a scheduling failure that arrives after an alarm ended the build does
+not change the state, the saved message, or the log. A publication that
+runs after a failure ended the build does not change the state, the org
+image, or the phase. Cleanup then deletes the snapshot of the failed
+build. Other log writes do not check the build state. So output can still
+reach the log during cleanup.
+
+The phase write of each step before publication does not check the build
+state. So a step that an alarm already runs can save a later phase after a
+scheduling failure ended the build. That write can replace the phase that
+the failure chose: `allocating`, `cleanup`, or `done`. `pendingImageCleanup`
+in [`image-maintenance-data.ts`](image-maintenance-data.ts) selects a build
+for cleanup when its state is `failed` or `succeeded` and its job phase is
+not `done`. So that build keeps its cleanup ownership, whatever phase the
+step saved.
+
 - A build loads the chosen repositories, installs the image software, runs
   the install script with Bash, and saves a snapshot. A first build that
-  pins a matching ready software image starts from it and still installs
-  the newest release. Admission records the pin in the job insert. The pin stays
+  pins a matching ready software image of its own account starts from it
+  and still installs the newest release. A first build in an account with
+  no such image, such as `e2b`, installs the software on the provider base
+  of that account. Admission records the pin in the job insert. The pin stays
   until the job reaches `done`, including its cleanup. The
   [software image backend](../software-image/README.md) owns these images.
   A refresh loads the repositories of the current image again, installs
@@ -173,72 +204,9 @@ it too, so the version and the snapshot always come from the same image.
 
 ## Provider retries
 
-Builds, refreshes, and workspace starts share one saved policy for a
-transient Boat error. `transientProviderError` in
-[`provider-retry.ts`](provider-retry.ts) decides which errors are
-transient. Other errors keep their existing handling.
-
-- The first transient error in an unfinished step opens a retry window of
-  10 minutes, `PROVIDER_RETRY_WINDOW_MS`. A completed step resets it. A
-  successful sandbox read or deadline update does not reset it.
-- The first retry waits 1 second. Each later retry waits twice as long, up
-  to 60 seconds. A retry never comes before the `Retry-After` of the error,
-  and never after the end of the window. The next alarm comes at that time.
-- When no retry fits in the rest of the window, or the window ends before
-  a pending retry runs, the existing failure and cleanup handling runs. For
-  an image job, that cleanup also revokes any source token, as the
-  [source loader](repository-layout.md#the-source-loader) says.
-- When a step runs without an error but does not finish, it clears only
-  the pending wait. The next alarm then comes after 1 second. So a healthy
-  command can run past the age of the window. A later fault in the same
-  step still uses the first window.
-- The window does not limit a whole job or a healthy command.
-- The whole-job deadline takes precedence over a retry wait. The limits
-  are in [Time limits of builds and starts](../../docs/protocol/workspace-life.md#time-limits-of-builds-and-starts).
-- Cancellation and terminal cleanup do not wait for a pending retry.
-- After a definite refusal of a source command start, such as HTTP 429,
-  the job waits and retries the start within the retry window. A start
-  with no confirmed reply still fails closed, as the
-  [source loader](repository-layout.md#the-source-loader) says.
-- Workspace allocation uses the retry handling in [`start-allocation.ts`](start-allocation.ts).
-
-An image job keeps this state in the nullable
-`image_builds.provider_retry_json` column of migration
-`202611070007_lifecycle_provider_retry.sql`. A start
-keeps the same state in its saved start job. So the window survives a
-restart of the object. Each completed build or source phase clears the
-state in the same D1 batch as the phase change. A start changes only its
-retry state in a storage transaction, so a cancellation and the saved
-output offsets stay.
-
-`nextProviderRetry` computes each wait.
-[`image-retry-data.ts`](image-retry-data.ts) reads and writes the state of
-an image job, and `completeBuildPhase` in
-[`build-phase-data.ts`](build-phase-data.ts) completes a build phase.
-`retryStartError` in [`start-provider-retry.ts`](start-provider-retry.ts)
-and `retry` in [`start-storage.ts`](start-storage.ts) do the same for a
-start.
-
-[`job-time-limit.ts`](job-time-limit.ts) supplies the job limits. An image
-job uses its saved `started_at` value. A start saves one absolute deadline
-beside its retry state. A phase change clears retry state and keeps the
-job deadline. The image and workspace alarm schedulers cap their next
-retry at that deadline. Terminal cleanup keeps its own retries after the
-job fails.
-
-A failed image job keeps the `allocating` phase when a dispatched request
-has no confirmed sandbox ID. The existing build row owns that cleanup.
-[`cleanupBuild`](build-execution.ts) replays the saved request through
-[`recoverImageBuildAllocation`](image-allocation.ts), then saves the ID
-before it deletes the sandbox. Only finished cleanup writes `done`.
-A definite refusal of the first dispatch needs no allocation recovery.
-A refused replay after an uncertain dispatch keeps the saved ownership.
-
-An old start without a saved deadline uses its saved creation time or
-lifecycle start time. The start coordinator saves the restored deadline
-before it advances the job. A timed-out start with an unresolved
-allocation moves its encrypted request to a separate cleanup job, as
-[`retryAllocationCleanup`](start-allocation-cleanup.ts) handles.
+[Provider retries](provider-retries.md) gives the retry policy of builds,
+refreshes, and starts after a transient provider error, the saved retry
+state, the job limits, and the cleanup of an unresolved allocation.
 
 ## Refresh timers
 
@@ -263,8 +231,10 @@ so it cannot find a change whose webhook never saved it.
 `wakeImagesForRepositoryChange` in
 [`repository-change-builds.ts`](repository-change-builds.ts) wakes the
 coordinator of each such org after the GitHub webhook receiver saves a
-repository change. It reads the software release only when an org needs a
-wake.
+repository change. Its discovery reads the image of each org's fixed account.
+It calls `scheduleIdleImage` in [`image-schedule.ts`](image-schedule.ts),
+which reads that account and schedules from the saved job and refresh deadlines.
+It reads the software release only when an org needs a wake.
 [Repository changes on GitHub](../../docs/protocol/repository-changes-on-github.md)
 states the rules.
 
@@ -279,6 +249,8 @@ states the rule.
 ## Key code
 
 - [`build-admission-data.ts`](build-admission-data.ts): guarded image build admission and publication, with the installed runner version.
+- [`build-end-data.ts`](build-end-data.ts): the shared writer for failure
+  and publication, with the final state and its writes in one D1 batch.
 - [`build-changes-data.ts`](build-changes-data.ts): `readBuildChanges`, the
   saved install script change and the added and removed repositories in
   `BuildsResponse.changes`. It reads the script reference and the published
@@ -292,10 +264,14 @@ states the rule.
   when the newest build succeeded.
 - [`image-build-failure.ts`](image-build-failure.ts): image failure classification, retry, warning, and allocation cleanup.
 - [`build-execution.ts`](build-execution.ts): build commands and cleanup of every live ledger computer for the exact org and build.
-- [`image-allocation.ts`](image-allocation.ts): `recoverImageBuildAllocation`
-  replays a saved allocation request and saves the recovered sandbox ID.
-  Failed image jobs retain their unresolved allocation phase until cleanup
-  recovers and deletes the sandbox.
+- [`image-allocation.ts`](image-allocation.ts): `allocateImageBuild` creates
+  or replays the allocation of a running build with the provider of its
+  caller, saves the sandbox ID, and completes the allocation phase.
+  `recoverImageBuildForCleanup` recovers a saved allocation for
+  `cleanupBuild`, which passes a cleanup-mode client. It saves a recovered
+  sandbox ID, or returns null after a certified absence. Failed image jobs
+  retain their unresolved allocation phase until cleanup recovers and
+  deletes the sandbox.
 - [`build-log-statements.ts`](build-log-statements.ts): `buildLogStatements`,
   which splits output into rows and adds the budget statements of
   [`build-log-retention.ts`](build-log-retention.ts) to the same D1 batch.

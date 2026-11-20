@@ -16,7 +16,11 @@ interface RpcFailure {
   data?: unknown
 }
 
-async function fixture(failure?: RpcFailure, forkFailure?: RpcFailure) {
+async function fixture(
+  failure?: RpcFailure,
+  forkFailure?: RpcFailure,
+  read?: { modelProvider: string } | RpcFailure,
+) {
   const h = await codexTokenFixture()
   const events: ProviderEvent[] = []
   h.options.conversationId = 'saved-thread'
@@ -33,7 +37,19 @@ async function fixture(failure?: RpcFailure, forkFailure?: RpcFailure) {
       },
       write(line) {
         const input = object(JSON.parse(line))
-        if (
+        if (input.method === 'thread/read' && read) {
+          h.servers.latest.writes.push(input)
+          queueMicrotask(() =>
+            receive(
+              JSON.stringify({
+                id: input.id,
+                ...('code' in read
+                  ? { error: read }
+                  : { result: { thread: { id: 'saved-thread', ...read } } }),
+              }),
+            ),
+          )
+        } else if (
           (input.method === 'thread/resume' && failure) ||
           input.method === 'thread/fork'
         ) {
@@ -97,15 +113,25 @@ it.each([
   },
 )
 
-it('keeps the resumed thread without forking when its provider is accepted', async () => {
-  const h = await fixture()
+it.each([
+  { saved: 'the read gives no provider', read: undefined },
+  {
+    saved: 'the read gives the current provider',
+    read: { modelProvider: 'openai' },
+  },
+  {
+    saved: 'the read fails',
+    read: { code: -32600, message: 'thread not loaded: saved-thread' },
+  },
+])('keeps the resumed thread without forking when $saved', async ({ read }) => {
+  const h = await fixture(undefined, undefined, read)
   const provider = await createCodexFactory(h.start)(h.options)
   onTestFinished(() => provider.close())
   expect(
     h.servers.latest.writes
       .filter(({ method }) => String(method).startsWith('thread/'))
       .map(({ method }) => method),
-  ).toEqual(['thread/resume'])
+  ).toEqual(['thread/read', 'thread/resume'])
   expect(h.events).toEqual([{ type: 'conversation', id: 'codex-conversation' }])
   await provider.send(h.command)
   expect(h.servers.latest.writes.at(-1)).toMatchObject({
@@ -134,7 +160,7 @@ it.each([
       h.servers.latest.writes
         .filter(({ method }) => String(method).startsWith('thread/'))
         .map(({ method }) => method),
-    ).toEqual(['thread/resume'])
+    ).toEqual(['thread/read', 'thread/resume'])
   },
 )
 
@@ -160,5 +186,49 @@ it('fails a refused fork once and closes the App Server', async () => {
     h.servers.latest.writes
       .filter(({ method }) => String(method).startsWith('thread/'))
       .map(({ method }) => method),
-  ).toEqual(['thread/resume', 'thread/fork'])
+  ).toEqual(['thread/read', 'thread/resume', 'thread/fork'])
+})
+
+it('forks without a resume when the saved conversation used another provider', async () => {
+  // Codex 0.170.0 refuses this resume without error data, so only the read
+  // of the saved provider can start the fork.
+  const h = await fixture(
+    {
+      code: -32600,
+      message:
+        "failed to load configuration: Cannot change this thread's model provider from `openai` to `conductive` on resume.",
+    },
+    undefined,
+    { modelProvider: 'openai' },
+  )
+  h.command.credential = turn('resume', 'alice', 'codex').credential
+  h.options.credential = { type: 'gateway', ...h.command.credential }
+  const provider = await createCodexFactory(h.start)(h.options)
+  onTestFinished(() => provider.close())
+  const requests = h.servers.latest.writes.filter(({ method }) =>
+    String(method).startsWith('thread/'),
+  )
+  expect(requests.map(({ method, params }) => ({ method, params }))).toEqual([
+    {
+      method: 'thread/read',
+      params: { threadId: 'saved-thread', includeTurns: false },
+    },
+    {
+      method: 'thread/fork',
+      params: {
+        threadId: 'saved-thread',
+        model: 'test-model',
+        modelProvider: 'conductive',
+        cwd: '/repo',
+        developerInstructions: 'Keep the saved session instructions.',
+        approvalPolicy: 'never',
+        sandbox: 'danger-full-access',
+      },
+    },
+  ])
+  expect(h.events).toEqual([{ type: 'conversation', id: 'forked-thread' }])
+  await provider.send(h.command)
+  expect(
+    h.servers.latest.writes.find(({ method }) => method === 'turn/start'),
+  ).toMatchObject({ params: { threadId: 'forked-thread' } })
 })

@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-18, from the branch `calummoore/record-step-times-for-builds-and-2nqj`.
-- **Location:** `worker/lifecycle/disk-retention.ts`, `worker/lifecycle/job-steps.ts`, `migrations/202611181200_job_step_times.sql`
+- **Location:** `worker/lifecycle/disk-retention.ts`, `worker/lifecycle/job-steps.ts`, `migrations/202611201500_job_step_times.sql`
 - **Reason:** The change that added the job step records covered only the jobs that a user waits for, and no perf work measures disk retention restarts yet.
 
 - **Terms:**

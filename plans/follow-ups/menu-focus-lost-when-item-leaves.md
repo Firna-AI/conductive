@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-16, from branch `calummoore/perth-6s0l`, review finding 1.
-- **Location:** `src/shell/ui/PointMenu.tsx:146`, `src/shell/ui/Overlay.tsx:167`, `src/chat/ui/dismiss.ts:53`, `src/files/panel/useRowMenu.tsx:169`, `src/chat/components/tab-menu-items.ts:105`.
+- **Location:** `src/shell/ui/PointMenu.tsx:64`, `src/shell/ui/Overlay.tsx:167`, `src/chat/ui/dismiss.ts:53`, `src/files/panel/useRowMenu.tsx:169`, `src/chat/components/tab-menu-items.ts:105`.
 - **Reason:** The defect needs a live update that removes the focused item while its menu stays open, which normal use seldom meets.
 
 - **Terms:**
@@ -14,11 +14,10 @@
   - A right click or Shift+F10 on a row of the Files panel opens the row menu. The focus goes to its first item, Add to chat.
   - Add to chat leaves an open menu at once when no message field can take the chip, for example when the cloud computer stops. `docs/protocol/file-row-menu.md` requires this, and `src/shell/workspace/files/RowAddToChat.test.tsx` tests that the item leaves an open menu.
   - The tab menu of a file tab keeps Copy path when the workspace turns read-only, so it stays open while Keep open and the moves leave (`src/chat/components/tab-menu-items.ts:105-134`). Before this, that menu closed.
-  - The shell point menu focuses an item only when it mounts (`src/shell/ui/PointMenu.tsx:146`). The shell sheets, dialogs, and anchored menus focus once through `useLayerFocus` (`src/shell/ui/Overlay.tsx:167`, `:197-209`). The chat menu kit focuses once through `useFocusInside` (`src/chat/ui/dismiss.ts:53-71`).
+  - The shell point menu focuses an item when it mounts. After each render, its hook `useLostFocus` gives a focus that fell to the page body back to its checked or first item (`src/shell/ui/PointMenu.tsx:64`). The shell sheets, dialogs, and anchored menus focus once through `useLayerFocus` (`src/shell/ui/Overlay.tsx:167`, `:197-209`). The chat menu kit focuses once through `useFocusInside` (`src/chat/ui/dismiss.ts:53-71`).
   - The row menu shows as a sheet on each window narrower than 640 px, also on desktop (`src/shell/ui/viewport.tsx:17`). The page behind a sheet is inert, and menu items have `tabIndex -1`.
 - **Problem:**
-  - When the focused item leaves an open menu, the focus falls to the page body. The arrow keys then reach no item.
-  - In a point menu, Tab then moves the focus into the page while the menu stays open. This breaks the rule "Escape, Tab, or a press outside the menu closes it" of `docs/protocol/file-row-menu.md`.
+  - When the focused item leaves the open row menu in its sheet, or the open tab menu, the focus falls to the page body. The arrow keys then reach no item.
   - In a sheet, Tab cannot bring the focus back.
   - A read-only reviewer reproduced the point menu case in memory with the real `useRowMenu` hook: after Add to chat left, `document.activeElement` was `body`, and ArrowDown did not reach Copy path. Happy-dom 21 returns `body` after the focused node leaves the page, so a test can fail before the fix.
 - **Impact if no action:** Keyboard users must close and reopen the menu to use the items that stay.
@@ -36,7 +35,6 @@
   - Send the arrow keys of the page to the open menu, because D also gives a screen reader a focused item and lets Tab close the menu.
   - Change nothing, because the remaining items stay out of reach of the keyboard.
 - **Wider fix:** E. It keeps preventing the class when the menu is a point menu, a sheet, a dialog, an anchored menu, or a menu of the chat kit.
-- **Previous examples:** `plans/follow-ups/workspace-menu-state-after-actions-change.md` records the same focus loss in the workspace row menus, from 10 November 2026.
-- **Related:** `plans/follow-ups/workspace-menu-state-after-actions-change.md`: the same cause. The focus part of its option D is part of option E here, so one branch can close the focus part of both items.
+- **Previous examples:** [A follow-up item at commit `908da17`](https://github.com/Firna-AI/conductive/blob/908da17da20f72d5b2c08450122fabf55ebb0abf/plans/follow-ups/workspace-menu-state-after-actions-change.md) records the same focus loss in the workspace row menus, from 10 November 2026. Its fix added `useLostFocus` to `src/shell/ui/PointMenu.tsx`, and `src/shell/list/RowMenu.tsx` calls it for its phone sheet.
 - **Recommendation:** E. One focus rule in the focus owners of both menu kits covers the row menu, its sheet, the workspace menus, and the tab menu. The first review recommended C, and the finding check changed it to E.
 - **Action:** fix after merge, apply E, because the defect is a Rare product bug of Medium severity whose fix does not get harder later.

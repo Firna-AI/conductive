@@ -68,9 +68,9 @@ org logins, as [Tokens and secrets](tokens-and-secrets.md) says.
 - A session keeps its memory across a stop and a resume of the sandbox.
 - A Codex session keeps its conversation when the kind of its login
   changes, such as from an OpenAI API key to a ChatGPT sign-in.
-- When Codex refuses to resume because the saved model provider differs
-  from the current provider or is no longer configured, the session
-  continues in a fork.
+- When the saved model provider of the conversation differs from the
+  current provider or is no longer configured, the session continues in
+  a fork.
 - The fork keeps the earlier messages. The session keeps the same chat.
 - The session saves the fork's conversation ID. Later turns use that ID,
   also after a restart of the runner.
@@ -92,6 +92,18 @@ org logins, as [Tokens and secrets](tokens-and-secrets.md) says.
   on a model without a level, Claude runs a lower level without a sign.
   It also ignores Ultracode on a model without it, and then runs Ultra as
   Max.
+- A new Codex model can need a newer Codex program than a cloud computer
+  runs. Until that computer installs its software update, an OpenAI API
+  key or an own endpoint login can run the model at a lower effort and at
+  standard speed, with no sign in the chat (older software decision 1,
+  2026-11-18). A ChatGPT sign-in keeps the chosen effort and speed, because
+  Codex then reads the model list of OpenAI.
+- Reason: the gap lasts minutes on a running computer, and about one turn
+  on a computer that starts again after a stop. A check of the runner's
+  Codex version before each turn was rejected for now, because it adds a
+  turn refusal. A note at the end of the turn, a wait for the update, and
+  a refusal in the model gateway were rejected for the same release, for
+  their cost.
 
 ## Names in the product
 

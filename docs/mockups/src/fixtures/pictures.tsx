@@ -1,3 +1,4 @@
+import type { CheckoutView } from './answerFiles'
 /**
  * The pictures of the image files of the mockups: screenshots of the
  * checkout form of Checkout address autocomplete on a phone. A screenshot
@@ -39,8 +40,9 @@ function Field(props: {
   )
 }
 
-/** The list of address suggestions, which covers the postcode field. */
-function Suggestions() {
+/** The list of address suggestions, with its top edge at `top`. */
+function Suggestions(props: { top: number }) {
+  const { top } = props
   const rows = ['Lisboa', 'Porto', 'Braga']
   return (
     <g>
@@ -51,7 +53,7 @@ function Suggestions() {
         rx="12"
         width="326"
         x="32"
-        y="314"
+        y={top + 4}
       />
       <rect
         fill="#ffffff"
@@ -60,11 +62,11 @@ function Suggestions() {
         stroke="#e5e7eb"
         width="326"
         x="32"
-        y="310"
+        y={top}
       />
       {rows.map((city, index) => (
         <g key={city}>
-          <text fill="#111827" fontSize="15" x="48" y={344 + index * 48}>
+          <text fill="#111827" fontSize="15" x="48" y={top + 34 + index * 48}>
             12 Rua das Flores, {city}
           </text>
           {index > 0 ? (
@@ -73,7 +75,7 @@ function Suggestions() {
               height="1"
               width="326"
               x="32"
-              y={316 + index * 48}
+              y={top + 6 + index * 48}
             />
           ) : null}
         </g>
@@ -82,14 +84,21 @@ function Suggestions() {
   )
 }
 
+export type { CheckoutView }
+
+/** The top edge of the list of suggestions in each view that has one. */
+const suggestionsTop = { covered: 310, fixed: 382 } as const
+
 /**
- * A screenshot of the checkout form on a phone. With `overlap`, the address
- * field has the focus, and its list of suggestions covers the postcode
- * field, as the attached screenshot shows. `label` names the picture for
+ * A screenshot of the checkout form on a phone, as `view` says. With a list
+ * of suggestions, the address field has the focus. The attached screenshot
+ * shows the list over the postcode field, and the screenshot of the agent
+ * after the fix shows it under that field. `label` names the picture for
  * screen readers, as the alt text of the image of the app does.
  */
-export function CheckoutPicture(props: { label: string; overlap?: boolean }) {
-  const overlap = props.overlap === true
+export function CheckoutPicture(props: { label: string; view: CheckoutView }) {
+  const { view } = props
+  const typing = view !== 'form'
   return (
     <svg
       aria-label={props.label}
@@ -125,18 +134,18 @@ export function CheckoutPicture(props: { label: string; overlap?: boolean }) {
       </text>
       <Field label="Full name" value="Ana Costa" y={178} />
       <Field
-        focused={overlap}
+        focused={typing}
         label="Address"
-        value={overlap ? '12 Rua das Fl' : '12 Rua das Flores'}
+        value={typing ? '12 Rua das Fl' : '12 Rua das Flores'}
         y={250}
       />
-      {overlap ? (
+      {typing ? (
         <rect fill="#2563eb" height="20" width="1.5" x="142" y="270" />
       ) : null}
       <Field label="Postcode" value="1200-195" y={322} />
       <Field label="City" value="Lisboa" y={394} />
       <Field label="Country" value="Portugal" y={466} />
-      {overlap ? <Suggestions /> : null}
+      {view === 'form' ? null : <Suggestions top={suggestionsTop[view]} />}
       <rect fill="#111827" height="52" rx="12" width="358" x="16" y="760" />
       <text
         fill="#ffffff"

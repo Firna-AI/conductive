@@ -5,13 +5,14 @@ import {
   type SendFeedbackRequest,
 } from '../../src/shared/feedback'
 import { createApp } from '../application'
-import type { AppEnv, HttpFetch } from '../env'
+import type { AppEnv } from '../env'
 import { memberFixture } from '../members/members-test-support'
 import {
   TEST_ORIGIN,
   TEST_TIME,
   type TestHarness,
 } from '../test-support/harness'
+import { FakeFeedbackResend } from './feedback-resend.test-support'
 
 export const screenshotSignatures = {
   png: [137, 80, 78, 71, 13, 10, 26, 10],
@@ -43,49 +44,12 @@ export function feedbackDraft(): SendFeedbackRequest {
   }
 }
 
-class FakeFeedbackResend {
-  requests: { request: Request; body: string; key: string }[] = []
-  deliveries = new Map<string, { id: string; body: string }>()
-  refuse = false
-  loseReply = false
-  throwError = false
-
-  fetch: HttpFetch = async (request) => {
-    const body = await request.text()
-    const key = request.headers.get('Idempotency-Key') ?? ''
-    this.requests.push({ request, body, key })
-    if (this.throwError) throw new Error('private-provider-error')
-    if (!key || key.length > 256)
-      return Response.json({ message: 'Invalid key' }, { status: 400 })
-    if (this.refuse)
-      return Response.json(
-        { message: 'private-provider-refusal' },
-        { status: 403 },
-      )
-    let delivery = this.deliveries.get(key)
-    if (delivery && delivery.body !== body)
-      return Response.json(
-        { message: 'Different body for this key' },
-        { status: 409 },
-      )
-    if (!delivery) {
-      delivery = { id: `feedback-email-${this.deliveries.size + 1}`, body }
-      this.deliveries.set(key, delivery)
-    }
-    if (this.loseReply) {
-      this.loseReply = false
-      throw new Error('Connection closed after delivery')
-    }
-    return Response.json({ id: delivery.id })
-  }
-}
-
 export async function feedbackFixture(harness: TestHarness) {
   const fixture = await memberFixture(harness)
   harness.env.FEEDBACK_EMAIL = 'feedback-team@example.com'
   harness.env.RESEND_API_KEY = 'test-resend-secret'
   let now = TEST_TIME
-  const resend = new FakeFeedbackResend()
+  const resend = new FakeFeedbackResend(() => now)
   const app = createApp({ now: () => now, fetch: resend.fetch })
   const fetch = (request: Request, env: AppEnv = harness.env) =>
     app.fetch(request, env)
@@ -112,6 +76,11 @@ export async function feedbackFixture(harness: TestHarness) {
     fetch,
     request,
     send,
+    scheduled: () =>
+      app.scheduled(
+        { cron: '*/15 * * * *', scheduledTime: now, noRetry() {} },
+        harness.env,
+      ),
     setTime(value: number) {
       now = value
       harness.setTime(value)

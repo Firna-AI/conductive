@@ -1,4 +1,3 @@
-import { publishedBuildStepsStatement } from './build-step-data'
 import type { ImageBuild } from '../../src/shared/org-settings'
 import { RUNNER_PROTOCOL_VERSION } from '../../src/shared/runner'
 import { activeOrgIdPredicate } from '../data/org-access'
@@ -8,6 +7,7 @@ import type { SelectedRepository } from './settings-data'
 import type { RepositoryLocation } from './repository-locations'
 import type { ImageSoftwareArtifact } from './image-software'
 import { serializeSavedScript, type SavedScript } from './saved-script'
+import { writeBuildEnd } from './build-end-data'
 
 export async function finishUnscheduledBuild(
   db: D1Database,
@@ -115,55 +115,6 @@ export async function publishBuild(
   job: BuildJob,
   now: number,
 ): Promise<void> {
-  await db.batch([
-    db
-      .prepare(
-        `INSERT INTO org_images
-         (org_id, provider_account, image_name, image_build_id, last_refresh_at, next_image_refresh_at)
-         SELECT ?, ?, ?, ?, ?, ? WHERE ${activeOrgIdPredicate('?')}
-         ON CONFLICT (org_id, provider_account) DO UPDATE SET
-         image_name = excluded.image_name, image_build_id = excluded.image_build_id,
-         last_refresh_at = excluded.last_refresh_at,
-         next_image_refresh_at = excluded.next_image_refresh_at`,
-      )
-      .bind(
-        job.orgId,
-        job.providerAccount,
-        job.snapshotName,
-        job.buildId,
-        now,
-        now + 86_400_000,
-        job.orgId,
-      ),
-    db
-      .prepare(
-        `UPDATE image_builds SET state = 'succeeded', completed_at = ?, error = NULL, provider_retry_json = NULL WHERE id = ? AND ${activeOrgIdPredicate('image_builds.org_id')}`,
-      )
-      .bind(now, job.buildId),
-    db
-      .prepare(
-        `UPDATE image_build_jobs SET phase = CASE WHEN
-          (? IS NULL AND ? = 'build'
-            AND EXISTS (SELECT 1 FROM settings WHERE org_id = ? AND revision > ?))
-          OR (EXISTS (SELECT 1 FROM repositories r WHERE r.org_id = ? AND r.selected = 1
-            AND NOT EXISTS (SELECT 1 FROM json_each(image_build_jobs.repositories_json) repository
-              WHERE json_extract(repository.value, '$.id') = r.id))
-            AND (SELECT state FROM image_builds WHERE org_id = ? AND kind = 'build'
-              ORDER BY started_at DESC, id DESC LIMIT 1) = 'succeeded')
-          THEN 'cleanup-build' ELSE 'cleanup' END,
-          process_id = NULL WHERE build_id = ? AND EXISTS
-          (SELECT 1 FROM image_builds WHERE id = image_build_jobs.build_id AND state = 'succeeded')`,
-      )
-      .bind(
-        job.previousImageName,
-        job.kind,
-        job.orgId,
-        job.settingsRevision,
-        job.orgId,
-        job.orgId,
-        job.buildId,
-      ),
-    publishedBuildStepsStatement(db, job.buildId, now),
-  ])
+  await writeBuildEnd(db, { state: 'succeeded', job }, now)
   await requireActiveOrg(db, job.orgId)
 }

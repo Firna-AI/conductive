@@ -8,7 +8,7 @@
 
 - **Terms:**
   - **One-time migration:** a SQL file under `migrations/` that D1 applies once. A merged migration never changes.
-- **Background:** The `testing` skill says that a migration never gets a test. Its proof is a one-time run whose output the branch keeps. Four test files on `main`, among them `worker/app-api/new-workspace-view-migration.test.ts`, test one-time migrations. They are `worker/app-api/agent-login-migration.test.ts`, `worker/app-api/new-workspace-view-migration.test.ts`, `worker/github/summary-migration.test.ts`, and `worker/members/org-order-migration.test.ts`.
+- **Background:** The `testing` skill says that a migration never gets a test. Its proof is a one-time run whose output the branch keeps. Four test files on `main`, among them `worker/app-api/new-workspace-view-migration.test.ts`, test one-time migrations. They are `worker/app-api/agent-login-migration.test.ts`, `worker/app-api/new-workspace-view-migration.test.ts`, `worker/github/summary-migration.test.ts`, and `worker/members/org-order-migration.test.ts`. A fifth one, `worker/secrets/mac-access-migration.test.ts`, has the same kind.
 - **Problem:** The repository and the testing rule disagree. Either the tests break the rule, or the rule misses a case that these tests cover.
 - **Impact if no action:** The gate keeps running tests of code that never runs again, and agents get two signals about migration tests.
 - **Root question:** Do one-time migrations get a test in this repository?

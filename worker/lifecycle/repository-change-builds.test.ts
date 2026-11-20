@@ -5,6 +5,10 @@ import { SOFTWARE } from './backend-test-support'
 import { setupBackendTests } from './backend-test-hooks'
 import { readBuildHistory, readBuildJob } from './build-data'
 import { refreshImagesForPush, runImageAlarm } from './image-timers'
+import {
+  SECONDARY_IMAGE_ACCOUNT,
+  seedSecondaryOrgImage,
+} from './org-image-account-test-support'
 import { wakeImagesForRepositoryChange } from './repository-change-builds'
 
 const backendFixture = setupBackendTests()
@@ -61,10 +65,41 @@ it('wakes the coordinator only for an image with old values after a good build',
   expect(fixture.scheduled.slice(scheduled)).toEqual([
     { orgId: org.id, software: SOFTWARE, buildId: null, nextAt: TEST_TIME },
   ])
+  await seedSecondaryOrgImage(fixture)
+  await runtime.env.DB.prepare(
+    'UPDATE orgs SET provider_account = ? WHERE id = ?',
+  )
+    .bind(SECONDARY_IMAGE_ACCOUNT, org.id)
+    .run()
+  const secondaryScheduled = fixture.scheduled.length
+  expect(await wakeImagesForRepositoryChange(images, change().input)).toEqual([
+    org.id,
+  ])
+  expect(fixture.scheduled.slice(secondaryScheduled)).toEqual([
+    {
+      orgId: org.id,
+      providerAccount: SECONDARY_IMAGE_ACCOUNT,
+      software: SOFTWARE,
+      buildId: null,
+      nextAt: TEST_TIME,
+    },
+  ])
+  await runtime.env.DB.prepare(
+    "UPDATE repositories SET full_name = 'example/repository', default_branch = 'secondary-main'",
+  ).run()
+  const current = change()
+  expect(await wakeImagesForRepositoryChange(images, current.input)).toEqual([])
+  expect(current.reads()).toBe(0)
+  await rename(runtime.env.DB)
+  await runtime.env.DB.prepare(
+    "UPDATE orgs SET provider_account = 'boat' WHERE id = ?",
+  )
+    .bind(org.id)
+    .run()
   await runtime.env.DB.prepare(
     `INSERT INTO image_builds (id, org_id, kind, state, settings_revision, runner_protocol_version, started_at, provider_account)
      SELECT 'failed-build', org_id, 'build', 'failed', settings_revision, runner_protocol_version, ?, provider_account
-     FROM image_builds WHERE org_id = ?`,
+     FROM image_builds WHERE org_id = ? AND id = 'published-image'`,
   )
     .bind(TEST_TIME, org.id)
     .run()

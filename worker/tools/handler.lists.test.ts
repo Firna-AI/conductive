@@ -31,7 +31,7 @@ const list = (path: string) =>
     `${TOOL_TEST_ORIGIN}${path}?orgId=org-b`,
   )
 
-it('lists only the caller org published image repositories in name order with the current repository', async () => {
+it('lists only the caller org published image repositories in the repository order with the current repository', async () => {
   await publishToolImage(fixture.db, 'org-a', 'old-image', [
     {
       id: 'old-repo',
@@ -43,10 +43,10 @@ it('lists only the caller org published image repositories in name order with th
   await publishToolImage(fixture.db, 'org-b', 'outside-image')
   await publishToolImage(fixture.db, 'org-a', 'current-image', [
     {
-      id: 'z',
+      id: 'upper',
       orgId: 'org-a',
-      fullName: 'example/Zebra',
-      defaultBranch: 'dev',
+      fullName: 'example/Alpha',
+      defaultBranch: 'release',
     },
     {
       id: 'tie-z',
@@ -61,10 +61,16 @@ it('lists only the caller org published image repositories in name order with th
       defaultBranch: 'main',
     },
     {
-      id: 'upper',
+      id: 'gone',
       orgId: 'org-a',
-      fullName: 'example/Alpha',
-      defaultBranch: 'release',
+      fullName: 'example/again',
+      defaultBranch: 'old',
+    },
+    {
+      id: 'z',
+      orgId: 'org-a',
+      fullName: 'example/Zebra',
+      defaultBranch: 'dev',
     },
     {
       id: 'repo-b',
@@ -75,8 +81,12 @@ it('lists only the caller org published image repositories in name order with th
   ])
   await fixture.db
     .prepare(
-      `INSERT INTO repositories (id, org_id, github_repository_id, full_name, default_branch, selected)
-     VALUES ('selected-only', 'org-a', 3, 'example/selected', 'main', 1)`,
+      `INSERT INTO repositories
+       (id, org_id, github_repository_id, full_name, default_branch, selected, position)
+     VALUES ('selected-only', 'org-a', 3, 'example/selected', 'main', 1, 1),
+       ('z', 'org-a', 4, 'example/Zebra', 'dev', 1, 0),
+       ('tie-z', 'org-a', 5, 'example/alpha', 'z', 1, NULL),
+       ('upper', 'org-a', 6, 'example/Alpha', 'release', 0, 2)`,
     )
     .run()
 
@@ -85,9 +95,9 @@ it('lists only the caller org published image repositories in name order with th
   expect(await response.json()).toEqual({
     repositories: [
       {
-        id: 'upper',
-        fullName: 'example/Alpha',
-        defaultBranch: 'release',
+        id: 'z',
+        fullName: 'example/Zebra',
+        defaultBranch: 'dev',
         current: false,
       },
       {
@@ -103,9 +113,15 @@ it('lists only the caller org published image repositories in name order with th
         current: false,
       },
       {
-        id: 'z',
-        fullName: 'example/Zebra',
-        defaultBranch: 'dev',
+        id: 'gone',
+        fullName: 'example/again',
+        defaultBranch: 'old',
+        current: false,
+      },
+      {
+        id: 'upper',
+        fullName: 'example/Alpha',
+        defaultBranch: 'release',
         current: false,
       },
     ],

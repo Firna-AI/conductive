@@ -1,5 +1,8 @@
 import { D1_ERROR_REASONS } from './d1-errors'
+import { mailDiagnosticFields } from './mail-diagnostics'
+import { runnerWorkFields } from './warning-runner-work'
 import {
+  ATTACHMENT_STEPS,
   RUNNER_MESSAGE_STAGES,
   SIMPLE_WARNINGS,
   type RunnerWarningFields,
@@ -34,6 +37,20 @@ export function warnWorker(warning: WorkerWarning): void {
 
 function warningFields(warning: WorkerWarning) {
   switch (warning.kind) {
+    case 'invitation_email_delivery_failed':
+    case 'approval_email_delivery_failed':
+    case 'feedback_email_delivery_failed':
+      return {
+        kind: warning.kind,
+        message: {
+          invitation_email_delivery_failed:
+            'Invitation email delivery failed. The invitation remains saved.',
+          approval_email_delivery_failed:
+            'Approval email delivery failed. The email remains pending.',
+          feedback_email_delivery_failed: 'Feedback email delivery failed.',
+        }[warning.kind],
+        error: errorFields(warning.error),
+      }
     case 'runner_connected':
     case 'runner_disconnected':
       return {
@@ -43,6 +60,13 @@ function warningFields(warning: WorkerWarning) {
             ? 'The runner of a workspace connected.'
             : 'The runner of a workspace disconnected.',
         ...runnerFields(warning),
+      }
+    case 'runner_work_interrupted':
+      return {
+        kind: warning.kind,
+        message: 'The work of a runner message did not finish.',
+        ...runnerFields(warning),
+        ...runnerWorkFields(warning),
       }
     case 'turn_ended_without_stop_request':
       return {
@@ -108,6 +132,18 @@ function warningFields(warning: WorkerWarning) {
         kind: warning.kind,
         message: 'A workspace could not admit its first message.',
         workspaceId: warning.workspaceId.text,
+        error: errorFields(warning.error),
+      }
+    case 'attachment_transfer_retried':
+    case 'attachment_copy_failed':
+      return {
+        kind: warning.kind,
+        message:
+          warning.kind === 'attachment_transfer_retried'
+            ? 'The provider did not answer a file transfer step. The transfer runs once more.'
+            : 'The files of a message did not reach the cloud computer.',
+        workspaceId: warning.workspaceId.text,
+        step: ATTACHMENT_STEPS.find((step) => step === warning.step) ?? null,
         error: errorFields(warning.error),
       }
     case 'automation_report_failed':
@@ -229,6 +265,8 @@ function runnerFields(warning: RunnerWarningFields) {
 
 function errorFields(error: ErrorSummary): ErrorSummary {
   switch (error.kind) {
+    case 'mail':
+      return { kind: 'mail', ...mailDiagnosticFields(error) }
     case 'provider':
       return {
         kind: error.kind,

@@ -1,4 +1,5 @@
 import type { ApiError } from './api/client'
+import { SendQueue } from './send-queue'
 import { asApiError, loading, ready, Store } from './store'
 import type { Loadable, Readable } from './store'
 
@@ -59,8 +60,7 @@ export class Resource<T> {
   private count = 0
   private confirmed: Layer<T>[] = []
   private writes: Layer<T>[] = []
-  /** The last write or save in the queue. It never fails, so the next can go. */
-  private sending: Promise<unknown> = Promise.resolve()
+  private readonly sends = new SendQueue()
   private readonly fetch: () => Promise<T>
   private readonly missing: (error: ApiError) => boolean
 
@@ -88,7 +88,7 @@ export class Resource<T> {
    * only its own caller.
    */
   save(send: () => Promise<T>): Promise<T> {
-    return this.queued(async () => {
+    return this.sends.run(async () => {
       const value = await send()
       this.answered(value, ++this.count)
       return value
@@ -122,7 +122,7 @@ export class Resource<T> {
     this.writes = [...this.writes, write]
     this.show()
     try {
-      const answer = await this.queued(send)
+      const answer = await this.sends.run(send)
       write.change = commit(answer)
       write.at = ++this.count
       return answer
@@ -132,13 +132,6 @@ export class Resource<T> {
     } finally {
       this.show()
     }
-  }
-
-  /** Runs `send` after the write or save before it, also a failed one. */
-  private queued<A>(send: () => Promise<A>): Promise<A> {
-    const run = this.sending.then(send)
-    this.sending = run.catch(() => undefined)
-    return run
   }
 
   /**

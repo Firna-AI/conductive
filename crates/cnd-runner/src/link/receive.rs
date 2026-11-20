@@ -46,6 +46,7 @@ impl SavedRunnerLink {
             WorkspaceToRunner::RunnerWelcome(RunnerWelcome::Welcome {
                 stream_id,
                 confirmed_through,
+                complete_tool_details,
                 ..
             }) => {
                 if welcomed || stream_id != stream {
@@ -58,6 +59,7 @@ impl SavedRunnerLink {
                         return Ok(LinkUpdate::Progress);
                     }
                     active.welcomed = true;
+                    active.complete_tool_details = complete_tool_details == Some(true);
                 }
                 self.resend(confirmed_through + 1).await;
                 Ok(LinkUpdate::Connected)

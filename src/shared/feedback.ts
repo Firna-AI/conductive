@@ -1,4 +1,5 @@
 export const FEEDBACK_PATH = '/api/feedback'
+export const FEEDBACK_SENDS_PER_HOUR = 10
 export const FEEDBACK_BODY_MAX_BYTES = 10_000_000
 export const FEEDBACK_SCREENSHOTS_MAX_BYTES = 7_000_000
 

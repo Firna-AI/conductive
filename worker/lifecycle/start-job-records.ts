@@ -71,7 +71,10 @@ export class StartJobRecords {
     this.storage = storage
     this.now = now
     const db = timedDatabase(env.DB, timer)
-    observeProviders(db, (provider) => timedProvider(provider, timer))
+    observeProviders(db, {
+      plain: env.DB,
+      observe: (provider) => timedProvider(provider, timer),
+    })
     // A live view, so that the controller reads the same env values as the
     // rest of the object, also values that a test sets after the start. The
     // target is a fresh copy, so its keys stay free to give another value.

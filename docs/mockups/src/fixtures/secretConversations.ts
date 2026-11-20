@@ -19,6 +19,7 @@ import {
   mapboxRequest,
   previewRequest,
   replicaRequest,
+  type KeptLogin,
 } from './secretRequests'
 
 /** The keys of the chats of runs with secrets, for the workspace state. */
@@ -35,6 +36,7 @@ export const secretConversationKeys = [
   'secret-late-ran',
   'secret-late-fallback',
   'secret-late-reconnect',
+  'secret-late-reconnect-org',
   'secret-late-denied',
   'secret-late-archived',
   'secret-in-work',
@@ -72,6 +74,17 @@ export function secretConversations(
     }),
     waitsForReplica,
   )
+  // Priya allowed the request after the login of the session was gone, so
+  // the turn for Cal waits until that login is connected again.
+  const reconnectLate = (login: KeptLogin) =>
+    outlived(
+      countAsk,
+      run(replicaRequest, 'late-allowed', {
+        grant: allowedByPriya,
+        delivery: { kind: 'reconnect', login, agent: 'claude' },
+      }),
+      waitsForReplica,
+    )
   return {
     'secret-waiting': [
       ...history,
@@ -172,17 +185,16 @@ export function secretConversations(
       ),
     ],
     // The Claude login of Cal, the starter, is gone, so the turn for Cal
-    // cannot run until he connects Claude again (item 12 C of the mockups).
+    // cannot run until he connects Claude again.
     'secret-late-reconnect': [
       ...history,
-      ...outlived(
-        countAsk,
-        run(replicaRequest, 'late-allowed', {
-          grant: allowedByPriya,
-          delivery: { kind: 'reconnect', starter: 'cal', agent: 'claude' },
-        }),
-        waitsForReplica,
-      ),
+      ...reconnectLate({ type: 'personal', starter: 'cal' }),
+    ],
+    // An admin removed the Claude login of Acme, which the session keeps,
+    // so the turn for Cal cannot run until an admin connects it again.
+    'secret-late-reconnect-org': [
+      ...history,
+      ...reconnectLate({ type: 'org' }),
     ],
     'secret-late-denied': [
       ...history,

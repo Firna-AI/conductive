@@ -116,7 +116,7 @@ async fn link(start: &RunnerStart, sent: Sender<RunnerToWorkspace>) -> Result<Sa
 async fn startup_identity_survives_reconnect_and_link_reconstruction_but_not_a_new_start()
 -> Result<()> {
     let (sent, received) = mpsc::channel();
-    let start = RunnerStart::new();
+    let start = RunnerStart::new(true);
     let first = link(&start, sent.clone()).await?;
     first.connect().await?;
     first.connect().await?;
@@ -124,7 +124,7 @@ async fn startup_identity_survives_reconnect_and_link_reconstruction_but_not_a_n
     let reconstructed = link(&start, sent.clone()).await?;
     reconstructed.connect().await?;
     reconstructed.close().await?;
-    let next_start = RunnerStart::new();
+    let next_start = RunnerStart::new(false);
     let next = link(&next_start, sent).await?;
     next.connect().await?;
     next.close().await?;
@@ -134,6 +134,10 @@ async fn startup_identity_survives_reconnect_and_link_reconstruction_but_not_a_n
         .collect::<std::result::Result<Vec<_>, _>>()
         .internal()?;
     assert_eq!(messages.len(), 4);
+    assert_eq!(messages[0]["fileServer"], true);
+    assert_eq!(messages[1]["fileServer"], true);
+    assert_eq!(messages[2]["fileServer"], true);
+    assert_eq!(messages[3].get("fileServer"), None);
     for message in messages.iter() {
         assert_eq!(message["type"], "hello");
         assert_eq!(message["streamId"], "saved-stream");

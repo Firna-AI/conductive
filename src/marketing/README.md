@@ -133,6 +133,11 @@ In the same change, update each sentence of the legal pages that restates
 the fact. A search for the old words is not enough, because a legal page
 can restate a fact in other words.
 
+A change to the Terms text gives a new Terms revision on its own, because
+`TERMS_VERSION` in [`src/shared/terms.ts`](../shared/terms.ts) is a digest
+of the text. In the same change, set the effective date at the top of the
+Terms to the date of the change.
+
 ## Public docs
 
 The public docs are guides to the product at `/docs`.
@@ -179,9 +184,13 @@ The pages are in `pages/`, with layouts in `layouts/` and parts in
 before the Worker serves them.
 
 - Run the site tests with `npm run test -- worker/marketing src/marketing`.
-  The built-site test clears Astro's content cache and builds once in a
-  temporary folder, so Markdown hooks always use current source. The
-  capture tests use fake pages and a fake browser, so they need no Chrome.
+  The built-site test clears Astro's content cache so Markdown hooks use
+  current source. It builds once into a new
+  `node_modules/.cache/conductive-site-<suffix>` folder, which Git and the
+  checks ignore. The folder stays on the checkout's mount so Astro can
+  rename built assets. The test removes its folder after success or
+  failure. The capture tests use fake pages and a fake browser, so they
+  need no Chrome.
 - Work on the pages with `npm run site:dev`. It serves them at
   `http://localhost:4321` and reloads them after edits. Sign-in links lead
   to the app of `npm run dev`. The footer shows the current year.
@@ -192,16 +201,21 @@ before the Worker serves them.
   and `/app-host/github-setup/requested`.
 - Run `npm run site:build` to write the pages, files, and file list into
   `public/_site/`, which Git ignores. `npm run dev` and `npm run build`
-  build the site first. Restart the Worker after rebuilding the site so
-  it reads the new file list.
+  build the site first. To see an edit through the Worker, start
+  `npm run dev` again. It rebuilds the site. The Worker then reads the new
+  file list.
 - Preview through the Worker with `npm run dev`. Set `APP_ORIGIN` to
   `http://127.0.0.1:5173` and `MARKETING_ORIGIN` to
   `http://localhost:5173` in `.dev.vars`. Open `http://localhost:5173` for
   the site and `http://127.0.0.1:5173` for the app.
 - To preview the production build, use port 5174 in those settings.
   Run `npm run build`, then `npm run preview`. Open
-  `http://localhost:5174`. The agreement page opens on the app host at
-  `/api/auth/github` without the current `terms_version` value.
+  `http://localhost:5174`.
+- `npm run dev` and `npm run preview` serve the built agreement and GitHub
+  return pages on the app host. The agreement page opens at
+  `/api/auth/github` without the current `terms_version` value. The
+  installed return page opens at `/github/setup?state=mac`. The requested
+  return page opens at `/github/setup?state=mac&setup_action=request`.
 
 ### Key code
 

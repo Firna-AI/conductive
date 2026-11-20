@@ -18,6 +18,10 @@ use cnd_runner::disk::AtomicDisk;
 use cnd_runner::emitter::{EventEmitter, SavingEmitter};
 use cnd_runner::engine::dependencies::{EngineDependencies, GitTurnRepositories, TurnRepositories};
 use cnd_runner::engine::handler::AgentEngine;
+use cnd_runner::file_server::files::RepositoryFiles;
+use cnd_runner::file_server::listener::LoopbackListener;
+use cnd_runner::file_server::policy::FilePolicy;
+use cnd_runner::file_server::server::{FileServer, HttpFileServer};
 use cnd_runner::filter::service::{CredentialFilter, Credentials, FilteredEmitter};
 use cnd_runner::helper::process::NodeHelpers;
 use cnd_runner::helper::startup::RunnerStartup;
@@ -29,11 +33,14 @@ use cnd_runner::reports::handler::{ReportCommandHandler, ReportDependencies};
 use cnd_runner::repository::git::{Cancellation, ChildGit};
 use cnd_runner::repository::io::LocalRepositoryIo;
 use cnd_runner::runtime::{RunExit, Runner, RunnerCore};
+use cnd_runner::skills::helper::{NodeSkillScanner, SkillHelpers};
+use cnd_runner::skills::reporter::SkillReporter;
 use cnd_runner::socket::WebSocketConnector;
 use cnd_runner::state::store::{DurableStore, EventStore};
 use cnd_runner::update::ReleaseReadiness;
 use cnd_runner::watcher::linux::LinuxWatchDriver;
 use cnd_runner::watcher::service::ReportWatchService;
+use cnd_runner_interface::file_server::FILE_SERVER_PORT;
 use tokio::signal::unix::{SignalKind, signal};
 use tokio::sync::watch;
 use uuid::Uuid;
@@ -46,7 +53,6 @@ use crate::runner_start::RunnerStart;
 pub(crate) const SDK_HELPER_PART: &str = "sdk-helper";
 
 pub(crate) async fn execute() -> Result<()> {
-    let start = RunnerStart::new();
     let environment: BTreeMap<String, String> = std::env::vars().collect();
     let cwd = std::env::current_dir().internal()?;
     let home = environment
@@ -104,6 +110,24 @@ pub(crate) async fn execute() -> Result<()> {
         tokio::select! { _ = terminate.recv() => {}, _ = interrupt.recv() => {} }
         stop.send_replace(true);
     });
+    let (repository_root, served_root) = watch::channel(configuration.cwd.clone());
+    let file_server = match LoopbackListener::bind(FILE_SERVER_PORT).await {
+        Ok(listener) => {
+            let server: Arc<dyn FileServer> = Arc::new(HttpFileServer {
+                listener: Arc::new(listener),
+                requests: Arc::new(FilePolicy {
+                    files: Arc::new(RepositoryFiles { root: served_root }),
+                }),
+            });
+            let stopped = shutdown.clone();
+            Some(tokio::spawn(async move { server.run(stopped).await }))
+        }
+        Err(_) => {
+            tracing::warn!("The repository file server could not bind its loopback port.");
+            None
+        }
+    };
+    let start = RunnerStart::new(file_server.is_some());
     let result = async {
         while !*shutdown.borrow() && shutdown.has_changed().is_ok() {
             let exit = run_once(
@@ -119,7 +143,10 @@ pub(crate) async fn execute() -> Result<()> {
                 return Ok(());
             }
             match exit {
-                RunExit::Relocate(target) => target.apply(&mut configuration),
+                RunExit::Relocate(target) => {
+                    target.apply(&mut configuration);
+                    repository_root.send_replace(configuration.cwd.clone());
+                }
                 _ => updates.swap(shutdown.clone()).await.internal()?,
             }
         }
@@ -128,6 +155,10 @@ pub(crate) async fn execute() -> Result<()> {
     .await;
     signals.abort();
     let _ = signals.await;
+    if let Some(task) = file_server {
+        task.abort();
+        let _ = task.await;
+    }
     result
 }
 
@@ -199,13 +230,30 @@ async fn run_once(
         saving.clone(),
         filter.clone(),
     ));
-    let watches = Arc::new(ReportWatchService::new(
-        Arc::new(LinuxWatchDriver),
-        files.clone(),
-        Some(ports.clone()),
-        configuration.cwd.clone(),
-        PathBuf::from("/run/conductive-terminal/restore-ended"),
+    let skills = Arc::new(SkillReporter::new(
+        Arc::new(NodeSkillScanner::new(
+            helpers.clone(),
+            filter.clone(),
+            configuration.cwd.to_string_lossy().into_owned(),
+            configuration.home.to_string_lossy().into_owned(),
+        )),
+        saving.clone(),
+        filter.clone(),
     ));
+    let agent_helpers = Arc::new(SkillHelpers {
+        ports: helpers.clone(),
+        skills: skills.clone(),
+    });
+    let watches = Arc::new(
+        ReportWatchService::new(
+            Arc::new(LinuxWatchDriver),
+            files.clone(),
+            Some(ports.clone()),
+            configuration.cwd.clone(),
+            PathBuf::from("/run/conductive-terminal/restore-ended"),
+        )
+        .with_skills(skills.clone()),
+    );
     let startup = Arc::new(RunnerStartup {
         home: configuration.home.clone(),
         helpers: helpers.clone(),
@@ -217,7 +265,7 @@ async fn run_once(
             store: store.clone(),
             emitter: chat,
             credentials: filter.clone(),
-            helpers,
+            helpers: agent_helpers,
             repositories,
             clock: clock.clone(),
             startup,
@@ -229,6 +277,7 @@ async fn run_once(
         ReportDependencies {
             files,
             ports: Some(ports),
+            skills: Some(skills),
             emitter: saving,
             link: link.clone(),
             store: store.clone(),

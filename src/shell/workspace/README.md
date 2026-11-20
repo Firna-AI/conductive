@@ -103,6 +103,15 @@ tabs at their places in the tab row.
 
 [The Files part](screen-parts.md#the-files-part) gives the Files screens
 of the shell, their addresses, and the saved view.
+[The tabs of HTML files](html-tabs.md) gives the files preview of the
+workspace, which shows the page of an HTML file in its tab, and the frames
+that the chat keeps.
+
+`files/chat-mentions.ts` builds the mentions of the kept chat. It gives
+`ChatMentions.pictures` only while the sandbox runs, with no sandbox panel
+and no resume at open. The reader stays the same while the tab keeps its
+files store, so a return, stop, or resume keeps its cached results. Picture
+reads call only the file client and cannot start or resume the sandbox.
 
 ## The tools part
 

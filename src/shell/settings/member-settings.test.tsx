@@ -123,7 +123,7 @@ describe('the org settings of a member who is not an admin', () => {
     )
     const listed = textOf(pages.repositories)
     expect(listed).toContain(
-      'acme/storefront The online shop acme/billing-service Invoices, payments, and webhooks acme/marketing-site The public website',
+      'acme/storefront The online shop Default acme/billing-service Invoices, payments, and webhooks acme/marketing-site The public website',
     )
     expect(listed).not.toContain('acme/admin-dashboard')
     expect(textOf(pages['cloud computer'])).toContain(

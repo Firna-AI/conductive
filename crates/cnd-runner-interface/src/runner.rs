@@ -6,6 +6,8 @@ use ts_rs::TS;
 use crate::chat_events::AgentChatEvent;
 use crate::file_tree::RunnerFileEvent;
 use crate::ports::RunnerPortsUpdated;
+use crate::runner_tool_detail::RunnerToolDetailPart;
+use crate::skills::RunnerSkillsUpdated;
 use crate::workspaces::WorkspaceStart;
 
 /// RunnerReady.
@@ -46,12 +48,16 @@ pub enum RunnerWorkspaceTitle {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
 #[serde(untagged)]
 pub enum RunnerEvent {
+    /// Private complete tool source. Never published as a chat event.
+    RunnerToolDetailPart(RunnerToolDetailPart),
     /// AgentChatEvent.
     AgentChatEvent(AgentChatEvent),
     /// RunnerFileEvent.
     RunnerFileEvent(RunnerFileEvent),
     /// RunnerPortsUpdated.
     RunnerPortsUpdated(RunnerPortsUpdated),
+    /// Complete skill metadata for both agents.
+    RunnerSkillsUpdated(RunnerSkillsUpdated),
     /// RunnerReady.
     RunnerReady(RunnerReady),
     /// RunnerStartUpdated.

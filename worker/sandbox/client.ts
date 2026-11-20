@@ -1,21 +1,23 @@
 import { findMembership } from '../data/orgs'
 import type { AppEnv, HttpFetch } from '../env'
 import { HttpError } from '../http'
-import { DEFAULT_PROVIDER_ACCOUNT } from './account-identity'
 import {
+  configuredProviderAccount,
   ProviderAccountError,
-  type ProviderAccountConfiguration,
+  type ProviderAccountEnvironment,
 } from './accounts'
 import { BoatClient } from './boat'
-import type { SandboxProvider } from './provider'
+import { E2bClient } from './e2b/client'
+import type { ProviderAllocationMode, SandboxProvider } from './provider'
 
-type ProviderAccountEnvironment = Pick<
-  AppEnv,
-  'BOAT_API_KEY' | 'BOAT_ORG_ID' | 'SANDBOX_PROVIDER_ACCOUNTS'
-> &
-  Partial<Pick<AppEnv, 'DB'>>
+type ProviderEnvironment = ProviderAccountEnvironment &
+  Partial<Pick<AppEnv, 'DB' | 'BOAT_KEY_ENCRYPTION_KEY'>>
 
-type ProviderObserver = (provider: SandboxProvider) => SandboxProvider
+interface ProviderObserver {
+  /** The binding that the observed env replaces. A provider uses it untimed. */
+  plain: D1Database
+  observe(provider: SandboxProvider): SandboxProvider
+}
 
 const observers = new WeakMap<D1Database, ProviderObserver>()
 
@@ -33,37 +35,51 @@ export function observeProviders(
 
 /** Trusted callers authorize the org and its resource before requesting a provider. */
 export function providerForAccount(
-  env: ProviderAccountEnvironment,
+  env: ProviderEnvironment,
   fetch: HttpFetch,
   accountId: string,
+  allocationMode: ProviderAllocationMode = 'active',
 ): SandboxProvider {
-  const account = configuredAccount(env, accountId)
+  const observer = env.DB && observers.get(env.DB)
+  if (!observer) return createProvider(env, fetch, accountId, allocationMode)
+  return observer.observe(
+    createProvider(
+      { ...env, DB: observer.plain },
+      fetch,
+      accountId,
+      allocationMode,
+    ),
+  )
+}
+
+function createProvider(
+  env: ProviderEnvironment,
+  fetch: HttpFetch,
+  accountId: string,
+  allocationMode: ProviderAllocationMode,
+): SandboxProvider {
+  const account = configuredProviderAccount(env, accountId)
   switch (account.kind) {
-    case 'boat': {
-      const provider = new BoatClient(account.apiKey, fetch, account.orgId)
-      const observer = env.DB && observers.get(env.DB)
-      return observer ? observer(provider) : provider
-    }
-    default: {
-      const unsupported: never = account.kind
-      throw new Error(
-        `The sandbox provider kind is not supported: ${unsupported}`,
-      )
-    }
+    case 'boat':
+      return new BoatClient(account.apiKey, fetch, account.orgId)
+    case 'e2b':
+      if (!env.DB || !env.BOAT_KEY_ENCRYPTION_KEY)
+        throw new ProviderAccountError(accountId)
+      return new E2bClient({
+        ...account,
+        accountId,
+        db: env.DB,
+        encryptionKey: env.BOAT_KEY_ENCRYPTION_KEY,
+        fetch,
+        allocationMode,
+      })
+    default:
+      return unsupportedAccount(account, accountId)
   }
 }
 
-function configuredAccount(
-  env: ProviderAccountEnvironment,
-  accountId: string,
-): ProviderAccountConfiguration {
-  if (accountId === DEFAULT_PROVIDER_ACCOUNT) {
-    return { kind: 'boat', apiKey: env.BOAT_API_KEY, orgId: env.BOAT_ORG_ID }
-  }
-  const accounts = env.SANDBOX_PROVIDER_ACCOUNTS
-  if (!accounts || !Object.hasOwn(accounts, accountId))
-    throw new ProviderAccountError(accountId)
-  return accounts[accountId]
+function unsupportedAccount(_account: never, accountId: string): never {
+  throw new ProviderAccountError(accountId)
 }
 
 export async function orgProviderForAccount(
@@ -72,9 +88,10 @@ export async function orgProviderForAccount(
   orgId: string,
   fetch: HttpFetch,
   accountId: string,
+  allocationMode: ProviderAllocationMode = 'active',
 ): Promise<SandboxProvider> {
   if (!(await findMembership(env.DB, orgId, userId))) {
     throw new HttpError(404, 'org_not_found', 'The org is not available.')
   }
-  return providerForAccount(env, fetch, accountId)
+  return providerForAccount(env, fetch, accountId, allocationMode)
 }

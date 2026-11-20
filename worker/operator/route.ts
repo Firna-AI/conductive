@@ -11,6 +11,8 @@ import { operatorDirectoryRoute } from './directory-route'
 import { liftOrgSuspension, liftUserSuspension } from './lift'
 import { numericGitHubId } from './directory'
 import { operatorWaitlistRoute } from './waitlist-route'
+import { operatorProvidersRoute } from './providers-route'
+import { operatorIdleStopRoute } from './idle-stop'
 
 export async function handleOperatorRequest(
   request: Request,
@@ -18,6 +20,20 @@ export async function handleOperatorRequest(
   context: RequestContext,
   dependencies: AppDependencies,
 ): Promise<Response | null> {
+  const providers = await operatorProvidersRoute(
+    request,
+    env,
+    context,
+    dependencies,
+  )
+  if (providers) return providers
+  const idleStop = await operatorIdleStopRoute(
+    request,
+    env,
+    context,
+    dependencies,
+  )
+  if (idleStop) return idleStop
   const waitlist = await operatorWaitlistRoute(
     request,
     env,

@@ -65,6 +65,7 @@ import { healthResponse } from './health-response'
 import { isSecretMachinePath } from './secrets/routes'
 import { routeSecretTool } from './tools/secrets'
 import { cleanupOldJobRecords } from './lifecycle/job-steps'
+import { cleanupFeedbackSends } from './app-api/feedback-quota-data'
 
 export function createApp(overrides: Partial<AppDependencies> = {}) {
   const dependencies: AppDependencies = {
@@ -143,7 +144,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
             return respond(await routeSecretTool(request, env))
           if (path === SOFTWARE_IMAGE_PATH)
             return respond(
-              await handleSoftwareImage(request, env, dependencies),
+              await handleSoftwareImage(request, env, dependencies, execution),
             )
           if (isAgentToolPath(path))
             return respond(
@@ -271,6 +272,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
         return
       }
       if (event.cron !== '*/15 * * * *') return
+      await cleanupFeedbackSends(env.DB, dependencies.now())
       await cleanupCodexDevices(env.DB, dependencies.now())
       await cleanupOldJobRecords(env.DB, dependencies.now())
       await cleanupDeletedOrgs(

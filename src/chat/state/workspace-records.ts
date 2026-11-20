@@ -5,15 +5,17 @@ import type { OrderedWorkspaceResponse } from '../../shared/workspaces'
 import { afterRestore, isArchived } from './archive-view'
 import type { ChatSnapshot } from './chat-snapshot'
 import type { ChatContext } from './context'
+import { withView } from './saved-view'
 
 /**
  * The view without its file and diff tabs, after a repository change: their
  * paths belong to the folder of the old repository. A file or diff that
  * showed gives its place to the session of the chat.
  */
-function withoutFileTabs(snapshot: ChatSnapshot): WorkspaceView | null {
-  const { view, activeSessionId } = snapshot
-  if (!view) return view
+function withoutFileTabs(
+  view: WorkspaceView,
+  activeSessionId: string | null,
+): WorkspaceView {
   const tabs = view.tabs.filter((tab) => tab.kind === 'session')
   const active = view.activeTab
   const showsFile = active !== null && active.kind !== 'session'
@@ -47,9 +49,10 @@ function withRecord(
     snapshot.workspace.repositoryId !== workspace.repositoryId
   const next = moved
     ? {
-        ...snapshot,
+        ...withView(snapshot, (view) =>
+          withoutFileTabs(view, snapshot.activeSessionId),
+        ),
         workspace,
-        view: withoutFileTabs(snapshot),
         repositoryFolder: null,
       }
     : { ...snapshot, workspace }
@@ -96,7 +99,7 @@ export function afterRepositoryMove(
     before.workspace.repositoryId === after.workspace.repositoryId
   )
     return
-  if (after.view && after.view !== before.view) context.saveView(after.view)
+  if (after.view !== before.view) context.saveView()
   void reloadRepositoryFolder(context, after.workspace.repositoryId)
 }
 

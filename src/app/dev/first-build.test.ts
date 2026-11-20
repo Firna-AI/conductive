@@ -80,11 +80,12 @@ it('requires repositories and starts the first simulated build with the complete
   expect(backend.state.orgs).toEqual([])
   const org = await create()
   const state = backend.state.orgs[0]
+  // Create org orders the choice by name: acme/data-pipeline, then acme/mobile-app.
   expect(
     state.repositories
       .filter((repository) => repository.selected)
       .map((repository) => repository.githubId),
-  ).toEqual([5, 6])
+  ).toEqual([6, 5])
   expect(
     await (await request(orgSettingsPaths.builds(org.id))).json(),
   ).toMatchObject({
