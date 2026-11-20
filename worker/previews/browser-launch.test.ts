@@ -55,7 +55,7 @@ async function runBrowser(paths: readonly string[], destination: string) {
   return { fetch, replace, history, failed }
 }
 
-it('posts the fragment path and follows only its encoded address, or the root without a path', async () => {
+it('keeps the fragment path out of the POST and follows only its encoded address, or the root without a path', async () => {
   for (const { paths, pathname } of [
     { paths: [], pathname: '/' },
     { paths: ['reports/\\%2F café/你好.html'], pathname: encodedPath },
@@ -71,7 +71,7 @@ it('posts the fragment path and follows only its encoded address, or the root wi
     const [url, init] = result.fetch.mock.calls[0]
     expect(url.origin).toBe('https://authorize.previews.test')
     expect(url.searchParams.get('hostname')).toBe(hostname)
-    expect(url.searchParams.getAll('path')).toEqual(paths)
+    expect(url.searchParams.getAll('path')).toEqual([])
     expect(url.hash).toBe('')
     expect(init).toEqual({
       method: 'POST',

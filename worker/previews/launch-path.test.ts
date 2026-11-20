@@ -1,3 +1,4 @@
+import { Window } from 'happy-dom'
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import {
@@ -69,11 +70,16 @@ it.each(['form', 'header'] as const)(
       ['\\/evil.example/x', '/%5C/evil.example/x'],
       ['reports/%2F.html', '/reports/%252F.html'],
       ['a b/café/你好.html', '/a%20b/caf%C3%A9/%E4%BD%A0%E5%A5%BD.html'],
+      [
+        'reports/a\rb\nc\r\nd\te\\f.html',
+        '/reports/a%0Db%0Ac%0D%0Ad%09e%5Cf.html',
+      ],
     ]) {
       const form = await readLaunch(setup, mode, path)
       expect(form.body.getAll('path'), path).toEqual(
-        path === undefined ? [] : [path],
+        mode === 'header' && path !== undefined ? [path] : [],
       )
+      if (mode === 'header') form.body.delete('path')
       const response = await setup.handler.proxy(authorize(mode, form))
       expect(response.status, path).toBe(mode === 'form' ? 303 : 200)
       expect(response.headers.getSetCookie()).toHaveLength(1)
@@ -86,6 +92,25 @@ it.each(['form', 'header'] as const)(
     expect(harness.requests).toHaveLength(0)
   },
 )
+
+it('keeps HTML delimiters of a launch path out of the launch markup', async () => {
+  const setup = await openPreview(harness)
+  const path = `reports/"><img src=x onerror='bad'>&quot;&.html`
+  const url = new URL(previewLaunchUrl(setup.preview, path))
+  const response = await setup.handler.fetch(
+    setup.request(url.pathname + url.search),
+  )
+  expect(response.status).toBe(200)
+  const html = await response.text()
+  const window = new Window()
+  const document = new window.DOMParser().parseFromString(html, 'text/html')
+  expect(document.querySelectorAll('form')).toHaveLength(1)
+  expect(document.querySelectorAll('input')).toHaveLength(2)
+  expect(document.querySelectorAll('img')).toHaveLength(0)
+  expect(document.querySelector('input[name="path"]')).toBeNull()
+  expect(html).not.toContain(path)
+  window.close()
+})
 
 const invalidPaths = [
   [''],
@@ -131,7 +156,7 @@ it.each(['form', 'header'] as const)(
   'rejects invalid %s authorization paths before using the grant',
   async (mode) => {
     const setup = await openPreview(harness)
-    const form = await readLaunch(setup, mode)
+    const form = await readLaunch(setup, mode, 'reports/selected.html')
     harness.requests.length = 0
     for (const paths of invalidPaths) {
       form.body.delete('path')

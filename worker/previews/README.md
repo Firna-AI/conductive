@@ -66,7 +66,8 @@ app and a top-level tab use different cookie partitions. The app gate checks
 the session. The handler then checks the membership, the running workspace,
 and the active preview. The GET returns trusted HTML that posts the preview
 hostname and a 60-second grant to the authorizer. When the launch has a path,
-the form also holds that path in an HTML-escaped hidden value.
+the grant seals it, and the form holds no path field. A browser turns each
+lone CR or LF of a form field into CR LF, so a path in the form can change.
 The GET checks the path with `isFilePath`. An invalid or repeated `path`
 gets 400 `invalid_input`, before any grant is issued, as
 [Launch paths](../../docs/protocol/preview-grants.md#launch-paths) requires.
@@ -83,7 +84,7 @@ request keeps the gate rules.
 
 A GET with `Accept: application/json` gets a `PreviewLaunchResponse` instead.
 Its `url` is the authorizer address, with the hostname, a new grant, and the
-optional path only in the fragment. Its `expiresAt` ends that grant. The Mac app fetches it with its
+optional path only in the fragment. The grant seals the same path. Its `expiresAt` ends that grant. The Mac app fetches it with its
 own session and the desktop Origin. It then opens `url` in the default browser.
 
 The launch page has a nonce-based CSP for its script and its style. Its `form-action` allows only the
@@ -96,15 +97,22 @@ The authorizer has two POST modes. Each needs one hostname and one valid grant
 for an active preview. Each failure gets the same 404, also for the desktop
 Origin.
 
-- Form mode accepts a form POST with `Origin: APP_ORIGIN`. It reads the optional
-  path from the form and answers with a 303 to the preview address.
+- Form mode accepts a form POST with `Origin: APP_ORIGIN`. It answers with a
+  303 to the preview address.
 - Header mode accepts a POST with the authorizer's own Origin, the hostname in
-  the query, and `Authorization: Bearer <grant>`. It reads the optional path
-  from the query and answers with JSON that holds the preview address.
+  the query, and `Authorization: Bearer <grant>`. It answers with JSON that
+  holds the preview address.
 
-Both modes check the path with `isFilePath` before the redemption. An invalid
-or repeated path gets the same 404 as an invalid grant, and the grant stays
-unused. The address starts with `https://`, the hostname of the redeemed
+Both modes read the request fields from one `URLSearchParams`: the form body
+in form mode, and the query in header mode. The preview address uses the path
+that the redeemed grant seals. For one release, a grant without a path falls
+back to the optional `path` field of the request. A launch page or an
+authorizer page of the previous Worker posts that field, and its grant seals
+no path. When the grant seals a path, the address ignores the field.
+
+Both modes check the `path` field with `isFilePath` before the redemption. An
+invalid or repeated field gets the same 404 as an invalid grant, and the grant
+stays unused. The address starts with `https://`, the hostname of the redeemed
 preview, and `/`. Each path segment is encoded with `encodeURIComponent`,
 then joined with `/`. The path is never read as an address. Without a path,
 the address stays `https://<hostname>/`.
@@ -124,11 +132,11 @@ A GET of the exact authorizer address without a query serves the authorizer
 page for a browser launch. Its CSP allows only its nonce script and style and
 requests to its own origin. Its `frame-ancestors 'none'` keeps it at the browser's top
 level. Its script removes the fragment from the address before any request.
-It then sends the header mode POST, with the optional fragment path in the
-query. It refuses repeated fragment paths. It follows only the address of the
-same preview hostname, with the encoded path that it expects, or `/` without
-a path. On a failure, it asks the user to open the preview
-again from the workspace.
+It then sends the header mode POST, with the hostname in the query and no
+path. It refuses repeated fragment paths. It keeps the fragment path only to
+check the reply. It follows only the address of the same preview hostname,
+with the encoded path that it expects, or `/` without a path. On a failure,
+it asks the user to open the preview again from the workspace.
 
 The launch page and the authorizer page share one look from
 [opening-page.ts](opening-page.ts): the logo tile, a turning ring, and
@@ -147,6 +155,8 @@ data binds the app origin, the hostname, the preview ID, and the purpose.
 So a grant cannot act as a cookie, and a cookie cannot move to another preview.
 Each grant and each cookie also seals its viewer: the user ID and the session
 ID that launched the preview, with the org and workspace IDs and the expiry.
+A grant also seals the optional launch path. A cookie seals no path, because
+it opens every path of its preview.
 So each credential belongs to one viewer session. It seals no sandbox ID, so it
 keeps working after the workspace gets a new sandbox. Each access read still
 needs a sandbox in a running state and an owner who is not suspended. An open
@@ -162,15 +172,16 @@ D1 is shared, so a grant works once across isolates and restarts.
 
 Both POST modes call `redeemLaunchGrant`, the one redemption operation.
 It first checks the grant and its viewer against the current access, with
-`readPreviewAccess`.
+`readPreviewAccess`. It also checks the sealed path with `isFilePath`.
 It then deletes the record of the grant with `takeOAuthState`.
-It returns the credential cookie only when that delete finds the record.
+It returns the credential cookie and the sealed path only when that delete
+finds the record.
 The delete is atomic, so only one request can use a grant.
 Every other request with that grant gets the same 404, with no cookie.
 
 Only `redeemLaunchGrant` returns a credential cookie, so no mode can skip the
 one-use check. The POST handler in `launch.ts` checks the method, the Origin,
-the form body, the hostname, and the path before the redemption. So a request that fails
+the form body, the hostname, and the `path` field before the redemption. So a request that fails
 a check leaves its grant unused. Keep each new check before the redemption.
 
 The proxy reads only the cookie of the requested preview ID. A duplicate of
@@ -330,7 +341,7 @@ The shared sandbox predicate refuses old grants, cookies, and each stream batch 
 - [browser-launch.ts](browser-launch.ts) builds the authorizer page for a browser launch.
 - [opening-page.ts](opening-page.ts) builds the shared look of both pages: the tile, the ring, the status, and the failure.
 - [preview-launch-path.ts](../security/preview-launch-path.ts) matches the exact launch path for the gate and the Mac app.
-- [credentials.ts](credentials.ts) issues grants with `launchGrant`, redeems each grant once with `redeemLaunchGrant`, and checks the credential cookies. Each one seals a `PreviewViewer`.
+- [credentials.ts](credentials.ts) issues grants with `launchGrant`, redeems each grant once with `redeemLaunchGrant`, and checks the credential cookies. Each one seals a `PreviewViewer`. A grant also seals the optional launch path.
 - [proxy.ts](proxy.ts) routes the authorizer page and POST, checks the credential cookie, and owns the request flow.
 - [server-timing.ts](../server-timing.ts) records the duration of each step for the `Server-Timing` header.
 - [hostname-cache.ts](hostname-cache.ts) keeps the workspace of each found preview hostname for the outer route.
@@ -353,7 +364,7 @@ The shared sandbox predicate refuses old grants, cookies, and each stream batch 
 - [port-credentials.test.ts](port-credentials.test.ts) checks that the proxy follows the credential for request headers, cookies, query names, and reply fields.
 - [socket.ts](socket.ts) selects binary frames and drains queued data before forwarding a normal close with its code and reason.
 - [types.ts](types.ts) defines the fetch, activity, and socket boundaries. Its `WorkspaceTarget` holds the sandbox ID with its provider account.
-- [launch-test-support.ts](launch-test-support.ts) runs the real launch GET and authorizer POST in tests.
+- [launch-test-support.ts](launch-test-support.ts) runs the real launch GET and authorizer POST in tests. Its `launchForm` turns each lone CR or LF of a form field into CR LF, as a browser does.
 
 The feature adapter checks workspace access before each provider operation.
 It refuses a workspace whose owner is suspended with 403 `user_suspended`.

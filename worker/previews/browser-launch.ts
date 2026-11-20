@@ -17,7 +17,6 @@ const pathname = path === null ? '/' : '/' + path.split('/').map(encodeURICompon
 async function launch() {
   const url = new URL(location.href)
   url.searchParams.set('hostname', hostname)
-  if (path !== null) url.searchParams.set('path', path)
   const response = await fetch(url, {
     method: 'POST', credentials: 'include',
     headers: { Authorization: 'Bearer ' + grant, Accept: 'application/json' },
