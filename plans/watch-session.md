@@ -4,9 +4,13 @@ Status: Active. On branch `calummoore/wake-a-session-when-a-turn-ends-b5kh`, no 
 
 Conductive agents hand work to other sessions. No workspace tool tells the caller when that work ends. A waiting parent keeps its turn and cloud computer active. This change adds a one-shot watch. The Worker wakes the calling session when the watched turn finishes, fails, or stops.
 
-Cal chose option C in workspace 322 on 20 November 2026. His words were "1 = C - create that in a sub-workspace now, while we discuss 2". This plan records that choice as watch decision 1. The separate dev server question stays in workspace 322.
+Cal chose option C in workspace 322 on 20 November 2026. His words were "1 = C - create that in a sub-workspace now, while we discuss 2". This plan records that choice as watch decision 1.
 
 On 20 November 2026, Cal answered "2 = D", "3 = C", "4 = C", "5 = D", and "6 = B". These answers approve the contract below. No watch design decision remains open at the start of implementation.
+
+## Coordination with services
+
+Cal chose services, option B for brainstorm item 2, on 20 November 2026. [Workspace 475](https://app.conductive.build/orgs/X6K5FFR3yoqyD5D1WfZdCk4GCk8QNz65J_GzQ5WkiOM/workspaces/msP0tcsEMU-tEeFyjeXKKSosVXVs0bWheJLDdoabwqo) builds that separate change. It adds commands in `crates/cnd-tools/` and guidance in the agent instructions. Keep watch commands and guidance in their own sections. The branch that merges second takes the latest `main` and resolves conflicts. This coordination changes no watch requirement.
 
 The source is the [agent process management session](https://app.conductive.build/orgs/X6K5FFR3yoqyD5D1WfZdCk4GCk8QNz65J_GzQ5WkiOM/workspaces/TECuGUpvCP2C5ezKfmG4f3VWeHSpToaeTHH8hDks8Og/sessions/iq1decCRv9wR4QbFyQpsCgAGmRKnXmCAk3GMzdo2bro). Research started at `c41f62825`. The branch then took `main` at `e54cbbd00` by fast-forward. Evidence belongs in `.context/watch-session/`. Review reports belong in `.context/reviews/calummoore/wake-a-session-when-a-turn-ends-b5kh/`.
 
