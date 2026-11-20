@@ -52,11 +52,6 @@ export const branchCopy = {
 export const targetCopy = {
   /** The label of the Target part, and its spoken name. */
   label: 'Target',
-  /**
-   * The name of one target with the word Target, such as "Target main".
-   * The target row of the app uses it until the app draws decision 301.
-   */
-  option: (branch: string) => `Target ${branch}`,
   /** The line of the picked branch, which stacks the work on it. */
   picked: 'The pull request holds only the new work.',
   /** The line of the default branch, which also gets the picked branch. */

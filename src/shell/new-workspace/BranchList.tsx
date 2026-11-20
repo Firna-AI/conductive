@@ -26,7 +26,6 @@ import type { Loadable } from '../../app/store'
 import { formatAgo } from '../../app/time'
 import type { RepositoryBranchesResponse } from '../../shared/branches'
 import { ActionButton } from '../ui/actions'
-import { useLayerFocus } from '../ui/Overlay'
 
 /** The handle of the search field of Firna, which takes the focus. */
 type SearchHandle =
@@ -129,15 +128,16 @@ function Status(props: {
 }
 
 /**
- * The open branch picker: the search field, then the default branch, then
- * the other branches by their newest commit, and under them the state of
- * the list. The search field keeps the focus: it is a combobox of the
- * rows. A search highlights its first match, Up and Down move the
- * highlight with a wrap at each end, and Enter picks the highlighted
- * branch. Tab goes on to the other controls of the picker, such as Try
- * again after a failed read. A picker beside its control closes when the
- * focus leaves it, as `BranchControl` says. A phone draws it in a sheet,
- * with rows of touch size, and the sheet holds the focus.
+ * The Start from part of the open dropdown: the search field, then the
+ * default branch, then the other branches by their newest commit, and
+ * under them the state of the list. The search field keeps the focus: it
+ * is a combobox of the rows. A search highlights its first match, Up and
+ * Down move the highlight with a wrap at each end, and Enter picks the
+ * highlighted branch. Tab goes on to the other controls of the dropdown,
+ * such as Try again after a failed read, and the Target part. A dropdown
+ * beside its control closes when the focus leaves it, as `BranchControl`
+ * says. A phone draws it in a sheet, with rows of touch size, and the
+ * sheet holds the focus.
  */
 export function BranchList(props: {
   list: Loadable<RepositoryBranchesResponse>
@@ -151,13 +151,11 @@ export function BranchList(props: {
 }) {
   const { field } = useControlSizes()
   const { now } = useServices()
-  const group = useRef<HTMLDivElement>(null)
   const search = useRef<SearchHandle>(null)
   const [query, setQuery] = useState('')
   // No row is highlighted until a search or an arrow key.
   const [highlight, setHighlight] = useState(-1)
   const id = useId()
-  useLayerFocus(group, { modal: false, enabled: !props.sheet })
   const { rows, status } = branchRows(props.list, props.branch, query)
   const time = now()
   const active = Math.min(highlight, rows.length - 1)
@@ -188,7 +186,7 @@ export function BranchList(props: {
   }
   return (
     <div
-      aria-label={branchCopy.picker}
+      aria-label={branchCopy.startFrom}
       className={classes(
         styles.list,
         props.sheet && menu.sheet,
@@ -197,7 +195,6 @@ export function BranchList(props: {
       // The field of Firna keeps its keys from the elements around it, so
       // the list hears them on their way in.
       onKeyDownCapture={onKeyDown}
-      ref={group}
       role="group"
     >
       <InputFrame

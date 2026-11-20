@@ -509,6 +509,27 @@ Design calls from the docs of Milestone 15, made on 20 November 2026:
 - The doc says only that a long name is cut short. Reason: the open item
   on long names has no answer.
 
+Design calls from the UI of Milestone 16, made on 20 November 2026:
+
+- The rows of the Target part are the radios of the group Target, with one
+  stop of Tab on the checked row. Up and Down move the focus between them,
+  with a wrap, and choose nothing. A press, Enter, or Space chooses the
+  target and closes the dropdown. Reason: a choice closes the dropdown, so
+  a key that chose at each move would close it at once. The list of Start
+  from and the menus of the app also move with the keys and choose with
+  Enter.
+- A Target row whose name is cut shows the full name as a tooltip, as each
+  row of Start from does. Reason: the rows of one dropdown behave the same.
+- The layer of the dropdown keeps it below the control also when it does
+  not fit there, and limits it to the room below, so the list of branches
+  scrolls. The option `keepSide` of `PopoverSurface` does this, and every
+  other menu still flips to the roomier side. Reason: the protocol doc
+  opens the dropdown below the control. With the Target part, the dropdown
+  needs about 415 px, and the room below the control on the page is 412 px
+  at a window height of 900 px and 322 px at 720 px, so the layer flipped
+  it above. The room caps of the mockup would fit by only 2 px, and not at
+  all for a control on a second line.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -814,21 +835,30 @@ Tags: ui
 
 Depends on: 14
 
-- [ ] Build decision 301 in New workspace, on the page and in the dialog,
+- [x] Build decision 301 in New workspace, on the page and in the dialog,
       as the mockups of Milestone 14 show, and remove the target row.
-- [ ] Keep the draft, the clear on a change of repository, the create
+- [x] Keep the draft, the clear on a change of repository, the create
       request, and the refusals working.
-- [ ] Test the closed control, the two-part dropdown, the kept target
+- [x] Test the closed control, the two-part dropdown, the kept target
       choice, and the phone sheet. Compare each screen with its mockup.
-- [ ] On a 360 px phone, check that a long name with `→ main` ends in an
+- [x] On a 360 px phone, check that a long name with `→ main` ends in an
       ellipsis, and that `→ main` and the chevron stay in view. The
       `min-width: 0` of `.start` in `NewWorkspaceScreen.module.css` keeps
       the start inside the screen.
-- [ ] Remove `TargetChoice.module.css`, the `target` rule of
+- [x] Remove `TargetChoice.module.css`, the `target` rule of
       `NewWorkspaceDialog.module.css`, and `targetCopy.option` from the
       mockups, once the app no longer uses them.
-- [ ] Update `src/app/start-branch.md`, also its lines on the old target
+- [x] Update `src/app/start-branch.md`, also its lines on the old target
       row, and `src/app/key-code-layers.md`, which names `TargetChoice.tsx`.
+- [x] Remove the bullet on `TargetChoice.module.css` and the `target` rule
+      from `docs/mockups/design-new-workspace.md`, because this milestone
+      removed both. The brief of the UI work allowed no edit of a doc under
+      `docs/`.
+
+Evidence: `.context/start-from-branch/ui-301/`, with the red, green, and
+mutation logs, the batch logs of `src/shell` and `src/app`, the ten repeat
+runs, the room and 360 px measures, the screenshots, and the comparisons
+with the mockups in `compare/`.
 
 ## Milestone 17: Split the create doc
 

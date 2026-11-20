@@ -68,10 +68,6 @@ of the New workspace dialog.
   dropdown, and of the refusals. It imports no fixture, and neither do the
   parts, so the app can share them. No word says "fork", because on GitHub
   a fork is a copy of the repository.
-- `TargetChoice.module.css` and the `target` rule of
-  `NewWorkspaceDialog.module.css` hold the styles of the target row that
-  decision 301 replaced. No mockup uses them. The app uses them until it
-  builds decision 301.
 - [The pull request bar](design-bar.md) gives the line under the bar after
   GitHub deleted the stored base of a workspace. It also gives the branch
   and its base at the top of the Checks tab of a phone, which name a

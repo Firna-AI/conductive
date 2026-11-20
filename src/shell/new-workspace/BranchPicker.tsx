@@ -1,9 +1,10 @@
 import { useRef, useState } from 'react'
 import { ChevronDown, GitBranch } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
+import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import { branchCopy } from '../../../docs/mockups/src/components/new-workspace/branchCopy'
 import styles from '../../../docs/mockups/src/components/new-workspace/BranchPicker.module.css'
-import type { FormBranch } from '../../app/new-workspace-branch'
+import type { BranchTarget, FormBranch } from '../../app/new-workspace-branch'
 import { useStore } from '../../app/store'
 import type { Repository } from '../../shared/org-settings'
 import { useOrgModel } from '../context'
@@ -14,12 +15,12 @@ import { PopoverSurface } from '../ui/PopoverSurface'
 import { Sheet } from '../ui/Sheet'
 import ui from '../ui/ui.module.css'
 import { useViewport } from '../ui/viewport'
-import { BranchList } from './BranchList'
+import { BranchMenu } from './BranchMenu'
 import local from './new-workspace.module.css'
 
 /**
- * The picker keeps its own width and height limit, as a menu does. Its
- * layer limits it only to the room below the control.
+ * The dropdown keeps its own width and height limit, as a menu does. Its
+ * layer keeps it below the control and limits it only to the room there.
  */
 const SURFACE_OPTIONS = {
   anchorWidthAsMinimum: false,
@@ -27,26 +28,66 @@ const SURFACE_OPTIONS = {
 }
 
 /**
- * The branch control beside the repository picker of New workspace, on the
- * page and in the dialog. It always names a branch: the default branch,
- * until the member picks another. A long name ends in an ellipsis, and on
- * a phone the control may take the whole width of its line. The page uses
- * the default tone, and the dialog the plain tone, as for the repository
- * picker.
+ * The target that the closed control names: the default branch while a
+ * picked branch targets it, else none. A target on the picked branch needs
+ * no word, because the work then stacks on the branch that the control
+ * names.
+ */
+function namedTarget(branch: FormBranch): string | undefined {
+  return branch.target === 'default' ? branch.defaultBranch : undefined
+}
+
+/**
+ * The end of the control: the muted target, such as `→ main`, then the
+ * chevron. The target keeps its width, so a long name gives way first.
+ */
+function ControlEnd(props: { target: string | undefined }) {
+  const { labelSize } = useControlSizes()
+  const chevron = (
+    <ChevronDown aria-hidden className={styles.chevron} size={13} />
+  )
+  if (props.target === undefined) return chevron
+  return (
+    <span className={styles.end}>
+      <span
+        className={styles.toTarget}
+        style={{ fontSize: labelSize, lineHeight: `${labelSize + 4}px` }}
+      >
+        {branchCopy.toTarget(props.target)}
+      </span>
+      {chevron}
+    </span>
+  )
+}
+
+/**
+ * The branch control directly right of the repository picker of New
+ * workspace, on the page and in the dialog (decision 301), with the look
+ * and the size of that picker. It always names a branch: the default
+ * branch, until the member picks another. While a picked branch targets
+ * the default branch, a muted `→ main` follows the name, and the spoken
+ * name adds the target. A long name ends in an ellipsis, and the target
+ * and the chevron stay in view. On a phone the control may take the whole
+ * width of its line. The page uses the default tone, and the dialog the
+ * plain tone, as for the repository picker.
  *
- * A press opens the picker, which reads the branches of the repository
- * again. On a computer the picker opens below the control, in the top
- * layer, so no box clips it, and Escape and a press outside close it. The
- * focus on an element outside the control and the picker closes it too.
- * So Tab reaches each control of the picker, such as Try again, and the
- * picker closes as Tab leaves it. A phone opens it as a sheet. A pick
- * closes it, and the focus goes back to the control.
+ * A press opens the dropdown of `BranchMenu`, which reads the branches of
+ * the repository again. On a computer the dropdown opens below the
+ * control, in the top layer, so no box clips it. It stays below the
+ * control also when it does not fit there, and takes at most the room
+ * below, so the list of branches scrolls. Escape and a press outside close
+ * it. The focus on an element outside the control and the dropdown closes
+ * it too. So Tab reaches each control of the dropdown, such as Try again
+ * and the Target part, and the dropdown closes as Tab leaves it. A phone
+ * opens it as a sheet. A pick of a branch or a press of a target closes
+ * it, and the focus goes back to the control.
  */
 export function BranchControl(props: {
   orgId: string
   repository: Repository
   branch: FormBranch
   pick: (name: string) => void
+  choose: (target: BranchTarget) => void
   tone?: ActionTone
 }) {
   const { repository, branch } = props
@@ -55,11 +96,12 @@ export function BranchControl(props: {
   const shown = useStore(list.store)
   const [open, setOpen] = useState(false)
   const anchor = useRef<HTMLSpanElement>(null)
+  const target = namedTarget(branch)
   const close = () => setOpen(false)
-  // The anchor holds the control and the open picker, so the focus of a
-  // press on the control leaves the picker open, and its click closes it.
+  // The anchor holds the control and the open dropdown, so the focus of a
+  // press on the control leaves the dropdown open, and its click closes it.
   useDismiss(open && !phone, anchor, close, { focusOutside: true })
-  // The palette key closes the picker beside the control, as it closes a
+  // The palette key closes the dropdown beside the control, as it closes a
   // menu. A phone sheet holds the key.
   useMenuLayer(open && !phone, () => {
     close()
@@ -73,9 +115,14 @@ export function BranchControl(props: {
     close()
     props.pick(name)
   }
-  const picker = (sheet: boolean) => (
-    <BranchList
+  const choose = (value: BranchTarget) => {
+    close()
+    props.choose(value)
+  }
+  const dropdown = (sheet: boolean) => (
+    <BranchMenu
       branch={branch}
+      choose={choose}
       list={shown}
       pick={pick}
       repository={repository.fullName}
@@ -85,17 +132,21 @@ export function BranchControl(props: {
   )
   return (
     <span className={styles.anchor} ref={anchor}>
-      <span className={classes(styles.control, phone && styles.wide)}>
+      <span
+        className={classes(
+          styles.control,
+          target !== undefined && styles.targeted,
+          phone && styles.wide,
+        )}
+      >
         <ActionButton
-          accessibilityLabel={branchCopy.control(branch.name)}
+          accessibilityLabel={branchCopy.control(branch.name, target)}
           expanded={open}
           icon={GitBranch}
           menu
           onPress={toggle}
           tone={props.tone}
-          trailing={
-            <ChevronDown aria-hidden className={styles.chevron} size={13} />
-          }
+          trailing={<ControlEnd target={target} />}
         >
           {branch.name}
         </ActionButton>
@@ -105,14 +156,15 @@ export function BranchControl(props: {
           align="start"
           anchor={anchor}
           className={ui.menuLayer}
+          keepSide
           options={SURFACE_OPTIONS}
         >
-          <div className={local.branchBox}>{picker(false)}</div>
+          <div className={local.branchBox}>{dropdown(false)}</div>
         </PopoverSurface>
       ) : null}
       {open && phone ? (
         <Sheet close={close} title={branchCopy.picker}>
-          {picker(true)}
+          {dropdown(true)}
         </Sheet>
       ) : null}
     </span>

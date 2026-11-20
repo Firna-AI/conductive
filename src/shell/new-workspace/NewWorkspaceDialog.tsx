@@ -188,15 +188,15 @@ function DialogCard(props: {
 
 /**
  * New workspace as a dialog over the whole frame, on a computer, as the
- * mockup draws it. The repository picker and the branch control sit at the
- * top left, and the org and the section of the new workspace at the top
- * right, as a menu of the sections of the org. A picked branch that is not
- * the default branch adds the target choice on a line under them. The
- * message and its files fill the middle, with the notices of the page under
- * them. The model picker sits at the bottom left, and the attach button and
- * Create at the bottom right. The dialog and the page of an org and a
- * section share one draft, so a close keeps the message, its files, and its
- * branch.
+ * mockup draws it. The repository picker and the branch control directly
+ * right of it sit at the top left, and the org and the section of the new
+ * workspace at the top right, as a menu of the sections of the org. The
+ * target of a picked branch lives in the dropdown of the branch control.
+ * The message and its files fill the middle, with the notices of the page
+ * under them. The model picker sits at the bottom left, and the attach
+ * button and Create at the bottom right. The dialog and the page of an org
+ * and a section share one draft, so a close keeps the message, its files,
+ * its branch, and its target.
  */
 export function NewWorkspaceDialog(props: {
   orgId: string

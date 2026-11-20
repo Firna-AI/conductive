@@ -21,7 +21,6 @@ import { useShownForm } from './NewWorkspaceHost'
 import { OrgLinks } from './OrgLinks'
 import { repositoriesFirst } from './notices'
 import { RepositoryMenu } from './parts'
-import { TargetChoice } from './TargetChoice'
 import {
   useNewWorkspaceForm,
   type NewWorkspaceForm,
@@ -34,13 +33,14 @@ function builtWhen(when: When): string {
 
 /**
  * The start of the empty chat, with the repository of the new workspace and
- * the branch control beside it. A picked branch that is not the default
- * branch adds the target choice under them. An org without chosen
- * repositories asks for them first: an admin gets Choose repositories, and
- * a member reads that an admin chooses them. It asks only after the
- * repositories load, as the dialog does. While the repository of the form
- * waits for its build, the notice over the composer says when it is ready,
- * so the note of the cloud computer gives way.
+ * the branch control directly right of it. The target of a picked branch
+ * lives in the dropdown of the branch control (decision 301), so no line of
+ * a target choice follows them. An org without chosen repositories asks for
+ * them first: an admin gets Choose repositories, and a member reads that an
+ * admin chooses them. It asks only after the repositories load, as the
+ * dialog does. While the repository of the form waits for its build, the
+ * notice over the composer says when it is ready, so the note of the cloud
+ * computer gives way.
  */
 function Start(props: {
   org: OrgSummary
@@ -82,6 +82,7 @@ function Start(props: {
           {branch ? (
             <BranchControl
               branch={branch}
+              choose={form.chooseTarget}
               orgId={org.id}
               pick={form.pickBranch}
               repository={chosen}
@@ -95,14 +96,6 @@ function Start(props: {
         >
           Choose repositories
         </ActionButton>
-      ) : null}
-      {chosen && branch?.target ? (
-        <TargetChoice
-          choose={form.chooseTarget}
-          defaultBranch={branch.defaultBranch}
-          picked={branch.name}
-          value={branch.target}
-        />
       ) : null}
       {chosen && builtAt !== null ? (
         <p className={styles.note}>

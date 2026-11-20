@@ -3,23 +3,26 @@
 import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 import { routes } from '../../app/router'
-import { repositoryBranchesPath } from '../../shared/branches'
 import {
   accessibleName,
   byRole,
   isOperable,
   queryByRole,
 } from '../../test-support/dom-queries'
-import type { FakeApiServer } from '../../test-support/fake-api'
 import { MOUNTED_TEST_TIMEOUT } from '../../test-support/mount'
 import { click, press, settle } from '../test-mount'
 import { focusableSelector } from '../ui/Overlay'
 import { org } from '../workspace/kept-test-kit'
+import {
+  branchesPath,
+  pickBranch,
+  picked,
+  reads,
+  serveBranches,
+} from './branch-test-kit'
 import { mainOf, openTab, serverWith } from './dialog-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
-
-const branchesPath = repositoryBranchesPath(org, 'storefront')
 
 /** New workspace as a page, where each read of the branches fails. */
 async function pageWithFailedReads() {
@@ -33,12 +36,6 @@ async function pageWithFailedReads() {
   const tab = await openTab(server, { at: routes.newWorkspace(org) })
   return { server, main: mainOf(tab.view) }
 }
-
-/** The number of reads of the branch list that the server got. */
-const reads = (server: FakeApiServer) =>
-  server.requests.filter(
-    (request) => new URL(request.url).pathname === branchesPath,
-  ).length
 
 /** Whether the branch picker shows, by its search field. */
 const pickerShows = (root: HTMLElement) =>
@@ -132,6 +129,40 @@ describe('the branch picker on a computer', () => {
     }).toEqual({
       down: { picker: true, expanded: 'true' },
       up: { picker: false, expanded: 'false', reads: 1 },
+    })
+  })
+
+  test('lets Tab reach the checked target after the search field, where Up and Down move the focus between the two targets, and a press of one closes the picker on that target with the focus on the control', async () => {
+    const server = serverWith('page')
+    serveBranches(server)
+    const tab = await openTab(server, { at: routes.newWorkspace(org) })
+    const main = mainOf(tab.view)
+    await pickBranch(main, 'main', picked)
+    click(byRole('button', `Branch: ${picked}`, main))
+    await settle()
+    pressTab()
+    const tabbed = focusName()
+    press(focused(), 'ArrowDown')
+    const down = focusName()
+    press(focused(), 'ArrowDown')
+    const wrapped = focusName()
+    press(focused(), 'ArrowUp')
+    const up = { focus: focusName(), picker: pickerShows(main) }
+    // Enter on a focused button clicks it, as a browser does.
+    click(focused())
+    await settle()
+    expect({
+      tabbed,
+      down,
+      wrapped,
+      up,
+      chosen: { focus: focusName(), picker: pickerShows(main) },
+    }).toEqual({
+      tabbed: picked,
+      down: 'main',
+      wrapped: picked,
+      up: { focus: 'main', picker: true },
+      chosen: { focus: `Branch: ${picked}, target main`, picker: false },
     })
   })
 })

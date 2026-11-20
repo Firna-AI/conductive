@@ -9,7 +9,6 @@ import { useOrgModel } from '../context'
 import { ActionButton } from '../ui/actions'
 import { BranchControl } from './BranchPicker'
 import { RepositoryMenu, SectionMenu } from './parts'
-import { TargetChoice } from './TargetChoice'
 import type { NewWorkspaceForm } from './useNewWorkspaceForm'
 
 // The parts of the New workspace dialog around its message.
@@ -31,10 +30,10 @@ function useSection(org: OrgSummary, model: NewWorkspaceModel) {
 
 /**
  * The header of the dialog: the repository picker and the branch control
- * at the start, and the menu of the org and the section at the end. A
- * picked branch that is not the default branch adds the target choice on a
- * line of its own under the header, with its line beside it when the two
- * fit. A suspended org refuses each create, so it shows no pickers.
+ * directly right of it at the start, and the menu of the org and the
+ * section at the end. The target of a picked branch lives in the dropdown
+ * of the branch control (decision 301), so no line follows the header. A
+ * suspended org refuses each create, so it shows no pickers.
  */
 export function DialogHeader(props: {
   org: OrgSummary
@@ -48,53 +47,41 @@ export function DialogHeader(props: {
   const repository = props.suspended ? undefined : form.repository
   const branch = repository ? form.branch : undefined
   return (
-    <>
-      <div className={styles.header}>
-        {repository ? (
-          <RepositoryMenu
-            chevron={styles.chevron}
-            choose={(id) => model.setRepository(id)}
-            chosen={repository}
-            repositories={form.repositories ?? []}
-            tone="plain"
-            waiting={form.waiting}
-          />
-        ) : null}
-        {repository && branch ? (
-          <BranchControl
-            branch={branch}
-            orgId={org.id}
-            pick={form.pickBranch}
-            repository={repository}
-            tone="plain"
-          />
-        ) : null}
-        {section ? (
-          <SectionMenu
-            chevron={styles.chevron}
-            choose={(id) => model.setSection(id)}
-            chosen={section}
-            className={classes(styles.anchor, styles.placeMenu)}
-            disabled={props.sending}
-            org={org.name}
-            sections={sections}
-          />
-        ) : (
-          <span className={styles.place}>{org.name}</span>
-        )}
-      </div>
-      {branch?.target ? (
-        <div className={styles.target}>
-          <TargetChoice
-            choose={form.chooseTarget}
-            defaultBranch={branch.defaultBranch}
-            inline
-            picked={branch.name}
-            value={branch.target}
-          />
-        </div>
+    <div className={styles.header}>
+      {repository ? (
+        <RepositoryMenu
+          chevron={styles.chevron}
+          choose={(id) => model.setRepository(id)}
+          chosen={repository}
+          repositories={form.repositories ?? []}
+          tone="plain"
+          waiting={form.waiting}
+        />
       ) : null}
-    </>
+      {repository && branch ? (
+        <BranchControl
+          branch={branch}
+          choose={form.chooseTarget}
+          orgId={org.id}
+          pick={form.pickBranch}
+          repository={repository}
+          tone="plain"
+        />
+      ) : null}
+      {section ? (
+        <SectionMenu
+          chevron={styles.chevron}
+          choose={(id) => model.setSection(id)}
+          chosen={section}
+          className={classes(styles.anchor, styles.placeMenu)}
+          disabled={props.sending}
+          org={org.name}
+          sections={sections}
+        />
+      ) : (
+        <span className={styles.place}>{org.name}</span>
+      )}
+    </div>
   )
 }
 

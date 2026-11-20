@@ -64,17 +64,6 @@
   margin-left: auto;
 }
 
-/*
- * The line of the target choice under the header, which decision 301
- * replaced with the Target part of the dropdown of the branch control. No
- * mockup draws it. The app draws it until it builds decision 301, which
- * removes this rule.
- */
-.target {
-  padding: 8px 10px 8px 12px;
-  border-bottom: 1px solid var(--ui-border);
-}
-
 /* The org alone, as plain text, while the sections load. */
 .place {
   overflow: hidden;

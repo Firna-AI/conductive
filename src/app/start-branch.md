@@ -1,8 +1,9 @@
 # New workspace: start from a branch
 
 This guide belongs to [Web app: data and composition](README.md). It gives
-the rules of the branch control of New workspace, its picker, the target
-choice, and the refusals of the branch check, as the app builds them.
+the rules of the branch control of New workspace, its dropdown with the
+parts Start from and Target, and the refusals of the branch check, as the
+app builds them.
 [Start from a branch](../../docs/protocol/start-from-a-branch.md) states
 the requirements, and the mockups under `app/new-workspace/start-branch`
 draw them. The words come from `branchCopy.ts` of the mockups, and the
@@ -35,15 +36,31 @@ parts reuse their CSS modules.
   request in `CreateState`, so a refusal names them also after a change
   of the form.
 
-## The control and its picker
+## The control and its dropdown
 
 - `BranchControl` in `../shell/new-workspace/BranchPicker.tsx` stands
-  beside the repository picker on the page and in the header of the
-  dialog. It always names a branch, and a long name ends in an ellipsis.
-- A press opens the picker, which reads the branches of the repository
+  directly right of the repository picker on the page and in the header of
+  the dialog, with the look and the size of that picker (decision 301). It
+  always names a branch.
+- While a picked branch targets the default branch, a muted `→ main`
+  follows the name, before the chevron, and the spoken name adds the
+  target, such as "Branch: feature-x, target main". A target on the picked
+  branch adds nothing, because the work then stacks on the branch that the
+  control names.
+- A long name ends in an ellipsis, and `→ main` and the chevron stay in
+  view. The limit of the control grows from 280 px to 340 px while it
+  shows `→ main`, so a name gives way at about the same length. On a phone
+  the control may take the whole width of its line, and the `min-width: 0`
+  of `.start` in `NewWorkspaceScreen.module.css` keeps the start of the
+  page inside the screen.
+- A press opens the dropdown, which reads the branches of the repository
   again, live. `OrgModel.branches` holds the list of each repository, in
   `branch-lists.ts`. While a read runs, the list loads, also for Try again
   after a failure. Only the answer of the newest read shows.
+- `BranchMenu` in `../shell/new-workspace/BranchMenu.tsx` draws the open
+  dropdown in two parts, with the CSS of `BranchMenu.module.css` of the
+  mockups: Start from, then Target for a picked branch that is not the
+  default branch. The label Start from shows also without Target.
 - A sign-out, or a sign-in of another person, forgets the lists, because
   GitHub shows each member only what that member may read.
 - `branchRows` in `branch-rows.ts` gives the rows and the line under them.
@@ -54,35 +71,45 @@ parts reuse their CSS modules.
 - A search keeps each branch whose name holds the query, in any case, also
   the default branch. The Worker gives every branch of the repository, so
   the app searches the list that it has, with no new read.
-- `BranchList` in `../shell/new-workspace/BranchList.tsx` draws the open
-  picker. The search field keeps the focus, as the combobox of the rows. A
+- `BranchList` in `../shell/new-workspace/BranchList.tsx` draws Start
+  from. The search field keeps the focus, as the combobox of the rows. A
   search highlights its first match. Up and Down move the highlight with a
   wrap at each end, and Enter picks the highlighted branch. The Firna field
   keeps its key events from the elements around it, so the list hears them
   in the capture phase.
-- A pick, Escape, and a press outside close the picker, and the focus goes
-  back to the control. The focus on an element outside the control and
-  the picker also closes a picker beside its control, through the option
-  `focusOutside` of `useDismiss` in `../shell/ui/Overlay.tsx`. So Tab goes
-  from the search field to Try again after a failed read, and the picker
-  closes as Tab leaves it. The control counts as part of the picker. So
+- A pick, a press of a target, Escape, and a press outside close the
+  dropdown, and the focus goes back to the control. The focus on an
+  element outside the control and the dropdown also closes a dropdown
+  beside its control, through the option `focusOutside` of `useDismiss` in
+  `../shell/ui/Overlay.tsx`. So Tab goes from the search field to Try
+  again after a failed read, then to the checked target, and the dropdown
+  closes as Tab leaves it. The control counts as part of the dropdown. So
   Shift+Tab from the search field moves the focus to the control and
-  leaves the picker open, and a press of the control closes the picker at
-  its click. A focus that goes to no element, such as to another window,
-  leaves the picker open. The key of the command palette closes it, as it
-  closes a menu.
-- On a computer the picker hangs below the control, in the top layer of a
-  `PopoverSurface`, so no box clips it. A phone opens it as a sheet.
+  leaves the dropdown open, and a press of the control closes the dropdown
+  at its click. A focus that goes to no element, such as to another
+  window, leaves the dropdown open. The key of the command palette closes
+  it, as it closes a menu.
+- On a computer the dropdown hangs below the control, in the top layer of
+  a `PopoverSurface`, so no box clips it. Its option `keepSide` keeps the
+  dropdown below the control also when it does not fit there, where a
+  menu flips to the roomier side, and limits it to the room below. When
+  the room runs out, the list of branches scrolls, and the labels, the
+  search field, and the Target part stay in view. A phone opens the
+  dropdown as a sheet with the same parts, and the body of the sheet is
+  the room.
 
-## The target choice
+## The Target part
 
-- `TargetChoice` in `../shell/new-workspace/TargetChoice.tsx` shows only
-  for a picked branch that is not the default branch. A computer shows a
-  segmented control, and a phone shows two radio cards. The line under the
-  choice says what the pull request then holds.
-- On the page the choice stands under the pickers. In the dialog,
-  `DialogHeader` of `dialog-parts.tsx` puts it on a line of its own under
-  the header.
+- The Target part of `BranchMenu` holds the target choice of decision 291,
+  on the page and in the dialog. No line of a target choice shows under
+  the pickers or under the header of the dialog (decision 301).
+- It has two rows: the picked branch first, then the default branch. Each
+  row names only its branch, and a check marks the target of the form. The
+  line under the rows says what the pull request then holds.
+- The rows are the radios of the group Target. They take one stop of Tab,
+  on the checked row. Up and Down move the focus between them, with a wrap,
+  and choose nothing. A press of a row, or Enter or Space on it, chooses
+  its target and closes the dropdown.
 
 ## Refusals of the branch check
 
@@ -109,13 +136,22 @@ parts reuse their CSS modules.
 - `new-workspace-branch.test.ts` checks the fields of each create, the kept
   target, the end of the branch at a change of repository and at a send,
   and Start from main.
-- `../shell/new-workspace/BranchPicker.test.tsx` checks the picker on the
-  page, in the dialog, and on a phone, the keys, the target choice, the
-  create, and both refusals.
+- `../shell/new-workspace/BranchPicker.test.tsx` checks Start from on the
+  page: the default branch without a Target part, the search, the keys, a
+  pick that closes the dropdown, and the create from the picked branch. It
+  also checks both refusals.
+- `../shell/new-workspace/BranchTarget.test.tsx` checks the Target part on
+  the page, in the dialog, and in the sheet of a phone: the closed control
+  with `→ main` and its spoken name, a press of a target that closes the
+  dropdown, the kept target, the create fields, the draft that the dialog
+  shares, and the clear at a change of repository. On a phone it also
+  checks Try again after a failed read.
 - `../shell/new-workspace/BranchPickerFocus.test.tsx` checks the focus of
-  the picker on a computer: Tab to Try again after a failed read, the close
-  as Tab leaves the picker, and a press of the control that closes the open
-  picker.
+  the dropdown on a computer: Tab to Try again after a failed read, the
+  close as Tab leaves the dropdown, a press of the control that closes the
+  open dropdown, and the keys of the Target part.
+- `../shell/new-workspace/branch-test-kit.ts` holds the helpers of these
+  three tests.
 
 ## Development
 
