@@ -49,9 +49,14 @@ export class WorkspaceArchive {
   async repair(workspaceId: string): Promise<void> {
     const row = await readArchiveResource(this.context.env.DB, workspaceId)
     if (!row || row.archivedAt === null) return
-    if (!(await this.context.storage.get('archive', ARCHIVE_STATE_KEY)))
-      await this.begin(workspaceId)
-    else await this.context.storage.setAlarm(this.context.dependencies.now())
+    const state = await this.context.storage.get('archive', ARCHIVE_STATE_KEY)
+    if (!state) await this.begin(workspaceId)
+    else {
+      const now = this.context.dependencies.now()
+      if (state.retry)
+        await this.save({ ...state, retry: { ...state.retry, at: now } })
+      await this.context.storage.setAlarm(now)
+    }
   }
 
   async clear(): Promise<void> {
@@ -79,9 +84,17 @@ export class WorkspaceArchive {
 
   async finishStop(): Promise<boolean> {
     const { storage } = this.context
-    const state = await storage.get('archive', ARCHIVE_STATE_KEY)
+    let state = await storage.get('archive', ARCHIVE_STATE_KEY)
     if (state && (state.phase === 'wait' || state.phase === 'resume'))
-      await this.save({ ...state, phase: 'stop', stopRequestedAt: undefined })
+      state = { ...state, phase: 'stop', stopRequestedAt: undefined }
+    if (state) {
+      if (state.retry)
+        state = {
+          ...state,
+          retry: { ...state.retry, at: this.context.dependencies.now() },
+        }
+      await this.save(state)
+    }
     await this.advance()
     return (
       !this.context.hasOutsideTurns?.() &&
@@ -139,6 +152,10 @@ export class WorkspaceArchive {
       ((await storage.get('number', ARCHIVE_REVISION_KEY)) ?? 0)
     ) {
       await this.begin(saved.workspaceId)
+      return
+    }
+    if (state.retry && dependencies.now() < state.retry.at) {
+      await storage.setAlarm(state.retry.at)
       return
     }
     await storage.setAlarm(dependencies.now() + 30_000)
