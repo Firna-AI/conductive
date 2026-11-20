@@ -11,7 +11,13 @@ import { WaitlistOffNotice, type WaitlistState } from './waitlistSwitch'
 
 /** The tabs of the operator section. */
 export type OperatorTab =
-  'overview' | 'orgs' | 'users' | 'waitlist' | 'codes' | 'providers'
+  | 'overview'
+  | 'orgs'
+  | 'users'
+  | 'waitlist'
+  | 'codes'
+  | 'providers'
+  | 'settings'
 
 /**
  * Whether new people can get in with a code or an org invitation, or an
@@ -26,6 +32,7 @@ const tabs: readonly { key: OperatorTab; label: string; to: string }[] = [
   { key: 'waitlist', label: 'Waitlist', to: paths.operatorWaitlist },
   { key: 'codes', label: 'Invite codes', to: paths.operatorCodes },
   { key: 'providers', label: 'Providers', to: paths.operatorProviders },
+  { key: 'settings', label: 'Settings', to: paths.operatorSettings },
 ]
 
 /** The rail of an operator, with the operator section open. */
@@ -37,10 +44,10 @@ const operatorRail: RailState = {
 
 /**
  * A page of the operator section: the header, the tabs Overview, Orgs,
- * Users, Waitlist, Invite codes, and Providers, and a dialog over the
+ * Users, Waitlist, Invite codes, Providers, and Settings, and a dialog over the
  * page. While sign-ups are paused, each tab starts with the notice of the
  * pause. While the waitlist is off, the notice of the switch follows it.
- * On a phone the six tabs keep one line while they fit. When they do not
+ * On a phone the seven tabs keep one line while they fit. When they do not
  * fit, as on a phone of 390 px, the last ones move to a second line, so
  * that each tab shows. The header leads back to the workspaces, unless the
  * page gives its own way back.

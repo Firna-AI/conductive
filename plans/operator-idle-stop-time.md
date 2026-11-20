@@ -1,6 +1,6 @@
 # Operator idle stop time
 
-Status: Active. On branch `calummoore/workspace-sandbox-timeout-6anh`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says. Decisions 1 to 4 below wait for the user.
+Status: Active. On branch `calummoore/workspace-sandbox-timeout-6anh`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 Today a cloud computer of a workspace stops after 30 minutes without user
 activity and without a running agent turn. The time is a constant in the
@@ -52,44 +52,48 @@ Design calls, all made by the agent on 20 November 2026:
 
 ## Decisions
 
-Decisions 1 to 4 wait for the user. The final report of the session gives
-them in the `decisions-and-findings` layout. Their recorded letters are:
+Cal answered all four decisions on 20 November 2026.
 
-1. Which stop times may the operator choose? Recommended: B, whole minutes
-   from 5 to 240.
-2. When does a change reach the computers that already run? Recommended:
-   A, each workspace takes the new time at its next schedule.
-3. How do the pricing page and the guides state the stop time?
-   Recommended: D, the Worker fills the saved time into the pages when it
-   serves them. The first recommendation was B, no number. The options
-   check showed that the Worker already fills values into served pages.
-4. Where does the setting show in the operator section? Recommended: A, a
-   new Settings tab.
-
-The final report of 20 November 2026 gives every option, its effort, and
-the reason of each recommendation. The options check of the same day added
-option D to decisions 1, 3, and 4, and option E to decisions 2 and 3.
+1. Which stop times may the operator choose? Chosen: A with 90 added, a
+   fixed list of 15, 30, 60, 90, and 120 minutes. Rejected: B, whole
+   minutes from 5 to 240, the recommendation. C, whole minutes from 5 to
+   1,440. D, the range of C with a confirmation over 120 minutes. A fixed
+   list gives the simplest screen and check, and no typo is possible.
+2. When does a change reach the computers that already run? Chosen: A,
+   each workspace takes the new time at its next schedule: its next
+   activity, turn change, or alarm. Rejected: B, a check sent at once to
+   each running workspace. C, only later starts. E, a provider auto-stop
+   fixed at the maximum. A needs no fan-out and keeps the backstop tight.
+3. How do the pricing page and the guides state the stop time? Chosen: B,
+   no number: the computer stops after a time without activity. Rejected:
+   A, keep "30 minutes". C, a public route read by a page script. D, the
+   Worker fills the saved time into the served pages, the recommendation.
+   E, the maximum. A page without a number is never wrong.
+4. Where does the setting show in the operator section? Chosen: A, a new
+   Settings tab with a Stop time box. Rejected: B, a box on the Providers
+   tab. C, a box on the Overview. D, a dialog from the section header. A
+   Settings tab gives later app settings a home.
 
 ## Milestone 1: Mockups
 
 Tags: mockup
 
-Depends on: decisions 1 and 4
+Depends on: none
 
-- [ ] Add the stop time box to the operator mockups in
+- [x] Add the stop time box to the operator mockups in
       `docs/mockups/src/entries/app/operator/`, at the place of decision 4.
       Show the saved state, a changed value with Save, a failed save, and
       the line that names the operator of the last change.
-- [ ] Update the hours rule of the pricing mockup in
+- [x] Update the hours rule of the pricing mockup in
       `docs/mockups/src/entries/marketing/pricing/index.mockup.tsx`, as
       decision 3 says.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that the
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that the
       mockups show.
 
 ## Milestone 2: Documentation and protocol
 
-Depends on: 1, and decisions 1 to 4
+Depends on: 1
 
 - [ ] Update `docs/protocol/stop-and-resume.md`: the stop time is the
       operator setting, 30 minutes by default.
