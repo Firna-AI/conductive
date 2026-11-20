@@ -1,6 +1,7 @@
 import { isRunning } from './chat-snapshot'
 import { showNotice, type ChatContext } from './context'
 import { hydrate } from './history'
+import { withView } from './saved-view'
 import { selectSession } from './session-actions'
 import { beginEdit } from './session-records'
 import { showsSession } from './sessions'
@@ -39,18 +40,17 @@ async function closeSession(
     const closed = await context.api.closeSession(sessionId, stopRunningTurn)
     edit.confirm(closed.session, closed.eventNumber)
     if (!context.live()) return
-    const { view, activeSessionId } = context.store.get()
-    if (view) context.saveView(view)
+    const { activeSessionId } = context.store.get()
+    context.saveView()
     if (activeSessionId) await hydrate(context, activeSessionId)
   } catch (error) {
     if (!context.live()) return
     if (before.index >= 0) {
-      context.store.update((snapshot) => ({
-        ...snapshot,
-        view:
-          snapshot.view &&
-          withSessionTabAt(snapshot.view, sessionId, before.index),
-      }))
+      context.store.update((snapshot) =>
+        withView(snapshot, (view) =>
+          withSessionTabAt(view, sessionId, before.index),
+        ),
+      )
     }
     edit.fail()
     const current = context.store.get()

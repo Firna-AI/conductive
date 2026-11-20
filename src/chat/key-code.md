@@ -19,6 +19,13 @@ is relative to `src/chat/`, the folder of this guide.
 - `state/tab-order.ts`: the pure row order, the places of the open
   sessions, and the move before or after a neighbour, which keeps a
   temporary tab whose place it changes.
+- `state/saved-view.ts`: `withView` and `viewWriter`. The initial read of
+  the saved view and its reread after a Restore set the view of the
+  snapshot directly. Each local change of the view uses `withView`, and
+  each save uses `ChatContext.saveView`, which `viewWriter` makes. The
+  writer sends the current view, one request at a time. A failed initial
+  read leaves the view null. While it is null, `withView` changes nothing
+  and the writer sends nothing.
 - `components/SessionTabs.tsx`: the tab row, with the session tabs of
   `components/SessionTab.tsx` and the tabs of `renderTab`.
   `components/tab-row.ts`: `RenderTab`, `TabDraw`, and `rowOf`, the tabs of
