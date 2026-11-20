@@ -149,7 +149,12 @@ it('preserves omission counts and a known optional turn end reason in runner cha
       ),
     ).toEqual(envelope(event))
   }
-  for (const endReason of ['future_reason', null, false]) {
+  for (const endReason of [
+    'cloud_computer_stopped',
+    'future_reason',
+    null,
+    false,
+  ]) {
     expect(
       parseRunnerEnvelope(
         numberedRunnerInput(envelope({ ...completed, endReason })),

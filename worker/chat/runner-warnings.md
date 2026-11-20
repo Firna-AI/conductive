@@ -14,8 +14,12 @@ explicitly, because a typed caller can still supply extra fields.
 | `runner_connected` | After the first accepted hello of a runner connection. A connection that closes before such a hello gets it just before its `runner_disconnected` | `workspaceId`, `connectionId`, `streamId`, `processStartId`, `protocolVersion` |
 | `runner_disconnected` | When the runner connection ends | `workspaceId`, `connectionId`, `streamId`, `processStartId`, `protocolVersion` |
 | `turn_ended_without_stop_request` | After the commit that stores a turn end with no Stop request | `workspaceId`, `turnId`, `state`, `connectionId`, `streamId`, `processStartId`, `protocolVersion` |
+| `workspace_provider_resume_refused` | A provider-stop continuation cannot queue automatic Resume because access or another request rule refuses it | `workspaceId`, `error` |
 
 - `message` is a fixed text for each kind.
+- The automatic-resume warning keeps the checked workspace ID and the
+  structured error kind, status, and code. It keeps no error message.
+  [Provider stops](provider-stops.md) gives the retained queued turn.
 - `state` is `finished`, `stopped`, or `failed`.
 - `connectionId` is `ActiveRunner.id`, the ID that the workspace gives the
   runner connection. A turn end takes the connection that is current at

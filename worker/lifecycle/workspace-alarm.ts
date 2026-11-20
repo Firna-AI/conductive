@@ -15,6 +15,8 @@ import type { WorkspaceArchive } from './archive-state'
 import type { ComputerStopTask } from './computer-stop-task'
 import type { QueueTurn } from '../chat/queue-turn'
 import { StartSuperseded } from './start-guard'
+import { PROVIDER_STOP_START_ALARM } from '../chat/provider-stop-start'
+import { resumeProviderStoppedWorkspace } from './provider-stop-start'
 
 export async function runWorkspaceAlarm(input: {
   turn?: QueueTurn
@@ -63,6 +65,8 @@ export async function runWorkspaceAlarm(input: {
       }
     }
     if (requested('lifecycle:archive')) await input.archive.advance()
+    if (requested(PROVIDER_STOP_START_ALARM))
+      await resumeProviderStoppedWorkspace(input)
     const legacyPublication =
       due.has('lifecycle') &&
       !(await alarms.has('lifecycle:publication')) &&

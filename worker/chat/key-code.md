@@ -42,6 +42,11 @@ first.
   `readChatWorkspaceSummary` returns.
 - `workspace-stop.ts`: `stopDispatchedTurns`, which ends the dispatched
   turns as stopped when the lifecycle state becomes stopped or error.
+- `provider-stop-permission.ts`, `provider-continuation.ts`, and
+  `turn-chain.ts`: the original sender's login, continuation insertion,
+  and time limits after a [provider stop](provider-stops.md).
+- `provider-stop-start.ts`: the durable start request shared with the
+  lifecycle alarm. `workspace-stop-hooks.ts` connects the stop callbacks.
 - `browser-authorization.ts`: `authorizeChatBrowser`, the browser gate of
   the object. With the body that the gate already read, it runs
   `gateAccess` in place of `gate`, and finds the workspace again.

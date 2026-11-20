@@ -6,6 +6,7 @@ import { suspendOrg } from '../operator/suspend-org'
 import { boatRoute } from '../sandbox/routes'
 import { setupBackendTests } from './backend-test-hooks'
 import { LIFECYCLE_STATE_KEY, TURN_HEARTBEAT_MS } from './durable-types'
+import type { DurableLifecycleState } from './durable-types'
 import { runningProviderStopFixture } from './provider-stop-native.test-support'
 
 const fixtureForTest = setupBackendTests()
@@ -21,14 +22,25 @@ it('logs the provider account and current runner once for a saved stop during a 
   const controls = actor.native.api.controls
   await controls.captureWarnings(true)
   try {
+    let stopped: DurableLifecycleState | undefined
+    actor.observePublication(async ({ event }) => {
+      if (
+        event.type === 'workspace.updated' &&
+        event.workspace.state === 'stopped'
+      )
+        stopped = await actor.storage.get(LIFECYCLE_STATE_KEY)
+    })
     fixture.boat.states.set(sandboxId, 'archived')
     const at = fixture.runtime.dependencies.now() + TURN_HEARTBEAT_MS
     await fixture.advanceTo(at, id)
-    expect(await actor.endpoint().readLifecycle()).toMatchObject({
+    expect(stopped).toMatchObject({
       state: 'stopped',
       providerStop: { at },
       stoppedAt: at,
       runningSessions: [],
+    })
+    expect(await actor.endpoint().readLifecycle()).toMatchObject({
+      state: 'starting',
     })
     await actor.restart()
     await actor.endpoint().acknowledgeLifecycleFirstMessage()

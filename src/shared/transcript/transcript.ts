@@ -171,6 +171,8 @@ export function foldEvent(
   late = false,
 ): Transcript {
   switch (event.type) {
+    case 'turn.continued':
+      return transcript
     case 'workspace.continued':
       return foldContinued(transcript, event)
     case 'workspace.repository-changed':

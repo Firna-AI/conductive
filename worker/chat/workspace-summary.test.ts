@@ -6,6 +6,7 @@ import {
   type ChatFixture,
 } from './harness.test-support'
 import { record, string } from './inputs'
+import { chatEventsOf } from '../../src/shared/transcript/session-events'
 let harness: TestHarness
 beforeAll(async () => {
   harness = await createHarness()
@@ -69,8 +70,16 @@ it('projects the stored cursor, visible output and dispatched work without treat
     userMessageIds: ['summary-message'],
   })
   await fixture.drain()
+  const continuation = {
+    type: 'turn.continued' as const,
+    sessionId: session.id,
+    previousTurnId: turnId,
+    turnId: null,
+    next: 'message' as const,
+  }
+  await fixture.appendWorkspaceEvent(WORKSPACE_ID, continuation)
   const expected = {
-    throughEventNumber: 8,
+    throughEventNumber: 9,
     lastOutputEventNumber: 7,
     working: false,
   }
@@ -78,6 +87,9 @@ it('projects the stored cursor, visible output and dispatched work without treat
   await fixture.restart()
   expect(await fixture.chat.workspaceSummary(WORKSPACE_ID)).toEqual(expected)
   const history = await fixture.history(session.id)
+  expect(chatEventsOf(session.id, history.events).at(-1)?.event).toEqual(
+    continuation,
+  )
   expect(
     string(
       record(

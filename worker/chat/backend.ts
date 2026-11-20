@@ -36,6 +36,7 @@ import { workspaceOperationRunner } from './workspace-operation'
 import { openBrowser } from './sockets'
 import { acceptSecretNotice } from './secret-notice'
 import type { StoredSecretRequest } from '../secrets/request-records'
+import type { WorkspaceStopOptions } from './workspace-stop'
 import type {
   BrowserPeer,
   ChatDependencies,
@@ -99,8 +100,11 @@ export class WorkspaceChat {
     return this.operations.accept(first)
   }
 
-  async stopWorkspace(workspaceId: string): Promise<void> {
-    await this.operations.stop(workspaceId)
+  async stopWorkspace(
+    workspaceId: string,
+    options?: WorkspaceStopOptions,
+  ): Promise<void> {
+    await this.operations.stop(workspaceId, options)
   }
 
   commitWorkspaceEvent(

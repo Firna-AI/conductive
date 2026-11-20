@@ -8,7 +8,11 @@ import {
 } from './first-message'
 import type { ChatStore } from './store'
 import type { ChatDependencies } from './types'
-import { stopDispatchedTurns } from './workspace-stop'
+import {
+  stopDispatchedTurns,
+  type WorkspaceStopOptions,
+} from './workspace-stop'
+import { observeProviderStopPermissions } from './provider-stop-permission'
 import { manageToolSession } from './tool-session-management'
 import type { ToolSessionManagement } from '../tools/services'
 import type { ToolSessionAccess, ToolSessionWrite } from '../tools/services'
@@ -111,18 +115,36 @@ export class WorkspaceOperations {
     )
   }
 
-  async stop(workspaceId: string): Promise<void> {
-    const { store, bind, publish, closeRunner } = this.options
+  async stop(
+    workspaceId: string,
+    options?: WorkspaceStopOptions,
+  ): Promise<void> {
+    const { store, bind, publish, closeRunner, dependencies, env } =
+      this.options
     bind(workspaceId)
     closeRunner()
+    const permissions = options?.providerStop
+      ? await observeProviderStopPermissions(
+          new ChatOperation(store, workspaceId, dependencies, publish),
+          env,
+        )
+      : undefined
     await store.change(
       workspaceId,
       async (transaction) => {
         await transaction.emit({ type: 'ports.updated', ports: null })
-        await stopDispatchedTurns(transaction)
+        await stopDispatchedTurns(
+          transaction,
+          permissions,
+          dependencies.randomId,
+        )
       },
       publish,
     )
+    const start = await store.read(workspaceId, (view) =>
+      view.providerStopStarts.read(),
+    )
+    if (start) await dependencies.providerStopStartAlarm?.(start.at)
   }
 
   async commit(

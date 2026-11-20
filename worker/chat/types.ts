@@ -31,6 +31,7 @@ import type { TurnTokenState } from '../model-gateway/token'
 import type { TitleModelCall } from './title-model'
 import type { AgentLogin } from './login-kind'
 import type { RepositoryMoveState } from './runner-repository-move'
+import type { TurnEndReason } from '../../src/shared/generated/TurnEndReason'
 import type { RunnerRepositoryRecord } from './branch-data'
 
 export interface ChatData {
@@ -71,6 +72,9 @@ export interface StoredTurn {
   /** Retained dispatch evidence. Older records may have no evidence. */
   started?: boolean
   startedAt?: number
+  chainStartedAt?: number
+  providerContinuationStartedAt?: number | null
+  endReason?: TurnEndReason
   /** Fast was requested but absent from the runner's started choice. */
   olderRunner?: true
   closeAfterStop: boolean
@@ -221,6 +225,7 @@ export interface ChatDependencies {
   runnerAlarm?: (at: number | null) => Promise<void>
   /** Stores the due time of the automation report retry, unless an earlier one is due. */
   automationReportAlarm?: (at: number) => Promise<void>
+  providerStopStartAlarm?: (at: number) => Promise<void>
   readRunnerAccess: (workspaceId: string, tokenHash: string) => Promise<boolean>
   readRunnerProtocolVersion: (workspaceId: string) => Promise<number | null>
   readConnectionAccess: (

@@ -158,6 +158,11 @@ all call `TurnLifecycle.stop` with a `TurnStopRequester` from
 
 ## Message admission
 
+[Provider stops](provider-stops.md) gives the continuation after a provider
+stops the cloud computer during a turn. Chat checks the original sender's
+login, keeps unanswered input, and stores a durable start request. The
+lifecycle alarm resumes the computer after the stop hook releases the queue.
+
 Send and Retry use the normal login and session checks during a first start.
 Accepted messages enter the durable queue while the computer starts or its first start is failed.
 Repeats return the stored acceptance and add no message or history.

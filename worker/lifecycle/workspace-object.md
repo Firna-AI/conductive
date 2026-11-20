@@ -303,7 +303,22 @@ the restore watch, turn changes, and member input. The `stopped` hook of
 `WorkspacePlatform` receives an optional `{ providerStop: boolean }` argument.
 The flag is true only for a stopped state whose mark matches `stoppedAt`
 and has no app intent. A mark from a different stop gives false.
-The chat stop hook receives the flag. Chat still ends running turns as stopped.
+The chat stop hook receives the flag. Chat ends eligible turns as stopped
+with `cloud_computer_stopped` and inserts their continuation turns.
+[Chat provider stops](../chat/provider-stops.md) gives the eligibility,
+sender checks, pending messages, time limits, and interrupt rules.
+
+Chat saves a durable start request beside the continuations. The lifecycle
+alarm owns `lifecycle:provider-stop`. `resumeProviderStoppedWorkspace` checks
+that a recorded continuation still waits and both workspace states are stopped.
+It also checks that the workspace is not archived. It calls `resumeWorkspace`
+for a remaining queued turn's sender through `QueueTurn.outside`.
+The stop hook never awaits Resume while it holds the chat queue.
+
+The alarm clears the request when the start is queued, the work was cancelled,
+or the workspace has already moved from stopped. An HTTP refusal clears it
+and logs `workspace_provider_resume_refused`. The turn stays queued.
+Transient failures keep the request and its retry alarm, 30 seconds later.
 
 After the state write, `writeLifecycleState` calls `providerStopped` only
 for a new provider stop. A repeated write, publication retry, or object

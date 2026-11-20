@@ -1,10 +1,11 @@
-import { TimerOff, type LucideIcon } from 'lucide-react'
+import { CloudOff, TimerOff, type LucideIcon } from 'lucide-react'
 import type { TurnEndReason } from '../../../../../src/shared/generated/TurnEndReason'
 import { endReasonText } from './endReasonCopy'
 import styles from './LinkedLine.module.css'
 
 const icons: Readonly<Record<TurnEndReason, LucideIcon>> = {
   background_work_limit: TimerOff,
+  cloud_computer_stopped: CloudOff,
 }
 
 /**

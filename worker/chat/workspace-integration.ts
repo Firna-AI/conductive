@@ -12,11 +12,9 @@ import {
 import { receiverStorage } from '../members/receiver-storage'
 import { DeviceRuntime } from '../devices/runtime'
 import { createWorkspaceController } from '../lifecycle/workspace-controller'
-import {
-  nativeWorkspacePlatform,
-  type WorkspaceStopHook,
-} from '../lifecycle/workspace-platform'
-import { warnProviderStop } from '../lifecycle/provider-stop-warning'
+import { nativeWorkspacePlatform } from '../lifecycle/workspace-platform'
+import { workspaceStopHooks } from './workspace-stop-hooks'
+import { PROVIDER_STOP_START_ALARM } from './provider-stop-start'
 import {
   lifecycleDependencies,
   type LifecycleEnvironment,
@@ -90,7 +88,6 @@ export function createWorkspaceIntegration(
     nativeAlarmStorage(context.storage),
   )
   const sockets = new WorkspaceSockets(context)
-  const stoppedHooks: WorkspaceStopHook[] = []
   const files = new WorkspaceFiles(
     durableFilesStorage(storage),
     dependencies.randomToken,
@@ -108,6 +105,8 @@ export function createWorkspaceIntegration(
       browserAlarm: (at) => alarms.set('browser', at),
       runnerAlarm: (at) => alarms.set('runner', at),
       automationReportAlarm: (at) => alarms.set('automation-report', at, true),
+      providerStopStartAlarm: (at) =>
+        alarms.set(PROVIDER_STOP_START_ALARM, at, true),
       runnerAttached: (_workspaceId, connectionId, send) => {
         files.runner.attach(connectionId, (command) => {
           context.waitUntil(
@@ -212,6 +211,11 @@ export function createWorkspaceIntegration(
       await projectInputState(chat, controller, request, now(), publish)
     },
   )
+  const stops = workspaceStopHooks(
+    chat,
+    (pending) => context.waitUntil(pending),
+    () => Promise.all([devices.reconcile(), secrets.reconcile()]),
+  )
   const platform = nativeWorkspacePlatform(
     context,
     ({ workspaceId, event, occurredAt }) =>
@@ -231,9 +235,7 @@ export function createWorkspaceIntegration(
       hasOutsideTurns: () => chat.store.hasOutsideTurns,
       deviceWaiting: async (id) =>
         (await devices.waiting(id)) || (await secrets.waiting(id)),
-      stopping: async (id) => {
-        for (const hook of stoppedHooks) await hook(id)
-      },
+      stopping: stops.stopping,
       readChatRecovery: (id) =>
         chat.store.read(id, async (view) => {
           const recovery = await view.lifecycleRecovery()
@@ -271,15 +273,8 @@ export function createWorkspaceIntegration(
           sender: identity,
         })
       },
-      providerStopped: (id, account) =>
-        warnProviderStop(id, account, chat.runner.connections.current),
-      stopped: async (id, options) => {
-        for (const hook of stoppedHooks) await hook(id, options)
-        await chat.stopWorkspace(id)
-        context.waitUntil(
-          Promise.all([devices.reconcile(), secrets.reconcile()]),
-        )
-      },
+      providerStopped: stops.providerStopped,
+      stopped: stops.stopped,
     },
   )
   return {
@@ -295,6 +290,6 @@ export function createWorkspaceIntegration(
     reconcileStopped: async () => {
       await Promise.all([devices.reconcile(), secrets.reconcile()])
     },
-    onStopped: (hook: WorkspaceStopHook) => stoppedHooks.push(hook),
+    onStopped: stops.onStopped,
   }
 }

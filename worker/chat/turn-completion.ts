@@ -4,6 +4,7 @@ import { continueUnanswered } from './continuation'
 import { firstStopRequester } from './stop-request'
 import type { ChatTransaction } from './store'
 import type { StoredTurn } from './types'
+import type { TurnEndReason } from '../../src/shared/generated/TurnEndReason'
 
 export type TurnEnd =
   | { state: 'stopped' }
@@ -96,13 +97,15 @@ export class TurnCompletion {
     })
   }
 
-  async stopped(turn: StoredTurn): Promise<void> {
+  async stopped(turn: StoredTurn, endReason?: TurnEndReason): Promise<void> {
+    if (endReason) turn.endReason = endReason
     if (!turn.loginFailure)
       await this.transaction.emit({
         type: 'turn.completed',
         sessionId: this.session.id,
         turnId: turn.id,
         state: 'stopped',
+        ...(endReason ? { endReason } : {}),
         durationMs: 0,
         files: [],
         omittedFileCount: 0,

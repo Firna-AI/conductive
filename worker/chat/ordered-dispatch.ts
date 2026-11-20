@@ -32,7 +32,8 @@ export async function commandDispatchState(
     // Copy and runner-compatibility failures can stop a process after ending its turn.
     if (
       command.type === 'interrupt' &&
-      turn?.state === 'failed' &&
+      (turn?.state === 'failed' ||
+        turn?.endReason === 'cloud_computer_stopped') &&
       turn.started === true
     )
       return 'send'

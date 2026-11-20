@@ -1,0 +1,75 @@
+# Provider stops
+
+This page belongs to the [chat backend](README.md).
+[Provider stops](../../docs/protocol/provider-stops.md) states the requirements.
+
+`workspace-stop-hooks.ts` forwards the lifecycle's provider stop flag to
+`WorkspaceOperations.stop`. The stop closes the runner first.
+`observeProviderStopPermissions` reads each eligible turn's login before
+the stop transaction. It uses `SessionLogins.observe`, as late answers do.
+Each continuation keeps the interrupted turn's sender.
+
+`stopDispatchedTurns` continues only running turns without a Stop request,
+session close, or login failure. Other dispatched turns keep their existing
+end behavior. Queued turns stay queued and request no automatic start.
+Each eligible turn ends as stopped with `cloud_computer_stopped`, also when
+its login or a time limit prevents continuation.
+
+`prepareProviderContinuation` inserts the new turn before existing waiting
+work. It copies pending member commands before the old end removes them.
+If the initial turn command still waits for acknowledgement, the successor
+holds those original messages and adds no app prompt. Otherwise it adds
+the hidden message `continuation:<previous turn ID>`. This message has a
+normal sender and message state for older CLI readers. No `message.accepted`
+event exposes it. A repeated stop adds no second successor.
+
+`turn.continued` names the session, old turn, successor or null, and `next`.
+Its values are `turn`, `reconnect`, and `message`. It carries no text.
+The shared session event filter keeps it. The summary treats it as metadata,
+so the event alone sets no unread mark.
+
+## Time limits
+
+`turn-chain.ts` finds the newest member message and keeps its timestamp in
+`StoredTurn.chainStartedAt`. It ignores `continuation:` and `secret-notice:`
+messages. A late-answer-only turn starts its chain when that turn is created.
+Older turns derive their anchor from stored messages or their start time.
+A stop at or after 30 days queues no continuation.
+
+`providerContinuationStartedAt` is absent on ordinary turns, null on a
+continuation before runner start, and the runner start time after that event.
+`StoredTurn.started` records dispatch evidence and cannot supply this guard.
+A continuation needs at least 15 minutes of runner execution before another
+provider continuation. A real member message resets both limits.
+
+## Interrupts and automatic start
+
+The stop transaction stores the old turn's interrupt before successor
+commands. Ordered dispatch permits that interrupt after the old turn ends.
+Its late runner end removes the interrupt without changing the saved end.
+`runner.ready` carries no active turn list and removes no interrupt.
+
+`ProviderStopStarts` stores `chat:v1:provider-stop-start` and the due marker
+`alarm:lifecycle:provider-stop` in the same transaction as the successor.
+After commit, the shared alarm scheduler sets the physical alarm.
+A failed stopped publication remains recoverable through the lifecycle's
+changed-publication retry.
+
+The [lifecycle alarm](../lifecycle/workspace-object.md#provider-stops) checks
+the queued turns and resumes for a remaining turn's sender outside the chat
+queue. Stop can cancel queued work before that alarm. A refused start drops
+the request and leaves the continuation queued. A transient failure keeps
+the request for a later alarm. So does a workspace row that does not show
+the stop yet, because its projection can lag behind the lifecycle.
+
+## Tests
+
+`provider-stop.test.ts` checks multiple sessions, unanswered input, repeat
+handling, and a turn that the runner never started.
+`provider-stop-access.test.ts` checks excluded turns, queued work, and login
+or sender loss. `provider-stop-limits.test.ts` checks both time limits and
+member resets. `provider-stop-late-answer.test.ts` checks app-only anchors.
+`provider-stop-dispatch.test.ts` checks interrupt acknowledgement and waiting
+turn order. `workspace-summary.test.ts` checks the session event and unread
+projection. The lifecycle's `provider-stop-start.test.ts` checks durable
+resume, cancellation, refusal, transient recovery, and a lagging row.

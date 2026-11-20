@@ -113,6 +113,9 @@ streams, and the order of the runner commands.
   command. The first end of a turn removes each command of that turn. When
   a failed file copy ends a running turn, it then saves one `interrupt` for
   that turn, as [Chat attachments](attachments.md#dispatch) says.
+- A [provider stop](provider-stops.md) also retains the old interrupt after
+  the turn ends. It precedes the continuation commands. A late runner end
+  removes it. Readiness alone carries no turn list and removes nothing.
 
 - A new `model` command replaces the pending `model` command of its
   session.

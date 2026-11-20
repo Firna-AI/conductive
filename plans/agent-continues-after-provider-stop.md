@@ -180,7 +180,9 @@ same day, and added what an open tab shows before the automatic start.
   after an `interrupt` for the old turn. Dispatch sends that interrupt,
   also though the turn ended as stopped, as it does for a failed turn that
   started. The Worker removes the interrupt when the runner sends the end
-  of the old turn or its `runner.ready` lists no such turn. Reason: a quick
+  of the old turn. The current `runner.ready` has no active turn list, so
+  readiness removes no interrupt. This uses the end-acknowledgement path
+  without a runner protocol change. Reason: a quick
   Boat resume can keep the old process. The runner would then refuse a
   second turn in the same session. This extends the rule of
   [The agent runner](../docs/protocol/agent-runner.md) that already lets
@@ -347,32 +349,35 @@ Depends on: 2
 
 Depends on: 3
 
-- [ ] Add `cloud_computer_stopped` to `TurnEndReason` in
+- [x] Add `cloud_computer_stopped` to `TurnEndReason` in
       `crates/cnd-runner-interface/`. Regenerate the types with
       `cargo run -p cnd-runner-interface --example export_bindings`. Keep
       the SDK helper's reader to `background_work_limit`. Replace the local
       `ChatEndReason` of `docs/mockups/src/components/chat/endReasonCopy.ts`
       with the generated type. `EndReasonLine` then needs an icon for the
       new value, or a type for the reasons of a finished turn only.
-- [ ] Add `turn.continued` to `ChatEvent` and `asSessionEvent`.
-- [ ] In the chat stop, choose the turns that continue, end them with the
+- [x] Add `turn.continued` to `ChatEvent` and `asSessionEvent`.
+- [x] In the chat stop, choose the turns that continue, end them with the
       end reason, and insert the continuation turns with their unanswered
       member messages.
-- [ ] Add `chainStartedAt` and apply the 30-day limit.
-- [ ] Store the start time of a continuation turn and apply the 15-minute
+- [x] Add `chainStartedAt` and apply the 30-day limit.
+- [x] Store the start time of a continuation turn and apply the 15-minute
       guard.
-- [ ] Check the login in a read step before the stop transaction.
-- [ ] Queue and dispatch the interrupt of the old turn, and remove it at
+- [x] Check the login in a read step before the stop transaction.
+- [x] Queue and dispatch the interrupt of the old turn, and remove it at
       the runner's end or `runner.ready`.
-- [ ] Store the "start due" record and run the start from the lifecycle
+- [x] Store the "start due" record and run the start from the lifecycle
       alarm.
-- [ ] Tests: two sessions with running turns. A turn that a member was
+- [x] Tests: two sessions with running turns. A turn that a member was
       stopping. A turn that never started. A member message in the
       detection window. A repeat of the chat stop. The 30-day limit. The
       15-minute guard, and its reset by a member message. A
       sender without the login. A refused start. The interrupt before the
       continuation turn.
-- [ ] Update the lifecycle and chat READMEs.
+- [x] Update the lifecycle and chat READMEs.
+
+Evidence: the test logs, ten-run results, mutation proofs, and full report are in
+`.context/agent-continues-after-provider-stop/`.
 
 ## Milestone 5: The chat lines in the app
 

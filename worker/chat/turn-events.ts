@@ -97,7 +97,8 @@ export async function prepareAgentEvent(
   return async () => {
     if (target.ended) {
       if (
-        turn.state === 'failed' &&
+        (turn.state === 'failed' ||
+          turn.endReason === 'cloud_computer_stopped') &&
         turn.started === true &&
         (event.type === 'turn.completed' || event.type === 'turn.failed')
       )
@@ -114,7 +115,11 @@ export async function prepareAgentEvent(
     }
     if (olderRunner) turn.olderRunner = true
     turn.started = true
-    if (event.type === 'turn.started') turn.startedAt = event.startedAt
+    if (event.type === 'turn.started') {
+      turn.startedAt = event.startedAt
+      if (turn.providerContinuationStartedAt !== undefined)
+        turn.providerContinuationStartedAt = event.startedAt
+    }
     if (event.type === 'turn.started' && turn.state !== 'stopping')
       turn.state = 'running'
     for (const messageId of acknowledged)

@@ -62,6 +62,14 @@ export interface RunnerEventRefused {
 
 export type ChatEvent =
   | AgentChatEvent
+  | ({
+      type: 'turn.continued'
+      sessionId: string
+      previousTurnId: string
+    } & (
+      | { next: 'turn'; turnId: string }
+      | { next: 'reconnect' | 'message'; turnId: null }
+    ))
   | {
       type: 'workspace.continued'
       sessionId: string

@@ -172,7 +172,8 @@ export type WorkerWarning =
       cancelled: boolean
     }
   | {
-      kind: 'workspace_first_message_failed'
+      kind:
+        'workspace_first_message_failed' | 'workspace_provider_resume_refused'
       workspaceId: WarningId
       error: ErrorSummary
     }

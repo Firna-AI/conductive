@@ -220,12 +220,15 @@ pub struct ToolCall {
     pub state: ToolCallState,
 }
 
-/// A cause other than the end of the agent's reply that finished a turn.
+/// A cause other than the agent's reply or a requested Stop that ended a turn.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
 pub enum TurnEndReason {
     /// background_work_limit.
     #[serde(rename = "background_work_limit")]
     BackgroundWorkLimit,
+    /// A provider stop. Only the workspace sets this on a stopped turn.
+    #[serde(rename = "cloud_computer_stopped")]
+    CloudComputerStopped,
 }
 
 /// Speed of a turn that requested fast mode.

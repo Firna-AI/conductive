@@ -6,6 +6,7 @@ import { normalizeSession, type StoredSession } from './session-storage'
 import { CHAT_ROOT, chatKey } from './storage-keys'
 import type { ChatData, ModelSessionCreation, StoredTurn } from './types'
 import type { ToolSessionRequest } from './tool-session-requests'
+import { ProviderStopStarts } from './provider-stop-start'
 
 const FIRST_SESSION_KEY = `${CHAT_ROOT}first-session`
 
@@ -16,9 +17,11 @@ interface FirstSession {
 
 export class ChatRecords {
   protected readonly data: ChatData
+  readonly providerStopStarts: ProviderStopStarts
 
   constructor(data: ChatData) {
     this.data = data
+    this.providerStopStarts = new ProviderStopStarts(data)
   }
 
   firstSession(): Promise<FirstSession | undefined> {

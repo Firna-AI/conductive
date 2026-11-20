@@ -2,9 +2,8 @@
  * Chat transcripts. Text in backticks renders as inline code.
  */
 
-import type { TurnEndReason } from '../../../../src/shared/generated/TurnEndReason'
 import type { TableCells } from '../../../../src/markdown/table-rows'
-import type { ChatEndReason } from '../components/chat/endReasonCopy'
+import type { TurnEndReason } from '../../../../src/shared/generated/TurnEndReason'
 import type { LostReason, LostWhat } from '../components/chat/lostCopy'
 import type { StandardSpeedCause } from '../components/chat/speedCopy'
 import { agentStopConversations } from './agentStopConversations'
@@ -121,7 +120,7 @@ export type ChatItem =
        * What ended the turn with no Stop, such as the stop of the cloud
        * computer. The line names it in place of "The agent stopped".
        */
-      endReason?: ChatEndReason
+      endReason?: TurnEndReason
       /**
        * The session link of the session whose agent stopped the turn with a
        * workspace tool, also through a close of the session. The line names

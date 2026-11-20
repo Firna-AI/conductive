@@ -5,6 +5,7 @@ import type {
   WorkspaceLifecycleEndpoint,
 } from './workspace-runtime'
 import type { WorkspaceStorage } from './platform-storage'
+import type { WorkspaceStopOptions } from '../chat/workspace-stop'
 
 export interface WorkspaceEventPublication {
   workspaceId: string
@@ -20,7 +21,7 @@ interface WorkspaceChatRecovery {
 
 export type WorkspaceStopHook = (
   workspaceId: string,
-  options?: { providerStop: boolean },
+  options?: WorkspaceStopOptions,
 ) => Promise<void>
 
 export interface WorkspacePlatform {

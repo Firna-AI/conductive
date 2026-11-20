@@ -14,6 +14,9 @@ a failed create, the access stop, and the image coordinator are lifecycle
 owners too. Archive owns `lifecycle:archive` separately. Its saved phases keep
 allocation recovery, stop confirmation, retention, and deletion across reconstruction.
 Its publication retries include confirmed deletion, even while the state stays archived.
+The provider-stop continuation owns `lifecycle:provider-stop`. Chat commits
+its request and due marker together. The lifecycle alarm later queues
+Resume for a remaining continuation's sender, outside the chat queue.
 The previews, GitHub, Continue, the repository change, and the automation report retry store their due times there too. So do
 the `browser`, `runner`, and `devices` security sources, on raw storage, as
 [Alarms](../README.md#alarms) says.

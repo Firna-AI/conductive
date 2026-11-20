@@ -33,6 +33,8 @@ const SUMMARY_KEY = 'chat:v1:workspace-summary'
 
 function isOutput({ event }: WorkspaceEventEnvelope): boolean {
   switch (event.type) {
+    case 'turn.continued':
+      return false
     case 'assistant.delta':
     case 'assistant.completed':
     case 'tool.updated':

@@ -11,6 +11,8 @@ import { assertReceiverActive } from '../members/receiver-fence'
 import type { ReceiverStorage } from '../members/receiver-storage'
 import type { WorkspaceArchiveState } from './archive-types'
 import type { ComputerStopTaskState } from './computer-stop-task'
+import type { ProviderStopStart } from '../chat/provider-stop-start'
+import type { StoredTurn } from '../chat/types'
 
 export interface WorkspaceValues {
   archive: WorkspaceArchiveState
@@ -25,6 +27,8 @@ export interface WorkspaceValues {
   number: number
   text: string
   computerStops: ComputerStopTaskState
+  providerStopStart: ProviderStopStart
+  chatTurn: StoredTurn
 }
 
 export interface WorkspaceTransaction {

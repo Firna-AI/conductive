@@ -113,6 +113,8 @@ export async function acceptMessage(
   await transaction.saveNewestTurn(sessionId, turn.id)
   const type = turn.messageIds.length === 0 ? 'turn' : 'message'
   turn.messageIds.push(message.id)
+  turn.chainStartedAt = transaction.now
+  delete turn.providerContinuationStartedAt
   await transaction.saveTurn(turn)
   await transaction.saveMessageTurn(message.id, turn.id)
   await transaction.saveCommand({

@@ -44,6 +44,7 @@ export function asSessionEvent(
     case 'message.sent':
     case 'session.updated':
     case 'turn.stop-requested':
+    case 'turn.continued':
     case 'turn.started':
     case 'turn.thinking':
     case 'assistant.delta':

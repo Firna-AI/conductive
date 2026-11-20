@@ -1,5 +1,6 @@
 import type { ChatTransaction } from './store'
 import type { StoredTurn } from './types'
+import { turnChainStartedAt } from './turn-chain'
 
 /** A text-only turn can finish before it answers messages sent during it. */
 export async function continueUnanswered(
@@ -37,6 +38,9 @@ export async function continueUnanswered(
       turnId: next.id,
     })
   }
-  if (next) await transaction.saveTurn(next)
+  if (next) {
+    next.chainStartedAt = await turnChainStartedAt(transaction, previous)
+    await transaction.saveTurn(next)
+  }
   return next
 }

@@ -103,6 +103,9 @@ methods of `Workspace`.
 - When the lifecycle state becomes `stopped` or `error`, `stopWorkspace`
   closes the runner. It ends each running or stopping turn as stopped.
   Queued turns stay for the resume. Device cleanup starts too.
+  A provider stop also passes `{ providerStop: true }`. Chat applies the
+  [continuation rules](../provider-stops.md) and stores the automatic start
+  for a later lifecycle alarm. The stop hook never calls Resume itself.
 - A failed admitted create keeps the same workspace and normal access to chat.
   Later messages remain queued. A replacement create uses a fresh computer token.
   Its readiness releases the existing commands in their saved order.

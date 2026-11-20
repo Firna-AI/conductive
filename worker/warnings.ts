@@ -128,9 +128,13 @@ function warningFields(warning: WorkerWarning) {
         cancelled: warning.cancelled,
       }
     case 'workspace_first_message_failed':
+    case 'workspace_provider_resume_refused':
       return {
         kind: warning.kind,
-        message: 'A workspace could not admit its first message.',
+        message:
+          warning.kind === 'workspace_first_message_failed'
+            ? 'A workspace could not admit its first message.'
+            : 'The automatic resume after a provider stop was refused. The turn remains queued.',
         workspaceId: warning.workspaceId.text,
         error: errorFields(warning.error),
       }

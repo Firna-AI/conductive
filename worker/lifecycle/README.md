@@ -31,6 +31,8 @@ gives the create, read, resume, and activity routes of a workspace to
   from its committed chat, when a hook or a restart lost an update.
 - Record app stop intent and identify confirmed provider stops during a
   turn, as [Provider stops](workspace-object.md#provider-stops) describes.
+- Resume a provider-stopped computer from a durable alarm when chat queued
+  a continuation. The start acts for the interrupted turn's sender.
 - Give the git credential helper a fresh GitHub user token of the sender of
   the current turn, or of the member who pressed Continue or changed the
   repository, during the fetch of that job.
@@ -179,6 +181,8 @@ the persisted resource records and the retained computer ledger.
   that a provider stop mark belongs to the current stop.
 - [provider-stop-warning.ts](provider-stop-warning.ts): logs the provider
   account and the current runner identity after a saved provider stop.
+- [provider-stop-start.ts](provider-stop-start.ts): checks durable chat
+  continuations and queues Resume outside the chat queue.
 
 [Key code](key-code.md) lists the entry points of the lifecycle code, and
 the guides that give the entry points of each part.

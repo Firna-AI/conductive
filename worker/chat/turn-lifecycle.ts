@@ -205,6 +205,7 @@ export class TurnLifecycle {
       closeAfterStop: false,
       stopRequest: null,
       nextTurnId: null,
+      chainStartedAt: this.transaction.now,
     }
   }
 }

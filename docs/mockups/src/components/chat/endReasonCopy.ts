@@ -9,15 +9,7 @@
 
 import type { TurnEndReason } from '../../../../../src/shared/generated/TurnEndReason'
 
-/**
- * Each end reason that the chat names. The generated `TurnEndReason` does
- * not hold `cloud_computer_stopped` yet, so the mockups add it here. It ends
- * a turn as stopped when the cloud computer stopped while the agent worked,
- * and no member and no part of the app asked for the stop.
- */
-export type ChatEndReason = TurnEndReason | 'cloud_computer_stopped'
-
-const reasons: Readonly<Record<ChatEndReason, string>> = {
+const reasons: Readonly<Record<TurnEndReason, string>> = {
   background_work_limit: 'Background work stopped at the time limit',
   cloud_computer_stopped: 'The cloud computer stopped',
 }
@@ -26,6 +18,6 @@ const reasons: Readonly<Record<ChatEndReason, string>> = {
  * The line of an end reason, such as "Background work stopped at the time
  * limit".
  */
-export function endReasonText(reason: ChatEndReason): string {
+export function endReasonText(reason: TurnEndReason): string {
   return reasons[reason]
 }
