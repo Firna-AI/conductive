@@ -150,6 +150,11 @@ keeps them after the merge.
 - The bar says that the cloud computer is deleted only after the delete.
   Before that, the bar of a removed workspace says that the cloud computer
   is being deleted.
+- An archived workspace can have no kept sandbox while a create or a
+  delete of its cloud computer is still open. A lost reply to the create
+  can cause this. Until Restore ends, its bar then promises only its chat
+  history. Reason: that cloud computer can still exist, but Restore cannot
+  bring it back.
 - A sandbox that the app never deletes was rejected, because each archived
   workspace then uses about two starts a month for its restarts.
 - A saved snapshot at Archive was rejected, because the stopped sandbox

@@ -34,7 +34,7 @@ how a screen is built, and links to the other pages.
 | `app/reassign`      | The owner of a workspace, its reassign menu, a member's view, a stopped turn  |
 | `app/repository-change` | The repository menu of the header, the question before a change, the change that runs, a change that stopped, and the workspace after it |
 | `app/restart`       | The menu of the header state with Restart, the question while an agent works, Starting after Restart, a failed update check, and a failed restart |
-| `app/archive`       | An archived workspace with Restore, the toast after Archive, the Archived group, the restored workspace, an archive without a kept cloud computer, and a workspace that left the list after its 14 days |
+| `app/archive`       | An archived workspace with Restore, the toast after Archive, the Archived group, the restored workspace, an archive whose unresolved create request can still hold a cloud computer, an archive after the delete of its cloud computer, and a workspace that left the list after its 14 days |
 | `app/composer`      | Two uploaded files in a sentence, then the picker, a missing agent, another member's login, a login that is not shared, and the org login |
 | `app/capabilities`  | The Capabilities control of a workspace, with the approvals of the open session and its values, and Mac access off |
 | `app/fast-mode`     | The Fast switch of the model menu on and off, with its key, the trigger with Fast, and a model without fast mode |
@@ -218,8 +218,13 @@ list on that day. Its child pages:
   billing forms.
 - `app/archive/restored` has the workspace back in its section, stopped,
   where each Restore leads.
-- `app/archive/no-computer` has the archived workspace when the app keeps
-  no cloud computer for it, as after a failed first start. The bar offers
+- `app/archive/pending` has the archived workspace while an unresolved
+  create request, or a delete that tries again, can still hold a cloud
+  computer that the workspace does not name, as after Archive during a
+  first start. The bar promises only the chat history, offers no Restore,
+  and gives the day when the workspace leaves the list.
+- `app/archive/no-computer` has the archived workspace after the app
+  deleted its cloud computer, as after a failed first start. The bar offers
   no Restore, and it still gives the day when the workspace leaves the
   list.
 - `app/archive/removed` has Postcode lookup for the shipping and billing
@@ -227,8 +232,9 @@ list on that day. Its child pages:
   opens it. The list has no row for it, the bar gives the day of the
   removal, and the cloud computer is deleted. Its `deleting` variant has the
   same workspace on that day, while a failed delete of its cloud computer
-  tries again. The flow `user-flows/open-a-removed-workspace` goes from the
-  chip to this page.
+  tries again. The same bar shows while an unresolved create request can
+  still hold a cloud computer after the 14 days. The flow
+  `user-flows/open-a-removed-workspace` goes from the chip to this page.
 
 `app/repository-change` draws the repository change of Checkout address
 autocomplete, from repository change decisions 1 to 4. Its canonical

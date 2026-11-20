@@ -10,7 +10,11 @@ import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
 import { refusedIcon } from '../orgs/suspension'
 import styles from './SandboxNotice.module.css'
-import type { SandboxNoticeState, SandboxProblem } from './sandboxNoticeState'
+import {
+  archiveStage,
+  type SandboxNoticeState,
+  type SandboxProblem,
+} from './sandboxNoticeState'
 
 type ArchivedNotice = Extract<SandboxNoticeState, { problem: 'archived' }>
 
@@ -81,34 +85,21 @@ const problems: Readonly<Record<Exclude<SandboxProblem, 'archived'>, Problem>> =
 /** The files and the tools of a cloud computer that the app deleted. */
 const wentWith = 'The files and the tools went with the cloud computer.'
 
-/**
- * How far an archived workspace is. In its 14 days: Restore until its last
- * day, no Restore in a suspended org, which promises no files, or no
- * cloud computer to bring back. After them it is removed: while a failed
- * delete of the cloud computer still tries again, or after the delete.
- * Restore ends with the 14 days, so a removed workspace has none.
- */
-type ArchiveStage = 'available' | 'refused' | 'none' | 'deleting' | 'removed'
-
-function stageOf(notice: ArchivedNotice): ArchiveStage {
-  if (notice.restore === 'ended') return 'deleting'
-  if (notice.removed === true) return 'removed'
-  return notice.restore ?? 'none'
-}
-
-/** Whether an archived workspace left the list, as `stageOf` says. */
+/** Whether an archived workspace left the list, as `archiveStage` says. */
 function leftTheList(notice: ArchivedNotice): boolean {
-  const stage = stageOf(notice)
+  const stage = archiveStage(notice)
   return stage === 'deleting' || stage === 'removed'
 }
 
 /**
- * The words of an archived workspace. Until its 14 days end, the title
- * gives the day of the Archive, and the body the day when the workspace
- * leaves the list, also without Restore. After them, the title gives the
- * day of the removal, and the body says that the workspace left the list,
- * what happens to its cloud computer, and that the chat is read-only. The
- * words say "removed" for the workspace, because the app keeps its data.
+ * The words of an archived workspace, for its stage. Until its 14 days end,
+ * the title gives the day of the Archive, and the body the day when the
+ * workspace leaves the list, also without Restore. A cloud computer that
+ * can still exist without Restore gets the words of a refused start, which
+ * promise only the chat history. After the 14 days, the title gives the day
+ * of the removal, and the body says that the workspace left the list, what
+ * happens to its cloud computer, and that the chat is read-only. The words
+ * say "removed" for the workspace, because the app keeps its data.
  */
 function archivedProblem(
   notice: ArchivedNotice & { days: ArchiveDays },
@@ -119,7 +110,7 @@ function archivedProblem(
   const listed = { icon: Archive, title: `Archived on ${archivedOn}` }
   const removed = { icon: Archive, title: `Removed on ${removedOn}` }
   const tone = 'neutral'
-  switch (stageOf(notice)) {
+  switch (archiveStage(notice)) {
     case 'available':
       return {
         ...listed,
@@ -128,14 +119,14 @@ function archivedProblem(
         action: 'Restore',
         tone,
       }
-    case 'refused':
+    case 'history':
       return {
         ...listed,
         body: `${history} ${leaves}`,
         panelBody: history,
         tone,
       }
-    case 'none':
+    case 'deleted':
       return {
         ...listed,
         body: `Its cloud computer is deleted, and the chat is read-only. ${leaves}`,
@@ -215,8 +206,9 @@ function barBody(state: SandboxNoticeState, body: string): string {
  * action, because the start stays refused until its cause changes. A start
  * that failed shows the message that the app saved for it, such as the
  * 20-minute limit of a start, before the body. An archived workspace offers
- * Restore until the app deletes its cloud computer, and gives the day when
- * it leaves the list. A removed workspace gives the day of its removal.
+ * Restore until its last day while it names its cloud computer, and gives
+ * the day when it leaves the list. A removed workspace gives the day of its
+ * removal.
  */
 export function SandboxBar(props: BarNotice) {
   const problem = problemOf(props)

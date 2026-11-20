@@ -3,6 +3,10 @@ import type { Workspace } from '../../src/shared/generated/Workspace'
 import type { WorkspaceState } from '../../src/shared/generated/WorkspaceState'
 import type { WorkspaceStart } from '../../src/shared/generated/WorkspaceStart'
 import { activeOrgIdPredicate } from '../data/org-access'
+import {
+  archivedComputerColumn,
+  archivedComputerFields,
+} from '../data/archived-computer'
 import { workspaceNameColumn } from '../data/workspace-name'
 import { presentWorkspace } from '../data/workspace-link'
 import { requireActiveOrg } from '../data/user-access'
@@ -33,6 +37,7 @@ const columns = `w.id, w.number, w.org_id AS orgId, w.repository_id AS repositor
   w.sandbox_id AS sandboxId,
   w.provider_account AS providerAccount, w.state, w.github_summary AS github,
   w.created_at AS createdAt, w.updated_at AS updatedAt, w.archived_at AS archivedAt,
+  ${archivedComputerColumn('w')},
   w.stopped_at AS stoppedAt, w.next_disk_keepalive_at AS nextDiskKeepaliveAt,
   w.task_number AS taskNumber, r.agent, r.model, r.effort, r.fast, r.session_id AS sessionId, r.first_turn_id AS firstTurnId`
 
@@ -96,6 +101,7 @@ export function workspaceRecord(row: WorkspaceRow): Omit<Workspace, 'link'> {
     updatedAt: row.updatedAt,
     archivedAt: row.archivedAt,
     restoreUntil: workspaceRestoreUntil(row.archivedAt, row.sandboxId),
+    ...archivedComputerFields(row),
   }
 }
 

@@ -278,8 +278,11 @@ Turning Mac access off also asks the workspace object to settle its waiting
 Mac requests. Running commands continue.
 
 The workspace responses give an org-local number and a canonical web link.
-They give `restoreUntil` while the archived cloud computer exists, including while an expired delete retries.
+They give `restoreUntil` while the workspace row names its archived cloud computer, including while an expired delete retries.
 Restore refuses an expired window even when the cloud computer remains.
+Each archived workspace with a known Archive date also gets `archivedComputer`: the state of its cloud computer and the original Restore cutoff.
+The list and the lifecycle reads take both from [`archived-computer.ts`](../data/archived-computer.ts), in their own query.
+So a null `restoreUntil` does not mean that the cloud computer is deleted.
 The request's effective app origin reaches each response constructor explicitly.
 Durable Object reads, Archive, and Restore receive that origin through their RPC arguments.
 The machine tools use the configured app origin instead.

@@ -113,6 +113,13 @@ A confirmed missing archived disk uses that batch too.
   start job.
 - [`computer-ledger.ts`](computer-ledger.ts): allocation records, returned IDs,
   confirmed deletions, and the live computers that still need cleanup.
+- [`archived-computer.ts`](../data/archived-computer.ts): `archivedComputerColumn`
+  gives each workspace read the state of the cloud computer of an archived
+  workspace. A computer ID on the workspace row, or a live entry that was not
+  refused, gives `may-exist`. Otherwise an entry with an ID and a deletion
+  mark gives `deleted`. Otherwise the state is `unknown`. Entries in every
+  account count. `archivedComputerFields` builds `Workspace.archivedComputer`
+  with the original Restore cutoff.
 - [`computer-stop-task.ts`](computer-stop-task.ts): persistent org Stop tasks.
   The task saves the account and ID of each computer, and its alarm, before the first provider request.
   Its native RPC and alarm share the lifecycle queue.
