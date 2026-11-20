@@ -46,6 +46,16 @@ the widest folders first. The alternatives were:
 - Mokly's review-ignore marker around the app frame. It hides the change
   instead of naming its cause.
 
+On 2026-11-20 the user answered decision 522, how the work reaches
+`main`: merge `main` once more, then open a pull request with Milestones
+1 to 4. The merges of `main` had grown to 39 and then 41 conflicted files,
+because this branch touches almost every mockup file. The alternatives
+were one pull request at the end (A), and stopping after the first pull
+request with Milestones 5 and 6 as follow-up items (C). Whether
+Milestones 5 to 8 then go on in a second pull request (B) or become
+follow-up items (C) still waits for the user. The first pull request
+keeps this plan, because the work spans more than one pull request.
+
 Decision 520, a rule in the shared `mockups` skill that keeps shared parts
 registered, moved on 2026-11-13 to the workspace "Mockups skill rule for
 registered Mokly components" in the `Firna-AI/skills` repository. The user
@@ -90,6 +100,12 @@ counts and test under `.context/mokly-html/` of this workspace.
 - Some parts nest other parts. Mokly attributes a child's edit to the
   child when the child renders through its wrapper, and to the parent
   when the child is plain.
+- The fifth merge of `main` (2026-11-20, `4190c1f46`) removed
+  `OrgRepositoryList`, so its registration is gone, and 266 parts are
+  registered. The app now reaches 86 of the 376 TSX files, among them
+  `ConfirmDialog`, through `RepositoryChangeText`, so `ConfirmDialog` draws
+  the plain `Sheet` again. Message table cells draw `AnswerText`, and file
+  table cells, now `cells="file"`, draw `PreviewText`.
 - On 2026-11-20 the strict build with the Changes comparison ran out of
   memory on the 7 GB cloud computer: the Mokly core grew to 5.2 GB. The
   same build with `--no-changes --sidecars 2` passes. CI runs on 16 GB
@@ -441,6 +457,11 @@ Depends on: 4
 
 Register the parts of the operator section and the automations: 55 parts.
 
+- [ ] Register the 37 parts that the fifth merge of `main` (2026-11-20,
+      `4190c1f46`) added, and move the 43 plain uses in its new mockup-only
+      files to wrappers. `.context/registered-mockup-parts/merge6-plain-uses.txt`
+      lists them. `HistoryAnchor` and `ChatPictures` are contexts, so they
+      stay out.
 - [ ] Register the parts that the fourth merge of `main` (2026-11-20,
       `7fd59e6eb`) added: `CapabilitiesButton`, `CapabilitiesPanel`,
       `GrantList`, `SendButton`, `StopButton`, `ComposerMenu`,
@@ -523,7 +544,9 @@ Mac app, and `ChatWorkspaces`: 35 parts.
 
 Depends on: 6
 
-State how the catalogue registers parts. No protocol doc changes, because
+State how the catalogue registers parts. The first pull request added
+`docs/mockups/registered-parts.md` and its links on 2026-11-20. This
+milestone brings it up to date with Milestones 5 and 6. No protocol doc changes, because
 the product does not change.
 
 - [ ] Update "How a screen is built" and "Folder layout" in
