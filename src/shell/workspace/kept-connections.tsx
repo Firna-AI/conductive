@@ -12,14 +12,17 @@ import { useWorkspaceFiles } from './files/workspace-files'
  * Preview tabs read one list, and each tab of an HTML file reads one files
  * preview. The parts that show files or previews only read the same stores.
  * An archived workspace has no file lists and no previews, so its stores
- * stay stopped.
+ * stay stopped. The files preview opens only in a running period that the
+ * open of the visit confirmed, as `useFilesPreviewConnection` says.
  */
 export function KeptConnections(props: {
   context: WorkspaceContext
+  /** The open of this visit ended, as `WorkspaceModel.opened` says. */
+  opened: boolean
   children: ReactNode
 }) {
   useWorkspaceFiles(props.context, props.context.sandbox !== 'archived')
   usePreviewsConnection(props.context)
-  useFilesPreviewConnection(props.context)
+  useFilesPreviewConnection(props.context, props.opened)
   return props.children
 }

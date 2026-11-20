@@ -108,13 +108,13 @@ export function chatParts(
       if (found.rest !== '') addText(found.rest)
     }
   }
-  /** A bare address: a chip, a link, or text. */
-  const addAddress = (href: string) => {
+  /** An address: a chip, a link, or text. */
+  const addAddress = (href: string, source = href) => {
     const target = linkTarget(href, links)
     const link = target ? undefined : options.web(href)
-    if (target) parts.push({ kind: 'chip', source: href, target })
-    else if (link) parts.push({ kind: 'link', link, text: href })
-    else addText(href)
+    if (target) parts.push({ kind: 'chip', source, target })
+    else if (link) parts.push({ kind: 'link', link, text: source })
+    else addText(source)
   }
   /** Text that shows as typed, with its code but no link. */
   const typed = (value: string) =>
@@ -127,7 +127,7 @@ export function chatParts(
       return
     }
     typed(markdown.before)
-    addAddress(href)
+    addAddress(href, markdown.address)
     typed(markdown.after)
   }
   // Only code of the text itself links its address. Code in a label that

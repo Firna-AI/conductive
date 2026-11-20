@@ -260,14 +260,14 @@ export function WorkspaceScreen(props: {
     // row and no Checks, so it reads no GitHub state and no files.
     if (archived) return screen
     return (
-      <KeptConnections context={context}>
+      <KeptConnections context={context} opened={opened}>
         <WorkspaceGitHub context={context}>{screen}</WorkspaceGitHub>
       </KeptConnections>
     )
   }
   // The bar of the Mac app tops the main area, above the whole workspace.
   return (
-    <KeptConnections context={context}>
+    <KeptConnections context={context} opened={opened}>
       <WorkspaceGitHub context={context}>
         <WorkspaceLinks context={context}>
           <WorkspaceMacBar context={context} />

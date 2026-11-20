@@ -181,29 +181,46 @@ has. These parts read and draw the headings:
   keeps the level of each heading, and leaves out a heading with no text,
   such as `## ` while the agent writes. The heading still ends the
   paragraph above it.
-- `heading` of `markdown/agent-paragraphs.ts` also leaves out a heading
-  that shows no words, as `showsWords` of `markdown/readable-text.ts`
-  says. The same module decides the hidden name of a message line, as
-  [Message lines](message-lines.md) says. A heading shows no words when
-  no text or code node holds a character other than white space, and no
-  link or image stands in it. So
-  `` ## ` ` `` draws nothing, as `main` pull request #555 made the old
-  reader do. A link or an image counts as words, because what it shows
-  depends on the tree and the links of the screen, when it draws. A mark
-  without its pair is text, so `## **` shows `**`, as
+- In an early check, `heading` of `markdown/agent-paragraphs.ts` also
+  leaves out a heading that cannot show words, from its text alone, as
+  `showsWords` of `markdown/readable-text.ts` says. Such a heading holds no
+  link and no image, and no text or code node in it holds a character
+  other than white space. So `` ## ` ` `` draws nothing. A mark without its
+  pair is text, so `## **` shows `**`, as
   [Formatting](../../docs/protocol/chat-markdown.md#formatting) says. The
-  check needs no tree and no workspace list, so the blocks depend only on
-  the text.
+  early check needs no tree and no workspace list, so the blocks depend
+  only on the text.
+- A heading with a link or an image stays a block, because the tree and
+  the links of the screen decide what it shows. It still ends the
+  paragraph above it, also when it draws nothing. When the heading draws,
+  the final check, `answerShowsWords` of `markdown/answer-parts.ts`,
+  decides whether its parts show words. Parts show words when they hold a
+  chip, or text or code with a character other than white space, also
+  inside a mark or a link. `AgentText` and `LineBlocks` call the final
+  check through `useShowsWords` of `markdown/answer-reading.ts`, with the
+  workspaces, the tree, and the links of the screen that `AnswerText`
+  reads. The hidden name of a message line uses the same final check, as
+  [Message lines](message-lines.md) says.
+- A heading shows no picture, so the image of a picture file shows as its
+  link there, as [Pictures in answers](text-links.md#pictures-in-answers)
+  says. With no alt text, an image of a file of the tree shows the name of
+  the file. With no alt text, an image at a web address shows that
+  address, and any other image shows nothing. So `## ![](x)` draws nothing
+  while `x` names no file of the tree and no web address, also while the
+  chat has no tree. When the tree gains a file at `x`, the heading shows
+  the name of that file, until the file goes.
 - The file preview reads its headings through the same parser, in
   `preview-blocks.ts` of `src/files/markdown/`.
 - `AgentText` draws a heading as `h1` to `h6`, at its level, with its text
-  through `AnswerText`.
+  through `AnswerText`. It draws nothing for a heading whose parts show no
+  words, so a screen reader meets no empty heading.
 - `MessageLine` draws a heading as a span with the `heading` class of the
   mockups' `ToolGroup.module.css`. That class gives the heading weight,
   closed and open. Open, the span shows on its own line. Under an open
   line, a heading after the first table draws through `AgentBlocks` as a
   heading element. The `.messageBody` rules of `ToolGroup.module.css` give
-  it the look of a heading of the open line.
+  it the look of a heading of the open line. `LineBlocks` draws nothing
+  for a heading whose parts show no words, also no space.
 - `MarkdownHeadings.module.css`, in `docs/mockups/src/components/common/`,
   gives the headings of an answer and of the file preview one look, under
   its `headings` class. It sets the size of each level, the weight, the

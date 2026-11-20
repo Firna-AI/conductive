@@ -89,6 +89,26 @@ export const RUNNER_MESSAGE_STAGES = [
 
 export type RunnerMessageStage = (typeof RUNNER_MESSAGE_STAGES)[number]
 
+/** The runner work that a workspace marks just after a runner connects. */
+export const RUNNER_WORK_KINDS = [
+  'hello',
+  'event',
+  'file_result',
+  'move_refused',
+  'flush',
+] as const
+
+type RunnerWorkKind = (typeof RUNNER_WORK_KINDS)[number]
+
+/** Values that `runner_work_interrupted` checks again before it logs them. */
+export interface RunnerWorkFields {
+  work: RunnerWorkKind | 'unknown'
+  stage: RunnerMessageStage | null
+  eventType: string | null
+  eventNumber: number | null
+  size: number | null
+}
+
 /** The provider step of a file check or download into a cloud computer. */
 export const ATTACHMENT_STEPS = ['check', 'start', 'status', 'command'] as const
 
@@ -107,6 +127,8 @@ export type WorkerWarning =
   | (RunnerWarningFields & {
       kind: 'runner_connected' | 'runner_disconnected'
     })
+  | (RunnerWarningFields &
+      RunnerWorkFields & { kind: 'runner_work_interrupted' })
   | (RunnerWarningFields & {
       kind: 'turn_ended_without_stop_request'
       turnId: WarningId

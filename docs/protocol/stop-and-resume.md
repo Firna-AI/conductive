@@ -10,8 +10,23 @@ says.
 
 ## The stop
 
-- A sandbox stops after 30 minutes without user activity on its workspace
-  and without a running agent turn (decisions 11 and 29).
+- A sandbox stops after the stop time without user activity on its
+  workspace and without a running agent turn (decisions 11 and 29).
+- The operator sets one stop time for every workspace of every org, on the
+  [Settings tab](operator-section.md#the-settings-tab). The choices are 15,
+  30, 60, 90, and 120 minutes. The stop time is 30 minutes until an
+  operator changes it.
+- Reason: the operator can then weigh the cost of idle sandboxes against
+  the work of the users. Cal asked for this on 20 November 2026. Cal chose
+  the fixed list, so that no typo keeps idle sandboxes running for hours.
+  Any whole number of minutes from 5 to 240, and from 5 to 1,440, were
+  rejected.
+- A changed stop time reaches a running sandbox at its next activity, at
+  the start or the end of a turn, or when its current stop time ends.
+  Reason: the app then needs no call to each running sandbox. Cal chose
+  this on 20 November 2026. A check of each running sandbox at once, a new
+  time only for later starts, and a provider stop fixed at the longest
+  time were rejected.
 - Activity is input in the tabs of the workspace, such as typing, clicks,
   and scrolling. Terminal input is activity too.
 - A request to a port preview is not activity (decision 293). A preview

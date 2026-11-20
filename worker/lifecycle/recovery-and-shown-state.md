@@ -36,7 +36,7 @@ archived workspace.
   one, `input` and `unread` stay, and `working` becomes `ready`.
 - `lastActivityAt` becomes the later of its stored value and the stored
   time of the newest turn end. So a repair, a hello, a heartbeat, or a
-  restart never starts a new 30-minute idle period.
+  restart never starts a new idle period.
 - On the normal path, `DurableLifecycle.turn` takes no time from its
   caller. The `lastTurnEndedAt` hook of `createWorkspaceLifecycle` reads
   the stored time of the newest turn end from the same committed chat

@@ -262,6 +262,7 @@ it('draws each heading at the level that the agent wrote, with its code, strong 
           '##### Unit tests',
           `###### Compare ${linked.link}`,
           '## ',
+          '## ![](x)',
         ].join('\n')}
       />
     </LinksProvider>,

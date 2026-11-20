@@ -14,11 +14,39 @@ const sent = (text: string) => chatParts(text, links, { web: webLinkOf })
 const text = (value: string): ChatPart => ({ kind: 'text', text: value })
 
 /** A link to another site, with its address as the text has it. */
-function web(href: string): ChatPart {
-  return { kind: 'link', link: { kind: 'web', url: new URL(href) }, text: href }
+function web(href: string, source = href): ChatPart {
+  return {
+    kind: 'link',
+    link: { kind: 'web', url: new URL(href) },
+    text: source,
+  }
 }
 
 describe('the links of a sent message', () => {
+  test.each(['HTTPS', 'hTtPs', 'HTTP', 'hTtP'])(
+    'a sent message links %s addresses and keeps each typed form',
+    (scheme) => {
+      const href = `${scheme}://example.com/Api/Case?q=MiXeD#Part`
+      expect(
+        sent(
+          `Read ${href}, <${href}>, \`${href}\`, \`curl ${href}\`, and [Docs](${href}).`,
+        ),
+      ).toEqual([
+        text('Read '),
+        web(href),
+        text(', <'),
+        web(href),
+        text('>, '),
+        { kind: 'code', text: href, link: { kind: 'web', url: new URL(href) } },
+        text(', '),
+        { kind: 'code', text: `curl ${href}` },
+        text(', and [Docs]('),
+        web(href),
+        text(').'),
+      ])
+    },
+  )
+
   test('a sent message shows a Markdown link as typed: its label stays text and code, and its address is a link', () => {
     const pull = 'https://github.com/acme/storefront/pull/468'
     const guide = 'https://design.acme.example/forms/address'
@@ -51,6 +79,22 @@ describe('the links of a sent message', () => {
       text('[Yahoo]('),
       web(yahoo),
       text(' "About https://www.yahoo.com")'),
+    ])
+  })
+
+  test('a sent message keeps Markdown address escapes as typed and opens the decoded address', () => {
+    expect(sent(String.raw`[Wiki](https://example.com/a\(b\))`)).toEqual([
+      text('[Wiki]('),
+      web('https://example.com/a(b)', String.raw`https://example.com/a\(b\)`),
+      text(')'),
+    ])
+  })
+
+  test('a sent message keeps an escaped angle end as typed and opens the full decoded address', () => {
+    expect(sent(String.raw`[x](<https://example.com/a\>b>)`)).toEqual([
+      text('[x](<'),
+      web('https://example.com/a%3Eb', String.raw`https://example.com/a\>b`),
+      text('>)'),
     ])
   })
 })

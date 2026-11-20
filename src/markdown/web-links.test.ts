@@ -146,6 +146,20 @@ describe('web addresses', () => {
     ])
   })
 
+  test.each(['HTTPS', 'hTtPs', 'HTTP', 'hTtP'])(
+    'reads %s bare addresses and angle addresses without changing their text',
+    (scheme) => {
+      const href = `${scheme}://example.com/Api_(Test)[1]?q=MiXeD#Part`
+      expect(webAddressParts(`Read ${href}, <${href}>.`)).toEqual([
+        { kind: 'text', text: 'Read ' },
+        { kind: 'link', href, source: href },
+        { kind: 'text', text: ', <' },
+        { kind: 'link', href, source: href },
+        { kind: 'text', text: '>.' },
+      ])
+    },
+  )
+
   test('tests labels as shown without code, bold, invisible characters, or edge spaces', () => {
     for (const label of [
       '`https://github.com`',
