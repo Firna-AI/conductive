@@ -214,57 +214,59 @@ Depends on: none
 No protocol doc changes, because the start steps and every stated
 requirement stay. The developer docs describe the start loop.
 
-- [ ] Update `worker/lifecycle/workspace-object.md`: the progress phases
+- [x] Update `worker/lifecycle/workspace-object.md`: the progress phases
       can chain in one lifecycle run, the bound, the 250 ms poll delay, and
       the auto-stop set at most once a minute. Write it after Milestone 3,
       so that it describes the code as built.
-- [ ] Update `worker/lifecycle/alarm-scheduler.md` if its run lease or due
+- [x] Update `worker/lifecycle/alarm-scheduler.md` if its run lease or due
       time rules need a sentence for the loop.
-- [ ] Check `worker/lifecycle/provider-accounts.md` line 42, which lists
+- [x] Check `worker/lifecycle/provider-accounts.md` line 42, which lists
       "each poll", and update it if it names the auto-stop call.
 
 ## Milestone 2: Chain the start steps in one run
 
 Depends on: 1
 
-- [ ] Make `runWorkspaceAlarm` advance the start again in the same run
+- [x] Make `runWorkspaceAlarm` advance the start again in the same run
       after a phase change, within the bound of the design.
-- [ ] Keep every existing outcome: a finished start, a failed start, a
+- [x] Keep every existing outcome: a finished start, a failed start, a
       cancelled start, `StartSuperseded`, a provider retry, and the
       runner-ready wait each end the loop as today.
-- [ ] Tests, with the fake provider of the Worker tests:
-  - [ ] A create starts `branch` in the same run that sees the `fetch`
+- [x] Tests, with the fake provider of the Worker tests:
+  - [x] A create starts `branch` in the same run that sees the `fetch`
         exit, and so on to `terminal-password`.
-  - [ ] A resume starts `startup` in the same run that sees the sandbox
+  - [x] A resume starts `startup` in the same run that sees the sandbox
         ready.
-  - [ ] The loop stops at 6 advances and at the 5 s bound.
-  - [ ] A move back from `ready` to `machine` ends the loop.
-  - [ ] A stop or an archive during the loop ends the start as today.
-  - [ ] A start job saved in the old shape continues.
-  - [ ] The start steps keep their order and times.
+  - [x] The loop stops at 6 advances and at the 5 s bound.
+  - [x] A move back from `ready` to `machine` ends the loop.
+  - [x] A stop or an archive during the loop ends the start as today.
+  - [x] A start job saved in the old shape continues.
+  - [x] The start steps keep their order and times.
 
 ## Milestone 3: Poll every 0.25 s, and set auto-stop once per command
 
 Depends on: 2
 
-- [ ] Set the next start run 250 ms after the run while a command runs or
+- [x] Set the next start run 250 ms after the run while a command runs or
       the `ready` phase waits, for the first 5 s of that wait, then 1 s.
       Keep every other delay.
-- [ ] Set the auto-stop deadline only when the last set was 60 s ago or
+- [x] Set the auto-stop deadline only when the last set was 60 s ago or
       more, or the job has no record of a set, in the `ready` phase and
       the command phases.
-- [ ] Tests:
-  - [ ] The next alarm of a running command and of the `ready` wait is
+- [x] Tests:
+  - [x] The next alarm of a running command and of the `ready` wait is
         250 ms after the run in the first 5 s of the wait, then 1 s. Other
         waits keep their delays.
-  - [ ] A poll within 60 s of the last set makes no auto-stop call. A
+  - [x] A poll within 60 s of the last set makes no auto-stop call. A
         poll 60 s or more after it makes one. A run that sees `ready` and
         starts the first command makes one call.
-  - [ ] A job without the new fields gets an auto-stop call and a 1 s
+  - [x] A job without the new fields gets an auto-stop call and a 1 s
         poll.
-  - [ ] A 250 ms start alarm is not pushed to the 2 s regular deferral of
+  - [x] A 250 ms start alarm is not pushed to the 2 s regular deferral of
         `worker/features/workspace-alarm.ts`. Use workspace 317's
         native-runtime finding.
+
+Evidence: `.context/chain-start-steps/report.md`.
 
 ## Milestone 4: Verification, commit, review, and pull request
 
