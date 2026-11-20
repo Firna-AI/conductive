@@ -15,7 +15,7 @@ account has an ID:
 | `e2b` | E2B | The `e2b` entry of the Worker secret `SANDBOX_PROVIDER_ACCOUNTS`. It is optional. |
 
 - Each org keeps one account for its whole life, as
-  [The account of an org](protocol/workspaces-and-sandboxes.md#the-account-of-an-org)
+  [The account of an org](protocol/provider-accounts.md#the-account-of-an-org)
   says. A new org gets its account from the weights of the operator
   section, or from the choice of an operator.
 - Only a configured account can have a weight or be chosen. The weights
@@ -24,6 +24,10 @@ account has an ID:
 - Keep each account configured while an org uses it. No call of an org
   goes to another account. So the calls of an org fail while its account
   is not configured.
+- Each account runs in one region. Both accounts run in the EU today. An
+  account in another region needs the steps that
+  [Regions](protocol/provider-accounts.md#regions) gives before a real org
+  runs on it.
 
 ## The app's Boat account
 

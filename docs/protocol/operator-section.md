@@ -161,7 +161,7 @@ holds these requirements.
 ## The Providers tab
 
 - The Providers tab holds the weights of new orgs, as
-  [The account of an org](workspaces-and-sandboxes.md#the-account-of-an-org)
+  [The account of an org](provider-accounts.md#the-account-of-an-org)
   says (e2b decision 222). It names each account by its ID, such as `boat`
   or `e2b` (e2b decision 221).
 - Its New orgs box shows the weights as one slider between `boat` and

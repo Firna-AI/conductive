@@ -20,7 +20,7 @@ says.
   copy of each repository that the org chose when the build of the image
   began.
 - The org image lives in the provider account of the org, as
-  [The account of an org](workspaces-and-sandboxes.md#the-account-of-an-org)
+  [The account of an org](provider-accounts.md#the-account-of-an-org)
   says. Every build and every refresh of the org runs in that account
   (e2b decision 222).
 - One image for each repository was rejected, because each image costs

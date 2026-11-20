@@ -40,7 +40,7 @@ says.
   org: "By weights", or one configured account by its ID, such as `boat`
   or `e2b` (e2b decisions 221 and 222). "By weights" is the default. It draws
   the account from the weights, as
-  [The account of an org](workspaces-and-sandboxes.md#the-account-of-an-org)
+  [The account of an org](provider-accounts.md#the-account-of-an-org)
   says.
 - Reason: an operator can then put a test org on each provider. The
   choice lists only configured accounts.
