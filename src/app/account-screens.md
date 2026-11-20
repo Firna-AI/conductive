@@ -32,8 +32,9 @@ agent login forms, and model lists in the web app.
   at once through `AccountModel.setNoReuse`. While it saves, it shows the
   new value and takes no other change. A failed save shows its cause under
   the switch until the next change, and the switch shows the saved value.
-  A share reply that a later save or remove of the same login overtook does
-  not show, so a removed login stays removed.
+  A save or a Remove of the same login that starts while the switch saves
+  waits until the share change ends. Then its own answer shows last, so a
+  removed login stays removed, as [Login data](login-data.md#rules) says.
 - The Connect form of an agent offers each kind of its login: Claude a
   subscription token, an API key, or an own endpoint, and Codex an API key,
   a ChatGPT plan, or an own endpoint. On a phone the kinds wrap onto two lines. Get

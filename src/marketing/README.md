@@ -133,6 +133,11 @@ In the same change, update each sentence of the legal pages that restates
 the fact. A search for the old words is not enough, because a legal page
 can restate a fact in other words.
 
+A change to the Terms text gives a new Terms revision on its own, because
+`TERMS_VERSION` in [`src/shared/terms.ts`](../shared/terms.ts) is a digest
+of the text. In the same change, set the effective date at the top of the
+Terms to the date of the change.
+
 ## Public docs
 
 The public docs are guides to the product at `/docs`.

@@ -18,6 +18,7 @@ import {
   type TextTable,
 } from './agent-text'
 import local from './chat.module.css'
+import { blockShowsText } from './readable-text'
 import { useFold } from './useFold'
 
 /**
@@ -165,11 +166,6 @@ function LineBlocks(props: { blocks: readonly TextBlock[]; line: LineState }) {
   ))
 }
 
-/** Whether a block draws nothing: a heading with no text. */
-function isEmptyHeading(block: TextBlock): boolean {
-  return block.kind === 'heading' && block.text === ''
-}
-
 /** Whether a block is a table, or a list with a table in an item. */
 function holdsTable(block: TextBlock): boolean {
   if (block.kind === 'table') return true
@@ -185,12 +181,13 @@ function holdsTable(block: TextBlock): boolean {
  *
  * A `<summary>` holds no table. So the open line keeps the blocks before
  * the first table, or before the list that holds it. That block and the
- * blocks after it open under the line. A line that starts with a table, or
- * with only empty headings before it, keeps its closed text as its name for
- * a screen reader. That hidden copy shows no chips, and draws each link as
- * its words, so it holds no link that the keyboard can reach while nobody
- * sees it. A press on a link in the line opens the link, as on a chip, and
- * the line stays open or closed.
+ * blocks after it open under the line. When the line shows no readable text
+ * for the blocks that it keeps, as `blockShowsText` reads them, it keeps its
+ * closed text as its name for a screen reader. So does a line that starts
+ * with a table. That hidden copy shows no chips, and draws each link as its
+ * words, so it holds no link that the keyboard can reach while nobody sees
+ * it. A press on a link in the line opens the link, as on a chip, and the
+ * line stays open or closed.
  *
  * The closed line shows the Markdown image of a picture file as its link,
  * so the line stays one line. The open line shows its picture, read for
@@ -204,6 +201,13 @@ export function MessageLine(props: { id: string; text: string }) {
   const { text } = props
   const blocks = useMemo(() => textBlocks(text), [text])
   const firstTable = blocks.findIndex(holdsTable)
+  // Whether the blocks that the open line keeps show no readable text, so
+  // the line needs its hidden name. It depends on the text alone, so it
+  // runs again only when the text changes.
+  const unnamed = useMemo(
+    () => firstTable >= 0 && !blocks.slice(0, firstTable).some(blockShowsText),
+    [blocks, firstTable],
+  )
   const split = open && firstTable >= 0
   const lead = split ? blocks.slice(0, firstTable) : blocks
   const body = split ? blocks.slice(firstTable) : []
@@ -219,7 +223,7 @@ export function MessageLine(props: { id: string; text: string }) {
         <MessageSquareText aria-hidden className={styles.icon} size={13} />
         <span className={styles.messageText}>
           <LineBlocks blocks={lead} line={line} />
-          {split && lead.every(isEmptyHeading) ? (
+          {split && unnamed ? (
             <span className={a11y.hidden}>
               <LinksProvider value={plainLinks}>
                 <PlainLinks>

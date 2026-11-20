@@ -308,6 +308,15 @@ The [workspace features](../features/README.md) use the current connection
 to gate files preview opens. The
 [file server protocol](../../docs/protocol/file-server.md) gives its rules.
 
+`readRunnerEventIdentity` in `runner-event-identity.ts` reads the identity of
+each runner event for refusal, repair, and turn-context checks. Its one scope
+table, typed from the shared runner types, gives each `RunnerEvent['type']`
+the scope `turn` or `workspace`. A `workspace` event gets no session and no
+turn, also when its payload names them. A `turn` event, or an event of an
+unknown type, keeps them only when `verifiedTurn` finds that turn. The
+`runner-event-identity.ts` entry of [Chat backend key code](key-code.md)
+gives the context and type of a private tool-detail part.
+
 ## Related docs
 
 - [Chat and events: Messages](../../docs/protocol/messages-and-attachments.md#messages)

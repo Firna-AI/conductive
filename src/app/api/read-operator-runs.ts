@@ -1,6 +1,6 @@
 import type { OperatorLongRun } from '../../shared/operator'
+import { WORKSPACE_STATES } from '../../shared/workspace-read'
 import { choice, count, maybeCount, maybeText, record, text } from './parse'
-import { WORKSPACE_STATES } from './read-workspaces'
 
 /** One long run of the Overview: a running workspace and its run start. */
 export function readLongRun(value: unknown): OperatorLongRun {
