@@ -264,26 +264,26 @@ Depends on: 2
 
 Depends on: 3
 
-- [ ] Add an optional `anchor` to the session type in
+- [x] Add an optional `anchor` to the session type in
       `crates/cnd-runner-interface/src/tools/session_types.rs`: the
       parent session ID, the message ID, the quote, and the text before
       and after it.
-- [ ] Run `cargo run -p cnd-runner-interface --example export_bindings`
+- [x] Run `cargo run -p cnd-runner-interface --example export_bindings`
       and commit the generated files.
-- [ ] Add `anchor` to the optional fields of
+- [x] Add `anchor` to the optional fields of
       `worker/chat/session-storage.ts`, so that old records stay valid.
-- [ ] Run the Rust checks of `AGENTS.md`.
+- [x] Run the Rust checks of `AGENTS.md`.
 
 ## Milestone 5: Start an explanation in the Worker
 
 Depends on: 4
 
-- [ ] Add a route that starts an explanation. It checks that the parent
+- [x] Add a route that starts an explanation. It checks that the parent
       session and the message exist in the workspace, and that the member
       may send there. It caps the length of the quote.
-- [ ] Create the explanation with its anchor as an open session, and send
+- [x] Create the explanation with its anchor as an open session, and send
       its first message: the written prompt of the design calls.
-- [ ] Add Worker tests for the start, the written prompt, the checks, and
+- [x] Add Worker tests for the start, the written prompt, the checks, and
       a read-only workspace.
 
 ## Milestone 6: Selection, Explain, and marks

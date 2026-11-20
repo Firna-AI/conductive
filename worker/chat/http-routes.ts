@@ -1,5 +1,6 @@
 import type { SessionsResponse } from '../../src/shared/sessions'
 import { HttpError, requiredString } from '../http'
+import type { AppEnv } from '../env'
 import type { RequestContext } from '../security/gate'
 import {
   choice,
@@ -17,6 +18,7 @@ import { closeSession, createSession, stopTurn } from './sessions'
 import type { ChatDependencies } from './types'
 import type { WorkspaceLinkContext } from '../data/workspace-link'
 import { presentWorkspaceHistory } from './workspace-events'
+import { explainSession } from './explain-session'
 
 export function afterNumber(url: URL): number {
   const value = url.searchParams.get('after')
@@ -37,6 +39,7 @@ export async function chatRoute(
   context: RequestContext,
   operation: ChatOperation,
   dependencies: ChatDependencies,
+  env: AppEnv,
   presentation: WorkspaceLinkContext,
 ): Promise<Response> {
   const url = new URL(request.url)
@@ -89,13 +92,26 @@ export async function chatRoute(
     }
   }
   const match = suffix.match(
-    /^\/sessions\/([^/]+)(?:\/(messages|interrupt|model|close|reopen))?(?:\/([^/]+)\/(retry))?$/,
+    /^\/sessions\/([^/]+)(?:\/(messages|interrupt|model|close|reopen|explain))?(?:\/([^/]+)\/(retry))?$/,
   )
   if (!match)
     throw new HttpError(404, 'not_found', 'The page is not available.')
   const sessionId = decode(match[1])
   await operation.read((view) => sessionFor(view, sessionId))
   const action = match[2]
+  if (action === 'explain' && request.method === 'POST' && !match[4]) {
+    return Response.json(
+      await explainSession(
+        operation,
+        sessionId,
+        context,
+        env,
+        dependencies,
+        presentation,
+      ),
+      { status: 201 },
+    )
+  }
   if (action === 'messages') {
     if (request.method !== 'POST')
       throw new HttpError(404, 'not_found', 'The page is not available.')

@@ -52,6 +52,7 @@ export async function browserRequest(
       current.context,
       operation,
       dependencies,
+      env,
       access.presentation,
     )
     if (write) await flushRunner()

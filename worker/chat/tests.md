@@ -133,6 +133,9 @@ npm run typecheck
   and `legacy-sessions.test.ts` test starters, linked sessions, and old data.
   `login-observation.test.ts` tests that an observed change stays after a
   refused Send, and that a repeated message ID observes nothing.
+  `explain-session.test.ts` checks anchored session creation, prompt admission, titles, model defaults, runner dispatch, and older stored sessions.
+  `explain-session-access.test.ts` checks selection limits, parent and message identity, finished answers, login checks, and read-only access.
+  `explain-prompt.test.ts` checks the prompt text and its quoted context lines.
   `linked-retry.test.ts` also restarts after a crash at the acceptance of a
   linked Retry. It checks each stored record, and a stale Retry gets 409.
 - `org-logins.test.ts` covers first-message selection, current-member access

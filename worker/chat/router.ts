@@ -8,7 +8,7 @@ import { recordUserActivity } from '../data/user-activity'
 
 /** A chat message that the person sends, or sends again after a failure. */
 const SENT_MESSAGE =
-  /^\/api\/orgs\/[^/]+\/workspaces\/[^/]+\/sessions\/[^/]+\/messages(?:\/[^/]+\/retry)?$/
+  /^\/api\/orgs\/[^/]+\/workspaces\/[^/]+\/sessions\/[^/]+\/(?:messages(?:\/[^/]+\/retry)?|explain)$/
 
 export async function routeRunner(
   request: Request,

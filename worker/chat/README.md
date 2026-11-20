@@ -30,6 +30,7 @@ which serves these routes. The path helpers live in
 | --- | --- | --- |
 | `GET` sessions | `sessionsPath` | Lists the open sessions and the session history |
 | `POST` sessions | `sessionsPath` | Creates a session. The requester becomes its starter |
+| `POST` explain | `explainSessionPath` | Starts an open session with a selection anchor and a first message that the Worker writes. It uses the requester's choice or default, login, and normal message admission |
 | `PATCH` session | `sessionPath` | Renames a session |
 | `POST` messages | `sessionPaths.messages` | Accepts a message. During a running turn, the message joins that turn. When the session login cannot serve the sender, a linked session takes the sender's default login, as [Session logins](integration/README.md#session-logins) says |
 | `POST` retry | `retryMessagePath` | Sends the message that `Session.retryMessageId` names again, also to a new linked session. Each other message gets `409 retry_not_available`, as [Retries](#retries) says |
@@ -168,6 +169,9 @@ Try again replaces the failed first computer without accepting the stored messag
 `send` takes a parsed message and its actual sender, so browser and trusted tool callers share one admission path.
 Its optional acceptance callback saves a tool request in the message transaction.
 `tool-session-write.ts` owns tool request replay and atomic creation with an optional first message.
+`explain-session.ts` checks the selected message and saves the anchored session with its first message in one transaction.
+It reads member messages from their stored records and finished agent answers from paged session history.
+`explain-prompt.ts` builds the prompt with the canonical parent session link.
 `ChatRecords` stores each `ToolSessionRequest` beside its accepted session and message.
 The workspace title request removes only the canonical final tool footer from its stored first-message input.
 
