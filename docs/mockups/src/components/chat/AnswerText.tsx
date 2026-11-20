@@ -1,3 +1,4 @@
+import type { InlineText } from '../../../../../src/chat/markdown/agent-inline'
 import { MarkedNodes } from '../common/MarkedNodes'
 import { answerNodes, type AnswerNode, type AnswerPart } from './answerNodes'
 import { FileLinkText, FilePicture } from './MentionChip'
@@ -35,15 +36,11 @@ function AnswerUnit(props: { part: AnswerPart; pictures: boolean }) {
 }
 
 /**
- * The nodes of the text of an answer, as `answerNodes` reads them: bold
- * text, emphasis, strikethrough, and line breaks around code, chips, and
- * links. `line` draws the text of a message line, whose closed line shows
- * each line break as a space. With `pictures`, as in a paragraph or a list
- * item of an answer, the Markdown image of a picture file shows as its
- * picture (screenshot decision 2). A heading and a table cell keep its
- * link.
+ * The nodes of the text of an answer: bold text, emphasis, strikethrough,
+ * and line breaks around code, chips, and links. `line` draws the text of
+ * a message line, whose closed line shows each line break as a space.
  */
-export function AnswerNodes(props: {
+function AnswerNodes(props: {
   nodes: readonly AnswerNode[]
   line?: boolean
   pictures?: boolean
@@ -59,14 +56,18 @@ export function AnswerNodes(props: {
 }
 
 /**
- * The text of an answer, or of a message line in the work of a turn. Each
- * link to a workspace of the org is a chip, each mention and each inline
- * path of the file tree is a file chip, and a Markdown link shows as its
- * label. The marks and the line breaks read as `answerNodes` says. With
- * `pictures`, the Markdown image of a picture file shows as its picture.
+ * The inline text of a block of an answer, or of a message line in the
+ * work of a turn, as the fixtures write it with the inline tree of the app.
+ * Each link to a workspace of the org is a chip, each mention and each
+ * inline path of the file tree is a file chip, and a Markdown link shows as
+ * its label, as `answerNodes` reads them. `line` draws the text of a
+ * message line, whose closed line shows each line break as a space. With
+ * `pictures`, as in a paragraph or a list item, the Markdown image of a
+ * picture file shows as its picture (screenshot decision 2). A heading and
+ * a table cell keep its link.
  */
 export function AnswerText(props: {
-  text: string
+  text: InlineText
   line?: boolean
   pictures?: boolean
 }) {

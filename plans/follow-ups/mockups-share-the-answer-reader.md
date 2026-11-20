@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-13, from branch `calummoore/delft-i3g7`, the wider fix of a review finding of round 2.
-- **Location:** `docs/mockups/src/components/chat/answerNodes.ts`, `docs/mockups/src/components/chat/fileMentions.ts`, `docs/mockups/src/components/chat/workspaceLinks.ts`, `docs/mockups/src/components/chat/MessageText.tsx`, and the mark rules of `docs/mockups/src/components/common/markdownMarks.ts`.
+- **Location:** `docs/mockups/src/components/chat/answerNodes.ts`, `docs/mockups/src/components/chat/fileMentions.ts`, `docs/mockups/src/components/chat/workspaceLinks.ts`, and `docs/mockups/src/components/chat/MessageText.tsx`.
 - **Reason:** the change replaces the text pipeline of every message of the mockup catalogue, which is larger than the branch that found it.
 
 - **Terms:**
@@ -11,9 +11,9 @@
   - **Reader of answers:** `agentBlocks` and `answerParts` in `src/chat/markdown/`. They read the text of an agent message with the shared `markdown-it` parser of `src/markdown/parser.ts`, and give its blocks, marks, code, workspace chips, file chips, and links.
   - **`chatParts`:** the reader of sent messages in `src/chat/links/chat-parts.ts`. It splits a sent message into text, code, workspace chips, file chips, and links.
 - **Background:**
-  - The app reads answers with the reader of answers, and sent messages with `chatParts`. The mockups read answers with their own reader, `answerNodes.ts`. It uses the marks of `common/markdownMarks.ts`, the line breaks of `common/markdownBreaks.ts`, the mention reader in `fileMentions.ts`, and the link reader in `workspaceLinks.ts`.
+  - The app reads answers with the reader of answers, and sent messages with `chatParts`. The mockups read answers with their own reader, `answerNodes.ts`. The mockup fixtures write each answer as the blocks and the inline tree of the app, `TextBlock` and `InlineText`. So `answerNodes.ts` pairs no marks. It keeps the line breaks by the rule of the app, in `src/markdown/kept-breaks.ts`. It uses the mention reader in `fileMentions.ts` and the link reader in `workspaceLinks.ts`.
   - On 13 November 2026 the mockups started to use the path and line rules of the app, through `docs/mockups/src/components/chat/answerPaths.ts`. The other rules stay copies, such as `mentionPattern` and `markedMentionPattern` in `fileMentions.ts`.
-- **Problem:** Each rule of the reader lives twice: the start and the end of a mention, its end mark, the marks of bold, emphasis, and strikethrough, the line breaks, and the web links. Each change of a rule needs two edits, and the visual spec can show what the app does not show. On 16 November 2026 the start of a mention after `**` needed an edit of both readers. On 17 November 2026 the mark rules of the shared parser needed a copy in `common/markdownMarks.ts`.
+- **Problem:** Each rule of the reader lives twice: the start and the end of a mention, its end mark, and the web links. Each change of a rule needs two edits, and the visual spec can show what the app does not show. On 16 November 2026 the start of a mention after `**` needed an edit of both readers. On 17 November 2026 the mark rules of the shared parser needed a copy in `common/markdownMarks.ts`.
 - **Impact if no action:** The catalogue drifts from the app at each change of the chat reader.
 - **Root question:** How do the mockups read an answer, with its marks, mentions, code, line targets, and links, by the same rules as the app?
 - **Options:**
