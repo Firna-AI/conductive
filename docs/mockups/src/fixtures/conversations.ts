@@ -36,6 +36,7 @@ import { newWorkspaceConversations } from './newWorkspaceConversations'
 import { secretConversations } from './secretConversations'
 import type { LateAnswerItem, SecretRunItem } from './secretRequests'
 import { secretValueConversations } from './secretValueConversations'
+import { sideQuestionConversations } from './sideQuestions'
 import { speedConversations } from './speedConversations'
 import { tableConversations } from './tableConversations'
 import { unavailableConversations } from './unavailableConversations'
@@ -241,4 +242,5 @@ export const conversations: Readonly<
   ...listConversations,
   ...headingConversations,
   ...chatLinkConversations(history),
+  ...sideQuestionConversations,
 }

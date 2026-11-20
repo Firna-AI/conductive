@@ -14,7 +14,8 @@
  * Preview tab of port 6006 (decision 291). `preview-behind` shows the first
  * session, and both Preview tabs stay in the row with their pages loaded.
  * A phone row shows no Preview tab, so a phone shows the page on its
- * Preview page.
+ * Preview page. `side-session` shows the tab of the side session of Cal
+ * after Open as tab, at the end of the row.
  */
 export const tabStates = [
   'session',
@@ -32,6 +33,7 @@ export const tabStates = [
   'attachment',
   'preview',
   'preview-behind',
+  'side-session',
 ] as const
 
 /**

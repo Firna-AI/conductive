@@ -8,6 +8,8 @@ headings of a reply and of a file preview, the work fold of a turn, and the
 line of a stopped turn. It also gives the data that the chat does not
 have, the files that the cloud computer could not read, the end of a turn at the time limit of
 background work, and the end of a fast turn that ran at standard speed.
+[Side questions](#side-questions) gives the marks, Ask about this, the
+prompt field, and the overlay of a side session.
 
 - A session tab shows a muted spinner in place of its chat icon while its
   agent works. The spinner keeps the icon's size and stays visible on
@@ -344,3 +346,57 @@ background work, and the end of a fast turn that ran at standard speed.
   place of the rows while the tree loads, when no tree is available, and
   when nothing matches. `fileMentions.ts` beside it reads the mentions of
   a text and orders the rows.
+
+## Side questions
+
+`app/chat/side-questions` draws the parts of side questions. They live in
+`src/components/side-questions/` and take no fixtures, so the app can use
+them too. `sideQuestionCopy.ts` beside them holds their words.
+
+- `SideText` draws a text of a message with the marks of its side
+  questions and the selection of the member. `ChatMarks` gives the chat
+  the marks of each message, and `ChatItemView` draws them in an answer and
+  in a member message. The text is cut only at the ends of a quote, so a
+  quote holds whole code and whole bold.
+  - A mark has the soft amber fill that also marks the lines of a file
+    tab. Its text keeps its colour, so the mark reads as a highlight and not
+    as a link. A mark that wraps keeps its fill on each line. Under the
+    pointer, and while the overlay of its side session is open, the fill is
+    deeper, in the `warningBorder` colour.
+  - `MarkGlyph` ends each mark with the run state of its side session: the
+    icon of Ask about this when its turn ended, the spinner of a session
+    tab while its turn runs, and the Needs input mark of the header while
+    it waits for a member. Each state has its own shape. Screen readers
+    hear the title of the session and its state, such as "Needs input",
+    and the pointer over a mark shows the title.
+  - Where two marks overlap, the fill is deeper, and a press opens a short
+    menu of their side sessions: below the overlap on a computer, and in a
+    sheet on a phone. Each row shows the state and the title of a session.
+  - `WholeMark` draws a mark whose text no longer matches. The whole
+    message takes the fill of a mark, a little wider than its text, with
+    the glyph at its top right. The fill tints the whole box, and no edge
+    has a strip.
+  - The selection takes the colours of a selection of the system. On a
+    phone the screen draws the handles of the phone and its selection menu
+    above the selection.
+- `AskButton` draws Ask about this just above the middle of a selection,
+  raised with the shadow of a menu. So it covers none of the text that the
+  member reads next. Where the chat has no room past the selection, such
+  as in a bubble, it lines up with the end of the selection.
+  On a phone, `PhoneAskButton` puts it above the composer, in the middle,
+  away from the selection menu and the handles of the phone.
+- `AskPrompt` draws the prompt field that takes the place of the button.
+  It opens under the selection, from the start of the selection. It holds
+  the question, the line "Starts a new session", Cancel, and Send, which
+  is off until the field holds text. On a phone, `AskPromptSheet` opens it in a sheet,
+  with the quoted text above the field.
+- `SideSessionOverlay` draws the overlay of a side session. On a computer
+  it is a dialog at the right edge of the app, under the header and the
+  tab row, over the light dim of the palette. So the parent chat with the
+  mark stays in view beside it, and the parent tab and the new tab show
+  above it. On a phone it is a sheet that stops under the tab row. Its
+  header shows the icon and the title of the session, as its tab does,
+  then Open as tab and the close button. A phone shows Open as tab as its
+  icon. Under the header a `ChatPane` draws the chat of the side session,
+  so the overlay shows its chat, its requests, and its composer with Stop,
+  as its tab does.

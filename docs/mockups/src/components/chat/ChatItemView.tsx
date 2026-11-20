@@ -9,6 +9,9 @@ import { classes } from '../common/classes'
 import headingStyles from '../common/MarkdownHeadings.module.css'
 import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
+import { useMessageMarks } from '../side-questions/chatMarks'
+import { SideText } from '../side-questions/SideText'
+import { WholeMark } from '../side-questions/WholeMark'
 import { AgentBlocks } from './AgentBlocks'
 import { ContinuedLine } from './ContinuedLine'
 import type { SingleItem } from './groupItems'
@@ -61,34 +64,48 @@ function stopNotes(item: StoppedItem): string[] {
 /**
  * One item of a chat transcript, other than a tool call, which joins a run
  * of tool calls. `viewer` is the person signed in, who reads the transcript.
+ * A member message and an answer show the marks of their side questions
+ * and the selection of the member, as `SideText` draws them.
  */
 export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
   const { item, viewer } = props
   const theme = useSharedUiTheme()
+  const marks = useMessageMarks(item.id)
   switch (item.kind) {
     case 'user': {
       const files = item.attachments ?? []
       const listed = filesWithoutPlace(item.text, files)
+      const text = (part: string) => (
+        <MessageText files={files} mentions text={part} waits={item.queued} />
+      )
       return (
         <div className={styles.user}>
           <div className={styles.bubble}>
-            <MessageText
-              files={files}
-              mentions
-              text={item.text}
-              waits={item.queued}
-            />
+            {marks ? (
+              <SideText marks={marks} render={text} text={item.text} />
+            ) : (
+              text(item.text)
+            )}
           </div>
           {listed.length > 0 ? <SentFiles files={listed} /> : null}
         </div>
       )
     }
-    case 'agent':
+    case 'agent': {
+      const answer = (part: string) => <MessageText answer text={part} />
+      const text = marks
+        ? (part: string) => (
+            <SideText marks={marks} render={answer} text={part} />
+          )
+        : undefined
       return (
-        <div className={classes(styles.agent, headingStyles.headings)}>
-          <AgentBlocks blocks={item.blocks} />
-        </div>
+        <WholeMark mark={marks?.whole}>
+          <div className={classes(styles.agent, headingStyles.headings)}>
+            <AgentBlocks blocks={item.blocks} text={text} />
+          </div>
+        </WholeMark>
       )
+    }
     case 'mac-command':
       return <MacCommand request={item.request} state={item.state} />
     case 'late-answer':

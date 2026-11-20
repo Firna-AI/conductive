@@ -8,6 +8,7 @@ import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { acmeRail } from '../components/layout/OrgRail'
 import { useMacApp } from '../components/mac/MacApp'
 import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
+import { ChatMarks } from '../components/side-questions/chatMarks'
 import { ChecksActions } from '../components/workspace/BarActions'
 import { MobileTabBar } from '../components/workspace/MobileTabBar'
 import {
@@ -32,6 +33,7 @@ import { centreOf } from './workspaceCentre'
 import { placeLostUpdate } from './lostUpdates'
 import { changedWorkspaces, chatWorkspacesOf } from './orgWorkspaces'
 import { viewerOf } from './sessionStarter'
+import { chatMarksOf } from './sideQuestionMarks'
 import { barOf, branchOf } from './workspaceBar'
 import {
   FilesContent,
@@ -71,7 +73,8 @@ const raisedSplit = 35
  * no new session, no rename, no owner change, no Archive, and no Restore.
  * `overlay` lies over the workspace in place of the overlay of its state,
  * such as a dialog that another screen opens over it. The chat and the
- * overlay find the workspaces of their chips in the list of the screen.
+ * overlay find the workspaces of their chips in the list of the screen,
+ * and the chat draws the marks of side questions over its messages.
  * The toast of the state lies over everything. `shortcuts` holds the
  * person's changes to the shortcuts. With them, the palette rows show their
  * keys, and the Search row shows the person's key of the palette.
@@ -118,31 +121,33 @@ export function WorkspaceScreen(props: {
   const rows = chatWorkspacesOf(state, { workspace, status })
   const chat = (
     <ChatWorkspaces rows={rows}>
-      <ChatPane
-        composer={composerFor(state, workspace, viewport)}
-        empty={
-          <EmptyState
-            body={`The agent works on ${workspace.branch}, on the same cloud computer as the other sessions.`}
-            icon={MessageSquarePlus}
-            title="New session"
-          />
-        }
-        fold={state.fold}
-        items={empty ? [] : chatItemsFor(open.items, state.paths)}
-        notice={
-          // An archived workspace keeps its archived bar, so the notice of a
-          // suspended org shows above it.
-          archived && suspended ? (
-            <SuspendedOrgNotice org={orgs[suspendedOrg]} />
-          ) : (
-            composerNotice(state, workspace)
-          )
-        }
-        problem={problem}
-        starting={startingLogFor(state)}
-        viewer={viewer}
-        viewport={viewport}
-      />
+      <ChatMarks marks={chatMarksOf(state)}>
+        <ChatPane
+          composer={composerFor(state, workspace, viewport)}
+          empty={
+            <EmptyState
+              body={`The agent works on ${workspace.branch}, on the same cloud computer as the other sessions.`}
+              icon={MessageSquarePlus}
+              title="New session"
+            />
+          }
+          fold={state.fold}
+          items={empty ? [] : chatItemsFor(open.items, state.paths)}
+          notice={
+            // An archived workspace keeps its archived bar, so the notice of a
+            // suspended org shows above it.
+            archived && suspended ? (
+              <SuspendedOrgNotice org={orgs[suspendedOrg]} />
+            ) : (
+              composerNotice(state, workspace)
+            )
+          }
+          problem={problem}
+          starting={startingLogFor(state)}
+          viewer={viewer}
+          viewport={viewport}
+        />
+      </ChatMarks>
     </ChatWorkspaces>
   )
   const workspaceHeader = (

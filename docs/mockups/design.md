@@ -385,7 +385,10 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - [The chat](design-chat.md) gives the chips of attached files, the
   Markdown tables and headings of a reply and of a file preview, and the
   fold of the work of a turn. It also gives the data that the chat does
-  not have, and the files that the cloud computer could not read.
+  not have, and the files that the cloud computer could not read. Its
+  [side questions](design-chat.md#side-questions) give the marks in the
+  text of the chat, and the overlay of a side session: a dialog at the
+  right edge of a computer, and a sheet on a phone.
 - [Secrets and Capabilities](design-secrets.md) gives the Secrets tab of
   the org settings, the Capabilities icon beside every message box with
   its control, and the requests and results of the secrets in the chat.

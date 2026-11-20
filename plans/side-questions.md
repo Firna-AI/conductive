@@ -91,6 +91,14 @@ rules.
   that the parent session also works on.
 - The overlay is a dialog on a computer and a sheet on a phone, as
   [the design](../docs/mockups/design.md) says for overlays.
+- On a computer, Ask about this stands just above the middle of the
+  selection, as the selection tools of most editors put it. In a member
+  message at the right of the chat, it lines up with the end of the
+  selection. The prompt field opens under the selection, from its start.
+  On a phone, the button stands above the composer, away from the
+  selection menu of the phone. The first mockup put the button under the
+  end of the selection. On 20 November 2026 the user said that this place
+  looked odd, so it moved.
 - The button says "Ask about this". The docs call the feature a "side
   question", because "preview" already names port previews.
 - A read-only workspace shows the marks and opens the overlay to read. It
@@ -113,24 +121,28 @@ Depends on: none
 Draw the side question flow in the chat catalogue, for a computer and a
 phone.
 
-- [ ] Draw the "Ask about this" button on a selection in an agent answer
+- [x] Draw the "Ask about this" button on a selection in an agent answer
       and in a member message.
-- [ ] Draw the prompt field that opens from the button, with send and
+- [x] Draw the prompt field that opens from the button, with send and
       cancel.
-- [ ] Draw the mark in the parent chat: idle, running, and waiting for
+- [x] Draw the mark in the parent chat: idle, running, and waiting for
       input. Draw overlapping marks and their menu.
-- [ ] Draw the overlay with the side chat, its composer, Stop, and "Open
+- [x] Draw the overlay with the side chat, its composer, Stop, and "Open
       as tab". Draw it as a dialog on a computer and as a sheet on a phone.
-- [ ] Draw the phone selection, so that the phone's own selection menu
+- [x] Draw the phone selection, so that the phone's own selection menu
       does not cover the button.
-- [ ] Draw a mark whose text no longer matches, which covers the whole
+- [x] Draw a mark whose text no longer matches, which covers the whole
       message.
-- [ ] Draw the read-only workspace: marks and a read-only overlay.
-- [ ] Draw the new side tab at the end of the row, with the parent tab
+- [x] Draw the read-only workspace: marks and a read-only overlay.
+- [x] Draw the new side tab at the end of the row, with the parent tab
       still shown under the overlay.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+
+The mockups are under `app/chat/side-questions` and
+`user-flows/ask-a-side-question`. Screenshots are in
+`.context/side-questions/mockups/final/`.
 
 ## Milestone 2: Documentation and protocol
 

@@ -1,0 +1,3 @@
+{
+  "order": ["select", "marks", "overlay", "tab", "read-only"]
+}

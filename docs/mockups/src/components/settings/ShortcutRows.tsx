@@ -4,12 +4,12 @@ import type { BrowserTab } from '../../fixtures/shortcutHosts'
 import { shortcutLimit } from '../../fixtures/shortcuts'
 import { ActionButton, IconButton } from '../common/actions'
 import { KeyChips, type Shortcut } from '../common/KeyChips'
+import { Linked } from '../common/ScreenLink'
 import {
   CancelButton,
   ConflictActions,
   ConflictLine,
   KeyButton,
-  Linked,
   Recorder,
   RefusedLine,
   RemoveButton,

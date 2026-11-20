@@ -1,0 +1,107 @@
+/*
+ * A lighter dim than a dialog that asks a question, as the palette has, so
+ * the chat of the parent session stays readable around the overlay.
+ */
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 6, 8, 0.3);
+}
+
+/*
+ * The layer of the dialog covers the whole app frame, as the layer of a
+ * question does. It holds the dialog at its right edge, under the header
+ * and the tab row of the workspace, so the parent tab and the tab of the
+ * side session stay in view above it.
+ */
+.layer {
+  display: flex;
+  position: absolute;
+  z-index: 40;
+  inset: 0;
+  justify-content: flex-end;
+  padding: calc(2 * var(--ui-bar-height) + 8px) 10px 10px;
+}
+
+/*
+ * The side session as a dialog at the right edge of the app, over the right
+ * column, so the chat of the parent, with the marked text, stays in view
+ * beside it. It holds the chat of a session tab in a card with the full
+ * hairline outline of every card of the app, and its chat scrolls inside
+ * it.
+ */
+.dialog {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  width: 100%;
+  max-width: 480px;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-xl);
+  background: var(--ui-surface);
+  box-shadow: 0 24px 60px -24px var(--ui-shadow);
+  box-sizing: border-box;
+}
+
+/*
+ * The header names the session as its tab does, and holds Open as tab and
+ * the close button at its end.
+ */
+.header {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  min-height: 42px;
+  padding: 6px 8px 6px 14px;
+  border-bottom: 1px solid var(--ui-border);
+  background: var(--ui-bar);
+  box-sizing: border-box;
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: var(--ui-text-md);
+  font-weight: var(--ui-weight-heading);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The chat of the side session fills the rest, with its composer last. */
+.body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/*
+ * On a phone the sheet rises from the bottom and stops under the tab row of
+ * the workspace, so the parent tab and the new tab stay in view above it.
+ * It has the round top corners and the shadow of every sheet.
+ */
+.sheet {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  height: calc(100% - var(--side-sheet-top, 144px));
+  padding-top: 8px;
+  overflow: hidden;
+  border: 1px solid var(--ui-border2);
+  border-bottom: 0;
+  border-radius: var(--ui-radius-xxl) var(--ui-radius-xxl) 0 0;
+  background: var(--ui-surface);
+  box-shadow: 0 -8px 28px var(--ui-shadow);
+  box-sizing: border-box;
+}
+
+.sheet .header {
+  padding: 0 4px 4px 14px;
+  background: transparent;
+}

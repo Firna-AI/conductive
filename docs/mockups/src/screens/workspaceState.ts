@@ -33,6 +33,11 @@ import {
   rowMenuStateKeys,
   rowMenuStateProperties,
 } from './rowMenuState'
+import {
+  sideQuestionStateDefaults,
+  sideQuestionStateKeys,
+  sideQuestionStateProperties,
+} from './sideQuestionState'
 
 /**
  * The state of the workspace screen. Each catalogue entry of the screen is a
@@ -70,6 +75,7 @@ export const workspaceStateSchema = {
     ...feedbackStateKeys,
     ...rowMenuStateKeys,
     ...barStateKeys,
+    ...sideQuestionStateKeys,
   ],
   properties: {
     workspace: { enum: openableWorkspaces },
@@ -235,6 +241,7 @@ export const workspaceStateSchema = {
     ...feedbackStateProperties,
     ...rowMenuStateProperties,
     ...barStateProperties,
+    ...sideQuestionStateProperties,
   },
 } as const
 
@@ -270,6 +277,7 @@ export const readyWorkspace: WorkspaceState = {
   ...feedbackStateDefaults,
   ...rowMenuStateDefaults,
   ...barStateDefaults,
+  ...sideQuestionStateDefaults,
 }
 
 /**

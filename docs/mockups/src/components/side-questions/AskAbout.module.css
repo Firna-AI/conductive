@@ -1,0 +1,118 @@
+/*
+ * A part that floats by a selection. The button stands just above the
+ * selection, and the prompt field hangs under it. Each lies above the other
+ * parts of the chat.
+ */
+.above,
+.below {
+  position: absolute;
+  z-index: 5;
+}
+
+.above {
+  bottom: calc(100% + 6px);
+}
+
+.below {
+  top: calc(100% + 6px);
+}
+
+/* The button stands over the middle of the selection. */
+.middle {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* The prompt field in an answer reaches on from the start of the selection. */
+.start {
+  left: -10px;
+}
+
+/* In a bubble at the right of the chat, each part lines up with its end. */
+.end {
+  right: -10px;
+}
+
+/* A raised button, with the shadow of a menu, so it reads over the text. */
+.float {
+  display: flex;
+  border-radius: var(--ui-radius-md);
+  box-shadow: 0 6px 18px var(--ui-shadow);
+  white-space: nowrap;
+}
+
+/*
+ * On a phone the button stands above the composer, in the middle. The row
+ * takes no room, and it gives back the gap of the footer, so the composer
+ * keeps its place.
+ */
+.phoneRow {
+  position: relative;
+  height: 0;
+  margin-bottom: -10px;
+}
+
+.phoneFloat {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/*
+ * The prompt field by the selection: a small card with the full hairline
+ * outline of every card of the app, and the shadow of a menu.
+ */
+.prompt {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 340px;
+  padding: 8px 8px 6px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-xl);
+  background: var(--ui-composer);
+  box-shadow: 0 10px 28px var(--ui-shadow);
+  box-sizing: border-box;
+  white-space: normal;
+}
+
+/* The line that says where the question goes, then Cancel and Send. */
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hint {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  padding-left: 4px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The quoted text at the top of the sheet of a phone. */
+.quote {
+  margin: 0;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-lg);
+  line-height: 1.5;
+}
+
+/* The field of the sheet, in the box of a message box. */
+.sheetField {
+  padding: 6px 8px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-xl);
+  background: var(--ui-surface);
+}
+
+.sheetHint {
+  margin: -4px 0 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+}

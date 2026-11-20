@@ -1,10 +1,10 @@
-import type { ReactElement, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { CircleAlert, Info, TriangleAlert } from 'lucide-react'
 import type { TabBrowser } from '../../fixtures/shortcutHosts'
 import { ActionButton } from '../common/actions'
 import { classes } from '../common/classes'
 import { KeyChips, spokenShortcut, type Shortcut } from '../common/KeyChips'
-import { ScreenLink } from '../common/ScreenLink'
+import { Linked, ScreenLink } from '../common/ScreenLink'
 import styles from './ShortcutsSections.module.css'
 
 /**
@@ -122,16 +122,6 @@ export function RemoveButton(props: { shortcut: Shortcut; label: string }) {
     >
       Remove
     </ActionButton>
-  )
-}
-
-/** A button that opens a page of the catalogue, or a button alone. */
-export function Linked(props: { to?: string; children: ReactElement }) {
-  if (!props.to) return props.children
-  return (
-    <ScreenLink asChild to={props.to}>
-      {props.children}
-    </ScreenLink>
   )
 }
 

@@ -11,6 +11,7 @@ import { startErrors } from '../fixtures/starting'
 import { ownerSuspendedRefusal } from '../fixtures/startRefusals'
 import type { ActivityStatus } from '../fixtures/workspaces'
 import { isRunning } from './composerFor'
+import { sideActivity } from './sideQuestionModel'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
 
@@ -27,7 +28,8 @@ const otherSessionWorks: ReadonlySet<ConversationKey> = new Set([
 /**
  * The state of the open workspace, for its header and its row: the state
  * of its sandbox, or, on a ready sandbox, whether its agent waits for the
- * user or works. The agent of any session of the workspace counts.
+ * user or works. The agent of any session of the workspace counts, also
+ * the agent of a side session.
  */
 export function activityOf(state: WorkspaceState): ActivityStatus {
   // A refused start leaves the sandbox stopped.
@@ -37,8 +39,10 @@ export function activityOf(state: WorkspaceState): ActivityStatus {
   if (state.overlay === 'restarting') return 'starting'
   if (state.overlay === 'restart-update-failed') return 'starting'
   if (conversations[state.conversation].some(waitsForAnswer)) return 'input'
+  const side = sideActivity(state)
+  if (side === 'input') return 'input'
   const works = isRunning(state) || otherSessionWorks.has(state.conversation)
-  return works ? 'working' : 'ready'
+  return works || side === 'working' ? 'working' : 'ready'
 }
 
 /**
