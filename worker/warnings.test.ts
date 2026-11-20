@@ -32,6 +32,17 @@ it('keeps only the kind, the status, and a known code of a provider error', () =
   })
 })
 
+it('keeps the Boat code that says why a resume failed', () => {
+  expect(
+    errorSummary(new ProviderError('conflict', 409, 'resume_failed')),
+  ).toEqual({
+    kind: 'provider',
+    providerKind: 'conflict',
+    status: 409,
+    code: 'resume_failed',
+  })
+})
+
 it('keeps a known HTTP code and drops arbitrary codes, error names, and messages', () => {
   expect(
     errorSummary(new HttpError(502, 'workspace_start_failed', marker)),
