@@ -4,7 +4,7 @@
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-20, from branch `calummoore/fix-apt-update-fails-after-the-php-ppa-nsja`, the fix for the failed `apt-get update` of image builds.
 - **Location:** `terminalPackagesCommand` in `worker/terminal/service.ts`, which runs `apt-get update` over every apt source of an image. `imagePackagesCommand` and `packagesStep` in `worker/lifecycle/image-packages.ts`, which compose the apt part of each build. `BASE_IMAGE` in `src/shared/base-image.ts`, the base image software that members see. The PPA source file `/etc/apt/sources.list.d/ondrej-ubuntu-php-noble.sources` of the Boat base image, outside this repository.
-- **Reason:** The Label option ends the current build failure, and the user asked to keep the PPA work for a separate task.
+- **Reason:** The Label option ends the current build failure, and the follow-up orchestrator asked to keep the PPA work for a separate task.
 
 - **Terms:**
   - **PPA:** a Personal Package Archive, an apt source on Launchpad that one maintainer publishes. `ondrej/php` publishes PHP packages for Ubuntu.
@@ -29,7 +29,7 @@
   - The fix does not disable, replace, or remove the PPA.
   - The Label option is part of the apt part. So it changes `imagePackagesVersion()` and the app software version. The next build or refresh from each older org image runs the apt part once.
   - On 2026-11-20, the follow-up orchestrator chose the Label option alone and no change to the PPA. It is a design call, not a decision by the user, Cal.
-  - The user asked to record the PPA work as one deferred item, with no work on it in the fix.
+  - The follow-up orchestrator asked to record the PPA work as one deferred item, with no work on it in the fix.
   - Known: the signed Release file marks the PPA as deprecated. The file gives no end date.
   - Not known: when the PPA stops serving files or fixes, if ever. Also not known: the replacement that its maintainer supports, and the plans of Boat for its base image. Nobody has checked these facts.
   - When a source stops serving its Release file, apt reports an error, and `apt-get update` fails. The Label option does not accept that error.
@@ -57,4 +57,4 @@
 - **Wider fix:** F. It stops a change in any apt source that the app's packages do not need from failing the apt part.
 - **Previous examples:** None found in the Git history.
 - **Recommendation:** D. The facts that separate the other options are unknown, and D finds them without a change to any image. F best protects the builds from every other apt source, so the decision after D also weighs F.
-- **Action:** fix after merge, apply D, because the Label option ends the current failure, and the user asked to keep the PPA work for a separate task.
+- **Action:** fix after merge, apply D, because the Label option ends the current failure, and the follow-up orchestrator asked to keep the PPA work for a separate task.
