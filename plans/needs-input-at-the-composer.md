@@ -184,8 +184,9 @@ Contract owners:
   same set of secrets a Deny of each command gives no extra control. The
   options check first recommended D, which the narrowed group made equal
   to B.
-- **Action:** ask the user, because B reverses Cal's decision of 17
-  November 2026 for requests that a card hides.
+- **Outcome:** Cal chose B on 20 November 2026. It replaces his decision
+  of 17 November 2026 for requests that a card hides. A Deny of a request
+  that hides none still ends only its own request.
 
 ## Design
 
