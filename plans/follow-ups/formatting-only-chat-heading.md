@@ -38,7 +38,7 @@
 - **Wider fix:** D. Correct heading blocks keep every later reader from drawing an empty heading.
 - **Previous examples:** None found in the focused history and follow-up search. Commit `712afd8f` added the earlier block-count name check.
 - **Related:**
-  - `plans/follow-ups/markdown-line-endings.md` changes line splitting near the same hash-heading branch. Either fix can go first.
+  - The fix of the closed item [The chat splits Markdown only at line feeds](https://github.com/Firna-AI/conductive/blob/6fa9e75c70f26df8d279521e54ab0f8feab54454/plans/follow-ups/markdown-line-endings.md) changed how `textBlocks` splits the lines that reach the same hash-heading branch. It now takes them from `markdownLines` in `src/markdown/lines.ts`, which splits at CRLF, CR, and LF, so a heading line holds no carriage return. That fix changed no empty check, so D still applies.
   - `plans/follow-ups/chat-quote-end-hides-heading.md` changes `Paragraph.add`. D changes `Paragraph.underline`, so the changes do not overlap.
   - The Markdown library option of the quote follow-up also prevents this case, but reverses a recorded user choice. This work need not wait for it.
   - `plans/follow-ups/message-line-unreadable-name.md` covers the older control-name gap for paragraphs and code blocks. D fixes only heading values.

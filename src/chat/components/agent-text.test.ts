@@ -252,6 +252,9 @@ it('reads an underline under the text of a paragraph as a heading once a line br
     quote: blocksOf('> Note', '---', ''),
     code: blocksOf('    npm ci', '===', ''),
     lazy: blocksOf('- Plan', '===', ''),
+    mixedEndings: textBlocks(
+      'Before.\r\n## Next\r\nBody.\r\rUnderline\n===\rAfter.',
+    ),
   }).toEqual({
     equals: [h(1, 'Review of #482'), p('The tests pass.')],
     hyphens: [h(2, 'Needs your answer')],
@@ -260,5 +263,12 @@ it('reads an underline under the text of a paragraph as a heading once a line br
     quote: [p('> Note ---')],
     code: [p('npm ci ===')],
     lazy: [{ kind: 'ul', items: [[p('Plan ===')]] }],
+    mixedEndings: [
+      p('Before.'),
+      h(2, 'Next'),
+      p('Body.'),
+      h(1, 'Underline'),
+      p('After.'),
+    ],
   })
 })

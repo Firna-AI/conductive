@@ -3,7 +3,7 @@ import {
   setextLevel,
   type HeadingLevel,
 } from '../../markdown/headings'
-import { expandTabs, isBlank, isRule } from '../../markdown/lines'
+import { isBlank, isRule, markdownLines } from '../../markdown/lines'
 import {
   interruptsParagraph,
   listMarker,
@@ -217,6 +217,6 @@ function itemBlocks(
  * list.
  */
 export function textBlocks(text: string): TextBlock[] {
-  const raw = text.split('\n')
-  return parseLines(raw.map(expandTabs), raw, 0).blocks
+  const { raw, expanded } = markdownLines(text)
+  return parseLines(expanded, raw, 0).blocks
 }
