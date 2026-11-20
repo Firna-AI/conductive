@@ -303,6 +303,8 @@ Depends on: 2
 
 Use the `non-ui implementor` action. Keep generated shared types and their generator in one writer's scope.
 
+Integration evidence: `.context/watch-session/m3-main-merge.md` records preserved main changes and the three mockup documentation conflict resolutions.
+
 - [ ] Define the new request, reply, and chat boundary types in `crates/cnd-runner-interface/`. Regenerate `src/shared/generated/` with the repository command.
 - [ ] Replace the mockup's local `WakeEnd` union with the generated terminal type. Build agent input with the single `wakeText` and `wakeWords` source.
 - [ ] Add the fixed Worker route with existing active-turn, stored sender, membership, org, and archive rules. Implement the approved target and repeat semantics.
