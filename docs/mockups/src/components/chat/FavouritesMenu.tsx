@@ -22,13 +22,14 @@ function favouriteWords(choice: AgentChoice): string {
  * other agent opens a new session, as a model of that agent does today.
  */
 function favouriteEntries(
+  list: readonly AgentChoice[],
   choice: AgentChoice,
   allModels: 'closed' | 'open',
   sessionAgent?: AgentKey,
   fastKey?: Shortcut,
 ): MenuEntry[] {
   return [
-    ...favourites.map((favourite): MenuEntry => {
+    ...list.map((favourite): MenuEntry => {
       const opensSession =
         sessionAgent !== undefined && favourite.agent !== sessionAgent
       return {
@@ -51,7 +52,8 @@ function favouriteEntries(
  * submenu of every model: beside the menu on a computer, and in place of
  * the menu on a phone, with Back at its top. `fastKey` marks the menu of
  * a session tab, where the key of Fast mode runs, so its Fast row shows
- * that key on desktop.
+ * that key on desktop. `list` holds the favourites, by default those of
+ * Cal.
  */
 export function FavouritesMenu(props: {
   choice: AgentChoice
@@ -59,6 +61,7 @@ export function FavouritesMenu(props: {
   allModels?: boolean
   sessionAgent?: AgentKey
   fastKey?: boolean
+  list?: readonly AgentChoice[]
 }) {
   const fastHint = useShortcutHint('fast-mode')
   const models = modelEntries(props.choice, props.sessionAgent)
@@ -75,6 +78,7 @@ export function FavouritesMenu(props: {
   const menu = (
     <Menu
       entries={favouriteEntries(
+        props.list ?? favourites,
         props.choice,
         props.allModels ? 'open' : 'closed',
         props.sessionAgent,

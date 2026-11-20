@@ -16,6 +16,19 @@ export const favourites: readonly AgentChoice[] = [
   { agent: 'claude', model: 'Fable 5.1', effort: 'low' },
 ]
 
+/**
+ * The favourites that a new account starts with (decision 1 A of the
+ * model favourites, 20 November 2026). The first is the default choice of
+ * new workspaces. Each agent has a deep and a quick choice.
+ */
+export const startingFavourites: readonly AgentChoice[] = [
+  { agent: 'claude', model: 'Opus 5.5', effort: 'high' },
+  { agent: 'claude', model: 'Opus 5.5', effort: 'max' },
+  { agent: 'claude', model: 'Sonnet 5.5', effort: 'medium' },
+  { agent: 'codex', model: 'GPT-6.1 Sol', effort: 'high' },
+  { agent: 'codex', model: 'GPT-6 Astra', effort: 'medium' },
+]
+
 /** Two choices are the same: the same model, effort, and fast mode. */
 export function sameChoice(a: AgentChoice, b: AgentChoice): boolean {
   return (
