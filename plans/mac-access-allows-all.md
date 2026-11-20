@@ -13,7 +13,8 @@ starts a grant until Stop for that workspace on that Mac. While Mac access
 is on, the control in the Mac app also shows a personal line, "Allow all
 commands on this Mac", that starts or stops that grant. The workspace
 check stays: while Mac access is off, the Worker still refuses every Mac
-command. The change does not touch the 15 minutes, Always allow, or the
+command. A switch-off also ends every grant of the workspace on every Mac,
+and a browser never starts a grant. The change does not touch the 15 minutes, Always allow, or the
 automation follow-up in `plans/follow-ups/automation-turns-mac-commands.md`.
 
 Contract owners:
@@ -99,8 +100,9 @@ on, how does another member stop the prompts on their own Mac? The options:
 
 ### Mac access decision 5: the switch in a browser
 
-Open. It waits for Cal. The options check of 20 November 2026 widened the
-root question, added options D, E, and F, and corrected the background.
+Cal chose A on 20 November 2026. The options check of the same day
+widened the root question, added options D, E, and F, and corrected the
+background. The record of the options as they were asked:
 
 - **Severity:** High. **Effort:** Small (for A).
 - **Source:** Design.
@@ -165,7 +167,8 @@ root question, added options D, E, and F, and corrected the background.
 
 ### Mac access decision 6: a grant after Mac access goes off
 
-Open. It waits for Cal. The options check found it in a design call.
+Cal chose C on 20 November 2026. The options check found it in a design
+call. The record of the options as they were asked:
 
 - **Severity:** High. **Effort:** Medium (for C).
 - **Source:** Design.
@@ -244,6 +247,22 @@ My calls, 20 November 2026, unless a decision above says otherwise:
   after the create returns the ID of the new workspace. A failed start
   shows as a notice in the new workspace, because the control of New
   workspace closes at the create.
+- Decision 6 C: each workspace gets a column `mac_access_period`, an
+  integer that starts at 0. Each write that turns Mac access off adds 1.
+  The migration only adds the column with a default, so the previous
+  Worker keeps working.
+- The broker reads the period at each dispatch, and sends it beside the
+  request: `{ type: 'command.request', request, macAccessPeriod }`. It is
+  not a field of `DeviceCommandRecord`. Reason: an older Mac app ignores
+  a field beside the request, and the record type, the runner, and the
+  stored records stay as they are.
+- The relayed `allow-workspace-until-stop` carries the current period
+  too. A grant from an answer takes the period of its request.
+- The Mac app keeps the period with each grant, also in the saved file
+  for the 15 minutes. A grant covers a request only when the periods
+  match. A saved grant with no period, from an older Mac app, covers no
+  request. Always allow has no period, because it covers one command
+  text in every workspace.
 - Risk: each turn that the member sends in a workspace with a grant can
   run any command on the member's Mac with no question. Text that steers
   the agent, another process in the sandbox, and a message of the session
@@ -304,7 +323,13 @@ Depends on: 2
 - [ ] Accept it in `desktop/src/device/messages.ts`, and apply it in
       `desktop/src/device/settings.ts`. Test the grant, its result, and a
       request that waits.
-- [ ] Apply decision 6, when Cal chose B or C.
+- [ ] Decision 6 C: add the migration of `mac_access_period`, and add 1
+      at each switch-off in `worker/secrets/capabilities-writes.ts`.
+- [ ] Decision 6 C: send the period beside each `command.request` from
+      `worker/devices/broker.ts`, and with the relayed start.
+- [ ] Decision 6 C: keep the period with each grant in
+      `desktop/src/device/permissions.ts` and its saved file. Test that a
+      grant from an older period covers no request.
 - [ ] Add the action to the fake device routes and the dev Mac settings.
 
 ## Milestone 4: The control
@@ -315,7 +340,7 @@ Depends on: 3
 
 - [ ] Add the personal line and the start after the switch to
       `src/shell/capabilities/`. Test the paired page, the browser, a
-      failed start, and an older Mac app.
+      failed start, and the Mac app with no device connection.
 - [ ] Start the grant after a create from New workspace with Mac access
       on, in the paired page.
 - [ ] Stop the grant of this Mac when the switch turns off.
