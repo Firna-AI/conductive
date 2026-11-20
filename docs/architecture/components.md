@@ -114,8 +114,9 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 
 - One Durable Object for each workspace. It runs in Western Europe, near
   Boat's machines and E2B's EU cluster. Each runner message passes between
-  the object and the sandbox, so the object runs near the region of its
-  provider account. Today every account runs in the EU.
+  the object and the sandbox. Every workspace object gets the Western
+  Europe hint, whatever its account. Today every account runs in the EU,
+  so each object is near its sandbox.
   [Regions](../protocol/provider-accounts.md#regions) says that an account
   can run in another region.
 - It holds the open tabs, the connection of the agent runner, and the

@@ -24,7 +24,8 @@ account has an ID:
 - Keep each account configured while an org uses it. No call of an org
   goes to another account. So the calls of an org fail while its account
   is not configured.
-- Each account runs in one region. Both accounts run in the EU today. An
+- Each account runs in one region. Both accounts run in the EU today:
+  Boat in Germany, Finland, and France, and E2B in Belgium. An
   account in another region needs the steps that
   [Regions](protocol/provider-accounts.md#regions) gives before a real org
   runs on it.

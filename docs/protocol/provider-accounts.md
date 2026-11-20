@@ -41,16 +41,13 @@ decision number name dated records, as
   Each account runs its sandboxes and its org images in one region.
 - An account can be in any region. The EU is not a requirement for a
   provider or for an account.
-- A rule that keeps every sandbox in the EU was rejected. Reason: the app
-  chose Western Europe only because Boat's machines run there. No user,
-  contract, or law asked for the EU.
+- A rule that keeps every sandbox in the EU was rejected. Reason: no
+  user, contract, or law needs the EU.
 - A review of a new provider weighs the region as a preference. It counts
   the latency to the users and to the app's servers, and the change to the
   legal pages. A region outside the EU does not rule a provider out.
-- Before a real org runs on an account in a new region, the
-  [Privacy page](../../src/marketing/privacy.ts) names the countries of
-  that region. For a region outside the European Economic Area, the page
-  also names the protection of the transfer from the UK. Until then, the
-  weight of the account stays at 0%, and only test orgs run on it.
-- Today every account runs in the EU. Boat runs in Germany, Finland, and
-  France. E2B's EU cluster runs in Belgium.
+- Before a real org runs on an account in a new region, the Privacy page
+  of the site names the countries of that region. For a region outside
+  the European Economic Area, the page also names the protection of the
+  transfer from the UK. Until then, the weight of the account stays at 0%,
+  and only test orgs run on it.
