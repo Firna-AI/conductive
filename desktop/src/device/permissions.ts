@@ -118,16 +118,6 @@ export function createPermissionStore(dependencies: PermissionDependencies) {
       dependencies.warn()
     }
   }
-  const observePeriod = (workspaceId: string, macAccessPeriod?: number) => {
-    const current = windows.get(workspaceId)
-    if (
-      current &&
-      macAccessPeriod !== undefined &&
-      (current.macAccessPeriod === undefined ||
-        current.macAccessPeriod < macAccessPeriod)
-    )
-      stopWorkspace(workspaceId)
-  }
   const retryRead = () => {
     if (readState !== 'pending') return
     try {
@@ -163,8 +153,7 @@ export function createPermissionStore(dependencies: PermissionDependencies) {
       .map((window) => ({ ...window })),
   })
   const prepareWorkspace = (operation: WorkspacePermissionIncrease) => {
-    const { workspaceId, macAccessPeriod } = operation
-    observePeriod(workspaceId, macAccessPeriod)
+    const { workspaceId } = operation
     return prepareWorkspacePermission(windows, operation, {
       now: clock.now(),
       settings,
@@ -183,21 +172,9 @@ export function createPermissionStore(dependencies: PermissionDependencies) {
   retryRead()
   return {
     retryRead,
-    observePeriod,
     prepareWorkspace,
-    permits(
-      command: string,
-      workspaceId: string,
-      macAccessPeriod?: number,
-    ): boolean {
-      observePeriod(workspaceId, macAccessPeriod)
-      const window = windows.get(workspaceId)
-      return (
-        commands.has(command) ||
-        (macAccessPeriod !== undefined &&
-          window?.macAccessPeriod === macAccessPeriod &&
-          runs(window))
-      )
+    permits(command: string, workspaceId: string): boolean {
+      return commands.has(command) || runs(windows.get(workspaceId))
     },
     allowCommand(command: string): void {
       const nextCommands = new Set([...commands, command])
@@ -214,22 +191,12 @@ export function createPermissionStore(dependencies: PermissionDependencies) {
       return saveRevocation()
     },
     /** Gives the 15 minutes, and saves them. A grant that runs stays. */
-    allowWorkspace(
-      workspaceId: string,
-      workspaceName: string | null,
-      macAccessPeriod?: number,
-    ): void {
-      observePeriod(workspaceId, macAccessPeriod)
-      if (
-        runs(windows.get(workspaceId)) &&
-        windows.get(workspaceId)?.macAccessPeriod === macAccessPeriod
-      )
-        return
+    allowWorkspace(workspaceId: string, workspaceName: string | null): void {
+      if (runs(windows.get(workspaceId))) return
       const window = {
         workspaceId,
         workspaceName,
         expiresAt: clock.now() + WINDOW_MS,
-        macAccessPeriod,
       }
       save(commands, new Map([...windows, [workspaceId, window]]))
       cancelTimer(workspaceId)
@@ -242,13 +209,11 @@ export function createPermissionStore(dependencies: PermissionDependencies) {
     allowWorkspaceUntilStop(
       workspaceId: string,
       workspaceName: string | null,
-      macAccessPeriod?: number,
     ): void {
       prepareWorkspace({
         action: 'start-workspace-until-stop',
         workspaceId,
         workspaceName,
-        macAccessPeriod,
       }).commit()
     },
     stopWorkspace,

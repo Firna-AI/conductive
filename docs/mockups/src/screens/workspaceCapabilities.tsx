@@ -14,56 +14,33 @@ import { paths } from '../paths'
 import { viewerOf } from './sessionStarter'
 import type { WorkspaceState } from './workspaceState'
 
-/** The Mac access of an open control, and whether it is drawn at its end. */
-type OpenState = { macAccess: MacAccessView; atEnd: boolean }
-
 /**
- * Each composer state that draws the Capabilities control open. Every
- * member opens and changes it (secrets decision 8), and each member sees
- * the line of their own Mac (Mac access decision 4). While Mac access is
- * on, the line is checked or unchecked. It is unchecked while the 15
- * minutes run, after the Stop of an uncheck, after a start that failed or
- * that found this Mac not available, and while the page cannot read the
- * settings of this Mac. The states of the line draw the control at its
- * end, where the line is.
+ * Each composer state that draws the Capabilities control open, with the
+ * switch of Mac access in it. Every member opens the control and changes
+ * its secrets (secrets decision 8). In the Mac app, each member also sees
+ * the switch of Mac access of their own Mac (Mac access decision 7). The
+ * switch is on while this Mac has a grant until Stop for the workspace. It
+ * is off without a grant, while the 15 minutes run, after the Stop of a
+ * switch-off, after a start that failed or that found this Mac not
+ * available, and while the page cannot read the settings of this Mac. A
+ * browser shows no Mac access part, so its view of each of these states
+ * shows only the secrets.
  */
-const openStates: Partial<Record<WorkspaceState['composer'], OpenState>> = {
-  capabilities: { macAccess: { on: true, thisMac: 'checked' }, atEnd: false },
-  'capabilities-checked': {
-    macAccess: { on: true, thisMac: 'checked' },
-    atEnd: true,
-  },
-  'capabilities-unchecked': {
-    macAccess: { on: true, thisMac: 'unchecked' },
-    atEnd: true,
-  },
-  'capabilities-fifteen-minutes': {
-    macAccess: { on: true, thisMac: 'fifteen-minutes' },
-    atEnd: true,
-  },
-  'capabilities-stopped': {
-    macAccess: { on: true, thisMac: 'stopped' },
-    atEnd: true,
-  },
-  'capabilities-not-started': {
-    macAccess: { on: true, thisMac: 'not-started' },
-    atEnd: true,
-  },
-  'capabilities-not-reached': {
-    macAccess: { on: true, thisMac: 'not-reached' },
-    atEnd: true,
-  },
-  'capabilities-not-available': {
-    macAccess: { on: true, thisMac: 'not-available' },
-    atEnd: true,
-  },
-  'capabilities-mac-off': { macAccess: { on: false }, atEnd: false },
+const openStates: Partial<Record<WorkspaceState['composer'], MacAccessView>> = {
+  capabilities: 'off',
+  'capabilities-on': 'on',
+  'capabilities-fifteen-minutes': 'fifteen-minutes',
+  'capabilities-stopped': 'stopped',
+  'capabilities-not-started': 'not-started',
+  'capabilities-not-reached': 'not-reached',
+  'capabilities-not-available': 'not-available',
 }
 
 /**
  * The control of Checkout address autocomplete, from its first session: the
  * secrets of Acme with the pre-approved one checked, the approvals of this
- * session and the value for the workspace, each with Remove, and Mac access.
+ * session and the value for the workspace, each with Remove, and in the Mac
+ * app the switch of Mac access.
  */
 function panelOf(
   state: WorkspaceState,
@@ -97,13 +74,10 @@ export function workspaceCapabilities(
   state: WorkspaceState,
   viewport: Viewport,
 ): CapabilitiesControl {
-  const open = openStates[state.composer]
-  if (open === undefined) return { to: paths.capabilities }
+  const macAccess = openStates[state.composer]
+  if (macAccess === undefined) return { to: paths.capabilities }
   if (viewport === 'mobile') return { expanded: true }
-  return {
-    panel: panelOf(state, open.macAccess, false),
-    atEnd: open.atEnd,
-  }
+  return { panel: panelOf(state, macAccess, false) }
 }
 
 /** The open Capabilities control as a sheet, on a phone. */
@@ -111,11 +85,9 @@ export function capabilitiesSheet(
   state: WorkspaceState,
   viewport: Viewport,
 ): ReactNode {
-  const open = openStates[state.composer]
-  if (open === undefined || viewport !== 'mobile') return null
+  const macAccess = openStates[state.composer]
+  if (macAccess === undefined || viewport !== 'mobile') return null
   return (
-    <Sheet title={capabilitiesLabel}>
-      {panelOf(state, open.macAccess, true)}
-    </Sheet>
+    <Sheet title={capabilitiesLabel}>{panelOf(state, macAccess, true)}</Sheet>
   )
 }

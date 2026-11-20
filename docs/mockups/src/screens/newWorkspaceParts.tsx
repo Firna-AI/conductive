@@ -68,15 +68,16 @@ export const newWorkspaceFormProperties = {
   /**
    * The Capabilities control of the icon beside the attach button, closed
    * or drawn open (secrets decision 6). It holds the secrets that the new
-   * workspace pre-approves, and Mac access, which is off in `open`.
-   * `mac-access-on` has Mac access turned on: the Mac app checks the line
-   * of this Mac, so the create starts a grant until Stop on this Mac, and
-   * a browser shows a note in place of the line (Mac access decisions 1 C
-   * and 5 A). `menu` opens the menu of the one button of a phone, which
-   * holds Attach files and Capabilities (secrets decision 16 G). A computer
-   * has no such menu. `search` draws the control open on an org with more
-   * than ten secrets, with a search typed above them. `info` draws it open
-   * with the description of PROD_DATABASE_URL shown under its name.
+   * workspace pre-approves. In the Mac app, it also holds the switch of Mac
+   * access of this Mac, which is off in `open`. `mac-access-on` has the
+   * switch on, so the create starts a grant until Stop on this Mac (Mac
+   * access decision 7). A browser shows no Mac access part, so it draws
+   * `mac-access-on` as `open`. `menu` opens the menu of the one button of a
+   * phone, which holds Attach files and Capabilities (secrets decision
+   * 16 G). A computer has no such menu. `search` draws the control open on
+   * an org with more than ten secrets, with a search typed above them.
+   * `info` draws it open with the description of PROD_DATABASE_URL shown
+   * under its name.
    */
   capabilities: {
     enum: ['closed', 'open', 'mac-access-on', 'menu', 'search', 'info'],

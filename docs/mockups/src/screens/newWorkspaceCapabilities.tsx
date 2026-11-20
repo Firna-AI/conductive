@@ -33,17 +33,14 @@ function secretsOf(state: DraftState) {
 }
 
 /**
- * The Mac access of the draft while the control is open: off, as a new
- * workspace starts, or turned on. A switch that turns on in the Mac app
- * checks the line of this Mac, so the create also starts a grant until
- * Stop on this Mac (Mac access decision 1 C).
+ * The switch of Mac access of the draft while the control is open: off, as
+ * a new workspace starts, or turned on, so that the create starts a grant
+ * until Stop on this Mac (Mac access decision 7). Only the Mac app shows
+ * the switch.
  */
 function macAccessOf(state: DraftState): MacAccessView | undefined {
   if (!isOpen(state)) return undefined
-  if (state.capabilities === 'mac-access-on') {
-    return { on: true, thisMac: 'checked' }
-  }
-  return { on: false }
+  return state.capabilities === 'mac-access-on' ? 'on' : 'off'
 }
 
 /**

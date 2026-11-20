@@ -62,9 +62,7 @@ one.
   tooltip. On a computer it stands right after the attach button in the bar
   of every composer and in the footer of the New workspace dialog. A press
   opens the control, which a computer draws above the icon, as an open menu
-  of the app. A long control scrolls inside it. A view runs no script, so
-  `atEnd` draws the control scrolled to its end, where Mac access is, for
-  the states of the line of this Mac.
+  of the app. A long control scrolls inside it.
 - A phone has one + button in place of the attach button and the
   Capabilities icon, from `ComposerMenu` in `src/components/chat/`. Its
   menu opens above it, as the menu of the model picker does, with Attach
@@ -80,9 +78,9 @@ one.
   sheet.
 - `CapabilitiesPanel` draws the control: its title, a line about what it
   holds, then each part. A part has a title in the label font, a control
-  at the end of the title, a hint, and its content. Secrets and Mac access
-  are the parts for now. A later feature, such as MCP servers, adds a part
-  to the list that `capabilityParts` gives.
+  at the end of the title, a hint, and its content. Secrets and, in the
+  Mac app, Mac access are the parts for now. A later feature, such as MCP
+  servers, adds a part to the list that `capabilityParts` gives.
 - The Secrets part has no hint line. It lists each secret of the org with
   a checkbox, which pre-approves it for the workspace. `SecretOption`
   draws each row, in the app too. The description shows only in the info
@@ -104,27 +102,27 @@ one.
   allows, by a check or for all agents, does not show. The Secrets part
   also lists each value for this workspace, with who gave it. Each has
   Remove. `GrantList` draws them, and a group without grants hides.
-- The Mac access part is a switch at the end of its title, off by default.
-- `OpenCapabilities` draws the open control with the words of its shell,
+- `OpenCapabilities` draws the open control with the parts of its shell,
   the Mac app or a browser, from `useMacApp`. It does not read a pairing of
   this Mac, because the Mac app with no device connection reads no device
-  either (Mac access decisions of 20 November 2026).
-- `MacAccessPart.tsx` draws the Mac access part. In the Mac app, while the
-  switch is on, the line Allow all commands on this Mac shows under it: a
-  checkbox with its hint, as each secret has. Each member sees the line of
-  their own Mac. It is checked while this Mac has a grant until Stop for
-  the workspace, and unchecked otherwise. While the 15 minutes run, it
-  stays unchecked, and its hint gives their time left. While the page
-  cannot read the settings of this Mac, the box is off, and the hint says
-  that this Mac is not available, unless a result under the line already
-  says why. `ChangeOutcome` shows the result of the last start or Stop
-  under the line: Not started and the cause of a start that failed, or the
-  result of the Stop of an uncheck. While the switch is off, the hint of
-  the Mac app adds that turning it on also allows all commands on this
-  Mac.
-- A browser shows a note with the Laptop icon of lucide in place of the
-  line. It says to use Allow all commands on this Mac in the Mac app.
-  `BrowserNote.tsx` draws it, for the mockups and the app.
+  either (Mac access decisions of 20 November 2026). A browser shows no Mac
+  access part, because only the page of the Mac app on that Mac starts a
+  grant (Mac access decision 7 of 21 November 2026).
+- `MacAccessPart.tsx` draws the Mac access part of the Mac app: one switch
+  at the end of its title, with no hint. Each member sees the switch of
+  their own Mac. It is on while this Mac has a grant until Stop for the
+  workspace, and off otherwise, also while the 15 minutes run, where the
+  bar gives the time left. On starts the grant, and off stops it, as Stop
+  does. While the page cannot read the settings of this Mac, the switch is
+  off and disabled, and the words under it say that this Mac is not
+  available, unless a result already says why. `ChangeOutcome` shows the
+  result of the last start or Stop under the switch: Not started and the
+  cause of a start that failed, or the result of the Stop of a switch-off.
+- In New workspace, the switch is a choice of the draft, and it starts
+  off. The create starts the grant only while the switch is on.
+- `BrowserNote.tsx` draws the note of a browser from before Mac access
+  decision 7. No mockup draws it. The app draws it until it hides the Mac
+  access part in a browser.
 - `StartFailedNotice` draws the notice over the composer of a new workspace
   whose grant did not start after the create: the cause, and Try again.
 - The control of an automation has the Secrets part only, from
@@ -213,6 +211,7 @@ one.
   beside it says whether the command runs or ran. A denied run says who
   denied it and that the command did not run. When its turn ends, the card
   folds with the work of the turn.
-- A Mac command that a workspace refused, because a member turned Mac
-  access off, shows its card with "Mac access off" and the reason.
+- A Mac command that a workspace refused while its Mac access was off,
+  before agents could always ask (Mac access decision 7), keeps its card
+  with "Mac access off" and the reason.
 - `secretRunCopy.ts` holds the words of the requests and the results.

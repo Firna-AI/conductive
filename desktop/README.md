@@ -79,6 +79,8 @@ The Dock can reopen the window.
 ## Device commands
 
 See [Mac device commands](src/device/README.md) for the connection, local permissions, execution, and focused checks.
+The connected Mac applies its local permissions to command requests.
+The stored workspace Mac access field does not block requests or grant starts.
 
 ## Window integration
 

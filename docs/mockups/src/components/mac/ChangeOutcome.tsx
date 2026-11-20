@@ -25,7 +25,7 @@ const tones = {
  * control, so a change that the Mac did not save or did not make never goes
  * unseen. When the change took its control away, such as the row of a
  * removed command, `action` repeats it. A result under its own control,
- * such as the line of this Mac in Capabilities, names no subject.
+ * such as the switch of Mac access in Capabilities, names no subject.
  */
 export function ChangeOutcome(props: {
   status: ChangeStatus

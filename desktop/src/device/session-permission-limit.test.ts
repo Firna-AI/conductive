@@ -10,7 +10,6 @@ it('refuses an oversized Always allow save and lets a fresh request use Allow on
   const saved = 'é'.repeat(449_998)
   test.permissions.allowCommand(saved)
   test.session.receive({
-    macAccessPeriod: 0,
     type: 'command.request',
     request: test.command(),
   })
@@ -34,7 +33,6 @@ it('refuses an oversized Always allow save and lets a fresh request use Allow on
   expect(test.permissions.settings().alwaysAllowedCommands).toEqual([saved])
   const fresh = test.command({ requestId: 'request-two' })
   test.session.receive({
-    macAccessPeriod: 0,
     type: 'command.request',
     request: fresh,
   })
@@ -61,7 +59,6 @@ it('refuses an oversized Always allow save and lets a fresh request use Allow on
     },
   })
   test.session.receive({
-    macAccessPeriod: 0,
     type: 'command.request',
     request: test.command({ requestId: 'request-three' }),
   })

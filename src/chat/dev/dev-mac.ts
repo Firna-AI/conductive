@@ -203,7 +203,6 @@ function answer(
             workspaceId: request.workspaceId,
             workspaceName: request.workspaceName,
             expiresAt,
-            macAccessPeriod: 0,
           },
         ],
       }

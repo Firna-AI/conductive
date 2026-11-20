@@ -98,29 +98,26 @@ export const temporaryTabStates = [
  * where the pick goes, then the picked file at the caret.
  *
  * The `capabilities` states open the Capabilities control of the icon
- * beside the attach button (secrets decision 8): with Mac access on, and
- * after a member turned it off. A computer draws it above the icon, and a
- * phone as a sheet. `menu` opens the menu of the one button of a phone,
- * which holds Attach files and Capabilities (secrets decision 16 G). A
- * computer has no such menu, so it draws the composer as it is.
+ * beside the attach button (secrets decision 8). A computer draws it above
+ * the icon, and a phone as a sheet. `menu` opens the menu of the one button
+ * of a phone, which holds Attach files and Capabilities (secrets decision
+ * 16 G). A computer has no such menu, so it draws the composer as it is.
  *
- * While Mac access is on, the Mac app shows the line of this Mac, and a
- * browser a note in its place (Mac access decisions 4 A and 5 A). The line
- * is checked in `capabilities` and `capabilities-checked`, because this Mac
- * has a grant until Stop for the workspace. It is unchecked in the other
- * states of the line: `capabilities-unchecked`, and
- * `capabilities-fifteen-minutes`, whose hint gives the time left of the 15
- * minutes. `capabilities-stopped` has the result of the Stop of an
- * uncheck. `capabilities-not-started` has a start that failed, and
- * `capabilities-not-reached` a start that found this Mac not available
- * (decision 3 A). In `capabilities-not-reached` and
+ * Only the Mac app shows the Mac access part, with the switch of this Mac
+ * (Mac access decision 7). A browser shows no Mac access part, so its view
+ * of each state of the switch shows only the secrets. The switch is on in
+ * `capabilities-on`, because this Mac has a grant until Stop for the
+ * workspace. It is off in each other state. This Mac has no grant in
+ * `capabilities`. In `capabilities-fifteen-minutes`, the 15 minutes run,
+ * and the bar gives their time left. `capabilities-stopped` has the result
+ * of the Stop of a switch-off. `capabilities-not-started` has a start that
+ * failed, and `capabilities-not-reached` a start that found this Mac not
+ * available (Mac access decision 3 A). In `capabilities-not-reached` and
  * `capabilities-not-available`, the page cannot read the settings of this
- * Mac, so the box is off. `capabilities` and `capabilities-mac-off` draw
- * the control from its top, as it opens. The other states of the line draw
- * it scrolled to its end, where the line is, as after a change of Mac
- * access. `grant-not-started` and `grant-not-reached` draw the notice over
- * the composer of a new workspace whose grant did not start after the
- * create. Only the Mac app starts a grant, so only its screens use them.
+ * Mac, so the switch is disabled. `grant-not-started` and
+ * `grant-not-reached` draw the notice over the composer of a new workspace
+ * whose grant did not start after the create. Only the Mac app starts a
+ * grant, so only its screens use them.
  */
 export const composerStates = [
   'empty',
@@ -158,14 +155,12 @@ export const composerStates = [
   'dropped-folder',
   'unreadable-folder',
   'capabilities',
-  'capabilities-checked',
-  'capabilities-unchecked',
+  'capabilities-on',
   'capabilities-fifteen-minutes',
   'capabilities-stopped',
   'capabilities-not-started',
   'capabilities-not-reached',
   'capabilities-not-available',
-  'capabilities-mac-off',
   'grant-not-started',
   'grant-not-reached',
   'menu',

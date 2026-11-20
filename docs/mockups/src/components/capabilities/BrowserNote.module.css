@@ -1,0 +1,20 @@
+/*
+ * The note of a browser, in the place of the line of this Mac, from before
+ * Mac access decision 7. No mockup draws it.
+ */
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 2px 0 0;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+}
+
+/* The icon centres on the first line of the note. */
+.noteIcon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--ui-muted);
+}

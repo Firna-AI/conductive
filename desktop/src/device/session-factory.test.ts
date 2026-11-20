@@ -6,14 +6,13 @@ it('recovers saved permissions after a failed read and failed addition without l
   const test = deviceLifecycleFixture()
   const saved = test.openPermissions()
   saved.allowCommand('printf saved')
-  saved.allowWorkspace('workspace-one', 'Checkout address', 0)
+  saved.allowWorkspace('workspace-one', 'Checkout address')
   saved.dispose()
   const read = vi.spyOn(test.files, 'read').mockImplementationOnce(() => {
     throw new Error('/private/account/permission-file: unavailable')
   })
   await test.start()
   test.receive({
-    macAccessPeriod: 0,
     type: 'command.request',
     request: test.command({
       requestId: 'before-read-recovery',
@@ -34,7 +33,6 @@ it('recovers saved permissions after a failed read and failed addition without l
     command: 'printf added',
   })
   test.receive({
-    macAccessPeriod: 0,
     type: 'command.request',
     request: failedAddition,
   })
@@ -57,7 +55,6 @@ it('recovers saved permissions after a failed read and failed addition without l
   await test.connection.wake()
   test.pair()
   test.receive({
-    macAccessPeriod: 0,
     type: 'command.request',
     request: test.command({
       requestId: 'after-read-recovery',
@@ -66,7 +63,6 @@ it('recovers saved permissions after a failed read and failed addition without l
     }),
   })
   test.receive({
-    macAccessPeriod: 0,
     type: 'command.request',
     request: test.command({
       requestId: 'workspace-after-recovery',
@@ -86,7 +82,6 @@ it('recovers saved permissions after a failed read and failed addition without l
     command: 'printf added',
   })
   test.receive({
-    macAccessPeriod: 0,
     type: 'command.request',
     request: addition,
   })
@@ -112,7 +107,6 @@ it('recovers saved permissions after a failed read and failed addition without l
       {
         workspaceId: 'workspace-one',
         workspaceName: 'Checkout address',
-        macAccessPeriod: 0,
         expiresAt: 1_800_000_900_000,
       },
     ],
@@ -141,7 +135,7 @@ it.each([
     const saved = test.openPermissions()
     if (operation.action === 'remove-command')
       saved.allowCommand('printf saved')
-    else saved.allowWorkspace('workspace-one', 'Checkout address', 0)
+    else saved.allowWorkspace('workspace-one', 'Checkout address')
     saved.dispose()
     vi.spyOn(test.files, 'read').mockImplementationOnce(() => {
       throw new Error('/private/account/permission-file: unavailable')
@@ -176,11 +170,11 @@ it.each([
       requestId: 'after-reconnect',
       command: 'printf saved',
     })
-    test.receive({ macAccessPeriod: 0, type: 'command.request', request })
+    test.receive({ type: 'command.request', request })
     expect(test.processes).toHaveLength(0)
     expect(test.notify).toHaveBeenCalledWith(request)
     const restored = test.openPermissions()
-    expect(restored.permits('printf saved', 'workspace-one', 0)).toBe(true)
+    expect(restored.permits('printf saved', 'workspace-one')).toBe(true)
     restored.dispose()
     expect(test.warn).toHaveBeenCalledTimes(2)
     expect(test.invalid).not.toHaveBeenCalled()

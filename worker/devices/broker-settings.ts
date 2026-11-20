@@ -1,30 +1,6 @@
-import type {
-  DeviceSettings,
-  DeviceSettingsOperation,
-} from '../../src/shared/device'
+import type { DeviceSettingsOperation } from '../../src/shared/device'
 import { HttpError } from '../http'
 import type { DeviceConnection, SettingsWaiter } from './broker-types'
-import { workspaceMacAccessPeriods } from './mac-access-data'
-
-export async function currentDeviceSettings(
-  db: D1Database,
-  settings: DeviceSettings,
-): Promise<DeviceSettings> {
-  const periods = await workspaceMacAccessPeriods(
-    db,
-    settings.workspaceWindows.map(({ workspaceId }) => workspaceId),
-  )
-  return {
-    ...settings,
-    workspaceWindows: settings.workspaceWindows.filter((window) => {
-      const current = periods.get(window.workspaceId)
-      return (
-        window.macAccessPeriod === undefined ||
-        (current !== undefined && window.macAccessPeriod >= current)
-      )
-    }),
-  }
-}
 
 export function relayDeviceSettings(
   settings: Map<string, SettingsWaiter>,

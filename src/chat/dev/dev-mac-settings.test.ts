@@ -40,7 +40,6 @@ it('starts an in-memory development grant with done and runs waiting commands ev
         workspaceId: FAKE_IDS.workspace,
         workspaceName: 'Checkout address autocomplete',
         expiresAt: null,
-        macAccessPeriod: 0,
       },
     ])
     expect(backend.mac.requests.map(({ state }) => state)).toEqual([

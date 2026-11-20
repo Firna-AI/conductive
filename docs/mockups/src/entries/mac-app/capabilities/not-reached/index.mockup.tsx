@@ -5,9 +5,9 @@ import { macAppSchema } from '../../../../screens/macAppState'
 export const macCapabilitiesNotReached = defineScreen({
   title: 'Mac not reached',
   description:
-    'Cal turned Mac access on while this Mac had no device connection, such as during a reconnect. The switch saved, and the start did not reach the Mac. The page cannot read the settings of this Mac, so the line is unchecked and off. Its result says Not started: this Mac is not available, so each command still asks first. The hint keeps what the line allows, because the result already says why the line is off. Once this Mac connects, a check of the line tries the start again.',
+    'Cal turned the switch on just as this Mac lost its device connection, such as at a reconnect, so the start did not reach the Mac. The page cannot read the settings of this Mac now, so the switch is off and disabled. Its result says Not started: this Mac is not available, so each command still asks first. Once this Mac connects, turning the switch on tries the start again.',
   rationale:
-    'Mac access decision 3 A (20 November 2026): the switch still saves, and the control says that the Mac was not reached and still asks before commands. A grant that the Worker keeps for the next connection, and a switch that refuses to turn on until the Mac is reachable, were rejected. The design of 20 November 2026: while the page cannot read the settings of this Mac, the line shows unchecked and disabled, so it never claims a grant that may not exist.',
+    'Mac access decision 3 A (20 November 2026): the control says that the Mac was not reached and still asks before commands. A grant that the Worker keeps for the next connection was rejected, because the server would store a grant. The design of 20 November 2026: while the page cannot read the settings of this Mac, the switch shows off and disabled, so it never claims a grant that may not exist.',
   relatedDocs: [],
   propSchema: macAppSchema,
   props: {

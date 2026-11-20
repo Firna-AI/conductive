@@ -24,8 +24,8 @@ function setup() {
 it('saves a running grant at Mac now plus 15 minutes and keeps its workspace name', () => {
   const test = setup()
   const store = test.open()
-  store.allowWorkspace('one', 'First workspace', 0)
-  store.allowWorkspace('two', 'Second workspace', 0)
+  store.allowWorkspace('one', 'First workspace')
+  store.allowWorkspace('two', 'Second workspace')
   test.advance(300_000)
   expect(
     store
@@ -36,13 +36,11 @@ it('saves a running grant at Mac now plus 15 minutes and keeps its workspace nam
     {
       workspaceId: 'one',
       workspaceName: 'First workspace',
-      macAccessPeriod: 0,
       expiresAt: 1_800_001_200_000,
     },
     {
       workspaceId: 'two',
       workspaceName: 'Second workspace',
-      macAccessPeriod: 0,
       expiresAt: 1_800_000_900_000,
     },
   ]
@@ -53,7 +51,7 @@ it('saves a running grant at Mac now plus 15 minutes and keeps its workspace nam
 it('fails Extend for an ended or absent grant even before its old timer fires', () => {
   const test = setup()
   const store = test.open()
-  store.allowWorkspace('one', null, 0)
+  store.allowWorkspace('one', null)
   const timers = [...test.timers]
   const contents = [...test.contents]
   vi.spyOn(test.clock, 'now').mockReturnValue(1_800_000_900_000)
@@ -67,7 +65,7 @@ it('fails Extend for an ended or absent grant even before its old timer fires', 
       message:
         'The 15 minutes already ended. Approve a request again to allow all commands.',
     })
-    expect(store.permits('anything', workspaceId, 0)).toBe(false)
+    expect(store.permits('anything', workspaceId)).toBe(false)
   }
   expect(store.settings().workspaceWindows).toEqual([])
   expect([...test.timers]).toEqual(timers)
@@ -77,7 +75,7 @@ it('fails Extend for an ended or absent grant even before its old timer fires', 
 it('keeps the old end and timer when saving Extend fails', () => {
   const test = setup()
   const store = test.open()
-  store.allowWorkspace('one', 'First workspace', 0)
+  store.allowWorkspace('one', 'First workspace')
   test.advance(300_000)
   const settings = store.settings()
   const timers = [...test.timers]
@@ -102,14 +100,14 @@ it('keeps the old end and timer when saving Extend fails', () => {
   expect(test.warn).toHaveBeenCalledOnce()
   test.files.write = write
   test.advance(600_000)
-  expect(store.permits('anything', 'one', 0)).toBe(false)
+  expect(store.permits('anything', 'one')).toBe(false)
   expect(test.timers.size).toBe(0)
 })
 
 it('leaves an until-Stop grant in memory when Extend is requested', () => {
   const test = setup()
   const store = test.open()
-  store.allowWorkspaceUntilStop('one', 'First workspace', 0)
+  store.allowWorkspaceUntilStop('one', 'First workspace')
   const write = vi.spyOn(test.files, 'write')
   expect(
     store
@@ -123,11 +121,10 @@ it('leaves an until-Stop grant in memory when Extend is requested', () => {
     {
       workspaceId: 'one',
       workspaceName: 'First workspace',
-      macAccessPeriod: 0,
       expiresAt: null,
     },
   ])
-  expect(store.permits('anything', 'one', 0)).toBe(true)
+  expect(store.permits('anything', 'one')).toBe(true)
   expect(write).not.toHaveBeenCalled()
   expect(test.timers.size).toBe(0)
 })
@@ -136,20 +133,20 @@ it('replaces the old timer and removes the saved grant at the extended end', () 
   const test = setup()
   const store = test.open()
   const write = vi.spyOn(test.files, 'write')
-  store.allowWorkspace('one', null, 0)
+  store.allowWorkspace('one', null)
   test.advance(300_000)
   store
     .prepareWorkspace({ action: 'extend-workspace', workspaceId: 'one' })
     .commit()
   write.mockClear()
   test.advance(600_000)
-  expect(store.permits('anything', 'one', 0)).toBe(true)
+  expect(store.permits('anything', 'one')).toBe(true)
   expect(test.timers.size).toBe(1)
   expect(write).not.toHaveBeenCalled()
   test.advance(299_999)
-  expect(store.permits('anything', 'one', 0)).toBe(true)
+  expect(store.permits('anything', 'one')).toBe(true)
   test.advance(1)
-  expect(store.permits('anything', 'one', 0)).toBe(false)
+  expect(store.permits('anything', 'one')).toBe(false)
   expect(test.timers.size).toBe(0)
   expect(write).toHaveBeenCalledOnce()
   expect(test.open().settings().workspaceWindows).toEqual([])

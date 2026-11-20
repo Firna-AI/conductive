@@ -3,7 +3,6 @@ import {
   type WorkspaceCapabilitiesResponse,
 } from '../../src/shared/secrets'
 import type { AppDependencies, AppEnv } from '../env'
-import { deviceCall } from '../devices/internal'
 import { requireActiveOrg } from '../data/user-access'
 import { requireOrgMember } from '../members/permissions'
 import {
@@ -14,7 +13,6 @@ import { readCapabilitiesChange } from '../secrets/capabilities-input'
 import { updateWorkspaceCapabilities } from '../secrets/capabilities-writes'
 import type { RequestContext } from '../security/gate'
 import { workspaceChildId } from './workspace-path'
-import { workspaceBinding } from './workspace-state'
 
 export async function capabilitiesRoute(
   request: Request,
@@ -45,14 +43,6 @@ export async function capabilitiesRoute(
     })
     await requireOrgMember(env.DB, orgId, userId)
     await requireActiveOrg(env.DB, orgId)
-    if (change.macAccess === false) {
-      await deviceCall(env, workspaceId, {
-        type: 'workspace.mac-access-changed',
-      })
-      await workspaceBinding(env)
-        .getByName(workspaceId)
-        .publishWorkspaceMetadata(orgId, workspaceId)
-    }
   }
   return Response.json({
     capabilities: await readWorkspaceCapabilities(env.DB, orgId, workspaceId),

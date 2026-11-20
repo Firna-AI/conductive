@@ -80,7 +80,6 @@ export function fakeDeviceRoutes(
             workspaceId,
             workspaceName: workspace?.name ?? null,
             expiresAt: null,
-            macAccessPeriod: 0,
           },
         ],
       })

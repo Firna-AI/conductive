@@ -10,12 +10,10 @@ export type WorkspacePermissionIncrease =
       action: 'start-workspace-until-stop'
       workspaceId: string
       workspaceName: string | null
-      macAccessPeriod?: number
     }
   | {
       action: 'keep-workspace' | 'extend-workspace'
       workspaceId: string
-      macAccessPeriod?: number
     }
 
 function preparePermissionWindow(
@@ -26,14 +24,12 @@ function preparePermissionWindow(
   if (operation.action === 'start-workspace-until-stop')
     return {
       window:
-        current?.expiresAt === null &&
-        current.macAccessPeriod === operation.macAccessPeriod
+        current?.expiresAt === null
           ? current
           : {
               workspaceId: operation.workspaceId,
               workspaceName: operation.workspaceName,
               expiresAt: null,
-              macAccessPeriod: operation.macAccessPeriod,
             },
       outcome: { status: 'done' },
     }
@@ -46,12 +42,7 @@ function preparePermissionWindow(
         message: 'This workspace already allows all commands until you stop.',
       },
     }
-  if (
-    !current ||
-    (current.expiresAt !== null && current.expiresAt <= now) ||
-    (operation.macAccessPeriod !== undefined &&
-      current.macAccessPeriod !== operation.macAccessPeriod)
-  )
+  if (!current || (current.expiresAt !== null && current.expiresAt <= now))
     return {
       window: current,
       outcome: {

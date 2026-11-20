@@ -1,17 +1,10 @@
-import { useId, type ReactNode } from 'react'
 import { Switch } from '@firna/ui/switch'
-import { allowAllLeft, failedMessage, stoppedResult } from '../../fixtures/mac'
+import { failedMessage, stoppedResult } from '../../fixtures/mac'
 import { noop } from '../../noop'
 import { useControlSizes } from '../common/touch'
 import { ChangeOutcome, type ChangeStatus } from '../mac/ChangeOutcome'
-import { BrowserNote } from './BrowserNote'
 import { macAccessWords, thisMacWords } from './capabilitiesCopy'
 import type { CapabilityPart } from './CapabilitiesPanel'
-import check from '../common/CheckOption.module.css'
-import styles from './Capabilities.module.css'
-
-/** Where the control shows: in the Mac app, or in a browser. */
-export type Shell = 'mac-app' | 'browser'
 
 /**
  * A start of the grant until Stop that failed: the Mac did not start it,
@@ -20,45 +13,34 @@ export type Shell = 'mac-app' | 'browser'
 export type FailedStart = 'not-started' | 'not-reached'
 
 /**
- * The line of this Mac: checked while this Mac has a grant until Stop for
- * the workspace, and unchecked otherwise. `fifteen-minutes` is the line
- * while the 15 minutes of the workspace run, and `stopped` is the line
- * after an uncheck, which is a Stop. After a start that failed, the line
- * stays unchecked and shows the cause. `not-available` is the line while
- * the page cannot read the settings of this Mac, such as during a
- * reconnect, and `not-reached` is the same line after a start that found
- * this Mac not available. In New workspace, checked means that the create
- * starts the grant.
+ * The switch of Mac access, which is personal (Mac access decision 7). It
+ * is `on` while this Mac has a grant until Stop for the workspace, and off
+ * in each other state. `fifteen-minutes` is the switch while the 15
+ * minutes of the workspace run, and `stopped` is the switch after a
+ * switch-off, which is a Stop. After a start that failed, the switch shows
+ * the cause. `not-available` is the switch while the page cannot read the
+ * settings of this Mac, such as during a reconnect, and `not-reached` is
+ * the same switch after a start that found this Mac not available. In New
+ * workspace, `on` means that the create starts the grant.
  */
-type ThisMacLine =
-  | 'checked'
-  | 'unchecked'
-  | 'fifteen-minutes'
-  | 'stopped'
-  | 'not-available'
-  | FailedStart
+export type MacAccessView =
+  'on' | 'off' | 'fifteen-minutes' | 'stopped' | 'not-available' | FailedStart
 
-/** Mac access of the workspace, and the line of this Mac while it is on. */
-export type MacAccessView = { on: false } | { on: true; thisMac: ThisMacLine }
+/** The result under the switch: a start that failed, or a Stop. */
+type SwitchResult = { status: ChangeStatus; title: string; message: string }
 
-/** New workspace, or a workspace that exists. */
-type Place = keyof typeof thisMacWords.lineHint
-
-/** The result under the line: a start that failed, or a Stop. */
-type LineResult = { status: ChangeStatus; title: string; message: string }
-
-/** The cause of each start that failed, which the line and the notice show. */
+/** The cause of each start that failed, which the part and the notice show. */
 export const startCauses: Readonly<Record<FailedStart, string>> = {
   'not-started': failedMessage,
   'not-reached': thisMacWords.notAvailable,
 }
 
 /**
- * The result under the line in each state that shows one: Not started with
- * the cause of a start that failed, or the Stop of an uncheck that the Mac
- * made and saved.
+ * The result under the switch in each state that shows one: Not started
+ * with the cause of a start that failed, or the Stop of a switch-off that
+ * the Mac made and saved.
  */
-const lineResults: Partial<Record<ThisMacLine, LineResult>> = {
+const switchResults: Partial<Record<MacAccessView, SwitchResult>> = {
   stopped: { status: 'done', ...stoppedResult },
   'not-started': {
     status: 'failed',
@@ -73,108 +55,52 @@ const lineResults: Partial<Record<ThisMacLine, LineResult>> = {
 }
 
 /**
- * Whether the page cannot read the settings of this Mac. The box is then
- * off and unchecked, so the line never claims a grant that may not exist.
+ * Whether the page cannot read the settings of this Mac. The switch is
+ * then off and disabled, so it never claims a grant that may not exist.
  */
-function unread(line: ThisMacLine): boolean {
-  return line === 'not-available' || line === 'not-reached'
+function unread(view: MacAccessView): boolean {
+  return view === 'not-available' || view === 'not-reached'
 }
 
-/**
- * The hint of the line: the time left of the bar while the 15 minutes run,
- * and that this Mac is not available while the page cannot read its
- * settings, unless a result under the line already says why. Otherwise,
- * what the line allows.
- */
-function hintOf(line: ThisMacLine, place: Place): string {
-  if (line === 'fifteen-minutes') {
-    return thisMacWords.fifteenMinutesHint(allowAllLeft)
-  }
-  if (unread(line) && lineResults[line] === undefined) {
-    return thisMacWords.notAvailableHint
-  }
-  return thisMacWords.lineHint[place]
-}
-
-/** The switch of Mac access, which saves at once. */
-function MacAccessSwitch(props: { on: boolean }) {
+/** The switch of this Mac, which starts or stops the grant at once. */
+function MacAccessSwitch(props: { view: MacAccessView }) {
   const { field } = useControlSizes()
   return (
     <Switch
       accessibilityLabel={macAccessWords.title}
+      disabled={unread(props.view)}
       onValueChange={noop}
       size={field === 'lg' ? 'md' : 'sm'}
-      value={props.on}
+      value={props.view === 'on'}
     />
   )
 }
 
 /**
- * The line of this Mac, which only the Mac app shows, while Mac access is
- * on (Mac access decisions 1 C and 4 A). Each member sees the state of
- * their own Mac. A check starts the grant until Stop on this Mac, and keeps
- * running 15 minutes until Stop. An uncheck stops the grant, as Stop does.
- * The result of the last start or Stop shows under the line until the next
- * change of the line. The line stays, so the result needs no Try again.
+ * The Mac access part, which only the Mac app shows (Mac access decision
+ * 7): one switch, with no hint. Each member sees the switch of their own
+ * Mac. On starts a grant until Stop of the workspace on this Mac, also
+ * while the 15 minutes run, and off stops it, as Stop does. Agents can
+ * always ask to run commands on the Mac, so the part shows only short
+ * results. The result of the last start or Stop shows under the switch
+ * until the next start or Stop. The switch stays, so the result needs no
+ * Try again. While the page cannot read the settings of this Mac, the
+ * part says that this Mac is not available, unless a result already says
+ * why.
  */
-function ThisMacCheck(props: { line: ThisMacLine; place: Place }) {
-  const hint = useId()
-  const { line } = props
-  const result = lineResults[line]
-  return (
-    <div className={styles.line}>
-      <label className={check.option}>
-        <input
-          aria-describedby={hint}
-          checked={line === 'checked'}
-          className={check.box}
-          disabled={unread(line)}
-          onChange={noop}
-          type="checkbox"
-        />
-        <span className={check.text}>
-          <span className={styles.lineLabel}>{thisMacWords.line}</span>
-          <span className={check.hint} id={hint}>
-            {hintOf(line, props.place)}
-          </span>
-        </span>
-      </label>
-      {result ? (
-        <ChangeOutcome
-          message={result.message}
-          status={result.status}
-          title={result.title}
-        />
-      ) : null}
-    </div>
-  )
-}
-
-/**
- * The Mac access part: the shared switch, and while it is on, the line of
- * this Mac in the Mac app or the note of a browser. While the switch is
- * off, the hint of the Mac app adds that turning it on also allows all
- * commands on this Mac (Mac access decision 1 C).
- */
-export function macAccessPart(
-  macAccess: MacAccessView,
-  place: Place,
-  shell: Shell,
-): CapabilityPart {
-  const macApp = shell === 'mac-app'
-  let content: ReactNode = null
-  if (macAccess.on) {
-    content = macApp ? (
-      <ThisMacCheck line={macAccess.thisMac} place={place} />
-    ) : (
-      <BrowserNote />
-    )
-  }
+export function macAccessPart(view: MacAccessView): CapabilityPart {
+  const result = switchResults[view]
   return {
     key: 'mac-access',
     title: macAccessWords.title,
-    hint: macApp && !macAccess.on ? thisMacWords.offHint : macAccessWords.hint,
-    control: <MacAccessSwitch on={macAccess.on} />,
-    content,
+    hint: view === 'not-available' ? thisMacWords.notAvailableHint : undefined,
+    control: <MacAccessSwitch view={view} />,
+    content: result ? (
+      <ChangeOutcome
+        message={result.message}
+        status={result.status}
+        title={result.title}
+      />
+    ) : null,
   }
 }

@@ -32,25 +32,19 @@ function approval(value: unknown): value is DeviceApprovalAction {
     value === 'allow-workspace-until-stop'
   )
 }
-function period(value: unknown): value is number {
-  return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0
-}
 function operation(value: unknown): value is DeviceSettingsOperation {
   return (
     record(value) &&
     (value.action === 'read' ||
       (value.action === 'remove-command' &&
         typeof value.command === 'string') ||
-      (value.action === 'stop-workspace' && text(value.workspaceId)) ||
-      ((value.action === 'extend-workspace' ||
+      ((value.action === 'stop-workspace' ||
+        value.action === 'extend-workspace' ||
         value.action === 'keep-workspace') &&
-        text(value.workspaceId) &&
-        (value.macAccessPeriod === undefined ||
-          period(value.macAccessPeriod))) ||
+        text(value.workspaceId)) ||
       (value.action === 'start-workspace-until-stop' &&
         text(value.workspaceId) &&
-        nullableText(value.workspaceName) &&
-        period(value.macAccessPeriod)))
+        nullableText(value.workspaceName)))
   )
 }
 function request(value: unknown): value is DeviceCommandRecord {
@@ -118,17 +112,8 @@ export function workerMessage(frame: string): WorkerToDevice | undefined {
     case 'device.pong':
       return { type: value.type }
     case 'command.request':
-      if (
-        request(value.request) &&
-        (value.macAccessPeriod === undefined || period(value.macAccessPeriod))
-      )
-        return {
-          type: value.type,
-          request: value.request,
-          ...(value.macAccessPeriod !== undefined && {
-            macAccessPeriod: value.macAccessPeriod,
-          }),
-        }
+      if (request(value.request))
+        return { type: value.type, request: value.request }
       return
     case 'command.cancel':
       if (text(value.workspaceId) && text(value.requestId))

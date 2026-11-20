@@ -8,12 +8,10 @@ import {
 it('isolates equal request IDs by workspace through approval, cancel, and completion', async () => {
   const test = sessionFixture()
   test.session.receive({
-    macAccessPeriod: 0,
     type: 'command.request',
     request: test.command(),
   })
   test.session.receive({
-    macAccessPeriod: 0,
     type: 'command.request',
     request: test.command({
       workspaceId: 'workspace-two',
@@ -75,7 +73,6 @@ it('cancels a running command and discards a late result after the turn ends or 
   const test = sessionFixture()
   for (const requestId of ['cancelled-turn', 'disconnected']) {
     test.session.receive({
-      macAccessPeriod: 0,
       type: 'command.request',
       request: test.command({ requestId }),
     })
@@ -108,25 +105,21 @@ it('rejects another pairing, another account, and a conflicting request without 
   const test = sessionFixture()
   const request = test.command()
   test.session.receive({
-    macAccessPeriod: 0,
     type: 'command.request',
     request: test.command({
       device: { deviceId: 'local-device', connectionId: 'old-connection' },
     }),
   })
   test.session.receive({
-    macAccessPeriod: 0,
     type: 'command.request',
     request: test.command({ sender: { ...request.sender, id: 'user-two' } }),
   })
-  test.session.receive({ macAccessPeriod: 0, type: 'command.request', request })
+  test.session.receive({ type: 'command.request', request })
   test.session.receive({
-    macAccessPeriod: 0,
     type: 'command.request',
     request: { ...request },
   })
   test.session.receive({
-    macAccessPeriod: 0,
     type: 'command.request',
     request: { ...request, command: 'conflicting command' },
   })
@@ -141,7 +134,6 @@ it('reports a failed private permission write without executing or exposing its 
     throw new Error('private secret in filesystem error')
   }
   test.session.receive({
-    macAccessPeriod: 0,
     type: 'command.request',
     request: test.command(),
   })

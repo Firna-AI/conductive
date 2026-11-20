@@ -9,7 +9,8 @@ import { startCauses, type FailedStart } from './MacAccessPart'
  * did not start after the create. New workspace in the Mac app starts the
  * grant once the create gives the new workspace its ID, and its control
  * closes at the create. So the notice names the cause, and Try again
- * repeats the start on this Mac. Mac access stays on.
+ * repeats the start on this Mac. The switch of Mac access in the
+ * Capabilities of the new workspace shows off, with the same result.
  */
 export function StartFailedNotice(props: { failure: FailedStart }) {
   return (

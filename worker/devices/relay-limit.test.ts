@@ -26,7 +26,7 @@ it('delivers a command request frame of exactly 1,000,000 bytes to the connected
     requestKey: await hash(input.requestId),
   }
   input.reason = 'x'.repeat(
-    1_000_000 - bytes({ type: 'command.request', request, macAccessPeriod: 0 }),
+    1_000_000 - bytes({ type: 'command.request', request }),
   )
   expect(bytes(input)).toBeLessThan(1_000_000)
   const response = await fixture.machine(input)
@@ -36,7 +36,6 @@ it('delivers a command request frame of exactly 1,000,000 bytes to the connected
   expect(frame).toEqual({
     type: 'command.request',
     request: accepted,
-    macAccessPeriod: 0,
   })
   expect(bytes(frame)).toBe(1_000_000)
   expect(accepted).toMatchObject({

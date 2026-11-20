@@ -34,7 +34,6 @@ function changed(
           workspaceId,
           workspaceName: mac.workspaceNames.get(workspaceId) ?? null,
           expiresAt: null,
-          macAccessPeriod: 0,
         },
       ],
     }

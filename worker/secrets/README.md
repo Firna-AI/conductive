@@ -46,13 +46,11 @@ Description and all-agents changes keep the version and last reveal.
 
 ## Workspace capabilities
 
-`capabilities-writes.ts` saves the shared Mac access switch with the member
-and org checks. Each write that sets Mac access off adds 1 to
-`workspaces.mac_access_period` in the same SQL statement. Other capability
-writes keep the period. The column defaults to 0, so existing rows and
-inserts of the previous Worker keep working. The
-[device broker](../devices/README.md#permission-policy-and-limits) reads the
-period for dispatch and settings operations.
+`capabilities-writes.ts` saves the workspace Mac access field with the member
+and org checks. The capabilities API and workspace create keep this field
+for older pages. The field does not gate Mac commands or grant starts.
+The [device broker](../devices/README.md#permission-policy-and-limits)
+relays requests to the Mac, which applies its local permissions.
 
 ## Workspace tool routes
 

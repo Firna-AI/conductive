@@ -21,7 +21,7 @@ const cases: {
     operation: { action: 'stop-workspace', workspaceId: 'workspace-one' },
     revokedCommand: 'printf needs approval',
     allow: (permissions) =>
-      permissions.allowWorkspace('workspace-one', 'Checkout address', 0),
+      permissions.allowWorkspace('workspace-one', 'Checkout address'),
   },
 ]
 
@@ -32,11 +32,10 @@ it.each(cases)(
     const saved = test.openPermissions()
     allow(saved)
     saved.allowCommand('printf hello')
-    saved.allowWorkspace('workspace-two', 'Other workspace', 0)
+    saved.allowWorkspace('workspace-two', 'Other workspace')
     saved.dispose()
     await test.start()
     test.receive({
-      macAccessPeriod: 0,
       type: 'command.request',
       request: test.command({
         requestId: 'already-running',
@@ -47,7 +46,6 @@ it.each(cases)(
     const atSave: { permitted: boolean; timers: number }[] = []
     test.files.write = () => {
       test.receive({
-        macAccessPeriod: 0,
         type: 'command.request',
         request: test.command({
           requestId: 'at-save',
@@ -72,7 +70,6 @@ it.each(cases)(
         {
           workspaceId: 'workspace-two',
           workspaceName: 'Other workspace',
-          macAccessPeriod: 0,
           expiresAt: 1_800_000_900_000,
         },
       ],
@@ -91,7 +88,7 @@ it.each(cases)(
     expect(test.warn).toHaveBeenCalledOnce()
     expect(test.processes[0].kill).not.toHaveBeenCalled()
     const restored = test.openPermissions()
-    expect(restored.permits(revokedCommand, 'workspace-one', 0)).toBe(true)
+    expect(restored.permits(revokedCommand, 'workspace-one')).toBe(true)
     restored.dispose()
 
     test.receive({
@@ -106,7 +103,6 @@ it.each(cases)(
       outcome: { status: 'done' },
     })
     test.receive({
-      macAccessPeriod: 0,
       type: 'command.request',
       request: test.command({
         requestId: 'needs-new-approval',
@@ -116,7 +112,6 @@ it.each(cases)(
     expect(test.notify).toHaveBeenCalledTimes(2)
     expect(test.processes).toHaveLength(1)
     test.receive({
-      macAccessPeriod: 0,
       type: 'command.request',
       request: test.command({
         requestId: 'still-allowed',
@@ -124,7 +119,6 @@ it.each(cases)(
       }),
     })
     test.receive({
-      macAccessPeriod: 0,
       type: 'command.request',
       request: test.command({
         requestId: 'other-workspace',
@@ -167,7 +161,6 @@ it.each(cases)(
       command: revokedCommand,
     })
     test.receive({
-      macAccessPeriod: 0,
       type: 'command.request',
       request: reconnected,
     })

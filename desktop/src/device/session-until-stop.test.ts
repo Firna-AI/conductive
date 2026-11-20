@@ -9,7 +9,7 @@ function request(
   answer = false,
 ) {
   const sent = test.command({ requestId, workspaceId: 'workspace-one' })
-  test.receive({ macAccessPeriod: 0, type: 'command.request', request: sent })
+  test.receive({ type: 'command.request', request: sent })
   if (answer)
     test.receive({
       type: 'command.approval',
@@ -54,7 +54,7 @@ it('turns the 15 minutes into a grant until Stop through a settings operation', 
     requestId: 'first',
     workspaceId: 'workspace-one',
   })
-  test.receive({ macAccessPeriod: 0, type: 'command.request', request: sent })
+  test.receive({ type: 'command.request', request: sent })
   test.receive({
     type: 'command.approval',
     workspaceId: 'workspace-one',
@@ -72,9 +72,7 @@ it('turns the 15 minutes into a grant until Stop through a settings operation', 
     operationId: 'keep',
     outcome: { status: 'done' },
     settings: {
-      workspaceWindows: [
-        { workspaceId: 'workspace-one', macAccessPeriod: 0, expiresAt: null },
-      ],
+      workspaceWindows: [{ workspaceId: 'workspace-one', expiresAt: null }],
     },
   })
   // The connection misses its heartbeats meanwhile, so it reconnects.

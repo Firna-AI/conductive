@@ -74,8 +74,6 @@ export interface DeviceWorkspaceWindow {
   workspaceName: string | null
   /** The end of the 15 minutes, or null for a grant that runs until Stop. */
   expiresAt: number | null
-  /** Absent in settings from an older Mac app. */
-  macAccessPeriod?: number
 }
 /** The Worker relays this value. Only the Mac stores or applies these rules. */
 export interface DeviceSettings {
@@ -91,24 +89,13 @@ export type DeviceSettingsAction =
   /** Turns the running 15 minutes of a workspace into a grant until Stop. */
   | { action: 'keep-workspace'; workspaceId: string }
   | { action: 'start-workspace-until-stop'; workspaceId: string }
-/** The Worker supplies workspace metadata. Older Workers omit periods. */
+/** The Worker supplies workspace metadata for a grant start. */
 export type DeviceSettingsOperation =
-  | Exclude<
-      DeviceSettingsAction,
-      | { action: 'start-workspace-until-stop' }
-      | { action: 'keep-workspace' }
-      | { action: 'extend-workspace' }
-    >
+  | Exclude<DeviceSettingsAction, { action: 'start-workspace-until-stop' }>
   | {
       action: 'start-workspace-until-stop'
       workspaceId: string
       workspaceName: string | null
-      macAccessPeriod: number
-    }
-  | {
-      action: 'keep-workspace' | 'extend-workspace'
-      workspaceId: string
-      macAccessPeriod?: number
     }
 export interface DeviceSettingsRequest extends DevicePairing {
   operation: Exclude<DeviceSettingsAction, { action: 'read' }>
@@ -133,11 +120,7 @@ export type WorkerToDevice =
       heartbeatIntervalMs: number
     }
   | { type: 'device.pong' }
-  | {
-      type: 'command.request'
-      request: DeviceCommandRecord
-      macAccessPeriod?: number
-    }
+  | { type: 'command.request'; request: DeviceCommandRecord }
   | ({ type: 'command.cancel' } & DeviceCommandRef)
   | {
       type: 'command.approval'

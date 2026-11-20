@@ -16,11 +16,7 @@ function isWindow(value: unknown): value is SavedWindow {
     (value.workspaceName === null || typeof value.workspaceName === 'string') &&
     'expiresAt' in value &&
     typeof value.expiresAt === 'number' &&
-    Number.isFinite(value.expiresAt) &&
-    (!('macAccessPeriod' in value) ||
-      (typeof value.macAccessPeriod === 'number' &&
-        Number.isSafeInteger(value.macAccessPeriod) &&
-        value.macAccessPeriod >= 0))
+    Number.isFinite(value.expiresAt)
   )
 }
 
@@ -66,10 +62,7 @@ export function readPermissionFile(
   return {
     commands: new Set(value.alwaysAllowedCommands),
     windows: value.workspaceWindows.filter(
-      (window) =>
-        window.macAccessPeriod !== undefined &&
-        window.expiresAt > now &&
-        window.expiresAt <= now + WINDOW_MS,
+      (window) => window.expiresAt > now && window.expiresAt <= now + WINDOW_MS,
     ),
   }
 }

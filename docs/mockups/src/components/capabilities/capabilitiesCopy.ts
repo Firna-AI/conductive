@@ -58,43 +58,51 @@ export function valueDetail(who: string, when: string): string {
 }
 
 /**
- * The shared switch of Mac access. `hint` is its hint in a browser, and in
- * the Mac app while the switch is on, where the line of this Mac shows
- * under it.
+ * The Mac access part, which only the Mac app shows. Its one switch has no
+ * hint (Mac access decision 7).
  */
 export const macAccessWords = {
   title: 'Mac access',
+  /**
+   * The hint of the shared switch before decision 7. No mockup shows it.
+   * The app reads it until it draws one switch.
+   */
   hint: 'Lets agents ask to run commands on the Mac of the member who sent the message.',
 } as const
 
-/** The label of the line of this Mac. */
+/**
+ * The label of the line of this Mac before decision 7, which no mockup
+ * shows.
+ */
 const thisMacLine = 'Allow all commands on this Mac'
 
 /**
- * The words of this Mac in the Mac access part (Mac access decisions 1 to
- * 5). In the Mac app, turning the switch on also starts a grant until Stop
- * of the workspace on this Mac, and the line of this Mac starts or stops
- * that grant. A browser cannot start a grant, so it shows `browserNote` in
- * place of the line.
+ * The words of this Mac in the Mac access part. In the Mac app, the switch
+ * starts or stops a grant until Stop of the workspace on this Mac (Mac
+ * access decision 7). The part shows only short results: Not started with
+ * its cause, and This Mac is not available. The notice of a new workspace
+ * whose grant did not start has its own title and Try again.
+ *
+ * `offHint`, `line`, `lineHint`, `fifteenMinutesHint`, and `browserNote`
+ * are the words of the shared switch, its line, and the note of a browser,
+ * from before decision 7. No mockup shows them. The app reads them until
+ * it draws one switch and hides the part in a browser.
  */
 export const thisMacWords = {
-  /** The hint of the switch in the Mac app while the switch is off. */
   offHint: `${macAccessWords.hint} When you turn it on, this Mac also allows all commands until you stop.`,
   line: thisMacLine,
-  /** What the line allows, in New workspace and in a workspace. */
   lineHint: {
     create:
       'Commands from the new workspace run without asking, until you stop.',
     workspace:
       'Commands from this workspace run without asking, until you stop.',
   },
-  /**
-   * The hint of the line while the 15 minutes of the workspace run, with
-   * their time left, such as "14:32". The line stays unchecked.
-   */
   fifteenMinutesHint: (left: string) =>
     `${left} left of the 15 minutes. Check this to keep them until you stop.`,
-  /** The hint of the line, off, while the page cannot read this Mac. */
+  /**
+   * The words under the switch, off and disabled, while the page cannot
+   * read this Mac.
+   */
   notAvailableHint: 'This Mac is not available.',
   /** The title of the result of a start that failed. */
   notStarted: 'Not started',

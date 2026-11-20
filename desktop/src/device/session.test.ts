@@ -8,7 +8,7 @@ import {
 it('holds requests for a relay choice and denies without running or granting permission', () => {
   const test = sessionFixture()
   const request = test.command()
-  test.session.receive({ macAccessPeriod: 0, type: 'command.request', request })
+  test.session.receive({ type: 'command.request', request })
   expect(test.run).not.toHaveBeenCalled()
   expect(test.sent).toEqual([])
   expect(test.notify).toHaveBeenCalledWith(request)
@@ -52,7 +52,7 @@ it('sends approved before execution and keeps Allow limited to one request', asy
     expect(input.command).toBe('printf hello')
     return { result: Promise.resolve(successfulResult), cancel: () => {} }
   })
-  test.session.receive({ macAccessPeriod: 0, type: 'command.request', request })
+  test.session.receive({ type: 'command.request', request })
   test.session.receive({
     type: 'command.approval',
     workspaceId: request.workspaceId,
@@ -81,7 +81,6 @@ it('sends approved before execution and keeps Allow limited to one request', asy
     },
   ])
   test.session.receive({
-    macAccessPeriod: 0,
     type: 'command.request',
     request: test.command({ requestId: 'request-two' }),
   })
@@ -92,7 +91,6 @@ it('sends approved before execution and keeps Allow limited to one request', asy
 it('applies exact always-allow policy and returns matching settings operations', () => {
   const test = sessionFixture()
   test.session.receive({
-    macAccessPeriod: 0,
     type: 'command.request',
     request: test.command(),
   })
@@ -104,12 +102,10 @@ it('applies exact always-allow policy and returns matching settings operations',
     action: 'always-allow',
   })
   test.session.receive({
-    macAccessPeriod: 0,
     type: 'command.request',
     request: test.command({ requestId: 'request-two' }),
   })
   test.session.receive({
-    macAccessPeriod: 0,
     type: 'command.request',
     request: test.command({
       requestId: 'request-three',
@@ -159,13 +155,12 @@ it('does not extend expired workspace grants from approval replays and applies S
     operationId: 'window-one',
     action: 'allow-workspace-15-minutes' as const,
   }
-  test.session.receive({ macAccessPeriod: 0, type: 'command.request', request })
+  test.session.receive({ type: 'command.request', request })
   test.session.receive(approval)
   expect(test.permissions.settings().workspaceWindows).toEqual([
     {
       workspaceId: 'workspace-one',
       workspaceName: 'Checkout address',
-      macAccessPeriod: 0,
       expiresAt: 1_800_000_900_000,
     },
   ])
@@ -175,7 +170,6 @@ it('does not extend expired workspace grants from approval replays and applies S
   expect(test.permissions.settings().workspaceWindows).toEqual([])
   expect(test.run).toHaveBeenCalledTimes(1)
   test.session.receive({
-    macAccessPeriod: 0,
     type: 'command.request',
     request: test.command({ requestId: 'request-two' }),
   })
@@ -189,7 +183,7 @@ it('does not extend expired workspace grants from approval replays and applies S
     operationId: 'stop-one',
     operation: { action: 'stop-workspace', workspaceId: 'workspace-one' },
   })
-  expect(test.permissions.permits('anything', 'workspace-one', 0)).toBe(false)
+  expect(test.permissions.permits('anything', 'workspace-one')).toBe(false)
   expect(test.sent.at(-1)).toEqual({
     type: 'settings.result',
     operationId: 'stop-one',

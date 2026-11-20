@@ -7,8 +7,8 @@ import styles from './Capabilities.module.css'
  * One part of the Capabilities control: its title, a control at the end
  * of its title, such as a switch or a link, an optional hint, and its
  * content.
- * Secrets and Mac access are the parts for now. Later features, such as
- * MCP servers, add their own parts to the list.
+ * Secrets and, in the Mac app, Mac access are the parts for now. Later
+ * features, such as MCP servers, add their own parts to the list.
  */
 export type CapabilityPart = {
   key: string

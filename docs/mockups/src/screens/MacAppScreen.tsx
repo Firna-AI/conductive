@@ -137,11 +137,11 @@ function pageFor(state: MacAppState): ReactNode {
  * commands that agents ask to run on this Mac. A command waits in the chat
  * of its workspace, just above the composer, and the workspace list marks
  * that workspace on every page. The Capabilities control of a workspace and
- * of New workspace shows the line of this Mac, which allows all commands of
- * the workspace on it. The Mac app gives the page every key, so it
- * shows the person's shortcuts: in the palette, in the Search row, and on
- * the Keyboard shortcuts tab of the account. The Mac app has no phone
- * layout, so a phone view shows the same screen, smaller.
+ * of New workspace shows the switch of Mac access of this Mac, which allows
+ * all commands of the workspace on it. The Mac app gives the page every
+ * key, so it shows the person's shortcuts: in the palette, in the Search
+ * row, and on the Keyboard shortcuts tab of the account. The Mac app has
+ * no phone layout, so a phone view shows the same screen, smaller.
  */
 export function MacAppScreen(props: { state: MacAppState }) {
   const { command, change } = props.state

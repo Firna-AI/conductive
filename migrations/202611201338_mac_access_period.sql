@@ -1,1 +1,0 @@
-ALTER TABLE workspaces ADD COLUMN mac_access_period INTEGER NOT NULL DEFAULT 0;

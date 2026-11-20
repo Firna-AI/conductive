@@ -343,6 +343,12 @@ My calls, 20 November 2026, unless a decision above says otherwise:
   calls from another workspace can all use it. The switch makes such
   grants common.
 
+- From decision 7, 21 November 2026, my calls: the Mac access part is
+  hidden in a browser, because a browser cannot change what runs on a Mac.
+  "This Mac is not available." is a muted line under the disabled switch.
+  The earlier calls on the scroll of the line, and the line itself, no
+  longer apply.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -477,12 +483,12 @@ Tags: mockup
 
 Depends on: 5
 
-- [ ] Draw one Mac access switch in the Mac app control of a workspace and
+- [x] Draw one Mac access switch in the Mac app control of a workspace and
       of New workspace, with no hint: on with the grant, off, Not started,
       Stopped, not available, and the 15 minutes running.
-- [ ] Hide the Mac access part in a browser. Remove the browser note and
+- [x] Hide the Mac access part in a browser. Remove the browser note and
       the extra line.
-- [ ] Update the catalogue. Run `npm run mockups:check`.
+- [x] Update the catalogue. Run `npm run mockups:check`.
 
 ## Milestone 7: Docs for one switch
 
@@ -496,19 +502,22 @@ Depends on: 6
 
 ## Milestone 8: Backend for one switch
 
-Depends on: 7
+Depends on: 5. Decision 7 states the requirement, so this milestone runs beside Milestone 6.
 
-- [ ] Remove the Worker refusal of Mac commands while Mac access is off,
+- [x] Remove the Worker refusal of Mac commands while Mac access is off,
       and the Mac access check of the start. Keep the capabilities API
       field for older pages.
-- [ ] Remove the Mac access period from the Worker, the shared types, the
+- [x] Remove the Mac access period from the Worker, the shared types, the
       Mac app, the fakes, and delete its migration.
+
+Evidence: `.context/mac-access-allows-all/m8-report.md` and
+`.context/mac-access-allows-all/m8-removals.md`.
 
 ## Milestone 9: The one switch
 
 Tags: ui
 
-Depends on: 8
+Depends on: 6, 8. It runs beside Milestone 7, because decision 7 states the requirement.
 
 - [ ] Replace the shared switch and the line with one switch in the Mac
       app control and in New workspace. Hide the part in a browser.

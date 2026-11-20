@@ -139,7 +139,7 @@ const state = useThisMacState(mac)
   of its grant that waits and increases the grant: a start, a Keep, or an
   Extend. It uses `cancel`. Such a change never goes, also when another
   member turns Mac access on again before its turn, because its choice
-  belongs to a period of Mac access that ended. It keeps no result, also
+  was taken back by the page. It keeps no result, also
   when it already went to the Mac, and its control is free at once.
 - A switch-off that saved sends Stop when the settings that show, current
   or kept, list a grant of the workspace, also when a start, a Keep, or an
@@ -156,11 +156,9 @@ const state = useThisMacState(mac)
   notice over the composer of the new workspace, with Try again. When Mac
   access of the workspace goes off, in this page or in a read of its
   Capabilities, the result goes.
-- The Worker refuses a start unless the user is a member of the org of the
-  workspace and Mac access of the workspace is on. It leaves out each
-  grant of an older Mac access period from the settings that it relays, so
-  the bar, This Mac, and the line never show a grant that covers no
-  request.
+- The Worker checks that a start names an existing workspace that is not
+  archived and belongs to an active org of the member. The stored Mac
+  access field does not gate starts or Mac command requests.
 
 ## Tests
 

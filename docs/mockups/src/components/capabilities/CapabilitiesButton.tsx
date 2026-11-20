@@ -18,12 +18,6 @@ export type CapabilitiesControl = {
    * script, so the screen draws it.
    */
   panel?: ReactNode
-  /**
-   * The open control is drawn scrolled to its end, where Mac access is, as
-   * after a change of Mac access. A view runs no script, so it cannot
-   * scroll the control.
-   */
-  atEnd?: boolean
   /** The control is open elsewhere, such as in a sheet on a phone. */
   expanded?: boolean
 }
@@ -70,11 +64,7 @@ export function CapabilitiesButton(
       {props.panel ? (
         <div
           aria-label={capabilitiesLabel}
-          className={classes(
-            styles.popover,
-            styles[props.placement],
-            props.atEnd && styles.atEnd,
-          )}
+          className={classes(styles.popover, styles[props.placement])}
           role="dialog"
         >
           {props.panel}

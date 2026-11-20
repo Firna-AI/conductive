@@ -89,8 +89,8 @@ export const macAppSchema = {
     },
     /**
      * The composer of a workspace page, as `composerStates` says, such as
-     * the Capabilities control with the line of this Mac. Without it, the
-     * composer is empty.
+     * the Capabilities control with the switch of Mac access of this Mac.
+     * Without it, the composer is empty.
      */
     composer: composerStateProperties.composer,
     /**

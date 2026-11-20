@@ -30,62 +30,55 @@ The child page `app/orgs/suspended/settings/secrets` has the tab of a
 suspended org, with no action.
 
 `app/new-workspace/capabilities` has the Capabilities control open on the
-New workspace page: the secrets of Acme with FIGMA_TOKEN pre-approved, and
-Mac access off. A phone opens it as a sheet from the menu of the + button.
-Its `no-secrets` variant has Firna without secrets, and its `menu` variant
-has that menu open on a phone. Its `mac-access-on` variant has Mac access
-on in a browser, with the note that says to use Allow all commands on this
-Mac in the Mac app. Its `search` variant has twelve secrets, with a Search
-secrets field above them and "deploy" typed in it. Its `info` variant has
-the info box of PROD_DATABASE_URL open, with its description, after a
-press on its info icon. STAGING_API_KEY there has no description, so it
-has no info icon. `app/new-workspace/dialog/capabilities` has the same
-control in the dialog.
+New workspace page: the secrets of Acme with FIGMA_TOKEN pre-approved. A
+browser shows no Mac access part, so the control holds only the Secrets
+part. A phone opens it as a sheet from the menu of the + button. Its
+`no-secrets` variant has Firna without secrets, and its `menu` variant
+has that menu open on a phone. Its `search` variant has twelve secrets,
+with a Search secrets field above them and "deploy" typed in it. Its
+`info` variant has the info box of PROD_DATABASE_URL open, with its
+description, after a press on its info icon. STAGING_API_KEY there has no
+description, so it has no info icon. `app/new-workspace/dialog/capabilities`
+has the same control in the dialog.
 
 `app/capabilities` has the control of Checkout address autocomplete in a
 browser, with the approval of its open session and its value for the
 workspace, each with Remove. It hides an approval of the pre-approved
-FIGMA_TOKEN and an approval of another session. Mac access is on, so the
-note of a browser shows under the switch. Its `mac-access-off` variant has
-Mac access off, with no note. Its `menu` variant has the menu of the +
-button of a phone, with Attach files and Capabilities. The
-`mac-access-off` variant of `app/mac-commands` has a Mac command that the
-workspace refused for that reason.
+FIGMA_TOKEN and an approval of another session. A browser shows no Mac
+access part. Its `menu` variant has the menu of the + button of a phone,
+with Attach files and Capabilities. The `mac-access-off` variant of
+`app/mac-commands` has the card of an older Mac command that a workspace
+refused while its Mac access was off.
 
-In the Mac app, the line Allow all commands on this Mac takes the place of
-that note while Mac access is on, from the Mac access decisions of 20
-November 2026. Each member sees the line of their own Mac.
-`mac-app/capabilities` has the control of Checkout address autocomplete
-after Cal turned Mac access on in the Mac app. The line is checked,
-because this Mac started a grant until Stop, and the bar of the workspace
-says Until you stop. It and each of its child pages draw the control
-scrolled to its end, where the line is, because the control of this
-workspace is longer than the space above the composer. The page shows only
-its canonical screen. Its child pages:
+In the Mac app, the control ends with the Mac access part: one switch with
+no hint, from Mac access decision 7 of 21 November 2026. Each member sees
+the switch of their own Mac. On starts a grant until Stop of the workspace
+on this Mac, and off stops it. `mac-app/capabilities` has the control of
+Checkout address autocomplete after Cal turned the switch on in the Mac
+app. The switch is on, because this Mac started a grant until Stop, and the
+bar of the workspace says Until you stop. The page shows only its canonical
+screen. Its child pages:
 
-- `unchecked` has Mac access that Priya turned on, so the line of Cal's
-  Mac is unchecked, and each command asks first.
-- `fifteen-minutes` has the line unchecked while the 15 minutes run. Its
-  hint gives the time left of the bar, 14:32, and says that a check keeps
-  them until Stop.
-- `stopped` has the line after Cal unchecked it. The line stays unchecked,
-  and Stopped shows under it: each command from this workspace asks first.
-  The bar names the same result.
-- `not-started` has a start that the Mac did not make. The line stays
-  unchecked, with Not started and the cause that the Mac gave.
+- `off` has the switch of Cal's Mac off, with no grant. Priya's Mac has a
+  grant, and Cal's Mac asks first at each command.
+- `fifteen-minutes` has the switch off while the 15 minutes run. The bar
+  gives the time left, 14:32, and the part has no hint.
+- `stopped` has the switch after Cal turned it off. Stopped shows under it:
+  each command from this workspace asks first. The bar names the same
+  result.
+- `not-started` has a start that the Mac did not make. The switch is off,
+  with Not started and the cause that the Mac gave.
 - `not-reached` has a start that found this Mac not available. The page
-  cannot read the settings of this Mac, so the line is unchecked and off.
+  cannot read the settings of this Mac, so the switch is off and disabled.
   Its result says that each command still asks first.
-- `not-available` has the line while the page cannot read the settings of
-  this Mac, with no result. The line is unchecked and off, and its hint
-  says that this Mac is not available.
+- `not-available` has the switch while the page cannot read the settings
+  of this Mac, with no result. The switch is off and disabled, and the
+  words under it say that this Mac is not available.
 
 `mac-app/new-workspace` has the control of New workspace in the Mac app,
-with Mac access on and the line checked, so the create starts the grant.
-Its variants:
+with the switch on, so the create starts the grant. Its variants:
 
-- `mac-access-off` has Mac access off. The hint of the Mac app says that
-  turning it on also allows all commands on this Mac.
+- `mac-access-off` has the switch off, with no hint.
 - `created` has the new workspace Saved carts after a create that started
   the grant, with the bar that says Until you stop.
 - `not-started` has Saved carts after a create whose grant did not start,

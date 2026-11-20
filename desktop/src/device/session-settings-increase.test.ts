@@ -10,7 +10,6 @@ it('fails a Start that crosses the settings reply budget without granting permis
     test.permissions.allowWorkspaceUntilStop(
       `existing-${index}`,
       `Existing workspace ${index} ${'w'.repeat(175)}`,
-      0,
     )
   const emptySize = Buffer.byteLength(
     JSON.stringify({
@@ -37,7 +36,6 @@ it('fails a Start that crosses the settings reply budget without granting permis
   test.receive({
     type: 'command.request',
     request: command(),
-    macAccessPeriod: 0,
   })
   const write = vi.spyOn(test.files, 'write')
   test.receive({
@@ -47,7 +45,6 @@ it('fails a Start that crosses the settings reply budget without granting permis
       action: 'start-workspace-until-stop',
       workspaceId: 'workspace-one',
       workspaceName: null,
-      macAccessPeriod: 0,
     },
   })
   expect(test.messages().at(-1)).toEqual({
@@ -55,16 +52,15 @@ it('fails a Start that crosses the settings reply budget without granting permis
     operationId: 'start',
     code: 'settings_result_too_large',
   })
-  expect(
-    test.permissions.permits('unrelated command', 'workspace-one', 0),
-  ).toBe(false)
+  expect(test.permissions.permits('unrelated command', 'workspace-one')).toBe(
+    false,
+  )
   expect(test.permissions.settings().workspaceWindows).toHaveLength(400)
   expect(write).not.toHaveBeenCalled()
   expect(test.processes).toHaveLength(0)
   test.receive({
     type: 'command.request',
     request: command({ requestId: 'later' }),
-    macAccessPeriod: 0,
   })
   expect(test.processes).toHaveLength(0)
   expect(test.closed).not.toHaveBeenCalled()
@@ -78,13 +74,13 @@ it.each(['keep-workspace', 'extend-workspace'] as const)(
   'leaves the saved end and timer unchanged when %s cannot return its settings',
   (action) => {
     const test = deviceSettingsFixture(['x'.repeat(1_000_000)])
-    test.permissions.allowWorkspace('workspace-one', 'First', 0)
+    test.permissions.allowWorkspace('workspace-one', 'First')
     test.advance(300_000)
     const write = vi.spyOn(test.files, 'write')
     test.receive({
       type: 'settings.operation',
       operationId: action,
-      operation: { action, workspaceId: 'workspace-one', macAccessPeriod: 0 },
+      operation: { action, workspaceId: 'workspace-one' },
     })
     expect(test.messages().at(-1)).toEqual({
       type: 'settings.failed',
@@ -96,7 +92,6 @@ it.each(['keep-workspace', 'extend-workspace'] as const)(
         workspaceId: 'workspace-one',
         workspaceName: 'First',
         expiresAt: 1_800_000_900_000,
-        macAccessPeriod: 0,
       },
     ])
     expect(write).not.toHaveBeenCalled()
@@ -104,7 +99,7 @@ it.each(['keep-workspace', 'extend-workspace'] as const)(
       test.permissions.settings().workspaceWindows,
     )
     test.advance(600_000)
-    expect(test.permissions.permits('anything', 'workspace-one', 0)).toBe(false)
+    expect(test.permissions.permits('anything', 'workspace-one')).toBe(false)
     expect(test.closed).not.toHaveBeenCalled()
   },
 )
@@ -114,7 +109,7 @@ it.each(['start-workspace-until-stop', 'keep-workspace'] as const)(
   (action) => {
     const test = deviceSettingsFixture()
     if (action === 'keep-workspace')
-      test.permissions.allowWorkspace('workspace-one', 'First', 0)
+      test.permissions.allowWorkspace('workspace-one', 'First')
     const before = test.permissions.settings()
     const write = vi.spyOn(test.files, 'write')
     test.wire.bufferedAmount = DEVICE_FRAME_LIMIT_BYTES
@@ -125,7 +120,6 @@ it.each(['start-workspace-until-stop', 'keep-workspace'] as const)(
         action,
         workspaceId: 'workspace-one',
         workspaceName: 'First',
-        macAccessPeriod: 0,
       },
     })
     expect(test.closed).toHaveBeenCalledOnce()

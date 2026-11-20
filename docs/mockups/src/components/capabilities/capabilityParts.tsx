@@ -15,10 +15,13 @@ import {
 } from './capabilitiesCopy'
 import { CapabilitiesPanel, type CapabilityPart } from './CapabilitiesPanel'
 import { GrantList } from './GrantList'
-import { macAccessPart, type MacAccessView, type Shell } from './MacAccessPart'
+import { macAccessPart, type MacAccessView } from './MacAccessPart'
 import { matchingSecrets, needsSecretSearch } from './secretSearch'
 import { SecretOption } from './SecretOption'
 import styles from './Capabilities.module.css'
+
+/** Where the control shows: in the Mac app, or in a browser. */
+type Shell = 'mac-app' | 'browser'
 
 /** What the Capabilities control shows for one workspace or one draft. */
 export type CapabilitiesView = {
@@ -46,6 +49,7 @@ export type CapabilitiesView = {
   grants?: WorkspaceGrants
   /** The title of the session that the control opens from, if any. */
   session?: string
+  /** The switch of Mac access of this Mac, which only the Mac app shows. */
   macAccess: MacAccessView
   /** The Secrets tab of the org settings. */
   secretsTo: string
@@ -188,24 +192,25 @@ function secretsPart(
 
 /**
  * The parts of the Capabilities control, in their order: the secrets that
- * the workspace pre-approves, with its grants, and Mac access, with the
- * words of the shell that shows the control.
+ * the workspace pre-approves, with its grants, and then Mac access, only
+ * in the Mac app.
  */
 function capabilityParts(
   view: CapabilitiesView,
   shell: Shell,
 ): CapabilityPart[] {
-  return [
-    secretsPart(view, undefined, <SecretsContent view={view} />),
-    macAccessPart(view.macAccess, view.place, shell),
-  ]
+  const secrets = secretsPart(view, undefined, <SecretsContent view={view} />)
+  if (shell === 'browser') return [secrets]
+  return [secrets, macAccessPart(view.macAccess)]
 }
 
 /**
  * The Capabilities control of New workspace or of a workspace, drawn open.
- * It chooses its words by the shell, not by a pairing of this Mac: the Mac
- * app shows the line of this Mac, and a browser a note in its place (Mac
- * access decision 5 A). A sheet on a phone has its own title.
+ * It chooses its parts by the shell, not by a pairing of this Mac. The Mac
+ * app shows the switch of Mac access of this Mac. A browser shows no Mac
+ * access part, because only the page of the Mac app on that Mac starts a
+ * grant (Mac access decisions 5 A and 7). A sheet on a phone has its own
+ * title.
  */
 export function OpenCapabilities(props: {
   view: CapabilitiesView

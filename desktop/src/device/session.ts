@@ -22,7 +22,6 @@ interface SessionDependencies {
 }
 interface LocalRequest {
   request: DeviceCommandRecord
-  macAccessPeriod?: number
   state: 'pending' | 'running' | 'terminal'
   cancel?: () => void
   dismiss?: () => void
@@ -98,10 +97,6 @@ export function createDeviceSession(dependencies: SessionDependencies) {
           dependencies.invalid()
           return
         }
-        dependencies.permissions.observePeriod(
-          request.workspaceId,
-          message.macAccessPeriod,
-        )
         const existing = requests.get(requestKey(request))
         if (existing) {
           if (JSON.stringify(existing.request) !== JSON.stringify(request))
@@ -111,7 +106,6 @@ export function createDeviceSession(dependencies: SessionDependencies) {
         const entry: LocalRequest = {
           request,
           state: 'pending',
-          macAccessPeriod: message.macAccessPeriod,
         }
         requests.set(requestKey(request), entry)
         if (!validCommand(request)) {
@@ -122,11 +116,7 @@ export function createDeviceSession(dependencies: SessionDependencies) {
             message: 'The Mac command request is invalid.',
           })
         } else if (
-          dependencies.permissions.permits(
-            request.command,
-            request.workspaceId,
-            entry.macAccessPeriod,
-          )
+          dependencies.permissions.permits(request.command, request.workspaceId)
         ) {
           execute(entry)
         } else {
@@ -161,13 +151,11 @@ export function createDeviceSession(dependencies: SessionDependencies) {
             dependencies.permissions.allowWorkspace(
               entry.request.workspaceId,
               entry.request.workspaceName,
-              entry.macAccessPeriod,
             )
           if (message.action === 'allow-workspace-until-stop')
             dependencies.permissions.allowWorkspaceUntilStop(
               entry.request.workspaceId,
               entry.request.workspaceName,
-              entry.macAccessPeriod,
             )
           execute(entry)
         } catch (error) {
@@ -198,7 +186,6 @@ export function createDeviceSession(dependencies: SessionDependencies) {
               dependencies.permissions.permits(
                 entry.request.command,
                 workspaceId,
-                entry.macAccessPeriod,
               )
             )
               execute(entry)
