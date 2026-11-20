@@ -1,6 +1,6 @@
 # Registered mockup parts
 
-Status: Active. On branch `calummoore/riga-skgh`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. [PR #607](https://github.com/Firna-AI/conductive/pull/607) is open with Milestones 1 to 4. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 Mokly builds the mockup catalogue in `docs/mockups/`. Its Changes view
 compares the catalogue of a branch with `origin/main`. Today the catalogue
