@@ -15,7 +15,9 @@ No person can give a fixed key to a command. The fixed keys are:
 - Enter with any modifier, the keypad Enter, and Space with no modifier,
   which press or choose a focused control, such as a button, a switch, or
   a menu item
-- Escape, which closes a dialog, a menu, or the palette
+- Escape, which closes a dialog, a menu, or the palette. When nothing
+  else takes it, it closes the shown temporary tab, as
+  [Close the tab](temporary-tabs.md#close-the-tab) says.
 - Up, Down, Home, End, and Enter in a menu and in the palette, and Left and
   Right on the tabs of the palette, as
   [Keys inside the palette](command-palette.md#keys-inside-the-palette)

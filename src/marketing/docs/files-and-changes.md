@@ -45,6 +45,8 @@ Its title shows in italics.
 The next click on another file replaces it in the same place.
 This applies to **All files**, **Changes**, and file chips in chat.
 If a file already has a tab, a click shows that tab.
+Press **Escape** to close the temporary tab while it shows.
+Escape first closes an open menu or dialog, and it does nothing in the message field.
 
 On a phone, each file opens within **Files**.
 Use its back action to return to **All files**.
