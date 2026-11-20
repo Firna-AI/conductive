@@ -18,6 +18,7 @@ import { capturedRepositoryLocations } from './repository-locations'
 import { latestSoftwareRelease } from './software-release'
 import { softwareVersion } from '../software-image/version'
 import { SWITCH_STOPPED_BUILD } from './build-switch-admission'
+import { repairEndedProviderSwitch } from './provider-switch-repair'
 
 export async function progressProviderSwitch(
   runtime: ImageRuntime,
@@ -26,6 +27,11 @@ export async function progressProviderSwitch(
   const { env, dependencies } = runtime
   const item = await readOpenProviderSwitch(env.DB, orgId)
   if (!item) return false
+  if (
+    item.state === 'building' &&
+    (await repairEndedProviderSwitch(env.DB, item, dependencies.now()))
+  )
+    return (await readOpenProviderSwitch(env.DB, orgId)) !== null
   let context = await readOrgSwitchContext(env.DB, orgId)
   if (
     context.runningJob?.id === item.endRunningJobId &&

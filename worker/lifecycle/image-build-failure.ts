@@ -22,6 +22,7 @@ import {
   transientProviderError,
 } from './provider-retry'
 import { liveBuildComputers } from './computer-ledger'
+import { switchBuildFailureCause } from './provider-switch-end'
 
 export async function failUnscheduledBuild(
   runtime: ImageRuntime,
@@ -97,13 +98,7 @@ export async function handleImageBuildFailure(
     error: errorSummary(failure),
   })
   await failBuild(env.DB, buildId, message, dependencies.now(), {
-    cause:
-      failure instanceof JobTimeLimit
-        ? 'time-limit'
-        : failure instanceof ProviderRetryExhausted ||
-            failure instanceof ProviderError
-          ? 'provider'
-          : 'script',
+    cause: switchBuildFailureCause(failure),
     wait: suspended
       ? failure instanceof HttpError && failure.code === 'org_suspended'
         ? 'suspended'

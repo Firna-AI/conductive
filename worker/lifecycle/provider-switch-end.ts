@@ -3,10 +3,28 @@ import type {
   OperatorSwitchWaitReason,
 } from '../../src/shared/operator-switch'
 import { activeOrgIdPredicate } from '../data/org-access'
+import { ProviderError } from '../sandbox/errors'
+import { JobTimeLimit } from './job-time-limit'
+import { ProviderRetryExhausted } from './provider-retry'
 
 export interface SwitchBuildFailure {
   cause?: OperatorSwitchFailure
   wait?: OperatorSwitchWaitReason
+}
+
+export function switchBuildFailureCause(error: unknown): OperatorSwitchFailure {
+  if (
+    error instanceof JobTimeLimit ||
+    error === new JobTimeLimit('build').message
+  )
+    return 'time-limit'
+  if (
+    error instanceof ProviderRetryExhausted ||
+    error instanceof ProviderError ||
+    error === new ProviderRetryExhausted().message
+  )
+    return 'provider'
+  return 'script'
 }
 
 export const switchMayPublish = `(image_builds.operator_switch_id IS NULL OR EXISTS (

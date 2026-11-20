@@ -79,6 +79,38 @@ Stop records its operator and time first. It then fails the hidden build,
 tries cleanup, releases an eligible member wait, and schedules remaining
 image work. Failed cleanup stays owned by its saved job.
 
+### Results from an older coordinator
+
+An older coordinator can end a hidden build without updating its switch.
+Before selecting an executing job, `progressProviderSwitch` checks the
+build of a switch that is still `building`.
+[`repairEndedProviderSwitch`](provider-switch-repair.ts) reads its stored
+result. A running build stays with ordinary progression.
+
+One guarded D1 batch repairs an ended build. A success completes the
+switch only while the target image names that build. It uses the normal
+publication guards for the org, starter, deletion, and source account.
+The completion depends on the account write changing one row in that
+same batch. The old image keeps its snapshot and loses its refresh marks.
+The target image keeps its pending push mark.
+
+The batch changes `cleanup-build` to `cleanup`, so the hidden build starts
+no added build. It retains every other cleanup phase and resource owner.
+An account-write failure rolls back these changes too. Every write checks
+the stored switch state, so a Stop committed before repair prevents
+completion. A blocked publication leaves the account unchanged.
+
+A failed build or a success that the target image no longer names fails
+the switch. `switchBuildFailureCause` also serves the live failure writer.
+It recognizes retained time-limit and provider-retry messages. A generic
+older error has no retained provider class and uses the existing `script`
+fallback. Repair preserves the stored build-completion time. It records
+the actual repair time as the account-change time.
+
+Progression then reads the open switch again. A completed, failed, or
+stopped switch no longer keeps the one-second switch alarm active.
+Ordinary image cleanup and refresh scheduling continue.
+
 ## Member reads
 
 `readBuildHistory` and `readBuildSnapshot` exclude operator switch rows.
@@ -117,5 +149,6 @@ or the existing repair scan can retry it.
 - [`provider-switch-data.ts`](provider-switch-data.ts): wait and no-image completion writes.
 - [`provider-switch-control.ts`](provider-switch-control.ts): wakes, stop, suspension, and advance fences.
 - [`provider-switch-end.ts`](provider-switch-end.ts): guarded switch failure and publication statements.
+- [`provider-switch-repair.ts`](provider-switch-repair.ts): guarded completion or failure of builds ended by older coordinators.
 - [`waiting-image-data.ts`](waiting-image-data.ts): queued member selection and atomic execution admission.
 - [`build-switch-admission.ts`](build-switch-admission.ts): admission predicates, switch claim, and first waiting log.
