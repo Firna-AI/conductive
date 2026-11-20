@@ -13,11 +13,31 @@ The user chose one `markdown-it` parser for both views on 16 November
 item 8 D, that the chat draws each part as the file preview draws it. On
 18 November 2026, the user chose items 9 C, 10 B, 11 C, 12 B, and 14 B,
 and on 20 November 2026 item 82 B, which this page gives at their parts.
-The mockups draw typed fixtures, so they read the inline Markdown of the
-fixtures with their own small reader.
+The fixtures write each agent message as the blocks and the inline tree
+that the app reads from the Markdown of the agent. The mockups read the
+chips, the links, and the files of that tree with their own small reader.
 
 ## The parts
 
+- `AgentBlocks` and `LineBlocks` in `src/components/chat/` draw the blocks
+  of an agent message, typed with `TextBlock` of the app. `AgentBlocks`
+  draws an answer and the blocks under an open message line. `LineBlocks`
+  draws the blocks in a message line, and its `holdsTable` finds where the
+  open line splits. The app draws its agent messages with them too, so
+  both views draw each kind of block.
+  - Each view gives the blocks its drawing, an `AgentDrawing` of
+    `agentDrawing.ts`. The drawing draws the inline text at its place,
+    draws a code block, and says whether a heading shows words. The place
+    says whether the text is in a message line, and whether a picture can
+    show there.
+  - `fixtureDrawing.tsx` gives the drawing of the mockups. It draws the
+    text with `AnswerText`, a code block with `CodeBlock`, and a heading
+    only when `answerNodes.ts` finds words in its text.
+  - `agentText.ts` in `src/fixtures/` gives the builders of the blocks and
+    of the inline text, such as `p`, `heading`, `bullets`, `task`,
+    `strong`, and `link`. A string is a text node with exactly its
+    characters. No builder reads Markdown, so a fixture copies no bug of
+    the reader of the app.
 - `MarkdownTable` in `src/components/common/` draws each Markdown table of
   a reply and of the Markdown preview of a file as a native table. It
   imports no fixture, so the app can use it too. Each caller draws the
@@ -104,8 +124,10 @@ fixtures with their own small reader.
     paragraph of the item, as on GitHub, so it stays on the line of its
     words, as the last task of `app/chat/lists/tasks` shows.
     `app/files/markdown` shows the box in the file preview.
-    `markdownTasks.ts` reads the box at the start of an item, and `TaskBox`
-    draws it, both in `src/components/common/`.
+    `markdownTasks.ts` reads the box at the start of an item of the file
+    preview, and `TaskBox` draws it, both in `src/components/common/`. A
+    fixture of a reply writes the state of the box with `task` of
+    `agentText.ts`.
   - The box has the look of the design, not of the browser, in both views
     and in a message line, from item 82 B of the Markdown plan. The
     browser drew a done box in light grey in the light scheme, so its
@@ -126,12 +148,14 @@ fixtures with their own small reader.
 
 ## Marks and line breaks
 
-- `markdownMarks.ts` in `src/components/common/` reads the marks of a
-  reply and of a file preview as CommonMark and `markdown-it` read them:
-  `**` and `__` around bold text, `*` and `_` around emphasis, and `~~`
-  around strikethrough. `markFlanking.ts` beside it gives the flanking
-  rules of CommonMark, which decide whether a mark can open or close.
-  `MarkedNodes` beside it draws each pair as `strong`, `em`, or `del`.
+- The marks of a reply and of a file preview follow CommonMark and
+  `markdown-it`: `**` and `__` around bold text, `*` and `_` around
+  emphasis, and `~~` around strikethrough. A fixture of a reply writes
+  each mark as a node of its tree, as the app reads it. `markdownMarks.ts`
+  in `src/components/common/` reads the marks of a file preview.
+  `markFlanking.ts` beside it gives the flanking rules of CommonMark, which
+  decide whether a mark can open or close. `MarkedNodes` beside it draws
+  each mark as `strong`, `em`, or `del`.
   - A mark pairs only where CommonMark lets it open and close, so a mark
     without a pair shows as typed: the `**` and the `*` of a file pattern
     such as `tests/**/*.test.ts`, a `*` between two spaces, and a single
@@ -145,29 +169,31 @@ fixtures with their own small reader.
     space and before a letter. A mark that can also close, such as the
     `**` of `tests/**/*.test.ts`, stays text, so a file pattern never
     turns the rest of the text bold. A finished message shows a mark
-    without a pair as typed. A fixture marks a message that the agent
-    still writes with `live`, and the mockups close the open marks of its
-    last paragraph.
+    without a pair as typed. The fixture of a message that the agent
+    still writes holds the tree that the app reads then, with the open
+    mark closed.
   - Bold text around code holds the code, so a chip from code inside bold
     text is bold too, from design call 7 of the Markdown plan.
-- `answerNodes.ts` in `src/components/chat/` reads the text of an answer
-  in the order in which the parser reads it: code first, then Markdown
-  links and images, then line breaks, then the marks, and last, in the
-  text between the marks, the mentions and the bare addresses. So code,
-  links, and chips are units that the marks do not read into, and a path
-  keeps its `_`. A mention can start right after a mark, as in
+- `answerNodes.ts` in `src/components/chat/` reads the inline tree of a
+  fixture. The tree holds code, links, images, line breaks, and marks as
+  nodes. So the marks do not read into code, links, or chips, and a path
+  keeps its `_`. In the text nodes, the reader finds the mentions and the
+  bare addresses. A mention can start right after a mark, as in
   `*@src/app.ts*`, and it ends before the closing mark, from design call
   11. `AnswerText` beside it draws the text, and `PreviewText` in
   `src/components/files/` draws the text of a file preview.
 - A line-break tag, `<br>`, `<br/>`, or `<br />` in any letter case, draws
   a line break in a paragraph, a heading, a list item, or a table cell, of
   a reply and of a file preview, from item 1 of the Markdown plan.
-  `markdownBreaks.ts` in `src/components/common/` reads the tags. Other
-  HTML shows as text, as the `<kbd>` tags of
+  `markdownBreaks.ts` in `src/components/common/` reads the tags of a
+  file preview. A fixture of a reply writes each break as a node of its
+  tree. Other HTML shows as text, as the `<kbd>` tags of
   `app/chat/formatting/as-typed` show, and so does a tag in code.
   - A break at the start or at the end of a block draws nothing, so a
     block of only breaks draws nothing. Two or more breaks in a row draw
-    at most one empty line. The mockups do not draw these cases.
+    at most one empty line. `answerNodes.ts` keeps the breaks of a reply
+    by the rule of `src/markdown/kept-breaks.ts` of the app. The mockups
+    do not draw these cases.
   - `app/chat/formatting` shows an address on two lines.
 - A Markdown image of a reply whose target is no file of the workspace
   shows its alt text, and no picture loads, from item 5 A of the Markdown
@@ -189,8 +215,8 @@ strikethrough, links, and chips show in the line, closed and open.
 - Closed, the line shows a table as its cells, row by row, with a dot
   between two cells. Open, the line keeps the paragraphs before the first
   table, and the table and the rest of the message show under the line,
-  at the left edge of its text, as `app/chat/work/table` shows. A quote
-  that holds a table counts as that table.
+  at the left edge of its text, as `app/chat/work/table` shows. A list or
+  a quote that holds a table, at any depth, counts as that table.
 - A summary may hold a heading, but its button role hides the heading
   from the heading list of a screen reader. Each heading of the line has
   the heading weight and the size of the text of the line. Closed, the

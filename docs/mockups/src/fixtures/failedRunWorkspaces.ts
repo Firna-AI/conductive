@@ -6,6 +6,7 @@
  * base branch of each run is its head branch (decision 507 G).
  */
 
+import { p } from './agentText'
 import { people } from './members'
 import { repositories } from './repositories'
 import { automations } from './automations'
@@ -104,7 +105,7 @@ export const startFailedRun: RunWorkspace = {
     {
       kind: 'agent',
       id: 'plan',
-      blocks: ["I'll read the changes of pull request #486 first."],
+      blocks: [p("I'll read the changes of pull request #486 first.")],
     },
     { kind: 'working', id: 'working', elapsed: '9s' },
   ],
@@ -124,7 +125,7 @@ export const turnFailedRun: RunWorkspace = {
     {
       kind: 'agent',
       id: 'plan',
-      blocks: ["I'll read the new commits of pull request #486 first."],
+      blocks: [p("I'll read the new commits of pull request #486 first.")],
     },
     {
       kind: 'tool',

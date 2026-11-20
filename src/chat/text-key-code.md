@@ -3,9 +3,9 @@
 This guide belongs to [Chat key code](key-code.md). It names the files,
 the types, and the functions that read and draw the text of the chat: the
 links, the chips, the mentions, the pictures, and the Markdown of agent
-messages. [Agent text](agent-text.md) and [Text links](text-links.md) give
-their rules. Each path is relative to `src/chat/`, the folder of this
-guide.
+messages. [Agent text](agent-text.md), [Text links](text-links.md), and
+[Pictures in answers](answer-pictures.md) give their rules. Each path is
+relative to `src/chat/`, the folder of this guide.
 
 - `links/`: `workspace-links.ts`, the link syntax, the reader of the
   links of a message field, and `linkTarget`, with the session of a
@@ -39,7 +39,7 @@ guide.
   the chips that answers share. `FilePicture.tsx` draws the Markdown image
   of a picture file of an answer as the mockups' `AnswerPicture`, and
   `picture-read.ts` reads and decodes its file, as
-  [Pictures in answers](text-links.md#pictures-in-answers) says.
+  [Pictures in answers](answer-pictures.md) says.
   `mention-copy.ts` makes
   the browser's own copy of chat text give the text of each chip that has
   a `data-mention` mark: each file chip, each skill chip, each `SentFileChip`, and each
@@ -83,7 +83,14 @@ guide.
   `markdown/FileTextLink.tsx`, a link to a file. `samePlainData` of
   `components/same-data.ts` lets a block draw again only when its data
   changes. `components/AgentText.tsx`:
-  `AgentText`, which draws the blocks, with the heading and prose styles
-  that the file preview shares, and `AgentBlocks`, which the message line
-  shares. `components/LineBlocks.tsx`: the blocks of a message line, as
-  spans, with the named task boxes of the line.
+  `AgentText`, which draws the blocks of an answer, with the heading and
+  prose styles that the file preview shares.
+  `components/answer-drawing.tsx`: `answerDrawing`, the drawing of the app
+  for the blocks of one message.
+- `../../docs/mockups/src/components/chat/`: the blocks that the chat
+  shares with the mockups. `AgentBlocks.tsx`: `AgentBlocks`, the blocks of
+  an answer and of the body of an open message line. `LineBlocks.tsx`:
+  `LineBlocks`, the blocks of a message line, as spans, with the named
+  task boxes of the line, and `holdsTable`. `agentDrawing.ts`:
+  `AgentDrawing` and `TextPlace`, which tell the blocks how a view draws
+  their text, their code, and their headings.

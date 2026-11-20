@@ -34,13 +34,15 @@ function rawEnd(text: string, start: number): number {
   return -1
 }
 
-/** The first unescaped `>` within the address length limit, or -1. */
+/** The unescaped `>` of a valid angle address within its length limit, or -1. */
 function angleEnd(text: string, open: number): number {
   for (let index = open + 1; index - open <= maxLength; index += 1) {
     const char = text[index]
-    if (char === undefined) return -1
-    if (char === '\\') index += 1
-    else if (char === '>') return index
+    if (char === undefined || char === '\n' || char === '<') return -1
+    if (char === '\\') {
+      if (text[index + 1] === '\n') return -1
+      index += 1
+    } else if (char === '>') return index
   }
   return -1
 }
@@ -78,7 +80,6 @@ function readInlineTarget(text: string, at: number): InlineTarget | null {
   const end = angle ? angleEnd(text, index) : rawEnd(text, index)
   if (end < 0) return null
   const source = text.slice(start, end)
-  if (angle && /[\n<]/.test(source)) return null
   index = skipSpace(text, angle ? end + 1 : end)
   if (text[index] === '"' || text[index] === "'" || text[index] === '(') {
     const close = titleEnd(text, index)

@@ -12,6 +12,7 @@ import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
 import { AgentBlocks } from './AgentBlocks'
 import { ContinuedLine } from './ContinuedLine'
+import { fixtureDrawing } from './fixtureDrawing'
 import { RepositoryChangedLine } from './RepositoryChangedLine'
 import type { SingleItem } from './groupItems'
 import { LinkedLine } from './LinkedLine'
@@ -91,7 +92,7 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
         <div
           className={classes(styles.agent, headingStyles.headings, prose.prose)}
         >
-          <AgentBlocks blocks={item.blocks} live={item.live} pictures />
+          <AgentBlocks blocks={item.blocks} drawing={fixtureDrawing} />
         </div>
       )
     case 'mac-command':

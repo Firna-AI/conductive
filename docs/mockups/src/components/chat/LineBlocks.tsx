@@ -1,45 +1,66 @@
 import { Fragment } from 'react'
-import line from '../../../docs/mockups/src/components/chat/MessageLine.module.css'
-import styles from '../../../docs/mockups/src/components/chat/ToolGroup.module.css'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import prose from '../../../docs/mockups/src/components/common/MarkdownProse.module.css'
-import { TaskBox } from '../../../docs/mockups/src/components/common/TaskBox'
-import markdown from '../../../docs/mockups/src/components/files/MarkdownView.module.css'
-import type { AnswerPictures } from '../links/FilePicture'
 import type {
   TextBlock,
   TextItem,
   TextList,
   TextTable,
-} from '../markdown/agent-blocks'
-import type { InlineText } from '../markdown/agent-inline'
-import { useShowsWords } from '../markdown/answer-reading'
-import { AnswerText } from '../markdown/AnswerText'
-import local from './chat.module.css'
+} from '../../../../../src/chat/markdown/agent-blocks'
+import type { InlineText } from '../../../../../src/chat/markdown/agent-inline'
+import { classes } from '../common/classes'
+import prose from '../common/MarkdownProse.module.css'
+import { TaskBox } from '../common/TaskBox'
+import markdown from '../files/MarkdownView.module.css'
+import type { AgentDrawing, TextPlace } from './agentDrawing'
+import blockStyles from './LineBlocks.module.css'
+import line from './MessageLine.module.css'
+import styles from './ToolGroup.module.css'
 
 /**
  * The state of a message line that each of its blocks gets: whether the
- * line is open, and the pictures of its message while it is open. A closed
- * line shows each image as its link, so the line stays one line.
+ * line is open, and the drawing of the text of its message. A closed line
+ * shows each image as its link, so the line stays one line.
  */
 export interface LineState {
   open: boolean
-  pictures?: AnswerPictures
+  drawing: AgentDrawing
 }
 
-/** The state of a closed line, which shows no picture. */
-export const closedLine: LineState = { open: false }
+/** A paragraph or a list item of an open line, where a picture can show. */
+const openText: TextPlace = { line: true, pictures: true }
+
+/**
+ * A heading or a table cell of a line, and the text of a closed line, which
+ * keep the link of an image.
+ */
+const lineText: TextPlace = { line: true, pictures: false }
+
+/** Where a line draws the text of a paragraph or of a list item. */
+function textPlace(state: LineState): TextPlace {
+  return state.open ? openText : lineText
+}
+
+/**
+ * Whether a block is a table, or a list or a quote that holds one at any
+ * depth. A `<summary>` holds no table, so a message line keeps the blocks
+ * before the first such block, as `chat-message-lines.md` says.
+ */
+export function holdsTable(block: TextBlock): boolean {
+  if (block.kind === 'table') return true
+  if (block.kind === 'quote') return block.blocks.some(holdsTable)
+  if (block.kind !== 'ul' && block.kind !== 'ol') return false
+  return block.items.some((item) => item.blocks.some(holdsTable))
+}
 
 /**
  * The cells of a table as text, row by row, with a dot between two cells.
  * A cell keeps the link of an image, as in an answer.
  */
-function TableText(props: { table: TextTable }) {
+function TableText(props: { table: TextTable; drawing: AgentDrawing }) {
   const { head, rows } = props.table
   return [head, ...rows].flat().map((cell, index) => (
     <Fragment key={index}>
       {index > 0 ? ' · ' : null}
-      <AnswerText line text={cell} />
+      {props.drawing.text(cell, lineText)}
     </Fragment>
   ))
 }
@@ -68,8 +89,7 @@ function LineTaskBox(props: { checked: boolean }) {
  * The text of a list item in a message line. An item of one paragraph shows
  * its text alone. Another item shows its blocks, such as its text and the
  * list that the agent indents under it. A task item shows its box before
- * the words of its first paragraph, which stay in the line of the box, as
- * the mockups draw it.
+ * the words of its first paragraph, which stay in the line of the box.
  */
 function LineItem(props: { item: TextItem; state: LineState }) {
   const { checked, blocks } = props.item
@@ -80,7 +100,7 @@ function LineItem(props: { item: TextItem; state: LineState }) {
     return (
       <>
         {box}
-        <AnswerText line pictures={state.pictures} text={first.text} />{' '}
+        {state.drawing.text(first.text, textPlace(state))}{' '}
         {rest.length > 0 ? <LineBlocks blocks={rest} state={state} /> : null}
       </>
     )
@@ -106,7 +126,7 @@ function LineList(props: { list: TextList; state: LineState }) {
     <span
       className={classes(
         styles.bullets,
-        local.lineBlock,
+        blockStyles.lineBlock,
         numbered && styles.numbered,
       )}
     >
@@ -129,25 +149,29 @@ function LineList(props: { list: TextList; state: LineState }) {
 
 /**
  * A heading of a message line: a span in the weight of a heading, as
- * `LineBlock` says, with its text through `AnswerText`. A heading whose
- * text shows no words where it draws, as `useShowsWords` reads it with the
- * tree and the links of the screen, draws nothing, also no space, so the
- * open line shows no empty line for it.
+ * `LineBlock` says. A heading whose text shows no words where it draws, as
+ * the `ShowsWords` of the view reads it, draws nothing, also no space, so
+ * the open line shows no empty line for it.
  */
-function LineHeading(props: { text: InlineText }) {
-  const shows = useShowsWords(props.text)
-  if (!shows) return null
+function LineHeading(props: { text: InlineText; drawing: AgentDrawing }) {
+  const { drawing, text } = props
   return (
-    <span
-      className={classes(styles.heading, local.lineBlock, local.lineHeading)}
-    >
-      <AnswerText line text={props.text} />{' '}
-    </span>
+    <drawing.ShowsWords text={text}>
+      <span
+        className={classes(
+          styles.heading,
+          blockStyles.lineBlock,
+          blockStyles.lineHeading,
+        )}
+      >
+        {drawing.text(text, lineText)}{' '}
+      </span>
+    </drawing.ShowsWords>
   )
 }
 
 /**
- * A block of a message line, as `AgentText` draws it, with the same text,
+ * A block of a message line, as an answer draws it, with the same text,
  * workspace chips, and links. A `<summary>` holds only phrasing content and
  * headings, and no paragraph, list, quote, rule, or table. So each block is
  * a span, which CSS shows as a block while the line is open. A code block
@@ -167,12 +191,12 @@ function LineBlock(props: { block: TextBlock; state: LineState }) {
   switch (block.kind) {
     case 'p':
       return (
-        <span className={classes(styles.paragraph, local.lineBlock)}>
-          <AnswerText line pictures={state.pictures} text={block.text} />{' '}
+        <span className={classes(styles.paragraph, blockStyles.lineBlock)}>
+          {state.drawing.text(block.text, textPlace(state))}{' '}
         </span>
       )
     case 'heading':
-      return <LineHeading text={block.text} />
+      return <LineHeading drawing={state.drawing} text={block.text} />
     case 'ul':
     case 'ol':
       return <LineList list={block} state={state} />
@@ -181,8 +205,8 @@ function LineBlock(props: { block: TextBlock; state: LineState }) {
         <>
           <span
             className={classes(
-              local.lineBlock,
-              local.code,
+              blockStyles.lineBlock,
+              blockStyles.code,
               state.open && markdown.block,
             )}
           >
@@ -206,14 +230,17 @@ function LineBlock(props: { block: TextBlock; state: LineState }) {
       )
     case 'table':
       return (
-        <span className={local.lineBlock}>
-          <TableText table={block} />{' '}
+        <span className={blockStyles.lineBlock}>
+          <TableText drawing={state.drawing} table={block} />{' '}
         </span>
       )
   }
 }
 
-/** The blocks of a message line as text, in the line. */
+/**
+ * The blocks of a message line as text, in the line. The app and the
+ * mockups share them, and each gives the drawing of its text in `state`.
+ */
 export function LineBlocks(props: {
   blocks: readonly TextBlock[]
   state: LineState

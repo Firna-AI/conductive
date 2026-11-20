@@ -9,7 +9,9 @@ requirements, and the mockups draw them at `app/chat/work`,
 
 - `MessageLine` in `components/MessageLine.tsx` reads the text of the
   message with `agentBlocks`, once for each text, as `AgentText` does.
-  `LineBlocks` in `components/LineBlocks.tsx` draws its blocks in the line.
+  `LineBlocks` draws its blocks in the line. The app and the mockups share
+  `LineBlocks`, in `docs/mockups/src/components/chat/LineBlocks.tsx`, with
+  the drawing of each view, as [Drawing](agent-text.md#drawing) says.
 - A `<summary>` holds only phrasing content and headings, and no
   paragraph, list, quote, rule, or table. So `LineBlocks` draws each block
   as a span, which CSS shows as a block while the line is open. A table
@@ -29,12 +31,13 @@ requirements, and the mockups draw them at `app/chat/work`,
   as a middle dot. Open, it shows both as blocks.
 - `AnswerText` with `line` draws a space before each line break. The CSS
   of the closed line hides each `br`, so the space keeps the words apart.
-- `LineBlocks` gets the `LineState` of the line: whether it is open, and,
-  while it is open, the pictures of its message. So the closed line shows
-  the image of a picture file as its link, and the open line shows its
-  picture, as [Pictures in answers](text-links.md#pictures-in-answers)
-  says. A heading and a table cell keep the link. The hidden copy of the
-  line gets the state of a closed line.
+- `LineBlocks` gets the `LineState` of the line: whether it is open, and
+  the drawing of its message. It allows pictures only in a paragraph or a
+  list item of an open line. So the closed line shows the image of a
+  picture file as its link, and the open line shows its picture, as
+  [Pictures in answers](answer-pictures.md) says. A heading
+  and a table cell keep the link. The hidden copy of the line gets the
+  state of a closed line.
 - A task item draws its fixed check box before the words of its first
   paragraph, which stay in the line of the box, as the mockups draw it. The
   item has the `task` class of `MessageLine.module.css`: closed, the box
@@ -50,11 +53,12 @@ requirements, and the mockups draw them at `app/chat/work`,
   draws through `AgentBlocks`, so it has the button.
 - An open line keeps the blocks before the first table in its summary.
   When a list or a quote holds that table, at any depth, the summary keeps
-  the blocks before that list or quote. The table or the block that holds
-  it, and the blocks after it, draw under the summary through
-  `AgentBlocks`, only while the line is open, so a closed line lays out no
-  hidden table. Under the line, a quote and a rule are elements, and
-  `MessageLine.module.css` sets their space.
+  the blocks before that list or quote. `holdsTable` of the shared
+  `LineBlocks.tsx` finds that block, for the app and for the mockups. The
+  table or the block that holds it, and the blocks after it, draw under
+  the summary through `AgentBlocks`, only while the line is open, so a
+  closed line lays out no hidden table. Under the line, a quote and a rule
+  are elements, and `MessageLine.module.css` sets their space.
 - A line that starts with a table, or with a block that holds one, keeps
   its closed text in a visually hidden span. So the open line keeps a name
   for a screen reader. So does a line whose blocks before the table show
