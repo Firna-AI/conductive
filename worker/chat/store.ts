@@ -11,6 +11,7 @@ import { ChatRecords } from './chat-records'
 import type { FilesStorage } from '../files/storage'
 import type { GitHubStateTransaction } from '../github/contracts'
 import { ReportRepairs } from './report-repairs'
+import { WorkspaceSkills } from './skill-state'
 import { WorkspaceSummaryProjection } from './workspace-summary'
 import { PreviewRevocations } from '../previews/revocation-events'
 import { TerminalList } from '../terminal/list-store'
@@ -35,6 +36,7 @@ export class ChatTransaction extends ChatRecords {
   readonly files: FilesStorage
   readonly github: GitHubStateTransaction
   readonly repairs: ReportRepairs
+  readonly skills: WorkspaceSkills
   readonly previews: PreviewRevocations
   readonly terminals: TerminalList
   readonly output: RunnerOutputState
@@ -64,6 +66,9 @@ export class ChatTransaction extends ChatRecords {
       emit: (event) => this.emit(event),
     }
     this.repairs = new ReportRepairs(data)
+    this.skills = new WorkspaceSkills(data, (event, occurredAt) =>
+      this.emit(event, occurredAt),
+    )
     this.previews = new PreviewRevocations(data, (event) => this.emit(event))
     this.terminals = new TerminalList(data, (event) => this.emit(event))
     this.summary = new WorkspaceSummaryProjection(
@@ -79,46 +84,6 @@ export class ChatTransaction extends ChatRecords {
 
   saveFirstMessageAdmission(first: FirstWorkspaceMessage): Promise<void> {
     return this.data.put(FIRST_MESSAGE_ADMISSION_KEY, first)
-  }
-  async cursor(streamId: string): Promise<number> {
-    return (await this.data.get<number>(key('cursor', streamId))) ?? 0
-  }
-  async streamReady(streamId: string): Promise<boolean> {
-    return (await this.data.get<boolean>(key('ready', streamId))) ?? false
-  }
-  saveStreamReady(streamId: string): Promise<void> {
-    return this.data.put(key('ready', streamId), true)
-  }
-  async command(commandId: string): Promise<PendingCommand | undefined> {
-    return (
-      await this.data.get<{ command: PendingCommand }>(
-        key('command', commandId),
-      )
-    )?.command
-  }
-  async commandDelivered(
-    commandId: string,
-    connectionId: string,
-  ): Promise<boolean> {
-    return (
-      (await this.data.get<{ deliveredTo?: string }>(key('command', commandId)))
-        ?.deliveredTo === connectionId
-    )
-  }
-  async saveCommandDelivery(
-    commandId: string,
-    connectionId: string,
-  ): Promise<void> {
-    const record = await this.data.get<{
-      command: PendingCommand
-      order: number
-      deliveredTo?: string
-    }>(key('command', commandId))
-    if (record)
-      await this.data.put(key('command', commandId), {
-        ...record,
-        deliveredTo: connectionId,
-      })
   }
   saveTurn(turn: StoredTurn): Promise<void> {
     return this.summary
@@ -153,12 +118,6 @@ export class ChatTransaction extends ChatRecords {
       command,
       order: ++this.commandThrough,
     })
-  }
-  async removeCommand(commandId: string): Promise<void> {
-    await this.data.delete(key('command', commandId))
-  }
-  saveCursor(streamId: string, through: number): Promise<void> {
-    return this.data.put(key('cursor', streamId), through)
   }
   history(after: number, through = this.through, session?: SessionPage) {
     return this.pages.read(

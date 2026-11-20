@@ -136,9 +136,10 @@ export interface ChatFiles {
  * session active while `content` shows a file, the address goes back to the
  * chat. The chat reads the kept files for the list of `@` and the file
  * chips, also on a phone before a visit to Files: `KeptConnections` of the
- * screen keeps them connected. A file or diff tab that leaves the saved
- * view, such as one that the user closed, forgets its kept scroll offset.
- * An archived workspace has no files.
+ * screen keeps them connected. It reads the skill lists of the workspace
+ * for the list of `/` and the skill chips. A file or diff tab that leaves
+ * the saved view, such as one that the user closed, forgets its kept scroll
+ * offset. An archived workspace has no files and no skills.
  */
 export function useChatFiles(
   context: WorkspaceContext,

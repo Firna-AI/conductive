@@ -31,6 +31,7 @@ and the separate preview domain.
 | A copy of the [GitHub state](../protocol/github-banner.md#the-github-state) of each workspace, for the lists | D1 |
 | Files attached to chat messages | The attachment storage, an R2 bucket, until the sandbox has them. Then the home folder of the sandbox |
 | The records of attached files | D1 |
+| The [merge record](../protocol/account-stats.md#the-merge-record) of each merged pull request of a workspace branch | D1 |
 | The repository, the files, and the agent sessions                            | The home folder of the sandbox           |
 | The prepared repositories and the installed software | The org image, in the provider account of the org |
 | The releases of the [sandbox software](sandbox-software.md) | An R2 bucket, public at `runner.conductive.build` |

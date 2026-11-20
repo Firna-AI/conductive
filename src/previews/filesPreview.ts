@@ -25,22 +25,36 @@ export interface FilesPreviewState {
   /** An open runs, so no second open starts. */
   opening: boolean
   /**
-   * Grows at each end of the connection of the screen. An open belongs to
-   * the connection in which it started, and its answer after the end of
-   * that connection changes nothing.
+   * The cloud computer runs, as the visit of the screen confirmed it: the
+   * open of the visit ended, and the workspace is ready. A running period
+   * lasts until the workspace leaves Ready or the visit ends. Before the
+   * open of a visit ends, the screen can still show a saved state, so no
+   * open starts then.
    */
-  connection: number
+  running: boolean
+  /**
+   * Grows at each start and each end of a running period, and at each end
+   * of the connection of the screen. An open belongs to the period in which
+   * it started, and its answer in a later period changes nothing.
+   */
+  period: number
 }
 
 type FilesPreviewAction =
   | { type: 'open' }
-  | { type: 'opened'; preview: Preview; connection: number }
-  | { type: 'open-failed'; connection: number }
+  | { type: 'opened'; preview: Preview; period: number }
+  | { type: 'open-failed'; period: number }
   /**
    * The files preview ended with no event that names it: at its expiry, or
    * when the cloud computer stopped.
    */
   | { type: 'ended'; previewId: string }
+  /**
+   * A running period starts or ends, as the screen confirms it. The files
+   * preview stays, so a Restart keeps the page that a tab shows, but the
+   * open that runs ends.
+   */
+  | { type: 'running'; running: boolean }
   /**
    * The connection of the screen ended. The files preview can end while no
    * screen watches it, so the app forgets it, and the next show opens again.
@@ -51,7 +65,8 @@ const initialFilesPreview: FilesPreviewState = {
   preview: null,
   ended: new Set(),
   opening: false,
-  connection: 0,
+  running: false,
+  period: 0,
 }
 
 function withEnded(
@@ -72,7 +87,9 @@ function withEnded(
  * A revoke names any preview of the workspace, so the state keeps each
  * ended ID: an open that answers with an ended preview changes nothing.
  * A failed open forgets the files preview, as the end of the connection
- * does, but ends no ID, so the next open can answer it again.
+ * does, but ends no ID, so the next open can answer it again. Each new
+ * period ends the open that runs, and the answer of an earlier period
+ * changes nothing.
  */
 function filesPreviewReducer(
   state: FilesPreviewState,
@@ -82,21 +99,29 @@ function filesPreviewReducer(
     case 'open':
       return { ...state, opening: true }
     case 'opened':
-      if (action.connection !== state.connection) return state
+      if (action.period !== state.period) return state
       return state.ended.has(action.preview.id)
         ? { ...state, opening: false }
         : { ...state, preview: action.preview, opening: false }
     case 'open-failed':
-      if (action.connection !== state.connection) return state
+      if (action.period !== state.period) return state
       return { ...state, preview: null, opening: false }
     case 'ended':
       return withEnded(state, action.previewId)
+    case 'running':
+      if (action.running === state.running) return state
+      return {
+        ...state,
+        running: action.running,
+        opening: false,
+        period: state.period + 1,
+      }
     case 'disconnected':
       return {
         ...state,
         preview: null,
         opening: false,
-        connection: state.connection + 1,
+        period: state.period + 1,
       }
     case 'preview.revoked':
       return withEnded(state, action.previewId)

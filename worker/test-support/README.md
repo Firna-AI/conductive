@@ -206,6 +206,9 @@ A callback counts as complete only after the `waitUntil` work that it starts end
   Its default export is the Worker entry of the native bundle.
 - [native-close.test-support.ts](native-close.test-support.ts): `NativeCloseProbe`, the close-first control of the native browser, runner, and Mac fixture entries.
 - [app-access.ts](app-access.ts) grants fixture access for users created directly in D1.
+- [d1-seeds.ts](d1-seeds.ts) has one seed helper for each of these D1 tables: `seedWorkspace` for `workspaces`, `seedMember` for `org_members`, `seedAutomation` for `automations`, and `seedAutomationRun` for `automation_runs`.
+  Each helper returns the insert statement of one row. The caller runs the statement or adds it to a D1 batch.
+  An optional field that the caller leaves out gets the column default of the schema.
 - `native-global-setup.ts` builds and provides the current native bundle, the split migrations, the migrated template, and the bundle folder before tests and watch reruns.
 - `native-chat-record-controls.ts` reads history and file projections inside the native object and calls its real chat writer.
 - `attachment-upload.ts` prepares attachment fixtures through the production multipart start and complete operations with Node-compatible R2 part writes.

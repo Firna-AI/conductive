@@ -1,19 +1,12 @@
 import { memo } from 'react'
-import { useTextLinks } from '../../shell/ui/text-links'
 import { samePlainData } from '../components/same-data'
 import { FileLink } from '../links/FileChips'
 import { FilePicture, type AnswerPictures } from '../links/FilePicture'
-import { LinkChip, useEntryLookup } from '../links/LinkedText'
-import { useChatLinks } from '../links/LinksContext'
+import { LinkChip } from '../links/LinkedText'
 import { CodeText, ChatWebLink } from '../links/WebLinkText'
-import { useRepositoryFolder } from '../mentions/MentionsContext'
 import type { InlineText } from './agent-inline'
-import {
-  answerParts,
-  namesFiles,
-  type AnswerPart,
-  type AnswerReading,
-} from './answer-parts'
+import { answerParts, namesFiles, type AnswerPart } from './answer-parts'
+import { useAnswerReading } from './answer-reading'
 import { FileTextLink } from './FileTextLink'
 
 /**
@@ -30,19 +23,6 @@ const markTags = { strong: 'strong', emphasis: 'em', strike: 'del' } as const
 interface Drawing {
   line: boolean
   pictures?: AnswerPictures
-}
-
-/**
- * What the chat reads the text with: the workspaces of the chat, the web
- * links of the screen, and the tree, while the chat has one. A text that
- * can name no file follows no change of the tree.
- */
-function useAnswerReading(text: InlineText): AnswerReading {
-  const { links } = useChatLinks()
-  const find = useEntryLookup(namesFiles(text))
-  const root = useRepositoryFolder()
-  const { linkOf } = useTextLinks()
-  return { links, web: linkOf, files: find ? { find, root } : undefined }
 }
 
 /**
@@ -173,11 +153,13 @@ interface AnswerTextProps {
  * table cell give no `pictures`, so the image keeps its link there.
  *
  * A text draws again when its data changes, or when what the chat reads it
- * with changes: the workspaces, the tree, or the links of the screen. So a
- * live update draws only the texts that changed.
+ * with changes: the workspaces, the tree, or the links of the screen, as
+ * `useAnswerReading` gives them. A text that can name no file follows no
+ * change of the tree. So a live update draws only the texts that changed.
  */
 export const AnswerText = memo(function AnswerText(props: AnswerTextProps) {
-  const parts = answerParts(props.text, useAnswerReading(props.text))
+  const reading = useAnswerReading(namesFiles(props.text))
+  const parts = answerParts(props.text, reading)
   const drawing: Drawing = {
     line: props.line ?? false,
     pictures: props.pictures,

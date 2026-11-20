@@ -12,6 +12,7 @@ use tokio::task::{JoinHandle, JoinSet};
 use crate::error::Result;
 use crate::ports::reporter::PortReports;
 use crate::reports::files::FileReports;
+use crate::skills::boundary::SkillReports;
 
 use super::boundary::{RepositoryWatch, WatchDriver};
 
@@ -33,6 +34,7 @@ pub struct ReportWatchService {
     driver: Arc<dyn WatchDriver>,
     files: Arc<dyn FileReports>,
     ports: Option<Arc<dyn PortReports>>,
+    skills: Option<Arc<dyn SkillReports>>,
     root: PathBuf,
     marker: PathBuf,
     stopped: watch::Sender<bool>,
@@ -52,11 +54,43 @@ impl ReportWatchService {
             driver,
             files,
             ports,
+            skills: None,
             root,
             marker,
             stopped: watch::channel(false).0,
             jobs: Mutex::new(None),
         }
+    }
+    /// Rescan skills after each debounced repository change and restore.
+    pub fn with_skills(mut self, skills: Arc<dyn SkillReports>) -> Self {
+        self.skills = Some(skills);
+        self
+    }
+}
+
+#[derive(Clone)]
+struct WatchReports {
+    files: Arc<dyn FileReports>,
+    skills: Option<Arc<dyn SkillReports>>,
+}
+
+impl WatchReports {
+    fn refresh(&self) -> BoxFuture<'static, Result<()>> {
+        let files = self.files.refresh(false, None, None);
+        let skills = self
+            .skills
+            .as_ref()
+            .map(|skills| skills.refresh(false, None));
+        Box::pin(async move {
+            let (files, skills) = tokio::join!(files, async {
+                match skills {
+                    Some(skills) => skills.await,
+                    None => Ok(()),
+                }
+            });
+            files?;
+            skills
+        })
     }
 }
 
@@ -68,7 +102,7 @@ fn delay(driver: Arc<dyn WatchDriver>, duration: Duration) -> BoxFuture<'static,
 
 async fn monitor(
     driver: Arc<dyn WatchDriver>,
-    files: Arc<dyn FileReports>,
+    reports: WatchReports,
     mut watcher: Arc<dyn RepositoryWatch>,
     root: PathBuf,
     marker: PathBuf,
@@ -92,12 +126,12 @@ async fn monitor(
                         Ok(new_watch) => watcher = new_watch,
                         Err(_) => { tracing::warn!("The repository watcher is unavailable."); break; },
                     }
-                    scans.spawn(files.refresh(false, None, None));
+                    scans.spawn(reports.refresh());
                 }
             },
             _ = &mut debounce, if debouncing => {
                 debouncing = false;
-                scans.spawn(files.refresh(false, None, None));
+                scans.spawn(reports.refresh());
             },
             changed = watcher.changed() => {
                 if changed.is_err() { tracing::warn!("The repository watcher is unavailable."); break; }
@@ -124,7 +158,10 @@ impl ReportWatches for ReportWatchService {
         let pending = !self.driver.exists(self.marker.clone()).await;
         let mut tasks = vec![tokio::spawn(monitor(
             self.driver.clone(),
-            self.files.clone(),
+            WatchReports {
+                files: self.files.clone(),
+                skills: self.skills.clone(),
+            },
             watcher,
             self.root.clone(),
             self.marker.clone(),

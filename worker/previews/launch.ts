@@ -27,7 +27,7 @@ export async function previewLaunchPage(
   now: number,
   path?: string,
 ): Promise<Response> {
-  const { token: grant } = await launchGrant(env, row, viewer, now)
+  const { token: grant } = await launchGrant(env, row, viewer, now, path)
   const nonce = randomToken()
   const action = previewHandoffUrl(env)
   const { html, policy } = previewLaunchDocument({
@@ -59,7 +59,7 @@ export async function previewNativeLaunch(
   now: number,
   path?: string,
 ): Promise<Response> {
-  const { token, expiresAt } = await launchGrant(env, row, viewer, now)
+  const { token, expiresAt } = await launchGrant(env, row, viewer, now, path)
   const url = new URL(previewHandoffUrl(env))
   const fields = new URLSearchParams({
     hostname: row.hostname,
@@ -128,13 +128,13 @@ export async function previewHandoff(
   }
   const hostnames = form.getAll('hostname')
   const paths = form.getAll('path')
-  const path = paths[0]
+  const legacyPath = paths[0]
   const suffix = `.${env.PREVIEW_DOMAIN?.toLowerCase()}`
   const hostname = hostnames[0] ?? ''
   if (
     hostnames.length !== 1 ||
     paths.length > 1 ||
-    (path !== undefined && !isFilePath(path)) ||
+    (legacyPath !== undefined && !isFilePath(legacyPath)) ||
     !hostname.endsWith(suffix) ||
     !/^[a-f0-9]{32}$/.test(hostname.slice(0, -suffix.length))
   )
@@ -162,6 +162,7 @@ export async function previewHandoff(
     )
   }
   const { row, cookie } = redeemed
+  const path = redeemed.path ?? legacyPath
   const url = `https://${row.hostname}/${path?.split('/').map(encodeURIComponent).join('/') ?? ''}`
   if (headerMode)
     return privateResponse(

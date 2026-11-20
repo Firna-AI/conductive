@@ -27,7 +27,8 @@ import type { StopFacts } from './turn-facts'
 /**
  * A message that a person sent. Each part in backticks is code, and each
  * workspace link is a chip. Each mention of an entry of the file tree is a
- * file chip, and each mention of a file of the message is the chip of that
+ * file chip, each skill text of a listed skill is a skill chip, and each
+ * mention of a file of the message is the chip of that
  * file, at its place. That chip opens the copy of the file only after the
  * message went out to the agent. The files that no chip shows stay under
  * the message.
@@ -38,6 +39,7 @@ export function UserBubble(props: {
   const { message } = props
   const parts = useChatParts(message.text, {
     mentions: true,
+    skills: true,
     attachments: message.attachments,
   })
   const listed = filesWithoutChip(parts, message.attachments)

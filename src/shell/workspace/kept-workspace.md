@@ -41,6 +41,12 @@ the `AppModel` of the tab, for the signed-in user.
   them follow the stream of the model before it opens, as the notices do.
   They keep the revokes of previews, and give each tool the kept revokes
   first, then the live events.
+- The tab also keeps the `WorkspaceSkills` of each workspace, the latest
+  skill lists for the list of `/` of its chat. Each show makes it follow
+  the stream of the model before it opens, as the tool events do. It
+  loads until the first `skills.updated` event, and each later event
+  replaces the lists. A report that the app cannot read keeps the last
+  lists. `workspace-skills.test.ts` checks it.
 - The tab also keeps the `WorkspaceFiles` of each workspace that it
   showed. The workspace screen connects it while it shows a workspace that
   is not archived, so a return shows the lists at once, and its socket asks

@@ -29,7 +29,8 @@ it('requests all workspace reports without a login, coalesces losses, and resets
   await fixture.drain()
   const initial = refreshCommands(runner)
   expect(initial.map((command) => command.kind)).toEqual(reportKinds)
-  expect(new Set(initial.map((command) => command.commandId)).size).toBe(5)
+  const count = reportKinds.length
+  expect(new Set(initial.map((command) => command.commandId)).size).toBe(count)
   expect(await refusedEvents(fixture)).toEqual(
     reportKinds.map((runnerEventType, index) => ({
       type: 'runner.event-refused',
@@ -44,11 +45,11 @@ it('requests all workspace reports without a login, coalesces losses, and resets
   for (const kind of reportKinds) runner.emit(oversizedReport(kind, 2))
   await fixture.drain()
   expect(refreshCommands(runner)).toEqual(initial)
-  expect((await refusedEvents(fixture)).slice(5)).toEqual(
+  expect((await refusedEvents(fixture)).slice(count)).toEqual(
     reportKinds.map((runnerEventType, index) => ({
       type: 'runner.event-refused',
       streamId: 'fake-stream-1',
-      runnerEventNumber: index + 6,
+      runnerEventNumber: index + count + 1,
       runnerEventType,
       reason: 'too_large',
       sessionId: null,
@@ -63,7 +64,7 @@ it('requests all workspace reports without a login, coalesces losses, and resets
   await fixture.drain()
   for (const kind of reportKinds) runner.emit(oversizedReport(kind, 4))
   await fixture.drain()
-  const next = refreshCommands(runner).slice(5)
+  const next = refreshCommands(runner).slice(count)
   expect(next.map((command) => command.kind)).toEqual(reportKinds)
   expect(
     next.every(
@@ -72,8 +73,10 @@ it('requests all workspace reports without a login, coalesces losses, and resets
     ),
   ).toBe(true)
   expect(
-    (await refusedEvents(fixture)).slice(10).map((event) => event.repairFailed),
-  ).toEqual([undefined, undefined, undefined, undefined, undefined])
+    (await refusedEvents(fixture))
+      .slice(count * 2)
+      .map((event) => event.repairFailed),
+  ).toEqual(reportKinds.map(() => undefined))
 })
 it('delivers repair commands during an active turn and ignores nonreplaceable refusals', async () => {
   const fixture = await createChatFixture(harness)

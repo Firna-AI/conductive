@@ -4,7 +4,7 @@ import type { HelperCredential } from './generated/HelperCredential'
 import type { ProviderInput } from './generated/ProviderInput'
 import type { RunnerBranches } from './generated/RunnerBranches'
 import type { RunnerRepository } from './generated/RunnerRepository'
-import { array, nullable, object, oneOf, string } from './parse'
+import { array, boolean, nullable, object, oneOf, string } from './parse'
 import {
   parseChoice,
   parseCredential,
@@ -115,7 +115,27 @@ export function readRequest(value: unknown): HelperRequest {
     case 'start':
       return { type: 'start', requestId, options: options(input.options) }
     case 'send':
-      return { type: 'send', requestId, input: providerInput(input.input) }
+      return {
+        type: 'send',
+        requestId,
+        input: providerInput(input.input),
+        ...(input.skills === undefined
+          ? {}
+          : {
+              skills: array(input.skills, (value) => {
+                const skill = object(value)
+                return { name: string(skill.name), path: string(skill.path) }
+              }),
+            }),
+      }
+    case 'skills':
+      return {
+        type: 'skills',
+        requestId,
+        repository: string(input.repository),
+        home: string(input.home),
+        reload: boolean(input.reload),
+      }
     case 'model':
       return { type: 'model', requestId, choice: parseChoice(input.choice) }
     case 'interrupt':

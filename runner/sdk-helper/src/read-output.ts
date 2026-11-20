@@ -1,6 +1,7 @@
 import { readTurnSpeed } from '../../../src/shared/chat-events'
 import type { HelperOutput } from './generated/HelperOutput'
 import type { ProviderEvent } from './generated/ProviderEvent'
+import type { SkillEntry } from './generated/SkillEntry'
 import {
   array,
   boolean,
@@ -91,9 +92,32 @@ function event(value: unknown): ProviderEvent {
   }
 }
 
+function skillEntry(value: unknown): SkillEntry {
+  const skill = object(value)
+  return {
+    name: string(skill.name),
+    description: string(skill.description),
+    path: string(skill.path),
+    ...(skill.manualOnly === undefined
+      ? {}
+      : { manualOnly: boolean(skill.manualOnly) }),
+  }
+}
+
 export function readOutput(value: unknown): HelperOutput {
   const input = object(value)
   switch (input.type) {
+    case 'skills': {
+      const skills = object(input.skills)
+      return {
+        type: input.type,
+        requestId: string(input.requestId),
+        skills: {
+          claude: array(skills.claude, skillEntry),
+          codex: array(skills.codex, skillEntry),
+        },
+      }
+    }
     case 'event':
       return { type: input.type, event: event(input.event) }
     case 'response':
