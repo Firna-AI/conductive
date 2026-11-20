@@ -89,33 +89,33 @@ Depends on: none
 The control of `app/capabilities` shows the approvals of the open session
 only, under "This session", and hides an approval of a pre-approved secret.
 
-- [ ] Change the words in `docs/mockups/src/components/capabilities/capabilitiesCopy.ts`:
+- [x] Change the words in `docs/mockups/src/components/capabilities/capabilitiesCopy.ts`:
       the title "This session" and the detail "Allowed by <who>, <when>".
-- [ ] Change `docs/mockups/src/components/capabilities/GrantList.tsx` and its
+- [x] Change `docs/mockups/src/components/capabilities/GrantList.tsx` and its
       fixtures, so that the page shows the approvals of one session. Keep one
       approval of a pre-approved secret in the fixture, hidden by the control.
-- [ ] Update the steps and the decision text of
+- [x] Update the steps and the decision text of
       `docs/mockups/src/entries/app/capabilities/index.mockup.tsx`.
-- [ ] Update `docs/mockups/design-secrets.md` and
+- [x] Update `docs/mockups/design-secrets.md` and
       `docs/mockups/catalogue-secrets.md`.
-- [ ] Run `npm run mockups:check`. Smoke-test `app/capabilities` and its
+- [x] Run `npm run mockups:check`. Smoke-test `app/capabilities` and its
       variants at desktop and phone width.
-- [ ] Update the design and the TODOs of this plan for each problem that the
+- [x] Update the design and the TODOs of this plan for each problem that the
       mockups show.
 
 ## Milestone 2: Documentation and protocol
 
 Depends on: 1
 
-- [ ] Update the Grants and Capabilities sections of
+- [x] Update the Grants and Capabilities sections of
       `docs/protocol/secrets.md`: the control of a session lists the
       approvals of that session, and it hides an approval whose secret the
       workspace allows.
-- [ ] Read `src/marketing/terms.ts` and `src/marketing/privacy.ts` in full.
+- [x] Read `src/marketing/terms.ts` and `src/marketing/privacy.ts` in full.
       Update each sentence that restates the changed fact.
-- [ ] Read each public guide in `src/marketing/docs/` in full. Update each
+- [x] Read each public guide in `src/marketing/docs/` in full. Update each
       sentence that restates the changed fact.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
 
 ## Milestone 3: App
 
@@ -123,12 +123,12 @@ Tags: ui
 
 Depends on: 2
 
-- [ ] Pass the open session to the control from
+- [x] Pass the open session to the control from
       `src/shell/capabilities/WorkspaceCapabilities.tsx`, and keep only its
       approvals whose secret the workspace does not allow.
-- [ ] Change `src/shell/capabilities/GrantList.tsx` to the new title and
+- [x] Change `src/shell/capabilities/GrantList.tsx` to the new title and
       detail.
-- [ ] Update `src/shell/capabilities/WorkspaceCapabilities.test.tsx`: an
+- [x] Update `src/shell/capabilities/WorkspaceCapabilities.test.tsx`: an
       approval of another session does not show, an approval of a checked
       secret or a secret for all agents does not show, and it shows again
       after an uncheck.
@@ -139,7 +139,7 @@ Depends on: 2
 Depends on: 1, 2, 3
 
 - [ ] Run the targeted tests and `npm run check`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record

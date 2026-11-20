@@ -186,7 +186,8 @@ while the change is open. Its pull request keeps them after the merge.
   task gives the pre-approval to a person who creates a workspace.
 - Every member can remove each pre-approval, each session approval, and
   each value for this workspace in the Capabilities of the workspace
-  (secrets decision 8 B).
+  (secrets decision 8 B). A session approval shows in the Capabilities of
+  its session, as [Capabilities](#capabilities) says.
 
 ## Capabilities
 
@@ -202,10 +203,20 @@ while the change is open. Its pull request keeps them after the merge.
 - Each workspace shows the same icon beside its message box
   (secrets decision 8 B). Every member can see and change the
   pre-approvals and Mac access there.
-- In a workspace, the control also lists each session approval, with its
-  session, the member who allowed it, and the time. It lists each value
-  for this workspace, with the member who gave it. Each of them has
-  Remove.
+- In a workspace, the control opens from the message box of one session.
+  Under "This session", it lists each session approval of that session,
+  with the member who allowed it and the time. It lists each value for
+  this workspace, with the member who gave it. Each of them has Remove.
+- The control does not list the session approvals of other sessions. A
+  member opens a session to see or remove its approvals. A closed session
+  opens again from History.
+- The control does not list a session approval whose secret the workspace
+  already allows, by a pre-approval or by the mark for all agents. The
+  approval stays. It shows again when that wider grant ends.
+- Reason: a session approval covers one session only, so it shows in that
+  session. An approval that a wider grant covers changes nothing while
+  that grant lasts. A list of the approvals of every session was
+  rejected, because members read it as approvals for the whole workspace.
 - A value for 15 minutes is not in the list. It ends by itself.
 - A secret for all agents shows as checked, with the words "All agents",
   and its checkbox does not change. The control links to the Secrets tab,

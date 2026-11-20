@@ -24,6 +24,8 @@ export type CapabilitiesView = {
    * only a workspace that exists has.
    */
   grants?: WorkspaceGrants
+  /** The title of the session that the control opens from, if any. */
+  session?: string
   macAccess: boolean
   /** The Secrets tab of the org settings. */
   secretsTo: string
@@ -91,6 +93,28 @@ function SecretPicker(props: { view: CapabilitiesView }) {
   )
 }
 
+/**
+ * The grants that the control shows: the approvals of the open session
+ * whose secret the workspace does not already allow, by a check or for all
+ * agents, and each value for the workspace. A hidden approval stays, and it
+ * shows again after an uncheck.
+ */
+function shownGrants(
+  view: CapabilitiesView,
+  grants: WorkspaceGrants,
+): WorkspaceGrants {
+  const allowed = (name: string) =>
+    view.preApproved.includes(name) ||
+    view.secrets.some((secret) => secret.name === name && secret.allAgents)
+  return {
+    approvals: grants.approvals.filter(
+      (approval) =>
+        approval.session === view.session && !allowed(approval.secret),
+    ),
+    values: grants.values,
+  }
+}
+
 function SecretsContent(props: { view: CapabilitiesView }) {
   const { view } = props
   return (
@@ -98,7 +122,7 @@ function SecretsContent(props: { view: CapabilitiesView }) {
       <SecretPicker view={view} />
       {view.grants ? (
         <GrantList
-          grants={view.grants}
+          grants={shownGrants(view, view.grants)}
           who={(person) => whoOf(person, view.viewer).object}
         />
       ) : null}

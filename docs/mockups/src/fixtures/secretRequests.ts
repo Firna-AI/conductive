@@ -197,7 +197,12 @@ export type WorkspaceGrants = {
 /** The secrets that the creator of a workspace pre-approved. */
 export const preApproved: readonly string[] = [figmaToken.name]
 
-/** The approvals and the values of Checkout address autocomplete. */
+/**
+ * The approvals and the values of Checkout address autocomplete. The control
+ * of its first session shows only the approval of PROD_DATABASE_URL: the
+ * workspace pre-approves FIGMA_TOKEN, and VERCEL_TOKEN belongs to the second
+ * session.
+ */
 export const autocompleteGrants: WorkspaceGrants = {
   approvals: [
     {
@@ -205,6 +210,12 @@ export const autocompleteGrants: WorkspaceGrants = {
       session: nameLabel(workspaceSessions[0].title),
       by: 'cal',
       when: '1h ago',
+    },
+    {
+      secret: figmaToken.name,
+      session: nameLabel(workspaceSessions[0].title),
+      by: 'priya',
+      when: '2d ago',
     },
     {
       secret: vercelToken.name,

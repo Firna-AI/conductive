@@ -227,7 +227,9 @@ The command gets the value, and the agent sees only the name.
 Each session needs a member's approval, unless the secret is for **All agents** or pre-approved in the workspace's **Capabilities**.
 Any member who sees the session can allow the request.
 The approval lasts for that session.
-Every member can remove approvals in **Capabilities**.
+Every member can remove an approval under **This session** in the session's **Capabilities**.
+**Capabilities** lists only the approvals of the session where you open it.
+It hides an approval while the secret is for **All agents** or pre-approved.
 
 A request waits 90 seconds for an answer.
 After that, it stays in the chat, and a later **Allow** tells the agent in a new turn.
