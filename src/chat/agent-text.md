@@ -93,6 +93,24 @@ React.
   its blocks in the same way, so a render for another change, such as a
   line that opens, reads no text again. `AgentBlocks` draws the blocks in
   order, and the open body of `MessageLine` shares it.
+- The app and the mockups share one renderer of the blocks, as they share
+  `MarkdownTable`. `AgentBlocks` and `LineBlocks` live in
+  `docs/mockups/src/components/chat/`, typed with `TextBlock`. The mockup
+  fixtures write the same blocks and inline trees with the builders of
+  `docs/mockups/src/fixtures/agentText.ts`. No builder reads Markdown, so
+  the fixtures copy no bug of the chat adapter.
+- Each view gives the blocks an `AgentDrawing`, from `agentDrawing.ts`
+  beside them. Its `text` draws an inline tree at its `TextPlace`: in a
+  message line or not, and with pictures or not. Its `code` draws a code
+  block of an answer. Its `ShowsWords` draws a heading only while the
+  text of the heading shows words where it draws.
+- `answerDrawing` in `components/answer-drawing.tsx` gives the drawing of
+  the app for one message: `AnswerText`, `CodeBlock`, and `useShowsWords`,
+  with the pictures of that message. The mockups give `fixtureDrawing`,
+  which draws with their own parts. `AgentText` and `MessageLine` keep one
+  drawing for each message ID, with `useMemo`. A block compares its
+  drawing too, and `samePlainData` counts a function only as the same
+  value. So a new drawing at each render would draw each block again.
 - `ItemRow` of `components/transcript-rows.tsx` gives `live` to the answer
   that the agent writes now, through `ItemView` of
   `components/TranscriptItem.tsx`. `TranscriptRows` of
@@ -122,17 +140,17 @@ React.
   picture, as [Pictures in answers](text-links.md#pictures-in-answers)
   says.
 - A numbered list counts up from the number of its first item, as
-  Markdown numbers it. `AgentText` gives that number to the `start` of the
-  `ol`. A message line writes each number from it. As in CommonMark, a
+  Markdown numbers it. `AgentBlocks` gives that number to the `start` of
+  the `ol`. A message line writes each number from it. As in CommonMark, a
   number has one to nine digits, so a longer number starts no list.
-- `AgentBlocks` draws each code block through `CodeBlock`. Inside a
-  `CodeCopyProvider`, `CodeBlock` adds a Copy code button beside the
-  `<pre>`, so the text of the `<pre>` stays the code alone. `ChatBody` in
-  `WorkspaceChat` gives the provider around the chat of the open session.
-  Its copy uses the `copy` services of the chat and shows a toast with the
-  result. Outside a provider, a code block has no button. The size of the
-  button comes from the control sizes, so the block keeps room for the
-  40 px button on a phone.
+- In the app, `AgentBlocks` draws each code block through `CodeBlock`, the
+  `code` of `answerDrawing`. Inside a `CodeCopyProvider`, `CodeBlock` adds
+  a Copy code button beside the `<pre>`, so the text of the `<pre>` stays
+  the code alone. `ChatBody` in `WorkspaceChat` gives the provider around
+  the chat of the open session. Its copy uses the `copy` services of the
+  chat and shows a toast with the result. Outside a provider, a code block
+  has no button. The size of the button comes from the control sizes, so
+  the block keeps room for the 40 px button on a phone.
 - `AgentText`, `AnswerText`, and `MessageLine` draw React text and
   elements only, so no HTML of a message reaches the page. The parser
   reads HTML as text, apart from a line-break tag.
@@ -167,7 +185,7 @@ CommonMark. Both views read their lists through the shared parser of
 - Both views read task boxes with `readTaskBox` of
   `src/markdown/task-boxes.ts`, and draw their list items with
   `MarkdownItem` of `src/markdown/MarkdownItem.tsx`. A message line draws
-  its task boxes in `components/LineBlocks.tsx`, as
+  its task boxes in the shared `LineBlocks`, as
   [Message lines](message-lines.md) says.
 
 ## Heading parts
@@ -196,10 +214,12 @@ has. These parts read and draw the headings:
   the final check, `answerShowsWords` of `markdown/answer-parts.ts`,
   decides whether its parts show words. Parts show words when they hold a
   chip, or text or code with a character other than white space, also
-  inside a mark or a link. `AgentText` and `LineBlocks` call the final
-  check through `useShowsWords` of `markdown/answer-reading.ts`, with the
-  workspaces, the tree, and the links of the screen that `AnswerText`
-  reads. The hidden name of a message line uses the same final check, as
+  inside a mark or a link.
+- In the app, `AgentBlocks` and `LineBlocks` call the final check through
+  the `ShowsWords` of `answerDrawing`. It calls `useShowsWords` of
+  `markdown/answer-reading.ts`, with the workspaces, the tree, and the
+  links of the screen that `AnswerText` reads. The hidden name of a
+  message line uses the same final check, as
   [Message lines](message-lines.md) says.
 - A heading shows no picture, so the image of a picture file shows as its
   link there, as [Pictures in answers](text-links.md#pictures-in-answers)
@@ -211,9 +231,9 @@ has. These parts read and draw the headings:
   the name of that file, until the file goes.
 - The file preview reads its headings through the same parser, in
   `preview-blocks.ts` of `src/files/markdown/`.
-- `AgentText` draws a heading as `h1` to `h6`, at its level, with its text
-  through `AnswerText`. It draws nothing for a heading whose parts show no
-  words, so a screen reader meets no empty heading.
+- `AgentBlocks` draws a heading as `h1` to `h6`, at its level, with its
+  text through `AnswerText`. It draws nothing for a heading whose parts
+  show no words, so a screen reader meets no empty heading.
 - `MessageLine` draws a heading as a span with the `heading` class of the
   mockups' `ToolGroup.module.css`. That class gives the heading weight,
   closed and open. Open, the span shows on its own line. Under an open
@@ -230,9 +250,10 @@ has. These parts read and draw the headings:
 - Each view sets the space around its headings. The mockups'
   `ChatItemView.module.css` sets it for an answer, also for a heading in a
   list item or a quote. `src/files/markdown/MarkdownView.module.css` sets
-  it for the file preview. `components/chat.module.css` sets it for a
-  heading of a message line after a code block, and for a heading in a
-  list item under an open line.
+  it for the file preview. The mockups' `ToolGroup.module.css` sets it for
+  a heading of a message line after a paragraph, a list, or a heading.
+  `LineBlocks.module.css` beside it sets it after a code block, and for a
+  heading in a list item under an open line.
 
 ## Table parts
 

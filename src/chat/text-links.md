@@ -242,14 +242,19 @@ states the requirements. These parts read and draw the pictures:
   place.
 - `AnswerText` takes `pictures`, an `AnswerPictures` with the ID of the
   agent message. It draws a part with `picture` as `FilePicture` only with
-  `pictures`, else as `FileTextLink`. `AgentText` gives `pictures`, with
-  the ID of its item in the transcript, to its paragraphs and list items,
-  also inside a quote. A heading and a table cell get none, so the image
-  keeps its link there.
-- `MessageLine` gives `pictures` only while the line is open, through the
-  `LineState` of `components/LineBlocks.tsx`, also to the blocks that open
-  under the line. So the closed line shows the link and stays one line.
-  The hidden copy of a line that starts with a table gets none.
+  `pictures`, else as `FileTextLink`. `AgentText` and `MessageLine` make
+  their drawing with `answerDrawing` of `components/answer-drawing.tsx`,
+  with the ID of their item in the transcript. The drawing gives
+  `pictures` where the `TextPlace` of a block allows pictures. The shared
+  `AgentBlocks` allows them in paragraphs and list items, also inside a
+  quote. A heading and a table cell allow none, so the image keeps its
+  link there.
+- The shared `LineBlocks` allows pictures only while the line is open,
+  from the `LineState` that `MessageLine` gives it. The blocks that open
+  under the line draw through `AgentBlocks`, so they show pictures as an
+  answer does. So the closed line shows the link and stays one line. The
+  hidden copy of a line that starts with a table gets the state of a
+  closed line, so it shows no picture.
 - `FilePicture`, in `links/FilePicture.tsx`, draws the mockups'
   `AnswerPicture` with an opener: the link of `fileOpener`. So a plain
   press opens the file tab in each state, and a press with a modifier key

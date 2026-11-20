@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-20, from branch `calummoore/follow-up-typed-markdown-addresses-lose-nxbt`, the docs report of the fix for the escapes of typed Markdown addresses.
-- **Location:** `src/markdown/markdown-destination.ts:81`, the check `/[\n<]/` in `readInlineTarget`, and `:38`, `angleEnd`. The readers that call it through `lineTargets`: `src/chat/links/chat-tokens.ts:96`, `tokens`, for sent messages. `src/markdown/web-links.ts:95`, `webAddressParts`, for the message field in `src/chat/components/chip-field/field-nodes.ts:54` and `field-text.ts:25`, and for the mockups in `docs/mockups/src/components/chat/WebLinkText.tsx:89`, `answerNodes.ts:67`, and `workspaceLinks.ts:34`.
+- **Location:** `src/markdown/markdown-destination.ts:81`, the check `/[\n<]/` in `readInlineTarget`, and `:38`, `angleEnd`. The readers that call it through `lineTargets`: `src/chat/links/chat-tokens.ts:96`, `tokens`, for sent messages. `src/markdown/web-links.ts:95`, `webAddressParts`, for the message field in `src/chat/components/chip-field/field-nodes.ts:54` and `field-text.ts:25`, and for the mockups in `docs/mockups/src/components/chat/WebLinkText.tsx:89`, `answerNodes.ts:150`, and `workspaceLinks.ts:34`.
 - **Reason:** Only an escaped `<` inside an address in angle brackets meets the bug, and members seldom write one.
 
 - **Terms:**

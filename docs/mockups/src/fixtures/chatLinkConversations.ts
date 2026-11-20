@@ -4,8 +4,8 @@
  * Acme, use the reserved top-level domain `.example`.
  */
 
+import { bullets, code, item, link, p, strong } from './agentText'
 import type { ChatItem } from './conversations'
-import { bullets } from './listConversations'
 import { addressQuery } from './previews'
 import { pullRequest } from './pullRequests'
 
@@ -40,11 +40,26 @@ const reviewLinks: readonly ChatItem[] = [
     kind: 'agent',
     id: 'links-answer',
     blocks: [
-      'Yes. All 6 checks passed. A reviewer needs these:',
+      p('Yes. All 6 checks passed. A reviewer needs these:'),
       bullets(
-        `The pull request: ${pullRequest.url}`,
-        'The **[docs of the places API](https://docs.places.example/v1/autocomplete)**, which the suggestions call.',
-        'A key for the places proxy, from `https://places.example/account/keys`. The proxy reads it from `PLACES_API_KEY`.',
+        item(`The pull request: ${pullRequest.url}`),
+        item(
+          'The ',
+          strong(
+            link(
+              'https://docs.places.example/v1/autocomplete',
+              'docs of the places API',
+            ),
+          ),
+          ', which the suggestions call.',
+        ),
+        item(
+          'A key for the places proxy, from ',
+          code('https://places.example/account/keys'),
+          '. The proxy reads it from ',
+          code('PLACES_API_KEY'),
+          '.',
+        ),
       ),
     ],
   },
@@ -69,8 +84,24 @@ const addressLabels: readonly ChatItem[] = [
     kind: 'agent',
     id: 'docs-answer',
     blocks: [
-      'The proxy calls the [autocomplete endpoint](https://docs.places.example/v1/autocomplete) of the places API.',
-      'The README links its guide as [https://places.example/docs](https://docs.places.example/v1/guide), and its status page as [www.places.example/status](https://status.places.example).',
+      p(
+        'The proxy calls the ',
+        link(
+          'https://docs.places.example/v1/autocomplete',
+          'autocomplete endpoint',
+        ),
+        ' of the places API.',
+      ),
+      p(
+        'The README links its guide as ',
+        link(
+          'https://docs.places.example/v1/guide',
+          'https://places.example/docs',
+        ),
+        ', and its status page as ',
+        link('https://status.places.example', 'www.places.example/status'),
+        '.',
+      ),
     ],
   },
   end('docs-end', '9s'),
@@ -96,7 +127,9 @@ const localServer: readonly ChatItem[] = [
     kind: 'agent',
     id: 'try-answer',
     blocks: [
-      `Yes. The dev server in Terminal 1 runs at http://localhost:3000. Open the checkout and type an address, such as ${addressQuery}, to see the suggestions.`,
+      p(
+        `Yes. The dev server in Terminal 1 runs at http://localhost:3000. Open the checkout and type an address, such as ${addressQuery}, to see the suggestions.`,
+      ),
     ],
   },
   end('try-end', '8s'),
@@ -138,7 +171,10 @@ const workLinks: readonly ChatItem[] = [
     kind: 'agent',
     id: 'cause',
     blocks: [
-      `[#${pullRequest.number}](${pullRequest.url}/checks) failed its end-to-end check at the phone size: the list of suggestions covers Continue.`,
+      p(
+        link(`${pullRequest.url}/checks`, `#${pullRequest.number}`),
+        ' failed its end-to-end check at the phone size: the list of suggestions covers Continue.',
+      ),
     ],
   },
   done(
@@ -151,7 +187,9 @@ const workLinks: readonly ChatItem[] = [
     kind: 'agent',
     id: 'pattern',
     blocks: [
-      "The combobox pattern at https://www.w3.org/WAI/ARIA/apg/patterns/combobox/ closes the list when the focus leaves the field. I'll do the same, so Continue shows again.",
+      p(
+        "The combobox pattern at https://www.w3.org/WAI/ARIA/apg/patterns/combobox/ closes the list when the focus leaves the field. I'll do the same, so Continue shows again.",
+      ),
     ],
   },
   done('edit-form', 'edit', 'src/app/checkout/AddressForm.tsx', '+7 −1'),
@@ -161,7 +199,9 @@ const workLinks: readonly ChatItem[] = [
     kind: 'agent',
     id: 'fix-answer',
     blocks: [
-      `Done. The list of suggestions now closes when the focus leaves the address field, so Continue shows on a phone. All 3 end-to-end tests pass, and the checks of #${pullRequest.number} run again.`,
+      p(
+        `Done. The list of suggestions now closes when the focus leaves the address field, so Continue shows on a phone. All 3 end-to-end tests pass, and the checks of #${pullRequest.number} run again.`,
+      ),
     ],
   },
   end('fix-end', '2m 04s'),
