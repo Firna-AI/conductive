@@ -26,6 +26,7 @@ fn content() -> Entry {
     Entry::File(FileContent {
         size: 10,
         modified: UNIX_EPOCH + Duration::from_millis(1_000_900),
+        etag: "\"mock-version\"".into(),
         reader: Box::new(Cursor::new(b"0123456789".to_vec())),
     })
 }
@@ -48,6 +49,7 @@ async fn streams_a_decoded_file_with_web_headers() {
     assert_eq!(response.headers()["content-length"], "10");
     assert_eq!(response.headers()["cache-control"], "no-cache");
     assert_eq!(response.headers()["accept-ranges"], "bytes");
+    assert_eq!(response.headers()["etag"], "\"mock-version\"");
     assert_eq!(
         response.headers()["last-modified"],
         "Thu, 01 Jan 1970 00:16:40 GMT"
@@ -89,7 +91,7 @@ async fn head_has_the_get_range_headers_without_streaming_content() {
 }
 
 #[tokio::test]
-async fn unchanged_dates_take_precedence_over_range_requests_to_the_second() {
+async fn dates_before_the_full_modification_time_do_not_suppress_range_requests() {
     let files = Unimock::new(
         FilesMock::open
             .some_call(matching!(_))
@@ -107,12 +109,12 @@ async fn unchanged_dates_take_precedence_over_range_requests_to_the_second() {
         .headers_mut()
         .insert("Range", "bytes=100-".parse().unwrap());
     let response = policy.respond(input).await;
-    assert_eq!(response.status(), StatusCode::NOT_MODIFIED);
+    assert_eq!(response.status(), StatusCode::RANGE_NOT_SATISFIABLE);
     assert_eq!(
         response.headers()["last-modified"],
         "Thu, 01 Jan 1970 00:16:40 GMT"
     );
-    assert!(!response.headers().contains_key("content-range"));
+    assert_eq!(response.headers()["content-range"], "bytes */10");
     assert!(
         response
             .into_body()
