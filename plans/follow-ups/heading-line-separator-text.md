@@ -19,6 +19,6 @@
 - **Left out:** Removing line separators from the text before the parse, because it changes the text of a heading. Only one other approach exists, and it fails the goal.
 - **Wider fix:** None. The fix sits in the shared readers, so both views get it.
 - **Previous examples:** None found.
-- **Related:** `plans/follow-ups/markdown-line-endings.md` changes how both views split lines. One branch can apply both.
+- **Related:** The fix of the closed item [The chat splits Markdown only at line feeds](https://github.com/Firna-AI/conductive/blob/6fa9e75c70f26df8d279521e54ab0f8feab54454/plans/follow-ups/markdown-line-endings.md) gave both views one line reader, `markdownLines` in `src/markdown/lines.ts`. It splits only at CRLF, CR, and LF, as CommonMark does. So a line separator stays inside its line and still reaches `atxHeading` and `listMarker`, and A still applies.
 - **Recommendation:** A. It is a one-flag change in the shared readers.
 - **Action:** fix after merge, apply A, because a Rare product bug of Low severity waits for a later branch under the fix rule.

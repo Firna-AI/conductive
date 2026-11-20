@@ -5,6 +5,7 @@ import type { ChangeModelRequest } from '../../shared/sessions'
 import { sessionState, type ChatSnapshot } from './chat-snapshot'
 import type { ChatContext } from './context'
 import { moveDraft } from './drafts'
+import { withView } from './saved-view'
 import { showsSession, viewShowing } from './sessions'
 
 /**
@@ -89,9 +90,8 @@ export function applyMoves(
     next = moveDraft(next, move)
     if (!move.open || !showsSession(next, move.from)) continue
     next = {
-      ...next,
+      ...withView(next, (view) => viewShowing(view, move.to)),
       activeSessionId: move.to,
-      view: viewShowing(next.view, move.to),
       overlay: { kind: 'none' },
     }
   }
@@ -103,7 +103,7 @@ export function saveMovedView(
   context: ChatContext,
   moves: readonly DraftMove[],
 ): void {
-  const { view, activeSessionId } = context.store.get()
+  const { activeSessionId } = context.store.get()
   if (!moves.some((move) => move.open && move.to === activeSessionId)) return
-  if (view) context.saveView(view)
+  context.saveView()
 }

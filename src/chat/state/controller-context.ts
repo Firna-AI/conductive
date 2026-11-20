@@ -15,7 +15,8 @@ import {
 import type { ChatStore } from './chat-store'
 import { applyEnvelopes } from './apply-events'
 import { isArchived, reloadView } from './archive-view'
-import { viewWriter, type ChatContext } from './context'
+import type { ChatContext } from './context'
+import { viewWriter } from './saved-view'
 import type { ChatSources } from './sources'
 
 export interface ChatContextOptions {
@@ -85,7 +86,10 @@ export function createChatContext(
     },
     uploads: new Map(),
     delay: timerDelay(timers ?? browserTimers),
-    saveView: viewWriter((view) => api.saveView(view)),
+    saveView: viewWriter(
+      () => store.get().view,
+      (view) => api.saveView(view),
+    ),
     live,
     owned: options.sources !== undefined,
     devices: {

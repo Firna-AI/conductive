@@ -54,13 +54,16 @@ function previewTabs(current: number | null) {
   })
 }
 
-/** Reload and Open of the preview that shows. */
-export function PreviewActions() {
+/**
+ * Reload and Open of the page that shows. Open opens `href` in a new tab:
+ * by default the launch address of the open port preview.
+ */
+export function PreviewActions(props: { href?: string }) {
   return (
     <>
       <IconButton icon={RotateCw} label="Reload" />
       <span className={styles.link}>
-        <ExternalLink href={previewUrl} label="Open in new tab">
+        <ExternalLink href={props.href ?? previewUrl} label="Open in new tab">
           Open
         </ExternalLink>
       </span>

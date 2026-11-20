@@ -11,8 +11,13 @@ publish = false
 [dependencies]
 async-trait = "0.1.92"
 base64 = "0.23.1"
+bytes = "1.12.1"
 cnd-runner-interface = { path = "../cnd-runner-interface" }
 futures-util = "0.3.34"
+http-body-util = "0.1.5"
+httpdate = "1.0.3"
+hyper = { version = "1.12.0", features = ["server", "http1"] }
+hyper-util = { version = "0.1.21", features = ["tokio"] }
 icu_collator = "2.4.0"
 icu_locale = "2.4.0"
 internal-error = { workspace = true }
@@ -24,6 +29,7 @@ tempfile = "3.27.0"
 thiserror = "2.0.21"
 tokio = { version = "1.54.1", features = ["fs", "io-util", "net", "sync", "time", "rt", "macros", "process", "signal"] }
 tokio-tungstenite = { version = "0.30.0", default-features = false, features = ["connect", "rustls-tls-webpki-roots"] }
+tokio-util = { version = "0.7.20", features = ["io"] }
 tracing = "0.1.44"
 url = "2.5.8"
 

@@ -14,6 +14,8 @@ the merge.
 
 These docs belong to this doc:
 
+- [Provider accounts](provider-accounts.md): the account of each org, its
+  weights, and the regions of the accounts.
 - [Org image](org-image.md): its builds, refreshes, and first build.
 - [Sandbox software](sandbox-software.md): the releases of the app's own
   software, the updates of each sandbox, the install in a build, and the
@@ -70,32 +72,8 @@ These docs belong to this doc:
   that its sandbox holds.
 - Every sandbox has one machine size for now, on each provider: Boat's
   default size, with 4 vCPU and 8 GB.
-
-### The account of an org
-
-- Each org runs on one provider account for its whole life
-  (e2b decision 222). Each workspace, build, and refresh of the org uses that
-  account.
-- An org from before the second provider runs on `boat`.
-- No org and no workspace moves to another account. A move by an operator
-  was dropped for now (e2b decision 222). The choice of an operator at create
-  puts a test org on each provider instead.
-- A standby on E2B for all orgs, with a switch, an automatic failover, or
-  an overflow by capacity, was rejected (e2b decision 222). Reason: one
-  account for each org needs one org image and one build at a time, with
-  no second copy on the other provider.
-- An org gets its account once, when it is created, before its first
-  build starts.
-- When an operator creates an org, the operator can choose its account,
-  as [Orgs](orgs-and-members.md#orgs) says. Otherwise, the app draws the
-  account from the weights.
-- The weights give the chance, in percent, that a new org gets each
-  account. They add up to 100%, and they start at 100% for `boat`.
-- Only a configured account can have a weight. A configured account is an
-  account whose credentials the Worker holds.
-- An operator sets the weights on the
-  [Providers tab](operator-section.md#the-providers-tab) of the operator
-  section. A change of the weights moves no org.
+- [Provider accounts](provider-accounts.md) gives the account of each org
+  and the regions of the accounts.
 
 ## Disk flushes
 

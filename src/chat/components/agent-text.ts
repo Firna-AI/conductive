@@ -3,7 +3,7 @@ import {
   setextLevel,
   type HeadingLevel,
 } from '../../markdown/headings'
-import { expandTabs, isBlank, isRule } from '../../markdown/lines'
+import { isBlank, isRule, markdownLines } from '../../markdown/lines'
 import {
   interruptsParagraph,
   listMarker,
@@ -19,16 +19,17 @@ import {
   tableStarts,
   type TableCells,
 } from '../../markdown/table-rows'
-import { isQuote, Paragraph } from './agent-paragraph'
+import { headingBlock, isQuote, Paragraph } from './agent-paragraph'
 
 /** A table of an answer. Each body row keeps its own cells. */
 export type TextTable = { kind: 'table' } & TableCells<string>
 
 /**
  * A block of an agent's answer, from the Markdown that the agent writes. A
- * heading keeps the level that the agent wrote, and its text can be empty
- * while the agent writes it. A numbered list counts up from `start`, the
- * number of its first item, as Markdown numbers it.
+ * heading keeps the level that the agent wrote. Its text is empty when the
+ * chat shows no readable text of it, such as `## ` or `## **` while the
+ * agent writes. A numbered list counts up from `start`, the number of its
+ * first item, as Markdown numbers it.
  */
 export type TextBlock =
   | { kind: 'p'; text: string }
@@ -148,7 +149,7 @@ function parseLines(
     const heading = atxHeading(line)
     if (heading) {
       flush()
-      blocks.push({ kind: 'heading', ...heading })
+      blocks.push(headingBlock(heading.level, heading.text))
       continue
     }
     const marker = isRule(line) ? null : listMarker(line)
@@ -217,6 +218,6 @@ function itemBlocks(
  * list.
  */
 export function textBlocks(text: string): TextBlock[] {
-  const raw = text.split('\n')
-  return parseLines(raw.map(expandTabs), raw, 0).blocks
+  const { raw, expanded } = markdownLines(text)
+  return parseLines(expanded, raw, 0).blocks
 }

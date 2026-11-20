@@ -79,9 +79,10 @@ export function createFilesHandler(options: FilesHandlerOptions) {
           url.pathname ===
           new URL(paths.diff(context.org.id, workspaceId, path), url).pathname
         ) {
+          const changes = await files.changes()
           const diff = await files.diff(
             path,
-            workspace.defaultBranch,
+            changes?.baseBranch ?? workspace.defaultBranch,
             request.signal,
           )
           if (!diff) throw fileUnavailable()

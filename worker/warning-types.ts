@@ -20,6 +20,8 @@ export const SIMPLE_WARNINGS = {
     'Sandbox provider assignment uses the configured account weights.',
   provider_assignment_choice_ignored:
     'The selected sandbox provider account is unavailable. Assignment uses the account weights.',
+  runner_file_server_invalid:
+    'A runner hello had an invalid file server announcement. It counts as no file server.',
   workspace_alarm_failed:
     'Workspace alarm work failed. Its durable deadline will retry.',
   terminal_restart_refresh_failed:

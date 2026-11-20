@@ -3,14 +3,16 @@ export async function associateSoftwareImageDeploy(
   digest: string,
   imageId: string,
   expiresAt: number,
-): Promise<void> {
-  await db
+): Promise<boolean> {
+  const result = await db
     .prepare(
-      `INSERT INTO software_image_deploys (token_digest, image_id, expires_at) VALUES (?, ?, ?)
+      `INSERT INTO software_image_deploys (token_digest, image_id, expires_at)
+       SELECT ?, ?, ? WHERE EXISTS (SELECT 1 FROM software_images WHERE id = ?)
        ON CONFLICT(token_digest) DO UPDATE SET image_id = excluded.image_id, expires_at = excluded.expires_at`,
     )
-    .bind(digest, imageId, expiresAt)
+    .bind(digest, imageId, expiresAt, imageId)
     .run()
+  return result.meta.changes === 1
 }
 
 export async function cleanupSoftwareImageProgress(

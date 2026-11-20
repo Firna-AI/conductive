@@ -23,9 +23,13 @@ state the requirements.
   paragraphs, headings, code blocks, and tables that the agent indents
   under the item. Past `maxNesting` levels, the lines of an item join into
   one paragraph.
-- `textBlocks` replaces tabs with spaces before it reads the structure, as
-  the file preview does. A code block outside a list takes its text from
-  the lines with their tabs, so it keeps them.
+- `textBlocks` splits the text at each line ending and replaces tabs with
+  spaces before it reads the structure, as the file preview does. Both
+  views take their lines from one line reader, as
+  [List parts](#list-parts) says. The split runs on the complete message
+  at each text change. So a CRLF that arrives in two live updates still
+  counts as one line ending. A code block outside a list takes its text
+  from the lines with their tabs, so it keeps them.
 - An item of one paragraph draws its text alone, in `AgentText` and in a
   message line, as in the file preview. Another item draws its blocks.
 - `AgentBlocks` draws the blocks of a message in order. `AgentText` and the
@@ -106,8 +110,17 @@ state the requirements.
 - `lineTargets` reads each target of a text once. Keep it so. The readers
   try a link at each `[`, and many `[` can reach the same `(`. One read
   for each `[` would take seconds for a crafted answer.
-- `chatParts` uses `bareAddressAt` and `lineTargets`, through the
-  tokenizer of `links/chat-tokens.ts`. The message field uses
+- `lineLabelEnds` of `src/markdown/markdown-labels.ts` finds where the
+  label of each `[` ends, in one pass over the text. Keep it so. One scan
+  for each `[` would take seconds for a long line of `[`.
+- A label ends at the first `]` after its `[`, on the same line. Labels
+  do not nest, so a `[` in a label does not move its end. When no `(`
+  comes directly after that `]`, the `[` starts no link. `chatParts`
+  reads labels in the `code` mode, where each backtick after the `[`
+  starts or ends code. A `]` in code ends no label. `webAddressParts`
+  reads labels in the `plain` mode, where a backtick is text.
+- `chatParts` uses `bareAddressAt`, `lineTargets`, and `lineLabelEnds`,
+  through the tokenizer of `links/chat-tokens.ts`. The message field uses
   `webAddressParts` and reads no code, so its addresses stay text.
 
 ## Web links
@@ -314,9 +327,18 @@ CommonMark. These parts read the lists of both:
   as text, closes it, so a list of any number can start under either. A
   list marker comes before a table, so `- a | b` with a separator row
   under it starts a list.
-- `src/markdown/lines.ts` holds the line tests that both readers share,
-  such as `expandTabs`. Like `table-rows.ts`, these modules import no
-  React.
+- `src/markdown/lines.ts` holds the line reader and the line tests that
+  both readers share, such as `isBlank`. Like `table-rows.ts`, these
+  modules import no React.
+- `markdownLines` gives `textBlocks` and `parseBlocks` the lines of a
+  text, so both views read the same lines. It splits the text at each line
+  ending of CommonMark: CRLF, CR, and LF. It does not split at U+2028 or
+  U+2029, because CommonMark reads them as text.
+- `expanded` holds the lines with their tabs replaced by spaces. Both
+  readers read the structure from it. `raw` holds each line as the text
+  has it, without its line ending. A chat code block outside a list takes
+  its text from `raw`. The file preview also takes from `raw` the rest of
+  a file that it shows as typed.
 
 ## Heading parts
 
@@ -347,6 +369,22 @@ preview:
   gets `ends`, which says whether the last of its lines ends the text. So
   an underline on the last line of a list item counts when a line break
   follows the item.
+- `parseLines` makes each hash heading, and `Paragraph.underline` makes
+  each underline heading. Both make the block with `headingBlock` of
+  `components/agent-paragraph.ts`. It reads the text with `tokens` of
+  `links/chat-tokens.ts`. When no text or code token holds a character
+  other than white space, the block gets empty text, as for `**` or a
+  lone backtick. A count of the tokens is not enough. A lone backtick
+  starts code that runs to the end of the text, so it gives one empty
+  code token.
+- The block stays with its level, so the heading still ends the
+  paragraph above it. A list item also keeps its blocks while the agent
+  writes the heading. A heading with readable text keeps the text that
+  the agent wrote, such as `**Pla` while the agent writes `**Plan**`.
+  `AnswerText` formats that text when it draws the heading. The check
+  needs no file tree and no workspace list, so the blocks depend only on
+  the text. The file preview reads `**` and a lone backtick as text, so
+  `src/markdown/headings.ts` does not apply this rule.
 - `AgentText` draws a heading as `h1` to `h6`, at its level, with its text
   through `AnswerText`. A heading with no text draws nothing, so a screen
   reader meets no empty heading.

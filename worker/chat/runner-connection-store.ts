@@ -16,6 +16,7 @@ export interface StoredRunnerConnection {
   protocolVersion: number | null
   loginKinds?: readonly RunnerLoginKind[]
   repositoryFolder?: string
+  fileServer?: boolean
   ready: boolean
   checkAt: number
 }
@@ -82,6 +83,7 @@ function readConnection(value: unknown): StoredRunnerConnection {
     streamId: value.streamId,
     processStartId: warningProcessStartId(value.processStartId),
     protocolVersion: value.protocolVersion ?? null,
+    ...(value.fileServer === true ? { fileServer: true } : {}),
     ...(value.loginKinds === undefined
       ? {}
       : { loginKinds: readLoginKinds(value.loginKinds) }),

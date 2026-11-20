@@ -28,7 +28,7 @@ afterEach(async () => {
   fixture = undefined
 })
 
-it('loads real user and app repository access, creates an org with initials, and guards repository selection', async () => {
+it('loads real user and app repository access, creates an org with initials and its repositories in name order, and guards repository selection', async () => {
   fixture = await createOuterRuntime(bundle)
   const github = await shellGitHubCatalog(fixture)
   const installations = await fixture.request(ACCOUNT_PATHS.githubInstallations)
@@ -71,7 +71,7 @@ it('loads real user and app repository access, creates an org with initials, and
     body: JSON.stringify({
       name: 'A new org',
       initials: 'AN',
-      repositoryIds: [202],
+      repositoryIds: [101, 202],
     }),
   })
   expect(created.status).toBe(201)
@@ -104,7 +104,16 @@ it('loads real user and app repository access, creates an org with initials, and
     })),
   ).toEqual([
     { githubId: 202, selected: true },
-    { githubId: 101, selected: false },
+    { githubId: 101, selected: true },
+  ])
+  const { results: places } = await fixture.env.DB.prepare(
+    'SELECT github_repository_id AS githubId, position FROM repositories WHERE org_id = ? ORDER BY position',
+  )
+    .bind(org.id)
+    .all()
+  expect(places).toEqual([
+    { githubId: 202, position: 0 },
+    { githubId: 101, position: 1 },
   ])
   const choices = readRepositories(
     await (

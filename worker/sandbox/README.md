@@ -153,6 +153,13 @@ and cancellation rules when a Boat response passes its byte budget, with its
 command and file fallback rules.
 [The E2B client](e2b/README.md#response-budgets) gives its control error mapping.
 
+Each adapter sets the deadline of its own provider requests.
+A request that misses this deadline before the reply headers, or while the Worker reads a 2xx body, fails with `unavailable` and status 503.
+A reply with an error status keeps the provider error of that status, also when its body stalls.
+So a 404 stays `not_found`.
+A complete but malformed 2xx body gives `invalid_response` with status 502.
+[Chat attachment delivery](../chat/attachments.md#dispatch) counts such a time-out as no answer, and runs the check or the download once more.
+
 ## File reads
 
 `SandboxProvider.fileInfo(sandboxId, path)` reads metadata without file content.

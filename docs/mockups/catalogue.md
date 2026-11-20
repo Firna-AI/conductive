@@ -42,7 +42,7 @@ how a screen is built, and links to the other pages.
 | `app/attachments`   | A file that uploads in the text, then a drop, a failed upload, a file over 1 GB, sent files, the file tab of a sent screenshot, a first message with files, and a file that is no longer in the cloud computer |
 | `app/workspace-links` | Chips in a message and an answer, then Copy link and its failure, a pasted link, a link of another org, session chips, and messages that an agent sent |
 | `app/file-mentions` | The list of `@` with a query, then the list without one, its other states, the file chips of the composer and of a sent message, and the file chips and the screenshot picture of an answer |
-| `app/files`         | All files, Changes with its summary, a file, Markdown, diff, and image tab, the temporary tab that the next press replaces, the file tab at a line, and the menu of a row with Add to chat and Copy path |
+| `app/files`         | All files, Changes with its summary, a file, Markdown, diff, image, and HTML tab, the temporary tab that the next press replaces, the file tab at a line, and the menu of a row with Add to chat and Copy path |
 | `app/tabs`          | A dragged tab, the moved row, a full row, the tab menu, and the rename field  |
 | `app/transcripts`   | Copy a transcript from the tab menu: the toast after a copy, a failed copy, and the menu of an archived workspace |
 | `app/tools`         | The terminal tabs and their states, a link in the terminal under the pointer and a size that another viewer set, then the Preview tool with its detected servers, the Preview tabs of the centre row, and its failed list repair, and the hidden Desktop, kept for its return |

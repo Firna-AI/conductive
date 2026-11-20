@@ -88,6 +88,7 @@ That action has no separate approval screen.
 Review the work and resulting workspaces as part of the task you give it.
 
 The workspace tools can list workspaces and usable repositories, sections, and models.
+They list repositories in the org's order.
 They can also list sessions and previews.
 They can read details of a workspace, session, or message, and read transcripts across the org.
 This includes workspaces that members created themselves.
@@ -284,11 +285,17 @@ Changed or encoded values can still appear, also to the agent and its model prov
 
 ## Understand previews and Mac commands
 
-Preview apps run on a separate domain from Conductive.
+Preview apps and the pages of HTML files run on a separate domain from Conductive.
 Opening a preview needs your sign-in and workspace access.
 Its address alone does not grant access to another person.
 Closing a preview or stopping the computer ends that preview's access.
 Your browser can still keep the preview files that it loaded, as the preview app's cache rules allow.
+
+The page of an HTML file can load the files of the workspace's repository.
+It cannot load files whose names start with a dot, such as `.env`, or files in `.git`.
+Its scripts can read the files that it can load and send them to another site.
+A secret in a file with another name, such as `key.pem`, stays readable to those scripts.
+Preview only HTML files whose scripts you trust.
 
 Mac commands run locally with the Mac user's permissions.
 Only the connected Mac that receives a request can approve it.
@@ -306,6 +313,7 @@ Keep the app open and retry if a permission change takes effect but cannot save.
 
 - [Control Mac command permissions](/docs/mac-app#change-saved-permissions)
 - [Use port previews](/docs/terminal-and-previews#preview-a-running-app)
+- [Preview an HTML file](/docs/files-and-changes#preview-an-html-file)
 
 ## Keep the work you need
 

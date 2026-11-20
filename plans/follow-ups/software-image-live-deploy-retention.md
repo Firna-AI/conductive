@@ -1,0 +1,54 @@
+# Cron can retire a waiting deploy's software image
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-20, from branch `calummoore/follow-up-software-image-cleanup-can-3smx`, decision 1.
+- **Location:** `worker/software-image/data.ts`, `claimSoftwareImageDeletion`, the guarded claim that retires one ready image. `worker/software-image/cleanup.ts`, `cleanupOldSoftwareImages`. `worker/software-image/repair.ts`, `repairSoftwareImages`, the Cron work. `worker/software-image/build.ts`, `requestSoftwareImage`, which ends each unfinished build of another version and writes the deploy link and its expiry. `worker/software-image/deploy-data.ts`, `associateSoftwareImageDeploy` and `cleanupSoftwareImageProgress`. `docs/protocol/sandbox-software.md`, section "The software image". `worker/software-image/README.md`, sections "Reply budget" and "Cron work". `worker/software-image/retention.test.ts`, the test that shows the case.
+- **Reason:** the extra retention changes the cleanup rule of recorded action E, and Cal has not answered that question.
+
+- **Terms:**
+  - **Software image:** a saved snapshot of the base image with the app's own software. A first build of an org on the `boat` account starts from the ready one of the current version.
+  - **Current version:** the version that a first build installs now. The Worker hashes the newest release and its install command, with `latestSoftwareRelease` and `softwareVersion`.
+  - **Deploy run:** the GitHub Actions workflow `Deploy` in `.github/workflows/deploy.yml`. It asks `POST /v1/deploy/software-image` for the image of its version and waits for it.
+  - **Attempt:** one row of the D1 table `software_images`. It is one build of one version, with the release that admission saved in it.
+  - **Deploy link:** one row of the D1 table `software_image_deploys`. It names the attempt that admission chose for the digest of one deploy token.
+- **Background:**
+  - The rule in force keeps the ready software image of the current version, whatever the start time of its build. It also keeps each image that a running org build starts from.
+  - That pin is `image_build_jobs.software_image_name`. The rule deletes each other ready software image. `docs/protocol/sandbox-software.md`, section "The software image", states it.
+  - Origin: the follow-up item "Software image cleanup can delete the running version", at `plans/follow-ups/software-image-cleanup-keeps-running-version.md`. That item is now deleted.
+  - That item found that cleanup kept only the ready image with the latest build start. So cleanup could delete the image of the current version.
+  - On 10 November 2026, that item recorded the action "fix after merge, apply E". Its reason: the case is rare, and the fix does not get harder later.
+  - Option E keeps the image of the current version on each cleanup path. A deploy request answers from the attempt that D1 holds, and starts a new attempt when it is gone.
+  - The follow-up orchestrator applied action E on 20 November 2026. No user decision chose E. Cal has not answered the extra live-deploy retention question of this item.
+  - Only the Cron work retires ready images. It runs every 15 minutes, as `*/15 * * * *` in `wrangler.jsonc` says.
+  - The Cron work reads the newest release once and computes the current version. In each provider account of `software_images`, it keeps the ready image of that version and each pinned image.
+  - When the release lookup fails, the Cron work keeps every ready image in that run. A deploy request cleans up only its own attempt.
+  - Each deploy run makes a new random token. The Worker keeps only its SHA-256 digest, in `CONDUCTIVE_DEPLOY_TOKEN_SHA256`.
+  - The Worker accepts the token only for 30 minutes after `CF_VERSION_METADATA.timestamp`, the time when its Worker version was made.
+  - The deploy run waits for up to 15 minutes. It sends a request every 10 seconds and gives each request at most 30 seconds.
+  - The deploy run fails unless the last answer says that the image is ready. Deploy runs run one at a time, in the concurrency group `deploy-production`.
+  - Each request answers within a reply budget of 20 seconds. `ExecutionContext.waitUntil` keeps its work running after the answer.
+  - Each network call of a request stops 45 seconds after the request starts. Cloudflare keeps work for at most 30 seconds after the answer.
+  - Admission saves the release in the attempt and writes a deploy link. The link expires at the time of the Worker version plus 30 minutes, when the token expires.
+  - The Cron work deletes expired links. Each later poll of a deploy finds its attempt through the token digest or the link. It uses the saved release with no new release lookup.
+  - When a request finds that its attempt no longer exists, it goes through admission again with the saved release.
+  - Admission first ends each unfinished build in the account whose version differs from the requested version. It does not check which version is newer. `docs/protocol/sandbox-software.md` says that a build of a newer version ends an unfinished build of an older version.
+  - A deleted attempt also loses its links, through `ON DELETE CASCADE`. A later poll that finds no attempt reads the newest release and goes through admission with it, as a first poll does.
+  - The Cron work already keeps the waiting output of an ended attempt while a deploy link names it, in `cleanupSoftwareImageProgress`.
+  - Evidence: the test "resumes a saved release without retiring the newer release that first builds now select", in `worker/software-image/retention.test.ts`, shows the case. A deploy poll admits a ready image on one release. The newest release then changes.
+  - In that test, the second poll of the deploy reads no release and answers `ready`. The next Cron run reads the newest release and retires the image of the admitted deploy.
+- **Problem:** A waiting deploy keeps its saved release, so its version can stop being current during its wait. No rule keeps the image of a live deploy, so the Cron work can retire that image while the deploy run still polls.
+- **Impact if no action:** The deploy run then builds its image again, or waits for the image of another version. It can reach the end of its 15-minute wait and fail, while its Worker stays live. When the request goes through admission again with its older saved release, admission ends each unfinished build of another version. So it can replace a build of the current version with a build of the older one. Deploy runs run one at a time, so only an unusual event changes the current version during a wait. Examples are a Worker version with other install steps, or a release that something other than the deploy workflow publishes.
+- **Root question:** How does a deploy that the Worker admitted keep the software image that it waits for, when the current version changes during its wait?
+- **Options:**
+  - **A.** Keep the rule in force: the image of the current version, the pins of unfinished org builds, and admission again for a missing attempt. Change nothing. In the rare case, a deploy run can build its image again, end a build of the current version, or fail its wait. Effort: Small.
+  - **B.** Also keep each ready image that a live deploy link names, in the account of that image. Make each link last until 45 seconds after its token expires, the work budget of a request. A request that the token admits just before it expires then keeps its image. A live deploy then keeps its attempt, so a retirement no longer sends it through admission again with an older release. Update the rule in `docs/protocol/sandbox-software.md` and the README, and add a regression test. The cost: such an image becomes eligible for retirement 30 minutes and 45 seconds after its Worker version was made. The next 15-minute Cron scan then retires it when its release read and its deletion succeed. The scan and the provider calls add their own time. A pin or a failure can keep the image longer. No rule caps the number of kept images, and each extra snapshot can cost money. Today only the `boat` account builds software images. Effort: Small.
+- **Left out:**
+  - A new release lookup at each poll, so that a deploy follows the newest version: the deploy then waits for another version's image. Each poll also adds a lookup that the reply budget design avoids.
+  - A grace time for each image that stops being current: it also keeps images that no deploy waits for, and it adds a timing rule.
+  - Keep the newest N images: the image of a live deploy can fall outside the newest N.
+  - Keep the image only during the request that admitted it: a later poll of the same deploy can still lose it.
+- **Wider fix:** B. It keeps the image of each admitted deploy from every retirement, whatever made its version stale.
+- **Previous examples:** The pin of an unfinished org build job keeps the image that the build starts from, in `claimSoftwareImageDeletion` of `worker/software-image/data.ts`. A live deploy link already keeps the waiting output of an ended attempt, in `cleanupSoftwareImageProgress` of `worker/software-image/deploy-data.ts`.
+- **Recommendation:** B. It avoids a repeated install for an admitted deploy with no new release lookup and no schema change, while extra snapshots can cost money.
+- **Action:** ask the user, because B adds a retention rule to the cleanup requirement, and no recorded user decision covers it.
