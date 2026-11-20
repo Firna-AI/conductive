@@ -1,4 +1,4 @@
-import { ArrowRightLeft, Eye, Pencil, Trash2 } from 'lucide-react'
+import { Eye, Pencil, Trash2 } from 'lucide-react'
 import type { OrgValue } from '../../fixtures/orgValues'
 import type { MenuEntry } from '../common/Menu'
 import { secretRights, type SecretsAccess } from '../secrets/secretRights'
@@ -8,13 +8,12 @@ import { kindWords, menuWords } from './valuesCopy'
 import styles from './ValuesTab.module.css'
 
 /** What a person may do with one value. */
-type ValueRights = { reveal: boolean; change: boolean; move: boolean }
+type ValueRights = { reveal: boolean; change: boolean }
 
 /**
  * The rights of a value. A secret keeps the rights of secrets decision 3 B.
- * Only an admin changes an env var (decision 57), and only an admin moves
- * it to secrets (item 2 C). Edit, which also renames, follows the right to
- * change.
+ * Only an admin changes an env var (decision 57). Edit, which also renames
+ * and changes the type, follows the right to change.
  */
 export function valueRights(
   value: OrgValue,
@@ -22,10 +21,10 @@ export function valueRights(
 ): ValueRights {
   if (value.kind === 'secret') {
     const rights = secretRights(value.secret, access)
-    return { reveal: rights.reveal, change: rights.change, move: false }
+    return { reveal: rights.reveal, change: rights.change }
   }
   const admin = access.kind === 'admin'
-  return { reveal: false, change: admin, move: admin }
+  return { reveal: false, change: admin }
 }
 
 /** The items of the menu of a row, as the rights allow. */
@@ -35,8 +34,6 @@ export function rowMenu(rights: ValueRights): MenuEntry[] {
     entries.push({ kind: 'item', label: menuWords.reveal, icon: Eye })
   if (rights.change)
     entries.push({ kind: 'item', label: menuWords.edit, icon: Pencil })
-  if (rights.move)
-    entries.push({ kind: 'item', label: menuWords.move, icon: ArrowRightLeft })
   if (rights.change) {
     entries.push({ kind: 'divider' })
     entries.push({

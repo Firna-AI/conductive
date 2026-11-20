@@ -1,12 +1,16 @@
 import { Badge } from '@firna/ui/badge'
+import { SegmentedControl } from '@firna/ui/segmented'
 import { Switch } from '@firna/ui/switch'
-import { MoreHorizontal } from 'lucide-react'
+import { MoreHorizontal, type LucideIcon } from 'lucide-react'
 import { noop } from '../../noop'
-import { IconButton } from '../common/actions'
+import { paths } from '../../paths'
+import { ActionButton, IconButton } from '../common/actions'
 import { Menu, type MenuEntry } from '../common/Menu'
+import { ScreenLink } from '../common/ScreenLink'
 import { useControlSizes } from '../common/touch'
+import { secretsWords } from '../secrets/secretsCopy'
 import secrets from '../secrets/SecretsTab.module.css'
-import { menuWords } from './valuesCopy'
+import { kindChoice, menuWords } from './valuesCopy'
 import styles from './ValuesTab.module.css'
 
 /** A small badge after the name of a value, such as Env or All agents. */
@@ -68,5 +72,46 @@ export function SwitchField(props: {
         <span className={secrets.switchHint}>{props.hint}</span>
       </span>
     </span>
+  )
+}
+
+/** Cancel, which closes a modal, and the action that saves. */
+export function ModalActions(props: { save: string; icon?: LucideIcon }) {
+  return (
+    <>
+      <ScreenLink asChild to={paths.values}>
+        <ActionButton>{secretsWords.cancel}</ActionButton>
+      </ScreenLink>
+      <ActionButton icon={props.icon} tone="primary">
+        {props.save}
+      </ActionButton>
+    </>
+  )
+}
+
+/**
+ * The type of a value, Secret or Env var, with the hint of the choice. Only
+ * an admin sees it, because only an admin adds and changes env vars.
+ */
+export function KindField(props: { kind: 'env' | 'secret'; hint?: string }) {
+  const { field } = useControlSizes()
+  const hint =
+    props.hint ??
+    (props.kind === 'env' ? kindChoice.envHint : kindChoice.secretHint)
+  return (
+    <div className={styles.kind}>
+      <span className={styles.kindLabel}>{kindChoice.label}</span>
+      <SegmentedControl
+        accessibilityLabel={kindChoice.label}
+        onChange={noop}
+        options={[
+          { label: kindChoice.secret, value: 'secret' },
+          { label: kindChoice.env, value: 'env' },
+        ]}
+        size={field}
+        value={props.kind}
+      />
+      <span className={styles.hint}>{hint}</span>
+    </div>
   )
 }

@@ -26,16 +26,16 @@ sees it. Its child pages:
   has the Replace form of one of her secrets.
 - `empty` has Firna, a new org, without secrets.
 - `combined` is a proposal for review, not the spec in force. It draws
-  the Env & secrets tab of Cal's review of 20 November 2026: env vars and
+  the Env & secrets tab of Cal's reviews of 20 November 2026: env vars and
   secrets in one short list, each row with its name, an Env or Secret
   badge, the description of a secret, and one "⋯" menu. It also draws
-  the open items 2 C, 3 B, and 4 B. Its child pages:
-  - `add` has the Add modal of a secret, with the type first. Its `env`
-    variant has the modal of an env var.
+  the open items 2, 3, and 4. Its child pages:
+  - `add` has the compact Add modal with one secret. Its `env` variant
+    has four env vars that a paste of `.env` lines split into rows.
   - `edit` has the Edit modal of FIGMA_TOKEN, which also renames it. Its
-    `env` variant has the Edit modal of PLACES_API_KEY.
+    `env` variant has the Edit modal of PLACES_API_KEY, and its `type`
+    variant changes STRIPE_SECRET_KEY from an env var to a secret.
   - `menu` has the open menu of STRIPE_SECRET_KEY.
-  - `move` has the question before Move to secrets of STRIPE_SECRET_KEY.
   - `member` has the list as Priya, a member, sees it. Its `add` variant
     has her modal, with no type.
   - `cloud-computer` has the Cloud computer tab without the env vars.

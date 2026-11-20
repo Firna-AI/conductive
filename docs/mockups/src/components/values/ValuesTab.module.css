@@ -88,3 +88,18 @@
   font-size: var(--ui-text-sm);
   line-height: 1.45;
 }
+
+/* The rows of the Add modal, with the labels of the columns first. */
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* One row: the name, the value, and Remove. */
+.addRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) 28px;
+  align-items: center;
+  gap: 8px;
+}

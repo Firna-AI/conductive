@@ -6,7 +6,7 @@ import {
 } from '../../../../../../screens/OrgValuesScreen'
 
 const open =
-  "This page is a proposal for review, from Cal's review of 20 November 2026. Items 2 C, 3 B, and 4 B are still open, so app/org-settings/secrets and app/org-settings/cloud-computer stay the spec in force until the change lands."
+  "This page is a proposal for review, from Cal's review of 20 November 2026. Items 2, 3, and 4 are still open, so app/org-settings/secrets and app/org-settings/cloud-computer stay the spec in force until the change lands."
 
 export const combinedMember = defineScreen({
   title: 'Proposal: seen by a member',

@@ -1,7 +1,7 @@
 /**
  * The words of the proposal that combines the env vars and the secrets of
  * an org in one tab, Env & secrets (Cal's review of 20 November 2026, and
- * items 2 C, 3 B, and 4 B, open). Only the mockups read them. The app keeps
+ * items 2, 3, and 4, open). Only the mockups read them. The app keeps
  * the words of `secretsCopy.ts` until the change lands.
  */
 
@@ -20,7 +20,7 @@ export const kindWords = {
 export const valuesIntro =
   'Env vars are added to every cloud computer automatically. Agents use a secret after a member allows it.'
 
-/** The choice of the kind in the Add modal, with the hint of each choice. */
+/** The choice of the type, with the hint of each choice. */
 export const kindChoice = {
   label: 'Type',
   secret: 'Secret',
@@ -29,24 +29,27 @@ export const kindChoice = {
   envHint: 'Added to every cloud computer automatically, at each start.',
 } as const
 
-/** The Add button and the titles of the Add modal. */
+/** The Add button and the Add modal, which takes one or more values. */
 export const addWords = {
   button: 'Add',
-  secretTitle: 'New secret',
-  envTitle: 'New env var',
-  save: 'Add',
+  secretTitle: 'Add secrets',
+  envTitle: 'Add env vars',
+  name: 'Name',
+  value: 'Value',
+  addRow: 'Add another',
+  removeRow: (index: number) => `Remove row ${index}`,
+  /** The hint under the rows: paste several, and the rule of new names. */
+  pasteHint: `Paste lines like NAME=value to add several at once. ${refusedNameError}`,
+  save: (count: number) => (count === 1 ? 'Add' : `Add ${count}`),
 } as const
 
-/** The hint of the name of an env var, with the rule of new names. */
-export const envNameHint = `Programs read the value by this name. ${refusedNameError}`
-
-/** The mark of an env var, which was "Secret" (item 3 B). */
+/** The mark of an env var, which only the Edit modal shows (item 3). */
 export const hideWords = {
   label: 'Hide on screen',
   hint: 'Hides the value in agent output and start logs.',
 } as const
 
-/** The Edit modal, which also renames the value. */
+/** The Edit modal, which also renames the value and changes its type. */
 export const editWords = {
   title: (name: string) => `Edit ${name}`,
   name: 'Name',
@@ -55,6 +58,10 @@ export const editWords = {
   secretNameHint: 'Agents that ask for the old name stop finding it.',
   envNameHint: 'Scripts that read the old name stop finding it.',
   envApplies: 'Changes apply at the next start of each cloud computer.',
+  /** The hint of a changed type, which says what Save then does (item 2). */
+  toSecret:
+    'Cloud computers stop getting it at their next start. Agents then ask before each use.',
+  toEnv: 'Every cloud computer gets it at its next start. Its approvals end.',
   save: 'Save',
 } as const
 
@@ -63,14 +70,5 @@ export const menuWords = {
   label: (name: string) => `More for ${name}`,
   reveal: 'Reveal value',
   edit: 'Edit',
-  move: 'Move to secrets',
   delete: 'Delete',
-} as const
-
-/** The question before Move (item 2 C). */
-export const moveWords = {
-  title: (name: string) => `Move ${name} to secrets?`,
-  body: 'Cloud computers stop getting it at their next start. Agents then ask before each use, and admins can reveal it.',
-  owner: 'You become the member who added it.',
-  confirm: 'Move',
 } as const
