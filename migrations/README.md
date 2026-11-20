@@ -389,6 +389,14 @@ The migration adds `workspaces.mac_access`, on for each existing and new
 row, and `workspace_creation_plans.capabilities_json` for create recovery.
 The [secrets backend](../worker/secrets/README.md) owns these records.
 
+`202611181310_automation_secret_preapprovals.sql` adds the chosen secrets of
+each automation. Composite foreign keys enforce the org of its automation
+and secret. Deleting either removes its rows. Approver IDs are opaque
+attribution IDs, so account removal keeps the choices. The migration adds
+only this table and its indexes for org reads and secret deletion. The
+previous Worker ignores them and keeps its existing reads and writes.
+The [automations backend](../worker/automations/README.md) owns these choices.
+
 `202611161353_secret_reveals.sql` adds retained reveal records with the
 secret ID and name, value version, admin ID, and time. An org foreign key
 removes its records at org purge. Secret and admin IDs have no foreign

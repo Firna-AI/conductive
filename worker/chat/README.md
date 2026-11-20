@@ -297,6 +297,16 @@ Native logins keep their existing cause text.
 repository folder checks before dispatch. Own endpoints require support for the agent's API-key
 mode. `runner-delivery.ts` owns the prepared command's send.
 
+`runner-input.ts` keeps only `fileServer: true` from a runner hello.
+A missing or false value announces no file server. A value of another
+type logs `runner_file_server_invalid` through `warnWorker`, without the
+value, and leaves the hello valid. `ActiveRunner` and
+`runner-connection-store.ts` keep the announcement across a native socket
+wake. A saved connection without the field announces no file server.
+The [workspace features](../features/README.md) use the current connection
+to gate files preview opens. The
+[file server protocol](../../docs/protocol/file-server.md) gives its rules.
+
 ## Related docs
 
 - [Chat and events: Messages](../../docs/protocol/messages-and-attachments.md#messages)
