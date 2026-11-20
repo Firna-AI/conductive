@@ -8,10 +8,12 @@ import { MarkdownItem } from '../../markdown/MarkdownItem'
 import type { AnswerPictures } from '../links/FilePicture'
 import {
   agentBlocks,
+  type HeadingLevel,
   type TextBlock,
   type TextItem,
 } from '../markdown/agent-blocks'
 import type { InlineText } from '../markdown/agent-inline'
+import { useShowsWords } from '../markdown/answer-reading'
 import { AnswerText } from '../markdown/AnswerText'
 import { CodeBlock } from './CodeBlock'
 import { samePlainData } from './same-data'
@@ -50,13 +52,34 @@ function ListItems(props: {
 }
 
 /**
+ * A heading of an answer, as `h1` to `h6` at the level that the agent
+ * wrote, with its text through `AnswerText`. A heading whose text shows no
+ * words where it draws, as `useShowsWords` reads it with the tree and the
+ * links of the screen, draws nothing, so a screen reader meets no empty
+ * heading. It stays a block of its own, so it still ends the paragraph
+ * above it. It draws once a change of the tree gives it words, such as the
+ * name of the file of an image with no alt text.
+ */
+function AnswerHeading(props: { level: HeadingLevel; text: InlineText }) {
+  const shows = useShowsWords(props.text)
+  if (!shows) return null
+  const Heading = `h${props.level}` as const
+  return (
+    <Heading>
+      <AnswerText text={props.text} />
+    </Heading>
+  )
+}
+
+/**
  * One block of an answer. It draws again only when its data or the
  * pictures of its message change, so a live update draws only the blocks
  * whose text changed. A change of what the chat reads the text with, such
  * as the workspaces, still reaches each `AnswerText` inside it, which reads
- * that itself. A paragraph, a list item, and a quote get `pictures`. A
- * heading and a table cell keep the link of an image, because a picture
- * breaks the layout of the heading or of the row.
+ * that itself, and each heading, which draws only when it shows words. A
+ * paragraph, a list item, and a quote get `pictures`. A heading and a
+ * table cell keep the link of an image, because a picture breaks the
+ * layout of the heading or of the row.
  */
 const Block = memo(function Block(props: {
   block: TextBlock
@@ -70,14 +93,8 @@ const Block = memo(function Block(props: {
           <AnswerText pictures={pictures} text={block.text} />
         </p>
       )
-    case 'heading': {
-      const Heading = `h${block.level}` as const
-      return (
-        <Heading>
-          <AnswerText text={block.text} />
-        </Heading>
-      )
-    }
+    case 'heading':
+      return <AnswerHeading level={block.level} text={block.text} />
     case 'ul':
       return (
         <ul>

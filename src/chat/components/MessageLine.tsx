@@ -8,6 +8,7 @@ import prose from '../../../docs/mockups/src/components/common/MarkdownProse.mod
 import { PlainLinks } from '../../shell/ui/text-links'
 import { LinksProvider, type ChatLinks } from '../links/LinksContext'
 import { agentBlocks, type TextBlock } from '../markdown/agent-blocks'
+import { useAnswerReading } from '../markdown/answer-reading'
 import { blockShowsText } from '../markdown/readable-text'
 import { MentionsProvider } from '../mentions/MentionsContext'
 import { AgentBlocks } from './AgentText'
@@ -44,8 +45,11 @@ function holdsTable(block: TextBlock): boolean {
  * the first table, or before the list or the quote that holds it. That
  * block and the blocks after it open under the line. When the line shows no
  * readable text for the blocks that it keeps, as `blockShowsText` reads
- * them, it keeps its closed text as its name for a screen reader. So does a
- * line that starts with a table. That hidden copy shows no chips, and draws
+ * them with the tree and the links of the screen, it keeps its closed text
+ * as its name for a screen reader. So does a line that starts with a
+ * table. The check follows the tree while the line is open, so a change of
+ * the tree that gives an image the name of its file names the line with
+ * it, and the hidden copy goes. That hidden copy shows no chips, and draws
  * each link as its words, so it holds no link that the keyboard can reach
  * while nobody sees it. A press on a link in the line opens the link, as on
  * a chip, and the line stays open or closed.
@@ -63,16 +67,16 @@ export function MessageLine(props: { id: string; text: string }) {
   const blocks = useMemo(() => agentBlocks(text), [text])
   const pictures = useMemo(() => ({ message: id }), [id])
   const firstTable = blocks.findIndex(holdsTable)
-  // Whether the blocks that the open line keeps show no readable text, so
-  // the line needs its hidden name. It depends on the text alone, so it
-  // runs again only when the text changes.
-  const unnamed = useMemo(
-    () => firstTable >= 0 && !blocks.slice(0, firstTable).some(blockShowsText),
-    [blocks, firstTable],
-  )
   const split = open && firstTable >= 0
   const lead = split ? blocks.slice(0, firstTable) : blocks
   const body = split ? blocks.slice(firstTable) : []
+  // Whether the blocks that the open line keeps show no readable text, so
+  // the line needs its hidden name. Their words depend on the tree and the
+  // links of the screen, as for the blocks that the line draws. So the
+  // check reads them as the line draws them, and runs again at each change
+  // of the tree while the line is open with a table.
+  const reading = useAnswerReading(split)
+  const unnamed = split && !lead.some((block) => blockShowsText(block, reading))
   const state: LineState = open ? { open, pictures } : closedLine
   return (
     <details
@@ -88,7 +92,7 @@ export function MessageLine(props: { id: string; text: string }) {
         <MessageSquareText aria-hidden className={styles.icon} size={13} />
         <span className={styles.messageText}>
           <LineBlocks blocks={lead} state={state} />
-          {split && unnamed ? (
+          {unnamed ? (
             <span className={a11y.hidden}>
               <LinksProvider value={plainLinks}>
                 <PlainLinks>

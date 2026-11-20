@@ -1,6 +1,5 @@
 import { pictureType } from '../../files/page/file-view'
-import { markdownParser } from '../../markdown/parser'
-import { labelHidesAddress, type WebLink } from '../../markdown/web-links'
+import type { WebLink } from '../../markdown/web-links'
 import type { FilePart } from '../links/chat-parts'
 import {
   codeTarget,
@@ -21,6 +20,7 @@ import type {
   InlineMark,
   InlineNode,
 } from './agent-inline'
+import { labelParts, linkWords, shownText } from './answer-labels'
 import { addPart, textParts } from './answer-text'
 
 /** A web link of an agent message, with its words. */
@@ -74,60 +74,6 @@ export interface AnswerReading {
    * chat has a tree. Without them, mentions stay text and paths stay code.
    */
   files?: { find: EntryLookup; root: string | null }
-}
-
-/**
- * The text that nodes show, as the chat tests a label (chat-links.md). A
- * line break is no character, so a label that shows an address on two
- * lines holds that address, as it does on one line.
- */
-function shownText(nodes: readonly InlineNode[]): string {
-  return nodes
-    .map((node) => {
-      if (node.kind === 'text' || node.kind === 'code') return node.text
-      if (node.kind === 'break') return ''
-      if (node.kind === 'mark') return shownText(node.nodes)
-      return shownText(node.kind === 'link' ? node.label : node.alt)
-    })
-    .join('')
-}
-
-/**
- * The parts of the label of a link or of the alt text of an image: text,
- * code, line breaks, and marks. No chip and no link sits in a label, and
- * an image in it shows its alt text.
- */
-function labelParts(nodes: readonly InlineNode[]): AnswerPart[] {
-  const parts: AnswerPart[] = []
-  for (const node of nodes) {
-    if (node.kind === 'text') addPart(parts, { kind: 'text', text: node.text })
-    else if (node.kind === 'code') parts.push({ kind: 'code', text: node.text })
-    else if (node.kind === 'break') parts.push({ kind: 'break' })
-    else if (node.kind === 'mark') {
-      parts.push({
-        kind: 'mark',
-        mark: node.mark,
-        parts: labelParts(node.nodes),
-      })
-    } else {
-      const inner = labelParts(node.kind === 'link' ? node.label : node.alt)
-      for (const part of inner) addPart(parts, part)
-    }
-  }
-  return parts
-}
-
-/**
- * The words of a web link: its label, or its address in the readable form
- * when the label reads as an address or shows nothing, so a label cannot
- * hide where its link leads.
- */
-function linkWords(
-  label: readonly InlineNode[],
-  href: string,
-): readonly AnswerPart[] {
-  if (!labelHidesAddress(shownText(label))) return labelParts(label)
-  return [{ kind: 'text', text: markdownParser.normalizeLinkText(href) }]
 }
 
 /**
@@ -265,6 +211,48 @@ export function answerParts(
   reading: AnswerReading,
 ): AnswerPart[] {
   return answerBreaks(inlineParts(nodes, reading))
+}
+
+/**
+ * Whether parts show words: text or code with a character other than white
+ * space, the chip of a workspace or of a file, or a mark, a web link, or a
+ * link to a file whose parts show words. A line break shows no words.
+ */
+function partsShowWords(parts: readonly AnswerPart[]): boolean {
+  return parts.some((part) => {
+    switch (part.kind) {
+      case 'text':
+      case 'code':
+        return part.text.trim() !== ''
+      case 'break':
+        return false
+      case 'mark':
+        return partsShowWords(part.parts)
+      case 'link':
+        return partsShowWords(part.words)
+      case 'file-link':
+        return partsShowWords(part.label)
+      case 'chip':
+      case 'file':
+        return true
+    }
+  })
+}
+
+/**
+ * Whether the inline text of a block shows words where the chat draws it,
+ * as `answerParts` reads it with `reading`. So an image shows its alt text,
+ * the name of its file, or its address, as `imageParts` says, and an image
+ * with no alt text that opens nothing shows no words. The words depend on
+ * the workspaces, the tree, and the links of the screen, so a heading and
+ * the name of a message line read them where they draw, with what the text
+ * draws with, and again at each change of it.
+ */
+export function answerShowsWords(
+  nodes: readonly InlineNode[],
+  reading: AnswerReading,
+): boolean {
+  return partsShowWords(answerParts(nodes, reading))
 }
 
 /**
