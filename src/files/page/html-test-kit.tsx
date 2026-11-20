@@ -92,8 +92,11 @@ export function seen(container: HTMLElement) {
   }
 }
 
-/** The page of the report over the fake API, as the shell mounts it. */
-export async function mountedReport(server: FakeApiServer) {
+/**
+ * The page of the report, or of the HTML file at `path`, over the fake API,
+ * as the shell mounts it.
+ */
+export async function mountedReport(server: FakeApiServer, path = reportPath) {
   const view = mountRoot()
   const held = heldFetch(server)
   const files = await startedFiles(server, held)
@@ -112,7 +115,7 @@ export async function mountedReport(server: FakeApiServer) {
         placeholder={options.placeholder}
         tab={{
           kind: 'file',
-          path: reportPath,
+          path,
           mode: options.mode ?? 'preview',
         }}
       />,
