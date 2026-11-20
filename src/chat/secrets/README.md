@@ -85,6 +85,10 @@ screens.
   card of a request, its answers, the phone sheet, and the value fields.
 - `SecretRunCard.tsx`: a run, or a request denied in time.
 - `LateAnswerLine.tsx`: the line of the app after a late Allow.
-- `secret-words.ts`: the words of the cards.
+- `secret-words.ts`: the words of the cards. Its `recoveryLogin` gives the
+  login that a session keeps, as a line names it when that login is gone.
+  The line of a late answer and the
+  [line after a provider stop](../transcript.md) share it, and
+  `loginOrgName` of `session-secrets.tsx` gives the name of the org.
 - `../components/WaitingRequests.tsx`: the region of the requests that
   wait, with the Mac commands.

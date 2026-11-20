@@ -176,6 +176,19 @@ line, and nothing for a fast turn at fast speed.
 speed with each known cause, "Standard speed" alone for another cause or
 none, the words at the end of a stop line, and nothing for a fast turn at
 fast speed or a turn without fast mode.
+`components/ProviderStop.test.tsx` renders the chats of a provider stop,
+the recorded `cloud-computer-*` chats of the fakes and events that it
+sends. The stopped line says "The cloud computer stopped", and the line
+under it says what comes next: the continuation turn, "you" to the starter
+whose login is gone, the name of that starter to another member, an admin
+for the org login, or "Send a message to continue". The line stays right
+under the stopped line, above a message that a member sent after the stop.
+The work of the continuation turn comes between the line and a message
+that waits for a later turn. `../shared/transcript/provider-stop.test.ts`
+copies the same lines, with the name of the starter or of the org in place
+of "you", and the continuation turn under its own heading.
+`../shared/transcript/turn-words.test.ts` also keeps the cause of a
+provider stop on the stopped line after a later end of the runner.
 `components/TabRow.dom.test.tsx` turns the wheel over a full row and reads
 its fades. It also scrolls a full row over the browser layout of
 `components/row-layout-test-kit.ts`, which gives the row and its tabs

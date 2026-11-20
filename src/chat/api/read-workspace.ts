@@ -10,6 +10,7 @@ import type { OrderedWorkspaceResponse } from '../../shared/workspaces'
 import { readSecretEvent } from '../secrets/read-secret-events'
 import { count, isRecord, list, nullable, oneOf, record, text } from './json'
 import { readChatEvent, readChoice, readSender } from './read-chat'
+import { readTurnContinued } from './read-continued'
 
 /**
  * The workspace events that the chat reads, with the requests, the runs,
@@ -162,6 +163,8 @@ function readEvent(value: unknown): ChatStreamEvent | null {
     case 'secrets.run':
     case 'secrets.notice':
       return readSecretEvent(value)
+    case 'turn.continued':
+      return readTurnContinued(value)
     default:
       return readChatEvent(value)
   }

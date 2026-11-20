@@ -2,6 +2,8 @@ import { memo, type ReactNode } from 'react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import type { ToolCall } from '../../shared/generated/ToolCall'
+import type { ContinuationNext } from '../../../docs/mockups/src/components/chat/continuationCopy'
+import { ContinuationLine } from '../../../docs/mockups/src/components/chat/ContinuationLine'
 import styles from '../../../docs/mockups/src/components/chat/ChatItemView.module.css'
 import { formatDuration } from '../../shared/transcript/duration'
 import type { WorkStep } from '../../shared/transcript/transcript-entries'
@@ -125,6 +127,21 @@ export const StopRow = memo(function StopRow(props: {
   return (
     <Row id={`item:${props.item.id}`}>
       <StoppedLine facts={props.facts} />
+    </Row>
+  )
+}, sameData)
+
+/**
+ * The line after a turn that a provider stop ended, right under its stopped
+ * line: what comes next, with the words of the mockups.
+ */
+export const ContinuationRow = memo(function ContinuationRow(props: {
+  id: string
+  next: ContinuationNext
+}) {
+  return (
+    <Row id={`item:${props.id}`}>
+      <ContinuationLine next={props.next} />
     </Row>
   )
 }, sameData)

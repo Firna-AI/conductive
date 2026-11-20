@@ -3,6 +3,7 @@ import type { AgentChatEvent } from '../generated/AgentChatEvent'
 import type { ToolCall } from '../generated/ToolCall'
 import type { ChangedFile } from '../generated/ChangedFile'
 import type { MessageSender } from '../generated/MessageSender'
+import type { TurnEndReason } from '../generated/TurnEndReason'
 import type { UserMessage } from '../generated/UserMessage'
 import type { StopSessionReference } from '../session-stop'
 import type { ChatEvent, RunnerEventRefused } from '../chat-events'
@@ -10,6 +11,7 @@ import { continuedKey, repositoryChangedKey, userKey } from './item-keys'
 import { hasEnded, noteTurn, takeMessage, type KnownTurn } from './known-turns'
 import { foldLate } from './late-events'
 import { foldRefused } from './refused-events'
+import { foldTurnContinued } from './turn-continued'
 import { foldTurn, markSent, replaceAt } from './turn-events'
 import { foldMarkedLate, foldRecord } from './turn-records'
 
@@ -32,6 +34,12 @@ export type TranscriptItem =
       /** The member who pressed Stop, or null for another stop source. */
       by: string | null
       from?: StopSessionReference
+      /**
+       * The cause that the end of the turn named, such as a provider stop.
+       * The line keeps it, also after a later end of the runner that names
+       * none, because the turn keeps the end that the workspace stored.
+       */
+      endReason?: TurnEndReason
     }
   | {
       kind: 'failed'
@@ -69,6 +77,20 @@ export type TranscriptItem =
       repository: { id: string; fullName: string }
       branch: string
     }
+  | ({
+      /**
+       * The line after a turn that a provider stop ended, right under its
+       * stopped line: what comes next, as `next` names it. A continuation
+       * turn that waits starts at the line, so the line belongs to that
+       * turn. Without one, `turnId` is null and the line belongs to no turn.
+       */
+      kind: 'turn-continued'
+      id: string
+      previousTurnId: string
+    } & (
+      | { next: 'turn'; turnId: string }
+      | { next: 'reconnect' | 'message'; turnId: null }
+    ))
 
 export interface RunningTurn {
   turnId: string
@@ -172,7 +194,7 @@ export function foldEvent(
 ): Transcript {
   switch (event.type) {
     case 'turn.continued':
-      return transcript
+      return foldTurnContinued(transcript, event)
     case 'workspace.continued':
       return foldContinued(transcript, event)
     case 'workspace.repository-changed':

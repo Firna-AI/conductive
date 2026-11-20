@@ -162,13 +162,8 @@ export function SessionChat(props: SessionChatProps) {
   const status = historyStatus(state)
   const content = showsContent(state, starting !== null)
   const viewerId = snapshot.account?.user.id ?? null
-  const { commands, secrets, inserts, readers, onRetry } = useTranscriptInputs(
-    snapshot,
-    controller,
-    session,
-    state,
-    readOnly,
-  )
+  const { commands, secrets, inserts, readers, recovery, onRetry } =
+    useTranscriptInputs(snapshot, controller, session, state, readOnly)
   const reader = loginReader(snapshot)
   const login = session ? sessionLoginOf(session, reader) : null
   const linked =
@@ -276,6 +271,7 @@ export function SessionChat(props: SessionChatProps) {
         pending={state.pending}
         readers={readers}
         readOnly={readOnly}
+        recovery={recovery}
         retrying={state.retrying}
         transcript={state.transcript}
       >

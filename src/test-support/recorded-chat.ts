@@ -5,6 +5,10 @@ import { sessionLink } from '../shared/session-link'
 import type { TurnStopRequester } from '../shared/session-stop'
 import { FAKE_IDS, FAKE_ORIGIN, FAKE_TIME } from './fixtures/core'
 import { workspaceFixtures } from './fixtures/workspaces'
+import {
+  providerStopRecords,
+  type ProviderStopScenario,
+} from './recorded-provider-stops'
 
 export type RecordedChatScenario =
   | 'history'
@@ -18,6 +22,7 @@ export type RecordedChatScenario =
   | 'refused-events'
   | 'sent-by'
   | 'stopped-from'
+  | ProviderStopScenario
 
 const { message } = workspaceFixtures()
 const turn = { sessionId: FAKE_IDS.session, turnId: 'turn-1' }
@@ -167,6 +172,7 @@ const records: Readonly<Record<RecordedChatScenario, readonly ChatEvent[]>> = {
       sessionId: 'debounce',
     },
   }),
+  ...providerStopRecords(beginning, message),
   failed: [
     accepted,
     started,

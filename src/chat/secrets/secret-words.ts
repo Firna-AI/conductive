@@ -11,6 +11,7 @@ import {
   lifetimeLabels,
   type SessionLoginOwner,
 } from '../../../docs/mockups/src/components/chat/secretRunCopy'
+import { agentNames } from '../../shared/agents'
 import { loginOwnerName } from '../../app/login-owner'
 import { personName } from '../../app/people'
 import {
@@ -23,6 +24,7 @@ import type {
   SecretValueLifetime,
   SecretWorkspaceEvent,
 } from '../../shared/secret-requests'
+import type { RecoveryLogin } from '../../shared/transcript/recovery-login'
 
 type RunEvent = Extract<SecretWorkspaceEvent, { type: 'secrets.run' }>
 
@@ -109,15 +111,6 @@ function endedWords(cause: SecretRequestEnd, org: string): string {
 }
 
 /**
- * The login that a late request names when it is gone: the owner of the
- * login that the session keeps, and the name of its agent.
- */
-export interface RecoveryLogin {
-  owner: SessionLoginOwner
-  agent: string
-}
-
-/**
  * The owner of the login that a session keeps, named by `loginOwnerName`,
  * as the session-login view names it. The session keeps `Session.login`
  * also after that login is gone, so the owner never follows the login that
@@ -126,7 +119,7 @@ export interface RecoveryLogin {
  * `orgName` is the name of the org of the workspace, which owns its org
  * login.
  */
-export function keptLoginOwner(
+function keptLoginOwner(
   session: Pick<Session, 'login' | 'startedBy'>,
   viewerId: string | null,
   orgName: string,
@@ -140,6 +133,23 @@ export function keptLoginOwner(
   return {
     type: 'personal',
     name: whoNamed(login.userId, name, viewerId).object,
+  }
+}
+
+/**
+ * The login that a session keeps, as the lines of the chat name it when
+ * that login is gone: the line of a late answer, and the line after a
+ * provider stop. Its owner comes from `keptLoginOwner`, so it is "you" to
+ * the reader who owns it.
+ */
+export function recoveryLogin(
+  session: Pick<Session, 'login' | 'startedBy' | 'choice'>,
+  viewerId: string | null,
+  orgName: string,
+): RecoveryLogin {
+  return {
+    owner: keptLoginOwner(session, viewerId, orgName),
+    agent: agentNames[session.choice.agent],
   }
 }
 

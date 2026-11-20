@@ -57,8 +57,9 @@ is relative to `src/chat/`, the folder of this guide.
   `ChatHost`, the start steps, the sandbox bar, and the tools of the
   composer that the app can give. `components/transcript-inputs.ts`:
   `useTranscriptInputs`, the Mac commands and the secret requests of the
-  open session, and the inserts, the readers, and Try again that its
-  transcript gets. Each keeps its value while its data stays the same.
+  open session, and the inserts, the readers, the login that the session
+  keeps, and Try again that its transcript gets. Each keeps its value while
+  its data stays the same.
 - `components/Composer.tsx`: the message box and its controls, with the
   steering prompt that [Messages](../../docs/protocol/messages-and-attachments.md#messages)
   states. It gives its field the `files` of the draft, and it holds the
@@ -229,9 +230,12 @@ is relative to `src/chat/`, the folder of this guide.
 - `components/TranscriptItem.tsx` and `components/LostEventLine.tsx`: each
   part of the chat, with the left-out counts and the plain words of a lost
   event from the mockups' `lostCopy.ts`. The line of a stopped turn uses
-  the mockups' `StopLine`: the words of a member's Stop or of a stop
-  without one, or "Stopped from" and the chip of the stopping session,
-  then the notes of the turn. `components/TurnEnd.tsx` draws the
+  the mockups' `StopLine`: the words of a member's Stop, of the end reason
+  of a stop without one, such as "The cloud computer stopped", or of
+  another stop, or "Stopped from" and the chip of the stopping session,
+  then the notes of the turn. `ContinuationRow` of
+  `components/transcript-rows.tsx` draws the line after a provider stop
+  with the mockups' `ContinuationLine`. `components/TurnEnd.tsx` draws the
   end of a finished turn: the line of its end reason, from the mockups'
   `EndReasonLine.tsx`, above its duration and its files, and the note of a
   fast turn at standard speed, from the mockups' `StandardSpeedNote.tsx`,
@@ -281,7 +285,9 @@ is relative to `src/chat/`, the folder of this guide.
   route builders and the app's `ApiClient`, and the readers of their
   responses. `api/read-chat.ts` copies a known `endReason` of a turn end,
   and drops an unknown value. It keeps a speed that `readTurnSpeed` reads,
-  and drops any other value. `api/read-changed-file.ts` reads the changed
+  and drops any other value. `api/read-continued.ts` reads the notes of
+  Continue and of a repository change, and `readTurnContinued` reads the
+  line after a provider stop. `api/read-changed-file.ts` reads the changed
   files of a turn end, with their real paths and display labels.
   `api/read-view.ts` reads the saved view of the view route, with each
   Preview tab at its place in the row and the shown terminal.

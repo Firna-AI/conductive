@@ -1,6 +1,7 @@
 import { CircleAlert, MessageSquarePlus, Plug, X } from 'lucide-react'
 import { useEffect } from 'react'
 import type { Agent } from '../../shared/generated/Agent'
+import { agentNames } from '../../shared/agents'
 import {
   linkedReasonText,
   linkedTitle,
@@ -10,7 +11,6 @@ import { Notice } from '../../../docs/mockups/src/components/common/Notice'
 import type { SendBlock } from '../state/blockers'
 import type { ChatNotice } from '../state/chat-snapshot'
 import { ActionButton, IconButton } from '../ui/actions'
-import { agentNames } from './AgentMark'
 
 /**
  * The notice over the composer when the agent is not connected.

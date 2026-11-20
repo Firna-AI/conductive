@@ -385,26 +385,30 @@ Tags: ui
 
 Depends on: 4
 
-- [ ] Read `turn.continued` in `src/chat/api/read-workspace.ts` and show
+- [x] Read `turn.continued` in `src/chat/api/read-workspace.ts` and show
       the line with `ContinuationLine` and `continuationCopy.ts` of the
       mockups, as `app/chat/cloud-computer-stops` shows.
-- [ ] Show the end reason on the stopped line, in place of "The agent
+- [x] Show the end reason on the stopped line, in place of "The agent
       stopped". `stoppedAttribution` and `stoppedSummary` in
       `src/shared/transcript/turn-words.ts` give the words to the chat and
       to the stopped Markdown case of
       `src/shared/transcript/markdown-items.ts`. Let the end reason reader
       in `src/chat/api/read-chat.ts` pass the new value. Today it keeps
       only `background_work_limit`.
-- [ ] Give the line after the stop in the copied transcript of
+- [x] Give the line after the stop in the copied transcript of
       `src/shared/transcript/markdown-items.ts`, with the name of the
       starter in place of "you", as `docs/protocol/session-transcripts.md`
       says.
-- [ ] Update `src/chat/loads-and-sends.md` and the key code pages of the
+- [x] Update `src/chat/loads-and-sends.md` and the key code pages of the
       chat for the new lines. Today that page says that each stop with no
       Stop request shows "The agent stopped".
-- [ ] Tests for the reader and the transcript.
-- [ ] Check the lines in a browser with `npm run dev`, and save a
+- [x] Tests for the reader and the transcript.
+- [x] Check the lines in a browser with `npm run dev`, and save a
       screenshot in `.context/`.
+
+Evidence: the screenshots, the check logs, the ten-run results, and the
+mutation proofs are in
+`.context/agent-continues-after-provider-stop/milestone-5/`.
 
 ## Milestone 6: Verification, commit, review, and pull request
 

@@ -20,6 +20,9 @@ const CONVERSATIONS = [
   'first-turn',
   'sent-by',
   'stopped-from',
+  'cloud-computer-continued',
+  'cloud-computer-login-gone',
+  'cloud-computer-stopped-again',
 ] as const satisfies readonly RecordedChatScenario[]
 
 /** The run lists of Review pull requests that the mockups also draw. */

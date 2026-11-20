@@ -1,14 +1,17 @@
 import { memo, type ReactNode } from 'react'
 import type { PendingMessage } from '../state/chat-snapshot'
 import { retryItemId } from '../../shared/transcript/known-turns'
+import type { RecoveryLogin } from '../../shared/transcript/recovery-login'
 import type { Transcript } from '../../shared/transcript/transcript'
 import {
   groupEntries,
   type SingleItem,
   type TranscriptInsert,
 } from '../../shared/transcript/transcript-entries'
+import { continuationNext } from '../../shared/transcript/turn-continued'
 import type { ChatReaders } from '../../shared/transcript/turn-words'
 import {
+  ContinuationRow,
   InsertRow,
   ItemRow,
   PendingRow,
@@ -26,6 +29,8 @@ interface RowsProps {
   transcript: Transcript
   inserts: readonly TranscriptInsert<ReactNode>[]
   readers: ChatReaders
+  /** The login that the session keeps, or null while the chat lacks it. */
+  recovery: RecoveryLogin | null
   readOnly: boolean
   retrying: boolean
   onRetry: (messageId: string) => void
@@ -35,7 +40,8 @@ interface RowsProps {
 /**
  * The row of an item. The end of a turn and the line of a stopped turn get
  * the data that the transcript keeps about their turn, so the row needs no
- * other part of the transcript.
+ * other part of the transcript. The line after a provider stop gets its
+ * words, which name the login of the session when that login is gone.
  */
 function itemRow(item: SingleItem, props: RowsProps, retryable: string | null) {
   switch (item.kind) {
@@ -54,6 +60,14 @@ function itemRow(item: SingleItem, props: RowsProps, retryable: string | null) {
           facts={stopFacts(props.transcript, item, props.readers)}
           item={item}
           key={item.id}
+        />
+      )
+    case 'turn-continued':
+      return (
+        <ContinuationRow
+          id={item.id}
+          key={item.id}
+          next={continuationNext(item, props.recovery)}
         />
       )
     default: {
@@ -118,13 +132,14 @@ const TranscriptRows = memo(function TranscriptRows(props: RowsProps) {
  * calls, the folded work of each ended turn, the end of each turn, and the
  * line of each lost event. Messages that the stream has not shown yet
  * follow, also while their send waits, then the running turn, then `children`, such as the steps of a
- * sandbox start. Give stable `inserts`, `readers`, `onRetry`, and
- * `onOpenDiff`: a new value draws each row that uses it again.
+ * sandbox start. Give stable `inserts`, `readers`, `recovery`, `onRetry`,
+ * and `onOpenDiff`: a new value draws each row that uses it again.
  */
 export function TranscriptView(props: {
   transcript: Transcript
   inserts?: readonly TranscriptInsert<ReactNode>[]
   readers: ChatReaders
+  recovery: RecoveryLogin | null
   pending: readonly PendingMessage[]
   now: number
   readOnly: boolean
@@ -142,6 +157,7 @@ export function TranscriptView(props: {
         onRetry={props.onRetry}
         readers={props.readers}
         readOnly={props.readOnly}
+        recovery={props.recovery}
         retrying={props.retrying}
         transcript={props.transcript}
       />

@@ -37,6 +37,11 @@ The dev app shows it with `?conversation=sent-by`, because the fake answers a se
 The `stopped-from` conversation is the `interrupted` conversation, but the agent of session `debounce` stopped its turn through a workspace tool.
 Its stop request names that session of `checkout-autocomplete` by its IDs, so the chat of each workspace of the fake names the same session.
 The dev app shows it with `?conversation=stopped-from`, also in another workspace such as `fix-cart-flake`.
+`recorded-provider-stops.ts` holds the three conversations of a provider stop, as the mockups draw them at `app/chat/cloud-computer-stops`.
+In each, the stop cuts off the tests of the first turn, which ends as stopped with `cloud_computer_stopped`, and `turn.continued` follows.
+In `cloud-computer-continued`, the continuation turn runs the tests again and finishes.
+In `cloud-computer-login-gone`, no turn follows, because the login of the session is gone. With `?sessionLogin=removed`, the dev app shows the line of the org login.
+In `cloud-computer-stopped-again`, the cloud computer stops the continuation turn too, and the line asks for a message.
 Each fake session record sets `retryMessageId`.
 In the `failed` conversation, each open session names the failed request `ask`, which the recorded failure names too.
 All other session records hold null.
@@ -271,6 +276,7 @@ Replies, timers, and `waitFor` go on.
 - `fake-terminal-list.ts` keeps each workspace's terminal list, support state, shells, and list events.
 - `fake-terminal-socket.ts` adapts a decoded fake shell to the app's browser socket interface and ttyd framing.
 - `recorded-chat.ts` supplies partial text, tools, queued messages, steer, stop, failure, omission counts, and refusal markers.
+  `recorded-provider-stops.ts` supplies its conversations of a provider stop.
 - `recorded-files.ts` supplies complete browser reports, runner parts, consecutive tree deltas, reads, diffs, and a size error.
 - `recorded-repairs.ts` supplies the first losses, failed repairs, complete reports, and tree deltas of the data without a session, and stores failed repairs in the fake history.
 - `fixtures/core.ts` maps account and org samples to the shared contracts.

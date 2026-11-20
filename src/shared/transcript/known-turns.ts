@@ -97,7 +97,11 @@ export function takeMessage(
   )
 }
 
-/** The turn of an item: of its message, of its marker, or its own turn. */
+/**
+ * The turn of an item: of its message, of its marker, or its own turn. The
+ * line after a provider stop belongs to the continuation turn that starts
+ * at it, or to no turn.
+ */
 export function turnOf(
   transcript: Transcript,
   item: TranscriptItem,

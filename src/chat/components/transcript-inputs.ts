@@ -3,7 +3,8 @@ import type { Session } from '../../shared/generated/Session'
 import type { AnswerSecretRequest } from '../../shared/secret-requests'
 import type { ChatReaders } from '../../shared/transcript/turn-words'
 import { sessionCommands } from '../device/session-commands'
-import { sessionSecrets } from '../secrets/session-secrets'
+import { loginOrgName, sessionSecrets } from '../secrets/session-secrets'
+import { recoveryLogin } from '../secrets/secret-words'
 import type { ChatSnapshot, SessionState } from '../state/chat-snapshot'
 import type { ChatController } from '../state/controller'
 import { sourceInsert } from './SourceLine'
@@ -12,9 +13,10 @@ import { sourceInsert } from './SourceLine'
  * The parts of the chat of the open session that come from the snapshot:
  * the Mac commands and the secret requests, with the ones that wait above
  * the composer, and the inputs of the transcript: its inserts, its readers,
- * and Try again. Each stays the same value while its data stays the same,
- * so a tick of the clock draws no row of the transcript again. The line of
- * a linked session to its source also stays while the session records stay.
+ * the login that the session keeps, and Try again. Each stays the same
+ * value while its data stays the same, so a tick of the clock draws no row
+ * of the transcript again. The line of a linked session to its source also
+ * stays while the session records stay.
  */
 export function useTranscriptInputs(
   snapshot: ChatSnapshot,
@@ -62,11 +64,17 @@ export function useTranscriptInputs(
     () => ({ viewerId, members: snapshot.members }),
     [viewerId, snapshot.members],
   )
+  // The line after a provider stop names this login when it is gone.
+  const orgName = loginOrgName(snapshot)
+  const recovery = useMemo(
+    () => (session ? recoveryLogin(session, viewerId, orgName) : null),
+    [session, viewerId, orgName],
+  )
   const onRetry = useCallback(
     (messageId: string) => {
       if (id) void controller.retry(id, messageId)
     },
     [controller, id],
   )
-  return { commands, secrets, inserts, readers, onRetry }
+  return { commands, secrets, inserts, readers, recovery, onRetry }
 }

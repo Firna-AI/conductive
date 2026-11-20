@@ -12,15 +12,17 @@ page.
   they put the escaped name of each attached file in place of its mention.
   The attachments line then lists only the other files. A Continue note
   copies as one note with the words of the chat, the name of the member,
-  and both branches as code, under no heading.
+  and both branches as code, under no heading. The line after a provider
+  stop copies as one note under the stopped line, with no heading.
   [Markdown code](transcript/markdown-code.ts)
   keeps inline and block fences longer than their content's backticks.
 - [Lost data](transcript/lost-data.ts) maps refusal event types to the same
   product names for the browser line and the copied transcript.
 - [Workspace tool types](../../crates/cnd-runner-interface/src/tools/mod.rs) own the Rust requests, replies, workspace and session records, and Mac command records. `generated/` contains their TypeScript.
 - [Agent tool runtime](agent-tools.ts) owns the machine paths, turn environment names, turn header, and workspace MCP registration.
-- [Agent words](agents.ts) supply the effort labels, model lookup, and model
-  labels for the chat, the new-workspace picker, and the mockups.
+- [Agent words](agents.ts) supply the agent names, the effort labels, the
+  model lookup, and the model labels for the chat, the new-workspace
+  picker, and the mockups.
   `sameChoice` compares two choices with one equality for each field of
   `AgentChoice`. The chat, the automation draft, and the Worker checks of a
   repeated message or model change use it. The Worker checks first read a
@@ -33,7 +35,14 @@ page.
 - [Turn words](transcript/turn-words.ts) supply running, stopped, and failed
   lines, the end reason of a turn, omitted-file and unavailable-file data,
   and the member of a Continue note: "You" to that member, its name to
-  others and in a copy.
+  others and in a copy. A stopped line keeps the end reason of the end
+  that made it, such as "The cloud computer stopped".
+- [Turn continued](transcript/turn-continued.ts) places the line after a
+  provider stop under the stopped line of its turn, and gives the form of
+  its words from `next` and the login of the session.
+  [Recovery login](transcript/recovery-login.ts) names the login that a
+  session keeps when that login is gone. A copy names its owner or the org,
+  never "you".
 - [Command words](transcript/command-words.ts) supply Mac names, command
   states, notes, and output text. Browser code supplies icons and colours.
 - [Session events](transcript/session-events.ts) take stored Worker envelopes

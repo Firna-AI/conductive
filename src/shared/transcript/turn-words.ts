@@ -7,6 +7,7 @@ import {
 } from '../../../docs/mockups/src/components/chat/stopCopy'
 import type { StopSessionReference } from '../session-stop'
 import type { User } from '../api'
+import { endReasonText } from '../../../docs/mockups/src/components/chat/endReasonCopy'
 import {
   turnFilesUnavailable,
   unlistedFiles,
@@ -16,7 +17,7 @@ import {
   standardSpeedText,
   type StandardSpeedCause,
 } from '../../../docs/mockups/src/components/chat/speedCopy'
-import type { Transcript } from './transcript'
+import type { Transcript, TranscriptItem } from './transcript'
 
 export const turnCopy = {
   failed: 'This turn stopped',
@@ -39,9 +40,16 @@ export interface ChatReaders {
 
 /**
  * The line of a stopped turn: "You" to the member who pressed Stop, and
- * that member's name to the others. An unnamed stop names nobody.
+ * that member's name to the others. A stop with no Stop request names its
+ * end reason, such as "The cloud computer stopped". Another stop names
+ * nobody.
  */
-function stoppedLine(by: string | null, readers: ChatReaders): string {
+function stoppedLine(
+  by: string | null,
+  readers: ChatReaders,
+  reason: TurnEndReason | undefined,
+): string {
+  if (by === null && reason !== undefined) return endReasonText(reason)
   if (by !== null && by === readers.viewerId) return memberStopped('You')
   const member = readers.members.find((item) => item.id === by)
   if (!member) return stoppedUnnamed
@@ -120,6 +128,11 @@ function hasFileRow(transcript: Transcript, turnId: string): boolean {
   )
 }
 
+/**
+ * Who or what stopped a turn, as its line names it: the session whose agent
+ * stopped it with a workspace tool, or the words of the line, with the end
+ * reason that the line of the turn keeps.
+ */
 export function stoppedAttribution(
   transcript: Transcript,
   turnId: string,
@@ -129,11 +142,12 @@ export function stoppedAttribution(
   | { kind: 'session'; text: string; reference: StopSessionReference }
   | { kind: 'text'; text: string } {
   const stopped = transcript.items.find(
-    (item) => item.kind === 'stopped' && item.turnId === turnId,
+    (item): item is Extract<TranscriptItem, { kind: 'stopped' }> =>
+      item.kind === 'stopped' && item.turnId === turnId,
   )
-  return stopped?.kind === 'stopped' && stopped.from
+  return stopped?.from
     ? { kind: 'session', text: stoppedFrom, reference: stopped.from }
-    : { kind: 'text', text: stoppedLine(by, readers) }
+    : { kind: 'text', text: stoppedLine(by, readers, stopped?.endReason) }
 }
 
 /**

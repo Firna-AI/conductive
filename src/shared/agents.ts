@@ -1,3 +1,4 @@
+import type { Agent } from './generated/Agent'
 import type { AgentModel } from './generated/AgentModel'
 import type { AgentChoice } from './generated/AgentChoice'
 
@@ -23,6 +24,16 @@ const choiceEqualities: {
 /** Whether every field of two choices is equal. */
 export function sameChoice(a: AgentChoice, b: AgentChoice): boolean {
   return Object.values(choiceEqualities).every((equal) => equal(a, b))
+}
+
+/**
+ * The name of each agent, for the marks, the notices, and screen readers
+ * of the chat, and for a line that names the login of a session that a
+ * member connects again, such as "after Cal connects Claude again".
+ */
+export const agentNames: Readonly<Record<Agent, string>> = {
+  claude: 'Claude',
+  codex: 'Codex',
 }
 
 /** The effort levels from the lowest, with the words that the picker shows. */

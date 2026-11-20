@@ -5,6 +5,7 @@ import type { UserMessage } from '../generated/UserMessage'
 import { sessionLink } from '../session-link'
 
 import { endReasonText } from '../../../docs/mockups/src/components/chat/endReasonCopy'
+import { continuationText } from '../../../docs/mockups/src/components/chat/continuationCopy'
 import {
   attachmentForMention,
   textWithAttachmentNames,
@@ -31,8 +32,10 @@ import {
 import { formatDuration } from './duration'
 import { lostData } from './lost-data'
 import { codeBlock, inlineCode, plainText } from './markdown-code'
+import type { RecoveryLogin } from './recovery-login'
 import { foldLabel, toolEnding, toolVerb } from './tool-words'
 import type { Transcript, TranscriptItem } from './transcript'
+import { continuationNext } from './turn-continued'
 import {
   continuedBy,
   filesUnread,
@@ -97,11 +100,16 @@ function userMarkdown(message: UserMessage): string {
     .join('\n\n')
 }
 
+/**
+ * One item of a transcript as Markdown. `recovery` is the login of the
+ * session as the copy names it, for the line after a provider stop.
+ */
 export function itemMarkdown(
   item: TranscriptItem,
   transcript: Transcript,
   readers: ChatReaders,
   links: { origin: string; orgId: string },
+  recovery: RecoveryLogin,
 ): string {
   switch (item.kind) {
     case 'user':
@@ -171,6 +179,8 @@ export function itemMarkdown(
         `${words.before}${inlineCode(item.repository.fullName)}${words.between}${inlineCode(item.branch)}`,
       )
     }
+    case 'turn-continued':
+      return note(plainText(continuationText(continuationNext(item, recovery))))
   }
 }
 

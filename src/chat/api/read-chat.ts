@@ -268,7 +268,8 @@ export function readChatEvent(source: Record<string, unknown>): ChatEvent {
         type: source.type,
         state: oneOf({ finished: true, stopped: true })(source.state),
         durationMs: count(source.durationMs),
-        ...(source.endReason === 'background_work_limit'
+        ...(source.endReason === 'background_work_limit' ||
+        source.endReason === 'cloud_computer_stopped'
           ? { endReason: source.endReason }
           : {}),
         ...(speed === undefined ? {} : { speed }),

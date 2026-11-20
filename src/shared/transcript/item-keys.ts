@@ -23,3 +23,7 @@ export const continuedKey = (branch: string) => `continued:${branch}`
 /** The note of a repository change: one for each new branch in a session. */
 export const repositoryChangedKey = (repositoryId: string, branch: string) =>
   `repository-changed:${repositoryId}:${branch}`
+
+/** The line after a provider stop: one for each turn that the stop ended. */
+export const turnContinuedKey = (previousTurnId: string) =>
+  `turn-continued:${previousTurnId}`

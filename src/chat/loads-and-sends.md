@@ -112,6 +112,12 @@ The session history stays open. The tab keeps its old name, and the sandbox bar 
 - A Stop request records the member who pressed Stop, and ends nothing. The
   turn ends when its end says stopped. A stop with no request names nobody:
   "The agent stopped".
+- A stop with no request whose end names an end reason names that reason
+  in place of these words. After a
+  [provider stop](../../docs/protocol/provider-stops.md), the line says
+  "The cloud computer stopped", and the line after the stop says what comes
+  next, as [Transcript rules](transcript.md) say. A later end of the runner
+  keeps these words.
 - A stop through the workspace tools names the session whose agent asked
   for it, as
   [Stops by the workspace tools](../../docs/protocol/messages-and-attachments.md#stops-by-the-workspace-tools)

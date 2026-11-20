@@ -21,8 +21,10 @@ import {
   toolMarkdown,
 } from './markdown-items'
 import { plainText } from './markdown-code'
+import { copiedRecoveryLogin } from './recovery-login'
 import { chatEventsOf, type SessionEnvelopeInput } from './session-events'
 import { SessionLog } from './session-log'
+import type { TranscriptItem } from './transcript'
 import { groupEntries, workSummary } from './transcript-entries'
 import { turnCopy, type ChatReaders } from './turn-words'
 
@@ -104,6 +106,15 @@ export class SessionMarkdown {
     const { session, workspace, commands, members, orgName } = this.document
     const transcript = this.log.transcript
     const readers = { viewerId: null, members }
+    const recovery = copiedRecoveryLogin(session, orgName, members)
+    const markdownOf = (item: TranscriptItem) =>
+      itemMarkdown(
+        item,
+        transcript,
+        readers,
+        this.document.linkContext,
+        recovery,
+      )
     const own = commands.filter((request) => request.sessionId === session.id)
     const placed = placeCommands(
       transcript.items,
@@ -148,31 +159,24 @@ export class SessionMarkdown {
         const { sender } = entry.item.message
         blocks.push(
           `## ${plainText(sender.displayName ?? sender.githubLogin)}`,
-          itemMarkdown(
-            entry.item,
-            transcript,
-            readers,
-            this.document.linkContext,
-          ),
+          markdownOf(entry.item),
         )
         headed = undefined
         continue
       }
       if (entry.kind === 'item') {
         // The note of a Continue or of a repository change belongs to no
-        // turn, so it has no heading.
+        // turn, and the line after a provider stop follows the stopped line
+        // of its turn, so they have no heading.
         const { kind } = entry.item
-        if (kind !== 'continued' && kind !== 'repository-changed') {
+        if (
+          kind !== 'continued' &&
+          kind !== 'repository-changed' &&
+          kind !== 'turn-continued'
+        ) {
           heading(turnOf(transcript, entry.item))
         }
-        blocks.push(
-          itemMarkdown(
-            entry.item,
-            transcript,
-            readers,
-            this.document.linkContext,
-          ),
-        )
+        blocks.push(markdownOf(entry.item))
       } else if (entry.kind === 'insert') {
         heading(entry.insert.content.turnId)
         blocks.push(insertMarkdown(entry.insert.content))
@@ -198,12 +202,7 @@ export class SessionMarkdown {
           blocks.push(
             ...entry.steps.map((step) =>
               step.kind === 'item'
-                ? itemMarkdown(
-                    step.item,
-                    transcript,
-                    readers,
-                    this.document.linkContext,
-                  )
+                ? markdownOf(step.item)
                 : insertMarkdown(step.insert.content),
             ),
           )

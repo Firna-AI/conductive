@@ -67,11 +67,38 @@ it('reads exact positive omission counts from browser event envelopes', () => {
 
 it('keeps a known optional end reason and reads older or unknown reasons without it', () => {
   const event = { ...completed, state: 'finished' }
-  const ended = { ...event, endReason: 'background_work_limit' }
-  expect(readEnvelope(envelope(ended)).event).toEqual(ended)
+  const known = [
+    { ...event, endReason: 'background_work_limit' },
+    { ...completed, endReason: 'cloud_computer_stopped' },
+  ]
+  expect(known.map((ended) => readEnvelope(envelope(ended)).event)).toEqual(
+    known,
+  )
   for (const endReason of [undefined, 'future_reason', null, false]) {
     expect(readEnvelope(envelope({ ...event, endReason })).event).toEqual(event)
   }
+})
+
+it('reads the line after a provider stop in each form, and skips a line that it cannot read', () => {
+  const line = {
+    type: 'turn.continued',
+    sessionId: 'session-1',
+    previousTurnId: 'turn-1',
+  }
+  const forms = [
+    { ...line, next: 'turn', turnId: 'turn-2' },
+    { ...line, next: 'reconnect', turnId: null },
+    { ...line, next: 'message', turnId: null },
+  ]
+  const unreadable = [
+    { ...line, next: 'turn', turnId: null },
+    { ...line, next: 'later', turnId: null },
+    { ...line, next: 'message', turnId: null, previousTurnId: undefined },
+  ]
+  expect({
+    forms: forms.map((event) => readEnvelope(envelope(event)).event),
+    unreadable: unreadable.map((event) => readEnvelope(envelope(event)).event),
+  }).toEqual({ forms, unreadable: [null, null, null] })
 })
 
 it('keeps the speed of a fast turn, and reads an end with no speed or an unreadable one without it', () => {

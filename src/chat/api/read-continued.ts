@@ -1,6 +1,8 @@
 import type { ChatEvent } from '../../shared/chat-events'
 import type { MessageSender } from '../../shared/generated/MessageSender'
-import { record, text } from './json'
+import { oneOf, record, text } from './json'
+
+type TurnContinued = Extract<ChatEvent, { type: 'turn.continued' }>
 
 function readMember(value: unknown): MessageSender {
   const member = record(value, 'member')
@@ -40,4 +42,30 @@ export function readRepositoryChanged(
     branch: text(source.branch),
     baseBranch: text(source.baseBranch),
   }
+}
+
+const readNext = oneOf<TurnContinued['next']>({
+  turn: true,
+  reconnect: true,
+  message: true,
+})
+
+/**
+ * The line after a turn that a provider stop ended. With `next: 'turn'`,
+ * `turnId` names the continuation turn. Each other `next` has no turn, so
+ * its line reads with none. A `next` that this app does not know throws,
+ * so the chat skips the line, as an older app does.
+ */
+export function readTurnContinued(
+  source: Record<string, unknown>,
+): TurnContinued {
+  const fields = {
+    type: 'turn.continued',
+    sessionId: text(source.sessionId),
+    previousTurnId: text(source.previousTurnId),
+  } as const
+  const next = readNext(source.next)
+  return next === 'turn'
+    ? { ...fields, next, turnId: text(source.turnId) }
+    : { ...fields, next, turnId: null }
 }

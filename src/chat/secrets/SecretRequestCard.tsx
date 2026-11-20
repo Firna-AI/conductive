@@ -16,7 +16,8 @@ import { Answers, PhoneAnswers, ValueSheet } from './RequestAnswers'
 import { ClaimedCommand } from './SecretRunCard'
 import { isOpen, type AnswerKind } from './secret-snapshot'
 import { missingNames } from '../../shared/secret-late-answer'
-import { allowedLabel, endLine, type RecoveryLogin } from './secret-words'
+import type { RecoveryLogin } from '../../shared/transcript/recovery-login'
+import { allowedLabel, endLine } from './secret-words'
 import {
   draftReady,
   emptyDraft,

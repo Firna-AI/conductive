@@ -10,10 +10,9 @@ import type { ChatSnapshot, SessionState } from '../state/chat-snapshot'
 import { loginReader } from '../state/session-login'
 import { LateAnswerLine } from './LateAnswerLine'
 import { isOpen } from './secret-snapshot'
-import { keptLoginOwner, lateAnswerParts } from './secret-words'
+import { lateAnswerParts, recoveryLogin } from './secret-words'
 import { SecretRequestCard } from './SecretRequestCard'
 import { SecretRunCard } from './SecretRunCard'
-import { agentNames } from '../../shell/account/labels'
 
 /** A part that waits just above the composer, in the order of its time. */
 export interface WaitingItem {
@@ -42,6 +41,15 @@ const cards = new KeptParts<ReactElement<object>>(sameElement)
 const placedCards = new KeptParts<TranscriptInsert<ReactNode>>(sameData)
 
 /**
+ * The org as the lines of a login that is gone name it: as the
+ * session-login view names it, with the name of the cards when the chat
+ * does not know that name.
+ */
+export function loginOrgName(snapshot: ChatSnapshot): string {
+  return loginReader(snapshot)?.orgName ?? snapshot.org?.name ?? 'This org'
+}
+
+/**
  * The secret requests, runs, and late answers of the shown session, as the
  * events of the workspace give them. A request that waits for its tool call
  * waits just above the composer. Each other request is a card at its place
@@ -67,14 +75,8 @@ export function sessionSecrets(
   const session = [...snapshot.sessions, ...snapshot.history].find(
     (item) => item.id === sessionId,
   )
-  // The org as the session-login view names it, with the name of the cards
-  // when the chat does not know that name.
-  const orgName = loginReader(snapshot)?.orgName ?? org
   const login = session
-    ? {
-        owner: keptLoginOwner(session, viewerId, orgName),
-        agent: agentNames[session.choice.agent],
-      }
+    ? recoveryLogin(session, viewerId, loginOrgName(snapshot))
     : null
   const card = (request: SecretRequest) =>
     cards.keep(

@@ -1,11 +1,6 @@
 import type { Agent } from '../../shared/generated/Agent'
+import { agentNames } from '../../shared/agents'
 import styles from '../../../docs/mockups/src/components/chat/AgentMark.module.css'
-
-/** The names of the agents, for marks, notices, and screen readers. */
-export const agentNames: Readonly<Record<Agent, string>> = {
-  claude: 'Claude',
-  codex: 'Codex',
-}
 
 /** Two letters for each agent, in place of a brand logo. */
 const letters: Readonly<Record<Agent, string>> = { claude: 'CL', codex: 'CX' }

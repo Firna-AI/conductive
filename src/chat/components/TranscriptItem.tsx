@@ -83,9 +83,13 @@ export interface ItemActions {
 /**
  * An item whose part shows only its own data and the readers. The end of a
  * turn and the line of a stopped turn also show data that the transcript
- * keeps about their turn, as `EndFacts` and `StopFacts` say.
+ * keeps about their turn, as `EndFacts` and `StopFacts` say. The line after
+ * a provider stop also names the login that the session keeps.
  */
-export type PlainItem = Exclude<SingleItem, { kind: 'turn-end' | 'stopped' }>
+export type PlainItem = Exclude<
+  SingleItem,
+  { kind: 'turn-end' | 'stopped' | 'turn-continued' }
+>
 
 /**
  * One part of a session's chat, other than a run of tool calls, the end of

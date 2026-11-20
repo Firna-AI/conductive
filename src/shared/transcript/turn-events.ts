@@ -74,6 +74,24 @@ function ending(transcript: Transcript, turnId: string): RunningTurn | null {
     : null
 }
 
+/**
+ * The line of a stopped end of a turn: the member or the session of its
+ * first Stop request, and the end reason that the end names.
+ */
+export function stoppedItem(
+  transcript: Transcript,
+  event: Extract<AgentChatEvent, { type: 'turn.completed' }>,
+): Extract<TranscriptItem, { kind: 'stopped' }> {
+  const { turnId, endReason } = event
+  return {
+    kind: 'stopped',
+    id: stoppedKey(turnId),
+    turnId,
+    ...stopperOf(transcript, turnId),
+    ...(endReason === undefined ? {} : { endReason }),
+  }
+}
+
 /** The member or session of the first Stop request in a turn. */
 export function stopperOf(
   transcript: Transcript,
@@ -201,12 +219,7 @@ export function foldTurn(
         stopped ? 'stopped' : 'done',
       )
       const end = stopped
-        ? {
-            kind: 'stopped' as const,
-            id: stoppedKey(event.turnId),
-            turnId: event.turnId,
-            ...stopperOf(transcript, event.turnId),
-          }
+        ? stoppedItem(transcript, event)
         : {
             kind: 'turn-end' as const,
             id: endKey(event.turnId),

@@ -1,5 +1,5 @@
 import type { AgentChatEvent } from '../generated/AgentChatEvent'
-import { endKey, failedKey, stoppedKey, toolKey } from './item-keys'
+import { endKey, failedKey, toolKey } from './item-keys'
 import { isEnd, placeInTurn } from './item-placement'
 import type { Transcript, TranscriptItem } from './transcript'
 import {
@@ -7,13 +7,14 @@ import {
   markSent,
   settleStops,
   settleTools,
-  stopperOf,
+  stoppedItem,
 } from './turn-events'
 
 /**
  * A late end of a turn. The turn keeps the row where it ended, such as the
- * member who stopped it, and the files of this end show as a file row before
- * that row. A turn without an end row takes this end as its row.
+ * member who stopped it or the end reason of its stop, and the files of this
+ * end show as a file row before that row. A turn without an end row takes
+ * this end as its row.
  */
 function foldLateEnd(
   transcript: Transcript,
@@ -26,14 +27,7 @@ function foldLateEnd(
     'stopped',
   )
   if (event.state === 'stopped' && !items.some((item) => isEnd(item, turnId))) {
-    const source = stopperOf(transcript, turnId)
-    const id = stoppedKey(turnId)
-    items = placeInTurn(
-      transcript,
-      items,
-      { kind: 'stopped', id, turnId, ...source },
-      true,
-    )
+    items = placeInTurn(transcript, items, stoppedItem(transcript, event), true)
   }
   if (event.state === 'finished' || event.files.length > 0) {
     const row = {

@@ -271,6 +271,8 @@ export function shown(controller: ChatController, sessionId: string): string[] {
         return `continued by ${item.member.githubLogin}: ${item.branch} from ${item.baseBranch}`
       case 'repository-changed':
         return `repository changed by ${item.member.githubLogin}: ${item.repository.fullName} on ${item.branch}`
+      case 'turn-continued':
+        return `after ${item.previousTurnId}: ${item.next} ${item.turnId ?? ''}`.trim()
     }
   })
 }

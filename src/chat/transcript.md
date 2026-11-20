@@ -32,7 +32,9 @@ the parts of the chat that draw the transcript.
   The reader keeps only a known value and drops an unknown one, so it refuses nothing new. `turnCompletions` keeps the reason with the completion.
   `turnEndReason` gives the reason to the chat and to the copied transcript, so both show its line for the same turns.
   A finished turn then shows the line of its reason, such as "Background work stopped at the time limit", above its duration and its files.
-  A stopped turn with an end reason names it on its stopped line in place of "The agent stopped", such as "The cloud computer stopped".
+  A stopped turn with an end reason and no Stop request names the reason on its stopped line in place of "The agent stopped", such as "The cloud computer stopped".
+  The `stopped` item keeps the reason of the end that made the line, so a later end of the runner, which names no reason, leaves the line as it is.
+  `stoppedAttribution` and `stoppedSummary` give these words to the chat and to the copy.
 - A completion of a fast turn can give its speed in `speed`: fast, or standard with a cause code, as [The speed of a turn](../../docs/protocol/fast-mode.md#the-speed-of-a-turn) says.
   The reader keeps a speed that `readTurnSpeed` reads and drops any other value, so it refuses nothing new. `turnCompletions` keeps the speed with the completion.
   `standardSpeedOf` gives the standard speed of a turn, with the cause that the line can name: `fast_limit` or `older_runner`. Another cause, or none, gives "Standard speed" alone.
@@ -90,11 +92,16 @@ the parts of the chat that draw the transcript.
 - Each `workspace.repository-changed` event of a session becomes one `repository-changed` item in the same way.
   The line names the member who changed the repository, "You" to that member, the new repository, and the new branch, with `RepositoryChangedLine` of the mockups.
   The item takes its ID from the new repository and the new branch. A copy of the session gives the note with no heading.
-- Each `turn.continued` event of a session becomes one item at its place among the events. It sits under the stopped line of the turn that `previousTurnId` names.
-  The line says what comes next, with `ContinuationLine` and `continuationText` of the mockups, from `next` and the login of the session.
-  For a login that is gone, it says "you" to the starter. A copy of the session names the starter instead.
-  The item never folds into work. With a continuation turn, that turn starts at the line, as
-  [The line after the stop](../../docs/protocol/provider-stops.md#the-line-after-the-stop) says.
+- Each `turn.continued` event of a session becomes one `turn-continued` item. It goes right under the row where the turn that `previousTurnId` names ended, so it comes before a message that a member sent after the stop.
+  Without that row, it goes at its place among the events. The item takes its ID from `previousTurnId`, so a repeat of the line replaces it.
+  The reader reads the three forms of `next`. A `next` of `turn` needs a `turnId`. An unknown `next` makes the event unreadable, so the chat skips the line, as an older app does.
+  The line says what comes next, with `ContinuationLine` and `continuationText` of the mockups, from `next` and the login that the session keeps.
+  For a login that is gone, `recoveryLogin` names who connects it again with the words of the line of a late answer: "you" to the owner of a personal login, the name of that owner to the others, and an admin of the org for the org login.
+  Without the record of the session, the chat cannot name the login, so the line says "Send a message to continue".
+  A copy of the session names the owner of the login, or the org, in place of "you", through `copiedRecoveryLogin`. The line has no heading in the copy, because it follows the stopped line.
+  The item never folds into work. With a continuation turn, the item belongs to that turn, as `turnOf` says, so the turn starts at the line.
+  The work of the turn then comes between the line and a message that waits for a later turn, as
+  [The line after the stop](../../docs/protocol/provider-stops.md#the-line-after-the-stop) says. Without a continuation turn, the item belongs to no turn.
 - Ordered history folding preserves these fields and lines across completion and failure events.
 
 ## Key code
@@ -106,7 +113,14 @@ the parts of the chat that draw the transcript.
   tool words, fold counts, and turn lines that the browser and Worker share.
   `turnEndReason` gives the end reason of a turn from `turnCompletions`, and
   `standardSpeedOf` and `standardSpeedLine` give the standard speed of a
-  fast turn.
+  fast turn. `stoppedAttribution` gives who or what stopped a turn, with the
+  end reason that its `stopped` item keeps.
+- [`turn-continued.ts`](../shared/transcript/turn-continued.ts): the
+  `turn-continued` item at its place, and `continuationNext`, the form of
+  its line from `next` and the login of the session.
+  [`recovery-login.ts`](../shared/transcript/recovery-login.ts):
+  `RecoveryLogin`, the login that a line names when it is gone, and
+  `copiedRecoveryLogin`, that login as a copy names it.
 - [`session-events.ts`](../shared/transcript/session-events.ts): the session
   events from stored Worker envelopes or parsed browser envelopes.
 - [`session-log.ts`](../shared/transcript/session-log.ts): the event log of each session, with its records
@@ -128,7 +142,10 @@ the parts of the chat that draw the transcript.
 - `components/TranscriptView.tsx`: `TranscriptView`, the parts of the chat
   of a session in order, then its pending messages and its running turn.
   Its `TranscriptRows` draws the entries of `groupEntries` with the parts
-  of `components/transcript-rows.tsx`, one part for each kind of row. Each
+  of `components/transcript-rows.tsx`, one part for each kind of row.
+  `ContinuationRow` draws the line after a provider stop with the mockups'
+  `ContinuationLine`, and the view gives it the `recovery` login that
+  `useTranscriptInputs` of `components/transcript-inputs.ts` reads. Each
   part draws again only when its own data changes, as `sameData` of
   `components/same-data.ts` checks. So a new value of an input, such as
   `readers`, draws each row that uses it again. `components/same-data.ts`
