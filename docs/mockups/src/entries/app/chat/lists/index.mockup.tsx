@@ -33,7 +33,7 @@ export const chatLists = defineScreen({
       description:
         'Cal asked the agent to make the two changes of the review of Priya and push them. The answer lists the work as a task list, where the agent wrote - [x] and - [ ]. Each task has a fixed check box in the place of its bullet: checked for the two changes that the agent pushed, and empty for the approval of Priya. The approval has a note in a list under it, and its box stays on the line of its words. A press on a box changes nothing. The Markdown preview of a file draws the same boxes, as app/files/markdown shows.',
       rationale:
-        'The user chose B of item 14 of the Markdown plan on 18 November 2026: the chat draws a task box as a fixed check box, as the file preview does. Not chosen: A, keep the box as text. Agents write task lists to show their progress, and the box shows the state of each task at a glance. The box is the check box of the browser, disabled, because the text of the agent is the record: a reader cannot tick a task.',
+        'The user chose B of item 14 of the Markdown plan on 18 November 2026: the chat draws a task box as a fixed check box, as the file preview does. Not chosen: A, keep the box as text. Agents write task lists to show their progress, and the box shows the state of each task at a glance. The box is a disabled check box in the look of the design, because the text of the agent is the record: a reader cannot tick a task. The user chose B of item 82 on 20 November 2026: a done box has the ink fill and a check in the colour of the page, so it reads well in both schemes.',
       props: { conversation: 'task-lists' },
     },
     {

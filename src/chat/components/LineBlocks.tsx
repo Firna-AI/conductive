@@ -3,6 +3,7 @@ import line from '../../../docs/mockups/src/components/chat/MessageLine.module.c
 import styles from '../../../docs/mockups/src/components/chat/ToolGroup.module.css'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import prose from '../../../docs/mockups/src/components/common/MarkdownProse.module.css'
+import { TaskBox } from '../../../docs/mockups/src/components/common/TaskBox'
 import markdown from '../../../docs/mockups/src/components/files/MarkdownView.module.css'
 import type {
   TextBlock,
@@ -28,20 +29,18 @@ function TableText(props: { table: TextTable }) {
 const taskStates = { done: 'done', open: 'not done' } as const
 
 /**
- * The fixed check box of a task item in a message line, as in an answer. A
- * screen reader reads the line as one button, so the name of the box says
- * whether its task is done. `MessageLine.module.css` lets a press pass
- * through the box to the line, which opens or closes, and the box does not
- * change.
+ * The fixed check box of a task item in a message line: the `TaskBox` of an
+ * answer, with its look. A screen reader reads the line as one button, so
+ * the name of the box says whether its task is done.
+ * `MessageLine.module.css` lets a press pass through the box to the line,
+ * which opens or closes, and the box does not change.
  */
 function LineTaskBox(props: { checked: boolean }) {
   const { checked } = props
   return (
-    <input
-      aria-label={checked ? taskStates.done : taskStates.open}
+    <TaskBox
       checked={checked}
-      disabled
-      type="checkbox"
+      label={checked ? taskStates.done : taskStates.open}
     />
   )
 }

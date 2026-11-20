@@ -93,6 +93,17 @@ The user chose each one. The full items, with every option, are in
     records the case, and the case goes to the `markdown-it` project. Not
     chosen: B, a wrapped link rule.
 
+- **Items 82 and 83, from Milestones 8 and 11** (Cal, 20 November 2026).
+  - **82 B:** a task box is drawn in the design colours, in both views. It
+    stays a disabled check box, with the browser's own look turned off. A
+    done box has a dark fill with a light check, so it reads well in both
+    schemes. Not chosen: A, the browser's disabled box, which is faint in
+    the light scheme.
+  - **83 A:** the median live update of a 100 KiB answer, 82 ms on the
+    workspace computer after decision 19 B, is accepted, with no new
+    measurement. Not chosen: B, parse only the end of a live message. C,
+    `content-visibility: auto`. D, a parse worker.
+
 ## Design calls
 
 Each is my call, with its reason. Calls 1 to 9 date from 16 November
@@ -598,8 +609,19 @@ Depends on: 9
       of the mockup README. The chat development page adds `answer=tasks`.
       The logs, the screenshots, and the browser checks are in
       `.context/markdown-it-reader/m11/`.
-- [ ] Waits for the user's answer to item 82: the look of a done task box
-      in the light scheme.
+- [x] Item 82 B: draw the task box in the design colours, in the mockups and
+      in both views. The `taskBox` class of `MarkdownProse.module.css`
+      gives `TaskBox` one look in an answer, a message line, and the file
+      preview, and `LineTaskBox` now draws `TaskBox` with its name. My
+      calls, 20 November 2026: the box keeps the 13 px of the box of the
+      browser, so the placement rules of `.task` and the place of each box
+      stay. An open box has a 1 px border in the muted colour, because the
+      lighter border colours were faint in the dark scheme. A done box has
+      the ink fill and a check in the surface colour, so in the dark scheme
+      it is a light box with a dark check, as the browser drew it there. A
+      mask draws the check. The box keeps its colours when the page prints,
+      and with forced colours it takes the look of the system. The
+      screenshots and the checks are in `.context/markdown-it-reader/item82/`.
 
 ## Milestone 7: Verification, commit, review, and pull request
 

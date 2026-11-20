@@ -124,7 +124,7 @@ it('nests a list that the agent indents under an item, in an answer and in a mes
   })
 })
 
-it('draws each task box as a fixed check box before the words of its task, in an answer and in a message line, and names the state of each box of the line', () => {
+it('draws each task box as a fixed check box in the shared look before the words of its task, in an answer and in a message line, and names the state of each box of the line', () => {
   const text = [
     'The review changes:',
     '- [x] Wait 250 ms after the last key press.',
@@ -137,6 +137,7 @@ it('draws each task box as a fixed check box before the words of its task, in an
   const boxOf = (box: HTMLInputElement) => ({
     checked: box.checked,
     disabled: box.disabled,
+    look: box.classList.contains(prose.taskBox),
     words: textOf(box.parentElement),
   })
   expect({
@@ -160,6 +161,7 @@ it('draws each task box as a fixed check box before the words of its task, in an
       {
         checked: true,
         disabled: true,
+        look: true,
         words: 'Wait 250 ms after the last key press.',
         task: true,
         start: true,
@@ -167,6 +169,7 @@ it('draws each task box as a fixed check box before the words of its task, in an
       {
         checked: false,
         disabled: true,
+        look: true,
         words: 'Approval of Priya',
         task: true,
         start: true,
@@ -182,6 +185,7 @@ it('draws each task box as a fixed check box before the words of its task, in an
       {
         checked: true,
         disabled: true,
+        look: true,
         words: 'Wait 250 ms after the last key press.',
         name: 'done',
         task: true,
@@ -189,6 +193,7 @@ it('draws each task box as a fixed check box before the words of its task, in an
       {
         checked: false,
         disabled: true,
+        look: true,
         words: 'Approval of Priya She checks the phone layout.',
         name: 'not done',
         task: true,

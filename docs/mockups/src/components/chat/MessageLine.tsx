@@ -73,7 +73,12 @@ function LineList(props: { list: MessageList }) {
                 <span className={styles.number}>{index + 1}.</span>{' '}
               </>
             ) : null}
-            {checked === null ? null : <TaskBox checked={checked} />}
+            {checked === null ? null : (
+              <TaskBox
+                checked={checked}
+                label={checked ? 'done' : 'not done'}
+              />
+            )}
             <AnswerText line text={text} />{' '}
             {item.list ? <LineList list={item.list} /> : null}
           </span>

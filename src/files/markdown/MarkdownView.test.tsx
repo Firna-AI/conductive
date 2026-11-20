@@ -209,10 +209,10 @@ it('renders a table, a quote, a rule, and a task list, with the box of a task wi
   expect(article).toContain(prose.prose)
   expect(html.match(/type="checkbox"/g)).toHaveLength(2)
   expect(html).toContain(
-    `<li class="${prose.task}"><input disabled="" type="checkbox" checked=""/>Done</li>`,
+    `<li class="${prose.task}"><input class="${prose.taskBox}" disabled="" type="checkbox" checked=""/>Done</li>`,
   )
   expect(html).toContain(
-    `<li class="${prose.task}"><p><input disabled="" type="checkbox"/>Open</p><ul><li>Saved addresses</li></ul></li>`,
+    `<li class="${prose.task}"><p><input class="${prose.taskBox}" disabled="" type="checkbox"/>Open</p><ul><li>Saved addresses</li></ul></li>`,
   )
 })
 

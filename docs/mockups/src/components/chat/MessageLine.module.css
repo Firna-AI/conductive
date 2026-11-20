@@ -55,11 +55,12 @@
 }
 
 /*
- * A task item of the line, with the fixed check box of the browser, from
- * item 14 B of the Markdown plan. Closed, the box stands in the line before
- * the text of its item. Open, it takes the place of the bullet, as in an
- * answer. A press on the box opens or closes the line, as a press on the
- * words of the line does. `span.task` outranks the bullet of an open item.
+ * A task item of the line, from item 14 B of the Markdown plan. Its fixed
+ * check box has the look of MarkdownProse.module.css, as in an answer.
+ * Closed, the box stands in the line before the text of its item. Open, it
+ * takes the place of the bullet, as in an answer. A press on the box opens
+ * or closes the line, as a press on the words of the line does.
+ * `span.task` outranks the bullet of an open item.
  */
 .task > input {
   margin: 0 4px 0 0;

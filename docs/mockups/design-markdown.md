@@ -12,8 +12,9 @@ The user chose one `markdown-it` parser for both views on 16 November
 2026, with item 3 C of the Markdown plan, and on 17 November 2026, with
 item 8 D, that the chat draws each part as the file preview draws it. On
 18 November 2026, the user chose items 9 C, 10 B, 11 C, 12 B, and 14 B,
-which this page gives at their parts. The mockups draw typed fixtures, so
-they read the inline Markdown of the fixtures with their own small reader.
+and on 20 November 2026 item 82 B, which this page gives at their parts.
+The mockups draw typed fixtures, so they read the inline Markdown of the
+fixtures with their own small reader.
 
 ## The parts
 
@@ -97,13 +98,27 @@ they read the inline Markdown of the fixtures with their own small reader.
     text, bold text has one look in both views.
   - A task item of a list, `- [ ]` or `- [x]`, shows a fixed check box in
     the place of its bullet, in the indent of the list, from item 14 B of
-    the Markdown plan. The box is the check box of the browser, disabled,
-    so it shows whether the task is done and a press changes nothing. In
-    an item with more blocks, the box starts the first paragraph of the
-    item, as on GitHub, so it stays on the line of its words, as the last
-    task of `app/chat/lists/tasks` shows. `app/files/markdown` shows the
-    box in the file preview. `markdownTasks.ts` reads the box at the start
-    of an item, and `TaskBox` draws it, both in `src/components/common/`.
+    the Markdown plan. The box is a disabled check box, so it shows
+    whether the task is done, a press changes nothing, and a screen reader
+    reads its state. In an item with more blocks, the box starts the first
+    paragraph of the item, as on GitHub, so it stays on the line of its
+    words, as the last task of `app/chat/lists/tasks` shows.
+    `app/files/markdown` shows the box in the file preview.
+    `markdownTasks.ts` reads the box at the start of an item, and `TaskBox`
+    draws it, both in `src/components/common/`.
+  - The box has the look of the design, not of the browser, in both views
+    and in a message line, from item 82 B of the Markdown plan. The
+    browser drew a done box in light grey in the light scheme, so its
+    check was hard to see. The box has the size of the box of the browser,
+    13 px, and the small radius. An open box is empty, with a 1 px border
+    in the muted colour. A done box has the ink fill and a check in the
+    surface colour: a dark box with a light check in the light scheme, and
+    a light box with a dark check in the dark scheme. The `taskBox` class
+    of `MarkdownProse.module.css` gives the look. A mask in the shape of
+    the check cuts the check from a layer in the surface colour, so the
+    check takes the colours of the scheme. The box keeps its colours when
+    the page prints, and with forced colours it takes the look of the
+    system.
   - In a reply, a quote lays out its blocks as the reply does, with the
     same gap, and a rule has 16 px above and below it. In the file preview,
     a quote has 10 px under it, as a paragraph does, and a rule has 16 px

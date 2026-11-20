@@ -98,7 +98,8 @@ React.
   text alone. Another item draws its blocks. A task item draws the fixed
   check box of the mockups' `TaskBox` at the start of its first paragraph,
   so a task with sub-tasks keeps its box on the line of its words. The box
-  is the disabled check box of the browser, so a press changes nothing.
+  is a disabled check box in the look of the design, from the `taskBox`
+  class of `MarkdownProse.module.css`, so a press changes nothing.
 - A quote is a `blockquote` with its own blocks, and a rule is an `hr`.
   The `prose` class of the mockups' `MarkdownProse.module.css` gives them
   their look, and the look of bold text, emphasis, strikethrough, and task
