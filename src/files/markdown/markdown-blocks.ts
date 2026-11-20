@@ -3,7 +3,7 @@ import {
   setextLevel,
   type HeadingLevel,
 } from '../../markdown/headings'
-import { expandTabs, indentOf, isBlank, isRule } from '../../markdown/lines'
+import { indentOf, isBlank, isRule, markdownLines } from '../../markdown/lines'
 import {
   interruptsParagraph,
   listMarker,
@@ -251,11 +251,11 @@ class BlockParser {
  * literal block, as typed.
  */
 export function parseBlocks(source: string): MarkdownBlocks {
-  const lines = source.split(/\r\n|\n|\r/)
+  const { raw, expanded } = markdownLines(source)
   const parser = new BlockParser()
-  const blocks = parser.parse(lines.map(expandTabs))
+  const blocks = parser.parse(expanded)
   if (parser.tail !== null) {
-    const text = lines.slice(parser.tail).join('\n').trimEnd()
+    const text = raw.slice(parser.tail).join('\n').trimEnd()
     blocks.push({ kind: 'literal', text })
   }
   return { blocks, definitions: parser.definitions }
