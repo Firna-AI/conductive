@@ -32,7 +32,9 @@ change can move the shared parts to the app's shared components.
   sequences, also while a hidden screen waits for its first open. The
   screen applies them in order when it opens. It answers no colour
   request from before the open, because a late answer can reach the shell
-  as input.
+  as input. A change of the colour scheme discards the colours that
+  programs set before it. This holds also before the open, so the open
+  applies only the later ones.
 - The screen fits its box, and sends its size at the start and at each
   change. It keeps 2,000 lines of history, as tmux does in the cloud
   computer.
@@ -258,7 +260,8 @@ each link that opens, in place of opening it.
   its own replies.
 - `xtermColours.ts`: `keepColoursUntilOpen` keeps the colour changes that
   xterm.js parses before the screen opens, and gives them to xterm.js at
-  the open. It relies on private parts of xterm.js, as its comment says.
+  the open. Each change of the xterm.js theme drops those from before it.
+  It relies on private parts of xterm.js, as its comment says.
 - `terminalLinks.ts`: the kind of a link of the terminal, from the shared
   reader `webLink` of `src/markdown/web-links.ts`, the key of a link
   click, and the hint.
