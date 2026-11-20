@@ -16,6 +16,7 @@ import {
   manySecrets,
   replicaUrl,
   secretSearch,
+  undescribedSecret,
 } from '../fixtures/secrets'
 import { paths } from '../paths'
 
@@ -29,14 +30,17 @@ type DraftState = {
 /** The secrets that the control lists for the state. */
 function secretsOf(state: DraftState) {
   if (state.org === 'new') return []
-  return state.capabilities === 'search' ? manySecrets : acmeSecrets
+  if (state.capabilities === 'search') return manySecrets
+  if (state.capabilities === 'info') return [...acmeSecrets, undescribedSecret]
+  return acmeSecrets
 }
 
 /**
  * The control of a new workspace. Acme offers its secrets, and the
  * creator pre-approved one. Firna, a new org, has none yet. Mac access
  * shows as a new workspace starts. `search` lists twelve secrets, with a
- * search that keeps three. `info` shows one description.
+ * search that keeps three. `info` shows one description, and a secret
+ * without a description, which has no info icon.
  */
 function panelOf(state: DraftState, sheet: boolean) {
   const firna = state.org === 'new'

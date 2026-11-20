@@ -36,7 +36,8 @@ Its `no-secrets` variant has Firna without secrets, and its `menu` variant
 has that menu open on a phone. Its `search` variant has twelve secrets,
 with a Search secrets field above them and "deploy" typed in it. Its
 `info` variant has the description of PROD_DATABASE_URL shown under its
-name, after a press on its info icon. `app/new-workspace/dialog/capabilities` has
+name, after a press on its info icon. STAGING_API_KEY there has no
+description, so it has no info icon. `app/new-workspace/dialog/capabilities` has
 the same control in the dialog.
 
 `app/capabilities` has the control of Checkout address autocomplete, with

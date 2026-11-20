@@ -89,6 +89,12 @@ export const manySecrets: readonly OrgSecret[] = [
   jonasSecret('STRIPE_TEST_KEY', 'Runs test payments in Stripe test mode.'),
 ]
 
+/**
+ * A secret that Jonas added without a description. Its row in the
+ * Capabilities control shows no info icon.
+ */
+export const undescribedSecret = jonasSecret('STAGING_API_KEY', '')
+
 /** The search of the long list, which keeps the three deploy tokens. */
 export const secretSearch = 'deploy'
 

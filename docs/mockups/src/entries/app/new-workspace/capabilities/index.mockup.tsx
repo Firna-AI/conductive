@@ -38,7 +38,7 @@ export const newWorkspaceCapabilities = defineScreen({
       slug: 'info',
       title: 'The description of a secret',
       description:
-        'Cal pressed the info icon after PROD_DATABASE_URL. Its description, "Read-only replica of the production database.", shows under the name, and the icon stays highlighted. A second press hides it. On a computer, the pointer on the icon also shows the description as a tooltip. A secret without a description shows no icon.',
+        'Cal pressed the info icon after PROD_DATABASE_URL. Its description, "Read-only replica of the production database.", shows under the name, and the icon stays highlighted. A second press hides it. On a computer, the pointer on the icon also shows the description as a tooltip. STAGING_API_KEY has no description, so it shows no icon, because the icon would have nothing to show.',
       rationale:
         'Cal chose on 20 November 2026 to hide the descriptions behind an info icon, and to remove the hint "Agents use a pre-approved secret with no question." A row then shows one line, so more secrets fit in the small card. A press also works on a phone, where no pointer hovers. The description stays in the card, because a press outside the card closes it.',
       props: { capabilities: 'info' },
