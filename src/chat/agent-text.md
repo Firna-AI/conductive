@@ -11,8 +11,8 @@ requirements. Two linked guides hold the rest of the code:
 - [Message lines](message-lines.md) gives the code of a message line in
   the work of a turn.
 - [Text links](text-links.md) gives the web links, the workspace chips,
-  and the file chips of sent messages and answers, and the pictures of
-  answers.
+  and the file chips of sent messages and answers. Its linked guide
+  [Pictures in answers](answer-pictures.md) gives the pictures of answers.
 
 ## The chat adapter
 
@@ -137,8 +137,7 @@ React.
   the marks, `br` for a line break, and the chips and links of
   `answerParts`. With `line`, as in a message line, a space comes before
   each `br`. With `pictures`, the image of a picture file shows as its
-  picture, as [Pictures in answers](text-links.md#pictures-in-answers)
-  says.
+  picture, as [Pictures in answers](answer-pictures.md) says.
 - A numbered list counts up from the number of its first item, as
   Markdown numbers it. `AgentBlocks` gives that number to the `start` of
   the `ol`. A message line writes each number from it. As in CommonMark, a
@@ -222,10 +221,10 @@ has. These parts read and draw the headings:
   message line uses the same final check, as
   [Message lines](message-lines.md) says.
 - A heading shows no picture, so the image of a picture file shows as its
-  link there, as [Pictures in answers](text-links.md#pictures-in-answers)
-  says. With no alt text, an image of a file of the tree shows the name of
-  the file. With no alt text, an image at a web address shows that
-  address, and any other image shows nothing. So `## ![](x)` draws nothing
+  link there, as [Pictures in answers](answer-pictures.md) says. With no
+  alt text, an image of a file of the tree shows the name of the file.
+  With no alt text, an image at a web address shows that address, and any
+  other image shows nothing. So `## ![](x)` draws nothing
   while `x` names no file of the tree and no web address, also while the
   chat has no tree. When the tree gains a file at `x`, the heading shows
   the name of that file, until the file goes.

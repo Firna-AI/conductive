@@ -35,7 +35,7 @@ requirements, and the mockups draw them at `app/chat/work`,
   the drawing of its message. It allows pictures only in a paragraph or a
   list item of an open line. So the closed line shows the image of a
   picture file as its link, and the open line shows its picture, as
-  [Pictures in answers](text-links.md#pictures-in-answers) says. A heading
+  [Pictures in answers](answer-pictures.md) says. A heading
   and a table cell keep the link. The hidden copy of the line gets the
   state of a closed line.
 - A task item draws its fixed check box before the words of its first
