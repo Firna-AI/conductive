@@ -4,8 +4,9 @@ This guide belongs to [the chat](README.md). It gives the rules of the
 stream cursor, the session logs, the transcript items and their counts,
 the end reason of a finished turn, the standard speed of a fast turn, the
 lost lines, the turns, the open run
-of tool calls of a running turn, the work fold of each ended turn, and Try
-again. Its [key code](#key-code) names the shared transcript modules and
+of tool calls of a running turn, the work fold of each ended turn, the
+wake lines, and Try again. Its [key code](#key-code) names the shared
+transcript modules and
 the parts of the chat that draw the transcript.
 
 - The stream cursor spans the whole workspace: every session, file, and
@@ -89,6 +90,16 @@ the parts of the chat that draw the transcript.
 - Each `workspace.repository-changed` event of a session becomes one `repository-changed` item in the same way.
   The line names the member who changed the repository, "You" to that member, the new repository, and the new branch, with `RepositoryChangedLine` of the mockups.
   The item takes its ID from the new repository and the new branch. A copy of the session gives the note with no heading.
+- Each `session.watch-notice` event of a session becomes one `wake` item at its place among the events.
+  It is the line that wakes the session when a turn that it watched ends, as [The wake line](../../docs/protocol/session-watches.md#the-wake-line) says.
+  `WakeLine` of the mockups draws it with the words of `wakeCopy.ts` and the chip that `SessionLinkText` gives the watched session.
+  The item takes its ID from the watch, so a repeat of the notice replaces it.
+  The notice reader keeps only a known end reason, and an unknown one reads as none, so the line still shows. A notice with an unknown end is unreadable.
+- A `wake` item belongs to the turn that takes its hidden message, as a message does: the turn that the message starts, the turn that it joins, or a continuation that takes it.
+  The turn that the notice names gives no place, because a continuation can take the message.
+  While no turn has taken the message, the items of the turn that runs go before the line, as before a message that waits.
+  The line starts a new part of its turn and never folds. An answer to its hidden message moves after the line, as after a message.
+  A copy gives the same words, with the link of the notice in place of the chip, under the heading of the turn of the line and with no heading of a sender.
 - Ordered history folding preserves these fields and lines across completion and failure events.
 
 ## Key code
@@ -106,7 +117,8 @@ the parts of the chat that draw the transcript.
 - [`session-log.ts`](../shared/transcript/session-log.ts): the event log of each session, with its records
   in event order and its newest record. The record owner keeps the logs private.
 - [`known-turns.ts`](../shared/transcript/known-turns.ts): the known turns, their order, their ends, and
-  `retryItemId`, the one failed item that offers Try again.
+  `retryItemId`, the one failed item that offers Try again. `turnOf` gives the turn of an item, and of a
+  message or a wake line through the turn that took its message.
 - [`item-placement.ts`](../shared/transcript/item-placement.ts): where an item goes in its turn, also a late one.
 - [`late-events.ts`](../shared/transcript/late-events.ts): accepted events of a turn that has ended.
 - [`item-keys.ts`](../shared/transcript/item-keys.ts): the item IDs that later events of an item reuse.

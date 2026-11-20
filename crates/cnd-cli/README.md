@@ -24,7 +24,7 @@ sorts below every release.
 
 The commands are `runner`, `relay`, `mcp`, `git-credential`, `update`,
 `workspaces`, `sessions`, `messages`, `sections`, `repositories`, `models`,
-`previews`, `mac`, and `secrets`. The workspace commands and `mcp` run the 26 calls in
+`previews`, `mac`, and `secrets`. The workspace commands and `mcp` run the 27 calls in
 [cnd-tools](../cnd-tools/README.md). They preserve the Worker replies and
 refusal codes. `relay` serves previews through [cnd-relay](../cnd-relay/README.md).
 `secrets list` returns metadata only. `secrets run --secret NAME -- <command>`
@@ -103,6 +103,17 @@ check and accept added JSON fields.
 program already has the newest version. An existing active release still
 prevents a downgrade. See [the install guide](../../image/install.md#release-installation)
 for the image-build sequence and the folder layout.
+
+### Session watches
+
+`conductive sessions watch --session ID [--workspace ID] [--turn-id ID]`
+and MCP `watch_session` ask for one wake when one turn finishes, fails, or stops.
+Use the actual session and exact `turnId` returned with the work, when available.
+The call returns at once. Set the watch, then end the reply when only that work remains.
+After a wake, use `read_session` for the result.
+An idle or ended reply means read it at once.
+A turn end does not mean the whole delegated task is complete.
+[Session watches](../../tools/calls.md#session-watches) gives targeting, replies, and Stop behavior.
 
 ## Quick Start
 

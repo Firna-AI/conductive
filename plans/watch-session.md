@@ -1,6 +1,6 @@
 # Wake a session when a watched turn ends
 
-Status: Active. On branch `calummoore/wake-a-session-when-a-turn-ends-b5kh`, no pull request yet. Cal approved watch decisions 2 D, 3 C, 4 C, 5 D, and 6 B on 20 November 2026. Milestones 1 to 3 are checked complete. The pull request that completes this work deletes this plan.
+Status: Active. On branch `calummoore/wake-a-session-when-a-turn-ends-b5kh`, no pull request yet. Cal approved watch decisions 2 D, 3 C, 4 C, 5 D, and 6 B on 20 November 2026. Milestones 1 to 5 are checked complete. The pull request that completes this work deletes this plan.
 
 Conductive agents hand work to other sessions. No workspace tool tells the caller when that work ends. A waiting parent keeps its turn and cloud computer active. This change adds a one-shot watch. The Worker wakes the calling session when the watched turn finishes, fails, or stops.
 
@@ -48,6 +48,17 @@ The private `PendingCommand` type moves from `worker/chat/types.ts` to
 imports the new owner directly. The combined watch and upstream additions
 put the old owner at 304 lines, above the repository's 300-line limit.
 Milestone 3 lists every consumer and removes the old export.
+
+The branch-only `agent-instructions-lifetime.md` duplicated the lifetime
+requirements that latest `main` now owns in `session-instructions.md`.
+The merge keeps the complete identical block in the main owner. Its two
+instruction links and architecture index move there. Milestone 6 records
+the checked consumers and removal.
+
+The private `WorkspaceChatResolvers` type moves from
+`worker/chat/workspace-integration.ts` to its own type module. Combined
+upstream and watch additions put the old owner at 303 lines. All four
+consumers import the new owner directly. Its shape and emitted code stay.
 
 ## Design
 
@@ -145,6 +156,28 @@ The first three calls came from the brainstorm on 18 November 2026. They are age
 - **20 November 2026, orchestrator call:** Use native stored target fixtures for core watch cases and real target admission for route and two-workspace smoke cases. Reason: each test needs the lowest boundary that protects its requirement. Keep all assertions and guards.
 - **20 November 2026, orchestrator call:** Complete the normal startup path and runner-ready success phase in the resume smoke. Scope only preconditions to setup. Reason: manually marking startup prepared skips the dispatch fence that the wake must use.
 - **20 November 2026, orchestrator call:** Move the private pending-command type and its direct consumers to a separate module. Reason: combined upstream and watch additions exceed the existing file cap. Preserve the type instead of compressing the old file or keeping a re-export.
+
+- **20 November 2026, non-UI implementor call:** Keep exact-turn parsing in its own watch input module and reuse the common adapters. Reason: existing routes, authentication, and errors stay shared.
+- **20 November 2026, non-UI implementor call:** Keep new watch help and runner guidance in distinct sections. Reason: the services branch owns its separate additions.
+- **20 November 2026, non-UI implementor call:** Reuse existing old workspace-create reply cases and check the additive turn ID in the real interface smoke. Reason: a duplicate regression test adds no protection.
+- **20 November 2026, non-UI implementor call:** Use private deterministic HTTP controls for actual CLI and MCP smoke. Reason: M3 already proves real Worker targeting, delivery, and resume.
+
+- **20 November 2026, UI implementor call:** Keep the generated notice in each wake item and derive its identity from the watch. Reason: one watch fires once.
+- **20 November 2026, UI implementor call:** Follow the hidden message to its actual turn without a notice-turn fallback. Reason: a continuation can take that message.
+- **20 November 2026, UI implementor call:** Treat an untaken wake message as waiting. Reason: running-turn items must stay before waiting input.
+- **20 November 2026, UI implementor call:** Put answers after their wake line. Reason: each answer stays with the messages that it answers.
+- **20 November 2026, UI implementor call:** Copy the notice's canonical link inside angle brackets. Reason: agent and copied text use the same complete link.
+- **20 November 2026, UI implementor call:** Put copied wake text under its turn's agent heading. Reason: the app line has no member heading.
+- **20 November 2026, UI implementor call:** Read unknown optional reasons as absent and unknown terminal states as unreadable. Reason: this follows the existing event-reader contract.
+- **20 November 2026, UI implementor call:** Mount UI cases with the real links context. Reason: a static render cannot show the real session chip.
+- **20 November 2026, UI implementor call:** Share five recorded wake chats between tests and dev views. Reason: production flows keep real data and the registry stays below its file cap.
+- **20 November 2026, orchestrator integration call:** Keep main's session-instruction lifetime owner and remove this branch's duplicate page. Reason: the full requirement blocks are identical.
+- **20 November 2026, orchestrator integration refinement:** Keep ordinary sender-line placement for each installed runner. Reason: main's skill work now places it after normal messages. This refines the earlier prefix wording without adding a watch exception.
+
+- **20 November 2026, orchestrator correction:** Make the fixture-only message ID helper private. Reason: all callers share its module, and the full gate rejects its unused export. Its implementation stays unchanged.
+
+- **20 November 2026, orchestrator integration call:** Use main's shared text-block builders for the two wake fixture sites. Reason: main replaced fixture strings, so the approved appearance needs its current data format.
+- **20 November 2026, orchestrator integration call:** Move the private workspace chat resolver type and four direct imports into a separate owner. Reason: combined upstream and watch additions exceed the existing file cap. Keep its shape and emitted code.
 
 The fresh options check is `.context/watch-session/options-check.md`. Its resolution is `.context/watch-session/options-check-resolution.md`. The check widened the options and changed the recommendations for repeat calls and Stop. The orchestrator kept the task's one-turn scope when it chose the targeting recommendation.
 
@@ -346,7 +379,7 @@ Latest integration evidence: `.context/watch-session/m3-integration-main.md` rec
 
 Evidence: `.context/watch-session/m3-report.md`, `.context/watch-session/m3-root-check.md`, `.context/watch-session/m3-root-repeat-check.json`, `.context/watch-session/m3-length-fix.md`, and `.context/watch-session/m3-combined-check.md`.
 
-## Milestone 4: Chat line implementation
+## Milestone 4: Chat line implementation — completed
 
 Tags: ui
 
@@ -354,37 +387,78 @@ Depends on: 3
 
 Use the `ui implementor` action. The approved mockup and generated event type are available before this milestone starts.
 
-- [ ] Render the approved `WakeLine` with real `SessionLinkText`, terminal data, and the shared word module from Milestone 1.
-- [ ] Keep live events, stored history, copy, and agent transcript text aligned. Preserve event order and once-only display.
-- [ ] Run focused existing chat and transcript tests for the new behavior. Add a test only for an uncovered requirement. Record new asynchronous test proofs and ten-run counts.
-- [ ] Check the app in the cloud computer browser at desktop and mobile widths. Compare it with the mockup. Save PNG screenshots under `.context/watch-session/`.
+- [x] Render the approved `WakeLine` with real `SessionLinkText`, terminal data, and the shared word module from Milestone 1.
+- [x] Keep live events, stored history, copy, and agent transcript text aligned. Preserve event order and once-only display.
+- [x] Run focused existing chat and transcript tests for the new behavior. Add a test only for an uncovered requirement. Record new asynchronous test proofs and ten-run counts.
+- [x] Check the app in the cloud computer browser at desktop and mobile widths. Compare it with the mockup. Save PNG screenshots under `.context/watch-session/`.
 
-## Milestone 5: CLI, MCP, and agent guidance
+Evidence: `.context/watch-session/m4-report.md`, `.context/watch-session/m4-root-check.md`, and `.context/watch-session/m4-root-proof-check.json`.
+
+## Milestone 5: CLI, MCP, and agent guidance — completed
 
 Depends on: 3
 
 Use the `non-ui implementor` action. The live watch path and generated contracts exist first. This work can run beside Milestone 4. Keep each agent's files, ports, test fixtures, and build output separate. The final pull request includes both milestones.
 
-- [ ] Add `watch_session` to the MCP schema and dispatch. Add `conductive sessions watch` to CLI parsing and help.
-- [ ] Update `crates/cnd-tools/README.md`, `crates/cnd-cli/README.md`, `tools/README.md`, and `tools/calls.md`. Replace the old call counts and the temporary unbuilt-call statement.
-- [ ] Expose the approved targeting and coalescing rules consistently. Return the Worker reply and its existing error form.
-- [ ] Add watch guidance to tool descriptions and `crates/cnd-runner/src/engine/instructions.rs`. Tell agents to set the watch, end their reply, and read the session after a wake.
-- [ ] Explain that a turn end does not mean a whole delegated task ended. Explain the approved Stop rule. Change no shared skill in this repository.
-- [ ] Keep existing session instructions stable for their lifetime. Keep all dev server guidance unchanged.
-- [ ] Run focused Rust CLI/MCP tests and smoke-test the call through both interfaces. Check old calls still use their original payloads.
+- [x] Add `watch_session` to the MCP schema and dispatch. Add `conductive sessions watch` to CLI parsing and help.
+- [x] Update `crates/cnd-tools/README.md`, `crates/cnd-cli/README.md`, `tools/README.md`, and `tools/calls.md`. Replace the old call counts and the temporary unbuilt-call statement.
+- [x] Expose the approved targeting and coalescing rules consistently. Return the Worker reply and its existing error form.
+- [x] Add watch guidance to tool descriptions and `crates/cnd-runner/src/engine/instructions.rs`. Tell agents to set the watch, end their reply, and read the session after a wake.
+- [x] Explain that a turn end does not mean a whole delegated task ended. Explain the approved Stop rule. Change no shared skill in this repository.
+- [x] Keep existing session instructions stable for their lifetime. Keep all dev server guidance unchanged.
+- [x] Run focused Rust CLI/MCP tests and smoke-test the call through both interfaces. Check old calls still use their original payloads.
 
-## Milestone 6: Verification, review, and pull request
+Evidence: `.context/watch-session/m5-report.md`, `.context/watch-session/m5-root-check.md`, and `.context/watch-session/m5-root-proof-check.json`.
+
+## Milestone 5a: Align wake fixtures with the shared renderer — completed
+
+Tags: mockup
 
 Depends on: 4, 5
 
+Latest main replaced fixture strings with shared text-block trees. Use the `ui implementor` action for this integration gap. Keep the approved words and appearance.
+
+- [x] Move the two agent-block sites in `wakeConversations.ts` to main's fixture builders. Preserve inline code and session links.
+- [x] Run the mockup check and inspect the wake states at desktop and mobile widths. Save PNG evidence and stop the preview and browser.
+- [x] Check the delegated source and evidence before ticking these tasks. Record any design change that the check needs.
+
+Evidence: `.context/watch-session/m5a-report.md` and `.context/watch-session/m5a-root-check.md`.
+
+## Milestone 6: Verification, review, and pull request
+
+Depends on: 4, 5, 5a
+
 The orchestrator owns this milestone. No delegated tests run beside the gate.
 
-- [ ] Inspect each delegated diff and report against the approved contract and repository rules. Tick only checked results.
-- [ ] Smoke-test a completed, failed, and stopped watched turn. Check a stopped caller computer resumes through the normal path. Use local deterministic controls when production access is unnecessary.
-- [ ] Run early format, lint, and file-length checks with Node 24. Install desktop and runner dependencies as `CLAUDE.md` requires.
-- [ ] Run `npm run check`. Run `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, and `cargo test --workspace`.
-- [ ] Regenerate shared bindings and verify no uncommitted drift. Run `cargo build --release --target x86_64-unknown-linux-musl -p cnd-cli`.
+Evidence: `.context/watch-session/m3-combined-check.md`, `.context/watch-session/m45-integration-main.md`, `.context/watch-session/m45-all-links.txt`, and `.context/watch-session/final-public-audit.md`.
+
+- [x] Integrate latest main and preserve each upstream path.
+  - [x] Move both instruction links from the duplicate lifetime page to `session-instructions.md`.
+  - [x] Remove the duplicate architecture-index entry and keep main's owner entry.
+  - [x] Remove the branch-only duplicate lifetime page after full-block equivalence.
+  - [x] Keep upstream sender guidance beside the distinct watch section.
+  - [x] Align watch prose with the ordinary sender-line placement of each runner.
+
+Evidence: `.context/watch-session/m45-integration-main.md` and its preservation records.
+
+- [x] Inspect each delegated diff and report against the approved contract and repository rules. Tick only checked results.
+- [x] Smoke-test a completed, failed, and stopped watched turn. Check a stopped caller computer resumes through the normal path. Use local deterministic controls when production access is unnecessary.
+- [x] Run early format, lint, and file-length checks with Node 24. Install desktop and runner dependencies as `CLAUDE.md` requires.
+- [x] Make the fixture-only wake message ID helper private for the unused-export check. Keep its implementation and callers.
+- [x] Investigate the new stopped-caller runtime smoke failure in the full suite. Keep all assertions, normal startup phases, and guards.
+- [ ] Apply Cal's choice for implementation item 8 in `follow-ups/watch-resume-test-timeout.md`. Keep the test and gate unchanged until that answer.
+- [x] Integrate the next main tip after the active gate releases its tested tree. Preserve every upstream path and check both overlapping mockup files.
+- [x] Move `WorkspaceChatResolvers` unchanged to its own type module for the existing file cap.
+  - [x] Update `worker/chat/workspace-integration.ts`.
+  - [x] Update `worker/workspace-lifecycle.ts`.
+  - [x] Update `worker/workspace.ts`.
+  - [x] Update `worker/lifecycle/native-alarm-workspace.test-support.ts`.
+  - [x] Prove unchanged emitted code and run the combined type and lint checks.
+- [ ] Run `npm run check` after Cal's choice for item 8. Report the interrupted run and its failures.
+- [x] Run `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, and `cargo test --workspace` on the current combined tree.
+- [x] Regenerate shared bindings and verify no uncommitted drift. Run `cargo build --release --target x86_64-unknown-linux-musl -p cnd-cli`.
 - [ ] Commit with Conventional Commits and push this branch after the preservation audits.
+- [x] Record and apply the fix rule to the sent-but-unacknowledged wake continuation display finding. Preserve existing member-message placement.
 - [ ] Review the complete diff against `origin/main` after the push with the `implementation-review` skill. Save the review and findings. Check new findings with the `second-pass review agent`. Fix `fix now` findings, record other findings as follow-up items, re-review once, and report.
 - [ ] Delete this plan after every earlier TODO is ticked and review rounds are complete. Preserve a permalink and every dated decision in the pull request description.
 - [ ] Open the pull request into `main`. Wait for green `Complete gate` and `Rust gate` checks on its last commit. Report its URL, commit, decisions, checks, and remaining follow-up items. Do not merge it.

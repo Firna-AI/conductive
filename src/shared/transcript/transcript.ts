@@ -4,9 +4,15 @@ import type { ToolCall } from '../generated/ToolCall'
 import type { ChangedFile } from '../generated/ChangedFile'
 import type { MessageSender } from '../generated/MessageSender'
 import type { UserMessage } from '../generated/UserMessage'
+import type { SessionWatchNotice } from '../generated/SessionWatchNotice'
 import type { StopSessionReference } from '../session-stop'
 import type { ChatEvent, RunnerEventRefused } from '../chat-events'
-import { continuedKey, repositoryChangedKey, userKey } from './item-keys'
+import {
+  continuedKey,
+  repositoryChangedKey,
+  userKey,
+  wakeKey,
+} from './item-keys'
 import { hasEnded, noteTurn, takeMessage, type KnownTurn } from './known-turns'
 import { foldLate } from './late-events'
 import { foldRefused } from './refused-events'
@@ -75,6 +81,17 @@ export type TranscriptItem =
       member: MessageSender
       repository: { id: string; fullName: string }
       branch: string
+    }
+  | {
+      /**
+       * The line of the app that wakes the session when a turn that it
+       * watched ends, at its place in the chat. Its hidden message carries
+       * the wake to the agent, so the line belongs to the turn that takes
+       * that message, as a message does. It is no message of a member.
+       */
+      kind: 'wake'
+      id: string
+      notice: SessionWatchNotice
     }
 
 export interface RunningTurn {
@@ -165,11 +182,29 @@ function foldRepositoryChanged(
 }
 
 /**
+ * Applies the wake of a watch at its place in the event order. A watch fires
+ * once, so a repeat of its notice replaces the line. The line takes no turn
+ * from the notice: the turn that takes its hidden message owns it, as
+ * `turnOf` says, also after a continuation takes that message.
+ */
+function foldWake(
+  transcript: Transcript,
+  event: SessionWatchNotice,
+): Transcript {
+  return withNote(transcript, {
+    kind: 'wake',
+    id: wakeKey(event.watchId),
+    notice: event,
+  })
+}
+
+/**
  * Applies one chat event of a session to its transcript. The chat shows only
  * the messages that people sent. A message ID that no accepted message has,
- * such as one that the agent SDK added, shows nothing. A session record ends
- * and starts turns, as `foldRecord` says. An agent event that the workspace
- * marked `late` belongs to a turn that has ended, as `foldMarkedLate` says.
+ * such as one that the agent SDK added, shows nothing. The hidden message of
+ * a wake shows as the line of its notice. A session record ends and starts
+ * turns, as `foldRecord` says. An agent event that the workspace marked
+ * `late` belongs to a turn that has ended, as `foldMarkedLate` says.
  */
 export function foldEvent(
   transcript: Transcript,
@@ -179,7 +214,7 @@ export function foldEvent(
 ): Transcript {
   switch (event.type) {
     case 'session.watch-notice':
-      return transcript
+      return foldWake(transcript, event)
     case 'workspace.continued':
       return foldContinued(transcript, event)
     case 'workspace.repository-changed':

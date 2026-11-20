@@ -73,6 +73,11 @@ export const choices = {
     'queued',
     'first-turn',
     'loss',
+    'wake-finished',
+    'wake-failed',
+    'wake-stopped',
+    'wake-other-workspace',
+    'wake-during-turn',
   ],
   workspace: ['existing', 'new'],
   state: [

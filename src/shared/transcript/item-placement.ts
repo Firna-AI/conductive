@@ -4,7 +4,7 @@ import type { Transcript, TranscriptItem } from './transcript'
 /** An item of one turn: its text, a tool call, or a row where it ended. */
 export type TurnItem = Exclude<
   TranscriptItem,
-  { kind: 'user' | 'lost' | 'continued' | 'repository-changed' }
+  { kind: 'user' | 'wake' | 'lost' | 'continued' | 'repository-changed' }
 >
 
 /** The item shows where a turn ended: its end, its failure, or its refused end. */
@@ -20,9 +20,15 @@ export function isEnd(item: TranscriptItem, turnId: string): boolean {
   )
 }
 
-/** The message waits: no turn has taken it yet. */
+/**
+ * The message waits: no turn has taken it yet. A wake line waits with its
+ * hidden message, so the items of the turn that runs go before it.
+ */
 function isWaiting(transcript: Transcript, item: TranscriptItem): boolean {
-  return item.kind === 'user' && turnOf(transcript, item) === null
+  return (
+    (item.kind === 'user' || item.kind === 'wake') &&
+    turnOf(transcript, item) === null
+  )
 }
 
 /**

@@ -148,3 +148,7 @@ mod secrets_tests;
 #[cfg(test)]
 #[path = "_tests_/workspace_tests.rs"]
 mod workspace_tests;
+
+#[cfg(test)]
+#[path = "_tests_/watch_adapter_tests.rs"]
+mod watch_adapter_tests;

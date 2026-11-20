@@ -73,7 +73,20 @@ calling session when one turn of a session ends. They take the session, an
 optional workspace, and an optional turn ID. The reply comes at once, with
 `watching`, `idle`, or the end of a turn that already ended.
 [Session watches](../../docs/protocol/session-watches.md) states the rules.
-The CLI and the MCP server do not offer this call yet.
+Use the reply's actual session and exact `turnId` after sending or creating work, when available.
+The typed reply keeps the workspace, linked session, and flattened state.
+Repeats for the same valid watch return the same `watchId`.
+An idle or ended reply sets no watch, so read the session at once.
+
+```sh
+cargo run -p cnd-cli -- sessions watch --session session-id --workspace workspace-id --turn-id turn-id
+```
+
+Set the watch, then end the reply when only that watched work remains.
+After a wake, use `read_session` for the result.
+A turn end does not mean the whole delegated task is complete.
+Explicit Stop drops older pending wakes of the calling session.
+Automatic idle computer stops keep watches.
 
 ## Quick Start
 
@@ -111,6 +124,7 @@ isolation and filtered output. Worker route tests need no Rust build.
 - [client.rs](src/client.rs) authenticates requests and validates typed replies.
 - [input](src/input/mod.rs) validates untrusted fields without changing text.
 - [request.rs](src/request.rs) maps typed calls to fixed HTTP routes.
+- [watches.rs](src/input/watches.rs) parses optional exact-turn selection for session watches.
 - [mcp](src/mcp/mod.rs) runs concurrent protocol requests and drains them at EOF.
 - [mcp-tools.json](src/mcp-tools.json) holds the MCP descriptors and input schemas.
 - [ports.rs](src/ports.rs) defines replaceable runtime and transport effects.

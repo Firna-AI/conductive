@@ -97,18 +97,28 @@ export function takeMessage(
   )
 }
 
-/** The turn of an item: of its message, of its marker, or its own turn. */
+/** The turn that took a message, or null while the message waits. */
+function messageTurn(transcript: Transcript, messageId: string): string | null {
+  return (
+    transcript.turns.find((turn) => turn.messageIds.includes(messageId))?.id ??
+    null
+  )
+}
+
+/**
+ * The turn of an item: of its message, of its marker, or its own turn. A
+ * wake line belongs to the turn that took its hidden message, not to the
+ * turn of its notice, because a continuation can take that message.
+ */
 export function turnOf(
   transcript: Transcript,
   item: TranscriptItem,
 ): string | null {
   switch (item.kind) {
     case 'user':
-      return (
-        transcript.turns.find((turn) =>
-          turn.messageIds.includes(item.message.id),
-        )?.id ?? null
-      )
+      return messageTurn(transcript, item.message.id)
+    case 'wake':
+      return messageTurn(transcript, item.notice.messageId)
     case 'lost':
       return item.marker.turnId
     case 'continued':

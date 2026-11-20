@@ -20,6 +20,11 @@ const CONVERSATIONS = [
   'first-turn',
   'sent-by',
   'stopped-from',
+  'wake-finished',
+  'wake-failed',
+  'wake-stopped',
+  'wake-other-workspace',
+  'wake-during-turn',
 ] as const satisfies readonly RecordedChatScenario[]
 
 /** The run lists of Review pull requests that the mockups also draw. */

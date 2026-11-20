@@ -1,8 +1,6 @@
 import { readChatWorkspaceResponse } from './chat/workspace-response'
-import type {
-  WorkspaceCompositionEnv,
-  WorkspaceChatResolvers,
-} from './chat/workspace-integration'
+import type { WorkspaceCompositionEnv } from './chat/workspace-integration'
+import type { WorkspaceChatResolvers } from './chat/workspace-resolvers'
 import { AgentSessionWorkspace } from './tools/workspace'
 import { lifecycleDependencies } from './lifecycle/runtime'
 import type { ToolPreviewCall } from './tools/services'

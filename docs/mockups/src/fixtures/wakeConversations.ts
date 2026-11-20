@@ -1,5 +1,7 @@
+import type { TextBlock } from '../../../../src/chat/markdown/agent-blocks'
 import type { TurnEndReason } from '../../../../src/shared/generated/TurnEndReason'
 import type { SessionWatchEndState } from '../../../../src/shared/generated/SessionWatchEndState'
+import { code, p } from './agentText'
 import type { ChatItem } from './conversations'
 import {
   autocompleteSessions,
@@ -75,7 +77,7 @@ function wake(
  * tool call that hands out the work, and `answer` the reply. The agent then
  * ends its reply, so the turn ends, and the session waits with no turn.
  */
-function handOff(ask: string, call: string, answer: string): ChatItem[] {
+function handOff(ask: string, call: string, answer: TextBlock): ChatItem[] {
   return [
     { kind: 'user', id: 'hand-off', text: ask },
     done('hand-out', call),
@@ -89,14 +91,20 @@ function handOff(ask: string, call: string, answer: string): ChatItem[] {
 const debounceHandOff = handOff(
   'Give the debounce of the address lookups to a new session. When its turn ends, check its work.',
   'conductive sessions create',
-  `I started ${sessionLink(debounce)} with the debounce. This session goes on when its turn ends.`,
+  p(
+    `I started ${sessionLink(debounce)} with the debounce. This session goes on when its turn ends.`,
+  ),
 )
 
 /** The restored address, given to the session of Saved carts, `W-402`. */
 const savedCartsHandOff = handOff(
   'Ask Saved carts to fill a restored address with `setAddress`, and to wait for the checks of its branch. When its turn ends, check its work.',
   'conductive sessions send',
-  `I asked ${sessionLink(savedCartsSession)} to fill a restored address with \`setAddress\` and to wait for the checks of its branch. This session goes on when its turn ends.`,
+  p(
+    `I asked ${sessionLink(savedCartsSession)} to fill a restored address with `,
+    code('setAddress'),
+    ' and to wait for the checks of its branch. This session goes on when its turn ends.',
+  ),
 )
 
 /** The turn that a wake starts, or joins, while it reads the session. */
@@ -124,7 +132,9 @@ const failedAnswer: readonly ChatItem[] = [
     kind: 'agent',
     id: 'failed-answer',
     blocks: [
-      `The turn of ${sessionLink(debounce)} failed before it changed a file, because Claude was overloaded. Should I send it the task again?`,
+      p(
+        `The turn of ${sessionLink(debounce)} failed before it changed a file, because Claude was overloaded. Should I send it the task again?`,
+      ),
     ],
   },
   { kind: 'turn-end', id: 'failed-end', duration: '11s', files: [] },
