@@ -1,13 +1,19 @@
 import type { ReactNode } from 'react'
 import type { InlineText } from '../../../../../src/chat/markdown/agent-inline'
+import { answerShowsWords } from '../../../../../src/chat/markdown/answer-parts'
 import type { AgentDrawing } from './agentDrawing'
-import { textShowsWords } from './answerNodes'
 import { AnswerText } from './AnswerText'
+import { answerReading } from './chatReading'
+import { useChatWorkspaces } from './chatWorkspaces'
 import { CodeBlock } from './CodeBlock'
 
-/** Draws `children` only when `text` shows words, as `answerNodes` reads it. */
+/**
+ * Draws `children` only when `text` shows words, as `answerShowsWords` of
+ * the app reads it with what `AnswerText` reads the text with.
+ */
 function ShowsWords(props: { text: InlineText; children: ReactNode }) {
-  return textShowsWords(props.text) ? props.children : null
+  const reading = answerReading(useChatWorkspaces())
+  return answerShowsWords(props.text, reading) ? props.children : null
 }
 
 /**

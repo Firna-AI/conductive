@@ -4,7 +4,7 @@ This page belongs to [the design](design.md), which gives the style, the
 layouts, the design tokens, and the shared parts. It gives the look of a
 web link in untrusted text, and what a press on each kind of link opens.
 It also gives the links and the pictures of files in answers.
-[Workspace, session, and file chips](design-chat.md#workspace-session-and-file-chips)
+[Workspace, session, and file chips](design-chips.md)
 gives the chips, which take the place of a link to a workspace of the org.
 `app/chat/links` draws the links of chat text, and the flow
 `user-flows/open-a-local-server` opens a local address.
@@ -32,10 +32,13 @@ gives the chips, which take the place of a link to a workspace of the org.
 
 ## Links in chat text
 
-- `MessageText` reads the links of the text of a member with
-  `workspaceLinks.ts`, and `AnswerText` reads the links of an answer with
-  `answerNodes.ts`. `WebLinkText.tsx` beside them draws each link that is
-  not a chip. Only `http` and `https` addresses are links.
+- `MessageText` draws the links of the text of a member from the parts
+  that `chatParts` of the app gives. `AnswerText` draws the links of an
+  answer from the parts that `answerParts` of the app gives.
+  `workspaceLinks.ts` beside them gives both readers the workspaces of the
+  chat, and where each web address leads. `WebLinkText.tsx` beside them
+  draws each link that is not a chip. Only `http` and `https` addresses
+  are links.
   - A bare address shows as the text has it. Punctuation, quotes, `*`,
     `_`, and `~` at its end stay out of it. A `)` or a `]` at its end
     stays in only when it closes a `(` or a `[` inside the address.
