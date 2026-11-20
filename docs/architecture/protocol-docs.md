@@ -196,6 +196,10 @@ This page lists each protocol doc and what it covers.
   - [Workspace and session names](../protocol/workspace-and-session-names.md):
     the missing and the automatic names of workspaces and sessions, and
     the title that a small model gives a new workspace.
+- [Model favourites](../protocol/model-favourites.md): the favourites of
+  each member, the rows and the marks of the model menu, All models, the
+  hidden favourites, the Favourites section of Preferences, the starting
+  favourites, and the account routes.
 - [Workspace links](../protocol/workspace-links.md): Copy link, and the chips
   that show workspace links in chat.
 - [Chat Markdown](../protocol/chat-markdown.md): the formatting of agent

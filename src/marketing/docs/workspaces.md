@@ -28,9 +28,15 @@ If you joined an org, its admin manages the repositories and shared setup.
 2. Select **New workspace**.
 3. Choose the repository for the task.
    **New workspace** starts with the org's default repository.
-4. Choose a model and effort.
-5. Describe the task in the message box.
-6. Select **Send** on the page, or **Create** in the dialog.
+4. Choose a favourite or a model in **All models**.
+5. Adjust the effort and **Fast** if needed.
+6. Describe the task in the message box.
+7. Select **Send** on the page, or **Create** in the dialog.
+
+A favourite sets the model, effort, and **Fast** together.
+With no favourites to show, the menu lists models directly.
+
+- [Choose models and set favourites](/docs/sessions-and-chat#choose-a-model)
 
 For example:
 

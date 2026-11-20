@@ -199,10 +199,15 @@ If you accepted an org invitation, your org is already open.
 
 1. Select **New workspace**.
 2. Choose the repository for your task.
-3. Choose a model for an agent available to you.
-4. Choose the effort in the same model menu.
+3. Choose a favourite or a model in **All models** for an agent available to you.
+4. Adjust the effort and **Fast** in the same menu if needed.
 5. Describe your task in the message box.
 6. Select **Create** in the dialog, or **Send** on the page.
+
+A favourite sets the model, effort, and **Fast** together.
+With no favourites to show, the menu lists models directly.
+
+- [Set your model favourites](/docs/sessions-and-chat#set-your-favourites)
 
 For a first task, you can use this message:
 

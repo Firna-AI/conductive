@@ -208,13 +208,34 @@ otherwise.
   still works, so a pick of a listed model shows the favourite in the menu
   again. The line under it says "Hidden from the model menu, because your
   endpoint does not list Fable 5.1." For a model that the model list no
-  longer holds, it says "Hidden from the model menu, because Fable 5.1 is
-  no longer available." A picker that is off was rejected, because the
+  longer holds, it says "Hidden from the model menu, because `<model ID>`
+  is no longer available." It names the model ID, because the model list
+  has no label for a model that it no longer holds. A picker that is off was rejected, because the
   member would then remove the favourite and add another to change it.
 - A failed save of the Favourites section keeps the saved list. The error
   under the list says "The change wasn't saved. Try again.", in the rose
   colour with an alert icon, as the other errors of Preferences do. The
   next change tries again.
+- A saved favourite whose model no longer offers its effort shows in the
+  menu as saved, as the saved default does today. A hidden row or a move
+  to the nearest effort was rejected, because the case needs the model
+  list to drop an effort, and the saved default already sets the rule.
+- Duplicates are compared after Fast is turned off for a model without
+  fast mode, in the route and in the setting. So no list holds two equal
+  favourites.
+- A malformed entry of `CONDUCTIVE_STARTING_FAVOURITES` is left out with
+  a warning, and the other entries still work. Only a missing value or a
+  value that is not an array falls back to the app default, with a
+  warning. With no app default either, the read gives no favourites and
+  still works.
+- `PUT /api/account/favourites` takes and gives `{ favourites }`. It
+  checks each entry as `PUT /api/account/default-model` does, and does
+  not check the model or the effort against the model list.
+- `docs/protocol/create-a-workspace.md` passed the 250-line limit of the
+  `documentation` skill, so its "Page or dialog" and "The dialog" parts
+  moved, unchanged, to `docs/protocol/new-workspace-dialog.md`. The new
+  `model-favourites.md` is a top-level protocol doc, because
+  `messages-and-attachments.md` has no room for another child link.
 - On a phone, the menu with five favourites and the six efforts of Opus
   5.5 is about 590 px high. Each menu keeps its height limit of 70% of the
   screen, so on a screen lower than about 845 px the menu scrolls, and the
@@ -268,25 +289,30 @@ menu.
 
 Depends on: 1
 
-- [ ] Add `docs/protocol/model-favourites.md` with the requirements and
-      the decisions in force, and list it in `docs/protocol/README.md`.
-- [ ] Update the rows of the model menu in `docs/protocol/fast-mode.md`.
-- [ ] Update the Preferences tab in `docs/protocol/create-a-workspace.md`.
-- [ ] Add the hidden favourites to
+- [x] Add `docs/protocol/model-favourites.md` with the requirements and
+      the decisions in force, and list it in
+      `docs/architecture/protocol-docs.md`, the index that
+      `docs/protocol/README.md` points to.
+- [x] Update the rows of the model menu in `docs/protocol/fast-mode.md`.
+- [x] Update the Preferences tab in `docs/protocol/create-a-workspace.md`.
+  - [x] Move its sections Page or dialog and The dialog to
+        `docs/protocol/new-workspace-dialog.md`, because the doc passed
+        250 lines. Pointer sections keep their anchors.
+- [x] Add the hidden favourites to
       `docs/protocol/own-endpoint-logins.md`.
-- [ ] Check the model picker lines of `agents-and-sessions.md`,
+- [x] Check the model picker lines of `agents-and-sessions.md`,
       `keyboard-shortcuts.md`, `automations.md`, and `org-logins.md`.
-- [ ] Add `CONDUCTIVE_STARTING_FAVOURITES` to
+- [x] Add `CONDUCTIVE_STARTING_FAVOURITES` to
       `docs/deployment/models.md`: its shape, its limit of five, the
       entries that the Worker leaves out, and the app default when it is
       missing. Check `docs/deployment.md` and `docs/local-development.md`
       for the list of model settings.
-- [ ] Read the Terms page and the Privacy page in full. Update each
+- [x] Read the Terms page and the Privacy page in full. Update each
       sentence that restates what the account stores.
-- [ ] Read each public guide in `src/marketing/docs/` in full. Update the
+- [x] Read each public guide in `src/marketing/docs/` in full. Update the
       steps that choose a model, in `get-started.md`, `workspaces.md`,
       and `sessions-and-chat.md`, and add a Favourites step.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
 
 ## Milestone 3: The Worker
 

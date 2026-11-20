@@ -16,6 +16,9 @@ protocol docs.
   - [New workspace notices](../protocol/new-workspace-notices.md): the
     notice before the first good build, and the notice of a waiting
     repository.
+  - [The New workspace dialog](../protocol/new-workspace-dialog.md): when
+    New workspace opens the page or the dialog, and the parts, the draft,
+    the close, and the create of the dialog.
 - [Repository folders](../protocol/repository-folders.md): the folder and the
   shell variable of each repository in a sandbox, and the context folder
   of each workspace.
