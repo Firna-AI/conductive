@@ -71,7 +71,8 @@ If the last build failed, the change waits for **Try again**.
 When a repository moves to another owner on GitHub, Conductive follows the move like a new name.
 It does so only when the org already has another repository of the new owner.
 Otherwise, builds fail, and its workspaces and automations get no updates from GitHub.
-To fix this, an admin removes the repository in **Edit** and adds it again.
+To fix this, an admin removes the repository in **Edit** and selects **Done**.
+Then the admin adds it again in **Edit** and selects **Done**.
 The removal turns off each automation of the repository.
 After the repository is back, the owner of each automation turns it on again.
 

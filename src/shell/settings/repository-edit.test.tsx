@@ -18,6 +18,7 @@ import {
 import { click, mountScreen, settle } from '../test-mount'
 import { startedApp } from '../test-render'
 import { OrgSettingsScreen } from './OrgSettingsScreen'
+import { noticesOf } from './test-builds'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -243,7 +244,9 @@ describe('the Repositories tab of an admin', () => {
       ),
       done: queryByRole('button', 'Done', view) !== null,
       kept: queryByRole('button', 'Remove acme/admin-dashboard', view) !== null,
+      notices: noticesOf(view).map((notice) => notice.text),
     }).toEqual({
+      notices: ['Select Done to add acme/admin-dashboard and start a build'],
       writes: [
         `PUT ${repositoryPath(org, 'admin-dashboard')}`,
         `PUT ${repositoryPath(org, 'mobile-app')}`,

@@ -3,7 +3,7 @@
 - **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-20, finding 12 of review round 3, branch `calummoore/build-stability-additions-jjdx`.
-- **Location:** `src/shell/settings/RepositoriesTab.tsx` (the `done` action).
+- **Location:** `src/shell/settings/RepositoriesTab.tsx`, the `done` action and its fixed failure title "The repositories did not change".
 - **Reason:** a partial save needs one failed request among several, and normal use rarely meets that.
 
 - **Terms:**
@@ -19,5 +19,8 @@
   - **A.** Choose the toast title from the outcome: keep "The repositories did not change" when Done saved nothing, and use "Some repositories did not change" after a partial save. Effort: Small.
   - **B.** Name each repository whose change did not save in the toast. Effort: Small.
   - **C.** Mark each row of the open edit whose change did not save. It needs a new mockup state. Effort: Medium.
+- **Left out:** Saving nothing when one change fails, because `docs/protocol/org-image.md` requires that the other changes save.
+- **Wider fix:** None found. No other action of the app saves several changes in one step and reports one result.
+- **Previous examples:** None found.
 - **Recommendation:** A. It makes the title true with the fewest new words.
-- **Action:** fix after merge, apply A.
+- **Action:** fix after merge, apply A, because a partial save needs one failed request among several, and normal use rarely meets that.
