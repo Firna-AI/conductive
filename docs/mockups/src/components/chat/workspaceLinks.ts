@@ -1,6 +1,4 @@
 import { parseRoute } from '../../../../../src/app/router'
-import { pictureType } from '../../../../../src/files/page/file-view'
-import { lineLabelEnds } from '../../../../../src/markdown/markdown-labels'
 import {
   webAddressParts,
   type WebAddressPart,
@@ -8,12 +6,6 @@ import {
 } from '../../../../../src/markdown/web-links'
 import { appDomain } from '../../brand'
 import type { Attachment } from '../../fixtures/attachments'
-import {
-  codeTarget,
-  linkTarget as fileTarget,
-  type PathTarget,
-} from './answerPaths'
-import { entryName } from './entryPaths'
 import type { ChatRow, ChatSession } from './chatWorkspaces'
 import {
   mentionParts,
@@ -32,118 +24,21 @@ export type TextPart =
   | { kind: 'code'; text: string; href?: string }
   | MentionPart
   | AttachedPart
-  | FileLinkPart
-
-/**
- * A Markdown link or image of an answer to an entry of the tree. It shows
- * as a normal link with its label, which opens the file. `picture` marks
- * the Markdown image of a PNG, JPEG, GIF, or WebP file, which can show as
- * its picture (screenshot decision 2). The file tab shows the same files
- * as pictures, so an SVG file stays a link.
- */
-export type FileLinkPart = {
-  kind: 'file-link'
-  label: string
-  source: string
-  picture: boolean
-} & PathTarget
-
-/** A Markdown link or image: its start, source, label, and target. */
-type PathLink = { index: number; source: string; label: string; target: string }
-
-/**
- * The target of a Markdown link or image after its `](`, through its `)`:
- * a target in angle brackets, or one with no space, parenthesis, or angle
- * bracket.
- */
-const pathTarget = /(?:<([^<>\n]+)>|([^\s()<>]+))\)/y
-
-/**
- * The Markdown links and images of a text, in order, as a global search
- * for `[label](target)` with an optional `!` before it finds them. A label
- * ends at the first `]` of its line. One pass reads that end for each `[`,
- * and each end reads its target once. A link hides each `[` inside it.
- * After a `[` that starts no link, the next `[` tries.
- */
-function* pathLinks(text: string): Generator<PathLink> {
-  const labelEndAt = lineLabelEnds(text, 'plain')
-  const targets = new Map<number, RegExpExecArray | null>()
-  const targetAt = (end: number) => {
-    let target = targets.get(end)
-    if (target === undefined) {
-      pathTarget.lastIndex = end + 2
-      target = pathTarget.exec(text)
-      targets.set(end, target)
-    }
-    return target
-  }
-  let at = text.indexOf('[')
-  while (at >= 0) {
-    const end = labelEndAt(at)
-    const target = end >= 0 && text[end + 1] === '(' ? targetAt(end) : null
-    if (!target) {
-      at = text.indexOf('[', at + 1)
-      continue
-    }
-    // A link ends with `)`, so a `!` before a `[` is in no earlier link.
-    const index = text[at - 1] === '!' ? at - 1 : at
-    const next = end + 2 + target[0].length
-    yield {
-      index,
-      source: text.slice(index, next),
-      label: text.slice(at + 1, end),
-      target: target[1] ?? target[2] ?? '',
-    }
-    at = text.indexOf('[', next)
-  }
-}
-
-/**
- * Plain text of an answer with its links to files of the tree. Each other
- * part reads as `rest` says.
- */
-function fileLinkParts(
-  text: string,
-  rest: (text: string) => TextPart[],
-): TextPart[] {
-  const parts: TextPart[] = []
-  let end = 0
-  for (const link of pathLinks(text)) {
-    const target = fileTarget(link.target)
-    if (!target) continue
-    parts.push(...rest(text.slice(end, link.index)))
-    const label =
-      link.label.trim() === '' ? entryName(target.entry) : link.label
-    const { folder, path } = target.entry
-    const image = link.source.startsWith('!')
-    const picture = image && !folder && pictureType(path) !== undefined
-    parts.push({
-      kind: 'file-link',
-      label,
-      source: link.source,
-      picture,
-      ...target,
-    })
-    end = link.index + link.source.length
-  }
-  return [...parts, ...rest(text.slice(end))]
-}
 
 /** Plain text with its links, and with its mentions when `mentions` asks. */
 function plainParts(
   text: string,
   mentions: boolean,
   files: readonly Attachment[],
-  marks = false,
 ): TextPart[] {
   if (!mentions) return webAddressParts(text)
-  return mentionParts(text, files, marks).flatMap((part): TextPart[] =>
+  return mentionParts(text, files).flatMap((part): TextPart[] =>
     part.kind === 'text' ? webAddressParts(part.text) : [part],
   )
 }
 
 /** Code, with the web address that it holds alone, if any. */
-function webCodePart(text: string): TextPart {
+export function webCodePart(text: string): TextPart {
   const parts = webAddressParts(text.trim(), false)
   const [only] = parts
   return parts.length === 1 && only?.kind === 'link'
@@ -152,43 +47,25 @@ function webCodePart(text: string): TextPart {
 }
 
 /**
- * A part in backticks: code, or in an answer, the file chip of the entry
- * of the tree that the whole code names.
- */
-function codePart(text: string, answer: boolean): TextPart {
-  const target = answer ? codeTarget(text) : undefined
-  return target
-    ? { kind: 'mention', ...target, source: text, code: true }
-    : webCodePart(text)
-}
-
-/**
- * Splits a text into plain text, code, links, and mentions. In a sent
- * message or an answer, `code` is true: each part in backticks is code,
- * and a mention in it stays code. A web address alone in code is a link.
- * A message box keeps plain
- * text, so it reads no code. The text of a member reads mentions when
- * `mentions` asks. An `answer` reads mentions too, and code whose whole
- * text is a path of the tree is a file chip (answer chip decision 1). A
- * mention of the copy path of one of the `files` of a sent message is the
- * mention of that file.
+ * Splits the text of a member into plain text, code, links, and mentions.
+ * In a sent message, `code` is true: each part in backticks is code, and a
+ * mention in it stays code. A web address alone in code is a link. A
+ * message box keeps plain text, so it reads no code. The text reads
+ * mentions when `mentions` asks. A mention of the copy path of one of the
+ * `files` of a sent message is the mention of that file. `answerNodes`
+ * reads the text of an answer.
  */
 export function textParts(
   text: string,
   code: boolean,
   mentions = false,
   files: readonly Attachment[] = [],
-  answer = false,
 ): TextPart[] {
   if (!code) return plainParts(text, mentions, files)
   return text
     .split('`')
     .flatMap((part, index): TextPart[] =>
-      index % 2 === 1
-        ? [codePart(part, answer)]
-        : answer
-          ? fileLinkParts(part, (rest) => plainParts(rest, true, files, true))
-          : plainParts(part, mentions, files),
+      index % 2 === 1 ? [webCodePart(part)] : plainParts(part, mentions, files),
     )
 }
 

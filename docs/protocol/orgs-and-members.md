@@ -122,9 +122,9 @@ adds this order. The pull request of that change keeps its record.
   [Waiting repositories](new-workspace-notices.md#waiting-repositories)
   says. A new automation gets it, as [Automations](automations.md) says.
 - The Repositories tab lists the chosen repositories in the order. The
-  first row shows Default, for every person. The tab says that new
-  workspaces and automations start in the first one, and that new
-  workspaces start in the next ready one while it waits for a build.
+  first row shows Default, for every person. The tab has no description
+  of the order, because the Default label shows it. The user asked for
+  this on 20 November 2026.
 - The New workspace repository menu, the repository menu of an
   automation, and each other list of the chosen repositories follow the
   order. The agent tool list follows it too, as

@@ -257,6 +257,9 @@ export function useHtmlPreview(
     view,
     open: live ? <OpenInNewTab path={path} preview={live.preview} /> : null,
     reload,
+    // Only a kept frame can show in the large window, so a phone has none.
+    expand:
+      live && frames && openFailure === null ? () => frames.expand(path) : null,
     show,
   }
 }

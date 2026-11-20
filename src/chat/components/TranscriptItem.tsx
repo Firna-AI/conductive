@@ -89,19 +89,21 @@ export type PlainItem = Exclude<SingleItem, { kind: 'turn-end' | 'stopped' }>
 
 /**
  * One part of a session's chat, other than a run of tool calls, the end of
- * a turn, and the line of a stopped turn.
+ * a turn, and the line of a stopped turn. `live` marks the agent message
+ * that the agent writes now.
  */
 export function ItemView(props: {
   item: PlainItem
   actions: ItemActions
   readers: ChatReaders
+  live?: boolean
 }) {
   const { item, actions } = props
   switch (item.kind) {
     case 'user':
       return <UserBubble message={item.message} />
     case 'agent':
-      return <AgentText id={item.id} text={item.text} />
+      return <AgentText id={item.id} live={props.live} text={item.text} />
     case 'failed':
       return (
         <Notice
