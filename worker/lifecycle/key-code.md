@@ -49,6 +49,12 @@ points of each part.
   [`archive-data.ts`](archive-data.ts) fences disk writes and Restore by archive identity and provider account.
   [`archive-missing.ts`](archive-missing.ts) detaches a confirmed missing disk and keeps other provider failures pending.
   [`archive-retry.ts`](archive-retry.ts) waits longer after each failed Archive step, and moves the D1 repair time with the alarm.
+  `WorkspaceArchive.advance` makes no provider call before the saved retry time, also when another run wakes it early.
+  `WorkspaceArchive.repair` moves that time to now and keeps the failure count.
+  So an owner change or a suspension lift still gets one attempt at once, as
+  [Starts, stops, and builds](../../docs/protocol/suspension-workspaces.md#starts-stops-and-builds)
+  and [Lift a suspension](../../docs/protocol/operator-actions.md#lift-a-suspension) require.
+  `WorkspaceArchive.finishStop`, the stop that Restore needs, does not wait.
 - [`archive-begin.ts`](archive-begin.ts): `beginWorkspaceArchive` writes the first Archive state and tells `WorkspaceArchive.begin` to run only the initialization while a start job exists or a queue task is outside the chat queue.
 - [`restore-workspace.ts`](restore-workspace.ts): the member Restore route action with an explicit app origin and the fixed expiry check.
 - [`workspace-response.ts`](workspace-response.ts): `presentProvisionedWorkspace` adds the immutable number and request link to older saved create admissions without replacing their saved fields.
