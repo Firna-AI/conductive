@@ -214,6 +214,30 @@ call. The record of the options as they were asked:
 - **Action:** ask the user, because A keeps a security risk, and B and C
   change the Mac command contract.
 
+### Mac access decision 7: one switch, and agents can always ask
+
+Cal chose this on 21 November 2026, after he saw the control: "why do we
+now have 2 check items - just have the switch, and that gives access, the
+workspace can always ask for access, as the user can refuse easily", and
+"remove the verbose copy". It replaces decisions 2 A, 4 A, and 6 C.
+
+- The Capabilities control has one Mac access switch. It is personal: in
+  the Mac app, on starts a grant until Stop of the workspace on this Mac,
+  and off stops it. It reads its state from the settings of this Mac.
+- Agents can always ask for a command on a Mac. The Worker no longer
+  refuses a Mac command while the stored Mac access of the workspace is
+  off. The Mac app question is the check, and the member can deny.
+- The part has no hint and no browser note. It shows only short results,
+  such as Not started or This Mac is not available.
+- The Mac access period goes, because no shared switch-off exists any
+  more. Its migration never merged, so the branch deletes it.
+- Open items 7 and 8 of the review close, because both need a shared
+  switch-off.
+- Risk: an automation run, or a steered agent, can ask from its first
+  turn. A command that the member set to Always allow then runs with no
+  question, as `plans/follow-ups/automation-turns-mac-commands.md` says.
+  Secrets decisions 18 A and 19 B no longer protect against it.
+
 ## Design
 
 My calls, 20 November 2026, unless a decision above says otherwise:
@@ -446,6 +470,58 @@ Depends on: every other milestone
       and the follow-up items that the change adds. It also gives the
       justifications of the merge of main, from
       `.context/mac-access-allows-all/merge-main.md`.
+
+## Milestone 6: Mockups for one switch
+
+Tags: mockup
+
+Depends on: 5
+
+- [ ] Draw one Mac access switch in the Mac app control of a workspace and
+      of New workspace, with no hint: on with the grant, off, Not started,
+      Stopped, not available, and the 15 minutes running.
+- [ ] Hide the Mac access part in a browser. Remove the browser note and
+      the extra line.
+- [ ] Update the catalogue. Run `npm run mockups:check`.
+
+## Milestone 7: Docs for one switch
+
+Depends on: 6
+
+- [ ] Update `docs/protocol/capabilities.md`, `desktop-commands.md`, and
+      `agent-tools.md` with decision 7. Remove the period rules.
+- [ ] Read both legal pages and each public guide in full. Update each
+      sentence that restates these facts. Set the Terms effective date.
+- [ ] Update the READMEs and the automation follow-up item.
+
+## Milestone 8: Backend for one switch
+
+Depends on: 7
+
+- [ ] Remove the Worker refusal of Mac commands while Mac access is off,
+      and the Mac access check of the start. Keep the capabilities API
+      field for older pages.
+- [ ] Remove the Mac access period from the Worker, the shared types, the
+      Mac app, the fakes, and delete its migration.
+
+## Milestone 9: The one switch
+
+Tags: ui
+
+Depends on: 8
+
+- [ ] Replace the shared switch and the line with one switch in the Mac
+      app control and in New workspace. Hide the part in a browser.
+- [ ] Keep the results and the take-back of a waiting change.
+
+## Milestone 10: Verification and review
+
+Depends on: 9
+
+- [ ] Run the complete gate. Commit and push.
+- [ ] Review the diff against `origin/main` with the
+      `implementation-review` skill, apply the fix rule, and update the
+      pull request description.
 
 ## Post-merge follow-up (non-blocking)
 
