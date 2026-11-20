@@ -102,7 +102,7 @@ function Finish(props: { build: FirstBuildState }) {
  * repositories, creates an org, and connects Claude or Codex. The rail shows
  * the org once it exists. While the person has a deleted org, the Deleted
  * orgs list with Restore comes before the steps, because a phone has no
- * other way from this page to the Account page.
+ * other way from this page to Settings.
  */
 export function GetStartedScreen(props: {
   state: GetStartedState

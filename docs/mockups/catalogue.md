@@ -27,7 +27,7 @@ how a screen is built, and links to the other pages.
 | `app/new-workspace` | An empty chat, the first build of a new org, a repository that waits for its build, its error, files on the first message, the Capabilities control, the model menu with Fast on, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/automations` | The automations of the org, an automation, its triggers, its runs, and a run workspace |
 | `app/org-settings`  | General with Delete org, then Repositories and Cloud computer with the notice of a repository change, the first build of a new org, Secrets with Reveal for an admin and the view of a member, and Members |
-| `app/settings-options` | Options for review, not yet chosen: one place for the account and the org settings, with a list of sections on the left. The page draws option C, the list in the place of the sidebar. Its child pages draw option A, two pages with a list each, option B, one page with the list inside it, option D, a dialog over the window, and a section on a phone |
+| `app/settings`      | The list of the tabs of Settings on a phone, in an Account group and an org group. A desktop opens Account › General in the Settings dialog |
 | `app/chat`          | A finished turn with its work folded, then running turns, turns that an agent stopped, open work, tables in replies, lists in replies, headings in replies, links in chat text, lost data, lost updates, unread files, the time limit of background work, and a fast turn at standard speed |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat, and one that a workspace with Mac access off refused |
 | `app/secret-requests` | A request for secrets above the composer, two secrets, a mixed request, a temporary request with its sheet on a phone, the results in the chat, and a request that outlived its tool call or ended with no answer |
@@ -53,7 +53,7 @@ A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `marketing/docs`, `app`,
 `app/sign-in`, `app/sign-in/get-started`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`, `app/workspace-menu`, `app/sub-workspaces`, `app/command-palette`, `app/command-palette/search`, `app/feedback`, `app/orgs`,
 `app/orgs/suspended`, `app/account`, `app/account/connect-codex`, `app/new-workspace`,
-`app/new-workspace/dialog`, `app/org-settings`, `app/settings-options`,
+`app/new-workspace/dialog`, `app/org-settings`,
 `app/org-settings/cloud-computer`, `app/org-settings/secrets`, `app/secret-requests`, `app/secret-requests/temporary`, `app/secret-requests/late`, `app/operator`, `app/operator/user`, `app/operator/user/access`, `app/operator/codes`, `app/banner`, `app/chat`, `app/archive`, `app/workspace-links`, `app/automations`, `app/automations/automation`,
 `app/automations/triggers`, `app/orgs/suspended/automations`, `app/file-mentions`, `app/attachments`, `app/files`, `app/files/menu`, `app/tools`, `app/account/shortcuts`, and `mac-app/shortcuts` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
@@ -153,9 +153,10 @@ Acme, which adds acme/admin-dashboard and removes acme/marketing-site:
   keeps the notice of the install script, which shows only for a change
   of the install script.
 
-`app/account` shows the General tab of the account: the sign-in, GitHub,
-and the invite code. Its five tabs are links, as the tabs of the org
-settings are. Its child pages:
+`app/account` shows Account › General in the Settings dialog: the
+sign-in, GitHub, and the invite code. Each tab of the dialog list is a
+link, and a phone shows each tab as a screen of its own, with Settings as
+the way back to `app/settings`. Its child pages:
 
 - `app/account/agents` shows the Agents tab, with Claude connected by a
   subscription token and Codex by an API key. The user asked for this tab

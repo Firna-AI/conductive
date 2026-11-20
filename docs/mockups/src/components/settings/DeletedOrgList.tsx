@@ -17,7 +17,7 @@ export type DeletedOrgRow = {
 }
 
 /**
- * The Deleted orgs section of the Account page: each org that an admin
+ * The Deleted orgs section of Account settings: each org that an admin
  * deleted and that the user can still restore, with its tile faded, as
  * the rail drew it before. The page of the app and its mockup share it.
  */

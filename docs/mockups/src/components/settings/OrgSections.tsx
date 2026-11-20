@@ -3,7 +3,6 @@ import { LogOut, Trash2 } from 'lucide-react'
 import { noop } from '../../noop'
 import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'
-import { LinkTabs } from '../common/LinkTabs'
 import { ScreenLink } from '../common/ScreenLink'
 import { useControlSizes } from '../common/touch'
 import { DetailList } from './DetailList'
@@ -37,37 +36,6 @@ export const suspendedSettingsLinks: Readonly<Record<SettingsTab, string>> = {
   computer: paths.suspendedComputer,
   secrets: paths.suspendedSecrets,
   members: paths.suspendedMembers,
-}
-
-/**
- * The parts of the org settings, as tabs that link to each part. Every
- * person of the org sees the same tabs. `wrap` puts the tabs on two lines,
- * for a phone, where they do not fit on one.
- */
-export function SettingsTabs(props: {
-  tab: SettingsTab
-  wrap?: boolean
-  links?: Readonly<Record<SettingsTab, string>>
-}) {
-  const links = props.links ?? settingsLinks
-  const tabs = [
-    { label: 'General', tab: 'general' },
-    { label: 'Repositories', tab: 'repositories' },
-    { label: 'Cloud computer', tab: 'computer' },
-    { label: 'Secrets', tab: 'secrets' },
-    { label: 'Members', tab: 'members' },
-  ] satisfies readonly { label: string; tab: SettingsTab }[]
-  return (
-    <LinkTabs
-      label="Org settings"
-      tabs={tabs.map((item) => ({
-        label: item.label,
-        to: links[item.tab],
-        selected: props.tab === item.tab,
-      }))}
-      wrap={props.wrap}
-    />
-  )
 }
 
 /** The name of an org and the initials that the rail shows. */

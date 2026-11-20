@@ -91,7 +91,7 @@ function shortcutsSetting(mac: boolean): Command {
 }
 
 /**
- * The sections of the Account page, which every org shares, in the order
+ * The sections of Account settings, which every org shares, in the order
  * of its tabs. Keyboard shortcuts follows New workspaces, and the Mac app
  * adds the This Mac tab last.
  */
