@@ -5,6 +5,7 @@
 - **Added:** 2026-11-20, from branch `calummoore/follow-up-launch-paths-lose-their-line-fdpt`, which fixes the follow-up item `plans/follow-ups/launch-path-line-breaks.md` with its option C.
 - **Location:** `previewHandoff` in `worker/previews/launch.ts`, which reads the `path` field of the request. `redeemLaunchGrant` in `worker/previews/credentials.ts`, which returns the path of the grant. `worker/previews/launch-grant-path.test.ts` tests the legacy fallback. `worker/previews/launch-path.test.ts` tests the checks of request paths. The section "Launch paths" of `docs/protocol/preview-grants.md`. The paragraphs about the authorizer modes in `worker/previews/README.md`.
 - **Reason:** Pages of a Worker before the fix need the fallback until a release holds the fix and the last grant of such a Worker ends.
+- **Related:** [Preview paths fail while Worker versions overlap](launch-browser-rollout-compatibility.md) asks whether to keep both path senders for one release. Its answer can extend this removal task.
 
 - **Terms:**
   - **Launch page:** the page on the app's hostname that posts a one-use grant to the authorizer in a form. The workspace object serves it.

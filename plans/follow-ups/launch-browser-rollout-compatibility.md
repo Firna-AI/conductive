@@ -1,0 +1,72 @@
+# Preview paths fail while Worker versions overlap
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-20, from the review of branch `calummoore/follow-up-launch-paths-lose-their-line-fdpt`, finding 1.
+- **Source:** Review.
+- **Category:** product bug.
+- **Location:** `worker/previews/browser-launch.ts:19`, `worker/previews/launch-document.ts:17`, and `worker/previews/launch.ts:164`. The existing fallback test is in `worker/previews/launch-grant-path.test.ts:132`.
+- **Reason:** The compatibility fix needs a one-release exception to the task's transport rules, which only the user can approve before this branch deploys.
+
+- **Terms:**
+  - **Worker:** the Cloudflare backend that handles app and preview requests.
+  - **Workspace object:** a persistent part of the backend for one workspace that can keep previous Worker code after a deploy.
+  - **Grant:** an encrypted preview permission that works once, for at most 60 seconds.
+  - **Launch page:** the app page that posts a grant to the preview domain in a form.
+  - **Authorizer:** the trusted preview-domain page and request handler that redeem a grant, set a cookie, and open the selected preview.
+- **Background:**
+  - Conductive opens selected HTML files in previews on a separate domain.
+  - A workspace object issues the launch page or the address that the Mac app opens in its browser.
+  - The outer Worker serves the authorizer, through `worker/features/router.ts:28`. It forwards launch requests to workspace objects.
+  - After an upload, running workspace objects can keep previous code for minutes. `docs/automatic-deploys.md`, "Migrations and the previous Worker", describes one measured window of about five minutes.
+  - A rollback reverses the overlap. Some objects can still issue launches from the newer Worker while the outer Worker runs the previous authorizer.
+  - The task prescribes an encrypted grant that holds the exact selected path. The authorizer uses that path, and the credential cookie holds no path.
+  - The task also removes the path from the launch form. It keeps the browser fragment path only for the authorizer page's target check.
+  - The path fallback stays for one release. The current handler uses `redeemed.path ?? legacyPath`, so a sealed path always wins.
+  - Older grants hold no path. Older launch pages post the path in the form body, and older authorizer pages post the fragment path in the query.
+  - Path launches already ship on `main` from PR #552 and release `v0.28.0`. Valid file names include line breaks, tabs, and backslashes.
+- **Problem:**
+  - On deploy, a previous workspace object can return a pathless grant with the selected file only in the browser fragment.
+  - The new authorizer page posts no path. The handler consumes the grant and returns the preview root, which the page's exact target check rejects.
+  - On rollback, a newer workspace object can return a launch form with no path. The previous handler ignores the sealed path and redirects to root.
+  - Both failures come from removing a path sender while a reader of the other Worker version still needs that path.
+  - The current fallback test adds the query path itself. It does not run the previous-format address through the new authorizer page.
+- **Evidence:**
+  - A reproduction used the production authorizer script, real launch and redemption handlers, and local D1.
+  - The current grant opened `/reports/index.html` through the current page and handler.
+  - A previous-format grant with that path only in its fragment returned HTTP 200 with destination `/` through the current page.
+  - That page made no navigation and showed `Preview not available`. The grant was used up.
+  - The same previous-format grant opened `/reports/index.html` through the page from `origin/main`.
+  - The removed hidden field and the previous handler's request-path reader show the reverse failure on rollback.
+- **Impact if no action:** Open from the Mac app can fail during the deploy window. Web Preview and Open can show root after a rollback. Reopening works after the objects upgrade.
+- **Root question:** How should preview launches keep their selected file while Worker versions overlap?
+- **Options:**
+  - **A.** Add a format marker to new browser fragments. For one release, the unmarked previous-format flow posts the fragment path through the existing query fallback. Marked launches use the fragment path only for the target check. Keep the authorizer address unchanged, so installed Mac apps accept it. This adds a temporary fragment field and page branch. Effort: Small.
+  - **B.** Keep both existing path senders for one release: the hidden form field and the authorizer page's query field. The new handler still uses the sealed path first. Remove both senders and the fallback together in the existing removal task. This needs no marker or page branch. It temporarily keeps paths in requests, although new grants hold the authoritative path. Effort: Small.
+  - **C.** For one release, let the authorizer page open its fragment target when the reply names the same hostname's root. Keep its POST free of a path, and add no marker. This lets the page choose an address that the reply did not name. It changes the exact-target refusal rule and weakens the root-reply refusal in `worker/previews/browser-launch.test.ts:90`. Effort: Small.
+  - **D.** For one release, let the outer Worker replace previous-format browser grants in workspace-object replies. When the old grant holds no path, seal the valid fragment path into a new grant and save its one-use record. Keep the authorizer page's POST free of a path. This adds grant encryption and state work to the generic route in `worker/features/router.ts`. It misses links that the previous outer Worker returned just before its switch. Effort: Medium.
+- **Each option also needs:**
+  - Keep the existing escaped hidden form path for one release. Only the newer object's launch page can preserve the path for the previous handler after a rollback.
+  - Keep the new handler's sealed-path priority. Keep the grant encrypted and one-use, the cookie free of a path, and redirects on the preview hostname.
+  - Encode each redirect path segment and keep the existing `isFilePath` checks. Add no path refusal.
+  - Add a regression that opens a previous-format browser launch through the current page and handler.
+  - Add coverage for a new launch form reaching the previous request-path reader. Keep the HTML-escaping assertions for the hidden field.
+  - Update `docs/protocol/preview-grants.md`, `worker/previews/README.md`, and the dated removal task with the chosen exception.
+  - Retire the temporary sender and reader code together in a release after a `v*` tag contains the fix commit.
+  - First confirm that every Worker before the fix stopped issuing grants. Then wait at least 60 seconds after its last grant.
+  - A rollback to a Worker before the fix resets that clock. Keep the code when nobody can confirm these conditions.
+  - After removal, ignore a request `path` field instead of refusing it.
+- **Left out:**
+  - Change nothing: it loses selected files during deployment and rollback. This breaks the compatible-path rule in `AGENTS.md`.
+  - Change only the authorizer's request handler: it cannot recover a path that neither the request nor the grant contains.
+  - Change the Mac app: it only opens the returned address, and a new app cannot fix installed copies.
+  - Force all workspace objects to restart: Cloudflare controls their restart schedule after upload.
+  - Change the authorizer path or add a query to its launch address: installed Mac apps refuse both in `desktop/src/preview.ts:54-68`.
+  - Accept root or the failure page as the result: neither opens the selected file.
+  - Fix this in a later branch: the deploy that needs the fix will already have happened.
+- **Wider fix:** None. `AGENTS.md` already requires a compatible path for a Worker API change. `docs/automatic-deploys.md` describes the overlap and the two-step removal rule. A's temporary marker fixes this transition only.
+- **Previous examples:** `plans/follow-ups/preview-listener-columns.md` preserves a previous Worker's reader during deployment. Commit `5809f8505` records the broader compatibility rule. No earlier browser-grant case was found.
+- **Related:** [Remove the request path fallback](launch-path-request-fallback.md) owns the later cleanup. If B is approved, it must remove both path senders with the fallback.
+- **Recommendation:** B. It preserves both directions with existing fields and the removal task's existing release conditions. The first pass recommended A. The finding check changed this to B because B adds no marker, page branch, or release coordination.
+- **Action:** ask the user, because B needs a one-release exception to the task's path-free launch form and fragment-for-target-check-only rules.
+- **Done when:** The user chooses an option. This branch applies it before deployment, adds both compatibility regressions, updates the protocol and README, and deletes this item. No status line links this item.
