@@ -141,7 +141,7 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         only after a member allows it.`,
       text`Endpoint models: ${productName} reads the endpoint's model list
         with its key when you or an admin save the login or select Refresh. For a
-        personal login, you use Refresh on your account page. For an org
+        personal login, you use Refresh in your Account settings. For an org
         login, an admin uses Refresh on the Agents tab of the org settings.
         When you or an admin save a Codex endpoint whose address gives no
         model list, it can read the list a second time, at that address with
@@ -234,7 +234,7 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         reads a merged pull request from GitHub for a workspace, and when
         GitHub sends the event of the merge, also for an archived workspace.
         The records are for the counts of merged pull requests on the Stats
-        tab of your account page.`,
+        tab of your Account settings.`,
       text`Feedback: your message and any screenshots help the team answer
         questions, find problems, and improve ${productName}. Each message
         includes your ${productName} user ID, GitHub user ID and login, the

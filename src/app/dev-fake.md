@@ -203,14 +203,14 @@ socket takes the events of its workspace after its own cursor.
   join link, such as `/join/V7MKC-2QDXH?waiting=1`, uses its code at once.
   `?paused=1` pauses
   sign-ups: each use of a code, and the Accept of a person who waits, get
-  `signups_paused`. The Account page shows the pause, and the operator
+  `signups_paused`. Account settings show the pause, and the operator
   section shows its notice.
   `?waitlist=off` starts with the waitlist off, by the operator of the
   samples. Unless sign-ups are paused, a person who waits gets app access
   at the next request, with a new referral code and no use of a code, so
   Get started opens. The fake does this before each request, as the gate
   of the Worker does. The operator section shows the switch off, and Zed
-  K, who came back and got in by open sign-up. The Account page names
+  K, who came back and got in by open sign-up. Account settings name
   open sign-up.
   `?inviteCode=used-up` or `?inviteCode=disabled` sets the state of the
   invite code of a user with app access, also on the page of that user in
@@ -224,7 +224,7 @@ socket takes the events of its workspace after its own cursor.
   not found. A code that works counts its use, and gives app access and a
   new invite code, so Get started opens. With `?operator=1`, a pause, a
   turn-off of the waitlist, or a Disable in the operator section shows on
-  the Account page of the operator.
+  Account settings of the operator.
 - The fake keeps its state in the page. A reload starts again from the
   options, so Sam waits again, and the codes, the pause, and the switch
   are those of the options. An operator never waits, so a pause, a change

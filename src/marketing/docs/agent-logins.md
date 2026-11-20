@@ -72,8 +72,8 @@ Each member can send messages in sessions on it.
 
 ## Connect Claude
 
-1. Open **Account**.
-2. Open **Agents**.
+1. Open **Settings**.
+2. Select **Agents** under **Account**.
 3. Find Claude.
 4. Select **Connect**.
 5. Choose **Subscription token** or **API key**.
@@ -96,8 +96,8 @@ Conductive keeps the stored login hidden in Account.
 
 ## Connect Codex
 
-1. Open **Account**.
-2. Open **Agents**.
+1. Open **Settings**.
+2. Select **Agents** under **Account**.
 3. Find Codex.
 4. Select **Connect**.
 
@@ -113,11 +113,11 @@ Ask your ChatGPT admin if you cannot change that setting.
 2. Select **Get a code**.
 3. Open [OpenAI's sign-in page](https://auth.openai.com/codex/device).
 4. Sign in to ChatGPT.
-5. Enter only a code that the Conductive page shows.
+5. Enter only a code that Conductive shows in **Agents**.
 
 Never share the code.
 The code expires in 15 minutes.
-Keep the Conductive page open while it shows **Waiting for you to sign in**.
+Keep **Agents** open in **Settings** while it shows **Waiting for you to sign in**.
 If the code expires, select **Get a new code**.
 If ChatGPT refuses sign-in, check the security setting, then select **Get a code** again.
 
@@ -148,8 +148,8 @@ The endpoint must support the API and key format of that agent:
 | Claude | Anthropic Messages API | `x-api-key` header | `https://gateway.example.com` |
 | Codex | OpenAI Responses API | Bearer token | `https://gateway.example.com/v1` |
 
-1. Open **Account**.
-2. Open **Agents**.
+1. Open **Settings**.
+2. Select **Agents** under **Account**.
 3. Find the agent.
 4. Select **Connect**.
 5. Choose **Own endpoint**.
@@ -171,7 +171,7 @@ Conductive adds routes such as `/v1/messages` for Claude.
 For Codex, it adds `/responses` to the saved address.
 The saved Codex address can differ from the hint after Conductive checks the model list.
 
-After you connect, the account page shows **Connected** and **Own endpoint**, with the host below the agent.
+After you connect, the agent's row shows **Connected** and **Own endpoint**, with the host below the agent.
 It includes the port when the port is not the default.
 Conductive keeps the address and key encrypted.
 Your browser gets neither the saved key nor the full saved address back.
@@ -192,14 +192,14 @@ If that read fails, it also tries `<address>/v1/models` unless the address alrea
 It makes no second read if the endpoint gives no HTTP response.
 If only the second read works, Conductive saves the address with `/v1` added.
 
-The account page then shows this note under the Codex row:
+**Agents** then shows this note under the Codex row:
 
 > Conductive added /v1 to the address, because the endpoint lists its models there.
 
 The note stays until you reload the page.
 A new save or **Remove** also clears it.
 
-When that list omits an app model, the account page names the missing models, their IDs, and the last successful read.
+When that list omits an app model, **Agents** names the missing models, their IDs, and the last successful read.
 Select **Refresh** there to read the list again.
 Conductive also reads the list in the background when a turn on the login starts, at most once in 10 minutes.
 Refresh and background reads keep the saved address.

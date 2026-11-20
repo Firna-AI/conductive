@@ -115,8 +115,8 @@ The sidebar shows no second toggle beside the Settings cog in the Mac app.
 The app disables the toggle in a window narrower than 900px and on a page without a sidebar.
 Other pages without the org rail, such as sign-in, show the bar in a 34px strip.
 That strip has no sidebar toggle.
-On the account page, the Mac app shows the sidebar of the last org that the user opened.
-The app does not save the toggle state or that org.
+Settings opens over the last page of the window, with the sidebar of its org.
+The app does not save the toggle state.
 
 The element that holds the bar has `data-desktop-chrome-slot`.
 The sidebar toggle sits in `data-desktop-panel-slot`.

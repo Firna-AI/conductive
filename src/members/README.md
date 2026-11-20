@@ -91,7 +91,7 @@ with the message of the API.
   read-only tabs to every person of a suspended org.
 - `onDeleted` gets the org with `deletion.deletesAt`. The shell keeps the
   org in its list, leaves it out of the rail, and opens the next org that
-  is not deleted, else Get started. The Account page lists the org with
+  is not deleted, else Get started. Account settings list the org with
   Restore, and its address still opens `DeletedOrgPage`.
 - `onRestored` gets the active org of the API's answer, with its `initials`
   and its colour when the answer has them. Delete and Restore read the org

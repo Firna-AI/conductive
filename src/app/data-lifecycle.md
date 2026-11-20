@@ -208,7 +208,7 @@ of the data that the screens read and write.
   app opens. A failed read shows that the app did not load, with Try
   again. A new start, a sign-out, or the open of the app makes an older
   answer of the waitlist change nothing.
-- The invite code of the account reads each time that the Account page
+- The invite code of the account reads each time that Account › General
   opens, because its uses change while the page is closed.
 - The tab keeps the `WorkspaceModel` of each workspace that it showed, for
   the signed-in user, as
