@@ -499,6 +499,16 @@ Design calls from the mockups of Milestone 14, made on 20 November 2026:
   changes only the three phone views with `→ main`. The app imports the
   file, so it gets the rule too.
 
+Design calls from the docs of Milestone 15, made on 20 November 2026:
+
+- The protocol doc gives a reason for each rejected variant of decision
+  301: C adds a control where B adds none, and D hides both targets behind
+  a submenu where B names both. Reason: the plan recorded a reason only
+  for B.
+- The old target row is a rejected way of decision 301, not history.
+- The doc says only that a long name is cut short. Reason: the open item
+  on long names has no answer.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -792,11 +802,11 @@ the screenshots in `shots/`, and the measurements of the phone fix in
 
 Depends on: 14
 
-- [ ] Update `docs/protocol/start-from-a-branch.md` and
+- [x] Update `docs/protocol/start-from-a-branch.md` and
       `docs/protocol/create-a-workspace-dialog.md` with decision 301.
-- [ ] Read each public guide in full, and update each sentence that
+- [x] Read each public guide in full, and update each sentence that
       describes the target choice. Read the legal pages for the same fact.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
 
 ## Milestone 16: The compact branch control in the app
 
@@ -817,7 +827,19 @@ Depends on: 14
 - [ ] Remove `TargetChoice.module.css`, the `target` rule of
       `NewWorkspaceDialog.module.css`, and `targetCopy.option` from the
       mockups, once the app no longer uses them.
-- [ ] Update `src/app/start-branch.md`.
+- [ ] Update `src/app/start-branch.md`, also its lines on the old target
+      row, and `src/app/key-code-layers.md`, which names `TargetChoice.tsx`.
+
+## Milestone 17: Split the create doc
+
+Depends on: 15
+
+- [ ] Move the section "The preference" of
+      `docs/protocol/create-a-workspace.md` to a new linked page, and leave
+      a short section with the same heading and a link, so that every link
+      into it keeps working. Reason: the doc has 281 lines, over the target
+      of about 250 of the `documentation` skill.
+- [ ] Check each relative link into and out of both docs.
 
 ## Milestone 9: Verification, commit, review, and pull request
 

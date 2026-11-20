@@ -209,7 +209,7 @@ branch that is not the default branch.
   default branch. The workspace then makes its own branch from the picked
   branch (decision 288), and the member chooses its target (decision 291).
 - [Start from a branch](start-from-a-branch.md) holds the requirements of
-  the branch control, its picker, and the target choice (decision 295). It
+  the branch control, its dropdown, and the target choice (decision 295). It
   also holds the branch check of a create and its refusals (decision 293).
 
 ## The branch and the name

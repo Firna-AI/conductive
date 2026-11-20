@@ -16,7 +16,7 @@ This page lists each protocol doc and what it covers.
       the parts of the dialog, its section, its notices, its close, and its
       draft.
     - [Start from a branch](../protocol/start-from-a-branch.md): the branch
-      control of New workspace, its picker, the target choice, and the
+      control of New workspace, its dropdown, the target choice, and the
       branch check of a create with its refusals.
   - [Base branches](../protocol/base-branches.md): the base branch of each
     workspace, a base branch that GitHub deleted, and the branch of a pull

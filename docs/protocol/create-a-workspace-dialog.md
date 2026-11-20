@@ -12,8 +12,11 @@ says.
 
 - The dialog holds the parts of the page: the repository picker, the
   branch control, the message and its files, and the model picker.
-  [Start from a branch](start-from-a-branch.md) states the branch control
-  and its target choice.
+- The header of the dialog holds the repository picker, with the branch
+  control directly right of it, as on the page (decision 301). The target
+  choice stands in the dropdown of the branch control, not on a line under
+  the header. [Start from a branch](start-from-a-branch.md) states the
+  branch control, its dropdown, and the target choice.
 - The dialog always names the org and the section of the new workspace,
   also General.
 - The org and the section are a menu of the sections of the org, in the

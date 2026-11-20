@@ -191,7 +191,7 @@ If you accepted an org invitation, your org is already open.
 1. Select **New workspace**.
 2. Choose the repository for your task.
 3. Keep the default branch, or choose another starting branch.
-4. If you choose another branch, select its target.
+4. If you choose another branch, open the branch control again and choose its target under **Target**.
 5. Choose a model for the agent you connected.
 6. Choose the effort in the same model menu.
 7. Describe your task in the message box.

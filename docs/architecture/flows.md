@@ -6,7 +6,7 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 
 ## Create a workspace
 
-1. The branch picker of New workspace asks the Worker for the branches of
+1. The branch control of New workspace asks the Worker for the branches of
    the repository. The Worker reads them from GitHub with the GitHub token
    of the user, and it stores no list.
 2. The user sends the first message of a new workspace, with its start

@@ -2,8 +2,8 @@
 
 This doc holds the requirements and the decisions in force for a new
 workspace that starts from a branch that is not the default branch. It
-covers the branch control of New workspace, its picker, the target choice,
-and the branch check of a create with its refusals. It belongs to
+covers the branch control of New workspace, its dropdown, the target
+choice, and the branch check of a create with its refusals. It belongs to
 [Create a workspace](create-a-workspace.md), which covers the rest of New
 workspace and the name of each workspace branch. The terms are those of
 the [architecture doc](../architecture.md#terms). A decision number names
@@ -48,23 +48,48 @@ branches that the create call of an agent takes.
 
 ## The branch control
 
-- Each New workspace page and dialog shows a branch control where it shows
-  the repository picker.
+- Each New workspace page and dialog shows a branch control directly
+  right of the repository picker (decision 301). When the two do not fit
+  on one line, such as on a phone, the control goes under the repository
+  picker.
+- A place in the footer of the composer was rejected, because the user
+  placed the control next to the repository picker (decision 301).
 - The control always names a branch. It shows the default branch of the
   repository until the member picks another branch.
+- While a picked branch targets the default branch, the control adds an
+  arrow and the name of the default branch after the picked branch, such
+  as `→ main` (decision 301). A screen reader hears the target too.
+- A long name is cut short. The arrow and the target stay in view.
+- Reason: the member then sees a target on the default branch before the
+  create.
+- While the work targets the picked branch, the control names no target,
+  because the work then stacks on the branch that the control names.
 - The control has no Clear, because it always names a branch. A pick of
-  the default branch hides the target choice.
+  the default branch hides the target choice and the arrow.
 - The picked branch and the target choice belong to the draft. So the page
   and the dialog of one draft share them, as they share its message.
 - A change of repository puts the control back on the default branch of
   the new repository, and it clears the target choice. Reason: a branch
   belongs to one repository.
 
-## The picker
+## The dropdown
 
-- A press on the control opens the picker. On a computer, the picker opens
-  below the control. A phone opens it as a sheet.
-- A search field stands at the top of the picker.
+- A press on the control opens its dropdown. On a computer, the dropdown
+  opens below the control. A phone opens it as a sheet.
+- The dropdown has two parts. Start from holds a search field and the
+  list of branches. Target holds the target choice, as
+  [The target choice](#the-target-choice) says.
+- Target shows only when the picked branch is not the default branch. The
+  label Start from shows also without Target.
+- When the dropdown runs out of room, the list of branches scrolls, and
+  the search field and Target stay in view. Reason: a long list must not
+  hide the target choice.
+- A pick in Start from closes the dropdown, as a pick in each picker does.
+  So the member opens the control again to change the target.
+
+### Start from
+
+- A search field stands at the top of Start from.
 - The default branch comes first, with the detail "default". The other
   branches follow, newest commit first, each with the time since its
   newest commit.
@@ -79,7 +104,8 @@ branches that the create call of an agent takes.
   member, as [Branch reads](github-tokens.md#branch-reads) says. It stores
   no list.
 - The live reply holds only branches that GitHub lists, newest commit
-  first. The picker adds its default row from the saved repository record.
+  first. The dropdown adds its default row from the saved repository
+  record.
 - The default branch needs no read of GitHub. So its row shows while the
   list loads, after a failed read, and without access to the repository.
 - A failed read stops no start from the default branch.
@@ -113,17 +139,32 @@ branches that the create call of an agent takes.
 - A pick of another branch that is not the default branch keeps the choice
   of the member. Only a change of repository clears it. Reason: the picked
   branch is selected first only before the member chooses.
-- Each option names its branch, such as "Target `feature-x`" and "Target
-  `main`". No word of the choice says "fork". Reason: on GitHub, a fork is
-  a copy of the repository.
-- A line under the choice says what the pull request then holds: only the
-  new work, or also the commits of the picked branch. Reason: the line
+- The target choice is the Target part of the dropdown, under Start from,
+  on the page and in the dialog (decision 301).
+- Reason: the user found a row of the choice under the pickers too
+  verbose. The Target part names both targets, and the control shows a
+  target on the default branch before the create.
+- These ways were rejected (decision 301):
+  - A row of the choice under the pickers, and in the dialog a line of its
+    own under the header. The user found it too verbose.
+  - A Target part with no sign of the target on the closed control. The
+    member then does not see a target on the default branch before the
+    create.
+  - A second control for the two targets, beside the branch control. It
+    adds a control, and the Target part adds none.
+  - A submenu on the checked row of Start from. The two targets then stay
+    hidden until the member opens the submenu.
+  - One switch, "Target `main`". It names only the default branch, not
+    both targets.
+- The Target part has two rows: the picked branch first, then the default
+  branch. Each row names only its branch, and a check marks the target of
+  the form. The word Target stands once, as the label of the part.
+- No word of the choice says "fork". Reason: on GitHub, a fork is a copy
+  of the repository.
+- A line under the two rows says what the pull request then holds: only
+  the new work, or also the commits of the picked branch. Reason: the line
   names the cost of a target on the default branch.
-- On a computer, the choice is a segmented control. On a phone, it is two
-  radio cards, one above the other. Reason: two branch names do not fit
-  side by side on a phone.
-- On the page, the choice stands under the pickers. In the dialog, it has
-  a line of its own under the header.
+- A press on a row closes the dropdown on that target.
 - The target becomes the base branch of the new workspace, as
   [The base branch of a workspace](base-branches.md#the-base-branch-of-a-workspace)
   says.

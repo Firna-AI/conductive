@@ -27,7 +27,7 @@ If you joined an org, its admin manages the repositories and shared setup.
 2. Select **New workspace**.
 3. Choose the repository for the task.
 4. Keep the default branch, or choose another starting branch.
-5. If you choose another branch, select its target.
+5. If you choose another branch, open the branch control again and choose its target under **Target**.
 6. Choose a model and effort.
 7. Describe the task in the message box.
 8. Select **Send** on the page, or **Create** in the dialog.
@@ -62,12 +62,14 @@ Open it to search the branches that your GitHub account can read.
 The default branch appears first.
 Conductive creates its own branch from the latest commit of the branch you select.
 
-If you select another branch, choose where your work will merge:
+If you select another branch, open the branch control again.
+Under **Target**, choose where your work will merge:
 
 - Target the selected branch to include only your new work in the pull request.
 - Target the default branch to include the selected branch's commits too.
 
 The selected branch is the target until you choose otherwise.
+When the default branch is the target, the branch control adds an arrow and the default branch's name, such as `→ main`.
 Choosing another branch that is not the default keeps your target choice.
 Changing repositories clears your branch and target choices.
 **Changes**, diffs, and **Create PR** use this target as the workspace's base branch.
