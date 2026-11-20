@@ -103,6 +103,10 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         a new turn tells the agent. That turn acts for the member whose
         message started the turn that asked, with that member's GitHub
         token and Mac.`,
+      text`A cloud computer can stop during a turn when no member and no
+        part of ${productName} asked for the stop. A new turn can then tell
+        the agent to continue. That turn acts for the same member as the
+        stopped turn, with that member's GitHub token and Mac.`,
       text`While a command runs with a secret, its value is in the cloud
         computer. A member with a terminal or a program there can read it
         then, also a member to whom the settings never show the value. A
@@ -150,8 +154,9 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         Such text can also steer the agent to read and change work across
         the org, with that member's workspace tool rights.
         Messages follow the same session login rules.`,
-      text`A tool message or an accepted late answer to a secret request
-        can start a stopped workspace's cloud computer.
+      text`A tool message, an accepted late answer to a secret request, or
+        a new turn after a stop that nobody asked for can start a stopped
+        workspace's cloud computer.
         The start follows the same checks as opening the workspace. ${productName}
         sets no limit on how many sessions or messages agents create.
         Repeated replies can spend agent logins and keep computers running.

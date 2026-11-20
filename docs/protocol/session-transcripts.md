@@ -169,8 +169,14 @@ at `app/tabs` and `app/transcripts`.
   its name at its place. A copy with the copy path of each file was
   rejected, because the chat shows no such path.
 - A stop line names the member who pressed Stop, as the chat names another
-  member, such as "Priya stopped the agent". A stop with no Stop request,
-  or by a member who left the org, gives "The agent stopped".
+  member, such as "Priya stopped the agent". A stop with no Stop request
+  and no end reason, or by a member who left the org, gives "The agent
+  stopped".
+- A turn that a [provider stop](provider-stops.md) ended has an end
+  reason. It gives "The cloud computer stopped" in its stop line, as the
+  chat does. The line after the stop follows it, in the words of
+  [The line after the stop](provider-stops.md#the-line-after-the-stop).
+  Where the chat says "you" to the starter, the text names the starter.
 - A close that stops a turn names the member who closed the session, as a
   Stop does.
 - A stop through the workspace tools gives "Stopped from" and the session

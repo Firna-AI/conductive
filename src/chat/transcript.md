@@ -2,8 +2,8 @@
 
 This guide belongs to [the chat](README.md). It gives the rules of the
 stream cursor, the session logs, the transcript items and their counts,
-the end reason of a finished turn, the standard speed of a fast turn, the
-lost lines, the turns, the open run
+the end reason of a turn, the standard speed of a fast turn, the line after
+a provider stop, the lost lines, the turns, the open run
 of tool calls of a running turn, the work fold of each ended turn, and Try
 again. Its [key code](#key-code) names the shared transcript modules and
 the parts of the chat that draw the transcript.
@@ -28,10 +28,11 @@ the parts of the chat that draw the transcript.
   A finished turn then ends with its duration and "Changed files unavailable" in place of its files.
   A stopped line ends with " · Changed files unavailable". The turn stays finished or stopped, with no failure and no Try again.
   A late end shows the mark in its file row, or on the stopped line when its turn has no file row. A row that lists files shows no mark.
-- A completion can name its end reason in `endReason`. Its one value is `background_work_limit`, the end at the time limit of [background work](../../docs/protocol/agent-runner.md#background-work).
+- A completion can name its end reason in `endReason`: `background_work_limit`, the end at the time limit of [background work](../../docs/protocol/agent-runner.md#background-work), or `cloud_computer_stopped`, the stopped end of a turn that a [provider stop](../../docs/protocol/provider-stops.md#the-end-of-the-turn) ended.
   The reader keeps only a known value and drops an unknown one, so it refuses nothing new. `turnCompletions` keeps the reason with the completion.
   `turnEndReason` gives the reason to the chat and to the copied transcript, so both show its line for the same turns.
-  A finished turn then shows the line, "Background work stopped at the time limit", above its duration and its files. A stopped line does not change.
+  A finished turn then shows the line of its reason, such as "Background work stopped at the time limit", above its duration and its files.
+  A stopped turn with an end reason names it on its stopped line in place of "The agent stopped", such as "The cloud computer stopped".
 - A completion of a fast turn can give its speed in `speed`: fast, or standard with a cause code, as [The speed of a turn](../../docs/protocol/fast-mode.md#the-speed-of-a-turn) says.
   The reader keeps a speed that `readTurnSpeed` reads and drops any other value, so it refuses nothing new. `turnCompletions` keeps the speed with the completion.
   `standardSpeedOf` gives the standard speed of a turn, with the cause that the line can name: `fast_limit` or `older_runner`. Another cause, or none, gives "Standard speed" alone.
@@ -89,6 +90,11 @@ the parts of the chat that draw the transcript.
 - Each `workspace.repository-changed` event of a session becomes one `repository-changed` item in the same way.
   The line names the member who changed the repository, "You" to that member, the new repository, and the new branch, with `RepositoryChangedLine` of the mockups.
   The item takes its ID from the new repository and the new branch. A copy of the session gives the note with no heading.
+- Each `turn.continued` event of a session becomes one item at its place among the events. It sits under the stopped line of the turn that `previousTurnId` names.
+  The line says what comes next, with `ContinuationLine` and `continuationText` of the mockups, from `next` and the login of the session.
+  For a login that is gone, it says "you" to the starter. A copy of the session names the starter instead.
+  The item never folds into work. With a continuation turn, that turn starts at the line, as
+  [The line after the stop](../../docs/protocol/provider-stops.md#the-line-after-the-stop) says.
 - Ordered history folding preserves these fields and lines across completion and failure events.
 
 ## Key code

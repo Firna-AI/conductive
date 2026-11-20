@@ -28,7 +28,8 @@ This page lists each protocol doc and what it covers.
     - [Workspace list marks](../protocol/workspace-marks.md): GitHub colours,
       agent motion, unread output, and reduced motion.
     - [Stop and resume](../protocol/stop-and-resume.md): the stop of an
-      idle sandbox, the resume, the starts from the agent tools, and the
+      idle sandbox, the stops that a provider makes by itself, the resume,
+      the starts from the agent tools and after a provider stop, and the
       restart near day 14 of a stop.
     - [Restart the software](../protocol/restart-the-software.md): Restart
       in the workspace header, what it restarts, and the download of the
@@ -81,6 +82,9 @@ This page lists each protocol doc and what it covers.
       turn that cannot run fast.
     - [Dropped answers](../protocol/dropped-answers.md): the continue
       message of a Claude turn after its model answer drops.
+    - [Provider stops](../protocol/provider-stops.md): the end of a turn
+      at a provider stop, the continuation turn, the line after the stop,
+      and the end of a chain of continuation turns.
   - [File mentions](../protocol/file-mentions.md): the list of `@` in the
     composer, the chips of files and folders, Add to chat, the sent chips
     of attached files, and the removal of each chip of the composer.
@@ -100,8 +104,9 @@ This page lists each protocol doc and what it covers.
       reports that belong to no session, the repair request after a refused
       update, and the notice of a failed repair.
     - [Runner warnings](../protocol/runner-warnings.md): the warnings of the
-      Worker for runner connections and for turn ends with no Stop request,
-      and the process-start ID of the runner.
+      Worker for runner connections, for turn ends with no Stop request, and
+      for provider stops during a turn, and the process-start ID of the
+      runner.
   - [Session transcripts](../protocol/session-transcripts.md): copying a
     session as concise or full Markdown, and the text of a copy.
     - [Transcript routes](../protocol/transcript-routes.md): the route of

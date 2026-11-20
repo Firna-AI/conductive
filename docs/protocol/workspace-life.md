@@ -102,7 +102,8 @@ keeps them after the merge.
 ## Stop and resume
 
 - [Stop and resume](stop-and-resume.md) holds the requirements of the stop
-  of a sandbox, its resume, and its restart near day 14 of a stop.
+  of a sandbox, the stops that a provider makes by itself, its resume, and
+  its restart near day 14 of a stop.
 
 ## Restart the software
 

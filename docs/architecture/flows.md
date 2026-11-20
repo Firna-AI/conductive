@@ -159,6 +159,11 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 
 - The Durable Object stops a sandbox when the stop rule of
   [Stop and resume](../protocol/stop-and-resume.md) says so.
+- A provider can also stop a sandbox by itself, such as at a runtime
+  limit. When the Durable Object finds such a stop during a turn, it ends
+  the turn. It then queues a continuation turn and starts the sandbox
+  again, in the cases that [Provider stops](../protocol/provider-stops.md)
+  gives.
 - On Boat, near day 14 of a stop, the app starts the sandbox briefly and
   stops it again, so that Boat keeps its disk (decision 43). E2B keeps a
   stopped sandbox with no time limit, so it gets no such restart.

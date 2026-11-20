@@ -30,6 +30,7 @@ Its starter is the member who began it.
 A turn is one period of work by its agent.
 Its sender is the person whose message started that turn.
 A turn that a late answer to a secret request starts keeps the sender of the turn that asked.
+A turn that continues the work after the cloud computer stopped keeps the sender of the stopped turn.
 
 | Action | Account or person it uses |
 | --- | --- |

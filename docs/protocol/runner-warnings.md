@@ -2,9 +2,9 @@
 
 This doc holds the requirements and the decisions in force for the
 warnings that the Worker writes to its log about the connections of the
-agent runner and about turn ends with no Stop request. It also covers the
-process-start ID that the runner sends for these warnings. It belongs to
-[Agent runner](agent-runner.md).
+agent runner, about turn ends with no Stop request, and about provider
+stops during a turn. It also covers the process-start ID that the runner
+sends for these warnings. It belongs to [Agent runner](agent-runner.md).
 [Agent instructions](agent-instructions.md#what-the-instructions-hold)
 states the guidance that tells each agent how a stop of the runner service
 ends its turns. The terms are those of the
@@ -39,11 +39,15 @@ Stop diagnostics decision 5 is the choice to add the process-start ID.
 - The Worker writes a warning to its log for each runner connection, for
   the end of each runner connection, and for each turn end with no Stop
   request (stop diagnostics decision 4 D).
-- Reason: a turn that stops with no Stop request shows only "The agent
-  stopped", with no cause, as [Messages](messages-and-attachments.md#messages)
-  says. The journal of the cloud computer is lost when the cloud computer
-  stops. The warnings let an operator match such a stop to a disconnect of
-  the runner.
+- Reason: a turn that stops with no Stop request often shows only "The
+  agent stopped", with no cause, as
+  [Messages](messages-and-attachments.md#messages) says. The journal of the
+  cloud computer is lost when the cloud computer stops. The warnings let an
+  operator match such a stop to a disconnect of the runner.
+- The chat names one cause of such a stop: "The cloud computer stopped",
+  for a turn that a provider stop ended. The workspace sets that cause,
+  not the runner, as
+  [The end of the turn](provider-stops.md#the-end-of-the-turn) says.
 - A cause that the runner records on each stopped turn, and that the chat
   shows, is not part of these rules (stop diagnostics decision 4). Reason:
   it needs a new end reason in the runner messages, which is a larger
@@ -89,12 +93,23 @@ Stop diagnostics decision 5 is the choice to add the process-start ID.
   So a store that fails writes no warning. A resent end, or a late event
   of an ended turn, writes no second warning.
 
+### Provider stops
+
+- The Worker writes one warning for each
+  [provider stop](stop-and-resume.md#stops-by-a-provider) that ends a
+  running turn. Each turn that the stop ends also gets its turn-end
+  warning.
+- Reason: the log then shows how often each provider account stops a
+  sandbox during a turn.
+
 ## What a warning holds
 
 - Each warning holds its kind and the workspace ID. It also holds the
   connection ID, the stream ID, the process-start ID, and the protocol
   version of a runner connection. A turn-end warning also holds the turn
   ID and the state of the end.
+- A provider stop warning also holds the ID of the provider account, such
+  as `boat` or `e2b`.
 - A turn-end warning names the runner connection that is current when the
   workspace stores the end, with the process-start ID of that connection.
   It does not name the connection or the runner start that took the turn.

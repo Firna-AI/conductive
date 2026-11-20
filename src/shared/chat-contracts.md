@@ -56,7 +56,10 @@ Turn summaries keep at most 200 files and 256 KiB of serialized file-list data.
 They count omitted files. The complete Changes response has no summary cap.
 A `turn.completed` event can carry `endReason`, of the type `TurnEndReason`.
 The runner, the Worker, and the browser use that one type.
-Its one value is `background_work_limit`.
+Its values are `background_work_limit` and `cloud_computer_stopped`.
+The runner sends `background_work_limit` on a finished end at the time limit of background work.
+The SDK helper reads only that value.
+Only the Worker sets `cloud_computer_stopped`, on the stopped end of a turn that a provider stop ended.
 The end of a fast turn can carry `speed`, of the type `TurnSpeed`, which
 `readTurnSpeed` reads: fast, or standard with a cause code.
 `runner.event-refused` belongs only to workspace chat events.
@@ -70,6 +73,13 @@ states the rules of the request and of a failed repair.
 or to the runner events. Only the Worker writes it. It names its
 `sessionId`, the `member` who pressed Continue, the new `branch`, and its
 `baseBranch`.
+`turn.continued` is the line of the app after a turn that a provider stop ended.
+It belongs to `ChatEvent` in the same way, and only the Worker writes it.
+It names its `sessionId`, the ended turn as `previousTurnId`, and the continuation turn as `turnId`, or null when no turn follows.
+Its `next` is `turn`, `reconnect`, or `message`. It has no text, because the browser writes the words.
+[Events](../../docs/protocol/chat-and-events.md#events) and
+[Provider stops](../../docs/protocol/provider-stops.md#the-line-after-the-stop)
+state the rules.
 
 ## The browser stream
 

@@ -1,17 +1,20 @@
 # Stop and resume
 
 This doc holds the requirements and the decisions in force for the stop
-and the resume of the sandbox of a workspace. It also covers the restart
-near day 14 of a stop. It belongs to
-[Life of a workspace](workspace-life.md). The terms are those of the
-[architecture doc](../architecture.md#terms). A decision number names a
-dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says.
+and the resume of the sandbox of a workspace. It also covers the stops
+that a provider makes by itself, and the restart near day 14 of a stop.
+It belongs to [Life of a workspace](workspace-life.md). The terms are
+those of the [architecture doc](../architecture.md#terms). A decision
+number names a dated record, as
+[Decision numbers](../architecture.md#decision-numbers) says. A provider
+stop decision number, such as provider stop decision 1, names a decision
+of the change that adds [Provider stops](provider-stops.md).
 
 ## The stop
 
-- A sandbox stops after 30 minutes without user activity on its workspace
-  and without a running agent turn (decisions 11 and 29).
+- The app stops a sandbox after 30 minutes without user activity on its
+  workspace and without a running agent turn (decisions 11 and 29). This
+  stop is the idle stop.
 - Activity is input in the tabs of the workspace, such as typing, clicks,
   and scrolling. Terminal input is activity too.
 - A request to a port preview is not activity (decision 293). A preview
@@ -26,6 +29,36 @@ says.
   not cut off real work.
 - A stop ends every process in the sandbox. Its files and its agent
   sessions stay.
+- A provider stop does not follow the rule of the idle stop. It can come
+  during a turn, and before 30 minutes without activity, as
+  [Stops by a provider](#stops-by-a-provider) says.
+
+## Stops by a provider
+
+- A provider stop is a stop of a sandbox that the app did not ask for. The
+  provider of the sandbox makes it by itself.
+- E2B limits the time that a sandbox runs without a pause: 1 hour on its
+  Hobby plan, and 24 hours on its Pro plan. A pause resets the count. At
+  the limit, E2B pauses the sandbox and keeps only its disk.
+- On E2B, code in the sandbox can also cause a provider stop. The Linux
+  user of the agents has `sudo`, and E2B turns a power-off into a pause.
+- Boat has no such limit on a paid plan. It can still stop a sandbox by
+  itself in rare cases, such as when the wallet of the account is empty.
+- [The runtime limit of E2B](../sandbox-provider-accounts.md#the-runtime-limit-of-e2b)
+  gives the plan of the app's E2B account.
+- A stop that the app asks for is never a provider stop. Examples are the
+  idle stop, the stop at a suspension, and Archive.
+- After a provider stop during a turn, the agent continues the work of
+  that turn in a new turn, as [Provider stops](provider-stops.md) says.
+  The app then starts the sandbox again for that turn, as
+  [The resume](#the-resume) says.
+- A provider stop with no continuation turn starts nothing. Examples are a
+  stop while no turn runs, and a stop of a turn whose Stop a member
+  pressed.
+- The error state of a provider is not a provider stop. A running turn
+  then ends as before, with no continuation. The workspace shows the error
+  state with Try again. Reason: a start of a failed sandbox can fail again
+  and again.
 
 ## The resume
 
@@ -51,6 +84,11 @@ says.
   stopped state with Resume (decision 11).
 - A resume at once when the tab shows again was rejected. Resume avoids a
   start that the user did not ask for.
+- After a provider stop, the tab also shows the stopped state with Resume
+  until the app starts the sandbox for a continuation turn. Resume starts
+  the sandbox at once.
+- A Starting state from the provider stop was rejected, because the app
+  can still refuse that start, such as for a suspended owner.
 - Opening a file tab or a diff tab also resumes the sandbox, in the same
   cases as opening the workspace (decision 247). A click on a file, on its
   tab, or on a link to it opens the tab. A move back or forward to its
@@ -67,6 +105,14 @@ says.
   also starts the sandbox in the same cases, with the same checks. The
   notice starts a turn in the asking session, as
   [Late answers](secret-requests.md#late-answers) says.
+- A continuation turn after a [provider stop](#stops-by-a-provider) also
+  starts the sandbox in the same cases, with the same checks (provider
+  stop decision 1). [Provider stops](provider-stops.md) states when the
+  workspace queues such a turn.
+- When the app refuses that start, such as for a suspended owner, the
+  continuation turn waits. It runs at the next resume.
+- Each turn that waited at the provider stop runs after that start, as
+  after any resume.
 - A failed first start keeps waiting for Try again, as
   [A failed first start](create-a-workspace.md#a-failed-first-start)
   says. An empty session from the agent tools starts nothing.

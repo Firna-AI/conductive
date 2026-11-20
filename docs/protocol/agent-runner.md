@@ -150,6 +150,14 @@ out-of-memory kill.
   turn still shows as failed. Reason: the failure in
   [The transfer](attachment-transfers.md#the-transfer) ends the turn at
   once, with no new wait for the agent.
+- After a [provider stop](stop-and-resume.md#stops-by-a-provider) ends a
+  running turn, the workspace sends Stop for that turn before the turn
+  command of its
+  [continuation turn](provider-stops.md#the-continuation-turn). That turn
+  keeps the end that the workspace stored.
+- Reason: at a resume soon after a stop, Boat can give back the same
+  machine, with the old turn still in its runner. The runner would then
+  refuse a second turn in the same session.
 - At a shutdown, the runner sends a stopped end for each accepted turn that
   has no end. After a restart, it does the same for each turn that it
   accepted before the restart. It starts no agent for such a turn.
@@ -227,6 +235,6 @@ the notice of a failed repair.
 ## Runner warnings
 
 The [runner warning requirements](runner-warnings.md) give the warnings of
-the Worker for each runner connection, for its end, and for each turn end
-with no Stop request. They also give the process-start ID that the runner
-sends for these warnings.
+the Worker for each runner connection, for its end, for each turn end with
+no Stop request, and for each provider stop during a turn. They also give
+the process-start ID that the runner sends for these warnings.

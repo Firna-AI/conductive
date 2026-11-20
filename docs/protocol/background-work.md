@@ -7,7 +7,8 @@ and the time limit of a wait. The terms are those of the
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A background work decision number, such as background work decision
 1, names a decision of the change that keeps a turn open for background
-work.
+work. A provider stop decision number names a decision of the change that
+adds [Provider stops](provider-stops.md).
 
 ## Background work
 
@@ -77,6 +78,12 @@ work.
   count.
 - Reason: the limit bounds the waiting that a turn holds with no new
   message of a member.
+- A [continuation turn](provider-stops.md#the-continuation-turn) after a
+  provider stop is a new turn, so it counts its own wait. The workspace
+  queues such a turn only within 30 days of the start of its chain, as
+  [The end of a chain](provider-stops.md#the-end-of-a-chain) says.
+- So the last continuation turn of a chain can wait past the end of its
+  chain, for up to its own 30 days (provider stop decision 4).
 - When the limit passes during a reply, the limit applies at the end of
   that reply. Reason: a cut tool call can leave half-done work, such as a
   push without its merge.
@@ -85,8 +92,13 @@ work.
   `finished`, its duration, its files, and `endReason`.
 - This end at the limit holds also when no live work remains at the end of
   that reply.
-- `endReason` is an optional field of `turn.completed`. Its one value is
-  `background_work_limit`, which marks an end at the limit.
+- `endReason` is an optional field of `turn.completed`. It has two values.
+  `background_work_limit` marks an end at the limit.
+  `cloud_computer_stopped` marks the stopped end of a turn that a provider
+  stop ended, as
+  [The end of the turn](provider-stops.md#the-end-of-the-turn) says.
+- The runner sends only `background_work_limit`. Only the workspace sets
+  `cloud_computer_stopped`.
 - A stopped end at the limit was rejected, because it shows no duration
   and no files.
 - Risk: a wait keeps each right of a running turn, such as its turn token,
@@ -96,4 +108,6 @@ work.
 - Risk: a wait is a running turn, so the
   [idle stop](workspace-life.md#stop-and-resume) does not stop its
   sandbox. A task that the agent does not stop, such as a dev server, can
-  keep the sandbox running for up to 30 days.
+  keep the sandbox running for up to 30 days. After a provider stop, the
+  last continuation turn of a chain can add up to 30 days more, as
+  [The end of a chain](provider-stops.md#the-end-of-a-chain) says.

@@ -95,6 +95,11 @@ holds how an agent action of the pull request bar sends its fixed prompt.
 - The line names no length of the limit. Reason: the member cannot change
   the limit.
 - A toast at the limit was rejected, because an automation run has no open tab.
+- A turn that a [provider stop](provider-stops.md) ended shows "The cloud
+  computer stopped" on its stopped line. A line of the app right under it
+  says what comes next, as
+  [The line after the stop](provider-stops.md#the-line-after-the-stop)
+  says.
 - When the runner cannot tell which files a turn changed, its end shows
   "Changed files unavailable" in place of the files (decision 109). The
   turn still shows as finished or stopped, not as failed.
@@ -237,6 +242,20 @@ holds how an agent action of the pull request bar sends its fixed prompt.
   that it shows.
 - The Durable Object of the workspace stores every event, so the chat
   survives a stop of the sandbox.
+- The workspace sends `turn.continued` for the line after a provider stop.
+  It names the session in `sessionId`, the ended turn in `previousTurnId`,
+  and the continuation turn in `turnId`, or null when no turn follows.
+- Its field `next` names what comes next:
+  - `turn`: a continuation turn waits.
+  - `reconnect`: the login of the session is gone.
+  - `message`: each other case.
+- The event holds no text. The app writes the words from `next` and from
+  the login of the session. Reason: a text of the workspace cannot say
+  "you" to the member who must act. A null `turnId` also cannot tell the
+  two lines without a turn apart.
+- The event alone does not mark the workspace as unread. Reason: the reply
+  of the continuation turn does.
+- An older copy of the app skips the event and shows no line.
 - A tab keeps the chat of each workspace that it showed in memory. A
   return to that workspace shows the chat at once, then gets only the new
   events (decision 87).

@@ -154,8 +154,11 @@ change that adds the org logins, as
   or "You stopped the agent" to Priya (decision 72). The workspace
   records that member when the Stop request arrives. The runner cannot
   set it, because agent code runs on the same cloud computer.
-- A turn that stops with no Stop request, such as when the cloud
-  computer stops, shows "The agent stopped".
+- A turn that stops with no Stop request shows "The agent stopped", such
+  as at a restart of the agent runner.
+- A turn that a [provider stop](provider-stops.md) ends shows "The cloud
+  computer stopped" in place of these words. A line of the app under it
+  says what comes next, and the agent can continue the work in a new turn.
 - A close of a session that stops its turn counts as a Stop of the member
   who closed the session. So the chat names that member too. Reason: that
   member confirmed the stop when the close asked first, as
@@ -242,6 +245,12 @@ change that adds the org logins, as
 
 - [Dropped answers](dropped-answers.md) states what a Claude turn does
   when its model answer drops before it is complete.
+
+### Provider stops
+
+- [Provider stops](provider-stops.md) states how a turn ends when its
+  sandbox stops with no request of the app, and how the agent continues
+  its work in a new turn.
 
 ## Attachments
 

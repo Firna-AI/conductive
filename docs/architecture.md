@@ -65,7 +65,11 @@ each feature.
   the login of its session, which can belong to another member or to the
   org. A turn that a late answer to a secret request starts has the sender
   of the turn that asked, as
-  [Late answers](protocol/secret-requests.md#late-answers) says.
+  [Late answers](protocol/secret-requests.md#late-answers) says. A
+  continuation turn after a provider stop has the sender of the turn that
+  the stop ended, as
+  [The continuation turn](protocol/provider-stops.md#the-continuation-turn)
+  says.
 - **Starter:** the member who started a session. The starter of a session
   never changes.
 - **Agent login:** the key, the token, the sign-in, or the own endpoint

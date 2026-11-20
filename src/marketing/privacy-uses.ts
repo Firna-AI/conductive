@@ -163,7 +163,9 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
       text`Operational logs: ${productName} records when the program that
         runs workspace agents connects to the service or disconnects.
         It also records turns that end without a Stop request, including
-        whether they finished, stopped, or failed.
+        whether they finished, stopped, or failed. It records each stop of a
+        cloud computer during a turn that ${productName} did not ask for, with
+        the cloud computer provider account.
         These records include the workspace ID and any available turn,
         connection, and event stream IDs, and communication protocol version.
         When available, they also include a random ID for each start of that

@@ -1,8 +1,8 @@
 # Sandbox provider accounts
 
 This page belongs to [Deployment inputs](deployment.md). It gives the
-provider accounts of a deployment, their inputs, and the steps before a
-real org runs on E2B.
+provider accounts of a deployment, their inputs, the steps before a real
+org runs on E2B, and the runtime limit of E2B.
 [The provider](protocol/workspaces-and-sandboxes.md#the-provider) states
 the requirements.
 
@@ -130,3 +130,23 @@ support:
 Move the project to E2B Pro before a real org runs on E2B. E2B's current
 [Billing and limits](https://docs.e2b.dev/billing) gives the plan limits
 for disk capacity, sandbox runtime, and the number of sandboxes at once.
+
+## The runtime limit of E2B
+
+E2B limits the time that a sandbox runs without a pause. Its
+[sandbox lifetime page](https://docs.e2b.dev/faq/sandbox-lifetime) gives
+1 hour on Hobby and 24 hours on Pro. A pause or a resume resets the count.
+
+- At the limit, E2B pauses the sandbox. The app asks for a pause that
+  keeps only the disk, so the runner, each agent, and each other process
+  end.
+- The app did not ask for this stop, so it is a provider stop. A turn that
+  runs at the limit ends as stopped. The app then starts the sandbox again,
+  and the agent continues in a new turn, as
+  [Provider stops](protocol/provider-stops.md) says.
+- The idle stop pauses an idle sandbox after 30 minutes, and resets the
+  count. So the limit stops only a sandbox that runs for the whole limit
+  without a pause. Examples are a long turn and a long session of work.
+- On Hobby, a sandbox stops after each hour that it runs without a pause.
+  Pro makes such a stop rare, so move the project to Pro before a real org
+  runs on E2B.

@@ -241,7 +241,7 @@ Older cloud computers get sub-workspace tools when an automatic software update 
 
 ## Resume a stopped computer
 
-The computer stops after 30 minutes without user activity and without a running agent turn.
+Conductive stops the computer after 30 minutes without user activity and without a running agent turn.
 An open tab alone does not keep it running.
 Using a port preview does not keep it running either.
 A normal stop keeps its files, sessions, and chat history.
@@ -263,6 +263,22 @@ A late answer to a secret request can also start the computer.
 This happens when you allow the secret or supply a value after the agent stopped waiting.
 The agent receives a message in the session that asked.
 The start follows the same checks as opening the workspace.
+
+The computer can also stop by itself during an agent turn.
+No member and no part of Conductive asked for that stop.
+The turn then ends with **The cloud computer stopped**.
+Conductive starts the computer again, and the agent continues the task in a new turn.
+That turn acts for the same person as the stopped turn.
+The start follows the same checks as opening the workspace.
+An open workspace shows **Resume** until the computer starts.
+
+Conductive does not start the computer again in these cases:
+
+- Such a new turn stopped less than 15 minutes after it started.
+- 30 days passed since a member last sent a message for that work.
+- The person of the stopped turn can no longer use the session's login.
+
+The chat then says how the work can go on, such as **Send a message to continue**.
 
 **Stop** in chat interrupts an agent turn.
 It is separate from the computer's automatic stop.

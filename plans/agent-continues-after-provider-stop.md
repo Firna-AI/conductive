@@ -156,7 +156,10 @@ same day, and added what an open tab shows before the automatic start.
 - **The 30-day limit (decision 3).** Each turn stores `chainStartedAt`: the
   time of the newest message of the turn that a member wrote. App
   messages, such as continuation and late-answer messages, do not count. A
-  continuation turn copies `chainStartedAt` from the interrupted turn. The
+  continuation turn copies `chainStartedAt` from the interrupted turn. A
+  turn that a late answer starts has no member message, so its
+  `chainStartedAt` is the time of that start. My call of 20 November 2026,
+  because the answer is a member action at that time. The
   chat queues a continuation only while `chainStartedAt` plus 30 days is in
   the future. Otherwise the old turn ends with `cloud_computer_stopped` and
   no continuation. Reason: the background-work count starts at the first
@@ -169,7 +172,10 @@ same day, and added what an open tab shows before the automatic start.
   queues no further continuation and starts no sandbox. The old turn ends
   with `cloud_computer_stopped`, and `turn.continued` has no `turnId`. Its
   line says that a member must continue. A member message starts a new
-  chain, with the guard reset.
+  chain, with the guard reset. A continuation turn that the runner never
+  started counts as a turn that stopped within 15 minutes. My call of
+  20 November 2026: such a turn did no work, and sandbox code that powers
+  off the sandbox at its start would otherwise loop.
 - **The Stop of the old turn.** The continuation's `turn` command comes
   after an `interrupt` for the old turn. Dispatch sends that interrupt,
   also though the turn ended as stopped, as it does for a failed turn that
@@ -228,6 +234,17 @@ same day, and added what an open tab shows before the automatic start.
 - **No runner change.** The runner gets a normal `turn` command, so every
   runner version works. The rule that the runner starts no agent for a turn
   from before a restart stays.
+- **The docs of Milestone 2.** My calls of 20 November 2026. A new
+  protocol page, [Provider stops](../docs/protocol/provider-stops.md),
+  belongs to Messages and attachments, as Dropped answers does. It holds
+  the turn rules, the words of the lines, and the end of a chain with the
+  15-minute guard. Reason: Messages and attachments already had 256 lines.
+  Background work covers only Claude turns, and a chain also holds Codex
+  turns. So Background work only links to the chain, and it states the
+  overrun of decision 4. The section in Stop and resume is "Stops by a
+  provider", so that its name differs from the page. The warning of "A
+  log" is a requirement in Runner warnings, so the Privacy page names the
+  new log record.
 
 Not in this change:
 
@@ -240,10 +257,13 @@ Not in this change:
 Contract owners:
 
 - [Stop and resume](../docs/protocol/stop-and-resume.md).
-- [Messages and attachments](../docs/protocol/messages-and-attachments.md).
+- [Messages and attachments](../docs/protocol/messages-and-attachments.md)
+  and its page [Provider stops](../docs/protocol/provider-stops.md).
 - [Background work](../docs/protocol/background-work.md).
 - [Chat and events](../docs/protocol/chat-and-events.md).
-- [The agent runner](../docs/protocol/agent-runner.md).
+- [The agent runner](../docs/protocol/agent-runner.md) and
+  [Runner warnings](../docs/protocol/runner-warnings.md).
+- [Session transcripts](../docs/protocol/session-transcripts.md).
 - The [lifecycle README](../worker/lifecycle/README.md), the
   [chat README](../worker/chat/README.md), and the
   [chat contracts](../src/shared/chat-contracts.md).
@@ -281,31 +301,34 @@ Evidence: the screenshots and the check logs are in
 
 Depends on: 1
 
-- [ ] `docs/protocol/stop-and-resume.md`: record the runtime limit of a
+- [x] `docs/protocol/stop-and-resume.md`: record the runtime limit of a
       provider. Add a provider stop during a turn as a case that starts the
       sandbox. Say that the idle stop rule does not hold at a provider stop.
-- [ ] `docs/protocol/messages-and-attachments.md`: the stopped line with
+- [x] `docs/protocol/messages-and-attachments.md`: the stopped line with
       the new end reason, and the forms of the continuation line.
-- [ ] `docs/protocol/session-transcripts.md`: the copy of a transcript
+- [x] `docs/protocol/session-transcripts.md`: the copy of a transcript
       gives the same lines. Today it says "The agent stopped" for each stop
       with no Stop request.
-- [ ] `docs/protocol/background-work.md`: the 30-day limit covers a chain
+- [x] `docs/protocol/background-work.md`: the 30-day limit covers a chain
       of continuation turns, with the 15-minute guard and the overrun of
       decision 4. `endReason` gets a second value.
-- [ ] `docs/protocol/chat-and-events.md`: the `turn.continued` event.
-- [ ] `docs/protocol/agent-runner.md`: the workspace can send Stop for a
+- [x] `docs/protocol/chat-and-events.md`: the `turn.continued` event.
+- [x] `docs/protocol/agent-runner.md`: the workspace can send Stop for a
       turn that a provider stop ended.
-- [ ] `docs/protocol/runner-warnings.md`: the stop cause that the chat now
+- [x] `docs/protocol/runner-warnings.md`: the stop cause that the chat now
       shows.
-- [ ] `src/shared/chat-contracts.md` and `src/chat/transcript.md`: the new
+- [x] `src/shared/chat-contracts.md` and `src/chat/transcript.md`: the new
       end reason and event.
-- [ ] `docs/sandbox-provider-accounts.md`: the E2B runtime limit and its
+- [x] `docs/sandbox-provider-accounts.md`: the E2B runtime limit and its
       effect.
-- [ ] Read the legal pages `src/marketing/terms.ts` and
+- [x] Read the legal pages `src/marketing/terms.ts` and
       `src/marketing/privacy.ts` in full, and each guide in
       `src/marketing/docs/`. Update each sentence that restates a changed
       fact.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
+
+Evidence: the link check script and its output are in
+`.context/agent-continues-after-provider-stop/milestone-2/`.
 
 ## Milestone 3: The Worker finds a provider stop
 
@@ -367,6 +390,13 @@ Depends on: 4
       `src/shared/transcript/markdown-items.ts`. Let the end reason reader
       in `src/chat/api/read-chat.ts` pass the new value. Today it keeps
       only `background_work_limit`.
+- [ ] Give the line after the stop in the copied transcript of
+      `src/shared/transcript/markdown-items.ts`, with the name of the
+      starter in place of "you", as `docs/protocol/session-transcripts.md`
+      says.
+- [ ] Update `src/chat/loads-and-sends.md` and the key code pages of the
+      chat for the new lines. Today that page says that each stop with no
+      Stop request shows "The agent stopped".
 - [ ] Tests for the reader and the transcript.
 - [ ] Check the lines in a browser with `npm run dev`, and save a
       screenshot in `.context/`.
@@ -375,6 +405,12 @@ Depends on: 4
 
 Depends on: every other milestone
 
+- [ ] Check each claim of the changed guides and legal pages against the
+      built app, as "Claims" in `src/marketing/docs-authoring.md` says.
+- [ ] Update option E of
+      `plans/follow-ups/runner-liveness-after-provider-stop.md`. It cites
+      the stopped line of Messages, and a provider stop now queues a turn
+      that the runner never started again.
 - [ ] Run the targeted tests, `npm run check`, and the Rust checks of
       `CLAUDE.md`.
 - [ ] Commit with Conventional Commits and push the branch.

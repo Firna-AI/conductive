@@ -367,6 +367,7 @@ That choice applies to every member's messages on the session's login.
 
 GitHub operations follow the person whose message started the running turn.
 After a late answer to a secret request, the new turn follows the person whose message started the turn that asked.
+After the cloud computer stops during a turn, the new turn that continues the work follows the same person as the stopped turn.
 Commits name that person as both author and committer.
 In a workspace with older cloud computer software, agent commits name the workspace owner.
 Mac command requests go to that same person's connected Mac.
