@@ -36,7 +36,7 @@ how a screen is built, and links to the other pages.
 | `app/restart`       | The menu of the header state with Restart, the question while an agent works, Starting after Restart, a failed update check, and a failed restart |
 | `app/archive`       | An archived workspace with Restore, the toast after Archive, the Archived group, the restored workspace, an archive without a kept cloud computer, and a workspace that left the list after its 14 days |
 | `app/composer`      | Two uploaded files in a sentence, then the picker, a missing agent, another member's login, a login that is not shared, and the org login |
-| `app/capabilities`  | The Capabilities control of a workspace, with the approvals of its sessions and its values, and Mac access off |
+| `app/capabilities`  | The Capabilities control of a workspace in a browser, with the approvals of its sessions and its values, the note of Mac access, and Mac access off |
 | `app/fast-mode`     | The Fast switch of the model menu on and off, with its key, the trigger with Fast, and a model without fast mode |
 | `app/model-favourites` | The model menu with five favourites, its All models submenu, a changed effort, and the favourites in Preferences |
 | `app/attachments`   | A file that uploads in the text, then a drop, a failed upload, a file over 1 GB, sent files, the file tab of a sent screenshot, a first message with files, and a file that is no longer in the cloud computer |
@@ -47,7 +47,7 @@ how a screen is built, and links to the other pages.
 | `app/transcripts`   | Copy a transcript from the tab menu: the toast after a copy, a failed copy, and the menu of an archived workspace |
 | `app/tools`         | The terminal tabs and their states, a link in the terminal under the pointer and a size that another viewer set, then the Preview tool with its detected servers, the Preview tabs of the centre row, and its failed list repair, and the hidden Desktop, kept for its return |
 | `app/panels`        | The right column, widened by the handle on its inner edge, and then hidden; the hidden sidebar, and its workspace list as a popover of the org tile |
-| `mac-app`           | The Mac app: its window, the waitlist, its device commands, This Mac, Keyboard shortcuts, and the palette with keys |
+| `mac-app`           | The Mac app: its window, the waitlist, its device commands, the Capabilities of a workspace and of New workspace with the line of this Mac, This Mac, Keyboard shortcuts, and the palette with keys |
 | `user-flows`        | Sign up, sign up during open sign-up, join with an invite link, create a workspace, create one in the dialog, reopen it, open one from the palette, send feedback, archive one from its row, open a removed workspace, create an org, run a Mac command, answer a secret request later, create an automation, link a workspace, open a session link, open a terminal link, merge and continue, mention a file, open a file from an answer, drop a file, open a local server |
 
 A folder page shows at most five screens, saved states included. A folder
@@ -242,4 +242,5 @@ pages of `app/attachments` and `app/files`, and their related flow.
 
 [Secrets and Capabilities](catalogue-secrets.md) gives the child pages of
 `app/org-settings/secrets` and `app/secret-requests`, the pages of the
-Capabilities control, and the flow `user-flows/secret-request`.
+Capabilities control in a browser and in the Mac app, and the flow
+`user-flows/secret-request`.

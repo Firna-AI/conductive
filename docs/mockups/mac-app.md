@@ -74,6 +74,17 @@ screens live under `mac-app`, and their parts in `src/components/mac/`.
   cause beside the time left, Extend, and Stop. It has no Try again,
   because Extend stays in the bar. An Extend result shows only while the
   15 minutes run. `mac-app/extend` draws both.
+- While Mac access is on, the Capabilities control of the Mac app shows
+  the line Allow all commands on this Mac under its switch, from the Mac
+  access decisions of 20 November 2026. A check starts a grant until Stop
+  of the workspace on this Mac, and turning the switch on checks it. A
+  start is done or failed. A start that failed shows Not started and its
+  cause under the line, from `ChangeOutcome`, and the line stays, so it
+  needs no Try again. New workspace starts the grant after the create, so
+  a start that failed there shows as a notice in the new workspace, with
+  Try again. `mac-app/capabilities` and `mac-app/new-workspace` draw them,
+  and [secrets and Capabilities](catalogue-secrets.md) lists their
+  variants. A browser shows a note in place of the line.
 - The web app shows a waiting request without the choices, because only
   the Mac app can allow a command on the Mac. Once answered, the command
   shows as a card at its place in the chat: denied, done with its output,

@@ -1,4 +1,5 @@
 import { CircleAlert, MessageSquarePlus, Paperclip } from 'lucide-react'
+import { StartFailedNotice } from '../components/capabilities/StartFailedNotice'
 import {
   attachFilesLabel,
   folderBody,
@@ -84,8 +85,8 @@ function folderNotice() {
 /**
  * The notice over the composer when the agent of the chosen model is not
  * connected. Its action opens the Connect form of that agent in the account.
- * A file over the size limit and an unreadable folder have their own
- * notices.
+ * A file over the size limit, an unreadable folder, and a grant of a new
+ * workspace that did not start on this Mac have their own notices.
  *
  * A message in a session on the login of another member, or on the org
  * login, runs on that login, so the own login of the viewer does not
@@ -103,6 +104,12 @@ export function composerNotice(state: WorkspaceState, workspace: Workspace) {
   }
   if (state.composer === 'unreadable-folder' && state.tab !== 'new-session') {
     return folderNotice()
+  }
+  if (state.composer === 'grant-not-started') {
+    return <StartFailedNotice failure="not-started" />
+  }
+  if (state.composer === 'grant-not-reached') {
+    return <StartFailedNotice failure="not-reached" />
   }
   const { choice } = workspace
   const agent = agents[choice.agent].name

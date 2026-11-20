@@ -33,6 +33,15 @@
   right: 0;
 }
 
+/*
+ * A control drawn scrolled to its end. A view runs no script, and a
+ * column-reverse box starts its scroll at its end.
+ */
+.atEnd {
+  display: flex;
+  flex-direction: column-reverse;
+}
+
 /* The parts of the control, one under the other, with a line between. */
 .panel {
   display: flex;
@@ -190,4 +199,37 @@
   font-size: var(--ui-text-xs);
   line-height: 1.45;
   overflow-wrap: anywhere;
+}
+
+/* The line of this Mac under the switch, and the result of a failed start. */
+.line {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.lineLabel {
+  color: var(--ui-ink);
+  font-size: var(--ui-text-sm);
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+/* The note of a browser, in the place of the line of this Mac. */
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 2px 0 0;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+}
+
+/* The icon centres on the first line of the note. */
+.noteIcon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--ui-muted);
 }

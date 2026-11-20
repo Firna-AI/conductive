@@ -24,13 +24,14 @@ const tones = {
  * the cause that the Mac gave. It stays until the next change of the same
  * control, so a change that the Mac did not save or did not make never goes
  * unseen. When the change took its control away, such as the row of a
- * removed command, `action` repeats it.
+ * removed command, `action` repeats it. A result under its own control,
+ * such as the line of this Mac in Capabilities, names no subject.
  */
 export function ChangeOutcome(props: {
   status: ChangeStatus
   title: string
   /** What the change acted on: an exact command, or a workspace name. */
-  subject: ReactNode
+  subject?: ReactNode
   /** The subject is a command, which shows in the code font. */
   code?: boolean
   message?: string | null
@@ -46,10 +47,15 @@ export function ChangeOutcome(props: {
         role={props.status === 'done' ? 'status' : 'alert'}
       >
         <span className={styles.head}>
-          <span className={styles.title}>{props.title}</span>{' '}
-          <span className={props.code ? styles.code : styles.subject}>
-            {props.subject}
-          </span>
+          <span className={styles.title}>{props.title}</span>
+          {props.subject === undefined ? null : (
+            <>
+              {' '}
+              <span className={props.code ? styles.code : styles.subject}>
+                {props.subject}
+              </span>
+            </>
+          )}
         </span>
         {props.message ? (
           <>

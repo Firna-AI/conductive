@@ -33,16 +33,50 @@ suspended org, with no action.
 New workspace page: the secrets of Acme with FIGMA_TOKEN pre-approved, and
 Mac access off. A phone opens it as a sheet from the menu of the + button.
 Its `no-secrets` variant has Firna without secrets, and its `menu` variant
-has that menu open on a phone. `app/new-workspace/dialog/capabilities` has
-the same control in the dialog.
+has that menu open on a phone. Its `mac-access-on` variant has Mac access
+on in a browser, with the note that says to use Allow all commands on this
+Mac in the Mac app. `app/new-workspace/dialog/capabilities` has the same
+control in the dialog.
 
-`app/capabilities` has the control of Checkout address autocomplete, with
-the approvals of its sessions and its value for the workspace, each with
-Remove. Its `mac-access-off` variant has Mac access off. Its `menu` variant
-has the menu of the + button of a phone, with Attach files and
-Capabilities. The
+`app/capabilities` has the control of Checkout address autocomplete in a
+browser, with the approvals of its sessions and its value for the
+workspace, each with Remove. Mac access is on, so the note of a browser
+shows under the switch. Its `mac-access-off` variant has Mac access off,
+with no note. Its `menu` variant has the menu of the + button of a phone,
+with Attach files and Capabilities. The
 `mac-access-off` variant of `app/mac-commands` has a Mac command that the
 workspace refused for that reason.
+
+In the Mac app, the line Allow all commands on this Mac takes the place of
+that note while Mac access is on, from the Mac access decisions of 20
+November 2026. Each member sees the line of their own Mac.
+`mac-app/capabilities` has the control of Checkout address autocomplete
+after Cal turned Mac access on in the Mac app. The line is checked,
+because this Mac started a grant until Stop, and the bar of the workspace
+says Until you stop. Each of its views draws the control scrolled to its
+end, where the line is, because the control of this workspace is longer
+than the space above the composer. Its variants:
+
+- `unchecked` has Mac access that Priya turned on, so the line of Cal's
+  Mac is unchecked, and each command asks first.
+- `fifteen-minutes` has the line unchecked while the 15 minutes run. A
+  check keeps them until Stop.
+- `not-started` has a start that the Mac did not make. The line stays
+  unchecked, with Not started and the cause that the Mac gave.
+- `not-reached` has a start that found this Mac not available. The line
+  stays unchecked, and its result says that each command still asks first.
+
+`mac-app/new-workspace` has the control of New workspace in the Mac app,
+with Mac access on and the line checked, so the create starts the grant.
+Its variants:
+
+- `mac-access-off` has Mac access off. The hint of the Mac app says that
+  turning it on also allows all commands on this Mac.
+- `created` has the new workspace Saved carts after a create that started
+  the grant, with the bar that says Until you stop.
+- `not-started` has Saved carts after a create whose grant did not start,
+  with a notice over the composer and Try again.
+- `not-reached` has the same notice for a Mac that was not available.
 
 `app/secret-requests` has a request for PROD_DATABASE_URL just above the
 composer, while the tool call waits. Its child pages:

@@ -61,7 +61,9 @@ one.
   tooltip. On a computer it stands right after the attach button in the bar
   of every composer and in the footer of the New workspace dialog. A press
   opens the control, which a computer draws above the icon, as an open menu
-  of the app.
+  of the app. A long control scrolls inside it. A view runs no script, so
+  `atEnd` draws the control scrolled to its end, where Mac access is, for
+  the states of the line of this Mac.
 - A phone has one + button in place of the attach button and the
   Capabilities icon, from `ComposerMenu` in `src/components/chat/`. Its
   menu opens above it, as the menu of the model picker does, with Attach
@@ -85,6 +87,22 @@ one.
   for this workspace, with who gave it. Each has Remove. `GrantList` draws
   them, and a group without grants hides.
 - The Mac access part is a switch at the end of its title, off by default.
+- `OpenCapabilities` draws the open control with the words of its shell,
+  the Mac app or a browser, from `useMacApp`. It does not read a pairing of
+  this Mac, because the Mac app with no device connection reads no device
+  either (Mac access decisions of 20 November 2026).
+- `MacAccessPart.tsx` draws the Mac access part. In the Mac app, while the
+  switch is on, the line Allow all commands on this Mac shows under it: a
+  checkbox with its hint, as each secret has. Each member sees the line of
+  their own Mac. It is checked while this Mac has a grant until Stop for
+  the workspace, and unchecked otherwise, also while the 15 minutes run. A
+  start that failed keeps it unchecked, and `ChangeOutcome` shows Not
+  started and the cause under it. While the switch is off, the hint of the
+  Mac app adds that turning it on also allows all commands on this Mac.
+- A browser shows a note with the Laptop icon of lucide in place of the
+  line. It says to use Allow all commands on this Mac in the Mac app.
+- `StartFailedNotice` draws the notice over the composer of a new workspace
+  whose grant did not start after the create: the cause, and Try again.
 - `capabilitiesCopy.ts` holds the words of the control.
 
 ## Requests and results in the chat

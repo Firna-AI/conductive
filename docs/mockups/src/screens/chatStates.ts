@@ -91,6 +91,20 @@ export const temporaryTabStates = [
  * phone as a sheet. `menu` opens the menu of the one button of a phone,
  * which holds Attach files and Capabilities (secrets decision 16 G). A
  * computer has no such menu, so it draws the composer as it is.
+ *
+ * While Mac access is on, the Mac app shows the line of this Mac, and a
+ * browser a note in its place (Mac access decisions 4 A and 5 A). The line
+ * is checked in `capabilities` and `capabilities-checked`, because this Mac
+ * has a grant until Stop for the workspace. It is unchecked in
+ * `capabilities-unchecked`, also while the 15 minutes run, and after a
+ * start that failed in `capabilities-not-started`, or that found this Mac
+ * not available in `capabilities-not-reached` (decision 3 A).
+ * `capabilities` and `capabilities-mac-off` draw the control from its top,
+ * as it opens. The other states of the line draw it scrolled to its end,
+ * where the line is, as after a change of Mac access. `grant-not-started` and
+ * `grant-not-reached` draw the notice over the composer of a new workspace
+ * whose grant did not start after the create. Only the Mac app starts a
+ * grant, so only its screens use them.
  */
 export const composerStates = [
   'empty',
@@ -121,6 +135,12 @@ export const composerStates = [
   'dropped-folder',
   'unreadable-folder',
   'capabilities',
+  'capabilities-checked',
+  'capabilities-unchecked',
+  'capabilities-not-started',
+  'capabilities-not-reached',
   'capabilities-mac-off',
+  'grant-not-started',
+  'grant-not-reached',
   'menu',
 ] as const

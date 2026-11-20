@@ -1,19 +1,25 @@
-import { Switch } from '@firna/ui/switch'
 import type { PersonKey } from '../../fixtures/members'
 import type { WorkspaceGrants } from '../../fixtures/secretRequests'
 import type { OrgSecret } from '../../fixtures/secrets'
 import { noop } from '../../noop'
 import { ScreenLink } from '../common/ScreenLink'
-import { useControlSizes } from '../common/touch'
 import { whoOf } from '../chat/SecretRun'
-import { macAccessWords, noSecrets, secretsPartWords } from './capabilitiesCopy'
-import type { CapabilityPart } from './CapabilitiesPanel'
+import { useMacApp } from '../mac/MacApp'
+import {
+  capabilitiesIntro,
+  noSecrets,
+  secretsPartWords,
+} from './capabilitiesCopy'
+import { CapabilitiesPanel, type CapabilityPart } from './CapabilitiesPanel'
 import { GrantList } from './GrantList'
+import { macAccessPart, type MacAccessView, type Shell } from './MacAccessPart'
 import check from '../common/CheckOption.module.css'
 import styles from './Capabilities.module.css'
 
 /** What the Capabilities control shows for one workspace or one draft. */
 export type CapabilitiesView = {
+  /** New workspace, or a workspace that exists. */
+  place: keyof typeof capabilitiesIntro
   /** The org, whose secrets the workspace can use. */
   org: string
   secrets: readonly OrgSecret[]
@@ -24,7 +30,7 @@ export type CapabilitiesView = {
    * only a workspace that exists has.
    */
   grants?: WorkspaceGrants
-  macAccess: boolean
+  macAccess: MacAccessView
   /** The Secrets tab of the org settings. */
   secretsTo: string
   /** The person signed in, who reads "you" for their own grants. */
@@ -106,24 +112,15 @@ function SecretsContent(props: { view: CapabilitiesView }) {
   )
 }
 
-/** The switch of Mac access, which saves at once. */
-function MacAccessSwitch(props: { on: boolean }) {
-  const { field } = useControlSizes()
-  return (
-    <Switch
-      accessibilityLabel={macAccessWords.title}
-      onValueChange={noop}
-      size={field === 'lg' ? 'md' : 'sm'}
-      value={props.on}
-    />
-  )
-}
-
 /**
  * The parts of the Capabilities control, in their order: the secrets that
- * the workspace pre-approves, with its grants, and Mac access.
+ * the workspace pre-approves, with its grants, and Mac access, with the
+ * words of the shell that shows the control.
  */
-export function capabilityParts(view: CapabilitiesView): CapabilityPart[] {
+function capabilityParts(
+  view: CapabilitiesView,
+  shell: Shell,
+): CapabilityPart[] {
   return [
     {
       key: 'secrets',
@@ -137,11 +134,26 @@ export function capabilityParts(view: CapabilitiesView): CapabilityPart[] {
         ),
       content: <SecretsContent view={view} />,
     },
-    {
-      key: 'mac-access',
-      title: macAccessWords.title,
-      hint: macAccessWords.hint,
-      control: <MacAccessSwitch on={view.macAccess} />,
-    },
+    macAccessPart(view.macAccess, view.place, shell),
   ]
+}
+
+/**
+ * The Capabilities control of New workspace or of a workspace, drawn open.
+ * It chooses its words by the shell, not by a pairing of this Mac: the Mac
+ * app shows the line of this Mac, and a browser a note in its place (Mac
+ * access decision 5 A). A sheet on a phone has its own title.
+ */
+export function OpenCapabilities(props: {
+  view: CapabilitiesView
+  sheet: boolean
+}) {
+  const shell: Shell = useMacApp() === undefined ? 'browser' : 'mac-app'
+  return (
+    <CapabilitiesPanel
+      intro={capabilitiesIntro[props.view.place]}
+      parts={capabilityParts(props.view, shell)}
+      sheet={props.sheet}
+    />
+  )
 }

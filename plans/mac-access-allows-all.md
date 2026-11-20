@@ -263,6 +263,27 @@ My calls, 20 November 2026, unless a decision above says otherwise:
   match. A saved grant with no period, from an older Mac app, covers no
   request. Always allow has no period, because it covers one command
   text in every workspace.
+- From the mockups, 20 November 2026, my calls:
+  - A grant of an older period is dead. When the Worker relays a settings
+    result, it reads the period of each listed workspace and leaves out
+    each grant of an older period. So the bar, This Mac, and the line never
+    show a dead grant. The Mac app ends such a grant when a request or a
+    start brings a newer period. Reason: one source of truth, also for a
+    Mac that was asleep.
+  - While the page cannot read the settings of this Mac, the line shows
+    unchecked and disabled, with "This Mac is not available." Reason: it
+    never claims a grant that may not exist.
+  - While the 15 minutes run, the line stays unchecked, and its hint gives
+    the time left and says that a check keeps them until Stop.
+  - When the line appears or shows a result, the control scrolls it into
+    view. Reason: the line sits below the secrets of a long control.
+  - In New workspace, the line is a choice of the draft. The switch checks
+    it, and the create starts the grant only while it is checked.
+  - A failed start shows one result for the workspace on this Mac, on the
+    line and as a notice in a new workspace. It stays until the next start
+    or Stop, or until Mac access goes off.
+  - The result of an uncheck, which is a Stop, shows under the line.
+  - This Mac says "Each command asks you first, unless you allowed it."
 - Risk: each turn that the member sends in a workspace with a grant can
   run any command on the member's Mac with no question. Text that steers
   the agent, another process in the sandbox, and a message of the session
@@ -278,17 +299,17 @@ Depends on: none
 The Capabilities control of a workspace and of New workspace, in the Mac
 app and in a browser.
 
-- [ ] Add the personal line to the Mac access part of
+- [x] Add the personal line to the Mac access part of
       `docs/mockups/src/screens/workspaceCapabilities.tsx`, with variants:
       on with the grant, on without it, start failed, and Mac not reached.
-- [ ] Add the browser variant with the note of decision 5.
-- [ ] Show the same line in `newWorkspaceCapabilities.tsx`, and the notice
+- [x] Add the browser variant with the note of decision 5.
+- [x] Show the same line in `newWorkspaceCapabilities.tsx`, and the notice
       of a failed start in the new workspace.
-- [ ] Update `docs/mockups/catalogue-secrets.md` and the words in
+- [x] Update `docs/mockups/catalogue-secrets.md` and the words in
       `capabilitiesCopy.ts`.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
-      the mockups show.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
+      the mockups show. Screenshots: `.context/mac-access-allows-all/`.
 
 ## Milestone 2: Documentation and protocol
 
@@ -330,6 +351,8 @@ Depends on: 2
 - [ ] Decision 6 C: keep the period with each grant in
       `desktop/src/device/permissions.ts` and its saved file. Test that a
       grant from an older period covers no request.
+- [ ] Leave out the grants of an older period when the Worker relays a
+      settings result, in `worker/devices/broker-settings.ts`.
 - [ ] Add the action to the fake device routes and the dev Mac settings.
 
 ## Milestone 4: The control
@@ -344,6 +367,9 @@ Depends on: 3
 - [ ] Start the grant after a create from New workspace with Mac access
       on, in the paired page.
 - [ ] Stop the grant of this Mac when the switch turns off.
+- [ ] Show the disconnected state, the 15 minutes hint, the result of an
+      uncheck, and scroll the line into view, as the mockups draw.
+- [ ] Change the This Mac sentence in `src/chat/device/ThisMacSection.tsx`.
 
 ## Milestone 5: Verification, commit, review, and pull request
 

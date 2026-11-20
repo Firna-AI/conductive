@@ -68,11 +68,15 @@ export const newWorkspaceFormProperties = {
   /**
    * The Capabilities control of the icon beside the attach button, closed
    * or drawn open (secrets decision 6). It holds the secrets that the new
-   * workspace pre-approves, and Mac access. `menu` opens the menu of the
-   * one button of a phone, which holds Attach files and Capabilities
-   * (secrets decision 16 G). A computer has no such menu.
+   * workspace pre-approves, and Mac access, which is off in `open`.
+   * `mac-access-on` has Mac access turned on: the Mac app checks the line
+   * of this Mac, so the create starts a grant until Stop on this Mac, and
+   * a browser shows a note in place of the line (Mac access decisions 1 C
+   * and 5 A). `menu` opens the menu of the one button of a phone, which
+   * holds Attach files and Capabilities (secrets decision 16 G). A computer
+   * has no such menu.
    */
-  capabilities: { enum: ['closed', 'open', 'menu'] },
+  capabilities: { enum: ['closed', 'open', 'mac-access-on', 'menu'] },
 } as const
 
 type FormProperty = keyof typeof newWorkspaceFormProperties

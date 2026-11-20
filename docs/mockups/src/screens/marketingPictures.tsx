@@ -11,7 +11,8 @@ import {
   type PictureLayout,
   type ScreenViewport,
 } from './marketingPictureList'
-import { MacAppScreen, type MacAppState } from './MacAppScreen'
+import { MacAppScreen } from './MacAppScreen'
+import type { MacAppState } from './macAppState'
 import { acmeSettings, OrgSettingsScreen } from './OrgSettingsScreen'
 import { WorkspaceListScreen } from './WorkspaceListScreen'
 import { WorkspaceScreen } from './WorkspaceScreen'
