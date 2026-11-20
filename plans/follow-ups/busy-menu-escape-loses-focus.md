@@ -23,5 +23,6 @@
 - **Left out:** Keeping the menu open until the save ends. It traps the member in the menu for one round trip.
 - **Wider fix:** A, in the shared trigger of `MenuButton`, so that every busy shell menu keeps the focus.
 - **Previous examples:** None found.
+- **Related:** `plans/follow-ups/shell-button-focus-default.md`: the same class, as a choice for every shell button. Its option C changes only the shell `ActionButton` and `IconButton`. The trigger here draws the Firna `Button` directly, in `src/shell/ui/ModelPicker.tsx`. So only its option D, a change of the Firna `Button`, would cover this trigger. This item does not wait for that answer. `plans/follow-ups/shell-dialog-cancel-focus.md` records the same native-disabling class at the shared Cancel. Its fix remains independent.
 - **Recommendation:** A. It matches the busy rows, which already use `aria-disabled`.
 - **Action:** fix after merge, apply A, because the problem is outside the scope of the fast mode branch.

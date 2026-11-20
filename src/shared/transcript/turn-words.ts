@@ -49,9 +49,10 @@ function stoppedLine(by: string | null, readers: ChatReaders): string {
 }
 
 /**
- * Who pressed Continue: "You" to that member, and the name that the note
- * keeps of the member to the others, also after the member left the org. A
- * copy has no reader, so it always gives the name.
+ * Who pressed Continue or changed the repository: "You" to that member,
+ * and the name that the note keeps of the member to the others, also after
+ * the member left the org. A copy has no reader, so it always gives the
+ * name.
  */
 export function continuedBy(
   member: MessageSender,
@@ -143,7 +144,9 @@ export function stoppedAttribution(
 export function stoppedNotes(transcript: Transcript, turnId: string): string[] {
   if (hasFileRow(transcript, turnId)) return []
   const speed = standardSpeedLine(transcript, turnId)
-  const files = omittedFiles(transcript, turnId)
+  const completion = completionOf(transcript, turnId)
+  const files =
+    (completion?.files.length ?? 0) + (completion?.omittedFileCount ?? 0)
   return [
     ...(speed === undefined ? [] : [speed]),
     ...(files > 0 ? [unlistedFiles(files)] : []),

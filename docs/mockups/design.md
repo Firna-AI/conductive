@@ -87,6 +87,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   A move that the place of a tab rules out keeps its place, greyed.
   A read-only workspace leaves out each item that it does not allow,
   from decision 214.
+- The app opens a menu beside its button in the top layer, so no box cuts
+  it. `app/chat/menu-placement` draws such menus above the page, and CSS
+  anchors place each one at its button.
 - A sub-workspace shows under the row of its parent, from sub-workspace
   decisions 1 C, 4 F, 5 C, and 6 A, as `app/sub-workspaces` shows.
   `withTrees` in `src/components/workspaces/trees.ts` places the rows of
@@ -215,6 +218,10 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - `ConfirmDialog` in `src/components/common/` asks before an action that a
   user cannot simply undo: a dialog over the dimmed app on desktop, and a
   sheet on a phone. The desktop dialog lies in the `overlay` of `AppFrame`.
+  A question that runs its own action stays open while the action runs. A
+  spinner then leads the confirming action, and Cancel is off, as
+  `app/orgs/suspended/leave/leaving` shows. Escape and a press outside then
+  do nothing, on desktop and in the sheet of a phone.
 - `ToastLayer` in `src/components/common/` draws a toast of Firna open
   where the app shows its toasts: at the bottom right of a desktop, and
   across the bottom of a phone. An action that a user can undo, such as
@@ -308,7 +315,11 @@ sessions as tabs above the chat, and four tabs at the bottom.
   saved automation in two tabs, Automation and Runs. The Runs list holds the
   newest 50 runs, and Show older runs ends it when older runs exist. A
   phone opens the Add trigger menu and the author filter of a pull request
-  trigger in a sheet. A suspended org keeps its Automations link, and shows
+  trigger in a sheet. The bar of the prompt box holds the Capabilities icon
+  of the owner and the model picker, and the lines under the box say what
+  the runs use, as
+  [the Capabilities control](design-secrets.md#the-capabilities-control)
+  says. A suspended org keeps its Automations link, and shows
   its automations read-only under its notice. `RunLinks` in
   `src/components/workspace/` draws the line under the header of a run
   workspace, which links to its automation and to its pull request. The pull
@@ -387,10 +398,13 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - [The workspace](design-workspace.md) gives the messages that wait for
   the sandbox, the tab row with its temporary tab, and the number with Copy
   link. It also gives the bars of the cloud computer.
-- [The chat](design-chat.md) gives the chips of attached files, the
-  Markdown tables and headings of a reply and of a file preview, and the
+- [The chat](design-chat.md) gives the chips of attached files and the
   fold of the work of a turn. It also gives the data that the chat does
   not have, and the files that the cloud computer could not read.
+- [The Markdown of replies](design-markdown.md) gives the tables, the
+  headings, the quotes, the rules, the marks, the line breaks, and the
+  pictures of a reply and of a file preview, and how a message line in the
+  work of a turn shows them.
 - [Secrets and Capabilities](design-secrets.md) gives the Secrets tab of
   the org settings, the Capabilities icon beside every message box with
   its control, and the requests and results of the secrets in the chat.

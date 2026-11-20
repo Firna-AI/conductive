@@ -1,7 +1,6 @@
 import { execFile } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
+import { mkdir, mkdtemp, readdir, readFile, rm } from 'node:fs/promises'
 import { join, relative } from 'node:path'
 import process from 'node:process'
 import { promisify } from 'node:util'
@@ -23,12 +22,15 @@ const types: Readonly<Record<string, string>> = {
 }
 
 /**
- * Builds the Astro site once into a temporary folder, and serves its files
- * from memory through a fake static assets binding. The folder is removed
- * on every exit, also when the build or a file read fails.
+ * Builds the Astro site once into a temporary folder in the repository.
+ * Keeps Astro's asset renames on the repository's mount.
+ * Serves its files from memory through a fake static assets binding.
+ * Removes the folder on every exit, also when the build or a file read fails.
  */
 export async function buildSiteAssets(): Promise<SiteBinding> {
-  const folder = await mkdtemp(join(tmpdir(), 'conductive-site-'))
+  const cache = join(process.cwd(), 'node_modules', '.cache')
+  await mkdir(cache, { recursive: true })
+  const folder = await mkdtemp(join(cache, 'conductive-site-'))
   try {
     await promisify(execFile)(
       'node_modules/.bin/astro',

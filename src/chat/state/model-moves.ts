@@ -1,10 +1,12 @@
 import type { Session } from '../../shared/generated/Session'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
+import { sameChoice } from '../../shared/agents'
 import type { ChangeModelRequest } from '../../shared/sessions'
 import { sessionState, type ChatSnapshot } from './chat-snapshot'
 import type { ChatContext } from './context'
 import { moveDraft } from './drafts'
-import { viewShowing } from './sessions'
+import { withView } from './saved-view'
+import { showsSession, viewShowing } from './sessions'
 
 /**
  * A model change of the other agent, which opens a session under the ID that
@@ -28,7 +30,7 @@ export interface PendingMove {
 }
 
 /**
- * The waiting change of a session to a model. A change waits from its
+ * The waiting change of a session to a choice. A change waits from its
  * request until its record shows or the server refuses it, also after a
  * failure with no answer.
  */
@@ -38,12 +40,8 @@ export function waitingMove(
   choice: AgentChoice,
 ): PendingMove | null {
   for (const move of context.moves.values()) {
-    const { agent, model, effort } = move.request.choice
-    const same =
-      agent === choice.agent &&
-      model === choice.model &&
-      effort === choice.effort
-    if (move.from === from && same) return move
+    if (move.from === from && sameChoice(move.request.choice, choice))
+      return move
   }
   return null
 }
@@ -90,13 +88,10 @@ export function applyMoves(
   let next = snapshot
   for (const move of moves) {
     next = moveDraft(next, move)
-    const activeTab = next.view?.activeTab
-    const showsFile = activeTab?.kind === 'file' || activeTab?.kind === 'diff'
-    if (!move.open || next.activeSessionId !== move.from || showsFile) continue
+    if (!move.open || !showsSession(next, move.from)) continue
     next = {
-      ...next,
+      ...withView(next, (view) => viewShowing(view, move.to)),
       activeSessionId: move.to,
-      view: viewShowing(next.view, move.to),
       overlay: { kind: 'none' },
     }
   }
@@ -108,7 +103,7 @@ export function saveMovedView(
   context: ChatContext,
   moves: readonly DraftMove[],
 ): void {
-  const { view, activeSessionId } = context.store.get()
+  const { activeSessionId } = context.store.get()
   if (!moves.some((move) => move.open && move.to === activeSessionId)) return
-  if (view) context.saveView(view)
+  context.saveView()
 }

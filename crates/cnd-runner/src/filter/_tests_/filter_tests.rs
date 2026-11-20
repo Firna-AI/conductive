@@ -30,7 +30,9 @@ fn answer(text: &str) -> RunnerEvent {
 #[test]
 fn masks_marker_credentials_and_preserves_a_standalone_marker() {
     let mut filter = Sanitizer::default();
-    filter.secrets = vec!["[redacted]tail".into(), "a".into(), "[".into()];
+    for secret in ["[redacted]tail", "a", "["] {
+        filter.registry.add(secret.into());
+    }
     assert_eq!(filter.accept(delta("[redacted]")), vec![]);
     assert_eq!(
         filter.accept(delta("tail production a")),
@@ -44,7 +46,10 @@ fn masks_marker_credentials_and_preserves_a_standalone_marker() {
         filter.text("[redacted] production"),
         "[redacted] production"
     );
-    filter.secrets = vec!["x".into(), "[redacted]tail".into()];
+    filter.registry.active.clear();
+    for secret in ["x", "[redacted]tail"] {
+        filter.registry.add(secret.into());
+    }
     assert_eq!(
         filter.accept(answer("xtail")),
         vec![answer("[redacted]tail")]
@@ -54,14 +59,14 @@ fn masks_marker_credentials_and_preserves_a_standalone_marker() {
 #[test]
 fn masks_only_new_text_after_a_completed_answer_releases_a_prefix() {
     let mut filter = Sanitizer::default();
-    filter.secrets.push("private-value".into());
+    filter.registry.add("private-value".into());
     assert_eq!(
         filter.accept(answer("Final private-")),
         vec![answer("Final private-")]
     );
     assert_eq!(filter.accept(delta("val")), vec![]);
     let mut filter = filter.clone();
-    filter.secrets.clear();
+    filter.registry.active.clear();
     assert_eq!(
         filter.accept(delta("ue and value")),
         vec![delta("[redacted] and value")]
@@ -71,9 +76,9 @@ fn masks_only_new_text_after_a_completed_answer_releases_a_prefix() {
 #[test]
 fn keeps_released_prefix_context_after_the_turn_ends() -> Result<(), Box<dyn std::error::Error>> {
     let mut filter = Sanitizer::default();
-    filter.secrets.push("private-value".into());
+    filter.registry.add("private-value".into());
     assert_eq!(filter.accept(delta("private-")), vec![]);
-    filter.secrets.clear();
+    filter.registry.active.clear();
     let end: RunnerEvent = serde_json::from_str(
         r#"{"type":"turn.completed","sessionId":"session-a","turnId":"turn-a","state":"finished","durationMs":1,"files":[],"omittedFileCount":0,"userMessageIds":["message-a"]}"#,
     )?;
@@ -88,11 +93,9 @@ fn keeps_released_prefix_context_after_the_turn_ends() -> Result<(), Box<dyn std
 #[test]
 fn masks_overlapping_and_historical_tokens_without_mixing_message_contexts() {
     let mut filter = Sanitizer::default();
-    filter.secrets = vec![
-        "abc".into(),
-        "abcdef".into(),
-        "sk-fake-gateway-turn-token".into(),
-    ];
+    for secret in ["abc", "abcdef", "sk-fake-gateway-turn-token"] {
+        filter.registry.add(secret.into());
+    }
     assert_eq!(
         filter.accept(delta("Login: sk-fake-")),
         vec![delta("Login: ")]
@@ -107,7 +110,7 @@ fn masks_overlapping_and_historical_tokens_without_mixing_message_contexts() {
         vec![answer("Final sk-fake-")]
     );
     let mut restored = filter.clone();
-    restored.secrets.clear();
+    restored.registry.active.clear();
     assert_eq!(
         restored.accept(delta("gateway-turn-token")),
         vec![delta("[redacted]")]
@@ -117,7 +120,7 @@ fn masks_overlapping_and_historical_tokens_without_mixing_message_contexts() {
 #[test]
 fn flushes_held_messages_in_original_insertion_order() -> Result<(), Box<dyn std::error::Error>> {
     let mut filter = Sanitizer::default();
-    filter.secrets.push("private-value".into());
+    filter.registry.add("private-value".into());
     let other = RunnerEvent::AgentChatEvent(AgentChatEvent::AssistantDelta {
         turn_event_context: context(),
         message_id: "b".into(),

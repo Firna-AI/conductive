@@ -28,6 +28,16 @@ export const feedbackScreenshot: FeedbackScreenshot = {
 export const replyEmail = 'cal@example.com'
 
 /**
+ * When Cal can send feedback again, in Unix milliseconds: the time that the
+ * server gives to a send after 10 sends in the last hour. The dialog shows
+ * it on Cal's clock, rounded up to the minute: 15:02.
+ */
+export const feedbackRetryAt = Date.UTC(2026, 10, 10, 15, 1, 40)
+
+/** The time zone of Cal's browser, which the dialog shows that time in. */
+export const feedbackTimeZone = 'Europe/London'
+
+/**
  * A capture of a whole page. With the pasted screenshot, the two pass the
  * limit of the screenshots of one message, so the dialog does not add it.
  */

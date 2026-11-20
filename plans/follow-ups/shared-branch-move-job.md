@@ -1,0 +1,33 @@
+# Continue and the repository change copy one job
+
+- **Severity:** Low. **Effort:** Large. **Confidence:** High. **Harder later:** Yes.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-17, from the branch `calummoore/perth-siol` (PR #423), review findings 7 (wider fix C) and 8 (option A).
+- **Location:** `worker/lifecycle/repository-change.ts` and `worker/lifecycle/continue.ts`; `worker/lifecycle/repository-change-command.ts` and `worker/lifecycle/continue-progress.ts`; `worker/lifecycle/repository-change-publication.ts` and `worker/lifecycle/continue-publication.ts`.
+- **Reason:** The fix changes the Continue job, which runs in production, so it needs its own change, tests, and review.
+
+- **Terms:**
+  - **Continue:** the action that moves a workspace to a new branch after its pull request merged. A durable job in the workspace Durable Object runs it.
+  - **Repository change:** the action that moves a workspace to a new branch of another repository of the org, in the same cloud computer. A second durable job runs it.
+  - **Reservation:** the stored job record that makes Continue, Restart, Archive, and a repository change refuse while one of them runs, and that holds new agent turns.
+  - **Steps after the move:** the publication of the new branch and the read of the branch after a lost command result. Git already changed in the cloud computer, so the job cannot simply fail.
+- **Background:**
+  - Both jobs fetch a base branch with the member's GitHub access, run a detached command in the cloud computer, and publish the result to D1 and to the chat stream.
+  - The repository change job copies the Continue job. These methods are line-for-line copies: `result`, `response`, `save`, `finish`, `advance`, `advanceOwned`, `credentialSender`, and `cancel`. The command step, the settle step, the lost-result logic, and the replay loop of the publication are copies too.
+  - The copies have intended differences: the branch read after a lost result, the exit codes of the move, the runner move at the end, the file-report reset at publication, and the repeat check in `start`.
+  - In Continue, a step after the move that fails for good retries every second with no end. An example is a branch read that keeps failing because the folder was removed. The reservation then holds the workspace forever.
+  - PR #423 added an end rule only to the repository change job: after 10 minutes of a failed publication or a failed branch read after the move, the job ends with a failure and a warning, while the D1 row still names the old repository and branch.
+  - Neither job ends when a started move command keeps failing at the provider, for example when the cloud computer is gone and each status read fails. The repository change end rule does not cover these errors.
+- **Problem:** A fix of the reservation, the credential scope, the command recovery, or the publication replay must be made in two places. Continue still has no end rule after the move, so it can hold a workspace forever.
+- **Impact if no action:** A fix in one job can miss the other, and a Continue whose branch read keeps failing blocks Continue, Restart, Archive, and every new message of its workspace.
+- **Root question:** How do Continue and the repository change share one durable branch-move job, so that each fix of its recovery, including an end rule after the move, reaches both?
+- **Options:**
+  - **A.** Extract one durable branch-move job. It owns the reservation, the poll reply, save and finish, the serialized advance, the fetch credential scope, the command step, the end rule after the move, and the publication replay. Each action supplies its admission, its phases before the fetch, its commands, its branch read, and its D1 write. Keep both record shapes and storage keys, so no stored record needs a migration. Effort: Large.
+  - **B.** Extract only the parts that are already the same: the credential sender, the command step, and the publication replay loop. Add the end rule to Continue by hand. The job classes still repeat `start`, `result`, `save`, `finish`, and `advance`. Effort: Medium.
+  - **C.** Make the repository change a kind of one branch-move job, with one record, one reservation key, and a `kind` field. Stored Continue and repository change records need a compatible path for the old keys. Effort: Large.
+  - **D.** Add a "kept in step" list to `worker/lifecycle/continue.md` and `worker/lifecycle/repository-change.md` that names each pair of copied files and the intended differences, and add the end rule to Continue by hand. A fix still needs two edits. Effort: Small.
+- **Left out:** A shared contract test suite for both jobs, because a fix still goes to two places, and the jobs differ on purpose. "Change nothing", because Continue keeps its endless retry.
+- **Wider fix:** A. One job removes the second copy and gives both actions one end rule.
+- **Previous examples:** None found.
+- **Recommendation:** A. It removes the copies, gives Continue the end rule, and needs no migration.
+- **Action:** fix after merge, apply A, because it changes the Continue job in production and is a Large change that needs its own review.

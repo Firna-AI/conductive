@@ -14,8 +14,6 @@ export type MentionPart = {
   /** The mention or the code as the text has it, such as `@src/lib/`. */
   source: string
   line?: LineTarget
-  /** The part was inline code of an answer, so it ends bold as code does. */
-  code?: true
 }
 
 /**
@@ -37,11 +35,14 @@ export type AttachedPart = {
 const mentionPattern = /(?<=^|\s)@(?:"([^"\n]+)"|(\S+))/g
 
 /**
- * A mention where `**` marks bold, as in an answer: it can also start
- * right after a mark, as in `**@src/app.ts**`, and it ends before the next
- * mark (answer chip decision 5).
+ * A mention in the text of an answer, which `*`, `_`, and `~~` mark: it
+ * can also start right after a mark, as in `*@src/app.ts*`, and it ends
+ * before the next `*` or `~~` (answer chip decision 5 and design call 11
+ * of 17 November 2026). A path keeps its `_`, because a `_` that closes a
+ * pair is gone before mentions read.
  */
-const markedMentionPattern = /(?<=^|\s|\*\*)@(?:"([^"\n]+)"|((?:(?!\*\*)\S)+))/g
+const markedMentionPattern =
+  /(?<=^|\s|\*|_|~~)@(?:"([^"\n]+)"|((?:(?!\*|~~)\S)+))/g
 
 /** The marks that can end a sentence after a mention, as in "See @a.ts." */
 const endMarks = '.,;:!?)'

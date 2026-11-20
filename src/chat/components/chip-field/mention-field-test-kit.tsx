@@ -1,4 +1,5 @@
 import { act, useState } from 'react'
+import { Store } from '../../../app/store'
 import type { FileEntry } from '../../../shared/generated/FileEntry'
 import { accessibleName, byRole } from '../../../test-support/dom-queries'
 import { filesAfterHistory, startFiles } from '../../../files/files-test-kit'
@@ -45,11 +46,10 @@ export const sampleTree: readonly FileEntry[] = [
  * screens over the fake API, as `realFiles` gives it.
  */
 export class FakeFiles {
-  private snapshot: MentionFilesSnapshot
-  private readonly listeners = new Set<() => void>()
+  private readonly store: Store<MentionFilesSnapshot>
 
   constructor(entries: readonly FileEntry[] | null) {
-    this.snapshot = FakeFiles.of(entries)
+    this.store = new Store<MentionFilesSnapshot>(FakeFiles.of(entries))
   }
 
   private static of(entries: readonly FileEntry[] | null) {
@@ -62,16 +62,12 @@ export class FakeFiles {
     }
   }
 
-  subscribe = (listener: () => void) => {
-    this.listeners.add(listener)
-    return () => this.listeners.delete(listener)
-  }
+  subscribe = (listener: () => void) => this.store.subscribe(listener)
 
-  getSnapshot = () => this.snapshot
+  getSnapshot = () => this.store.get()
 
   set(entries: readonly FileEntry[] | null) {
-    this.snapshot = FakeFiles.of(entries)
-    this.listeners.forEach((listener) => listener())
+    this.store.set(FakeFiles.of(entries))
   }
 }
 

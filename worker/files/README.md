@@ -4,13 +4,15 @@ This module serves the Files and Changes API for Conductive.
 It keeps the runner's last tree and branch changes in workspace Durable Object storage.
 It joins the numbered parts of each full runner report before it stores the complete report.
 It also sends file and diff requests to the connected runner.
-Diff requests use the stored workspace base branch, with the repository default as a fallback.
+Each diff request names the base branch of the workspace's last complete changes report.
+Without that report, it names the stored workspace base branch, with the repository default as a fallback.
 The runner compares from the merge base with the current workspace branch.
 A disconnected file read uses the shared sandbox provider on the server.
 
 The workspace Durable Object owns one `WorkspaceFiles` over the chat storage.
 Production routes forward the original request to that object.
-Its handler preserves cancellation and reads the captured checkout folder from D1.
+Its handler gives each pending read the signal of the request that reaches the object.
+It reads the captured checkout folder from D1.
 
 ## Integration
 
@@ -25,6 +27,8 @@ The assembly state holds the stored report parts and the revision progress of th
 Both use storage keys that start with `files:`.
 Keep one instance active in an object.
 An unavailable-tree event marks the stored tree and keeps its entries and revision.
+`markFilesMoved` in [storage.ts](storage.ts) gives the same mark after a [repository change](../lifecycle/repository-change.md#publication), in its publication transaction, and drops the stored changes of the old folder.
+So the Changes API returns `file_unavailable` until the runner reports the new folder, and the next complete tree clears the mark.
 Before any complete tree, the marked tree has revision zero and no cached entries.
 Only a complete snapshot clears the mark.
 A delta or an incomplete report keeps it.
@@ -137,36 +141,50 @@ Required options:
 - `fetch`: the server's provider transport.
 - `now`: the clock for the existing request gate.
 
+The outer Worker forwards the original request with `stub.fetch`.
+The runtime does not pass the signal of the outer request to the object, because `wrangler.jsonc` does not turn on `request_signal_passthrough`.
+No test or run shows that a browser disconnect ends a pending read.
 The production handler calls the local port inside the workspace object.
-The outer Worker forwards its request through `fetch`, with its cancellation signal.
 Its `read` and `diff` methods return `null` when the runner is disconnected.
 An adapter must preserve that result.
 It must carry request cancellation to the object or detach pending requests when its connection ends.
-The handler reads the stored workspace base from D1.
+For each diff, the handler names the `baseBranch` of the workspace's last complete changes report.
+That report names the base that the runner of this workspace selected.
+So the diff compares with the same base as the Changes list.
+The workspaces of one repository in an org share one repository default branch in D1.
+Continue in one of them can change it.
+So that update does not change the diff base of a workspace that has a changes report.
+Without a complete changes report, the handler uses the stored workspace base from D1.
 A null base uses the repository default branch.
 It does not use a browser-supplied base branch.
-The runner uses that name only when the current branch has no `gh-merge-base` Git setting, as [The comparison base](../../runner/file-reports.md#the-comparison-base) says.
+The runner uses the requested name only when the current branch has no `gh-merge-base` Git setting, as [The comparison base](../../runner/file-reports.md#the-comparison-base) says.
+A local base change, such as the move of Continue, can come before the next changes report.
+Until that report arrives, a runner that reads the `gh-merge-base` setting replies with its new base.
+The broker then refuses the reply.
+The diff fails with HTTP 502 `file_unavailable`.
 
 The repository root is required because lifecycle and runner code own the checkout folder.
-The Boat read adapter accepts roots under `/home/user/`.
+The provider fallback accepts roots under `/home/user/`.
 It appends only a repository-relative file path.
 The runner must resolve and confine file paths to its own checkout, including symlinks.
 The Boat API applies its own canonical path checks.
 
 The fallback gets `SandboxProvider` through `orgProviderForAccount`, with the authorized user's ID and the provider account of the workspace.
-The provider owns the fixed routes, headers, organization pin, and the key of that account, the app's Boat key in production.
-Its `readFile` requests base64 so a binary file keeps its bytes.
+The provider owns the fixed routes, the headers, and the key of that account, such as the app's Boat key or E2B key. On Boat, it also owns the organization pin.
+Its `readFile` returns base64 so a binary file keeps its bytes.
+Boat requests base64 from its API. E2B reads raw bytes through envd and encodes them on the server.
 The [sandbox response policy](../sandbox/response-limits.md) defines the reply budgets and the metadata fallback.
 The handler reports the file size with `file_too_large`.
-The provider checks that both replies name the requested absolute path.
-The Boat read adapter converts valid UTF-8 to text and preserves a leading byte order mark.
+The provider validates the requested absolute path in its file metadata.
+Boat also validates the content reply path. E2B raw replies have no path field.
+The fallback in `boat.ts` converts valid UTF-8 to text and preserves a leading byte order mark.
 It checks the returned size and decoded byte length against the configured limit.
 Provider error messages never reach the browser.
 The [Boat read-file reference](https://docs.boat.dev/api/reference/agent/read-sandbox-file) defines that route.
 
-A disconnected diff returns `file_unavailable` and makes no Boat call.
-The Boat fallback does not resume a stopped sandbox.
-Boat may therefore refuse a file read until the cloud computer is ready.
+A disconnected diff returns `file_unavailable` and makes no provider call.
+Neither provider fallback resumes a stopped sandbox.
+A disconnected read can therefore fail until the cloud computer is ready.
 
 Org suspension refuses file resources with 403 `org_suspended` before any runner or provider call.
 Chat history remains readable through its separate access path.

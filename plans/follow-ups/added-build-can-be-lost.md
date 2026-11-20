@@ -18,7 +18,7 @@
   - It also saves `cleanup-build` after each successful build or refresh that lacks a chosen repository, when the newest build succeeded.
   - `docs/protocol/org-image.md` requires both added builds. A failed build gets none, and a refresh after a failed build gets none.
   - `cleanupBuild` deletes the build sandbox, writes the phase `done`, and only then calls `startAddedImageBuild`, which calls `startImageBuild` with the first admin who is not suspended.
-  - `pendingImageCleanup` finds only jobs in `allocating`, `cleanup`, or `cleanup-build`, so a job in `done` never runs again.
+  - `pendingImageCleanup` excludes a job in `done`, so that job never runs again.
   - `startAddedImageBuild` catches each error and writes only the warning "Could not start the added cloud computer build.".
   - After the first good build publishes, the org has an image, so `refreshImagesForPush` can start a refresh during the cleanup. A refresh only fetches the repositories of the current image, and runs no install script.
   - `startImageBuild` returns the ID of a running build in place of a new one. So when a refresh runs at the end of the cleanup, no added build is recorded.

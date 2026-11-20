@@ -1,0 +1,49 @@
+# Split literal markers garble in streamed answers
+
+- **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-18, from the check of review finding 3, round 2, on branch `calummoore/follow-up-tool-detail-cuts-precede-env-q1hv`, a problem outside the scope of that review.
+- **Location:** `scanSecretText` and `filterSecretText` in `src/shared/secret-text.ts`, `OutputSanitizer` in `src/shared/output-sanitizer.ts`, and `agentItem` in `src/shared/transcript/turn-events.ts:130`.
+- **Reason:** No protocol doc states the literal-marker rule, so each option waits for the user's choice of that rule.
+
+- **Source:** Review.
+- **Category:** Product bug.
+- **Terms:**
+  - **Literal marker:** the text `[redacted]` in an agent answer, such as a copy of masked command output. The filter shows it as one unit when it arrives whole.
+  - **Answer filter:** the exact-copy filter of agent answer text in the workspace's Durable Object, `OutputSanitizer` in `src/shared/output-sanitizer.ts`.
+  - **Held text:** the end of an unfinished answer that the answer filter keeps back, because it can still start a secret value.
+  - **Active values:** the values that the filter hides at a runner event: secret env values, current values of used org secrets, and live temporary values.
+- **Background:**
+  - The answer filter replaces each exact copy of an active value with `[redacted]`.
+  - When the literal marker starts at a place, and no longer active value starts there, the scanner keeps the marker as one unit. So one delta `[redacted]` stays one marker, also when an active value such as `reda` lies inside it.
+  - Commit `216ed6791` of 8 November 2026 added that rule to the answer filter.
+  - The answer filter holds text back only when an active value can still start with it. It holds no part of the literal marker.
+  - So when two deltas split a literal marker, the first delta masks an active value inside it at once. The second delta then shows the rest of the marker.
+  - On this branch, the private tool-detail filter has its own scanner, `scanHeld` in `worker/chat/tool-detail-scan.ts`. It holds a partial or whole literal marker at the end of its text, so a split marker stays one unit across parts.
+  - `scanSecretText` in `src/shared/secret-text.ts` takes `holdMarker`, and `filterSecretText` passes false for answers. That kept the answer rule of `origin/main` on purpose, by a design call of 18 November 2026.
+  - The chat shows the text of `assistant.completed` in place of the streamed deltas, in `agentItem`. The filter scans the completion text whole, so it shows the marker as one unit.
+  - So the defect shows while the answer streams. It stays when the answer ends without a completion, for example after Stop or a failure.
+  - It needs an agent that writes `[redacted]`, a delta boundary inside it, and an active value inside the marker, such as `red`.
+  - Agents can copy the marker. The secret tools write `[redacted]` into the command output that the agent reads, in `crates/cnd-tools/src/secrets/filter.rs`.
+  - Reproduction with synthetic values: with `reda` active, one delta `x [redacted] y` shows `x [redacted] y`.
+  - Deltas `x [reda` and `cted] y` show `x [[redacted]` and `cted] y`, and nothing is held. The completion `x [redacted] y` then shows `x [redacted] y`.
+  - With `holdMarker` true, `x [reda` shows `x ` and holds `[reda`, and the joined text shows `x [redacted] y`. A delta `see [` shows `see ` and holds `[`.
+  - A read-only probe gave these results on `origin/main` at `221df8ca0` and on branch head `043eebc3c`, with the real `OutputSanitizer` and `scanSecretText`.
+  - No protocol doc states the literal-marker rule. "Secrets that users enter" in `docs/protocol/tokens-and-secrets.md` says that the Durable Object "hides each exact copy of a secret value in the text that screens show". Taken literally, that also hides a value inside a literal marker.
+  - Branch tests keep a literal marker whole across tool-detail parts, in `worker/chat/tool-detail-stream.test.ts` and `worker/chat/tool-detail-retention.test.ts`. No answer test covers a split marker.
+- **Problem:** When an agent's literal `[redacted]` arrives in two deltas, and an active value lies inside it, the streamed answer shows a mask inside the marker. An example is `[[redacted]cted]`. One delta with the same text shows `[redacted]`. So the result depends on where the delta boundary falls.
+- **Impact if no action:** While the answer streams, the chat shows a garbled marker. An answer that ends without a completion keeps it in stored chat. No secret value shows.
+- **Root question:** How should a streamed answer show a literal `[redacted]` that two events split, when an active value lies inside it?
+- **Options:**
+  - **A.** Keep the current behaviour, and state it in the protocol. A literal marker in one event stays one unit, and a split one can show a masked value inside it. This adds a requirement, so it needs the user. Effort: Small.
+  - **B.** Hold a partial literal marker in the answer filter too, as the tool-detail filter does. Pass `holdMarker` true for the delta scan only. Keep the current rule for answer contexts and saved value lists, or saved contexts grow. State the literal-marker rule in the protocol, which needs the user. Cost: a delta that ends with a start of `[redacted]`, such as `[`, shows that end one event later or at the answer's end. Effort: Small.
+  - **C.** Drop the literal-marker rule, so the filter also masks a value inside a whole marker. Every case then follows the exact-copy rule as written. Cost: a marker with a value inside it shows garbled also in one event, in tool details, and in markers that the runner's filter writes. It changes behaviour on `origin/main` and tests of that rule, so it needs the user. Effort: Small.
+- **Left out:**
+  - No change and no protocol text. The protocol stays silent, so a reader cannot tell which result is right.
+  - A fix at completion only. The chat already shows the completion text, so nothing changes for an answer that ends without a completion.
+  - A different marker text. Any marker text can contain a short value, so the same split case remains.
+- **Wider fix:** B. One hold rule for every streamed path removes the difference between tool details and answers.
+- **Previous examples:** Commit `9395f05e9` of 18 November 2026 added the hold for private tool-detail parts, and kept the answer rule on purpose. The check of review finding 3 on the same branch probed a split marker in the tool-detail cleanup.
+- **Related:** `docs/protocol/answer-text-secrets.md` gives the symbolic answer-state rollout and rollback rules. Symbolic held copies keep the current literal-marker behaviour. Each option here must preserve its whole-copy masks and exact longer matches. `worker/chat/output-answer-records.ts` saves the answer contexts of the answer filter, one record for each answer. B here must keep the context rule, or answer contexts grow.
+- **Recommendation:** B. A split marker then shows as one marker, as one event and tool details already do, for a short delay of a trailing `[`.
+- **Action:** ask the user, because no protocol doc states the literal-marker rule, and each option adds or changes that requirement.

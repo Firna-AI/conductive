@@ -34,5 +34,20 @@ export const filesImage = defineScreen({
         'A damaged file or a file with a wrong name still opens: its download gives the member the bytes, as for every other binary file.',
       props: { tab: 'image-not-drawn' },
     },
+    {
+      slug: 'from-answer',
+      title: 'Screenshot from an answer',
+      description:
+        'A press on the picture of the screenshot in the answer of app/file-mentions/answers opened after.png in the temporary tab, at the end of the row. A press on its chip opens the same tab. The tab shows the whole screenshot, with the list of suggestions under the postcode field. The right column keeps Changes, as before the press. On a phone, the screenshot opens as a page of Files.',
+      rationale:
+        'The user chose B of screenshot decision 2 on 18 November 2026: a press on the picture of a Markdown image in an answer opens the file tab, as its link did before. A press opens a file in the temporary tab, from option B of decision 284. The tab shows the picture at the size of the tab, so the answer keeps its picture small.',
+      props: {
+        banner: 'ready-to-merge',
+        conversation: 'file-answer',
+        files: 'changes',
+        tab: 'screenshot',
+      },
+      useCasePaths: ['user-flows/open-a-file-from-an-answer'],
+    },
   ],
 })

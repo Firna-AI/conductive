@@ -1,6 +1,7 @@
 import type { HttpFetch } from '../env'
 import { HttpError, isRecord } from '../http'
 import { BodyBudgetExceeded, readBoundedJson } from '../http/bounded-body'
+import { outboundRequest } from '../http/outbound-request'
 import { ProviderError, providerError } from './errors'
 import { fileResponseBudget } from './file-response'
 import { boatRoute, type BoatRoute } from './routes'
@@ -69,11 +70,10 @@ export class BoatTransport {
     let response: Response
     try {
       response = await this.fetch(
-        new Request(`${BOAT_API}${path}`, {
+        outboundRequest(`${BOAT_API}${path}`, {
           method,
           headers,
           body: body === undefined ? undefined : JSON.stringify(body),
-          redirect: 'manual',
           signal,
         }),
       )
@@ -101,6 +101,7 @@ export class BoatTransport {
         )
       }
       if (!response.ok) throw providerError(response, null)
+      if (signal.aborted) throw new ProviderError('unavailable', 503)
       throw new ProviderError('invalid_response', 502)
     }
     if (!response.ok) throw providerError(response, value)

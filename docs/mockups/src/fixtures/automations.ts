@@ -12,6 +12,7 @@ import {
   repositories,
   type RepositoryKey,
 } from './repositories'
+import { figmaToken, vercelToken } from './secrets'
 import type { SectionKey } from './sections'
 
 export type Weekday =
@@ -101,6 +102,11 @@ export type Automation = {
   /** The first message of each run, before the facts of its trigger. */
   prompt: string
   choice: AgentChoice
+  /**
+   * The secrets that each run workspace starts with as pre-approvals, by
+   * name (automation capabilities decision 1 A). None when absent.
+   */
+  preApproved?: readonly string[]
   /** The automation exists. A new automation is not saved yet. */
   saved: boolean
 }
@@ -120,7 +126,8 @@ export const automationKeys = [
 
 export type AutomationKey = (typeof automationKeys)[number]
 
-const london = 'Europe/London'
+/** The time zone of the automations of Acme. */
+export const london = 'Europe/London'
 
 /**
  * Lena Park, who created the automation that checks the site copy and then
@@ -180,6 +187,7 @@ export const automations: Readonly<Record<AutomationKey, Automation>> = {
     prompt:
       'Review this pull request for bugs, missing tests, and unclear names. Post your findings as one review on the pull request, and push no commits.',
     choice: defaultChoice,
+    preApproved: [figmaToken.name, vercelToken.name],
     saved: true,
   },
   new: {
@@ -214,6 +222,7 @@ export const automations: Readonly<Record<AutomationKey, Automation>> = {
     prompt:
       'Update the npm packages that have new minor or patch versions. Run the tests, and open one pull request with the updates.',
     choice: { agent: 'codex', model: 'GPT-6.1 Sol', effort: 'medium' },
+    preApproved: [vercelToken.name],
     saved: true,
   },
   'copy-review': {
@@ -273,20 +282,4 @@ export function offAfterFailedRuns(automation: Automation): boolean {
     !automation.active &&
     (automation.failedRunsInARow ?? 0) >= failedRunsToTurnOff
   )
-}
-
-/** An automation that Jonas turned off, which only the list shows. */
-export const changelog: Automation = {
-  key: 'changelog',
-  name: 'Update the changelog',
-  repository: 'marketing-site',
-  section: 'general',
-  owner: people.jonas,
-  active: false,
-  timeZone: london,
-  triggers: [{ kind: 'pull-request', event: 'merged' }],
-  prompt:
-    'Add a line for this pull request to the changelog page, and open a pull request with it.',
-  choice: defaultChoice,
-  saved: true,
 }

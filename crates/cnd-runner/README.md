@@ -8,16 +8,20 @@ The `conductive runner` command composes this crate. The installed service runs 
 ## Responsibilities
 
 - Open an authenticated outbound TLS WebSocket and send the version 2 hello with the caller's process-start ID.
+- Name the repository folder in hello, and move the runner to another
+  repository folder of the sandbox on `repository.move`.
 - Save numbered events before sending them. Keep unconfirmed events across restarts.
 - Process welcome, confirmations, gaps, resends, and connection retries.
 - Keep conversation references, instructions, file revisions, turn records, and report receipts.
 - Read and write the existing Node state file format without a migration.
 - Read safe repository files and compare Git changes through private indexes and objects.
+- Stream repository files over private loopback HTTP for HTML file previews.
 - Send bounded file reports and stable listening-port reports.
 - Watch recursive repository changes and repair watches after a restore.
 - Prepare ignored context storage, including linked Git worktrees.
 - Run independent sessions through private Node SDK helper processes.
 - Filter credentials before saving chat output and preparing report labels.
+- Offer complete tool details in hello, and send each accepted long source as private parts.
 - Cancel pending turns, helper requests, and repository reads on Stop or shutdown.
 
 ## What This Crate Does
@@ -35,9 +39,18 @@ The event emitter retries pending agent output and terminal events once.
 A failed output retry permits the turn to continue. A failed start still
 reaches its caller. The caller supplies events after its credential filter.
 This crate bounds tool details, whole turn-file prefixes, file payloads,
-and complete envelopes. The shared credential filter keeps tokens in process
-memory. It holds incomplete streamed prefixes and preserves operational paths
-and file contents. Report labels use the same filter before byte limits.
+and complete envelopes. When the `welcome` accepts complete tool details,
+it sends each complete filtered tool-detail source instead, and the Worker
+keeps the prefix after its own filter. A detail that fits stays one
+`tool.updated`. A longer source goes as consecutive `tool.detail.part`
+events that each fit the envelope. Only the first part carries the tool
+metadata. `EventStore::append_batch` saves all parts of one update in one
+write. The link starts without that support, keeps an accepted support
+across reconnects, and replaces it at each `welcome`. The shared credential filter keeps tokens in process
+memory. It masks each whole token and each run of at least 21 characters of
+a token. It holds streamed text that can still grow into either, and
+preserves operational paths and file contents. Report labels use the same
+filter before byte limits.
 
 The socket accepts HTTPS or WSS endpoints and uses rustls with public roots.
 It repairs lone UTF-16 surrogate escapes to U+FFFD before typed decoding.
@@ -60,10 +73,35 @@ monotonic time for that interval. A command or a busy check resets it.
 The runtime closes the link, shuts down its handlers, and persists before
 returning `RunExit::Swap`. The caller owns activation and process replacement.
 
+A runner whose hello names `repositoryFolder` accepts `repository.move`.
+`RepositoryFolders` accepts only a folder of a `CONDUCTIVE_REPOSITORY_<NAME>_DIR`
+variable that holds `.git`. It refuses any other folder with a
+`repository.move.refused` reply, and the runner keeps its folder. A move to
+the current folder changes nothing. A good move waits until
+`CommandHandler::working` reports no agent work. It checks again each
+second, and report work does not delay it. The runtime then ends the round as
+`RunExit::Relocate`, in the same order as a swap. The caller points the
+configuration at the new folder and branches and starts a new round in the
+same process. Agent processes keep running. The new round prepares the
+context folder, sends a full file report, and names the new folder in hello.
+The stream and the file revisions stay, so the Worker reads the first report
+of the new folder as a full replacement. A later restart or swap reads the
+start variables again, so the Worker sends the move again after that hello.
+
 The repository runs Git child processes with literal paths and cancellation.
 Comparisons preserve the real index and object store. Reads check the opened
 descriptor, reject escaped paths and Git metadata, and preserve binary bytes.
 Diffs use Git representations, including filters, link text, and submodules.
+
+The CLI starts the repository file server on `127.0.0.1:7683`. A failed
+bind warns and leaves the runner available without that capability.
+The hello carries `fileServer: true` while the server listens.
+The [file server protocol](../../docs/protocol/file-server.md) defines its
+private request headers, file access, indexes, types, cache dates, and byte ranges.
+The server shares descriptor checks with file reads. It streams files
+without the file-tab size limit and refuses dot files and links to dot files.
+It reads the current repository folder of the runner at each request, so a
+repository move points it at the new folder with no new bind.
 
 File reports keep separate tree and changes histories. Filtering runs on each
 complete report before splitting. Multipart reports keep whole entries and
@@ -88,13 +126,17 @@ Compose `Arc<dyn Disk>`, `Arc<dyn EventStore>`, `Arc<dyn Clock>`,
 `Arc<dyn Connector>`, and `Arc<dyn RunnerLink>`. Give `DurableStore` a fresh
 random stream ID for a missing file. Call `EventStore::load` once before
 sharing the store. An existing file supplies its saved stream ID.
+Give `SavedRunnerLink` a true file-server flag only after the listener binds.
 Give each `SavedRunnerLink` the process-start ID of the runner start.
 Make one random version 4 UUID when the program starts. Give that ID to
 each later link of the same program. Never save it in the store.
 Give `RunnerCore` the loaded store, link, clock, a `CommandHandler`, and a
 `ReleaseReadiness` port. `NoUpdates` disables swaps for other embeddings.
 Drive `Runner::run` with a Tokio watch channel for shutdown. Handle its
-`RunExit::Shutdown` and `RunExit::Swap` results after graceful cleanup.
+`RunExit::Shutdown`, `RunExit::Swap`, and `RunExit::Relocate` results after
+graceful cleanup. Give `RunnerCore::with_folders` the folders of the
+configuration, and `SavedRunnerLink::with_repository_folder` its folder, to
+accept moves. Without folders, the runtime refuses each move.
 
 Compose `GitRepository` with `GitRunner` and `RepositoryIo` boundaries. Give
 `FileReporter` the loaded file revisions and a shared `ReportFilter`.
@@ -107,9 +149,12 @@ Its startup hook starts watches before the first connection attempt.
 Compose `AgentEngine` with `EngineDependencies` and the loaded state.
 Supply `CredentialFilter` to reports and `FilteredEmitter` around the saving
 emitter. Supply `NodeHelpers`, `GitTurnRepositories`, and `RunnerStartup`.
+`NodeHelpers::workspace_environment` gives each helper, and so each agent
+command, the folder and branch variables of the current round.
 Use the engine as the next handler of `ReportCommandHandler`.
 
-Each session pins its agent, instructions, and branch context.
+Each session pins its agent, instructions, branch context, and the
+repository folder that its instructions name.
 New sessions also name their workspace ID, link, parent, depth, and depth limit.
 The instructions give the cases of when to nest a new workspace.
 The Worker supplies these tree facts through the service environment at runner start.
@@ -143,6 +188,8 @@ cargo build --release --target x86_64-unknown-linux-musl -p cnd-cli
 ```
 
 Unit tests use unimock at the disk, Git, process, watch, scan, and link boundaries.
+File policy unit tests mock file access. HTTP integration tests bind isolated
+loopback listeners and stream real repository files from temporary folders.
 Connection-loop tests hold message processing after receipt and control report completion.
 Timer tests use paused Tokio time. Integration tests use temporary real Git
 repositories, native watches, a controlled disk, and an in-memory endpoint.
@@ -156,7 +203,7 @@ and connection drops. It does not run the Worker.
 
 - [config.rs](src/config.rs): `Configuration::parse` reads supplied service settings.
 - [instructions.rs](src/engine/instructions.rs): `build` adds validated workspace tree facts and the cases of when to nest to new session instructions.
-- [store.rs](src/state/store.rs): `EventStore` defines serialized state operations.
+- [store.rs](src/state/store.rs): `EventStore` defines serialized state operations, and `append_batch` saves all parts of one update in one write.
 - [records.rs](src/state/records.rs): `RunnerState` reads the existing JSON format.
 - [disk.rs](src/disk.rs): `AtomicDisk` replaces the private state file atomically.
 - [connection.rs](src/link/connection.rs): `SavedRunnerLink` sends hello and saved events.
@@ -164,15 +211,23 @@ and connection drops. It does not run the Worker.
 - [emitter.rs](src/emitter.rs): `SavingEmitter` applies the failed-save retry policy.
 - [runtime.rs](src/runtime.rs): `RunnerCore` recovers turns and owns reconnection and shutdown.
 - [update.rs](src/update.rs): `ReleaseReadiness` supplies local release conditions for an idle swap.
+- [relocation.rs](src/relocation.rs): `RepositoryFolders` checks a repository move and refuses unknown folders.
 - [handler.rs](src/engine/handler.rs): `AgentEngine` routes turns and Stop to independent session actors.
 - [service.rs](src/filter/service.rs): `CredentialFilter` filters chat, report labels, and helper warnings.
+- [registry.rs](src/filter/registry.rs): keeps one canonical value per credential and resolves historical matches for retained suffixes.
 - [driver.rs](src/helper/driver.rs): `HelperConnection` correlates requests while agent events stream.
 - [process.rs](src/helper/process.rs): `NodeHelpers` owns private pipes and process-group cleanup.
 - [startup.rs](src/helper/startup.rs): `RunnerStartup` clears stale credentials, warms the SDK, and confirms a welcome.
 - [runner_command.rs](../cnd-cli/src/runner_command.rs): the CLI makes the process-start ID once, and composes the full runner and signal handling.
 - [limits.rs](src/limits.rs): `bound_event` applies serialized chat excerpts.
+- [tool_detail.rs](src/link/tool_detail.rs): `prepare` keeps a fitting tool detail whole, or splits a longer complete source into private parts that each fit the envelope.
 - [commands.rs](src/json/commands.rs): `workspace_message` repairs and validates command JSON.
 - [service.rs](src/repository/service.rs): `Repository` supplies scans, reads, diffs, and checkpoints.
+- [open.rs](src/repository/open.rs): `verified_file` checks containment through the opened descriptor for file tabs and HTTP.
+- [server.rs](src/file_server/server.rs): `FileServer` owns HTTP connections and their shutdown.
+- [policy.rs](src/file_server/policy.rs): `FileRequests` enforces private HTTP requests, paths, and file replies.
+- [range.rs](src/file_server/range.rs): selects byte ranges only when `If-Range` is absent or matches the file's modification date to the second.
+- [files.rs](src/file_server/files.rs): `Files` provides safe repository files and rejects dot files.
 - [setup.rs](src/repository/setup.rs): context setup adds the exclude rule once and creates attachment storage.
 - [files.rs](src/reports/files.rs): `FileReporter` serializes captured report parts and file requests.
 - [handler.rs](src/reports/handler.rs): `ReportCommandHandler` connects reports to commands and durable state.
@@ -184,6 +239,7 @@ and connection drops. It does not run the Worker.
 ### Related Docs
 
 - [Agent runner protocol](../../docs/protocol/agent-runner.md)
+- [File server protocol](../../docs/protocol/file-server.md)
 - [Runner warnings](../../docs/protocol/runner-warnings.md)
 - [Agent instructions](../../docs/protocol/agent-instructions.md)
 - [Sub-workspaces](../../docs/protocol/sub-workspaces.md)

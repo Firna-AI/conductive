@@ -1,11 +1,12 @@
 import type { Attachment } from '../../shared/generated/Attachment'
 import type { SendMessageRequest } from '../../shared/messages'
 import { withSession, type PendingMessage } from './chat-snapshot'
-import type { ChatContext } from './context'
+import { messageOf, type ChatContext } from './context'
+import { shownMessageIds, withLateSends } from './late-sends'
 import { takeReply } from './linked-replies'
 
 /** The title of the notice of a message that did not send. */
-export const sendFailedTitle = "Your message didn't send"
+const sendFailedTitle = "Your message didn't send"
 
 /** A posted message: the session that took it, or the error of the send. */
 export type PostedMessage = { target: string | null } | { error: unknown }
@@ -43,6 +44,32 @@ export async function postMessage(
     dropWaiting(context, sessionId, request.id)
     return { error }
   }
+}
+
+/**
+ * Shows the notice of a failed send, with the client ID of its message. Call
+ * it after the message went back to its draft. The stream can show the
+ * message before the error arrives, because a send with no answer can still
+ * reach the Worker. Then the message did send, so no notice shows and the
+ * draft lets the message go, as `withLateSends` says.
+ */
+export function showSendFailed(
+  context: ChatContext,
+  sessionId: string,
+  messageId: string,
+  error: unknown,
+): void {
+  if (!context.live()) return
+  context.store.update((snapshot) => {
+    const notice = {
+      sessionId,
+      title: sendFailedTitle,
+      message: messageOf(error),
+      messageId,
+    }
+    const next = { ...snapshot, notice }
+    return withLateSends(next, shownMessageIds(next))
+  })
 }
 
 /**

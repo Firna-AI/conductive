@@ -43,6 +43,10 @@ export const workspacePaths = {
     `${workspacePath(orgId, id)}/continue`,
   continueResult: (orgId: string, id: string, continueId: string) =>
     `${workspacePath(orgId, id)}/continue/${encodeURIComponent(continueId)}`,
+  repository: (orgId: string, id: string) =>
+    `${workspacePath(orgId, id)}/repository`,
+  repositoryResult: (orgId: string, id: string, changeId: string) =>
+    `${workspacePath(orgId, id)}/repository/${encodeURIComponent(changeId)}`,
   restore: (orgId: string, id: string) => `${workspacePath(orgId, id)}/restore`,
   restart: (orgId: string, id: string) => `${workspacePath(orgId, id)}/restart`,
 } as const
@@ -88,6 +92,43 @@ export type ContinueWorkspaceResponse =
       localWork: LocalWork
     }
   | { state: 'continued'; workspace: Workspace; eventNumber: number }
+
+/** A repository change moves the workspace to another repository of its org. */
+export interface ChangeRepositoryRequest {
+  /** The repository and the branch that the caller shows. */
+  expectedRepositoryId: string
+  expectedBranch: string
+  /** The new repository. */
+  repositoryId: string
+  /** Change repository in the question: go on with the listed work. */
+  allowWork?: boolean
+}
+
+/** The work of the question before a repository change. */
+export interface RepositoryChangeWork {
+  /** The local work in the old folder, as Continue counts it. */
+  localWork: LocalWork
+  /** The open pull request of the old branch. */
+  pullRequest: { number: number; url: string } | null
+  /** The pushed commits of the old branch that its base branch does not hold. */
+  pushedCommits: number
+  /** The changed files of the new folder, which move to the new branch. */
+  carriedFiles: readonly string[]
+}
+
+export type ChangeRepositoryResponse =
+  | { state: 'pending'; changeId: string }
+  | {
+      state: 'confirmation-required'
+      /** The new repository. */
+      repository: { id: string; fullName: string }
+      /** The old branch, which stays with the old repository. */
+      branch: string
+      /** The latest default branch of the new repository. */
+      baseBranch: string
+      work: RepositoryChangeWork
+    }
+  | { state: 'changed'; workspace: Workspace; eventNumber: number }
 
 /**
  * The reply of Restart: whether the cloud computer downloaded the newest

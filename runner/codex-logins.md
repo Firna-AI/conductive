@@ -6,13 +6,20 @@ credential and environment rules. The
 [model gateway protocol](../docs/protocol/model-gateway.md) states the requirements.
 
 The runner starts `codex app-server` from the `@openai/codex` package that
-`@openai/codex-sdk` installs. `sdk-helper/package.json` pins version 0.167.0.
+`@openai/codex-sdk` installs. `sdk-helper/package.json` pins version 0.170.0.
 Check both routes again at each update of the pinned program.
 
 ## Conversation continuation
 
-Both login kinds use the shared conversation storage. The runner first sends
-`thread/resume` for a saved conversation. If its JSON-RPC error has
+Both login kinds use the shared conversation storage. For a saved
+conversation, the runner first sends `thread/read` with `includeTurns=false`.
+When its `thread.modelProvider` differs from the current provider, the runner
+sends one `thread/fork` for the same thread ID and no `thread/resume`.
+Codex 0.170.0 refuses a resume from `openai` to `conductive` with no error
+data, so only this read finds that change.
+
+When the read fails, gives no provider, or gives the current provider, the
+runner sends `thread/resume`. If its JSON-RPC error has
 `data.type=modelProviderMismatch` or `data.type=modelProviderNotConfigured`,
 the runner sends one `thread/fork` for the same thread ID.
 The fork uses the current provider, model, working folder, developer

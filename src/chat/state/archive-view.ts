@@ -3,6 +3,7 @@ import type { Session } from '../../shared/generated/Session'
 import type { ChatSnapshot } from './chat-snapshot'
 import type { ChatContext } from './context'
 import { hydrate } from './history'
+import { withView } from './saved-view'
 import { withSessionPlaces } from './tab-order'
 import { neighbour, pickActive } from './sessions'
 
@@ -13,7 +14,9 @@ import { neighbour, pickActive } from './sessions'
  * history of any session as a tab, and closes that tab again. The stored
  * session records never change, so a closed session stays closed.
  * `archiveTabs` holds the IDs of these tabs, and the records stay in
- * `sessions` and `history`.
+ * `sessions` and `history`. `archiveClosed` holds the IDs of the sessions
+ * whose tabs closed in the browser, the last closed first, because their
+ * records keep no time of these closes. A reload and a Restore forget both.
  */
 export function isArchived(snapshot: ChatSnapshot): boolean {
   return snapshot.workspace?.state === 'archived'
@@ -68,7 +71,8 @@ export function endedAt(
 /**
  * Shows a session of a read-only workspace as a tab and as the shown
  * session, and loads its stored history. It writes nothing. Each call is a
- * choice of a shown session, which an older address lookup yields to.
+ * choice of a shown session, which an older address lookup yields to. The
+ * session leaves `archiveClosed`, so its next close puts it first again.
  */
 export async function showLocally(
   context: ChatContext,
@@ -81,20 +85,21 @@ export async function showLocally(
   const ids = tabIds(snapshot)
   const opening = !ids.includes(sessionId)
   context.store.update((current) => ({
-    ...current,
-    archiveTabs: opening ? [...ids, sessionId] : ids,
-    view:
-      opening && current.view
+    ...withView(current, (view) =>
+      opening
         ? {
-            ...current.view,
+            ...view,
             tabs: [
-              ...current.view.tabs.filter(
+              ...view.tabs.filter(
                 (tab) => tab.kind !== 'session' || tab.sessionId !== sessionId,
               ),
               { kind: 'session', sessionId },
             ],
           }
-        : current.view,
+        : view,
+    ),
+    archiveTabs: opening ? [...ids, sessionId] : ids,
+    archiveClosed: current.archiveClosed.filter((id) => id !== sessionId),
     activeSessionId: sessionId,
     overlay: { kind: 'none' },
   }))
@@ -103,7 +108,8 @@ export async function showLocally(
 
 /**
  * Closes the tab of a session of a read-only workspace. The next tab shows.
- * It writes nothing, and the session stays in the session history.
+ * It writes nothing, and the session shows first in the session history, as
+ * the last closed.
  */
 export function closeLocally(context: ChatContext, sessionId: string): void {
   context.store.update((snapshot) => {
@@ -114,16 +120,19 @@ export function closeLocally(context: ChatContext, sessionId: string): void {
         ? neighbour(shown, sessionId)
         : snapshot.activeSessionId
     return {
-      ...snapshot,
-      view: snapshot.view && {
-        ...snapshot.view,
-        tabs: snapshot.view.tabs.filter(
+      ...withView(snapshot, (view) => ({
+        ...view,
+        tabs: view.tabs.filter(
           (tab) => tab.kind !== 'session' || tab.sessionId !== sessionId,
         ),
-      },
+      })),
       archiveTabs: shown
         .filter((item) => item.id !== sessionId)
         .map((item) => item.id),
+      archiveClosed: [
+        sessionId,
+        ...snapshot.archiveClosed.filter((id) => id !== sessionId),
+      ],
       activeSessionId: active,
     }
   })
@@ -132,9 +141,10 @@ export function closeLocally(context: ChatContext, sessionId: string): void {
 /**
  * The snapshot after its workspace left the archived state, such as after a
  * Restore. The tabs that changed in the browser only end, so the open
- * sessions show in their saved order again. An overlay that the archive hid,
- * such as a question before a close, ends too. A session that the reader
- * showed from the history gives way to an open one.
+ * sessions show in their saved order again. The order of their closes ends
+ * with them, so the session history keeps its stored order. An overlay that
+ * the archive hid, such as a question before a close, ends too. A session
+ * that the reader showed from the history gives way to an open one.
  */
 export function afterRestore(snapshot: ChatSnapshot): ChatSnapshot {
   const open = snapshot.sessions.some(
@@ -143,6 +153,7 @@ export function afterRestore(snapshot: ChatSnapshot): ChatSnapshot {
   return {
     ...snapshot,
     archiveTabs: null,
+    archiveClosed: [],
     overlay: { kind: 'none' },
     activeSessionId: open
       ? snapshot.activeSessionId

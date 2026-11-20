@@ -13,25 +13,28 @@ const chevron = <ChevronDown aria-hidden className={styles.chevron} size={13} />
  */
 export function PaletteFilters(props: {
   choices: readonly RepositoryChoice[]
-  repositoryId: string | null
+  /**
+   * The repository filter that the results apply, or `null` for all
+   * repositories. The choices hold it, so its menu entry shows checked.
+   */
+  repository: RepositoryChoice | null
   archived: boolean
   onRepository: (repositoryId: string | null) => void
   onArchived: (archived: boolean) => void
 }) {
-  const { choices, repositoryId, archived } = props
-  const chosen = choices.find((choice) => choice.id === repositoryId)
+  const { choices, repository, archived } = props
   const repositories: MenuEntry[] = [
     {
       kind: 'item',
       label: 'All repositories',
-      checked: chosen === undefined,
+      checked: repository === null,
       onSelect: () => props.onRepository(null),
     },
     { kind: 'divider' },
     ...choices.map((choice): MenuEntry => ({
       kind: 'item',
       label: choice.name,
-      checked: choice.id === chosen?.id,
+      checked: choice.id === repository?.id,
       onSelect: () => props.onRepository(choice.id),
     })),
   ]
@@ -63,7 +66,7 @@ export function PaletteFilters(props: {
             tone="plain"
             trailing={chevron}
           >
-            {chosen?.name ?? 'All repositories'}
+            {repository?.name ?? 'All repositories'}
           </ActionButton>
         )}
       />

@@ -142,17 +142,41 @@ export function lateAnswerNote(who: string, outcome: LateOutcome): string {
 }
 
 /**
- * The line of a late Allow whose turn waits for the login of the starter,
+ * The owner of the login that a session keeps, as the line of a late
+ * request names it: the personal login of its starter, or the org login.
+ * The session keeps that login also after it is gone. `name` of a personal
+ * login is "you" for the viewer, and the name of the starter for the
+ * others. `name` of the org login is the name of the org, such as "Acme".
+ */
+export type SessionLoginOwner =
+  { type: 'personal'; name: string } | { type: 'org'; name: string }
+
+/**
+ * Who connects the login of a session again, and what they connect. Only
+ * an admin connects the org login, so that action names no member.
+ */
+function reconnectAction(owner: SessionLoginOwner, agent: string): string {
+  switch (owner.type) {
+    case 'personal':
+      return owner.name === 'you'
+        ? `you connect ${agent}`
+        : `${owner.name} connects ${agent}`
+    case 'org':
+      return `an admin connects ${owner.name}'s ${agent} login`
+  }
+}
+
+/**
+ * The line of a late Allow whose turn waits for the login of the session,
  * which is gone: who answered, and the action that gets the agent going
- * again (item 12 C of the mockups). `starter` is "you" for the viewer.
+ * again (item 12 C of the mockups).
  */
 export function reconnectNote(
   who: string,
-  starter: string,
+  owner: SessionLoginOwner,
   agent: string,
 ): string {
-  const action =
-    starter === 'you' ? `you connect ${agent}` : `${starter} connects ${agent}`
+  const action = reconnectAction(owner, agent)
   return `${who} answered. The agent learns of it when ${action} again.`
 }
 

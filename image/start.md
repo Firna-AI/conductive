@@ -38,8 +38,9 @@ folder names and the variable names. The
 Worker makes and keeps the folder map.
 
 The runner, the terminal launcher, and the terminal's shell server read the
-variables from `/run/ascii-secrets/env.sh`, where Boat puts them. A systemd
-service does not get them in another way. A Boat command process does not
+variables from `/run/ascii-secrets/env.sh`. Boat writes that file, and the
+E2B adapter uses the same path. A systemd service does not get them in
+another way. A Boat command process does not
 get them either. So the install command of a build loads the same file,
 with automatic export, before Bash runs the org's install script. The
 install script then gets the folder variables.
@@ -114,9 +115,10 @@ Each value replaces a saved variable of the same name.
 | `CONDUCTIVE_REPOSITORY` | `CONDUCTIVE_REPOSITORY_DIR` |
 | `CONDUCTIVE_RUNNER_URL` | `CONDUCTIVE_MACHINE_ORIGIN` without a trailing slash, then the path of `MACHINE_PATHS.runner` |
 
-The Worker gives no setting for the computer tools. Boat writes the entry
-of the `computer` server into each sandbox at its start, and the runner
-reads it, as [What it does](../runner/README.md#what-it-does) says.
+The Worker gives no setting for the computer tools. On Boat, the provider
+writes the `computer` server entry at each sandbox start. The E2B template
+supplies no entry. The runner reads the optional entry, as
+[What it does](../runner/README.md#what-it-does) says.
 
 ## Secrets
 

@@ -29,6 +29,7 @@ A workspace you create uses the repository's default branch.
 For a pull request run, its first message names the initial target under **Your work goes to**.
 The pull request bar names the current target.
 After **Continue**, the workspace targets the latest default branch of its repository.
+After a repository change, it targets the latest default branch of the new repository.
 Your draft and its attached files stay unchanged.
 Conductive then shows the pull request's state for that branch.
 
@@ -157,7 +158,9 @@ If the bar says **GitHub state did not load**, select **Try again**.
 GitHub can also need time to update a pull request's merge state.
 Follow the error's retry action when that happens.
 
-If an agent action cannot send, the chat opens with the cause.
+If an agent action cannot send while you stay in the workspace on the same branch, the chat opens with the cause.
+If you leave or change the branch before the failure arrives, your chosen page stays open.
+The cause waits in that session's message box, also if you return before the failure arrives.
 Open a session or connect its required login before trying again.
 The action follows the same login and sharing rules as a message you write.
 

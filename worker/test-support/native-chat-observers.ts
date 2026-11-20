@@ -7,7 +7,9 @@ export type NativeChatObservers = WorkspaceCallbackObservers
 export function nativeChatObservers() {
   const observers: NativeChatObservers = {}
   const published: WorkspaceEventEnvelope[] = []
+  const publications: WorkspaceEventEnvelope[] = []
   const stored: WorkspaceEventEnvelope[] = []
+  let publicationFailure: string | null = null
   const callbacks: WorkspaceCallbackObservers = {
     runnerEventStored: async (...args) => {
       stored.push(structuredClone(args[0]))
@@ -27,6 +29,13 @@ export function nativeChatObservers() {
     observers,
     callbacks,
     observePublications: (chat: WorkspaceChat) => {
+      const publish = chat.browsers.publish.bind(chat.browsers)
+      chat.browsers.publish = (events) => {
+        if (publicationFailure && events.length)
+          throw new Error(publicationFailure)
+        publish(events)
+        publications.push(...structuredClone(events))
+      }
       const change = chat.store.change.bind(chat.store)
       chat.store.change = (id, work, committed) =>
         change(id, work, (batch) => {
@@ -35,6 +44,10 @@ export function nativeChatObservers() {
         })
     },
     takeEvents: async () => published.splice(0),
+    takePublications: async () => publications.splice(0),
+    failPublication: async (message: string | null) => {
+      publicationFailure = message
+    },
     takeStoredEvents: async () => stored.splice(0),
   }
 }

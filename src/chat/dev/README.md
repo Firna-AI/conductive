@@ -18,6 +18,14 @@ sign-in gate.
 The composer lists the files of the Files development page after `@`, and
 a press on a file chip notes what the app opens. The page has no file tab,
 so a press on the chip of a sent attached file also only notes its path.
+The mentions also give a picture reader over the Files development
+fixtures, only while the sandbox runs, as the workspace screen does. So a
+stopped sandbox shows each picture of an answer as its link. The tree also
+holds two screenshots of the context folder, which `dev-pictures.ts`
+draws in the browser, and a third screenshot whose read fails. Each read
+of a picture waits 2.5 seconds, as a read over the network does, so the
+box of its label shows first. `public/hero.png` is a PNG fixture of one
+pixel. The reader uses the fake file routes and runs no cloud computer.
 The page has no workspace screen, so each link of chat text opens a new
 tab, also a local address and a link of the app.
 As in the app, the chat takes a drop of files anywhere on its column for
@@ -51,7 +59,7 @@ The address chooses the state. The first value of each option is the default:
 | `page` | `chat`, `this-mac` (the This Mac section of the account) |
 | `files` | `listed`, `unread` (each end of a turn of the chat says that the cloud computer could not read its changed files) |
 | `speed` | `none` (no fast mode), `fast` (each end of a turn of the chat ends a fast turn at fast speed, which shows nothing new), `limit` (each end says "Standard speed · Fast limit reached"), `older` (each end says "Standard speed · Older cloud computer software"), `other` (each end gives a cause that the app does not name, so it says "Standard speed" alone) |
-| `answer` | `text`, `tables` (each scripted turn answers with three tables: the resources of the machine, bundle sizes with a short row, and a wide table of test runs), `headings` (each scripted turn writes its plan under a heading, and answers with a review under headings at levels 2 to 4) |
+| `answer` | `text`, `tables` (each scripted turn answers with three tables: the resources of the machine, bundle sizes with a short row, and a wide table of test runs), `headings` (each scripted turn writes its plan under a heading, and answers with a review under headings at levels 2 to 4), `prose` (each scripted turn answers with quotes, a rule, emphasis, strikethrough, line breaks, and a bold label whose pair comes in the next part, and its plan holds a quote, a rule, strikethrough, and a line break), `long` (each scripted turn answers with about 100 KiB of Markdown in one part, then ten short parts), `tasks` (each scripted turn writes a plan of two open tasks, and answers with two done tasks and an open task with a note under it), `pictures` (each scripted turn writes a plan with a screenshot, and answers with two screenshots side by side, a link and an image that stay links, and an image in a table cell) |
 
 ## What the page does
 
@@ -104,7 +112,23 @@ Each turn of the page's scripted agent writes its answer in parts, about
 two parts. So each header row shows as text until its separator row comes,
 and the table then grows one row at a time. With `answer=headings`, each
 part is one line too. The plan of each turn then starts with a heading,
-so its message line in the folded work shows the heading.
+so its message line in the folded work shows the heading. With
+`answer=prose`, each part is one line or one blank line too, and the plan
+shows its quote, rule, and line break in the folded work. With
+`answer=long`, each short part after the first is a live update of an
+answer of about 100 KiB. With `answer=tasks`, each part is one line or one
+blank line, and the folded work shows the boxes of the plan in its
+message line, as `app/chat/lists/tasks-work` of the mockups does. With
+`answer=pictures`, the plan holds a screenshot. So its closed message line
+in the folded work shows the link, and the open line shows the picture.
+
+Send parts out of order starts a short turn in the first open session.
+The page sends the second part of its answer first, and the first part
+1.5 seconds later. As in the Worker, the page stores both parts before it
+sends either one. So the chat holds the second part, connects again, and
+gets the first part from the stored history. The answer then reads "The
+parts arrived out of order, and the chat kept their order." The late copy
+of the first part changes nothing, so each part shows once.
 
 The names follow the backend. A new workspace and each new session have no
 name, and show "Untitled". The page fills a name only while it is empty,

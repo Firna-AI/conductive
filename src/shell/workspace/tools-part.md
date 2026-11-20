@@ -50,7 +50,7 @@ tools.
   and the address keeps the tab of the centre. Only a tool address follows
   the new tool.
 - On desktop, a choice of Terminal moves the keyboard focus to the shown
-  terminal, as [The shell](../../../docs/protocol/terminal.md#the-shell)
+  terminal, as [The shell](../../../docs/protocol/terminal-shell.md#the-shell)
   says. The `select` of `useToolSelect` runs for a click on its tab and for
   Go to Terminal of the palette or its key. It asks `terminalFocus` of the
   workspace context, a `TerminalFocus` that each workspace screen keeps.
@@ -126,7 +126,11 @@ tabs, the page in place of the chat, and the kept pages.
   the list loads, and while an open runs. After a failed open, it asks
   again only at the next show of the tab, or at Reload or Try again. A
   port with two open previews shows the oldest one.
-- The bar of the shown tab holds Reload and Open. Reload loads the page
+- The bar of the shown tab holds Reload, Expand, and Open. Expand shows
+  while the page of the tab is in its frame. It shows that kept frame in
+  a large window over the whole app, through `ExpandableFrames`, with no
+  new load. The window closes at Close, at Escape, at a press on the dim
+  layer, and when another tab shows or the page goes. Reload loads the page
   again, or asks again after a failure: it reads the list again after a
   failed read, and else asks for a new open. A failed read of the list
   shows in the tab, with Try again. While the sandbox does

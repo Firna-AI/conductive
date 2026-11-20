@@ -12,18 +12,28 @@ import {
   type Focusable,
 } from './Overlay'
 
+/** The controls of a layer that Tab reaches, in their order. */
+function controlsOf(layer: HTMLElement): HTMLElement[] {
+  return Array.from(
+    layer.querySelectorAll<HTMLElement>(focusableSelector),
+  ).filter((element) => element.tabIndex >= 0)
+}
+
 /**
  * Keeps the Tab key inside a modal layer, as a dialog needs. Tab from the
  * last element goes to the first, and Shift+Tab from the first goes to the
  * last. From the layer itself, which takes the focus on a press outside its
  * controls, Tab goes to the first and Shift+Tab to the last. The layer
  * listens in the capture phase, because a text field stops its key events.
+ * `tabbableOf` gives the elements that Tab moves between, in their order.
+ * By default they are the controls of the layer that can take the focus.
  */
-export function trapTab(event: KeyboardEvent<HTMLElement>): void {
+export function trapTab(
+  event: KeyboardEvent<HTMLElement>,
+  tabbableOf: (layer: HTMLElement) => readonly HTMLElement[] = controlsOf,
+): void {
   if (event.key !== 'Tab') return
-  const tabbable = Array.from(
-    event.currentTarget.querySelectorAll<HTMLElement>(focusableSelector),
-  ).filter((element) => element.tabIndex >= 0)
+  const tabbable = tabbableOf(event.currentTarget)
   const first = tabbable[0]
   const last = tabbable.at(-1)
   if (!first || !last) {

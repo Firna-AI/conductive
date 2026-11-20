@@ -6,6 +6,7 @@
     "tables",
     "lists",
     "headings",
+    "formatting",
     "links",
     "lost-data",
     "lost-updates",
@@ -13,6 +14,7 @@
     "background-limit",
     "standard-speed",
     "masked-paths",
-    "endpoint-models"
+    "endpoint-models",
+    "menu-placement"
   ]
 }

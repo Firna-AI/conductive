@@ -1,0 +1,31 @@
+/* The repository gives up its room before the name of the workspace. */
+.anchor {
+  display: flex;
+  position: relative;
+  overflow: visible;
+  min-width: 0;
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  overflow: hidden;
+  min-width: 0;
+  color: var(--ui-muted);
+}
+
+.name {
+  overflow: hidden;
+  min-width: 0;
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-xs);
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.icon {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+}

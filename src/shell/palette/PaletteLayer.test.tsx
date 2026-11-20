@@ -4,6 +4,7 @@ import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
 import { routes } from '../../app/router'
 import type { Platform } from '../../app/services'
+import screenStyles from '../../terminal/TerminalScreen.module.css'
 import {
   byLabel,
   byRole,
@@ -12,6 +13,7 @@ import {
 } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
+import { layOut } from '../../test-support/layout'
 import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
@@ -125,6 +127,8 @@ describe('the command palette', () => {
     hint: string
     expected: object
   }[])('on $platform, $outcome', async ({ platform, hint, expected }) => {
+    // happy-dom has no layout. The terminal needs a visible host to open.
+    layOut(`.${screenStyles.host}`, { width: 440, height: 389 })
     holdAnimationFrames()
     const server = new FakeApiServer()
     let runs = 0

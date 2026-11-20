@@ -24,7 +24,7 @@ import { FILE_BYTES } from './attachment.test-support'
 
 const execute = promisify(execFile)
 
-it('downloads atomically, rejects the wrong byte count, and clears old temporary files after a restart', async () => {
+it('downloads atomically, rejects the wrong byte count, clears old temporary files after a restart, and leaves a delivered file alone', async () => {
   const directory = await mkdtemp(join(tmpdir(), "attachment's-repository-"))
   const relativePath = await attachmentPath({
     id: 'shell-file',
@@ -125,9 +125,13 @@ it('downloads atomically, rejects the wrong byte count, and clears old temporary
     expect((await lstat(target)).isSymbolicLink()).toBe(false)
     expect(new Uint8Array(await readFile(target))).toEqual(FILE_BYTES)
     expect(await readdir(linkedDirectory)).toEqual([])
-    await writeFile(payload, 'short')
-    await expect(run(command(6))).rejects.toMatchObject({ code: 1 })
-    expect(new Uint8Array(await readFile(target))).toEqual(FILE_BYTES)
+    await writeFile(target, 'edited by the agent')
+    await rm(argumentsPath)
+    expect(await run(command(6))).toMatchObject({ stdout: '', stderr: '' })
+    expect(await readFile(target, 'utf8')).toBe('edited by the agent')
+    await expect(readFile(argumentsPath)).rejects.toMatchObject({
+      code: 'ENOENT',
+    })
     expect(await readdir(parent)).toEqual(['a-file.dat'])
   } finally {
     await rm(directory, { recursive: true, force: true })

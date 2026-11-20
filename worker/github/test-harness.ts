@@ -1,4 +1,4 @@
-import { createHmac } from 'node:crypto'
+import { createHmac, generateKeyPairSync } from 'node:crypto'
 
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import type { AppEnv } from '../env'
@@ -13,32 +13,51 @@ import type { GitHubRefresh, GitHubWorkspace } from './contracts'
 import { activeWorkspace } from './data'
 import { RepositoryGitHub } from './fake-repository'
 import { handleGitHubWebhook, type GitHubWebhookDependencies } from './webhook'
-import { refreshWorkspace } from './refresh'
-import { MemoryWorkspace } from './memory-workspace'
+import { requireFeatureResult } from '../features/result'
+import { record, string } from '../chat/inputs'
+import type { NativeActor } from '../test-support/native-runtime'
+import type { WorkspaceEventEnvelope } from '../chat/workspace-events'
+import {
+  advanceGitHubAlarm,
+  inspectGitHubActor,
+} from './native-fixture.test-support'
 
 export const MACHINE_ORIGIN = 'https://machines.conductive.test'
 export const WEBHOOK_SECRET = 'test-only-webhook-secret'
+const { privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 })
+const APP_PRIVATE_KEY = privateKey
+  .export({ type: 'pkcs1', format: 'pem' })
+  .toString()
 
 export class GitHubTestHarness {
   readonly base: TestHarness
   readonly env: AppEnv
   api: RepositoryGitHub
-  states = new Map<string, MemoryWorkspace>()
+  actors = new Map<string, NativeActor>()
+  private publications = new Map<string, WorkspaceEventEnvelope[]>()
+  private workspaces = new Map<string, GitHubWorkspace>()
   tokens: GitHubWorkspace[] = []
   pushed?: GitHubWebhookDependencies['pushed']
+  repositoryChange?: GitHubWebhookDependencies['repositoryChange']
 
   constructor(base: TestHarness) {
     this.base = base
     this.env = base.env
+    this.env.GITHUB_APP_PRIVATE_KEY = APP_PRIVATE_KEY
     this.api = new RepositoryGitHub(base.github)
+    this.connectGitHub()
   }
 
   async reset() {
     await this.base.reset()
     this.api = new RepositoryGitHub(this.base.github)
-    this.states = new Map()
+    this.actors.clear()
+    this.publications.clear()
+    this.workspaces.clear()
+    this.connectGitHub()
     this.tokens = []
     this.pushed = undefined
+    this.repositoryChange = undefined
   }
 
   async seed(branch = 'changes', workspaceId = 'workspace-1', orgId?: string) {
@@ -69,38 +88,69 @@ export class GitHubTestHarness {
     ])
     const workspace = await activeWorkspace(this.env.DB, workspaceId, org)
     if (!workspace) throw new Error('Missing test workspace')
+    this.workspaces.set(workspace.id, workspace)
     return { session, orgId: org, workspace, userId }
   }
 
-  memory(id: string): MemoryWorkspace {
-    let memory = this.states.get(id)
-    if (!memory) {
-      memory = new MemoryWorkspace(id)
-      this.states.set(id, memory)
-    }
-    return memory
+  private connectGitHub() {
+    this.base.setNativeFetch(async (request) => {
+      if (new URL(request.url).pathname.endsWith('/access_tokens')) {
+        const jwt = request.headers.get('Authorization')?.split(' ')[1] ?? ''
+        const payload = record(
+          JSON.parse(Buffer.from(jwt.split('.')[1], 'base64url').toString()),
+        )
+        const workspace = this.workspaces.get(string(payload.iss))
+        if (!workspace) throw new Error('Unknown GitHub credential workspace')
+        this.tokens.push(workspace)
+        return Response.json({ token: 'server-read-token' })
+      }
+      return new URL(request.url).hostname === 'boat.dev'
+        ? this.base.boat.fetch(request)
+        : this.api.fetch(request)
+    })
   }
 
-  refresh = (workspace: GitHubWorkspace, signal: GitHubRefresh) =>
-    refreshWorkspace(
-      this.env.DB,
-      workspace,
-      signal,
-      this.memory(workspace.id).state,
-      {
-        now: () => TEST_TIME,
-        token: async (target) => {
-          this.tokens.push(target)
-          return 'server-read-token'
+  actor(id: string): NativeActor {
+    let actor = this.actors.get(id)
+    if (!actor) {
+      actor = this.base.native.actor(id, {
+        environment: {
+          GITHUB_APP_PRIVATE_KEY: APP_PRIVATE_KEY,
+          GITHUB_CLIENT_ID: id,
         },
-        fetch: (request) => this.api.fetch(request),
-      },
-    )
+      })
+      this.actors.set(id, actor)
+    }
+    return actor
+  }
 
-  runScheduled(workspaceId: string) {
-    const scheduled = this.memory(workspaceId).scheduled.shift()
-    if (!scheduled) throw new Error('No scheduled GitHub refresh')
-    return this.refresh(scheduled.request.workspace, scheduled.request.signal)
+  inspect(id: string) {
+    let publications = this.publications.get(id)
+    if (!publications) {
+      publications = []
+      this.publications.set(id, publications)
+    }
+    return inspectGitHubActor(this.actor(id), id, publications)
+  }
+
+  async restart(id: string) {
+    await this.inspect(id)
+    await this.actor(id).restart()
+  }
+
+  refresh = async (workspace: GitHubWorkspace, signal: GitHubRefresh) => {
+    this.workspaces.set(workspace.id, workspace)
+    const actor = this.actor(workspace.id)
+    await actor.ready
+    return requireFeatureResult(
+      await actor.rpc.refreshGitHub(workspace, signal),
+    )
+  }
+
+  async runScheduled(workspaceId: string) {
+    return requireFeatureResult(
+      await advanceGitHubAlarm(this.base, this.actor(workspaceId), workspaceId),
+    )
   }
 
   read(path: string, session = '', init: RequestInit = {}) {
@@ -112,7 +162,7 @@ export class GitHubTestHarness {
       {
         now: () => TEST_TIME,
         refresh: this.refresh,
-        stored: (workspace) => this.memory(workspace.id).state.stored(),
+        stored: (workspace) => this.actor(workspace.id).api.github.stored(),
       },
     )
   }
@@ -144,7 +194,12 @@ export class GitHubTestHarness {
         MACHINE_ORIGIN,
         GITHUB_WEBHOOK_SECRET: WEBHOOK_SECRET,
       },
-      { now: () => TEST_TIME, refresh: this.refresh, pushed: this.pushed },
+      {
+        now: () => TEST_TIME,
+        refresh: this.refresh,
+        pushed: this.pushed,
+        repositoryChange: this.repositoryChange,
+      },
     )
   }
 }

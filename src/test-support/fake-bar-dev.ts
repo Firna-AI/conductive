@@ -77,7 +77,7 @@ export function readScenario(query: URLSearchParams): BarScenario {
 const org = FAKE_IDS.org
 const id = FAKE_IDS.workspace
 
-async function read<T>(
+export async function read<T>(
   server: FakeApiServer,
   path: string,
   reader: (value: unknown) => T,
@@ -87,7 +87,7 @@ async function read<T>(
 }
 
 /** The JSON body of a request, as the Worker reads it. */
-function bodyOf(init: RequestInit | undefined) {
+export function bodyOf(init: RequestInit | undefined) {
   return record(JSON.parse(String(init?.body)), 'request')
 }
 

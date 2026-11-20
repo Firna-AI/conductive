@@ -13,6 +13,7 @@ import type { WorkspaceTurnTokens } from '../model-gateway/workspace'
 import { storeRunnerReceipt } from './runner-receipt'
 import { RepairDelivery } from './repair-delivery'
 import { prepareRunnerHello } from './runner-handshake'
+import { RepositoryMoves } from './runner-repository-move'
 import type {
   ChatDependencies,
   ChatCallbackPublisher,
@@ -25,6 +26,7 @@ export class RunnerChannel {
   readonly connections: RunnerConnections
   private readonly delivery: RunnerDelivery
   private readonly repairs: RepairDelivery
+  private readonly moves: RepositoryMoves
   private readonly store: ChatStore
   private readonly dependencies: ChatDependencies
   private readonly publish: (events: readonly WorkspaceEventEnvelope[]) => void
@@ -48,6 +50,7 @@ export class RunnerChannel {
       forRunningTurn,
     )
     this.repairs = new RepairDelivery(store, publish)
+    this.moves = new RepositoryMoves(dependencies)
     this.connections = new RunnerConnections(
       store,
       dependencies,
@@ -116,6 +119,8 @@ export class RunnerChannel {
       active.processStartId = message.processStartId
       active.protocolVersion = welcome.protocolVersion
       active.loginKinds = message.loginKinds
+      active.repositoryFolder = message.repositoryFolder
+      active.fileServer = message.fileServer
       active.ready = welcome.ready
       await this.connections.persist(active)
       this.connections.reportConnected(active)
@@ -125,8 +130,12 @@ export class RunnerChannel {
         protocolVersion: welcome.protocolVersion,
         streamId: message.streamId,
         confirmedThrough: welcome.cursor,
+        ...(message.completeToolDetails === true
+          ? { completeToolDetails: true }
+          : {}),
       })
       await this.repairs.flush(active)
+      await this.moves.check(active)
       await this.dependencies.runnerHello(
         active.workspace.id,
         this.publisher(active.workspace.id),
@@ -157,6 +166,11 @@ export class RunnerChannel {
       progress.stage = 'file_result'
       if (active.id)
         await this.dependencies.receiveFileResult(message.value, active.id)
+      return
+    }
+    if (message.type === 'repository.move.refused') {
+      this.moves.refused(active, message)
+      await this.flush()
       return
     }
     if (message.streamId !== active.streamId)
@@ -213,6 +227,23 @@ export class RunnerChannel {
     for (const envelope of stored)
       await this.dependencies.runnerEventStored(envelope, publish)
     await this.flush()
+  }
+
+  /**
+   * Moves a connected runner to the record folder, as after a repository
+   * change. A runner that cannot move, or that is already there, gets no
+   * command. A failed send closes the connection, and the next hello
+   * moves the runner. Call inside the store queue.
+   */
+  async checkRepository(): Promise<void> {
+    const active = this.connections.current
+    if (!active || active.protocolVersion === null) return
+    if (!(await active.peer.authorize())) return
+    try {
+      await this.moves.check(active)
+    } catch {
+      this.close()
+    }
   }
 
   async flush(): Promise<void> {

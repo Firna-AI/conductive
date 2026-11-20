@@ -5,21 +5,42 @@ use hyper::{
     header::{CONNECTION, COOKIE, HOST, HeaderValue},
 };
 
+use crate::ingress::IngressIdentity;
+use crate::ingress_config::configuration;
+
 pub(crate) const MARK: &str = "x-conductive-relay";
 pub(crate) const PORT: &str = "x-conductive-preview-port";
 
-pub(crate) fn target(headers: &HeaderMap, relay_port: u16) -> Result<u16, StatusCode> {
+pub(crate) fn target(
+    headers: &HeaderMap,
+    relay_port: u16,
+    ingress: &IngressIdentity,
+) -> Result<u16, StatusCode> {
     let host = headers
         .get(HOST)
         .and_then(|h| h.to_str().ok())
         .unwrap_or_default();
     let suffix = format!("-{relay_port}.on.boat.dev");
-    let private = host.strip_suffix(&suffix).is_some_and(|prefix| {
-        !prefix.is_empty()
-            && prefix
-                .bytes()
-                .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == b'-')
-    });
+    let alias = match ingress {
+        IngressIdentity::Current(identity) => {
+            identity.aliases.get(&relay_port.to_string()).copied()
+        }
+        _ => None,
+    };
+    let private = match ingress {
+        IngressIdentity::Missing => host.strip_suffix(&suffix).is_some_and(|prefix| {
+            !prefix.is_empty()
+                && prefix
+                    .bytes()
+                    .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == b'-')
+        }),
+        IngressIdentity::Untrusted => false,
+        IngressIdentity::Current(identity) => alias.is_some_and(|alias| {
+            alias != 0
+                && headers.get_all(HOST).iter().count() == 1
+                && host == format!("{alias}-{}.{}", identity.sandbox_id, identity.domain)
+        }),
+    };
     if !private {
         return Err(StatusCode::FORBIDDEN);
     }
@@ -32,7 +53,9 @@ pub(crate) fn target(headers: &HeaderMap, relay_port: u16) -> Result<u16, Status
         return Err(StatusCode::BAD_REQUEST);
     }
     match value.parse::<u16>() {
-        Ok(port) if port != 0 && port != 7682 && port != relay_port => Ok(port),
+        Ok(port) if port != 0 && port != 7682 && port != relay_port && Some(port) != alias => {
+            Ok(port)
+        }
         _ => Err(StatusCode::BAD_REQUEST),
     }
 }
@@ -70,6 +93,12 @@ pub(crate) fn request(headers: &HeaderMap, port: u16) -> HeaderMap {
             *name == HOST
                 || *name == PORT
                 || *name == "forwarded"
+                || configuration().is_some_and(|config| {
+                    config
+                        .private_headers
+                        .values()
+                        .any(|private| name.as_str() == private)
+                })
                 || name.as_str().starts_with("x-forwarded-")
         })
         .cloned()

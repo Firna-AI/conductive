@@ -28,6 +28,13 @@ change can move the shared parts to the app's shared components.
 - The screen uses the Graphite tokens: the surface, the ink, the monospace
   font at 12px, lines 1.6 times the font size apart, and the status colours
   for the ANSI colours. It follows a change of the colour scheme.
+- A program can change and reset the colours of the screen with OSC
+  sequences, also while a hidden screen waits for its first open. The
+  screen applies them in order when it opens. It answers no colour
+  request from before the open, because a late answer can reach the shell
+  as input. A change of the colour scheme discards the colours that
+  programs set before it. This holds also before the open, so the open
+  applies only the later ones.
 - The screen fits its box, and sends its size at the start and at each
   change. It keeps 2,000 lines of history, as tmux does in the cloud
   computer.
@@ -142,7 +149,7 @@ change can move the shared parts to the app's shared components.
 - `touch` selects the phone layout: 40px controls and the key row.
 - `focusRequest` is optional. A new request moves the keyboard focus to
   the xterm.js screen of the shown terminal. A hidden terminal never takes
-  it. A request waits until that screen exists, also across the read of
+  it. A request waits until that screen opens, also across the read of
   the terminals, the mount, and the connection of the terminal. The screen
   takes it only while the focus is still on the element of the request,
   `from`, or on no element. Then it calls `onFocusDone`, and the owner
@@ -242,9 +249,19 @@ each link that opens, in place of opening it.
   shown terminal from the route and the list.
 - `useTerminalActions.ts`: the open, also from outside the tool, and the
   close, and their failure toasts. `terminalCopy.ts`: the words of the tabs.
-- `TerminalScreen.tsx`: the xterm.js screen, its fit, and the key row.
+- `TerminalScreen.tsx`: the xterm.js screen of one terminal, its
+  connections, its focus request, and the key row.
+- `screenConnection.ts`: `openScreen` makes the xterm.js screen of a
+  terminal, which outlives each connection. The screen opens in its box
+  once the box has a size. `connectScreen` connects one transport to the
+  screen. It fits the screen to its box, or shows the shared size of the
+  bridge.
 - `xtermScreen.ts`: splits the data of xterm.js into the user's input and
   its own replies.
+- `xtermColours.ts`: `keepColoursUntilOpen` keeps the colour changes that
+  xterm.js parses before the screen opens, and gives them to xterm.js at
+  the open. Each change of the xterm.js theme drops those from before it.
+  It relies on private parts of xterm.js, as its comment says.
 - `terminalLinks.ts`: the kind of a link of the terminal, from the shared
   reader `webLink` of `src/markdown/web-links.ts`, the key of a link
   click, and the hint.

@@ -1,4 +1,5 @@
 import { CircleAlert, MessageSquarePlus, Plug, X } from 'lucide-react'
+import { useEffect } from 'react'
 import type { Agent } from '../../shared/generated/Agent'
 import {
   linkedReasonText,
@@ -13,14 +14,23 @@ import { agentNames } from './AgentMark'
 
 /**
  * The notice over the composer when the agent is not connected.
- * Its action opens the Connect form of that agent.
+ * Its action opens the Connect form of that agent. While it shows, its
+ * watch keeps the login status of the account current, so that a read can
+ * show a login that serves, as `ChatRuns.watchMissingLogin` says.
  */
 export function BlockNotice(props: {
   block: SendBlock
   model: string
   onConnectAgent?: (agent: Agent) => void
+  /**
+   * Starts the watch, and returns its end. Keep it stable: a new value ends
+   * the watch and starts another one, which reads the account again.
+   */
+  watch: () => () => void
 }) {
-  const { block, onConnectAgent } = props
+  const { block, onConnectAgent, watch } = props
+  // The watch starts when the notice shows, and ends when it goes.
+  useEffect(() => watch(), [watch])
   const name = agentNames[block.agent]
   return (
     <Notice

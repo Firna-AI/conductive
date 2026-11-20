@@ -8,12 +8,14 @@ import {
   type FailedRepairs,
 } from './failed-repairs'
 import { FilesInvalidation } from './files-invalidation'
+import { RepositoryWatch } from './repository-watch'
 import type { FilesSnapshot } from './files-snapshot'
 import {
   emptySync,
   syncEvent,
   syncFetchedChanges,
   syncFetchedTree,
+  syncMoved,
   type FilesSync,
   type SyncStep,
 } from './files-sync'
@@ -73,6 +75,9 @@ export class WorkspaceFiles {
   private subscription = 0
   private unsubscribe: (() => void) | null = null
   private running = false
+  private readonly repository = new RepositoryWatch()
+  /** A repository change dropped the changes, so the route reads again. */
+  private changesMoved = false
 
   constructor(options: { client: FilesClient; subscribe: FilesSubscribe }) {
     this.client = options.client
@@ -220,6 +225,11 @@ export class WorkspaceFiles {
     const repairs = repairsAfter(this.repairs, envelope)
     const repaired = repairs !== this.repairs
     this.repairs = repairs
+    if (this.repository.moved(envelope.repositoryId)) {
+      this.apply(syncMoved(this.sync), invalidation)
+      this.changesMoved = true
+      return true
+    }
     if (!envelope.event) return repaired
     this.apply(syncEvent(this.sync, envelope.event), invalidation)
     return true
@@ -237,6 +247,12 @@ export class WorkspaceFiles {
     if (this.sync.treeStale && !this.reads.has('tree')) {
       this.read('tree', false)
       change = { ...change, treeError: null }
+    }
+    // The changes of the new folder: the route waits for its first report.
+    if (this.changesMoved) {
+      this.changesMoved = false
+      this.read('changes', false)
+      change = { ...change, changesError: null }
     }
     this.publish({ ...invalidation.apply(this.snapshot), ...change })
   }

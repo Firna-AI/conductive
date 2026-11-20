@@ -24,7 +24,7 @@ export const connectCodexChatGpt = defineScreen({
       description:
         'The user pressed Get a code. The form gives the link to auth.openai.com/codex/device, where the user signs in to ChatGPT and enters the code. Then come the one-time code in large type, the warning never to share it and to enter only a code that this page shows, and that it expires in 15 minutes. A line with a spinner says that the page waits for the sign-in, and Cancel ends it. Once the user enters the code, the form closes, and the row shows Codex connected, as app/account/codex-token shows.',
       rationale:
-        'OpenAI warns that device codes are a common target of phishing, so the words say never to share the code. An attacker can also send a code to enter, so the words say to enter only a code that this page shows, as the user chose on 10 November 2026. The address shows in full, so the user sees that the page is of OpenAI, and can type it on another device. A code works for 15 minutes, the time that the pinned Codex 0.167.0 waits. The page finds the sign-in by itself, so the form has no button to press after it.',
+        'OpenAI warns that device codes are a common target of phishing, so the words say never to share the code. An attacker can also send a code to enter, so the words say to enter only a code that this page shows, as the user chose on 10 November 2026. The address shows in full, so the user sees that the page is of OpenAI, and can type it on another device. A code works for 15 minutes, the time that the pinned Codex 0.170.0 waits. The page finds the sign-in by itself, so the form has no button to press after it.',
       props: { codexSignIn: 'code' },
     },
     {

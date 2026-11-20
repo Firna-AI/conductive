@@ -16,6 +16,7 @@ The address holds the state of the page:
 | `scenario` | `mockup`, the mockup data, or `live`, which replays the updates |
 | `repair`   | `all-files`, `changes`, or both, as `all-files,changes`: the failed repairs of the stored history |
 | `tree`     | `saved`, or `none`: the cloud computer could not read the files, and All files keeps the saved tree, or no tree was saved |
+| `preview`  | What the Preview of an HTML file shows: `page`, the default, or `opening`, `failed`, or `older-software` |
 | `controls` | `off` hides the development controls                         |
 
 For example, `?list=changes&tab=diff:src/app/checkout/AddressForm.tsx`
@@ -23,7 +24,9 @@ draws the diff of the mockups. `public/hero.png` shows a picture of 1 × 1
 pixel in its file tab, with a binary diff at `?tab=diff:public/hero.png`.
 `public/catalog.json` is over the sample read limit, and
 `src/app/checkout/page.tsx` fails to read. `?tab=file:preview:README.md`
-parses its Markdown in the module worker, as the app does. The page has
+parses its Markdown in the module worker, as the app does. The README
+follows the README of the mockups at `app/files/markdown`, with its web
+picture and its task list. The page has
 no workspace screen, so each link of the preview opens a new tab, also a
 link of the app. The fixtures
 serve each file on its content and download routes with one sample limit,
@@ -31,6 +34,18 @@ as the Worker does. Download saves the reply of the fake API, through
 `dev/dev-targets.ts`. The controls play
 the recorded updates, edit the open file, and switch the layout, the
 theme, and the data. The product build does not include the page.
+
+`?tab=file:preview:.context/report.html` shows the page of an HTML report
+with a style file, as `app/files/html` of the mockups draws it.
+`?tab=file:source:.context/report.html` shows its source. The fake API
+serves no preview domain, so the page stands in for the files preview of
+the shell with `dev/dev-html-preview.tsx`: the frame loads the stub page
+`dev/pages/report.html`, which loads `report.css` beside it, from the
+development server. The file routes serve the same texts, so Source shows
+what the frame shows. The controls under "HTML preview" show each state of
+the Preview: the page, the wait of its open, a failed open with Try
+again, and the notice of older software. Reload loads the stub again, and
+Try again shows the page. The product build does not include `dev/pages/`.
 
 The page keeps its open tabs in memory, with no saved view. So each tab
 that a press opens stays open, and the page draws no temporary tab. The

@@ -16,9 +16,12 @@ import {
 } from '../chat/integration/outer-runtime.test-support'
 import {
   OUTER_ORG,
+  OUTER_REPOSITORY,
   OUTER_WORKSPACE,
 } from '../chat/integration/outer-seed.test-support'
 import { RepositoryGitHub } from '../github/fake-repository'
+import { readBuildHistory, readBuildJob } from '../lifecycle/build-data'
+import { readRepositories } from '../lifecycle/settings-data'
 import {
   featureFixture,
   featureState,
@@ -65,6 +68,12 @@ it('shares chat history with GitHub reads, retries pending reads, and refreshes 
     ),
     active.env.DB.prepare(
       "UPDATE repositories SET github_repository_id = 186853002, full_name = 'Codertocat/Hello-World', installation_id = 1 WHERE id = 'chat-repository'",
+    ),
+    // The published image holds the same name, so a push refreshes it. An
+    // image with an older name gets a build instead.
+    active.env.DB.prepare(
+      `UPDATE image_build_jobs SET repositories_json = replace(repositories_json, '"owner/repository"', '"Codertocat/Hello-World"')
+       WHERE build_id IN (SELECT image_build_id FROM org_images WHERE org_id = 'chat-org')`,
     ),
     active.env.DB.prepare(
       "UPDATE workspaces SET branch = 'changes' WHERE id = ?",
@@ -173,4 +182,102 @@ it('shares chat history with GitHub reads, retries pending reads, and refreshes 
       .bind(OUTER_ORG)
       .first('count'),
   ).toBe(1)
+})
+
+it('saves current GitHub repository values and wakes a native image build from a verified rename', async () => {
+  const { privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 })
+  const secret = 'repository-webhook-test-secret'
+  let repositoryReads = 0
+  const active = (fixture = await featureFixture(bundle, {
+    configuration: {
+      GITHUB_APP_PRIVATE_KEY: privateKey
+        .export({ type: 'pkcs1', format: 'pem' })
+        .toString(),
+      GITHUB_WEBHOOK_SECRET: secret,
+    },
+    outbound: (request, fallback) => {
+      const url = new URL(request.url)
+      if (
+        request.method === 'POST' &&
+        url.pathname === '/app/installations/1/access_tokens'
+      )
+        return Promise.resolve(Response.json({ token: 'server-token' }))
+      if (
+        request.method === 'GET' &&
+        url.pathname === '/repositories/186853002'
+      ) {
+        repositoryReads += 1
+        return Promise.resolve(
+          Response.json({
+            full_name: 'Codertocat/Greetings',
+            default_branch: 'trunk',
+          }),
+        )
+      }
+      if (request.method === 'DELETE' && url.pathname === '/installation/token')
+        return Promise.resolve(new Response(null, { status: 204 }))
+      return fallback(request)
+    },
+  }))
+  await active.env.DB.batch([
+    active.env.DB.prepare(
+      "INSERT INTO github_installations (id, account_login, account_type, created_at) VALUES (1, 'Codertocat', 'User', 1)",
+    ),
+    active.env.DB.prepare(
+      "UPDATE repositories SET github_repository_id = 186853002, installation_id = 1 WHERE id = 'chat-repository'",
+    ),
+  ])
+  const body = JSON.stringify({
+    action: 'renamed',
+    repository: {
+      id: 186853002,
+      full_name: 'Codertocat/Intermediate',
+      default_branch: 'payload-branch',
+    },
+    installation: { id: 1 },
+  })
+  const signature = `sha256=${createHmac('sha256', secret).update(body).digest('hex')}`
+  const response = await active.runtime.dispatchFetch(
+    `${OUTER_MACHINE_ORIGIN}${MACHINE_PATHS.githubWebhook}`,
+    {
+      method: 'POST',
+      body,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Hub-Signature-256': signature,
+        'X-GitHub-Event': 'repository',
+        'X-GitHub-Delivery': 'production-repository-rename',
+      },
+    },
+  )
+  expect(response.status).toBe(204)
+  expect(repositoryReads).toBe(2)
+  expect(
+    await active.env.DB.prepare(
+      'SELECT full_name AS fullName, default_branch AS defaultBranch, installation_id AS installationId FROM repositories WHERE id = ?',
+    )
+      .bind(OUTER_REPOSITORY)
+      .first(),
+  ).toEqual({
+    fullName: 'Codertocat/Greetings',
+    defaultBranch: 'trunk',
+    installationId: 1,
+  })
+  await active.actor(`org-image:${OUTER_ORG}`).advanceStartAlarm()
+  const builds = (await readBuildHistory(active.env.DB, OUTER_ORG)).builds
+  expect(builds).toHaveLength(2)
+  const build = await readBuildJob(
+    active.env.DB,
+    OUTER_ORG,
+    builds[0]?.id ?? '',
+  )
+  expect(build.kind).toBe('build')
+  expect(readRepositories(JSON.parse(build.repositoriesJson))).toEqual([
+    {
+      id: OUTER_REPOSITORY,
+      orgId: OUTER_ORG,
+      fullName: 'Codertocat/Greetings',
+      defaultBranch: 'trunk',
+    },
+  ])
 })
