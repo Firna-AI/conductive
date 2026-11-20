@@ -1,3 +1,5 @@
+import type { TextBlock } from '../../../../src/chat/markdown/agent-blocks'
+import { code, p } from './agentText'
 import type { ChatItem } from './conversations'
 
 /**
@@ -69,9 +71,17 @@ export const skillChipDraft =
   '/plans Add a saved address book to the checkout, so a member can pick a past address.'
 
 /** The answer of the agent, after it ran the skill. */
-const skillAnswer: readonly string[] = [
-  'I wrote the plan in `plans/saved-address-book.md`. It has a mockup milestone first, then the address store, the picker in `AddressForm`, and the tests.',
-  'It asks you one decision: keep the addresses for each member, or for each org.',
+const skillAnswer: readonly TextBlock[] = [
+  p(
+    'I wrote the plan in ',
+    code('plans/saved-address-book.md'),
+    '. It has a mockup milestone first, then the address store, the picker in ',
+    code('AddressForm'),
+    ', and the tests.',
+  ),
+  p(
+    'It asks you one decision: keep the addresses for each member, or for each org.',
+  ),
 ]
 
 /**

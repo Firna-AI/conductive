@@ -1,3 +1,5 @@
+import type { TextBlock } from '../../../../src/chat/markdown/agent-blocks'
+import { code, codeBlock, image, p, strong } from './agentText'
 import type { ChatItem } from './conversations'
 import { repositoryFolder } from './fileMentions'
 
@@ -38,15 +40,30 @@ const answerAsk =
  * link while the chat reads no picture. A path in another repository and
  * the code block stay code.
  */
-const fileAnswer = [
-  `I moved the list of suggestions under the postcode field in **@src/app/checkout/AddressForm.tsx**, so it no longer covers the field. The phone view after the fix is in \`${repositoryFolder}/${answerShot}\`.`,
-  'The hook skips a query under three characters in `src/app/checkout/useAddressAutocomplete.ts:19-22`. The billing service checks postcodes in `/home/user/code/billing-service/src/postcode.ts`, which I left as it is.',
-  `The screenshot: ![Postcode field on a phone](${repositoryFolder}/${answerShot}). I took it with:`,
-  {
-    kind: 'code',
-    text: 'npx playwright screenshot --device="iPhone 13" http://localhost:3000/checkout .context/shots/after.png',
-  },
-] as const
+const fileAnswer: readonly TextBlock[] = [
+  p(
+    'I moved the list of suggestions under the postcode field in ',
+    strong('@src/app/checkout/AddressForm.tsx'),
+    ', so it no longer covers the field. The phone view after the fix is in ',
+    code(`${repositoryFolder}/${answerShot}`),
+    '.',
+  ),
+  p(
+    'The hook skips a query under three characters in ',
+    code('src/app/checkout/useAddressAutocomplete.ts:19-22'),
+    '. The billing service checks postcodes in ',
+    code('/home/user/code/billing-service/src/postcode.ts'),
+    ', which I left as it is.',
+  ),
+  p(
+    'The screenshot: ',
+    image('Postcode field on a phone', `${repositoryFolder}/${answerShot}`),
+    '. I took it with:',
+  ),
+  codeBlock(
+    'npx playwright screenshot --device="iPhone 13" http://localhost:3000/checkout .context/shots/after.png',
+  ),
+]
 
 /** A tool call of the agent that finished. */
 function done(
@@ -77,7 +94,14 @@ const workShots: readonly ChatItem[] = [
     kind: 'agent',
     id: 'shots-cause',
     blocks: [
-      `The list of suggestions opens over the postcode field: ![Postcode field before the fix](${repositoryFolder}/${beforeShot}). I'll move it under the field.`,
+      p(
+        'The list of suggestions opens over the postcode field: ',
+        image(
+          'Postcode field before the fix',
+          `${repositoryFolder}/${beforeShot}`,
+        ),
+        ". I'll move it under the field.",
+      ),
     ],
   },
   done('shots-edit', 'edit', 'src/app/checkout/AddressForm.tsx', '+4 −2'),
@@ -86,7 +110,10 @@ const workShots: readonly ChatItem[] = [
     kind: 'agent',
     id: 'shots-check',
     blocks: [
-      `The list now opens under the postcode field: ![Postcode field on a phone](${repositoryFolder}/${answerShot})`,
+      p(
+        'The list now opens under the postcode field: ',
+        image('Postcode field on a phone', `${repositoryFolder}/${answerShot}`),
+      ),
     ],
   },
   done('shots-test', 'run', 'npx playwright test checkout.spec.ts', '3 passed'),
@@ -94,7 +121,9 @@ const workShots: readonly ChatItem[] = [
     kind: 'agent',
     id: 'shots-answer',
     blocks: [
-      'Done. The list of suggestions opens under the postcode field, so the field stays in view. All 3 end-to-end tests pass.',
+      p(
+        'Done. The list of suggestions opens under the postcode field, so the field stays in view. All 3 end-to-end tests pass.',
+      ),
     ],
   },
   {
