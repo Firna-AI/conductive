@@ -76,8 +76,13 @@ the tab at `app/files/html`, on desktop and on a phone.
 - Reload loads the page again. Open opens the page at the path of the file
   in a new browser tab. The Mac app opens it in the default browser, with
   a [browser launch](desktop-app.md#port-previews).
+- On desktop, the header also has Expand, after Reload, while the page
+  shows. Expand shows the page in the large window of a Preview tab, as
+  [Port previews](port-previews.md) says. The window names the file. It
+  also closes when the files preview ends, because Reload and Open then
+  need a new files preview, which only a show of the tab opens.
 - On a phone, the file page also shows the frame, with Reload and Open in
-  its header.
+  its header, and with no Expand.
 - While the frame has the focus, every key goes to the frame, as
   [Where a key goes](keyboard-shortcuts.md#where-a-key-goes) says for the
   frame of a port preview.

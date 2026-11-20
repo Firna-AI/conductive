@@ -1,4 +1,4 @@
-import { Plus, RotateCw } from 'lucide-react'
+import { Maximize2, Plus, RotateCw } from 'lucide-react'
 import {
   detectedServers,
   openPort,
@@ -13,7 +13,12 @@ import { ExternalLink } from '../common/ExternalLink'
 import { ScreenLink } from '../common/ScreenLink'
 import { PortMessage, ServerList } from './PortForm'
 import { PreviewTabs } from './PreviewTabs'
-import { portFormCopy, previewTabLabel, serverDescription } from './previewCopy'
+import {
+  expandedPreviewCopy,
+  portFormCopy,
+  previewTabLabel,
+  serverDescription,
+} from './previewCopy'
 import { StorefrontPage } from './StorefrontPage'
 import styles from './PortPreview.module.css'
 
@@ -55,13 +60,20 @@ function previewTabs(current: number | null) {
 }
 
 /**
- * Reload and Open of the page that shows. Open opens `href` in a new tab:
- * by default the launch address of the open port preview.
+ * Reload, Expand, and Open of the page that shows. Open opens `href` in a
+ * new tab: by default the launch address of the open port preview. Expand
+ * shows only on desktop, with `expandTo`, the screen of the page in its
+ * large window over the whole app.
  */
-export function PreviewActions(props: { href?: string }) {
+export function PreviewActions(props: { href?: string; expandTo?: string }) {
   return (
     <>
       <IconButton icon={RotateCw} label="Reload" />
+      {props.expandTo ? (
+        <ScreenLink asChild to={props.expandTo}>
+          <IconButton icon={Maximize2} label={expandedPreviewCopy.expand} />
+        </ScreenLink>
+      ) : null}
       <span className={styles.link}>
         <ExternalLink href={props.href ?? previewUrl} label="Open in new tab">
           Open

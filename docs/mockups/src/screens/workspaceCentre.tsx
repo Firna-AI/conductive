@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { FilePage } from '../components/files/FilePage'
+import { paths } from '../paths'
 import { PreviewPage } from '../components/tools/PreviewPage'
 import { SandboxPanel } from '../components/workspace/SandboxNotice'
 import { openFile } from './workspaceFileTab'
@@ -16,7 +17,13 @@ import type { WorkspaceState } from './workspaceState'
 export function centreOf(state: WorkspaceState, chat: ReactNode): ReactNode {
   const file = openFile(state)
   if (file) {
-    return <FilePage placeholder={filePlaceholder(state, true)} view={file} />
+    return (
+      <FilePage
+        expandTo={paths.htmlExpanded}
+        placeholder={filePlaceholder(state, true)}
+        view={file}
+      />
+    )
   }
   if (state.tab === 'preview') {
     const panel = panelState(state)
