@@ -128,6 +128,8 @@ export const paths = {
   operatorCodesWaitlistOffPaused: 'app/operator/codes/waitlist-off/paused',
   operatorProviders: 'app/operator/providers',
   operatorProvidersSaved: 'app/operator/providers/saved',
+  operatorSettings: 'app/operator/settings',
+  operatorSettingsSaved: 'app/operator/settings/saved',
   newWorkspace: 'app/new-workspace',
   firstBuildWorkspace: 'app/new-workspace/first-build',
   newWorkspaceFiles: 'app/new-workspace/files',
