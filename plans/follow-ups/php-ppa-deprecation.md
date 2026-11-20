@@ -1,0 +1,60 @@
+# Boat base image holds a deprecated PHP PPA
+
+- **Severity:** High. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-20, from branch `calummoore/fix-apt-update-fails-after-the-php-ppa-nsja`, the fix for the failed `apt-get update` of image builds.
+- **Location:** `terminalPackagesCommand` in `worker/terminal/service.ts`, which runs `apt-get update` over every apt source of an image. `imagePackagesCommand` and `packagesStep` in `worker/lifecycle/image-packages.ts`, which compose the apt part of each build. `BASE_IMAGE` in `src/shared/base-image.ts`, the base image software that members see. The PPA source file `/etc/apt/sources.list.d/ondrej-ubuntu-php-noble.sources` of the Boat base image, outside this repository.
+- **Reason:** The Label option ends the current build failure, and the user asked to keep the PPA work for a separate task.
+
+- **Terms:**
+  - **PPA:** a Personal Package Archive, an apt source on Launchpad that one maintainer publishes. `ondrej/php` publishes PHP packages for Ubuntu.
+  - **Release file:** the signed index of an apt source, here `InRelease`. Its fields include `Origin`, `Label`, `Suite`, and `Codename`.
+  - **Apt part:** the part of each image build that installs `ttyd`, `tmux`, and `gh` with apt. `worker/lifecycle/image-packages.ts` composes it.
+  - **Software image:** the shared Boat image with the app's own software. Each deploy run builds it from the Boat base image, and the run fails when that build fails.
+  - **Label option:** `-o Acquire::AllowReleaseInfoChange::Label=true`. With it, `apt-get update` accepts a changed `Label` in a Release file.
+- **Background:**
+  - Boat org images and the software image derive from the Boat base image, Ubuntu 24.04. Boat owns that base image.
+  - The E2B template starts from `ubuntu:24.04`. Its build inputs add no PHP PPA. An org install script can still add the PPA to an org image.
+  - On 2026-11-20, a read-only check of a Boat workspace sandbox of this repository found the PPA in `/etc/apt/sources.list.d/ondrej-ubuntu-php-noble.sources`.
+  - That sandbox held 13 PHP 8.4.24 packages from the PPA. They are `php-common`, `php8.4-bcmath`, `php8.4-cli`, `php8.4-common`, `php8.4-curl`, `php8.4-gd`, `php8.4-intl`, `php8.4-mbstring`, `php8.4-mysql`, `php8.4-opcache`, `php8.4-readline`, `php8.4-xml`, and `php8.4-zip`. It also held `/usr/local/bin/composer`.
+  - The source file, the PHP packages, and Composer date from 2026-07-31, within minutes of the Docker and Node.js packages. So the Boat base image most likely installs them, not an org install script.
+  - `BASE_IMAGE` in `src/shared/base-image.ts` lists the base image software that members see in the settings. It names no PHP.
+  - The apt part runs `apt-get update` over every apt source of the image, also the PPA. Then it installs only `ttyd`, `tmux`, and `gh`.
+  - On 2026-11-20 at 16:41:28 UTC, the Release file `https://ppa.launchpadcontent.net/ondrej/php/ubuntu/dists/noble/InRelease` changed its `Label` from `PPA for PHP` to `PPA for PHP (deprecated)`. Its `Origin` stayed `LP-PPA-ondrej-php`.
+  - apt compares a new Release file with the one in its cached lists. The Boat base image holds lists with the old `Label`.
+  - With apt 2.8.3 and the old `Label` in the cache, a plain `sudo apt-get update` failed with exit code 100. It printed: `E: Repository 'https://ppa.launchpadcontent.net/ondrej/php/ubuntu noble InRelease' changed its 'Label' value from 'PPA for PHP' to 'PPA for PHP (deprecated)'`
+  - Deploy run 44776951476, at commit `e1706ffc6`, failed when it built the software image.
+  - In the same sandbox, `sudo apt-get -o Acquire::AllowReleaseInfoChange::Label=true update` passed with exit code 0. A second run, with the new `Label` in the cache, also passed.
+  - The fix adds the Label option to `apt-get update` in `terminalPackagesCommand`. apt still checks the signatures. A changed `Origin` or `Codename` still stops the update.
+  - The fix does not disable, replace, or remove the PPA.
+  - The Label option is part of the apt part. So it changes `imagePackagesVersion()` and the app software version. The next build or refresh from each older org image runs the apt part once.
+  - On 2026-11-20, the follow-up orchestrator chose the Label option alone and no change to the PPA. It is a design call, not a decision by the user, Cal.
+  - The user asked to record the PPA work as one deferred item, with no work on it in the fix.
+  - Known: the signed Release file marks the PPA as deprecated. The file gives no end date.
+  - Not known: when the PPA stops serving files or fixes, if ever. Also not known: the replacement that its maintainer supports, and the plans of Boat for its base image. Nobody has checked these facts.
+  - When a source stops serving its Release file, apt reports an error, and `apt-get update` fails. The Label option does not accept that error.
+  - Org install scripts, startup scripts, and agents can also run a plain `apt-get update`. While their cached lists hold the old `Label`, they fail in the same way.
+- **Problem:** The Boat base image holds a PHP apt source that its maintainer now marks as deprecated. Boat org images and the software image derive from it, and the apt part reads each apt source that an image holds. Nobody knows the next change of the source, or the source that should replace it.
+- **Impact if no action:** A later change of the PPA, such as a removal of its files, can again fail each deploy and each build that runs the apt part. The PHP packages of Boat images can also stop getting security fixes without a notice.
+- **Root question:** How do Boat images keep working builds and supported PHP packages now that the PHP PPA is deprecated?
+- **Options:**
+  - **A.** Change nothing more. Keep the Label option and the PPA. It costs nothing now. The next change of the PPA can fail deploys and builds again with no warning. Effort: Small.
+  - **B.** Disable the PPA in the apt part before `apt-get update`. Builds then never read it. The PHP packages then get no updates, and an org script that installs a PHP package from the PPA fails. Members see this change. Effort: Small.
+  - **C.** Ask Boat to replace or drop the PPA in its base image. The app controls neither the answer nor its date. Boat's change can also remove PHP that orgs use. Effort: Small.
+  - **D.** Make a read-only investigation. Change no code and no image. The investigation finds these facts:
+    - the replacement that the PPA maintainer supports, and any announced end date of the PPA
+    - whether that source, or the PHP packages of Ubuntu 24.04 itself, supply the same 13 packages and keep Composer working
+    - whether Boat plans to change its base image
+    - whether org install scripts or startup scripts use the PPA
+
+    Then give the user the package-source decision, with these facts and with A, B, C, E, and F as its options. Effort: Medium.
+  - **E.** Replace the PPA in the apt part with a supported source, such as the one that its maintainer names or the PHP packages of Ubuntu 24.04 itself. The app then owns that source and its signing key in every Boat image. PHP versions can change. Effort: Medium.
+  - **F.** Limit the apt part to the sources that `ttyd`, `tmux`, and `gh` need. A change in any other source, such as this PPA, then cannot fail the apt part. The step must still find the `gh` source of each provider's image, and it must keep the lists of the other sources. The PHP packages stay as they are. Effort: Medium.
+- **Left out:**
+  - Accept every changed release field with `--allow-releaseinfo-change`. It differs from A only in a detail. It also accepts a changed `Origin` or `Codename`, which can mean that a source now serves another archive.
+  - Remove PHP from each Boat image. It fails the goal for orgs that use PHP.
+  - A base image of the app's own on Boat, like the E2B template. B or E gives the same result for this source at a lower cost.
+- **Wider fix:** F. It stops a change in any apt source that the app's packages do not need from failing the apt part.
+- **Previous examples:** None found in the Git history.
+- **Recommendation:** D. The facts that separate the other options are unknown, and D finds them without a change to any image. F best protects the builds from every other apt source, so the decision after D also weighs F.
+- **Action:** fix after merge, apply D, because the Label option ends the current failure, and the user asked to keep the PPA work for a separate task.
