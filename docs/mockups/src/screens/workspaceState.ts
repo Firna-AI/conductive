@@ -50,6 +50,7 @@ export const workspaceStateSchema = {
     'sandbox',
     'startError',
     'conversation',
+    'otherRequest',
     'fold',
     'pictures',
     'banner',
@@ -99,6 +100,13 @@ export const workspaceStateSchema = {
      */
     startError: { enum: startErrorKeys },
     conversation: { enum: conversationKeys },
+    /**
+     * An open request of a session that does not show: none, or the late
+     * request for PROD_DATABASE_URL of the first session, Address
+     * autocomplete. Its tab then shows the needs-input mark, and the
+     * workspace needs input (needs-input decision 2 B).
+     */
+    otherRequest: { enum: ['none', 'first-session'] },
     /**
      * The fold of the work of each ended turn: closed, as it starts, open,
      * or open with its last message line open too. A view runs no script,
@@ -223,6 +231,7 @@ export const readyWorkspace: WorkspaceState = {
   sandbox: 'ready',
   startError: 'failed',
   conversation: 'history',
+  otherRequest: 'none',
   fold: 'closed',
   pictures: 'shown',
   banner: 'ready-to-merge',

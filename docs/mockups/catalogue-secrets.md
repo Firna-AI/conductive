@@ -45,11 +45,15 @@ Capabilities. The
 workspace refused for that reason.
 
 `app/secret-requests` has a request for PROD_DATABASE_URL just above the
-composer, while the tool call waits. Its child pages:
+composer, while the tool call waits, and the needs-input mark on the tab
+of its session. Its child pages:
 
 - `several` has a request for two secrets. Its `mixed` variant has a
   secret of Acme and a name that Acme does not have in one card, and its
-  `mixed-value` variant has the same card with a value.
+  `mixed-value` variant has the same card with a value. Its
+  `waiting-and-late` variant has a request whose call waits and an older
+  late request in the region, the waiting one first, with the region at
+  its height limit.
 - `temporary` has a request for MAPBOX_TOKEN, which Acme does not have,
   with no value yet. A phone shows Deny and Give a value. Its child pages:
   - `value` has a typed value and 15 minutes, and on a phone the sheet
@@ -58,16 +62,19 @@ composer, while the tool call waits. Its child pages:
     name with spaces, so Save as secret is off. Its `mixed-invalid-name`
     variant adds that name to a mixed request, and Save as secret is off
     for every value.
-  - `late` has the request after the turn ended, with no value yet. Its
-    `value` variant has the value that Priya types later, and its `given`
-    variant has her answer for this workspace and the line of the app that
+  - `late` has the late request above the composer after the turn ended,
+    with no value yet. Its `value` variant has the value that Priya types
+    later, and its `given` variant has her answer for this workspace, with
+    the request at its place in its turn, and the line of the app that
     names her.
 - `results` has the run after Allow for this session: its card, with no
   output, and the tool call line of the agent beside it. Its variants have
   the run while it runs, a denied request, a pre-approved secret, and a
   value for 15 minutes.
-- `late` has the request that nobody answered in time, in the chat after
-  its turn. Its child pages:
+- `late` has the request that nobody answered in time. It waits just above
+  the composer after its turn ended, with its late line and its choices.
+  Its child pages have the request at its place in its turn after its
+  answer or its end:
   - `answered` has the late Allow of Priya, the line of the app that names
     her, and the new turn for Cal. Its `ran` variant has the run of that
     turn. Its `fallback` variant has a late Allow whose turn cannot run,
@@ -84,5 +91,9 @@ composer, while the tool call waits. Its child pages:
 - `in-work` has the run in the open fold of its ended turn.
 
 `user-flows/secret-request` goes from the request above the composer,
-through the late request in the chat and the late Allow of Priya, to the
-run of the new turn for Cal.
+through the late request that stays above the composer and the late Allow
+of Priya, to the run of the new turn for Cal.
+
+`app/tabs/needs-input` has the late request in the first session while
+the second session shows, so the tab of the first session shows the
+needs-input mark. [The catalogue](catalogue.md) gives its child pages.

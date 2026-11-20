@@ -17,6 +17,7 @@ import { maskedDiffPath } from '../fixtures/maskedFiles'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import { htmlTab } from './workspaceFileTab'
+import { chatWaits, tabNeedsInput } from './workspaceRequests'
 import type { WorkspaceState } from './workspaceState'
 import { codeTabKey, moreTabs, withCodeMoved } from './workspaceTabRow'
 import { withTemporaryTab } from './workspaceTemporaryTab'
@@ -41,11 +42,12 @@ function oneSession(state: WorkspaceState): boolean {
 /**
  * The states after the second session sent a message to the first session
  * and to Saved carts. Each session tab then leads to the chat of its session
- * at that time.
+ * at that time. The second session shows at another time too, while the
+ * first session holds a request.
  */
 function sessionLinkStates(state: WorkspaceState): boolean {
   return (
-    state.tab === 'later-session' ||
+    (state.tab === 'later-session' && state.otherRequest === 'none') ||
     state.conversation === 'sent-by' ||
     state.composer === 'session-link'
   )
@@ -147,7 +149,8 @@ function previewTabs(state: WorkspaceState): WorkspaceTab[] {
  * messages, the second session can show, and each session tab leads to its
  * chat of that time. The file or the diff that the state opens can be the
  * temporary tab, as `withTemporaryTab` draws it. The Preview tabs show
- * after the code file.
+ * after the code file. Each session tab whose session holds an open
+ * request shows the needs-input mark, as `tabNeedsInput` says.
  */
 export function tabsFor(
   state: WorkspaceState,
@@ -156,7 +159,17 @@ export function tabsFor(
 ): WorkspaceTab[] {
   if (oneSession(state)) {
     const title = workspaceName(state, workspace)
-    return [{ key: 'session', kind: 'session', title, selected: true, running }]
+    const needsInput = chatWaits(state)
+    return [
+      {
+        key: 'session',
+        kind: 'session',
+        title,
+        selected: true,
+        running,
+        needsInput,
+      },
+    ]
   }
   const [first, second] = workspaceSessions
   const linked =
@@ -168,6 +181,8 @@ export function tabsFor(
     firstPath = paths.orgLoginRemoved
   }
   if (sent) firstPath = paths.sentBy
+  // The tab of the first session leads to its request above the composer.
+  if (state.otherRequest === 'first-session') firstPath = paths.secretLate
   const tabs: WorkspaceTab[] = [
     {
       key: first.key,
@@ -260,17 +275,19 @@ export function tabsFor(
       selected: true,
     })
   }
-  const background = state.conversation === 'session-links'
-  const active =
-    (background ? tabs[0] : undefined) ??
+  // The session of the open chat, and the session whose agent works.
+  const chat =
     tabs.find(
       (tab) =>
         tab.kind === 'session' && tab.selected && tab.key !== newSession.key,
-    ) ??
-    tabs[0]
+    ) ?? tabs[0]
+  const background = state.conversation === 'session-links'
+  const active = background ? tabs[0] : chat
   const states = tabs.map((tab) => ({
     ...tab,
     running: tab === active && (running || background),
+    needsInput:
+      tab.kind === 'session' && tabNeedsInput(state, tab.key, tab === chat),
   }))
   return withTemporaryTab(
     state,

@@ -50,6 +50,7 @@ const runningConversations = new Set([
   'sent-by-other',
   'secret-waiting',
   'secret-waiting-two',
+  'secret-waiting-late',
   'secret-running',
   'secret-done',
   'secret-denied',

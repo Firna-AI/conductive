@@ -1,4 +1,3 @@
-import { waitsForAnswer } from '../components/chat/requests'
 import type {
   BarNotice,
   PanelNotice,
@@ -18,6 +17,7 @@ import { startErrors } from '../fixtures/starting'
 import { ownerSuspendedRefusal } from '../fixtures/startRefusals'
 import type { ActivityStatus, OpenableWorkspace } from '../fixtures/workspaces'
 import { isRunning } from './composerFor'
+import { needsInput } from './workspaceRequests'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
 
@@ -43,7 +43,7 @@ export function activityOf(state: WorkspaceState): ActivityStatus {
   // After Restart the workspace starts until the agents are back.
   if (state.overlay === 'restarting') return 'starting'
   if (state.overlay === 'restart-update-failed') return 'starting'
-  if (conversations[state.conversation].some(waitsForAnswer)) return 'input'
+  if (needsInput(state)) return 'input'
   const works = isRunning(state) || otherSessionWorks.has(state.conversation)
   return works ? 'working' : 'ready'
 }

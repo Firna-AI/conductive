@@ -38,6 +38,12 @@ export type WorkspaceTab = {
   selected: boolean
   running?: boolean
   /**
+   * The session of the tab holds an open request, so its tab shows the
+   * needs-input mark in place of its icon or its spinner (needs-input
+   * decision 2 B).
+   */
+  needsInput?: boolean
+  /**
    * The temporary tab, from decision 284: the next press on a file or a
    * diff replaces its file. Only its title changes, in italics.
    */
@@ -75,7 +81,10 @@ function TabContent(props: { tab: WorkspaceTab }) {
   return (
     <>
       {tab.kind === 'session' ? (
-        <SessionTabIcon running={tab.running ?? false} />
+        <SessionTabIcon
+          needsInput={tab.needsInput}
+          running={tab.running ?? false}
+        />
       ) : (
         <Icon aria-hidden className={styles.icon} size={13} />
       )}

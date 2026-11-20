@@ -55,12 +55,14 @@ function RequestFacts(props: { request: Request }) {
  * A request for secrets (secrets decisions 4 and 7): each name, its
  * description, and the reason of the agent, never a value. While the tool
  * call waits, the chat pins it just above the composer. After the time
- * limit, or when the turn ends, it stays at its place in the chat, with
- * the same choices, and it does not fold with the work of the turn. Any
- * member who sees the session answers it. A name that the org does not
- * have asks for a value and how long it lasts: in the card on a computer,
- * and in a sheet that Give a value opens on a phone (item 4 C of the
- * mockups). An ended request shows its answer, or Not answered.
+ * limit, or when the turn ends, it stays there as a late request, with the
+ * same choices and its late line, until a member answers it or it ends
+ * (needs-input decision 1 A). Then it takes its place in its turn, and it
+ * does not fold with the work of the turn. Any member who sees the session
+ * answers it. A name that the org does not have asks for a value and how
+ * long it lasts: in the card on a computer, and in a sheet that Give a
+ * value opens on a phone (item 4 C of the mockups). An ended request shows
+ * its answer, or Not answered.
  */
 export function SecretRequest(props: {
   item: SecretRunItem

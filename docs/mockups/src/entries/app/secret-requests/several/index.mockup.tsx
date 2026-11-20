@@ -37,5 +37,14 @@ export const severalSecrets = defineScreen({
         overlay: 'value-sheet',
       },
     },
+    {
+      slug: 'waiting-and-late',
+      title: 'A waiting request and a late request',
+      description:
+        'Nobody gave a value for MAPBOX_TOKEN in time, so its request turned late when its turn ended. Then Cal asked for the count of the saved addresses, and the tool call of the agent waits for PROD_DATABASE_URL. Both requests wait just above the composer: first the request whose call waits, then the late request with its line, though the late one is older. The region keeps at most 40% of the window, and the requests scroll inside it, also on a phone. The tab of the session shows the needs-input mark.',
+      rationale:
+        'The user chose option A of decision 1 of the needs-input change on 20 November 2026: each open request waits above the composer, also a late one. A design call of the same day: the requests whose calls wait come first, because a waiting call has a time limit and a late request has none. Each group keeps the oldest first. The region keeps its height limit and its inner scroll, also on a phone, so the chat and the composer stay in view.',
+      props: { conversation: 'secret-waiting-late' },
+    },
   ],
 })

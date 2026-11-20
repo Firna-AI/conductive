@@ -123,11 +123,22 @@ one.
   missing name gets its own field, named after it, and one choice of how
   long covers every value. A line says that Allow also allows the secrets
   of the org for this session.
-- After the time limit, or when the turn ends, the request stays at its
-  place in the chat with the same choices, and a line says that the agent
-  stopped waiting and that Allow tells it in a new turn. It never folds
-  with the work of its turn. After an answer, it shows the answer at the
-  end of its names, and its line says who answered and what followed.
+- After the time limit, or when the turn ends, the request becomes a late
+  request. It stays just above the composer with the same choices until a
+  member answers it or it ends, from needs-input decision 1 A, as
+  `app/secret-requests/late` shows. A line says that the agent stopped
+  waiting and that Allow tells it in a new turn. The card keeps its full
+  form and shows no age, and no Stop comes back for it, because its turn
+  ended.
+- The region holds the requests whose calls wait first, then the late
+  requests, each group oldest first, as
+  `app/secret-requests/several/waiting-and-late` shows. A waiting call has
+  a time limit, and a late request has none. The region keeps its height
+  limit of 40% of the window and its inner scroll, also on a phone.
+- After an answer, or when it ends, a late request leaves the region at
+  once and takes its place in its turn. There it never folds with the work
+  of its turn. It shows the answer at the end of its names, and its line
+  says who answered and what followed.
 - A late Allow starts a turn that acts for the sender of the turn that
   asked, under the login rules of that sender. `LateAnswerLine` draws the
   line of the app that starts it, such as "Priya Raman allowed
@@ -147,7 +158,9 @@ one.
   request as Not answered, with no choices, and Needs input ends. Its line
   says what ended it.
 - The header and the workspace list show Needs input while a request waits
-  above the composer or in the chat.
+  above the composer of any session of the workspace. The tab of that
+  session shows the needs-input mark, as [the workspace](design-workspace.md)
+  gives.
 - `SecretRun` draws a run with secrets at its place in the chat, with the
   card of a Mac command: the names, Allowed or Denied, the command that the
   agent says it will run, and what let it run. The Worker gets no output

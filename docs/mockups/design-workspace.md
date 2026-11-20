@@ -3,7 +3,8 @@
 This page belongs to [the design](design.md), which gives the style, the
 layouts, the design tokens, and the shared parts. This page gives the
 messages that wait for the sandbox and the tab row of the centre column,
-with its temporary tab, and the menu of a row of the Files panel. It gives
+with its temporary tab and the needs-input mark of a session tab, and the
+menu of a row of the Files panel. It gives
 the page of an HTML file in its tab. It also gives the number of a
 workspace with Copy link, and the bars of the cloud computer.
 
@@ -42,6 +43,22 @@ workspace with Copy link, and the bars of the cloud computer.
   and its tabs. `TabScroll.module.css` styles a full row, `TabDrag.module.css`
   a drag, and `TabRename.module.css` the rename field. The app shares these
   modules.
+- A session tab whose session holds an open request, a Mac command or a
+  secret request, shows the needs-input mark in place of its icon, from
+  needs-input decision 2 B, as `app/tabs/needs-input` shows. The mark shows
+  the tab that holds the request from every tab, also on a phone, where the
+  row holds only the session tabs.
+  - The mark is the list mark of a workspace that needs input, from
+    `WorkspaceMark`: blue in the accent colour, with its slow pulse. With
+    reduced motion its middle column stays lit in blue and still, as
+    `app/tabs/needs-input/reduced-motion` shows.
+  - It wins over the spinner of a running turn, because the member must
+    act, as `app/tabs/needs-input/running` shows. The shown tab carries it
+    too. It shows on the lifted copy of a drag, as the spinner does.
+  - It takes the 13 px of the chat icon, so the title does not move.
+    Screen readers hear "Needs input" before the title.
+  - `SessionTabIcon` in `src/components/workspace/` draws the chat icon,
+    the spinner, and the mark. The app shares it.
 - The temporary tab, from decisions 284 to 287, is the one file or diff tab
   that the next press on a file or a diff replaces, as
   `app/files/temporary` shows. A press on a row of All files or Changes, or

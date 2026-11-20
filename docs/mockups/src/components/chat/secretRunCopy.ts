@@ -6,8 +6,8 @@ import type {
 
 /**
  * The words of a run with secrets: the request card above the composer,
- * the late request in the chat, and the result at its place. No text holds
- * a value. The app and the mockups take them from here.
+ * the late request, and the result at its place. No text holds a value.
+ * The app and the mockups take them from here.
  */
 export const secretRunWords = {
   deny: 'Deny',
@@ -24,7 +24,7 @@ export const secretRunWords = {
   notAnswered: 'Not answered',
   /** The phone action that opens the sheet of a value. */
   giveValue: 'Give a value',
-  /** The line of a late request: why it is in the chat, and what Allow does. */
+  /** The line of a late request: the agent stopped waiting, and what Allow does. */
   late: 'The agent stopped waiting. Allow tells it in a new turn.',
   /** The spoken name of the region of the requests above the composer. */
   region: 'Requests that wait for an answer',

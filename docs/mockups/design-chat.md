@@ -12,7 +12,9 @@ background work, and the end of a fast turn that ran at standard speed.
 - A session tab shows a muted spinner in place of its chat icon while its
   agent works. The spinner keeps the icon's size and stays visible on
   background tabs and while the user drags a tab. An idle tab shows the
-  chat icon.
+  chat icon. A tab whose session holds an open request shows the
+  needs-input mark instead, also while its agent works, as
+  [the workspace](design-workspace.md) gives.
 - `DraftFileChip` in `src/components/chat/` draws each attached file of a
   draft as a chip at its place in the text of the message box. It is one
   unit of the text, as a file chip is, with the size of a file chip, from
@@ -154,7 +156,8 @@ background work, and the end of a fast turn that ran at standard speed.
     `ToolGroup.tsx` draws the line of both kinds of fold. A Mac command
     card and a lost line fold at their place, with no count and no mark,
     from decision 151. The card of a run with secrets folds in the same way.
-    A late request for secrets is not work, so it stays at its place, as
+    A late request for secrets is not work. It waits above the composer,
+    and after its answer it stays at its place, unfolded, as
     [secrets and Capabilities](design-secrets.md) gives.
   - The open fold lists its steps in order, in the indented list of an
     open run of tool calls: the call line that `ToolGroup` shares, a

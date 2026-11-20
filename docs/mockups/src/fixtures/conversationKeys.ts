@@ -50,6 +50,7 @@ export const conversationKeys = [
   'other-org-link',
   'sent-by',
   'sent-by-other',
+  'second-session',
   'session-links',
   'steered',
   'mac-in-work',

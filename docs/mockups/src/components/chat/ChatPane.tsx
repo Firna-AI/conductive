@@ -14,7 +14,7 @@ import { ChatPictures, type PictureRead } from './chatPictures'
 import { Composer, type ComposerState } from './Composer'
 import { groupItems } from './groupItems'
 import { isPendingCommand, PendingCommand } from './PendingCommand'
-import { isPendingRequest } from './requests'
+import { isPendingRequest, pendingRequests } from './requests'
 import { SecretRequest } from './SecretRequest'
 import { secretRunWords } from './secretRunCopy'
 import { ToolGroup } from './ToolGroup'
@@ -26,11 +26,12 @@ import styles from './ChatPane.module.css'
  * the sandbox starts, its steps show at the end of the transcript. An empty
  * transcript shows `empty` instead. When a turn ends, the work before each
  * of its answers folds into one line. The commands that wait for approval
- * on a Mac, and the requests for secrets while their tool calls wait, leave
- * the transcript and stay in view just above the composer, in a region
- * that scrolls when they need more room. Once answered, a command or a run
- * shows at its place in the transcript. A request that outlived its tool
- * call stays at its place, as a late request.
+ * on a Mac, the requests for secrets while their tool calls wait, and the
+ * late requests for secrets that wait for a member leave the transcript.
+ * They stay in view just above the composer, in a region that scrolls when
+ * they need more room: the requests whose calls wait first, then the late
+ * requests. Once answered, or ended with no answer, a command or a run
+ * shows at its place in the transcript.
  */
 export function ChatPane(props: {
   items: readonly ChatItem[]
@@ -63,7 +64,7 @@ export function ChatPane(props: {
   const mac = useMacApp()
   const empty = props.items.length === 0 && !props.starting
   const composer = !props.problem || !replacesComposer(props.problem)
-  const pending = props.items.filter(isPendingRequest)
+  const pending = pendingRequests(props.items)
   const commands = pending.filter(isPendingCommand)
   const transcript = props.items.filter((item) => !isPendingRequest(item))
   const fold = props.fold ?? 'closed'

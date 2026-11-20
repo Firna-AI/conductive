@@ -56,8 +56,9 @@ export type SecretGrant =
 
 /**
  * A run as the chat shows it. `waiting` waits above the composer, while
- * the tool call waits. `late` stays in the chat after the call ended
- * without an answer. `allowed` gave the values to the command, and
+ * the tool call waits. `late` waits there too after the call ended
+ * without an answer, after the requests whose calls wait, until a member
+ * answers it or it ends. `allowed` gave the values to the command, and
  * `denied` gave none. The tool call of the agent beside the card shows
  * whether the command runs or ran. `late-allowed` and `late-denied`
  * answer a late request. `not-answered` is an open request that ended

@@ -152,6 +152,18 @@ Contract owners:
   The Mac commands doc then says that the row opens the workspace, where
   the marked tab shows the request. My call of 20 November 2026, under
   decision 2 B.
+- The mark of a session tab is the needs-input form of the list mark,
+  drawn by `WorkspaceMark`, and not the column of the header. It takes the
+  13 px of the chat icon, so the title does not move when the mark comes or
+  goes. Reason: needs input then looks the same in the list and in the
+  row. The UI agent's call of 20 November 2026.
+- The mark shows on the lifted copy of a drag, as the spinner does.
+  Screen readers hear "Needs input" before the title of the tab, in the
+  words of the header. The UI agent's call of 20 November 2026.
+- In the region, the late line stays at the end of the late card, as in
+  the chat. When the region is full, the member scrolls it to read the
+  line, as `app/secret-requests/several/waiting-and-late` shows. Reason:
+  the card keeps its full form. The UI agent's call of 20 November 2026.
 
 ## Milestone 1: Mockups
 
@@ -162,25 +174,28 @@ Depends on: none
 The secret request mockups and the tab row of the workspace change, on a
 computer and on a phone.
 
-- [ ] Change `isPendingRequest` in
+- [x] Change `isPendingRequest` in
       `docs/mockups/src/components/chat/requests.ts` so that an open late
       request waits above the composer.
-- [ ] Update `app/secret-requests/late` and
+- [x] Update `app/secret-requests/late` and
       `app/secret-requests/temporary/late`: the late card above the
       composer, with its late line and its choices, on a computer and on a
       phone. The answered, denied, and not-answered pages keep the card at
       its place.
-- [ ] Add a variant of `app/secret-requests/several` with a waiting
+- [x] Add a variant of `app/secret-requests/several` with a waiting
       request and a late request in the region, the waiting one first.
-- [ ] Update step 2 of `user-flows/secret-request`.
-- [ ] Add the needs-input mark to `SessionTabIcon` and show it on a
+- [x] Update step 2 of `user-flows/secret-request`.
+- [x] Add the needs-input mark to `SessionTabIcon` and show it on a
       session tab in a workspace mockup, also while the turn of that tab
       runs, and with reduced motion. Add a phone page.
-- [ ] Update `docs/mockups/catalogue-secrets.md` and each other catalogue
+- [x] Update `docs/mockups/catalogue-secrets.md` and each other catalogue
       page that names the changed pages.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+
+Evidence: `.context/needs-input-at-the-composer/` holds the check logs, the
+smoke-test results, and the screenshots in `mockups/`.
 
 ## Milestone 2: Documentation and protocol
 
@@ -197,6 +212,11 @@ session tab.
       region holds each open request.
 - [ ] Add the needs-input mark of a session tab to
       `docs/protocol/tab-row.md`.
+- [ ] Update `docs/protocol/workspace-marks.md`: the needs-input form of
+      the list mark also shows on a session tab that holds an open
+      request.
+- [ ] Update `plans/follow-ups/mockup-tab-row-clips-shown-tab.md`: `full`
+      is now a child page of `app/tabs`, with the same path, not a variant.
 - [ ] Correct `docs/protocol/desktop-commands.md`: a click on the row opens
       the workspace, and the marked tab shows the request.
 - [ ] Check `docs/protocol/chat-and-events.md` "The work of a turn" and the
@@ -239,7 +259,12 @@ Depends on: 3
       `src/chat/components/tab-row.ts`, from the open secret requests and
       the waiting Mac command requests of its session.
 - [ ] Show the mark in `src/chat/components/SessionTab.tsx` with the
-      `SessionTabIcon` of the mockups.
+      `SessionTabIcon` of the mockups, through its `needsInput` prop, also
+      on the lifted copy of a drag.
+- [ ] Capture the pictures of the marketing site again with
+      `npm run marketing:pictures`. The Mac picture shows the tab of a
+      waiting Mac command, which the mockups now draw with the needs-input
+      mark.
 - [ ] Add DOM tests: a tab of another session shows the mark, the mark
       wins over the spinner, and the mark ends with the answer.
 - [ ] Update `src/chat/README.md` and `src/chat/tab-row.md`.
