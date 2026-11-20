@@ -43,7 +43,7 @@ export const composer = defineComponent({
       roomAbove: roomAboveSchema,
     },
   } as const,
-  slots: ['capabilitiesPanel'],
+  slots: ['capabilitiesPanel', 'pickerPart'],
   props: empty,
   render: ({ roomAbove, capabilities, capabilitiesPanel, ...props }) =>
     withRoomAbove(

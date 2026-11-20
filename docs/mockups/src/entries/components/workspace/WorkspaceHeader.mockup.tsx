@@ -3,6 +3,7 @@ import { WorkspaceHeader } from '../../../components/workspace/WorkspaceHeader'
 import { runWorkspaces } from '../../../fixtures/runWorkspaces'
 import { checkoutAutocomplete } from '../../../fixtures/workspaces'
 import { paths } from '../../../paths'
+import { menuSchema } from '../common/menuEntries'
 import { viewports } from '../common/viewports'
 import {
   activityStatuses,
@@ -21,7 +22,7 @@ export const workspaceHeader = defineComponent({
   slug: 'workspace-header',
   title: 'Workspace header',
   description:
-    'The name, number, repository, owner, and state of the open workspace. The label of the number follows the name and copies the link of the workspace. For an admin of the org, the owner opens the menu that reassigns the workspace. On desktop the header ends with the toggle that hides the right column. On a phone, Back leads the header, and the label of the number leads the line under the name. A run workspace also links to its automation and its pull request. While the software of the cloud computer runs, the state opens a menu with Restart, for every member of an org that is not suspended. Its own page shows Checkout address autocomplete for an admin.',
+    'The name, number, repository, owner, and state of the open workspace. The name is a button that opens the workspace menu of the list below it, and Rename in that menu puts the field in place of the name. The label of the number follows the name and copies the link of the workspace. The repository opens the menu that moves the workspace to another repository. For an admin of the org, the owner opens the menu that reassigns the workspace. On desktop the header ends with the toggle that hides the right column. On a phone, Back leads the header, and the label of the number leads the line under the name. A run workspace also links to its automation and its pull request. While the software of the cloud computer runs, the state opens a menu with Restart, for every member of an org that is not suspended. Its own page shows Checkout address autocomplete for an admin.',
   relatedDocs: ['docs/mockups/design-workspace.md'],
   propSchema: {
     type: 'object',
@@ -50,6 +51,12 @@ export const workspaceHeader = defineComponent({
       rightHidden: { type: 'boolean' },
       /** The automation of a run workspace and the pull request of its run. */
       run: runSourceSchema,
+      /** The menu of the repository is open, or the change runs. */
+      repositoryControl: { enum: ['open', 'changing'] },
+      /** The workspace menu that the name opened. A phone shows a sheet. */
+      menu: menuSchema.properties.entries,
+      /** Rename put the field in place of the name. */
+      renaming: { type: 'boolean' },
     },
   } as const,
   props: {
@@ -65,8 +72,11 @@ export const workspaceHeader = defineComponent({
       canReassign={props.canReassign}
       canRestart={props.canRestart}
       copy={props.copy}
+      menu={props.menu}
       name={props.name}
       ownerOpen={props.ownerOpen}
+      renaming={props.renaming}
+      repositoryControl={props.repositoryControl}
       rightHidden={props.rightHidden}
       run={props.run}
       stateOpen={props.stateOpen}

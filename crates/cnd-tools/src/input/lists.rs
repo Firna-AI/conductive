@@ -74,6 +74,11 @@ pub(super) fn workspaces(fields: &Map<String, Value>) -> Result<AgentListWorkspa
             InputError::Archived,
         ),
         (
+            "removed",
+            fields.get("removed").is_none_or(Value::is_boolean),
+            InputError::Removed,
+        ),
+        (
             "query",
             fields.get("query").is_none_or(Value::is_string),
             InputError::Query,

@@ -1,8 +1,8 @@
 import { defineComponent } from '@mokly/mokly'
 import type { CellAlign } from '../../../../../../src/markdown/table-rows'
 import { MarkdownTable } from '../../../components/common/MarkdownTable'
-import { MessageText } from '../../../components/chat/MessageText'
-import { InlineText } from '../../../components/common/InlineText'
+import { AnswerText } from '../../../components/chat/AnswerText'
+import { PreviewText } from '../../../components/files/PreviewText'
 
 /** The alignments of a column, as `CellAlign` lists them. */
 const alignments = [
@@ -13,12 +13,13 @@ const alignments = [
 ] as const satisfies readonly CellAlign[]
 
 /**
- * How the cells of a table draw their text: with inline code, as the file
- * preview draws it, or as the text of a chat message.
+ * How the cells of a table draw their text: as the preview of a Markdown
+ * file draws it, with its inline code, its marks, and its line breaks, or
+ * as the text of an answer of the chat.
  */
 const cellRenderers = {
-  'inline-code': (text: string) => <InlineText text={text} />,
-  message: (text: string) => <MessageText answer text={text} />,
+  file: (text: string) => <PreviewText text={text} />,
+  message: (text: string) => <AnswerText text={text} />,
 } as const
 
 /**
@@ -47,7 +48,7 @@ export const markdownTable = defineComponent({
       /** The alignment of each column. */
       align: { type: 'array', items: { enum: alignments } },
       /** How the cells draw their text. */
-      cells: { enum: ['inline-code', 'message'] },
+      cells: { enum: ['file', 'message'] },
       /** A class of the call that places the box, such as a margin. */
       className: { type: 'string' },
     },
@@ -59,7 +60,7 @@ export const markdownTable = defineComponent({
       ['`npm run build`', 'Builds the app'],
     ],
     align: [null, null],
-    cells: 'inline-code',
+    cells: 'file',
   },
   render: (props) => (
     <MarkdownTable

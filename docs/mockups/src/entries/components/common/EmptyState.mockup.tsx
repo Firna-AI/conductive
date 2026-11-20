@@ -21,6 +21,8 @@ export const emptyState = defineComponent({
       icon: { enum: iconKeys },
       title: { type: 'string' },
       body: { type: 'string' },
+      /** The message is an error, and screen readers announce it. */
+      alert: { type: 'boolean' },
     },
   } as const,
   slots: ['action'],
@@ -32,6 +34,7 @@ export const emptyState = defineComponent({
   render: (props) => (
     <EmptyState
       action={props.action}
+      alert={props.alert}
       body={props.body}
       icon={icons[props.icon]}
       title={props.title}

@@ -45,6 +45,8 @@ const secretRequestSchema = {
         properties: {
           name: { type: 'string' },
           description: { type: 'string' },
+          /** A new name with other characters than letters and digits. */
+          invalidName: { const: true },
         },
       },
     },
@@ -96,6 +98,27 @@ const secretGrantSchema = {
   ],
 } as const
 
+/** The login that a session keeps, as `KeptLogin`. */
+const keptLoginSchema = {
+  anyOf: [
+    {
+      type: 'object',
+      additionalProperties: false,
+      required: ['type', 'starter'],
+      properties: {
+        type: { const: 'personal' },
+        starter: { enum: personKeys },
+      },
+    },
+    {
+      type: 'object',
+      additionalProperties: false,
+      required: ['type'],
+      properties: { type: { const: 'org' } },
+    },
+  ],
+} as const
+
 /** How a late Allow reached the agent, as the `delivery` of a run. */
 const lateDeliverySchema = {
   anyOf: [
@@ -108,10 +131,10 @@ const lateDeliverySchema = {
     {
       type: 'object',
       additionalProperties: false,
-      required: ['kind', 'starter', 'agent'],
+      required: ['kind', 'login', 'agent'],
       properties: {
         kind: { const: 'reconnect' },
-        starter: { enum: personKeys },
+        login: keptLoginSchema,
         agent: { enum: agentKeys },
       },
     },

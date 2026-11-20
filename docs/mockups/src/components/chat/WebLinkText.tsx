@@ -11,6 +11,7 @@ import { paths } from '../../paths'
 import inline from '../common/InlineText.module.css'
 import { ScreenLink, useOutsideHref } from '../common/ScreenLink'
 import { TextLink, type LinkOpener } from '../common/TextLink'
+import type { ImagePart } from './answerNodes'
 import { useChatWorkspaces } from './chatWorkspaces'
 import { linkContext, linkPage, linkTarget } from './workspaceLinks'
 
@@ -112,6 +113,22 @@ export function WebLinkPart(props: { part: WebAddressLink; answer: boolean }) {
   if (!link || !props.answer) return <TypedText text={source} />
   const shown = labelHidesAddress(label) ? href : label
   return <WebLinkText link={link}>{shown}</WebLinkText>
+}
+
+/**
+ * A Markdown image of an answer whose target is no entry of the tree. No
+ * picture loads from a web address, so the image shows its alt text as a
+ * link to its address, with the rules of a Markdown link: alt text that
+ * reads as an address, or that shows nothing, shows the address in its
+ * place. An image with no valid address shows its alt text only.
+ */
+export function WebImagePart(props: { part: ImagePart }) {
+  const { alt, href } = props.part
+  const link = webLink(href, linkContext)
+  if (!link) return alt
+  return (
+    <WebLinkText link={link}>{labelHidesAddress(alt) ? href : alt}</WebLinkText>
+  )
 }
 
 /**

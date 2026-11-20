@@ -3,8 +3,10 @@ import type { RunnerEvent } from '../../../src/shared/generated/RunnerEvent'
 import type { RunnerEventEnvelope } from '../../../src/shared/generated/RunnerEventEnvelope'
 import type { RunnerToWorkspace } from '../../../src/shared/generated/RunnerToWorkspace'
 import type { RunnerProtocolVersion } from '../../../src/shared/generated/RunnerProtocolVersion'
+import type { RunnerHello } from '../../../src/shared/generated/RunnerHello'
 import { MACHINE_PATHS } from '../../../src/shared/agent-tools'
 import { SocketInbox } from '../adapter-sockets.test-support'
+import { record } from '../inputs'
 import {
   OUTER_MACHINE_ORIGIN,
   type OuterRuntime,
@@ -31,6 +33,7 @@ export class OuterFakeRunner {
   readonly inbox: SocketInbox
   readonly received: unknown[] = []
   readonly closed: Promise<{ code: number; reason: string }>
+  private readonly receipts: SocketInbox
   private eventNumber = 0
   private readonly streamId: string
 
@@ -41,12 +44,16 @@ export class OuterFakeRunner {
       streamId?: string
       eventNumber?: number
       protocolVersion?: RunnerProtocolVersion
+      /** A runner that accepts repository.move names its folder. */
+      repositoryFolder?: string
+      processStartId?: RunnerHello['processStartId']
     } = {},
   ) {
     this.streamId = options.streamId ?? 'outer-runner-stream'
     this.eventNumber = options.eventNumber ?? 0
     this.socket = socket
     this.inbox = new SocketInbox(socket)
+    this.receipts = new SocketInbox(socket)
     socket.addEventListener('message', (event) => {
       if (typeof event.data !== 'string')
         throw new Error('Expected a text socket message.')
@@ -70,7 +77,20 @@ export class OuterFakeRunner {
       protocolVersion: options.protocolVersion ?? 2,
       workspaceId,
       streamId: this.streamId,
+      ...(options.repositoryFolder
+        ? { repositoryFolder: options.repositoryFolder }
+        : {}),
+      ...(options.processStartId === undefined
+        ? {}
+        : { processStartId: options.processStartId }),
     })
+  }
+
+  async waitForTurn(turnId: string): Promise<Record<string, unknown>> {
+    for (;;) {
+      const message = record(await this.receipts.next())
+      if (message.type === 'turn' && message.turnId === turnId) return message
+    }
   }
 
   emit(event: RunnerEvent): RunnerEventEnvelope {

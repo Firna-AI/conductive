@@ -141,6 +141,14 @@ function accessOf(state: CapabilityState): {
   }
 }
 
+/**
+ * Whether the member gets the agent actions: with write access, or when
+ * the access read failed. A read that has not answered offers none.
+ */
+export function offersAgentActions(state: CapabilityState): boolean {
+  return accessOf(state).access !== 'read'
+}
+
 function appActionOf(outcome: BarOutcome | null): BarFacts['appAction'] {
   switch (outcome?.kind) {
     case 'merging':

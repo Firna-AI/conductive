@@ -7,7 +7,7 @@ export const localWorkList = defineComponent({
   slug: 'local-work-list',
   title: 'Local work list',
   description:
-    'The local work that the question of Continue lists: each changed file that is not committed, and the commits that no remote branch holds, on every local branch. The app and the mockups share it. Its own page shows two changed files and one commit.',
+    'The local work that the question of Continue lists: each changed file that is not committed, and the commits that no remote branch holds, on every local branch, and the rows that a caller adds after them, such as a pull request. The app and the mockups share it. Its own page shows two changed files and one commit.',
   relatedDocs: ['docs/mockups/design-bar.md'],
   propSchema: {
     type: 'object',
@@ -18,11 +18,20 @@ export const localWorkList = defineComponent({
       files: { type: 'array', items: { type: 'string' } },
       /** The commits that no remote branch holds. */
       commits: { type: 'integer', minimum: 0 },
+      /** The name of the list, such as the work that stays behind. */
+      label: { type: 'string' },
     },
   } as const,
+  slots: ['children'],
   props: { files: unpushedWork.files, commits: unpushedWork.commits },
   render: (props) => (
-    <LocalWorkList commits={props.commits} files={props.files} />
+    <LocalWorkList
+      commits={props.commits}
+      files={props.files}
+      label={props.label}
+    >
+      {props.children}
+    </LocalWorkList>
   ),
   variants: [
     {

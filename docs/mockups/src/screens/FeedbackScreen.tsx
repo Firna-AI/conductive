@@ -1,14 +1,19 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { offlineMessage } from '../components/common/LoadFailure'
 import { successToast } from '../entries/components/common/SuccessToast.mockup'
-import { sentToastTitle } from '../components/feedback/feedbackCopy'
+import {
+  sendLimitBody,
+  sentToastTitle,
+} from '../components/feedback/feedbackCopy'
 import { feedbackDialog } from '../entries/components/feedback/FeedbackDialog.mockup'
 import type { FeedbackProblem } from '../components/feedback/FeedbackDialog'
 import type { FeedbackReply } from '../components/feedback/FeedbackReply'
 import {
   feedbackMessage,
+  feedbackRetryAt,
   feedbackScreenshot,
   type FeedbackScreenshot,
+  feedbackTimeZone,
   largeCapture,
   longFeedbackMessage,
   longFeedbackScreenshots,
@@ -37,10 +42,11 @@ export const feedbackSchema = {
      */
     reply: { enum: ['email', 'none', 'loading', 'failed'] },
     /**
-     * The dialog before a send, while the send runs, or after the send
-     * failed. After a send went, the dialog closes and the toast shows.
+     * The dialog before a send, while the send runs, after the send
+     * failed, or after the server refused a send over the limit of an hour.
+     * After a send went, the dialog closes and the toast shows.
      */
-    send: { enum: ['draft', 'sending', 'failed', 'sent'] },
+    send: { enum: ['draft', 'sending', 'failed', 'over-limit', 'sent'] },
     /**
      * A file that the dialog did not add: a capture that passes the limit of
      * the screenshots of the message, or a photo of another type.
@@ -85,11 +91,18 @@ const replies: Readonly<Record<FeedbackState['reply'], FeedbackReply>> = {
 
 /**
  * The notice of a state: a failed send gives the message of the server,
- * such as when the app cannot reach it, and a refusal names its file.
+ * such as when the app cannot reach it, a send over the limit gives the
+ * time when Cal can try again, and a refusal names its file.
  */
 function problemOf(state: FeedbackState): FeedbackProblem | undefined {
   if (state.send === 'failed') {
     return { kind: 'not-sent', message: offlineMessage }
+  }
+  if (state.send === 'over-limit') {
+    return {
+      kind: 'not-sent',
+      message: sendLimitBody(feedbackRetryAt, feedbackTimeZone),
+    }
   }
   switch (state.refusal) {
     case 'none':

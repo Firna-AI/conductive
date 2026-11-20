@@ -17,4 +17,15 @@ export const replaceSecret = defineScreen({
   render: (props, context) => (
     <OrgSettingsScreen state={props} viewport={context.viewport} />
   ),
+  variants: [
+    {
+      slug: 'invalid-name',
+      title: 'Replace a secret with an older name',
+      description:
+        'Acme also has Cloudflare (read-only), which Jonas added before new names took only letters, digits, and underscores. Its row is first in the list and shows like the other rows. Cal chose Replace on it. The form holds its description and an empty field of a new value, as for every secret. It has no name field and no error, so the name stays as it is.',
+      rationale:
+        'Cal chose on 17 November 2026 that existing names keep working, with no rename. Agents still run commands with this secret. The name rule covers only Add secret and Save as secret, so Replace checks no name and changes only the description and the value.',
+      props: { secrets: 'replace-older' },
+    },
+  ],
 })

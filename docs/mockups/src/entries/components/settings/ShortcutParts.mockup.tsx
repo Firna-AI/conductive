@@ -12,6 +12,7 @@ import {
 } from '../../../components/settings/ShortcutParts'
 import { actionButton, iconButton } from '../common/actions.mockup'
 import { keyChips } from '../common/KeyChips.mockup'
+import { shortcutSchema } from '../common/shortcutSchemas'
 import {
   chromePages,
   heldSchema,
@@ -20,12 +21,11 @@ import {
   recordingLabel,
   refusedSchema,
   refusedUndo,
-  shortcutSchema,
   tabBrowsers,
 } from './shortcutRowSchemas'
 
 const docs = ['docs/mockups/design.md']
-const [shortcut = '⌥⌘/'] = recordingKeys
+const [shortcut = ['⌥', '⌘', '/']] = recordingKeys
 /** The start of the closed object schema of each part. */
 const closedObject = { type: 'object', additionalProperties: false } as const
 
@@ -55,7 +55,8 @@ export const rowMessage = defineComponent({
       slots: {
         children: (
           <>
-            <keyChips.Component shortcut="⇧⌘P" /> wasn&apos;t saved. Try again.
+            <keyChips.Component shortcut={['⇧', '⌘', 'P']} /> wasn&apos;t saved.
+            Try again.
           </>
         ),
       },
@@ -110,7 +111,7 @@ export const keyButton = defineComponent({
       slug: 'kept',
       title: 'Kept by the browser',
       description: 'A key that Chrome keeps in a normal tab: dimmed.',
-      props: { shortcut: '⌘W', label: 'Close tab', keptBy: 'Chrome' },
+      props: { shortcut: ['⌘', 'W'], label: 'Close tab', keptBy: 'Chrome' },
     },
   ],
 })
@@ -222,7 +223,7 @@ export const refusedLine = defineComponent({
       slug: 'fixed',
       title: 'Fixed shortcut',
       description: 'A shortcut that several fixed rows hold: it is fixed.',
-      props: { refused: { shortcut: 'Space' } },
+      props: { refused: { shortcut: ['Space'] } },
     },
   ],
 })
@@ -264,7 +265,7 @@ export const rowLayout = defineComponent({
         note: (
           <actionButton.Component tone="plain">Reset</actionButton.Component>
         ),
-        keys: <keyChips.Component shortcut="⇧⌘P" />,
+        keys: <keyChips.Component shortcut={['⇧', '⌘', 'P']} />,
         end: <iconButton.Component icon="plus" label="Add shortcut" quiet />,
         message: (
           <rowMessage.Component tone="danger">

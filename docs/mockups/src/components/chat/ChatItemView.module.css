@@ -60,6 +60,32 @@
 }
 
 /*
+ * A quote and a rule of an answer. Their look comes from
+ * MarkdownProse.module.css. A quote lays out its blocks as the answer
+ * does, and a heading in it stands as far from the block above it. A rule
+ * has 16px above and below it, the gap of the answer and its own 8px, as
+ * a rule of the file preview has.
+ */
+.agent blockquote {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+}
+
+.agent blockquote > * + :is(h1, h2) {
+  margin-top: 12px;
+}
+
+.agent blockquote > * + :is(h3, h4, h5, h6) {
+  margin-top: 8px;
+}
+
+.agent hr {
+  margin: 8px 0;
+}
+
+/*
  * A heading inside a list item. A list item has no gap, so a heading after
  * another block of the item takes the whole space above it: 20px for level
  * 1 or 2, and 16px for a smaller heading. The block under it stands as far
@@ -74,7 +100,7 @@
   margin-top: 16px;
 }
 
-.agent li > :is(h1, h2, h3, h4, h5, h6) + :is(p, pre, div, ol, ul) {
+.agent li > :is(h1, h2, h3, h4, h5, h6) + :is(p, pre, div, ol, ul, blockquote) {
   margin-top: 8px;
 }
 
@@ -98,16 +124,19 @@
 }
 
 /*
- * A block after the text of a list item, such as a second paragraph or a
- * table. The rules name the blocks of an item, so a chip or code in the
- * text of an item keeps its place in the line.
+ * A block after the text of a list item, such as a second paragraph, a
+ * table, or a quote. The rules name the blocks of an item, so a chip or
+ * code in the text of an item keeps its place in the line.
  */
-.agent li > :is(p, pre, div, ol, ul) + :is(p, pre, div) {
+.agent
+  li
+  > :is(p, pre, div, ol, ul, blockquote)
+  + :is(p, pre, div, blockquote) {
   margin-top: 8px;
 }
 
 /* A list under the text of its item, as close as the next item. */
-.agent li > :is(p, pre, div, ol, ul) + :is(ol, ul) {
+.agent li > :is(p, pre, div, ol, ul, blockquote) + :is(ol, ul) {
   margin-top: 2px;
 }
 

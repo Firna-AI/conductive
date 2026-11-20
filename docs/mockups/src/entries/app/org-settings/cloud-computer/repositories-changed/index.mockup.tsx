@@ -15,8 +15,8 @@ const noButton =
 export const repositoriesChanged = defineScreen({
   title: 'Repositories changed',
   description:
-    'Cal added acme/admin-dashboard on the Repositories tab, and the add started a build. The notice under the intro says that acme/admin-dashboard is ready after the build, with a spinner and no button. The card shows the build that runs, with its log. The install script did not change, so its notice does not show.',
-  rationale: `${decision} The user chose option C of decision 240 on the same day, so an added repository starts a build by itself. The notice shows once the org has a cloud computer, because the notices of the first build cover the time before it. ${noButton} New workspace links an admin here while the build of a waiting repository runs.`,
+    'Cal added acme/admin-dashboard on the Repositories tab and selected Done, which started a build. The notice under the intro says that acme/admin-dashboard is ready after the build, with a spinner and no button. The card shows the build that runs, with its log. The install script did not change, so its notice does not show.',
+  rationale: `${decision} The user chose option C of decision 240 on the same day, so an added repository starts a build by itself. The user asked on 18 November 2026, decision 295, that the build start at Done of the Repositories tab, not at each add. The notice shows once the org has a cloud computer, because the notices of the first build cover the time before it. ${noButton} New workspace links an admin here while the build of a waiting repository runs.`,
   relatedDocs: [],
   propSchema: orgSettingsSchema,
   props: {

@@ -87,18 +87,52 @@ const codeSchema = {
   },
 } as const
 
+/** A rule of a message, as `MessageRule`: a line between two of its parts. */
+const ruleSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['kind'],
+  properties: { kind: { const: 'rule' } },
+} as const
+
+/** The blocks of a message that hold no other block. */
+const flatBlocks = [
+  { type: 'string' },
+  headingSchema,
+  tableSchema,
+  listSchema,
+  codeSchema,
+  ruleSchema,
+] as const
+
+/** A quote of a message whose blocks take the schema `block`. */
+function quoteOf<const Block>(block: Block) {
+  return {
+    type: 'object',
+    additionalProperties: false,
+    required: ['kind', 'blocks'],
+    properties: {
+      kind: { const: 'quote' },
+      blocks: { type: 'array', items: block },
+    },
+  } as const
+}
+
+/**
+ * A quote of a message, as `MessageQuote`, with the blocks that it holds. A
+ * schema has no reference to itself, so it takes quotes two levels deep.
+ * The replies of the mockups quote one level.
+ */
+const quoteSchema = quoteOf({
+  anyOf: [...flatBlocks, quoteOf({ anyOf: flatBlocks })],
+})
+
 /**
  * A block of a message of the agent, as `AgentBlock`: a paragraph, a
- * heading, a table, a list, or a code block.
+ * heading, a table, a list, a code block, a quote, or a rule.
  */
 export const agentBlockSchema = {
-  anyOf: [
-    { type: 'string' },
-    headingSchema,
-    tableSchema,
-    listSchema,
-    codeSchema,
-  ],
+  anyOf: [...flatBlocks, quoteSchema],
 } as const
 
 /** The kinds of an attached file, as `Attachment` lists them. */

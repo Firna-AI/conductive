@@ -69,6 +69,8 @@ export const agentItemSchema = {
     kind: { const: 'agent' },
     id: { type: 'string', minLength: 1 },
     blocks: { type: 'array', items: agentBlockSchema },
+    /** The agent still writes it, so an open mark closes at its end. */
+    live: { const: true },
   },
 } as const
 
@@ -202,6 +204,20 @@ const continuedItem = {
   },
 } as const
 
+/** The note of a repository change: who changed it, and the new branch. */
+const repositoryChangedItem = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['kind', 'id', 'by', 'repository', 'branch'],
+  properties: {
+    kind: { const: 'repository-changed' },
+    id: { type: 'string', minLength: 1 },
+    by: { enum: personKeys },
+    repository: { type: 'string' },
+    branch: { type: 'string' },
+  },
+} as const
+
 /** An item of a chat transcript as JSON, as `ChatItem`. */
 export const chatItemSchema = {
   anyOf: [
@@ -216,6 +232,7 @@ export const chatItemSchema = {
     lostItem,
     linkedItem,
     continuedItem,
+    repositoryChangedItem,
     secretRunItemSchema,
     lateAnswerItemSchema,
   ],
@@ -234,6 +251,7 @@ export const singleItemSchema = {
     lostItem,
     linkedItem,
     continuedItem,
+    repositoryChangedItem,
     secretRunItemSchema,
     lateAnswerItemSchema,
   ],

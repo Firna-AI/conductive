@@ -56,28 +56,31 @@ share. Its linked pages give the parts of
 [the workspace](design-workspace.md), of [the chat](design-chat.md),
 of [the operator section](design-operator.md), and of
 [the pull request bar](design-bar.md). They also give [the marks](design-marks.md),
-[secrets and Capabilities](design-secrets.md), and
-[the links in text](design-links.md).
+[secrets and Capabilities](design-secrets.md),
+[the links in text](design-links.md), and
+[the Markdown of replies](design-markdown.md).
 
 ## The catalogue
 
 [The catalogue](catalogue.md) lists each path of the catalogue and what it
 shows. It also gives the rules of the folder pages and the entries that
-moved. It gives the child pages of `marketing/docs`, `app/account`,
-`app/workspace-menu`, and `app/sub-workspaces`, the New workspace dialog,
-and the repositories that wait for a build. Its linked page,
+moved. It gives the child pages of `marketing/docs` and the New workspace
+dialog. Its linked page,
 [the waitlist, suspensions, and the operator](catalogue-operator.md), gives
 the pages of the waitlist, the child pages of `app/orgs/suspended`, and the
 operator section. Its linked page
 [the pull request bar](catalogue-bar.md) gives `app/banner` and its child
 pages. The [chat and automations](catalogue-chat-and-automations.md) page gives
 the child pages and flows of `app/chat` and `app/automations`. The
-[workspace links, file mentions, and tools](catalogue-workspace-tools.md)
+[workspace links, file and skill mentions, and tools](catalogue-workspace-tools.md)
 page gives the child pages and flows of `app/workspace-links`,
-`app/file-mentions`, and `app/tools`.
+`app/file-mentions`, `app/skill-mentions`, and `app/tools`.
 The [command palette and feedback](catalogue-palette.md) page gives the child
 pages of `app/command-palette` and `app/feedback`, the Feedback dialog,
 and the flow that sends feedback.
+The [keyboard shortcuts](catalogue-shortcuts.md) page gives the Keyboard
+shortcuts tab in a browser and in the Mac app, and the palette of the Mac
+app with its keys.
 The [attachments and files](catalogue-attachments-and-files.md) page
 gives the child pages of `app/attachments` and `app/files`, and the flow
 `user-flows/drop-a-file`. The [org logins](catalogue-org-logins.md) page
@@ -86,6 +89,12 @@ other pages that name the org login of an org. The
 [secrets and Capabilities](catalogue-secrets.md) page gives the Secrets tab
 of the org settings, the Capabilities pages, the child pages of
 `app/secret-requests`, and the flow `user-flows/secret-request`.
+The [account](catalogue-account.md) page gives the child pages of
+`app/account`. The
+[workspace menu and sub-workspaces](catalogue-workspace-list.md) page gives
+the child pages of `app/workspace-menu` and `app/sub-workspaces`. The
+[first build and waiting repositories](catalogue-org-builds.md) page gives
+the first build of a new org and the repositories that wait for a build.
 
 `app/attachments` shows each attached file as a chip at its place in the
 text of the message box. `app/attachments/drop` shows a drop of files into
@@ -99,6 +108,10 @@ failed, because a file of its message is no longer in the cloud computer.
 `app/files/image` shows the picture of an image file in its tab, and an
 image that the browser cannot draw. The flow `user-flows/drop-a-file` goes
 from the drop of a screenshot, through Send, to its file tab.
+`app/file-mentions/answers` shows a screenshot of the agent as a small
+picture in its answer, and its child pages show the picture while it
+loads, the link while the cloud computer is stopped, and the pictures in
+the work of a turn.
 
 `app/new-workspace/files` shows the same chips in the first message of a
 new workspace, before the workspace exists. `app/new-workspace/dialog/files`
@@ -107,9 +120,11 @@ shows them in the New workspace dialog.
 `DraftFileChip` in `src/components/chat/` draws the chip of an attached
 file in the text of a message box, in each state of its upload.
 `SentFileChip` beside it draws the chip of an attached file at its place in
-a sent message. `ImageView` in `src/components/files/` draws the picture of
-an image file in its tab. These three parts take no fixtures, so the app
-can draw them too. [attachmentCopy.ts](src/components/chat/attachmentCopy.ts)
+a sent message. `AnswerPicture` beside them draws a Markdown image of an
+answer to a picture file: its picture, the box of its label while it
+loads, or its link. `ImageView` in `src/components/files/` draws the
+picture of an image file in its tab. These four parts take no fixtures, so
+the app can draw them too. [attachmentCopy.ts](src/components/chat/attachmentCopy.ts)
 holds the words of the chips, and of the notices for a file over 1 GB and
 a dropped folder that the browser cannot read. The app shares these words.
 [The chat](design-chat.md) gives the design of each part.
@@ -125,7 +140,7 @@ a dropped folder that the browser cannot read. The app shares these words.
 | `src/design/`             | The design tokens: colours, type, density, sizes, radii, and fonts  |
 | `src/render.tsx`          | The renderer: the Firna theme and the tokens of the colour scheme   |
 | `src/theme.ts`            | The Firna theme of each scheme, and the tokens as CSS variables     |
-| `src/paths.ts`            | The catalogue paths that screens link to                            |
+| `src/paths.ts`            | The catalogue paths that screens link to, with those of `src/bannerPaths.ts` for the pull request bar |
 | `src/brand.ts`            | The name "Conductive", its domains, its repository, and DMG names   |
 | `src/fonts/`              | Inter, which the Firna theme names first, with its licence          |
 | `../../mokly.config.json` | The Mokly configuration: the root, the renderer, and the schemes    |
@@ -141,10 +156,10 @@ a dropped folder that the browser cannot read. The app shares these words.
   screen declares its states in `src/screens/automationState.ts` in the same
   way. The tab and composer states of the workspace screen live in
   `src/screens/chatStates.ts`. `tabStates` covers the session, file,
-  image, and Preview tabs of the centre column. `temporaryTabStates` covers the
+  image, HTML, and Preview tabs of the centre column. `temporaryTabStates` covers the
   temporary tab, which `src/screens/workspaceTemporaryTab.ts` draws in the
   row. `composerStates` covers the composer, with its links, mentions,
-  attached files, drops, and the chip of Add to chat.
+  skills, attached files, drops, and the chip of Add to chat.
   `src/screens/composerState.ts` adds that composer to the workspace state,
   with the login of the open session and the model of the next message.
   `src/screens/rowMenuState.ts` holds the open menu of a row of All files
@@ -185,7 +200,8 @@ pages, and its `member` page show them.
 
 A secret of an org differs from an env var. An env var reaches every cloud
 computer at each start. A secret reaches only one command that an agent
-runs after a member allows it, and the agent gets only its name. Every
+runs after a member allows it. The agent gets its name and its variable
+name, never its value. Every
 member adds secrets on the Secrets tab, and only an admin reveals a value,
 one at a time, as `app/org-settings/secrets` shows.
 [Secrets and Capabilities](design-secrets.md) gives the tab, the

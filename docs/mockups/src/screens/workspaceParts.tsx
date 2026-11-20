@@ -1,9 +1,7 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import { filePage } from '../entries/components/files/FilePage.mockup'
-import type { FileTabView } from '../components/files/FilesPanel'
 import { filesPanel } from '../entries/components/files/FilesPanel.mockup'
-import type { BackLink } from '../components/layout/Page'
 import { desktopView } from '../entries/components/tools/DesktopView.mockup'
 import { previewTool } from '../entries/components/tools/PortPreview.mockup'
 import { terminalTool } from '../entries/components/tools/TerminalTool.mockup'
@@ -26,56 +24,9 @@ import { paths } from '../paths'
 import { rowMenuOf } from './workspaceRowMenu'
 import { freshPromptFor, runStartingLog } from './workspaceRun'
 import { panelState } from './workspaceSandbox'
+import { backFrom, openFile } from './workspaceFileTab'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
-
-/**
- * The file that the centre tab shows, when the tab is a file. With masked
- * paths, a diff opens the masked seed script.
- */
-export function openFile(state: WorkspaceState): FileTabView | undefined {
-  switch (state.tab) {
-    case 'code':
-    case 'code-lines':
-    case 'markdown':
-      return state.tab
-    case 'diff':
-      return state.paths === 'masked' ? 'masked-diff' : 'diff'
-    case 'unnamed-file':
-      return 'unnamed'
-    case 'image':
-    case 'image-not-drawn':
-    case 'attachment':
-      return state.tab
-    case 'session':
-    case 'new-session':
-    case 'linked-session':
-    case 'later-session':
-    case 'started-session':
-    case 'preview':
-    case 'preview-behind':
-      return undefined
-  }
-}
-
-/** The way back from a file page on a phone: to its list. */
-function backFrom(open: FileTabView): BackLink {
-  switch (open) {
-    case 'diff':
-      return { label: 'Changes', to: paths.filesChanges }
-    case 'masked-diff':
-      return { label: 'Changes', to: paths.maskedPathsChanges }
-    case 'unnamed':
-      return { label: 'All files', to: paths.maskedPathsAllFiles }
-    case 'code':
-    case 'code-lines':
-    case 'markdown':
-    case 'image':
-    case 'image-not-drawn':
-    case 'attachment':
-      return { label: 'All files', to: paths.filesAll }
-  }
-}
 
 /**
  * The steps of a sandbox start, while the sandbox starts. A new workspace
@@ -91,9 +42,12 @@ export function startingLogFor(state: WorkspaceState): StartingLog | undefined {
 
 /**
  * The changed paths of the branch after Continue: the changed files that
- * moved to the new branch, or none. Any other branch shows every change.
+ * moved to the new branch, or none. After a repository change: none, as
+ * the new branch starts clean in the mockups. Any other branch shows every
+ * change.
  */
 function changedPaths(state: WorkspaceState): readonly string[] | undefined {
+  if (state.repositoryMove === 'changed') return []
   if (state.branch !== 'continued') return undefined
   return state.localWork === 'changes' ? unpushedWork.files : []
 }

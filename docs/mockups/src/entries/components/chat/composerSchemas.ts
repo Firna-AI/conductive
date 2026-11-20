@@ -1,4 +1,5 @@
 import type { MentionTree } from '../../../components/chat/FileMentionList'
+import type { SkillSource } from '../../../components/chat/SkillMentionList'
 import { agentKeys } from '../../../fixtures/agents'
 import { agentChoiceSchema } from '../workspaces/workspaceSchemas'
 import { attachmentSchema } from './chatBlockSchemas'
@@ -9,6 +10,14 @@ export const mentionTrees = [
   'loading',
   'unavailable',
 ] as const satisfies readonly MentionTree[]
+
+/** The skills that the list of `/` finds, as `SkillSource` lists them. */
+const skillSources = [
+  'latest',
+  'loading',
+  'unavailable',
+  'none',
+] as const satisfies readonly SkillSource[]
 
 /**
  * The agent login of a message when it is not the own login of the viewer:
@@ -88,6 +97,8 @@ export const composerStateProperties = {
   sessionLogin: sessionLoginSchema,
   /** The list of `@` is open above the box, with this file tree. */
   mention: { enum: mentionTrees },
+  /** The list of `/` is open above the box, with the skills so found. */
+  skills: { enum: skillSources },
   /** The pointer over the icon of the first chip of the text. */
   pointer: { type: 'boolean' },
   /** The Capabilities icon beside the attach button. */

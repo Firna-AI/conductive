@@ -6,6 +6,8 @@ use async_trait::async_trait;
 use serde::Deserialize;
 
 use cnd_runner_interface::json::decoder;
+use cnd_runner_interface::tools::secret_results::RunWithSecretsResult;
+use cnd_runner_interface::tools::secrets::RunWithSecretsResponse;
 
 use crate::call::{Call, Name};
 use crate::error::{Error, InputError, Result};
@@ -13,8 +15,8 @@ use crate::ports::{Http, HttpRequest, Runtime};
 use crate::process::Process;
 use crate::reply::{self, Reply};
 use crate::request::{self, Request};
-use crate::secrets::response::{self, RunResponse};
-use crate::secrets::types::RunResult;
+use crate::secrets::environment::SecretEnvironment;
+use crate::secrets::response;
 
 /// Validated runtime configuration, without printable credentials.
 #[derive(Clone)]
@@ -102,13 +104,21 @@ impl Dispatch for Client {
             return Err(Error::Input(InputError::ActiveTurn));
         }
         if let Call::RunWithSecrets(input, command) = &call {
+            let environment = SecretEnvironment::new(&input.names)?;
             let body = self.body(name, request::request(&call)?).await?;
             let response = response::parse(&body, &input.names)?;
             let result = match response {
-                RunResponse::Allowed { values, .. } => {
-                    RunResult::Completed(self.process.run(command.clone(), values).await?)
+                RunWithSecretsResponse::Allowed { values, .. } => {
+                    let result = self
+                        .process
+                        .run(command.clone(), environment.values(&values)?)
+                        .await?;
+                    RunWithSecretsResult::Completed {
+                        result,
+                        environment_variables: environment.variables(),
+                    }
                 }
-                response => match response.into_result() {
+                response => match response::into_result(response) {
                     Some(result) => result,
                     None => return Err(Error::Reply { mac: false }),
                 },

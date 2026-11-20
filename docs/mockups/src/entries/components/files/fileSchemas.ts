@@ -31,6 +31,7 @@ export const treePreviews = [
   'markdown',
   'image',
   'image-not-drawn',
+  'html',
 ] as const satisfies readonly NonNullable<TreeEntry['preview']>[]
 
 /** An entry of All files as JSON, with the fields of `TreeEntry`. */
@@ -62,4 +63,10 @@ export const fileTabViews = [
   'image',
   'image-not-drawn',
   'attachment',
+  'screenshot',
+  'html',
+  'html-source',
+  'html-opening',
+  'html-older-software',
+  'html-failed',
 ] as const satisfies readonly FileTabView[]

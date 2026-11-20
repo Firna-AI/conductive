@@ -107,7 +107,7 @@ describe('the default logins of the account', () => {
     expect(before).toBe('own')
   })
 
-  test('a share change of an own login while a read of the account runs still shows the default logins of the server after the change', async () => {
+  test('a share change queued during an account read shows the server default logins after the change', async () => {
     const server = new FakeApiServer()
     serveDefaults(server, { claude: 'own', codex: 'own' }, true)
     const { app, held } = await started(server)
@@ -121,9 +121,9 @@ describe('the default logins of the account', () => {
       kind: 'token',
       noReuse: false,
     })
-    await app.account.setNoReuse('claude', false)
+    const share = app.account.setNoReuse('claude', false)
     held.release('GET', ACCOUNT_PATHS.account)
-    await read
+    await Promise.all([read, share])
     expect(claudeDefault(app)).toBe('org')
   })
 
@@ -133,11 +133,12 @@ describe('the default logins of the account', () => {
     const { app, held } = await started(server)
     held.holdAnswer('GET', ACCOUNT_PATHS.account)
     const read = app.account.refreshLogins()
+    await flushMicrotasks()
     server.json('DELETE', agentLoginPath('claude'), {})
     serveDefaults(server, { claude: 'org', codex: null }, false)
-    await app.account.removeLogin('claude')
+    const remove = app.account.removeLogin('claude')
     held.release('GET', ACCOUNT_PATHS.account)
-    await read
+    await Promise.all([read, remove])
     expect(claudeDefault(app)).toBe('org')
   })
 })

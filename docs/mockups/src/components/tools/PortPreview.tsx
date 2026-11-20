@@ -16,7 +16,12 @@ import {
   serverList,
 } from '../../entries/components/tools/PortForm.mockup'
 import { previewTabs as previewTabsPart } from '../../entries/components/tools/PreviewTabs.mockup'
-import { portFormCopy, previewTabLabel, serverDescription } from './previewCopy'
+import {
+  expandedPreviewCopy,
+  portFormCopy,
+  previewTabLabel,
+  serverDescription,
+} from './previewCopy'
 import { storefrontPage } from '../../entries/components/tools/StorefrontPage.mockup'
 import styles from './PortPreview.module.css'
 
@@ -57,8 +62,13 @@ function previewTabs(current: number | null) {
   })
 }
 
-/** Reload and Open of the preview that shows. */
-export function PreviewActions() {
+/**
+ * Reload, Expand, and Open of the page that shows. Open opens `href` in a
+ * new tab: by default the launch address of the open port preview. Expand
+ * shows only on desktop, with `expandTo`, the screen of the page in its
+ * large window over the whole app.
+ */
+export function PreviewActions(props: { href?: string; expandTo?: string }) {
   return (
     <>
       <iconButton.Component
@@ -66,9 +76,18 @@ export function PreviewActions() {
         label="Reload"
         moklyInstance="reload-preview"
       />
+      {props.expandTo ? (
+        <ScreenLink asChild to={props.expandTo}>
+          <iconButton.Component
+            icon="maximize-2"
+            label={expandedPreviewCopy.expand}
+            moklyInstance="expand-preview"
+          />
+        </ScreenLink>
+      ) : null}
       <span className={styles.link}>
         <externalLink.Component
-          href={previewUrl}
+          href={props.href ?? previewUrl}
           label="Open in new tab"
           moklyInstance="open-preview"
         >

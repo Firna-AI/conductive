@@ -10,7 +10,7 @@ use crate::error::Result;
 pub trait ReportFilter: Send + Sync {
     /// Filter one complete captured file report without changing operational paths.
     fn file_report(&self, event: RunnerFileEvent) -> Result<RunnerFileEvent>;
-    /// Filter a complete retained report or port list before saving it.
+    /// Filter complete retained reports, port labels, and skill metadata before saving.
     fn report(&self, event: RunnerEvent) -> Result<RunnerEvent>;
     /// Filter displayed file text without changing its request identity or real path.
     fn response(&self, response: RunnerFileResponse) -> Result<RunnerFileResponse>;

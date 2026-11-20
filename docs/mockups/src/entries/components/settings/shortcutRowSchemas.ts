@@ -1,3 +1,4 @@
+import { shortcutSchema } from '../common/shortcutSchemas'
 import { shortcutPages } from '../../../components/settings/shortcutPages'
 import {
   editedShortcuts,
@@ -11,9 +12,6 @@ import {
   defaultShortcuts,
   fixedLabel,
 } from '../../../fixtures/shortcuts'
-
-/** A shortcut as the tab writes it, such as `⇧⌘P`, as `Shortcut`. */
-export const shortcutSchema = { type: 'string', minLength: 1 } as const
 
 /** The shortcuts of a row. */
 export const shortcutsSchema = { type: 'array', items: shortcutSchema } as const

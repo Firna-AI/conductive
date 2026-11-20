@@ -22,7 +22,23 @@ export interface DevView {
   repair: readonly DevRepair[]
   /** The tree of All files before the page opened: `?tree=`. */
   tree: DevTree
+  /** What the Preview of an HTML file shows: `?preview=`. */
+  preview: DevPreview
 }
+
+/**
+ * What the Preview of an HTML file shows on the development page, in place
+ * of the files preview of the shell: the page, the wait of its open, a
+ * failed open, or the notice of older software.
+ */
+export type DevPreview = 'page' | 'opening' | 'failed' | 'older-software'
+
+export const devPreviews: readonly DevPreview[] = [
+  'page',
+  'opening',
+  'failed',
+  'older-software',
+]
 
 /** A list whose fresh full report the stored history lost: `?repair=`. */
 type DevRepair = 'all-files' | 'changes'
@@ -68,6 +84,8 @@ export function readView(search: string): DevView {
       (query.get('repair') ?? '').split(',').includes(repair),
     ),
     tree: trees.find((tree) => tree === query.get('tree')) ?? 'latest',
+    preview:
+      devPreviews.find((preview) => preview === query.get('preview')) ?? 'page',
   }
 }
 
@@ -81,6 +99,7 @@ export function viewQuery(view: DevView): string {
   if (!view.controls) query.set('controls', 'off')
   if (view.repair.length > 0) query.set('repair', view.repair.join(','))
   if (view.tree !== 'latest') query.set('tree', view.tree)
+  if (view.preview !== 'page') query.set('preview', view.preview)
   return `?${query}`
 }
 

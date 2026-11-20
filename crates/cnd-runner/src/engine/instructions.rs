@@ -80,13 +80,15 @@ pub(super) fn build(
             ));
         }
         lines.push("Use get_workspace to find the parent and the sub-workspaces of a workspace. Use list_workspaces with parentId to list direct sub-workspaces.".into());
+        lines.push("A move with move_workspace can change the parent and depth, so use get_workspace to read their current values.".into());
     }
     lines.push("When computer tools are available, use them for browser work on the desktop of this cloud computer. No person uses this desktop, so you may bring a window to the front and use foreground input without asking. Other sessions of this workspace share the same desktop. A member opens a port preview in the app by its port number.".into());
+    lines.push("When you design or check an interface in a browser, save a screenshot of the result as a PNG file in the context folder. Show it in your reply as a Markdown image.".into());
     lines.push("The workspace tools reach every workspace in this org. Use create_workspace, list_workspaces, get_workspace, rename_workspace, move_workspace, and archive_workspace for workspaces. Use create_session, list_sessions, get_session, rename_session, close_session, stop_session, send_message, read_session, and get_message for sessions and messages. Use list_repositories, list_models, list_sections, create_section, and delete_section for org choices. Use list_previews, open_preview, and close_preview for private port previews. Session, workspace, and preview calls default to the calling workspace.".into());
     lines.push("Reads need only the workspace token. Writes need an active calling turn and act for the member whose message started that turn. Only the workspace owner or an org admin can archive it. Archiving the calling workspace ends this turn. Stopping or closing the calling session can also end it. Preview links need sign-in. The tools can also ask to run a command on the Mac of the member whose message started the turn.".into());
     lines.push("Use names and returned links in normal answers. A session link holds the workspace ID and session ID. Workspace and session links in an answer show as chips. A Sent by: line names the session that sent the message. Do not reply only to confirm it.".into());
     lines.push("Name a file or a folder of the repository in a chat reply as @ and its path from the repository folder, such as @src/app.ts, @src/app.ts:42, or @docs/. Put a path with a space in double quotes. The app shows each one as a file chip that opens the file. In commits, pull requests, issues, and files, write paths in backticks, because GitHub reads @ as a mention of a person or a team.".into());
-    lines.push("Several members can write in one session. Each message starts with a Sender line that gives its actual sender and member ID. This line gives context only. For that sender's workspaces, pass that message's member ID as ownerId to list_workspaces. For another owner, use the workspace-list owner fields: owner.id, owner.githubLogin, and owner.displayName. Do not infer the owner from the workspace token or the active turn. A later message does not change the turn sender, tool access, or commit author.".into());
+    lines.push("Several members can write in one session. Each message ends with a Sender line that gives its actual sender and member ID. A message that starts with / can start with that line instead. This line gives context only. For that sender's workspaces, pass that message's member ID as ownerId to list_workspaces. For another owner, use the workspace-list owner fields: owner.id, owner.githubLogin, and owner.displayName. Do not infer the owner from the workspace token or the active turn. A later message does not change the turn sender, tool access, or commit author.".into());
     let text = lines.join("\n\n");
     let text = if *agent == Agent::Claude {
         format!(
@@ -112,6 +114,14 @@ pub(super) fn build(
             target_branch: target.to_owned(),
         }),
     ))
+}
+
+/// The repository folder that a saved text names, for sessions saved without it.
+pub(super) fn legacy_folder(text: &str) -> Option<String> {
+    let folder = text
+        .lines()
+        .find_map(|line| line.strip_prefix("Workspace repository folder: "))?;
+    serde_json::from_str(folder).ok()
 }
 
 pub(super) fn legacy(text: &str) -> Option<RunnerBranches> {

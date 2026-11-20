@@ -54,7 +54,7 @@ export const codeView = defineComponent({
   slug: 'code-view',
   title: 'Code view',
   description:
-    'A code file with line numbers and syntax colours, as the tab of a code file shows it. A tab opened at a line target marks the lines of the range and shows the first of them in the middle of the view. Its own page shows the hook of Checkout address autocomplete.',
+    'A code file with line numbers and syntax colours, as the tab of a code file shows it. With the path of the file, the colours are those of its language, such as HTML. A tab opened at a line target marks the lines of the range and shows the first of them in the middle of the view. Its own page shows the hook of Checkout address autocomplete.',
   relatedDocs: ['docs/mockups/catalogue-attachments-and-files.md'],
   propSchema: {
     type: 'object',
@@ -64,13 +64,15 @@ export const codeView = defineComponent({
       code: { type: 'string' },
       /** The lines of a line target, which the tab opened at. */
       marked: lineRangeSchema,
+      /** The path of the file, whose language gives the colours. */
+      path: { type: 'string', minLength: 1 },
       placeHeight: placeHeightSchema,
     },
   } as const,
   props: { code: autocompleteHook },
   render: (props) =>
     inPlace(
-      <CodeView code={props.code} marked={props.marked} />,
+      <CodeView code={props.code} marked={props.marked} path={props.path} />,
       props.placeHeight,
     ),
   variants: [

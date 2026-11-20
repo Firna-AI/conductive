@@ -14,8 +14,7 @@ const privateKey = generateKeyPairSync('rsa', { modulusLength: 2048 })
 
 /**
  * The commands that the local builder ran, with the fixture home hidden.
- * The fixture home can itself start with /home/user, in a checkout of a
- * cloud computer, so only a path of the image that no map reached counts.
+ * Only an image path that remains after mapping counts as unmapped.
  */
 function unmappedCommands(fixture: {
   home: string

@@ -57,6 +57,8 @@ export async function openPaletteTab(
     copy?: AppServices['copy']
     /** Opens a page in a new tab, such as a fake that keeps each address. */
     openInNewTab?: AppServices['openInNewTab']
+    /** The time zone of dates, in place of the UTC of the test services. */
+    timeZone?: AppServices['timeZone']
   } = {},
 ) {
   const server = options.server ?? new FakeApiServer()
@@ -76,6 +78,7 @@ export async function openPaletteTab(
     ...options.clock,
     ...(options.copy ? { copy: options.copy } : {}),
     ...(options.openInNewTab ? { openInNewTab: options.openInNewTab } : {}),
+    ...(options.timeZone ? { timeZone: options.timeZone } : {}),
   })
   const navigation = memoryNavigation(href)
   const shell = options.mac ? (
@@ -119,6 +122,11 @@ export function options(): HTMLElement[] {
   const list = queryByRole('listbox', 'Results')
   if (!list) return []
   return Array.from(list.querySelectorAll<HTMLElement>('[role="option"]'))
+}
+
+/** The names of the options, as a screen reader reads them. */
+export function optionNames(): string[] {
+  return options().map(accessibleName)
 }
 
 /** The labels of the groups of the results, in their order. */

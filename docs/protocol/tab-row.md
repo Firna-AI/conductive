@@ -3,9 +3,9 @@
 This page belongs to [Agents and sessions](agents-and-sessions.md). It
 holds the requirements and the decisions in force for the tab row of the
 centre column of a workspace. It covers the order of the tabs, their
-moves, the scroll of the row, the place that each tab keeps, and the tab
-menu. The terms are those of the
-[architecture doc](../architecture.md#terms). A decision number names a
+moves, the scroll of the row, the place that each tab keeps, the tab
+that shows at a return to the workspace, and the tab menu. The terms are
+those of the [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A file row menu decision number names a decision of the change that
 adds the menu of the rows of All files and Changes, as
@@ -57,6 +57,35 @@ adds the menu of the rows of All files and Changes, as
 - A tab that closes forgets its place, also when another member closes its
   session. When it opens again, a session tab shows the bottom, and a file
   or diff tab shows the top. The user chose this on 13 November 2026.
+
+## The shown tab at a return
+
+- A return to a workspace at its address alone shows the tab that showed
+  when the member left it, also a file, diff, or Preview tab. A click on
+  the row of the workspace in the list, its workspace row in the command
+  palette, and a reload of that address open the workspace at that
+  address. The user asked for this on 17 November 2026.
+- Reason: a member who leaves a Preview tab and comes back expects that
+  tab, not the chat.
+- The shown tab comes from the saved view that the browser tab read. A
+  reload, a new browser tab, and another device of the member read the
+  saved view again. A workspace that the browser tab keeps uses its kept
+  copy of the view, as
+  [Events](chat-and-events.md#events) says of its chat.
+- An address that names a tab, a tool, or a session shows what it names.
+- A move to the address of the workspace during the same visit shows the
+  chat, as a click on a session tab does. Such a move, such as a move back
+  in the browser history, makes the shown session the active tab. So a
+  later return shows the chat too.
+- A move away and back before the view is read keeps the address.
+- On a phone, the workspace opens at the chat, because its row holds only
+  the session tabs.
+- A restore of the shown tab starts no Resume of a stopped cloud computer
+  of its own. The open of the workspace resumes it, as
+  [Stop and resume](workspace-life.md#stop-and-resume) says.
+
+## The tab menu
+
 - A right click on a tab opens its tab menu (decision 188).
 - On a focused tab, Shift and F10, or the Menu key, also opens the tab
   menu. This holds on every system.

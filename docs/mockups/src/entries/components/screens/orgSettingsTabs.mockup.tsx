@@ -4,13 +4,14 @@ import {
   acmeSettings,
   orgSettingsSchema,
 } from '../../../screens/orgSettingsState'
+import { viewports } from '../common/viewports'
 
 /** The body of the open tab of the org settings, registered with Mokly. */
 export const tabBody = defineComponent({
   slug: 'tab-body',
   title: 'Tab body',
   description:
-    'The body of the open tab of the org settings in a state: General with the org and Delete org, Repositories with the repository notice and the list, Cloud computer, or Members. A member who is not an admin, and everyone in a suspended org, reads the settings without edit fields and actions. Its own page shows General of Acme for an admin.',
+    'The body of the open tab of the org settings in a state: General with the org and Delete org, Repositories with the repository notice and the chosen repositories in their order, with Edit, or the whole list while an admin edits it, Cloud computer, or Members. A member who is not an admin, and everyone in a suspended org, reads the settings without edit fields and actions. Its own page shows General of Acme for an admin.',
   relatedDocs: ['docs/mockups/catalogue.md'],
   propSchema: {
     type: 'object',
@@ -19,10 +20,17 @@ export const tabBody = defineComponent({
     properties: {
       /** The state of the org settings, as `OrgSettingsState`. */
       state: orgSettingsSchema,
+      /** The viewport of the screen, when it differs from the view. */
+      viewport: { enum: viewports },
     },
   } as const,
   props: { state: acmeSettings },
-  render: (props) => <TabBody state={props.state} />,
+  render: (props, context) => (
+    <TabBody
+      state={props.state}
+      viewport={props.viewport ?? context.viewport}
+    />
+  ),
   variants: [
     {
       slug: 'repositories',

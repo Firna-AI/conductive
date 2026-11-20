@@ -107,13 +107,15 @@ export const fileLinkText = defineComponent({
       part: {
         type: 'object',
         additionalProperties: false,
-        required: ['kind', 'label', 'source', 'entry'],
+        required: ['kind', 'label', 'source', 'picture', 'entry'],
         properties: {
           kind: { const: 'file-link' },
           /** The label of the link. */
           label: { type: 'string' },
           /** The link as the text has it. */
           source: { type: 'string' },
+          /** The Markdown image of a picture file, which can show as it. */
+          picture: { type: 'boolean' },
           entry: mentionEntrySchema,
           line: lineSchema,
         },
@@ -125,6 +127,7 @@ export const fileLinkText = defineComponent({
       kind: 'file-link',
       label: 'the hook',
       source: `[the hook](${hook.path})`,
+      picture: false,
       entry: hook,
     },
   },
@@ -141,6 +144,7 @@ export const fileLinkText = defineComponent({
           label: 'Postcode field on a phone',
           source:
             '![Postcode field on a phone](/home/user/code/storefront/.context/shots/after.png)',
+          picture: true,
           entry: { path: '.context/shots/after.png', folder: false },
         },
       },

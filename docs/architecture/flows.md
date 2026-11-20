@@ -4,13 +4,22 @@ Each flow uses the components and the terms of the
 [architecture doc](../architecture.md). A decision number names a dated
 record, as [Decision numbers](../architecture.md#decision-numbers) says.
 
+## Create an org
+
+1. A person creates an org with its repositories. An operator can also
+   choose its provider account.
+2. The Worker sets the account of the org once: the choice of the
+   operator, or a draw from the weights. The org keeps that account for
+   its whole life.
+3. The Worker starts the first build of the org image in that account.
+
 ## Create a workspace
 
 1. The user sends the first message of a new workspace. The Worker records
    the workspace, and its Durable Object keeps the message.
-2. With the Boat key, the Worker asks Boat for a sandbox from the newest
-   good org image of the org. The sandbox gets the workspace token and the
-   org's env vars, but no agent login.
+2. With the key of the account of the org, the Worker asks its provider
+   for a sandbox from the newest good org image of the org. The sandbox
+   gets the workspace token and the org's env vars, but no agent login.
 3. The Durable Object pushes each start step to the open tabs.
 4. The agent runner starts and connects to the Durable Object. The Durable
    Object sends it the waiting message.
@@ -67,17 +76,22 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
   `app.conductive.build`. The Worker connects it to the private terminal
   port.
 - A preview frame loads its preview hostname. The Worker proxies the
-  request to the private preview relay of the sandbox. The relay forwards
-  it to the previewed server with its local address as `Host`.
-- The Worker asks Boat for a short-lived desktop URL, and the browser
-  shows Boat's desktop stream.
+  request to the private preview relay of the sandbox, with the port
+  credential of its provider. The relay forwards it to the previewed
+  server with its local address as `Host`.
+- The frame of an HTML file tab loads the files preview of its workspace
+  in the same way. The relay forwards each of its requests to the file
+  server of the agent runner, which reads the files of the repository.
+- For a sandbox on Boat, the Worker asks Boat for a short-lived desktop
+  URL, and the browser shows Boat's desktop stream. A sandbox on E2B has
+  no desktop stream. The app hides the Desktop tool for now.
 
 ## GitHub events
 
 - GitHub sends pull request, check, status, and push webhooks. The Worker
   routes each event to the workspace whose current branch it names.
 - A push to the default branch of a chosen repository can also start a
-  refresh of the org image.
+  refresh of the org image, in the account of the org.
 - A pull request event can also start the runs of automations, as
   [Automation runs](#automation-runs) says.
 
@@ -105,6 +119,29 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 4. The Durable Object pushes the new state and the note of Continue to
    every open tab. Each later message carries the new branch to the agent.
 
+## Repository change
+
+1. A member picks another repository in the header. The Durable Object
+   refuses the change while a turn runs, while Continue or Restart runs,
+   and when the agent runner of the sandbox cannot move. It starts the
+   sandbox when it is stopped.
+2. The Durable Object reads the work that the workspace stops following:
+   the local work of the old folder, and the open pull request and the
+   pushed commits of the old branch. It also reads the changed files of
+   the new folder. When it finds work, the app asks the member first.
+3. The Durable Object runs a trusted job in the sandbox, as for Continue.
+   Its fetch of the default branch of the new repository gets the GitHub
+   token of that member, only while the fetch runs. The job adds the
+   exclude rule of the context folder, copies the context folder, and
+   creates the new branch in the new folder with its changed files.
+4. The Worker stores the new repository, branch, and base branch in D1 in
+   one guarded write. The Durable Object pushes the new state and one note
+   to each session, and reads the GitHub state of the new branch.
+5. The Durable Object sends the move to the agent runner. The runner moves
+   to the new folder in its own process, so agent processes keep running.
+   Held turns go out after the runner names the new folder.
+   [Repository change](../protocol/repository-change.md) states the rules.
+
 ## Automation runs
 
 1. A trigger fires: the minute Cron Trigger finds a due schedule, a pull
@@ -124,11 +161,16 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 ## Stops
 
 - The Durable Object stops a sandbox when the stop rule of
-  [Stop and resume](../protocol/workspace-life.md#stop-and-resume) says
-  so.
-- Near day 14 of a stop, the app starts the sandbox briefly and stops it
-  again, so that Boat keeps its disk (decision 43).
+  [Stop and resume](../protocol/stop-and-resume.md) says so.
+- On Boat, near day 14 of a stop, the app starts the sandbox briefly and
+  stops it again, so that Boat keeps its disk (decision 43). E2B keeps a
+  stopped sandbox with no time limit, so it gets no such restart.
 - Archive stops a running sandbox at once, and keeps the sandbox. The
   Durable Object deletes it 14 days after the Archive, unless a member
   restores the workspace first, as
   [Archive](../protocol/workspace-life.md#archive) says.
+- 14 days after the Archive, the workspace also leaves the lists of the
+  app and of the agent tools. D1, the Durable Object, and the attachment
+  storage keep its data, as
+  [Removed workspaces](../protocol/workspace-life.md#removed-workspaces)
+  says.

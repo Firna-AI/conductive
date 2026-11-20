@@ -1,8 +1,7 @@
-import type {
-  RunWithSecretsRequest,
-  RunWithSecretsResponse,
-  SecretRunGrant,
-} from '../../src/shared/secret-requests'
+import type { RunWithSecretsRequest } from '../../src/shared/generated/RunWithSecretsRequest'
+import type { RunWithSecretsResponse } from '../../src/shared/generated/RunWithSecretsResponse'
+import type { SecretRunGrant } from '../../src/shared/generated/SecretRunGrant'
+
 import type { ChatTransaction } from '../chat/store'
 import { decrypt } from '../security/crypto'
 import { secretValueContext } from './data'

@@ -15,7 +15,7 @@ export const filePage = defineComponent({
   slug: 'file-page',
   title: 'File page',
   description:
-    'A file, a code preview, a picture, or a diff as a full page. The header shows the label of the path and the actions on the file: Download, Copy, and, for Markdown, the switch between the preview and the source. A diff shows its lines in the header. A picture keeps Download, and its Copy is off. On a phone the page leads back to its list. A screen can supply the state of a sandbox in place of the content. Its own page shows a code file.',
+    'A file, a code preview, a picture, or a diff as a full page. The header shows the label of the path and the actions on the file: Download, Copy, and, for Markdown and HTML, the switch between the preview and the source. The page of an HTML file in a frame adds Reload, Expand on desktop, and Open. A diff shows its lines in the header. A picture keeps Download, and its Copy is off. On a phone the page leads back to its list. A screen can supply the state of a sandbox in place of the content. Its own page shows a code file.',
   relatedDocs: ['docs/mockups/catalogue-attachments-and-files.md'],
   propSchema: {
     type: 'object',
@@ -33,6 +33,8 @@ export const filePage = defineComponent({
           to: { type: 'string', minLength: 1 },
         },
       },
+      /** The screen of an HTML page in its large window, which Expand shows. */
+      expandTo: { type: 'string', minLength: 1 },
       placeHeight: placeHeightSchema,
     },
   } as const,
@@ -42,6 +44,7 @@ export const filePage = defineComponent({
     inPlace(
       <FilePage
         back={props.back}
+        expandTo={props.expandTo}
         placeholder={props.placeholder}
         view={props.view}
       />,

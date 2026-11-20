@@ -2,7 +2,7 @@ import { mayArchiveWorkspace } from '../components/workspaces/permissions'
 import { bannerSummary } from '../fixtures/pullRequests'
 import { suspendedOwner } from '../fixtures/startRefusals'
 import { viewerOf } from './sessionStarter'
-import { barOf, branchOf } from './workspaceBar'
+import { barOf, placeOf } from './workspaceBar'
 import { openWorkspace } from './workspaceRun'
 import { activityOf, archiveRestore, drawnState } from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
@@ -10,10 +10,10 @@ import { workspaceName } from './workspaceTabs'
 
 /**
  * The open workspace of a state, as the workspace screen draws it: the
- * drawn state, the workspace with the name, the branch, and the GitHub
- * state of its pull request bar, its status, and what the person signed in
- * may do in it. In a suspended org, and in an archived workspace, nothing
- * can change.
+ * drawn state, the workspace with the name, the branch and the repository,
+ * and the GitHub state of its pull request bar, its status, and what the
+ * person signed in may do in it. In a suspended org, and in an archived
+ * workspace, nothing can change.
  */
 export function workspaceOpen(input: WorkspaceState) {
   const state = drawnState(input)
@@ -28,7 +28,7 @@ export function workspaceOpen(input: WorkspaceState) {
     ...record,
     owner: ownerRefused ? suspendedOwner : record.owner,
     name: workspaceName(state, record),
-    branch: branchOf(state, record),
+    ...placeOf(state, record),
     github: bannerSummary(state.banner),
   }
   const archived = state.sandbox === 'archived'

@@ -16,8 +16,8 @@ import styles from './RepositoryList.module.css'
  */
 const githubAccessUrl = 'https://github.com/apps/conductive/installations/new'
 
-/** One repository. `readOnly` drops its Add or Remove. */
-function Row(props: { repository: ReachableRepository; readOnly?: boolean }) {
+/** One repository, with its Add or Remove. */
+function Row(props: { repository: ReachableRepository }) {
   const { repository } = props
   return (
     <li className={styles.row}>
@@ -26,7 +26,7 @@ function Row(props: { repository: ReachableRepository; readOnly?: boolean }) {
         <span className={styles.name}>{repository.name}</span>
         <span className={styles.description}>{repository.description}</span>
       </span>
-      {props.readOnly ? null : repository.used ? (
+      {repository.used ? (
         <>
           <span className={styles.added}>
             <Check aria-hidden size={13} />
@@ -53,8 +53,8 @@ function Row(props: { repository: ReachableRepository; readOnly?: boolean }) {
 }
 
 /**
- * The repositories that the shared GitHub App can reach, with the ones that
- * the org uses marked as added. A search narrows the list. When the app
+ * The repositories that the shared GitHub App can reach, by name, with the
+ * ones that the org uses marked as added. A search narrows the list. When the app
  * reaches no repository, the list asks for access, with Manage access.
  */
 export function RepositoryList(props: {
@@ -88,9 +88,11 @@ export function RepositoryList(props: {
         query={props.search}
       />
       <ul aria-label="Repositories" className={styles.list}>
-        {props.repositories.map((repository) => (
-          <Row key={repository.name} repository={repository} />
-        ))}
+        {[...props.repositories]
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map((repository) => (
+            <Row key={repository.name} repository={repository} />
+          ))}
       </ul>
       <p className={styles.note}>
         The list shows the repositories that the GitHub App can reach.{' '}
@@ -106,19 +108,17 @@ export function RepositoryList(props: {
 }
 
 /**
- * The repositories that the org uses, without search and actions, for a
- * member who is not an admin (decision 57).
+ * Edit, which opens the whole list with search, Add, and Remove, or Done,
+ * which saves the changes of the edit and closes it. Only an admin gets it.
  */
-export function OrgRepositoryList(props: {
-  repositories: readonly ReachableRepository[]
-}) {
-  return (
-    <ul aria-label="Repositories" className={styles.list}>
-      {props.repositories
-        .filter((repository) => repository.used)
-        .map((repository) => (
-          <Row key={repository.name} readOnly repository={repository} />
-        ))}
-    </ul>
+export function RepositoryEditToggle(props: { editing: boolean }) {
+  return props.editing ? (
+    <actionButton.Component icon="check" moklyInstance="done-repositories">
+      Done
+    </actionButton.Component>
+  ) : (
+    <actionButton.Component icon="pencil" moklyInstance="edit-repositories">
+      Edit
+    </actionButton.Component>
   )
 }

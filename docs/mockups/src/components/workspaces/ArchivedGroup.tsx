@@ -12,11 +12,13 @@ export type DrawnRow = { workspace: string; controls: RowControls }
 /**
  * The archived workspaces at the end of the list. The group is the app's
  * own, not a section of the user, so it has no menu, and it is collapsed
- * until the user opens it. An archived workspace opens with its chat
- * read-only. While the app keeps its cloud computer, its row offers Restore
- * on hover to every member, except in a suspended org (`readOnly`).
- * `drawn` draws the menu that a right click opened on a row, which only an
- * admin has on an archived row.
+ * until the user opens it, with the count of its rows. An archived
+ * workspace opens with its chat read-only. While the app keeps its cloud
+ * computer, its row offers Restore on hover to every member, except in a
+ * suspended org (`readOnly`). When its 14 days end, a workspace leaves the
+ * group and its count, and only a link opens it. `drawn` draws the menu
+ * that a right click opened on a row, which only an admin has on an
+ * archived row.
  */
 export function ArchivedGroup(props: {
   rows: readonly WorkspaceRow[]

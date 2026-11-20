@@ -37,7 +37,15 @@ const stats: AccountStats = {
   readAt: FAKE_TIME,
   orgs: 2,
   workspaces: { total: 1240, lastWeek: 7 },
-  workspaceStates: { running: 3, stopped: 11, failed: 1, archived: 1225 },
+  // As the Worker does, the reply counts the 1,200 removed workspaces in
+  // `archived` too, and the tab takes them out of Archived.
+  workspaceStates: {
+    running: 3,
+    stopped: 11,
+    failed: 1,
+    archived: 1225,
+    removed: 1200,
+  },
   automations: 4,
   newWorkspacesByDay: days((index) => index % 3),
   automationRunsByDay: days(() => 2),
@@ -69,7 +77,7 @@ function statsReads(server: FakeApiServer): number {
 }
 
 describe('the Stats tab of the account', () => {
-  test('follows Keyboard shortcuts, and shows the totals, the workspaces by state, and the 30-day totals', async () => {
+  test('follows Keyboard shortcuts, and shows the totals, the workspaces by state with Removed apart from Archived, and the 30-day totals', async () => {
     const server = new FakeApiServer()
     server.json('GET', ACCOUNT_PATHS.stats, stats)
     const { view } = await mountStats(server)
@@ -94,7 +102,8 @@ describe('the Stats tab of the account', () => {
       current: ['Stats'],
       totals:
         'Workspaces 1,240 +7 in 7 days Running now 3 Automations 4 Orgs 2',
-      states: 'Running 3 0.2% Stopped 11 0.9% Failed 1 0.1% Archived 1,225 99%',
+      states:
+        'Running 3 0.2% Stopped 11 0.9% Failed 1 0.1% Archived 25 2% Removed 1,200 97%',
       workspaceDays: true,
       runDays: true,
       reads: 1,

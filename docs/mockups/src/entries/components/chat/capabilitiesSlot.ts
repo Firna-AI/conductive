@@ -34,25 +34,35 @@ export function withPanel(
 
 /**
  * The state of a message box as data, and its open Capabilities control
- * apart, for a part that takes the control in a slot.
+ * and the picker in place of its model picker apart, for a part that takes
+ * them in slots.
  */
 export function composerData(state: ComposerState): {
   composer: ComposerState
   capabilitiesPanel?: ReactNode
+  pickerPart?: ReactNode
 } {
-  const { capabilities, ...rest } = state
+  const { capabilities, pickerPart, ...rest } = state
   const parts = capabilitiesData(capabilities)
   return {
     composer: { ...rest, ...defined({ capabilities: parts.capabilities }) },
-    ...defined({ capabilitiesPanel: parts.capabilitiesPanel }),
+    ...defined({ capabilitiesPanel: parts.capabilitiesPanel, pickerPart }),
   }
 }
 
-/** The state of a message box with the open control of the slot of a part. */
+/**
+ * The state of a message box with the open control and the picker of the
+ * slots of a part.
+ */
 export function withComposerPanel(
   state: ComposerState,
   panel: ReactNode,
+  pickerPart?: ReactNode,
 ): ComposerState {
-  if (panel === undefined || panel === null) return state
-  return { ...state, capabilities: withPanel(state.capabilities, panel) }
+  const picked =
+    pickerPart === undefined || pickerPart === null
+      ? state
+      : { ...state, pickerPart }
+  if (panel === undefined || panel === null) return picked
+  return { ...picked, capabilities: withPanel(state.capabilities, panel) }
 }

@@ -4,7 +4,12 @@ import { Button } from '@firna/ui/button'
 import { ChevronDown } from 'lucide-react'
 import type { Agent } from '../../shared/generated/Agent'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
-import { effortLabels, findModel, modelLabel } from '../../shared/agents'
+import {
+  effortLabels,
+  findModel,
+  modelLabel,
+  sameChoice,
+} from '../../shared/agents'
 import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import { pickerButtonStyle } from '../../../docs/mockups/src/components/chat/pickerButton'
 import styles from '../../../docs/mockups/src/components/chat/ModelPicker.module.css'
@@ -19,16 +24,6 @@ import { fastFor } from '../state/format'
 import { useDismiss } from '../ui/dismiss'
 import { Menu } from '../ui/Menu'
 import { effortsOf, modelMenu } from './model-menu'
-
-/** Whether two choices differ in the agent, the model, the effort, or fast. */
-function differs(next: AgentChoice, current: AgentChoice): boolean {
-  return (
-    next.agent !== current.agent ||
-    next.model !== current.model ||
-    next.effort !== current.effort ||
-    next.fast !== current.fast
-  )
-}
 
 /**
  * One picker for the model and the effort of the session, such as
@@ -62,7 +57,7 @@ export function ModelPicker(props: {
   const label = modelLabel(props.models, choice)
   const effort = effortLabels[choice.effort]
   const send = (next: AgentChoice) => {
-    if (differs(next, choice)) onChoose(next)
+    if (!sameChoice(next, choice)) onChoose(next)
   }
   const choose = (next: AgentChoice) => {
     setOpen(false)
@@ -116,6 +111,7 @@ export function ModelPicker(props: {
       </ShortcutTip>
       {open ? (
         <Menu
+          anchor={anchor}
           entries={modelMenu(props.models, choice, props.sessionAgent, choose, {
             toggle: toggleFast,
             hint: fastHint,

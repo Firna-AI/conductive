@@ -141,7 +141,12 @@ export const menu = defineComponent({
           { kind: 'label', label: 'Effort' },
           { kind: 'item', label: 'High', checked: true },
           { kind: 'divider' },
-          { kind: 'switch', label: 'Fast', on: false, shortcut: '⌥⌘F' },
+          {
+            kind: 'switch',
+            label: 'Fast',
+            on: false,
+            shortcut: ['⌥', '⌘', 'F'],
+          },
         ],
       },
     },

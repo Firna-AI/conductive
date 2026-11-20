@@ -1,4 +1,9 @@
-import { FIRST_TERMINAL_ID, type TerminalEntry } from '../shared/terminal'
+import {
+  FIRST_TERMINAL_ID,
+  type TerminalEnd,
+  type TerminalEntry,
+} from '../shared/terminal'
+import { retries } from './terminalRetry'
 import { byNumber, type ReadyTerminal } from './terminalApi'
 
 /**
@@ -36,6 +41,11 @@ export interface ReadyTerminals {
   ended: ReadonlySet<string>
   /** The connection of each terminal. Each Reconnect gives it a new one. */
   connections: ReadonlyMap<string, number>
+  /**
+   * The terminals whose connection is the one automatic try after a lost
+   * connection.
+   */
+  automatic: ReadonlySet<string>
   /** A new terminal opens. */
   opening: boolean
   /** The terminals whose close runs. */
@@ -55,7 +65,11 @@ interface RepliedList {
 export type ReadyTerminalsAction =
   /** The view shows a terminal for `requested`, the terminal of the route. */
   | { type: 'shown'; terminalId: string; requested: string | null }
-  | { type: 'ended'; terminalId: string }
+  /**
+   * The connection ended, `lasted` milliseconds after its first output, or
+   * with no output, as 0.
+   */
+  | { type: 'ended'; terminalId: string; end: TerminalEnd; lasted: number }
   | { type: 'reconnect'; terminalId: string }
   /**
    * The list of a `terminals.updated` event, with the number of its event,
@@ -92,6 +106,7 @@ export function readyTerminals(answer: ReadyTerminal): ReadyTerminals {
     opened: new Set(),
     ended: new Set(),
     connections: new Map(),
+    automatic: new Set(),
     opening: false,
     closing: new Set(),
   }
@@ -136,6 +151,7 @@ function withTerminals(
     opened: listed(ready.opened),
     ended: listed(ready.ended),
     connections: new Map([...ready.connections].filter(([id]) => ids.has(id))),
+    automatic: listed(ready.automatic),
     closing: listed(ready.closing),
   }
   const { shown } = ready
@@ -162,6 +178,16 @@ function withNewerList(
   if (ready.revision !== null && eventNumber <= ready.revision) return ready
   const next = { ...withTerminals(ready, terminals), revision: eventNumber }
   return several === undefined ? next : { ...next, several }
+}
+
+/** The terminal with a new connection, which ends its Disconnected. */
+function reconnected(
+  ready: ReadyTerminals,
+  terminalId: string,
+): ReadyTerminals {
+  const connections = new Map(ready.connections)
+  connections.set(terminalId, (connections.get(terminalId) ?? 0) + 1)
+  return { ...ready, ended: removed(ready.ended, terminalId), connections }
 }
 
 /**
@@ -195,15 +221,22 @@ export function readyReducer(
       // That end changes nothing.
       const { terminalId } = action
       if (!ready.terminals.some((each) => each.id === terminalId)) return ready
+      if (retries(ready.automatic.has(terminalId), action))
+        return {
+          ...reconnected(ready, terminalId),
+          automatic: added(ready.automatic, terminalId),
+        }
       const ended = added(ready.ended, terminalId)
-      return ended === ready.ended ? ready : { ...ready, ended }
+      const automatic = removed(ready.automatic, terminalId)
+      return ended === ready.ended && automatic === ready.automatic
+        ? ready
+        : { ...ready, ended, automatic }
     }
-    case 'reconnect': {
-      const { terminalId } = action
-      const connections = new Map(ready.connections)
-      connections.set(terminalId, (connections.get(terminalId) ?? 0) + 1)
-      return { ...ready, ended: removed(ready.ended, terminalId), connections }
-    }
+    case 'reconnect':
+      return {
+        ...reconnected(ready, action.terminalId),
+        automatic: removed(ready.automatic, action.terminalId),
+      }
     case 'listed': {
       const { terminals, eventNumber, several } = action
       return withNewerList(ready, terminals, eventNumber, several)

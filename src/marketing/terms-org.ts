@@ -12,13 +12,20 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
   blocks: [
     list(
       text`Every member of an org sees all of its workspaces and automations.
+        A removed workspace opens by direct link or chat link, with
+        read-only chat.
         In an active org, members can send messages in workspaces that are
         not archived.
         After a pull request merges, every member can use Continue to start
-        the next task in that workspace.`,
+        the next task in that workspace. Every member can also move a
+        workspace to another repository of the org.`,
       text`The workspace tools let agents read workspace, session, and
-        message details, list sessions and previews, list the names and
-        descriptions of the org's secrets, and read chats across the org.
+        message details, list sessions and previews, and read chats across
+        the org. They also list each org secret's name, description, and
+        environment variable name.
+        Agents can read removed workspaces and their sessions by ID.
+        Workspace lists leave out removed workspaces unless the agent asks
+        for them.
         A workspace token is a credential for those tools. Any program
         with it can make these reads without a running turn.
         A copied token keeps that access after the person who copied
@@ -82,13 +89,14 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         workspace. You can also connect an OpenAI API key.`,
       text`While a turn runs, its GitHub token is in the cloud computer of
         the workspace. A member with a terminal in that cloud computer can
-        read it. During Continue, the fetch uses the GitHub token of the
-        member who clicks. A member with a terminal can also read that token
-        while the fetch runs. A member with a terminal can also get the
+        read it. During Continue or a repository change, the fetch uses the
+        GitHub token of the member who starts it. A member with a terminal
+        can also read that token while the fetch runs. A member with a terminal can also get the
         workspace owner's GitHub token without a running turn.`,
       text`An agent can ask to run one command with a secret of the org.
-        The command gets the value, and the agent gets only its name. Any
-        member who sees the session can allow the secret for that session.
+        The command gets the value. The agent gets the secret's name and
+        environment variable name, without the value. Any member who sees
+        the session can allow the secret for that session.
         A secret that an admin marked for all agents, or that a member
         pre-approved for the workspace, needs no approval.`,
       text`When a member allows a request after the agent stopped waiting,
@@ -132,13 +140,26 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         automation moves to the member who gets their workspaces. It stays
         off until that member turns it on. Later runs follow the same
         agent login rule and use that member's GitHub token.`,
+      text`The owner can choose org secrets in Capabilities on the automation
+        page. Every member sees the chosen secret names. Only the owner changes
+        the choice. Each run workspace starts with these secrets pre-approved
+        by the owner. Its agents can use them without a new request.`,
+      text`These pre-approvals stay in a kept run workspace until a member
+        removes them or the secret is deleted. Changing the automation's
+        choice affects only later run workspaces. The member who added a
+        chosen secret, or an admin, can replace its value. Later runs then
+        use the new value. A request for another
+        secret still waits for a member unless another approval allows it.
+        Mac access starts off in each run workspace.`,
       text`The run of an automation for a pull request reads that pull request,
         also the comments, reviews, and descriptions of other GitHub
         accounts. Such text can steer the agent while the run uses the
         session's agent login, the owner's GitHub token, and the org's
         env vars.
         It can also steer the agent to use the secrets that need no new
-        approval, such as a secret for all agents.
+        approval, such as a secret for all agents or one chosen for the
+        automation. The automation page warns every member about this risk
+        when the automation has a pull request trigger and a chosen secret.
         Such text can also steer the agent to read and change work across
         the org, with that member's workspace tool rights.
         Messages follow the same session login rules.`,

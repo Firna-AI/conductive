@@ -1,7 +1,6 @@
 import { useId } from 'react'
 import { agentKeys, agents, type AgentKey } from '../../fixtures/agents'
 import {
-  loginLabels,
   shareNotSavedCause,
   sharedByDefault,
   type AgentLogins,
@@ -19,6 +18,7 @@ import {
 import { loginShare } from '../../entries/components/settings/LoginShare.mockup'
 import { classes } from '../common/classes'
 import { StatusText } from '../common/StatusText'
+import { loginLabels } from './agentConnectCopy'
 import type { EndpointEntry } from './EndpointFields'
 import type { SignInStep } from './chatGptSignInCopy'
 import type { UnusableLogin } from './LoginNotUsable'

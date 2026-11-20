@@ -1,6 +1,7 @@
 import { agents, type AgentKey } from '../../fixtures/agents'
-import { loginLabels, type EndpointLogin } from '../../fixtures/logins'
+import type { EndpointLogin } from '../../fixtures/logins'
 import { actionButton } from '../../entries/components/common/actions.mockup'
+import { loginLabels } from './agentConnectCopy'
 import type { LoginOwner } from './EndpointModels'
 import { endpointModels } from '../../entries/components/settings/EndpointModels.mockup'
 import {

@@ -63,7 +63,11 @@ function workspaceAt(href: string | null | undefined): string | null {
  */
 async function mountTrees() {
   const app = await startedApp(new FakeApiServer())
-  const groups = groupWorkspaces(coreFixtures().sectionList.sections, trees)
+  const groups = groupWorkspaces(
+    coreFixtures().sectionList.sections,
+    trees,
+    FAKE_TIME,
+  )
   const moves: { workspaceId: string; target: DropTarget }[] = []
   const shown: { workspaceId: string; anchor: MenuAnchor }[] = []
   const menus = (workspace: Workspace): RowMenu => ({

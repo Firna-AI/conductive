@@ -8,11 +8,18 @@ The helper owns the SDK, agent process, and temporary credential cleanup.
 ## Interface
 
 The runner writes JSON lines to stdin. The helper writes JSON lines to stdout.
+The helper also reads the JSON-RPC lines that the Codex App Server writes to its stdout.
+Each of these readers ends a line only at LF.
+A JSON string can hold U+2028 and U+2029 raw, and `node:readline` also ends a line at them.
 Rust defines these messages in [cnd-runner-interface](../../crates/cnd-runner-interface/README.md).
 Its export command writes their TypeScript into `src/generated/`.
 Import each generated type directly. Never edit generated files.
 
-Requests start an agent, send input, change model, interrupt, close, or warm the Claude binary.
+Requests start an agent, send input, change model, interrupt, close, warm the
+Claude binary, or scan skills. A scanner helper stays separate from agent
+helpers. It returns metadata and private skill paths. Rust filters and
+bounds that data before it saves a workspace report. Each agent send can
+carry the latest private Codex skill paths.
 Request IDs match response or error messages.
 Agent events stream while a request waits. Result message lists retain their exact IDs and order.
 Background note updates carry the work IDs that the active turn already named.
@@ -78,8 +85,12 @@ The Rust runner drives the helper directly. The release contains no separate run
 - [main.ts](src/main.ts) connects private stdin and stdout and handles process shutdown.
 - [session.ts](src/session.ts) orders requests and cancels agent setup.
 - [json-lines.ts](src/json-lines.ts) frames complete UTF-8 JSON lines.
+- [text-lines.ts](src/text-lines.ts) splits UTF-8 input into lines at LF only, for both JSON-line readers.
+- [process.ts](src/providers/process.ts) starts the Codex App Server and reads its output lines.
 - [read-request.ts](src/read-request.ts) and [read-output.ts](src/read-output.ts) validate boundary data.
 - [claude.ts](src/providers/claude.ts) and [codex.ts](src/providers/codex.ts) start the two adapters.
+- [skills.ts](src/skills.ts) caches skill discovery from Claude folders and the Codex app server or fallback folders.
+- [skill-input.ts](src/providers/skill-input.ts) selects explicit Codex skill input from each message.
 - [lifetime.ts](src/providers/lifetime.ts) waits for agent exit and removes credentials.
 - [test-support](test-support/) holds the fake SDK query, App Server, and provider fixtures.
 - [Rust driver](../../crates/cnd-runner/src/helper/driver.rs) drives helper processes.

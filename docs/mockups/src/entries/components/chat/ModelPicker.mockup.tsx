@@ -21,7 +21,7 @@ export const modelPicker = defineComponent({
   slug: 'model-picker',
   title: 'Model picker',
   description:
-    'One picker for the model and the effort of the next message, such as "Opus 5.5 High". The effort shows in a muted colour, and so does "Fast" after it while fast mode is on. Its menu lists the models of each agent, the efforts, and Fast. In a session with messages, a model of the other agent opens a new session. Its own page shows the default choice.',
+    'One picker for the model and the effort of the next message, such as "Opus 5.5 High". The effort shows in a muted colour, and so does "Fast" after it while fast mode is on. Its menu lists the models of each agent, the efforts, and Fast. In a session with messages, a model of the other agent opens a new session. A screen can supply an open menu in place of the model menu, such as the menu of the favourites. Its own page shows the default choice.',
   relatedDocs: ['docs/mockups/design-chat.md'],
   propSchema: {
     type: 'object',
@@ -41,12 +41,14 @@ export const modelPicker = defineComponent({
       fastKey: { type: 'boolean' },
     },
   } as const,
+  slots: ['menu'],
   props: { choice: defaultChoice },
   render: (props) => (
     <ModelPicker
       choice={props.choice}
       fastKey={props.fastKey}
       hiddenModels={props.hiddenModels}
+      menu={props.menu}
       open={props.open}
       placement={props.placement}
       sessionAgent={props.sessionAgent}

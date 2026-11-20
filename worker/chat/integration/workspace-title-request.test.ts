@@ -93,7 +93,15 @@ it('retries an empty title after a native restart with the saved first message t
     'Task message as a JSON string:\n"Keep the first message"',
   )
   await actor.completeTitle('Title: ""')
+  // The first request tries the model three times.
+  for (const after of [1, 2]) {
+    expect((await actor.waitForTitleCall(after)).messages?.[1].content).toBe(
+      'Task message as a JSON string:\n"Keep the first message"',
+    )
+    await actor.completeTitle('Title: ""')
+  }
   await actor.drainTitleWork()
+  expect(await actor.titleCallCount()).toBe(3)
   expect((await active.session(active.first.sessionId)).title).toBeNull()
   await active.restart()
   const restartedBindings = await active.runtime.getBindings<{

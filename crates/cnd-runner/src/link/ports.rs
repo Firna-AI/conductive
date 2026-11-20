@@ -3,7 +3,7 @@
 use async_trait::async_trait;
 use cnd_runner_interface::runner::RunnerEvent;
 use cnd_runner_interface::runner_commands::RunnerCommand;
-use cnd_runner_interface::runner_files::RunnerFileResponse;
+use cnd_runner_interface::runner_handshake::RunnerToWorkspace;
 
 use crate::error::Result;
 
@@ -33,8 +33,8 @@ pub trait RunnerLink: Send + Sync {
     async fn emit(&self, event: RunnerEvent, report_command_id: Option<String>) -> Result<()>;
     /// Save all pending state and replay only committed events.
     async fn persist(&self) -> Result<()>;
-    /// Send a file response outside the numbered outbox after welcome.
-    async fn reply(&self, response: RunnerFileResponse) -> Result<()>;
+    /// Send a file response or a move refusal outside the numbered outbox after welcome.
+    async fn reply(&self, response: RunnerToWorkspace) -> Result<()>;
     /// Close the socket without discarding saved state.
     async fn close(&self) -> Result<()>;
 }

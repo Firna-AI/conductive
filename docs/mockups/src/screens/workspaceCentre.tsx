@@ -1,9 +1,11 @@
 import type { ReactNode } from 'react'
 import { defined } from '../defined'
 import { filePage } from '../entries/components/files/FilePage.mockup'
+import { paths } from '../paths'
 import { PreviewPage } from '../components/tools/PreviewPage'
 import { SandboxPanel } from '../components/workspace/SandboxNotice'
-import { filePlaceholder, openFile } from './workspaceParts'
+import { openFile } from './workspaceFileTab'
+import { filePlaceholder } from './workspaceParts'
 import { panelState } from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
 
@@ -18,6 +20,7 @@ export function centreOf(state: WorkspaceState, chat: ReactNode): ReactNode {
   if (file) {
     return (
       <filePage.Component
+        expandTo={paths.htmlExpanded}
         moklyInstance="file-page"
         view={file}
         {...defined({ placeholder: filePlaceholder(state, true) })}

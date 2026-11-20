@@ -50,12 +50,15 @@ const statsSchema = {
     workspaceStates: {
       type: 'object',
       additionalProperties: false,
-      required: ['running', 'stopped', 'failed', 'archived'],
+      required: ['running', 'stopped', 'failed', 'archived', 'removed'],
       properties: {
         running: countSchema,
         stopped: countSchema,
         failed: countSchema,
+        /** The archived workspaces in the list. */
         archived: countSchema,
+        /** The archived workspaces that left the list. */
+        removed: countSchema,
       },
     },
     automations: countSchema,

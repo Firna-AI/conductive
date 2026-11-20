@@ -7,7 +7,23 @@ const archiveRestores = [
   'ended',
 ] as const satisfies readonly ArchiveRestore[]
 
-/** The states of a sandbox that is not running, as `SandboxNoticeState`. */
+/** The days of an archived workspace, as `ArchiveDays`. */
+const archiveDaysSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['archivedOn', 'removedOn'],
+  properties: {
+    /** The day of the Archive. */
+    archivedOn: { type: 'string' },
+    /** The last day of Restore, when the workspace leaves the list. */
+    removedOn: { type: 'string' },
+  },
+} as const
+
+/**
+ * The states of a sandbox that is not running, as `BarNotice`: the states
+ * of `SandboxNoticeState`, with the days of an archived workspace.
+ */
 const noticeStates = [
   {
     type: 'object',
@@ -18,11 +34,15 @@ const noticeStates = [
   {
     type: 'object',
     additionalProperties: false,
-    required: ['problem'],
+    required: ['problem', 'days'],
     properties: {
       problem: { const: 'archived' },
       /** Without it, the cloud computer is gone, and nothing comes back. */
       restore: { enum: archiveRestores },
+      /** Its 14 days ended, so it left the list. */
+      removed: { type: 'boolean' },
+      /** The day of the Archive, and the day when it leaves the list. */
+      days: archiveDaysSchema,
     },
   },
   {
@@ -49,10 +69,10 @@ const noticeStates = [
   },
 ] as const
 
-/** The bar of a sandbox that is not running, as `SandboxNoticeState`. */
+/** The bar of a sandbox that is not running, as `BarNotice`. */
 export const sandboxNoticeSchema = { anyOf: noticeStates } as const
 
-/** What a panel shows in place of its content, as `SandboxPanelState`. */
+/** What a panel shows in place of its content, as `PanelNotice`. */
 export const sandboxPanelSchema = {
   anyOf: [
     ...noticeStates,

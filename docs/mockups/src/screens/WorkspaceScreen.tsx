@@ -27,6 +27,8 @@ import { composerNotice } from './composerNotice'
 import { centreOf } from './workspaceCentre'
 import { placeLostUpdate } from './lostUpdates'
 import { chatWorkspacesOf } from './orgWorkspaces'
+import { headerMenusOf } from './workspaceBar'
+import { headerMenuOf } from './workspaceHeaderMenu'
 import { workspaceOpen } from './workspaceOpen'
 import {
   filesContent,
@@ -34,12 +36,10 @@ import {
 } from '../entries/components/screens/workspaceParts.mockup'
 import { startingLogFor } from './workspaceParts'
 import { workspaceSidebar } from './workspaceSidebar'
-import {
-  copyToast,
-  workspaceOverlay,
-  workspacePalette,
-  workspaceToast,
-} from './workspaceOverlays'
+// The toasts lay first in the old module of the overlays, so their styles
+// keep their place before the styles of the dialogs.
+import { copyToast, workspaceToast } from './workspaceToasts'
+import { workspaceOverlay, workspacePalette } from './workspaceOverlays'
 import { sandboxNotice } from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
 import { tabRowOf } from './workspaceTabRow'
@@ -64,14 +64,16 @@ const raisedSplit = 35
  * The toast of the state lies over everything. `shortcuts` holds the
  * person's changes to the shortcuts. With them, the palette rows show their
  * keys, and the Search row shows the person's key of the palette.
+ * `picker` takes the place of the model picker of the message box.
  */
 export function WorkspaceScreen(props: {
   state: WorkspaceState
   viewport: Viewport
   overlay?: ReactNode
   shortcuts?: ShortcutChanges
+  picker?: ReactNode
 }) {
-  const { viewport } = props
+  const { viewport, picker: pickerPart } = props
   const mac = useMacApp()
   const {
     state,
@@ -96,7 +98,7 @@ export function WorkspaceScreen(props: {
     rows,
     workspace,
     items: empty ? [] : chatItemsFor(open.items, state.paths),
-    composer: composerFor(state, workspace, viewport),
+    composer: { ...composerFor(state, workspace, viewport), pickerPart },
     // An archived workspace keeps its archived bar, so the notice of a
     // suspended org shows above it.
     notice:
@@ -108,6 +110,7 @@ export function WorkspaceScreen(props: {
       ) : (
         composerNotice(state, workspace)
       ),
+    pictures: state.sandbox === 'ready' ? state.pictures : undefined,
     problem,
     starting: startingLogFor(state),
     fold: state.fold,
@@ -120,15 +123,19 @@ export function WorkspaceScreen(props: {
       canRestart={!readOnly}
       moklyInstance="workspace-header"
       name={workspace.name}
-      ownerOpen={state.overlay === 'reassign'}
+      renaming={state.overlay === 'header-rename'}
       rightHidden={rightHidden}
-      stateOpen={state.overlay === 'restart'}
       status={status}
       viewport={viewport}
       workspace={workspace}
       {...defined({
+        ...headerMenusOf(state),
         back: suspended ? paths.suspendedOrg : undefined,
         copy: state.copyLink === 'none' ? undefined : state.copyLink,
+        menu:
+          state.overlay === 'workspace-menu' && viewport === 'desktop'
+            ? headerMenuOf(state, workspace.owner)
+            : undefined,
         run: open.run,
       })}
     />

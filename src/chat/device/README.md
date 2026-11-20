@@ -59,8 +59,12 @@ const { controller, state } = useMacSettings(services.api)
   Allow, and the menu of the other ways to allow. A browser, the Mac app of
   another Mac, and a replaced connection show the state only. The pairing
   IDs name a connection, and the Worker checks the session of the window.
-  The menu is a popover in the top layer, which CSS anchors to the actions
-  of its request, so the region of the requests never cuts it.
+- The menu of the other ways to allow opens in the top layer, on
+  `PopoverSurface` in `src/shell/ui/`, beside the actions of its request.
+  So the region of the requests never cuts it. It opens above the actions
+  when it fits there, else on the side with more room, and it follows them
+  when the region scrolls. A narrow request puts its actions under the
+  command. The menu then starts at the actions and keeps inside their width.
 - An answer goes to the address of the `requestKey` of its record, which
   the Worker gives. The chat keeps the raw `requestId` for its own maps and
   never builds an address from it.
@@ -74,6 +78,11 @@ const { controller, state } = useMacSettings(services.api)
   less makes it short again. A command that fits shows no button. The
   whole text stays in the page, so a screen reader and a copy get all of
   it. A change of the width measures the command again.
+- `CommandCard` shows the output of a finished run through
+  `CommandOutput`, with the same rules: long output shows its first ten
+  lines, its last lines fade out, and Show all and Show less open and close
+  it. Output that fits shows no button. `useClipped` in `use-clipped.ts`
+  measures both.
 - `ThisMacSection` and `AllowAllBar` show the settings that the Mac keeps.
   One read or change of the settings runs at a time, in the order of the
   user's actions, so the Mac gets them in that order and the last reply
@@ -124,7 +133,8 @@ menu of Allow over the region. Build the Mac app first, then run
 - `mac-settings.ts`: the reads and the changes of the Mac's settings for
   `ThisMacSection.tsx`, `SavedChoices.tsx`, and `AllowAllBar.tsx`.
 - `AllowedCommand.tsx`: one always-allowed command, short with Show all
-  when it is long.
+  when it is long. `CommandOutput.tsx` does the same for the output of a
+  card, and `use-clipped.ts` measures whether a text is cut.
 - `settings-results.ts`: the result of each control, and its words.
 
 ### Related docs

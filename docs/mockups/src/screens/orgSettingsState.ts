@@ -1,5 +1,6 @@
 import type { SchemaProps } from '@mokly/mokly'
 import { ORG_COLORS } from '../design/orgColors'
+import { repositoryOrderStates } from '../components/settings/RepositoryOrderList'
 import { repositoryChanges } from '../fixtures/repositories'
 import {
   orgAgentsDefaults,
@@ -15,6 +16,8 @@ export const orgSettingsSchema = {
     'build',
     'script',
     'repositoryChange',
+    'repositoryView',
+    'repositoryOrder',
     'envForm',
     'secrets',
     'dialog',
@@ -56,6 +59,20 @@ export const orgSettingsSchema = {
      */
     repositoryChange: { enum: repositoryChanges },
     /**
+     * The Repositories tab of an admin: the chosen repositories with Edit,
+     * or, after Edit, every repository that the GitHub App reaches, with
+     * search, Add, Remove, and Done. `edit-added` is an open edit that
+     * adds acme/admin-dashboard, which Done has not saved yet.
+     */
+    repositoryView: { enum: ['list', 'edit', 'edit-added'] },
+    /**
+     * The order of the chosen repositories outside Edit, from
+     * repository-order decision 1 F: the plain list, the row menu of
+     * acme/billing-service open, a drag of acme/marketing-site to the top,
+     * or the list after Make default on acme/billing-service.
+     */
+    repositoryOrder: { enum: repositoryOrderStates },
+    /**
      * The open form of the environment variables, which the cloud computer
      * tab of an admin shows: none, Add variable, or the new value of
      * DATABASE_URL.
@@ -63,13 +80,25 @@ export const orgSettingsSchema = {
     envForm: { enum: ['none', 'add', 'change'] },
     /**
      * The Secrets tab: the list, the value of PROD_DATABASE_URL that an
-     * admin just revealed, the Add secret form, or the field of a new
-     * value in the row of a secret.
+     * admin just revealed, the Add secret form, that form after it refused
+     * a name with spaces, or the field of a new value in the row of a
+     * secret. `replace-older` lists Cloudflare (read-only), a secret with
+     * an older name, and opens that field in its row.
      */
-    secrets: { enum: ['list', 'revealed', 'add', 'replace'] },
+    secrets: {
+      enum: [
+        'list',
+        'revealed',
+        'add',
+        'add-refused',
+        'replace',
+        'replace-older',
+      ],
+    },
     /**
      * A dialog over the page: Delete org, the removal of a member, the
-     * leave of a suspended org, or the question before Delete of a secret.
+     * leave of a suspended org, that leave while it runs, or the question
+     * before Delete of a secret.
      */
     dialog: {
       enum: [
@@ -77,6 +106,7 @@ export const orgSettingsSchema = {
         'delete-org',
         'remove-member',
         'leave-org',
+        'leaving-org',
         'delete-secret',
       ],
     },
@@ -113,6 +143,8 @@ export const acmeSettings: OrgSettingsState = {
   build: 'ready',
   script: 'built',
   repositoryChange: 'none',
+  repositoryView: 'list',
+  repositoryOrder: 'list',
   envForm: 'none',
   secrets: 'list',
   dialog: 'none',

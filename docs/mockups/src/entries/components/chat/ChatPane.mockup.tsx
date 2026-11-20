@@ -1,6 +1,7 @@
 import { defineComponent } from '@mokly/mokly'
 import { ChatPane } from '../../../components/chat/ChatPane'
 import { foldStates } from '../../../components/chat/WorkFold'
+import { pictureReads } from '../../../components/chat/chatPictures'
 import { plainData } from '../../../defined'
 import { defaultChoice } from '../../../fixtures/agents'
 import { conversations } from '../../../fixtures/conversations'
@@ -53,17 +54,24 @@ export const chatPane = defineComponent({
       fold: { enum: foldStates },
       /** The viewport of the screen, when it differs from the view. */
       viewport: { enum: viewports },
+      /** The reads of the pictures of the answers, while the computer runs. */
+      pictures: { enum: pictureReads },
     },
   } as const,
-  slots: ['empty', 'notice', 'capabilitiesPanel'],
+  slots: ['empty', 'notice', 'capabilitiesPanel', 'pickerPart'],
   props: { items: plainData(conversations.history), composer, viewer: 'cal' },
   render: (props, context) => (
     <ChatPane
-      composer={withComposerPanel(props.composer, props.capabilitiesPanel)}
+      composer={withComposerPanel(
+        props.composer,
+        props.capabilitiesPanel,
+        props.pickerPart,
+      )}
       empty={props.empty}
       fold={props.fold}
       items={props.items}
       notice={props.notice}
+      pictures={props.pictures}
       problem={props.problem}
       starting={props.starting}
       viewer={props.viewer}

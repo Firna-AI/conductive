@@ -1,6 +1,6 @@
+import type { RunWithSecretsRequest } from '../../src/shared/generated/RunWithSecretsRequest'
 import type { RunnerEvent } from '../../src/shared/generated/RunnerEvent'
 import type {
-  RunWithSecretsRequest,
   AnswerSecretRequest,
   SecretRequestResponse,
   SecretRequestsResponse,

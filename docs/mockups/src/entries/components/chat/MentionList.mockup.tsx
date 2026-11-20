@@ -5,6 +5,7 @@ import {
   MentionAnchor,
   MentionList,
 } from '../../../components/chat/MentionList'
+import { SkillIcon } from '../../../components/chat/SkillChip'
 import { instanceKey } from '../../../instanceKey'
 import { entryIcon } from '../files/fileIcons.mockup'
 import { roomAboveSchema, withRoomAbove } from '../common/ownPages'
@@ -27,7 +28,7 @@ export const mentionList = defineComponent({
   slug: 'mention-list',
   title: 'Mention list',
   description:
-    'The list of `@` above the message box, as wide as the box: the icon, the name, and the folder of each file or folder that matches. The row that Enter or Tab picks is highlighted. One line takes the place of the rows while the tree loads, when no tree is available, and when nothing matches. Its own page shows the matches of "addr".',
+    'The list of `@` above the message box, as wide as the box: the icon, the name, and the folder of each file or folder that matches. The list of `/` shows the name and the description of each skill in the same way, and `label` names its listbox. The row that Enter or Tab picks is highlighted. One line takes the place of the rows while the tree loads, when no tree is available, and when nothing matches. Its own page shows the matches of "addr".',
   relatedDocs: ['docs/mockups/catalogue-workspace-tools.md'],
   propSchema: {
     type: 'object',
@@ -35,6 +36,8 @@ export const mentionList = defineComponent({
     required: ['id', 'rows', 'highlighted', 'line'],
     properties: {
       id: { type: 'string', minLength: 1 },
+      /** The name of the listbox, for the list of `/`. */
+      label: { type: 'string' },
       rows: {
         type: 'array',
         items: {
@@ -42,13 +45,15 @@ export const mentionList = defineComponent({
           additionalProperties: false,
           required: ['key', 'name', 'folder', 'icon'],
           properties: {
-            /** The real path, which stays the key of the row. */
+            /** The real path, or the name of a skill: the key of the row. */
             key: { type: 'string', minLength: 1 },
             name: { type: 'string' },
             /** The folder that holds the entry, or '' at the root. */
             folder: { type: 'string' },
-            /** The icon of a file, by its name, or of a folder. */
-            icon: { enum: ['file', 'folder'] },
+            /** The muted line after the name: the description of a skill. */
+            description: { type: 'string' },
+            /** The icon of a file, by its name, of a folder, or of a skill. */
+            icon: { enum: ['file', 'folder', 'skill'] },
           },
         },
       },
@@ -71,17 +76,21 @@ export const mentionList = defineComponent({
       <MentionList
         highlighted={props.highlighted}
         id={props.id}
+        label={props.label}
         line={props.line}
         rows={props.rows.map((row) => ({
           ...row,
-          icon: (
-            <entryIcon.Component
-              folder={row.icon === 'folder'}
-              moklyInstance={`icon-${instanceKey(row.key)}`}
-              name={row.name}
-              size={14}
-            />
-          ),
+          icon:
+            row.icon === 'skill' ? (
+              <SkillIcon size={14} />
+            ) : (
+              <entryIcon.Component
+                folder={row.icon === 'folder'}
+                moklyInstance={`icon-${instanceKey(row.key)}`}
+                name={row.name}
+                size={14}
+              />
+            ),
         }))}
       />,
       props.roomAbove,

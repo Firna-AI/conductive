@@ -6,6 +6,7 @@ use cnd_runner_interface::tools::{
     device::DeviceCommandInput,
     previews::OpenPreviewRequest,
     resources::AgentCreateSectionRequest,
+    secrets::RunWithSecretsRequest,
     session_actions::{AgentCloseSessionRequest, AgentRenameSessionRequest},
     session_reads::{AgentListSessionsRequest, AgentReadSessionRequest},
     sessions::{AgentCreateSessionRequest, AgentSendMessageRequest},
@@ -16,7 +17,6 @@ use cnd_runner_interface::tools::{
 };
 
 use crate::process::CommandInput;
-use crate::secrets::types::RunRequest;
 
 /// The 26 public tool identities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -54,7 +54,7 @@ pub(crate) enum Name {
 #[derive(Debug, Clone)]
 pub(crate) enum Call {
     ListSecrets,
-    RunWithSecrets(RunRequest, CommandInput),
+    RunWithSecrets(RunWithSecretsRequest, CommandInput),
     RunMacCommand(DeviceCommandInput),
     CreateWorkspace(AgentCreateWorkspaceRequest),
     ListWorkspaces(AgentListWorkspacesRequest),

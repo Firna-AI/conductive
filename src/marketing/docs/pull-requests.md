@@ -29,6 +29,7 @@ A workspace you create uses the repository's default branch.
 For a pull request run, its first message names the initial target under **Your work goes to**.
 The pull request bar names the current target.
 After **Continue**, the workspace targets the latest default branch of its repository.
+After a repository change, it targets the latest default branch of the new repository.
 Your draft and its attached files stay unchanged.
 Conductive then shows the pull request's state for that branch.
 
@@ -91,6 +92,13 @@ Each agent action sends a fixed message to the chat session you viewed last.
 It uses that session's model, effort, **Fast** setting, and normal send rules.
 It preserves your draft and uploads.
 
+To bring the latest target branch into your branch at any time, open the command palette and choose **Merge latest**.
+The row names the target branch, as in **Merge latest main**.
+It asks the agent to merge that branch, fix conflicts, test, commit, and push.
+It sends its message in the same way as the agent actions of the bar.
+You see it when the agent actions are available to you.
+It is not offered after the pull request merges.
+
 **Address review** asks the agent to change code without replying on GitHub.
 Select the pull request number to read, reply to, or resolve review comment threads on GitHub.
 On a phone, use **Open on GitHub** at the top of **Checks**.
@@ -150,7 +158,9 @@ If the bar says **GitHub state did not load**, select **Try again**.
 GitHub can also need time to update a pull request's merge state.
 Follow the error's retry action when that happens.
 
-If an agent action cannot send, the chat opens with the cause.
+If an agent action cannot send while you stay in the workspace on the same branch, the chat opens with the cause.
+If you leave or change the branch before the failure arrives, your chosen page stays open.
+The cause waits in that session's message box, also if you return before the failure arrives.
 Open a session or connect its required login before trying again.
 The action follows the same login and sharing rules as a message you write.
 
@@ -182,9 +192,11 @@ Continue waits while an agent turn runs in any session of the workspace.
 After a merge, the workspace owner and org admins can select **Archive** in the bar.
 Archive stops its cloud computer at once, without checking the work or asking a question.
 It keeps the computer and its files for 14 days.
-The chat stays read-only in **Archived**, with no file lists or tools.
+The workspace stays in **Archived** for those 14 days.
+Its chat is read-only, with no file lists or tools.
 
 The notification after Archive offers **Restore**.
+It also gives the day the workspace leaves the list.
 Every member of an active org can restore the workspace while its computer and Restore window remain available.
 Restore returns the workspace to its place in the list, stopped.
 Select **Resume** if the restored workspace is already open.
@@ -193,6 +205,9 @@ On a computer, point to its row in **Archived** to find **Restore**.
 
 Restore ends after 14 days.
 Conductive then deletes the computer and its files.
+The workspace leaves **Archived** and the command palette.
+A direct link or a chat link still opens its read-only chat.
+Conductive keeps its chat history until the org is deleted.
 The merge alone does not archive the workspace.
 
 - [Archive a workspace](/docs/workspaces#archive-a-workspace)

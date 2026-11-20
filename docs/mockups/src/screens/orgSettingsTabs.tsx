@@ -1,3 +1,4 @@
+import type { Viewport } from '@mokly/mokly'
 import { membersTab } from '../entries/components/members/MembersTab.mockup'
 import { SecretsTab } from '../components/secrets/SecretsTab'
 import type { SecretsAccess } from '../components/secrets/secretRights'
@@ -13,10 +14,10 @@ import {
   OrgColorSection,
   type ReadOnlyCause,
 } from '../components/settings/OrgSections'
-import {
-  orgRepositoryList,
-  repositoryList,
-} from '../entries/components/settings/RepositoryList.mockup'
+import { RepositoryEditToggle } from '../components/settings/RepositoryList'
+import { repositoryList } from '../entries/components/settings/RepositoryList.mockup'
+import { RepositoryOrderList } from '../components/settings/RepositoryOrderList'
+import { EditRepositoryNotice } from '../components/settings/RepositoryNotice'
 import { section } from '../entries/components/settings/Section.mockup'
 import {
   memberViewer,
@@ -24,6 +25,8 @@ import {
   type Membership,
   type PersonKey,
 } from '../fixtures/members'
+import { addedRepository } from '../fixtures/repositories'
+import { olderSecret, type OrgSecret } from '../fixtures/secrets'
 import { orgAgentsFor } from './orgAgentsState'
 import type { OrgSettingsState } from './orgSettingsState'
 import { settingsOrg } from './settingsOrgs'
@@ -63,18 +66,37 @@ function secretsAccess(state: OrgSettingsState): SecretsAccess {
 }
 
 /**
- * The sentence after the description of the repositories. The notice of a
- * suspended org says why nothing changes, so the tab adds nothing.
+ * The secrets of the Secrets tab. The Replace state for an older name also
+ * lists Cloudflare (read-only), a secret of Acme, first, as the list sorts
+ * by name.
  */
-const repositoryNotes: Readonly<Record<ReadOnlyCause | 'editable', string>> = {
-  editable: ' Adding a repository starts a build.',
-  member: ' Only an admin can change them.',
-  suspended: '',
+function tabSecrets(
+  state: OrgSettingsState,
+  secrets: readonly OrgSecret[],
+): readonly OrgSecret[] {
+  if (state.secrets !== 'replace-older' || state.org === 'new') return secrets
+  return [olderSecret, ...secrets]
+}
+
+/**
+ * The description of the Repositories tab. Only a member who is not an
+ * admin gets one. The notice of a suspended org says why nothing changes,
+ * so the tab adds nothing.
+ */
+const repositoryNotes: Readonly<
+  Record<ReadOnlyCause | 'editable', string | undefined>
+> = {
+  editable: undefined,
+  member: 'Only an admin can change them.',
+  suspended: undefined,
 }
 
 /** The body of the open tab of the org settings. */
-export function TabBody(props: { state: OrgSettingsState }) {
-  const { state } = props
+export function TabBody(props: {
+  state: OrgSettingsState
+  viewport: Viewport
+}) {
+  const { state, viewport } = props
   const viewer = settingsViewer(state)
   const readOnly = readOnlyCause(state)
   const settings = settingsOrg(state)
@@ -107,23 +129,44 @@ export function TabBody(props: { state: OrgSettingsState }) {
       )
     case 'repositories': {
       const note = repositoryNotes[readOnly ?? 'editable']
+      const editing = !readOnly && state.repositoryView !== 'list'
+      // An open edit with an add that Done has not saved yet.
+      const unsaved = editing && state.repositoryView === 'edit-added'
+      const listed = unsaved
+        ? settings.repositories.map((repository) =>
+            repository.name === addedRepository
+              ? { ...repository, used: true }
+              : repository,
+          )
+        : settings.repositories
       return (
         <section.Component
-          description={`The cloud computer of ${org.name} holds these repositories, and its workspaces start in them.${note}`}
           moklyInstance="repositories"
           title="Repositories"
+          {...defined({
+            action: readOnly ? undefined : (
+              <RepositoryEditToggle editing={editing} />
+            ),
+            description: note,
+          })}
         >
-          {settingsRepositoryNotice(state, settings)}
-          {readOnly ? (
-            <orgRepositoryList.Component
-              moklyInstance="repository-list"
-              repositories={settings.repositories}
-            />
+          {unsaved ? (
+            <EditRepositoryNotice added={[addedRepository]} />
           ) : (
+            settingsRepositoryNotice(state, settings)
+          )}
+          {editing ? (
             <repositoryList.Component
               moklyInstance="repository-list"
-              repositories={settings.repositories}
+              repositories={listed}
               search=""
+            />
+          ) : (
+            <RepositoryOrderList
+              canMove={!readOnly}
+              repositories={settings.repositories}
+              state={state.repositoryOrder}
+              viewport={viewport}
             />
           )}
         </section.Component>
@@ -153,7 +196,7 @@ export function TabBody(props: { state: OrgSettingsState }) {
           access={secretsAccess(state)}
           computerTo={settings.links.computer}
           org={org.name}
-          secrets={settings.secrets}
+          secrets={tabSecrets(state, settings.secrets)}
           view={state.secrets}
         />
       )

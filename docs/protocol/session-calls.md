@@ -49,10 +49,11 @@ at `app/workspace-links/sent-by`.
 - Each reply gives the session link of each session that it names, as the
   workspace replies give workspace links. Reason: an agent can then point
   to a session that it started.
-- The reads also reach an archived workspace and a closed session, as a
-  copy of a transcript does. Each write refuses an archived workspace with
-  HTTP 409 and the error code `workspace_archived`. Reason: the chat of an
-  archived workspace is read-only.
+- The reads also reach an archived workspace, also a
+  [removed one](workspace-life.md#removed-workspaces), and a closed
+  session, as a copy of a transcript does. Each write refuses an archived
+  workspace with HTTP 409 and the error code `workspace_archived`.
+  Reason: the chat of an archived workspace is read-only.
 - `create_session` and `send_message` take an optional request ID. A
   repeat of such a write with the same request ID gives the result of the
   first write, as a repeated message of the app does.
@@ -87,7 +88,7 @@ at `app/workspace-links/sent-by`.
   requests of that turn belong to that member.
 - A tool message that joins a running turn keeps the stored sender of that
   turn. So it changes neither the GitHub token nor the Mac of that turn, as
-  [Access](agent-instructions.md#access) says for each message that joins
+  [Access](message-lines.md#access) says for each message that joins
   a turn.
 - An approval of each tool message by a member was rejected, because the
   delegated work would then stop while no member answers.
@@ -236,8 +237,8 @@ at `app/workspace-links/sent-by`.
   on the tool messages of a workspace in an hour was rejected too. Each
   adds a stored count and a refusal.
 - Risk: two agents that answer each other spend the logins of their
-  sessions until a member stops one. They also spend the starts that all
-  orgs share.
+  sessions until a member stops one. They also spend the starts that the
+  orgs of their provider account share.
 
 ## Tool descriptions
 

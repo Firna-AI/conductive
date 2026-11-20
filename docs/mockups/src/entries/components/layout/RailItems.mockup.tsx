@@ -5,6 +5,7 @@ import {
   RailLink,
   RailTile,
 } from '../../../components/layout/RailItems'
+import { shortcutSchema } from '../common/shortcutSchemas'
 import { orgs } from '../../../fixtures/orgs'
 import { paths } from '../../../paths'
 import { menuSchema } from '../common/menuEntries'
@@ -99,7 +100,7 @@ export const orgItem = defineComponent({
       /** The name of the org shows beside its tile, as on hover. */
       hint: { type: 'boolean' },
       /** The key that opens the org, which its hint shows. */
-      shortcut: { type: 'string' },
+      shortcut: shortcutSchema,
       state: { const: 'suspended' },
       /** The tile stays as a faint copy during a drag. */
       placeholder: { type: 'boolean' },

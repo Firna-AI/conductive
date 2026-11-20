@@ -1,11 +1,9 @@
-import type { WorkspaceState } from '../../shared/generated/WorkspaceState'
 import { useMemo, type ReactNode } from 'react'
 import type { Agent } from '../../shared/generated/Agent'
 import { modelLabel } from '../../shared/agents'
 
 import { pendingCommandItems } from '../device/PendingCommands'
-import { sessionSecrets } from '../secrets/session-secrets'
-import { DeviceLoadNotice, sessionCommands } from '../device/session-commands'
+import { DeviceLoadNotice } from '../device/session-commands'
 import { tabSessions } from '../state/archive-view'
 import { sendBlock } from '../state/blockers'
 import {
@@ -27,7 +25,7 @@ import { ActionNotice, BlockNotice, LinkedSessionNotice } from './ChatNotices'
 import { Composer } from './Composer'
 import type { ComposerTool } from './ComposerTools'
 import type { ComposerFocus } from './composer-requests'
-import { SandboxBar, StartingCard, type SandboxProblem } from './SandboxState'
+import { workspaceProblemOf, SandboxBar, StartingCard } from './SandboxState'
 import {
   EarlierLoading,
   emptyView,
@@ -35,15 +33,9 @@ import {
   HistoryFailure,
   showsContent,
 } from './SessionStatus'
-import { sourceInsert } from './SourceLine'
+import { useTranscriptInputs } from './transcript-inputs'
 import { TranscriptView } from './TranscriptView'
 import { WaitingRequests } from './WaitingRequests'
-
-function problemOf(state: WorkspaceState | undefined): SandboxProblem | null {
-  return state === 'stopped' || state === 'error' || state === 'archived'
-    ? state
-    : null
-}
 
 /**
  * The parts of the chat that the app draws from its own record of the
@@ -92,7 +84,7 @@ function sandboxParts(props: SessionChatProps): ChatHost {
   if (props.host) return props.host
   const { snapshot, controller, now } = props
   const { workspace } = snapshot
-  const problem = problemOf(workspace?.state)
+  const problem = workspaceProblemOf(workspace?.state)
   const readOnly = props.readOnly ?? false
   const firstStart = failedFirstStart(workspace, snapshot.start)
   return {
@@ -107,6 +99,7 @@ function sandboxParts(props: SessionChatProps): ChatHost {
           busy={snapshot.resuming}
           firstStart={firstStart}
           message={snapshot.savedError}
+          now={now}
           onResume={() => void controller.resume()}
           problem={problem}
         />
@@ -169,21 +162,17 @@ export function SessionChat(props: SessionChatProps) {
   const status = historyStatus(state)
   const content = showsContent(state, starting !== null)
   const viewerId = snapshot.account?.user.id ?? null
-  const commands = sessionCommands(snapshot, id, state)
-  const secrets = sessionSecrets(snapshot, id, state, {
-    choices: !readOnly,
-    onAnswer: (requestId, answer) =>
-      void controller.answerSecret(requestId, answer),
-  })
+  const { commands, secrets, inserts, readers, onRetry } = useTranscriptInputs(
+    snapshot,
+    controller,
+    session,
+    state,
+    readOnly,
+  )
   const reader = loginReader(snapshot)
   const login = session ? sessionLoginOf(session, reader) : null
   const linked =
     login?.kind === 'linked' || (login?.kind === 'missing' && login.linked)
-  const openSession = (sessionId: string) => {
-    const open = snapshot.sessions.some((item) => item.id === sessionId)
-    void (open ? controller.select(sessionId) : controller.reopen(sessionId))
-  }
-  const source = sourceInsert(snapshot, session, openSession)
   const footer = (
     <>
       {id && content && status === 'failed' ? (
@@ -203,6 +192,7 @@ export function SessionChat(props: SessionChatProps) {
           block={block}
           model={modelLabel(snapshot.models, session.choice)}
           onConnectAgent={props.onConnectAgent}
+          watch={controller.watchMissingLogin}
         />
       ) : null}
       {!down && session && !block && login?.kind === 'linked' ? (
@@ -279,16 +269,12 @@ export function SessionChat(props: SessionChatProps) {
     >
       {content && status === 'loading' ? <EarlierLoading /> : null}
       <TranscriptView
-        inserts={[
-          ...(source ? [source] : []),
-          ...commands.inserts,
-          ...secrets.inserts,
-        ]}
+        inserts={inserts}
         now={now}
         onOpenDiff={props.onOpenDiff}
-        onRetry={(messageId) => id && void controller.retry(id, messageId)}
+        onRetry={onRetry}
         pending={state.pending}
-        readers={{ viewerId, members: snapshot.members }}
+        readers={readers}
         readOnly={readOnly}
         retrying={state.retrying}
         transcript={state.transcript}

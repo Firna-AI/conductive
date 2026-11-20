@@ -101,6 +101,6 @@ export async function handleGitHubRead(
       request.method === 'HEAD' ? new Response(null) : Response.json(body),
     )
   } catch (error) {
-    return privateResponse(errorResponse(error))
+    return privateResponse(errorResponse(error, request))
   }
 }

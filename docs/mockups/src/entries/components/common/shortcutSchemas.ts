@@ -4,8 +4,18 @@ import {
   type ShortcutHost,
 } from '../../../fixtures/shortcutHosts'
 
-/** The shortcuts of one command, such as `⇧⌘P`, as `Shortcut` strings. */
-const shortcutList = { type: 'array', items: { type: 'string' } } as const
+/**
+ * A shortcut as its keyboard prints each of its keys, as `Shortcut`: its
+ * modifiers, then its key, such as `['⇧', '⌘', 'P']`.
+ */
+export const shortcutSchema = {
+  type: 'array',
+  minItems: 1,
+  items: { type: 'string', minLength: 1 },
+} as const
+
+/** The shortcuts of one command, as a list of `Shortcut`. */
+const shortcutList = { type: 'array', items: shortcutSchema } as const
 
 /**
  * The person's changes to the shortcuts as JSON, as `ShortcutChanges`: the
@@ -61,6 +71,7 @@ export const shortcutChangesSchema = {
     'create-pull-request': shortcutList,
     'fix-checks': shortcutList,
     'resolve-conflicts': shortcutList,
+    'merge-latest': shortcutList,
     'address-review': shortcutList,
     'commit-and-push': shortcutList,
     'mark-ready-for-review': shortcutList,

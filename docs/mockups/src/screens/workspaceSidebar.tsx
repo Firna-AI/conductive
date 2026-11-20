@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { defined, plainData } from '../defined'
 import {
   archivedSections,
+  removedSections,
   suspendedSections,
   workspaceSections,
 } from '../components/workspaces/sections'
@@ -11,6 +12,7 @@ import { orgs } from '../fixtures/orgs'
 import type { ShortcutChanges } from '../fixtures/shortcutChanges'
 import type { ActivityStatus, Workspace } from '../fixtures/workspaces'
 import { changedWorkspaces } from './orgWorkspaces'
+import { isRemoved } from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
 
 /**
@@ -18,8 +20,10 @@ import type { WorkspaceState } from './workspaceState'
  * current status. The rows that the state changed show their states of
  * then. The toast of an Archive shows at once, so the row of the workspace
  * shows that Archive. An archived workspace sits in the open Archived
- * group, with Restore while its last day has not passed. In a suspended
- * org every row shows stopped, and nothing in the sidebar changes the org.
+ * group, with Restore while its last day has not passed. A removed
+ * workspace, which a link opened, has no row: the Archived group stays
+ * closed, with its count, and no row is selected. In a suspended org every
+ * row shows stopped, and nothing in the sidebar changes the org.
  * `shortcuts` holds the person's changes, for the key of the Search row.
  */
 export function workspaceSidebar(props: {
@@ -54,10 +58,14 @@ export function workspaceSidebar(props: {
       />
     )
   }
-  const list = archivedSections(workspace, suspended, state.archive === 'kept')
+  const removed = isRemoved(state.archive)
+  const list = removed
+    ? removedSections(workspace, suspended)
+    : archivedSections(workspace, suspended, state.archive === 'kept')
   return (
     <sidebar.Component
       archived={plainData(list.archived)}
+      archivedCollapsed={removed}
       moklyInstance="sidebar"
       org={orgs.acme}
       sections={plainData(list.sections)}

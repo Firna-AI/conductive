@@ -1,4 +1,5 @@
 import { expect, it, vi } from 'vitest'
+import { ProviderError } from '../sandbox/errors'
 import type { CommandStatus } from '../sandbox/provider'
 import { runAttachmentDownload } from './attachment-download-process'
 
@@ -82,6 +83,49 @@ it('fails a nonzero, timed-out, or lost download with the existing attachment co
       ),
     ).rejects.toMatchObject({ status: 503, code: 'attachment_copy_failed' })
   }
+})
+
+it('names the failed provider step, and marks only a provider without an answer as unanswered', async () => {
+  // A status that the provider client does not list also has the kind
+  // unavailable, but it is an answer.
+  for (const error of [
+    new ProviderError('rate_limited', 429),
+    new ProviderError('unavailable', 405),
+  ])
+    await expect(
+      runAttachmentDownload(
+        {
+          startCommand: async () => {
+            throw error
+          },
+          getCommandStatus: async () => status(),
+        },
+        'sandbox',
+        'download command',
+      ),
+    ).rejects.toMatchObject({
+      step: 'start',
+      unanswered: false,
+      message:
+        'The attached files could not reach the cloud computer. Try again.',
+    })
+  await expect(
+    runAttachmentDownload(
+      {
+        startCommand: async () => ({ processId: 7 }),
+        getCommandStatus: async () => {
+          throw new ProviderError('unavailable', 503)
+        },
+      },
+      'sandbox',
+      'download command',
+    ),
+  ).rejects.toMatchObject({
+    step: 'status',
+    unanswered: true,
+    message:
+      'The cloud computer did not answer, so the attached files did not arrive. Try again.',
+  })
 })
 
 it('waits short times between the first status checks, then 1 second', async () => {

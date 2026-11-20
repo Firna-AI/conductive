@@ -5,6 +5,7 @@ import {
   SearchLink,
   SettingsLink,
 } from '../../../components/workspaces/SidebarLinks'
+import { shortcutSchema } from '../common/shortcutSchemas'
 
 /** A screen of the catalogue that a link opens. */
 const toSchema = { type: 'string', minLength: 1 } as const
@@ -140,7 +141,7 @@ export const searchLink = defineComponent({
     properties: {
       variant: linkVariant,
       /** The key that opens the palette, such as ⌘K, or none. */
-      shortcut: { type: 'string' },
+      shortcut: shortcutSchema,
     },
   } as const,
   props: { variant: 'page' },
@@ -153,7 +154,7 @@ export const searchLink = defineComponent({
       title: 'In the sidebar',
       description:
         'The compact row of the sidebar, with the key of the palette.',
-      props: { variant: 'sidebar', shortcut: '⌘K' },
+      props: { variant: 'sidebar', shortcut: ['⌘', 'K'] },
     },
   ],
 })

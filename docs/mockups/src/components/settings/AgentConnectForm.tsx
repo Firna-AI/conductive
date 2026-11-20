@@ -3,23 +3,19 @@ import { Input } from '@firna/ui/input'
 import { SegmentedControl } from '@firna/ui/segmented'
 import { productName } from '../../brand'
 import { agents, type AgentKey } from '../../fixtures/agents'
-import {
-  anthropicKeyPage,
-  claudeTokenCommand,
-  connectKinds,
-  loginLabels,
-  openAiKeyPage,
-  pastedKey,
-  type LoginKind,
-} from '../../fixtures/logins'
-import { orgConnectKinds } from '../../fixtures/orgLogins'
-import { instanceKey } from '../../instanceKey'
+import { pastedKey, type LoginKind } from '../../fixtures/logins'
 import { noop } from '../../noop'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { externalLink } from '../../entries/components/common/ExternalLink.mockup'
 import { notice } from '../../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { useControlSizes } from '../common/touch'
+import {
+  agentConnectCopy as copy,
+  connectKinds,
+  loginLabels,
+  orgConnectKinds,
+} from './agentConnectCopy'
 import { chatGptSignIn } from '../../entries/components/settings/ChatGptSignIn.mockup'
 import { endpointFields } from '../../entries/components/settings/EndpointFields.mockup'
 import type { EndpointEntry } from './EndpointFields'
@@ -43,35 +39,28 @@ type SecretAsk = {
 /** What a form asks for: a secret, or the ChatGPT sign-in, with no field. */
 type Ask = SecretAsk | { type: 'chatgpt-sign-in' } | { type: 'endpoint' }
 
-/** The account of each agent that an API key belongs to, and its key page. */
-const keyAccounts: Readonly<Record<AgentKey, { name: string; page: string }>> =
-  {
-    claude: { name: 'Anthropic', page: anthropicKeyPage },
-    codex: { name: 'OpenAI', page: openAiKeyPage },
-  }
-
 /**
  * An API key: a key of the own account of the user, or of the account of
  * the org, such as "Acme's", for an org login.
  */
 function keyAsk(agent: AgentKey, org: string | undefined): SecretAsk {
-  const account = keyAccounts[agent]
-  const whose = org ? `${org}'s` : 'your'
+  const { key } = copy
+  const whose = org ? key.whose.org(org) : key.whose.own
   return {
     type: 'secret',
     text: (
       <>
-        Paste an API key of {whose} {account.name} account.{' '}
+        {key.text(agent, whose)}{' '}
         <externalLink.Component
-          href={account.page}
-          moklyInstance={`${instanceKey(account.name)}-keys`}
+          href={key.pages[agent]}
+          moklyInstance={`${agent}-keys`}
         >
-          {`Make one on ${account.name}`}
+          {key.link(agent)}
         </externalLink.Component>
       </>
     ),
-    label: `${account.name} API key`,
-    placeholder: 'Paste the key',
+    label: key.label(agent),
+    placeholder: key.placeholder,
   }
 }
 
@@ -80,12 +69,13 @@ const tokenAsk: SecretAsk = {
   type: 'secret',
   text: (
     <>
-      Run <code className={styles.code}>{claudeTokenCommand}</code> on your
-      computer, then paste the token that it prints.
+      {copy.token.before}{' '}
+      <code className={styles.code}>{copy.token.command}</code>{' '}
+      {copy.token.after}
     </>
   ),
-  label: 'Subscription token',
-  placeholder: 'Paste the token',
+  label: copy.token.label,
+  placeholder: copy.token.placeholder,
 }
 
 /** What each agent asks for, by the kind that the switch selects. */
@@ -209,7 +199,7 @@ export function AgentConnectForm(props: {
   return (
     <div className={styles.form}>
       <SegmentedControl
-        accessibilityLabel="Connect with"
+        accessibilityLabel={copy.switchLabel}
         onChange={noop}
         options={kinds.map((item) => ({
           label: loginLabels[props.agent][item],

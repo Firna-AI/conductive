@@ -47,7 +47,9 @@ export const imageView = defineComponent({
       description: 'A screenshot of the checkout form on a phone.',
       props: {},
       slots: {
-        children: <CheckoutPicture label="postcode-overlap.png" overlap />,
+        children: (
+          <CheckoutPicture label="postcode-overlap.png" view="covered" />
+        ),
       },
     },
   ],

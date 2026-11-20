@@ -1,6 +1,6 @@
 import { chmod, writeFile } from 'node:fs/promises'
 
-import { expect, it } from 'vitest'
+import { expect, it, onTestFinished } from 'vitest'
 
 import { shellArgument } from './privileged'
 import { credentialScript, launcherScript } from './scripts'
@@ -8,6 +8,7 @@ import { runScript, scriptFixture } from './scripts.test-support'
 
 async function launch(node?: string, ids: readonly string[] = []) {
   const fixture = await scriptFixture()
+  onTestFinished(fixture.dispose)
   await writeFile(
     fixture.terminal,
     `#!/bin/sh

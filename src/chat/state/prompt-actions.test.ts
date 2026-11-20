@@ -90,6 +90,45 @@ describe('a fixed prompt of the member', () => {
     expect({ outcome, texts }).toEqual({ outcome: 'sent', texts: [prompt] })
   })
 
+  it('ignores another fixed prompt while one waits, across sessions, and keeps composer sends independent', async () => {
+    let waiting = true
+    const chat = chatFor({
+      hold: (request) =>
+        waiting &&
+        request.method === 'POST' &&
+        request.url.endsWith('/messages'),
+    })
+    await chat.controller.start()
+    const sending = chat.controller.sendPrompt(prompt)
+    expect(chat.held).toHaveLength(1)
+    waiting = false
+    chat.controller.setDraft(first, 'An independent message')
+    await chat.controller.send(first)
+    await chat.controller.select(other)
+
+    const repeated = await chat.controller.sendPrompt('Fix the failed checks.')
+
+    chat.held.splice(0, 1)[0]()
+    const outcome = await sending
+    expect({
+      repeated,
+      outcome,
+      shown: chat.controller.getSnapshot().activeSessionId,
+      first: (await chat.bodies('POST', sendPath(first))).map(
+        (body) => record(body).id,
+      ),
+      other: await chat.bodies('POST', sendPath(other)),
+      draft: chat.draftOf(first)?.text,
+    }).toEqual({
+      repeated: null,
+      outcome: 'sent',
+      shown: other,
+      first: ['client-2', 'client-1'],
+      other: [],
+      draft: '',
+    })
+  })
+
   it('puts the kept place of its session at the bottom, so the prompt shows when the chat shows again after a file tab', async () => {
     const chat = chatFor()
     await chat.controller.start()
@@ -132,7 +171,7 @@ describe('a fixed prompt of the member', () => {
     })
   })
 
-  it('keeps the client ID of a failed prompt for a second try in its session, and sends a new message in another session', async () => {
+  it('keeps the client ID of a failed prompt for a second try in its session, and gives another session and later sends new IDs', async () => {
     let failing = true
     const chat = chatFor({ answer: refusing(() => failing) })
     await chat.controller.start()
@@ -142,6 +181,7 @@ describe('a fixed prompt of the member', () => {
     await chat.controller.select(other)
     await chat.controller.sendPrompt(prompt)
     await chat.controller.select(first)
+    await chat.controller.sendPrompt(prompt)
     await chat.controller.sendPrompt(prompt)
 
     const ids = async (sessionId: string) =>
@@ -156,7 +196,7 @@ describe('a fixed prompt of the member', () => {
     }).toEqual({
       failed: 'failed',
       notice: "Your message didn't send",
-      first: ['client-1', 'client-1'],
+      first: ['client-1', 'client-1', 'client-3'],
       other: ['client-2'],
     })
   })

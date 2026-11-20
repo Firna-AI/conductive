@@ -12,7 +12,7 @@ export const agentBlocks = defineComponent({
   slug: 'agent-blocks',
   title: 'Agent blocks',
   description:
-    'The blocks of a message of the agent, in order: its paragraphs, its headings, its tables, its lists, and its code blocks. Their text keeps its inline code and its bold, and each link to a workspace of the org is a chip. Each mention, and each inline code whose whole text is a path of the tree, is a file chip. A code block stays code. A list shows the lists that the agent indents under its items. The element around them sets the type and the space between them. Its own page shows the answer of a finished turn.',
+    'The blocks of a message of the agent, in order: its paragraphs, its headings, its tables, its lists, its code blocks, its quotes, and its rules. Their text keeps its inline code, its bold text, its emphasis, its strikethrough, and its line breaks, and each link to a workspace of the org is a chip. Each mention, and each inline code whose whole text is a path of the tree, is a file chip. A code block stays code. A list shows the lists that the agent indents under its items, and a task item its check box. A quote holds its own blocks. While the agent still writes, a mark that opens in the last paragraph closes at its end. With pictures, the image of a picture file in a paragraph or a list item shows as its picture. The element around them sets the type and the space between them. Its own page shows the answer of a finished turn.',
   relatedDocs: ['docs/mockups/design-chat.md'],
   propSchema: {
     type: 'object',
@@ -22,6 +22,10 @@ export const agentBlocks = defineComponent({
       /** The ID of the message, which names its table for Mokly. */
       id: { type: 'string', minLength: 1 },
       blocks: { type: 'array', items: agentBlockSchema },
+      /** The agent still writes the message. */
+      live: { type: 'boolean' },
+      /** The images of picture files show as their pictures. */
+      pictures: { type: 'boolean' },
     },
   } as const,
   props: {
@@ -34,7 +38,14 @@ export const agentBlocks = defineComponent({
       ),
     ],
   },
-  render: (props) => <AgentBlocks blocks={props.blocks} id={props.id} />,
+  render: (props) => (
+    <AgentBlocks
+      blocks={props.blocks}
+      id={props.id}
+      live={props.live}
+      pictures={props.pictures}
+    />
+  ),
   variants: [
     {
       slug: 'headings',

@@ -122,6 +122,11 @@
   text-overflow: ellipsis;
 }
 
+/* The muted words in the line of a label, such as an effort. */
+.muted {
+  color: var(--ui-muted);
+}
+
 .check {
   flex-shrink: 0;
   color: var(--ui-primary);

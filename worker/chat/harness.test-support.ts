@@ -211,6 +211,7 @@ export async function createChatFixture(
     disconnect: transport.disconnect,
     drainAttachments: async () => {
       try {
+        await transport.drain()
         await actor.api.controls.drainBackground()
       } finally {
         await transport.drain()

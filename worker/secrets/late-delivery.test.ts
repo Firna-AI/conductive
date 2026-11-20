@@ -61,6 +61,8 @@ it('resumes a stopped computer for a late value answer and dispatches its turn a
     values: { TOKEN: 'late-workspace-value' },
   })
   expect(answered.request.notice).toMatchObject({ state: 'sent' })
+  if (answered.request.notice?.state !== 'sent')
+    throw new Error('The late answer notice was not sent.')
   expect(await actor.readLifecycle()).toMatchObject({
     state: 'starting',
     start: { kind: 'resume' },
@@ -80,6 +82,7 @@ it('resumes a stopped computer for a late value answer and dispatches its turn a
     expect(await runner.inbox.next()).toMatchObject({ type: 'welcome' })
     runner.emit({ type: 'runner.ready' })
     expect(await runner.inbox.next()).toMatchObject({ type: 'confirm' })
+    await runner.waitForTurn(answered.request.notice.turnId)
     expect(await runner.inbox.next()).toMatchObject({
       type: 'turn',
       sessionId: 'first-session',
@@ -111,6 +114,9 @@ it('dispatches a recovered late notice to the connected runner', async () => {
   })
   const recovered = (await active.listRequests()).requests[0]
   expect(recovered.notice).toMatchObject({ state: 'sent' })
+  if (recovered.notice?.state !== 'sent')
+    throw new Error('The recovered notice was not sent.')
+  await active.runner.waitForTurn(recovered.notice.turnId)
   expect(active.runner.received).toContainEqual(
     expect.objectContaining({
       type: 'turn',

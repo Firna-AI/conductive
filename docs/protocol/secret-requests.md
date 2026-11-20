@@ -2,11 +2,14 @@
 
 This doc holds the requirements and the decisions in force for the use of
 secrets by agents. It covers the two calls of the workspace tools, the
-requests, their time limit, late requests and late answers, temporary
-values, mixed requests, what the chat shows, the exact-copy filter, and
-the end of a request. It belongs to [Secrets](secrets.md), which covers
-the secrets, their rights, their grants, and Capabilities. The terms are
-those of [Secrets](secrets.md#terms) and of the
+requests, covered requests, their time limit, temporary values, mixed
+requests, what the chat shows, the exact-copy filter, and the end of a
+request. It belongs to [Secrets](secrets.md), which covers the secrets,
+their rights, their grants, and Capabilities. [Late secret requests](secret-late-answers.md)
+covers late requests and late answers.
+[Secret variables](secret-variables.md) covers the names of new secrets
+and the environment of the command. The terms are those of
+[Secrets](secrets.md#terms) and of the
 [architecture doc](../architecture.md#terms). The
 [mockup catalogue](../mockups/catalogue-secrets.md) draws the requests and
 the results at `app/secret-requests`.
@@ -37,10 +40,11 @@ decision number names a decision of the change that adds
 
 - `list_secrets` is a read. It needs only the workspace token, and no
   active turn.
-- It gives each secret of the org with its name, its description, and
-  whether the calling session may use it with no request. It never gives
-  a value.
-- Reason: a read gives data that each member already sees.
+- It gives each secret of the org with its name, its description, its
+  [variable name](secret-variables.md#variable-names), and whether the
+  calling session may use it with no request. It never gives a value.
+- Reason: a read gives data that each member already sees. The variable
+  name follows from the name alone.
 - A call from a command of a turn names that turn. The session of a turn
   that runs in the calling workspace is the calling session.
 - Without such a turn, the list says only whether the mark for all agents
@@ -55,6 +59,9 @@ decision number names a decision of the change that adds
   optional reason. The CLI takes them as
   `conductive secrets run --secret NAME [--reason TEXT] -- <command>`.
 - The call also sends the text of the command (secrets decision 11 D).
+- The tool refuses a run with a
+  [conflict](secret-variables.md#conflicting-variable-names) before it
+  calls the Worker.
 - When grants cover each name, the Worker returns the values at once.
 - Otherwise the Worker makes one request for the names that no grant
   covers. The call waits for its answer, up to
@@ -74,8 +81,13 @@ decision number names a decision of the change that adds
 - The result gives the exit code of the command. When the command did not
   run, the result says why, such as a member who denied the request, or a
   request that stays open.
+- The result of a command that ran also gives the variable name of each
+  name, as [What the tools give](secret-variables.md#what-the-tools-give)
+  says.
 - The help of the CLI and the descriptions of the MCP tools tell the agent
   to keep each value out of its output, its files, and its answers.
+- They also tell the agent to read each value through its variable name,
+  and they say what a conflict does.
 
 ## The request
 
@@ -99,12 +111,45 @@ decision number names a decision of the change that adds
 - While a request waits, its workspace shows needs input (decision 68).
   The workspace keeps needs input while any of its requests waits, also a
   late request.
+- Starting shows over needs input. So the workspace shows Starting during
+  a start or a [Restart](restart-the-software.md#restart), also while a
+  request waits. When Starting ends and the agent runner is ready, the
+  workspace shows needs input again while any request still waits. Cal
+  chose this on 20 November 2026.
+- Reason: each member and the app then see when the cloud computer is
+  ready again. A new field or event for that was rejected, because the
+  state already shows Starting. An end of the open requests at a Restart
+  was rejected, because a member can still answer a late request.
 - The composer keeps Stop while a request waits, because the turn runs.
 - A request for secrets of the org offers Deny and Allow for this session.
   Allow gives the session an approval of each secret that the request
   names.
 - Only the request and needs input show that a request waits. The Mac app
   shows no notification for it, as it does for a Mac command request.
+
+## Covered requests
+
+- An Allow also allows each other open request, waiting or late, that its
+  new grants cover. A request is covered when the grant of the answer
+  reaches each secret that it asks for, in the session of the request.
+- The scope of each grant sets the reach. An approval for the session and
+  a value for 15 minutes reach the session that asked. A value for this
+  workspace reaches each session of the workspace.
+- A covered request names the member who answered. A waiting call of a
+  covered request gets its values at once.
+- A request that asks for a secret that the answer does not give stays
+  open, and does not change. This holds also when another grant, such as
+  one of Capabilities, now covers that secret. Reason: the request then
+  names only grants that the member gave.
+- Reason: an agent often asks again after its request becomes late. The
+  member then answers once, and no call waits for an answer that it
+  already has.
+- A Deny ends only its own request. Reason: a Deny judges one command, and
+  the agent can ask again with a better reason.
+- A settle of the requests that a grant of Capabilities covers was
+  rejected. Each such write must then reach every workspace that it
+  covers, for a rare case. So was a new call that waits on the open
+  request of the same secrets, because its card then shows an old command.
 
 ## Who answers
 
@@ -133,54 +178,13 @@ decision number names a decision of the change that adds
 
 ## Late requests
 
-- A late request leaves the composer. It stays at its place in the chat,
-  with the choices of its card.
-- A line on it says that the agent stopped waiting, and that Allow tells
-  the agent in a new turn.
-- A late request never folds into the work of its turn. Reason: it still
-  waits for a member.
+[Late requests](secret-late-answers.md#late-requests) states a request
+after the wait of its tool call ends.
 
 ## Late answers
 
-- When a member allows a late request, a line of the app tells the agent
-  in the session that asked (secrets decision 10 B). This holds for Allow
-  for this session, for a temporary value, and for Save as secret.
-- The line names the member who answered and each secret, and it says
-  what the answer gives. It never holds a value. It is not a message of
-  the member who answered.
-- The agent gets the same text, with the name of the member who answered.
-  One shared function writes these words for the chat and for the agent,
-  so the two texts cannot drift apart.
-- The line starts a turn in that session. The turn acts for the sender of
-  the turn that asked, under the login rules of that sender. So its GitHub
-  token, its Mac requests, and the writes of its workspace tools follow
-  that sender.
-- When a turn of that session runs at the time of the answer, the line
-  joins that turn, as a message does. That turn keeps its sender.
-- When the line can start no turn, the app sends nothing. Examples are a
-  starter who does not share the login with that sender, a login that is
-  gone, and a sender who left the org.
-- The late request then says that the agent learns of the answer at the
-  next message. The grant of the answer stays.
-- When the login of the starter is gone, the late request instead names
-  the action that gets the agent going again, such as "The agent learns of
-  it when Cal connects Claude again."
-- Reason: a message of another member then opens a new session, as
-  [Messages](messages-and-attachments.md#messages) says, so the next
-  message does not reach this agent.
-- Reason: the answer then acts as an answer in time does, and the share
-  setting of each login keeps its rule.
-- A turn on the login of the starter, also while the starter does not
-  share it, was rejected, because the share setting exists to stop that
-  use.
-- A rule that sends nothing whenever the message of the member who
-  answered would open a new session was rejected. Most late answers of
-  other members would then send nothing, because a new subscription login
-  is not shared by default.
-- A notice that waits for the next message of the session was rejected.
-  So was a new linked session, because it has none of the earlier history.
-- A late Deny sends nothing. The late request then shows that it was
-  denied. Reason: no agent waits, because its call already ended.
+[Late answers](secret-late-answers.md#late-answers) states what an answer
+to a late request does.
 
 ## Temporary values
 
@@ -201,6 +205,13 @@ decision number names a decision of the change that adds
   description. The session gets an approval of it.
 - Reason: the reason says why the value is needed, and the card stays
   short.
+- Save as secret needs each name that gets a value to follow
+  [New names](secret-variables.md#new-names). Otherwise Save as secret
+  shows but stays off, with a line under the choices that says why.
+  15 minutes and This workspace stay.
+- The Worker checks each name of a Save as secret answer before it writes.
+  It refuses an answer with a name that breaks the rule. The request then
+  stays open, with no new secret and no approval.
 - The other two choices create no secret of the org.
 - The Durable Object of the workspace keeps a temporary value encrypted
   for the time of that value.
@@ -267,6 +278,8 @@ decision number names a decision of the change that adds
   chat by mistake.
 - Risk: the filter hides only exact copies. A changed or encoded value
   still shows.
+- [Answer text secrets](answer-text-secrets.md) states how the end of an
+  unfinished answer keeps to the times above.
 
 ## The end of a request
 

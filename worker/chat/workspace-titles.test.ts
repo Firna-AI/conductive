@@ -33,9 +33,12 @@ it.each(['failed', 'empty'] as const)(
   'keeps names empty after a %s answer and asks again on the next accepted text',
   async (failure) => {
     const run = vi.fn<TitleModelCall>()
-    if (failure === 'failed')
-      run.mockRejectedValueOnce(new Error('private answer'))
-    else run.mockResolvedValueOnce({ response: 'Title: ""' })
+    // The first request tries the model three times.
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      if (failure === 'failed')
+        run.mockRejectedValueOnce(new Error('private answer'))
+      else run.mockResolvedValueOnce({ response: 'Title: ""' })
+    }
     run.mockResolvedValue({ response: 'Fix chat titles' })
     const { fixture, first, acceptFirst, drain } = await createTitleFixture(
       harness,
@@ -63,16 +66,17 @@ it.each(['failed', 'empty'] as const)(
     expect((await sessionRecord(fixture, first.sessionId)).title).toBe(
       'Fix chat titles',
     )
-    expect(run).toHaveBeenCalledTimes(2)
+    expect(run).toHaveBeenCalledTimes(4)
     expect(
       run.mock.calls.map(([, input]) => input.messages?.[1].content),
-    ).toEqual([
-      'Task message as a JSON string:\n"Fix the workspace title"',
-      'Task message as a JSON string:\n"Fix the workspace title"',
-    ])
+    ).toEqual(
+      Array<string>(4).fill(
+        'Task message as a JSON string:\n"Fix the workspace title"',
+      ),
+    )
     await fixture.send(first.sessionId, 'after-title')
     await drain()
-    expect(run).toHaveBeenCalledTimes(2)
+    expect(run).toHaveBeenCalledTimes(4)
   },
 )
 

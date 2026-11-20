@@ -22,8 +22,8 @@ function TerminalLine(props: { keyboard: Keyboard }) {
     return (
       <p className={styles.introLine}>
         Keys without{' '}
-        <keyChips.Component moklyInstance="command-key" shortcut="⌘" /> go to
-        the terminal while it has the focus.
+        <keyChips.Component moklyInstance="command-key" shortcut={['⌘']} /> go
+        to the terminal while it has the focus.
       </p>
     )
   }

@@ -32,10 +32,18 @@ option overrides this default, including queued chats that show no spinner.
   as sent, so `?upload=wait&sent=64` shows the measured state of a file of
   one part. Create org of the dev fake
   requires at least one repository and starts a simulated build. Its
-  repository catalogue keeps the saved choices, and its custom initials
+  repository catalogue keeps the saved choices in the repository order of
+  the Worker. An add goes to the end of the order, and a move of a chosen
+  repository starts no build. Its custom initials
   and its colour stay through rename, delete, and restore. Settings changes during the
   first good build start one added build. The fake compares settings
   revisions with builds as the Worker does.
+- Acme also holds Postcode lookup for the shipping and billing forms,
+  `postcode-lookup`, which a member archived 3 weeks before the clock of
+  the fake starts. Its 14 days ended, so the workspace list and the
+  palette leave it out. The list route still sends it, as the Worker does,
+  so its link and its chip still open its read-only chat, at
+  `/orgs/acme/workspaces/postcode-lookup`, with the Removed bar.
 - `?subWorkspaces=1` gives Acme the sub-workspaces of the mockup page
   `app/sub-workspaces`, from `fixtures/sub-workspaces.ts` of
   `src/test-support/`: two trees in Checkout, under Apple Pay button and
@@ -92,7 +100,11 @@ option overrides this default, including queued chats that show no spinner.
   `<GitHub login>@example.com`, and each send answers 204.
   `?feedback=no-email` gives a reply without an address.
   `?feedback=fail` fails the first send of the page with
-  `502 feedback_email_failed`, so a retry sends. With `?waiting=1`, both
+  `502 feedback_email_failed`, so a retry sends.
+  `?feedback=limit` refuses the first send of the page with
+  `429 feedback_send_limit`, as the send limit does. Its `retryAt` is
+  23 minutes and 40 seconds after the clock of the fake. A retry sends.
+  With `?waiting=1`, both
   routes refuse with `access_required`. The fake sends no email and keeps
   no copy.
 - `?operator=1` makes the dev user an operator, so the rail and the org
@@ -104,7 +116,12 @@ option overrides this default, including queued chats that show no spinner.
   write of that org with `org_suspended`. The open app does not read its orgs again, so its pages
   of that org show the suspension only after such a refusal. Without the
   option, each operator request gets `operator_required`, as the Worker
-  does.
+  does. The provider accounts are `boat` and `e2b`, with every new org on
+  `boat`. `?providers=one`, `?providers=three`, or `?providers=fail` gives
+  `boat` only, a third account, or a failed read, and `?providerSave=fail`
+  fails each save of the weights. An org that Create org makes joins the
+  operator section with its account: the choice of an operator, or a draw
+  from the weights.
 - `?waiting=1` signs in Sam Okafor of the waitlist mockups, who waits for
   app access with a verified email, so the app shows only the
   [waitlist](screens.md#the-waitlist). `?waiting=no-email` gives the same
@@ -170,6 +187,8 @@ option overrides this default, including queued chats that show no spinner.
   the run fails with no workspace. A prompt that contains `fail` stands for
   a cloud computer that did not start: the run fails and keeps its
   workspace, in the error state with Try again, as the Worker does. The
+  workspace of a run starts with the chosen secrets of its automation
+  pre-approved, and Mac access off. The
   recorded server has no chat for
   a workspace that the fake made, so its chat does not load, and the line
   of its automation does not show.
@@ -181,7 +200,7 @@ option overrides this default, including queued chats that show no spinner.
   value. A member changes only the own secrets, and only an admin sets the
   mark for all agents or reveals a value, which the fake records. A Replace
   of the value ends the record of the last reveal, and a Delete ends each
-  grant of the secret. A suspended org refuses each write, also a reveal.
+  grant of the secret and leaves the chosen secrets of each automation. A suspended org refuses each write, also a reveal.
   `dev/capability-routes.ts` serves the Capabilities of each workspace:
   `checkout-autocomplete` pre-approves FIGMA_TOKEN and has two approvals of
   its sessions, and a create keeps the choices of its control. The fake
@@ -193,8 +212,12 @@ option overrides this default, including queued chats that show no spinner.
   of a new turn. A value for this workspace joins the list of the
   workspace, and Save adds a secret of the org. `?secrets=<state>` puts a
   state into the session of `checkout-autocomplete`, from
-  `dev/secret-request-seed.ts`. `waiting`, `value`, and `mixed` wait for an
-  answer above the composer, so use them with `conversation=running`.
+  `dev/secret-request-seed.ts`. `waiting`, `value`, `mixed`,
+  `invalid-name`, and `mixed-invalid-name` wait for an answer above the
+  composer, so use them with `conversation=running`. `invalid-name` asks
+  for a value of Google Places key, a name that a new secret cannot take,
+  so Save as secret is off. `mixed-invalid-name` adds that name to a mixed
+  request.
   `late`, `late-value`, `results`, and `ended` sit in a short turn after
   the recorded one: a late request, a late request for a value, the runs
   with a denied request and a late Allow with its line, and a request that
@@ -249,4 +272,6 @@ The next account read returns both keyboards.
 The Stats tab of the account reads its counts from `dev/account-stats.ts`.
 It counts the orgs of the fake that are not deleted, the workspaces and
 the automations that the person owns in them, and the automation runs of the
-person that were not skipped, by the rules of the Worker.
+person that were not skipped, by the rules of the Worker. Its reply keeps
+the removed workspaces in `archived` and counts them again in `removed`,
+as the Worker does. So Cal's tab shows Postcode lookup in its Removed row.

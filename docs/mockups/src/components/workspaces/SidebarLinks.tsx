@@ -108,7 +108,10 @@ export function AutomationsLink(props: {
  */
 export function SearchLink(props: {
   variant: 'sidebar' | 'page'
-  /** The key that opens the palette, such as ⌘K, or none. */
+  /**
+   * The key of a Mac that opens the palette, or none. A Mac prints the keys
+   * of a shortcut with no space between them, such as ⌘K.
+   */
   shortcut?: Shortcut
 }) {
   const mac = useMacApp()
@@ -120,7 +123,7 @@ export function SearchLink(props: {
       <Search aria-hidden className={styles.icon} size={14} />
       Search
       {props.shortcut ? (
-        <kbd className={styles.keys}>{props.shortcut}</kbd>
+        <kbd className={styles.keys}>{props.shortcut.join('')}</kbd>
       ) : null}
     </ScreenLink>
   )

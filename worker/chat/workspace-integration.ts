@@ -1,5 +1,5 @@
 import { HttpError } from '../http'
-import { pendingContinue } from '../lifecycle/continue-types'
+import { pendingWorkspaceChange } from '../lifecycle/repository-change-types'
 import { WorkspaceFiles } from '../files/workspace'
 import { durableFilesStorage } from '../files/storage'
 import { WorkspaceAlarms, nativeAlarmStorage } from '../features/alarms'
@@ -31,6 +31,7 @@ import {
 import { QueueGenerations } from './queue-generation'
 import { unsupportedRunnerReason } from './runner-unsupported'
 import { SecretRuntime } from '../secrets/runtime'
+import { nativeRunnerWorkStorage } from './runner-work-watch'
 import { projectInputState } from '../secrets/workspace-runtime'
 
 export type WorkspaceCompositionEnv = LifecycleEnvironment
@@ -103,6 +104,8 @@ export function createWorkspaceIntegration(
       waitUntil: (promise) => context.waitUntil(promise),
       browserAlarm: (at) => alarms.set('browser', at),
       runnerAlarm: (at) => alarms.set('runner', at),
+      runnerWork: nativeRunnerWorkStorage(context.storage),
+      automationReportAlarm: (at) => alarms.set('automation-report', at, true),
       runnerAttached: (_workspaceId, connectionId, send) => {
         files.runner.attach(connectionId, (command) => {
           context.waitUntil(
@@ -152,7 +155,7 @@ export function createWorkspaceIntegration(
           runnerDisconnected: async (_id, publish) =>
             controller.runnerLifecycleDisconnected(callbackPublisher(publish)),
           turnDispatching: async (_id, turn, publish) => {
-            if (await pendingContinue(storage)) return false
+            if (await pendingWorkspaceChange(storage)) return false
             const state = await controller.readLifecycle()
             if (!state) return true
             if (!['ready', 'working', 'unread', 'input'].includes(state.state))

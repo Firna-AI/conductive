@@ -5,6 +5,7 @@ import { hydrate } from './history'
 import { applyMoves, saveMovedView, type DraftMove } from './model-moves'
 import { selectSession } from './session-actions'
 import { confirmRecord } from './session-records'
+import { showsSession } from './sessions'
 
 /**
  * Puts the message of a Send or Try again reply in the session that the reply
@@ -77,7 +78,9 @@ export async function showTarget(
     !source.sending &&
     !holdsWork(sessionState(snapshot, target).draft)
   if (!movable) {
-    if (!holdsWork(source)) await selectSession(context, target)
+    if (!holdsWork(source) && showsSession(snapshot, from)) {
+      await selectSession(context, target)
+    }
     return
   }
   const moves: DraftMove[] = [

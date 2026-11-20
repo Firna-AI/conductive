@@ -11,6 +11,7 @@ import { suspendedOrgNotice } from '../entries/components/orgs/SuspendedOrgNotic
 import { failedBuildOf } from '../components/settings/BuildSection'
 import { DeleteSecretDialog } from '../components/secrets/DeleteSecretDialog'
 import { deleteOrgDialog } from '../entries/components/settings/DeleteOrgDialog.mockup'
+import { RepositoryMenuSheet } from '../components/settings/RepositoryOrderList'
 import { settingsTabs } from '../entries/components/settings/OrgSections.mockup'
 import { sidebar as sidebarPart } from '../entries/components/workspaces/Sidebar.mockup'
 import { memberViewer, people, viewerMembership } from '../fixtures/members'
@@ -59,6 +60,15 @@ export function OrgSettingsScreen(props: {
     ),
     'leave-org': suspended ? (
       <leaveOrgDialog.Component
+        busy={false}
+        moklyInstance="leave-org-dialog"
+        viewer={settingsViewer(state)}
+        viewport={viewport}
+      />
+    ) : null,
+    'leaving-org': suspended ? (
+      <leaveOrgDialog.Component
+        busy
         moklyInstance="leave-org-dialog"
         viewer={settingsViewer(state)}
         viewport={viewport}
@@ -68,7 +78,16 @@ export function OrgSettingsScreen(props: {
       <DeleteSecretDialog viewport={viewport} />
     ),
   }
-  const dialog = dialogs[state.dialog]
+  const repositoryMenu =
+    mobile &&
+    admin &&
+    !suspended &&
+    state.tab === 'repositories' &&
+    state.repositoryView === 'list' &&
+    state.repositoryOrder === 'menu' ? (
+      <RepositoryMenuSheet repositories={settings.repositories} />
+    ) : null
+  const dialog = dialogs[state.dialog] ?? repositoryMenu
   const page = (
     <pagePart.Component
       subtitle="Org settings"
@@ -92,7 +111,11 @@ export function OrgSettingsScreen(props: {
           org={{ name: org.name }}
         />
       ) : null}
-      <tabBody.Component moklyInstance="tab-body" state={state} />
+      <tabBody.Component
+        moklyInstance="tab-body"
+        state={state}
+        viewport={viewport}
+      />
     </pagePart.Component>
   )
   if (mobile) {

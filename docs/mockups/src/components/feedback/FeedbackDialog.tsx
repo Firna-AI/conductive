@@ -33,7 +33,8 @@ import styles from './FeedbackDialog.module.css'
 /**
  * What a notice under the message box names: a file that the dialog did
  * not add, because it passes the limit of the screenshots or is of another
- * type, or a send that failed, with the message of the server.
+ * type, or a send that failed, with the message of its error: the message
+ * of the server, or the time when a send over the limit can go.
  */
 export type FeedbackProblem =
   | { kind: 'too-large'; name: string }

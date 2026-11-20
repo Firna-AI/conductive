@@ -65,6 +65,28 @@ fn instructions(env: &BTreeMap<String, String>, agent: &Agent) -> Result<Vec<Str
 }
 
 #[test]
+fn gives_screenshot_guidance_after_computer_tools() -> Result<()> {
+    let config = Configuration::parse(
+        &configured("0"),
+        Path::new("/repo"),
+        Path::new("/home/user"),
+    )?;
+    for agent in [Agent::Claude, Agent::Codex] {
+        let (text, _) = build(&config, None, &agent)?;
+        assert_eq!(
+            text.split("\n\n")
+                .skip_while(|line| !line.starts_with("When computer tools are available"))
+                .nth(1),
+            Some(
+                "When you design or check an interface in a browser, save a screenshot of the result as a PNG file in the context folder. Show it in your reply as a Markdown image."
+            ),
+            "{agent:?}"
+        );
+    }
+    Ok(())
+}
+
+#[test]
 fn gives_exact_top_level_context_to_both_agents() -> Result<()> {
     for agent in [Agent::Claude, Agent::Codex] {
         assert_eq!(
@@ -76,6 +98,7 @@ fn gives_exact_top_level_context_to_both_agents() -> Result<()> {
                 "Nest a new workspace under this one when its work belongs to the task of this workspace: a part of a large task that can run in parallel, follow-up work that the task starts, work in another repository for the same task, or a change that needs its own pull request. A workspace has one branch at a time, so each separate pull request needs its own workspace. Create a top-level workspace for unrelated work. When a member names the place of a new workspace, follow the member.",
                 "Nesting stops at depth 3. To nest a new workspace under this one, pass \"workspace\" as parentId to create_workspace.",
                 "Use get_workspace to find the parent and the sub-workspaces of a workspace. Use list_workspaces with parentId to list direct sub-workspaces.",
+                "A move with move_workspace can change the parent and depth, so use get_workspace to read their current values.",
             ]
         );
     }
@@ -93,6 +116,7 @@ fn gives_exact_depth_one_context() -> Result<()> {
             "Nest a new workspace under this one when its work belongs to the task of this workspace: a part of a large task that can run in parallel, follow-up work that the task starts, work in another repository for the same task, or a change that needs its own pull request. A workspace has one branch at a time, so each separate pull request needs its own workspace. Create a top-level workspace for unrelated work. When a member names the place of a new workspace, follow the member.",
             "Nesting stops at depth 3. To nest a new workspace under this one, pass \"workspace\" as parentId to create_workspace.",
             "Use get_workspace to find the parent and the sub-workspaces of a workspace. Use list_workspaces with parentId to list direct sub-workspaces.",
+            "A move with move_workspace can change the parent and depth, so use get_workspace to read their current values.",
         ]
     );
     Ok(())
@@ -110,6 +134,7 @@ fn gives_exact_sibling_advice_at_the_deepest_depth() -> Result<()> {
             "Nesting stops at depth 3.",
             "This workspace cannot hold sub-workspaces. Create a sibling instead. Pass \"parent\" as parentId to create_workspace. Start its name with a one-word group prefix, such as \"Limits: \".",
             "Use get_workspace to find the parent and the sub-workspaces of a workspace. Use list_workspaces with parentId to list direct sub-workspaces.",
+            "A move with move_workspace can change the parent and depth, so use get_workspace to read their current values.",
         ]
     );
     Ok(())

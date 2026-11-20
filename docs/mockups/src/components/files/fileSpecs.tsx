@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import { File, FileCode, FileDiff, FileText } from 'lucide-react'
+import { answerShot } from '../../fixtures/answerFiles'
 import { screenshotCopy } from '../../fixtures/attachments'
 import {
   addressFormDiff,
@@ -9,7 +10,11 @@ import {
 } from '../../fixtures/fileContents'
 import { maskedDiffPath, seedScriptDiff } from '../../fixtures/maskedFiles'
 import { branchPictures, splitPath } from '../../fixtures/files'
-import { CheckoutPicture, screenshotSize } from '../../fixtures/pictures'
+import {
+  CheckoutPicture,
+  screenshotSize,
+  type CheckoutView,
+} from '../../fixtures/pictures'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { emptyState } from '../../entries/components/common/EmptyState.mockup'
 import { codeView } from '../../entries/components/files/CodeView.mockup'
@@ -17,6 +22,7 @@ import type { LineRange } from './CodeView'
 import { diffStat } from '../../entries/components/files/DiffStat.mockup'
 import { diffView } from '../../entries/components/files/DiffView.mockup'
 import type { FileTabView } from './FilesPanel'
+import { htmlSpec } from './htmlSpecs'
 import { imageView } from '../../entries/components/files/ImageView.mockup'
 import { markdownView } from '../../entries/components/files/MarkdownView.mockup'
 
@@ -31,19 +37,29 @@ export type FileSpec = {
   closed?: true
   /** The file is not text, so the header keeps Download, and Copy is off. */
   binary?: true
+  /**
+   * The file shows rendered or as its source, so the header has the switch
+   * between Preview and Source, which shows this view.
+   */
+  mode?: 'preview' | 'source'
+  /**
+   * The address of the page that the tab shows in a frame, which Open opens
+   * in a new tab. The header then has Reload and Open.
+   */
+  pageUrl?: string
 }
 
 /**
  * The picture of an image file. The tab shows a PNG, JPEG, GIF, or WebP
  * file by its name as a picture, up to the read limit of the file tab.
  */
-function picture(path: string, overlap: boolean): FileSpec {
+function picture(path: string, view: CheckoutView): FileSpec {
   return {
     path,
     icon: File,
     content: (
       <imageView.Component moklyInstance="image-view" size={screenshotSize}>
-        <CheckoutPicture label={splitPath(path).name} overlap={overlap} />
+        <CheckoutPicture label={splitPath(path).name} view={view} />
       </imageView.Component>
     ),
     binary: true,
@@ -113,6 +129,7 @@ export function specFor(view: FileTabView): FileSpec {
       return {
         path: 'README.md',
         icon: FileText,
+        mode: 'preview',
         content: (
           <markdownView.Component
             blocks={readme}
@@ -166,10 +183,18 @@ export function specFor(view: FileTabView): FileSpec {
         closed: true,
       }
     case 'image':
-      return picture(branchPictures.picture, false)
+      return picture(branchPictures.picture, 'form')
     case 'image-not-drawn':
       return notDrawn(branchPictures.damaged)
     case 'attachment':
-      return picture(screenshotCopy.path, true)
+      return picture(screenshotCopy.path, 'covered')
+    case 'screenshot':
+      return picture(answerShot, 'fixed')
+    case 'html':
+    case 'html-source':
+    case 'html-opening':
+    case 'html-older-software':
+    case 'html-failed':
+      return htmlSpec(view)
   }
 }

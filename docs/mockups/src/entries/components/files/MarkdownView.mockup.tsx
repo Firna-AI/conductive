@@ -43,6 +43,39 @@ const tableBlock = {
   },
 } as const
 
+/** A rule of a Markdown file: a line between two of its parts. */
+const ruleBlock = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['kind'],
+  properties: { kind: { const: 'rule' } },
+} as const
+
+/** The blocks of a Markdown file that hold no other block. */
+const flatBlocks = [textBlock, listBlock, tableBlock, ruleBlock] as const
+
+/** A quote of a Markdown file whose blocks take the schema `block`. */
+function quoteOf<const Block>(block: Block) {
+  return {
+    type: 'object',
+    additionalProperties: false,
+    required: ['kind', 'blocks'],
+    properties: {
+      kind: { const: 'quote' },
+      blocks: { type: 'array', items: block },
+    },
+  } as const
+}
+
+/**
+ * A quote of a Markdown file, with the blocks that it holds. A schema has
+ * no reference to itself, so it takes quotes two levels deep. The README
+ * quotes one level.
+ */
+const quoteBlock = quoteOf({
+  anyOf: [...flatBlocks, quoteOf({ anyOf: flatBlocks })],
+})
+
 /**
  * A Markdown file as formatted text, registered with Mokly. Its page shows
  * the README of the branch.
@@ -51,7 +84,7 @@ export const markdownView = defineComponent({
   slug: 'markdown-view',
   title: 'Markdown view',
   description:
-    'A Markdown file, rendered as formatted text: its headings, paragraphs, lists, code blocks, and tables, with inline code. Its own page shows the README of Storefront.',
+    'A Markdown file, rendered as formatted text: its headings, paragraphs, lists, code blocks, tables, quotes, and rules, with inline code, images as links, bold text, emphasis, strikethrough, and line breaks. A task item shows its check box. Its own page shows the README of Storefront.',
   relatedDocs: ['docs/mockups/catalogue-attachments-and-files.md'],
   propSchema: {
     type: 'object',
@@ -60,7 +93,7 @@ export const markdownView = defineComponent({
     properties: {
       blocks: {
         type: 'array',
-        items: { anyOf: [textBlock, listBlock, tableBlock] },
+        items: { anyOf: [...flatBlocks, quoteBlock] },
       },
     },
   } as const,

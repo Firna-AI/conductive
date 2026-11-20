@@ -87,8 +87,8 @@ export function FixedShortcuts(props: {
 }) {
   return (
     <rowLayout.Component
-      keys={props.keys.map((shortcut) => (
-        <span className={styles.still} key={shortcut}>
+      keys={props.keys.map((shortcut, index) => (
+        <span className={styles.still} key={index}>
           <keyChips.Component
             moklyInstance={`${instanceKey(props.label)}-${shortcutKey(shortcut)}`}
             shortcut={shortcut}

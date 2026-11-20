@@ -6,10 +6,12 @@ import { paths } from '../../paths'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { classes } from '../common/classes'
 import headingStyles from '../common/MarkdownHeadings.module.css'
+import prose from '../common/MarkdownProse.module.css'
 import { notice } from '../../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { agentBlocks } from '../../entries/components/chat/AgentBlocks.mockup'
 import { continuedLine } from '../../entries/components/chat/ContinuedLine.mockup'
+import { RepositoryChangedLine } from './RepositoryChangedLine'
 import type { SingleItem } from './groupItems'
 import { linkedLine } from '../../entries/components/chat/LinkedLine.mockup'
 import { lostLine } from '../../entries/components/chat/LostLine.mockup'
@@ -98,11 +100,15 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
     }
     case 'agent':
       return (
-        <div className={classes(styles.agent, headingStyles.headings)}>
+        <div
+          className={classes(styles.agent, headingStyles.headings, prose.prose)}
+        >
           <agentBlocks.Component
             blocks={item.blocks}
             id={item.id}
             moklyInstance="blocks"
+            pictures
+            {...defined({ live: item.live })}
           />
         </div>
       )
@@ -167,6 +173,14 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
           base={item.base}
           branch={item.branch}
           moklyInstance="continued-line"
+          who={item.by === viewer ? 'You' : people[item.by].name}
+        />
+      )
+    case 'repository-changed':
+      return (
+        <RepositoryChangedLine
+          branch={item.branch}
+          repository={item.repository}
           who={item.by === viewer ? 'You' : people[item.by].name}
         />
       )

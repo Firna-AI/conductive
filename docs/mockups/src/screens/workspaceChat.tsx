@@ -4,9 +4,10 @@ import { chatPane } from '../entries/components/chat/ChatPane.mockup'
 import { composerData } from '../entries/components/chat/capabilitiesSlot'
 import { ChatWorkspaces, type ChatRow } from '../components/chat/chatWorkspaces'
 import { emptyState } from '../entries/components/common/EmptyState.mockup'
+import type { PictureRead } from '../components/chat/chatPictures'
 import type { ComposerState } from '../components/chat/Composer'
 import type { FoldState } from '../components/chat/WorkFold'
-import type { SandboxNoticeState } from '../components/workspace/sandboxNoticeState'
+import type { BarNotice } from '../components/workspace/SandboxNotice'
 import { defined, plainData } from '../defined'
 import type { ChatItem } from '../fixtures/conversations'
 import type { PersonKey } from '../fixtures/members'
@@ -25,7 +26,9 @@ type WorkspaceChatParts = {
   composer: ComposerState
   /** A message above the composer, such as a notice of the org. */
   notice: ReactNode
-  problem: SandboxNoticeState | undefined
+  problem: BarNotice | undefined
+  /** The reads of the pictures of the answers, while the computer runs. */
+  pictures: PictureRead | undefined
   starting: StartingLog | undefined
   fold: FoldState
   viewer: PersonKey
@@ -39,7 +42,8 @@ type WorkspaceChatParts = {
  * it imported the chat before, so the styles of the chat load first.
  */
 export function workspaceChat(parts: WorkspaceChatParts): ReactNode {
-  // The open Capabilities control is not data, so it goes in a slot.
+  // The open Capabilities control and a picker in place of the model
+  // picker are not data, so they go in slots.
   const box = composerData(parts.composer)
   return (
     <ChatWorkspaces rows={parts.rows}>
@@ -60,7 +64,9 @@ export function workspaceChat(parts: WorkspaceChatParts): ReactNode {
         viewport={parts.viewport}
         {...defined({
           capabilitiesPanel: box.capabilitiesPanel,
+          pickerPart: box.pickerPart,
           notice: parts.notice,
+          pictures: parts.pictures,
           problem: parts.problem && plainData(parts.problem),
           starting: parts.starting && plainData(parts.starting),
         })}

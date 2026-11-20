@@ -1,20 +1,23 @@
 import type { Viewport } from '@mokly/mokly'
-import { FolderGit2 } from 'lucide-react'
 import { defined } from '../../defined'
 import { people } from '../../fixtures/members'
-import { repositories } from '../../fixtures/repositories'
 import type { ActivityStatus, Workspace } from '../../fixtures/workspaces'
 import { paths } from '../../paths'
+import { menu as menuPart } from '../../entries/components/common/Menu.mockup'
+import type { MenuEntryData } from '../../entries/components/common/menuEntries'
 import { ScreenLink } from '../common/ScreenLink'
 import { shortcutTip } from '../../entries/components/common/ShortcutTip.mockup'
 import { classes } from '../common/classes'
 import { iconButton } from '../../entries/components/common/actions.mockup'
 import { useCornerControls } from '../layout/sidebarPlace'
 import { workspaceLabel } from '../workspaces/label'
+import rowMenu from '../workspaces/RowMenu.module.css'
 import { copyLinkButton } from '../../entries/components/workspace/CopyLinkButton.mockup'
 import type { CopyResult } from './CopyLinkButton'
 import { HeaderState } from './HeaderState'
+import { NameMenuButton } from './NameMenuButton'
 import { ownerPicker } from '../../entries/components/workspace/OwnerPicker.mockup'
+import { RepositoryPicker } from './RepositoryPicker'
 import { runLinks } from '../../entries/components/workspace/RunLinks.mockup'
 import type { RunSource } from './RunLinks'
 import styles from './WorkspaceHeader.module.css'
@@ -25,12 +28,15 @@ import styles from './WorkspaceHeader.module.css'
  * header names the repository. The label of the number follows the name,
  * and copies the link of the workspace. On desktop its tooltip names the
  * key of Copy link. On a phone it leads the line under
- * the name, before the repository. For an admin of the org,
+ * the name, before the repository. The repository opens the menu that
+ * moves the workspace to another repository. For an admin of the org,
  * the owner opens the menu that reassigns the workspace. On desktop the
  * header ends with the toggle that hides the right column and shows it
  * again. A run workspace also links to its automation and its pull request.
  * While the software of the cloud computer runs, the state opens a menu with
- * Restart, for every member of an org that is not suspended.
+ * Restart, for every member of an org that is not suspended. The name is a
+ * button with no caret. It opens the workspace menu of the list below it,
+ * and Rename in that menu puts the field in place of the name.
  */
 export function WorkspaceHeader(props: {
   workspace: Workspace
@@ -54,10 +60,30 @@ export function WorkspaceHeader(props: {
   rightHidden?: boolean
   /** The automation of a run workspace and the pull request of its run. */
   run?: RunSource
+  /**
+   * The menu of the repository is open, or the change of the repository
+   * runs. A phone shows the menu as a sheet.
+   */
+  repositoryControl?: 'open' | 'changing'
+  /**
+   * The workspace menu that the name opened, below the name on desktop. A
+   * phone shows it as a sheet.
+   */
+  menu?: readonly MenuEntryData[]
+  /** Rename of the workspace menu put the field in place of the name. */
+  renaming?: boolean
 }) {
   const { workspace, name } = props
   const corner = useCornerControls()
-  const repository = repositories[workspace.repository].name
+  const repositoryOpen = props.repositoryControl === 'open'
+  const repository = (
+    <RepositoryPicker
+      changing={props.repositoryControl === 'changing'}
+      inline={props.viewport === 'mobile'}
+      open={repositoryOpen}
+      repository={workspace.repository}
+    />
+  )
   const owner = (
     <ownerPicker.Component
       compact={props.viewport === 'mobile'}
@@ -67,6 +93,31 @@ export function WorkspaceHeader(props: {
     />
   )
   const label = workspaceLabel(workspace.number)
+  // A view runs no script, so a span stands for the field, which opens
+  // focused, with the name selected.
+  const title = props.renaming ? (
+    <span
+      aria-label="Workspace name"
+      className={classes(rowMenu.field, styles.titleField)}
+      role="textbox"
+    >
+      <span className={rowMenu.selection}>{name}</span>
+    </span>
+  ) : props.menu ? (
+    <span className={styles.nameAnchor}>
+      <NameMenuButton name={name} open />
+      <span className={styles.nameMenu}>
+        <menuPart.Component
+          entries={props.menu}
+          label={name}
+          moklyInstance="name-menu"
+          placement="point"
+        />
+      </span>
+    </span>
+  ) : (
+    <NameMenuButton name={name} />
+  )
   const copyLink = (
     <shortcutTip.Component
       command="copy-link"
@@ -91,10 +142,10 @@ export function WorkspaceHeader(props: {
           />
         </ScreenLink>
         <div className={styles.titles}>
-          <h1 className={styles.title}>{name}</h1>
+          {title}
           <span className={styles.line}>
             {copyLink}
-            <span className={styles.branch}>{repository}</span>
+            {repository}
           </span>
         </div>
         {owner}
@@ -107,13 +158,12 @@ export function WorkspaceHeader(props: {
       </header>
     ) : (
       <header className={classes(styles.bar, corner && styles.cornerBar)}>
-        <h1 className={styles.title}>{name}</h1>
+        {title}
         {copyLink}
-        <span className={styles.metas}>
-          <span className={styles.meta}>
-            <FolderGit2 aria-hidden className={styles.icon} size={13} />
-            <span className={styles.branch}>{repository}</span>
-          </span>
+        <span
+          className={classes(styles.metas, repositoryOpen && styles.metasOpen)}
+        >
+          {repository}
         </span>
         {owner}
         <HeaderState

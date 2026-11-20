@@ -15,22 +15,27 @@ import type { GitHubFeed } from '../../../github/githubStore'
 import { PullRequestBar } from '../../../github/PullRequestBar'
 import { PullRequestRow } from '../../../github/PullRequestRow'
 import { useGitHubState } from '../../../github/useGitHubState'
-import { useOrgServices } from '../../context'
+import { useOrgModel, useOrgServices } from '../../context'
 import { usePanelLayout } from '../../layout/panels'
 import { useShortcutLabelsOf } from '../../shortcuts/shortcut-hints'
 import type { WorkspaceContext } from '../features'
 import { useFilesNavigation } from '../files/files-navigation'
 import { useScreenActions, useScreenControls } from './bar-controls'
-import { useBranchFeed } from './bar-feed'
+import { useBranchFeed, useLiveMark } from './bar-feed'
 import { BarKeys } from './bar-keys'
 import { githubSubscribe } from './github-events'
+import { useMergeLatest, type MergeLatest } from './merge-latest'
 
 const GitHubFeedContext = createContext<GitHubFeed | null>(null)
 
-/** The bar actions of the screen: their view, and the store of their runs. */
+/**
+ * The bar actions of the screen: their view, the store of their runs, and
+ * Merge latest, which the palette offers with the same store.
+ */
 interface ScreenBar {
   controls: BarControls | null
   actions: BarActions
+  mergeLatest: MergeLatest | null
 }
 
 const BarContext = createContext<ScreenBar | null>(null)
@@ -50,7 +55,8 @@ export function useScreenBar(): ScreenBar | null {
  * and for the Checks tab, with one action state for the bar on desktop and
  * the top of the Checks tab on a phone. It reads with the fetch of the org,
  * follows the ordered stream of the workspace, and waits with the timer of
- * the app. A state of another branch shows as loading.
+ * the app. A state of another branch shows as loading. The list mark of
+ * the workspace shows the state of this store while the screen shows it.
  */
 export function WorkspaceGitHub(props: {
   context: WorkspaceContext
@@ -71,9 +77,15 @@ export function WorkspaceGitHub(props: {
     source,
   )
   const feed = useBranchFeed(github, workspace.branch)
+  const model = useOrgModel(org.id)
+  useLiveMark(model, workspace.id, feed)
   const actions = useScreenActions(props.context, github)
   const controls = useScreenControls(props.context, feed, actions)
-  const bar = useMemo(() => ({ controls, actions }), [controls, actions])
+  const mergeLatest = useMergeLatest(props.context, feed, actions)
+  const bar = useMemo(
+    () => ({ controls, actions, mergeLatest }),
+    [controls, actions, mergeLatest],
+  )
   return (
     <GitHubFeedContext.Provider value={feed}>
       <BarContext.Provider value={bar}>{props.children}</BarContext.Provider>

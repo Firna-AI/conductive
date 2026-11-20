@@ -96,9 +96,17 @@ describe('web addresses', () => {
     )
   })
 
-  test('keeps balanced parentheses and leaves trailing punctuation and marks out', () => {
+  test('keeps balanced parentheses and brackets and leaves trailing marks out', () => {
     const href = 'https://example.com/a_(b(c))'
     expect(bareAddressAt(`Read (${href})).,;:!?'"*_~] now`, 6)).toBe(href)
+    expect(bareAddressAt('http://[::1]', 0)).toBe('http://[::1]')
+    expect(bareAddressAt('(https://[::1]).', 1)).toBe('https://[::1]')
+    expect(bareAddressAt('http://example.com/a[1]', 0)).toBe(
+      'http://example.com/a[1]',
+    )
+    expect(bareAddressAt('http://example.com/a[1]]).', 0)).toBe(
+      'http://example.com/a[1]',
+    )
     expect(bareAddressAt('https://example.com`code', 0)).toBe(
       'https://example.com',
     )
@@ -137,6 +145,20 @@ describe('web addresses', () => {
       { kind: 'text', text: ')' },
     ])
   })
+
+  test.each(['HTTPS', 'hTtPs', 'HTTP', 'hTtP'])(
+    'reads %s bare addresses and angle addresses without changing their text',
+    (scheme) => {
+      const href = `${scheme}://example.com/Api_(Test)[1]?q=MiXeD#Part`
+      expect(webAddressParts(`Read ${href}, <${href}>.`)).toEqual([
+        { kind: 'text', text: 'Read ' },
+        { kind: 'link', href, source: href },
+        { kind: 'text', text: ', <' },
+        { kind: 'link', href, source: href },
+        { kind: 'text', text: '>.' },
+      ])
+    },
+  )
 
   test('tests labels as shown without code, bold, invisible characters, or edge spaces', () => {
     for (const label of [

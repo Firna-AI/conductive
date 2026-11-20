@@ -23,6 +23,11 @@ Restore the workspace before starting a session or sending another message.
 Restore is available for 14 days after Archive while its computer is kept.
 Select **Resume** if the restored workspace is already open.
 
+After 14 days, the workspace leaves **Archived** and the command palette.
+A direct link or a chat link still opens its read-only chat.
+The bar says **Removed on** followed by the removal date.
+Conductive keeps its chat history until the org is deleted.
+
 - [Create a workspace](/docs/workspaces#create-a-workspace-from-a-message)
 - [Connect an agent login](/docs/agent-logins)
 - [Restore an archived workspace](/docs/workspaces#restore-an-archived-workspace)
@@ -41,6 +46,7 @@ On a phone, **Enter** adds a line.
 Your message appears in the chat at once.
 The chat scrolls down to it, also when you read an earlier part of the chat.
 If it cannot send, it goes back to the message box, and the chat shows the cause.
+If the message arrives later, the chat removes the cause and clears the message box, unless you changed the text.
 
 You can send a message while the workspace's computer starts.
 The chat shows the steps of that start.
@@ -99,7 +105,8 @@ Each chip keeps its place in the sent message.
 When the message reaches the agent, select its file chip to open the copy.
 The copy opens in the workspace's file view.
 This can start a stopped cloud computer.
-Restore an archived workspace before opening its attached files.
+Restore an archived workspace within 14 days before opening its attached files.
+After removal, the cloud computer and the attached files in it are deleted.
 
 Attached files arrive in `.context/attachments/` in the workspace's repository folder.
 Conductive keeps each attached file until the workspace's cloud computer has it and its first start succeeds.
@@ -130,7 +137,9 @@ This also works while you view a file or **Checks**.
 Your draft, attached files, and uploads stay as they were.
 The action's message appears in chat as your message.
 During a turn, it follows the same rules as a message you send from the box.
-If it cannot send, the chat opens and shows the cause.
+If it cannot send while you stay in the workspace on the same branch, the chat opens and shows the cause.
+If you leave or change the branch before the failure arrives, your chosen page stays open.
+The cause waits in that session's message box, also if you return before the failure arrives.
 
 - [Choose a pull request action](/docs/pull-requests#read-the-pull-request-state)
 
@@ -158,8 +167,10 @@ The title of a session in another workspace updates when the chat loads.
 Session links also show as small boxes in agent answers and pasted message drafts.
 A member can type the same **Sent by:** line, so it does not prove who wrote a message.
 
-An agent can read archived workspaces and closed sessions.
-It cannot send messages to an archived workspace or a closed session.
+An agent can read archived and removed workspaces by ID.
+It can also read closed sessions.
+Workspace lists leave out removed workspaces unless the agent asks for them.
+It cannot send messages to an archived or removed workspace or a closed session.
 Use **Stop** in each affected session if agents keep replying to each other without useful work.
 
 - [Get the current workspace tools](/docs/cloud-computer#apply-setup-changes)
@@ -187,6 +198,12 @@ Choosing a model without **Fast** turns it off.
 A turn with **Fast** on can still run at standard speed, for example when the agent reaches its fast limit.
 The turn then continues, and its end shows **Standard speed** with the cause.
 **Fast** stays on, so later turns run fast when the cause ends.
+
+A newly added Codex model can need newer cloud computer software.
+Until the cloud computer updates, an OpenAI API key or an own endpoint can run that model at a lower effort and without **Fast**.
+The chat shows no note for this.
+The cloud computer updates on its own within minutes of being idle.
+A ChatGPT sign-in is not affected.
 
 The message box offers **Connect** when neither the session's login nor your personal or org login can serve the chosen agent.
 Connect a personal login in **Account**, or ask an admin to connect an org login.
@@ -233,7 +250,7 @@ The answer stays visible beside it.
 
 ## Read replies and tables
 
-Agent replies can contain headings, paragraphs, lists, code, tables, and file chips.
+Agent replies can contain headings, paragraphs, lists, quotes, code, tables, file chips, and pictures.
 A wide table scrolls sideways inside the message.
 The text around it keeps the width of the chat.
 
@@ -243,6 +260,8 @@ Code that holds only the path of a file of the workspace also shows as a file ch
 Select a chip to open its file.
 A Markdown link or image to a file of the workspace shows as a link with its label.
 Select the link to open the file.
+While the cloud computer runs, an image of a PNG, JPEG, GIF, or WebP file, such as a screenshot that the agent took, shows as a small picture instead.
+Select the picture to open the file.
 A path can end with a line or a range of lines, such as `@src/app.ts:42` or `src/app.ts:42-50`.
 Its chip opens the file as text, with those lines in view and marked.
 To copy a code block, select **Copy code** in its top corner.
@@ -250,7 +269,7 @@ With a mouse, the button shows when you point at the block.
 **Code copied** confirms the copy.
 
 While a reply arrives, the chat shows its headings, text, and table rows as they arrive.
-In the folded work of a turn, open a message line to read its table.
+In the folded work of a turn, open a message line to read its table or see its pictures.
 
 ## Manage session tabs
 
@@ -284,7 +303,12 @@ After a merge, **Continue** keeps these sessions and their conversation context 
 Each session shows a note with the member who continued, the new branch, and its starting branch.
 With current agent software, later messages tell the agent the current branch names when they change.
 
+A repository change also keeps these sessions and their conversation context.
+Each session shows a note with the member who changed the repository, the new repository, and the new branch.
+Later messages tell the agent the folder of the new repository and the new branch.
+
 - [Continue after a merge](/docs/workspaces#continue-after-a-merge)
+- [Change the repository](/docs/workspaces#change-the-repository)
 
 ## Copy a transcript
 
@@ -307,7 +331,7 @@ A long read returns part of the transcript, with its line range and a way to rea
 For a stop through an agent's tools, the transcript gives **Stopped from** and the sending session's link.
 
 You can copy another tab's conversation without changing the selected tab.
-Both options work in archived and other read-only workspaces.
+Both options work in archived and removed workspaces, and in other read-only workspaces.
 
 For a closed session, reopen it from **Session history** before copying.
 

@@ -43,6 +43,13 @@ it('retains a failed email and retries from the scheduled entry with the same ke
         {
           kind: 'approval_email_delivery_failed',
           message: 'Approval email delivery failed. The email remains pending.',
+          error: {
+            kind: 'mail',
+            reason: 'provider_refused',
+            status: 503,
+            code: 'unknown',
+            errorType: null,
+          },
         },
       ],
     ])

@@ -15,6 +15,7 @@ interface Totals {
   stopped: number
   failed: number
   archived: number
+  removed: number
   automations: number
 }
 
@@ -32,7 +33,8 @@ function inLiveOrg(table: string): string {
  * and the new workspaces and the automation runs of each of the 30 UTC days
  * through `readAt`. Deleted orgs and their records count nowhere. A automation
  * run counts for its owner at the time of the run, and a skipped run counts
- * nowhere, because it started no agent.
+ * nowhere, because it started no agent. As the Overview of the operator
+ * does, `archived` keeps the removed workspaces, which `removed` counts too.
  */
 export async function readAccountStats(
   db: D1Database,
@@ -49,7 +51,7 @@ export async function readAccountStats(
          ) CROSS JOIN (
            SELECT COUNT(*) AS workspacesTotal,
              COUNT(CASE WHEN w.created_at BETWEEN ?2 AND ?3 THEN 1 END) AS workspacesLastWeek,
-             ${workspaceStateCounts}
+             ${workspaceStateCounts('?3')}
            FROM workspaces w ${inLiveOrg('w')}
            WHERE w.owner_user_id = ?1
          ) CROSS JOIN (
@@ -91,6 +93,7 @@ export async function readAccountStats(
       stopped: totals.stopped,
       failed: totals.failed,
       archived: totals.archived,
+      removed: totals.removed,
     },
     automations: totals.automations,
     newWorkspacesByDay: dailyCounts(workspaceDays.results, firstDay),

@@ -10,6 +10,7 @@ import {
 import { people } from '../../fixtures/members'
 import { defined } from '../../defined'
 import type { IconKey } from '../../entries/components/common/icons'
+import { actionButton } from '../../entries/components/common/actions.mockup'
 import type { StatusTone } from '../common/StatusText'
 import { statusText } from '../../entries/components/common/StatusText.mockup'
 import styles from './MacCommand.module.css'
@@ -88,7 +89,8 @@ export function CommandStatus(props: { id: string; state: MacCommandState }) {
 /**
  * A command that the agent asked to run on the Mac of the person who sent
  * the turn (decision 62), at its place in the chat: the Mac, the state, the
- * command, its folder and time limit, and the output once it ran.
+ * command, its folder and time limit, and the output once it ran. Long
+ * output shows its first ten lines with a fade and Show all.
  */
 export function MacCommand(props: {
   /** The id of the chat item of the command. */
@@ -112,7 +114,21 @@ export function MacCommand(props: {
         {request.limit}
       </span>
       {state === 'done' ? (
-        <pre className={styles.output}>{safariOutput}</pre>
+        <div className={styles.output}>
+          <pre
+            className={`${styles.outputText} ${styles.outputShort} ${styles.outputFaded}`}
+          >
+            {safariOutput}
+          </pre>
+          <span className={styles.outputMore}>
+            <actionButton.Component
+              moklyInstance={`show-all-${props.id}`}
+              tone="plain"
+            >
+              Show all
+            </actionButton.Component>
+          </span>
+        </div>
       ) : null}
       {note ? <span className={styles.note}>{note}</span> : null}
     </section>

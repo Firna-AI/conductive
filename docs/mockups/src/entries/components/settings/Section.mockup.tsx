@@ -80,7 +80,7 @@ export const section = defineComponent({
   slug: 'section',
   title: 'Section',
   description:
-    'A titled card of settings, in the account, the org settings, Get started, and the operator section: its title with an optional state beside it, a description, its content, and its actions at the bottom. A screen supplies the state, the content, and the actions, so its own page shows the title alone.',
+    'A titled card of settings, in the account, the org settings, Get started, and the operator section: its title with an optional state beside it and an optional action at the end of the title row, such as Edit, a description, its content, and its actions at the bottom. A screen supplies the state, the action, the content, and the actions, so its own page shows the title alone.',
   relatedDocs: ['docs/mockups/design.md'],
   propSchema: {
     type: 'object',
@@ -91,10 +91,11 @@ export const section = defineComponent({
       description: { type: 'string' },
     },
   } as const,
-  slots: ['status', 'children', 'actions'],
+  slots: ['status', 'action', 'children', 'actions'],
   props: { title: inviteCodeCopy.title },
   render: (props) => (
     <Section
+      action={props.action}
       actions={props.actions}
       description={props.description}
       status={props.status}
@@ -119,6 +120,18 @@ export const section = defineComponent({
           <actionButton.Component icon="trash-2" tone="danger">
             Delete org
           </actionButton.Component>
+        ),
+      },
+    },
+    {
+      slug: 'title-action',
+      title: 'With an action in the title row',
+      description:
+        'A section with Edit at the end of its title row, such as the chosen repositories of an org for an admin.',
+      props: { title: 'Repositories' },
+      slots: {
+        action: (
+          <actionButton.Component icon="pencil">Edit</actionButton.Component>
         ),
       },
     },

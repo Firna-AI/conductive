@@ -34,7 +34,7 @@ export const fixedShortcuts = defineComponent({
       note: { type: 'boolean' },
     },
   } as const,
-  props: { label: 'Close a dialog or a menu', keys: ['Esc'], note: false },
+  props: { label: 'Close a dialog or a menu', keys: [['Esc']], note: false },
   render: (props) => (
     <FixedShortcuts keys={props.keys} label={props.label} note={props.note} />
   ),
@@ -123,7 +123,14 @@ export const commandShortcuts = defineComponent({
         'Close tab in a normal Chrome tab, which keeps ⌘W: that key is dimmed, and ⌥⌘W is not.',
       props: {
         label: 'Close tab',
-        state: { kind: 'shortcuts', keys: ['⌘W', '⌥⌘W'], changed: false },
+        state: {
+          kind: 'shortcuts',
+          keys: [
+            ['⌘', 'W'],
+            ['⌥', '⌘', 'W'],
+          ],
+          changed: false,
+        },
       },
     },
   ],

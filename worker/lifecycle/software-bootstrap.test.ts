@@ -97,3 +97,14 @@ it('warns and still restarts the runner when release discovery failed', () => {
   expect(command).not.toContain('nohup')
   expect(command).toContain('systemctl restart conductive-runner.service')
 })
+
+it('removes the terminal folder of a repository change at each start, before the runner restarts', () => {
+  const command = workspaceStartupCommand(readSavedScript(''), null)
+  expect(command).toContain("rm -f -- '/run/conductive/repository'")
+  expect(command.indexOf('/run/conductive/repository')).toBeGreaterThan(
+    command.indexOf('install -d -m 700 -o user -g user /run/conductive'),
+  )
+  expect(command.indexOf('/run/conductive/repository')).toBeLessThan(
+    command.indexOf('systemctl restart conductive-runner.service'),
+  )
+})

@@ -188,6 +188,11 @@ it('refuses invalid messages, malformed or renamed images, and excess combined i
     })
   }
   expect(client.resend.requests).toHaveLength(0)
+  expect(
+    await harness.env.DB.prepare(
+      'SELECT COUNT(*) AS count FROM feedback_sends',
+    ).first('count'),
+  ).toBe(0)
 })
 
 it('reports missing inboxes and failed delivery without exposing provider data or logging feedback', async () => {
@@ -238,7 +243,12 @@ it('reports missing inboxes and failed delivery without exposing provider data o
     expect(client.resend.requests).toHaveLength(2)
     expect(client.resend.deliveries.size).toBe(0)
     expect(info.mock.calls).toEqual([])
-    expect(warn.mock.calls).toEqual([])
+    expect(warn.mock.calls.map(([warning]) => warning.error.reason)).toEqual([
+      'provider_refused',
+      'request_failed',
+      'not_configured',
+    ])
+    expect(JSON.stringify(warn.mock.calls)).not.toContain('private-provider')
     expect(error.mock.calls).toEqual([])
   } finally {
     info.mockRestore()

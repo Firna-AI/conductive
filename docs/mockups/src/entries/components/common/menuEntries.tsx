@@ -5,6 +5,7 @@ import { instanceKey } from '../../../instanceKey'
 import { personAvatar } from '../orgs/OrgTile.mockup'
 import { agentKeys } from '../../../fixtures/agents'
 import { iconKeys, icons } from './icons'
+import { shortcutSchema } from './shortcutSchemas'
 
 /** Where a menu opens, as `MenuPlacement` lists them, and at a point. */
 const placements = [
@@ -49,6 +50,11 @@ const itemSchema = {
     mark: markSchema,
     /** Muted text after the label, such as the time of a session. */
     detail: { type: 'string' },
+    /**
+     * Muted words that follow the label in its line, such as the effort of
+     * a favourite after its model.
+     */
+    muted: { type: 'string' },
     trailingIcon: { enum: iconKeys },
     /** The spoken name of the trailing icon. */
     trailingLabel: { type: 'string' },
@@ -86,7 +92,7 @@ const entrySchema = {
         label: { type: 'string' },
         on: { type: 'boolean' },
         /** The key of the command that changes the setting. */
-        shortcut: { type: 'string' },
+        shortcut: shortcutSchema,
       },
     },
     {

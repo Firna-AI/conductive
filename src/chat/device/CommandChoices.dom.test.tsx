@@ -1,4 +1,5 @@
 // @vitest-environment happy-dom
+import { useRef } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import type { DeviceApprovalAction } from '../../shared/device'
 import {
@@ -22,6 +23,19 @@ const blocked = (element: Element) =>
   element.getAttribute('aria-disabled') === 'true' ||
   element.hasAttribute('disabled')
 
+/** The choices in the box of the actions, as the card of a request holds them. */
+function Choices(props: {
+  answering: DeviceApprovalAction | null
+  onAnswer: (action: DeviceApprovalAction) => void
+}) {
+  const actions = useRef<HTMLSpanElement>(null)
+  return (
+    <span ref={actions}>
+      <CommandChoices actions={actions} {...props} />
+    </span>
+  )
+}
+
 /** Each row of the open menu: its name, and the scope that describes it. */
 function rows() {
   return Array.from(document.querySelectorAll('[role="menuitem"]'), (row) => ({
@@ -36,9 +50,7 @@ describe('CommandChoices', () => {
     holdAnimationFrames()
     const answers: DeviceApprovalAction[] = []
     const answer = (action: DeviceApprovalAction) => answers.push(action)
-    const view = await mount(
-      <CommandChoices answering={null} onAnswer={answer} />,
-    )
+    const view = await mount(<Choices answering={null} onAnswer={answer} />)
     await press(byRole('button', 'More ways to allow'))
     expect(rows()).toEqual([
       { name: 'Always allow', scope: 'This exact command, on this Mac' },
@@ -77,10 +89,7 @@ describe('CommandChoices', () => {
     expect(answers).toHaveLength(sends.length)
 
     await view.rerender(
-      <CommandChoices
-        answering="allow-workspace-until-stop"
-        onAnswer={answer}
-      />,
+      <Choices answering="allow-workspace-until-stop" onAnswer={answer} />,
     )
     for (const name of ['Deny', 'More ways to allow']) {
       expect(blocked(byRole('button', name)), name).toBe(true)

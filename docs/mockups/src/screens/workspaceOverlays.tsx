@@ -2,7 +2,6 @@ import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import { nameLabel } from '../../../../src/shared/name-label'
 import { actionButton } from '../entries/components/common/actions.mockup'
-import { toastLayer } from '../entries/components/common/ToastLayer.mockup'
 import {
   confirmDialog,
   dialogText,
@@ -12,10 +11,8 @@ import { menu } from '../entries/components/common/Menu.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { sheet } from '../entries/components/common/Sheet.mockup'
 import { RowMenuSheet } from '../components/files/FileRowMenu'
-import { pathResults } from '../components/files/rowMenuCopy'
 import { commandPalette } from '../entries/components/palette/CommandPalette.mockup'
 import type { PaletteContext } from '../components/palette/paletteContent'
-import { archivedToast } from '../entries/components/workspace/ArchivedToast.mockup'
 import { continueDialog } from '../entries/components/workspace/ContinueDialog.mockup'
 import { reassignMenu } from '../components/workspace/OwnerPicker'
 import {
@@ -26,14 +23,16 @@ import {
 import type { WorkspaceTab } from '../components/workspace/TabItem'
 import { tabMenuSheet } from '../entries/components/workspace/TabMenu.mockup'
 import { plainData } from '../defined'
-import { transcriptToasts } from '../components/workspace/transcriptCopy'
 import { workspaceSessions } from '../fixtures/sessions'
 import { closedTerminal, cloudComputerSilent } from '../fixtures/terminals'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import { valueSheet } from './requestSheets'
+import { expandedPage } from './workspaceExpanded'
+import { headerMenuOf } from './workspaceHeaderMenu'
 import { capabilitiesSheet } from './workspaceCapabilities'
-import { openFile } from './workspaceParts'
+import { openFile } from './workspaceFileTab'
+import { repositoryOverlay } from './workspaceRepositoryOverlay'
 import { rowMenuOf } from './workspaceRowMenu'
 import type { WorkspaceState } from './workspaceState'
 import { historyFor } from './workspaceTabs'
@@ -141,31 +140,6 @@ function TerminalFailure(props: { title: string; viewport: Viewport }) {
 }
 
 /**
- * The toast after a copy from a menu, if any: Copy path from a row menu or
- * a tab menu, or a copy of a session transcript from the tab menu. It lies
- * over the workspace at the place of the toasts of the app.
- */
-export function copyToast(
-  state: WorkspaceState,
-  viewport: Viewport,
-): ReactNode {
-  const path = state.copyPath !== 'none'
-  const result = path ? state.copyPath : state.copyTranscript
-  if (result === 'none') return null
-  const words = path ? pathResults : transcriptToasts
-  return (
-    <toastLayer.Component
-      moklyInstance="copy-toast"
-      phone={viewport === 'mobile'}
-      toast={{
-        title: words[result],
-        tone: result === 'copied' ? 'success' : 'error',
-      }}
-    />
-  )
-}
-
-/**
  * The sheet of the open menu of a row of the Files panel, on a phone. Its
  * Files tab shows the lists, unless the state shows a file there as a page.
  */
@@ -182,6 +156,8 @@ function rowMenuSheet(state: WorkspaceState, viewport: Viewport): ReactNode {
  * each one as a sheet, and the open Capabilities control too. `row` holds
  * the tabs that the viewport shows, the tab whose menu is open, if any, and
  * whether the workspace is read-only, which leaves items out of that menu.
+ * Desktop draws the workspace menu of the header at the pointer in the
+ * header, and a phone as a sheet.
  */
 export function workspaceOverlay(
   state: WorkspaceState,
@@ -236,6 +212,10 @@ export function workspaceOverlay(
           />
         </sheet.Component>
       ) : null
+    case 'repository':
+    case 'repository-change':
+    case 'repository-failed':
+      return repositoryOverlay(state.overlay, workspace, viewport)
     case 'tab-menu':
       return mobile && row.menuTab ? (
         <tabMenuSheet.Component
@@ -263,29 +243,23 @@ export function workspaceOverlay(
       )
     case 'value-sheet':
       return valueSheet(state, viewport)
-  }
-}
-
-/**
- * The toast of the state, over the whole screen. Just after Archive, the
- * toast names the workspace and offers Restore, which does what Restore on
- * the archived bar does.
- */
-export function workspaceToast(
-  state: WorkspaceState,
-  workspace: Workspace,
-  viewport: Viewport,
-): ReactNode {
-  switch (state.toast) {
-    case 'none':
+    case 'workspace-menu':
+      return mobile ? (
+        <sheet.Component
+          moklyInstance="workspace-menu-sheet"
+          title={workspace.name}
+        >
+          <menu.Component
+            entries={headerMenuOf(state, workspace.owner)}
+            label={workspace.name}
+            moklyInstance="workspace-menu"
+            placement="sheet"
+          />
+        </sheet.Component>
+      ) : null
+    case 'header-rename':
       return null
-    case 'archived':
-      return (
-        <archivedToast.Component
-          moklyInstance="archived-toast"
-          name={workspace.name}
-          phone={viewport === 'mobile'}
-        />
-      )
+    case 'expanded-page':
+      return mobile ? null : expandedPage(state)
   }
 }

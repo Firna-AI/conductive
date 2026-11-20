@@ -14,7 +14,11 @@ import { instanceKey } from '../../instanceKey'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
 import { orgTile } from '../../entries/components/orgs/OrgTile.mockup'
-import { activityPresentation, listMarkLabel } from '../workspaces/status'
+import { listMarkLabel } from '../workspaces/status'
+import {
+  WorkspaceName,
+  type EmphasisClasses,
+} from '../workspaces/WorkspaceName'
 import type { CommandLead } from './paletteCommands'
 import type { PaletteContent, PaletteRow } from './paletteContent'
 import {
@@ -24,6 +28,16 @@ import {
 import { paletteStatusPart } from '../../entries/components/palette/PaletteStatus.mockup'
 import { defined } from '../../defined'
 import styles from './CommandPalette.module.css'
+
+/**
+ * The look of the name of a workspace in each state, as in the list: the
+ * strong weight for unread output, and the muted colour while the workspace
+ * is stopped or archived.
+ */
+const nameEmphasis: EmphasisClasses = {
+  strong: styles.strong,
+  dim: styles.dim,
+}
 
 function Lead(props: {
   lead: CommandLead
@@ -88,10 +102,11 @@ function shortcutOf(row: PaletteRow, keys?: PaletteKeys): Shortcut | undefined {
 
 /**
  * One result. A workspace shows its list mark, its name, its repository,
- * and the age of its last activity, as the list does. When the query
- * matches the label of its number, the label leads the name, as in a chip.
- * A command shows its icon, its label, the page of a setting in a mixed
- * list, and its key.
+ * and the age of its last activity, as the list does. `WorkspaceName` gives
+ * the name the look of the state, as in the list. When the query matches
+ * the label of its number, the label leads the name, as in a chip. A
+ * command shows its icon, its label, the page of a setting in a mixed list,
+ * and its key.
  */
 function Row(props: {
   row: PaletteRow
@@ -101,14 +116,9 @@ function Row(props: {
   const { row, highlighted } = props
   if (row.kind === 'workspace') {
     const { workspace, status, github, to } = row.row
-    const presentation = activityPresentation[status]
     return (
       <RowLink
-        className={classes(
-          styles.row,
-          styles[presentation.emphasis],
-          highlighted && styles.highlighted,
-        )}
+        className={classes(styles.row, highlighted && styles.highlighted)}
         to={to}
       >
         <span className={styles.lead}>
@@ -122,7 +132,13 @@ function Row(props: {
         {row.number ? (
           <span className={styles.number}>{row.number}</span>
         ) : null}
-        <span className={styles.label}>{workspace.name}</span>
+        <WorkspaceName
+          className={styles.label}
+          emphasis={nameEmphasis}
+          status={status}
+        >
+          {workspace.name}
+        </WorkspaceName>
         <span className={styles.repository}>
           {repositories[workspace.repository].name}
         </span>

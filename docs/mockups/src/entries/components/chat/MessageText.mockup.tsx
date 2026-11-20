@@ -10,6 +10,7 @@ import {
   draftAttachments,
 } from '../../../fixtures/attachments'
 import { mentionChipsDraft } from '../../../fixtures/fileMentions'
+import { skillChipDraft } from '../../../fixtures/skills'
 import { followUpTask } from '../../../fixtures/workspaceLinkConversations'
 import { checkoutAutocomplete, savedCarts } from '../../../fixtures/workspaces'
 import { paths } from '../../../paths'
@@ -134,8 +135,8 @@ export const linkText = defineComponent({
 })
 
 /**
- * The text of a sent message or an answer, registered with Mokly. Its
- * pages show each kind of chip and link that a text holds. The parts of a
+ * The text of a message of a member, registered with Mokly. Its pages show
+ * each kind of chip and link that a text holds. The parts of a
  * text have no key that stays the same, so the text draws them with the
  * plain parts.
  */
@@ -143,7 +144,7 @@ export const messageText = defineComponent({
   slug: 'message-text',
   title: 'Message text',
   description:
-    'The text of a sent message or an answer. Each part in backticks is code, and each link to a workspace of the org is a chip that opens the workspace. Each other web address is a link. An answer shows `**` as bold and a Markdown link as its label, and each mention and each inline path of the file tree in it is a file chip. In the text of a member, each mention of a file or a folder is a chip, and the mention of an attached file shows the chip of that file. Its own page shows a message that links a workspace.',
+    'The text of a message of a member, as typed. Each part in backticks is code, and each link to a workspace of the org is a chip that opens the workspace. Each other web address is a link, and a Markdown link shows as typed. Each mention of a file or a folder is a chip, each skill of the list is a skill chip, and the mention of an attached file shows the chip of that file. The text of an answer is not this part. Its own page shows a message that links a workspace.',
   relatedDocs: ['docs/mockups/design-chat.md'],
   propSchema: {
     type: 'object',
@@ -151,13 +152,8 @@ export const messageText = defineComponent({
     required: ['text'],
     properties: {
       text: { type: 'string' },
-      /** The text of a member: each mention of a file is a chip. */
+      /** Each mention of a file and each skill is a chip. */
       mentions: { type: 'boolean' },
-      /**
-       * An answer: `**` marks bold, a Markdown link shows its label, and
-       * each mention and each inline path of the file tree is a file chip.
-       */
-      answer: { type: 'boolean' },
       /** The attached files of a sent message. */
       files: { type: 'array', items: attachmentSchema },
       /** The message waits for the cloud computer. */
@@ -167,7 +163,6 @@ export const messageText = defineComponent({
   props: { text: followUpTask },
   render: (props) => (
     <MessageText
-      answer={props.answer}
       files={props.files}
       mentions={props.mentions}
       text={props.text}
@@ -176,24 +171,11 @@ export const messageText = defineComponent({
   ),
   variants: [
     {
-      slug: 'answer',
-      title: 'Answer',
+      slug: 'skill',
+      title: 'Skill chip',
       description:
-        'An answer of the agent with bold, code, and a Markdown link to the docs.',
-      props: {
-        answer: true,
-        text: 'The proxy calls the **[autocomplete endpoint](https://docs.places.example/v1/autocomplete)** of the places API, from `src/app/api/places/route.ts`.',
-      },
-    },
-    {
-      slug: 'answer-files',
-      title: 'Answer with files',
-      description:
-        'An answer that names files of the tree: a mention in bold, an inline path with a line target, and a Markdown link to a picture, which shows as a link.',
-      props: {
-        answer: true,
-        text: 'I moved the list under the postcode field in **@src/app/checkout/AddressForm.tsx**. The hook skips a short query in `src/app/checkout/useAddressAutocomplete.ts:19-22`. [The phone view](/home/user/code/storefront/.context/shots/after.png) shows the fix.',
-      },
+        'A message of a member that starts with the chip of a skill, which opens nothing.',
+      props: { mentions: true, text: skillChipDraft },
     },
     {
       slug: 'mentions',

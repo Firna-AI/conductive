@@ -1,5 +1,6 @@
 import { defineComponent } from '@mokly/mokly'
 import { KeyChips } from '../../../components/common/KeyChips'
+import { shortcutSchema } from './shortcutSchemas'
 
 /**
  * A shortcut as small key chips, one for each key, registered with Mokly.
@@ -17,13 +18,13 @@ export const keyChips = defineComponent({
     additionalProperties: false,
     required: ['shortcut'],
     properties: {
-      /** The shortcut as its keyboard prints it, such as ⌥⌘/ or Ctrl+K. */
-      shortcut: { type: 'string', minLength: 1 },
+      /** The keys as its keyboard prints them, such as ⌥⌘/ or Ctrl+K. */
+      shortcut: shortcutSchema,
       /** The key does not work where the page runs. */
       dimmed: { type: 'boolean' },
     },
   } as const,
-  props: { shortcut: '⌘K' },
+  props: { shortcut: ['⌘', 'K'] },
   render: (props) => (
     <KeyChips dimmed={props.dimmed} shortcut={props.shortcut} />
   ),
@@ -33,14 +34,14 @@ export const keyChips = defineComponent({
       title: 'Kept by the browser',
       description:
         'A key that a browser tab keeps: an outline with dashes and no fill.',
-      props: { shortcut: '⌘W', dimmed: true },
+      props: { shortcut: ['⌘', 'W'], dimmed: true },
     },
     {
       slug: 'windows',
       title: 'Windows',
       description:
         'The modifiers of a Windows keyboard as words, joined with +.',
-      props: { shortcut: 'Ctrl+Shift+T' },
+      props: { shortcut: ['Ctrl', 'Shift', 'T'] },
     },
   ],
 })

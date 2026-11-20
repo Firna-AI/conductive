@@ -1,8 +1,5 @@
 import { defineComponent } from '@mokly/mokly'
-import {
-  OrgRepositoryList,
-  RepositoryList,
-} from '../../../components/settings/RepositoryList'
+import { RepositoryList } from '../../../components/settings/RepositoryList'
 import { acmeRepositories, newOrg } from '../../../fixtures/repositories'
 
 /** A repository that the GitHub App reaches, as `ReachableRepository`. */
@@ -26,7 +23,7 @@ export const repositoryList = defineComponent({
   slug: 'repository-list',
   title: 'Repository list',
   description:
-    'The repositories that the shared GitHub App can reach, with a search field: each with its description, and Added with Remove, or Add. A note under the list links to Manage access. When the app reaches no repository, the list asks for access. Its own page shows the repositories of Acme for an admin.',
+    'The repositories that the shared GitHub App can reach, by name, with a search field: each with its description, and Added with Remove, or Add. A note under the list links to Manage access. When the app reaches no repository, the list asks for access. Its own page shows the repositories of Acme for an admin.',
   relatedDocs: ['docs/mockups/catalogue.md'],
   propSchema: {
     type: 'object',
@@ -58,21 +55,4 @@ export const repositoryList = defineComponent({
       props: { repositories: [] },
     },
   ],
-})
-
-/** The repositories that an org uses, registered with Mokly. */
-export const orgRepositoryList = defineComponent({
-  slug: 'org-repository-list',
-  title: 'Org repository list',
-  description:
-    'The repositories that an org uses, without search and actions, for a member who is not an admin. Its own page shows the repositories of Acme.',
-  relatedDocs: ['docs/mockups/catalogue.md'],
-  propSchema: {
-    type: 'object',
-    additionalProperties: false,
-    required: ['repositories'],
-    properties: { repositories: repositoriesSchema },
-  } as const,
-  props: { repositories: acmeRepositories },
-  render: (props) => <OrgRepositoryList repositories={props.repositories} />,
 })

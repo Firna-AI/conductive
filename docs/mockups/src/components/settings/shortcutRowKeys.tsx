@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import type { BrowserTab } from '../../fixtures/shortcutHosts'
-import type { Shortcut } from '../common/KeyChips'
+import { sameShortcut, type Shortcut } from '../common/KeyChips'
 import { keyChips } from '../../entries/components/common/KeyChips.mockup'
 import {
   keyButton,
@@ -12,7 +12,9 @@ import styles from './ShortcutsSections.module.css'
 
 /** The browser that keeps a shortcut in a normal tab, or none. */
 function keeper(shortcut: Shortcut, tab?: BrowserTab) {
-  return tab?.kept.has(shortcut) ? tab.browser : undefined
+  return tab?.kept.some((key) => sameShortcut(key, shortcut))
+    ? tab.browser
+    : undefined
 }
 
 /** A shortcut of a row, as a button that records new keys. */
@@ -24,7 +26,7 @@ export function keyOf(
 ) {
   return (
     <keyButton.Component
-      key={shortcut}
+      key={shortcutKey(shortcut)}
       label={label}
       moklyInstance={`key-${shortcutKey(shortcut)}`}
       shortcut={shortcut}
@@ -50,10 +52,13 @@ export function recordingKeys(
       {...defined({ shortcut: recorded })}
     />
   )
+  const { replaces } = state
   const others = state.keys.map((shortcut) =>
-    shortcut === state.replaces ? recorder : keyOf(label, shortcut, tab),
+    replaces !== undefined && sameShortcut(shortcut, replaces)
+      ? recorder
+      : keyOf(label, shortcut, tab),
   )
-  return state.replaces === undefined ? [...others, recorder] : others
+  return replaces === undefined ? [...others, recorder] : others
 }
 
 /**
@@ -66,15 +71,15 @@ export function resetKeys(
   state: { keys: readonly Shortcut[]; shortcut: Shortcut },
   tab?: BrowserTab,
 ): ReactNode[] {
-  return state.keys.map((shortcut) =>
-    shortcut === state.shortcut ? (
+  return state.keys.map((shortcut, index) =>
+    sameShortcut(shortcut, state.shortcut) ? (
       <recorderPart.Component
-        key={shortcut}
+        key={index}
         moklyInstance="recorder"
         shortcut={shortcut}
       />
     ) : (
-      <span className={styles.still} key={shortcut}>
+      <span className={styles.still} key={index}>
         <keyChips.Component
           dimmed={keeper(shortcut, tab) !== undefined}
           moklyInstance={`${instanceKey(label)}-${shortcutKey(shortcut)}`}

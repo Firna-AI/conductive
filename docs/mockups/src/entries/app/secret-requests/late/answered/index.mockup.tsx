@@ -51,5 +51,19 @@ export const lateAllowed = defineScreen({
         composer: 'no-starter-login',
       },
     },
+    {
+      slug: 'org-login-gone',
+      title: 'The org login is gone',
+      description:
+        'Cal started Address autocomplete on the Claude login of Acme. An admin of Acme removed that login later, so the turn for Cal cannot run. Priya allowed the late request. The widget says Allowed for this session, and its line says that the agent learns of it when an admin connects Acme\'s Claude login again. No line and no turn follow. A message of Priya would start a new session, because "Acme\'s Claude login is not available," as the notice over her composer says.',
+      rationale:
+        'A session keeps its login, and the login of a session on the org login names the org (org login decision 1 B). So the session keeps the login of Acme after its removal, and a new login of Cal does not serve it. Only an admin who connects the Claude login of Acme again gets the agent going, so the line names that action and no member. A session on a personal login, and an older one whose record names no login, keep the words of the login-gone variant.',
+      props: {
+        conversation: 'secret-late-reconnect-org',
+        viewer: 'member',
+        composer: 'no-starter-login',
+        login: 'org',
+      },
+    },
   ],
 })

@@ -88,11 +88,14 @@ function submenuOf(
 }
 
 /**
- * The menu of a workspace row as the registered menu takes it: the actions
- * of `workspaceMenuItems`, with the key of each icon. `open` is the submenu
- * that shows its choices.
+ * The menu of a workspace as the registered menu takes it, on its row and
+ * from the name in its header: the actions of `workspaceMenuItems`, with
+ * the key of each icon. `open` is the submenu that shows its choices.
  */
-function workspaceMenu(access: RowAccess, open?: Submenu): MenuEntryData[] {
+export function workspaceMenuOf(
+  access: RowAccess,
+  open?: Submenu,
+): MenuEntryData[] {
   return workspaceMenuItems(access).map((item): MenuEntryData => {
     if (item.kind === 'divider') return item
     const entry = {
@@ -132,7 +135,7 @@ export function rowControls(
     readOnly: context.readOnly,
     nested: isNested(row),
   }
-  const entries = workspaceMenu(access, submenu)
+  const entries = workspaceMenuOf(access, submenu)
   if (drawing.kind === 'rename') {
     // A row whose person may not rename it draws no field.
     if (!renames(access)) return undefined

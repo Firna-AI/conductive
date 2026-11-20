@@ -10,8 +10,9 @@ import { guideClasses } from './guideLines'
 import { rowPointMenu } from '../../entries/components/workspaces/RowMenu.mockup'
 import type { RowControls } from './RowMenu'
 import type { WorkspaceRow } from './sections'
-import { activityPresentation, listMarkLabel } from './status'
+import { listMarkLabel } from './status'
 import type { RowIndent } from './trees'
+import { WorkspaceName, type EmphasisClasses } from './WorkspaceName'
 import rowMenu from './RowMenu.module.css'
 import styles from './WorkspaceRow.module.css'
 
@@ -19,6 +20,17 @@ import styles from './WorkspaceRow.module.css'
 export type RowDrag = 'lifted' | 'placeholder'
 
 type Variant = 'sidebar' | 'page'
+
+/**
+ * The look of the name of a row in each state: ink and the strong weight
+ * for unread output, ink while the agent works or needs input, and the muted
+ * colour while the workspace is stopped or archived.
+ */
+const nameEmphasis: EmphasisClasses = {
+  strong: styles.strong,
+  active: styles.active,
+  dim: styles.dim,
+}
 
 /**
  * The classes of a row of a tree: the indent of a nested row, by the steps
@@ -111,12 +123,14 @@ function rowAction(
 /**
  * One workspace on one line: its list mark on the left, its name, and the
  * time since its last activity. The mark shows the GitHub state of its
- * pull request in colour, and whether its agent works. The action of the
- * row, Archive or Restore, covers the time on hover only. A nested row
- * indents by the steps of `row.indent`, and a row of a tree draws the guide
- * lines of `row.lines`, as a file tree does. A drag lifts the row and leaves
- * a faint copy behind. `controls` draws the menu that a right click opened,
- * the field of Rename, or a hover, because a view runs no script.
+ * pull request in colour, and whether its agent works. `WorkspaceName`
+ * gives the name the look of the state, so bold alone marks unread output.
+ * The action of the row, Archive or Restore, covers the time on hover only.
+ * A nested row indents by the steps of `row.indent`, and a row of a tree
+ * draws the guide lines of `row.lines`, as a file tree does. A drag lifts
+ * the row and leaves a faint copy behind. `controls` draws the menu that a
+ * right click opened, the field of Rename, or a hover, because a view runs
+ * no script.
  */
 export function WorkspaceRowView(props: {
   row: WorkspaceRow
@@ -139,14 +153,12 @@ export function WorkspaceRowView(props: {
       <RenameRow rename={controls.rename} row={row} variant={props.variant} />
     )
   }
-  const status = activityPresentation[row.status]
   const lifted = props.drag === 'lifted'
   const carried = lifted ? (props.carried ?? 0) : 0
   const className = classes(
     styles.row,
     props.variant === 'page' && styles.page,
     row.selected && styles.selected,
-    styles[status.emphasis],
     props.drag && styles[props.drag],
     carried > 0 && styles.liftedTree,
     // The lifted row stands for its whole tree, so it draws no guide lines.
@@ -155,7 +167,13 @@ export function WorkspaceRowView(props: {
   const content = (
     <>
       <workspaceMark.Component github={row.github} status={row.status} />
-      <span className={styles.name}>{row.workspace.name}</span>
+      <WorkspaceName
+        className={styles.name}
+        emphasis={nameEmphasis}
+        status={row.status}
+      >
+        {row.workspace.name}
+      </WorkspaceName>
       {carried > 0 ? (
         <span className={styles.moving}>+{carried}</span>
       ) : (
