@@ -15,7 +15,6 @@ import {
   RepositoryEditToggle,
   RepositoryList,
 } from '../components/settings/RepositoryList'
-import { repositoryDefaultNote } from '../components/settings/repositoryOrder'
 import { RepositoryOrderList } from '../components/settings/RepositoryOrderList'
 import { EditRepositoryNotice } from '../components/settings/RepositoryNotice'
 import { Section } from '../components/settings/Section'
@@ -78,13 +77,16 @@ function tabSecrets(
 }
 
 /**
- * The sentence after the description of the repositories. The notice of a
- * suspended org says why nothing changes, so the tab adds nothing.
+ * The description of the Repositories tab. Only a member who is not an
+ * admin gets one. The notice of a suspended org says why nothing changes,
+ * so the tab adds nothing.
  */
-const repositoryNotes: Readonly<Record<ReadOnlyCause | 'editable', string>> = {
-  editable: ' Adding repositories starts a build when you select Done.',
-  member: ' Only an admin can change them.',
-  suspended: '',
+const repositoryNotes: Readonly<
+  Record<ReadOnlyCause | 'editable', string | undefined>
+> = {
+  editable: undefined,
+  member: 'Only an admin can change them.',
+  suspended: undefined,
 }
 
 /** The body of the open tab of the org settings. */
@@ -129,7 +131,7 @@ export function TabBody(props: {
       return (
         <Section
           action={readOnly ? null : <RepositoryEditToggle editing={editing} />}
-          description={`The cloud computer of ${org.name} holds these repositories, and its workspaces start in them. ${repositoryDefaultNote}${note}`}
+          description={note}
           title="Repositories"
         >
           {unsaved ? (

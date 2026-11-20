@@ -71,10 +71,3 @@ export function repositoryPlaceText(
 
 /** The label of the first chosen repository. */
 export const defaultRepositoryLabel = 'Default'
-
-/**
- * The sentence of the Repositories tab that says where new workspaces and
- * automations start, from repository-order decision 1 F.
- */
-export const repositoryDefaultNote =
-  'New workspaces and automations start in the first one. While it waits for a build, new workspaces start in the next ready one.'
