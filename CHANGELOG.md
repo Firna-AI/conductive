@@ -1,5 +1,44 @@
 # Changelog
 
+## [0.29.0](https://github.com/Firna-AI/conductive/compare/v0.28.0...v0.29.0) (2026-11-20)
+
+
+### Features
+
+* **chat:** report runner work that an object reset interrupts ([#585](https://github.com/Firna-AI/conductive/issues/585)) ([b54c756](https://github.com/Firna-AI/conductive/commit/b54c756b4ad8952d255ed7d9cbda75ce76983d63))
+* **files:** close the shown temporary tab with Escape ([#578](https://github.com/Firna-AI/conductive/issues/578)) ([924df6d](https://github.com/Firna-AI/conductive/commit/924df6da6a351319a63f59aed9fbd6a35114e6c1))
+* **markdown:** read the chat and the file preview with one markdown-it parser ([#563](https://github.com/Firna-AI/conductive/issues/563)) ([1f2f6fe](https://github.com/Firna-AI/conductive/commit/1f2f6fe79b685293803284c211bb268d4bb8032a))
+* **operator:** let the operator set the idle stop time ([#586](https://github.com/Firna-AI/conductive/issues/586)) ([e1b027a](https://github.com/Firna-AI/conductive/commit/e1b027a79b3e7775af17ff04f363deda286b94ca))
+* **previews:** expand a preview into a large window ([#580](https://github.com/Firna-AI/conductive/issues/580)) ([462bde9](https://github.com/Firna-AI/conductive/commit/462bde910adba12c15e40131228cdaa5f3a3f50e))
+* **terms:** compute the Terms revision from the Terms text ([#571](https://github.com/Firna-AI/conductive/issues/571)) ([4b643cd](https://github.com/Firna-AI/conductive/commit/4b643cda07aab64131efab4fe6d8fdfb28ff8f20))
+
+
+### Bug Fixes
+
+* **account:** order login requests and sign-in completion ([#577](https://github.com/Firna-AI/conductive/issues/577)) ([3f11e2e](https://github.com/Firna-AI/conductive/commit/3f11e2e001c99bc17df84d733c6db7a4952efb1a))
+* **chat:** keep open message controls named ([#564](https://github.com/Firna-AI/conductive/issues/564)) ([458bd46](https://github.com/Firna-AI/conductive/commit/458bd46de386ccbccb8550ecc328799fbb3cde43))
+* **chat:** keep refused workspace reports out of sessions ([#570](https://github.com/Firna-AI/conductive/issues/570)) ([b1af8df](https://github.com/Firna-AI/conductive/commit/b1af8df6fa53c6cf4fd67c545edaea4bbecad86b))
+* **chat:** keep typed Markdown address escapes ([#589](https://github.com/Firna-AI/conductive/issues/589)) ([def5bb3](https://github.com/Firna-AI/conductive/commit/def5bb3c1a4556a98b1013a7834f789db1ab0e1c))
+* **chat:** share rendered-word checks for blank images ([#592](https://github.com/Firna-AI/conductive/issues/592)) ([dfd4372](https://github.com/Firna-AI/conductive/commit/dfd43720dd9a057c44d0cbe71f89e8165f41427c))
+* **chat:** use saved context for refused tool parts ([#583](https://github.com/Firna-AI/conductive/issues/583)) ([cd417f0](https://github.com/Firna-AI/conductive/commit/cd417f08b5223f3d9dce75dbce428125625d5dc2))
+* **desktop:** use the configured app origin for shared links ([#562](https://github.com/Firna-AI/conductive/issues/562)) ([e7d4891](https://github.com/Firna-AI/conductive/commit/e7d4891911b43dcbee001da39f3f419aecde7a64))
+* **files:** keep saved HTML page labels after failed reads ([#579](https://github.com/Firna-AI/conductive/issues/579)) ([3a26a72](https://github.com/Firna-AI/conductive/commit/3a26a72f3dbba4ec959d057297e0b6dd2fad8177))
+* **files:** wait for confirmed Ready before HTML preview ([#591](https://github.com/Firna-AI/conductive/issues/591)) ([4e428a3](https://github.com/Firna-AI/conductive/commit/4e428a369185ce7295fdfc27f5efb53eaa8049ec))
+* **orgs:** share the active org source ([#566](https://github.com/Firna-AI/conductive/issues/566)) ([6828e1a](https://github.com/Firna-AI/conductive/commit/6828e1a64af76bb2cee3abe51ee2eb6296b0c0ba))
+* **repositories:** reply with saved choices without another GitHub read ([#587](https://github.com/Firna-AI/conductive/issues/587)) ([f681c8a](https://github.com/Firna-AI/conductive/commit/f681c8a6cc6c175eaaf7e1d09c3d7d594ddb79f9))
+* **runner:** refresh file previews after same-second rewrites ([#588](https://github.com/Firna-AI/conductive/issues/588)) ([908da17](https://github.com/Firna-AI/conductive/commit/908da17da20f72d5b2c08450122fabf55ebb0abf))
+* **settings:** remove the Repositories tab description ([#576](https://github.com/Firna-AI/conductive/issues/576)) ([b7b7615](https://github.com/Firna-AI/conductive/commit/b7b76150c2534e1df9901fa26d8625d4be8a8561))
+* **shortcuts:** preserve Plus in key chips and spoken names ([#575](https://github.com/Firna-AI/conductive/issues/575)) ([1f3bbbe](https://github.com/Firna-AI/conductive/commit/1f3bbbe643e6fd07708d33ce908494102514575e))
+* **shortcuts:** stop held keys after focus changes ([#561](https://github.com/Firna-AI/conductive/issues/561)) ([2085de0](https://github.com/Firna-AI/conductive/commit/2085de0933ed3a4acb3a71f64aa485e757ea0f89))
+* **terminal:** discard queued colours on a theme change ([#574](https://github.com/Firna-AI/conductive/issues/574)) ([590e4fd](https://github.com/Firna-AI/conductive/commit/590e4fd6bae14050dc43930b28ab4577a22ffdec))
+* **warnings:** log the Boat code of a failed start ([#582](https://github.com/Firna-AI/conductive/issues/582)) ([a8c31a5](https://github.com/Firna-AI/conductive/commit/a8c31a53cc2fe4f74eecfaf1e65decaba2148493))
+* **workspaces:** show Starting while requests wait ([#581](https://github.com/Firna-AI/conductive/issues/581)) ([a3cb5f4](https://github.com/Firna-AI/conductive/commit/a3cb5f4575277b9b616b3e9886a2ac0b0efb4290))
+
+
+### Performance Improvements
+
+* **chat:** index session history events ([#572](https://github.com/Firna-AI/conductive/issues/572)) ([0660702](https://github.com/Firna-AI/conductive/commit/0660702f1c79dbb81bb6f94b454c483cd901de33))
+
 ## [0.28.0](https://github.com/Firna-AI/conductive/compare/v0.27.0...v0.28.0) (2026-11-20)
 
 
