@@ -10,7 +10,9 @@ number names a dated record, as
 decision number names a decision of the change that adds
 [secrets](secrets.md), as that doc says. An org login decision number
 names a decision of the change that adds the org logins, as
-[Tokens and secrets](tokens-and-secrets.md) says.
+[Tokens and secrets](tokens-and-secrets.md) says. A provider stop decision
+number names a decision of the change that continues the work after a
+provider stop, as [Provider stops](provider-stops.md) says.
 
 ## A run is a workspace
 
@@ -129,15 +131,46 @@ names a decision of the change that adds the org logins, as
     or archived
   - failed, with its cause
   - skipped, with its reason
-- A run whose first turn fails shows as failed, with the cause of the turn.
-  It does not show as finished or ready.
+- A run takes the outcome of the last turn of the chain of its first turn
+  (provider stop decision 6). The chain holds the first turn and each
+  continuation turn after it, as [Provider stops](provider-stops.md#terms)
+  says. The user chose this on 20 November 2026.
+- A run whose chain ends with a failed turn shows as failed, with the cause
+  of that turn. It does not show as finished or ready.
 - Reason: a failed turn counts as output for the state of a workspace. So
   the state of the workspace would hide the failure.
+- A chain that a provider stop ends with no continuation turn fails the run
+  too. [Provider stops](provider-stops.md) states when no continuation turn
+  follows.
+- Reason: the app no longer continues the work, so the run did not finish
+  it. A loop of provider stops then turns the automation off.
+- An outcome from the first turn alone was rejected. A failed or a
+  finished continuation turn would then not change the run or the count.
+- A failed run at the provider stop itself was rejected. The run would then
+  fail while the agent continues the work. Each runtime limit of a provider
+  would count as a failed run.
+- No outcome for a chain that ends with no continuation turn was rejected.
+  A loop of provider stops would then never turn the automation off.
+- An outcome from the first finished or failed turn of the first session
+  was rejected. After a Stop of the first turn, a later message of a member
+  would then decide the run.
 - A run fails for one of these causes:
   - No login serves the owner for the agent of the run.
   - The owner's GitHub access expired.
   - The cloud computer did not start.
-  - The first turn failed.
+  - A turn of the chain failed.
+  - A provider stop ended the chain, and no continuation turn follows.
+- When the login of the session is gone at such an end, the run fails with
+  the code `agent_login_required`, as a failed login check does.
+- At each other such end, the run fails with the code
+  `cloud_computer_stopped`. Examples are the 15-minute rule, the end of the
+  30 days of the chain, and an owner who can no longer use a login that
+  still works. The code is the same as the end reason of the ended turn,
+  because that stop ended the work.
+- Reason: the cause follows the line in the chat after the stop. A line
+  that names a login to connect again gives `agent_login_required`. The
+  line "Send a message to continue" gives `cloud_computer_stopped`. So the
+  words of the run stay true in each case.
 - The owner sees the one action that fixes the cause, when one exists, such
   as Connect Claude. Another member reads whose login or access it is.
 - The cause names the agent and the owner of the run, also after the
@@ -162,25 +195,42 @@ names a decision of the change that adds the org logins, as
   (decisions 130 D and 512 B).
 - The run shows as failed with its cause and a link to that workspace.
   Try again there starts a new sandbox for the same workspace.
-- A run whose first turn fails keeps its workspace too. Try again there
-  retries the turn, as [Messages](messages-and-attachments.md#messages) says.
-- A failed run keeps its failed outcome after an in-workspace retry.
-- Every failed check, start, and first turn counts toward the turn-off
-  after three failed runs (decision 513 B).
+- A run whose chain ends with a failed turn keeps its workspace too. So
+  does a run whose chain ends with no continuation turn (provider stop
+  decision 6). Try again retries a failed turn there, as
+  [Messages](messages-and-attachments.md#messages) says.
+- For the code `cloud_computer_stopped`, the row says "The cloud computer
+  stopped before the agent finished. Send a message in the workspace to
+  continue." The first sentence names what stopped, not the limit, as the
+  stopped line of the chat does. The second sentence says what a member
+  can do, because a stopped turn has no Try again.
+- When nobody can act, as in a suspended org, the row gives only the first
+  sentence. Reason: a suspended org shows no action that it refuses.
+- When the login of the session is gone at the provider stop, the row
+  gives the words and the action of the failed login check. It does not
+  give the words of a failed turn. Reason: the owner then sees the one
+  action that fixes the cause.
+- A failed run keeps its failed outcome after an in-workspace retry, and
+  after a message that continues the work.
+- Every failed run counts toward the turn-off after three failed runs
+  (decision 513 B).
 - Decision 509 F puts the retry of a failed run in its workspace. Run again
   in the Runs list was rejected. An automatic retry, and an automatic start
   after a reconnect, were rejected, because they spend starts that nobody
   asked for.
+- A continuation turn after a provider stop is not such a retry, because
+  the run has no outcome while its chain goes on.
 - A kept workspace for the failed starts of runs alone was rejected,
   because the app would then have two rules for a failed first start.
 
 ## Turn off after failed runs
 
 - An automation turns off after three runs in a row fail (decision 513 B).
-- Each failed run counts: a failed check, a failed start, and a failed
-  first turn. A failure that clears by itself counts too.
-- A run whose first turn finishes resets the count. A skipped run and a
-  queued run do not count.
+- Each failed run counts: a failed check, a failed start, and a failed turn
+  of the chain. A chain that ends with no continuation turn counts too
+  (provider stop decision 6), and so does a failure that clears by itself.
+- A run whose chain ends with a finished turn resets the count. A skipped
+  run and a queued run do not count.
 - The automation page then says that the automation turned off after three
   failed runs in a row. The owner reads that they can fix the cause and
   turn it on. Another member reads that only the owner can turn it on.

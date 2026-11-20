@@ -150,8 +150,11 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 3. The Worker creates a workspace as the owner, with the run text as its
    first message. The workspace starts as in
    [Create a workspace](#create-a-workspace).
-4. The Durable Object of the workspace reports how the first turn ended,
-   so that a failed first turn shows as a failed run.
+4. The Durable Object of the workspace reports how the
+   [chain](../protocol/provider-stops.md#terms) of the first turn ended.
+   That chain is the first turn and each continuation turn after a
+   provider stop. So a failed turn, or a chain that ends with no
+   continuation turn, shows as a failed run.
 
 [Automations](../protocol/automations.md) and its linked pages state the rules.
 

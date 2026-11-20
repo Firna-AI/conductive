@@ -123,6 +123,31 @@ stop. The [mockup catalogue](../mockups/catalogue.md) draws the lines at
   - Before the agent repeats an action outside the cloud computer, it
     checks whether that action already happened. Examples are a push, a
     pull request, and a message.
+- The message also names the session of the ended turn, which holds the
+  work (provider stop decision 7). When the agent lacks the context of the
+  task, the message tells it to read that session with `read_session`, as
+  [Read a session](session-calls.md#read-a-session) says. The user chose
+  this on 20 November 2026.
+- Reason: a new session that a Try again starts has none of the earlier
+  history. The name of the session then gives its agent a way back to the
+  task.
+- Try again of a failed continuation turn sends the message of the app
+  again, as a new message of the app. The chat does not show it either.
+- That Try again acts for the member who presses it, as each Try again
+  does. When that member cannot use the login of the session, the Try
+  again starts a new session, as
+  [Messages](messages-and-attachments.md#messages) says. The message in the
+  new session still names the session of the ended turn.
+- A rule that changes nothing was rejected. The agent of such a new
+  session would then have no way back to the task. A member would have to
+  give the task again.
+- A Try again that acts for the sender of the failed turn was rejected.
+  The press of another member would then spend the login of that sender.
+  Its turn would also use the GitHub token and the Mac of that sender.
+- A message of the app that names the earlier session in each new session
+  was rejected. It changes each new session that a message of a member
+  starts. It also adds a message of the app to the first turn of each such
+  session.
 - The message follows the naming rules of
   [the agent instructions](agent-instructions.md#what-the-instructions-hold).
   So it never names a sandbox provider, and it never uses "Claude Code" as
@@ -202,3 +227,7 @@ stop. The [mockup catalogue](../mockups/catalogue.md) draws the lines at
   rejected. The turn then shows no duration and no files.
 - A new field of the turn command with the end of the chain was rejected.
   It changes the runner messages for little gain.
+- An automation run takes the outcome of the last turn of the chain of its
+  first turn. So a chain that ends with no continuation turn fails that
+  run, as [Run states](automation-runs.md#run-states) says (provider stop
+  decision 6).

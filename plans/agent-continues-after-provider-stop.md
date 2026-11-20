@@ -280,6 +280,12 @@ same day, and added what an open tab shows before the automatic start.
     its run with the new code `cloud_computer_stopped`. It is the same
     string as the end reason of the stopped turn, because that stop ended
     the work.
+  - The cause follows the line in the chat after the stop: `reconnect`
+    gives `agent_login_required`, and `message` gives
+    `cloud_computer_stopped`. So an owner who can no longer use a login
+    that still works also gets `cloud_computer_stopped`. My call of
+    20 November 2026, from the Milestone 8 report: its words stay true, and
+    `agent_login_required` would name a login that works.
   - The row of such a run in the Runs list says "The cloud computer
     stopped before the agent finished. Send a message in the workspace to
     continue." The first sentence names what stopped, not the limit, as
@@ -518,19 +524,22 @@ Evidence: the screenshots and the check logs are in
 
 Depends on: 7
 
-- [ ] `docs/protocol/automation-runs.md`: a run takes the outcome of the
+- [x] `docs/protocol/automation-runs.md`: a run takes the outcome of the
       last turn of its first turn's chain. A chain that ends with no
       continuation fails the run with its cause and counts toward the
       turn-off. Update "Run states", with the new cause in its list of
       causes. Update "Failed runs", because such a run keeps its
       workspace. Update "Turn off after failed runs".
-- [ ] `docs/protocol/provider-stops.md`: the continuation message names the
+- [x] `docs/protocol/provider-stops.md`: the continuation message names the
       session that holds the work, and tells the agent to read it when it
       lacks the context.
-- [ ] Read the legal pages and each guide in `src/marketing/docs/` in full,
+- [x] Read the legal pages and each guide in `src/marketing/docs/` in full,
       such as the automations guide. Update each sentence that restates a
       changed fact.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
+
+Evidence: the link check, the sentence check, and the format and lint logs
+are in `.context/agent-continues-after-provider-stop/milestone-8/`.
 
 ## Milestone 9: The Worker applies decisions 5, 6, and 7
 
