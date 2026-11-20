@@ -4,7 +4,7 @@
  * opens pull request #482.
  */
 
-import type { ChatItem, ToolKind } from './conversations'
+import type { ChatItem, ToolCallItem, ToolKind } from './conversations'
 import { changedFiles } from './files'
 import { bullets } from './listConversations'
 
@@ -81,7 +81,7 @@ const autocompleteEnd: readonly ChatItem[] = [
   { kind: 'turn-end', id: 'turn-end', duration: '4m 12s', files: changedFiles },
 ]
 
-export const e2eRunning: ChatItem = {
+export const e2eRunning: ToolCallItem = {
   kind: 'tool',
   id: 'e2e',
   tool: 'run',

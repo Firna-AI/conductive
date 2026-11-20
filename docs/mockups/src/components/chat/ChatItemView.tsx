@@ -1,6 +1,8 @@
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { CircleAlert } from 'lucide-react'
+import { agents } from '../../fixtures/agents'
+import type { TurnContinuedItem } from '../../fixtures/continuationConversations'
 import { people, type PersonKey } from '../../fixtures/members'
 import { orgs } from '../../fixtures/orgs'
 import { paths } from '../../paths'
@@ -10,7 +12,10 @@ import headingStyles from '../common/MarkdownHeadings.module.css'
 import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
 import { AgentBlocks } from './AgentBlocks'
+import type { ContinuationNext } from './continuationCopy'
+import { ContinuationLine } from './ContinuationLine'
 import { ContinuedLine } from './ContinuedLine'
+import { endReasonText } from './endReasonCopy'
 import { RepositoryChangedLine } from './RepositoryChangedLine'
 import type { SingleItem } from './groupItems'
 import { LinkedLine } from './LinkedLine'
@@ -21,7 +26,7 @@ import { filesWithoutPlace, LinkText, MessageText } from './MessageText'
 import { LateAnswerLine } from './LateAnswerLine'
 import { isLateRequest } from './requests'
 import { SecretRequest } from './SecretRequest'
-import { SecretRun } from './SecretRun'
+import { keptLoginOwner, SecretRun } from './SecretRun'
 import { SentFiles } from './SentFiles'
 import { standardSpeedText } from './speedCopy'
 import { StopLine, type StopSource } from './StopLine'
@@ -34,16 +39,43 @@ type StoppedItem = Extract<SingleItem, { kind: 'stopped' }>
 /**
  * Who stopped a turn. A stop from a session names that session with its
  * chip. Else the line names the member who pressed Stop, and says "You" to
- * that member. A turn that stopped with no Stop, such as when the cloud
- * computer stopped, names no member.
+ * that member. A turn that stopped with no Stop names no member: the line
+ * names its end reason, such as "The cloud computer stopped", or else says
+ * "The agent stopped".
  */
 function stopSource(item: StoppedItem, viewer: PersonKey): StopSource {
   if (item.from !== undefined) {
     return { kind: 'session', chip: <LinkText href={item.from} /> }
   }
-  if (item.by === undefined) return { kind: 'words', text: stoppedUnnamed }
-  const who = item.by === viewer ? 'You' : people[item.by].name
-  return { kind: 'words', text: memberStopped(who) }
+  if (item.by !== undefined) {
+    const who = item.by === viewer ? 'You' : people[item.by].name
+    return { kind: 'words', text: memberStopped(who) }
+  }
+  return {
+    kind: 'words',
+    text:
+      item.endReason === undefined
+        ? stoppedUnnamed
+        : endReasonText(item.endReason),
+  }
+}
+
+/**
+ * What comes after a stop of the cloud computer, as its line says it. A
+ * login that is gone names who connects it again: "you" to its starter, the
+ * name of the starter to the others, and an admin for the org login.
+ */
+function continuationNext(
+  item: TurnContinuedItem,
+  viewer: PersonKey,
+): ContinuationNext {
+  const { next } = item
+  if (next.kind !== 'reconnect') return next
+  return {
+    kind: 'reconnect',
+    owner: keptLoginOwner(next.login, viewer),
+    agent: agents[next.agent].name,
+  }
 }
 
 /**
@@ -148,6 +180,8 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
       return (
         <StopLine notes={stopNotes(item)} source={stopSource(item, viewer)} />
       )
+    case 'turn-continued':
+      return <ContinuationLine next={continuationNext(item, viewer)} />
     case 'error':
       return (
         <Notice

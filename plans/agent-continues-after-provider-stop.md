@@ -90,6 +90,8 @@ design. Its report is in
 
 Each item below is my design call of 20 November 2026, unless it names a
 decision. The options check corrected several of them on the same day.
+The mockups of Milestone 1 corrected the words and the chat line on the
+same day, and added what an open tab shows before the automatic start.
 
 - **The app's stop intent.** `DurableLifecycleState` gets an optional
   `appStop?: { at: number }`. Each stop that the app asks for writes it
@@ -131,10 +133,19 @@ decision. The options check corrected several of them on the same day.
     sender and a message state, so that `get_message` of an older
     `conductive` program reads it. The chat does not show it.
 - **The chat line.** A new event `turn.continued` with `sessionId`,
-  `turnId` or null, `previousTurnId`, and `text`. It is part of the
+  `turnId` or null, `previousTurnId`, and `next`. It has no `text` field,
+  because the app writes the words, as the next sentences say. My call of
+  20 November 2026: a Worker text cannot say "you". It is part of the
   hand-written `ChatEvent`, as `workspace.continued` is, not of the Rust
   agent events. `asSessionEvent` reads it. It does not set the unread mark,
-  because the agent's reply does. An older app skips it.
+  because the agent's reply does. An older app skips it. The event also
+  names what comes next: `turn` when a continuation turn waits, `reconnect`
+  when the login of the session is gone, or `message` in each other case
+  without a turn. The app writes the words of the line from it and from the
+  login of the session, as it does for the late-answer line. Reason: the
+  mockups show three forms of the line, and the login form says "you" to
+  the member who must act. A null `turnId` alone cannot tell the login
+  form from the guard form.
 - **The sender.** The continuation turn acts for the sender of the
   interrupted turn, with its login rules, as
   [Late answers](../docs/protocol/secret-late-answers.md#late-answers)
@@ -174,17 +185,37 @@ decision. The options check corrected several of them on the same day.
   the start as `deliverSecretNotice` does, when the stored state of the
   workspace is `stopped`, and retries on a later alarm. A refused start,
   such as for a suspended owner or org, logs a warning, drops the record,
-  and leaves the turn queued. It then runs at the next resume.
+  and leaves the turn queued. It then runs at the next resume. A tab that
+  is open at the stop shows the stopped state with Resume until that start
+  begins, as `app/shell/stopped/during-turn` shows. Resume starts the
+  sandbox at once. A Starting state at the stop was left out, because the
+  app can still refuse that start.
 - **Queued turns.** A turn that waited at the stop runs after the automatic
   start, as after any resume. A stop with only queued turns starts nothing.
 - **The words.** No line names a provider. The product name comes from
   `docs/mockups/src/brand.ts`. No line says that the sandbox started before
-  it did.
+  it did. The continuation line sits right under the stopped line of the
+  old turn, so it says only what comes next. The mockups showed that the
+  first words, which started each continuation line with "The cloud
+  computer stopped while the agent worked.", repeated the stopped line.
+  `docs/mockups/src/components/chat/continuationCopy.ts` holds the words.
+  A line ends with no period, as the other event lines of the chat.
   - The old turn: "The cloud computer stopped".
-  - The continuation line: "The cloud computer stopped while the agent
-    worked. The agent continues when it starts again."
-  - The line at the guard or at the end of the chain: "The cloud computer
-    stopped while the agent worked. Send a message to continue."
+  - The continuation line: "The agent continues when the cloud computer
+    starts again".
+  - The line when the login is gone: "The agent can continue after Cal
+    connects Claude again". For the org login: "The agent can continue
+    after an admin connects Acme's Claude login again". The shared words
+    of the late-answer line name who connects the login, so the line says
+    "you" to that member. It says "can continue", because the chat queues
+    no turn and a reconnect starts none. "The agent continues when Cal
+    connects Claude again." was left out, because no turn would follow.
+  - The line when the sender can no longer use the login for another
+    reason, such as a starter who stopped sharing it: "Send a message to
+    continue". The late-answer line says "at the next message" in that
+    case.
+  - The line at the guard or at the end of the chain: "Send a message to
+    continue".
   - The agent text: "This message comes from Conductive, not from a member.
     The cloud computer of this workspace stopped while you worked, and it
     started again. Your processes may have ended, also background tasks,
@@ -226,18 +257,25 @@ Depends on: none
 The chat shows a new end line for the interrupted turn and a new app line
 for the continuation turn.
 
-- [ ] Add `cloud_computer_stopped` to `endReasonCopy.ts` in
+- [x] Add `cloud_computer_stopped` to `endReasonCopy.ts` in
       `docs/mockups/src/components/chat/`.
-- [ ] Add a continuation line component beside `EndReasonLine.tsx`.
-- [ ] Add a mockup entry that shows an interrupted turn, its end line, and
+- [x] Add a continuation line component beside `EndReasonLine.tsx`.
+- [x] Add a mockup entry that shows an interrupted turn, its end line, and
       the continuation turn with the agent's reply. Add a second state in
       which the line names who must act because the login is gone. Add a
       third state in which the guard or the end of the chain stops the
       continuations.
-- [ ] Run `npm run mockups:check`. Smoke-test the new page with
+- [x] Update `app/shell/stopped/during-turn`, which showed "The agent
+      stopped" for such a stop, and the mockup docs that name that line.
+      Keep "The agent stopped" in view in the new variant
+      `app/chat/turns/runner-restarted`.
+- [x] Run `npm run mockups:check`. Smoke-test the new page with
       `npm run mockups:serve`, and save a screenshot in `.context/`.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+
+Evidence: the screenshots and the check logs are in
+`.context/agent-continues-after-provider-stop/`.
 
 ## Milestone 2: Documentation and protocol
 
@@ -246,7 +284,11 @@ Depends on: 1
 - [ ] `docs/protocol/stop-and-resume.md`: record the runtime limit of a
       provider. Add a provider stop during a turn as a case that starts the
       sandbox. Say that the idle stop rule does not hold at a provider stop.
-- [ ] `docs/protocol/messages-and-attachments.md`: the two new lines.
+- [ ] `docs/protocol/messages-and-attachments.md`: the stopped line with
+      the new end reason, and the forms of the continuation line.
+- [ ] `docs/protocol/session-transcripts.md`: the copy of a transcript
+      gives the same lines. Today it says "The agent stopped" for each stop
+      with no Stop request.
 - [ ] `docs/protocol/background-work.md`: the 30-day limit covers a chain
       of continuation turns, with the 15-minute guard and the overrun of
       decision 4. `endReason` gets a second value.
@@ -285,7 +327,10 @@ Depends on: 3
 - [ ] Add `cloud_computer_stopped` to `TurnEndReason` in
       `crates/cnd-runner-interface/`. Regenerate the types with
       `cargo run -p cnd-runner-interface --example export_bindings`. Keep
-      the SDK helper's reader to `background_work_limit`.
+      the SDK helper's reader to `background_work_limit`. Replace the local
+      `ChatEndReason` of `docs/mockups/src/components/chat/endReasonCopy.ts`
+      with the generated type. `EndReasonLine` then needs an icon for the
+      new value, or a type for the reasons of a finished turn only.
 - [ ] Add `turn.continued` to `ChatEvent` and `asSessionEvent`.
 - [ ] In the chat stop, choose the turns that continue, end them with the
       end reason, and insert the continuation turns with their unanswered
@@ -313,10 +358,15 @@ Tags: ui
 Depends on: 4
 
 - [ ] Read `turn.continued` in `src/chat/api/read-workspace.ts` and show
-      the line, as in the mockup.
-- [ ] Show the end reason on the stopped line in
-      `src/chat/components/TurnEnd.tsx` and in the stopped Markdown case of
-      `src/shared/transcript/markdown-items.ts`.
+      the line with `ContinuationLine` and `continuationCopy.ts` of the
+      mockups, as `app/chat/cloud-computer-stops` shows.
+- [ ] Show the end reason on the stopped line, in place of "The agent
+      stopped". `stoppedAttribution` and `stoppedSummary` in
+      `src/shared/transcript/turn-words.ts` give the words to the chat and
+      to the stopped Markdown case of
+      `src/shared/transcript/markdown-items.ts`. Let the end reason reader
+      in `src/chat/api/read-chat.ts` pass the new value. Today it keeps
+      only `background_work_limit`.
 - [ ] Tests for the reader and the transcript.
 - [ ] Check the lines in a browser with `npm run dev`, and save a
       screenshot in `.context/`.

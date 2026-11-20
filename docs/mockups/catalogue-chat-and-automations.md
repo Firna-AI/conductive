@@ -6,7 +6,9 @@ pages of the chat and of automations.
 `app/chat` shows a finished turn, whose work folds into one line. Its child
 pages: `app/chat/turns` has the running turn, steer, interrupt, and a
 failure, which moved from `app/chat/running`, `steer`, `interrupted`, and
-`failed` and declare `movedFrom`. `app/chat/agent-stops` draws a turn that
+`failed` and declare `movedFrom`. Its `runner-restarted` variant has a
+stop with no Stop, after a restart of the agent runner, with the line "The
+agent stopped". `app/chat/agent-stops` draws a turn that
 the agent of another session stopped with a workspace tool, from decision
 279. Its line says "Stopped from" and shows the session chip of that
 session, for a session of the same workspace and, in `other-workspace`, of
@@ -89,6 +91,29 @@ still ran at the time limit, so the turn ends as finished, with
 "Background work stopped at the time limit" above its duration and its
 files. Its `waiting` variant draws the same turn before the limit, which
 shows as any running turn.
+
+`app/chat/cloud-computer-stops` draws a turn that the cloud computer
+stopped while the agent worked, when no member and no part of the app
+asked for the stop. Cal chose C of decision 1 and B of decision 2 of the
+continuation plan on 20 November 2026. The stopped line says "The cloud
+computer stopped", and a line of the app under it says what comes next.
+In the canonical screen, it says that the agent continues when the cloud
+computer starts again. The continuation turn follows, with the reply of
+the agent. The message that told the agent to continue does not show.
+Its variants:
+
+- `login-gone` has the view of Priya after Cal removed his Claude login,
+  so the app started no turn. The line says that the agent can continue
+  after Cal connects Claude again.
+- `org-login-gone` has the same after an admin removed the Claude login of
+  Acme. The line names an admin.
+- `stopped-again` has a continuation turn that the cloud computer stopped
+  within 15 minutes, so the app started no further turn. The line says
+  "Send a message to continue". The end of the 30 days of a chain gives
+  the same line.
+
+`app/shell/stopped/during-turn` draws the same stop in a tab that was
+open, before the app starts the cloud computer again.
 
 `app/chat/standard-speed` draws a fast turn that ran at standard speed,
 from fast mode decision 257. Fast is on in the trigger. Claude reached its

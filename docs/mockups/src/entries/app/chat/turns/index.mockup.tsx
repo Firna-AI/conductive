@@ -38,6 +38,15 @@ export const chatTurns = defineScreen({
       props: { conversation: 'interrupted' },
     },
     {
+      slug: 'runner-restarted',
+      title: 'Stopped with no Stop',
+      description:
+        'The agent runner restarted while the agent worked, such as after the agent restarted its service, and the cloud computer kept running. No member pressed Stop, so the chat says "The agent stopped". The runner could not tell which files the turn changed, so the line ends with "Changed files unavailable". The composer is ready for the next message.',
+      rationale:
+        'The user chose option C of decision 72: the chat names the member who pressed Stop. With no Stop, the line names no member. A stop of the cloud computer names its cause in place of these words, as app/chat/cloud-computer-stops shows.',
+      props: { conversation: 'runner-restarted' },
+    },
+    {
       slug: 'failed',
       title: 'Turn failed',
       description:

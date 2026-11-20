@@ -1,7 +1,6 @@
 import { Ban, CircleCheck, CircleMinus } from 'lucide-react'
 import { agents } from '../../fixtures/agents'
 import type { PersonKey } from '../../fixtures/members'
-import { orgWithLogin } from '../../fixtures/orgLogins'
 import { orgs } from '../../fixtures/orgs'
 import type { SecretRunItem } from '../../fixtures/secretRequests'
 import { paths } from '../../paths'
@@ -9,14 +8,13 @@ import { ActionButton } from '../common/actions'
 import { ScreenLink } from '../common/ScreenLink'
 import { StatusText } from '../common/StatusText'
 import { asksValue } from './requests'
-import { whoOf } from './SecretRun'
+import { keptLoginOwner, whoOf } from './SecretRun'
 import {
   endedLine,
   lateAllowedLabel,
   lateAnswerNote,
   reconnectNote,
   secretRunWords,
-  type SessionLoginOwner,
 } from './secretRunCopy'
 
 /** Whether a request names a secret of the org too. */
@@ -156,10 +154,6 @@ export function endLine(
   if (item.state === 'late-denied') return lateAnswerNote(who, 'denied')
   const delivery = item.delivery ?? { kind: 'turn' }
   if (delivery.kind !== 'reconnect') return lateAnswerNote(who, delivery.kind)
-  const { login } = delivery
-  const owner: SessionLoginOwner =
-    login.type === 'org'
-      ? { type: 'org', name: orgWithLogin.name }
-      : { type: 'personal', name: whoOf(login.starter, viewer).object }
+  const owner = keptLoginOwner(delivery.login, viewer)
   return reconnectNote(who, owner, agents[delivery.agent].name)
 }

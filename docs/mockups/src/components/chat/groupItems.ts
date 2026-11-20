@@ -58,11 +58,22 @@ function isWork(item: ChatItem): item is WorkItem {
 }
 
 /**
+ * Whether a line of the app starts a turn: the line of a late Allow, or the
+ * line after a stop of the cloud computer when a continuation turn follows
+ * it.
+ */
+function startsTurn(item: ChatItem): boolean {
+  if (item.kind === 'late-answer') return true
+  return item.kind === 'turn-continued' && item.next.kind === 'turn'
+}
+
+/**
  * The parts of each ended turn. The mockup items have no turn IDs, so the
- * items after a member message, up to an end, form one turn. The line of
- * a late Allow starts a turn too. A message sent during the turn joins it
- * and starts a new part. A linked line starts no turn. A turn without an
- * end, such as a running one, does not fold.
+ * items after a member message, up to an end, form one turn. A line of the
+ * app that starts a turn does the same. A message sent during the turn
+ * joins it and starts a new part. A linked line starts no turn, and neither
+ * does a line after a stop that no turn follows. A turn without an end,
+ * such as a running one, does not fold.
  */
 function endedParts(items: readonly ChatItem[]): ChatItem[][] {
   const ended: ChatItem[][] = []
@@ -70,9 +81,9 @@ function endedParts(items: readonly ChatItem[]): ChatItem[][] {
   for (const item of items) {
     if (item.kind === 'user') {
       parts = item.during && parts.length > 0 ? [...parts, []] : [[]]
-    } else if (item.kind === 'late-answer') {
+    } else if (startsTurn(item)) {
       parts = [[]]
-    } else if (item.kind === 'linked') {
+    } else if (item.kind === 'linked' || item.kind === 'turn-continued') {
       parts = []
     } else {
       parts.at(-1)?.push(item)
@@ -107,8 +118,8 @@ function foldedRuns(part: readonly ChatItem[]): WorkItem[][] {
 
 /**
  * The IDs of the items of the running turn: the items after the member
- * message or the late Allow that started it, up to the working line. A
- * message sent during the turn joins it. No turn runs when the chat has
+ * message or the line of the app that started it, up to the working line.
+ * A message sent during the turn joins it. No turn runs when the chat has
  * no working line.
  */
 function runningItems(items: readonly ChatItem[]): Set<string> {
@@ -118,7 +129,7 @@ function runningItems(items: readonly ChatItem[]): Set<string> {
     (item, index) =>
       index < working &&
       ((item.kind === 'user' && !item.during) ||
-        item.kind === 'late-answer' ||
+        startsTurn(item) ||
         isEnd(item)),
   )
   return new Set(items.slice(start + 1, working).map((item) => item.id))

@@ -4,6 +4,7 @@
 
 import type { TurnEndReason } from '../../../../src/shared/generated/TurnEndReason'
 import type { TableCells } from '../../../../src/markdown/table-rows'
+import type { ChatEndReason } from '../components/chat/endReasonCopy'
 import type { LostReason, LostWhat } from '../components/chat/lostCopy'
 import type { StandardSpeedCause } from '../components/chat/speedCopy'
 import { agentStopConversations } from './agentStopConversations'
@@ -24,6 +25,10 @@ import {
   type RepositoryChangedItem,
 } from './barConversations'
 import { chatLinkConversations } from './chatLinkConversations'
+import {
+  continuationConversations,
+  type TurnContinuedItem,
+} from './continuationConversations'
 import type { ChangedFile } from './files'
 import {
   headingConversations,
@@ -107,11 +112,16 @@ export type ChatItem =
       /**
        * A stopped turn. All members see the same chat, so the item records
        * `by`, the member who pressed Stop (decision 72). A turn that stopped
-       * with no Stop, such as when the cloud computer stopped, has no `by`.
+       * with no Stop has no `by`.
        */
       kind: 'stopped'
       id: string
       by?: PersonKey
+      /**
+       * What ended the turn with no Stop, such as the stop of the cloud
+       * computer. The line names it in place of "The agent stopped".
+       */
+      endReason?: ChatEndReason
       /**
        * The session link of the session whose agent stopped the turn with a
        * workspace tool, also through a close of the session. The line names
@@ -177,6 +187,7 @@ export type ChatItem =
   | RepositoryChangedItem
   | SecretRunItem
   | LateAnswerItem
+  | TurnContinuedItem
 
 /** One tool call of an agent turn. */
 export type ToolCallItem = Extract<ChatItem, { kind: 'tool' }>
@@ -211,8 +222,11 @@ export const conversations: Readonly<
     { kind: 'working', id: 'working', elapsed: '2m 58s' },
   ],
   interrupted: [...cutOffTurn, { kind: 'stopped', id: 'stopped', by: 'cal' }],
-  /** The cloud computer stopped during the turn, and no member pressed Stop. */
-  'sandbox-stopped': [...cutOffTurn, { kind: 'stopped', id: 'stopped' }],
+  /** The agent runner restarted during the turn, and no member pressed Stop. */
+  'runner-restarted': [
+    ...cutOffTurn,
+    { kind: 'stopped', id: 'stopped', filesUnavailable: true },
+  ],
   failed: [
     ...autocompleteStart,
     {
@@ -230,6 +244,7 @@ export const conversations: Readonly<
   ...unavailableConversations({ history, cutOff: cutOffTurn }),
   ...speedConversations({ history, cutOff: cutOffTurn }),
   ...agentStopConversations(cutOffTurn),
+  ...continuationConversations,
   ...backgroundConversations,
   ...linkedConversations,
   ...attachmentConversations(history),

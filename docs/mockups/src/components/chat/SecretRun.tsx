@@ -1,9 +1,15 @@
 import { Ban, CircleCheck, KeyRound } from 'lucide-react'
 import { people, type PersonKey } from '../../fixtures/members'
-import type { SecretRunItem } from '../../fixtures/secretRequests'
+import { orgWithLogin } from '../../fixtures/orgLogins'
+import type { KeptLogin, SecretRunItem } from '../../fixtures/secretRequests'
 import { StatusText } from '../common/StatusText'
 import { CommandLine } from './MacCommand'
-import { deniedNote, grantNote, secretRunWords } from './secretRunCopy'
+import {
+  deniedNote,
+  grantNote,
+  secretRunWords,
+  type SessionLoginOwner,
+} from './secretRunCopy'
 import card from './MacCommand.module.css'
 import styles from './SecretRun.module.css'
 
@@ -18,6 +24,20 @@ export function whoOf(
   if (person === viewer) return { subject: 'You', object: 'you' }
   const { name } = people[person]
   return { subject: name, object: name }
+}
+
+/**
+ * The owner of the login that a session keeps, as a line of the chat names
+ * it when that login is gone: its starter, "you" to that starter, or the
+ * org of the org login.
+ */
+export function keptLoginOwner(
+  login: KeptLogin,
+  viewer: PersonKey,
+): SessionLoginOwner {
+  return login.type === 'org'
+    ? { type: 'org', name: orgWithLogin.name }
+    : { type: 'personal', name: whoOf(login.starter, viewer).object }
 }
 
 /** The names of the secrets of a run, in the order of the request. */

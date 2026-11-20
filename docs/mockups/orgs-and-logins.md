@@ -73,12 +73,16 @@ plan limits.
   because all members of an org see the same chat. That member sees "You
   stopped the agent", as `app/chat/turns/interrupted` shows. The other members
   see the name of that member, such as "Cal stopped the agent" in
-  `app/reassign/member-stop`. When no member pressed Stop, such as when
-  the cloud computer stopped during the turn, the chat says "The agent
-  stopped", as `app/shell/stopped/during-turn` shows. When the agent of a
-  session stopped the turn with a workspace tool, the chat names that
-  session, not a member, from decision 279. It says "Stopped from" and
-  shows the session chip of that session, as `app/chat/agent-stops` shows.
+  `app/reassign/member-stop`. When no member pressed Stop, the chat says
+  "The agent stopped", such as at a restart of the agent runner, as
+  `app/chat/turns/runner-restarted` shows. When the
+  cloud computer stopped during the turn, and no part of the app asked for
+  it, the line names that cause, "The cloud computer stopped", as
+  `app/shell/stopped/during-turn` and `app/chat/cloud-computer-stops`
+  show. When the agent of a session stopped the turn with a workspace
+  tool, the chat names that session, not a member, from decision 279. It
+  says "Stopped from" and shows the session chip of that session, as
+  `app/chat/agent-stops` shows.
 - Each branch starts with the GitHub login of the owner of its workspace,
   such as `calummoore/lisbon-7k2q`, from decision 53.
 - Archive stops the cloud computer at once, with no check and no question,

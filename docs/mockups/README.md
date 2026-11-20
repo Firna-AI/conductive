@@ -54,6 +54,7 @@ Use the expand control of the frame to see the full desktop layout.
 desktop and the phone, the design tokens, and the parts that the screens
 share. Its linked pages give the parts of
 [the workspace](design-workspace.md), of [the chat](design-chat.md),
+of [the ends of turns](design-turn-ends.md),
 of [the operator section](design-operator.md), and of
 [the pull request bar](design-bar.md). They also give [the marks](design-marks.md),
 [secrets and Capabilities](design-secrets.md), and
