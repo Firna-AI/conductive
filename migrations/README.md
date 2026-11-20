@@ -536,3 +536,15 @@ chosen row without a position after the rows with one, and it ignores the
 position of a row that is not chosen. The next add or move gives every
 chosen row a position again.
 [The app API](../worker/app-api/README.md) gives the rules of the order.
+
+`202611201200_pull_request_merges.sql` adds `pull_request_merges`. Each row
+holds one merged pull request of a workspace branch: the GitHub repository
+ID and the number as the key, the org, the workspace, the owner at the time
+of the record, the GitHub merge time, and the record time. Deleting the org
+deletes the rows through the foreign key. The workspace ID has no foreign
+key, so the org purge can delete the workspaces first. One index serves the
+counts of an owner by merge time, and one serves the cascade of an org. The
+migration copies no data, so the table starts empty. It changes no existing
+table, so the previous Worker keeps working.
+[The merge record](../worker/github/README.md#the-merge-record) gives the
+rules of the rows.

@@ -13,6 +13,7 @@ import {
   repositoryChange,
   type RepositoryChangeDependencies,
 } from './repository-change'
+import { recordBranchMerge } from './merge-record-data'
 import { checkRepositoryValues } from './repository-values-check'
 import {
   webhookRepository,
@@ -161,6 +162,25 @@ export async function handleGitHubWebhook(
     } catch (error) {
       pullRequestFailure = { error }
     }
+    // An archived workspace gets no refresh, so the event records the merge.
+    let mergeFailure: { error: unknown } | undefined
+    const merged = route.pullRequest
+    try {
+      if (merged?.trigger.event === 'merged')
+        await recordBranchMerge(
+          env.DB,
+          {
+            repositoryId: merged.repositoryId,
+            installationId: merged.installationId,
+            number: merged.trigger.number,
+            branch: merged.trigger.headBranch,
+            mergedAt: merged.mergedAt ?? dependencies.now(),
+          },
+          dependencies.now(),
+        )
+    } catch (error) {
+      mergeFailure = { error }
+    }
     const workspaces = await repositoryWorkspaces(
       env.DB,
       route.repositoryId,
@@ -196,6 +216,7 @@ export async function handleGitHubWebhook(
         route.branch,
       )
     if (pullRequestFailure) throw pullRequestFailure.error
+    if (mergeFailure) throw mergeFailure.error
     if (failure) throw failure.error
     await completeDelivery(env.DB, deliveryId, dependencies.now())
     return new Response(null, { status: 204 })

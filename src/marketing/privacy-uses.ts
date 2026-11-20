@@ -204,6 +204,15 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         repository, which GitHub sends to ${productName}. An automation
         also uses the GitHub accounts that open, push to, or merge a pull
         request, to decide whether the event starts a run.`,
+      text`Merge records: ${productName} keeps one record for each merged
+        pull request of a workspace branch. The record holds the GitHub
+        repository ID, the pull request number, the org, the workspace, the
+        workspace owner at the time of the record, the merge time from
+        GitHub, and the time of the record. ${productName} writes it when it
+        reads a merged pull request from GitHub for a workspace, and when
+        GitHub sends the event of the merge, also for an archived workspace.
+        The records are for the counts of merged pull requests on the Stats
+        tab of your account page.`,
       text`Feedback: your message and any screenshots help the team answer
         questions, find problems, and improve ${productName}. Each message
         includes your ${productName} user ID, GitHub user ID and login, the

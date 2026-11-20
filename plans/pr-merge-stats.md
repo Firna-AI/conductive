@@ -158,29 +158,28 @@ with its reason.
   the repository ID and the number, so a repeated insert changes nothing.
   An index on the owner and the merge time serves the read. My call:
   a pull request merges once, and the Stats read stays an index range.
+  The owner is a column of the row, because every option of decision 3
+  counts the owner. Other roles get their own table after decision 3. My
+  call, 2026-11-20.
 - **The roles.** Open decisions 3 and 5. A role names a member at the
   time that the app records the merge. A merge counts once in the total
   of a person, whatever the roles. One pull request counts once, also when two workspaces share its
   branch. My call: the key is the repository and the number.
-- **The time.** A merge counts on the UTC day of its GitHub merge time,
-  not the record time. My call: a late record, for example after a failed
-  webhook, still lands on the right day.
-- **Where the app records.** Two paths insert with `INSERT OR IGNORE`:
+- **The time.** A merge counts on the UTC day of its GitHub merge time.
+  My call: a late record still lands on the right day.
+- **Where the app records.** Two paths insert with `ON CONFLICT DO NOTHING`:
   - The GitHub refresh, where it copies the summary to D1
     (`worker/github/refresh.ts`). A snapshot whose banner is `merged`
     inserts the row. This covers merges from the Merge button, merges on
     GitHub, and a tab that opens a workspace after a missed webhook.
   - The verified `pull_request` webhook with `closed` and `merged: true`
-    (`worker/github/webhook.ts`). It inserts a row for each workspace of
-    the repository and the head branch, also an archived one. It makes no
+    (`worker/github/webhook.ts`). It inserts a row for the oldest workspace
+    of the repository and the head branch, also an archived one. It makes no
     GitHub read. My call: GitHub sends no refresh to an archived
     workspace, and a merge after Archive is common.
-  - A failed insert fails the refresh or the delivery. The delivery then
-    stays retryable, as for the summary copy. GitHub does not resend a
-    failed delivery by itself. The next refresh of a workspace that is not
-    archived records the merge. A failed insert for an archived workspace
-    loses the merge until someone resends the delivery. My call: this
-    keeps the existing retry path and adds no new job.
+  - A failed insert fails the refresh or the delivery, as for the summary
+    copy. GitHub does not resend a failed delivery, so an archived
+    workspace can lose a merge. My call: no new retry job.
 - **What counts.** Every merge method and every base branch count. A
   closed pull request that did not merge does not count. A later revert
   removes no merge. Merges in deleted orgs count nowhere. Merges in
@@ -189,9 +188,9 @@ with its reason.
   the org purge in `worker/members/purge-data.ts` removes them. The table
   has no foreign key to the workspace, so it does not block the purge of
   workspaces. My call: `automation_runs` goes the same way.
-- **The start day.** Open decision 4. The plan assumes its option A. The
-  protocol doc and the tab say that the merge counts start on the release
-  day. My call: a merge that the app did not record is not zero.
+- **The start day.** Open decision 4. The record saves each merge that
+  the app sees, also an older one. Decision 4 then only sets a filter of
+  the read. My call, 2026-11-20: the record then serves both options.
 - **The read.** `readAccountStats` adds two queries to its batch: the
   totals of all time and of 7 days, and the counts of 30 UTC days. Each
   joins the live orgs, like the other counts.
@@ -203,10 +202,12 @@ with its reason.
   the layout of five tiles on a phone, and whether the tab needs a note
   that the merges count from the release day.
 
-Constraint: PR #420 is open and changes `docs/protocol/account-stats.md`,
-`StatsSections.tsx`, the Stats fixtures, and the Stats mockup entry. Merge
-`origin/main` after #420 merges, before Milestone 1. When #420 is still
-open, build on `main` and resolve the conflicts at the merge.
+PR #420 changed the same Stats files. It merged on 2026-11-17, and this
+branch merged `origin/main` after it.
+
+The user said "impl" on 2026-11-18 and 2026-11-20, with decisions 3, 4,
+and 5 still open. Milestone 2 then ran before the mockups, because no open
+decision changes the record. My call, 2026-11-20.
 
 ## Milestone 1: Mockups
 
@@ -230,41 +231,40 @@ phone layouts, with its loading and failed states.
 - [ ] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
-## Milestone 2: Documentation and protocol
+## Milestone 2: The merge record
 
-Depends on: 1
+Depends on: none
 
-- [ ] Update `docs/protocol/account-stats.md`: the merge counts, merge stats
-      decisions 1 and 2, the owner and day rules, and the release-day start.
-      Limit account stats decision 2 so that it allows the merge record.
-- [ ] Update `docs/protocol/github-banner.md` with the merge record of the
-      refresh and of the merge webhook.
-- [ ] Update `docs/architecture/data-and-trust.md` with the new stored
-      record.
-- [ ] Read both legal pages in full (`src/marketing/terms.ts`,
-      `src/marketing/privacy*.ts`). Add the merge record where the Privacy
-      page lists the stored GitHub facts.
-- [ ] Read each public guide in `src/marketing/docs/` in full. Update each
-      sentence that the change makes wrong.
-- [ ] Check each relative link of each changed Markdown file.
-
-## Milestone 3: The merge record and the read
-
-Depends on: 2
-
-- [ ] Add the migration of `pull_request_merges` with its index, and its
+- [x] Add the migration of `pull_request_merges` with its indexes, and its
       note in `migrations/README.md`.
-- [ ] Insert a row from the refresh of a `merged` snapshot, beside the
+- [x] Insert a row from the refresh of a `merged` snapshot, beside the
       summary copy.
-- [ ] Insert rows from the merged `pull_request` webhook, also for
-      archived workspaces. Keep `merged_at` in the webhook parser.
-- [ ] Check that the org purge removes the rows. Add a test.
-- [ ] Add the two queries to `readAccountStats` and the fields to
-      `AccountStats` in `src/shared/account.ts`.
+- [x] Insert a row from the merged `pull_request` webhook, also for an
+      archived workspace. Keep `merged_at` in the webhook parser.
+- [x] Check that the org purge removes the rows.
+- [x] Add tests: a repeated insert, the owner at record time, a closed
+      pull request, an archived workspace, a missing merge time, a deleted
+      org, and the purge.
+- [x] Update `docs/protocol/account-stats.md` with merge stats decisions 1
+      and 2, `docs/protocol/github-banner.md`, and
+      `docs/architecture/data-and-trust.md`.
+- [x] Read both legal pages and each public guide in full. Update each
+      sentence that the record makes wrong.
+- [x] Update `worker/github/README.md` and `worker/github/verification.md`.
+- [x] Check each relative link of each changed Markdown file.
+
+## Milestone 3: The roles, the read, and their docs
+
+Depends on: 2, and decisions 3, 4, and 5
+
+- [ ] Record the roles that decision 3 chooses.
+- [ ] Add the queries to `readAccountStats` and the fields to
+      `AccountStats` in `src/shared/account.ts`, with the filter of
+      decision 4.
 - [ ] Add the fields to the dev fake in `src/app/dev/account-stats.ts`.
-- [ ] Add tests: a repeated insert, the owner at record time, the merge
-      day, a deleted org, an archived workspace, and the 7 and 30 days.
-- [ ] Update `worker/github/README.md` and `worker/app-api/README.md`.
+- [ ] Add tests: the roles, the merge day, and the 7 and 30 days.
+- [ ] Update `docs/protocol/account-stats.md` with what the tab shows, and
+      `worker/app-api/README.md`.
 
 ## Milestone 4: The Stats tab
 
