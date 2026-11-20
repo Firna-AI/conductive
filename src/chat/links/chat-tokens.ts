@@ -9,12 +9,14 @@ import {
 import { bareAddressAt } from '../../markdown/web-links'
 import { mentionAt, type Mention } from '../../shared/mention-text'
 
-/** A Markdown link: its label, and the text around its address as typed. */
+/** A Markdown link, with its label and address as typed. */
 export interface MarkdownLink {
   /** The text between the brackets. */
   label: string
   /** The text before the address, such as `[docs](` or `[docs]( <`. */
   before: string
+  /** The address as typed, with its backslash escapes. */
+  address: string
   /** The text after the address, such as `)`, `>)`, or ` "Docs")`. */
   after: string
   /** A `!` stands before it, so it is the Markdown of an image. */
@@ -71,6 +73,7 @@ function markdownLinkAt(
     markdown: {
       label: text.slice(at + 1, end),
       before: text.slice(at, target.start),
+      address: text.slice(target.start, target.end),
       after: text.slice(target.end, target.next),
       image: text[at - 1] === '!',
     },

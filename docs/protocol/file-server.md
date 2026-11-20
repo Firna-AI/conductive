@@ -49,9 +49,24 @@ names a dated record, as
 - Each text type carries `charset=utf-8`. Every other file is
   `application/octet-stream`. Reason: with `nosniff`, a browser runs a
   script or a style only with its correct type.
-- Each reply carries `Cache-Control: no-cache` and `Last-Modified`. A
-  request with `If-Modified-Since` for a file that did not change since
-  then gets 304. So a reload shows the newest file at a low cost.
+- Each reply carries `Cache-Control: no-cache`. So a reload shows the
+  newest file at a low cost. `no-store` was rejected, because each reload
+  then loads each file of the page in full.
+- Each reply for a file carries `Last-Modified` and an `ETag`. Every reply
+  for one version of a file carries the same `ETag`, also a range, a
+  `HEAD` reply, and a 304.
+- The `ETag` changes with each change of the file, also within one
+  second. It also changes when a new file takes the place of the file, or
+  when a tool sets its modification time back.
+- A request with `If-None-Match` gets 304 when that header matches the
+  current `ETag` of the file, as
+  [RFC 9110](https://www.rfc-editor.org/rfc/rfc9110#section-13.1.2)
+  defines the match. When a request has `If-None-Match`, the file server
+  ignores `If-Modified-Since`.
+- A request with `If-Modified-Since` and no `If-None-Match` gets 304 when
+  the full modification time of the file is not after that date. Else the
+  date has no effect. Reason: a date has only whole seconds, so a change
+  later in the same second must still reach the browser.
 - The file server streams each file, with no size limit.
 - A request for one byte range gets that range. A request for several
   ranges gets the whole file. A range that the file cannot satisfy gets
@@ -59,9 +74,9 @@ names a dated record, as
 - A range request with `If-Range` gets its range only when that header is
   a date equal to the current `Last-Modified` of the file. Else it gets
   the whole file with HTTP 200, also in place of a 416. An entity tag in
-  `If-Range` never matches, because the file server sends no ETag. Reason:
-  a browser that asks for a missing part of a stored file must never join
-  bytes of two versions of the file.
+  `If-Range` never matches, also when it is the current `ETag` of the
+  file. Reason: a browser that asks for a missing part of a stored file
+  must never join bytes of two versions of the file.
 - The file server writes no request path to a log, because a path can hold
   a secret value.
 - The runner announces its file server in its `hello`, as

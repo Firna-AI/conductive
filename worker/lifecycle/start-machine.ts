@@ -21,6 +21,7 @@ import type {
   StartJobStorage,
 } from './start-types'
 import type { StartCall } from './start-guard'
+import { workspaceAutoStopSeconds } from './idle-stop'
 
 export async function advanceStartMachine(
   env: AppEnv,
@@ -87,7 +88,7 @@ export async function advanceStartMachine(
           snapshotName: job.imageName ?? undefined,
           name: row.id,
           env: runtimeEnv,
-          ttlSeconds: 1_800,
+          ttlSeconds: await workspaceAutoStopSeconds(env.DB),
           idempotencyKey: job.attempt,
           labels: {
             user: row.ownerUserId,
@@ -115,7 +116,11 @@ export async function advanceStartMachine(
             job.environmentCiphertext,
           )
           await requireActiveStartUsers(env.DB, job)
-          await provider.resume(sandboxId, runtimeEnv, 1_800)
+          await provider.resume(
+            sandboxId,
+            runtimeEnv,
+            await workspaceAutoStopSeconds(env.DB),
+          )
         })
       }
     }
@@ -138,7 +143,10 @@ export async function advanceStartMachine(
     if (status === 'error') throw new WorkspaceStartError(null)
     if (status !== 'ready') return null
     await call(async () => {
-      await provider.setAutoStop(sandboxId, 1_800)
+      await provider.setAutoStop(
+        sandboxId,
+        await workspaceAutoStopSeconds(env.DB),
+      )
       if (job.kind === 'create')
         await releaseImageLease(env.DB, job.orgId, job.workspaceId)
     })

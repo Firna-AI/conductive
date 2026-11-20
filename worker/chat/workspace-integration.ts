@@ -31,6 +31,7 @@ import {
 import { QueueGenerations } from './queue-generation'
 import { unsupportedRunnerReason } from './runner-unsupported'
 import { SecretRuntime } from '../secrets/runtime'
+import { nativeRunnerWorkStorage } from './runner-work-watch'
 import { projectInputState } from '../secrets/workspace-runtime'
 
 export type WorkspaceCompositionEnv = LifecycleEnvironment
@@ -103,6 +104,7 @@ export function createWorkspaceIntegration(
       waitUntil: (promise) => context.waitUntil(promise),
       browserAlarm: (at) => alarms.set('browser', at),
       runnerAlarm: (at) => alarms.set('runner', at),
+      runnerWork: nativeRunnerWorkStorage(context.storage),
       automationReportAlarm: (at) => alarms.set('automation-report', at, true),
       runnerAttached: (_workspaceId, connectionId, send) => {
         files.runner.attach(connectionId, (command) => {
