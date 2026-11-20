@@ -49,6 +49,9 @@ Contract owners:
   account starts with five favourites. Option B, no favourites until the
   member adds one, and option C, the default of new workspaces as the
   only favourite, were not chosen.
+- Model favourites decision 3, 20 November 2026: the user chose A, a new
+  deployment setting, `CONDUCTIVE_STARTING_FAVOURITES`. The item below
+  keeps the options and the record.
 - Model favourites decision 2, 20 November 2026: the user chose A. A
   member adds a favourite only in Preferences. Option B, an "Add to
   favourites" row in the menu, was not chosen, because the user asked for
@@ -125,6 +128,11 @@ Contract owners:
   default of an existing member.
 - **Action:** ask the user, because the starting favourites need a new
   setting of each deployment that no requirement covers.
+- **Decision:** 20 November 2026: the user chose A, not the recommended
+  E. Each deployment sets its starting favourites in
+  `CONDUCTIVE_STARTING_FAVOURITES`. Every account that never saved
+  favourites gets the same list. A saved default of a member does not
+  join the list.
 
 ## Design calls
 
@@ -146,16 +154,24 @@ otherwise.
   turns fast mode off for a model without fast mode, as `modelChoice`
   does. So the route adds no new rejection.
 - An account that exists before the deploy also gets the starting
-  favourites. Decision 1 A rejected a start with no favourites, and with
-  option E of decision 3 its saved default comes first. A start with no
-  favourites only for older accounts was rejected, because it splits the
-  members into two menus.
+  favourites, because decision 1 A rejected a start with no favourites.
+  Its saved default stays the choice of new workspaces. When the list
+  does not hold that default, the menu of a new workspace marks no
+  favourite, as for a changed effort. A start with no favourites only
+  for older accounts was rejected, because it splits the members into
+  two menus.
 - The Worker never fails because of the starting favourites. It leaves
   out each entry whose model the model list does not hold, or whose
   effort that model does not offer, and logs a warning. It turns fast
-  mode off for a model without fast mode. A missing or bad setting gives
-  only the default of new workspaces. So a bad value never stops the app
+  mode off for a model without fast mode. It keeps the first five
+  entries. A missing, empty, or bad setting gives only the app default,
+  `CONDUCTIVE_DEFAULT_CHOICE`. So a bad value never stops the app
   from starting, as `configuredDefaultChoice` would with HTTP 503.
+- `CONDUCTIVE_STARTING_FAVOURITES` in `wrangler.jsonc` starts with the
+  app default, Opus 5.5 High. Opus 5.5 Max, Sonnet 5.5 Medium, GPT-6.2
+  Sol High, and GPT-6.2 Astra Medium follow, all with fast mode off. Each
+  agent then has a deep and a quicker choice, from the newest models of
+  the production list.
 - `GET /api/account` gives `favourites`, the saved list or the starting
   favourites. An older app ignores the new field.
 - A favourite whose model the model list no longer holds, or that the
@@ -196,8 +212,9 @@ menu.
       `app/composer` (`picker`), `app/fast-mode`, `app/new-workspace`
       with its dialog, `app/account/preferences` (`model-menu`), the
       prompt box of `app/automations`, and `app/chat/endpoint-models`.
-- [ ] Remove the review words of `app/model-favourites`, and draw the
-      starting favourites from the answer of decision 3.
+- [ ] Remove the review words of `app/model-favourites`. Say in its
+      `new-account` view that the deployment setting of decision 3 A
+      gives the starting favourites.
 - [ ] Split `app/model-favourites` into child pages, as it passes five
       views. Add the views of the design calls:
   - [ ] A menu that leaves out a favourite whose model the own endpoint
@@ -228,8 +245,11 @@ Depends on: 1
       `docs/protocol/own-endpoint-logins.md`.
 - [ ] Check the model picker lines of `agents-and-sessions.md`,
       `keyboard-shortcuts.md`, `automations.md`, and `org-logins.md`.
-- [ ] Add the starting favourites setting of decision 3 to
-      `docs/deployment/models.md`.
+- [ ] Add `CONDUCTIVE_STARTING_FAVOURITES` to
+      `docs/deployment/models.md`: its shape, its limit of five, the
+      entries that the Worker leaves out, and the app default when it is
+      missing. Check `docs/deployment.md` and `docs/local-development.md`
+      for the list of model settings.
 - [ ] Read the Terms page and the Privacy page in full. Update each
       sentence that restates what the account stores.
 - [ ] Read each public guide in `src/marketing/docs/` in full. Update the
@@ -244,18 +264,19 @@ Depends on: 2
 - [ ] Add a migration with the nullable `model_favourites` column of
       `user_preferences`. Check that the previous Worker keeps working, as
       `migrations/README.md` says.
-- [ ] Build the starting favourites of decision 3 in
-      `worker/app-api/models.ts`, with the filter and the warning of the
-      design calls. Add any new setting to `wrangler.jsonc` and to the env
-      types.
+- [ ] Read `CONDUCTIVE_STARTING_FAVOURITES` in
+      `worker/app-api/models.ts`, with the filter, the warning, and the
+      fallback of the design calls. Add it to the `vars` of
+      `wrangler.jsonc` with the production values of the design calls,
+      and to the env types.
 - [ ] Read and save the list in `worker/app-api/account-data.ts`.
 - [ ] Give `favourites` in `GET /api/account`, and add
       `PUT /api/account/favourites` in `worker/app-api/boot.ts`, with
       `ACCOUNT_PATHS.favourites` in `src/shared/account.ts`.
 - [ ] Add the same route to the dev routes of
       `src/app/dev/account-routes.ts`.
-- [ ] Test the read, the save, the starting favourites with and without
-      a saved default, a bad setting, the duplicates, the sixth entry, a
+- [ ] Test the read, the save, the starting favourites, a missing and a
+      bad setting, an entry outside the model list, the duplicates, the sixth entry, a
       model outside the list, and the isolation between accounts.
 
 ## Milestone 4: The model menu
