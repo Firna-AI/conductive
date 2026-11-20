@@ -111,7 +111,8 @@ export const privacyDocument: LegalDocument = {
         paragraph`Account records, the latest Terms acceptance, the time of
           your last activity, and suspension records do not automatically expire when you stop
           using ${productName}. Workspace chat history, Mac command records,
-          and secret request records stay while their org exists, including
+          secret request records, and merge records stay while their org
+          exists, including
           while a cloud computer is stopped or a workspace is removed. When
           ${productName} passes on model requests and their answers, it keeps
           no copy of them.`,
