@@ -66,8 +66,11 @@ app and a top-level tab use different cookie partitions. The app gate checks
 the session. The handler then checks the membership, the running workspace,
 and the active preview. The GET returns trusted HTML that posts the preview
 hostname and a 60-second grant to the authorizer. When the launch has a path,
-the grant seals it, and the form holds no path field. A browser turns each
-lone CR or LF of a form field into CR LF, so a path in the form can change.
+the grant seals it. For one release, the form also holds that path in an
+HTML-escaped hidden value. An older authorizer reads only that value, during
+a deploy or after a rollback. A browser turns each lone CR or LF of a form
+field into CR LF, so the value can differ from the sealed path. The current
+authorizer uses the sealed path.
 The GET checks the path with `isFilePath`. An invalid or repeated `path`
 gets 400 `invalid_input`, before any grant is issued, as
 [Launch paths](../../docs/protocol/preview-grants.md#launch-paths) requires.
@@ -106,9 +109,11 @@ Origin.
 Both modes read the request fields from one `URLSearchParams`: the form body
 in form mode, and the query in header mode. The preview address uses the path
 that the redeemed grant seals. For one release, a grant without a path falls
-back to the optional `path` field of the request. A launch page or an
-authorizer page of the previous Worker posts that field, and its grant seals
-no path. When the grant seals a path, the address ignores the field.
+back to the optional `path` field of the request. A grant of the previous
+Worker seals no path, and its launch page and authorizer page post that
+field. For the same release, the launch page and the authorizer page of this
+Worker post the field too, for an older authorizer. When the grant seals a
+path, the address ignores the field.
 
 Both modes check the `path` field with `isFilePath` before the redemption. An
 invalid or repeated field gets the same 404 as an invalid grant, and the grant
@@ -132,11 +137,12 @@ A GET of the exact authorizer address without a query serves the authorizer
 page for a browser launch. Its CSP allows only its nonce script and style and
 requests to its own origin. Its `frame-ancestors 'none'` keeps it at the browser's top
 level. Its script removes the fragment from the address before any request.
-It then sends the header mode POST, with the hostname in the query and no
-path. It refuses repeated fragment paths. It keeps the fragment path only to
-check the reply. It follows only the address of the same preview hostname,
-with the encoded path that it expects, or `/` without a path. On a failure,
-it asks the user to open the preview again from the workspace.
+It then sends the header mode POST, with the hostname in the query. For one
+release, the query also holds the optional fragment path, for a grant of the
+previous Worker or for an older authorizer. It refuses repeated fragment
+paths. It follows only the address of the same preview hostname, with the
+encoded path that it expects, or `/` without a path. On a failure, it asks
+the user to open the preview again from the workspace.
 
 The launch page and the authorizer page share one look from
 [opening-page.ts](opening-page.ts): the logo tile, a turning ring, and
@@ -171,8 +177,9 @@ Each record expires with its grant, and each save deletes the expired records.
 D1 is shared, so a grant works once across isolates and restarts.
 
 Both POST modes call `redeemLaunchGrant`, the one redemption operation.
-It first checks the grant and its viewer against the current access, with
-`readPreviewAccess`. It also checks the sealed path with `isFilePath`.
+It first checks the grant. A sealed path must pass `isFilePath`, or the grant
+is not valid. It then checks the viewer of the grant against the current
+access, with `readPreviewAccess`.
 It then deletes the record of the grant with `takeOAuthState`.
 It returns the credential cookie and the sealed path only when that delete
 finds the record.

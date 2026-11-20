@@ -64,7 +64,7 @@ it.each(['form', 'header'] as const)(
   async (mode) => {
     const setup = await openPreview(harness)
     harness.requests.length = 0
-    for (const [path, pathname] of [
+    for (const [path, pathname, formPath = path] of [
       [undefined, '/'],
       ['reports/index.html', '/reports/index.html'],
       ['\\/evil.example/x', '/%5C/evil.example/x'],
@@ -73,11 +73,12 @@ it.each(['form', 'header'] as const)(
       [
         'reports/a\rb\nc\r\nd\te\\f.html',
         '/reports/a%0Db%0Ac%0D%0Ad%09e%5Cf.html',
+        'reports/a\r\nb\r\nc\r\nd\te\\f.html',
       ],
     ]) {
       const form = await readLaunch(setup, mode, path)
       expect(form.body.getAll('path'), path).toEqual(
-        mode === 'header' && path !== undefined ? [path] : [],
+        path === undefined ? [] : [mode === 'form' ? formPath : path],
       )
       if (mode === 'header') form.body.delete('path')
       const response = await setup.handler.proxy(authorize(mode, form))
@@ -105,9 +106,11 @@ it('keeps HTML delimiters of a launch path out of the launch markup', async () =
   const window = new Window()
   const document = new window.DOMParser().parseFromString(html, 'text/html')
   expect(document.querySelectorAll('form')).toHaveLength(1)
-  expect(document.querySelectorAll('input')).toHaveLength(2)
+  expect(document.querySelectorAll('input')).toHaveLength(3)
   expect(document.querySelectorAll('img')).toHaveLength(0)
-  expect(document.querySelector('input[name="path"]')).toBeNull()
+  expect(
+    document.querySelector('input[name="path"]')?.getAttribute('value'),
+  ).toBe(path)
   expect(html).not.toContain(path)
   window.close()
 })

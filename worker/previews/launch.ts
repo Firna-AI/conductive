@@ -37,6 +37,7 @@ export async function previewLaunchPage(
     nonce,
     appOrigin: env.APP_ORIGIN,
     desktopOrigin: DESKTOP_ORIGIN,
+    path,
   })
   const response = privateResponse(
     new Response(html, {
