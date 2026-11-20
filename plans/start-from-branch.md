@@ -235,6 +235,45 @@ picked branch targets the default branch. The separate target row goes.
   changes since 20 November 2026. Milestone 9 renumbers them. Number 301
   stays free after that renumber.
 
+### Decision 310: a rename of the default branch reaches the cloud computer
+
+Chosen by Cal on 21 November 2026: B, from merge item 1 of the merge of
+`main` on 20 November 2026. When the `repository` webhook of `main` (#463)
+saves a new default branch, the Worker saves one base move for each live
+workspace of that repository whose base is the default branch. The move
+reuses the fetch with the owner's token (decision 297 in the old numbers)
+and the one retry owner (decision 298 in the old numbers), so the cloud
+computer fetches the new default branch and then targets it.
+
+- Problem that it solves: after a rename, the app named the new default
+  branch, but the cloud computer kept its old copy and target, so Changes
+  could show merged work and `gh` targeted a branch that GitHub no longer
+  had. `main` had the same gap.
+- Rejected: A, no change, because members would need Continue or a new
+  workspace after each rename. C, a fetch at each start, because a running
+  cloud computer waits for its next start and each start needs a token.
+
+### Decision 311: the follow-up item on a stale saved default branch goes
+
+Chosen by Cal on 21 November 2026: A, from merge item 3. Delete
+`plans/follow-ups/saved-default-branch-after-github-rename.md`, because
+`main` built its option C, a `repository` webhook (#463, #500, #515).
+Decision 310 covers the cloud computers that already run.
+
+- Rejected: B, a rewrite that keeps only the running computers, because
+  decision 310 owns that work.
+
+### Decision 312: a repository change stores the default base as null
+
+Chosen by Cal on 21 November 2026: B, from merge item 4. When `main`'s
+repository change (#423) moves a workspace to another repository and its
+base is that repository's default branch, it stores the base as null, as a
+create and Continue do, so the base follows a later rename.
+
+- Problem that it solves: a stored name made a later rename look like a
+  deleted base, and the bar said that the branch was no longer on GitHub.
+- Rejected: A, no change, because the bar would show a wrong cause.
+
 ## Design calls
 
 My calls, made on 13 November 2026:
@@ -883,6 +922,41 @@ Depends on: 15
       of about 250 of the `documentation` skill.
 - [x] Check each relative link into and out of both docs.
 
+## Milestone 18: Renumber the decisions of this plan
+
+Depends on: none
+
+`main` used the numbers 288 to 297 for other changes. Decisions 310 to 312
+already have free numbers.
+
+- [ ] Renumber this plan's decisions in every file of the branch: 288 to
+      298 become 298 to 308 in order, and 301 becomes 309. Change only the
+      references that this branch added. Keep each reference of `main` to
+      its own decisions 288 to 297.
+- [ ] Check with `git grep` that no reference of this branch keeps an old
+      number, and that each reference of `main` is unchanged.
+
+## Milestone 19: Default branch renames and repository changes
+
+Depends on: 18
+
+- [ ] In `docs/protocol/base-branches.md` and the doc of the repository
+      change, state decisions 310 and 312. Read the legal pages and the
+      public guides for the same facts.
+- [ ] Build decision 310: the webhook save of a new default branch saves
+      one base move for each live workspace of the repository whose base is
+      null, through the operation of decisions 307 and 308 (the old 297 and
+      298).
+- [ ] Build decision 312 in `worker/lifecycle/repository-change-progress.ts`
+      and `worker/lifecycle/repository-change-data.ts`, with the check after
+      the write that accepts null.
+- [ ] Delete `plans/follow-ups/saved-default-branch-after-github-rename.md`
+      (decision 311), and remove each link to it.
+- [ ] Test a rename with a running and with a stopped cloud computer, a
+      workspace with a stored base that the rename does not move, and a
+      repository change to the default branch.
+- [ ] Update the READMEs of `worker/github/` and `worker/lifecycle/`.
+
 ## Milestone 9: Verification, commit, review, and pull request
 
 Depends on: every other milestone
@@ -891,7 +965,8 @@ Depends on: every other milestone
       off and targets the default branch, on the development page.
 - [x] Set the comparison rows as Milestone 2 says. Pull request #380 on
       `main` removed the comparison page and its rows, so no row remains.
-- [ ] Renumber decisions 288 to 295 when another change took those numbers.
+- [x] Renumber decisions 288 to 295 when another change took those numbers.
+      Milestone 18 does it.
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
